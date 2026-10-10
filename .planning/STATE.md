@@ -2,39 +2,43 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 174
-current_phase_name: Recovery Entry and Diagnosis
+current_phase: 176
+current_phase_name: Search and Playbooks
 status: planning
-stopped_at: Phase 173 complete; Phase 174 ready for discussion
-last_updated: "2026-10-07T02:06:46.583Z"
-last_activity: 2026-10-06
-last_activity_desc: Phase 173 complete, transitioned to Phase 174
-state_head: e36b95a1e47c9b3631000dc852187ecf5bcf8416
+stopped_at: Phase 175 complete; Phase 176 discussion next
+last_updated: "2026-10-10T18:15:02.580Z"
+last_activity: 2026-10-10
+last_activity_desc: Phase 175 complete, transitioned to Phase 176
+state_head: 7547a346f9e7db65e33ba3e6477e302e5465f80f
 progress:
   total_phases: 5
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 20
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 18
+  percent: 60
 ---
 
 # Project State
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 174 Recovery Entry and Diagnosis; Phase 173 completed all four plans and seven requirements with independent executable verification.
+See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: v1.43 Phase 176 Search and Playbooks, discussion next using the accepted UX audit and rubric. Phases 173–175 completed 18 plans and 14 requirements with independent executable verification; their source-bound hosted receipts remain separate.
 
 ## Current Position
 
-Phase: 174 — Recovery Entry and Diagnosis
+Phase: 176 — Search and Playbooks
 Plan: Not started
-Status: Ready for Phase 174 discussion
-Last activity: 2026-10-06 — Phase 173 complete, transitioned to Phase 174
-Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plans complete)
+Status: Ready to plan
+Last activity: 2026-10-10 — Phase 175 complete, transitioned to Phase 176
+Progress: [██████░░░░] 60% (3/5 phases; 18/18 currently planned plans complete; later phases are not yet planned)
 
 ## Delivered Evidence
 
-- Phase 173: 4/4 plans, OPUX-09–OPUX-15, independent verification 58/58; final production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Accepted candidate [run 37558615968](https://github.com/szTheory/scrypath/actions/runs/37558615968) at `d3af57fd1f156df2d6e1deec18200ae3b1eef119` passed required jobs, coverage and attestation. `phases/173-shared-visual-foundation-and-operational-time/173-CLOSEOUT.md` records retained evidence, tracking warnings, advisory limits and the final-source receipt procedure. Final exact-SHA evidence is retained outside the frozen checkout. No merge, release or Phase 174 execution is claimed.
+- Phase 175: 6/6 plans and OPUX-20–OPUX-22; independent verification 29/29 truths. Final scoped Ops lane 334 tests + 2 doctests, owned browser 7/7, existing mounted operator 4/4, prior-phase browser regression 113/113 and root regression 735 tests + 4 properties, all zero failures in their recorded scopes. Six real prohibition producers independently passed bad-subject and clean-control checks. Code review has zero open findings; UI audit 23/24; security has zero high-threshold blockers and one unaccepted medium host-auth advisory. Candidate [run 38072905651](https://github.com/szTheory/scrypath/actions/runs/38072905651) at `fd216fb1b6ee31e535884bb74b40ae166e12df55` passed all five required jobs, coverage and closeout attestation. Final exact-SHA receipt and task-owned cleanup are external to the frozen tracking commit; see `phases/175-repair-and-verification/175-CLOSEOUT.md`. No merge, release or real host-trust approval.
+
+- Phase 174: 8/8 plans and OPUX-16–OPUX-19; independent verification 48/48 plan truths and 4/4 roadmap outcomes, all 30 UI criteria, 24 decisions and four source assumptions checked. Native recovery browser 11/11 with 48 AFTER captures; Ops 275 tests + 2 doctests and core 661 tests + 4 properties, zero failures. Prior Phase173 regression has 34 unique cases with passing evidence across truthful 32/34 full and exact 2/2 focused reports. Both code review findings are fixed; ASVS L1 register has 14 closed threats; UI audit 23/24. Maintainer preview localhost:4014 is retained; original localhost:4012, frozen Phase173 and original 15 dirty files are preserved. Hosted two-stage closeout is recorded separately. This Phase 174 receipt does not cover Phase 175 work or convey host trust approval, merge or release.
+
+- Phase 173: 4/4 plans, OPUX-09–OPUX-15, independent verification 58/58; final production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Accepted candidate [run 37558615968](https://github.com/szTheory/scrypath/actions/runs/37558615968) at `d3af57fd1f156df2d6e1deec18200ae3b1eef119` passed required jobs, coverage and attestation. `phases/173-shared-visual-foundation-and-operational-time/173-CLOSEOUT.md` records retained evidence, tracking warnings, advisory limits and the final-source receipt procedure. Final exact-SHA evidence is retained outside the frozen checkout. That Phase173 receipt made no merge, release or Phase174 execution claim.
 
 - Phase172:8/8 requirements and plans; independent verification38/38 truths; audit6/6 connections and5/5 flows. Archive: `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.42-phases/`.
 - PR91 merged3ad154a33f99cb200b791577aadc5970adc70ca2. Candidate135517b/run37178388184 passed104 browser,4 mounted, required gates, coverage and attestation. Scoped Ops also passed PR37178390800 and main37180290165. Root657tests+4properties0; Ops233+2doctests0.
@@ -51,6 +55,14 @@ Progress: [██░░░░░░░░] 20% (1/5 phases; all 4 Phase 173 plan
 - On 2026-10-06, direct Search health feedback prompted a local layout correction: removed duplicate Impeccable preview wrappers from the shared panel, restored 24px section spacing, replaced sentence-length action links with concise shared controls and supporting prose, removed redundant section/diagnostic panels, and preserved full module names and readable timestamps. The broader recovery → verification → saved-check refinement sequence is captured in `reference/OPERATOR-UI-REFINEMENT.md`; no active phase was created.
 - Local verification for the current changes: Ops `mix precommit` passed 233 tests and 2 doctests with zero failures; token contrast passed with zero AA failures (34 AAA advisory findings). Live desktop and 390px mobile review covered light and dark themes, measured 24px section gaps and 40px action controls, and found no horizontal overflow. Diagnostic subgroups are transparent and full identifiers/timestamps remain readable. The revised browser depth spec parsed/listed 33 tests; the full browser matrix was not executed or the feedback preview reseeded. These local results are not hosted exact-SHA evidence and do not extend the archived Phase172 receipt. The temporary test database was removed after validation; preview data remains intact.
 - Later on 2026-10-06, the maintainer identified shared visual defects: shell gradients, broad yellow warning fills/outlines, green zero-error metrics, double theme selection, quiet-action hover colors, and dense last-success timestamps. The refinement brief now puts shared visual foundations first and records concrete acceptance criteria, including human-readable operational times and truthful clipboard/toast feedback. This follow-up edits planning/design context only; no UI implementation, new test run, commit, or milestone activation is claimed.
+
+## Whole-App UX Follow-Up (2026-10-09)
+
+The maintainer accepted an independent Impeccable audit and concrete fixes across all six operator surfaces. This follow-up strengthens v1.43 and does not complete Phases 175–177. The durable [UX rubric](reference/OPERATOR-UX-RUBRIC.md), [audit and verification record](reference/OPERATOR-UX-AUDIT-2026-10-09.md), root DESIGN.md terminology, and phase inputs in ROADMAP.md carry the conversation forward. Baseline heuristic score is 28/40; it is not an after-fix score or approval. Required diagnostics, exact identifiers, host authority and accepted/terminal/unknown distinctions remain explicit.
+
+Work lives in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`, branch `gsd/phase-174-recovery-entry-and-diagnosis`, draft PR95. Retained preview: http://127.0.0.1:4014/admin/search. Original checkout, preview4012, frozen173 and next-planning are preserved. Final local proof: 57 browser cases with retries disabled, 303 Ops tests + 2 doctests, and 661 core tests + 4 properties all pass. The dated audit record and committed machine reports retain scope, source hashes, preservation, prior failures and hosted CI limits; old phase attestations do not cover these changes. The owned test database/browser resources are removed; :4014 stays healthy without reseeding.
+
+**Next command:** `$gsd-discuss-phase 176` in the execution checkout above, using the accepted audit/rubric as binding input and automatically following the maintainer's established preferences. It prepares the Search and Playbooks refinement, followed by its UI contract and plan. No new session or manual directory setup is needed in this conversation; the agent selects that working directory. Context can be compacted because these inputs are persisted. No merge, release or simulated human trust approval is authorized.
 
 ## Durable Defaults
 
@@ -82,16 +94,80 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-07T02:06:46.531Z
-Stopped at: Phase 173 complete; Phase 174 ready for discussion
+Last session: 2026-10-10T18:15:02.494Z
+Stopped at: Phase 175 complete; Phase 176 discussion next
 Resume file: None
 
-Phase 173 is complete in `/private/tmp/scrypath-phase173-20261006-155750/execution` on `gsd/phase-173-shared-visual-foundation`. The original `/Users/jon/projects/scrypath` checkout, its fifteen modified source/design files, branch/HEAD and preview :4012 remain preserved. Its pre-execution STATE intentionally remains unchanged. Use the execution checkout for the next GSD action; do not replay Phase 173 or overwrite the original dirty baseline.
+Working checkout: `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`; branch `gsd/phase-174-recovery-entry-and-diagnosis`; [draft PR95](https://github.com/szTheory/scrypath/pull/95). Next: `$gsd-discuss-phase 176`. Context can be compacted; the phase inputs, exact handoff and evidence are persisted. In this conversation the agent selects the checkout, so no manual directory setup is needed. The retained previews are preserved feedback instances, not final Phase 175 acceptance or freshly seeded review environments.
 
-Four plan summaries, independent verification (58/58), native 34-case browser report, Nyquist validation, clean code re-review, security coverage and UI disposition are committed. Final browser/core/Ops evidence and captures are retained under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`. All executor/disposable fixture resources were removed. The original standalone before-images and intentional RED history for 173-01 remain documented limits; the UI audit's readable uneven-disclosure polish is nonblocking. Newly published Cloak advisories in the unchanged Ops lock graph remain a separate documented follow-up, with no inferred risk acceptance or release approval.
+## Historical Phase 174 Session Continuity
 
-Candidate run 37558615968 completed successfully; its validated receipt is committed in the phase directory. Final tracking records precede the exact-final-SHA hosted run, whose collector receipt is external at `/private/tmp/scrypath-phase173-20261006-155750/final-receipt.json`. No tracked writes are allowed after that run succeeds; a later planning handoff needs a separate successor and does not extend the receipt.
+Phase 174 now executes in a separate regular clone on `gsd/phase-174-recovery-entry-and-diagnosis` in `/private/tmp/scrypath-phase173-20261006-155750/phase174-execution`. The previous planning worktree and its RED artifacts remain preserved; the fresh clone resolves the executor commit guard without bypassing it. It starts from the immutable Phase 173 source `13ea88a9c18a7515f4ec5ae7deea0cdde4c22531`. Its later handoff metadata does not extend the prior exact-SHA receipt. The execution checkout and PR branch `gsd/phase-173-shared-visual-foundation` remain unchanged at that attested source.
 
-Next is `$gsd-discuss-phase 174` in the execution checkout. **Recovery Entry and Diagnosis** clarifies current state, affected schema/work and the next safe recovery action across Control Room, Search health and Failed sync work. It has no CONTEXT or plans yet. Read PROJECT.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, PRODUCT.md, DESIGN.md and the operator quality/refinement references. Reuse Phase 173's neutral visual contract and explicit source/time/copy semantics; preserve allowed-schema context and host-owned safety gates.
+**Completed:** v1.43 Phase 173, four plans and OPUX-09–OPUX-15; independent verification 58/58, native production browser proof 34/34, core 661 tests/four properties and Ops 247 tests/two doctests, all zero failures. Final exact-source [run 37560447817](https://github.com/szTheory/scrypath/actions/runs/37560447817) completed successfully with all five required jobs, coverage and closeout attestation passing. The collector-validated receipt is retained at `reference/v1.43-phase173-final-receipt.json`; archive and member hashes refer to different verified bytes. [Draft PR #94](https://github.com/szTheory/scrypath/pull/94) targets main at the attested source. No merge or release was performed.
 
-Automatic chaining is disabled; preserve adaptive model routing and the existing frontend UI/safety gates. Do not replay Phases 172/170 or extend archived receipts to changed source. Context can be cleared after final hosted closeout and the PR handoff: the committed records preserve scope, decisions, verification evidence, unresolved items, working directory/branch and exact next action.
+**Unresolved evidence limits:** The broader advisory ecommerce browser lane is not green: candidate 70 failures/64 passes; final 71 failures/63 passes. Diagnostics include older selectors/visual contracts, standalone specs discovered without their dedicated Ops service, and an additional Control Room navigation timeout in the final run. The dedicated dual-entrypoint Phase 173 run passed all 34 cases; no full-matrix pass is claimed. Newly published Cloak advisories in the unchanged Ops lock graph remain documented in `173-SECURITY.md`, with no inferred risk acceptance, dependency exception or release approval. Missing intentional RED history and original standalone before-images for 173-01, and the UI audit's nonblocking uneven open-disclosure polish, remain disclosed. The original historical audit score is 17/24; two findings were fixed. Do not reopen completed phases merely to refresh historical receipts.
+
+**Preservation:** The original `/Users/jon/projects/scrypath` checkout remains on `planning/next-milestone-handoff` at `368abcc5f0309cb0e154739c1e52916478283b90`. All fifteen original modified source/design files are byte-identical to the baseline; preview :4012 remains healthy and unmodified. All executor and disposable verification stacks/resources were removed. This next-planning checkout is intentionally retained for the next command. Native logs/captures remain under `/private/tmp/scrypath-phase173-20261006-155750/evidence/173-final-review/`, with final CI logs and the original external collector receipt under the parent directory.
+
+**Historical next (superseded by the 2026-10-09 handoff above):** Continue $gsd-execute-phase 174 --auto --no-transition through the eight checked plans and independent executable verification, then prepare the working UI for maintainer review. Sequential execution follows the runtime base-divergence guard; use the regular phase174-execution clone, preserve the previous planning worktree, frozen173 and original preview. Do not advance175.
+
+Automatic chaining is disabled. Preserve adaptive routing and the existing frontend UI/safety gates. Context can be cleared: the committed successor records retain scope, decisions, verification evidence, unresolved items, working directory/branch and exact next command. Phases 172/170 and their archived source-bounded receipts remain historical.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 174 P01 | 19m | 2 tasks | 8 files |
+| Phase 174 P02 | 20m | 2 tasks | 11 files |
+| Phase 174 P03 | 14m | 2 tasks | 7 files |
+| Phase 174 P04 | 24m | 2 tasks | 9 files |
+| Phase 174 P07 | 33m | 2 tasks | 10 files |
+| Phase 174 P05 | 21m | 2 tasks | 10 files |
+| Phase 174 P06 | 301min | 2 tasks | 25 files |
+| Phase 174 P08 | 126m | 2 tasks | 10 files |
+| Phase 175 P01 | 6 min | 2 tasks | 3 files |
+| Phase 175 P02 | 7min | 2 tasks | 3 files |
+| Phase 175 P03 | 15min | 2 tasks | 2 files |
+| Phase 175 P04 | 19m | 2 tasks | 3 files |
+| Phase 175 P05 | 13m | 2 tasks | 6 files |
+| Phase 175 P06 | 80m | 2 tasks | 7 files |
+
+## Decisions
+
+- [Phase 174]: Canonical allowlist resolution owns the recovery target; fleet ranking remains separate evidence.
+- [Phase 174]: Use schema/source-qualified internal row identity for colliding IDs and include inspection generation in retry events.
+- [Phase 174]: The live allowlist and URL own the shared recovery target; absent fleet context stays absent.
+- [Phase 174]: Only recovery destinations inherit shell context; Search and Playbooks retain route ownership.
+- [Phase 174]: A sudo interruption keeps only a local return path and a canonical schema revalidated against the live allowlist.
+- [Phase 174]: Recovery callbacks require current selected-schema validation in addition to generation and opaque-handle equality.
+- [Phase 174]: Control Room affected scope derives from bounded posture rows while the validated recovery target stays independent.
+- [Phase 174]: Refresh resolves current runtime Scrypath options and carries prior posture evidence forward.
+- [Phase 174]: Posture source classification and worst-first ranking remain unchanged; schema-derived action IDs preserve identity through reorder.
+- [Phase 174]: Keep a stable server-owned sibling palette manifest present without a validated target so the hook observes later context changes safely.
+- [Phase 174]: Copy only canonical server hrefs into existing ignored palette anchors using a native MutationObserver with teardown cleanup.
+- [Phase 174]: Only the encoded current-schema/source/full-ID key identifies a retry or delete-confirmation action; legacy numeric IDs are not resolved.
+- [Phase 174]: Manual replay availability is described from RecoveryAction data, separately from Oban retry state and subject to existing server/host gates.
+- [Phase 174]: OPUX-18 and OPUX-19 remain pending until independent phase verification accepts the Phase 174 evidence.
+- [Phase 174]: Phase174 fixture routes and provider configuration stay restricted to MIX_ENV=test and the :phase174 route action.
+- [Phase 174]: The stale test OperatorContext is assigned only during the Phase174 test-route mount; the real Sigra confirm destination is navigation only and requires a separate explicit return.
+- [Phase 174]: OPUX-16 through OPUX-19 remain pending until independent phase verification accepts the final Plan 174-08 browser and canonical Ops proof.
+- [Phase 174]: Use the active validated allowlist for shell recovery targets and the existing prominent control-height token for the Control Room health action.
+- [Phase 175]: Keep the all-schema Search health destination available when requested schema context is unavailable.
+- [Phase 175]: Missing backend setup and failed required backend/queue reads remain unavailable evidence, never zero work.
+- [Phase 175]: Known source-qualified retry receipt identity remains visible when authority reads are unavailable, while outcome stays unknown.
+- [Phase 175]: Recovery refresh observes the same opaque receipt read-only and never submits work.
+- [Phase 175]: Promotion status reads the accepted task UID through the configured Meilisearch client and keeps read activity distinct from remote status.
+- [Phase 175]: Stale task callbacks must match current schema, allowlist, generation, endpoint, backend, and runtime before publishing a remote claim.
+- [Phase 175]: Keep Meilisearch promotion as one exact pairwise swap; do not introduce alias semantics or newer request options.
+- [Phase 175]: Keep task status and UID outside the native user-owned promotion disclosure; preserve OPUX-20 and OPUX-22 as pending until phase verification.
+- [Phase 175]: The test-only :phase175 route owns bounded scenarios; unknown recovery refreshes retain last-known retry identity while outcome remains unknown.
+- [Phase 175]: Keep the standalone browser fixture on SyncDriftLive and isolate its fake source in its own Compose process.
+- [Phase 175]: Keep OPUX-20–22 pending until independent verification and exact-source hosted CI closeout.
+
+### Blockers
+
+- [Phase 175] Independent goal/candidate verification passed. Final exact-SHA attestation and cleanup are retained externally under the closeout procedure; phase delivery claims require the receipt to match the final HEAD.
+- [Phase 175] Existing advisory deep-quality dependency findings and the medium host-authorization advisory remain disclosed without risk acceptance. Broad advisory browser results are not claimed green.
+- [Phase 175] GSD completion emitted three command-as-filename summary warnings; actual referenced test files exist and have passing evidence. Details are in `175-CLOSEOUT.md`.
+- [Phase 175] Three historical raw edge-probe rows remain unclassified provenance; no approval or classification was invented. The binding requirements and all six safety prohibitions have independent executable proof.

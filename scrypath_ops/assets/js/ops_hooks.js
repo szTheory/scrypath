@@ -2,6 +2,7 @@
 let opsModalPendingTrigger = null
 let activeOpsModal = null
 const INFO_FEEDBACK_DURATION = 4000
+let activeTimestampFeedback = null
 
 const scheduleInfoDismiss = (owner, dismiss) => {
   window.clearTimeout(owner.dismissTimer)
@@ -32,6 +33,69 @@ const OpsRefreshButton = {
   }
 }
 
+// Ignore `open` during patches so a focused descendant is never briefly hidden.
+// Keep manual expansion, while automatic expansion ends when the observation clears
+// unless closing would hide the currently focused control.
+const OpsHealthDetails = {
+  mounted() {
+    this.manuallyOpen = false
+    this.onSummaryClick = event => {
+      const summary = this.el.querySelector(":scope > summary")
+      const activated = event.target instanceof Element ? event.target.closest("summary") : null
+      if (activated === summary && !event.defaultPrevented) {
+        // The native click (including keyboard activation) toggles after this handler.
+        this.manuallyOpen = !this.el.open
+      }
+    }
+    this.onFocusOut = event => {
+      // An unchanged nested disclosure may receive no updated hook on a refresh.
+      // Reconcile when focus actually moves, while null relatedTarget during a
+      // DOM reorder stays under the patch's guarded focus restoration instead.
+      if (event.relatedTarget instanceof Element) this.syncOpenState(event.relatedTarget)
+    }
+    this.el.addEventListener("click", this.onSummaryClick)
+    this.el.addEventListener("focusout", this.onFocusOut)
+    this.syncOpenState()
+  },
+  beforeUpdate() {
+    const focused = document.activeElement
+    this.focusedBeforeUpdate = this.el.contains(focused)
+      ? {element: focused, id: focused.id}
+      : null
+  },
+  updated() {
+    const previous = this.focusedBeforeUpdate
+    this.focusedBeforeUpdate = null
+    const focused = document.activeElement
+    const focusLost = focused === document.body || focused === document.documentElement
+
+    if (previous && focusLost) {
+      const target = previous.id ? document.getElementById(previous.id) : previous.element
+      if (target && this.el.contains(target) && !target.closest("[hidden], [inert]") &&
+          !target.matches(":disabled") && typeof target.focus === "function") {
+        const summary = this.el.querySelector(":scope > summary")
+        if (!summary?.contains(target)) {
+          for (let ancestor = target.parentElement; ancestor; ancestor = ancestor.parentElement) {
+            if (ancestor.tagName === "DETAILS") ancestor.open = true
+            if (ancestor === this.el) break
+          }
+        }
+        target.focus({preventScroll: true})
+      }
+    }
+    this.syncOpenState()
+  },
+  destroyed() {
+    this.el.removeEventListener("click", this.onSummaryClick)
+    this.el.removeEventListener("focusout", this.onFocusOut)
+  },
+  syncOpenState(focused = document.activeElement) {
+    const summary = this.el.querySelector(":scope > summary")
+    const contentFocused = this.el.contains(focused) && !summary?.contains(focused)
+    this.el.open = this.el.dataset.opsRequiredOpen === "true" || this.manuallyOpen || contentFocused
+  }
+}
+
 // Info flashes are brief confirmations; errors stay visible until dismissed.
 const OpsToast = {
   mounted() { this.scheduleDismiss() },
@@ -58,12 +122,18 @@ const OpsTimestampCopy = {
     this.dismissButton?.addEventListener("click", this.onDismiss)
   },
   destroyed() {
+    this.copyAttempt = (this.copyAttempt || 0) + 1
+    if (activeTimestampFeedback === this) activeTimestampFeedback = null
     window.clearTimeout(this.dismissTimer)
     this.el.removeEventListener("click", this.onCopy)
     this.dismissButton?.removeEventListener("click", this.onDismiss)
   },
   async copyTimestamp(event) {
     event.preventDefault()
+    if (activeTimestampFeedback && activeTimestampFeedback !== this) {
+      activeTimestampFeedback.clearFeedback()
+    }
+    activeTimestampFeedback = this
     this.clearFeedback()
     const attempt = (this.copyAttempt || 0) + 1
     this.copyAttempt = attempt
@@ -100,6 +170,7 @@ const OpsTimestampCopy = {
     else delete this.feedback.dataset.state
   },
   clearFeedback() {
+    this.copyAttempt = (this.copyAttempt || 0) + 1
     window.clearTimeout(this.dismissTimer)
     this.dismissTimer = null
     this.setFeedback("", null)
@@ -127,6 +198,26 @@ const CommandPalette = {
     this.visible = this.items.slice()
     this.activeIndex = -1
     this.previousFocus = null
+    this.destinations = document.getElementById("ops-command-palette-destinations")
+    this.syncDestinations = () => {
+      if (!this.destinations) return
+
+      this.destinations.querySelectorAll("[data-ops-palette-destination]").forEach(destination => {
+        const item = this.items.find(candidate => candidate.id === destination.dataset.opsPaletteItem)
+        const href = destination.getAttribute("href")
+        if (item && href !== null) item.setAttribute("href", href)
+      })
+    }
+    this.destinationObserver = new MutationObserver(this.syncDestinations)
+    if (this.destinations) {
+      this.destinationObserver.observe(this.destinations, {
+        attributes: true,
+        attributeFilter: ["href", "data-ops-palette-item"],
+        childList: true,
+        subtree: true
+      })
+      this.syncDestinations()
+    }
 
     this.onKeydown = e => this.handleKeydown(e)
     this.onModalOverlayOpen = () => this.closeForModal()
@@ -163,6 +254,7 @@ const CommandPalette = {
     this.input.addEventListener("keydown", e => this.inputKeydown(e))
   },
   destroyed() {
+    this.destinationObserver?.disconnect()
     window.removeEventListener("keydown", this.onKeydown)
     document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.removeEventListener("click", this.onCommandOpenClick)
@@ -646,4 +738,81 @@ const OpsModal = {
   }
 }
 
-export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsTimestampCopy, OpsToast}
+// Native popovers provide Escape, outside-click dismissal, and one open explanation.
+// This hook adds pointer/focus discovery and keeps the explanation inside the viewport.
+const OpsHelp = {
+  mounted() {
+    this.trigger = this.el.querySelector("button")
+    this.content = this.el.querySelector("[popover]")
+    if (!this.content?.showPopover) return
+    this.listeners = new AbortController()
+    const options = {signal: this.listeners.signal}
+    this.hovered = false
+    this.pinned = false
+
+    this.el.addEventListener("pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return
+      this.hovered = true
+      clearTimeout(this.closeTimer)
+      this.show()
+    }, options)
+    this.el.addEventListener("pointerleave", (event) => {
+      if (event.pointerType !== "mouse") return
+      this.hovered = false
+      // Let the pointer cross the small gap into the explanation.
+      this.closeTimer = setTimeout(() => this.closeIfUnused(), 150)
+    }, options)
+    this.trigger.addEventListener("focus", () => this.show(), options)
+    this.trigger.addEventListener("blur", () => {
+      this.pinned = false
+      this.closeIfUnused()
+    }, options)
+    this.trigger.addEventListener("click", (event) => {
+      event.preventDefault()
+      if (this.pinned && this.content.matches(":popover-open")) {
+        this.hide()
+      } else {
+        this.pinned = true
+        this.show()
+      }
+    }, options)
+    this.content.addEventListener("beforetoggle", (event) => {
+      this.trigger.setAttribute("aria-expanded", String(event.newState === "open"))
+      if (event.newState === "closed") this.pinned = false
+    }, options)
+    this.el.closest(".ops-schema-health")?.addEventListener("toggle", (event) => {
+      if (!event.currentTarget.open) this.hide()
+    }, options)
+    window.addEventListener("resize", () => this.position(), options)
+    window.addEventListener("scroll", () => this.position(), {...options, capture: true})
+    this.trigger.setAttribute("aria-expanded", "false")
+  },
+  show() {
+    if (!this.content.matches(":popover-open")) this.content.showPopover()
+    this.position()
+  },
+  hide() {
+    if (this.content.matches(":popover-open")) this.content.hidePopover()
+  },
+  closeIfUnused() {
+    if (!this.hovered && !this.pinned && document.activeElement !== this.trigger) this.hide()
+  },
+  position() {
+    if (!this.content.matches(":popover-open")) return
+    const anchor = this.trigger.getBoundingClientRect()
+    const popup = this.content.getBoundingClientRect()
+    const margin = 12
+    const below = anchor.bottom + 4
+    const top = below + popup.height <= window.innerHeight - margin
+      ? below : anchor.top - popup.height - 4
+    this.content.style.left = `${Math.max(margin, Math.min(anchor.right - popup.width, window.innerWidth - popup.width - margin))}px`
+    this.content.style.top = `${Math.max(margin, top)}px`
+  },
+  destroyed() {
+    clearTimeout(this.closeTimer)
+    this.listeners?.abort()
+    if (this.content?.hidePopover) this.hide()
+  }
+}
+
+export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsHealthDetails, OpsTimestampCopy, OpsToast, OpsHelp}

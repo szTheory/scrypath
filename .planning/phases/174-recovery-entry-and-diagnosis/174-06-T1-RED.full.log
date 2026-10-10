@@ -1,0 +1,60 @@
+==> scrypath
+    warning: incompatible types given to decorate_result/2:
+
+        decorate_result(
+          (&Scrypath.Sync.RelatedEnqueue.enqueue(schema_module, records, fan_out_key, &1)).(
+            Scrypath.Config.ensure_oban_ready!(config)
+          ),
+          config
+        )
+
+    given types:
+
+        -none()-, dynamic()
+
+    the 1st argument is empty (often represented as none()), most likely because it is the result of an expression that always fails, such as a `raise` or a previous invalid call. This causes any function called with this value to fail
+
+    where "config" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:54:12
+        config = Scrypath.Config.resolve!(opts)
+
+    where "fan_out_key" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:43:17
+        fan_out_key =
+          case Keyword.get(opts, :fan_out) do
+            x when x === false or x === nil ->
+              :erlang.error(ArgumentError.exception("opts[:fan_out] is required"))
+        
+            x ->
+              x
+          end
+
+    where "records" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:35
+        records
+
+    where "schema_module" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:20
+        schema_module
+
+    typing violation found at:
+    │
+ 61 │         |> decorate_result(config)
+    │            ~
+    │
+    └─ (scrypath 0.3.15) lib/scrypath/sync.ex:61:12: Scrypath.Sync.sync_related/3
+
+==> scrypath_ops
+Nav contract OK: operator-ia.md matches Nav.primary/0
+TAP version 13
+not ok 1 - test standalone routes mount production views over the A-selected fixture
+# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: "expected test-only Phase174 route /ops/phase174 to mount ScrypathOpsWeb.ControlRoomLive", expr: :ex_unit_no_meaningful_value, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.Phase174FixtureLiveTest, :"-test standalone routes mount production views over the A-selected fixture/1-fun-1-", 1, [file: ~c"test/scrypath_ops_web/live/phase174_fixture_live_test.exs", line: 24]}, {Enum, :"-each/2-lists^foreach/1-0-", 2, [file: ~c"lib/enum.ex", line: 961]}, {ScrypathOpsWeb.Phase174FixtureLiveTest, :"test standalone routes mount production views over the A-selected fixture", 1, [file: ~c"test/scrypath_ops_web/live/phase174_fixture_live_test.exs", line: 21]}]}]
+1..1

@@ -111,11 +111,11 @@ async function gotoPlaybooks(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
 }
 
-// Switch the Search playground into multi-index mode. This is a `push_patch`
+// Switch the Search playground into multiple-schema mode. This is a `push_patch`
 // (search_live.ex handle_event "set_mode" -> push_patch mode: :multi) — the exact
 // re-render that would replay an A3 mount-keyframe reveal across the results/merge region.
 async function switchSearchMode(page: Page, mode: "single" | "multi"): Promise<void> {
-  const label = mode === "multi" ? "Multi index" : "Single index";
+  const label = mode === "multi" ? "Multiple schemas" : "Single schema";
   await page.getByRole("button", { name: label }).click();
 }
 
@@ -397,10 +397,10 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
         // The catalog list renders selectable playbook rows; each row's "Load preview"
         // button selects that playbook (phx-click="load"), which re-renders the list with
-        // the chosen row carrying .ops-object-item-active. (Use the exact "Load preview"
-        // name — a substring "Load" also matches the unrelated "Reload playbooks" button.)
+        // the chosen row carrying .ops-object-item-active. Match the contextual preview
+        // name to exclude the unrelated "Reload playbooks" button.
         // Need at least two catalog entries to move A->B.
-        const loadButtons = page.getByRole("button", { name: "Load preview" });
+        const loadButtons = page.getByRole("button", { name: /^Load preview of / });
         const count = await loadButtons.count();
         test.skip(count < 2, "needs >= 2 catalog playbooks to exercise A->B selection");
 

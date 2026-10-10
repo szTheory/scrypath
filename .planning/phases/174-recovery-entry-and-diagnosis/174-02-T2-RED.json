@@ -1,0 +1,10 @@
+{
+  "command": "MIX_TEST_PARTITION=174_wave1 SCRYPATH_TAP=1 mix test test/scrypath_ops_web/ops_shell_contract_test.exs --no-color -n \"shell recovery context follows the selected schema across health, failed work, and drift\"",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test shell recovery context follows the selected schema across health, failed work, and drift\n# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: \"Expected truthy, got false\", expr: {:assert, [], [{:has_element?, [line: 222], [{:health_lv, [line: 222], nil}, \"[data-testid='shell-recovery-target']\", {:schema_a, [line: 222], nil}]}]}, args: [#Phoenix.LiveViewTest.View<id: \"phx-GNw_3IQlNqXcEyXE\", module: ScrypathOpsWeb.PostureLive, pid: #PID<0.491.0>, endpoint: ScrypathOpsWeb.Endpoint, ...>, \"[data-testid='shell-recovery-target']\", \"ScrypathOps.Test.OpsPostA\"], doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.OpsShellContractTest, :\"test shell recovery context follows the selected schema across health, failed work, and drift\", 1, [file: ~c\"test/scrypath_ops_web/ops_shell_contract_test.exs\", line: 222]}]}]\n1..1\n",
+  "targetTest": "test shell recovery context follows the selected schema across health, failed work, and drift",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/ops_shell_contract_test.exs",
+  "expected": "The validated URL target appears in the shell and contextual recovery links on Search health, Failed sync work, and Sync and drift; a selector patch refreshes the shared target.",
+  "actual": "Search health did not render the shell recovery target for explicit allowed OpsPostA.",
+  "semanticAssessment": "The target shell LiveView test executed and failed at the assertion that Search health exposes the selected target in shared navigation. TAP output is the complete one-test run and names the failing target; this is the planned missing propagation, not a setup or collection failure."
+}

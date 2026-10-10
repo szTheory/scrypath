@@ -1,3 +1,4 @@
+import { expandHealthDetails } from "./helpers/operator-ui";
 /**
  * Admin surface-depth binding gate (SCREEN-DARK-01, Phase 134).
  *
@@ -329,6 +330,7 @@ async function expectNoStatusCopper(page: Page): Promise<void> {
 }
 
 async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> {
+  await expandHealthDetails(page);
   const card = ".ops-schema-signal-card";
   await expect(page.locator(card).first()).toBeVisible();
 
@@ -368,7 +370,7 @@ async function preparePopulatedPlaybooks(page: Page): Promise<void> {
 
   const basename = `surface-depth-${Date.now()}.json`;
   await page.getByRole("button", { name: "Save as playbook" }).click();
-  await page.getByLabel("Basename (.json)").fill(basename);
+  await page.getByLabel("Filename (.json)").fill(basename);
   await page.getByRole("button", { name: "Save playbook" }).click();
   await expect(page.getByText(new RegExp(`Saved playbook ${basename.replace(".", "\\.")}`))).toBeVisible();
 

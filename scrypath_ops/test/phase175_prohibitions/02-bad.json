@@ -1,0 +1,1 @@
+{"kind":"mutation","find":"{:noreply, refresh_drift(socket)}","replace":"Scrypath.Meilisearch.swap_indexes(socket.assigns.selected_schema, ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts))\n      {:noreply, refresh_drift(socket)}"}

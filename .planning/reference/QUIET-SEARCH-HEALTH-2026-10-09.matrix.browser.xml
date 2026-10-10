@@ -1,0 +1,92 @@
+<testsuites id="" name="" tests="8" failures="0" skipped="0" errors="0" time="97.127222">
+<testsuite name="phase174_quiet_health.spec.ts" timestamp="2026-10-09T18:02:10.510Z" hostname="chromium" tests="8" failures="0" skipped="0" time="90.455" errors="0">
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="9.464">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-b6427dc05b07720e9dd516646e375c8e59f6ae69.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/failed-ff6ee38cdd7e714414f19fdb567d53f2a03096bf.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/unavailable-5eb467348f0c169656f0bb33a0881f678c62ff7a.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="10.916">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-984143dc0e08426192a19641926b2c927df9593d.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/failed-eb8245014de2df412928dc0c3aa61cf791f323a5.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/unavailable-0ba5fec987de62d0d24f6a843d6aa299da74d6fb.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="7.423">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-c90814ac7aa93bb47d1c81c6c3d594cacd00cd9c.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/failed-22937e2c4d7028aaf32ad3be25d774fbd5826d73.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/unavailable-3b0469d6dae09148c7705a6c42c3ad53be3c8a67.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="8.801">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-f9a7f4d2d1fb1976fabbbc037a5bcf5fd84240c5.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/failed-db4542cfc9de6a62bbff768c14caba77f1741033.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/unavailable-5f5785dfecc002b338cd4570ffcd5fe858890766.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="17.285">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-1f958a11078e18f2538c5bb051146b2d261000fe.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/failed-152ec297c98929c4c18ac4b8a744b86cf9a90835.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/unavailable-60bccb9c77e3fcf17b690adc6ff20e6a3350ccb9.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="16.029">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-64a714fb276b1b53a857e5ea45a3391de0d32854.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/failed-d965f4cbeb9ec2d95abdbc2c30e93b15f2d8d9b8.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/unavailable-ed208ed596e71a5b2f44d3497c39143603e225dd.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="11.161">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-015b03dca27742a7db916681d71ac19c45a91e1f.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/failed-13af01013e7542ce49c877554e1ec47a45193f3f.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/unavailable-ba21fb51af02dd2024d56f076f08022190a16d60.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="9.376">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-0a3236e9fb6d9ae4d6e2aa5c242821697f806bcf.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/failed-f7247869f42fad75e291f216ade40c4d82b6efc2.png]]
+
+[[ATTACHMENT|ui-quiet-health-matrix-complete/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/unavailable-60b9d71f006e1b2b85cbfded533e3e8cbf1f0f81.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

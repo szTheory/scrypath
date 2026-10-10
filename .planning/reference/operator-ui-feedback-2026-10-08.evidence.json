@@ -1,0 +1,115 @@
+{
+  "reports": [
+    {
+      "file": "operator-ui-feedback-2026-10-08.browser.xml",
+      "sha256": "7b3be76f81d055456fd2037731d5ae6f6c00986b504c6ca98914ab57fdf92e74",
+      "tests": 41,
+      "passed": 39,
+      "failures": 1,
+      "errors": 1,
+      "skipped": 0
+    },
+    {
+      "file": "operator-ui-feedback-2026-10-08.status.xml",
+      "sha256": "cc3c6309bf53ad60b3646659f3b30699610ce3645b0842b18ecf2d839970b24d",
+      "tests": 32,
+      "passed": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "file": "operator-ui-feedback-2026-10-08.copy.xml",
+      "sha256": "8a84f3324e829036fc5380fea595a78191f3d4c93e81df79319d81b23bd9775c",
+      "tests": 14,
+      "passed": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "unique_passing_case_identities": 63,
+  "single_combined_native_report": false,
+  "runtime_source": {
+    "files": [
+      {
+        "path": "scrypath_ops/assets/css/app.css",
+        "local": "6893bf3332a59a6056796e7e77c879aac4ccb21c9eac880b3aebceaf393b5002",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "6893bf3332a59a6056796e7e77c879aac4ccb21c9eac880b3aebceaf393b5002",
+          "scrypath_phase174_d4395f2_review-ops-1": "6893bf3332a59a6056796e7e77c879aac4ccb21c9eac880b3aebceaf393b5002"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/assets/js/ops_hooks.js",
+        "local": "ff84ac529f256600a46fd05acd533f9501d8dc0f4667470c6719c22a0da6374c",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "ff84ac529f256600a46fd05acd533f9501d8dc0f4667470c6719c22a0da6374c",
+          "scrypath_phase174_d4395f2_review-ops-1": "ff84ac529f256600a46fd05acd533f9501d8dc0f4667470c6719c22a0da6374c"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/lib/scrypath_ops/posture.ex",
+        "local": "b75cc37d8c1304e330bfa6897ca641e6e0a021083a1e241119a84887d3e0a780",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "b75cc37d8c1304e330bfa6897ca641e6e0a021083a1e241119a84887d3e0a780",
+          "scrypath_phase174_d4395f2_review-ops-1": "b75cc37d8c1304e330bfa6897ca641e6e0a021083a1e241119a84887d3e0a780"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+        "local": "55e90493ca0a7a9257a67d34d12abddbfd2700619f28b03241ca5d711e7e192d",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "55e90493ca0a7a9257a67d34d12abddbfd2700619f28b03241ca5d711e7e192d",
+          "scrypath_phase174_d4395f2_review-ops-1": "55e90493ca0a7a9257a67d34d12abddbfd2700619f28b03241ca5d711e7e192d"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
+        "local": "2c3307ce2c79173634d6246377d7126ea764b57da18fcbbfc3e7e1eb10213689",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "2c3307ce2c79173634d6246377d7126ea764b57da18fcbbfc3e7e1eb10213689",
+          "scrypath_phase174_d4395f2_review-ops-1": "2c3307ce2c79173634d6246377d7126ea764b57da18fcbbfc3e7e1eb10213689"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex",
+        "local": "c025ea168af5da10311cdb4bc3e79e9ebebd3bee8559828538769af388a3face",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "c025ea168af5da10311cdb4bc3e79e9ebebd3bee8559828538769af388a3face",
+          "scrypath_phase174_d4395f2_review-ops-1": "c025ea168af5da10311cdb4bc3e79e9ebebd3bee8559828538769af388a3face"
+        },
+        "all_match": true
+      },
+      {
+        "path": "scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex",
+        "local": "1014e9a6ba9e9400cdabb9f006c8e46cceb38427e44638df859aeffa1dfa3ffd",
+        "server_hashes": {
+          "scrypath_phase174_d4395f2_review-web-1": "1014e9a6ba9e9400cdabb9f006c8e46cceb38427e44638df859aeffa1dfa3ffd",
+          "scrypath_phase174_d4395f2_review-ops-1": "1014e9a6ba9e9400cdabb9f006c8e46cceb38427e44638df859aeffa1dfa3ffd"
+        },
+        "all_match": true
+      }
+    ],
+    "all_match": true,
+    "checked_at": "2026-10-08T19:43:12.301532+00:00"
+  },
+  "preservation": {
+    "checked_at": "2026-10-08T19:43:59.767911+00:00",
+    "original_paths_checked": 15,
+    "changed_paths": [],
+    "frozen_phase173_sha": "13ea88a9c18a7515f4ec5ae7deea0cdde4c22531"
+  },
+  "review_fixture_restored": {
+    "scenario": "all_green",
+    "failed_count": 0,
+    "drift": false,
+    "port": 4014
+  },
+  "hosted_evidence": "Follow-up PR CI is recorded separately against the final commit; the historical a18c456 receipt does not apply to this source."
+}

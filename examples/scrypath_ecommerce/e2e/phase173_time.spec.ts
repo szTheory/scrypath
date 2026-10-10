@@ -1,4 +1,5 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { expandHealthDetails } from "./helpers/operator-ui";
+import { expect, test, type Browser } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
@@ -26,15 +27,15 @@ async function openPage(browser: Browser, width: number, theme: "light" | "dark"
 }
 
 for (const entrypoint of ENTRYPOINTS) {
-  test(`${entrypoint.name} renders stable exact operational time without overflow`, async ({ browser }) => {
-    const captureDir = join(process.cwd(), "test-results", "phase173-time-captures");
-    mkdirSync(captureDir, { recursive: true });
-
-    for (const width of [390, 1279, 1280, 1440]) {
-      for (const theme of ["light", "dark"] as const) {
+  for (const width of [390, 1279, 1280, 1440]) {
+    for (const theme of ["light", "dark"] as const) {
+      test(`${entrypoint.name} exact time at ${width}px in ${theme} survives disclosure and refresh`, async ({ browser }) => {
+        const captureDir = join(process.cwd(), "test-results", "phase173-time-captures");
+        mkdirSync(captureDir, { recursive: true });
         const { context, page } = await openPage(browser, width, theme);
         await page.goto(entrypoint.url);
         await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+        await expandHealthDetails(page);
         const row = page.locator(`[id="${entrypoint.row}"]`);
         await expect(row).toBeVisible();
 
@@ -91,7 +92,15 @@ for (const entrypoint of ENTRYPOINTS) {
         const refresh = page.getByRole("button", { name: "Refresh search health" });
         await refresh.evaluate((button) => button.setAttribute("phx-value-scenario", "source-error"));
         await refresh.click();
-        await expect(row).toContainText("fetch error: :fixture_unavailable");
+        const backend = row.locator(".ops-signal-group").first();
+        await expect(backend.locator(":scope > p")).toBeVisible();
+        await expect(backend.locator(":scope > p")).toContainText("Backend observation unavailable");
+        const diagnostics = backend.locator("details.ops-disclosure");
+        await expect(diagnostics.locator("pre")).not.toBeVisible();
+        await diagnostics.locator("summary").click();
+        await expect(diagnostics.locator("pre")).toBeVisible();
+        await expect(diagnostics.locator("pre")).toHaveText(":fixture_unavailable");
+        await diagnostics.locator("summary").click();
         await expect(row).toContainText("last success retained from the previous check");
         const retainedTime = row.locator(".ops-time").first();
         await expect(retainedTime).toContainText("2 days ago");
@@ -99,22 +108,32 @@ for (const entrypoint of ENTRYPOINTS) {
         await expect(checked.locator("time")).toHaveAttribute("datetime", "2026-10-07T17:18:42.318Z");
 
         await context.close();
-      }
+      });
     }
+  }
 
-    for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+  for (const scenario of ["source-error", "no-success", "missing-time", "manual"] as const) {
+    test(`${entrypoint.name} time evidence stays truthful in ${scenario}`, async ({ browser }) => {
       const { context, page } = await openPage(browser, 390, "light");
       const separator = entrypoint.url.includes("?") ? "&" : "?";
       await page.goto(`${entrypoint.url}${separator}scenario=${scenario}`);
       await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-connected/);
+      await expandHealthDetails(page);
       const row = page.locator(`[id="${entrypoint.row}"]`);
       await expect(row).toBeVisible();
 
       if (scenario === "source-error") {
-        await expect(row).toContainText("fetch error: :fixture_unavailable");
         const backend = row.locator(".ops-signal-group").first();
         const queue = row.locator(".ops-signal-group").nth(1);
-        await expect(backend.locator(".ops-time__reason")).toHaveText(":fixture_unavailable");
+        await expect(backend.locator(":scope > p")).toBeVisible();
+        await expect(backend.locator(":scope > p")).toContainText("Backend observation unavailable");
+        await expect(backend.locator(".ops-time__reason")).toHaveCount(0);
+        const diagnostics = backend.locator("details.ops-disclosure");
+        await expect(diagnostics.locator("pre")).not.toBeVisible();
+        await diagnostics.locator("summary").click();
+        await expect(diagnostics.locator("pre")).toBeVisible();
+        await expect(diagnostics.locator("pre")).toHaveText(":fixture_unavailable");
+        await diagnostics.locator("summary").click();
         await expect(backend).toContainText("Not observed");
         await expect(backend.locator("details.ops-time__disclosure")).toHaveCount(0);
         await expect(queue.locator("time.ops-time__value")).toHaveText("3 days ago");
@@ -128,6 +147,6 @@ for (const entrypoint of ENTRYPOINTS) {
       }
 
       await context.close();
-    }
-  });
+    });
+  }
 }

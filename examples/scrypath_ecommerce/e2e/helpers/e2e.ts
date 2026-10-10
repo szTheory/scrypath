@@ -88,6 +88,28 @@ export type RecoveryEvidence = {
   active_document: boolean;
 };
 
+export type DeleteRecoveryFixture = {
+  marker: string;
+  schema: string;
+  index: string;
+  original_job_id: number;
+  original_attempt: number;
+  document_id: number;
+  expected_name: string;
+};
+
+export type DeleteRecoveryEvidence = {
+  marker: string;
+  accepted_job_id: number;
+  accepted_attempt: number;
+  task_uid: number;
+  task_status: string;
+  task_type: string;
+  task_index: string;
+  document_id: number;
+  active_document_absent: boolean;
+};
+
 export type SwapFixture = {
   marker: string;
   schema: string;
@@ -413,6 +435,34 @@ export async function prepareRecoveryFixture(
   return requestJson<RecoveryFixture>(request, "/dev/e2e/recovery-fixture", {
     method: "POST",
     data: { tenant_id: args.tenantId, marker: args.marker }
+  });
+}
+
+export async function prepareDeleteRecoveryFixture(
+  request: APIRequestContext,
+  args: { tenantId: number; marker: string }
+): Promise<DeleteRecoveryFixture> {
+  return requestJson<DeleteRecoveryFixture>(request, "/dev/e2e/delete-recovery-fixture", {
+    method: "POST",
+    data: { tenant_id: args.tenantId, marker: args.marker }
+  });
+}
+
+export async function probeDeleteRecoveryEvidence(
+  request: APIRequestContext,
+  args: { marker: string; originalJobId: number; acceptedJobId: number; handle: string; generation: number; taskUid: number; index: string; documentId: number }
+): Promise<DeleteRecoveryEvidence> {
+  return requestJson<DeleteRecoveryEvidence>(request, "/dev/e2e/delete-recovery-probe", {
+    params: {
+      marker: args.marker,
+      original_job_id: String(args.originalJobId),
+      accepted_job_id: String(args.acceptedJobId),
+      handle: args.handle,
+      generation: String(args.generation),
+      task_uid: String(args.taskUid),
+      index: args.index,
+      document_id: String(args.documentId)
+    }
   });
 }
 

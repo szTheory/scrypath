@@ -1,0 +1,294 @@
+<testsuites id="" name="" tests="57" failures="0" skipped="0" errors="0" time="52.706604">
+<testsuite name="operator_ux_followup.spec.ts" timestamp="2026-10-10T04:12:08.640Z" hostname="chromium" tests="32" failures="0" skipped="0" time="24.607" errors="0">
+<testcase name="UX inventory Control Room 1440 light" classname="operator_ux_followup.spec.ts" time="0.774">
+</testcase>
+<testcase name="UX inventory Search health 1440 light" classname="operator_ux_followup.spec.ts" time="0.59">
+</testcase>
+<testcase name="UX inventory Failed sync work 1440 light" classname="operator_ux_followup.spec.ts" time="0.524">
+</testcase>
+<testcase name="UX inventory Sync and drift 1440 light" classname="operator_ux_followup.spec.ts" time="0.557">
+</testcase>
+<testcase name="UX inventory Search 1440 light" classname="operator_ux_followup.spec.ts" time="0.713">
+</testcase>
+<testcase name="UX inventory Saved playbooks 1440 light" classname="operator_ux_followup.spec.ts" time="0.596">
+</testcase>
+<testcase name="UX recovery and configuration 1440 light" classname="operator_ux_followup.spec.ts" time="0.769">
+</testcase>
+<testcase name="UX search and playbook input identity 1440 light" classname="operator_ux_followup.spec.ts" time="2.572">
+</testcase>
+<testcase name="UX inventory Control Room 1440 dark" classname="operator_ux_followup.spec.ts" time="1.046">
+</testcase>
+<testcase name="UX inventory Search health 1440 dark" classname="operator_ux_followup.spec.ts" time="1.025">
+</testcase>
+<testcase name="UX inventory Failed sync work 1440 dark" classname="operator_ux_followup.spec.ts" time="0.631">
+</testcase>
+<testcase name="UX inventory Sync and drift 1440 dark" classname="operator_ux_followup.spec.ts" time="0.658">
+</testcase>
+<testcase name="UX inventory Search 1440 dark" classname="operator_ux_followup.spec.ts" time="0.692">
+</testcase>
+<testcase name="UX inventory Saved playbooks 1440 dark" classname="operator_ux_followup.spec.ts" time="0.773">
+</testcase>
+<testcase name="UX recovery and configuration 1440 dark" classname="operator_ux_followup.spec.ts" time="0.775">
+</testcase>
+<testcase name="UX search and playbook input identity 1440 dark" classname="operator_ux_followup.spec.ts" time="1.607">
+</testcase>
+<testcase name="UX inventory Control Room 390 light" classname="operator_ux_followup.spec.ts" time="0.707">
+</testcase>
+<testcase name="UX inventory Search health 390 light" classname="operator_ux_followup.spec.ts" time="0.528">
+</testcase>
+<testcase name="UX inventory Failed sync work 390 light" classname="operator_ux_followup.spec.ts" time="0.458">
+</testcase>
+<testcase name="UX inventory Sync and drift 390 light" classname="operator_ux_followup.spec.ts" time="0.519">
+</testcase>
+<testcase name="UX inventory Search 390 light" classname="operator_ux_followup.spec.ts" time="0.507">
+</testcase>
+<testcase name="UX inventory Saved playbooks 390 light" classname="operator_ux_followup.spec.ts" time="0.437">
+</testcase>
+<testcase name="UX recovery and configuration 390 light" classname="operator_ux_followup.spec.ts" time="0.654">
+</testcase>
+<testcase name="UX search and playbook input identity 390 light" classname="operator_ux_followup.spec.ts" time="1.399">
+</testcase>
+<testcase name="UX inventory Control Room 390 dark" classname="operator_ux_followup.spec.ts" time="0.447">
+</testcase>
+<testcase name="UX inventory Search health 390 dark" classname="operator_ux_followup.spec.ts" time="0.715">
+</testcase>
+<testcase name="UX inventory Failed sync work 390 dark" classname="operator_ux_followup.spec.ts" time="0.478">
+</testcase>
+<testcase name="UX inventory Sync and drift 390 dark" classname="operator_ux_followup.spec.ts" time="0.481">
+</testcase>
+<testcase name="UX inventory Search 390 dark" classname="operator_ux_followup.spec.ts" time="0.443">
+</testcase>
+<testcase name="UX inventory Saved playbooks 390 dark" classname="operator_ux_followup.spec.ts" time="0.447">
+</testcase>
+<testcase name="UX recovery and configuration 390 dark" classname="operator_ux_followup.spec.ts" time="0.672">
+</testcase>
+<testcase name="UX search and playbook input identity 390 dark" classname="operator_ux_followup.spec.ts" time="1.413">
+</testcase>
+</testsuite>
+<testsuite name="phase174_health_help.spec.ts" timestamp="2026-10-10T04:12:08.640Z" hostname="chromium" tests="8" failures="0" skipped="0" time="6.094" errors="0">
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="0.798">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-mount-1505d-over-focus-and-tap-in-light-chromium/attachments/health-help-0b7cf8a87a83f23fc84fc0287b760b6279848e3e.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="0.806">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-mount-e358c-hover-focus-and-tap-in-dark-chromium/attachments/health-help-fe5177c358c7624491e936bd4368ebed05aee170.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="0.742">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-mount-64a36-over-focus-and-tap-in-light-chromium/attachments/health-help-5930147417336fe37554a62269fcacfc8ef39146.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="0.696">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-mount-40827-hover-focus-and-tap-in-dark-chromium/attachments/health-help-376fb510eb8c7129ee4d1655f4a055e1f8a62e16.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="0.795">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-stand-bfbed-over-focus-and-tap-in-light-chromium/attachments/health-help-c8b7348b5f351951dc9d6e74338f291f3ec96677.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="0.76">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-stand-5d9ff-hover-focus-and-tap-in-dark-chromium/attachments/health-help-8a61ffcf96ff88450c928530d39ebb4e9cbdfa1a.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="0.717">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-stand-ea28b-over-focus-and-tap-in-light-chromium/attachments/health-help-4b119ef3527ba65695496e83baabf63e37cc8380.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="0.78">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_health_help-stand-a804f-hover-focus-and-tap-in-dark-chromium/attachments/health-help-991f2845d48018aa9ace16908e8e530eabc89d0b.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_overview_scope.spec.ts" timestamp="2026-10-10T04:12:08.640Z" hostname="chromium" tests="8" failures="0" skipped="0" time="9.653" errors="0">
+<testcase name="mounted overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="1.091">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/control-room-e1150cc5ecedd5074d6f24dfadae09cf38e9436f.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/health-799f07c640e8c89f2f1d8a0b380992d1708836b7.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="1.064">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/control-room-e3add22fb293eddff1bd20c11b8323a4ecf71650.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/health-53287036bc600a2da059a63d4ab7d35883edbda6.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="1.462">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/control-room-16269df9b9c3efa8eb1b89f32b68dbbc833c4369.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/health-1ec95dcb7ca83d86e0c43133b4ce033973bfe7ef.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="1.364">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/control-room-e4bc601bcdf7ca342343d9e9cd18c8c18c047a28.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/health-432742d8c6c375660bdaf9142a81c86b3535da7d.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="1.059">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/control-room-8fb9f76b4172b2753bd3044306a9a191dd6f6014.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/health-33e11e67dc306cd30b8f70a1ef2dbf5d8b94a150.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="1.042">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/control-room-d899b2a6446c847bdb4a60be0def1213783ba1c2.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/health-bf3a4f816d6b4e35b577582d3d9c616d88441a4e.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="1.331">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/control-room-f3c9949a8d0fa6183749b8d78b3374deefaeea84.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/health-495b2c3ce156d5eb18f75c934336bbe3528ea3fa.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="1.24">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/control-room-ace66184d1e222666b801e25d289e8e867cb2649.png]]
+
+[[ATTACHMENT|test-results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/health-c325df19a24d6a4da16e0a26c304e2c60e7029ef.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_quiet_health.spec.ts" timestamp="2026-10-10T04:12:08.640Z" hostname="chromium" tests="8" failures="0" skipped="0" time="9.924" errors="0">
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="1.118">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-7606405bd981140465fdd7ee41a6ae28cb97a9ff.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/failed-9a229712af2ce0180d5564bfea8849ed5a246227.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/unavailable-9ab5770f3cb81fc8e5a374217d94c999e029b865.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.201">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-047d9a4cbb61603aefe696fed7371f845c8aac41.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/failed-c6d54af29215d9fa52d5006c260ee4c6f27af70f.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/unavailable-a3d6745bc07b4f0e2ec440206874e62307d082af.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="1.258">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-2ec4ca71ec561ffced6ed8738890b79dbb93909c.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/failed-b8e495b92c38522704534b15ddbec66e305d9ea5.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/unavailable-40a3556072b4ba10ca672924d7e951635d368a02.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.308">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-277bb8ea0db7465a40e281f91e14a2816666876b.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/failed-cc2d34c5251f812e60ae7d520d0dfc3c73ed5c8f.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/unavailable-ef731e402064f021afd6127b94e05a11161fb2f5.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="1.455">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-373fc840c3ac867e315d04d704ab09642fec693c.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/failed-b797e836b2402f0a05be1ca9c5bc8c588eb06209.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/unavailable-a2eaa38dfb7acf455a3eada2fc63545670793d4a.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.255">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-fbd3549031dfecd234b1dcc4f0b368c668db9051.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/failed-f94110252be28261573266810c6dfcdeb2900d04.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/unavailable-88d9349709d351c9a90b1e6483389445b3d6d9ea.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="1.152">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-dbaa7a0a787d849d83f759ff4bf5cae1b11287ef.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/failed-40768cc18ed887377019405a04e7e7122b883715.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/unavailable-7390100795d8e17a52e0f8d7f7285827b1e877d3.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.177">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-72e8711235d33107d47cd0b697e61f01f325a55d.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/failed-1d630b4f3889e3718cf70ce14838de85fbd10fae.png]]
+
+[[ATTACHMENT|test-results/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/unavailable-443be751a618d21e8f2be1bb0739d8d738ff37fa.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-10T04:12:08.640Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.799" errors="0">
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="0.799">
+</testcase>
+</testsuite>
+</testsuites>

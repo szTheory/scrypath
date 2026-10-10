@@ -11,6 +11,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.Posture
+  alias ScrypathOps.OperatorSelection
 
   @orientation_href "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/operator-ia.md"
 
@@ -28,6 +29,18 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   end
 
   @impl true
+  def handle_params(params, uri, socket) do
+    socket = socket |> apply_phase174_fixture(params) |> load_summary()
+
+    socket =
+      if Map.has_key?(params, "schema"),
+        do: push_patch(socket, to: OperatorSelection.overview_path(uri), replace: true),
+        else: socket
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("refresh", _params, socket) do
     socket =
       socket
@@ -38,9 +51,67 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   end
 
   defp load_summary(socket) do
-    summary = Posture.summary(socket.assigns.schema_allowlist, socket.assigns.scrypath_opts)
-    assign(socket, :posture, summary)
+    allowlist =
+      if phase174_fixture?(socket),
+        do: socket.assigns.schema_allowlist,
+        else: ScrypathOps.Schemas.allowlist()
+
+    socket = assign(socket, :schema_allowlist, allowlist)
+    previous = Map.get(socket.assigns, :posture)
+
+    scrypath_opts =
+      if phase174_fixture?(socket),
+        do: socket.assigns.scrypath_opts,
+        else: ScrypathOps.Schemas.scrypath_opts()
+
+    summary =
+      Posture.summary(
+        socket.assigns.schema_allowlist,
+        scrypath_opts,
+        DateTime.utc_now(),
+        previous
+      )
+
+    socket
+    |> assign(:scrypath_opts, scrypath_opts)
+    |> assign(:posture, summary)
   end
+
+  defp apply_phase174_fixture(%{assigns: %{live_action: :phase174}} = socket, params) do
+    if Mix.env() == :test do
+      source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
+
+      if fixture_source?(source) do
+        scenario = Map.get(params, "scenario", "a-selected-b-worse")
+        fixture = source.scenario(scenario)
+
+        socket
+        |> assign(:schema_allowlist, fixture.allowlist)
+        |> assign(:scrypath_opts, fixture.opts)
+        |> assign(:phase174_fixture_scenario, scenario)
+      else
+        socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp apply_phase174_fixture(socket, _params), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
+
+  defp phase174_fixture?(%{
+         assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario}
+       })
+       when is_binary(scenario),
+       do: Mix.env() == :test
+
+  defp phase174_fixture?(_socket), do: false
 
   @impl true
   def render(assigns) do
@@ -51,12 +122,13 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <div class="space-y-ops-page-gap">
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
             title="Control Room"
-            subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
+            subtitle="Monitor search sync, verify a change, or explore search results."
           />
           <.ops_refresh_control
             id="control-room-refresh"
@@ -75,21 +147,51 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.badge_kind(@posture.state)}
-            label="Can I trust search right now?"
+            label="Search health"
             headline={@posture.headline}
             class="ops-verdict--hero"
           >
             <:actions>
-              <.ops_link_button navigate={"#{@mount_path}/health"} variant={:ghost} size={:sm}>
-                View search health <span aria-hidden="true">→</span>
+              <.ops_link_button
+                id="control-room-health-link"
+                data-testid="control-room-health-link"
+                navigate={OperatorSelection.path(@mount_path, "health", nil)}
+                variant={:ghost}
+                size={:md}
+              >
+                Review Search health <span aria-hidden="true">→</span>
               </.ops_link_button>
             </:actions>
-            <p>{@posture.evidence}</p>
-            <p class="mt-2 text-ops-sm text-base-content/60">
-              {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
-                @posture.backend_failed_count
-              )}
-            </p>
+            <p :if={@posture.evidence != ""}>{@posture.evidence}</p>
+            <div
+              :if={affected_rows(@posture) != []}
+              class="mt-3 space-y-ops-2"
+              data-testid="control-room-affected-scope"
+            >
+              <p class="text-ops-body text-base-content">
+                {affected_scope_label(@posture)}
+              </p>
+              <ul :if={affected_rows(@posture) != []} class="space-y-ops-2">
+                <li
+                  :for={{schema, reasons} <- affected_rows(@posture)}
+                  class="ops-control-room__scope"
+                >
+                  <.ops_inline_code>{OperatorSelection.canonical(schema)}</.ops_inline_code>
+                  <ul class="ml-4 list-disc space-y-1">
+                    <li
+                      :for={reason <- reasons}
+                      data-testid={
+                        if String.contains?(reason, "observation unavailable"),
+                          do: "control-room-observation-error",
+                          else: nil
+                      }
+                    >
+                      {reason}
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
           </.ops_verdict>
         </section>
 
@@ -97,23 +199,12 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_heading level={2} id="control-room-intents-heading">
             What do you need to do?
           </.ops_heading>
-          <div class="grid gap-4 md:grid-cols-3">
-            <.ops_intent_card
-              icon="hero-wrench-screwdriver"
-              kind={intent_tone(@posture)}
-              recommended={@posture.state in [:degraded, :missing_backend]}
-              title="Recover search"
-              summary="Recover search when something looks wrong. Check schema health, work failed syncs, then confirm drift."
-              route_label="Start recovery"
-              navigate={"#{@mount_path}/health"}
-              data-testid="intent-incident"
-            >
-            </.ops_intent_card>
+          <div class="grid gap-4 md:grid-cols-2">
             <.ops_intent_card
               icon="hero-arrow-up-tray"
               title="Verify a change"
-              summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
-              route_label="Pre-flight sync drift"
+              summary="Check sync status and index configuration before promoting a change."
+              route_label="Check sync and drift"
               navigate={"#{@mount_path}/sync-drift"}
               data-testid="intent-change"
             />
@@ -130,7 +221,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
         <section
           aria-labelledby="control-room-orient-heading"
-          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/55"
+          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/75"
         >
           <h2 id="control-room-orient-heading" class="sr-only">Operator guide</h2>
           <a href={@orientation_href} class="link link-hover">
@@ -142,18 +233,73 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     """
   end
 
-  defp intent_tone(%Posture{state: :degraded}), do: :warning
-  defp intent_tone(%Posture{state: :missing_backend}), do: :error
-  defp intent_tone(_), do: :neutral
+  defp affected_scope_label(summary) do
+    count = length(affected_rows(summary))
 
-  defp schema_health_label(1), do: "1 schema checked"
-  defp schema_health_label(count), do: "#{count} schemas checked"
+    case count do
+      1 -> "1 schema needs attention:"
+      count -> "#{count} schemas need attention:"
+    end
+  end
 
-  defp fetch_health_label(0), do: "All fetches healthy"
-  defp fetch_health_label(1), do: "1 fetch needs attention"
-  defp fetch_health_label(count), do: "#{count} fetches need attention"
+  defp affected_rows(summary) do
+    Enum.flat_map(summary.rows, fn
+      {schema, {:error, reason}} ->
+        [{schema, ["Search health observation unavailable: #{inspect(reason)}"]}]
 
-  defp backend_health_label(0), do: "All backends healthy"
-  defp backend_health_label(1), do: "1 backend needs attention"
-  defp backend_health_label(count), do: "#{count} backends need attention"
+      {schema, {:ok, status}} ->
+        reasons =
+          [:backend, :queue]
+          |> Enum.flat_map(&source_findings(status, summary, schema, &1))
+
+        if reasons == [], do: [], else: [{schema, reasons}]
+    end)
+  end
+
+  defp source_findings(status, summary, schema, source) do
+    case Map.fetch(Map.get(status, :source_errors, %{}), source) do
+      {:ok, reason} ->
+        reference = Posture.last_success_ref(summary, schema, source)
+        label = source_label(source)
+
+        retained =
+          if reference && reference.retained?,
+            do: " last success retained from the previous check.",
+            else: ""
+
+        time = retained_time(reference && reference.state)
+
+        timestamp =
+          if time do
+            " Last successful source observation: #{DateTime.to_iso8601(time)}."
+          else
+            ""
+          end
+
+        ["#{label} observation unavailable: #{inspect(reason)}.#{retained}#{timestamp}"]
+
+      :error ->
+        source_failed_findings(status, source)
+    end
+  end
+
+  defp source_failed_findings(status, :backend) do
+    case length(status.backend.failed) do
+      0 -> []
+      count -> ["Backend: #{count} failed task(s) observed on this check."]
+    end
+  end
+
+  defp source_failed_findings(status, :queue) do
+    case length(status.queue.failed) do
+      0 -> []
+      count -> ["Queue: #{count} failed job(s) observed on this check."]
+    end
+  end
+
+  defp source_label(:backend), do: "Backend"
+  defp source_label(:queue), do: "Queue"
+
+  defp retained_time(%Scrypath.Operator.State{at: %DateTime{} = at}), do: at
+  defp retained_time(_), do: nil
 end

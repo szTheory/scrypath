@@ -40,8 +40,8 @@ and keyboard focus. Generate utilities like `bg-primary`, `text-base-content`,
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
 | `base-100` | `#ffffff` | `#191e25` | surfaces |
-| `base-200` | `#f7f6f3` | `#111419` | app background, muted panels |
-| `base-300` | `#d9d8d2` | `#353d48` | borders, dividers |
+| `base-200` | `#f5f6f8` | `#111419` | app background, muted panels |
+| `base-300` | `#d7dbe1` | `#353d48` | borders, dividers |
 | `base-content` | `#202124` | `#f1f2f4` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
@@ -75,12 +75,12 @@ free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surfa
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#f7f6f3` | `#111419` | Page floor / Night — app background |
+| `--ops-bg` | `#f5f6f8` | `#111419` | Page floor / Night — app background |
 | `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#efeee9` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-surface-2` | `#edeff2` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
 
 Dark surface ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
-Light surface ramp: `#f7f6f3` (bg) → `#ffffff` (surface-1) → `#efeee9` (surface-2) → `#d9d8d2` (base-300 / borders).
+Light surface ramp: `#f5f6f8` (bg) → `#ffffff` (surface-1) → `#edeff2` (surface-2) → `#d7dbe1` (base-300 / borders).
 
 The three visible System / Light / Dark targets each have a minimum 44px hit area. Exactly
 one target exposes `aria-pressed="true"` and `data-theme-selected="true"`. A System choice
@@ -127,6 +127,7 @@ inventory names every current export; add new exports here with their role consu
 
 | Component exports | Consumed roles |
 | --- | --- |
+| `ops_schema_context` | Explicit validated URL selection only; complete module identifier as neutral inline context outside fleet health summaries. Default fleet overviews show no schema selection. |
 | `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
@@ -136,12 +137,17 @@ inventory names every current export; add new exports here with their role consu
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
-| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Operational age, Copy timestamp and feedback use the 14px body family; copy/dismiss targets are 40px with quiet neutral hover/press and independent focus; copy uses interaction text and feedback uses primary text; exact technical evidence may use monospace, optional metadata retains 11px/12px exceptions |
-| `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
+| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Operational age is the copy button; its text and feedback use the 14px body family. Copy/dismiss targets are 40px with neutral hover/press and independent focus; success uses a brief bottom-corner toast and failures keep exact evidence and persistent feedback; exact technical evidence may use monospace, optional metadata retains 11px/12px exceptions |
+| `ops_help` | Optional term explanation with a named 32px information button, enlarged to 44px on mobile. Body copy uses 14px and theme surfaces. Hover, keyboard focus, and tap open a native popover; Escape, outside click, or leaving an unpinned explanation closes it. Keep required status and actions outside help. |
+| `ops_modal`, `ops_command_palette`, `ops_command_palette_destinations` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles; palette destinations remain server-owned outside the ignored dialog subtree |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 
 Search health uses the 24px section gap with unframed Next checks and per-schema
-headings. Each schema owns one surface; Backend tasks and Queue jobs share that
+headings. “Per-schema health” uses compact native disclosures for clear schemas and
+opens pending, retrying, failed, or unavailable checks by default. Only positive issue
+counts earn metric tiles; schema coverage is quiet metadata. Zero work counters are
+omitted from source groups, while last-success evidence remains available in details.
+Each schema owns one surface; Backend tasks and Queue jobs share that
 surface as plain diagnostic groups. Navigation actions use concise `ops_link_button`
 labels with supporting prose; explanatory sentences retain normal body styling.
 Ordinary prose links keep their text-link styling. Full module names and last-success
@@ -458,3 +464,7 @@ only and never affects the exit code.
 - Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
 
 Neutral surface opacity mixes use `color-mix(in srgb, ..., transparent)` so header, metric, and quiet grouping colors retain the approved palette after browser composition. The production browser contract samples rendered colors in Light, Dark, and System preferences.
+
+### Whole-workflow control refinements (2026-10-09)
+
+The command hint uses “Jump” at mobile widths while retaining its accessible name and shortcut. Supporting verdict text and table headings meet body-text contrast floors. Exact timestamp summaries have a 24px desktop target; time, compact disclosure and segmented controls expand to 44px on mobile. `ops_disclosure` accepts an optional `summary_label` for object-specific accessible names without lengthening the visible “Actions” label. Keep native disclosure IDs stable and preserve browser-owned `open` state through LiveView patches. These refinements reuse existing tokens and introduce no dependency.

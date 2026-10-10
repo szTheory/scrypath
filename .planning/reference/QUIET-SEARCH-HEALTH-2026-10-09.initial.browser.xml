@@ -1,0 +1,438 @@
+<testsuites id="" name="" tests="16" failures="0" skipped="0" errors="8" time="102.511508">
+<testsuite name="phase174_health_help.spec.ts" timestamp="2026-10-09T17:48:38.433Z" hostname="chromium" tests="8" failures="0" skipped="0" time="40.996" errors="0">
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="5.904">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-mount-1505d-over-focus-and-tap-in-light-chromium/attachments/health-help-65517f4ce344a0598946c49c3b446e8f5bbb7d0d.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="5.942">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-mount-e358c-hover-focus-and-tap-in-dark-chromium/attachments/health-help-b6d052dbfa1c422d99ca054755cad0dcd15f63b8.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.796">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-mount-64a36-over-focus-and-tap-in-light-chromium/attachments/health-help-9af7e209578f2ae4f8e5ded2b93d618c9459d04a.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="7.221">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-mount-40827-hover-focus-and-tap-in-dark-chromium/attachments/health-help-ff34a0e15b23c23824c0995789df4946fac0d869.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.547">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-stand-bfbed-over-focus-and-tap-in-light-chromium/attachments/health-help-6bed9ff23337da7252f3b05ab8df0aa3732d897f.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="3.407">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-stand-5d9ff-hover-focus-and-tap-in-dark-chromium/attachments/health-help-cd58435c096b6ca95c51d9e941cbecac1d35840a.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="5.572">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-stand-ea28b-over-focus-and-tap-in-light-chromium/attachments/health-help-d7e1c169279749bd326433797a1e5629e084cfca.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="5.607">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_health_help-stand-a804f-hover-focus-and-tap-in-dark-chromium/attachments/health-help-0add1abef94bb34ca26ef5c85d4047039954122c.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_quiet_health.spec.ts" timestamp="2026-10-09T17:48:38.433Z" hostname="chromium" tests="8" failures="0" skipped="0" time="29.145" errors="8">
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="3.749">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-4da3c4be9fd379f4843dfee6a88cb623fcc1c6d3.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathEcommerce.Catalog.Product No pending or failed work Details' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-4da3c4be9fd379f4843dfee6a88cb623fcc1c6d3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="3.953">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-9b6f24d73ae9a8ef43b62323bb0fe5f82a4637c6.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathEcommerce.Catalog.Product No pending or failed work Details' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-9b6f24d73ae9a8ef43b62323bb0fe5f82a4637c6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="5.435">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-d44a3a3b5ec6e63120f031861a1d387a9738fef8.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathEcommerce.Catalog.Product No pending or failed work Details' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-d44a3a3b5ec6e63120f031861a1d387a9738fef8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="6.789">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-f1ad4e48ebe1cf15cd2790140e170939a3eec606.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathEcommerce.Catalog.Product No pending or failed work Details' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathEcommerce.Catalog.Product').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-f1ad4e48ebe1cf15cd2790140e170939a3eec606.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="4.249">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-3c8c0e5648ba883b4b09e40662a36676fbd8e3fc.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathOps.Test.OpsPostA No' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-3c8c0e5648ba883b4b09e40662a36676fbd8e3fc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.444">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-69d96209f6eef5899a5330fb5d06f89cb8996dba.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathOps.Test.OpsPostA No' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-69d96209f6eef5899a5330fb5d06f89cb8996dba.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="1.893">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-03d848562f9ac84dfc29ec1ed607cca392c9c052.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathOps.Test.OpsPostA No' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-03d848562f9ac84dfc29ec1ed607cca392c9c052.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="1.633">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-e11e5b3b313707a2347623c62b4477725d26eab7.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="locator.focus: Error: strict mode violation: locator(&apos;details.ops-schema-health&apos;).first().locator(&apos;summary&apos;) resolved to 3 elements:" type="Error">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: locator.focus: Error: strict mode violation: locator('details.ops-schema-health').first().locator('summary') resolved to 3 elements:
+        1) <summary class="ops-schema-health__summary">…</summary> aka locator('summary').filter({ hasText: 'ScrypathOps.Test.OpsPostA No' })
+        2) <summary>Exact timestamp</summary> aka getByLabel('Backend task health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+        3) <summary>Exact timestamp</summary> aka getByLabel('Queue job health for ScrypathOps.Test.OpsPostA').getByText('Exact timestamp')
+
+    Call log:
+      - waiting for locator('details.ops-schema-health').first().locator('summary')
+
+
+      54 |
+      55 |           // Native disclosure works from the keyboard and keeps source evidence available.
+    > 56 |           await firstSummary.focus();
+         |                              ^
+      57 |           await page.keyboard.press("Enter");
+      58 |           await expect(firstBody).toBeVisible();
+      59 |           await expect(firstBody.locator(".ops-time__copy").first()).toBeVisible();
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:56:30
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-e11e5b3b313707a2347623c62b4477725d26eab7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-initial/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+</testsuite>
+</testsuites>

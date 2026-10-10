@@ -1,0 +1,10 @@
+{
+  "command": "MIX_TEST_PARTITION=174_wave1 MIX_ENV=test SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/phase174_fixture_live_test.exs",
+  "exitCode": 1,
+  "output": "TAP version 13\nnot ok 1 - test standalone routes mount production views over the A-selected fixture\n# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: \"expected test-only Phase174 route /ops/phase174 to mount ScrypathOpsWeb.ControlRoomLive\", expr: :ex_unit_no_meaningful_value, args: :ex_unit_no_meaningful_value, doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.Phase174FixtureLiveTest, :\"-test standalone routes mount production views over the A-selected fixture/1-fun-1-\", 1, [file: ~c\"test/scrypath_ops_web/live/phase174_fixture_live_test.exs\", line: 24]}, {Enum, :\"-each/2-lists^foreach/1-0-\", 2, [file: ~c\"lib/enum.ex\", line: 961]}, {ScrypathOpsWeb.Phase174FixtureLiveTest, :\"test standalone routes mount production views over the A-selected fixture\", 1, [file: ~c\"test/scrypath_ops_web/live/phase174_fixture_live_test.exs\", line: 21]}]}]\n1..1\n",
+  "targetTest": "test standalone routes mount production views over the A-selected fixture",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/phase174_fixture_live_test.exs",
+  "expected": "The test-only /ops/phase174 standalone route exists and mounts the production ControlRoomLive with the :phase174 action.",
+  "actual": "The named ExUnit test executed and failed its assertion because no /ops/phase174 route was present.",
+  "semanticAssessment": "Valid behavioral RED: the target test ran, and its planned router-contract assertion failed on the missing test-only route. The initial pre-test compile typo was fixed before this run and is retained separately for provenance."
+}

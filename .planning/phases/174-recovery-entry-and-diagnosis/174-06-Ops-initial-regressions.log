@@ -1,0 +1,8 @@
+Initial full Ops-suite regression record (preserved before final green):
+Command: cd scrypath_ops && MIX_ENV=test MIX_TEST_PARTITION=174_wave1 SCRYPATH_TAP=1 mix test
+Initial result: 2 failed / 273 total (full TAP run; initial run output showed test failures at cases 188 and 225).
+
+- Case 188, ScrypathOpsWeb.ControlRoomLiveTest: "refresh names unavailable evidence and keeps the previous successful observation" failed because the refreshed normal ControlRoomLive no longer emitted `[data-testid='control-room-observation-error']` with "Backend observation unavailable". Cause: the new fixture integration had reused mount-time `scrypath_opts` on normal refresh. Fix: only the active Phase174 fixture action uses assigned fixture opts; normal Control Room refresh again reads current `ScrypathOps.Schemas.scrypath_opts()`.
+- Case 225, ScrypathOpsWeb.FailedSyncLiveTest: "selection changes invalidate receipts, confirmations, and inspected evidence" failed because an invalid selection did not render "That schema is unavailable". Cause: the new fixture integration had reused the mount-time allowlist on normal selection changes. Fix: the active Phase174 route uses its fixture allowlist; normal FailedSync selection again reads current `ScrypathOps.Schemas.allowlist()`.
+
+This is a compact regression record retained from the initial runner output, not the complete original failing TAP stream. Final native TAP and precommit logs are stored alongside this record.

@@ -206,6 +206,51 @@ defmodule ScrypathEcommerceWeb.E2EController do
     end
   end
 
+  def delete_recovery_fixture(conn, %{"tenant_id" => tenant_id, "marker" => marker}) do
+    with {:ok, tenant_id} <- parse_integer(tenant_id) do
+      json(conn, E2ERecovery.prepare_delete(tenant_id, marker))
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  end
+
+  def delete_recovery_probe(conn, %{
+        "marker" => marker,
+        "original_job_id" => original_job_id,
+        "accepted_job_id" => job_id,
+        "handle" => handle,
+        "generation" => generation,
+        "task_uid" => task_uid,
+        "index" => index,
+        "document_id" => document_id
+      }) do
+    with {:ok, original_job_id} <- parse_integer(original_job_id),
+         {:ok, job_id} <- parse_integer(job_id),
+         {:ok, generation} <- parse_integer(generation),
+         {:ok, task_uid} <- parse_integer(task_uid),
+         {:ok, document_id} <- parse_integer(document_id) do
+      json(
+        conn,
+        E2ERecovery.probe_delete(
+          marker,
+          original_job_id,
+          job_id,
+          handle,
+          conn.host,
+          generation,
+          task_uid,
+          index,
+          document_id
+        )
+      )
+    else
+      {:error, :invalid_integer} -> invalid_integer(conn)
+    end
+  rescue
+    error in [MatchError, ArgumentError, Ecto.NoResultsError] ->
+      probe_mismatch(conn, "delete_recovery_probe_mismatch", error)
+  end
+
   def recovery_probe(conn, %{
         "marker" => marker,
         "accepted_job_id" => job_id,

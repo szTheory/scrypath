@@ -1,0 +1,90 @@
+<testsuites id="" name="" tests="12" failures="0" skipped="0" errors="0" time="32.141555">
+<testsuite name="phase174_overview_scope.spec.ts" timestamp="2026-10-09T19:13:21.852Z" hostname="chromium" tests="8" failures="0" skipped="0" time="21.717" errors="0">
+<testcase name="mounted overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="2.214">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/control-room-b9ac9b8af5722f1ba3f5353149d8d3ece7d24032.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-1ca6b-recovery-at-1440px-in-light-chromium/attachments/health-85b614288ff23d03267a04d6b28285a646584648.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="3.332">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/control-room-62acef847c7a84740644d6d51492f25bfc928087.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-54c68--recovery-at-1440px-in-dark-chromium/attachments/health-6991b25a8e8aa7514f45b569ad1f9682b1b1ff53.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="1.982">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/control-room-f67014f99442ade95e6eeeea06587e993f880c18.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-ee8f7--recovery-at-390px-in-light-chromium/attachments/health-920cd52895de8040de119a724a436fd54bbfbec5.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="3.148">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/control-room-647de464f2d5a0362f5cae0a841d56fb025d19d4.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-mo-524d7-t-recovery-at-390px-in-dark-chromium/attachments/health-dc39c95f6622d48a84f432c666bf54774eaab560.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in light" classname="phase174_overview_scope.spec.ts" time="2.078">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/control-room-217aee2b579afea5a51efe592b773c4b4aa5591b.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-st-25444-recovery-at-1440px-in-light-chromium/attachments/health-e115316e4e715b2c51b10e62a4d0a3abf1aeb2bd.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 1440px in dark" classname="phase174_overview_scope.spec.ts" time="2.675">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/control-room-3daa7312472dc15bc31660d65d4f3492cb5e6b55.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cc28e--recovery-at-1440px-in-dark-chromium/attachments/health-15e812e5c02a6a1dfb9ae8479a5ab825d8bc9204.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in light" classname="phase174_overview_scope.spec.ts" time="2.293">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/control-room-ad4dfcabbfbf3a35880674ade08cddc634743bef.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cdadb--recovery-at-390px-in-light-chromium/attachments/health-c1609de945d4261cc38fc8d9dbd14a06375393a8.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone overall health and explicit recovery at 390px in dark" classname="phase174_overview_scope.spec.ts" time="3.995">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/control-room-0f0a988e383490c3ad26a429a597a865674dbd72.png]]
+
+[[ATTACHMENT|final-results/phase174_overview_scope-st-cea82-t-recovery-at-390px-in-dark-chromium/attachments/health-fb4e278aeae5de631cd9aaa4c0004ff3c2fa97e0.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-09T19:13:21.852Z" hostname="chromium" tests="4" failures="0" skipped="0" time="6.583" errors="0">
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="0.865">
+</testcase>
+<testcase name="selected recovery context remains reachable through the mobile drawer and palette keyboard flow" classname="phase174_recovery.spec.ts" time="1.7">
+</testcase>
+<testcase name="mounted palette recovery destinations follow the selected schema" classname="phase174_recovery.spec.ts" time="2.035">
+</testcase>
+<testcase name="standalone palette manifest follows the validated fixture schema" classname="phase174_recovery.spec.ts" time="1.983">
+<properties>
+<property name="phase174-standalone-palette-state" value="{&quot;selectedSchema&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestTarget&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestHealthHref&quot;:&quot;/ops/phase174/health&quot;,&quot;paletteHealthHref&quot;:&quot;/ops/phase174/health&quot;}">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>

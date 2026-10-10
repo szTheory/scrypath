@@ -11,6 +11,8 @@ Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, 
 
 ## Jobs-to-be-done
 
+Control Room answers “Does search sync need attention?” across every configured schema. Search health answers “Which schemas need attention, and what failed or is still pending?” with a worst-first list and expandable details. Its diagnostic next step is each schema’s recovery link, rather than generic links that default to a different schema. Neither overview has a selected schema or a schema filter. Old overview links carrying `schema` normalize to the all-schema URL. Choose a schema through its recovery link; Failed sync work and Sync and drift have actual schema selectors and scoped content. Those workflows preserve the validated selection between each other; returning to Search health restores the overall view.
+
 1. **When** an alert fires that search or sync looks unhealthy, **I need** one place to see search health and sync signals, **so that** I can decide whether to page deeper or recover — **done when** I can tell “healthy / degraded / broken” with explicit next checks (ships fully in phase 45).
 2. **When** sync jobs fail or retry, **I need** a bounded list of failed work with reasons, **so that** I can retry or quarantine safely — **done when** I can open failed-work detail from the same nav priority as health (ships fully in phase 45).
 3. **When** someone asks “is the index in sync?”, **I need** read-only drift and visibility plus links to existing Mix tasks and guides, **so that** I never bypass the library’s public APIs — **done when** I can jump to `mix scrypath.*` docs and drift guides without duplicate prose here (shipped phase 45 — see `/ops/sync-drift` and **`phase 45`** in the nav table below).
@@ -50,22 +52,26 @@ Primary shell navigation under `/ops` is grouped by the job the operator brought
 
 The surfaces thread into two task groups — **Recover** (health → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the primary shell nav stays free so a power user is never trapped.
 
-- **Incident-response loop** (on-call): Control Room verdict (degraded) → Search health (which schemas?) → Failed sync work (why? retry) → Sync and drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
-- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check the index contract) → optionally open **Advanced: index promotion** → re-check Search health.
+- **Incident-response loop** (on-call): Control Room → Search health → the affected schema's next action. Failed work leads to Failed sync work; pending, clear or unavailable observations lead to Sync and drift. Verify recovery against the correlated task and active-index document observation, then return to overall health. A quiet health summary or empty failed-work list alone does not establish that recovery completed.
+- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check index configuration) → optionally open **Advanced: index promotion** → re-check Search health.
 - **Explore → capture loop** (search owner): Control Room ("explore") → Search (probe) → capture → Playbooks (save/run) → back to Search.
 
 Two shared components carry this structure so it stays consistent (principle of least surprise):
 
 - **`ops_trail`** — a contextual breadcrumb (`<group> › <page>`), not a map of the whole product. Siblings live in the primary shell nav; the landing shows no trail.
-- **`ops_handoff`** — the unified "Next step" page footer. One eyebrow + imperative grammar on every triage/explore surface so the bottom of each page reliably tells the operator where to go next, and the loops visibly close.
+- **`ops_handoff`** — the "Next step" footer for a scoped workflow. Search health uses each schema’s recovery link instead of a generic footer that could open the wrong schema.
 
 ### Sync recovery and index promotion
 
-Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then run the index contract check. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
+Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then check index configuration. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
 
-Index promotion is a separate advanced action. Its readiness and server-side guard use the same current, schema-and-index scoped checks. A confirmation names the schema, live index, target index, and alias change. Backend task acceptance is shown as **accepted** with its exact task ID; only that task's terminal success is shown as **Index swap completed**. Timeout or failure keeps the task identity visible and offers check refresh without submitting another swap.
+Index promotion is a separate advanced action. Its readiness and server-side guard use the same current, schema-and-index scoped checks. A confirmation names the full schema and exact live/target pair, and explains that Meilisearch's pairwise swap exchanges the indexes' documents, primary keys, settings, and task history; it does not rename an alias. Backend task acceptance is shown as **accepted** with its exact task UID; only that task's terminal success is shown as **Index swap completed**. Timeout or failure keeps the task identity visible and offers a read-only status check without submitting another swap.
 
-Use **backend task** for Meilisearch work and **queue job** for Oban work. A clean index contract describes declared settings and the live index contract; it does not prove that projected documents are present. Recovery verification is based on the correlated task and active-index document observation described by the incident flow.
+Use **backend task** for Meilisearch work and **queue job** for Oban work. Matching **index configuration** means declared fields and settings match the live index; it does not prove that indexed documents are current. Technical APIs retain their established contract names. Recovery verification is based on the correlated task and active-index document observation described by the incident flow.
+
+### Common-path hierarchy
+
+Search has one Run action. Result limits live in Search options; completed results and saved-check captures identify the executed query and schemas even while the form is edited. Playbooks lead with the catalog and selected preview, identify the exact loaded file or imported input, and keep less frequent file actions under each row's named Actions disclosure. Import and workspace details remain available without competing with a loaded preview. Required errors and next actions stay visible; successful technical comparisons and file history can be disclosed. Apply the shared [operator UX rubric](../../.planning/reference/OPERATOR-UX-RUBRIC.md) when refining these paths.
 
 | Job | Primary persona | Nav label | Route | Scrypath / doc / Mix follow-up |
 | --- | --- | --- | --- | --- |

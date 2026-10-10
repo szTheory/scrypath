@@ -59,8 +59,13 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Check index configuration" }).click();
+  const configurationDetails = page.getByTestId("configuration-details");
+  await expect(configurationDetails.getByText("Comparison details", { exact: true })).toBeVisible();
+  if ((await configurationDetails.getAttribute("open")) === null) {
+    await configurationDetails.locator("summary").click();
+  }
+  await expect(configurationDetails.getByText("Index configuration comparison", { exact: true })).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");
@@ -71,7 +76,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
   await capture(page, testInfo, "04-search-single-results");
 
-  await page.getByRole("button", { name: "Multi index" }).click();
+  await page.getByRole("button", { name: "Multiple schemas" }).click();
   const firstSchema = page.locator("input[name='schemas[]']").first();
   if (!(await firstSchema.isChecked())) {
     await firstSchema.check();
@@ -83,6 +88,10 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
+  const playbookImport = page.locator("#playbook-import");
+  if ((await playbookImport.getAttribute("open")) === null) {
+    await playbookImport.locator("summary").click();
+  }
   await page.getByText("Or paste JSON").click();
   await page.locator("textarea[name='json']").fill(
     JSON.stringify({
@@ -97,7 +106,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByTestId("playbook-preview-marker")).toBeVisible();
   await capture(page, testInfo, "06-playbook-preview");
 
-  await page.getByRole("button", { name: "Run saved playbook" }).click();
+  await page.getByRole("button", { name: "Run playbook" }).click();
   await expect(page.getByText("Playbook run completed", { exact: true })).toBeVisible();
   await capture(page, testInfo, "07-playbook-run-result");
 });

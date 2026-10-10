@@ -1,0 +1,1 @@
+{"kind":"mutation","find":"defp promotion_check_status(_, _task_id), do: :unknown","replace":"defp promotion_check_status(_, _task_id), do: :completed"}

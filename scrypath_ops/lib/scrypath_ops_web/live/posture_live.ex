@@ -14,12 +14,12 @@ defmodule ScrypathOpsWeb.PostureLive do
   def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
-    phase173? = socket.assigns.live_action == :phase173
-    fixture_source = Application.get_env(:scrypath_ops, :phase173_fixture_source)
+    fixture_action = socket.assigns.live_action
+    fixture_source = fixture_source_for(fixture_action)
 
     {allowlist, scrypath_opts, observed_at, fixture_scenario, refresh_disabled?} =
-      if phase173? and fixture_source?(fixture_source) do
-        scenario = Map.get(params, "scenario", "default")
+      if fixture_action in [:phase173, :phase174] and fixture_source?(fixture_source) do
+        scenario = Map.get(params, "scenario", default_scenario(fixture_action))
         fixture = fixture_source.scenario(scenario)
 
         {fixture.allowlist, fixture.opts, fixture.observed_at, scenario,
@@ -51,7 +51,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def handle_event("refresh", params, socket) do
     start_ms = System.monotonic_time(:millisecond)
-    socket = maybe_select_phase173_scenario(socket, params)
+    socket = maybe_select_fixture_scenario(socket, params)
     socket = load_posture(socket)
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
@@ -81,7 +81,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   @impl true
   def handle_params(_params, uri, %{assigns: %{live_action: :legacy}} = socket) do
     query_suffix =
-      case URI.parse(uri).query do
+      case URI.parse(OperatorSelection.overview_path(uri)).query do
         nil -> ""
         query -> "?" <> query
       end
@@ -93,11 +93,18 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> String.replace_suffix("/posture", "")
       |> String.trim_trailing("/")
 
-    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}")}
+    {:noreply, push_navigate(socket, to: "#{mount_path}/health#{query_suffix}", replace: true)}
   end
 
-  def handle_params(_params, _uri, socket) do
-    {:noreply, refresh_next_checks(socket)}
+  def handle_params(params, uri, socket) do
+    socket = refresh_next_checks(socket)
+
+    socket =
+      if Map.has_key?(params, "schema"),
+        do: push_patch(socket, to: OperatorSelection.overview_path(uri), replace: true),
+        else: socket
+
+    {:noreply, socket}
   end
 
   defp load_posture(socket) do
@@ -131,7 +138,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> refresh_next_checks()
   end
 
-  defp maybe_select_phase173_scenario(
+  defp maybe_select_fixture_scenario(
          %{assigns: %{live_action: :phase173}} = socket,
          %{"scenario" => scenario}
        ) do
@@ -151,7 +158,40 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp maybe_select_phase173_scenario(socket, _params), do: socket
+  defp maybe_select_fixture_scenario(
+         %{assigns: %{live_action: :phase174}} = socket,
+         %{"scenario" => scenario}
+       ) do
+    source = fixture_source_for(:phase174)
+
+    if fixture_source?(source) do
+      fixture = source.scenario(scenario)
+
+      socket
+      |> assign(:schema_allowlist, fixture.allowlist)
+      |> assign(:scrypath_opts, fixture.opts)
+      |> assign(:phase173_observed_at, fixture.observed_at)
+      |> assign(:phase173_fixture_scenario, scenario)
+    else
+      socket
+    end
+  end
+
+  defp maybe_select_fixture_scenario(socket, _params), do: socket
+
+  defp fixture_source_for(:phase173),
+    do: Application.get_env(:scrypath_ops, :phase173_fixture_source)
+
+  defp fixture_source_for(:phase174) do
+    if Mix.env() == :test,
+      do: Application.get_env(:scrypath_ops, :phase174_fixture_source),
+      else: nil
+  end
+
+  defp fixture_source_for(_action), do: nil
+
+  defp default_scenario(:phase174), do: "a-selected-b-worse"
+  defp default_scenario(_action), do: "default"
 
   defp fixture_source?(source) when is_atom(source) do
     Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
@@ -205,11 +245,12 @@ defmodule ScrypathOpsWeb.PostureLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title="Search health"
-          subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
+          subtitle="Health across all configured schemas. Expand a schema to investigate."
         />
         <.ops_refresh_control
           id="search-health-refresh"
@@ -235,37 +276,41 @@ defmodule ScrypathOpsWeb.PostureLive do
           <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
           <.ops_verdict
             kind={ScrypathOps.Posture.badge_kind(@posture_state)}
-            label="Can I trust search right now?"
+            label="Search health"
             headline={@posture_headline}
           >
             {@posture_evidence}
           </.ops_verdict>
-          <.ops_metric_grid cols={4}>
+          <.ops_metric_grid :if={@posture_state == :degraded} cols={3}>
             <.ops_metric
-              label="Schemas"
-              value={posture_schema_count(@posture_rows)}
-              kind={:neutral}
-            />
-            <.ops_metric
-              label="Schema check errors"
+              :if={@aggregate_error_count > 0}
+              label="Incomplete checks"
+              help_id="health-checks-help"
+              help="Schemas we couldn't fully check. Some health information is missing; review the details below."
               value={@aggregate_error_count}
               kind={metric_tone(@aggregate_error_count)}
             />
             <.ops_metric
+              :if={posture_backend_failed_count(@posture_rows) > 0}
               label="Failed backend tasks"
+              help_id="health-backend-help"
+              help="Search engine tasks that failed to update an index. Search results may be out of date. Review failed sync work for the affected schema. Counts reflect the available task history."
               value={posture_backend_failed_count(@posture_rows)}
               kind={metric_tone(posture_backend_failed_count(@posture_rows))}
             />
             <.ops_metric
-              label="Queues observed"
-              value={posture_queue_observed_count(@posture_rows)}
-              kind={:neutral}
+              :if={@posture_summary.queue_failed_count > 0}
+              label="Failed queue jobs"
+              help_id="health-queue-help"
+              help="Background jobs that keep search updated and have stopped retrying. Search results may be out of date. Counts reflect the available job history; missing health information is shown below."
+              value={@posture_summary.queue_failed_count}
+              kind={metric_tone(@posture_summary.queue_failed_count)}
             />
           </.ops_metric_grid>
         </section>
 
         <section
-          :if={@next_checks != []}
+          :if={@next_checks != [] and @posture_state in [:unconfigured, :missing_backend]}
           data-testid="posture-next-checks"
           aria-labelledby="posture-jtbd-heading"
           class="space-y-3"
@@ -315,203 +360,261 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_section
           :if={match?({:ok, _}, @posture_rows)}
           id="posture-fleet-heading"
-          title="Per-schema signals"
-          subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
+          title="Per-schema health"
+          subtitle="Schemas with issues appear first. Expand a schema for details."
         >
+          <:actions>
+            <div
+              class="flex items-center gap-1 text-ops-body text-base-content/75"
+              data-testid="health-schema-count"
+            >
+              <span>
+                {posture_schema_count(@posture_rows)} {if posture_schema_count(@posture_rows) == 1,
+                  do: "schema",
+                  else: "schemas"}
+              </span>
+              <.ops_help id="health-schemas-help" label="Schemas">
+                Schemas describe your app's records, usually stored in a database—for example,
+                products. This count shows how many schemas are included in the health check.
+              </.ops_help>
+            </div>
+          </:actions>
           <div class="ops-schema-signal-list">
-            <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
-              <article
-                data-testid="posture-row"
-                id={"posture-#{inspect(mod)}"}
-                class={[
-                  "ops-schema-signal-card",
-                  posture_card_tone(row)
-                ]}
-              >
-                <%= case row do %>
-                  <% {:ok, status} -> %>
-                    <div class="ops-schema-signal-card__header">
-                      <div class="min-w-0">
-                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {module_heading(mod)}
-                        </h3>
-                        <p class="mt-1 text-ops-sm text-base-content/65">
-                          Index
-                          <.ops_inline_code>{status.index}</.ops_inline_code>
-                          · sync mode <strong>{status.mode}</strong>
-                        </p>
-                      </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={backend_badge_kind(status)}>
-                          {backend_badge_label(status)}
-                        </.ops_badge>
-                        <.ops_badge kind={queue_badge_kind(status)}>
-                          {queue_badge_label(status)}
-                        </.ops_badge>
-                      </div>
-                    </div>
-
-                    <div class="ops-schema-signal-card__groups">
-                      <section
-                        aria-label={"Backend task signals for #{inspect(mod)}"}
-                        class="ops-signal-group"
-                      >
-                        <p class="ops-signal-group__title">Backend tasks</p>
-                        <dl :if={!source_error?(status, :backend)} class="ops-signal-metrics">
-                          <div>
-                            <dt>Pending</dt>
-                            <dd>{length(status.backend.pending)}</dd>
-                          </div>
-                          <div>
-                            <dt>Failed</dt>
-                            <dd>{length(status.backend.failed)}</dd>
-                          </div>
-                          <div class="ops-signal-metrics__wide">
-                            <dt>Last success</dt>
-                            <dd>
-                              <.ops_time
-                                id={"ops-time-#{module_flat_name(mod)}-backend-success"}
-                                dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
-                                source_iso={state_source_iso(status.backend.last_succeeded)}
-                                copy={true}
-                                reference={success_reference(@posture_summary, mod, :backend)}
-                                empty={success_time_empty(status.backend.last_succeeded)}
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                        <.unavailable_signal
-                          :if={source_error?(status, :backend)}
-                          status={status}
-                          source={:backend}
-                          mod={mod}
-                          summary={@posture_summary}
-                        />
-                      </section>
-
-                      <section
-                        aria-label={"Queue job signals for #{inspect(mod)}"}
-                        class="ops-signal-group"
-                      >
-                        <p class="ops-signal-group__title">Queue jobs</p>
-                        <dl :if={status.queue.observed?} class="ops-signal-metrics">
-                          <div>
-                            <dt>Pending</dt>
-                            <dd>{length(status.queue.pending)}</dd>
-                          </div>
-                          <div>
-                            <dt>Retrying</dt>
-                            <dd>{length(status.queue.retrying)}</dd>
-                          </div>
-                          <div>
-                            <dt>Failed</dt>
-                            <dd>{length(status.queue.failed)}</dd>
-                          </div>
-                          <div class="ops-signal-metrics__wide">
-                            <dt>Last success</dt>
-                            <dd>
-                              <.ops_time
-                                id={"ops-time-#{module_flat_name(mod)}-queue-success"}
-                                dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
-                                source_iso={state_source_iso(status.queue.last_succeeded)}
-                                copy={true}
-                                reference={success_reference(@posture_summary, mod, :queue)}
-                                empty={success_time_empty(status.queue.last_succeeded)}
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                        <.unavailable_signal
-                          :if={source_error?(status, :queue)}
-                          status={status}
-                          source={:queue}
-                          mod={mod}
-                          summary={@posture_summary}
-                        />
-                        <p
-                          :if={!status.queue.observed? and !source_error?(status, :queue)}
-                          class="text-ops-sm text-base-content/75"
-                        >
-                          {queue_unobserved_copy(status)}
-                        </p>
-                      </section>
-                    </div>
-                    <.ops_link_button
-                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      variant={:ghost}
-                      class="justify-self-start gap-2 text-base-content"
-                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
-                      data-testid="posture-failed-sync-link"
-                    >
-                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
-                    </.ops_link_button>
-                  <% {:error, reason} -> %>
-                    <div class="ops-schema-signal-card__header">
-                      <div class="min-w-0">
-                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {module_heading(mod)}
-                        </h3>
-                        <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                      </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={:error}>fetch error</.ops_badge>
-                      </div>
-                    </div>
-                    <div class="ops-schema-signal-card__groups">
-                      <section
-                        :for={source <- [:backend, :queue]}
-                        aria-label={"#{if(source == :backend, do: "Backend task", else: "Queue job")} signals for #{inspect(mod)}"}
-                        class="ops-signal-group"
-                      >
-                        <p class="ops-signal-group__title">
-                          {if(source == :backend, do: "Backend tasks", else: "Queue jobs")}
-                        </p>
-                        <.unavailable_signal
-                          :if={source == :backend or !queue_unused_mode?(queue_mode(@scrypath_opts))}
-                          status={%{source_errors: %{source => reason}}}
-                          source={source}
-                          mod={mod}
-                          summary={@posture_summary}
-                        />
-                        <p
-                          :if={source == :queue and queue_unused_mode?(queue_mode(@scrypath_opts))}
-                          class="text-ops-sm text-base-content/75"
-                        >
-                          Queue not used in {queue_mode(@scrypath_opts)} sync mode.
-                        </p>
-                      </section>
-                    </div>
-                    <.ops_link_button
-                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      variant={:ghost}
-                      class="justify-self-start gap-2 text-base-content"
-                      aria-label={"View failed sync work for #{module_flat_name(mod)}"}
-                      data-testid="posture-failed-sync-link"
-                    >
-                      View failed sync work <.icon name="hero-arrow-right" class="size-4" />
-                    </.ops_link_button>
-                <% end %>
-              </article>
-            <% end %>
+            <.health_row
+              :for={{mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1))}
+              mod={mod}
+              row={row}
+              mount_path={@mount_path}
+              summary={@posture_summary}
+              opts={@scrypath_opts}
+            />
           </div>
         </.ops_section>
-
-        <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
-          <:step
-            navigate={"#{@mount_path}/failed-sync"}
-            hint="When you've spotted a failing schema —"
-          >
-            Work the failed-sync queue
-          </:step>
-        </.ops_handoff>
       </div>
     </Layouts.app>
     """
   end
 
+  defp health_row(assigns) do
+    assigns = assign(assigns, :failed_work?, observed_failed_work?(assigns.row))
+
+    ~H"""
+    <article
+      data-testid="posture-row"
+      id={"posture-#{inspect(@mod)}"}
+      class={[
+        "ops-schema-signal-card",
+        posture_card_tone(@row)
+      ]}
+    >
+      <details
+        id={"posture-details-#{module_flat_name(@mod)}"}
+        class="ops-schema-health"
+        open={posture_details_open?(@row)}
+        phx-hook="OpsHealthDetails"
+        phx-mounted={JS.ignore_attributes("open")}
+        data-ops-required-open={if posture_details_open?(@row), do: "true", else: "false"}
+      >
+        <summary class="ops-schema-health__summary">
+          <h3 class="ops-schema-health__heading">
+            <span class="min-w-0">
+              <span class="block font-mono text-ops-h3 font-semibold text-base-content">
+                {module_heading(@mod)}
+              </span>
+              <span
+                class="mt-1 block text-ops-body font-normal text-base-content/75"
+                data-testid="schema-health-status"
+              >
+                {posture_row_summary(@row)}
+              </span>
+            </span>
+            <span class="ops-schema-health__toggle" aria-hidden="true">
+              Details <.icon name="hero-chevron-down" class="size-4" />
+            </span>
+          </h3>
+        </summary>
+        <div class="ops-schema-health__details">
+          <%= case @row do %>
+            <% {:ok, status} -> %>
+              <div class="ops-schema-signal-card__header">
+                <div class="min-w-0">
+                  <p class="mt-1 text-ops-sm text-base-content/65">
+                    Index
+                    <.ops_inline_code>{status.index}</.ops_inline_code>
+                    · sync mode <strong>{status.mode}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div class="ops-schema-signal-card__groups">
+                <section
+                  aria-label={"Backend task health for #{inspect(@mod)}"}
+                  class="ops-signal-group"
+                >
+                  <.signal_heading source={:backend} mod={@mod} />
+                  <dl :if={!source_error?(status, :backend)} class="ops-signal-metrics">
+                    <div :if={status.backend.pending != []}>
+                      <dt>Pending</dt>
+                      <dd>{length(status.backend.pending)}</dd>
+                    </div>
+                    <div :if={status.backend.failed != []}>
+                      <dt>Failed</dt>
+                      <dd>{length(status.backend.failed)}</dd>
+                    </div>
+                    <div class="ops-signal-metrics__wide">
+                      <dt>Last success</dt>
+                      <dd>
+                        <.ops_time
+                          id={"ops-time-#{module_flat_name(@mod)}-backend-success"}
+                          dt={status.backend.last_succeeded && status.backend.last_succeeded.at}
+                          source_iso={state_source_iso(status.backend.last_succeeded)}
+                          copy={true}
+                          reference={success_reference(@summary, @mod, :backend)}
+                          empty={success_time_empty(status.backend.last_succeeded)}
+                        />
+                      </dd>
+                    </div>
+                  </dl>
+                  <.unavailable_signal
+                    :if={source_error?(status, :backend)}
+                    status={status}
+                    source={:backend}
+                    mod={@mod}
+                    summary={@summary}
+                  />
+                </section>
+
+                <section
+                  aria-label={"Queue job health for #{inspect(@mod)}"}
+                  class="ops-signal-group"
+                >
+                  <.signal_heading source={:queue} mod={@mod} />
+                  <dl :if={status.queue.observed?} class="ops-signal-metrics">
+                    <div :if={status.queue.pending != []}>
+                      <dt>Pending</dt>
+                      <dd>{length(status.queue.pending)}</dd>
+                    </div>
+                    <div :if={status.queue.retrying != []}>
+                      <dt>Retrying</dt>
+                      <dd>{length(status.queue.retrying)}</dd>
+                    </div>
+                    <div :if={status.queue.failed != []}>
+                      <dt>Failed</dt>
+                      <dd>{length(status.queue.failed)}</dd>
+                    </div>
+                    <div class="ops-signal-metrics__wide">
+                      <dt>Last success</dt>
+                      <dd>
+                        <.ops_time
+                          id={"ops-time-#{module_flat_name(@mod)}-queue-success"}
+                          dt={status.queue.last_succeeded && status.queue.last_succeeded.at}
+                          source_iso={state_source_iso(status.queue.last_succeeded)}
+                          copy={true}
+                          reference={success_reference(@summary, @mod, :queue)}
+                          empty={success_time_empty(status.queue.last_succeeded)}
+                        />
+                      </dd>
+                    </div>
+                  </dl>
+                  <.unavailable_signal
+                    :if={source_error?(status, :queue)}
+                    status={status}
+                    source={:queue}
+                    mod={@mod}
+                    summary={@summary}
+                  />
+                  <p
+                    :if={!status.queue.observed? and !source_error?(status, :queue)}
+                    class="text-ops-sm text-base-content/75"
+                  >
+                    {queue_unobserved_copy(status)}
+                  </p>
+                </section>
+              </div>
+            <% {:error, reason} -> %>
+              <div class="ops-schema-signal-card__groups">
+                <section
+                  :for={source <- [:backend, :queue]}
+                  aria-label={"#{if(source == :backend, do: "Backend task", else: "Queue job")} health for #{inspect(@mod)}"}
+                  class="ops-signal-group"
+                >
+                  <.signal_heading source={source} mod={@mod} />
+                  <.unavailable_signal
+                    :if={source == :backend or !queue_unused_mode?(queue_mode(@opts))}
+                    status={%{source_errors: %{source => reason}}}
+                    source={source}
+                    mod={@mod}
+                    summary={@summary}
+                  />
+                  <p
+                    :if={source == :queue and queue_unused_mode?(queue_mode(@opts))}
+                    class="text-ops-sm text-base-content/75"
+                  >
+                    Queue not used in {queue_mode(@opts)} sync mode.
+                  </p>
+                </section>
+              </div>
+          <% end %>
+          <.link
+            :if={!@failed_work?}
+            navigate={OperatorSelection.path(@mount_path, "sync-drift", @mod)}
+            class="ops-schema-action justify-self-start gap-2 text-base-content"
+            aria-label={"Check sync status for #{module_flat_name(@mod)}"}
+            id={"posture-sync-link-#{module_flat_name(@mod)}"}
+            data-testid="posture-sync-link"
+          >
+            Check sync status <.icon name="hero-arrow-right" class="size-4" />
+          </.link>
+          <%!-- Keep the failed-work link under the same keyed parents when a refresh promotes it.
+          Moving it out of history replaces the focused node during a LiveView patch. --%>
+          <details
+            id={"posture-failed-history-#{module_flat_name(@mod)}"}
+            open={@failed_work?}
+            class={!@failed_work? && "ops-disclosure ops-disclosure-compact"}
+            phx-hook="OpsHealthDetails"
+            phx-mounted={JS.ignore_attributes("open")}
+            data-ops-required-open={if @failed_work?, do: "true", else: "false"}
+          >
+            <summary
+              hidden={@failed_work?}
+              class="cursor-pointer text-ops-body font-medium text-base-content"
+            >
+              Failed work history
+            </summary>
+            <div
+              id={"posture-failed-action-#{module_flat_name(@mod)}"}
+              class={!@failed_work? && "ops-disclosure-body mt-2 text-ops-body text-base-content/80"}
+            >
+              <.link
+                navigate={OperatorSelection.path(@mount_path, "failed-sync", @mod)}
+                class={
+                  if @failed_work?,
+                    do: "ops-schema-action justify-self-start gap-2 text-base-content",
+                    else: "link link-hover"
+                }
+                aria-label={"View failed sync work for #{module_flat_name(@mod)}"}
+                id={"posture-failed-sync-link-#{module_flat_name(@mod)}"}
+                data-testid="posture-failed-sync-link"
+              >
+                View failed sync work
+                <.icon :if={@failed_work?} name="hero-arrow-right" class="size-4" />
+              </.link>
+            </div>
+          </details>
+        </div>
+      </details>
+    </article>
+    """
+  end
+
+  defp observed_failed_work?({:ok, status}),
+    do: status.backend.failed != [] or status.queue.failed != []
+
+  defp observed_failed_work?(_row), do: false
+
   # Default-sort the per-schema table worst-first so a red/degraded schema lands at the
   # top of the scan path (B1). Rank: fetch error (0) → backend failures (1) → queue not
-  # observed or queue failures (2) → clean (3); ties break alphabetically by module name.
+  # observed or queue failures (2) → pending work (3) → clear (4); ties break by module name.
   defp posture_rows_worst_first(rows) when is_list(rows) do
     Enum.sort_by(rows, fn {mod, row} -> {posture_row_rank(row), inspect(mod)} end)
   end
@@ -522,15 +625,59 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_row_rank({:ok, status}) do
     cond do
+      map_size(Map.get(status, :source_errors, %{})) > 0 -> 0
       length(status.backend.failed) > 0 -> 1
-      not status.queue.observed? -> 2
+      queue_status_missing?(status) -> 2
       length(status.queue.failed) > 0 -> 2
       length(status.queue.retrying) > 0 -> 2
-      true -> 3
+      length(status.backend.pending) > 0 or length(status.queue.pending) > 0 -> 3
+      true -> 4
     end
   end
 
   defp posture_row_rank(_), do: 3
+
+  defp posture_details_open?({:error, _reason}), do: true
+
+  defp posture_details_open?({:ok, status}) do
+    map_size(Map.get(status, :source_errors, %{})) > 0 or queue_status_missing?(status) or
+      Enum.any?(
+        [
+          status.backend.pending,
+          status.backend.failed,
+          status.queue.pending,
+          status.queue.retrying,
+          status.queue.failed
+        ],
+        &(&1 != [])
+      )
+  end
+
+  defp queue_status_missing?(status),
+    do: not status.queue.observed? and not queue_unused_mode?(status.mode)
+
+  defp posture_row_summary({:error, _reason}), do: "Sync status unavailable"
+
+  defp posture_row_summary({:ok, status}) do
+    parts =
+      [
+        source_error?(status, :backend) && "Backend status unavailable",
+        queue_status_missing?(status) && "Queue status unavailable",
+        work_count(status.backend.failed, "backend task", "failed"),
+        work_count(status.queue.failed, "queue job", "failed"),
+        work_count(status.queue.retrying, "queue job", "retrying"),
+        work_count(status.backend.pending, "backend task", "pending"),
+        work_count(status.queue.pending, "queue job", "pending")
+      ]
+      |> Enum.filter(& &1)
+
+    if parts == [], do: "No pending or failed work", else: Enum.join(parts, " · ")
+  end
+
+  defp work_count([], _label, _state), do: nil
+
+  defp work_count(items, label, state),
+    do: "#{length(items)} #{label}#{if length(items) == 1, do: "", else: "s"} #{state}"
 
   defp posture_schema_count({:ok, rows}), do: length(rows)
   defp posture_schema_count(_), do: 0
@@ -544,14 +691,30 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp posture_backend_failed_count(_), do: 0
 
-  defp posture_queue_observed_count({:ok, rows}) do
-    Enum.count(rows, fn
-      {_mod, {:ok, status}} -> status.queue.observed?
-      _row -> false
-    end)
-  end
+  defp signal_heading(assigns) do
+    assigns =
+      assign(
+        assigns,
+        :label,
+        if(assigns.source == :backend, do: "Backend tasks", else: "Queue jobs")
+      )
 
-  defp posture_queue_observed_count(_), do: 0
+    ~H"""
+    <div class="ops-signal-group__heading">
+      <p class="ops-signal-group__title">{@label}</p>
+      <.ops_help id={"health-#{module_flat_name(@mod)}-#{@source}-help"} label={@label}>
+        <%= if @source == :backend do %>
+          Tasks the search engine runs to update an index. Pending tasks are waiting or processing;
+          failed tasks need review. Last success is the most recent completed task in the available history.
+        <% else %>
+          A queue holds background jobs that send changes from your app to search. Pending jobs
+          are waiting or running; retrying jobs will try again. Failed jobs need review.
+          A completed job doesn't always mean the search engine has finished indexing.
+        <% end %>
+      </.ops_help>
+    </div>
+    """
+  end
 
   defp state_source_iso(%Scrypath.Operator.State{metadata: metadata}),
     do: Map.get(metadata, :source_iso)
@@ -579,7 +742,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       length(status.backend.failed) > 0 -> "ops-schema-signal-card--warning"
       length(status.queue.failed) > 0 -> "ops-schema-signal-card--warning"
       length(status.queue.retrying) > 0 -> "ops-schema-signal-card--warning"
-      not status.queue.observed? -> "ops-schema-signal-card--warning"
+      queue_status_missing?(status) -> "ops-schema-signal-card--warning"
       true -> "ops-schema-signal-card--success"
     end
   end
@@ -601,9 +764,9 @@ defmodule ScrypathOpsWeb.PostureLive do
 
     ~H"""
     <p class="text-ops-body text-base-content">
-      {@source_label} observation unavailable;
+      {@source_label} observation unavailable.
       <span :if={@reference && @reference.state}>last success retained from the previous check.</span>
-      fetch error: {inspect(@reason)}
+      Check {@source_label |> String.downcase()} configuration and availability, then refresh search health.
     </p>
     <.ops_time
       id={"ops-time-#{module_flat_name(@mod)}-retained-#{@source}-success"}
@@ -611,44 +774,13 @@ defmodule ScrypathOpsWeb.PostureLive do
       source_iso={state_source_iso(@reference && @reference.state)}
       copy={true}
       reference={@reference}
-      label="Last success retained"
+      label={if @reference && @reference.state, do: "Last success retained", else: "Last success"}
       empty="Not observed"
-      unavailable_reason={inspect(@reason)}
     />
+    <.ops_disclosure summary="Diagnostics" variant={:compact} class="mt-2">
+      <.ops_code_block variant={:embedded}>{inspect(@reason)}</.ops_code_block>
+    </.ops_disclosure>
     """
-  end
-
-  defp backend_badge_kind(status) do
-    if source_error?(status, :backend) or length(status.backend.failed) > 0,
-      do: :warning,
-      else: :neutral
-  end
-
-  defp backend_badge_label(status) do
-    cond do
-      source_error?(status, :backend) -> "Backend observation unavailable"
-      length(status.backend.failed) > 0 -> "backend failed"
-      true -> "no backend failures observed"
-    end
-  end
-
-  defp queue_badge_kind(status) do
-    if status.queue.observed? and length(status.queue.failed) == 0 and
-         length(status.queue.retrying) == 0 do
-      :neutral
-    else
-      :warning
-    end
-  end
-
-  defp queue_badge_label(status) do
-    cond do
-      not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
-      not status.queue.observed? -> "Queue observations unavailable"
-      length(status.queue.failed) > 0 -> "queue failed"
-      length(status.queue.retrying) > 0 -> "queue retrying"
-      true -> "queue observed"
-    end
   end
 
   defp queue_mode(opts) do

@@ -1,0 +1,600 @@
+<testsuites id="" name="" tests="32" failures="8" skipped="0" errors="2" time="341.813059">
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-09T17:54:11.880Z" hostname="chromium" tests="14" failures="0" skipped="0" time="86.98" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="8.727">
+</testcase>
+<testcase name="mounted copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="14.225">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="1.121">
+</testcase>
+<testcase name="mounted keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="1.166">
+</testcase>
+<testcase name="mounted supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="2.523">
+</testcase>
+<testcase name="mounted omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="5.038">
+</testcase>
+<testcase name="mounted retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="4.57">
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="10.131">
+</testcase>
+<testcase name="standalone copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="11.936">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="1.702">
+</testcase>
+<testcase name="standalone keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="3.955">
+</testcase>
+<testcase name="standalone supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="3.165">
+</testcase>
+<testcase name="standalone omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="13.554">
+</testcase>
+<testcase name="standalone retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="5.167">
+</testcase>
+</testsuite>
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-09T17:54:11.880Z" hostname="chromium" tests="2" failures="0" skipped="0" time="60.007" errors="2">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="30.004">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [chromium] › phase173_time.spec.ts:30:7 › mounted renders stable exact operational time without overflow 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.screenshot: Test ended.
+    Call log:
+      - taking page screenshot
+      - waiting for fonts to load...
+      - fonts loaded
+
+
+      83 |
+      84 |         await page.evaluate(() => window.scrollTo(0, 0));
+    > 85 |         await page.screenshot({
+         |                    ^
+      86 |           path: join(captureDir, `phase173-${entrypoint.name}-${width}-${theme}.png`),
+      87 |           fullPage: true
+      88 |         });
+        at /app/examples/scrypath_ecommerce/e2e/phase173_time.spec.ts:85:20
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase173_time-mounted-rend-763f7-ional-time-without-overflow-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="30.003">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md]]
+]]>
+</system-out>
+<error message="Test timeout of 30000ms exceeded." type="Error">
+<![CDATA[  [chromium] › phase173_time.spec.ts:30:7 › standalone renders stable exact operational time without overflow 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase173_time-standalone-r-d0161-ional-time-without-overflow-chromium/error-context.md
+]]>
+</error>
+</testcase>
+</testsuite>
+<testsuite name="phase174_health_help.spec.ts" timestamp="2026-10-09T17:54:11.880Z" hostname="chromium" tests="8" failures="0" skipped="0" time="26.313" errors="0">
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.738">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-mount-1505d-over-focus-and-tap-in-light-chromium/attachments/health-help-31c6a3902dc275a08cd313a3e21b32b03c7ce035.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="2.238">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-mount-e358c-hover-focus-and-tap-in-dark-chromium/attachments/health-help-b974f5df27f7d707176b9b668ef6e6af440d7e9c.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="2.321">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-mount-64a36-over-focus-and-tap-in-light-chromium/attachments/health-help-42e4a1be76e4d4abbec22d5ccf2d2795dbba5c99.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="6.049">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-mount-40827-hover-focus-and-tap-in-dark-chromium/attachments/health-help-94e7fad86419094bb9c5f772f61c3d3dccfcd81b.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.394">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-stand-bfbed-over-focus-and-tap-in-light-chromium/attachments/health-help-f866c072b33c1fc0f0aafc64f223bdc631c5453e.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="3.04">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-stand-5d9ff-hover-focus-and-tap-in-dark-chromium/attachments/health-help-65558ef6cb7940ba3d8010862c228611370a9587.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.199">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-stand-ea28b-over-focus-and-tap-in-light-chromium/attachments/health-help-3df4c44cc10ff38d415040f893dc96623d181a35.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="2.334">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_health_help-stand-a804f-hover-focus-and-tap-in-dark-chromium/attachments/health-help-71b3fe92fb23ef42929fb036fb6b34956e5c179b.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="phase174_quiet_health.spec.ts" timestamp="2026-10-09T17:54:11.880Z" hostname="chromium" tests="8" failures="8" skipped="0" time="124.525" errors="0">
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="7.69">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-126053bfa898f70caaf9bf47e476d3fac09f6e1a.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/failed-67d788aa5de384e52014656567d07d52f296b473.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(queue).toContainText("Queue observation unavailable");
+      90 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+    > 91 |           await expect(queue.locator(".ops-time__exact")).toHaveText(exactTime!);
+         |                                                           ^
+      92 |           await capture("unavailable");
+      93 |
+      94 |           await refreshScenario(page, "retrying");
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/healthy-126053bfa898f70caaf9bf47e476d3fac09f6e1a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/attachments/failed-67d788aa5de384e52014656567d07d52f296b473.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-1abd3-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="12.022">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-a7c1494ff0c74dfaaa0bdf6c74997aa85ee87731.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/failed-fa769d876f3261234b2a9d7d7e77344b9be036d0.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(queue).toContainText("Queue observation unavailable");
+      90 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+    > 91 |           await expect(queue.locator(".ops-time__exact")).toHaveText(exactTime!);
+         |                                                           ^
+      92 |           await capture("unavailable");
+      93 |
+      94 |           await refreshScenario(page, "retrying");
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/healthy-a7c1494ff0c74dfaaa0bdf6c74997aa85ee87731.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/attachments/failed-fa769d876f3261234b2a9d7d7e77344b9be036d0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-7f1be-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="9.447">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-2b9d927d4637a583e774837b6ca62e88b879eab0.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/failed-c58c6269d2ab8b1d7787b2aae530e47876f0109e.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(queue).toContainText("Queue observation unavailable");
+      90 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+    > 91 |           await expect(queue.locator(".ops-time__exact")).toHaveText(exactTime!);
+         |                                                           ^
+      92 |           await capture("unavailable");
+      93 |
+      94 |           await refreshScenario(page, "retrying");
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/healthy-2b9d927d4637a583e774837b6ca62e88b879eab0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/attachments/failed-c58c6269d2ab8b1d7787b2aae530e47876f0109e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-77b25-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="9.275">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-89b08880616cbea13bfa922a52eb6f60d0e29683.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/failed-495bbb881f0ec236cedca7309891d0259cfcb56d.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › mounted quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(metrics).toContainText("Incomplete checks");
+      90 |           await expect(page.locator("details.ops-schema-health[open]")).toHaveCount(2);
+    > 91 |           await expect(rows.first().getByTestId("schema-health-status")).toHaveText("Queue status unavailable");
+         |                                                           ^
+      92 |           const queue = firstBody.locator("[aria-label^='Queue job health']");
+      93 |           await expect(queue).toContainText("Queue observation unavailable");
+      94 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/healthy-89b08880616cbea13bfa922a52eb6f60d0e29683.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/attachments/failed-495bbb881f0ec236cedca7309891d0259cfcb56d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-moun-aeb62-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="18.054">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-87cc410acb6ee3fb579b3ba95f8ad2db67561174.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/failed-96be6fd43d9ea24d4745516e08b80536e862d720.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(metrics).toContainText("Incomplete checks");
+      90 |           await expect(page.locator("details.ops-schema-health[open]")).toHaveCount(2);
+    > 91 |           await expect(rows.first().getByTestId("schema-health-status")).toHaveText("Queue status unavailable");
+         |                                                           ^
+      92 |           const queue = firstBody.locator("[aria-label^='Queue job health']");
+      93 |           await expect(queue).toContainText("Queue observation unavailable");
+      94 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/healthy-87cc410acb6ee3fb579b3ba95f8ad2db67561174.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/attachments/failed-96be6fd43d9ea24d4745516e08b80536e862d720.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21b55-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="27.692">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-38b010585238421949f7d1261314a094220f9f2b.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/failed-2619ce02fc75168c8e054f9e0a670b59e2a8cff8.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 1440px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(metrics).toContainText("Incomplete checks");
+      90 |           await expect(page.locator("details.ops-schema-health[open]")).toHaveCount(2);
+    > 91 |           await expect(rows.first().getByTestId("schema-health-status")).toHaveText("Queue status unavailable");
+         |                                                           ^
+      92 |           const queue = firstBody.locator("[aria-label^='Queue job health']");
+      93 |           await expect(queue).toContainText("Queue observation unavailable");
+      94 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/healthy-38b010585238421949f7d1261314a094220f9f2b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/attachments/failed-2619ce02fc75168c8e054f9e0a670b59e2a8cff8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-c33bc-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light" classname="phase174_quiet_health.spec.ts" time="26.817">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-c7d3e482607a08a7bddc42e6537e31fd062b9da9.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/failed-551f201497adcae5388dd28be6409376884905a4.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in light 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(metrics).toContainText("Incomplete checks");
+      90 |           await expect(page.locator("details.ops-schema-health[open]")).toHaveCount(2);
+    > 91 |           await expect(rows.first().getByTestId("schema-health-status")).toHaveText("Queue status unavailable");
+         |                                                           ^
+      92 |           const queue = firstBody.locator("[aria-label^='Queue job health']");
+      93 |           await expect(queue).toContainText("Queue observation unavailable");
+      94 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/healthy-c7d3e482607a08a7bddc42e6537e31fd062b9da9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/attachments/failed-551f201497adcae5388dd28be6409376884905a4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-21e14-es-actionable-work-in-light-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark" classname="phase174_quiet_health.spec.ts" time="13.528">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-f60ffc413208d4d2a8dbfc30f3aaa25ad2ec55ca.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/failed-ee1e5e5f9505458e31aad1257a5f44f5cc84aa8d.png]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/error-context.md]]
+
+[[ATTACHMENT|ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveText(expected) failed" type="expect.toHaveText">
+<![CDATA[  [chromium] › phase174_quiet_health.spec.ts:24:13 › standalone quiet health at 390px › keeps healthy details quiet and exposes actionable work in dark 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+    Expected: "2026-10-04T13:02:05.123456-04:00"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('details.ops-schema-health').first().locator('.ops-schema-health__details').locator('[aria-label^=\'Queue job health\']').locator('.ops-time__exact')
+
+
+      89 |           await expect(metrics).toContainText("Incomplete checks");
+      90 |           await expect(page.locator("details.ops-schema-health[open]")).toHaveCount(2);
+    > 91 |           await expect(rows.first().getByTestId("schema-health-status")).toHaveText("Queue status unavailable");
+         |                                                           ^
+      92 |           const queue = firstBody.locator("[aria-label^='Queue job health']");
+      93 |           await expect(queue).toContainText("Queue observation unavailable");
+      94 |           await expect(queue.locator(".ops-signal-metrics")).toHaveCount(0);
+        at /app/examples/scrypath_ecommerce/e2e/phase174_quiet_health.spec.ts:91:59
+
+    attachment #1: healthy (image/png) ─────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/healthy-f60ffc413208d4d2a8dbfc30f3aaa25ad2ec55ca.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: failed (image/png) ──────────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/attachments/failed-ee1e5e5f9505458e31aad1257a5f44f5cc84aa8d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../evidence/ui-quiet-health-browser-final/phase174_quiet_health-stan-9f99d-ses-actionable-work-in-dark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

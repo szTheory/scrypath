@@ -1,0 +1,70 @@
+==> scrypath
+    warning: incompatible types given to decorate_result/2:
+
+        decorate_result(
+          (&Scrypath.Sync.RelatedEnqueue.enqueue(schema_module, records, fan_out_key, &1)).(
+            Scrypath.Config.ensure_oban_ready!(config)
+          ),
+          config
+        )
+
+    given types:
+
+        -none()-, dynamic()
+
+    the 1st argument is empty (often represented as none()), most likely because it is the result of an expression that always fails, such as a `raise` or a previous invalid call. This causes any function called with this value to fail
+
+    where "config" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:54:12
+        config = Scrypath.Config.resolve!(opts)
+
+    where "fan_out_key" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:43:17
+        fan_out_key =
+          case Keyword.get(opts, :fan_out) do
+            x when x === false or x === nil ->
+              :erlang.error(ArgumentError.exception("opts[:fan_out] is required"))
+        
+            x ->
+              x
+          end
+
+    where "records" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:35
+        records
+
+    where "schema_module" was given the type:
+
+        # type: dynamic()
+        # from: lib/scrypath/sync.ex:42:20
+        schema_module
+
+    typing violation found at:
+    │
+ 61 │         |> decorate_result(config)
+    │            ~
+    │
+    └─ (scrypath 0.3.15) lib/scrypath/sync.ex:61:12: Scrypath.Sync.sync_related/3
+
+==> scrypath_ops
+Compiling 1 file (.ex)
+Generated scrypath_ops app
+Nav contract OK: operator-ia.md matches Nav.primary/0
+TAP version 13
+ok 1 - test stale sudo omits a selected schema after it leaves the current allowlist
+ok 2 - test __action_config__/0 uses stable scrypath.ops prefixes
+ok 3 - test fresh sudo executes the closure
+ok 4 - test stale sudo rejects a cross-host explicit return path
+ok 5 - test stale sudo preserves only the current allowlisted schema in the local return path
+ok 6 - test nil operator_context executes the closure
+ok 7 - test impersonation blocks the action and adds an error flash
+ok 8 - test stale sudo sends the operator to the confirm path with return_to
+ok 9 - test test-only routes target production views and deterministic source fixtures
+ok 10 - test standalone fixture renders selected A and returns from the real stale-sudo gate
+1..10

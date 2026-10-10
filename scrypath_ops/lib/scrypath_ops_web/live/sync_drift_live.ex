@@ -13,19 +13,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   alias ScrypathOps.OperatorSelection
   alias ScrypathOps.PromotionEligibility
   alias ScrypathOps.RecoveryObservation
-  alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Meilisearch.{Client, TaskPayload, Tasks}
   alias Scrypath.Operations.Task, as: OperationTask
 
   @impl true
   def mount(_params, _session, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
-    scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
+    {allowlist, scrypath_opts} = initial_route_config(socket)
 
     socket =
       socket
       |> assign(:page_title, "Sync and drift")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:fixture_scenario, nil)
       |> assign(:selected_schema, nil)
       |> assign(:selection_error, nil)
       |> assign(:context_generation, 0)
@@ -39,6 +39,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
       |> assign(:recovery_handle, nil)
+      |> assign(:recovery_runtime, nil)
       |> assign(:recovery_origin_generation, nil)
       |> assign(:recovery_status, nil)
       |> assign(:recovery_evidence, nil)
@@ -47,6 +48,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:promotion_task_id, nil)
       |> assign(:promotion_status, nil)
       |> assign(:promotion_loading, false)
+      |> assign(:promotion_check_loading, false)
+      |> assign(:promotion_context, nil)
+      |> assign(:promotion_schema, nil)
+      |> assign(:promotion_indexes, nil)
       |> assign(:confirm_swap?, false)
       |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
 
@@ -55,7 +60,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    {allowlist, scrypath_opts, fixture_scenario} =
+      route_config(params, Map.get(socket.assigns, :live_action))
+
     resolution = OperatorSelection.resolve(params, allowlist)
 
     selected =
@@ -72,11 +79,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       end
 
     changed? =
-      selected != socket.assigns.selected_schema or error != socket.assigns.selection_error
+      selected != socket.assigns.selected_schema or error != socket.assigns.selection_error or
+        fixture_scenario != socket.assigns.fixture_scenario
 
     socket =
       socket
       |> assign(:schema_allowlist, allowlist)
+      |> assign(:scrypath_opts, scrypath_opts)
+      |> assign(:fixture_scenario, fixture_scenario)
       |> assign(:selected_schema, selected)
       |> assign(:selection_error, error)
       |> maybe_advance_generation(changed?)
@@ -85,6 +95,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       if selected do
         socket
         |> load_reconcile_on_mount()
+        |> seed_phase175_promotion(fixture_scenario)
         |> maybe_start_recovery(
           Map.get(params, "recovery"),
           Map.get(params, "recovery_generation")
@@ -98,6 +109,97 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     {:noreply, socket}
   end
 
+  defp initial_route_config(%{assigns: %{live_action: :phase175}}) do
+    if Mix.env() == :test do
+      source = phase175_fixture_source()
+      {source.allowlist("accepted-processing"), source.opts("accepted-processing")}
+    else
+      {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts()}
+    end
+  end
+
+  defp initial_route_config(_socket),
+    do: {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts()}
+
+  defp route_config(params, :phase175) do
+    if Mix.env() == :test do
+      source = phase175_fixture_source()
+      scenario = Map.get(params, "scenario", "accepted-processing")
+
+      case source.scenario(scenario) do
+        {:ok, fixture} -> {fixture.allowlist, fixture.opts, scenario}
+        {:error, :unknown_scenario} -> {[], source.opts("accepted-processing"), scenario}
+      end
+    else
+      {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts(), nil}
+    end
+  end
+
+  defp route_config(_params, _action),
+    do: {ScrypathOps.Schemas.allowlist(), ScrypathOps.Schemas.scrypath_opts(), nil}
+
+  defp phase175_fixture_source,
+    do: Module.concat(["ScrypathOps.Test.Phase175FixtureSource"])
+
+  defp seed_phase175_promotion(socket, scenario) when is_binary(scenario) do
+    if Mix.env() == :test and socket.assigns.live_action == :phase175 do
+      source = phase175_fixture_source()
+
+      case source.scenario(scenario) do
+        {:ok, %{task_uid: task_id}} ->
+          schema = socket.assigns.selected_schema
+          indexes = source.indexes(schema)
+
+          context = %{
+            generation: socket.assigns.context_generation,
+            task_id: task_id,
+            schema: schema,
+            indexes: indexes,
+            runtime:
+              promotion_runtime_identity(
+                schema,
+                ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+              )
+          }
+
+          socket
+          |> assign(:promotion_task_id, task_id)
+          |> assign(:promotion_status, :accepted)
+          |> assign(:promotion_loading, false)
+          |> assign(:promotion_check_loading, false)
+          |> assign(:promotion_context, context)
+          |> assign(:promotion_schema, schema)
+          |> assign(:promotion_indexes, indexes)
+
+        _ ->
+          socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp seed_phase175_promotion(socket, _scenario), do: socket
+
+  defp active_allowlist(%{assigns: %{live_action: :phase175, fixture_scenario: scenario}})
+       when is_binary(scenario) do
+    if Mix.env() == :test do
+      phase175_fixture_source().allowlist(scenario)
+    else
+      ScrypathOps.Schemas.allowlist()
+    end
+  end
+
+  defp active_allowlist(_socket), do: ScrypathOps.Schemas.allowlist()
+
+  defp active_runtime_opts(socket) do
+    if Mix.env() == :test and Map.get(socket.assigns, :live_action) == :phase175 do
+      socket.assigns.scrypath_opts |> ScrypathOps.Schemas.runtime_opts()
+    else
+      ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+    end
+  end
+
   defp load_reconcile_on_mount(socket) do
     case {socket.assigns.selected_schema,
           Keyword.has_key?(socket.assigns.scrypath_opts, :backend)} do
@@ -106,6 +208,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       {_mod, false} ->
         socket
+        |> assign(:reconcile_error, :missing_backend)
+        |> refresh_promotion_eligibility()
 
       {mod, true} ->
         opts = socket.assigns.scrypath_opts
@@ -126,7 +230,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             |> assign(:reconcile_generation, nil)
             |> assign(:reconcile_error, reason)
             |> refresh_promotion_eligibility()
-            |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
+            |> put_flash(:error, "Sync status could not be checked. Refresh to try again.")
         end
     end
   end
@@ -153,6 +257,35 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       {:noreply, socket}
     else
       {:noreply, unavailable(socket)}
+    end
+  end
+
+  def handle_event("check_swap_status", _params, socket) do
+    case {socket.assigns.promotion_task_id, socket.assigns.promotion_context} do
+      {task_id, context} when is_integer(task_id) and is_map(context) ->
+        cond do
+          socket.assigns.promotion_check_loading ->
+            {:noreply, socket}
+
+          promotion_context_current?(socket, context) ->
+            {:noreply, start_promotion_check(socket, context)}
+
+          same_promotion_task?(socket, context) ->
+            {:noreply,
+             socket
+             |> assign(:promotion_status, :unknown)
+             |> assign(:promotion_loading, false)
+             |> assign(:promotion_check_loading, false)}
+
+          true ->
+            {:noreply, socket}
+        end
+
+      _ ->
+        {:noreply,
+         socket
+         |> assign(:promotion_status, :unknown)
+         |> assign(:promotion_check_loading, false)}
     end
   end
 
@@ -191,7 +324,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, active_allowlist(socket)) do
       {:ok, mod} ->
         {:noreply,
          push_patch(socket,
@@ -247,36 +380,51 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, {generation, handle, result}},
         socket
       ) do
-    if generation == socket.assigns.context_generation and
-         handle == socket.assigns.recovery_handle do
-      {status, evidence} =
-        case result do
-          {status, %{} = evidence} -> {status, evidence}
-          status -> {status, nil}
-        end
+    cond do
+      generation == socket.assigns.context_generation and
+        handle == socket.assigns.recovery_handle and current_selection?(socket) and
+          recovery_runtime_current?(socket) ->
+        {status, evidence} =
+          case result do
+            {status, evidence} when is_map(evidence) or is_nil(evidence) -> {status, evidence}
+            status -> {status, socket.assigns.recovery_evidence}
+          end
 
-      {:noreply,
-       socket
-       |> assign(:recovery_status, status)
-       |> assign(:recovery_evidence, evidence)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
-       |> assign(:recovery_loading, false)}
-    else
-      {:noreply, socket}
+        evidence = evidence || socket.assigns.recovery_evidence
+
+        {:noreply,
+         socket
+         |> assign(:recovery_status, status)
+         |> assign(:recovery_evidence, evidence)
+         |> assign(:recovery_checked_at, DateTime.utc_now())
+         |> assign(:recovery_loading, false)}
+
+      generation == socket.assigns.context_generation and
+          handle == socket.assigns.recovery_handle ->
+        {:noreply, stale_recovery_result(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
   def handle_async({:recovery_observation, generation, handle}, {:exit, _reason}, socket) do
-    if generation == socket.assigns.context_generation and
-         handle == socket.assigns.recovery_handle do
-      {:noreply,
-       socket
-       |> assign(:recovery_status, :unknown)
-       |> assign(:recovery_evidence, nil)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
-       |> assign(:recovery_loading, false)}
-    else
-      {:noreply, socket}
+    cond do
+      generation == socket.assigns.context_generation and
+        handle == socket.assigns.recovery_handle and current_selection?(socket) and
+          recovery_runtime_current?(socket) ->
+        {:noreply,
+         socket
+         |> assign(:recovery_status, :unknown)
+         |> assign(:recovery_checked_at, DateTime.utc_now())
+         |> assign(:recovery_loading, false)}
+
+      generation == socket.assigns.context_generation and
+          handle == socket.assigns.recovery_handle ->
+        {:noreply, stale_recovery_result(socket)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
@@ -285,49 +433,97 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, {generation, task_id, result}},
         socket
       ) do
-    if generation == socket.assigns.context_generation and
-         task_id == socket.assigns.promotion_task_id do
-      socket = assign(socket, :promotion_loading, false)
+    context = socket.assigns.promotion_context
 
-      case result do
-        {:ok, %{id: ^task_id, state: :succeeded}} ->
-          socket
-          |> assign(:promotion_status, :completed)
-          |> load_reconcile_on_mount()
-          |> refresh_drift()
+    cond do
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          promotion_context_current?(socket, context) ->
+        socket
+        |> assign(:promotion_loading, false)
+        |> assign(:promotion_status, promotion_wait_status(result, context.task_id))
+        |> maybe_refresh_after_promotion_success(result, context.task_id)
+        |> invalidate_recovery_claim()
+        |> refresh_promotion_eligibility()
+        |> then(&{:noreply, &1})
 
-        {:ok, _unexpected_task} ->
-          assign(socket, :promotion_status, :unknown)
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_loading, false)
+         |> assign(:promotion_status, :unknown)
+         |> invalidate_recovery_claim()}
 
-        {:error, {:timeout, _task}} ->
-          assign(socket, :promotion_status, :timed_out)
-
-        {:error, {:task_failed, %OperationTask{id: ^task_id, state: :failed} = task}} ->
-          assign(socket, :promotion_status, {:failed, {:task_failed, task}})
-
-        {:error, {:cancelled, %OperationTask{id: ^task_id, state: :cancelled} = task}} ->
-          assign(socket, :promotion_status, {:failed, {:cancelled, task}})
-
-        {:error, _observation_error} ->
-          assign(socket, :promotion_status, :unknown)
-      end
-      |> invalidate_recovery_claim()
-      |> refresh_promotion_eligibility()
-      |> then(&{:noreply, &1})
-    else
-      {:noreply, socket}
+      true ->
+        {:noreply, socket}
     end
   end
 
   def handle_async({:promotion_swap, generation, task_id}, {:exit, _reason}, socket) do
-    if generation == socket.assigns.context_generation and
-         task_id == socket.assigns.promotion_task_id do
+    context = socket.assigns.promotion_context
+
+    if is_map(context) and context.generation == generation and context.task_id == task_id and
+         promotion_context_current?(socket, context) do
       {:noreply,
        socket
        |> assign(:promotion_loading, false)
        |> assign(:promotion_status, :unknown)}
     else
-      {:noreply, socket}
+      if is_map(context) and context.generation == generation and context.task_id == task_id and
+           same_promotion_task?(socket, context) do
+        {:noreply,
+         socket
+         |> assign(:promotion_loading, false)
+         |> assign(:promotion_status, :unknown)}
+      else
+        {:noreply, socket}
+      end
+    end
+  end
+
+  def handle_async(
+        {:promotion_check, _generation, _task_id},
+        {:ok, {context, result}},
+        socket
+      ) do
+    cond do
+      promotion_context_current?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, promotion_check_status(result, context.task_id))}
+
+      same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      true ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_async({:promotion_check, generation, task_id}, {:exit, _reason}, socket) do
+    context = socket.assigns.promotion_context
+
+    cond do
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          promotion_context_current?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
@@ -343,6 +539,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp recovery_status_label(:failed), do: "Recovery failed"
   defp recovery_status_label(:timed_out), do: "Recovery check timed out"
   defp recovery_status_label(_), do: "Recovery unknown"
+
+  defp recovery_source_label(:oban), do: "Oban"
+  defp recovery_source_label(:meilisearch), do: "Meilisearch"
+  defp recovery_source_label(source) when is_binary(source), do: source
+  defp recovery_source_label(_), do: "Unknown source"
 
   defp recovery_status_kind(:verified), do: :success
   defp recovery_status_kind(:failed), do: :error
@@ -372,6 +573,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:drift_error, nil)
     |> assign(:drift_loading, false)
     |> assign(:recovery_handle, nil)
+    |> assign(:recovery_runtime, nil)
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
@@ -380,6 +582,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_task_id, nil)
     |> assign(:promotion_status, nil)
     |> assign(:promotion_loading, false)
+    |> assign(:promotion_check_loading, false)
+    |> assign(:promotion_context, nil)
+    |> assign(:promotion_schema, nil)
+    |> assign(:promotion_indexes, nil)
     |> assign(:confirm_swap?, false)
     |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
@@ -403,6 +609,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp clear_recovery_handoff(socket) do
     socket
     |> assign(:recovery_handle, nil)
+    |> assign(:recovery_runtime, nil)
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
@@ -420,8 +627,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     socket =
       socket
       |> assign(:recovery_handle, handle)
+      |> assign(:recovery_runtime, promotion_runtime_identity(schema, opts))
       |> assign(:recovery_status, :unknown)
-      |> assign(:recovery_evidence, nil)
       |> assign(:recovery_loading, true)
 
     start_async(socket, {:recovery_observation, generation, handle}, fn ->
@@ -447,39 +654,60 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp observe_recovery_now(context, handle, schema, opts, operator_opts) do
-    with true <- schema in ScrypathOps.Schemas.allowlist(),
-         receipt when is_map(receipt) <- RecoveryObservation.observe(context, handle),
-         true <- receipt.generation == context.generation,
-         true <- current_runtime_matches?(receipt, opts),
-         {:ok, expected_index} <- active_index(schema, opts),
-         true <- receipt.index == expected_index,
-         {:ok, job} <- read_recovery_job(receipt),
-         {:ok, queue_state} <- validate_recovery_job(job, receipt) do
-      status =
-        case receipt.task_uid do
-          task_uid when is_integer(task_uid) ->
-            verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
+    observed = RecoveryObservation.observe(context, handle)
+    evidence = if is_map(observed), do: recovery_receipt_evidence(observed), else: nil
 
-          _ when queue_state == :completed ->
-            :queue_only_completed
+    result =
+      with true <- schema in ScrypathOps.Schemas.allowlist(),
+           receipt when is_map(receipt) <- observed,
+           true <- receipt.generation == context.generation,
+           true <- current_runtime_matches?(receipt, opts),
+           {:ok, expected_index} <- active_index(schema, opts),
+           true <- receipt.index == expected_index,
+           {:ok, job} <- read_recovery_job(receipt),
+           {:ok, queue_state} <- validate_recovery_job(job, receipt) do
+        status =
+          case receipt.task_uid do
+            task_uid when is_integer(task_uid) ->
+              verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
 
-          _ when queue_state == :running ->
-            :running
+            _ when queue_state == :completed ->
+              :queue_only_completed
 
-          _ ->
-            :accepted
-        end
+            _ when queue_state == :running ->
+              :running
 
-      {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
-    else
-      false -> :unknown
-      :unknown -> :unknown
-      {:error, :job_running} -> :running
-      {:error, :queue_only_completed} -> :queue_only_completed
-      {:error, :job_failed} -> :failed
-      {:error, _} -> :unknown
-      _ -> :unknown
+            _ ->
+              :accepted
+          end
+
+        {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
+      else
+        false -> :unknown
+        :unknown -> :unknown
+        {:error, :job_running} -> :running
+        {:error, :queue_only_completed} -> :queue_only_completed
+        {:error, :job_failed} -> :failed
+        {:error, _} -> :unknown
+        _ -> :unknown
+      end
+
+    case result do
+      {status, _existing_evidence} -> {status, evidence}
+      status -> {status, evidence}
     end
+  end
+
+  defp recovery_receipt_evidence(receipt) do
+    Map.take(receipt, [
+      :replacement_job,
+      :attempt,
+      :task_uid,
+      :operation,
+      :schema,
+      :source_failure,
+      :index
+    ])
   end
 
   defp current_runtime_matches?(receipt, opts) do
@@ -499,6 +727,27 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   rescue
     _ -> false
+  end
+
+  defp recovery_runtime_current?(socket) do
+    runtime = Map.get(socket.assigns, :recovery_runtime)
+
+    is_map(runtime) and
+      runtime ==
+        promotion_runtime_identity(socket.assigns.selected_schema, active_runtime_opts(socket))
+  rescue
+    _ -> false
+  end
+
+  defp stale_recovery_result(socket) do
+    if current_selection?(socket) do
+      socket
+      |> assign(:recovery_status, :unknown)
+      |> assign(:recovery_checked_at, nil)
+      |> assign(:recovery_loading, false)
+    else
+      unavailable(socket)
+    end
   end
 
   defp oban_config(instance) do
@@ -674,9 +923,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp read_expected_effects(schema, receipt, opts) do
     source_id = get_in(receipt, [:source_failure, :id])
+    source = get_in(receipt, [:source_failure, :source])
 
     with {:ok, rows} when is_list(rows) <- Scrypath.failed_sync_work(schema, opts),
-         row when not is_nil(row) <- Enum.find(rows, &(to_string(&1.id) == to_string(source_id))),
+         row when not is_nil(row) <-
+           Enum.find(rows, &(&1.source == source and to_string(&1.id) == to_string(source_id))),
          recovery when not is_nil(recovery) <- Scrypath.Operator.FailedWork.recovery_action(row),
          payload when is_map(payload) <- get_in(recovery.reference, [:payload]) do
       if receipt.operation == :delete do
@@ -705,7 +956,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp current_selection?(socket) do
     case OperatorSelection.resolve(
            %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
-           ScrypathOps.Schemas.allowlist()
+           active_allowlist(socket)
          ) do
       {:ok, selected} -> selected == socket.assigns.selected_schema
       _ -> false
@@ -742,7 +993,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           |> assign(:reconcile_generation, nil)
           |> assign(:reconcile_error, reason)
           |> refresh_promotion_eligibility()
-          |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
+          |> put_flash(:error, "Sync status could not be checked. Refresh to try again.")
       end
     else
       socket
@@ -751,7 +1002,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:reconcile_generation, nil)
       |> assign(:reconcile_error, :missing_backend)
       |> refresh_promotion_eligibility()
-      |> put_flash(:error, "Select a schema and configure Scrypath runtime.")
+      |> put_flash(:error, sync_error_copy(:missing_backend))
     end
   end
 
@@ -799,17 +1050,46 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
           case Scrypath.Meilisearch.swap_indexes(mod, opts) do
             {:ok, %{task: task}} ->
-              task_id = Map.fetch!(task, :uid)
               generation = socket.assigns.context_generation
+              task_id = Map.get(task, :uid)
+              indexes = {Map.get(task, :live_index), Map.get(task, :target_index)}
 
-              socket
-              |> assign(:promotion_task_id, task_id)
-              |> assign(:promotion_status, :accepted)
-              |> assign(:promotion_loading, true)
-              |> start_async({:promotion_swap, generation, task_id}, fn ->
-                result = Tasks.wait_for_task(task, task_wait_opts(opts))
-                {generation, task_id, result}
-              end)
+              context =
+                if is_integer(task_id) do
+                  %{
+                    generation: generation,
+                    task_id: task_id,
+                    schema: mod,
+                    indexes: indexes,
+                    runtime: promotion_runtime_identity(mod, opts)
+                  }
+                end
+
+              socket =
+                socket
+                |> assign(:promotion_task_id, task_id)
+                |> assign(
+                  :promotion_status,
+                  if(is_integer(task_id), do: :accepted, else: :unknown)
+                )
+                |> assign(:promotion_loading, is_integer(task_id))
+                |> assign(:promotion_check_loading, false)
+                |> assign(:promotion_context, context)
+                |> assign(:promotion_schema, mod)
+                |> assign(:promotion_indexes, indexes)
+
+              if is_integer(task_id) do
+                start_async(socket, {:promotion_swap, generation, task_id}, fn ->
+                  result = Tasks.wait_for_task(task, task_wait_opts(opts))
+                  {generation, task_id, result}
+                end)
+              else
+                put_flash(
+                  socket,
+                  :warning,
+                  "Index swap was accepted without a usable task ID. Check the current index state."
+                )
+              end
 
             {:error, reason} ->
               put_flash(socket, :error, "Index swap was not accepted: #{inspect(reason)}")
@@ -826,7 +1106,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     operator_opts = socket.assigns.scrypath_opts
     opts = ScrypathOps.Schemas.runtime_opts(operator_opts)
 
-    if (mod && mod in ScrypathOps.Schemas.allowlist()) and
+    if (mod && mod in active_allowlist(socket)) and
          Keyword.get(opts, :backend) == Scrypath.Meilisearch do
       reconcile = Scrypath.reconcile_sync(mod, operator_opts)
       drift = Scrypath.index_contract_drift(mod, opts)
@@ -894,9 +1174,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:schema_not_allowed), do: "select an available schema"
   defp promotion_reason(:unsupported_backend), do: "Meilisearch is unavailable"
   defp promotion_reason(:reconcile_failed), do: "refresh sync and queue status"
-  defp promotion_reason(:contract_failed), do: "refresh the index contract check"
+  defp promotion_reason(:contract_failed), do: "refresh the index configuration check"
   defp promotion_reason(:reconcile_not_current), do: "refresh sync and queue status"
-  defp promotion_reason(:contract_not_current), do: "run the index contract check"
+  defp promotion_reason(:contract_not_current), do: "check the index configuration"
   defp promotion_reason(:check_in_progress), do: "wait for the current check"
   defp promotion_reason(:context_mismatch), do: "refresh checks for this schema and index"
   defp promotion_reason(:indexes_not_distinct), do: "confirm live and target indexes differ"
@@ -906,7 +1186,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:reindex_pending), do: "wait for reindex work to finish"
   defp promotion_reason(:cutover_pending), do: "wait for the current cutover to finish"
   defp promotion_reason(:failed_work), do: "resolve failed sync work first"
-  defp promotion_reason(:contract_mismatch), do: "resolve contract differences first"
+  defp promotion_reason(:contract_mismatch), do: "resolve index configuration differences first"
   defp promotion_reason(_), do: "refresh current checks"
 
   defp promotion_eligibility_title(:eligible), do: "Ready for promotion"
@@ -926,15 +1206,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_index(reconcile, key),
     do: inspect(reconcile |> Map.get(:reindex, %{}) |> Map.get(key) || "unknown")
 
-  defp promotion_status_kind(:accepted), do: :warning
-  defp promotion_status_kind(:completed), do: :success
-  defp promotion_status_kind({:failed, _}), do: :error
-  defp promotion_status_kind(:timed_out), do: :warning
-  defp promotion_status_kind(:unknown), do: :warning
-  defp promotion_status_kind(_), do: :neutral
-
   defp promotion_status_title(:accepted), do: "Index swap accepted"
+  defp promotion_status_title(:running), do: "Index swap running"
   defp promotion_status_title(:completed), do: "Index swap completed"
+  defp promotion_status_title({:failed, :cancelled}), do: "Index swap canceled"
   defp promotion_status_title({:failed, _}), do: "Index swap failed"
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
@@ -946,6 +1221,129 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> Keyword.put_new(:inline_timeout, 15_000)
   end
 
+  defp start_promotion_check(socket, context) do
+    opts = active_runtime_opts(socket)
+
+    socket
+    |> assign(:promotion_check_loading, true)
+    |> start_async({:promotion_check, context.generation, context.task_id}, fn ->
+      result = observe_promotion_task(context.task_id, opts)
+      {context, result}
+    end)
+  end
+
+  defp observe_promotion_task(task_id, opts) do
+    client = Keyword.get(opts, :meilisearch_client) || Client
+
+    if Code.ensure_loaded?(client) and function_exported?(client, :task, 2) do
+      case apply(client, :task, [task_id, opts]) do
+        {:ok, response} -> TaskPayload.normalize(response, :poll)
+        {:error, reason} -> {:error, reason}
+        _ -> {:error, :invalid_task_response}
+      end
+    else
+      {:error, :task_client_unavailable}
+    end
+  rescue
+    _ -> {:error, :task_observation_failed}
+  catch
+    _, _ -> {:error, :task_observation_failed}
+  end
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :enqueued}}, task_id), do: :accepted
+  defp promotion_check_status({:ok, %{uid: task_id, status: :processing}}, task_id), do: :running
+  defp promotion_check_status({:ok, %{uid: task_id, status: :succeeded}}, task_id), do: :completed
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :failed}}, task_id),
+    do: {:failed, :task_failed}
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :cancelled}}, task_id),
+    do: {:failed, :cancelled}
+
+  defp promotion_check_status(_, _task_id), do: :unknown
+
+  defp promotion_wait_status({:ok, %OperationTask{id: task_id, state: :succeeded}}, task_id),
+    do: :completed
+
+  defp promotion_wait_status(
+         {:error, {:task_failed, %OperationTask{id: task_id, state: :failed}}},
+         task_id
+       ),
+       do: {:failed, :task_failed}
+
+  defp promotion_wait_status(
+         {:error, {:cancelled, %OperationTask{id: task_id, state: :cancelled}}},
+         task_id
+       ),
+       do: {:failed, :cancelled}
+
+  defp promotion_wait_status({:error, {:timeout, _}}, _task_id), do: :timed_out
+  defp promotion_wait_status(_, _task_id), do: :unknown
+
+  defp maybe_refresh_after_promotion_success(
+         socket,
+         {:ok, %OperationTask{id: task_id, state: :succeeded}},
+         task_id
+       ),
+       do: socket |> load_reconcile_on_mount() |> refresh_drift()
+
+  defp maybe_refresh_after_promotion_success(socket, _result, _task_id), do: socket
+
+  defp same_promotion_task?(socket, context) do
+    context.generation == socket.assigns.context_generation and
+      context.task_id == socket.assigns.promotion_task_id and
+      context.schema == socket.assigns.promotion_schema and
+      context.indexes == socket.assigns.promotion_indexes
+  end
+
+  defp promotion_context_current?(socket, context) when is_map(context) do
+    current_runtime =
+      promotion_runtime_identity(
+        context.schema,
+        active_runtime_opts(socket)
+      )
+
+    same_promotion_task?(socket, context) and
+      context.schema == socket.assigns.selected_schema and
+      context.schema in active_allowlist(socket) and
+      current_selection?(socket) and
+      context == socket.assigns.promotion_context and
+      context.runtime == current_runtime
+  rescue
+    _ -> false
+  end
+
+  defp promotion_context_current?(_socket, _context), do: false
+
+  defp promotion_runtime_identity(schema, opts) do
+    instance = Keyword.get(opts, :oban)
+
+    oban_state =
+      if is_atom(instance) and not is_nil(instance), do: oban_config(instance), else: {:ok, %{}}
+
+    {repo, prefix} =
+      case oban_state do
+        {:ok, config} ->
+          {Map.get(config, :repo) || Keyword.get(opts, :repo),
+           Map.get(config, :prefix) || Keyword.get(opts, :prefix)}
+
+        _ ->
+          {Keyword.get(opts, :repo), Keyword.get(opts, :prefix)}
+      end
+
+    %{
+      schema: schema,
+      backend: Keyword.get(opts, :backend),
+      endpoint: endpoint_identity(Keyword.get(opts, :meilisearch_url)),
+      index_prefix: Keyword.get(opts, :index_prefix),
+      meilisearch_client: Keyword.get(opts, :meilisearch_client) || Client,
+      oban: instance,
+      repo: repo,
+      prefix: prefix,
+      node: node()
+    }
+  end
+
   defp invalidate_recovery_claim(socket) do
     socket
     |> assign(:recovery_status, :unknown)
@@ -954,11 +1352,50 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_loading, false)
   end
 
+  defp reconcile_signal_label(:reindex_visibility_available), do: "Reindex task history available"
+  defp reconcile_signal_label(:pending_backend_work), do: "Backend tasks pending"
+  defp reconcile_signal_label(:pending_queue_work), do: "Queue jobs pending"
+  defp reconcile_signal_label(:failed_sync_work), do: "Failed sync work"
+  defp reconcile_signal_label(:reindex_in_progress), do: "Reindex in progress"
+  defp reconcile_signal_label(:reindex_cutover_pending), do: "Index swap pending"
+
   defp reconcile_signal_label(signal) do
     signal
     |> to_string()
     |> String.trim_leading(":")
     |> String.replace("_", " ")
+  end
+
+  defp sync_summary(report) do
+    signals = report.drift_signals
+
+    cond do
+      :failed_sync_work in signals ->
+        {"Sync failures need attention", "Review the failure reason before retrying."}
+
+      :pending_backend_work in signals or :pending_queue_work in signals ->
+        {"Sync work is pending", "Refresh sync status to check progress."}
+
+      :reindex_in_progress in signals or :reindex_cutover_pending in signals ->
+        {"Reindex work is pending", "Refresh sync status to check progress."}
+
+      report.reindex.task_state == :failed ->
+        {"A reindex task failed", "Review the reindex evidence before promoting an index."}
+
+      report.reindex.task_state == :unknown ->
+        {"Reindex status is unknown", "Refresh sync status to check again."}
+
+      true ->
+        {"No pending or failed sync work found", nil}
+    end
+  end
+
+  defp sync_error_copy(:missing_backend) do
+    "Sync status is unavailable because the backend is not configured. Configure the backend, then refresh to check again."
+  end
+
+  defp sync_error_copy(_reason) do
+    "Sync status is incomplete because a required backend task or queue read failed. Refresh to try again, then review the backend and queue configuration if needed."
   end
 
   defp drift_dimension_label(key) do
@@ -986,15 +1423,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <.ops_page_header
         title="Sync and drift"
-        subtitle="Check sync status and compare the schema contract with its live index."
+        subtitle="Check sync progress and compare index configuration."
       />
 
-      <.ops_trail current={:sync_drift} class="mt-4" />
+      <.ops_trail current={:sync_drift} />
 
-      <.ops_panel class="mt-4">
+      <.ops_panel>
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="sync-schema-select"
@@ -1004,10 +1442,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.form>
       </.ops_panel>
 
-      <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
+      <.ops_panel :if={@recovery_handle} id="recovery-observation">
         <.ops_section
-          title="Retry observation"
-          subtitle="This read checks the accepted queue job, its exact Meilisearch task, and the active index documents."
+          title="Retry status"
+          subtitle="Check whether this retry reached the queue, search backend, and live index."
           meta={if @recovery_checked_at, do: "checked #{format_dt(@recovery_checked_at)}"}
         >
           <:actions>
@@ -1023,7 +1461,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             kind={recovery_status_kind(@recovery_status)}
             title={recovery_status_label(@recovery_status)}
           >
-            A refresh observes this retry and never submits work.
+            <span
+              :if={!@recovery_loading and @recovery_status in [:unknown, :timed_out]}
+              data-testid="recovery-unavailable"
+            >
+              The receipt or one of its queue, task, or document reads is unavailable. The selected
+              schema and any known retry identity remain shown. Refresh checks this same retry; it
+              does not submit work.
+            </span>
+            <span :if={@recovery_loading or @recovery_status not in [:unknown, :timed_out]}>
+              A refresh observes this retry and never submits work.
+            </span>
           </.ops_status>
           <p :if={@recovery_evidence} class="mt-2 text-ops-body" data-testid="recovery-evidence">
             Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
@@ -1032,6 +1480,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </span>
             ·
             <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
+          </p>
+          <p
+            :if={is_map(@recovery_evidence) and is_map(@recovery_evidence.source_failure)}
+            class="mt-2 break-words text-ops-body"
+            data-testid="recovery-source"
+          >
+            Original failure: {recovery_source_label(@recovery_evidence.source_failure.source)}
+            {@recovery_evidence.source_failure.id} · operation {@recovery_evidence.operation} ·
+            schema
+            <.ops_inline_code>{@recovery_evidence.schema}</.ops_inline_code>
           </p>
         </.ops_section>
       </.ops_panel>
@@ -1046,73 +1504,108 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         title="That schema is unavailable"
         role="alert"
       >
-        Select an allowlisted schema to continue.
+        Choose an available schema to continue.
       </.ops_status>
 
       <.ops_panel>
         <.ops_section
           id="sync-reconcile-heading"
-          title="Sync and queue status"
-          subtitle="Check current backend tasks and queued work for this schema."
+          title="Sync status"
+          subtitle="Check backend tasks and queued work for this schema."
         >
           <:actions>
             <.ops_refresh_control
               id="sync-drift-refresh"
               checked_at={@reconcile_loaded_at}
               phx-click="refresh_reconcile"
+              label="Refresh sync and queue status"
               aria_label="Refresh sync and queue status"
               disabled={!@selected_schema}
             />
           </:actions>
 
-          <.ops_signal_table :if={@reconcile_result}>
-            <thead>
-              <tr>
-                <th scope="col">Signal</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Index</th>
-                <td>
-                  <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Mode</th>
-                <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Drift signals</th>
-                <td>
-                  <div class="flex flex-wrap gap-1">
-                    <.ops_badge
-                      :for={signal <- @reconcile_result.drift_signals}
-                      kind={:neutral}
-                    >
-                      {reconcile_signal_label(signal)}
-                    </.ops_badge>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
+          <div :if={@reconcile_result} class="space-y-2" id="sync-work-status" role="status">
+            <p class="font-semibold">{elem(sync_summary(@reconcile_result), 0)}</p>
+            <p :if={elem(sync_summary(@reconcile_result), 1)} class="text-base-content/80">
+              {elem(sync_summary(@reconcile_result), 1)}
+            </p>
+            <.ops_link_button
+              :if={:failed_sync_work in @reconcile_result.drift_signals}
+              navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
+              variant={:ghost}
+            >
+              Review failed sync work <span aria-hidden="true">→</span>
+            </.ops_link_button>
+          </div>
+
+          <.ops_disclosure
+            :if={@reconcile_result}
+            id={"sync-details-#{@context_generation}"}
+            summary="Sync details"
+            variant={:compact}
+            class="mt-3"
+            phx-mounted={JS.ignore_attributes("open")}
+          >
+            <.ops_signal_table>
+              <thead>
+                <tr>
+                  <th scope="col">Check</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Index</th>
+                  <td>
+                    <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Mode</th>
+                  <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Work observed</th>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      <.ops_badge
+                        :for={signal <- @reconcile_result.drift_signals}
+                        kind={:neutral}
+                      >
+                        {reconcile_signal_label(signal)}
+                      </.ops_badge>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </.ops_signal_table>
+          </.ops_disclosure>
 
           <p
-            :if={@reconcile_result == nil && @selected_schema}
+            :if={@reconcile_result == nil && @selected_schema && !@reconcile_error}
             class="text-ops-body text-base-content/70"
           >
             Sync status is not available yet. Refresh sync status to check again.
           </p>
+          <.ops_status
+            :if={@reconcile_error && @selected_schema}
+            kind={:error}
+            title="Sync status is unavailable"
+            role="alert"
+          >
+            {sync_error_copy(@reconcile_error)}
+            <.ops_disclosure summary="Check diagnostics" variant={:compact} class="mt-2">
+              <.ops_code_block>{inspect(@reconcile_error)}</.ops_code_block>
+            </.ops_disclosure>
+          </.ops_status>
         </.ops_section>
       </.ops_panel>
 
       <.ops_panel>
         <.ops_section
           id="sync-drift-heading"
-          title="Index contract"
-          subtitle="Compare the selected schema contract with its live index."
+          title="Index configuration"
+          subtitle="Compare declared fields and search settings. This does not check document freshness."
           meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
         >
           <:actions>
@@ -1121,7 +1614,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               phx-disable-with="Checking…"
               disabled={@drift_loading || !@selected_schema}
             >
-              {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
+              {if @drift_result, do: "Refresh configuration check", else: "Check index configuration"}
             </.ops_button>
           </:actions>
 
@@ -1129,79 +1622,185 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             :if={@drift_loading}
             class="space-y-3"
             role="status"
-            aria-label="Loading contract drift"
+            aria-label="Checking index configuration"
           >
             <p class="text-ops-body text-base-content/70">
-              Comparing the declared contract against the live index…
+              Comparing index configuration…
             </p>
-            <.ops_loading lines={4} label="Loading contract drift" />
+            <.ops_loading lines={4} label="Checking index configuration" />
           </div>
 
+          <p
+            :if={!@drift_loading && !@drift_result && !@drift_error && @selected_schema}
+            class="text-ops-sm text-base-content/75"
+            data-testid="configuration-not-checked"
+          >
+            Not checked
+          </p>
+
           <.ops_status
-            :if={!@drift_loading}
+            :if={!@drift_loading && @drift_error && @selected_schema}
             kind={drift_status_kind(@drift_result, @drift_error)}
             title={drift_status_title(@drift_result, @drift_error)}
             role={if @drift_error, do: "alert"}
           >
             {drift_status_copy(@drift_result, @drift_error)}
+            <.ops_disclosure summary="Check diagnostics" variant={:compact} class="mt-2">
+              <.ops_code_block>{inspect(@drift_error)}</.ops_code_block>
+            </.ops_disclosure>
           </.ops_status>
 
-          <.ops_signal_table :if={@drift_result && !@drift_loading}>
-            <thead>
-              <tr>
-                <th scope="col">Field</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Summary</th>
-                <td>Index contract snapshot</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Version · index</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  version {@drift_result.version} · index {@drift_result.index}
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Dimension mismatches</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
-          <.ops_data_card
+          <div :if={@drift_result && !@drift_loading} class="space-y-2" role="status">
+            <p class="font-semibold">{drift_status_title(@drift_result, nil)}</p>
+            <p :if={drift_mismatch_count(@drift_result) > 0} class="text-base-content/80">
+              {drift_status_copy(@drift_result, nil)}
+            </p>
+          </div>
+
+          <.ops_disclosure
             :if={@drift_result && !@drift_loading}
-            title="Contract dimensions"
+            id={"index-configuration-details-#{@context_generation}-#{drift_mismatch_count(@drift_result) > 0}"}
+            summary="Comparison details"
+            open={drift_mismatch_count(@drift_result) > 0}
+            variant={:compact}
             class="mt-3"
+            data-testid="configuration-details"
+            phx-mounted={JS.ignore_attributes("open")}
           >
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <.ops_tone_chip
-                :for={{label, match?} <- drift_dimension_rows(@drift_result)}
-                kind={if match?, do: :success, else: :warning}
-                label={label}
-                value={if match?, do: "matches", else: "differs"}
-              />
+            <.ops_signal_table>
+              <thead>
+                <tr>
+                  <th scope="col">Field</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Summary</th>
+                  <td>Index configuration comparison</td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Version · index</th>
+                  <td class="font-mono text-ops-sm tabular-nums">
+                    version {@drift_result.version} · index {@drift_result.index}
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row" class="font-semibold align-top">Differences</th>
+                  <td class="font-mono text-ops-sm tabular-nums">
+                    {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
+                  </td>
+                </tr>
+              </tbody>
+            </.ops_signal_table>
+            <div class="mt-3">
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <.ops_tone_chip
+                  :for={{label, match?} <- drift_dimension_rows(@drift_result)}
+                  kind={if match?, do: :neutral, else: :warning}
+                  label={label}
+                  value={if match?, do: "matches", else: "differs"}
+                />
+              </div>
             </div>
-          </.ops_data_card>
+          </.ops_disclosure>
+        </.ops_section>
+      </.ops_panel>
+
+      <.ops_panel
+        :if={@promotion_schema || @promotion_task_id}
+        id="promotion-task-status"
+      >
+        <.ops_section
+          title={promotion_status_title(@promotion_status)}
+          subtitle="Task completion is separate from the current index and document state."
+        >
+          <p class="text-ops-body" data-testid="promotion-task-identity">
+            Schema
+            <.ops_inline_code>{module_flat_name(@promotion_schema)}</.ops_inline_code>
+            <span :if={@promotion_indexes}>
+              · swap pair
+              <.ops_inline_code>{elem(@promotion_indexes, 0)}</.ops_inline_code>
+              →
+              <.ops_inline_code>{elem(@promotion_indexes, 1)}</.ops_inline_code>
+            </span>
+            <span :if={@promotion_task_id}>
+              · task
+              <.ops_inline_code>{@promotion_task_id}</.ops_inline_code>
+            </span>
+          </p>
+          <p :if={@promotion_status == :accepted} class="text-ops-body">
+            The backend accepted this swap. Its task is still queued or its latest status is not yet known.
+          </p>
+          <p :if={@promotion_status == :running} class="text-ops-body">
+            Meilisearch reports that this swap task is processing.
+          </p>
+          <p :if={@promotion_status == :completed} class="text-ops-body">
+            The matching swap task completed. Check current index state separately.
+          </p>
+          <p :if={match?({:failed, :cancelled}, @promotion_status)} class="text-ops-body">
+            The matching swap task was canceled. Check current index state separately.
+          </p>
+          <p
+            :if={
+              match?({:failed, _}, @promotion_status) and
+                not match?({:failed, :cancelled}, @promotion_status)
+            }
+            class="text-ops-body"
+          >
+            The matching swap task failed. Check current index state separately.
+          </p>
+          <p
+            :if={@promotion_status in [:timed_out, :unknown]}
+            class="text-ops-body"
+            data-testid="promotion-unconfirmed"
+          >
+            The task result could not be confirmed. The returned task UID remains shown; checking it again never submits another swap.
+          </p>
+          <p
+            :if={is_nil(@promotion_task_id)}
+            class="text-ops-body"
+            data-testid="promotion-missing-task-id"
+          >
+            The swap response did not provide a usable task ID. Review the current index state; no task lookup is available.
+          </p>
+          <.ops_button
+            :if={is_integer(@promotion_task_id)}
+            phx-click="check_swap_status"
+            phx-disable-with="Checking swap status…"
+            disabled={@promotion_check_loading}
+            size={:sm}
+          >
+            Check swap status
+          </.ops_button>
+          <span :if={@promotion_check_loading} role="status" class="text-ops-sm text-base-content/70">
+            Checking swap status…
+          </span>
         </.ops_section>
       </.ops_panel>
 
       <details
         :if={@selected_schema}
         id="index-promotion"
-        class="ops-panel mt-4"
-        open={@promotion_status != nil}
+        class="ops-panel"
+        phx-hook="OpsHealthDetails"
+        phx-mounted={JS.ignore_attributes("open")}
+        data-testid="advanced-promotion-disclosure"
+        data-ops-required-open="false"
       >
-        <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
+        <summary
+          class="cursor-pointer p-4 font-semibold"
+          data-testid="advanced-promotion-summary"
+        >
+          Advanced: index promotion
+        </summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">
-            Promotion changes the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
+            Promotion swaps the live and prepared target indexes for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>. Their
+            documents, primary keys, settings, and task history move as a pair.
           </p>
           <.ops_status
-            kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
+            kind={if @promotion_eligibility == :eligible, do: :neutral, else: :warning}
             title={promotion_eligibility_title(@promotion_eligibility)}
           >
             {promotion_eligibility_copy(@promotion_eligibility)}
@@ -1212,33 +1811,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           >
             Promote target index
           </.ops_button>
-          <.ops_status
-            :if={@promotion_status}
-            kind={promotion_status_kind(@promotion_status)}
-            title={promotion_status_title(@promotion_status)}
-          >
-            <span :if={@promotion_task_id}>
-              Task
-              <.ops_inline_code>{@promotion_task_id}</.ops_inline_code>
-            </span>
-            <span :if={@promotion_status == :accepted}>
-              The backend accepted this swap. Waiting for its terminal result.
-            </span>
-            <span :if={@promotion_status == :completed}>Index swap completed.</span>
-            <span :if={@promotion_status in [:timed_out, :unknown]}>
-              The task result could not be confirmed. Refresh checks to inspect current index state.
-            </span>
-            <span :if={match?({:failed, _}, @promotion_status)}>
-              The swap task failed. Refresh checks to inspect current index state.
-            </span>
-            <.ops_button
-              :if={@promotion_status != :accepted}
-              phx-click="refresh_promotion_checks"
-              size={:sm}
-            >
-              Refresh checks
-            </.ops_button>
-          </.ops_status>
+          <.ops_button phx-click="refresh_promotion_checks" size={:sm}>
+            Refresh sync and configuration checks
+          </.ops_button>
         </div>
       </details>
 
@@ -1250,11 +1825,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           Return to Control Room
         </:step>
         <:step
-          :if={@selected_schema}
-          navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-          hint="For the selected schema —"
+          navigate={OperatorSelection.path(@mount_path, "health", nil)}
+          hint="Across all configured schemas —"
         >
-          Inspect search health
+          Review search health
         </:step>
       </.ops_handoff>
 
@@ -1262,11 +1836,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         :if={@confirm_swap? && @selected_schema}
         id="confirm-index-promotion"
         title="Confirm index promotion"
-        description="Meilisearch will change the live alias after its swap task completes."
+        description="This swaps the selected indexes' documents, primary keys, settings, and task history so the prepared target becomes live."
         action_label="promote index"
         cancel_event="cancel_swap_live"
       >
-        <.form for={%{}} phx-submit="swap_live" class="space-y-3">
+        <.form for={%{}} id="index-promotion-form" phx-submit="swap_live" class="space-y-3">
           <p>
             Schema:
             <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
@@ -1279,7 +1853,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Target index:
             <.ops_inline_code>{promotion_index(@reconcile_result, :target_index)}</.ops_inline_code>
           </p>
-          <p>Effect: replace the live alias with the prepared target index.</p>
+          <p>
+            Effect: Meilisearch swaps this pair atomically. The prepared target's documents,
+            primary key, settings, and task history take the live index's place after the task
+            completes; the other index keeps the prior live data.
+          </p>
           <div class="flex justify-between gap-2">
             <.ops_button
               type="button"
@@ -1303,17 +1881,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp drift_status_kind(result, nil),
     do: if(drift_mismatch_count(result) == 0, do: :success, else: :warning)
 
-  defp drift_status_title(_result, error) when not is_nil(error), do: "Drift check failed"
-  defp drift_status_title(nil, nil), do: "Drift not loaded"
+  defp drift_status_title(_result, error) when not is_nil(error),
+    do: "Index configuration could not be checked"
+
+  defp drift_status_title(nil, nil), do: "Not checked"
 
   defp drift_status_title(result, nil) do
     if drift_mismatch_count(result) == 0,
-      do: "No contract drift detected",
-      else: "Contract drift detected"
+      do: "Index configuration matches",
+      else: "Index configuration differs"
   end
 
   defp drift_status_copy(_result, error) when not is_nil(error) do
-    "Reconcile above remains usable. Fix the drift check input or backend state, then reload contract drift. Reason: #{inspect(error)}"
+    "Refresh the configuration check to try again. You can still check sync status above."
   end
 
   defp drift_status_copy(nil, nil) do
@@ -1326,7 +1906,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     if mismatches == 0 do
       "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
     else
-      "#{mismatches} contract #{if mismatches == 1, do: "dimension differs", else: "dimensions differ"} from the live index. Review the differences before promoting a target index."
+      "#{mismatches} configuration #{if mismatches == 1, do: "difference", else: "differences"} found. Review the comparison before promoting an index."
     end
   end
 

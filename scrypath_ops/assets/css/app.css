@@ -66,8 +66,8 @@
   prefersdark: false;
   color-scheme: "light";
   --color-base-100: #ffffff;
-  --color-base-200: #f7f6f3;
-  --color-base-300: #d9d8d2;
+  --color-base-200: #f5f6f8;
+  --color-base-300: #d7dbe1;
   --color-base-content: #202124;
   --color-primary: #5b4ad1;
   --color-primary-content: #f4f1ea;
@@ -94,9 +94,9 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #f7f6f3;
+  --ops-bg: #f5f6f8;
   --ops-surface-1: #ffffff;
-  --ops-surface-2: #efeee9;
+  --ops-surface-2: #edeff2;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
 }
 
@@ -272,6 +272,8 @@
     gap: var(--spacing-ops-4);
   }
 
+  .ops-command-hint__compact { display: none; }
+
   @media (max-width: 640px) {
     .ops-header__inner {
       display: grid;
@@ -292,6 +294,8 @@
     }
 
     .ops-header .ops-command-hint .ops-kbd { display: none; }
+    .ops-header .ops-command-hint__full { display: none; }
+    .ops-header .ops-command-hint__compact { display: inline; }
   }
 
   .ops-sidebar {
@@ -596,6 +600,58 @@
     gap: var(--spacing-ops-2);
   }
 
+  .ops-metric__label,
+  .ops-signal-group__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-help {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  .ops-help__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-ops-control);
+    color: color-mix(in srgb, var(--color-base-content) 72%, transparent);
+    cursor: pointer;
+  }
+
+  .ops-help__trigger:hover {
+    color: var(--color-base-content);
+    background: var(--ops-surface-2);
+  }
+
+  @media (max-width: 640px) {
+    .ops-help__trigger { width: 44px; height: 44px; }
+  }
+
+  .ops-help__content {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    width: min(320px, calc(100vw - 24px));
+    padding: var(--spacing-ops-3);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-ops-control);
+    background: var(--ops-surface-1);
+    color: var(--color-base-content);
+    font-family: var(--font-sans);
+    font-size: var(--text-ops-body);
+    font-weight: 400;
+    line-height: var(--leading-ops-body);
+    text-transform: none;
+    letter-spacing: normal;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--color-base-content) 12%, transparent);
+  }
+
   .ops-metric__cue {
     color: var(--color-warning);
   }
@@ -645,6 +701,10 @@
     height: 0.625rem;
   }
 
+  #control-room-health-link {
+    min-height: var(--control-h-lg);
+  }
+
   .ops-verdict__dot {
     flex: none;
     width: 0.5rem;
@@ -655,6 +715,11 @@
        reads as a single beat — the dot is the loudest tone signal, so a snapping dot would
        break the "one answer moved" coherence A2 is built for. */
     transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
+  }
+
+  .ops-control-room__scope {
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 
   .ops-verdict.ops-tone-success .ops-verdict__dot {
@@ -933,6 +998,21 @@
   .ops-text-meta  { font-size: var(--text-ops-xs); line-height: var(--leading-ops-body); color: var(--ops-text-muted); }
   .ops-text-mono  { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: var(--text-ops-sm); }
 
+  .ops-schema-context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-ops-2);
+    font-size: var(--text-ops-body);
+    color: var(--ops-text-muted);
+  }
+
+  .ops-schema-context code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--color-base-content);
+  }
+
   .ops-time {
     display: flex;
     max-width: 100%;
@@ -971,6 +1051,9 @@
   .ops-time__disclosure > summary {
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center;
+    min-height: 24px;
   }
 
   .ops-time__disclosure code {
@@ -981,36 +1064,30 @@
     user-select: text;
   }
 
-  .ops-time__copy-group {
-    font-family: var(--font-sans);
-    display: inline-flex;
-    max-width: 100%;
-    min-width: 0;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-ops-2);
-  }
-
   .ops-time__copy {
+    font-family: var(--font-sans);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: var(--control-h-md);
     max-width: 100%;
     gap: var(--spacing-ops-2);
-    padding: 0 var(--spacing-ops-3);
+    padding: 0;
     flex: none;
     border-radius: var(--radius-ops-control);
-    color: var(--color-primary);
-    font-weight: 600;
+    color: var(--color-base-content);
+    font-weight: 400;
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
+    text-decoration: underline dotted;
+    text-underline-offset: 0.25em;
     transition:
       background-color var(--duration-ops-fast) var(--ease-ops-standard),
       color var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   .ops-time__feedback {
+    font-family: var(--font-sans);
     display: inline-flex;
     max-width: 100%;
     min-width: 0;
@@ -1020,6 +1097,27 @@
     color: var(--color-base-content);
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
+  }
+
+  .ops-time__feedback:not(:has([data-state])) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .ops-time__feedback:has([data-state="success"]) {
+    position: fixed;
+    inset-inline-end: var(--spacing-ops-4);
+    bottom: var(--spacing-ops-4);
+    z-index: var(--z-index-ops-flash);
+    max-width: calc(100vw - 2 * var(--spacing-ops-4));
+    padding: var(--spacing-ops-3) var(--spacing-ops-4);
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-ops-control);
+    background: var(--ops-surface-1);
+    box-shadow: var(--shadow-ops-overlay);
   }
 
   .ops-time__feedback-dismiss {
@@ -1579,6 +1677,32 @@
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
+  .failed-sync-row__facts {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: minmax(0, 6rem) minmax(0, 1fr);
+    gap: var(--spacing-ops-1) var(--spacing-ops-2);
+    margin-top: var(--spacing-ops-3);
+    font-size: var(--text-ops-body);
+    line-height: var(--leading-ops-body);
+  }
+
+  .failed-sync-row__facts dt {
+    font-weight: 600;
+  }
+
+  .failed-sync-row__facts dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .failed-sync-row__facts code {
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-size: inherit;
+    overflow-wrap: anywhere;
+  }
+
   /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
      vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
      to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
@@ -1699,11 +1823,66 @@
     gap: var(--spacing-ops-3);
   }
 
-  .ops-schema-signal-card__badges {
+  .ops-schema-health__summary {
+    min-height: var(--control-h-md);
+    border-radius: var(--radius-ops-control);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .ops-schema-health__heading {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: var(--spacing-ops-2);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-ops-3);
+    min-height: var(--control-h-md);
+  }
+
+  .ops-schema-health__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .ops-schema-health__summary:hover .ops-schema-health__toggle {
+    color: var(--color-primary);
+  }
+
+  .ops-schema-health__toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--spacing-ops-1);
+    font-size: var(--text-ops-body);
+    color: color-mix(in srgb, var(--color-base-content) 75%, transparent);
+  }
+
+  .ops-schema-health[open] > summary .ops-schema-health__toggle > svg {
+    transform: rotate(180deg);
+  }
+
+  .ops-schema-health__details {
+    display: grid;
+    gap: var(--spacing-ops-4);
+    padding-top: var(--spacing-ops-4);
+  }
+
+  .ops-schema-health:not([open]) > .ops-schema-health__details {
+    display: none;
+  }
+
+  .ops-schema-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--control-h-md);
+    padding: 0;
+    border-radius: var(--radius-ops-control);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
+  }
+
+  .ops-schema-action:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
   }
 
   .ops-schema-signal-card__groups {
@@ -1713,7 +1892,7 @@
     padding-top: var(--spacing-ops-4);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 960px) {
     .ops-schema-signal-card__groups {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--spacing-ops-panel);
@@ -1799,7 +1978,7 @@
 
   #flash-group {
     position: fixed;
-    top: 5.75rem;
+    bottom: 1rem;
     right: 1rem;
     z-index: var(--z-index-ops-flash);
     display: grid;
@@ -1826,15 +2005,6 @@
 
   .ops-flash--error {
     border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
-  }
-
-  @media (max-width: 640px) {
-    #flash-group {
-      top: auto;
-      right: 1rem;
-      bottom: 1rem;
-    }
-
   }
 
   /* Command palette (⌘K) + cheat-sheet overlay. */
@@ -2123,6 +2293,12 @@
 
 .ops-modal.modal-open {
   visibility: visible;
+}
+
+.failed-sync-delete-modal {
+  max-height: min(90dvh, 48rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 @starting-style {
@@ -2441,6 +2617,17 @@
 }
 
 /* Text links must remain readable above daisyUI's utility-layer primary color. */
+.ops-table-scroll thead th {
+  color: var(--color-base-content);
+}
+
+@media (max-width: 640px) {
+  .ops-segmented-btn,
+  .ops-time__disclosure > summary,
+  .ops-time__copy,
+  .ops-disclosure-compact > summary { min-height: 44px; }
+}
+
 .ops-shell a.link-primary {
   color: var(--color-base-content);
   text-decoration: underline;

@@ -9,10 +9,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   alias Scrypath.Operator.FailedWork
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOps.OperatorSelection
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     scrypath_opts = ScrypathOps.Schemas.scrypath_opts()
 
@@ -29,12 +30,17 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:last_refresh_at, nil)
       |> assign(:recovery_receipts, %{})
       |> assign(:delete_confirmation, nil)
+      |> apply_phase174_fixture(params)
+      |> assign_phase174_stale_sudo()
 
     {:ok, socket}
   end
 
   @impl true
-  def handle_params(params, _uri, socket), do: {:noreply, resolve_selection(socket, params)}
+  def handle_params(params, _uri, socket) do
+    socket = apply_phase174_fixture(socket, params)
+    {:noreply, resolve_selection(socket, params)}
+  end
 
   @impl true
   def handle_event("refresh", _params, socket) do
@@ -49,8 +55,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     {:noreply, socket}
   end
 
-  def handle_event("retry", %{"id" => id}, socket) do
-    {:noreply, request_retry(socket, id)}
+  def handle_event("retry", %{"id" => key, "generation" => generation}, socket) do
+    {:noreply, request_retry(socket, key, generation)}
+  end
+
+  def handle_event("retry", %{"id" => key}, socket) do
+    {:noreply, request_retry(socket, key, to_string(socket.assigns.context_generation))}
   end
 
   def handle_event("confirm_retry_delete", _params, socket) do
@@ -77,7 +87,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   def handle_event("select_schema", %{"schema" => mod_str}, socket) do
-    case OperatorSelection.resolve(%{"schema" => mod_str}, ScrypathOps.Schemas.allowlist()) do
+    case OperatorSelection.resolve(%{"schema" => mod_str}, active_schema_allowlist(socket)) do
       {:ok, mod} ->
         {:noreply,
          push_patch(socket,
@@ -90,7 +100,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   end
 
   defp resolve_selection(socket, params) do
-    allowlist = ScrypathOps.Schemas.allowlist()
+    allowlist = active_schema_allowlist(socket)
     resolution = OperatorSelection.resolve(params, allowlist)
 
     selected =
@@ -114,6 +124,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:schema_allowlist, allowlist)
       |> assign(:selected_schema, selected)
       |> assign(:selection_error, error)
+      |> assign(
+        :return_to,
+        if(selected,
+          do: OperatorSelection.path(socket.assigns.mount_path, "failed-sync", selected),
+          else: nil
+        )
+      )
       |> maybe_advance_generation(changed?)
 
     if selected do
@@ -145,12 +162,72 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp current_selection?(socket) do
     case OperatorSelection.resolve(
            %{"schema" => OperatorSelection.canonical(socket.assigns.selected_schema)},
-           ScrypathOps.Schemas.allowlist()
+           active_schema_allowlist(socket)
          ) do
       {:ok, selected} -> selected == socket.assigns.selected_schema
       _ -> false
     end
   end
+
+  defp apply_phase174_fixture(%{assigns: %{live_action: :phase174}} = socket, params) do
+    if Mix.env() == :test do
+      source = Application.get_env(:scrypath_ops, :phase174_fixture_source)
+
+      if fixture_source?(source) do
+        scenario = Map.get(params, "scenario", "a-selected-b-worse")
+        fixture = source.scenario(scenario)
+
+        socket
+        |> assign(:schema_allowlist, fixture.allowlist)
+        |> assign(:scrypath_opts, fixture.opts)
+        |> assign(:phase174_fixture_scenario, scenario)
+      else
+        socket
+      end
+    else
+      socket
+    end
+  end
+
+  defp apply_phase174_fixture(socket, _params), do: socket
+
+  defp assign_phase174_stale_sudo(
+         %{
+           assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario}
+         } = socket
+       )
+       when is_binary(scenario) do
+    if Mix.env() == :test do
+      assign(
+        socket,
+        :operator_context,
+        %OperatorContext{
+          user_id: "phase174-fixture-user",
+          active_org_id: "phase174-fixture-org",
+          sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
+        }
+      )
+    else
+      socket
+    end
+  end
+
+  defp assign_phase174_stale_sudo(socket), do: socket
+
+  defp fixture_source?(source) when is_atom(source) do
+    Code.ensure_loaded?(source) and function_exported?(source, :scenario, 1)
+  end
+
+  defp fixture_source?(_source), do: false
+
+  defp active_schema_allowlist(%{
+         assigns: %{live_action: :phase174, phase174_fixture_scenario: scenario} = assigns
+       })
+       when is_binary(scenario) do
+    if Mix.env() == :test, do: assigns.schema_allowlist, else: ScrypathOps.Schemas.allowlist()
+  end
+
+  defp active_schema_allowlist(_socket), do: ScrypathOps.Schemas.allowlist()
 
   defp unavailable(socket) do
     Enum.each(Map.values(Map.get(socket.assigns, :recovery_receipts, %{})), fn receipt ->
@@ -215,27 +292,30 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp request_retry(socket, id) do
+  defp request_retry(socket, key, generation) do
     cond do
+      generation != to_string(socket.assigns.context_generation) ->
+        put_flash(socket, :info, "That retry action belongs to an earlier inspection.")
+
       not current_selection?(socket) ->
         unavailable(socket)
 
-      Map.has_key?(Map.get(socket.assigns, :recovery_receipts, %{}), to_string(id)) ->
-        put_flash(socket, :info, "A retry for job #{id} is already accepted.")
+      receipt_already_accepted?(socket, key) ->
+        put_flash(socket, :info, accepted_retry_message(socket, key))
 
       true ->
-        case failed_work_row(socket, id) do
+        case failed_work_row(socket, key) do
           nil ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              put_flash(socket, :error, "Could not find that failed job.")
+              put_flash(socket, :error, "Could not find that failed sync work row.")
             end)
 
           %{operation: :delete, recovery: recovery} when not is_nil(recovery) ->
-            assign(socket, :delete_confirmation, to_string(id))
+            assign(socket, :delete_confirmation, key)
 
           %{recovery: recovery} when not is_nil(recovery) ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              retry_failed_work(socket, id)
+              retry_failed_work(socket, key)
             end)
 
           _row ->
@@ -244,8 +324,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp retry_failed_work(socket, id) do
-    case failed_work_row(socket, id) do
+  defp retry_failed_work(socket, key) do
+    case failed_work_row(socket, key) do
       nil ->
         put_flash(socket, :error, "Could not find that failed job.")
 
@@ -260,10 +340,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             case Scrypath.retry_sync_work(recovery, runtime_opts) do
               {:ok, result} ->
                 receipt = accepted_receipt(socket, row, recovery, result, runtime_opts)
+                receipt_key = ui_work_key(socket.assigns.selected_schema, row)
 
                 socket
                 |> refresh_inspection()
-                |> update(:recovery_receipts, &Map.put(&1, to_string(id), receipt))
+                |> update(:recovery_receipts, &Map.put(&1, receipt_key, receipt))
                 |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
 
               {:error, reason} ->
@@ -302,6 +383,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       index: index,
       backend: Atom.to_string(recovery.backend),
       source_failure: %{
+        source: row.source,
         id: row.id,
         task_uid: Map.get(row.metadata, :task_uid),
         index: Map.get(row.metadata, :index),
@@ -377,7 +459,25 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp field(map, key) when is_map(map), do: Map.get(map, key)
   defp field(_, _), do: nil
 
-  defp recovery_receipt(receipts, id), do: Map.get(receipts, to_string(id))
+  defp recovery_receipt(receipts, row, selected_schema) do
+    Map.get(receipts, ui_work_key(selected_schema, row))
+  end
+
+  defp receipt_already_accepted?(socket, key) do
+    receipts = Map.get(socket.assigns, :recovery_receipts, %{})
+
+    case failed_work_row(socket, key) do
+      nil -> false
+      row -> Map.has_key?(receipts, ui_work_key(socket.assigns.selected_schema, row))
+    end
+  end
+
+  defp accepted_retry_message(socket, key) do
+    case failed_work_row(socket, key) do
+      nil -> "A retry for failed sync work is already accepted."
+      row -> "A retry for #{failed_work_title(row)} is already accepted."
+    end
+  end
 
   defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
@@ -392,14 +492,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "#{base}/sync-drift?#{query}"
   end
 
-  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, id)
-       when is_binary(id) do
+  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, key, selected_schema)
+       when is_binary(key) do
     Enum.find(entries, fn row ->
-      to_string(row.id) == id and row.operation == :delete and row.recovery
+      row.schema == selected_schema and ui_work_key(selected_schema, row) == key and
+        row.operation == :delete and row.recovery
     end)
   end
 
-  defp delete_confirmation_row(_, _), do: nil
+  defp delete_confirmation_row(_, _, _), do: nil
 
   defp delete_confirmation_ids(row) do
     get_in(row.recovery.reference, [:payload, "document_ids"]) || []
@@ -415,12 +516,31 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "Retry deletion of #{count} documents for #{module_flat_name(row.schema)} in #{delete_confirmation_index(row)}."
   end
 
-  defp failed_work_row(socket, id) do
-    inspection = Map.get(socket.assigns, :inspection)
+  defp failed_work_row(socket, key) do
+    case Map.get(socket.assigns, :inspection) do
+      %FailedSyncWorkInspection{entries: entries} when is_list(entries) ->
+        selected_schema = socket.assigns.selected_schema
 
-    if inspection do
-      Enum.find(inspection.entries, &(to_string(&1.id) == to_string(id)))
+        if current_selection?(socket) do
+          Enum.find(entries, fn row ->
+            row.schema == selected_schema and ui_work_key(selected_schema, row) == key
+          end)
+        end
+
+      _ ->
+        nil
     end
+  end
+
+  defp ui_work_key(selected_schema, row) do
+    [
+      OperatorSelection.canonical(selected_schema),
+      to_string(row.source),
+      to_string(row.id)
+    ]
+    |> Enum.map(fn part -> [<<byte_size(part)::unsigned-big-32>>, part] end)
+    |> IO.iodata_to_binary()
+    |> Base.url_encode64(padding: false)
   end
 
   defp empty_counts(rows) do
@@ -452,13 +572,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp failed_sync_status_kind(_inspection), do: :warning
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 0}}),
-    do: "No failed sync work visible"
+    do: "No failed sync work for this schema"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 1}}),
-    do: "1 failed sync job needs triage"
+    do: "1 failed sync work item needs triage"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: total}}),
-    do: "#{total} failed sync jobs need triage"
+    do: "#{total} failed sync work items need triage"
 
   defp dominant_reason_class(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
@@ -470,16 +590,57 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp maybe_map_from_struct(%_{} = struct), do: Map.from_struct(struct)
   defp maybe_map_from_struct(map) when is_map(map), do: map
 
-  defp retryable_count(%FailedSyncWorkInspection{entries: entries}) do
-    Enum.count(entries, & &1.retryable?)
+  defp manual_recovery_count(%FailedSyncWorkInspection{entries: entries}) do
+    Enum.count(entries, &(not is_nil(&1.recovery)))
   end
 
-  defp retryable_label(1), do: "1 retryable job"
-  defp retryable_label(count), do: "#{count} retryable jobs"
+  defp manual_recovery_label(0), do: "No Queue jobs have manual replay data"
+  defp manual_recovery_label(1), do: "1 Queue job has manual replay data"
+  defp manual_recovery_label(count), do: "#{count} Queue jobs have manual replay data"
+
+  defp manual_recovery_explanation(%{recovery: recovery}) when not is_nil(recovery),
+    do: "Manual retry data is present; current server and host gates still apply."
+
+  defp manual_recovery_explanation(%{source: :meilisearch}),
+    do: "Backend tasks have no supported in-page replay action."
+
+  defp manual_recovery_explanation(%{source: :oban}),
+    do: "Recovery is unavailable under the current observed queue facts."
+
+  defp manual_recovery_explanation(_row),
+    do: "Recovery is unavailable under the current observed facts."
+
+  defp work_index(row), do: (row.recovery && row.recovery.index) || Map.get(row.metadata, :index)
+
+  defp work_source_details(%{source: :oban, metadata: metadata}) do
+    [
+      {"Queue", Map.get(metadata, :queue) || "unknown"},
+      {"Worker", Map.get(metadata, :worker) || "unknown"}
+    ]
+  end
+
+  defp work_source_details(%{source: :meilisearch, metadata: metadata}) do
+    [{"Source", "Backend tasks"}, {"Task", Map.get(metadata, :task_uid) || "unknown"}]
+  end
+
+  defp work_source_details(%{source: source}), do: [{"Source", to_string(source)}]
+
+  defp work_attempts(%{attempt: attempt, max_attempts: max_attempts})
+       when is_integer(attempt) and is_integer(max_attempts),
+       do: "#{attempt} of #{max_attempts}"
+
+  defp work_attempts(%{attempt: attempt}) when is_integer(attempt), do: "#{attempt}"
+  defp work_attempts(_row), do: nil
+
+  defp work_operation(:upsert), do: "upsert"
+  defp work_operation(:delete), do: "delete"
+  defp work_operation(:unknown), do: "unknown"
+  defp work_operation(operation), do: to_string(operation)
 
   defp reason_counts(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
     |> maybe_map_from_struct()
+    |> Enum.filter(fn {_class, count} -> count > 0 end)
     |> Enum.map(fn {class, count} -> {reason_class_label(class), count} end)
     |> Enum.sort_by(&elem(&1, 0))
   end
@@ -497,11 +658,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       shell={@shell}
       page_title={@page_title}
       ops_main_width={:wide}
+      recovery_target={@recovery_target}
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
-          subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
+          subtitle="Review the failure reason before retrying. Some failures need a configuration or data fix first."
         />
         <.ops_refresh_control
           id="failed-sync-refresh"
@@ -527,7 +689,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
         Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync work.
       </.ops_empty_state>
 
       <.ops_status
@@ -558,12 +720,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         role="alert"
       >
         The selected schema could not be inspected. Check backend and queue configuration, then
-        refresh failed sync jobs. Reason:
+        refresh failed sync work. Reason:
         <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
       <.ops_panel :if={@inspection}>
-        <section aria-labelledby="failed-sync-rollups-heading">
+        <section :if={@inspection.counts.total > 0} aria-labelledby="failed-sync-rollups-heading">
           <.ops_status
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
@@ -577,13 +739,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-ops-body text-base-content/80">
             <span>
               <strong>{@inspection.counts.total}</strong>
-              failed sync {if @inspection.counts.total == 1, do: "job", else: "jobs"}
+              failed sync work {if @inspection.counts.total == 1, do: "item", else: "items"}
             </span>
             <span aria-hidden="true">·</span>
-            <span>{retryable_label(retryable_count(@inspection))}</span>
+            <span>{manual_recovery_label(manual_recovery_count(@inspection))}</span>
             <span class="sr-only" id="failed-sync-rollups-heading">Failure reasons</span>
             <span
               :for={{label, count} <- reason_counts(@inspection)}
+              data-testid="failed-sync-reason-count"
               class="rounded-full border border-base-300 px-2 py-0.5 text-ops-sm"
             >
               {label}: {count}
@@ -596,18 +759,24 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             id="failed-sync-table-heading"
             class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            Failed sync jobs
+            Failed sync work
           </h2>
           <.ops_empty_hero
             :if={@inspection.counts.total == 0}
-            title="No failed sync jobs"
+            title="No failed sync work for this schema"
             icon="hero-shield-check"
             class="mt-3"
             data-testid="failed-sync-empty-hero"
           >
-            Nothing needs retry for this schema. If you are confirming recovery, check sync drift before changing indexes.
+            No failed work was returned by this inspection. Check sync status to see whether work is still pending.
             <:actions>
-              <.ops_button phx-click="refresh" variant={:default}>
+              <.ops_link_button
+                navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
+                variant={:primary}
+              >
+                Check sync status
+              </.ops_link_button>
+              <.ops_button phx-click="refresh" variant={:ghost}>
                 Refresh this view
               </.ops_button>
             </:actions>
@@ -616,46 +785,70 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
             <.ops_result_row
               :for={row <- sorted_entries(@inspection)}
-              title={"Failed job #{inspect(row.id)}"}
-              subtitle={"#{row.operation} · #{row.source} · last attempt #{format_dt(row.last_attempt_at || row.failed_at)}"}
+              title={failed_work_title(row)}
+              id={"failed-sync-row-#{ui_work_key(@selected_schema, row)}"}
               data-testid="failed-sync-row"
             >
               <:meta>
                 <.ops_badge kind={:warning}>{reason_class_label(row.reason_class)}</.ops_badge>
                 <.ops_badge kind={:error}>{row.state}</.ops_badge>
-                <.ops_badge :if={row.retryable?} kind={:partial}>retryable</.ops_badge>
               </:meta>
+              <dl class="failed-sync-row__facts" data-testid="failed-sync-facts">
+                <dt>Selected schema</dt>
+                <dd><code>{module_flat_name(@selected_schema)}</code></dd>
+                <dt>Operation</dt>
+                <dd>{work_operation(row.operation)}</dd>
+                <dt>Index</dt>
+                <dd><code>{work_index(row) || "Unavailable in this inspection"}</code></dd>
+                <div :for={{label, value} <- work_source_details(row)} class="contents">
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+                <dt>Source time</dt>
+                <dd>{format_dt(row.last_attempt_at || row.failed_at)}</dd>
+                <dt :if={not is_nil(work_attempts(row))}>Attempts</dt>
+                <dd :if={not is_nil(work_attempts(row))}>{work_attempts(row)}</dd>
+              </dl>
               <p
-                class="mt-2 break-words text-ops-body text-base-content/85"
+                class="mt-3 break-words text-ops-body leading-ops-body text-base-content/85"
                 data-testid="failed-sync-reason"
               >
                 {row.reason}
               </p>
+              <p
+                class="mt-2 text-ops-body leading-ops-body text-base-content/85"
+                data-testid="failed-sync-recovery-availability"
+              >
+                {manual_recovery_explanation(row)}
+              </p>
               <.ops_action_group
-                :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row.id))}
-                tone={:advanced}
+                :if={
+                  row.recovery && is_nil(recovery_receipt(@recovery_receipts, row, @selected_schema))
+                }
                 class="mt-3 items-start"
               >
                 <.ops_button
                   phx-click="retry"
-                  phx-value-id={row.id}
+                  phx-value-id={ui_work_key(@selected_schema, row)}
+                  phx-value-generation={@context_generation}
                   data-testid="failed-sync-retry"
                   variant={:primary}
-                  size={:xs}
                 >
-                  Retry sync work
+                  Retry queue job
                 </.ops_button>
               </.ops_action_group>
               <.ops_status
-                :if={receipt = recovery_receipt(@recovery_receipts, row.id)}
+                :if={receipt = recovery_receipt(@recovery_receipts, row, @selected_schema)}
                 class="mt-3"
                 kind={:info}
-                title="Retry accepted"
+                title={"Replacement accepted — queue job #{receipt.replacement_job}. Terminal completion has not been observed."}
                 role="status"
                 data-testid="recovery-receipt"
               >
-                Queue job {receipt.replacement_job} · {receipt.operation} · <.ops_inline_code>{receipt.index}</.ops_inline_code>.
-                Original failure #{row.id} retained.
+                Original Queue job {row.id} failure retained. Operation {work_operation(
+                  receipt.operation
+                )} ·
+                index <.ops_inline_code>{receipt.index}</.ops_inline_code>.
                 <.link
                   :if={receipt.handle}
                   navigate={recovery_handoff_path(@mount_path, @selected_schema, receipt)}
@@ -665,7 +858,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 </.link>
               </.ops_status>
               <.ops_disclosure
-                id={"failed-detail-#{row.id}"}
+                id={"failed-detail-#{ui_work_key(@selected_schema, row)}"}
                 summary="Diagnostics"
                 variant={:compact}
                 class="mt-3"
@@ -685,25 +878,28 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </.ops_disclosure>
       </.ops_panel>
 
-      <.ops_handoff :if={@inspection && @selected_schema}>
+      <.ops_handoff :if={@inspection && @inspection.counts.total > 0 && @selected_schema}>
         <:step
           navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
-          hint="When the queue's clear —"
+          hint="To verify sync —"
         >
-          Check sync and drift
+          Check sync status
         </:step>
       </.ops_handoff>
 
       <.ops_modal
-        :if={delete_confirmation_row(@inspection, @delete_confirmation)}
+        :if={delete_confirmation_row(@inspection, @delete_confirmation, @selected_schema)}
         id="retry-delete-modal"
         title="Confirm delete sync work"
         description={
-          delete_confirmation_description(delete_confirmation_row(@inspection, @delete_confirmation))
+          delete_confirmation_description(
+            delete_confirmation_row(@inspection, @delete_confirmation, @selected_schema)
+          )
         }
         action_label="retry delete"
         initial_focus="[data-ops-modal-cancel]"
         cancel_event="cancel_retry_delete"
+        class="failed-sync-delete-modal"
       >
         <.form for={%{}} phx-submit="confirm_retry_delete" class="space-y-3">
           <div class="rounded-ops-surface border border-base-300 p-ops-3 text-ops-body">
@@ -714,18 +910,24 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <p>
               Index
               <.ops_inline_code>
-                {delete_confirmation_index(delete_confirmation_row(@inspection, @delete_confirmation))}
+                {delete_confirmation_index(
+                  delete_confirmation_row(@inspection, @delete_confirmation, @selected_schema)
+                )}
               </.ops_inline_code>
             </p>
             <p>
               {length(
-                delete_confirmation_ids(delete_confirmation_row(@inspection, @delete_confirmation))
+                delete_confirmation_ids(
+                  delete_confirmation_row(@inspection, @delete_confirmation, @selected_schema)
+                )
               )} documents
             </p>
             <ul class="mt-2 list-inside list-disc break-all font-mono text-ops-sm">
               <li :for={
                 document_id <-
-                  delete_confirmation_ids(delete_confirmation_row(@inspection, @delete_confirmation))
+                  delete_confirmation_ids(
+                    delete_confirmation_row(@inspection, @delete_confirmation, @selected_schema)
+                  )
               }>
                 {inspect(document_id)}
               </li>
@@ -754,4 +956,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp format_dt(%DateTime{} = dt) do
     Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
   end
+
+  defp failed_work_title(%{source: :oban, id: id}), do: "Queue job #{inspect(id)}"
+  defp failed_work_title(%{source: :meilisearch, id: id}), do: "Backend task #{inspect(id)}"
+  defp failed_work_title(%{source: source, id: id}), do: "#{source} work #{inspect(id)}"
 end

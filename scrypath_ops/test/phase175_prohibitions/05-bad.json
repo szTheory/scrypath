@@ -1,0 +1,1 @@
+{"kind":"mutation","find":"Gating.gate_sensitive_action(socket, :swap_live, fn ->","replace":"Gating.gate_sensitive_action(%{socket | assigns: Map.delete(socket.assigns, :operator_context)}, :swap_live, fn ->"}

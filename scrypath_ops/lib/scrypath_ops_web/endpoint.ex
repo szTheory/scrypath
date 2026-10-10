@@ -31,6 +31,20 @@ defmodule ScrypathOpsWeb.Endpoint do
 
   if Mix.env() == :test do
     plug(Plug.Static,
+      at: "/ops/phase174",
+      from: :scrypath_ops,
+      gzip: false,
+      only: ScrypathOpsWeb.static_paths()
+    )
+
+    plug(Plug.Static,
+      at: "/ops/phase175",
+      from: :scrypath_ops,
+      gzip: false,
+      only: ScrypathOpsWeb.static_paths()
+    )
+
+    plug(Plug.Static,
       at: "/ops/phase173",
       from: :scrypath_ops,
       gzip: false,

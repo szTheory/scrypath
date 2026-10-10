@@ -1,0 +1,49 @@
+{
+  "phase": 174,
+  "prior_phase": 173,
+  "unique_browser_cases_with_passing_evidence": 34,
+  "full_native_report": {
+    "path": "174-REGRESSION-BROWSER.xml",
+    "tests": 34,
+    "passed": 32,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "sha256": "aab7afc065045a72307752b51136d161d45720b6a7482ee03fb2cf7320cb424f",
+    "harness_source_commit": "85afb35703c4ea935633b30058b36968c5266afe"
+  },
+  "focused_native_report": {
+    "path": "174-REGRESSION-FOCUSED.xml",
+    "tests": 2,
+    "passed": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "sha256": "edd355eb0d0066e0c8c1c837d7973d7101aa401952241586a0cb713df5fbac12",
+    "harness_source_commit": "50b331041ee8fd8dc164724b9e89a50148c866ad"
+  },
+  "resolved_case_identity_match": true,
+  "product_and_fixture_source_commit": "e286962f8174b2d1f5911c2b12a4018375c47d5c",
+  "reason": "Two full-run failures expected removed queue-observed prose. The focused rerun asserts all three exact zero queue metrics, retained last-success timestamps, no success observed, source-local unavailability and absence of success styling. All production/fixture files and the other 32 cases are unchanged. This is complete scoped behavioral coverage across two native runs, not a fabricated single green 34-case report or a full advisory lane claim.",
+  "core_regression": {
+    "tests": 661,
+    "properties": 4,
+    "failures": 0,
+    "excluded": 85,
+    "source_commit": "973813d",
+    "command": "mix test --exclude integration --exclude docs_contract",
+    "timeout_seconds": 600
+  },
+  "ops": {
+    "tests": 275,
+    "doctests": 2,
+    "failures": 0,
+    "source_commit": "e286962",
+    "command": "mix precommit"
+  },
+  "limits": [
+    "Only current-milestone prior Phase173 references were reconciled; archived phases were not reopened.",
+    "Native generic regression command resolver lacks Elixir; CONTRIBUTING command was explicitly normalized and bounded with native run-with-timeout.",
+    "No hosted exact final-SHA closeout, phase completion, inherited advisory remediation or release claim is inferred."
+  ]
+}

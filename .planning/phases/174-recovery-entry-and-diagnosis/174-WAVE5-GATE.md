@@ -1,0 +1,9 @@
+# Phase 174 Wave 5 gate
+
+Plan 06 has a committed summary followed by separate tracking commits. HEAD at review is 7872153658446266ffba018c230efadc8856c404 and the tree is clean. Parent inspected the actual route, selected-target and real Sigra return test, not only its summary. Native artifact probe passes 2/2, key links 3/3 and evaluation scope resolves eight reachable task/summary/tracking commits; the first two created files exist and the self-check reports PASSED.
+
+The executor's final focused suite passes 10 tests. Its final canonical Ops precommit passes 273 TAP cases including two doctests after c2706f1 restricted stale fixture context to mount. Setup errors and earlier production regressions remain recorded; only the intended executable assertions were classified as RED. The test confirms real stale-sudo interruption and a deliberate new selected-A navigation with no receipt or replay. It does not prove host authentication or approval. All four requirements remain pending until browser proof and independent verification.
+
+Fresh execute:wave:post commands exit zero: schema drift block=false; codebase drift skips because STRUCTURE.md is absent; UI safety sees the approved spec and changed UI files, block=false. These metadata gates do not establish browser behavior. Fresh execute:wave:pre has no active hooks.
+
+Plan 08 is the sole incomplete plan, native ready=true, and TDD applicability=true. Its pre-wave key-link probe exits zero with one verified predecessor and two pending files owned by 08; pending future files are not completed links. All three links must be established after implementation. There is no .gitmodules. Native base-check reports HEAD divergence and degrades this run to sequential none; the fresh plan-scoped sentinel records phase 174/plan 174-08/none. Persistent configuration is unchanged. Frozen 173, old planning, original dirty source and preview 4012 remain preserved. No Phase 175 transition or simulated approval.

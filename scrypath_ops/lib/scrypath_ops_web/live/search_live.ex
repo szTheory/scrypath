@@ -16,15 +16,12 @@ defmodule ScrypathOpsWeb.SearchLive do
   @guide_href "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
 
   attr(:result, :any, required: true)
-  attr(:guide_href, :string, required: true)
 
   def empty_or_hits_single(assigns) do
     ~H"""
     <%= if @result.hits == [] do %>
       <.ops_empty_state title="No matching documents">
-        Widen or simplify the query, raise the page size, or pick another index, then run
-        search again. The panel above explains merge ceilings and backend limits
-        (<a class="link link-primary" href={@guide_href}>guides/multi-index-search.md</a>).
+        Try different search text or choose another schema, then run search again.
       </.ops_empty_state>
     <% else %>
       <div class="grid gap-2">
@@ -59,6 +56,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:completed_run, nil)
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
       |> assign_capture_defaults()
@@ -170,7 +168,7 @@ defmodule ScrypathOpsWeb.SearchLive do
          put_flash(
            socket,
            :error,
-           "Filename must match *.json basename rules (letters, digits, ., -, _)."
+           "Use a .json filename with letters, digits, dots, hyphens, or underscores."
          )}
 
       true ->
@@ -187,7 +185,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                    put_flash(
                      socket,
                      :error,
-                     "That playbook name is already in use — pick another basename."
+                     "That filename is already in use — choose another."
                    )}
                 else
                   case Store.save_workspace_file(root, basename, json <> "\n") do
@@ -222,6 +220,30 @@ defmodule ScrypathOpsWeb.SearchLive do
     {:noreply, put_flash(socket, :error, "Missing save fields.")}
   end
 
+  def handle_event("search_change", params, socket) do
+    socket =
+      socket
+      |> assign(:q, Map.get(params, "q", socket.assigns.q))
+      |> assign(:page_size, parse_page_size_param(params["page_size"], socket.assigns.page_size))
+      |> assign(
+        :selected_schema,
+        selected_schema_from_params(params, socket.assigns.schema_allowlist, socket)
+      )
+
+    socket =
+      if socket.assigns.mode == :multi do
+        assign(
+          socket,
+          :selected_multi_schemas,
+          multi_schemas_from_form(params, socket.assigns.schema_allowlist)
+        )
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
   def handle_event("search", params, socket) do
     # Two-step so the loading skeleton paints before the bounded read runs (S2). The
     # Scrypath search dispatch is synchronous; deferring it to handle_info/2 lets LiveView
@@ -234,6 +256,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:completed_run, nil)
       |> assign(:searching, true)
 
     {:noreply, socket}
@@ -257,6 +280,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:completed_run, nil)
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
       |> assign_capture_defaults()
@@ -323,6 +347,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             socket =
               socket
               |> assign(:result_single, res)
+              |> assign(:completed_run, %{q: res.query.text, schemas: [mod]})
               |> assign_search_capture_single(mod, q, opts)
               |> push_patch(
                 to:
@@ -345,13 +370,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp run_multi(socket, params, q, opts, allowlist, start_ms) do
-    selected =
-      params
-      |> Map.get("schemas", Map.get(params, "schemas[]", []))
-      |> List.wrap()
-      |> Enum.map(&module_in_allowlist(&1, allowlist))
-      |> Enum.reject(&is_nil/1)
-      |> Enum.uniq()
+    selected = multi_schemas_from_form(params, allowlist)
 
     socket = assign(socket, :selected_multi_schemas, selected)
 
@@ -394,6 +413,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             socket =
               socket
               |> assign(:result_multi, res)
+              |> assign(:completed_run, %{q: completed_multi_query(res, q), schemas: selected})
               |> assign(:show_all_footnote, footnote?)
               |> assign_search_capture_multi(selected, q, opts)
               |> push_patch(
@@ -453,6 +473,15 @@ defmodule ScrypathOpsWeb.SearchLive do
         module_in_allowlist(raw, allowlist) || socket.assigns.selected_schema ||
           List.first(allowlist)
     end
+  end
+
+  defp multi_schemas_from_form(params, allowlist) do
+    params
+    |> Map.get("schemas", Map.get(params, "schemas[]", []))
+    |> List.wrap()
+    |> Enum.map(&module_in_allowlist(&1, allowlist))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
   end
 
   defp selected_multi_from_params(params, allowlist, socket) do
@@ -522,18 +551,62 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp search_status_badge_kind(%{searching: true}), do: :running
+  defp search_status_badge_kind(%{run_error: error}) when not is_nil(error), do: :error
 
-  defp search_status_badge_kind(%{result_single: r1, result_multi: r2})
-       when not is_nil(r1) or not is_nil(r2), do: :success
+  defp search_status_badge_kind(%{result_multi: %MultiSearchResult{failures: [_ | _]}}),
+    do: :partial
 
+  defp search_status_badge_kind(%{completed_run: run}) when not is_nil(run), do: :success
   defp search_status_badge_kind(_), do: :neutral
 
   defp search_status_badge_label(%{searching: true}), do: "Running…"
+  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Search failed"
 
-  defp search_status_badge_label(%{result_single: r1, result_multi: r2})
-       when not is_nil(r1) or not is_nil(r2), do: "Last run loaded"
+  defp search_status_badge_label(%{result_multi: %MultiSearchResult{failures: [_ | _]}}),
+    do: "Partial results"
 
-  defp search_status_badge_label(_), do: "Run a probe"
+  defp search_status_badge_label(%{completed_run: run} = assigns) when not is_nil(run) do
+    if returned_hit_count(assigns) == 0, do: "No matches", else: "Completed"
+  end
+
+  defp search_status_badge_label(_), do: "Not run yet"
+
+  defp completed_search_status(%{searching: true}), do: "Running search…"
+  defp completed_search_status(%{completed_run: nil}), do: ""
+
+  defp completed_search_status(%{completed_run: %{q: q, schemas: schemas}} = assigns) do
+    count = returned_hit_count(assigns)
+    results = if count == 1, do: "1 result", else: "#{count} results"
+    query = if q == "", do: "an empty query", else: "“#{q}”"
+    targets = Enum.map_join(schemas, ", ", &inspect/1)
+    summary = "#{results} returned for #{query} in #{targets}."
+
+    case assigns.result_multi do
+      %MultiSearchResult{failures: [_ | _] = failures} ->
+        failed =
+          if length(failures) == 1,
+            do: "1 schema failed",
+            else: "#{length(failures)} schemas failed"
+
+        "Partial results: #{summary} #{failed}."
+
+      _ ->
+        summary
+    end
+  end
+
+  defp returned_hit_count(%{result_single: %{hits: hits}}), do: length(hits)
+
+  defp returned_hit_count(%{result_multi: %MultiSearchResult{ordered: ordered}}) do
+    Enum.reduce(ordered, 0, fn {_schema, result}, count -> count + length(result.hits) end)
+  end
+
+  defp returned_hit_count(_), do: 0
+
+  defp completed_multi_query(%MultiSearchResult{ordered: [{_schema, result} | _]}, _fallback),
+    do: result.query.text
+
+  defp completed_multi_query(_result, fallback), do: fallback
 
   # Lead a single-index hit row with its most human field (name/title/sku) so result
   # titles read meaningfully instead of "Hit 1 / Hit 2" (P29). Falls back to the
@@ -559,8 +632,13 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp hit_summary(hit) when is_map(hit) do
+    title = hit_human_field(hit)
+
     hit
     |> Map.take(["id", :id, "title", :title, "name", :name, "sku", :sku])
+    |> Enum.reject(fn {key, value} ->
+      key in ["title", :title, "name", :name, "sku", :sku] and to_string(value) == title
+    end)
     |> Enum.map(fn {key, value} -> "#{key}: #{value}" end)
     |> Enum.join(" · ")
     |> case do
@@ -769,21 +847,13 @@ defmodule ScrypathOpsWeb.SearchLive do
         <.ops_toolbar class="items-end">
           <.ops_page_header
             title={@page_title}
-            subtitle="Choose an index, run a query, inspect the answer, then save a repeatable check."
+            subtitle="Search your schemas and save useful queries as playbooks."
           />
         </.ops_toolbar>
 
         <.ops_trail current={:search} />
 
-        <.ops_notice
-          id="search-honesty-panel"
-          kind={:warning}
-          title="Non-production search playground"
-        >
-          Exploratory queries may be logged by Meilisearch or proxies. Do not paste production secrets or PII; keep page size and schema lists bounded.
-        </.ops_notice>
-
-        <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
+        <.ops_panel class="space-y-6">
           <.ops_empty_state :if={@schema_allowlist == []} title="No schemas configured">
             Add allowlisted schema modules with <code class="text-ops-body">schema_allowlist</code>
             under <code class="text-ops-body">:scrypath_ops</code>
@@ -806,11 +876,12 @@ defmodule ScrypathOpsWeb.SearchLive do
               for={%{}}
               as={:search}
               phx-submit="search"
+              phx-change="search_change"
               id="ops-search-playground-form"
               class="ops-form-stack"
             >
               <.ops_fieldset
-                legend="Search target"
+                legend="Search in"
                 disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
                 <.ops_segmented_control
@@ -818,80 +889,72 @@ defmodule ScrypathOpsWeb.SearchLive do
                   event="set_mode"
                   selected={to_string(@mode)}
                   disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                  items={[{"Single index", "single"}, {"Multi index", "multi"}]}
+                  items={[{"Single schema", "single"}, {"Multiple schemas", "multi"}]}
                 />
-                <p :if={@mode == :single} class="text-ops-body text-base-content/80">
-                  Choose one index for this search.
-                </p>
-                <p :if={@mode == :multi} class="text-ops-body text-base-content/80">
-                  Compare multiple indexes. Merged order is a federation view, not one global score. <a
-                    class="link link-hover text-primary"
-                    href={@guide_href}
-                  >Read semantics</a>.
-                </p>
-
                 <.ops_schema_select
                   :if={@mode == :single && @schema_allowlist != []}
                   id="search_schema"
                   name="schema"
-                  label="Index"
-                  hint="Choose the index for this run."
+                  label="Schema"
                   schemas={@schema_allowlist}
                   selected={@selected_schema}
                   disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
-                  class="font-mono text-ops-sm"
                 />
 
-                <div :if={@mode == :multi} class="space-y-2">
+                <fieldset :if={@mode == :multi} class="space-y-2">
+                  <legend class="text-ops-body font-semibold text-base-content/75">Schemas</legend>
                   <p id="search-schemas-hint" class="text-ops-sm leading-5 text-base-content/70">
-                    Choose up to {SearchPlayground.max_schemas_allowed()} indexes for this run.
+                    Choose up to {SearchPlayground.max_schemas_allowed()} schemas.
                   </p>
                   <.ops_checkbox_list
                     name="schemas[]"
                     options={schema_options(@schema_allowlist)}
                     selected={Enum.map(@selected_multi_schemas, &inspect/1)}
                   />
-                </div>
+                </fieldset>
               </.ops_fieldset>
 
-              <.ops_fieldset
-                legend="Query"
-                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-              >
-                <.ops_field
+              <.ops_field id="search_q" label="Search text">
+                <.ops_text_input
                   id="search_q"
-                  label="Search text"
-                  hint="Search text is sent to the selected index or indexes."
-                >
-                  <.ops_text_input
-                    id="search_q"
-                    name="q"
-                    value={@q}
-                    placeholder="Try a product or operator probe"
-                    hint="Search text is sent to the selected index or indexes."
-                    aria-describedby="search-honesty-panel"
-                  />
-                </.ops_field>
-              </.ops_fieldset>
-
-              <.ops_fieldset
-                legend="Limits / safety"
-                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-              >
-                <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/70">
-                  Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
+                  name="q"
+                  value={@q}
+                  placeholder="Enter search text"
+                  aria-describedby="search-honesty-panel"
+                  disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
+                />
+                <p id="search-honesty-panel" class="text-ops-sm leading-5 text-base-content/75">
+                  Queries may be logged by the search backend or proxies. Keep secrets and personal data out.
                 </p>
-                <.ops_field id="search_page_size" label="Page size" class="w-full max-w-xs">
-                  <.ops_number_input
-                    id="search_page_size"
-                    name="page_size"
-                    value={@page_size}
-                    min="1"
-                    max={SearchPlayground.max_page_size_allowed()}
-                    aria-describedby="search-honesty-panel search-limits-copy"
-                  />
-                </.ops_field>
-              </.ops_fieldset>
+              </.ops_field>
+
+              <details
+                id="search-options"
+                class="ops-disclosure ops-disclosure-compact"
+                phx-mounted={JS.ignore_attributes("open")}
+              >
+                <summary class="cursor-pointer text-ops-body font-medium text-base-content">
+                  Result limit: {@page_size}
+                </summary>
+                <div class="ops-disclosure-body mt-2 space-y-2">
+                  <.ops_field id="search_page_size" label="Result limit" class="w-full max-w-xs">
+                    <.ops_number_input
+                      id="search_page_size"
+                      name="page_size"
+                      value={@page_size}
+                      min="1"
+                      max={SearchPlayground.max_page_size_allowed()}
+                      aria-describedby="search-limits-copy"
+                      disabled={
+                        @schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)
+                      }
+                    />
+                  </.ops_field>
+                  <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/75">
+                    1–{SearchPlayground.max_page_size_allowed()} results per request. Default: {SearchPlayground.default_page_size()}.
+                  </p>
+                </div>
+              </details>
 
               <.ops_button
                 type="submit"
@@ -917,12 +980,95 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </.ops_badge>
               </div>
 
-              <div
-                :if={@searching}
-                class="space-y-3"
+              <p
+                id="search-completion-status"
                 role="status"
-                aria-label="Running search"
+                aria-live="polite"
+                aria-atomic="true"
+                class="min-w-0 break-words text-ops-body text-base-content/80"
               >
+                {completed_search_status(assigns)}
+              </p>
+
+              <section
+                :if={@capture_base != nil}
+                aria-labelledby="search-capture-heading"
+                class="space-y-3"
+              >
+                <h2 id="search-capture-heading" class="sr-only">
+                  Save as playbook
+                </h2>
+                <div class="ops-save-playbook">
+                  <.ops_button
+                    variant={:default}
+                    size={:sm}
+                    phx-click={JS.toggle(to: "#search-capture-form-panel")}
+                    aria-controls="search-capture-form-panel"
+                  >
+                    Save as playbook
+                  </.ops_button>
+
+                  <div id="search-capture-form-panel" style="display: none;">
+                    <.form
+                      for={%{}}
+                      as={:capture}
+                      phx-change="capture_change"
+                      phx-submit="save_search_capture"
+                      class="mt-4 max-w-2xl space-y-4"
+                      id="search-capture-form"
+                    >
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <.ops_field id="capture_title" label="Title">
+                          <.ops_text_input
+                            id="capture_title"
+                            name="capture[title]"
+                            value={@capture_title}
+                            placeholder="Optional"
+                          />
+                        </.ops_field>
+                        <.ops_field id="capture_basename" label="Filename (.json)">
+                          <.ops_text_input
+                            id="capture_basename"
+                            name="capture[basename]"
+                            value={@capture_basename}
+                            class="font-mono text-ops-body"
+                            placeholder="my-search.json"
+                            required
+                          />
+                        </.ops_field>
+                      </div>
+                      <.ops_field id="capture_description" label="Description">
+                        <.ops_textarea
+                          id="capture_description"
+                          name="capture[description]"
+                          value={@capture_description}
+                          placeholder="Optional"
+                        />
+                      </.ops_field>
+
+                      <p
+                        :if={@capture_preview_ok?}
+                        class="text-ops-sm text-base-content/70"
+                        data-testid="playbook-preview-marker"
+                      >
+                        Playbook preview is ready
+                      </p>
+                      <.ops_code_block
+                        :if={@capture_preview_json}
+                        data-testid="search-capture-preview-pre"
+                      >
+                        {@capture_preview_json}
+                      </.ops_code_block>
+
+                      <.ops_button type="submit" variant={:primary}>
+                        Save playbook
+                      </.ops_button>
+                    </.form>
+                  </div>
+                </div>
+              </section>
+
+              <div :if={@searching} class="space-y-3" aria-hidden="true">
                 <p class="text-ops-body text-base-content/70">
                   Running search...
                 </p>
@@ -941,49 +1087,34 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </p>
               </.ops_status>
 
-              <.ops_empty_hero
+              <p
                 :if={
                   !@searching && is_nil(@result_single) && is_nil(@result_multi) &&
                     is_nil(@run_error)
                 }
-                title="Run a search to see results"
-                icon="hero-magnifying-glass"
+                class="text-ops-body text-base-content/75"
                 data-testid="search-empty-hero"
               >
-                Choose an index, enter a query, inspect the answer, then save a useful check.
-                <:actions>
-                  <.ops_button
-                    type="submit"
-                    form="ops-search-playground-form"
-                    variant={:primary}
-                    disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                  >
-                    Run current search
-                  </.ops_button>
-                </:actions>
-              </.ops_empty_hero>
+                Run a search to see results.
+              </p>
 
               <div :if={@result_single} class="space-y-3">
-                <.empty_or_hits_single result={@result_single} guide_href={@guide_href} />
+                <.empty_or_hits_single result={@result_single} />
               </div>
 
               <div :if={@result_multi} class="space-y-3">
-                <div id="search-federation-status" role="status" class="text-ops-body space-y-2">
+                <div id="search-federation-status" class="text-ops-body space-y-2">
                   <p :if={@result_multi.failures == []} class="text-base-content/70">
-                    All selected indexes returned results on this run.
+                    All selected schemas responded.
                   </p>
                   <div
                     :if={@result_multi.failures != []}
                     id="search-partial-live"
                     class="rounded-ops-control border p-4 ops-tone-warning"
                   >
-                    <p class="font-semibold">Some indexes did not return results.</p>
+                    <p class="font-semibold">Some schemas could not be searched.</p>
                     <p class="mt-1 text-ops-sm">
-                      Failures are per index and do not cancel the whole response. Next: open failure details, adjust entries or backend, then run search again.
-                    </p>
-                    <p class="mt-2 text-ops-sm text-base-content/70">
-                      <code class="text-ops-sm">:all</code>
-                      entries expanded follow declaration order before limits apply when multi-search uses global expansion.
+                      Open failure details, check the affected schemas or backend, then run again.
                     </p>
                     <.ops_disclosure
                       summary={"Failure details (#{length(@result_multi.failures)})"}
@@ -1008,7 +1139,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                 <.ops_data_card title="Federation summary">
                   <p class="mt-1 text-base-content/80">
                     <strong>Merged order is a federation view</strong>
-                    - each index keeps its own relevance scores, so positions are not one global ranking.
+                    - each index keeps its own relevance scores, so positions are not one global ranking. <a
+                      class="link link-primary"
+                      href={@guide_href}
+                    >How results are merged</a>.
                   </p>
                   <p class="mt-2 text-ops-sm text-base-content/70">
                     Indexes in this response: {length(@result_multi.ordered)} · failures: {length(
@@ -1060,7 +1194,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </.ops_disclosure>
 
                 <div class="space-y-3">
-                  <.ops_heading level={2}>Index details</.ops_heading>
+                  <.ops_heading level={2}>Schema results</.ops_heading>
                   <%= for {mod, sres} <- @result_multi.ordered do %>
                     <.ops_data_card title={inspect(mod)}>
                       <p class="text-ops-sm text-base-content/70">
@@ -1080,88 +1214,6 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
             </section>
           </div>
-
-          <section
-            :if={@capture_base != nil}
-            aria-labelledby="search-capture-heading"
-            class="space-y-3"
-          >
-            <h2 id="search-capture-heading" class="sr-only">
-              Save as playbook
-            </h2>
-            <div class="ops-save-playbook">
-              <.ops_button
-                variant={:default}
-                size={:sm}
-                phx-click={JS.toggle(to: "#search-capture-form-panel")}
-                aria-controls="search-capture-form-panel"
-              >
-                Save as playbook
-              </.ops_button>
-
-              <div id="search-capture-form-panel" style="display: none;">
-                <p class="mt-3 max-w-2xl text-ops-body text-base-content/70">
-                  Save this run only after the result is worth reusing.
-                </p>
-
-                <.form
-                  for={%{}}
-                  as={:capture}
-                  phx-change="capture_change"
-                  phx-submit="save_search_capture"
-                  class="mt-4 max-w-2xl space-y-4"
-                  id="search-capture-form"
-                >
-                  <div class="grid gap-3 md:grid-cols-2">
-                    <.ops_field id="capture_title" label="Title">
-                      <.ops_text_input
-                        id="capture_title"
-                        name="capture[title]"
-                        value={@capture_title}
-                        placeholder="Optional"
-                      />
-                    </.ops_field>
-                    <.ops_field id="capture_basename" label="Basename (.json)">
-                      <.ops_text_input
-                        id="capture_basename"
-                        name="capture[basename]"
-                        value={@capture_basename}
-                        class="font-mono text-ops-body"
-                        placeholder="my-search.json"
-                        required
-                      />
-                    </.ops_field>
-                  </div>
-                  <.ops_field id="capture_description" label="Description">
-                    <.ops_textarea
-                      id="capture_description"
-                      name="capture[description]"
-                      value={@capture_description}
-                      placeholder="Optional"
-                    />
-                  </.ops_field>
-
-                  <p
-                    :if={@capture_preview_ok?}
-                    class="text-ops-sm text-base-content/70"
-                    data-testid="playbook-preview-marker"
-                  >
-                    Playbook preview is ready
-                  </p>
-                  <.ops_code_block
-                    :if={@capture_preview_json}
-                    data-testid="search-capture-preview-pre"
-                  >
-                    {@capture_preview_json}
-                  </.ops_code_block>
-
-                  <.ops_button type="submit" variant={:primary}>
-                    Save playbook
-                  </.ops_button>
-                </.form>
-              </div>
-            </div>
-          </section>
         </.ops_panel>
       </div>
     </Layouts.app>

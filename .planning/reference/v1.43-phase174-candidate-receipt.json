@@ -1,0 +1,28 @@
+{
+  "authority": "github-actions-exact-sha",
+  "repository": "szTheory/scrypath",
+  "workflow": "ci.yml",
+  "run_id": 37692220357,
+  "run_url": "https://github.com/szTheory/scrypath/actions/runs/37692220357",
+  "head_sha": "85afb35703c4ea935633b30058b36968c5266afe",
+  "event": "workflow_dispatch",
+  "jobs": [
+    "core (required)",
+    "package (required)",
+    "repository-contracts (required)",
+    "backend (required)",
+    "ecommerce-mounted (required)",
+    "coverage (advisory)",
+    "closeout-attestation"
+  ],
+  "coverage_artifact": {
+    "id": 11514150984,
+    "digest": "sha256:aee174df08330bdfb6a4c312ecfae4fb4a8029878074bd0316658839bf0c9fc5",
+    "expires_at": "2026-10-14T21:51:22Z"
+  },
+  "closeout_artifact": {
+    "id": 11513384088,
+    "digest": "sha256:80e1ce18cb99617f71af8a863afaf4b752e561aef5e6d55b85caa77c02006320",
+    "expires_at": "2026-10-14T21:55:10Z"
+  }
+}

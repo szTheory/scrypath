@@ -60,13 +60,20 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-  await page.getByRole("link", { name: "Start recovery" }).click();
+  await page.getByRole("link", { name: "Review Search health" }).click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
+  const variantHealth = page.getByTestId("posture-row").filter({ hasText: "ScrypathEcommerce.Catalog.Variant" });
+  const variantDetails = variantHealth.locator("details.ops-schema-health");
+  if (!(await variantDetails.evaluate(node => (node as HTMLDetailsElement).open))) {
+    await variantHealth.locator("summary.ops-schema-health__summary").click();
+  }
+  const failedHistory = variantHealth.locator("details.ops-disclosure").filter({ hasText: "Failed work history" });
+  if (await failedHistory.count()) await failedHistory.locator("summary").click();
   const variantHandoff = page.getByRole("link", { name: "View failed sync work for ScrypathEcommerce.Catalog.Variant", exact: true });
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
 
@@ -76,18 +83,18 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.locator(".ops-schema-picker__option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
-  const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
+  const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) });
   await expect(failedRow).toBeVisible();
-  const retry = failedRow.getByRole("button", { name: "Retry sync work" });
+  const retry = failedRow.getByRole("button", { name: "Retry queue job" });
   await expect(retry).toBeVisible();
   await retry.click();
 
   const receipt = failedRow.getByTestId("recovery-receipt");
   await expect(receipt).toBeVisible();
   await scanNonContrastA11y(page, testInfo, "retry-accepted-dark-desktop");
-  await expect(receipt).toContainText(`Original failure #${fixture.original_job_id} retained`);
+  await expect(receipt).toContainText(`Original Queue job ${fixture.original_job_id} failure retained`);
   const receiptText = await receipt.innerText();
-  const acceptedMatch = receiptText.match(/Queue job (\d+)/);
+  const acceptedMatch = receiptText.match(/Replacement accepted — queue job (\d+)/);
   expect(acceptedMatch, "rendered receipt must identify the accepted queue job").not.toBeNull();
   const acceptedJobId = Number(acceptedMatch![1]);
   expect(acceptedJobId).not.toBe(fixture.original_job_id);
@@ -151,21 +158,21 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   expect(wrongDocument.status(), "a different document cannot verify this recovery").toBe(422);
 
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Failed sync work", level: 1 })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Queue job ${fixture.original_job_id}` }) })).toBeVisible();
 });
 
 test("operator promotes only this returned task pair and unique target document", async ({ page, request }, testInfo) => {
@@ -181,24 +188,34 @@ test("operator promotes only this returned task pair and unique target document"
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await page.getByRole("link", { name: "Pre-flight sync drift" }).click();
+  await page.getByRole("link", { name: "Check sync and drift" }).click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Check index configuration" }).click();
+  const configurationDetails = page.getByTestId("configuration-details");
+  await expect(configurationDetails.getByText("Comparison details", { exact: true })).toBeVisible();
+  if ((await configurationDetails.getAttribute("open")) === null) {
+    await configurationDetails.locator("summary").click();
+  }
+  await expect(configurationDetails.getByText("Index configuration comparison", { exact: true })).toBeVisible();
   const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
   await expect(page.getByRole("heading", { name: "Confirm index promotion" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirm index promotion" }).getByRole("button", { name: "Promote target index", exact: true }).click();
+  const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
+  await expect(confirmation).toContainText(fixture.live_index);
+  await expect(confirmation).toContainText(fixture.target_index);
+  await confirmation.getByRole("button", { name: "Promote target index", exact: true }).click();
 
-  const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
+  const promotionStatus = page.locator("#promotion-task-status");
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
-  const taskText = await promotionStatus.innerText();
-  const taskMatch = taskText.match(/Task\s+(\d+)/);
-  expect(taskMatch, "completed promotion must retain its returned task UID").not.toBeNull();
-  const taskUid = Number(taskMatch![1]);
+  await advanced.locator("summary").click();
+  await expect(advanced).not.toHaveAttribute("open", "");
+  await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible();
+  const uidText = await promotionStatus.getByTestId("promotion-task-identity").locator("code").last().innerText();
+  const taskUid = Number(uidText);
+  expect(Number.isInteger(taskUid), "completed promotion must retain its returned task UID").toBe(true);
   const evidence = await probeSwapEvidence(request, {
     marker: fixture.marker, taskUid, liveIndex: fixture.live_index, targetIndex: fixture.target_index,
     taskBaseline: fixture.task_baseline, documentId: fixture.document_id

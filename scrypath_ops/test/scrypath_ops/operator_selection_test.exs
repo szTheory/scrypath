@@ -5,6 +5,21 @@ defmodule ScrypathOps.OperatorSelectionTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
 
+  test "overview URLs discard selection while retaining unrelated parameters and mount paths" do
+    assert OperatorSelection.overview_path("http://localhost/mounted/ops/health?schema=Gone") ==
+             "/mounted/ops/health"
+
+    uri = "http://localhost/mounted/ops?scenario=errors&schema=&note=%C3%89clair#checks"
+    parsed = uri |> OperatorSelection.overview_path() |> URI.parse()
+    assert parsed.path == "/mounted/ops"
+    assert URI.decode_query(parsed.query) == %{"scenario" => "errors", "note" => "Éclair"}
+    assert parsed.fragment == "checks"
+    assert parsed.host == nil
+
+    assert OperatorSelection.path("/mounted/ops/", "health", OpsPostB) ==
+             "/mounted/ops/health"
+  end
+
   test "resolves the first allowlisted schema only when the query is absent" do
     assert OperatorSelection.resolve(%{}, [OpsPostA, OpsPostB]) == {:ok, OpsPostA}
     assert OperatorSelection.resolve(%{"schema" => ""}, [OpsPostA]) == :unavailable

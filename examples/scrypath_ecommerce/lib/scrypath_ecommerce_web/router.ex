@@ -54,13 +54,18 @@ defmodule ScrypathEcommerceWeb.Router do
         live("/ui-fixtures", E2EUIFixtureLive)
       end
     end
+  end
 
+  # Mutation fixtures are available only in the disposable test runtime.
+  if Mix.env() == :test do
     scope "/dev/e2e", ScrypathEcommerceWeb do
       pipe_through(:api)
       post("/seed", E2EController, :seed)
       post("/drain", E2EController, :drain)
       post("/recovery-fixture", E2EController, :recovery_fixture)
       get("/recovery-probe", E2EController, :recovery_probe)
+      post("/delete-recovery-fixture", E2EController, :delete_recovery_fixture)
+      get("/delete-recovery-probe", E2EController, :delete_recovery_probe)
       post("/swap-fixture", E2EController, :swap_fixture)
       get("/swap-probe", E2EController, :swap_probe)
       get("/search-visible", E2EController, :search_visible)

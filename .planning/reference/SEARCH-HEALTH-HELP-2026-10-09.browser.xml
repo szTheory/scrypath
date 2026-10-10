@@ -1,0 +1,60 @@
+<testsuites id="" name="" tests="8" failures="0" skipped="0" errors="0" time="33.900994999999995">
+<testsuite name="phase174_health_help.spec.ts" timestamp="2026-10-09T17:12:50.379Z" hostname="chromium" tests="8" failures="0" skipped="0" time="29.873" errors="0">
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="2.691">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-mount-1505d-over-focus-and-tap-in-light-chromium/attachments/health-help-bb2fe634bd42e575bacb9d93765d915bef0c80ec.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="3.247">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-mount-e358c-hover-focus-and-tap-in-dark-chromium/attachments/health-help-780d4da012fce17fb3267b8d4edeaa54188774f6.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="2.425">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-mount-64a36-over-focus-and-tap-in-light-chromium/attachments/health-help-bbce46c65c204b20e33a01b09ab8a2372283e99f.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="mounted health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="3.523">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-mount-40827-hover-focus-and-tap-in-dark-chromium/attachments/health-help-2e61ab02c946e0c0f6a066cb58f4cd36d9dd9c44.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="5.86">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-stand-bfbed-over-focus-and-tap-in-light-chromium/attachments/health-help-2a50ec9e2f85d5f2c448dae5f6b02bfe478da3e8.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 1440px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="6.892">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-stand-5d9ff-hover-focus-and-tap-in-dark-chromium/attachments/health-help-0669f1828bee8f707c65ee9f9e75d8c579134895.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in light" classname="phase174_health_help.spec.ts" time="3.07">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-stand-ea28b-over-focus-and-tap-in-light-chromium/attachments/health-help-224e6a3e992156722a5eacc699905a4947f80456.png]]
+]]>
+</system-out>
+</testcase>
+<testcase name="standalone health metric help at 390px › explains terms on hover, focus, and tap in dark" classname="phase174_health_help.spec.ts" time="2.165">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|final-captures/phase174_health_help-stand-a804f-hover-focus-and-tap-in-dark-chromium/attachments/health-help-986d484e5d429e1af0fcb8a7757d91d185a58970.png]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

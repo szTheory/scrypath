@@ -1,0 +1,7 @@
+# Mid-Wave3 integration check
+
+Four plans01–04 have committed summaries/task histories. Parent repaired the concrete SyncDrift fixture cleanup race: ExUnit supervises the named Agent and owns shutdown instead of on_exit attempting a second stop after the linked test process exits. This changes test lifecycle only. Compile with warnings-as-errors exited0; full Ops precommit passed263tests plus2doctests,0failures, measured17.9s test runtime. Actual logs/receipt at `/private/tmp/scrypath-phase173-20261006-155750/174-wave3-post-plan04-{compile,precommit}.log` and174-wave3-post-plan04-gate.json. The receipt records source854706c plus this then-uncommitted test-only fix subsequently committed; it is local evidence, not hosted exact-SHA attestation. Unchanged core compiler type warning remains deferred.
+
+174-04 artifact probe passes4/4; plan-scope commits resolve8task/metadata commits. Actual requirements.ready-ids174-04 OPUX16/17 returnsready=[]/blockedboth because06/08 remain incomplete; parent restoredPending instead of prematureComplete. Its coverageD3 human_judgment isfalse: pending automated geometry/focus is not maintainer review. All four phase requirements await final dependent proof. No source/browser approval is fabricated.
+
+Wave3 is not complete:174-07 palette bridge remains. Execute07 as the fifth plan before wave4/05, even though05also has completed direct predecessors. No175 transition; original preview/frozen source preserved.

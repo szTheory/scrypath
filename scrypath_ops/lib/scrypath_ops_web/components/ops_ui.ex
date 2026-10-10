@@ -22,9 +22,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="ops-copper-eyebrow">
-        Operator workspace
-      </p>
       <h1
         id={@title_id}
         class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
@@ -34,6 +31,25 @@ defmodule ScrypathOpsWeb.OpsUi do
       <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
     </div>
     """
+  end
+
+  @doc "Local schema selection context, separate from the fleet-wide health verdict."
+  attr(:schema, :atom, required: true)
+
+  def ops_schema_context(assigns) do
+    assigns =
+      assign(assigns, :name, ScrypathOps.OperatorSelection.canonical(assigns.schema))
+
+    ~H"""
+    <p class="ops-schema-context" data-testid="recovery-target">
+      <span>Selected schema</span>
+      <code translate="no">{schema_name_parts(@name)}</code>
+    </p>
+    """
+  end
+
+  defp schema_name_parts(name) do
+    name |> String.split(".") |> Enum.intersperse([".", Phoenix.HTML.raw("<wbr>")])
   end
 
   @doc """
@@ -53,7 +69,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
-      <span>Jump to surface</span>
+      <span class="ops-command-hint__full">Jump to surface</span>
+      <span class="ops-command-hint__compact" aria-hidden="true">Jump</span>
       <kbd class="ops-kbd">⌘K</kbd>
     </button>
     """
@@ -238,6 +255,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Refresh action paired with the time of the latest check."
   attr(:id, :string, required: true)
+  attr(:label, :string, default: "Refresh")
   attr(:checked_at, :any, default: nil)
   attr(:aria_label, :string, required: true)
 
@@ -265,6 +283,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       </span>
       <.ops_refresh_button
         id={@id}
+        label={@label}
         aria_label={@aria_label}
         variant={@variant}
         size={@size}
@@ -326,7 +345,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Operator status surface for results, failures, and important workflow feedback."
   attr(:kind, :atom,
     default: :info,
-    values: [:info, :success, :warning, :error, :partial, :running]
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
   )
 
   attr(:title, :string, required: true)
@@ -341,7 +360,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface ops-notice-surface--raised",
-        tone_class(@kind),
+        @kind != :neutral && tone_class(@kind),
         @class
       ]}
       role={@role}
@@ -363,6 +382,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Small metric tile for rollups and status counts."
   attr(:label, :string, required: true)
   attr(:value, :any, required: true)
+  attr(:help_id, :string, default: nil)
+  attr(:help, :string, default: nil)
 
   attr(:kind, :atom,
     default: :neutral,
@@ -372,7 +393,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+      <div class="ops-metric__label">
+        <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+        <.ops_help :if={@help} id={@help_id} label={@label}>{@help}</.ops_help>
+      </div>
       <p class="ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums">
         {@value}
         <span :if={@kind in [:warning, :error]} class="ops-metric__cue" aria-hidden="true">
@@ -380,6 +404,30 @@ defmodule ScrypathOpsWeb.OpsUi do
         </span>
       </p>
     </div>
+    """
+  end
+
+  @doc "Optional term explanation, available on hover, focus, or tap. Keep actions outside it."
+  attr(:id, :string, required: true)
+  attr(:label, :string, required: true)
+  slot(:inner_block, required: true)
+
+  def ops_help(assigns) do
+    ~H"""
+    <span id={@id} class="ops-help" phx-hook="OpsHelp" phx-update="ignore">
+      <button
+        type="button"
+        class="ops-help__trigger"
+        aria-label={"About #{@label}"}
+        aria-describedby={"#{@id}-content"}
+        popovertarget={"#{@id}-content"}
+      >
+        <ScrypathOpsWeb.CoreComponents.icon name="hero-information-circle" class="size-4" />
+      </button>
+      <span id={"#{@id}-content"} class="ops-help__content" role="tooltip" popover="auto">
+        {render_slot(@inner_block)}
+      </span>
+    </span>
     """
   end
 
@@ -479,7 +527,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
-            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
+            class="text-ops-body font-medium text-base-content/75"
           >
             {@label}
           </p>
@@ -1241,7 +1289,22 @@ defmodule ScrypathOpsWeb.OpsUi do
     <span class={["ops-time", @class]}>
       <span :if={@label} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
+        <button
+          :if={@copy and @copy_available?}
+          id={@id}
+          type="button"
+          class="ops-time__copy"
+          phx-hook="OpsTimestampCopy"
+          data-ops-timestamp={@source_iso}
+          aria-label="Copy timestamp"
+          title="Copy exact timestamp"
+        >
+          <time class="ops-time__value" datetime={@exact} aria-label={@aria_label}>
+            {@human}
+          </time>
+        </button>
         <time
+          :if={!@copy or !@copy_available?}
           class="ops-time__value"
           datetime={@exact}
           aria-label={@aria_label}
@@ -1253,37 +1316,26 @@ defmodule ScrypathOpsWeb.OpsUi do
           <p><code class="ops-time__exact">{@exact}</code></p>
           <p>UTC equivalent: <code class="ops-time__utc">{@utc_exact}</code></p>
         </details>
-        <span :if={@copy and @copy_available?} class="ops-time__copy-group">
+        <span
+          :if={@copy and @copy_available?}
+          id={"#{@id}-feedback"}
+          phx-update="ignore"
+          class="ops-time__feedback"
+          data-ops-time-feedback
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span data-ops-time-feedback-text></span>
           <button
-            id={@id}
             type="button"
-            class="ops-time__copy"
-            phx-hook="OpsTimestampCopy"
-            data-ops-timestamp={@source_iso}
-            aria-label="Copy timestamp"
-            title="Copy timestamp"
+            class="ops-time__feedback-dismiss"
+            data-ops-time-feedback-dismiss
+            aria-label="Dismiss copy message"
+            hidden
           >
-            <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
-            <span>Copy timestamp</span>
+            Dismiss
           </button>
-          <span
-            class="ops-time__feedback"
-            data-ops-time-feedback
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <span data-ops-time-feedback-text></span>
-            <button
-              type="button"
-              class="ops-time__feedback-dismiss"
-              data-ops-time-feedback-dismiss
-              aria-label="Dismiss copy message"
-              hidden
-            >
-              Dismiss
-            </button>
-          </span>
         </span>
       <% else %>
         <span class="ops-time__value">{@empty}</span>
@@ -1327,6 +1379,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   @doc "Disclosure with consistent operator trace/debug styling."
   attr(:summary, :string, required: true)
+  attr(:summary_label, :string, default: nil)
   attr(:id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
   attr(:open, :boolean, default: false)
@@ -1346,7 +1399,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <summary class="cursor-pointer text-ops-body font-medium text-base-content">
+      <summary
+        class="cursor-pointer text-ops-body font-medium text-base-content"
+        aria-label={@summary_label}
+      >
         {@summary}
       </summary>
       <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
@@ -1479,13 +1535,58 @@ defmodule ScrypathOpsWeb.OpsUi do
   control. Rendered once in the `:ops` shell so it is available on every surface.
   """
   attr(:mount_path, :string, required: true)
+  attr(:recovery_target, :atom, default: nil)
+
+  def ops_command_palette_destinations(assigns) do
+    destinations =
+      assigns.mount_path
+      |> ScrypathOpsWeb.Nav.primary(assigns.recovery_target)
+      |> Enum.filter(&(&1.group == :recover))
+      |> Enum.with_index(1)
+      |> Enum.map(fn {item, index} ->
+        route = item.path |> URI.parse() |> Map.fetch!(:path) |> String.split("/") |> List.last()
+
+        %{
+          path: item.path,
+          id: "ops-palette-destination-#{route}",
+          palette_item_id: "ops-cmdk-item-#{index}"
+        }
+      end)
+
+    assigns = assign(assigns, :destinations, destinations)
+
+    ~H"""
+    <div
+      id="ops-command-palette-destinations"
+      hidden
+      aria-hidden="true"
+      data-recovery-target={
+        if @recovery_target, do: ScrypathOps.OperatorSelection.canonical(@recovery_target)
+      }
+    >
+      <a
+        :for={destination <- @destinations}
+        id={destination.id}
+        href={destination.path}
+        tabindex="-1"
+        data-ops-palette-destination="true"
+        data-ops-palette-item={destination.palette_item_id}
+      >
+        {destination.id}
+      </a>
+    </div>
+    """
+  end
+
+  attr(:mount_path, :string, required: true)
+  attr(:recovery_target, :atom, default: nil)
 
   def ops_command_palette(assigns) do
     items =
       [
         %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
         | Enum.map(
-            ScrypathOpsWeb.Nav.primary(assigns.mount_path),
+            ScrypathOpsWeb.Nav.primary(assigns.mount_path, assigns.recovery_target),
             &%{path: &1.path, label: &1.label, hint: "#{nav_group_label(&1.group)} · #{&1.title}"}
           )
       ]

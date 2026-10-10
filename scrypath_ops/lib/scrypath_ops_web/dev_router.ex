@@ -29,6 +29,45 @@ defmodule ScrypathOpsWeb.DevRouter do
   end
 
   if Mix.env() == :test do
+    scope "/", ScrypathOpsWeb do
+      pipe_through(:browser)
+      get("/sudo/confirm", PageController, :home)
+    end
+
+    scope "/ops/phase175", alias: false do
+      pipe_through(:browser)
+      forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
+      forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+      get("/fixture-status", ScrypathOpsWeb.Phase175FixtureController, :status)
+
+      live_session :phase175_ops_fixture,
+        on_mount: [
+          {ScrypathOpsWeb.Live.OnMount, :default},
+          {ScrypathOps.Test.Phase175AuthFixtureOnMount, :default}
+        ],
+        session: %{
+          "scrypath_ops_opts" => [repo: ScrypathOps.Repo, mount_path: "/ops/phase175"]
+        } do
+        live("/sync-drift", ScrypathOpsWeb.SyncDriftLive, :phase175)
+      end
+    end
+
+    scope "/ops/phase174", alias: false do
+      pipe_through(:browser)
+      forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
+      forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+
+      live_session :phase174_ops_fixture,
+        on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],
+        session: %{
+          "scrypath_ops_opts" => [repo: ScrypathOps.Repo, mount_path: "/ops/phase174"]
+        } do
+        live("/", ScrypathOpsWeb.ControlRoomLive, :phase174)
+        live("/health", ScrypathOpsWeb.PostureLive, :phase174)
+        live("/failed-sync", ScrypathOpsWeb.FailedSyncLive, :phase174)
+      end
+    end
+
     scope "/ops/phase173", alias: false do
       pipe_through(:browser)
       forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")

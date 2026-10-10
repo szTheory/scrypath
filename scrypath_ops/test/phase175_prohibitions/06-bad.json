@@ -1,0 +1,5 @@
+{
+  "kind": "mutation",
+  "find": "  def handle_event(\"refresh_promotion_checks\", _params, socket) do\n    if current_selection?(socket) do\n",
+  "replace": "  def handle_event(\"refresh_promotion_checks\", _params, socket) do\n    if current_selection?(socket) do\n      socket.assigns.scrypath_opts[:meilisearch_client].swap_indexes([], socket.assigns.scrypath_opts)\n"
+}

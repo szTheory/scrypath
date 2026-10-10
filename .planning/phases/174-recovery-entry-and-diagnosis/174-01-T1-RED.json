@@ -1,0 +1,10 @@
+{
+  "command": "MIX_TEST_PARTITION=174_01_red SCRYPATH_TAP=1 mix test test/scrypath_ops_web/live/recovery_journey_live_test.exs --no-color",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - test selected A stays the recovery target while worse B is listed first\n# [{:error, %ExUnit.AssertionError{left: :ex_unit_no_meaningful_value, right: :ex_unit_no_meaningful_value, message: \"Expected truthy, got false\", expr: {:assert, [], [{:has_element?, [line: 117], [{:room, [line: 117], nil}, \"[data-testid='recovery-target']\", {:schema_a, [line: 117], nil}]}]}, args: [#Phoenix.LiveViewTest.View<id: \"phx-GNw95CY_hnA3BABH\", module: ScrypathOpsWeb.ControlRoomLive, pid: #PID<0.494.0>, endpoint: ScrypathOpsWeb.Endpoint, ...>, \"[data-testid='recovery-target']\", \"ScrypathOps.Test.OpsPostA\"], doctest: :ex_unit_no_meaningful_value, context: :==}, [{ScrypathOpsWeb.RecoveryJourneyLiveTest, :\"test selected A stays the recovery target while worse B is listed first\", 1, [file: ~c\"test/scrypath_ops_web/live/recovery_journey_live_test.exs\", line: 117]}]}]\n1..1\n",
+  "targetTest": "test selected A stays the recovery target while worse B is listed first",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/recovery_journey_live_test.exs",
+  "expected": "Control Room renders the explicit allowed A schema as recovery target and links to selected A-scoped Search health.",
+  "actual": "The target assertion failed because ControlRoomLive ignores the explicit schema query and does not render the recovery-target element.",
+  "semanticAssessment": "The target test executed and failed on the planned missing selected-schema behavior at the assertion in line 117; TAP reports one discovered failing test (not ok 1) and a complete plan of 1..1. This is an assertion failure, not a setup, collection, syntax, or fixture failure."
+}

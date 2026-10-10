@@ -1,6 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { expandHealthDetails } from "./helpers/operator-ui";
 
 const ENTRYPOINTS = [
   {
@@ -18,6 +19,18 @@ const ENTRYPOINTS = [
 const scenarios = ["default", "failed", "unknown", "empty", "partial", "long-value", "source-error", "manual", "no-success"] as const;
 type Theme = "light" | "dark" | "system";
 
+async function inspectSourceDiagnostics(group: Locator, source: "Backend" | "Queue", reasons: string[]) {
+  const copy = group.locator(":scope > p");
+  await expect(copy).toBeVisible();
+  await expect(copy).toContainText(`${source} observation unavailable`);
+  const diagnostics = group.locator("details.ops-disclosure");
+  await expect(diagnostics.locator("pre")).not.toBeVisible();
+  await diagnostics.locator("summary").click();
+  await expect(diagnostics.locator("pre")).toBeVisible();
+  for (const reason of reasons) await expect(diagnostics.locator("pre")).toContainText(reason);
+  await diagnostics.locator("summary").click();
+}
+
 async function openScenario(page: import("@playwright/test").Page, url: string, scenario: string, theme: Theme, width: number) {
   await page.setViewportSize({ width, height: 960 });
   await page.emulateMedia({ colorScheme: theme === "system" ? "dark" : theme });
@@ -34,13 +47,11 @@ async function openScenario(page: import("@playwright/test").Page, url: string, 
 }
 
 for (const entrypoint of ENTRYPOINTS) {
-  test(`${entrypoint.name} status sources stay truthful across themes and responsive widths`, async ({ page }) => {
-    test.setTimeout(90_000);
-    const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
-    mkdirSync(captureDir, { recursive: true });
-
-    for (const theme of ["light", "dark", "system"] as const) {
-      for (const width of [390, 1279, 1280, 1440]) {
+  for (const theme of ["light", "dark", "system"] as const) {
+    for (const width of [390, 1279, 1280, 1440]) {
+      test(`${entrypoint.name} status sources stay truthful in ${theme} at ${width}px`, async ({ page }) => {
+        const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
+        mkdirSync(captureDir, { recursive: true });
         let neutralReference: { verdictBackground: string; verdictBorder: string; rowBackground: string; rowBorder: string } | undefined;
         for (const scenario of scenarios) {
           await openScenario(page, entrypoint.url, scenario, theme, width);
@@ -60,33 +71,34 @@ for (const entrypoint of ENTRYPOINTS) {
               await expect(row.locator("h3")).toContainText(id.replace("posture-", ""));
               await expect(row.locator("h3")).toHaveCSS("overflow-wrap", "anywhere");
             }
-            await expect(page.locator(".ops-metric").first()).toContainText("Schemas");
-            await expect(page.locator(".ops-metric").nth(1)).toContainText("Schema check errors");
+            await expect(page.getByTestId("health-schema-count")).toContainText(scenario === "partial" ? "1 schema" : "2 schemas");
+            await expandHealthDetails(page);
             await expect(page.locator(".ops-metric-success")).toHaveCount(0);
           }
 
           if (scenario === "failed") {
-            await expect(page.locator(".ops-verdict")).toContainText("Degraded");
-            await expect(page.locator(".ops-verdict")).toContainText("will not self-heal");
+            await expect(page.locator(".ops-verdict")).toContainText("Sync needs attention");
+            await expect(page.locator(".ops-verdict")).toContainText(/sync failures? needs? review/);
             await expect(page.getByTestId("posture-failed-sync-link").first()).toBeVisible();
             await expect(page.locator(".ops-metric-warning").first()).toBeVisible();
           } else if (scenario === "unknown") {
             // The unknown Meilisearch status fails source decoding explicitly;
             // it must not be represented as zero or as remote terminal failure.
-            await expect(rows.first()).toContainText("fetch error:");
+            await inspectSourceDiagnostics(rows.first().locator(".ops-signal-group").first(), "Backend", ["invalid_task_payload", "mystery", "status: :unknown"]);
             await expect(rows.first()).not.toContainText("backend failed");
-            await expect(page.locator(".ops-metric").nth(2)).toContainText("0");
+            await expect(page.locator(".ops-metric")).toHaveCount(1);
+            await expect(page.locator(".ops-metric")).toContainText("Incomplete checks");
           } else if (scenario === "source-error") {
-            await expect(rows.first()).toContainText("fetch error: :fixture_unavailable");
+            await inspectSourceDiagnostics(rows.first().locator(".ops-signal-group").first(), "Backend", [":fixture_unavailable"]);
             await expect(rows.first()).toContainText("Not observed");
-            await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+            await expect(page.locator(".ops-verdict")).toContainText("Sync needs attention");
           } else if (scenario === "manual") {
             await expect(rows.first()).toContainText("Queue not used in manual sync mode.");
           } else if (scenario === "no-success") {
-            await expect(rows.first().locator("[aria-label^='Backend task signals']")).toContainText("No success observed");
+            await expect(rows.first().locator("[aria-label^='Backend task health']")).toContainText("No success observed");
           } else if (scenario === "partial") {
             await expect(rows).toHaveCount(1);
-            await expect(page.locator(".ops-metric").first()).toContainText("1");
+            await expect(page.getByTestId("health-schema-count")).toContainText("1 schema");
           }
 
           if (["default", "failed"].includes(scenario)) {
@@ -101,39 +113,39 @@ for (const entrypoint of ENTRYPOINTS) {
                 rowBackground: rowStyle.backgroundColor,
                 rowBorder: rowStyle.borderColor
               };
-            });
-            if (scenario === "default") neutralReference = surfaces;
-            if (scenario === "failed") expect(surfaces).toEqual(neutralReference);
-          }
+          });
+          if (scenario === "default") neutralReference = surfaces;
+          if (scenario === "failed") expect(surfaces).toEqual(neutralReference);
+        }
 
-          const dimensions = await page.evaluate(() => ({
-            viewport: document.documentElement.clientWidth,
-            document: document.documentElement.scrollWidth,
-            rowGap: (() => {
-              const list = document.querySelector(".ops-schema-signal-list");
-              return list ? getComputedStyle(list).rowGap : null;
-            })()
-          }));
-          expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
-          if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap ?? "0")).toBeGreaterThanOrEqual(24);
+        const dimensions = await page.evaluate(() => ({
+          viewport: document.documentElement.clientWidth,
+          document: document.documentElement.scrollWidth,
+          rowGap: (() => {
+            const list = document.querySelector(".ops-schema-signal-list");
+            return list ? getComputedStyle(list).rowGap : null;
+          })()
+        }));
+        expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport);
+        if (scenario !== "empty") expect(Number.parseFloat(dimensions.rowGap ?? "0")).toBeGreaterThanOrEqual(24);
 
-          const refresh = page.getByRole("button", { name: "Refresh search health" });
-          const refreshBox = await refresh.boundingBox();
-          expect(refreshBox).not.toBeNull();
-          expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
-          const checked = refresh.locator("..").locator("time");
-          await expect(checked).toBeVisible();
-          await expect(checked).toHaveCSS("font-size", "14px");
-          expect(await checked.evaluate((time) => getComputedStyle(time).fontFamily))
-            .toBe(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily));
-          if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
-          }
+        const refresh = page.getByRole("button", { name: "Refresh search health" });
+        const refreshBox = await refresh.boundingBox();
+        expect(refreshBox).not.toBeNull();
+        expect(refreshBox!.height).toBeGreaterThanOrEqual(40);
+        const checked = refresh.locator("..").locator("time");
+        await expect(checked).toBeVisible();
+        await expect(checked).toHaveCSS("font-size", "14px");
+        expect(await checked.evaluate((time) => getComputedStyle(time).fontFamily))
+          .toBe(await page.locator("body").evaluate((body) => getComputedStyle(body).fontFamily));
+        if ([390, 1440].includes(width) && ["default", "failed"].includes(scenario)) {
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-${scenario}-${theme}-${width}.png`), fullPage: true });
         }
       }
+      });
     }
-  });
+  }
 
   test(`${entrypoint.name} partial queue failure retains only queue evidence and empty queues stay observed`, async ({ page }) => {
     const captureDir = join(process.cwd(), "test-results", "phase173-status-captures");
@@ -141,14 +153,15 @@ for (const entrypoint of ENTRYPOINTS) {
     await openScenario(page, entrypoint.url, "default", "light", 390);
     const row = page.locator(`[id="${entrypoint.rows[0]}"]`);
     await expect(row.locator(".ops-badge-success")).toHaveCount(0);
-    await expect(row).toContainText("no backend failures observed");
+    await expandHealthDetails(page);
+    await expect(row.locator(".ops-signal-metrics dt").filter({ hasText: /^(Pending|Failed|Retrying)$/ })).toHaveCount(0);
     await page.getByRole("button", { name: "Refresh search health" }).evaluate((button) =>
       button.setAttribute("phx-value-scenario", "queue-error")
     );
     await page.getByRole("button", { name: "Refresh search health" }).click();
-    await expect(row).toContainText("fixture_queue_unavailable");
     const backend = row.locator(".ops-signal-group").first();
     const queue = row.locator(".ops-signal-group").nth(1);
+    await inspectSourceDiagnostics(queue, "Queue", [":fixture_queue_unavailable"]);
     await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
     await expect(backend.locator(".ops-signal-metrics")).toBeVisible();
     await expect(backend).not.toContainText("observation unavailable");
@@ -163,15 +176,16 @@ for (const entrypoint of ENTRYPOINTS) {
       button.setAttribute("phx-value-scenario", "all-source-error")
     );
     await page.getByRole("button", { name: "Refresh search health" }).click();
-    await expect(backend).toContainText("fixture_unavailable");
+    await inspectSourceDiagnostics(backend, "Backend", [":fixture_unavailable"]);
     await expect(backend.locator("time.ops-time__value")).toHaveText("3 days ago");
-    await expect(queue).toContainText("fixture_queue_unavailable");
+    await inspectSourceDiagnostics(queue, "Queue", [":fixture_queue_unavailable"]);
     await expect(queue.locator("time.ops-time__value")).toHaveText("2 days ago");
     await expect(queue.locator(".ops-time__exact")).toHaveText("2026-10-04T13:02:05.123456-04:00");
     await page.screenshot({ path: join(captureDir, `phase173-${entrypoint.name}-all-source-error-light-390.png`), fullPage: true });
 
     await openScenario(page, entrypoint.url, "empty-queue", "dark", 1440);
-    await expect(row).toContainText("queue observed");
+    await expandHealthDetails(page);
+    await expect(queue.locator(".ops-signal-metrics dt").filter({ hasText: /^(Pending|Failed|Retrying)$/ })).toHaveCount(0);
     await expect(queue.locator(".ops-signal-metrics")).toBeVisible();
     await expect(queue).toContainText("No success observed");
     await expect(queue).not.toContainText("unavailable");
@@ -179,7 +193,7 @@ for (const entrypoint of ENTRYPOINTS) {
 
   test(`${entrypoint.name} neutral chrome and metrics preserve the approved palette`, async ({ page }) => {
     for (const theme of ["light", "dark", "system"] as const) {
-      await openScenario(page, entrypoint.url, "default", theme, 390);
+      await openScenario(page, entrypoint.url, "failed", theme, 390);
       await page.waitForTimeout(250);
       const colors = await page.evaluate(() => {
         const canvas = document.createElement("canvas");
@@ -194,7 +208,7 @@ for (const entrypoint of ENTRYPOINTS) {
         return { header: sample(".ops-header"), metric: sample(".ops-muted-panel") };
       });
       const expected = theme === "light"
-        ? { header: [255, 255, 255], metric: [239, 238, 233] }
+        ? { header: [255, 255, 255], metric: [237, 239, 242] }
         : { header: [25, 30, 37], metric: [34, 40, 49] };
       for (const role of ["header", "metric"] as const) {
         colors[role].forEach((channel, index) => {

@@ -1,0 +1,284 @@
+{
+  "items": [
+    {
+      "requirement_id": "E1",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "With no configured schemas, Control Room shows configuration-empty guidance from Copywriting Contract and no target recovery action; it does not present zero observations as healthy.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room refresh keeps a meaningful icon and label with busy feedback and preserves the previous successful evidence snapshot; a request being dispatched does not change health facts.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room distinguishes missing runtime/setup from observation failure, states the observed source/reason and read-only refresh path, and never equates unavailable observation with a remote task failure.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room leads with observed fleet state, complete affected schema scope and one read-only Review Search health destination, with verification and exploration quieter. A healthy selected A remains the recovery target while B is worse.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room names unavailable or retained source observations and their evidence boundary; known fleet facts remain readable without claiming universal backend health, document freshness or promotion readiness.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room summary, affected-scope items, target identity and actions wrap or stack within the incumbent page at desktop, narrow and changed breakpoints without horizontal page overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room distinguishes no configuration, one affected schema and multiple affected schemas with source-backed counts and correct singular/plural copy, without changing the selected target implicitly.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Control Room preserves complete affected module identifiers, current target and readable explanation/action labels; long values wrap at body size rather than clip or shrink.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Search health with no allowlisted schemas shows the configuration-empty guidance from Copywriting Contract and no target action; empty observed failure counts do not prove freshness or universal health.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Search health refresh retains its icon/label and busy semantics, the prior successful per-source observation and its stable time reference until a successful replacement observation exists.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Search health labels the affected source and observation failure/reason with a refresh path, preserves retained known history, and does not turn unknown values into zero counts or terminal remote failure.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Search health presents existing worst-first schema records, one neutral surface per schema with full schema/index/mode, plain Backend/Queue groups, explicit local state and record-specific next checks.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Known Backend/Queue observations remain readable alongside independently unavailable or retained evidence; no success observed, success time not observed, queue unused, automatic retry and terminal failure remain distinct.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full schema/index/work identity and exact evidence wrap in their owning surface; Backend/Queue groups stack as content requires with 24px record rhythm, reachable actions and no horizontal page overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero schemas uses setup guidance; one and many use the same record structure, truthful counts and correct singular/plural copy. A manual refresh may reorder records but keeps the focused schema/action identity and does not jump focus to the new worst row.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long full module/index identifiers, source reasons, source times and action labels remain readable without ellipsis or tiny essential copy; Phase173 exact timestamp access remains available where applicable, and routine Checked has no copy control.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Only a successful inspection with no failed work uses the Copywriting Contract empty-history message. Invalid target, missing runtime and unavailable inspection render their distinct guards and expose no recovery action from absent evidence.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Failed-work refresh/retry retains meaningful label and busy feedback; an in-flight request does not assert acceptance or completion. Selection changes invalidate confirmations/receipts/results and reject prior-generation responses.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Failed-work observation/action failure displays the relevant source/reason and existing refresh/recovery path; backend task failures, queue job failures and failed observations remain distinct. No dispatched event alone creates a success receipt.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Failed-work records show source-qualified Backend task/Queue job identities, operation/index/source facts, time, bounded reason and eligibility before Diagnostics. Existing supported replay is a standard readable action; absent backend replay never gains an invented executable control.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Available inspection/history remains readable when a source is unavailable; unavailable retry has a source-backed reason or honest generic explanation. An accepted replacement queue job preserves original history and Check sync status, replaces that row’s retry control and does not assert terminal completion.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Work records, Diagnostics, receipts and the existing delete modal reflow without clipping identifiers, confirmations or controls; the modal’s content may scroll while exact schema/index/count/IDs and confirmation controls remain keyboard/touch reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero failures uses inspected-empty copy; one and many preserve source-qualified stable row/action/receipt/confirmation identity. Backend task501 and Queue job501 are distinct and cannot receive each other’s recovery action or receipt.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Bounded reasons and full source IDs/schema/index/document IDs wrap at readable size. Optional verbose diagnostics use the existing selectable/scrollable evidence area; primary diagnosis does not expand raw payload/authentication detail or invent a new redaction policy.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "An empty allowlist shows setup guidance with no target/action. On a schema-specific page, an absent schema parameter may select the existing first allowlisted default; a present blank/invalid/removed value never defaults to another target.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Selection, patch, navigation and reconnect preserve the URL’s validated target. Pending prior-target observations cannot change the new context; confirmation/receipt/result generations invalidate when schema changes, and labels/focus follow the existing lifecycle.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Invalid or removed explicit targets show the unavailable message and no target actions. Existing host auth/sudo interruption preserves a safe return path with only validated schema context and never automatically replays a mutation.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "If the selected target remains allowed while another source/schema lacks observations, fleet views retain known evidence and that selected target. If current allowlist validation removes it, actions stop without silently substituting a healthy or worse schema.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Desktop recovery navigation, narrow drawer, palette and target selector retain reachable labels/controls at the existing1280px rail boundary without horizontal page overflow or clipped overlays.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full canonical schema strings and navigation labels remain readable and encoded through existing mounted path helpers. Palette recovery destinations actually update after a selector patch, and Back/reload/reconnect restore the validated target without hidden global/session/browser sticky selection.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    }
+  ],
+  "coverage": {
+    "applicable": 30,
+    "resolved": 30,
+    "unresolved": 0,
+    "unclassified": 0,
+    "byVerification": {
+      "explicit": 30,
+      "backstop": 0
+    }
+  }
+}

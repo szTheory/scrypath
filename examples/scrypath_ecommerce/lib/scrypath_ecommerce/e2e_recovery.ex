@@ -112,6 +112,194 @@ defmodule ScrypathEcommerce.E2ERecovery do
     }
   end
 
+  @doc "Prepares one discarded, source-qualified delete retry for the mounted browser fixture."
+  def prepare_delete(tenant_id, marker) when is_integer(tenant_id) and is_binary(marker) do
+    marker = safe_marker!(marker)
+    _tenant = Repo.get!(Tenant, tenant_id, skip_tenant_id: true)
+
+    product =
+      Product
+      |> where([product], product.tenant_id == ^tenant_id)
+      |> order_by([product], asc: product.id)
+      |> limit(1)
+      |> Repo.one!(skip_tenant_id: true)
+
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    index = Scrypath.Meilisearch.index_name(Product, config)
+
+    case read_document(index, product.id, config) do
+      {:ok, _document} ->
+        :ok
+
+      other ->
+        raise ArgumentError,
+              "delete recovery fixture requires an active source document: #{inspect(other)}"
+    end
+
+    scenario_key = "phase175_delete_recovery_#{marker}"
+    now = DateTime.utc_now()
+
+    args = %{
+      "operation" => "delete",
+      "schema" => @product_schema,
+      "backend" => @backend,
+      "index" => index,
+      "scenario_key" => scenario_key,
+      "document_count" => 1,
+      "document_ids" => [product.id]
+    }
+
+    original =
+      %Job{}
+      |> Ecto.Changeset.cast(
+        %{
+          worker: "Scrypath.Oban.DeleteWorker",
+          queue: "scrypath_sync",
+          args: args,
+          state: "discarded",
+          attempt: 1,
+          max_attempts: 1,
+          errors: [
+            %{
+              "attempt" => 1,
+              "at" => DateTime.to_iso8601(now),
+              "error" => "** (Req.TransportError) deterministic Phase 175 delete retry fixture"
+            }
+          ],
+          attempted_at: now,
+          scheduled_at: now
+        },
+        [
+          :worker,
+          :queue,
+          :args,
+          :state,
+          :attempt,
+          :max_attempts,
+          :errors,
+          :attempted_at,
+          :scheduled_at
+        ]
+      )
+      |> Repo.insert!()
+
+    %{
+      marker: marker,
+      schema: @product_schema,
+      index: index,
+      original_job_id: original.id,
+      original_attempt: original.attempt,
+      document_id: product.id,
+      expected_name: product.name
+    }
+  end
+
+  @doc "Verifies a delete retry's exact completed Oban job/task and active-index absence."
+  def probe_delete(
+        marker,
+        original_job_id,
+        accepted_job_id,
+        handle,
+        host,
+        generation,
+        expected_task_uid,
+        index,
+        expected_document_id
+      )
+      when is_binary(marker) and is_integer(original_job_id) and is_integer(accepted_job_id) and
+             is_binary(handle) and is_binary(host) and is_integer(generation) and
+             is_integer(expected_task_uid) and is_binary(index) and
+             is_integer(expected_document_id) do
+    marker = safe_marker!(marker)
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    expected_index = Scrypath.Meilisearch.index_name(Product, config)
+    true = index == expected_index
+
+    original = Repo.get!(Job, original_job_id, skip_tenant_id: true)
+    assert_fixture!(original.state == "discarded", :original_job_state, original.state)
+
+    assert_fixture!(
+      get_arg(original.args, "scenario_key") == "phase175_delete_recovery_#{marker}",
+      :original_scenario_key,
+      get_arg(original.args, "scenario_key")
+    )
+
+    assert_fixture!(accepted_job_id != original_job_id, :accepted_job_id, accepted_job_id)
+    job = Repo.get!(Job, accepted_job_id, skip_tenant_id: true)
+    args = job.args
+    assert_fixture!(job.worker == "Scrypath.Oban.DeleteWorker", :worker, job.worker)
+    assert_fixture!(job.queue == "scrypath_sync", :queue, job.queue)
+    assert_fixture!(job.state == "completed", :job_state, job.state)
+
+    assert_fixture!(
+      get_arg(args, "operation") == "delete",
+      :operation,
+      get_arg(args, "operation")
+    )
+
+    assert_fixture!(get_arg(args, "schema") == @product_schema, :schema, get_arg(args, "schema"))
+    assert_fixture!(get_arg(args, "index") == expected_index, :index, get_arg(args, "index"))
+
+    assert_fixture!(
+      get_arg(args, "document_ids") == [expected_document_id],
+      :document_ids,
+      get_arg(args, "document_ids")
+    )
+
+    assert_fixture!(
+      get_arg(original.args, "document_ids") == [expected_document_id],
+      :original_document_ids,
+      get_arg(original.args, "document_ids")
+    )
+
+    context = %{
+      host: host,
+      org: nil,
+      schema: "ScrypathEcommerce.Catalog.Product",
+      generation: generation
+    }
+
+    receipt = RecoveryObservation.observe(context, handle)
+    assert_fixture!(is_map(receipt), :receipt, receipt)
+
+    assert_fixture!(
+      receipt.source_failure.id == original_job_id,
+      :source_id,
+      receipt.source_failure.id
+    )
+
+    assert_fixture!(
+      receipt.replacement_job == accepted_job_id,
+      :replacement_job,
+      receipt.replacement_job
+    )
+
+    assert_fixture!(receipt.attempt == job.attempt, :attempt, receipt.attempt)
+    assert_fixture!(receipt.schema == @product_schema, :receipt_schema, receipt.schema)
+    assert_fixture!(receipt.index == expected_index, :receipt_index, receipt.index)
+    assert_fixture!(receipt.task_uid == expected_task_uid, :receipt_task_uid, receipt.task_uid)
+
+    task_uid = receipt.task_uid
+    {:ok, task} = Client.task(task_uid, config)
+    assert_fixture!(task_uid == task_uid_of(task), :task_uid, task_uid_of(task))
+    assert_fixture!(task_status(task) == "succeeded", :task_status, task_status(task))
+    assert_fixture!(task_index(task) == expected_index, :task_index, task_index(task))
+    assert_fixture!(task_type(task) == "documentDeletion", :task_type, task_type(task))
+    :absent = ensure_document_absent!(expected_index, expected_document_id, config)
+
+    %{
+      marker: marker,
+      accepted_job_id: job.id,
+      accepted_attempt: job.attempt,
+      task_uid: task_uid,
+      task_status: task_status(task),
+      task_type: task_type(task),
+      task_index: task_index(task),
+      document_id: expected_document_id,
+      active_document_absent: true
+    }
+  end
+
   @doc "Joins a rendered retry receipt to its exact accepted job, worker task, terminal Meili task, and active document."
   def probe_recovery(
         marker,
@@ -487,4 +675,9 @@ defmodule ScrypathEcommerce.E2ERecovery do
       do: marker,
       else: raise(ArgumentError, "invalid E2E fixture marker")
   end
+
+  defp assert_fixture!(true, _label, _actual), do: :ok
+
+  defp assert_fixture!(false, label, actual),
+    do: raise(ArgumentError, "#{label} mismatch: #{inspect(actual)}")
 end

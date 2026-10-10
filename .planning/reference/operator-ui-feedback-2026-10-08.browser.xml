@@ -1,0 +1,290 @@
+<testsuites id="" name="" tests="41" failures="1" skipped="0" errors="1" time="360.922377">
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-08T19:21:23.576Z" hostname="chromium" tests="14" failures="0" skipped="0" time="40.784" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="5.689">
+</testcase>
+<testcase name="mounted copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="9.809">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.696">
+</testcase>
+<testcase name="mounted keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.697">
+</testcase>
+<testcase name="mounted supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="1.526">
+</testcase>
+<testcase name="mounted omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="2.616">
+</testcase>
+<testcase name="mounted retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="1.347">
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="3.322">
+</testcase>
+<testcase name="standalone copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="8.411">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="0.675">
+</testcase>
+<testcase name="standalone keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.902">
+</testcase>
+<testcase name="standalone supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="0.856">
+</testcase>
+<testcase name="standalone omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="3.228">
+</testcase>
+<testcase name="standalone retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="1.01">
+</testcase>
+</testsuite>
+<testsuite name="phase173_shell.spec.ts" timestamp="2026-10-08T19:21:23.576Z" hostname="chromium" tests="4" failures="0" skipped="0" time="19.341" errors="0">
+<testcase name="phase 173 operator shell › mounted PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="5.349">
+</testcase>
+<testcase name="phase 173 operator shell › mounted shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="5.142">
+</testcase>
+<testcase name="phase 173 operator shell › standalone PostureLive keeps the preference visible and operational" classname="phase173_shell.spec.ts" time="4.851">
+</testcase>
+<testcase name="phase 173 operator shell › standalone shell fits the approved widths and produces theme captures" classname="phase173_shell.spec.ts" time="3.999">
+</testcase>
+</testsuite>
+<testsuite name="phase173_status_actions.spec.ts" timestamp="2026-10-08T19:21:23.576Z" hostname="chromium" tests="10" failures="1" skipped="0" time="185.168" errors="1">
+<testcase name="mounted status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="92.245">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_status_actions-mo-c0537-hemes-and-responsive-widths-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_status_actions-mo-c0537-hemes-and-responsive-widths-chromium/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 90000ms exceeded." type="Error">
+<![CDATA[  [chromium] › phase173_status_actions.spec.ts:37:7 › mounted status sources stay truthful across themes and responsive widths 
+
+    Test timeout of 90000ms exceeded.
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator:  locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+    Expected: visible
+    Received: undefined
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for locator('[id="posture-ScrypathEcommerce.Catalog.Product"]')
+
+
+      57 |             for (const id of entrypoint.rows.slice(0, scenario === "partial" ? 1 : 2)) {
+      58 |               const row = page.locator(`[id="${id}"]`);
+    > 59 |               await expect(row).toBeVisible();
+         |                                 ^
+      60 |               await expect(row.locator("h3")).toContainText(id.replace("posture-", ""));
+      61 |               await expect(row.locator("h3")).toHaveCSS("overflow-wrap", "anywhere");
+      62 |             }
+        at /app/examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts:59:33
+
+    Error Context: ../test-results/phase173_status_actions-mo-c0537-hemes-and-responsive-widths-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_status_actions-mo-c0537-hemes-and-responsive-widths-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_status_actions-mo-c0537-hemes-and-responsive-widths-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="mounted partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="1.95">
+</testcase>
+<testcase name="mounted neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="3.126">
+</testcase>
+<testcase name="mounted refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.664">
+</testcase>
+<testcase name="mounted quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="0.909">
+</testcase>
+<testcase name="standalone status sources stay truthful across themes and responsive widths" classname="phase173_status_actions.spec.ts" time="78.652">
+<system-out>
+<![CDATA[
+[[ATTACHMENT|phase173_status_actions-st-d8d07-hemes-and-responsive-widths-chromium/error-context.md]]
+
+[[ATTACHMENT|phase173_status_actions-st-d8d07-hemes-and-responsive-widths-chromium/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toHaveClass(expected) failed" type="expect.toHaveClass">
+<![CDATA[  [chromium] › phase173_status_actions.spec.ts:37:7 › standalone status sources stay truthful across themes and responsive widths 
+
+    Error: expect(locator).toHaveClass(expected) failed
+
+    Locator: locator('[data-phx-main]')
+    Expected pattern: /phx-connected/
+    Received string:  "phx-loading phx-error phx-client-error"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveClass" with timeout 5000ms
+      - waiting for locator('[data-phx-main]')
+        10 × locator resolved to <div data-phx-main="" id="phx-GNykaC2m47iOqCHB" data-phx-root-id="phx-GNykaC2m47iOqCHB" class="phx-loading phx-error phx-client-error" data-phx-static="SFMyNTY.g2gDaAJhBnQAAAADdwJpZG0AAAAUcGh4LUdOeWthQzJtNDdpT3FDSEJ3BWZsYXNodAAAAAB3CmFzc2lnbl9uZXdqbgYAoin6HKEBYgABUYA.ulO07cgqPdCHfCPsgazLHro75psEjCUxDr8WpD_W2d0" data-phx-session="SFMyNTY.g2gDaAJhBnQAAAAIdwJpZG0AAAAUcGh4LUdOeWthQzJtNDdpT3FDSEJ3B3Nlc3Npb250AAAAAW0AAAARc2NyeXBhdGhfb3BzX29wdHNsAAAAAmgCdwRyZXBvdxdFbGl4aXIuU2NyeXBhdGhPcHMuUmVwb2gCdwptb3Vu…>…</div>
+           - unexpected value "phx-loading phx-error phx-client-error"
+
+
+      25 |   await page.goto(`${url}${separator}scenario=${scenario}`);
+      26 |   const live = page.locator("[data-phx-main]");
+    > 27 |   await expect(live).toHaveClass(/phx-connected/);
+         |                      ^
+      28 |   const preference = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
+      29 |   await preference.click();
+      30 |   await expect(preference).toHaveAttribute("aria-pressed", "true");
+        at openScenario (/app/examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts:27:22)
+        at /app/examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts:46:11
+
+    Error Context: ../test-results/phase173_status_actions-st-d8d07-hemes-and-responsive-widths-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../test-results/phase173_status_actions-st-d8d07-hemes-and-responsive-widths-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace ../test-results/phase173_status_actions-st-d8d07-hemes-and-responsive-widths-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="standalone partial queue failure retains only queue evidence and empty queues stay observed" classname="phase173_status_actions.spec.ts" time="3.107">
+</testcase>
+<testcase name="standalone neutral chrome and metrics preserve the approved palette" classname="phase173_status_actions.spec.ts" time="2.528">
+</testcase>
+<testcase name="standalone refresh keeps server eligibility after a LiveView patch" classname="phase173_status_actions.spec.ts" time="0.653">
+</testcase>
+<testcase name="standalone quiet action exposes independent focus and transient interaction states" classname="phase173_status_actions.spec.ts" time="1.334">
+</testcase>
+</testsuite>
+<testsuite name="phase173_time.spec.ts" timestamp="2026-10-08T19:21:23.576Z" hostname="chromium" tests="2" failures="0" skipped="0" time="31.627" errors="0">
+<testcase name="mounted renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="16.193">
+</testcase>
+<testcase name="standalone renders stable exact operational time without overflow" classname="phase173_time.spec.ts" time="15.434">
+</testcase>
+</testsuite>
+<testsuite name="phase174_recovery.spec.ts" timestamp="2026-10-08T19:21:23.576Z" hostname="chromium" tests="11" failures="0" skipped="0" time="69.236" errors="0">
+<testcase name="mounted target selection stays canonical through worse-row navigation and browser history" classname="phase174_recovery.spec.ts" time="2.617">
+</testcase>
+<testcase name="standalone source-collision action eligibility stays with Queue job 501" classname="phase174_recovery.spec.ts" time="0.574">
+</testcase>
+<testcase name="real Search health refresh reorders records without moving focus to a different action" classname="phase174_recovery.spec.ts" time="0.756">
+</testcase>
+<testcase name="selected recovery context remains reachable through the mobile drawer and palette keyboard flow" classname="phase174_recovery.spec.ts" time="1.732">
+</testcase>
+<testcase name="standalone rendered states preserve unavailable, retained, unknown, empty, and long evidence" classname="phase174_recovery.spec.ts" time="2.063">
+</testcase>
+<testcase name="refresh keeps its real label, icon, and prior observation while the LiveView response is pending" classname="phase174_recovery.spec.ts" time="3.198">
+</testcase>
+<testcase name="retry dispatch retains the source row and withholds its receipt until the server response arrives" classname="phase174_recovery.spec.ts" time="3.78">
+</testcase>
+<testcase name="mounted palette recovery destinations follow the selected schema" classname="phase174_recovery.spec.ts" time="1.436">
+</testcase>
+<testcase name="standalone palette manifest follows the validated fixture schema" classname="phase174_recovery.spec.ts" time="1.157">
+<properties>
+<property name="phase174-standalone-palette-state" value="{&quot;selectedSchema&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestTarget&quot;:&quot;ScrypathOps.Test.OpsPostB&quot;,&quot;manifestHealthHref&quot;:&quot;/ops/phase174/health?schema=ScrypathOps.Test.OpsPostB&quot;,&quot;paletteHealthHref&quot;:&quot;/ops/phase174/health?schema=ScrypathOps.Test.OpsPostB&quot;}">
+</property>
+</properties>
+</testcase>
+<testcase name="mounted app selects non-first A while Product remains the worse posture and accepts a scoped retry" classname="phase174_recovery.spec.ts" time="23.63">
+<properties>
+<property name="phase174-mounted-receipt" value="{&quot;original&quot;:230,&quot;schema&quot;:&quot;Elixir.ScrypathEcommerce.Catalog.Variant&quot;,&quot;href&quot;:&quot;/admin/search/sync-drift?recovery=VcPbObulWqiFQgeiPaAphVa0S0Y9GA0-&amp;recovery_generation=1&amp;schema=ScrypathEcommerce.Catalog.Variant&quot;}">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1440/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1440/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1280/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1280/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/health/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1279/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/1279/dark">
+</property>
+<property name="phase174-capture" value="mounted/control-room/390/light">
+</property>
+<property name="phase174-capture" value="mounted/health/390/light">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/390/light">
+</property>
+<property name="phase174-capture" value="mounted/control-room/390/dark">
+</property>
+<property name="phase174-capture" value="mounted/health/390/dark">
+</property>
+<property name="phase174-capture" value="mounted/failed-sync/390/dark">
+</property>
+</properties>
+</testcase>
+<testcase name="standalone Ops routes preserve Gating return state, palette patches, focus and responsive captures" classname="phase174_recovery.spec.ts" time="28.293">
+<properties>
+<property name="phase174-gating" value="Real standalone interruption; return preserved validated schema and did not replay; second explicit click re-entered the gate. No host approval performed.">
+</property>
+<property name="phase174-capture" value="standalone/health/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1440/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1440/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1280/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1280/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1279/light">
+</property>
+<property name="phase174-capture" value="standalone/health/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/1279/dark">
+</property>
+<property name="phase174-capture" value="standalone/health/390/light">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/390/light">
+</property>
+<property name="phase174-capture" value="standalone/control-room/390/light">
+</property>
+<property name="phase174-capture" value="standalone/health/390/dark">
+</property>
+<property name="phase174-capture" value="standalone/failed-sync/390/dark">
+</property>
+<property name="phase174-capture" value="standalone/control-room/390/dark">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>

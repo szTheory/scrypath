@@ -1,0 +1,1 @@
+{"kind":"mutation","find":"defp promotion_check_status({:ok, %{uid: task_id, status: :succeeded}}, task_id), do: :completed","replace":"defp promotion_check_status({:ok, %{status: :succeeded}}, _task_id), do: :completed"}

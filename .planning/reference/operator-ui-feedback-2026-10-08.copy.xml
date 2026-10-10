@@ -1,0 +1,32 @@
+<testsuites id="" name="" tests="14" failures="0" skipped="0" errors="0" time="88.24037200000001">
+<testsuite name="phase173_copy.spec.ts" timestamp="2026-10-08T19:37:49.857Z" hostname="chromium" tests="14" failures="0" skipped="0" time="82.323" errors="0">
+<testcase name="mounted copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="20.116">
+</testcase>
+<testcase name="mounted copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="10.068">
+</testcase>
+<testcase name="mounted keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="1.183">
+</testcase>
+<testcase name="mounted keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="0.936">
+</testcase>
+<testcase name="mounted supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="2.483">
+</testcase>
+<testcase name="mounted omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="3.416">
+</testcase>
+<testcase name="mounted retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="6.037">
+</testcase>
+<testcase name="standalone copies one exact operational timestamp after clipboard resolution" classname="phase173_copy.spec.ts" time="8.852">
+</testcase>
+<testcase name="standalone copy text and feedback meet composed contrast and action targets" classname="phase173_copy.spec.ts" time="17.589">
+</testcase>
+<testcase name="standalone keeps the latest clipboard outcome when writes settle out of order" classname="phase173_copy.spec.ts" time="1.447">
+</testcase>
+<testcase name="standalone keeps rejected and unavailable clipboard feedback persistent and selectable" classname="phase173_copy.spec.ts" time="2.388">
+</testcase>
+<testcase name="standalone supports keyboard and touch and restarts the four-second success timer" classname="phase173_copy.spec.ts" time="1.629">
+</testcase>
+<testcase name="standalone omits copy for Checked, missing, invalid, and unobserved timestamps" classname="phase173_copy.spec.ts" time="4.531">
+</testcase>
+<testcase name="standalone retains copy and snapshot age after a failed refresh server patch" classname="phase173_copy.spec.ts" time="1.648">
+</testcase>
+</testsuite>
+</testsuites>
