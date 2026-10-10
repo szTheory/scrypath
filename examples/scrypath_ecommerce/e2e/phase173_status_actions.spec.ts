@@ -120,6 +120,21 @@ for (const entry of entries) {
     await expect(page.getByTestId("posture-row")).toHaveCount(2);
     await expect(page.getByTestId("posture-row").filter({ hasText: "fetch error" })).toHaveCount(1);
     await expect(page.getByTestId("posture-row").filter({ hasText: entry.schema })).toHaveCount(1);
+
+    for (const theme of ["light", "dark"] as const) {
+      await visit(page, entry, "failed");
+      await setTheme(page, theme);
+      await mkdir(screenshotDir, { recursive: true });
+      for (const width of [390, 1440]) {
+        await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+        await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.screenshot({
+          path: join(screenshotDir, `${entry.name}-degraded-${theme}-${width}.png`),
+          fullPage: true
+        });
+      }
+    }
   });
 
   test(`${entry.name} Search health wraps long evidence at rail and mobile boundaries`, async ({ page }) => {
