@@ -47,14 +47,50 @@ const OpsHealthDetails = {
         this.manuallyOpen = !this.el.open
       }
     }
+    this.onFocusOut = event => {
+      // An unchanged nested disclosure may receive no updated hook on a refresh.
+      // Reconcile when focus actually moves, while null relatedTarget during a
+      // DOM reorder stays under the patch's guarded focus restoration instead.
+      if (event.relatedTarget instanceof Element) this.syncOpenState(event.relatedTarget)
+    }
     this.el.addEventListener("click", this.onSummaryClick)
+    this.el.addEventListener("focusout", this.onFocusOut)
     this.syncOpenState()
   },
-  updated() { this.syncOpenState() },
-  destroyed() { this.el.removeEventListener("click", this.onSummaryClick) },
-  syncOpenState() {
-    const summary = this.el.querySelector(":scope > summary")
+  beforeUpdate() {
     const focused = document.activeElement
+    this.focusedBeforeUpdate = this.el.contains(focused)
+      ? {element: focused, id: focused.id}
+      : null
+  },
+  updated() {
+    const previous = this.focusedBeforeUpdate
+    this.focusedBeforeUpdate = null
+    const focused = document.activeElement
+    const focusLost = focused === document.body || focused === document.documentElement
+
+    if (previous && focusLost) {
+      const target = previous.id ? document.getElementById(previous.id) : previous.element
+      if (target && this.el.contains(target) && !target.closest("[hidden], [inert]") &&
+          !target.matches(":disabled") && typeof target.focus === "function") {
+        const summary = this.el.querySelector(":scope > summary")
+        if (!summary?.contains(target)) {
+          for (let ancestor = target.parentElement; ancestor; ancestor = ancestor.parentElement) {
+            if (ancestor.tagName === "DETAILS") ancestor.open = true
+            if (ancestor === this.el) break
+          }
+        }
+        target.focus({preventScroll: true})
+      }
+    }
+    this.syncOpenState()
+  },
+  destroyed() {
+    this.el.removeEventListener("click", this.onSummaryClick)
+    this.el.removeEventListener("focusout", this.onFocusOut)
+  },
+  syncOpenState(focused = document.activeElement) {
+    const summary = this.el.querySelector(":scope > summary")
     const contentFocused = this.el.contains(focused) && !summary?.contains(focused)
     this.el.open = this.el.dataset.opsRequiredOpen === "true" || this.manuallyOpen || contentFocused
   }
