@@ -13,7 +13,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   alias ScrypathOps.OperatorSelection
   alias ScrypathOps.PromotionEligibility
   alias ScrypathOps.RecoveryObservation
-  alias Scrypath.Meilisearch.Tasks
+  alias Scrypath.Meilisearch.{Client, TaskPayload, Tasks}
   alias Scrypath.Operations.Task, as: OperationTask
 
   @impl true
@@ -47,6 +47,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:promotion_task_id, nil)
       |> assign(:promotion_status, nil)
       |> assign(:promotion_loading, false)
+      |> assign(:promotion_check_loading, false)
+      |> assign(:promotion_context, nil)
+      |> assign(:promotion_schema, nil)
+      |> assign(:promotion_indexes, nil)
       |> assign(:confirm_swap?, false)
       |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
 
@@ -155,6 +159,35 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       {:noreply, socket}
     else
       {:noreply, unavailable(socket)}
+    end
+  end
+
+  def handle_event("check_swap_status", _params, socket) do
+    case {socket.assigns.promotion_task_id, socket.assigns.promotion_context} do
+      {task_id, context} when is_integer(task_id) and is_map(context) ->
+        cond do
+          socket.assigns.promotion_check_loading ->
+            {:noreply, socket}
+
+          promotion_context_current?(socket, context) ->
+            {:noreply, start_promotion_check(socket, context)}
+
+          same_promotion_task?(socket, context) ->
+            {:noreply,
+             socket
+             |> assign(:promotion_status, :unknown)
+             |> assign(:promotion_loading, false)
+             |> assign(:promotion_check_loading, false)}
+
+          true ->
+            {:noreply, socket}
+        end
+
+      _ ->
+        {:noreply,
+         socket
+         |> assign(:promotion_status, :unknown)
+         |> assign(:promotion_check_loading, false)}
     end
   end
 
@@ -299,46 +332,85 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, {generation, task_id, result}},
         socket
       ) do
-    if generation == socket.assigns.context_generation and
-         task_id == socket.assigns.promotion_task_id do
-      socket = assign(socket, :promotion_loading, false)
+    context = socket.assigns.promotion_context
 
-      case result do
-        {:ok, %{id: ^task_id, state: :succeeded}} ->
-          socket
-          |> assign(:promotion_status, :completed)
-          |> load_reconcile_on_mount()
-          |> refresh_drift()
+    cond do
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          promotion_context_current?(socket, context) ->
+        socket
+        |> assign(:promotion_loading, false)
+        |> assign(:promotion_status, promotion_wait_status(result, context.task_id))
+        |> maybe_refresh_after_promotion_success(result, context.task_id)
+        |> invalidate_recovery_claim()
+        |> refresh_promotion_eligibility()
+        |> then(&{:noreply, &1})
 
-        {:ok, _unexpected_task} ->
-          assign(socket, :promotion_status, :unknown)
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_loading, false)
+         |> assign(:promotion_status, :unknown)
+         |> invalidate_recovery_claim()}
 
-        {:error, {:timeout, _task}} ->
-          assign(socket, :promotion_status, :timed_out)
-
-        {:error, {:task_failed, %OperationTask{id: ^task_id, state: :failed} = task}} ->
-          assign(socket, :promotion_status, {:failed, {:task_failed, task}})
-
-        {:error, {:cancelled, %OperationTask{id: ^task_id, state: :cancelled} = task}} ->
-          assign(socket, :promotion_status, {:failed, {:cancelled, task}})
-
-        {:error, _observation_error} ->
-          assign(socket, :promotion_status, :unknown)
-      end
-      |> invalidate_recovery_claim()
-      |> refresh_promotion_eligibility()
-      |> then(&{:noreply, &1})
-    else
-      {:noreply, socket}
+      true ->
+        {:noreply, socket}
     end
   end
 
   def handle_async({:promotion_swap, generation, task_id}, {:exit, _reason}, socket) do
-    if generation == socket.assigns.context_generation and
-         task_id == socket.assigns.promotion_task_id do
+    context = socket.assigns.promotion_context
+
+    if is_map(context) and context.generation == generation and context.task_id == task_id and
+         promotion_context_current?(socket, context) do
       {:noreply,
        socket
        |> assign(:promotion_loading, false)
+       |> assign(:promotion_status, :unknown)}
+    else
+      if is_map(context) and context.generation == generation and context.task_id == task_id and
+           same_promotion_task?(socket, context) do
+        {:noreply,
+         socket
+         |> assign(:promotion_loading, false)
+         |> assign(:promotion_status, :unknown)}
+      else
+        {:noreply, socket}
+      end
+    end
+  end
+
+  def handle_async(
+        {:promotion_check, _generation, _task_id},
+        {:ok, {context, result}},
+        socket
+      ) do
+    cond do
+      promotion_context_current?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, promotion_check_status(result, context.task_id))}
+
+      same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      true ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_async({:promotion_check, generation, task_id}, {:exit, _reason}, socket) do
+    context = socket.assigns.promotion_context
+
+    if is_map(context) and context.generation == generation and context.task_id == task_id and
+         same_promotion_task?(socket, context) do
+      {:noreply,
+       socket
+       |> assign(:promotion_check_loading, false)
        |> assign(:promotion_status, :unknown)}
     else
       {:noreply, socket}
@@ -399,6 +471,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_task_id, nil)
     |> assign(:promotion_status, nil)
     |> assign(:promotion_loading, false)
+    |> assign(:promotion_check_loading, false)
+    |> assign(:promotion_context, nil)
+    |> assign(:promotion_schema, nil)
+    |> assign(:promotion_indexes, nil)
     |> assign(:confirm_swap?, false)
     |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
@@ -841,17 +917,46 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
           case Scrypath.Meilisearch.swap_indexes(mod, opts) do
             {:ok, %{task: task}} ->
-              task_id = Map.fetch!(task, :uid)
               generation = socket.assigns.context_generation
+              task_id = Map.get(task, :uid)
+              indexes = {Map.get(task, :live_index), Map.get(task, :target_index)}
 
-              socket
-              |> assign(:promotion_task_id, task_id)
-              |> assign(:promotion_status, :accepted)
-              |> assign(:promotion_loading, true)
-              |> start_async({:promotion_swap, generation, task_id}, fn ->
-                result = Tasks.wait_for_task(task, task_wait_opts(opts))
-                {generation, task_id, result}
-              end)
+              context =
+                if is_integer(task_id) do
+                  %{
+                    generation: generation,
+                    task_id: task_id,
+                    schema: mod,
+                    indexes: indexes,
+                    runtime: promotion_runtime_identity(mod, opts)
+                  }
+                end
+
+              socket =
+                socket
+                |> assign(:promotion_task_id, task_id)
+                |> assign(
+                  :promotion_status,
+                  if(is_integer(task_id), do: :accepted, else: :unknown)
+                )
+                |> assign(:promotion_loading, is_integer(task_id))
+                |> assign(:promotion_check_loading, false)
+                |> assign(:promotion_context, context)
+                |> assign(:promotion_schema, mod)
+                |> assign(:promotion_indexes, indexes)
+
+              if is_integer(task_id) do
+                start_async(socket, {:promotion_swap, generation, task_id}, fn ->
+                  result = Tasks.wait_for_task(task, task_wait_opts(opts))
+                  {generation, task_id, result}
+                end)
+              else
+                put_flash(
+                  socket,
+                  :warning,
+                  "Index swap was accepted without a usable task ID. Check the current index state."
+                )
+              end
 
             {:error, reason} ->
               put_flash(socket, :error, "Index swap was not accepted: #{inspect(reason)}")
@@ -968,15 +1073,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_index(reconcile, key),
     do: inspect(reconcile |> Map.get(:reindex, %{}) |> Map.get(key) || "unknown")
 
-  defp promotion_status_kind(:accepted), do: :warning
-  defp promotion_status_kind(:completed), do: :success
-  defp promotion_status_kind({:failed, _}), do: :error
-  defp promotion_status_kind(:timed_out), do: :warning
-  defp promotion_status_kind(:unknown), do: :warning
-  defp promotion_status_kind(_), do: :neutral
-
   defp promotion_status_title(:accepted), do: "Index swap accepted"
+  defp promotion_status_title(:running), do: "Index swap running"
   defp promotion_status_title(:completed), do: "Index swap completed"
+  defp promotion_status_title({:failed, :cancelled}), do: "Index swap cancelled"
   defp promotion_status_title({:failed, _}), do: "Index swap failed"
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
@@ -986,6 +1086,129 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     opts
     |> Keyword.put_new(:inline_poll_interval, 50)
     |> Keyword.put_new(:inline_timeout, 15_000)
+  end
+
+  defp start_promotion_check(socket, context) do
+    opts = ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+
+    socket
+    |> assign(:promotion_check_loading, true)
+    |> start_async({:promotion_check, context.generation, context.task_id}, fn ->
+      result = observe_promotion_task(context.task_id, opts)
+      {context, result}
+    end)
+  end
+
+  defp observe_promotion_task(task_id, opts) do
+    client = Keyword.get(opts, :meilisearch_client) || Client
+
+    if Code.ensure_loaded?(client) and function_exported?(client, :task, 2) do
+      case apply(client, :task, [task_id, opts]) do
+        {:ok, response} -> TaskPayload.normalize(response, :poll)
+        {:error, reason} -> {:error, reason}
+        _ -> {:error, :invalid_task_response}
+      end
+    else
+      {:error, :task_client_unavailable}
+    end
+  rescue
+    _ -> {:error, :task_observation_failed}
+  catch
+    _, _ -> {:error, :task_observation_failed}
+  end
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :enqueued}}, task_id), do: :accepted
+  defp promotion_check_status({:ok, %{uid: task_id, status: :processing}}, task_id), do: :running
+  defp promotion_check_status({:ok, %{uid: task_id, status: :succeeded}}, task_id), do: :completed
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :failed}}, task_id),
+    do: {:failed, :task_failed}
+
+  defp promotion_check_status({:ok, %{uid: task_id, status: :cancelled}}, task_id),
+    do: {:failed, :cancelled}
+
+  defp promotion_check_status(_, _task_id), do: :unknown
+
+  defp promotion_wait_status({:ok, %OperationTask{id: task_id, state: :succeeded}}, task_id),
+    do: :completed
+
+  defp promotion_wait_status(
+         {:error, {:task_failed, %OperationTask{id: task_id, state: :failed}}},
+         task_id
+       ),
+       do: {:failed, :task_failed}
+
+  defp promotion_wait_status(
+         {:error, {:cancelled, %OperationTask{id: task_id, state: :cancelled}}},
+         task_id
+       ),
+       do: {:failed, :cancelled}
+
+  defp promotion_wait_status({:error, {:timeout, _}}, _task_id), do: :timed_out
+  defp promotion_wait_status(_, _task_id), do: :unknown
+
+  defp maybe_refresh_after_promotion_success(
+         socket,
+         {:ok, %OperationTask{id: task_id, state: :succeeded}},
+         task_id
+       ),
+       do: socket |> load_reconcile_on_mount() |> refresh_drift()
+
+  defp maybe_refresh_after_promotion_success(socket, _result, _task_id), do: socket
+
+  defp same_promotion_task?(socket, context) do
+    context.generation == socket.assigns.context_generation and
+      context.task_id == socket.assigns.promotion_task_id and
+      context.schema == socket.assigns.promotion_schema and
+      context.indexes == socket.assigns.promotion_indexes
+  end
+
+  defp promotion_context_current?(socket, context) when is_map(context) do
+    current_runtime =
+      promotion_runtime_identity(
+        context.schema,
+        ScrypathOps.Schemas.scrypath_opts() |> ScrypathOps.Schemas.runtime_opts()
+      )
+
+    same_promotion_task?(socket, context) and
+      context.schema == socket.assigns.selected_schema and
+      context.schema in ScrypathOps.Schemas.allowlist() and
+      current_selection?(socket) and
+      context == socket.assigns.promotion_context and
+      context.runtime == current_runtime
+  rescue
+    _ -> false
+  end
+
+  defp promotion_context_current?(_socket, _context), do: false
+
+  defp promotion_runtime_identity(schema, opts) do
+    instance = Keyword.get(opts, :oban)
+
+    oban_state =
+      if is_atom(instance) and not is_nil(instance), do: oban_config(instance), else: {:ok, %{}}
+
+    {repo, prefix} =
+      case oban_state do
+        {:ok, config} ->
+          {Map.get(config, :repo) || Keyword.get(opts, :repo),
+           Map.get(config, :prefix) || Keyword.get(opts, :prefix)}
+
+        _ ->
+          {Keyword.get(opts, :repo), Keyword.get(opts, :prefix)}
+      end
+
+    %{
+      schema: schema,
+      backend: Keyword.get(opts, :backend),
+      endpoint: endpoint_identity(Keyword.get(opts, :meilisearch_url)),
+      index_prefix: Keyword.get(opts, :index_prefix),
+      meilisearch_client: Keyword.get(opts, :meilisearch_client) || Client,
+      oban: instance,
+      repo: repo,
+      prefix: prefix,
+      node: node()
+    }
   end
 
   defp invalidate_recovery_claim(socket) do
@@ -1350,11 +1573,85 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.ops_section>
       </.ops_panel>
 
+      <.ops_panel
+        :if={@promotion_schema || @promotion_task_id}
+        id="promotion-task-status"
+        class="mt-4"
+      >
+        <.ops_section
+          title={promotion_status_title(@promotion_status)}
+          subtitle="Task completion is separate from the current index and document state."
+        >
+          <p class="text-ops-body" data-testid="promotion-task-identity">
+            Schema
+            <.ops_inline_code>{module_flat_name(@promotion_schema)}</.ops_inline_code>
+            <span :if={@promotion_indexes}>
+              · swap pair
+              <.ops_inline_code>{elem(@promotion_indexes, 0)}</.ops_inline_code>
+              →
+              <.ops_inline_code>{elem(@promotion_indexes, 1)}</.ops_inline_code>
+            </span>
+            <span :if={@promotion_task_id}>
+              · task
+              <.ops_inline_code>{@promotion_task_id}</.ops_inline_code>
+            </span>
+          </p>
+          <p :if={@promotion_status == :accepted} class="text-ops-body">
+            The backend accepted this swap. Its task is still queued or its latest status is not yet known.
+          </p>
+          <p :if={@promotion_status == :running} class="text-ops-body">
+            Meilisearch reports that this swap task is processing.
+          </p>
+          <p :if={@promotion_status == :completed} class="text-ops-body">
+            The matching swap task completed. Check current index state separately.
+          </p>
+          <p :if={match?({:failed, :cancelled}, @promotion_status)} class="text-ops-body">
+            The matching swap task was cancelled. Check current index state separately.
+          </p>
+          <p
+            :if={
+              match?({:failed, _}, @promotion_status) and
+                not match?({:failed, :cancelled}, @promotion_status)
+            }
+            class="text-ops-body"
+          >
+            The matching swap task failed. Check current index state separately.
+          </p>
+          <p
+            :if={@promotion_status in [:timed_out, :unknown]}
+            class="text-ops-body"
+            data-testid="promotion-unconfirmed"
+          >
+            The task result could not be confirmed. The returned task UID remains shown; checking it again never submits another swap.
+          </p>
+          <p
+            :if={is_nil(@promotion_task_id)}
+            class="text-ops-body"
+            data-testid="promotion-missing-task-id"
+          >
+            The swap response did not provide a usable task ID. Review the current index state; no task lookup is available.
+          </p>
+          <.ops_button
+            :if={is_integer(@promotion_task_id)}
+            phx-click="check_swap_status"
+            phx-disable-with="Checking swap status…"
+            disabled={@promotion_check_loading}
+            size={:sm}
+          >
+            Check swap status
+          </.ops_button>
+          <span :if={@promotion_check_loading} role="status" class="text-ops-sm text-base-content/70">
+            Checking swap status…
+          </span>
+        </.ops_section>
+      </.ops_panel>
+
       <details
         :if={@selected_schema}
         id="index-promotion"
         class="ops-panel mt-4"
-        open={@promotion_status != nil}
+        phx-hook="OpsHealthDetails"
+        phx-mounted={JS.ignore_attributes("open")}
       >
         <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
         <div class="space-y-3 px-4 pb-4">
@@ -1373,33 +1670,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           >
             Promote target index
           </.ops_button>
-          <.ops_status
-            :if={@promotion_status}
-            kind={promotion_status_kind(@promotion_status)}
-            title={promotion_status_title(@promotion_status)}
-          >
-            <span :if={@promotion_task_id}>
-              Task
-              <.ops_inline_code>{@promotion_task_id}</.ops_inline_code>
-            </span>
-            <span :if={@promotion_status == :accepted}>
-              The backend accepted this swap. Waiting for its terminal result.
-            </span>
-            <span :if={@promotion_status == :completed}>Index swap completed.</span>
-            <span :if={@promotion_status in [:timed_out, :unknown]}>
-              The task result could not be confirmed. Refresh checks to inspect current index state.
-            </span>
-            <span :if={match?({:failed, _}, @promotion_status)}>
-              The swap task failed. Refresh checks to inspect current index state.
-            </span>
-            <.ops_button
-              :if={@promotion_status != :accepted}
-              phx-click="refresh_promotion_checks"
-              size={:sm}
-            >
-              Refresh checks
-            </.ops_button>
-          </.ops_status>
+          <.ops_button phx-click="refresh_promotion_checks" size={:sm}>
+            Refresh sync and configuration checks
+          </.ops_button>
         </div>
       </details>
 

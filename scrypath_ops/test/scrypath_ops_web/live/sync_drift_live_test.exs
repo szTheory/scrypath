@@ -81,7 +81,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         Map.update!(state, :task_calls, &[uid | &1])
       end)
 
-      case Agent.get(:sync_drift_live_test_state, & &1) do
+      state = Agent.get(:sync_drift_live_test_state, & &1)
+      if state.task_delay_ms > 0, do: Process.sleep(state.task_delay_ms)
+
+      case state do
         %{task_error: reason} when not is_nil(reason) -> {:error, reason}
         %{task_response: response} -> {:ok, response}
       end
@@ -96,7 +99,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
   setup do
     keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
+      schema_allowlist backend repo sync_mode index_prefix meilisearch_url meilisearch_client
       meilisearch_tasks oban oban_queue oban_inspector oban_jobs
     )a
 
@@ -104,6 +107,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
     Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+    Application.put_env(:scrypath_ops, :repo, ScrypathOps.Repo)
     Application.put_env(:scrypath_ops, :sync_mode, :manual)
     Application.put_env(:scrypath_ops, :index_prefix, "sdv")
     Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
@@ -125,6 +129,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
                settings_calls: 0,
                task_calls: [],
                task_response: %{"uid" => 201, "status" => "processing"},
+               task_delay_ms: 0,
                task_error: nil,
                swap_called: false,
                tasks_error: nil
@@ -491,41 +496,162 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:ok, view, _html} =
       live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
 
-    :sys.replace_state(view.pid, fn state ->
-      socket = state.socket
+    seed_rendered_promotion(view)
 
-      assigns =
-        Map.merge(socket.assigns, %{
-          promotion_task_id: 201,
-          promotion_status: :accepted,
-          promotion_schema: OpsPostA,
-          promotion_indexes: {"sdv_ops_post_a", "sdv_ops_post_a__reindex"},
-          promotion_runtime: %{
-            schema: OpsPostA,
-            backend: Scrypath.Meilisearch,
-            endpoint: "http://localhost:7700",
-            index_prefix: "sdv",
-            oban: nil,
-            repo: nil,
-            prefix: nil,
-            node: node()
-          }
-        })
-
-      %{state | socket: %{socket | assigns: assigns}}
-    end)
-
-    assert has_element?(view, "#promotion-task-status", "Task 201")
+    assert has_element?(view, "#promotion-task-status")
+    assert render(view) =~ "201"
     assert has_element?(view, "#promotion-task-status", "Index swap accepted")
 
     view
     |> element("#promotion-task-status button", "Check swap status")
     |> render_click()
+
     render_async(view)
 
     assert has_element?(view, "#promotion-task-status", "Index swap running")
     assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.task_calls)) == [201]
     refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+  end
+
+  test "rendered promotion status keeps an enqueued task accepted while checking", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:task_response, %{"taskUid" => 201, "status" => "enqueued"})
+      |> Map.put(:task_delay_ms, 100)
+    end)
+
+    {:ok, view, _html} =
+      live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    seed_rendered_promotion(view)
+
+    view
+    |> element("#promotion-task-status button", "Check swap status")
+    |> render_click()
+
+    assert :sys.get_state(view.pid).socket.assigns.promotion_status == :accepted
+    assert :sys.get_state(view.pid).socket.assigns.promotion_check_loading
+    assert has_element?(view, "#promotion-task-status", "Checking swap status…")
+
+    render_async(view)
+
+    assert has_element?(view, "#promotion-task-status", "Index swap accepted")
+    refute has_element?(view, "#promotion-task-status", "Index swap running")
+    assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.task_calls)) == [201]
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+  end
+
+  test "rendered promotion checks map exact terminal and unconfirmed responses", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    seed_rendered_promotion(view)
+
+    cases = [
+      {%{"uid" => 201, "status" => "succeeded"}, nil, "Index swap completed"},
+      {%{"uid" => 201, "status" => "failed"}, nil, "Index swap failed"},
+      {%{"uid" => 201, "status" => "canceled"}, nil, "Index swap cancelled"},
+      {%{"uid" => 202, "status" => "succeeded"}, nil, "outcome unconfirmed"},
+      {%{"uid" => 201}, nil, "outcome unconfirmed"},
+      {nil, :task_read_failed, "outcome unconfirmed"}
+    ]
+
+    for {response, error, expected} <- cases do
+      Agent.update(:sync_drift_live_test_state, fn state ->
+        state |> Map.put(:task_response, response) |> Map.put(:task_error, error)
+      end)
+
+      view
+      |> element("#promotion-task-status button", "Check swap status")
+      |> render_click()
+
+      render_async(view)
+      assert has_element?(view, "#promotion-task-status", expected)
+      assert has_element?(view, "#promotion-task-status", "201")
+      refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+    end
+
+    assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.task_calls)) ==
+             [201, 201, 201, 201, 201, 201]
+  end
+
+  test "rendered timed-out promotion check retries the same UID without another swap", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :task_error, :timeout))
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    seed_rendered_promotion(view)
+
+    view |> element("#promotion-task-status button", "Check swap status") |> render_click()
+    render_async(view)
+    assert has_element?(view, "#promotion-task-status", "outcome unconfirmed")
+
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:task_error, nil)
+      |> Map.put(:task_response, %{"uid" => 201, "status" => "processing"})
+    end)
+
+    view |> element("#promotion-task-status button", "Check swap status") |> render_click()
+    render_async(view)
+
+    assert has_element?(view, "#promotion-task-status", "Index swap running")
+    assert Agent.get(:sync_drift_live_test_state, &Enum.reverse(&1.task_calls)) == [201, 201]
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+  end
+
+  test "promotion callbacks discard success and error results after runtime or context changes" do
+    stale_mutations = [
+      fn -> Application.put_env(:scrypath_ops, :meilisearch_url, "http://other:7700") end,
+      fn -> Application.put_env(:scrypath_ops, :backend, :other_backend) end,
+      fn -> Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB]) end,
+      fn -> :generation end
+    ]
+
+    for mutate <- stale_mutations do
+      socket = sync_drift_socket(%{promotion_task_id: 201, promotion_status: :accepted})
+      context = socket.assigns.promotion_context
+
+      changed_socket =
+        if mutate.() == :generation do
+          %{
+            socket
+            | assigns: Map.put(socket.assigns, :context_generation, context.generation + 1)
+          }
+        else
+          socket
+        end
+
+      {:noreply, success} =
+        SyncDriftLive.handle_async(
+          {:promotion_check, context.generation, context.task_id},
+          {:ok, {context, {:ok, %{uid: 201, status: :succeeded}}}},
+          changed_socket
+        )
+
+      assert success.assigns.promotion_task_id == 201
+
+      expected =
+        if context.generation == changed_socket.assigns.context_generation,
+          do: :unknown,
+          else: :accepted
+
+      assert success.assigns.promotion_status == expected
+      refute success.assigns.promotion_check_loading
+
+      {:noreply, failed} =
+        SyncDriftLive.handle_async(
+          {:promotion_check, context.generation, context.task_id},
+          {:exit, :observer_failed},
+          changed_socket
+        )
+
+      assert failed.assigns.promotion_task_id == 201
+      assert failed.assigns.promotion_status == expected
+      refute failed.assigns.promotion_check_loading
+
+      Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
+      Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+      Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
+    end
   end
 
   test "guarded promotion preserves the queue inspector and refuses newly pending work" do
@@ -768,7 +894,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:noreply, completed} =
       SyncDriftLive.handle_async(
         {:promotion_swap, 9, 991},
-        {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
+        {:ok,
+         {9, 991,
+          {:ok,
+           %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :succeeded}}}},
         socket
       )
 
@@ -778,7 +907,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:noreply, wrong_task} =
       SyncDriftLive.handle_async(
         {:promotion_swap, 9, 991},
-        {:ok, {9, 991, {:ok, %{id: 992, state: :succeeded}}}},
+        {:ok,
+         {9, 991,
+          {:ok,
+           %OperationTask{source: :meilisearch, kind: :index_swap, id: 992, state: :succeeded}}}},
         socket
       )
 
@@ -796,10 +928,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert failed.assigns.promotion_status ==
-             {:failed,
-              {:task_failed,
-               %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :failed}}}
+    assert failed.assigns.promotion_status == {:failed, :task_failed}
 
     assert failed.assigns.promotion_task_id == 991
 
@@ -814,10 +943,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert cancelled.assigns.promotion_status ==
-             {:failed,
-              {:cancelled,
-               %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :cancelled}}}
+    assert cancelled.assigns.promotion_status == {:failed, :cancelled}
 
     assert cancelled.assigns.promotion_task_id == 991
 
@@ -888,7 +1014,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:noreply, stale} =
       SyncDriftLive.handle_async(
         {:promotion_swap, 8, 991},
-        {:ok, {8, 991, {:ok, %{id: 991, state: :succeeded}}}},
+        {:ok,
+         {8, 991,
+          {:ok,
+           %OperationTask{source: :meilisearch, kind: :index_swap, id: 991, state: :succeeded}}}},
         socket
       )
 
@@ -990,8 +1119,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       recovery_handle: nil,
       recovery_origin_generation: nil,
       promotion_loading: false,
+      promotion_check_loading: false,
       promotion_task_id: nil,
       promotion_status: nil,
+      promotion_context: nil,
+      promotion_schema: nil,
+      promotion_indexes: nil,
       confirm_swap?: false,
       recovery_status: nil,
       recovery_evidence: nil,
@@ -1002,15 +1135,107 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       local_ui_state: nil
     }
 
+    assigns = Map.merge(base_assigns, overrides)
+
+    promotion_context =
+      if is_integer(assigns.promotion_task_id) do
+        %{
+          generation: assigns.context_generation,
+          task_id: assigns.promotion_task_id,
+          schema: assigns.selected_schema,
+          indexes: assigns.promotion_indexes || {"sdv_ops_post_a", "sdv_ops_post_a__reindex"},
+          runtime: promotion_test_runtime(assigns.selected_schema, assigns.scrypath_opts)
+        }
+      end
+
+    assigns =
+      assigns
+      |> Map.put(:promotion_context, promotion_context)
+      |> Map.put(:promotion_schema, assigns.selected_schema)
+
+    assigns =
+      if is_map(promotion_context),
+        do: Map.put(assigns, :promotion_indexes, promotion_context.indexes),
+        else: assigns
+
     %Phoenix.LiveView.Socket{
-      assigns: Map.merge(base_assigns, overrides),
+      assigns: assigns,
       host_uri: URI.parse("https://scrypath.example/ops/sync-drift")
+    }
+  end
+
+  defp seed_rendered_promotion(view) do
+    :sys.replace_state(view.pid, fn state ->
+      socket = state.socket
+      indexes = {"sdv_ops_post_a", "sdv_ops_post_a__reindex"}
+
+      runtime = %{
+        schema: OpsPostA,
+        backend: Scrypath.Meilisearch,
+        endpoint: %{scheme: "http", host: "localhost", port: 7700, path: ""},
+        index_prefix: "sdv",
+        meilisearch_client: SyncDriftClient,
+        oban: nil,
+        repo: ScrypathOps.Repo,
+        prefix: nil,
+        node: node()
+      }
+
+      context = %{
+        generation: socket.assigns.context_generation,
+        task_id: 201,
+        schema: OpsPostA,
+        indexes: indexes,
+        runtime: runtime
+      }
+
+      assigns =
+        Map.merge(socket.assigns, %{
+          promotion_task_id: 201,
+          promotion_status: :accepted,
+          promotion_schema: OpsPostA,
+          promotion_indexes: indexes,
+          promotion_context: context,
+          promotion_check_loading: false
+        })
+        |> Map.put(:__changed__, %{
+          promotion_task_id: true,
+          promotion_status: true,
+          promotion_schema: true,
+          promotion_indexes: true,
+          promotion_context: true,
+          promotion_check_loading: true
+        })
+
+      %{state | socket: %{socket | assigns: assigns}}
+    end)
+
+    view |> element("#sync-drift-refresh") |> render_click()
+  end
+
+  defp promotion_test_runtime(schema, opts) do
+    endpoint = URI.parse(Keyword.get(opts, :meilisearch_url))
+
+    %{
+      schema: schema,
+      backend: Keyword.get(opts, :backend),
+      endpoint:
+        Map.merge(Map.take(endpoint, [:scheme, :host, :port]), %{
+          path: String.trim_trailing(endpoint.path || "", "/")
+        }),
+      index_prefix: Keyword.get(opts, :index_prefix),
+      meilisearch_client: Keyword.get(opts, :meilisearch_client),
+      oban: Keyword.get(opts, :oban),
+      repo: Keyword.get(opts, :repo),
+      prefix: Keyword.get(opts, :prefix),
+      node: node()
     }
   end
 
   defp sync_drift_scrypath_opts do
     [
       backend: Scrypath.Meilisearch,
+      repo: ScrypathOps.Repo,
       sync_mode: :manual,
       index_prefix: "sdv",
       meilisearch_url: "http://localhost:7700",
