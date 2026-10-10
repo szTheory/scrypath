@@ -106,6 +106,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       {_mod, false} ->
         socket
+        |> assign(:reconcile_error, :missing_backend)
+        |> refresh_promotion_eligibility()
 
       {mod, true} ->
         opts = socket.assigns.scrypath_opts
@@ -765,7 +767,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:reconcile_generation, nil)
       |> assign(:reconcile_error, :missing_backend)
       |> refresh_promotion_eligibility()
-      |> put_flash(:error, "Select a schema and configure Scrypath runtime.")
+      |> put_flash(:error, sync_error_copy(:missing_backend))
     end
   end
 
@@ -1006,6 +1008,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   end
 
+  defp sync_error_copy(:missing_backend) do
+    "Sync status is unavailable because the backend is not configured. Configure the backend, then refresh to check again."
+  end
+
+  defp sync_error_copy(_reason) do
+    "Sync status is incomplete because a required backend task or queue read failed. Refresh to try again, then review the backend and queue configuration if needed."
+  end
+
   defp drift_dimension_label(key) do
     key
     |> to_string()
@@ -1180,7 +1190,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             title="Sync status is unavailable"
             role="alert"
           >
-            Refresh to try again. If the check keeps failing, review the backend and queue configuration.
+            {sync_error_copy(@reconcile_error)}
             <.ops_disclosure summary="Check diagnostics" variant={:compact} class="mt-2">
               <.ops_code_block>{inspect(@reconcile_error)}</.ops_code_block>
             </.ops_disclosure>

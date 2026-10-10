@@ -191,7 +191,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
     assert has_element?(view, "[role=alert]", "Sync status is unavailable")
-    assert has_element?(view, "[role=alert]", "backend task read failed")
+    assert has_element?(view, "[role=alert]", "backend task or queue read failed")
     refute has_element?(view, "#sync-work-status", "No pending or failed sync work found")
 
     view |> element("button", "Check index configuration") |> render_click()
@@ -279,6 +279,38 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
            )
 
     refute html =~ "Documents are stale"
+  end
+
+  test "multiple configuration differences expose each affected dimension", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state
+      |> Map.put(:ready, true)
+      |> Map.put(:applied_settings, %{
+        "searchableAttributes" => ["title"],
+        "filterableAttributes" => ["category"],
+        "sortableAttributes" => ["price"]
+      })
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    view |> element("button", "Check index configuration") |> render_click()
+    html = render(view)
+
+    assert html =~ "Index configuration differs"
+    assert html =~ "2 configuration differences found"
+    assert has_element?(view, "details[data-testid=configuration-details][open]")
+
+    assert has_element?(
+             view,
+             "details[data-testid=configuration-details]",
+             "filterable attributes"
+           )
+
+    assert has_element?(
+             view,
+             "details[data-testid=configuration-details]",
+             "sortable attributes"
+           )
   end
 
   test "pending work remains visible before optional sync diagnostics and health return is overall",
