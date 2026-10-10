@@ -83,9 +83,9 @@ status: complete
 
 ## Task Commits
 
-**Task 1: Drive one standalone selected-schema task recheck through the production LiveView** — RED `ac1428f`, GREEN `1f1a571`
+**Task 1: Drive one standalone selected-schema task recheck through the production LiveView — RED: missing standalone route; GREEN: exact-UID processing recheck with no second swap POST.** `ac1428f` `1f1a571`
 
-**Task 2: Expand standalone fixtures to adverse recovery, task and promotion controls** — RED `d3e3044`, GREEN `888c1eb`
+**Task 2: Expand standalone fixtures to adverse recovery, task and promotion controls — RED: named scenarios were unsupported; GREEN: bounded adverse states and retained retry identity render through LiveView.** `d3e3044` `888c1eb`
 
 ## Verification
 
