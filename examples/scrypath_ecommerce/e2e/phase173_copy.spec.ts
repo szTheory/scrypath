@@ -186,6 +186,7 @@ for (const entry of entries) {
         expect(geometry.exact.scrollWidth).toBeLessThanOrEqual(geometry.exact.width + 1);
         expect(geometry.exact.userSelect).toBe("text");
         expect(geometry.button).toBeGreaterThanOrEqual(40);
+        await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({ path: join(screenshotDir, `${entry.name}-copy-${theme}-${width}.png`), fullPage: true });
       }
     }
