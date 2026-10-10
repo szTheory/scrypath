@@ -39,6 +39,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
       |> assign(:recovery_handle, nil)
+      |> assign(:recovery_runtime, nil)
       |> assign(:recovery_origin_generation, nil)
       |> assign(:recovery_status, nil)
       |> assign(:recovery_evidence, nil)
@@ -381,7 +382,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       ) do
     cond do
       generation == socket.assigns.context_generation and
-        handle == socket.assigns.recovery_handle and current_selection?(socket) ->
+        handle == socket.assigns.recovery_handle and current_selection?(socket) and
+          recovery_runtime_current?(socket) ->
         {status, evidence} =
           case result do
             {status, evidence} when is_map(evidence) or is_nil(evidence) -> {status, evidence}
@@ -399,7 +401,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       generation == socket.assigns.context_generation and
           handle == socket.assigns.recovery_handle ->
-        {:noreply, unavailable(socket)}
+        {:noreply, stale_recovery_result(socket)}
 
       true ->
         {:noreply, socket}
@@ -409,7 +411,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_async({:recovery_observation, generation, handle}, {:exit, _reason}, socket) do
     cond do
       generation == socket.assigns.context_generation and
-        handle == socket.assigns.recovery_handle and current_selection?(socket) ->
+        handle == socket.assigns.recovery_handle and current_selection?(socket) and
+          recovery_runtime_current?(socket) ->
         {:noreply,
          socket
          |> assign(:recovery_status, :unknown)
@@ -418,7 +421,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       generation == socket.assigns.context_generation and
           handle == socket.assigns.recovery_handle ->
-        {:noreply, unavailable(socket)}
+        {:noreply, stale_recovery_result(socket)}
 
       true ->
         {:noreply, socket}
@@ -504,14 +507,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_async({:promotion_check, generation, task_id}, {:exit, _reason}, socket) do
     context = socket.assigns.promotion_context
 
-    if is_map(context) and context.generation == generation and context.task_id == task_id and
-         same_promotion_task?(socket, context) do
-      {:noreply,
-       socket
-       |> assign(:promotion_check_loading, false)
-       |> assign(:promotion_status, :unknown)}
-    else
-      {:noreply, socket}
+    cond do
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          promotion_context_current?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      is_map(context) and context.generation == generation and context.task_id == task_id and
+          same_promotion_task?(socket, context) ->
+        {:noreply,
+         socket
+         |> assign(:promotion_check_loading, false)
+         |> assign(:promotion_status, :unknown)}
+
+      true ->
+        {:noreply, socket}
     end
   end
 
@@ -561,6 +573,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:drift_error, nil)
     |> assign(:drift_loading, false)
     |> assign(:recovery_handle, nil)
+    |> assign(:recovery_runtime, nil)
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
@@ -596,6 +609,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp clear_recovery_handoff(socket) do
     socket
     |> assign(:recovery_handle, nil)
+    |> assign(:recovery_runtime, nil)
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
@@ -613,6 +627,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     socket =
       socket
       |> assign(:recovery_handle, handle)
+      |> assign(:recovery_runtime, promotion_runtime_identity(schema, opts))
       |> assign(:recovery_status, :unknown)
       |> assign(:recovery_loading, true)
 
@@ -712,6 +727,27 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end
   rescue
     _ -> false
+  end
+
+  defp recovery_runtime_current?(socket) do
+    runtime = Map.get(socket.assigns, :recovery_runtime)
+
+    is_map(runtime) and
+      runtime ==
+        promotion_runtime_identity(socket.assigns.selected_schema, active_runtime_opts(socket))
+  rescue
+    _ -> false
+  end
+
+  defp stale_recovery_result(socket) do
+    if current_selection?(socket) do
+      socket
+      |> assign(:recovery_status, :unknown)
+      |> assign(:recovery_checked_at, nil)
+      |> assign(:recovery_loading, false)
+    else
+      unavailable(socket)
+    end
   end
 
   defp oban_config(instance) do

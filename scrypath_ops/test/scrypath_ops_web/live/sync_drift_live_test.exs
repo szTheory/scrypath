@@ -11,6 +11,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.Integrations.Sigra.OperatorContext
   alias ScrypathOps.RecoveryObservation
   alias ScrypathOpsWeb.SyncDriftLive
+  alias ScrypathOpsWeb.SyncDriftLiveTest.RecoveryRuntimeOban
   alias Scrypath.Operations.Task, as: OperationTask
 
   defmodule SyncDriftClient do
@@ -1026,6 +1027,90 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert refreshing.assigns.recovery_evidence == evidence
   end
 
+  test "recovery success and exit reject a runtime changed after the observation started" do
+    original_runtime_config = Application.get_env(:scrypath_ops, :phase175_runtime_config)
+
+    on_exit(fn ->
+      if original_runtime_config,
+        do: Application.put_env(:scrypath_ops, :phase175_runtime_config, original_runtime_config),
+        else: Application.delete_env(:scrypath_ops, :phase175_runtime_config)
+    end)
+
+    for mutation <- [:endpoint, :instance, :repo, :prefix, :node] do
+      Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
+      Application.put_env(:scrypath_ops, :oban, RecoveryRuntimeOban)
+
+      Application.put_env(:scrypath_ops, :phase175_runtime_config, %{
+        repo: ScrypathOps.Repo,
+        prefix: "public"
+      })
+
+      opts = Keyword.put(sync_drift_scrypath_opts(), :oban, RecoveryRuntimeOban)
+      runtime = promotion_test_runtime(OpsPostA, opts) |> Map.put(:prefix, "public")
+      evidence = %{replacement_job: 45, attempt: 1, task_uid: 780, index: "posts"}
+
+      socket =
+        sync_drift_socket(%{
+          scrypath_opts: opts,
+          context_generation: 3,
+          recovery_handle: "receipt",
+          recovery_runtime: runtime,
+          recovery_status: :verified,
+          recovery_evidence: evidence,
+          recovery_checked_at: DateTime.utc_now(),
+          recovery_loading: true
+        })
+
+      socket =
+        case mutation do
+          :endpoint ->
+            Application.put_env(:scrypath_ops, :meilisearch_url, "http://changed:7700")
+            socket
+
+          :instance ->
+            Application.put_env(:scrypath_ops, :oban, :changed_oban)
+            socket
+
+          :repo ->
+            Application.put_env(:scrypath_ops, :phase175_runtime_config, %{
+              repo: :changed_repo,
+              prefix: "public"
+            })
+
+            socket
+
+          :prefix ->
+            Application.put_env(:scrypath_ops, :phase175_runtime_config, %{
+              repo: ScrypathOps.Repo,
+              prefix: "changed"
+            })
+
+            socket
+
+          :node ->
+            %{
+              socket
+              | assigns:
+                  Map.put(
+                    socket.assigns,
+                    :recovery_runtime,
+                    Map.put(runtime, :node, :changed_node)
+                  )
+            }
+        end
+
+      for result <- [{:ok, {3, "receipt", {:verified, evidence}}}, {:exit, :observer_failed}] do
+        {:noreply, updated} =
+          SyncDriftLive.handle_async({:recovery_observation, 3, "receipt"}, result, socket)
+
+        assert updated.assigns.recovery_status == :unknown, "stale #{mutation} #{inspect(result)}"
+        assert updated.assigns.recovery_checked_at == nil
+        assert updated.assigns.recovery_evidence == evidence
+        refute updated.assigns.recovery_loading
+      end
+    end
+  end
+
   test "recovery success arriving after its selected schema is removed is discarded" do
     socket =
       sync_drift_socket(%{
@@ -1335,6 +1420,15 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assigns = Map.merge(base_assigns, overrides)
 
+    assigns =
+      Map.put_new(
+        assigns,
+        :recovery_runtime,
+        if(assigns.recovery_handle,
+          do: promotion_test_runtime(assigns.selected_schema, assigns.scrypath_opts)
+        )
+      )
+
     promotion_context =
       if is_integer(assigns.promotion_task_id) do
         %{
@@ -1444,6 +1538,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       oban_inspector: SyncDriftObanInspector,
       oban_jobs: []
     ]
+  end
+
+  defmodule RecoveryRuntimeOban do
+    def config, do: Application.fetch_env!(:scrypath_ops, :phase175_runtime_config)
   end
 
   defp operator_context(opts \\ []) do
