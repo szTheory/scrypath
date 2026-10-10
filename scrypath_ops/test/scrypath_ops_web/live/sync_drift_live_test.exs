@@ -127,6 +127,46 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
+  test "rendered selection scopes both observations without submitting a mutation", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> form("#sync-drift-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
+    |> render_change()
+
+    assert_patch(view, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    html = render(view)
+
+    assert html =~ "ScrypathOps.Test.OpsPostB"
+    assert html =~ "sdv_ops_post_b"
+    assert has_element?(view, "a[href='/ops']", "Return to Control Room")
+    assert has_element?(view, "a[href='/ops/health']", "Review search health")
+
+    view |> element("#sync-drift-refresh") |> render_click()
+    view |> element("button", "Check index configuration") |> render_click()
+    render(view)
+
+    assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) > 0
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) > 0
+    refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
+  end
+
+  test "invalid schema selection stays unavailable with a safe next step", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.Removed")
+
+    assert html =~ "That schema is unavailable"
+
+    assert has_element?(
+             view,
+             "[role=alert]",
+             "That schema is unavailable. Choose an available schema to continue."
+           )
+
+    assert has_element?(view, "a[href='/ops/health']", "Review search health")
+    refute html =~ "No pending or failed sync work found"
+  end
+
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
