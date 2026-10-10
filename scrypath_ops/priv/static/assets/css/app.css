@@ -1502,9 +1502,6 @@
   .inset-y-0 {
     inset-block: calc(var(--spacing) * 0);
   }
-  .top-0 {
-    top: calc(var(--spacing) * 0);
-  }
   .top-ops-3 {
     top: var(--spacing-ops-3);
   }
@@ -1513,9 +1510,6 @@
   }
   .right-ops-3 {
     right: var(--spacing-ops-3);
-  }
-  .left-0 {
-    left: calc(var(--spacing) * 0);
   }
   .left-\[40rem\] {
     left: 40rem;
@@ -2201,6 +2195,9 @@
   .max-h-96 {
     max-height: calc(var(--spacing) * 96);
   }
+  .min-h-\[var\(--control-h-lg\)\] {
+    min-height: var(--control-h-lg);
+  }
   .min-h-\[var\(--control-h-md\)\] {
     min-height: var(--control-h-md);
   }
@@ -2212,9 +2209,6 @@
   }
   .min-h-screen {
     min-height: 100vh;
-  }
-  .w-1\/3 {
-    width: calc(1/3 * 100%);
   }
   .w-4 {
     width: calc(var(--spacing) * 4);
@@ -2255,8 +2249,8 @@
   .min-w-0 {
     min-width: calc(var(--spacing) * 0);
   }
-  .min-w-\[var\(--control-h-md\)\] {
-    min-width: var(--control-h-md);
+  .min-w-\[var\(--control-h-lg\)\] {
+    min-width: var(--control-h-lg);
   }
   .flex-1 {
     flex: 1;
@@ -2369,6 +2363,9 @@
   }
   .gap-4 {
     gap: calc(var(--spacing) * 4);
+  }
+  .gap-ops-2 {
+    gap: var(--spacing-ops-2);
   }
   .gap-ops-control-gap {
     gap: var(--spacing-ops-control-gap);
@@ -2494,9 +2491,6 @@
   .border-accent {
     border-color: var(--color-accent);
   }
-  .border-base-200 {
-    border-color: var(--color-base-200);
-  }
   .border-base-300 {
     border-color: var(--color-base-300);
   }
@@ -2604,6 +2598,9 @@
   }
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
+  }
+  .px-ops-2 {
+    padding-inline: var(--spacing-ops-2);
   }
   .py-0\.5 {
     padding-block: calc(var(--spacing) * 0.5);
@@ -3500,10 +3497,8 @@
     overflow: hidden;
   }
   .ops-shell {
-    background: radial-gradient(circle at top left, var(--color-primary), transparent 34rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    @supports (color: color-mix(in lab, red, red)) {
-      background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 14%, transparent), transparent 34rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
+    background-color: var(--ops-bg);
+    background-image: none;
   }
   .ops-header .text-base-content\/60 {
     color: var(--ops-text-muted);
@@ -4782,12 +4777,6 @@
       right: 1rem;
       bottom: 1rem;
     }
-    .ops-shell {
-      background: radial-gradient(circle at top left, var(--color-primary), transparent 28rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-      @supports (color: color-mix(in lab, red, red)) {
-        background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 28rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-      }
-    }
   }
   .ops-cmdk {
     position: fixed;
@@ -5102,17 +5091,21 @@
   min-width: var(--control-h-lg);
   min-height: var(--control-h-lg);
   border-radius: 999px;
-  transition-property: background-color, color, box-shadow;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-base-content);
+  transition-property: background-color, border-color, color;
   transition-duration: var(--duration-ops-fast);
   transition-timing-function: var(--ease-ops-standard);
 }
-.ops-theme-toggle__button[data-theme-selected="true"], .ops-theme-toggle__button[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-#theme-toggle-pill {
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: var(--duration-ops-fast);
-  transition-timing-function: var(--ease-ops-standard);
+.ops-theme-toggle__button[data-theme-selected="true"] {
+  border-color: var(--color-primary);
+  @supports (color: color-mix(in lab, red, red)) {
+    border-color: color-mix(in oklch, var(--color-primary) 24%, transparent);
+  }
+  background: var(--ops-selection);
+  color: var(--color-primary);
+  font-weight: 600;
 }
 .ops-disclosure[open] > .ops-disclosure-body {
   animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
@@ -5183,21 +5176,6 @@
     animation-iteration-count: 1 !important;
   }
 }
-html[data-theme-effective="light"] #theme-toggle-pill {
-  left: 33.333333%;
-}
-html[data-theme-effective="dark"] #theme-toggle-pill {
-  left: 66.666667%;
-}
-html[data-theme-preference="system"] #theme-toggle [data-phx-theme="system"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-html[data-theme-preference="light"] #theme-toggle [data-phx-theme="light"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
 .bg-ops-surface-2 {
   background: var(--ops-surface-2);
 }
@@ -5253,36 +5231,6 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     background: oklch(0% 0 0 / 0.62);
   }
 }
-[data-theme="dark"] .ops-shell {
-  background: radial-gradient(circle at top left, var(--color-primary), transparent 30rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  @supports (color: color-mix(in lab, red, red)) {
-    background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-shell {
-    background: radial-gradient(circle at top left, var(--color-primary), transparent 30rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    @supports (color: color-mix(in lab, red, red)) {
-      background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
-  }
-}
-@media (max-width: 640px) {
-  [data-theme="dark"] .ops-shell {
-    background: radial-gradient(circle at top left, var(--color-primary), transparent 24rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    @supports (color: color-mix(in lab, red, red)) {
-      background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
-  }
-}
-@media (prefers-color-scheme: dark) and (max-width: 640px) {
-  html:not([data-theme="light"]) .ops-shell {
-    background: radial-gradient(circle at top left, var(--color-primary), transparent 24rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    @supports (color: color-mix(in lab, red, red)) {
-      background: radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem), linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
-  }
-}
 [data-theme="dark"] .ops-wordmark .ops-wordmark__light {
   display: none;
 }
@@ -5319,38 +5267,6 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
       background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
     }
     box-shadow: var(--shadow-ops-panel-dark);
-  }
-}
-[data-theme="dark"] .ops-theme-toggle__pill {
-  border-color: var(--color-base-content);
-  @supports (color: color-mix(in lab, red, red)) {
-    border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-  }
-  background: var(--ops-surface-1);
-  @supports (color: color-mix(in lab, red, red)) {
-    background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-  }
-  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-theme-toggle__pill {
-    border-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-    }
-    background: var(--ops-surface-1);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-    }
-    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-  }
-}
-[data-theme="dark"] .ops-theme-toggle__button[data-theme-selected="true"], [data-theme="dark"] .ops-theme-toggle__button[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--color-primary-strong), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-theme-toggle__button[data-theme-selected="true"], html:not([data-theme="light"]) .ops-theme-toggle__button[aria-pressed="true"] {
-    box-shadow: 0 0 0 2px var(--color-primary-strong), var(--shadow-ops-glow);
   }
 }
 [data-theme="dark"] .ops-data-card {
@@ -5611,18 +5527,18 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   @media (prefers-color-scheme: dark) {
     :root {
       color-scheme: dark;
-      --color-base-100: #141923;
-      --color-base-200: #0c0f14;
-      --color-base-300: #2a3446;
-      --color-base-content: #f4f1ea;
-      --color-primary: #6c5ce7;
-      --color-primary-content: #f4f1ea;
+      --color-base-100: #191e25;
+      --color-base-200: #111419;
+      --color-base-300: #353d48;
+      --color-base-content: #f1f2f4;
+      --color-primary: #aaa0ff;
+      --color-primary-content: #111419;
       --color-secondary: #c17a3e;
       --color-secondary-content: #0c0f14;
-      --color-accent: #5b4ad1;
-      --color-accent-content: #f4f1ea;
-      --color-neutral: #2a3446;
-      --color-neutral-content: #f4f1ea;
+      --color-accent: #aaa0ff;
+      --color-accent-content: #111419;
+      --color-neutral: #353d48;
+      --color-neutral-content: #f1f2f4;
       --color-info: #5ca9e6;
       --color-info-content: #0c0f14;
       --color-success: #4fae74;
@@ -5639,10 +5555,11 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
       --border: 1.5px;
       --depth: 1;
       --noise: 0;
-      --color-primary-strong: #5b4ad1;
-      --ops-bg: #0c0f14;
-      --ops-surface-1: #141923;
-      --ops-surface-2: #1b2230;
+      --color-primary-strong: #aaa0ff;
+      --ops-bg: #111419;
+      --ops-surface-1: #191e25;
+      --ops-surface-2: #222831;
+      --ops-selection: #302b4c;
       --ops-text-muted: var(--color-base-content);
       @supports (color: color-mix(in lab, red, red)) {
         --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
@@ -5653,18 +5570,18 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
 @layer base {
   :root:has(input.theme-controller[value=dark]:checked),[data-theme="dark"] {
     color-scheme: dark;
-    --color-base-100: #141923;
-    --color-base-200: #0c0f14;
-    --color-base-300: #2a3446;
-    --color-base-content: #f4f1ea;
-    --color-primary: #6c5ce7;
-    --color-primary-content: #f4f1ea;
+    --color-base-100: #191e25;
+    --color-base-200: #111419;
+    --color-base-300: #353d48;
+    --color-base-content: #f1f2f4;
+    --color-primary: #aaa0ff;
+    --color-primary-content: #111419;
     --color-secondary: #c17a3e;
     --color-secondary-content: #0c0f14;
-    --color-accent: #5b4ad1;
-    --color-accent-content: #f4f1ea;
-    --color-neutral: #2a3446;
-    --color-neutral-content: #f4f1ea;
+    --color-accent: #aaa0ff;
+    --color-accent-content: #111419;
+    --color-neutral: #353d48;
+    --color-neutral-content: #f1f2f4;
     --color-info: #5ca9e6;
     --color-info-content: #0c0f14;
     --color-success: #4fae74;
@@ -5681,10 +5598,11 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     --border: 1.5px;
     --depth: 1;
     --noise: 0;
-    --color-primary-strong: #5b4ad1;
-    --ops-bg: #0c0f14;
-    --ops-surface-1: #141923;
-    --ops-surface-2: #1b2230;
+    --color-primary-strong: #aaa0ff;
+    --ops-bg: #111419;
+    --ops-surface-1: #191e25;
+    --ops-surface-2: #222831;
+    --ops-selection: #302b4c;
     --ops-text-muted: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
@@ -5694,16 +5612,16 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
 @layer base {
   :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme="light"] {
     color-scheme: light;
-    --color-base-100: #fffdf8;
-    --color-base-200: #faf7f2;
-    --color-base-300: #ded8ce;
-    --color-base-content: #141923;
+    --color-base-100: #ffffff;
+    --color-base-200: #f7f6f3;
+    --color-base-300: #d9d8d2;
+    --color-base-content: #202124;
     --color-primary: #5b4ad1;
-    --color-primary-content: #f4f1ea;
+    --color-primary-content: #ffffff;
     --color-secondary: #a85d2e;
     --color-secondary-content: #fffdf8;
-    --color-accent: #6c5ce7;
-    --color-accent-content: #fffdf8;
+    --color-accent: #5b4ad1;
+    --color-accent-content: #ffffff;
     --color-neutral: #2a3446;
     --color-neutral-content: #f4f1ea;
     --color-info: #5ca9e6;
@@ -5723,9 +5641,10 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     --depth: 1;
     --noise: 0;
     --color-primary-strong: #5b4ad1;
-    --ops-bg: #faf7f2;
-    --ops-surface-1: #fffdf8;
-    --ops-surface-2: #faf7f2;
+    --ops-bg: #f7f6f3;
+    --ops-surface-1: #ffffff;
+    --ops-surface-2: #efeee9;
+    --ops-selection: #eeebff;
     --ops-text-muted: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);

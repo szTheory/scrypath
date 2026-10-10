@@ -22,23 +22,31 @@
     </script>
     <script>
       (() => {
+        const themeKey = "phx:theme";
+        const normalizeTheme = (theme) =>
+          theme === "light" || theme === "dark" ? theme : "system";
+
+        const readStoredTheme = () => {
+          try {
+            return normalizeTheme(localStorage.getItem(themeKey));
+          } catch (_error) {
+            return "system";
+          }
+        };
+
+        let currentPreference = readStoredTheme();
+
         const effectiveTheme = () => {
-          const explicit = document.documentElement.getAttribute("data-theme");
-          if (explicit === "dark") return "dark";
-          if (explicit === "light") return "light";
+          if (currentPreference === "light" || currentPreference === "dark") {
+            return currentPreference;
+          }
+
           return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
         };
 
-        const preferenceTheme = () => {
-          const stored = localStorage.getItem("phx:theme");
-          if (stored === "light" || stored === "dark") return stored;
-          return "system";
-        };
-
         const syncThemeButtons = () => {
-          const preference = preferenceTheme();
           document.querySelectorAll("[data-phx-theme]").forEach((button) => {
-            const selected = button.dataset.phxTheme === preference;
+            const selected = button.dataset.phxTheme === currentPreference;
             button.setAttribute("aria-pressed", selected ? "true" : "false");
             button.setAttribute("data-theme-selected", selected ? "true" : "false");
           });
@@ -46,30 +54,39 @@
 
         const syncThemeMeta = () => {
           document.documentElement.setAttribute("data-theme-effective", effectiveTheme());
-          document.documentElement.setAttribute("data-theme-preference", preferenceTheme());
+          document.documentElement.setAttribute("data-theme-preference", currentPreference);
           syncThemeButtons();
         };
 
-        const setTheme = (theme) => {
-          if (theme === "system") {
-            localStorage.removeItem("phx:theme");
+        const setTheme = (theme, persist = true) => {
+          currentPreference = normalizeTheme(theme);
+
+          if (persist) {
+            try {
+              if (currentPreference === "system") {
+                localStorage.removeItem(themeKey);
+              } else {
+                localStorage.setItem(themeKey, currentPreference);
+              }
+            } catch (_error) {
+              // Keep the current page usable when browser storage is denied.
+            }
+          }
+
+          if (currentPreference === "system") {
             document.documentElement.removeAttribute("data-theme");
           } else {
-            localStorage.setItem("phx:theme", theme);
-            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.setAttribute("data-theme", currentPreference);
           }
+
           syncThemeMeta();
         };
 
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
-        } else {
-          syncThemeMeta();
-        }
+        setTheme(currentPreference, false);
 
         window.addEventListener("storage", (e) => {
-          if (e.key === "phx:theme") {
-            setTheme(e.newValue || "system");
+          if (e.key === themeKey) {
+            setTheme(e.newValue, false);
           }
         });
 

@@ -153,8 +153,6 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(src="/ops/images/scrypath-wordmark-inverse.svg")
     assert html =~ ~s(aria-label="Scrypath home")
     assert html =~ ~s(class="ops-theme-toggle)
-    assert html =~ ~s(id="theme-toggle-pill")
-    assert html =~ ~s(ops-theme-toggle__pill)
     assert Regex.scan(~r/class=\"[^\"]*ops-theme-toggle__button/, html) |> length() == 3
     assert Regex.scan(~r/data-phx-theme=\"(?:system|light|dark)\"/, html) |> length() == 3
     assert html =~ ~s(aria-label="Theme preference")
@@ -212,6 +210,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     source = File.read!(@root_template)
 
     assert source =~ "syncThemeButtons"
+    assert source =~ "normalizeTheme"
+    assert source =~ "readStoredTheme"
+    assert source =~ "currentPreference = normalizeTheme(theme)"
+    assert source =~ "Keep the current page usable when browser storage is denied."
     assert source =~ "querySelectorAll(\"[data-phx-theme]\")"
     assert source =~ "setAttribute(\"aria-pressed\""
     assert source =~ "setAttribute(\"data-theme-selected\""
