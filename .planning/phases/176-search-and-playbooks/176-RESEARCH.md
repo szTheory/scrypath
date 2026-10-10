@@ -349,9 +349,10 @@ Missing dependencies with fallback:
 | A1 | The existing focused browser acceptance can run through the documented disposable Docker workflow once its phase-specific checks are added. | Validation Architecture / Environment Availability | If the existing lane cannot exercise the new controls, planning must select a current existing browser target or surface a concrete testability gap; do not create a new required service by default. |
 | A2 | ASVS 5.0 is the appropriate current taxonomy for security mapping in the plan. | Security Domain | The concrete controls remain server-side validation, safe file paths, and host authorization; taxonomy changes would affect labels rather than scope. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. No product or interaction decision blocks planning; CONTEXT and UI-SPEC resolve the behavior. [VERIFIED: .planning/phases/176-search-and-playbooks/176-CONTEXT.md:16-69] The local shell needs a supported Elixir version selected before local Mix verification, with CI available for the canonical Ops gate. [VERIFIED: shell probe 2026-10-10] [CITED: CONTRIBUTING.md:198-200] The planner should include runtime availability in the first execution preconditions rather than infer that a missing shell version means the repository no longer supports its declared Elixir range. [VERIFIED: scrypath_ops/mix.exs:4-14]
+1. **Product or interaction decisions:** RESOLVED — none block planning; CONTEXT and UI-SPEC settle the behavior. [VERIFIED: .planning/phases/176-search-and-playbooks/176-CONTEXT.md:16-69]
+2. **Local Elixir/Mix selection:** RESOLVED for planning — the current shell lacks a selected runtime, so keep the existing runtime constraint and make toolchain availability an execution precondition. The canonical Ops gate remains available in CI. Do not infer a support-range change from the local shell state. [VERIFIED: shell probe 2026-10-10] [CITED: CONTRIBUTING.md:198-200] [VERIFIED: scrypath_ops/mix.exs:4-14]
 
 ## Metadata
 
