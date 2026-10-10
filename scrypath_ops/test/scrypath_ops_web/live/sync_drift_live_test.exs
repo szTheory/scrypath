@@ -551,6 +551,111 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute Agent.get(:sync_drift_live_test_state, &(length(&1.swap_calls) > 1))
   end
 
+  test "promotion task identity stays visible outside the manually controlled disclosure", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    seed_rendered_promotion(view)
+
+    assert has_element?(view, "#index-promotion[phx-hook=OpsHealthDetails]")
+    assert has_element?(view, "#index-promotion summary[data-testid=advanced-promotion-summary]")
+    refute has_element?(view, "#index-promotion[open]")
+
+    assert has_element?(
+             view,
+             "#promotion-task-status [data-testid=promotion-task-identity]",
+             "201"
+           )
+
+    refute has_element?(view, "#index-promotion #promotion-task-status")
+  end
+
+  test "rendered promotion confirmation can be cancelled without submitting", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> element("#index-promotion button", "Refresh sync and configuration checks")
+    |> render_click()
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    assert has_element?(view, "#confirm-index-promotion[role=dialog]")
+
+    view
+    |> element("#confirm-index-promotion button", "Cancel index swap")
+    |> render_click()
+
+    refute has_element?(view, "#confirm-index-promotion")
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == []
+  end
+
+  test "rendered promotion rechecks prerequisites immediately before submitting", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> element("#index-promotion button", "Refresh sync and configuration checks")
+    |> render_click()
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, false))
+
+    view
+    |> form("#index-promotion-form")
+    |> render_submit()
+
+    render_async(view)
+
+    refute has_element?(view, "#confirm-index-promotion")
+    assert has_element?(view, "[role=alert]", "Index promotion blocked")
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == []
+  end
+
+  test "rendered promotion returns through sudo confirmation without replay", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, view, _html} = live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    view
+    |> element("#index-promotion button", "Refresh sync and configuration checks")
+    |> render_click()
+
+    view
+    |> element("#index-promotion button", "Promote target index")
+    |> render_click()
+
+    :sys.replace_state(view.pid, fn state ->
+      socket = state.socket
+
+      assigns =
+        Map.put(
+          socket.assigns,
+          :operator_context,
+          operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
+        )
+        |> Map.put(:__changed__, %{operator_context: true})
+
+      %{state | socket: %{socket | assigns: assigns}}
+    end)
+
+    view
+    |> form("#index-promotion-form")
+    |> render_submit()
+
+    assert_redirect(
+      view,
+      "/sudo/confirm?return_to=%2Fops%2Fsync-drift%3Fschema%3DScrypathOps.Test.OpsPostA"
+    )
+
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == []
+  end
+
   test "rendered promotion status check reads only the retained task UID", %{conn: conn} do
     {:ok, view, _html} =
       live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
