@@ -29,9 +29,30 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 
 import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast} from "./ops_hooks"
 
+const createMemoryStorage = () => {
+  const entries = new Map()
+  return {
+    get length() { return entries.size },
+    clear() { entries.clear() },
+    getItem(key) { return entries.get(key) ?? null },
+    key(index) { return Array.from(entries.keys())[index] ?? null },
+    removeItem(key) { entries.delete(key) },
+    setItem(key, value) { entries.set(String(key), String(value)) }
+  }
+}
+
+const safeLocalStorage = (() => {
+  try {
+    return window.localStorage
+  } catch (_error) {
+    return createMemoryStorage()
+  }
+})()
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
+  localStorage: safeLocalStorage,
   hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast},
 })
 

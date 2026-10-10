@@ -1639,6 +1639,7 @@
     flex: none;
     display: block;
     width: 7.5rem;
+    min-height: var(--control-h-lg);
     line-height: 0;
   }
 

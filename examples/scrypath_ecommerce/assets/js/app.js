@@ -15,28 +15,53 @@ import {
   OpsToast
 } from "../../../../scrypath_ops/assets/js/ops_hooks";
 
+const createMemoryStorage = () => {
+  const entries = new Map();
+  return {
+    get length() { return entries.size; },
+    clear() { entries.clear(); },
+    getItem(key) { return entries.get(key) ?? null; },
+    key(index) { return Array.from(entries.keys())[index] ?? null; },
+    removeItem(key) { entries.delete(key); },
+    setItem(key, value) { entries.set(String(key), String(value)); }
+  };
+};
+
+const safeLocalStorage = (() => {
+  try {
+    return window.localStorage;
+  } catch (_error) {
+    return createMemoryStorage();
+  }
+})();
+
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
+  localStorage: safeLocalStorage,
   hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
 });
 
+const themeKey = "phx:theme";
+const normalizeTheme = (theme) =>
+  theme === "light" || theme === "dark" ? theme : "system";
+
+const readStoredTheme = () => {
+  return normalizeTheme(safeLocalStorage.getItem(themeKey));
+};
+
+let currentPreference = readStoredTheme();
+
 const effectiveTheme = () => {
-  const explicit = document.documentElement.getAttribute("data-theme");
-  if (explicit === "dark") return "dark";
-  if (explicit === "light") return "light";
+  if (currentPreference === "light" || currentPreference === "dark") {
+    return currentPreference;
+  }
+
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 };
 
-const preferenceTheme = () => {
-  const stored = localStorage.getItem("phx:theme");
-  if (stored === "light" || stored === "dark") return stored;
-  return "system";
-};
-
 const syncThemeButtons = () => {
-  const preference = preferenceTheme();
   document.querySelectorAll("[data-phx-theme]").forEach((button) => {
-    const selected = button.dataset.phxTheme === preference;
+    const selected = button.dataset.phxTheme === currentPreference;
     button.setAttribute("aria-pressed", selected ? "true" : "false");
     button.setAttribute("data-theme-selected", selected ? "true" : "false");
   });
@@ -44,22 +69,31 @@ const syncThemeButtons = () => {
 
 const syncThemeMeta = () => {
   document.documentElement.setAttribute("data-theme-effective", effectiveTheme());
-  document.documentElement.setAttribute("data-theme-preference", preferenceTheme());
+  document.documentElement.setAttribute("data-theme-preference", currentPreference);
   syncThemeButtons();
 };
 
-const setTheme = (theme) => {
-  if (theme === "system") {
-    localStorage.removeItem("phx:theme");
+const setTheme = (theme, persist = true) => {
+  currentPreference = normalizeTheme(theme);
+
+  if (persist) {
+    if (currentPreference === "system") safeLocalStorage.removeItem(themeKey);
+    else safeLocalStorage.setItem(themeKey, currentPreference);
+  }
+
+  if (currentPreference === "system") {
     document.documentElement.removeAttribute("data-theme");
   } else {
-    localStorage.setItem("phx:theme", theme);
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", currentPreference);
   }
+
   syncThemeMeta();
 };
 
-setTheme(localStorage.getItem("phx:theme") || "system");
+setTheme(currentPreference, false);
+window.addEventListener("storage", (event) => {
+  if (event.key === themeKey || event.key === null) setTheme(event.newValue, false);
+});
 window.addEventListener("phx:set-theme", (event) => {
   const button = event.target.closest("[data-phx-theme]");
   if (button) setTheme(button.dataset.phxTheme);
@@ -68,13 +102,13 @@ window
   .matchMedia("(prefers-color-scheme: dark)")
   .addEventListener("change", () => syncThemeMeta());
 
+window.addEventListener("phx:page-loading-stop", () => syncThemeMeta());
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => syncThemeMeta(), { once: true });
 } else {
   syncThemeMeta();
 }
-
-window.addEventListener("phx:page-loading-stop", () => syncThemeMeta());
 
 window.addEventListener("phx:copy_run_diagnostics", async ({ detail }) => {
   const text = detail?.text;

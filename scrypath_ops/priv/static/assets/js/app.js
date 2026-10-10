@@ -9194,9 +9194,40 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
 
   // js/app.js
   var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+  var createMemoryStorage = () => {
+    const entries = /* @__PURE__ */ new Map();
+    return {
+      get length() {
+        return entries.size;
+      },
+      clear() {
+        entries.clear();
+      },
+      getItem(key) {
+        return entries.get(key) ?? null;
+      },
+      key(index) {
+        return Array.from(entries.keys())[index] ?? null;
+      },
+      removeItem(key) {
+        entries.delete(key);
+      },
+      setItem(key, value) {
+        entries.set(String(key), String(value));
+      }
+    };
+  };
+  var safeLocalStorage = (() => {
+    try {
+      return window.localStorage;
+    } catch (_error) {
+      return createMemoryStorage();
+    }
+  })();
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
+    localStorage: safeLocalStorage,
     hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });

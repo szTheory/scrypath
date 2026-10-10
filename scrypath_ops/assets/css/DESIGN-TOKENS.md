@@ -31,14 +31,14 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `primary` | `#5b4ad1` | `#6c5ce7` | brand/accent, active nav, primary actions |
-| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | text-bearing selected fills only; see Phase 132 floor |
+| `primary` | `#5b4ad1` | `#aaa0ff` | brand/accent, active nav, primary actions |
+| `--color-primary-strong` | `#5b4ad1` | `#aaa0ff` | text-bearing selected fills only; see Phase 132 floor |
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
-| `accent` | `#6c5ce7` | `#5b4ad1` | gradient partner (route mark) |
-| `base-100` | `#fffdf8` | `#141923` | surfaces |
-| `base-200` | `#faf7f2` | `#0c0f14` | app background, muted panels |
-| `base-300` | `#ded8ce` | `#2a3446` | borders, dividers |
-| `base-content` | `#141923` | `#f4f1ea` | text |
+| `accent` | `#5b4ad1` | `#aaa0ff` | restrained active-theme brand accent |
+| `base-100` | `#ffffff` | `#191e25` | surfaces |
+| `base-200` | `#f7f6f3` | `#111419` | app background, muted panels |
+| `base-300` | `#d9d8d2` | `#353d48` | borders, dividers |
+| `base-content` | `#202124` | `#f1f2f4` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
 ## A11y contrast floors -- Phase 132
@@ -71,12 +71,12 @@ free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surfa
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#faf7f2` | `#0c0f14` | Page floor / Night — app background |
-| `--ops-surface-1` | `#fffdf8` | `#141923` | Resting panel / Ink — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#faf7f2` | `#1b2230` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-bg` | `#f7f6f3` | `#111419` | Flat page floor and shell background |
+| `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-surface-2` | `#efeee9` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-selection` | `#eeebff` | `#302b4c` | Selected theme-preference button backing |
 
-Dark 4-step midnight ramp: `#0C0F14` (bg) → `#141923` (surface-1) → `#1B2230` (surface-2) → `#2A3446` (base-300 / borders).
-Light values are byte-identical to the prior `base-200`/`base-100` references — zero light regression.
+Dark 4-step neutral ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
 
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
@@ -162,7 +162,7 @@ keeps light panels pixel-identical.
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
 | `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `.ops-flash`, `.ops-intent-card` |
-| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — live brand mark, active nav, theme-toggle selected pill/button, route/path nodes, and key-callout hover only. Never on text, resting panels, or background floods |
+| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — live brand mark, active nav, route/path nodes, and key-callout hover only. Never on the theme control, text, resting panels, or background floods |
 | `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
 
 **Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
@@ -225,17 +225,18 @@ box-shadow ring is, and double-drawing outline + ring reads as muddy.
 
 Shell chrome is the shared operator frame: `.ops-header`, `.ops-shell`, `.ops-wordmark`,
 `.ops-nav-list`, `.ops-nav-item-active`, `.ops-theme-toggle*`, `.ops-cmdk__panel`, and
-`.ops-flash`. Light remains on the base recipes by default; custom shell depth is dark-only
-and must be authored in both explicit `[data-theme="dark"]` and system-dark
-`@media (prefers-color-scheme: dark) html:not([data-theme="light"])` paths.
+`.ops-flash`. Phase 173 sets a flat warm-neutral light floor and neutral dark floor; this
+supersedes the earlier shell wash and separate sliding pill treatments. Explicit and System
+appearance share the same shell tokens, while selected preference remains independent from
+the effective OS appearance.
 
 | Selector | Contract |
 | --- | --- |
 | `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
-| `.ops-shell` | Exactly one top-left `radial-gradient(...)` wash plus one `linear-gradient(...)` page floor per rule. Base/light stays 14% / 34rem; dark is bounded to 10% / 30rem and dark mobile to 8% / 24rem. No extra gradient layers, orbs, bokeh, texture, or loops. |
+| `.ops-shell` | Flat `background-color: var(--ops-bg)` with `background-image: none` in light, dark, System, and responsive modes. Keep functional scroll-edge cues; do not add a decorative wash. |
 | `.ops-wordmark` | Displays the canonical horizontal Scrypath wordmark. Light and inverse SVG assets switch with explicit and system theme; keep the artwork and copper slash unfiltered. |
 | `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
-| `.ops-theme-toggle`, `.ops-theme-toggle__pill`, `.ops-theme-toggle__button` | Class selectors mirror the existing IDs. Selected state is exposed through `aria-pressed` and `data-theme-selected`; dark paths use `--shadow-ops-panel-dark`, `--shadow-ops-glow`, and `--color-primary-strong`. |
+| `.ops-theme-toggle`, `.ops-theme-toggle__button` | Three visible native buttons name System, Light, and Dark and retain at least a 44px target. Exactly one preference-selected button exposes `aria-pressed="true"` and `data-theme-selected="true"`; its backing uses `--ops-selection`. System appearance may change with the OS without changing the selected preference. |
 | `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |
 | `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Info confirmations use a polite `role="status"` toast and dismiss after 4 seconds; errors use `role="alert"` and stay until dismissed. Status colors tint the active theme's base surface and mark the outer border; text stays on `base-content` for contrast. |
 

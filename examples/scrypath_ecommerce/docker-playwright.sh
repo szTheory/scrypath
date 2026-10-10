@@ -32,6 +32,10 @@ if (( ready_count < 3 )); then
 fi
 
 case "$scope" in
+  phase173_shell)
+    echo "Running Phase 173 shell proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_shell.spec.ts --workers=1 --retries=0
+    ;;
   focused)
     echo "Running focused mounted integration/browser proof..."
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0

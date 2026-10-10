@@ -10,6 +10,7 @@
     --color-black: #000;
     --spacing: 0.25rem;
     --container-xs: 20rem;
+    --container-sm: 24rem;
     --container-md: 28rem;
     --container-xl: 36rem;
     --container-2xl: 42rem;
@@ -1967,8 +1968,14 @@
   .mt-ops-4 {
     margin-top: var(--spacing-ops-4);
   }
+  .mb-1 {
+    margin-bottom: calc(var(--spacing) * 1);
+  }
   .mb-3 {
     margin-bottom: calc(var(--spacing) * 3);
+  }
+  .mb-4 {
+    margin-bottom: calc(var(--spacing) * 4);
   }
   .ml-1 {
     margin-left: calc(var(--spacing) * 1);
@@ -2239,6 +2246,9 @@
   }
   .max-w-md {
     max-width: var(--container-md);
+  }
+  .max-w-sm {
+    max-width: var(--container-sm);
   }
   .max-w-xl {
     max-width: var(--container-xl);
@@ -4723,6 +4733,7 @@
     flex: none;
     display: block;
     width: 7.5rem;
+    min-height: var(--control-h-lg);
     line-height: 0;
   }
   .ops-wordmark img {
