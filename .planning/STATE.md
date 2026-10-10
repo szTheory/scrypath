@@ -5,17 +5,17 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 173
 current_phase_name: Shared Visual Foundation and Operational Time
 status: Executing
-stopped_at: "Phase 173 Plan 01 complete; Plan 02 timestamp provenance and snapshot stability in progress"
-last_updated: "2026-10-10T23:02:00.000Z"
+stopped_at: "Phase 173 Plan 02 complete; Plan 03 neutral status, metrics, and quiet actions next"
+last_updated: "2026-10-10T23:20:08.000Z"
 last_activity: 2026-10-10
-last_activity_desc: Phase 173 Plan 01 shell and preference proof passed in mounted and standalone apps
-state_head: de92b7469b76666e9b327a6def18b04bb395efcc
+last_activity_desc: Phase 173 Plan 02 passed source normalization, timestamp browser proof, contrast, and the exact-SHA root core gate
+state_head: 012649917e6dd0cf82dbb7d0154ccd37ac45bc43
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 9
-  completed_plans: 1
-  percent: 11
+  completed_plans: 2
+  percent: 22
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See PROJECT.md (updated 2026-10-06). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 173 (Shared Visual Foundation and Operational Time) — EXECUTING
-Plan: 1 of 4 complete; Plan 02 in progress
+Plan: 2 of 4 complete; Plan 03 next
 Status: Executing
-Last activity: 2026-10-10 — Phase 173 Plan 01 shell and preference proof passed in mounted and standalone apps
-Progress: [█░░░░░░░░░] 11% (0/5 phases; 1/9 plans complete)
+Last activity: 2026-10-10 — Phase 173 Plan 02 passed source normalization, timestamp browser proof, contrast, and exact-SHA core gate
+Progress: [██░░░░░░░░] 22% (0/5 phases; 2/9 plans complete)
 
 ## Delivered Evidence
 
@@ -80,17 +80,17 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-10T20:32:47Z
-Stopped at: Phase 176 plans independently verified; next: $gsd-execute-phase 173; execution order remains 173 → 174 → 175 → 176 → 177
-Resume file: .planning/phases/176-search-and-playbooks/176-PLAN-CHECK.md
+Last session: 2026-10-10T23:20:08Z
+Stopped at: Phase 173 Plan 02 complete at source SHA 012649917e6dd0cf82dbb7d0154ccd37ac45bc43; continue with Plan 03, then Plan 04.
+Resume file: .planning/phases/173-shared-visual-foundation-and-operational-time/173-03-PLAN.md
 
-Run `$gsd-execute-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion, approved UI contract, research, pattern mapping, and implementation planning are complete. Four sequential waves deliver (01) neutral shell/theme and a disposable dual-entrypoint browser runner, (02) lossless snapshot-stable operational time, (03) local status/neutral metrics/quiet actions, and (04) truthful timestamp copying. Independent plan review passed after one revision resolved production standalone browser wiring and the missing root core gate. Final deterministic checks passed four frontmatters/structures, 7/7 requirements, 22/22 decisions, 26/26 UI considerations and 11/11 automated failure directions; the post-planning gate covered all 29 requirement/decision items. See 173-PLAN-CHECK.md and 173-VALIDATION.md. Product tests and new browser harness execution remain pending; no Phase 173 implementation or hosted source receipt is claimed. OPUX-09–OPUX-15 remain pending. The last completed implementation phase remains 172 in archived v1.42. Research/validation commit is 7fed9db; the final planning commit follows it.
+Run `$gsd-execute-phase 173` from `/Users/jon/projects/scrypath` on `planning/next-milestone-handoff`. Phase 173 discussion, approved UI contract, research, pattern mapping, and implementation planning are complete. Four sequential waves deliver (01) neutral shell/theme and a disposable dual-entrypoint browser runner, (02) lossless snapshot-stable operational time, (03) local status/neutral metrics/quiet actions, and (04) truthful timestamp copying. Independent plan review passed after one revision resolved production standalone browser wiring and the missing root core gate. Final deterministic checks passed four frontmatters/structures, 7/7 requirements, 22/22 decisions, 26/26 UI considerations and 11/11 automated failure directions; the post-planning gate covered all 29 requirement/decision items. See 173-PLAN-CHECK.md and 173-VALIDATION.md. Plan 01 shell and Plan 02 operational-time implementation are complete in the isolated worktree; Plan 02 source `012649917e6dd0cf82dbb7d0154ccd37ac45bc43` passed the mounted/standalone time browser suite (8 tests), root `verify.core` (660 tests + 4 properties), contrast (0 AA failures), and focused Ops tests (11). Plans 03 and 04 remain. No hosted source receipt is claimed. OPUX-09, OPUX-12, and OPUX-14 are complete locally; OPUX-10/11/13/15 remain pending. The last completed implementation phase remains 172 in archived v1.42. Research/validation commit is 7fed9db; the final planning commit follows it.
 
 Current product/design context, schema-picker, naming/logo, and Search health layout follow-ups remain uncommitted and preserved. The Control Room refresh remains in the page toolbar outside the health verdict. Preserve adaptive routing, the existing UI phase/safety gates, and feedback preview data. Plan from this checkout; execution must preserve the dirty baseline when preparing clean source for the root workspace-clean gate through the authorized GSD isolation workflow.
 
 The root MILESTONE-CONTEXT.md was consumed; its original input is preserved in `research/v1.43/MILESTONE-CONTEXT.md`. Read PROJECT.md, this STATE.md, ROADMAP.md, REQUIREMENTS.md, `research/v1.43/SCOPE.md`, root PRODUCT.md / DESIGN.md, both operator quality/refinement references, and Phase 173 CONTEXT/UI-SPEC/UI-CHECK. Impeccable Operate informed the selected contract. Its stale design sidecar remains a separate nonblocking maintenance item. Static comp evidence has 12 captures across two palettes/themes, desktop/mobile and the 1279/1280 rail breakpoint: no horizontal overflow, broken logos or AA failures in the sampled pairs. These measurements do not prove application theme/clipboard/LiveView behavior. The original renderer failure was a macOS sandbox bootstrap denial; the user explicitly authorized a scoped launch approval, which succeeded without contacting or mutating the retained preview.
 
-Next is `$gsd-execute-phase 173`, which implements the four checked slices and their executable acceptance gates. Both UI generation and the planning safety gate remain enabled; automatic execution chaining remains disabled. Do not replay Phase 172/170 or reuse archived receipts for changed source. Byte checks confirmed all 15 preserved modified source/design files were unchanged by planning. Preserve local app/design edits and preview :4012; mutating fixtures belong in disposable stacks. Context can be cleared after this planning handoff is committed: the plans, research, validation, checker record and STATE preserve scope, decisions, evidence limits, working directory/branch and exact next action.
+Continue `$gsd-execute-phase 173` for Plans 03 and 04. Both UI generation and the planning safety gate remain enabled; automatic execution chaining remains disabled. Do not replay Phase 172/170 or reuse archived receipts for changed source. Preserve local app/design edits and preview :4012; mutating fixtures belong in disposable stacks. The code is isolated in worktree `/Users/jon/projects/scrypath/.claude/worktrees/agent-p173-01-retry-1791665855` on `worktree-agent-p173-01-retry-1791665855`; root checkout and retained preview remain untouched. The remaining plans and this state file preserve the current evidence and exact continuation point if context is cleared.
 
 Phase 176's five plans are independently checked and cover OPUX-23–25, all 27 trackable discussion decisions, and the 58 confirmed UI considerations. Its explicit dependencies keep execution behind Phases 173–175. The spec-less edge cases remain visibly flagged for execution review. No implementation or product verification has started.
 
