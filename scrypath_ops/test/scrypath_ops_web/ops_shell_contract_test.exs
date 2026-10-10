@@ -249,17 +249,23 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "standalone and mounted LiveSockets share all operator hooks" do
-    assert File.read!(@app_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"|
+    assert Regex.match?(
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast\s*\}\s+from\s+"\.\/ops_hooks"/,
+             File.read!(@app_js)
+           )
+
+    assert Regex.match?(
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast\s*\}\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/scrypath_ops\/assets\/js\/ops_hooks"/,
+             File.read!(@host_js)
+           )
 
     assert File.read!(@host_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks"|
+             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast }"
 
-    assert File.read!(@host_js) =~ "hooks: { CommandPalette, OpsNavDrawer, OpsModal }"
     refute File.read!(@host_js) =~ "const CommandPalette ="
   end
 
-  test "flash component exposes durable passive alert chrome" do
+  test "flash component exposes persistent, correctly announced feedback" do
     info =
       render_component(&CoreComponents.flash/1,
         kind: :info,
@@ -272,7 +278,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
         flash: %{"error" => "Search sync failed."}
       )
 
-    assert info =~ ~s(role="alert")
+    assert info =~ ~s(role="status")
     assert info =~ "ops-flash"
     assert info =~ "ops-flash--info"
     assert info =~ "Saved playbook."
