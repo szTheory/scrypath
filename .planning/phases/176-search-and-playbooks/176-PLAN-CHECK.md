@@ -1,7 +1,7 @@
 ## VERIFICATION PASSED
 
-**Phase:** Search and Playbooks (176)  
-**Plans verified:** 5  
+**Phase:** Search and Playbooks (176)
+**Plans verified:** 5
 **Status:** Independent checker found no blockers, warnings, or advisories.
 
 ### Coverage Summary
