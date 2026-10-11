@@ -655,6 +655,30 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.promotion_loading
   end
 
+  test "a successful swap task without fresh index evidence is not promotion completion" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true,
+        reconcile_result: nil,
+        reconcile_error: :backend_unavailable,
+        drift_result: nil,
+        drift_error: :backend_unavailable
+      })
+
+    assert {:noreply, observed} =
+             SyncDriftLive.handle_async(
+               {:promotion_swap, 9, 991},
+               {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
+               socket
+             )
+
+    assert observed.assigns.promotion_status == :unknown
+    assert observed.assigns.promotion_task_id == 991
+  end
+
   test "refresh after an unconfirmed promotion checks state without submitting another swap" do
     for status <- [:timed_out, :unknown] do
       socket =
