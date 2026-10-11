@@ -1607,6 +1607,20 @@
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
+  /* Search can return many hits. Use a light divider list instead of repeating full cards. */
+  .ops-search-hit.ops-result-row {
+    gap: var(--spacing-ops-2);
+    border: 0;
+    border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: 0;
+    background: transparent;
+    padding: var(--spacing-ops-2) 0;
+  }
+
+  .ops-search-hit.ops-result-row:first-child {
+    border-top: 0;
+  }
+
   /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
      vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
      to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
@@ -1616,9 +1630,17 @@
     box-shadow: var(--shadow-ops-mid);
   }
 
+  .ops-search-hit.ops-result-row:hover {
+    box-shadow: none;
+  }
+
   .ops-result-row:active,
   .ops-object-item:active {
     transform: scale(0.995);
+  }
+
+  .ops-search-hit.ops-result-row:active {
+    transform: none;
   }
 
   @media (min-width: 768px) {

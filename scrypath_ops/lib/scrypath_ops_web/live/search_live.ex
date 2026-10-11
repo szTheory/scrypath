@@ -958,11 +958,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                   schemas={@schema_allowlist}
                   selected={@selected_schema}
                   disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
-                  class="font-mono text-ops-sm"
+                  class="font-mono text-ops-body"
                 />
 
                 <div :if={@mode == :multi} class="space-y-2">
-                  <p id="search-schemas-hint" class="text-ops-sm leading-5 text-base-content/70">
+                  <p id="search-schemas-hint" class="text-ops-body leading-5 text-base-content/70">
                     Choose up to {SearchPlayground.max_schemas_allowed()} indexes for this run.
                   </p>
                   <.ops_checkbox_list
@@ -997,7 +997,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 legend="Limits / safety"
                 disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
-                <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/70">
+                <p id="search-limits-copy" class="text-ops-body leading-5 text-base-content/70">
                   Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
                 </p>
                 <.ops_field id="search_page_size" label="Page size" class="w-full max-w-xs">
@@ -1111,7 +1111,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 role="alert"
               >
                 <p>{format_run_error(@run_error)}</p>
-                <p class="mt-2 text-ops-sm">
+                <p class="mt-2 text-ops-body">
                   Fix the query options or operator config, then run search again.
                 </p>
               </.ops_status>
@@ -1143,11 +1143,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                     class="rounded-ops-control border p-4 ops-tone-warning"
                   >
                     <p class="font-semibold">Some indexes did not return results.</p>
-                    <p class="mt-1 text-ops-sm">
+                    <p class="mt-1 text-ops-body">
                       Failures are per index and do not cancel the whole response. Next: open failure details, adjust entries or backend, then run search again.
                     </p>
-                    <p class="mt-2 text-ops-sm text-base-content/70">
-                      <code class="text-ops-sm">:all</code>
+                    <p class="mt-2 text-ops-body text-base-content/70">
+                      <code class="text-ops-body">:all</code>
                       entries expanded follow declaration order before limits apply when multi-search uses global expansion.
                     </p>
                     <.ops_disclosure
@@ -1155,15 +1155,15 @@ defmodule ScrypathOpsWeb.SearchLive do
                       variant={:compact}
                       class="mt-2"
                     >
-                      <ul class="list-inside list-disc font-mono text-ops-sm">
+                      <ul class="list-inside list-disc font-mono text-ops-body">
                         <%= for %{schema: s, reason: r} <- @result_multi.failures do %>
                           <li>{inspect(s)} — {inspect(r)}</li>
                         <% end %>
                       </ul>
-                      <p :if={@show_all_footnote} class="mt-2 text-ops-sm text-base-content/80">
-                        <code class="text-ops-sm">:all</code>
+                      <p :if={@show_all_footnote} class="mt-2 text-ops-body text-base-content/80">
+                        <code class="text-ops-body">:all</code>
                         entries expanded to the configured global schema list in declaration order before limits apply; empty registry and missing
-                        <code class="text-ops-sm">otp_app</code>
+                        <code class="text-ops-body">otp_app</code>
                         errors match library invalid_options / all_expansion vocabulary.
                       </p>
                     </.ops_disclosure>
@@ -1188,7 +1188,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   variant={:compact}
                   class="ops-path-trace"
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-body">
                     <%= for {mod, hit} <- MultiSearchResult.merge_projection(@result_multi) do %>
                       <li>{inspect(mod)} — {inspect(hit)}</li>
                     <% end %>
@@ -1204,7 +1204,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   variant={:compact}
                   class="ops-path-trace"
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-body">
                     <%= for pair <- @result_multi.merge_hit_order do %>
                       <li>{inspect(pair)}</li>
                     <% end %>
@@ -1216,7 +1216,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   summary="Federation metadata"
                   variant={:compact}
                 >
-                  <p class="mt-2 text-ops-sm text-base-content/60">
+                  <p class="mt-2 text-ops-body text-base-content/60">
                     Per-entry weights are uniform when the backend does not expose per-entry overrides.
                   </p>
                   <.ops_code_block variant={:compact} class="mt-2">
@@ -1238,9 +1238,13 @@ defmodule ScrypathOpsWeb.SearchLive do
                         {length(sres.hits)} {pluralize(length(sres.hits), "hit")} returned.
                       <% end %>
                     </p>
-                    <div :if={sres.hits != []} class="mt-3 grid min-w-0 gap-2">
+                    <div :if={sres.hits != []} class="mt-3 grid min-w-0">
                       <%= for {hit, idx} <- Enum.with_index(sres.hits, 1) do %>
-                        <.ops_result_row title={hit_title(hit, idx)} subtitle={hit_summary(hit)}>
+                        <.ops_result_row
+                          title={hit_title(hit, idx)}
+                          subtitle={hit_summary(hit)}
+                          class="ops-search-hit"
+                        >
                           <.ops_disclosure summary="Raw hit payload" variant={:compact}>
                             <.ops_code_block variant={:compact}>
                               {inspect(hit, pretty: true)}

@@ -1283,7 +1283,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               id={"playbook-row-#{playbook_dom_id(row.name)}"}
               active={row.name == @selected_basename}
             >
-              <div class="flex min-w-0 flex-col gap-0.5">
+              <div class="flex min-w-0 flex-col gap-1">
                 <span class="text-ops-body font-semibold text-base-content">{row.display_title}</span>
                 <span
                   :if={row.description != ""}
@@ -1291,7 +1291,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 >
                   {row.description}
                 </span>
-                <span class="ops-playbook-filename font-mono text-ops-sm text-base-content/65">
+                <span class="ops-playbook-filename font-mono text-ops-body text-base-content/65">
                   {row.name}
                 </span>
               </div>
@@ -1401,7 +1401,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
                     {label}
                   </dt>
-                  <dd class="mt-0.5 whitespace-pre-wrap break-words text-ops-body text-base-content">
+                  <dd class="mt-1 whitespace-pre-wrap break-words text-ops-body text-base-content">
                     {value}
                   </dd>
                 </div>
@@ -1528,7 +1528,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               role="alert"
               data-testid="run-failure-panel"
             >
-              <p class="text-ops-sm">Failure category: {@run_failure_enriched.failure_class}</p>
+              <p class="text-ops-body">Failure category: {@run_failure_enriched.failure_class}</p>
               <p>{@run_failure_enriched.message}</p>
               <div class="mt-3 flex flex-wrap gap-2">
                 <a
@@ -1570,7 +1570,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
                     {label}
                   </dt>
-                  <dd class="mt-0.5 whitespace-pre-wrap break-words text-ops-body text-base-content">
+                  <dd class="mt-1 whitespace-pre-wrap break-words text-ops-body text-base-content">
                     {value}
                   </dd>
                 </div>
@@ -1647,7 +1647,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                         do: "playbook-paste-json-hint playbook-import-error",
                         else: "playbook-paste-json-hint"
                     }
-                    class="font-mono text-ops-sm"
+                    class="font-mono text-ops-body"
                     placeholder="Paste playbook JSON"
                   />
                 </.ops_field>
