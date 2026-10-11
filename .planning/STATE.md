@@ -5,11 +5,11 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: planning
-stopped_at: Phase 175 context gathered; UI contract next
-last_updated: "2026-10-11T03:41:11.084Z"
+stopped_at: Phase 175 UI-SPEC approved; ready to plan Phase 175
+last_updated: "2026-10-11T03:49:00.475Z"
 last_activity: 2026-10-10
 last_activity_desc: Phase 174 complete, transitioned to Phase 175
-state_head: bee4bea1751454624a81291ba9da5f37cb3011b5
+state_head: ea39c6c67a953d3cb2e9b57c424b1ac9aa19fda2
 progress:
   total_phases: 5
   completed_phases: 2
@@ -80,9 +80,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-11T03:41:11.051Z
-Stopped at: Phase 175 context gathered; UI contract next
-Resume file: .planning/phases/175-repair-and-verification/175-CONTEXT.md
+Last session: 2026-10-11T03:49:00.442Z
+Stopped at: Phase 175 UI-SPEC approved; ready to plan Phase 175
+Resume file: .planning/phases/175-repair-and-verification/175-UI-SPEC.md
 
 Phase 173 is complete in this isolated worktree at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59`. All four plans and OPUX-09–OPUX-15 passed goal verification (41/41 plan truths); Ops precommit and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests, the focused PostureLive suite passed 15 tests, and mounted/standalone shell and copy browser suites passed 14/14 and 10/10. Security review closed 9/9 threats; code review had zero findings; the UI audit scored 24/24 with no human review required. These are local exact-source results; no hosted source receipt is claimed. See the four plan summaries, `173-VERIFICATION.md`, `173-SECURITY.md`, `173-REVIEW.md`, `173-UI-REVIEW.md`, and `173-VALIDATION.md`.
 
