@@ -5,10 +5,10 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 176
 current_phase_name: Search and Playbooks
 status: planning
-stopped_at: Phase 175 complete, ready to plan Phase 176
-last_updated: "2026-10-11T15:57:35.741Z"
+stopped_at: Phase 176 Plan 176-01 ready; execution awaiting a worktree-capable GSD executor
+last_updated: "2026-10-11T16:08:01Z"
 last_activity: 2026-10-11
-last_activity_desc: Phase 175 complete, transitioned to Phase 176
+last_activity_desc: Phase 176 execution dispatch halted before edits because this tool cannot meet the configured worktree isolation and branch guards
 state_head: fdaf9b8752e45b17ed80f3ceaa6a9c28b741573a
 progress:
   total_phases: 5
@@ -22,14 +22,14 @@ progress:
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phases 173 and 174 are complete, and Phase 175 has one verification gap after its first three executed plans.
+See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phases 173–175 are complete, and Phase 176 is approved with five execution plans.
 
 ## Current Position
 
 Phase: 176 — Search and Playbooks
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-11 — Phase 175 complete, transitioned to Phase 176
+Plan: 176-01 — Search submit/results tracer (not started)
+Status: Planned; execution awaits a GSD executor harness that supports the configured worktree isolation
+Last activity: 2026-10-11 — execution dispatch halted before edits by the current agent tool's isolation/branch limitations
 Progress: [██████░░░░] 60% (3/5 phases; 11/16 plans complete)
 
 ## Delivered Evidence
@@ -80,15 +80,21 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-11T15:00:22Z
-Stopped at: Phase 175 complete, ready to plan Phase 176
+Last session: 2026-10-11T16:08:01Z
+Stopped at: Phase 176 Plan 176-01 dispatch; no Phase 176 source edits
 Resume file: None
 
-Phase 173 is complete in this isolated worktree at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59`. All four plans and OPUX-09–OPUX-15 passed goal verification (41/41 plan truths); Ops precommit and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests, the focused PostureLive suite passed 15 tests, and mounted/standalone shell and copy browser suites passed 14/14 and 10/10. Security review closed 9/9 threats; code review had zero findings; the UI audit scored 24/24 with no human review required. These are local exact-source results; no hosted source receipt is claimed. See the four plan summaries, `173-VERIFICATION.md`, `173-SECURITY.md`, `173-REVIEW.md`, `173-UI-REVIEW.md`, and `173-VALIDATION.md`.
+Phases 173–175 are complete in this worktree, with 11 plan summaries total (Phase 173: 4, Phase 174: 3, Phase 175: 4). The GSD progress query confirms those phases are Executed/Complete and Phase 176 is Planned. Their phase verification, reviews, security records, and validation artifacts are present under their phase directories. The current ROADMAP progress table agrees.
 
-Next command: `$gsd-execute-phase 175 --gaps-only`. Phase 174 (Recovery Entry and Diagnosis) is complete at source SHA `2375f6b71f57037e9e636ae060828e26f59a82c6`; its three plans and all 19 goal truths passed, with OPUX-16–OPUX-19 complete. Phase 175 (Repair and Verification) executed Plans 01–03, then verification found one document-observation completion defect across three truths (40/43 verified). Plan 175-04 closes that gap for OPUX-21/22; OPUX-20 was satisfied by the earlier plans. Automatic phase chaining remains disabled in configuration; the user has explicitly authorized automatic progress for this run. Continue from worktree `/Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis` on branch `gsd/phase-174-recovery-entry-diagnosis` so the completed source and planning record stay together. Context can be cleared after the gap-plan commit is recorded.
+Phase 176 has an approved UI contract, five checked plans, and confirmed state rules. Plan 176-01 is the next action. No Phase 176 implementation or product verification is claimed. The earlier Phase 173–175 blocker text in this file was stale and has been superseded by the current header, ROADMAP, summaries, and GSD progress query.
 
-Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Phase 176's five checked plans remain gated behind Phases 173–175; no Phase 176 implementation or product verification is claimed. Preserve the intentional adaptive model routing in `.planning/config.json` and do not replay Phase 172/170 or extend archived source receipts.
+Execution dispatch was attempted and stopped before edits. The configured host resolves dispatch.isolation=harness-worktree, which requires the isolation="worktree" spawn flag. The available collaboration.spawn_agent schema cannot pass that flag and starts agents in the main checkout by default. Sequential fallback also halted safely: the executor branch guard will not commit from this linked phase worktree on gsd/phase-174-recovery-entry-diagnosis. Do not bypass these guards by changing the phase branch or disabling worktrees. Resume from this worktree using a GSD executor harness that can pass the declared isolation flag.
+
+The temporary workflow.use_worktrees=false setting was restored to true. The disposable scrypath-phase176 stack and its volumes were removed after preflight; port 4002 is free, and the retained :4012 preview was untouched. A read-only Search test run occurred in the wrong checkout and is not phase verification evidence.
+
+Next command: $gsd-execute-phase 176, run from /Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis in a worktree-capable GSD harness. This begins the already-approved Plan 176-01; it does not repeat discussion or planning. Context can be cleared after switching to that compatible harness because the plans, context, UI contract, research, validation map, phase summaries, and this dispatch limitation are persisted.
+
+Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Do not replay completed phases or replan Phase 176 without new evidence. Preserve the intentional adaptive model routing in .planning/config.json and do not extend archived source receipts.
 
 ## Performance Metrics
 
