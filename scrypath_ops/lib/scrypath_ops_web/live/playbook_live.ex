@@ -80,13 +80,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   @impl true
-  def handle_event("import_paste", %{"json" => raw}, socket) do
+  def handle_event("import_paste", %{"json" => raw}, socket) when is_binary(raw) do
     socket =
       socket
       |> maybe_supersede_running_run()
       |> assign(:paste_open, true)
 
-    bin = raw |> to_string()
+    bin = raw
 
     if byte_size(bin) > @max_import_bytes do
       {:noreply,
@@ -103,6 +103,22 @@ defmodule ScrypathOpsWeb.PlaybookLive do
        |> assign(:paste_json, bin)
        |> apply_decoded(bin, :paste, %{kind: :imported, name: "pasted JSON"})}
     end
+  end
+
+  def handle_event("import_paste", _params, socket) do
+    socket =
+      socket
+      |> maybe_supersede_running_run()
+      |> assign(:paste_open, true)
+      |> assign(:paste_json, "")
+
+    {:noreply,
+     import_failure(
+       socket,
+       :paste,
+       %{kind: :imported, name: "pasted JSON"},
+       "Paste content must be text."
+     )}
   end
 
   def handle_event("import_upload", _params, socket) do
@@ -151,7 +167,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   def handle_event("load", %{"name" => name}, socket) do
     socket = maybe_supersede_running_run(socket)
-    name = to_string(name)
+    name = text_param(name)
 
     cond do
       not Store.safe_basename?(name) ->
@@ -196,7 +212,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   def handle_event("run_now", %{"name" => name}, socket) do
     socket = maybe_supersede_running_run(socket)
-    name = to_string(name)
+    name = text_param(name)
 
     with :ok <- validate_catalog_name(name),
          {:ok, bin} <- read_catalog_playbook(socket, name),
@@ -265,7 +281,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("save", %{"basename" => basename}, socket) do
-    basename = basename |> to_string() |> String.trim()
+    basename = basename |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
     socket = socket |> assign(:save_basename, basename) |> assign(:save_error, nil)
 
@@ -321,7 +337,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("request_delete", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
 
     if Store.safe_basename?(name) do
       {:noreply,
@@ -342,7 +358,8 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("confirm_delete", %{"confirm" => typed}, socket) do
-    socket = assign(socket, :delete_confirmation, to_string(typed))
+    typed = text_param(typed)
+    socket = assign(socket, :delete_confirmation, typed)
 
     socket =
       Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
@@ -357,7 +374,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("rename_open", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
 
     if Store.safe_basename?(name) do
       {:noreply,
@@ -372,7 +389,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   def handle_event("rename_change", %{"new_name" => new_name}, socket) do
     case socket.assigns.rename_modal do
       modal when is_map(modal) ->
-        {:noreply, assign(socket, :rename_modal, Map.put(modal, :new_name, to_string(new_name)))}
+        {:noreply, assign(socket, :rename_modal, Map.put(modal, :new_name, text_param(new_name)))}
 
       _ ->
         {:noreply, socket}
@@ -393,7 +410,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       %{from: from} ->
         socket =
           update(socket, :rename_modal, fn modal ->
-            Map.put(modal, :new_name, to_string(new_name))
+            Map.put(modal, :new_name, text_param(new_name))
           end)
 
         rename_submit_impl(socket, from, new_name)
@@ -401,7 +418,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("dup_open", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
     root = socket.assigns.workspace_root
 
     cond do
@@ -434,7 +451,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     case socket.assigns.duplicate_modal do
       modal when is_map(modal) ->
         {:noreply,
-         assign(socket, :duplicate_modal, Map.put(modal, :new_name, to_string(to_name)))}
+         assign(socket, :duplicate_modal, Map.put(modal, :new_name, text_param(to_name)))}
 
       _ ->
         {:noreply, socket}
@@ -451,7 +468,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       %{from: from} ->
         socket =
           update(socket, :duplicate_modal, fn modal ->
-            Map.put(modal, :new_name, to_string(to_name))
+            Map.put(modal, :new_name, text_param(to_name))
           end)
 
         dup_submit_impl(socket, from, to_name)
@@ -659,6 +676,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   defp selected_name(%{kind: kind, name: name}) when kind in [:workspace, :example], do: name
   defp selected_name(_origin), do: nil
 
+  defp text_param(value) when is_binary(value), do: value
+  defp text_param(_value), do: ""
+
   defp catalog_origin(socket, name) do
     if socket.assigns.workspace_root,
       do: %{kind: :workspace, name: name},
@@ -680,7 +700,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   defp rename_submit_impl(socket, from, new_name) do
-    new_name = new_name |> to_string() |> String.trim()
+    new_name = new_name |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
 
     cond do
@@ -724,7 +744,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   defp dup_submit_impl(socket, from, to_name) do
-    to_name = to_name |> to_string() |> String.trim()
+    to_name = to_name |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
 
     cond do
@@ -1796,7 +1816,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp confirm_delete(socket, typed) do
     pending = socket.assigns.delete_pending
-    typed = to_string(typed)
+    typed = text_param(typed)
     root = socket.assigns.workspace_root
 
     cond do

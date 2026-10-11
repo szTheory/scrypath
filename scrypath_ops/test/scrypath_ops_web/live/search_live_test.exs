@@ -296,6 +296,46 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert render(view) =~ "Saved playbook zero-hit-check.json."
   end
 
+  test "malformed capture fields return a field error without crashing the LiveView", %{
+    conn: conn
+  } do
+    temporary_playbook_workspace()
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "hello",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html =
+      render_submit(view, "capture_change", %{
+        "capture" => %{"basename" => %{"unexpected" => "object"}}
+      })
+
+    assert Process.alive?(view.pid)
+    assert html =~ "search-capture-form"
+
+    html =
+      render_submit(view, "save_search_capture", %{
+        "capture" => %{"basename" => %{"unexpected" => "object"}}
+      })
+
+    assert Process.alive?(view.pid)
+    assert html =~ "Filename must be a .json basename"
+
+    render_submit(view, "search", %{
+      "q" => %{"unexpected" => "object"},
+      "page_size" => %{"unexpected" => "object"},
+      "schema" => %{"unexpected" => "object"},
+      "schemas" => [%{"unexpected" => "object"}]
+    })
+
+    assert Process.alive?(view.pid)
+  end
+
   test "eligible partial multi response saves criteria without response documents", %{conn: conn} do
     Application.put_env(:scrypath_ops, :search_stub_variant, :partial)
     dir = temporary_playbook_workspace()

@@ -260,6 +260,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     end
   end
 
+  test "non-text paste payload returns an import error without crashing the LiveView", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    html = render_submit(view, "import_paste", %{"json" => %{"unexpected" => "object"}})
+
+    assert Process.alive?(view.pid)
+    assert html =~ "Paste content must be text."
+    refute has_element?(view, "#playbook-preview")
+  end
+
   test "uploaded playbook is not imported until submit and malformed upload preserves the preview",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")

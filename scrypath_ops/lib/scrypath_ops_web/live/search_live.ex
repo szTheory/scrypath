@@ -131,10 +131,10 @@ defmodule ScrypathOpsWeb.SearchLive do
     {:noreply, socket}
   end
 
-  def handle_event("capture_change", %{"capture" => fields}, socket) do
-    title = fields |> Map.get("title", "") |> to_string()
-    description = fields |> Map.get("description", "") |> to_string()
-    basename = fields |> Map.get("basename", "") |> to_string()
+  def handle_event("capture_change", %{"capture" => fields}, socket) when is_map(fields) do
+    title = fields |> Map.get("title", "") |> text_input()
+    description = fields |> Map.get("description", "") |> text_input()
+    basename = fields |> Map.get("basename", "") |> text_input()
 
     socket =
       socket
@@ -149,11 +149,11 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   def handle_event("capture_change", _, socket), do: {:noreply, socket}
 
-  def handle_event("save_search_capture", %{"capture" => cap}, socket) do
+  def handle_event("save_search_capture", %{"capture" => cap}, socket) when is_map(cap) do
     root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    basename = cap |> Map.get("basename", "") |> to_string() |> String.trim()
-    title = cap |> Map.get("title", "") |> to_string()
-    description = cap |> Map.get("description", "") |> to_string()
+    basename = cap |> Map.get("basename", "") |> text_input() |> String.trim()
+    title = cap |> Map.get("title", "") |> text_input()
+    description = cap |> Map.get("description", "") |> text_input()
 
     socket =
       socket
@@ -244,7 +244,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     {:noreply, put_capture_error(socket, "Enter a filename ending in .json, then retry saving.")}
   end
 
-  def handle_event("search", params, socket) do
+  def handle_event("search", params, socket) when is_map(params) do
     # Two-step so the loading skeleton paints before the bounded read runs (S2). The
     # Scrypath search dispatch is synchronous; deferring it to handle_info/2 lets LiveView
     # push the `:searching` frame first. Clear prior results immediately so the skeleton
@@ -267,6 +267,10 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign_capture_defaults()
 
     {:noreply, socket}
+  end
+
+  def handle_event("search", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Search input was invalid. Check the fields and retry.")}
   end
 
   @impl true
@@ -465,7 +469,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       mode: socket.assigns.mode,
       schema: schema,
       schemas: schemas,
-      query: params |> Map.get("q", "") |> to_string() |> String.trim(),
+      query: params |> Map.get("q", "") |> text_input() |> String.trim(),
       page_size: parse_page_size_param(params["page_size"], socket.assigns.page_size)
     }
   end
@@ -480,7 +484,10 @@ defmodule ScrypathOpsWeb.SearchLive do
 
     raw
     |> List.wrap()
-    |> Enum.flat_map(fn value -> String.split(to_string(value), ",", trim: true) end)
+    |> Enum.flat_map(fn
+      value when is_binary(value) -> String.split(value, ",", trim: true)
+      _value -> []
+    end)
     |> Enum.map(&module_in_allowlist(&1, allowlist))
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq()
@@ -495,7 +502,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp parse_page_size_param(raw, fallback) do
-    case Integer.parse(to_string(raw || "")) do
+    case Integer.parse(text_input(raw || "")) do
       {n, _} -> n
       :error -> fallback
     end
@@ -517,7 +524,10 @@ defmodule ScrypathOpsWeb.SearchLive do
       params
       |> Map.get("schemas", Map.get(params, "schemas[]", nil))
       |> List.wrap()
-      |> Enum.flat_map(fn value -> String.split(to_string(value), ",", trim: true) end)
+      |> Enum.flat_map(fn
+        value when is_binary(value) -> String.split(value, ",", trim: true)
+        _value -> []
+      end)
 
     selected =
       raw
@@ -676,6 +686,9 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp humanize_hit_value(value),
     do: inspect(value, limit: 8, printable_limit: 160, charlists: :as_lists)
+
+  defp text_input(value) when is_binary(value), do: value
+  defp text_input(_value), do: ""
 
   defp emit_run(mode, outcome, duration_ms) do
     :telemetry.execute(

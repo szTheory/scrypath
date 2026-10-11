@@ -3,10 +3,17 @@ defmodule ScrypathOps.Playbook.Store do
   Filesystem helpers for operator playbook JSON under a single **absolute** workspace root.
 
   All mutating APIs accept **basename-only** names (see `safe_basename?/1`). Resolved paths
-  must remain under the configured root after `Path.expand/1` to mitigate traversal.
+  must remain under the configured root after `Path.expand/1` to mitigate traversal. Reads and
+  overwrites verify the opened file descriptor against the basename's link metadata before doing
+  I/O, so a symlink cannot redirect an operation outside the workspace. Listing and destructive
+  actions accept regular files only.
   """
 
   @basename_regex ~r/\A[\w.\-]+\.json\z/
+  @read_chunk_size 65_536
+
+  require Record
+  Record.defrecordp(:file_info, Record.extract(:file_info, from_lib: "kernel/include/file.hrl"))
 
   @doc """
   Returns true if `name` is a safe basename (no path separators), ending in `.json`.
@@ -26,6 +33,7 @@ defmodule ScrypathOps.Playbook.Store do
           json =
             names
             |> Enum.filter(&safe_basename?/1)
+            |> Enum.filter(&regular_workspace_entry?(Path.join(root_abs, &1)))
             |> Enum.sort()
 
           {:ok, json}
@@ -43,9 +51,8 @@ defmodule ScrypathOps.Playbook.Store do
   """
   @spec read_workspace_file(Path.t(), String.t()) :: {:ok, binary()} | {:error, term()}
   def read_workspace_file(root, name) when is_binary(root) and is_binary(name) do
-    with {:ok, path} <- resolved_path(root, name),
-         {:ok, data} <- File.read(path) do
-      {:ok, data}
+    with {:ok, path} <- resolved_path(root, name) do
+      with_workspace_file(path, [:read, :binary, :raw], &read_all/1)
     end
   end
 
@@ -57,7 +64,7 @@ defmodule ScrypathOps.Playbook.Store do
   @spec save_workspace_file(Path.t(), String.t(), iodata()) :: :ok | {:error, term()}
   def save_workspace_file(root, name, data) when is_binary(root) and is_binary(name) do
     with {:ok, path} <- resolved_path(root, name) do
-      File.write(path, data)
+      save_workspace_file_at(path, data)
     end
   end
 
@@ -87,7 +94,10 @@ defmodule ScrypathOps.Playbook.Store do
   @spec delete_workspace_file(Path.t(), String.t()) :: :ok | {:error, term()}
   def delete_workspace_file(root, name) when is_binary(root) and is_binary(name) do
     with {:ok, path} <- resolved_path(root, name) do
-      File.rm(path)
+      case regular_workspace_entry?(path) do
+        true -> File.rm(path)
+        false -> {:error, :outside_workspace}
+      end
     end
   end
 
@@ -96,7 +106,9 @@ defmodule ScrypathOps.Playbook.Store do
   @doc """
   Renames a workspace JSON file by basename (`from_name` → `to_name`).
 
-  Returns `{:error, :target_exists}` if the destination path already exists (no overwrite).
+  Creates a hard link at the destination before removing the source, making destination creation
+  no-replace. Returns `{:error, :target_exists}` if the destination path already exists. The
+  workspace filesystem must support hard links.
   """
   @spec rename_workspace_file(Path.t(), String.t(), String.t()) :: :ok | {:error, term()}
   def rename_workspace_file(root, from_name, to_name)
@@ -104,19 +116,7 @@ defmodule ScrypathOps.Playbook.Store do
     if safe_basename?(from_name) and safe_basename?(to_name) do
       with {:ok, from_path} <- resolved_path(root, from_name),
            {:ok, to_path} <- resolved_path(root, to_name) do
-        cond do
-          not File.exists?(from_path) ->
-            {:error, :rename_failed}
-
-          File.exists?(to_path) ->
-            {:error, :target_exists}
-
-          true ->
-            case File.rename(from_path, to_path) do
-              :ok -> :ok
-              {:error, _} -> {:error, :rename_failed}
-            end
-        end
+        rename_without_replacing(from_path, to_path)
       end
     else
       {:error, :outside_workspace}
@@ -189,6 +189,181 @@ defmodule ScrypathOps.Playbook.Store do
       {:ok, root_abs}
     else
       {:error, :relative_root}
+    end
+  end
+
+  defp with_workspace_file(path, modes, callback) do
+    case :file.open(path, modes) do
+      {:ok, file} ->
+        try do
+          case safe_workspace_file?(path, file) do
+            true -> callback.(file)
+            false -> {:error, :outside_workspace}
+          end
+        after
+          :file.close(file)
+        end
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp read_all(file), do: read_chunks(file, [])
+
+  defp read_chunks(file, chunks) do
+    case :file.read(file, @read_chunk_size) do
+      {:ok, chunk} -> read_chunks(file, [chunk | chunks])
+      :eof -> {:ok, chunks |> Enum.reverse() |> IO.iodata_to_binary()}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp save_workspace_file_at(path, data) do
+    case overwrite_workspace_file(path, data) do
+      {:error, :enoent} ->
+        create_or_retry_workspace_file(path, data)
+
+      result ->
+        result
+    end
+  end
+
+  defp create_or_retry_workspace_file(path, data) do
+    case :file.open(path, [:write, :binary, :raw, :exclusive]) do
+      {:ok, file} ->
+        try do
+          :file.write(file, data)
+        after
+          :file.close(file)
+        end
+
+      {:error, :eexist} ->
+        overwrite_workspace_file(path, data)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp overwrite_workspace_file(path, data) do
+    with_workspace_file(path, [:read, :write, :binary, :raw], fn file ->
+      with {:ok, _position} <- :file.position(file, :bof),
+           :ok <- :file.truncate(file),
+           :ok <- :file.write(file, data) do
+        :ok
+      end
+    end)
+  end
+
+  defp safe_workspace_file?(path, file) do
+    with {:ok, %File.Stat{type: :regular} = path_info} <- File.lstat(path),
+         {:ok, descriptor_info} <- :file.read_file_info(file) do
+      same_file?(path_info, descriptor_info)
+    else
+      _ -> false
+    end
+  end
+
+  defp same_file?(%File.Stat{} = path_info, descriptor_info) do
+    descriptor_type = file_info(descriptor_info, :type)
+    descriptor_device = file_info(descriptor_info, :major_device)
+    descriptor_inode = file_info(descriptor_info, :inode)
+
+    cond do
+      path_info.type != :regular or descriptor_type != :regular ->
+        false
+
+      path_info.inode > 0 and descriptor_inode > 0 ->
+        path_info.major_device == descriptor_device and path_info.inode == descriptor_inode
+
+      true ->
+        path_info.size == file_info(descriptor_info, :size) and
+          path_info.mode == file_info(descriptor_info, :mode) and
+          path_info.mtime == file_info(descriptor_info, :mtime) and
+          path_info.ctime == file_info(descriptor_info, :ctime)
+    end
+  end
+
+  defp regular_workspace_entry?(path) do
+    case File.lstat(path) do
+      {:ok, %File.Stat{type: :regular}} -> true
+      _ -> false
+    end
+  end
+
+  defp rename_without_replacing(from_path, to_path) do
+    with {:ok, %File.Stat{type: :regular} = source_info} <- File.lstat(from_path) do
+      case File.ln(from_path, to_path) do
+        :ok ->
+          case File.lstat(to_path) do
+            {:ok, %File.Stat{type: :regular} = destination_info} ->
+              if same_file_stats?(source_info, destination_info) do
+                case File.lstat(from_path) do
+                  {:ok, current_source} when current_source.type == :regular ->
+                    if same_file_stats?(source_info, current_source) do
+                      case File.rm(from_path) do
+                        :ok ->
+                          :ok
+
+                        {:error, :enoent} ->
+                          remove_created_link(to_path, source_info)
+                          {:error, :rename_failed}
+
+                        {:error, _} ->
+                          {:error, :rename_failed}
+                      end
+                    else
+                      remove_created_link(to_path, source_info)
+                      {:error, :rename_failed}
+                    end
+
+                  {:error, :enoent} ->
+                    remove_created_link(to_path, source_info)
+                    {:error, :rename_failed}
+
+                  _ ->
+                    remove_created_link(to_path, source_info)
+                    {:error, :rename_failed}
+                end
+              else
+                {:error, :rename_failed}
+              end
+
+            _ ->
+              # File.ln never follows a destination symlink. Leave a changed entry
+              # untouched rather than risk deleting another writer's destination.
+              {:error, :outside_workspace}
+          end
+
+        {:error, :eexist} ->
+          {:error, :target_exists}
+
+        {:error, _} ->
+          {:error, :rename_failed}
+      end
+    else
+      {:ok, _non_regular} -> {:error, :outside_workspace}
+      {:error, _} -> {:error, :rename_failed}
+    end
+  end
+
+  defp same_file_stats?(left, right) do
+    if left.inode > 0 and right.inode > 0 do
+      left.major_device == right.major_device and left.inode == right.inode
+    else
+      left.type == right.type and left.size == right.size and left.mode == right.mode and
+        left.mtime == right.mtime and left.ctime == right.ctime
+    end
+  end
+
+  defp remove_created_link(path, expected_info) do
+    case File.lstat(path) do
+      {:ok, current_info} when current_info.type == :regular ->
+        if same_file_stats?(expected_info, current_info), do: File.rm(path)
+
+      _ ->
+        :ok
     end
   end
 
