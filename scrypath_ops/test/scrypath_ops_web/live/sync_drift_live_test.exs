@@ -984,6 +984,48 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns == socket.assigns
   end
 
+  test "promotion task refresh failure clears the previous document observation", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    mounted_socket = :sys.get_state(lv.pid).socket
+    generation = mounted_socket.assigns.context_generation
+
+    socket = %{
+      mounted_socket
+      | assigns:
+          Map.merge(mounted_socket.assigns, %{
+            promotion_task_id: 991,
+            promotion_status: :completed,
+            promotion_loading: true,
+            promotion_document_observation: %{state: :verified},
+            promotion_observation_error: nil
+          })
+    }
+
+    assert {:noreply, refreshed} =
+             SyncDriftLive.handle_async(
+               {:promotion_refresh, generation, 991},
+               {:exit, :task_unavailable},
+               socket
+             )
+
+    assert refreshed.assigns.promotion_status == :unknown
+    refute refreshed.assigns.promotion_loading
+    assert is_nil(refreshed.assigns.promotion_document_observation)
+    assert is_nil(refreshed.assigns.promotion_observation_error)
+
+    html =
+      refreshed
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert html =~ "The task result could not be confirmed."
+    refute html =~ "Expected document effect:"
+    refute html =~ "The swap task succeeded, but its expected-document observation could not be confirmed."
+  end
+
   test "mounted promotion refresh reads the retained UID once without swapping again", %{
     conn: conn
   } do
