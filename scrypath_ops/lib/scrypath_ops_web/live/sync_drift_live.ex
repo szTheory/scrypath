@@ -42,6 +42,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:recovery_origin_generation, nil)
       |> assign(:recovery_status, nil)
       |> assign(:recovery_evidence, nil)
+      |> assign(:recovery_document_observation, nil)
       |> assign(:recovery_checked_at, nil)
       |> assign(:recovery_loading, false)
       |> assign(:promotion_task_id, nil)
@@ -251,14 +252,27 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          handle == socket.assigns.recovery_handle do
       {status, evidence} =
         case result do
-          {status, %{} = evidence} -> {status, evidence}
-          status -> {status, nil}
+          {status, %{} = evidence, document_observation} ->
+            {status, Map.put(evidence, :document_observation, document_observation)}
+
+          {status, %{} = evidence} ->
+            {status, evidence}
+
+          status ->
+            {status, nil}
         end
+
+      document_observation =
+        if is_map(evidence), do: Map.get(evidence, :document_observation), else: nil
+
+      evidence =
+        if is_map(evidence), do: Map.delete(evidence, :document_observation), else: evidence
 
       {:noreply,
        socket
        |> assign(:recovery_status, status)
        |> assign(:recovery_evidence, evidence)
+       |> assign(:recovery_document_observation, document_observation)
        |> assign(:recovery_checked_at, DateTime.utc_now())
        |> assign(:recovery_loading, false)}
     else
@@ -273,6 +287,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
        socket
        |> assign(:recovery_status, :unknown)
        |> assign(:recovery_evidence, nil)
+       |> assign(:recovery_document_observation, nil)
        |> assign(:recovery_checked_at, DateTime.utc_now())
        |> assign(:recovery_loading, false)}
     else
@@ -352,6 +367,44 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp recovery_status_kind(_), do: :neutral
 
+  defp document_observation_title(nil), do: "Not checked"
+  defp document_observation_title(%{state: :not_checked}), do: "Not checked"
+  defp document_observation_title(%{state: :verified}), do: "Expected documents observed"
+  defp document_observation_title(%{state: :running}), do: "Document task is still running"
+  defp document_observation_title(%{state: :failed}), do: "Document task failed"
+  defp document_observation_title(_), do: "Could not check document freshness"
+
+  defp document_observation_kind(%{state: :verified}), do: :success
+  defp document_observation_kind(%{state: :failed}), do: :error
+  defp document_observation_kind(%{state: :running}), do: :warning
+  defp document_observation_kind(_), do: :info
+
+  defp document_observation_copy(nil),
+    do: "Expected-document evidence has not been checked for this recovery."
+
+  defp document_observation_copy(%{state: :not_checked, reason: reason}),
+    do:
+      "Expected-document evidence is unavailable (#{inspect(reason)}); check the selected recovery receipt."
+
+  defp document_observation_copy(%{state: :verified, operation: :upsert}),
+    do: "The expected upsert effect was observed in the active index."
+
+  defp document_observation_copy(%{state: :verified, operation: :delete}),
+    do: "The expected delete effect was observed in the active index."
+
+  defp document_observation_copy(%{state: :running}),
+    do: "The exact backend task is still running; refresh recovery status to check again."
+
+  defp document_observation_copy(%{state: :failed}),
+    do: "The exact backend task failed; inspect its task result before retrying."
+
+  defp document_observation_copy(%{reason: reason}),
+    do:
+      "Document freshness could not be checked (#{inspect(reason)}); refresh recovery status to check again."
+
+  defp document_observation_copy(_),
+    do: "Document freshness has not been confirmed; refresh recovery status to check again."
+
   defp maybe_advance_generation(socket, true) do
     socket
     |> update(:context_generation, &(&1 + 1))
@@ -375,6 +428,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
+    |> assign(:recovery_document_observation, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
     |> assign(:promotion_task_id, nil)
@@ -470,7 +524,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             :accepted
         end
 
-      {status, Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])}
+      evidence = Map.take(receipt, [:replacement_job, :attempt, :task_uid, :index])
+
+      case status do
+        {document_status, document_observation} when is_map(document_observation) ->
+          {document_status, evidence, document_observation}
+
+        _ ->
+          {status, evidence, nil}
+      end
     else
       false -> :unknown
       :unknown -> :unknown
@@ -545,15 +607,52 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
              task,
              Keyword.put(opts, :document_id_field, Scrypath.Schema.Metadata.document_id(schema))
            ) do
-      observation.state
+      {observation.state,
+       observation
+       |> Map.put(:operation, expected.operation)
+       |> Map.put(:index, receipt.index)
+       |> Map.put(:expected_ids, expected_document_ids(expected))}
     else
-      {:error, :job_running} -> :running
-      {:error, :queue_only_completed} -> :queue_only_completed
-      {:error, :job_failed} -> :failed
-      _ -> :unknown
+      {:error, :job_running} -> {:running, nil}
+      {:error, :queue_only_completed} -> {:queue_only_completed, nil}
+      {:error, :job_failed} -> {:failed, nil}
+      {:error, reason} -> {:unknown, unchecked_document_observation(receipt, reason)}
+      _ -> {:unknown, unchecked_document_observation(receipt, :observation_unavailable)}
     end
   rescue
-    _ -> :unknown
+    _ -> {:unknown, unchecked_document_observation(receipt, :observation_error)}
+  end
+
+  defp expected_document_ids(%{operation: operation, expected: expected})
+       when operation in [:upsert, :delete] and is_list(expected) and length(expected) <= 50 do
+    ids =
+      Enum.map(expected, fn
+        %{id: id} -> id
+        %{"id" => id} -> id
+        id when operation == :delete -> id
+        _ -> nil
+      end)
+
+    with true <- Enum.all?(ids, &(is_binary(&1) or is_integer(&1))),
+         {:ok, encoded} <- Jason.encode(expected),
+         true <- byte_size(encoded) <= 65_536 do
+      ids
+    else
+      _ -> nil
+    end
+  end
+
+  defp expected_document_ids(_), do: nil
+
+  defp unchecked_document_observation(receipt, reason) do
+    %{
+      state: :not_checked,
+      reason: reason,
+      checked_at: DateTime.utc_now(),
+      operation: Map.get(receipt, :operation),
+      index: Map.get(receipt, :index),
+      expected_ids: nil
+    }
   end
 
   defp recovery_host_context(socket, schema) do
@@ -1186,6 +1285,39 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               />
             </div>
           </.ops_data_card>
+        </.ops_section>
+      </.ops_panel>
+
+      <.ops_panel :if={@selected_schema} class="mt-4" id="document-freshness">
+        <.ops_section
+          title="Document freshness"
+          subtitle="Check the expected effect for the exact recovery task in this schema's active index."
+          meta={
+            if @recovery_document_observation && @recovery_document_observation.checked_at,
+              do: "checked #{format_dt(@recovery_document_observation.checked_at)}"
+          }
+        >
+          <.ops_status
+            kind={document_observation_kind(@recovery_document_observation)}
+            title={document_observation_title(@recovery_document_observation)}
+          >
+            {document_observation_copy(@recovery_document_observation)}
+          </.ops_status>
+          <div :if={@recovery_document_observation} class="mt-2 space-y-1 text-ops-body">
+            <p :if={@recovery_document_observation.operation}>
+              Expected effect: {@recovery_document_observation.operation}
+            </p>
+            <p :if={@recovery_document_observation.index}>
+              Active index:
+              <.ops_inline_code>{@recovery_document_observation.index}</.ops_inline_code>
+            </p>
+            <p :if={is_list(@recovery_document_observation.expected_ids)}>
+              Expected document identities:
+              <span :for={id <- @recovery_document_observation.expected_ids} class="break-all">
+                <.ops_inline_code>{id}</.ops_inline_code>
+              </span>
+            </p>
+          </div>
         </.ops_section>
       </.ops_panel>
 
