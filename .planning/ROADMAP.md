@@ -109,10 +109,10 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: 3 plans
+**Plans**: 1/3 plans executed
 Plans:
 **Wave 1**
-- [ ] 175-01-PLAN.md — Separate recovery evidence and show the ordinary repair path
+- [x] 175-01-PLAN.md — Separate recovery evidence and show the ordinary repair path
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 175-02-PLAN.md — Gate promotion and verify its correlated outcome
@@ -175,6 +175,6 @@ Plans:
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-10 |
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
-| 175. Repair and Verification | 0/3 | Planned | - |
+| 175. Repair and Verification | 1/3 | In Progress | - |
 | 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |

@@ -5,16 +5,16 @@ milestone_name: ScrypathOps UI refinement
 current_phase: 175
 current_phase_name: Repair and Verification
 status: executing
-stopped_at: Phase 175 plan passed independent review; ready to execute
-last_updated: "2026-10-11T11:12:32.574Z"
+stopped_at: Completed 175-01-PLAN.md
+last_updated: "2026-10-11T12:00:36.838Z"
 last_activity: 2026-10-11
 last_activity_desc: Phase 175 execution started
-state_head: 810fdf54e62200a35cde1cc984b0bd9c2f2ae397
+state_head: 6a26f1ddd5e2017acdc0c32fde46813575e3cf16
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 15
-  completed_plans: 7
+  completed_plans: 8
   percent: 40
 ---
 
@@ -27,10 +27,10 @@ See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 175 (Repair and Verification) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 175
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-10-11 — Phase 175 execution started
-Progress: [████░░░░░░] 40% (2/5 phases; 7/15 plans complete)
+Progress: [████░░░░░░] 40% (2/5 phases; 8/15 plans complete)
 
 ## Delivered Evidence
 
@@ -80,9 +80,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-11T03:49:00.442Z
-Stopped at: Phase 175 UI-SPEC approved; ready to plan Phase 175
-Resume file: .planning/phases/175-repair-and-verification/175-UI-SPEC.md
+Last session: 2026-10-11T12:00:36.775Z
+Stopped at: Completed 175-01-PLAN.md
+Resume file: None
 
 Phase 173 is complete in this isolated worktree at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59`. All four plans and OPUX-09–OPUX-15 passed goal verification (41/41 plan truths); Ops precommit and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests, the focused PostureLive suite passed 15 tests, and mounted/standalone shell and copy browser suites passed 14/14 and 10/10. Security review closed 9/9 threats; code review had zero findings; the UI audit scored 24/24 with no human review required. These are local exact-source results; no hosted source receipt is claimed. See the four plan summaries, `173-VERIFICATION.md`, `173-SECURITY.md`, `173-REVIEW.md`, `173-UI-REVIEW.md`, and `173-VALIDATION.md`.
 
@@ -97,6 +97,7 @@ Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Phase 176's 
 | Phase 174 P01 | 6min | 2 tasks | 4 files |
 | Phase 174 P02 | 20min | 2 tasks | 3 files |
 | Phase 174 P03 | 8min | 2 tasks | 3 files |
+| Phase 175 P01 | 21min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -107,3 +108,6 @@ Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Phase 176's 
 - [Phase 174]: Keep no-schema and missing-backend guidance distinct, with no retry or recovery offer.
 - [Phase 174]: Preserve Posture ranking and classification; render the schema-specific handoff only when failed tasks are observed.
 - [Phase 174]: Keep each schema as one labelled health article with plain Backend and Queue groups.
+- [Phase 175]: Keep document freshness as a distinct receipt-correlated observation rather than inferring it from queue or contract status.
+- [Phase 175]: Keep refresh observational and preserve the previous result with its checked time until a new observation succeeds.
+- [Phase 175]: Reuse the existing selected-schema failed-sync route for ordinary repair and leave index promotion in its advanced section.
