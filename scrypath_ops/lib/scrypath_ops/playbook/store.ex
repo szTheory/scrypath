@@ -350,7 +350,7 @@ defmodule ScrypathOps.Playbook.Store do
   end
 
   defp replace_workspace_file(path, data, source_file, source_info) do
-    with {:ok, temp_path, temp_file} <- open_temporary_file(path) do
+    with {:ok, temp_dir, temp_path, temp_file} <- open_temporary_file(path) do
       write_result = :file.write(temp_file, data)
       close_result = :file.close(temp_file)
       permission_bits = Bitwise.band(source_info.mode, 0o7777)
@@ -369,7 +369,7 @@ defmodule ScrypathOps.Playbook.Store do
           {:error, _} = error -> error
         end
 
-      if result != :ok, do: File.rm(temp_path)
+      remove_temporary_file(temp_dir, temp_path)
       result
     end
   end
@@ -380,18 +380,25 @@ defmodule ScrypathOps.Playbook.Store do
 
   defp open_temporary_file(path, attempts) do
     suffix = System.unique_integer([:positive, :monotonic])
-    temp_path = Path.join(Path.dirname(path), ".#{Path.basename(path)}.#{suffix}.tmp")
+    # A private sibling directory keeps the replacement inode unreachable while it is written.
+    temp_dir = Path.join(Path.dirname(path), ".#{Path.basename(path)}.#{suffix}.tmp")
+    temp_path = Path.join(temp_dir, "replacement")
 
-    case :file.open(temp_path, [:write, :binary, :raw, :exclusive]) do
-      {:ok, file} ->
-        # Keep replacement contents private while the named temp file is populated.
-        case File.chmod(temp_path, 0o600) do
+    case File.mkdir(temp_dir) do
+      :ok ->
+        case File.chmod(temp_dir, 0o700) do
           :ok ->
-            {:ok, temp_path, file}
+            case :file.open(temp_path, [:write, :binary, :raw, :exclusive]) do
+              {:ok, file} ->
+                {:ok, temp_dir, temp_path, file}
+
+              {:error, reason} ->
+                remove_temporary_file(temp_dir, temp_path)
+                {:error, reason}
+            end
 
           {:error, reason} ->
-            :file.close(file)
-            File.rm(temp_path)
+            File.rmdir(temp_dir)
             {:error, reason}
         end
 
@@ -401,6 +408,12 @@ defmodule ScrypathOps.Playbook.Store do
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  defp remove_temporary_file(temp_dir, temp_path) do
+    File.rm(temp_path)
+    File.rmdir(temp_dir)
+    :ok
   end
 
   defp safe_workspace_file_info(path, file) do

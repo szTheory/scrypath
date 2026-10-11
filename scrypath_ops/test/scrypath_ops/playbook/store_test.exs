@@ -138,6 +138,7 @@ defmodule ScrypathOps.Playbook.StoreTest do
     assert File.read!(path) == "after"
     assert {after_save.major_device, after_save.inode} != {before.major_device, before.inode}
     assert Bitwise.band(after_save.mode, 0o777) == 0o600
+    assert File.ls!(dir) == ["p.json"]
   end
 
   test "create_workspace_file/3 never replaces a file created concurrently", %{dir: dir} do
