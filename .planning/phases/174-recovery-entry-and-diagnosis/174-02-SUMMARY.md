@@ -91,8 +91,6 @@ status: complete
 1. **Task 1: Put Control Room state, affected scope, and one safe route first** — `d298777` (feat)
 2. **Task 2: Assert the Control Room entry route in the mounted recovery journey** — `be1882d` (test)
 
-**Plan metadata:** pending summary commit.
-
 ## Files Created/Modified
 
 - `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex` — posture hierarchy, exact setup guidance, affected-scope detail, and refresh retention.
@@ -111,7 +109,7 @@ None. The initial mounted run exposed two assertion mismatches in the planned su
 
 - Final focused ControlRoomLive suite passed: `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/control_room_live_test.exs` — 6 tests, 0 failures.
 - Final mounted verification passed: `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted` — 4 browser checks passed, including both operator journeys.
-- The first full Ops `mix precommit` run (seed **219458**) reported 250 tests and 2 doctests with one teardown failure in the unrelated `ScrypathOpsWeb.SyncDriftLiveTest` case “observer exits from a previous schema cannot change the current screen”: `GenServer.stop(...): no process`, raised in `ExUnit.OnExitHandler.exec_callback/1` from `test/scrypath_ops_web/live/sync_drift_live_test.exs:269`. An isolated rerun with `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/sync_drift_live_test.exs:269` passed (seed **367094**, 1 test, 0 failures). Treat the full-suite result as initial and unreproduced pending the orchestrator’s planned rerun; no SyncDrift source was changed.
+- The first full Ops `mix precommit` run (seed **219458**) reported 250 tests and 2 doctests with one teardown failure in the unrelated `ScrypathOpsWeb.SyncDriftLiveTest` case “observer exits from a previous schema cannot change the current screen”: `GenServer.stop(...): no process`, raised in `ExUnit.OnExitHandler.exec_callback/1` from `test/scrypath_ops_web/live/sync_drift_live_test.exs:269`. The exact test passed in isolation (seed **367094**); the orchestrator rerun with `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix precommit` passed all 250 tests and 2 doctests (seed **10343**, 0 failures). No SyncDrift source was changed and no failure remains deferred.
 
 ## User Setup Required
 
