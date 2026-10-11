@@ -1360,27 +1360,34 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
              true <- Map.get(receipt, :index) == identity.target_index,
              true <-
                Map.get(receipt, :endpoint) ==
-                 endpoint_identity(Keyword.get(socket.assigns.scrypath_opts, :meilisearch_url)),
-             {:ok, expected} <-
-               read_expected_effects(identity.schema, receipt, socket.assigns.scrypath_opts),
-             {:ok, observation} <-
-               ScrypathOps.DocumentObservation.check_effects(
-                 expected.operation,
-                 identity.live_index,
-                 expected.expected,
-                 ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
-                 |> Keyword.put(
-                   :document_id_field,
-                   Scrypath.Schema.Metadata.document_id(identity.schema)
-                 )
-               ) do
-          if observation.state == :verified do
-            {:ok, observation}
-          else
-            {:error, {:prepared_target_effect_unconfirmed, observation.state, observation.reason}}
+                 endpoint_identity(Keyword.get(socket.assigns.scrypath_opts, :meilisearch_url)) do
+          case read_expected_effects(identity.schema, receipt, socket.assigns.scrypath_opts) do
+            {:ok, expected} ->
+              case ScrypathOps.DocumentObservation.check_effects(
+                     expected.operation,
+                     identity.live_index,
+                     expected.expected,
+                     ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+                     |> Keyword.put(
+                       :document_id_field,
+                       Scrypath.Schema.Metadata.document_id(identity.schema)
+                     )
+                   ) do
+                {:ok, %{state: :verified} = observation} ->
+                  {:ok, observation}
+
+                {:ok, observation} ->
+                  {:error,
+                   {:prepared_target_effect_unconfirmed, observation.state, observation.reason}}
+
+                {:error, reason} ->
+                  {:error, {:prepared_target_effect_unconfirmed, :unknown, reason}}
+              end
+
+            {:error, reason} ->
+              {:error, {:prepared_target_effect_unconfirmed, :unknown, reason}}
           end
         else
-          false -> {:ok, %{state: :not_checked, reason: :no_applicable_prepared_target_effect}}
           _ -> {:ok, %{state: :not_checked, reason: :no_applicable_prepared_target_effect}}
         end
 
@@ -1451,10 +1458,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp promotion_status_title(:accepted), do: "Index swap accepted"
   defp promotion_status_title(:completed), do: "Index swap completed"
+  defp promotion_status_title({:failed, {:cancelled, _}}), do: "Index swap canceled"
   defp promotion_status_title({:failed, _}), do: "Index swap failed"
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(_), do: "Index swap status"
+
+  defp promotion_status_role({:failed, _}), do: "alert"
+  defp promotion_status_role(_), do: "status"
 
   defp promotion_document_copy(%{state: :verified}),
     do: "The prepared target's expected document effect was observed in the selected live index."
@@ -1543,268 +1554,277 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         kind={:error}
         title="That schema is unavailable"
         role="alert"
+        neutral
       >
         Select an allowlisted schema to continue.
       </.ops_status>
 
-      <.ops_panel>
-        <.ops_section
-          id="sync-reconcile-heading"
-          title="Sync and queue status"
-          subtitle="Check current backend tasks and queued work for this schema."
+      <.ops_section
+        id="sync-reconcile-heading"
+        title="Sync and queue status"
+        subtitle="Check current backend tasks and queued work for this schema."
+        prominent_title
+      >
+        <:actions>
+          <.ops_refresh_control
+            id="sync-drift-refresh"
+            checked_at={@reconcile_loaded_at}
+            phx-click="refresh_reconcile"
+            label="Refresh sync and queue status"
+            aria_label="Refresh sync and queue status"
+            disabled={!@selected_schema}
+          />
+        </:actions>
+
+        <.ops_signal_table :if={@reconcile_result}>
+          <thead>
+            <tr>
+              <th scope="col">Signal</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" class="align-top">Index</th>
+              <td>
+                <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" class="align-top">Mode</th>
+              <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
+            </tr>
+            <tr>
+              <th scope="row" class="align-top">Drift signals</th>
+              <td>
+                <div class="flex flex-wrap gap-1">
+                  <.ops_badge
+                    :for={signal <- @reconcile_result.drift_signals}
+                    kind={:neutral}
+                  >
+                    {reconcile_signal_label(signal)}
+                  </.ops_badge>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </.ops_signal_table>
+
+        <p
+          :if={@reconcile_result == nil && @selected_schema}
+          class="text-ops-body text-base-content/70"
         >
-          <:actions>
-            <.ops_refresh_control
-              id="sync-drift-refresh"
-              checked_at={@reconcile_loaded_at}
-              phx-click="refresh_reconcile"
-              aria_label="Refresh sync and queue status"
-              disabled={!@selected_schema}
+          Sync status is not available yet. Refresh sync status to check again.
+        </p>
+        <.ops_status
+          :if={@reconcile_error}
+          kind={:error}
+          title="Sync and queue status could not be checked"
+          role="alert"
+          neutral
+        >
+          Reason: {inspect(@reconcile_error)}. Any displayed values retain their last checked time; refresh to check again.
+        </.ops_status>
+      </.ops_section>
+
+      <.ops_section
+        id="sync-drift-heading"
+        title="Index contract"
+        subtitle="Compare the selected schema contract with its live index."
+        meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
+        class="mt-6"
+      >
+        <:actions>
+          <.ops_button
+            phx-click="load_drift"
+            phx-disable-with="Checking…"
+            disabled={@drift_loading || !@selected_schema}
+          >
+            {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
+          </.ops_button>
+        </:actions>
+
+        <div
+          :if={@drift_loading}
+          class="space-y-3"
+          role="status"
+          aria-label="Loading contract drift"
+        >
+          <p class="text-ops-body text-base-content/70">
+            Comparing the declared contract against the live index…
+          </p>
+          <.ops_loading lines={4} label="Loading contract drift" />
+        </div>
+
+        <.ops_status
+          :if={@drift_loading && @drift_result}
+          kind={:info}
+          title="Checking index contract"
+          role="status"
+          neutral
+        >
+          The last contract result remains visible with its checked time while this check runs.
+        </.ops_status>
+
+        <.ops_status
+          :if={!@drift_loading || is_nil(@drift_result)}
+          kind={drift_status_kind(@drift_result, @drift_error)}
+          title={drift_status_title(@drift_result, @drift_error)}
+          role={if @drift_error, do: "alert"}
+          neutral
+        >
+          {drift_status_copy(@drift_result, @drift_error)}
+        </.ops_status>
+
+        <.ops_signal_table :if={@drift_result}>
+          <thead>
+            <tr>
+              <th scope="col">Field</th>
+              <th scope="col">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" class="align-top">Summary</th>
+              <td>Index contract snapshot</td>
+            </tr>
+            <tr>
+              <th scope="row" class="align-top">Version · index</th>
+              <td class="font-mono text-ops-sm tabular-nums">
+                version {@drift_result.version} · index {@drift_result.index}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" class="align-top">Dimension mismatches</th>
+              <td class="font-mono text-ops-sm tabular-nums">
+                {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
+              </td>
+            </tr>
+          </tbody>
+        </.ops_signal_table>
+        <.ops_data_card
+          :if={@drift_result}
+          title="Contract dimensions"
+          class="mt-3"
+        >
+          <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <.ops_tone_chip
+              :for={{label, match?} <- drift_dimension_rows(@drift_result)}
+              kind={if match?, do: :success, else: :warning}
+              label={label}
+              value={if match?, do: "matches", else: "differs"}
             />
-          </:actions>
+          </div>
+        </.ops_data_card>
+      </.ops_section>
 
-          <.ops_signal_table :if={@reconcile_result}>
-            <thead>
-              <tr>
-                <th scope="col">Signal</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Index</th>
-                <td>
-                  <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Mode</th>
-                <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Drift signals</th>
-                <td>
-                  <div class="flex flex-wrap gap-1">
-                    <.ops_badge
-                      :for={signal <- @reconcile_result.drift_signals}
-                      kind={:neutral}
-                    >
-                      {reconcile_signal_label(signal)}
-                    </.ops_badge>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
+      <.ops_section
+        :if={@selected_schema}
+        id="document-freshness"
+        class="mt-6"
+        title="Document freshness"
+        subtitle="Check the expected effect for the exact recovery task in this schema's active index."
+        meta={
+          if @recovery_document_observation && @recovery_document_observation.checked_at,
+            do: "checked #{format_dt(@recovery_document_observation.checked_at)}"
+        }
+      >
+        <p :if={@recovery_loading} role="status" aria-label="Checking document freshness">
+          Checking the expected effect for this same recovery operation. Any previous result remains available with its checked time.
+        </p>
+        <.ops_status
+          id="document-freshness-result"
+          kind={document_observation_kind(@recovery_document_observation)}
+          title={document_observation_title(@recovery_document_observation)}
+          role="status"
+          neutral
+        >
+          {document_observation_copy(@recovery_document_observation)}
+        </.ops_status>
+        <div :if={@recovery_document_observation} class="mt-2 space-y-1 text-ops-body">
+          <p :if={@recovery_document_observation.operation}>
+            Expected effect: {@recovery_document_observation.operation}
+          </p>
+          <p :if={@recovery_document_observation.index}>
+            Active index:
+            <.ops_inline_code>{@recovery_document_observation.index}</.ops_inline_code>
+          </p>
+          <p :if={is_list(@recovery_document_observation.expected_ids)}>
+            Expected document identities:
+            <span :for={id <- @recovery_document_observation.expected_ids} class="break-all">
+              <.ops_inline_code>{id}</.ops_inline_code>
+            </span>
+          </p>
+        </div>
+      </.ops_section>
 
+      <.ops_section
+        :if={@selected_schema}
+        id="ordinary-recovery"
+        class="mt-6"
+        title="Ordinary recovery"
+        subtitle="Review the selected schema's failed work and use its existing eligible retry action."
+        meta={if @recovery_checked_at, do: "last checked #{format_dt(@recovery_checked_at)}"}
+      >
+        <:actions>
+          <.link
+            navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
+            class="link link-primary"
+          >
+            Review failed sync work
+          </.link>
+          <.ops_button
+            :if={@recovery_handle}
+            phx-click="refresh_recovery_status"
+            phx-disable-with="Checking…"
+            disabled={@recovery_loading || !@selected_schema}
+          >
+            Refresh recovery status
+          </.ops_button>
+        </:actions>
+        <p class="text-ops-body text-base-content/75">
+          Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
+        </p>
+        <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
+          <p :if={@recovery_loading} role="status" aria-label="Checking recovery status">
+            Checking this same recovery operation. The last observed result remains visible until this check finishes.
+          </p>
+          <.ops_status
+            kind={recovery_status_kind(@recovery_status)}
+            title={
+              if @recovery_observation_error,
+                do: "Recovery refresh could not be checked",
+                else: recovery_status_label(@recovery_status)
+            }
+            role={if @recovery_observation_error, do: "alert", else: "status"}
+            neutral
+          >
+            {recovery_status_copy(@recovery_status)}
+            <span :if={@recovery_observation_error}>
+              Check detail: {inspect(@recovery_observation_error)}.
+            </span>
+          </.ops_status>
           <p
-            :if={@reconcile_result == nil && @selected_schema}
-            class="text-ops-body text-base-content/70"
+            :if={@recovery_evidence}
+            class="text-ops-body break-all"
+            data-testid="recovery-evidence"
           >
-            Sync status is not available yet. Refresh sync status to check again.
+            Schema:
+            <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
+            · Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
+            <span :if={@recovery_evidence.task_uid}>
+              · Meilisearch task {@recovery_evidence.task_uid}
+            </span>
+            · Active index
+            <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
           </p>
-          <.ops_status
-            :if={@reconcile_error}
-            kind={:error}
-            title="Sync and queue status could not be checked"
-            role="alert"
-          >
-            Reason: {inspect(@reconcile_error)}. Any displayed values retain their last checked time; refresh to check again.
-          </.ops_status>
-        </.ops_section>
-      </.ops_panel>
-
-      <.ops_panel>
-        <.ops_section
-          id="sync-drift-heading"
-          title="Index contract"
-          subtitle="Compare the selected schema contract with its live index."
-          meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
-        >
-          <:actions>
-            <.ops_button
-              phx-click="load_drift"
-              phx-disable-with="Checking…"
-              disabled={@drift_loading || !@selected_schema}
-            >
-              {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
-            </.ops_button>
-          </:actions>
-
-          <div
-            :if={@drift_loading}
-            class="space-y-3"
-            role="status"
-            aria-label="Loading contract drift"
-          >
-            <p class="text-ops-body text-base-content/70">
-              Comparing the declared contract against the live index…
-            </p>
-            <.ops_loading lines={4} label="Loading contract drift" />
-          </div>
-
-          <.ops_status
-            :if={@drift_loading && @drift_result}
-            kind={:info}
-            title="Checking index contract"
-            role="status"
-          >
-            The last contract result remains visible with its checked time while this check runs.
-          </.ops_status>
-
-          <.ops_status
-            :if={!@drift_loading || is_nil(@drift_result)}
-            kind={drift_status_kind(@drift_result, @drift_error)}
-            title={drift_status_title(@drift_result, @drift_error)}
-            role={if @drift_error, do: "alert"}
-          >
-            {drift_status_copy(@drift_result, @drift_error)}
-          </.ops_status>
-
-          <.ops_signal_table :if={@drift_result}>
-            <thead>
-              <tr>
-                <th scope="col">Field</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row" class="font-medium align-top">Summary</th>
-                <td>Index contract snapshot</td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Version · index</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  version {@drift_result.version} · index {@drift_result.index}
-                </td>
-              </tr>
-              <tr>
-                <th scope="row" class="font-medium align-top">Dimension mismatches</th>
-                <td class="font-mono text-ops-sm tabular-nums">
-                  {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
-                </td>
-              </tr>
-            </tbody>
-          </.ops_signal_table>
-          <.ops_data_card
-            :if={@drift_result}
-            title="Contract dimensions"
-            class="mt-3"
-          >
-            <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              <.ops_tone_chip
-                :for={{label, match?} <- drift_dimension_rows(@drift_result)}
-                kind={if match?, do: :success, else: :warning}
-                label={label}
-                value={if match?, do: "matches", else: "differs"}
-              />
-            </div>
-          </.ops_data_card>
-        </.ops_section>
-      </.ops_panel>
-
-      <.ops_panel :if={@selected_schema} class="mt-4" id="document-freshness">
-        <.ops_section
-          title="Document freshness"
-          subtitle="Check the expected effect for the exact recovery task in this schema's active index."
-          meta={
-            if @recovery_document_observation && @recovery_document_observation.checked_at,
-              do: "checked #{format_dt(@recovery_document_observation.checked_at)}"
-          }
-        >
-          <p :if={@recovery_loading} role="status" aria-label="Checking document freshness">
-            Checking the expected effect for this same recovery operation. Any previous result remains available with its checked time.
-          </p>
-          <.ops_status
-            kind={document_observation_kind(@recovery_document_observation)}
-            title={document_observation_title(@recovery_document_observation)}
-          >
-            {document_observation_copy(@recovery_document_observation)}
-          </.ops_status>
-          <div :if={@recovery_document_observation} class="mt-2 space-y-1 text-ops-body">
-            <p :if={@recovery_document_observation.operation}>
-              Expected effect: {@recovery_document_observation.operation}
-            </p>
-            <p :if={@recovery_document_observation.index}>
-              Active index:
-              <.ops_inline_code>{@recovery_document_observation.index}</.ops_inline_code>
-            </p>
-            <p :if={is_list(@recovery_document_observation.expected_ids)}>
-              Expected document identities:
-              <span :for={id <- @recovery_document_observation.expected_ids} class="break-all">
-                <.ops_inline_code>{id}</.ops_inline_code>
-              </span>
-            </p>
-          </div>
-        </.ops_section>
-      </.ops_panel>
-
-      <.ops_panel :if={@selected_schema} class="mt-4" id="ordinary-recovery">
-        <.ops_section
-          title="Ordinary recovery"
-          subtitle="Review the selected schema's failed work and use its existing eligible retry action."
-          meta={if @recovery_checked_at, do: "last checked #{format_dt(@recovery_checked_at)}"}
-        >
-          <:actions>
-            <.link
-              navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
-              class="link link-primary"
-            >
-              Review failed sync work
-            </.link>
-            <.ops_button
-              :if={@recovery_handle}
-              phx-click="refresh_recovery_status"
-              phx-disable-with="Checking…"
-              disabled={@recovery_loading || !@selected_schema}
-            >
-              Refresh recovery status
-            </.ops_button>
-          </:actions>
-          <p class="text-ops-body text-base-content/75">
-            Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
-          </p>
-          <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
-            <p :if={@recovery_loading} role="status" aria-label="Checking recovery status">
-              Checking this same recovery operation. The last observed result remains visible until this check finishes.
-            </p>
-            <.ops_status
-              kind={recovery_status_kind(@recovery_status)}
-              title={
-                if @recovery_observation_error,
-                  do: "Recovery refresh could not be checked",
-                  else: recovery_status_label(@recovery_status)
-              }
-              role={if @recovery_observation_error, do: "alert", else: "status"}
-            >
-              {recovery_status_copy(@recovery_status)}
-              <span :if={@recovery_observation_error}>
-                Check detail: {inspect(@recovery_observation_error)}.
-              </span>
-            </.ops_status>
-            <p
-              :if={@recovery_evidence}
-              class="text-ops-body break-all"
-              data-testid="recovery-evidence"
-            >
-              Schema:
-              <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
-              · Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
-              <span :if={@recovery_evidence.task_uid}>
-                · Meilisearch task {@recovery_evidence.task_uid}
-              </span>
-              · Active index
-              <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
-            </p>
-          </div>
-        </.ops_section>
-      </.ops_panel>
+        </div>
+      </.ops_section>
 
       <details
         :if={@selected_schema}
         id="index-promotion"
-        class="ops-panel mt-4"
+        class="ops-panel mt-6"
         open={@promotion_status != nil}
       >
         <summary
@@ -1820,6 +1840,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           <.ops_status
             kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
             title={promotion_eligibility_title(@promotion_eligibility)}
+            neutral
           >
             {promotion_eligibility_copy(@promotion_eligibility)}
           </.ops_status>
@@ -1831,8 +1852,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           </.ops_button>
           <.ops_status
             :if={@promotion_status}
+            id="promotion-status-result"
             kind={promotion_status_kind(@promotion_status)}
             title={promotion_status_title(@promotion_status)}
+            role={promotion_status_role(@promotion_status)}
+            neutral
           >
             <span :if={@promotion_task_id}>
               Task
@@ -1845,7 +1869,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <span :if={@promotion_status in [:timed_out, :unknown]}>
               The task result could not be confirmed. Refresh checks to inspect current index state.
             </span>
-            <span :if={match?({:failed, _}, @promotion_status)}>
+            <span :if={match?({:failed, {:cancelled, _}}, @promotion_status)}>
+              The swap task was canceled. Refresh checks to inspect current index state.
+            </span>
+            <span :if={
+              match?({:failed, _}, @promotion_status) &&
+                !match?({:failed, {:cancelled, _}}, @promotion_status)
+            }>
               The swap task failed. Refresh checks to inspect current index state.
             </span>
             <p :if={@promotion_status == :completed} class="break-words">
@@ -1856,14 +1886,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                 @promotion_observation_error
               )}).
             </p>
-            <.ops_button
-              :if={@promotion_status != :accepted || !@promotion_loading}
-              phx-click="refresh_promotion_checks"
-              size={:sm}
-            >
-              Refresh checks
-            </.ops_button>
           </.ops_status>
+          <.ops_button
+            :if={@promotion_status && (@promotion_status != :accepted || !@promotion_loading)}
+            phx-click="refresh_promotion_checks"
+            size={:sm}
+          >
+            Refresh checks
+          </.ops_button>
         </div>
       </details>
 

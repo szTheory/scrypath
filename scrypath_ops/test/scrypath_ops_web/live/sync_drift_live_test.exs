@@ -797,6 +797,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     html = render(lv)
 
     assert result.promotion_status == :unknown
+
     assert result.promotion_document_observation.reason ==
              {:prepared_target_effect_unconfirmed, :failed, :document_mismatch}
 
@@ -833,6 +834,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     html = render(lv)
 
     assert result.promotion_status == :unknown
+
     assert result.promotion_document_observation.reason ==
              {:prepared_target_effect_unconfirmed, :unknown, :source_unavailable}
 
