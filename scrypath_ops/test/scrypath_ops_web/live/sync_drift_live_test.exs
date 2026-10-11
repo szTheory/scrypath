@@ -891,6 +891,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "Expected document effect:"
     assert html =~ "document_observation_http_error"
     assert html =~ "991"
+    refute html =~ "The selected live-index or contract effect could not be confirmed"
     refute html =~ "Index swap failed"
     refute html =~ "Index swap completed"
     assert_receive :prepared_target_document_read
