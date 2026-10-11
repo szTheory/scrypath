@@ -15,7 +15,7 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 completed locally on 2026-10-10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`: all four plans, OPUX-09–OPUX-15, and 41/41 plan truths passed; no hosted source receipt is claimed. Phase 174 is next to discuss and plan. Phase 176 has five independently checked lookahead plans, gated behind Phases 173–175.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 completed locally on 2026-10-10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`: all four plans, OPUX-09–OPUX-15, and 41/41 plan truths passed; no hosted source receipt is claimed. Phase 174 completed locally at `2375f6b71f57037e9e636ae060828e26f59a82c6`: all three plans, OPUX-16–OPUX-19, and 19/19 goal truths passed. Phase 175 is next to discuss and plan. Phase 176 has five independently checked lookahead plans, gated until Phase 175 is complete.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 is complete locally (4/4 plans; OPUX-09–OPUX-15; verification 41/41); Phase 174 is next and unplanned. Phase 176 has five plans verified by the independent checker but remains gated behind Phases 174–175. The required execution order is 173 → 174 → 175 → 176 → 177.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173 and 174 are complete locally (Phase 173: 4/4 plans and 41/41 truths; Phase 174: 3/3 plans and 19/19 truths). Phase 175 is next to discuss and plan. Phase 176 has five plans verified by the independent checker and remains gated behind Phase 175. The required execution order is 173 → 174 → 175 → 176 → 177.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -38,7 +38,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 ## Phases
 
 - [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-10)
-- [ ] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work.
+- [x] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work. (completed 2026-10-10)
 - [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
 - [ ] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence.
@@ -92,6 +92,10 @@ Plans:
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
 **Plans**: TBD
+- [x] 174-01-PLAN.md
+- [x] 174-02-PLAN.md
+- [x] 174-03-PLAN.md
+
 **UI hint**: yes
 **Acceptance**: Inspect before/after recovery views in both themes and relevant widths; run focused rendered-navigation, focus/layout, state, and mounted handoff proof in existing lanes, including a changed schema selection.
 
@@ -155,12 +159,12 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is complete (4/4 plans); Phase 174 is next to discuss and plan.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173 (4/4 plans) and 174 (3/3 plans) are complete; Phase 175 is next to discuss and plan.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-10 |
-| 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
+| 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |

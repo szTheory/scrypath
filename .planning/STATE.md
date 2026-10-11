@@ -2,35 +2,35 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 174
-current_phase_name: recovery-entry-and-diagnosis
-status: executing
-stopped_at: Phase 174 context gathered; ready for UI contract
-last_updated: "2026-10-11T02:09:05.832Z"
+current_phase: 175
+current_phase_name: Repair and Verification
+status: planning
+stopped_at: Phase 174 complete, ready to plan Phase 175
+last_updated: "2026-10-11T03:34:28.100Z"
 last_activity: 2026-10-10
-last_activity_desc: Phase 173 complete, transitioned to Phase 174
-state_head: 89f243814a2e20840d8aaf72f3198f3b14f9263a
+last_activity_desc: Phase 174 complete, transitioned to Phase 175
+state_head: 2375f6b71f57037e9e636ae060828e26f59a82c6
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
-  completed_plans: 4
-  percent: 20
+  completed_plans: 7
+  percent: 40
 ---
 
 # Project State
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phase 173 is complete and Phase 174 is next to discuss and plan.
+See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phases 173 and 174 are complete, and Phase 175 is next to discuss and plan.
 
 ## Current Position
 
-Phase: 174 (recovery-entry-and-diagnosis) — READY TO EXECUTE
+Phase: 175 — Repair and Verification
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-10 — Phase 173 complete, transitioned to Phase 174
-Progress: [██░░░░░░░░] 20% (1/5 phases; 4/9 plans complete)
+Status: Ready to plan
+Last activity: 2026-10-10 — Phase 174 complete, transitioned to Phase 175
+Progress: [████░░░░░░] 40% (2/5 phases; 7/12 plans complete)
 
 ## Delivered Evidence
 
@@ -80,12 +80,30 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-11T00:54:47.588Z
-Stopped at: Phase 174 context gathered; ready for UI contract
-Resume file: .planning/phases/174-recovery-entry-and-diagnosis/174-CONTEXT.md
+Last session: 2026-10-11T03:35:09.808Z
+Stopped at: Phase 174 complete, ready to discuss Phase 175
+Resume file: .planning/STATE.md
 
 Phase 173 is complete in this isolated worktree at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59`. All four plans and OPUX-09–OPUX-15 passed goal verification (41/41 plan truths); Ops precommit and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests, the focused PostureLive suite passed 15 tests, and mounted/standalone shell and copy browser suites passed 14/14 and 10/10. Security review closed 9/9 threats; code review had zero findings; the UI audit scored 24/24 with no human review required. These are local exact-source results; no hosted source receipt is claimed. See the four plan summaries, `173-VERIFICATION.md`, `173-SECURITY.md`, `173-REVIEW.md`, `173-UI-REVIEW.md`, and `173-VALIDATION.md`.
 
-Next command: `$gsd-discuss-phase 174`. Phase 174 (Recovery Entry and Diagnosis) is the next approved, dependency-ready phase and has no context/UI contract/implementation plan yet; discussion resolves its scope before the UI contract and plan. Automatic phase chaining is disabled. Continue from worktree `/Users/jon/projects/scrypath/.claude/worktrees/agent-p173-01-retry-1791665855` on branch `worktree-agent-p173-01-retry-1791665855` so the completed source and planning record remain together. The root checkout and retained preview at `http://127.0.0.1:4012/admin/search` were not modified by this run. Context can be cleared after the planning closeout commit is recorded.
+Next command: `$gsd-discuss-phase 175`. Phase 174 (Recovery Entry and Diagnosis) is complete at source SHA `2375f6b71f57037e9e636ae060828e26f59a82c6`; its three plans and all 19 goal truths passed, with OPUX-16–OPUX-19 complete. Phase 175 (Repair and Verification) is the approved, dependency-ready next phase; discussion resolves its scope before the UI contract and plan. Automatic phase chaining is disabled. Continue from worktree `/Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis` on branch `gsd/phase-174-recovery-entry-diagnosis` so the completed source and planning record stay together. Context can be cleared after this planning closeout commit is recorded.
 
 Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Phase 176's five checked plans remain gated behind Phases 173–175; no Phase 176 implementation or product verification is claimed. Preserve the intentional adaptive model routing in `.planning/config.json` and do not replay Phase 172/170 or extend archived source receipts.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 174 P01 | 6min | 2 tasks | 4 files |
+| Phase 174 P02 | 20min | 2 tasks | 3 files |
+| Phase 174 P03 | 8min | 2 tasks | 3 files |
+
+## Decisions
+
+- [Phase 174]: Keep URL schema identity and the host gate authoritative for recovery actions.
+- [Phase 174]: Derive retry eligibility from the existing RecoveryAction and show unsupported work as unavailable.
+- [Phase 174]: Keep Control Room fleet-level with one generic health route; schema identity starts at Search health.
+- [Phase 174]: Retain the last complete posture snapshot on partial refresh and never announce refresh success without complete observations.
+- [Phase 174]: Keep no-schema and missing-backend guidance distinct, with no retry or recovery offer.
+- [Phase 174]: Preserve Posture ranking and classification; render the schema-specific handoff only when failed tasks are observed.
+- [Phase 174]: Keep each schema as one labelled health article with plain Backend and Queue groups.

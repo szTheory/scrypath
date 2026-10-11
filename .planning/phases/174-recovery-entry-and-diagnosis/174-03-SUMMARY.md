@@ -138,3 +138,9 @@ None. No new route, authorization boundary, schema, or network surface was added
 
 - The three modified files exist, the focused suite passes, the two browser entrypoints pass, and contrast reports no AA failures.
 - Both task commits are ancestors of the summary commit.
+
+## Post-review follow-up (2026-10-11)
+
+Commit `2375f6b71f57037e9e636ae060828e26f59a82c6` closes the Phase 174 UI-review findings: Control Room secondary intents follow the verdict, the generic Search health route is available from healthy state, phase-owned spacing and recovery copy match the contract, and the healthy observation precedes its route. A DOM-order assertion covers the reading order.
+
+The final exact-revision gates passed: `mix verify.ops_ui` (252 tests + 2 doctests), mounted operator journey (4/4), contrast (0 AA failures), and Phase 173 browser regression scopes (shell 14/14, status 6/6, time 8/8, copy 10/10; mounted and standalone). The final Control Room LiveView suite passed 6/6.

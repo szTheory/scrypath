@@ -1,7 +1,7 @@
 # Requirements: Scrypath — v1.43 ScrypathOps UI refinement
 
 **Defined:** 2026-10-06
-**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-15 are complete and verified locally in Phase 173; OPUX-16–OPUX-28 remain pending.
+**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-15 are complete and verified locally in Phase 173; OPUX-16–OPUX-19 are complete and verified locally in Phase 174; OPUX-20–OPUX-28 remain pending.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.43 Requirements
@@ -20,10 +20,10 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 ### Recovery entry and diagnosis
 
-- [ ] **OPUX-16**: Operators entering Control Room can identify the current state, affected search scope, and next safe action in a clear reading order without duplicated explanations or competing secondary controls.
-- [ ] **OPUX-17**: Operators inspecting Search health can scan worst-first schema records with readable complete identifiers/times, one meaningful surface per schema, and plain Backend/Queue diagnostic groups; section spacing and concise next-check actions remain clear without redundant nested containers.
-- [ ] **OPUX-18**: Operators inspecting Failed sync work can see the failure reason, source/work identity, and recovery availability before opening verbose evidence; the common supported recovery action is discoverable while retained history, eligibility rules, and safety gates stay explicit.
-- [ ] **OPUX-19**: Operators retain their selected allowed schema across rendered recovery handoffs, refresh, and back navigation after changing selection; invalid/unavailable targets cannot silently become actions on a different schema.
+- [x] **OPUX-16**: Operators entering Control Room can identify the current state, affected search scope, and next safe action in a clear reading order without duplicated explanations or competing secondary controls.
+- [x] **OPUX-17**: Operators inspecting Search health can scan worst-first schema records with readable complete identifiers/times, one meaningful surface per schema, and plain Backend/Queue diagnostic groups; section spacing and concise next-check actions remain clear without redundant nested containers.
+- [x] **OPUX-18**: Operators inspecting Failed sync work can see the failure reason, source/work identity, and recovery availability before opening verbose evidence; the common supported recovery action is discoverable while retained history, eligibility rules, and safety gates stay explicit.
+- [x] **OPUX-19**: Operators retain their selected allowed schema across rendered recovery handoffs, refresh, and back navigation after changing selection; invalid/unavailable targets cannot silently become actions on a different schema.
 
 ### Repair and verification
 
@@ -82,10 +82,10 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 | OPUX-13 | Phase 173 | Complete |
 | OPUX-14 | Phase 173 | Complete |
 | OPUX-15 | Phase 173 | Complete |
-| OPUX-16 | Phase 174 | Pending |
-| OPUX-17 | Phase 174 | Pending |
-| OPUX-18 | Phase 174 | Pending |
-| OPUX-19 | Phase 174 | Pending |
+| OPUX-16 | Phase 174 | Complete |
+| OPUX-17 | Phase 174 | Complete |
+| OPUX-18 | Phase 174 | Complete |
+| OPUX-19 | Phase 174 | Complete |
 | OPUX-20 | Phase 175 | Pending |
 | OPUX-21 | Phase 175 | Pending |
 | OPUX-22 | Phase 175 | Pending |
