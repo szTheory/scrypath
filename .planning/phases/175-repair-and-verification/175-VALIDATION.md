@@ -1,10 +1,11 @@
 ---
 phase: "175"
 slug: "repair-and-verification"
-status: planned
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-11"
+validated: "2026-10-11"
 ---
 
 # Phase 175 — Validation Strategy
@@ -34,12 +35,12 @@ Plans 175-01 through 175-03 assign six tasks across three sequential waves. The 
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 175-01-01 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-01, T-175-02 | Exact receipt identity reaches independently rendered queue, contract and active-document results; absent expected identity is not checked. | LiveView tracer | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
-| 175-01-02 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-02, T-175-03 | Common recovery handoff, lifecycle states, unknown observer failures, retained history, and refresh without mutation are rendered. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
-| 175-02-01 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-05 | Matching terminal swap plus fresh alias/contract and applicable expected-document evidence precedes completion; mismatches do not. | LiveView + document observer | `cd scrypath_ops && mix test test/scrypath_ops/document_observation_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suites | ⬜ pending |
-| 175-02-02 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-04, T-175-06 | Same-UID refresh is observational; current host/allowlist/eligibility/target and confirmation gate the sole mutation. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
-| 175-03-01 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-07, T-175-08 | Disposable mounted control flow correlates selected schema, exact UID, alias and authoritative fixture document; unsupported fixture effects are recorded as source limits. | Mounted Playwright | `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted` | Yes; extend existing suite/fixture | ⬜ pending |
-| 175-03-02 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-09 | Degraded and long-ID states stay readable, focusable and contrast-compliant across themes and widths; full Ops suite remains green. | Mounted layout + contrast + ExUnit | `cd scrypath_ops && mix assets.build`; `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted`; `make -C examples/scrypath_ecommerce contrast`; `mix verify.ops_ui`; `cd scrypath_ops && mix precommit` | Yes; extend existing suites | ⬜ pending |
+| 175-01-01 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-01, T-175-02 | Exact receipt identity reaches independently rendered queue, contract and active-document results; absent expected identity is not checked. | LiveView tracer | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ✓ pass — focused suite, `mix verify.ops_ui`, and `mix precommit` |
+| 175-01-02 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-02, T-175-03 | Common recovery handoff, lifecycle states, unknown observer failures, retained history, and refresh without mutation are rendered. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ✓ pass — focused suite, `mix verify.ops_ui`, and `mix precommit` |
+| 175-02-01 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-05 | Matching terminal swap plus fresh alias/contract and applicable expected-document evidence precedes completion; mismatches do not. | LiveView + document observer | `cd scrypath_ops && mix test test/scrypath_ops/document_observation_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suites | ✓ pass — focused suites, `mix verify.ops_ui`, `mix precommit`, and mounted proof |
+| 175-02-02 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-04, T-175-06 | Same-UID refresh is observational; current host/allowlist/eligibility/target and confirmation gate the sole mutation. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ✓ pass — focused suite, `mix verify.ops_ui`, and `mix precommit` |
+| 175-03-01 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-07, T-175-08 | Disposable mounted control flow correlates selected schema, exact UID, alias and authoritative fixture document; unsupported fixture effects are recorded as source limits. | Mounted Playwright | `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted` | Yes; extend existing suite/fixture | ✓ pass — 4/4 focused mounted browser checks on the final source |
+| 175-03-02 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-09 | Degraded and long-ID states stay readable, focusable and contrast-compliant across themes and widths; full Ops suite remains green. | Mounted layout + contrast + ExUnit | `cd scrypath_ops && mix assets.build`; `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted`; `make -C examples/scrypath_ecommerce contrast`; `mix verify.ops_ui`; `cd scrypath_ops && mix precommit` | Yes; extend existing suites | ✓ pass — 0 AA failures; focused mounted proof; 260 tests + 2 doctests in precommit and root UI gate |
 
 ## Wave 0 Requirements
 
@@ -56,6 +57,15 @@ All acceptance behaviors must have executable verification. Compare representati
 - [x] Existing test and disposable mounted infrastructure is identified; no new infrastructure is required.
 - [x] No watch-mode command is used.
 - [x] Focused feedback remains bounded and mounted proof is scheduled at Wave 3.
-- [x] `nyquist_compliant: true` set after exact plan/task/command mapping; execution results remain pending.
+- [x] `nyquist_compliant: true` and `status: validated` after all six task rows passed on the final source.
+- [x] Exact-UID regression and async generation/task result checks were added after code review and passed focused, full Ops, and mounted verification.
 
-**Approval:** Plan validation map complete; execution evidence remains pending.
+**Approval:** All six planned tasks have executable verification; no coverage gaps were found or escalated.
+
+## Validation Audit 2026-10-11
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
