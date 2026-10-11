@@ -64,6 +64,24 @@ defmodule ScrypathOps.Playbook.Store do
   def save_workspace_file(_, _, _), do: {:error, :invalid_args}
 
   @doc """
+  Creates a workspace file by basename without replacing an existing file.
+
+  Exclusive creation makes the existence check and file creation one filesystem operation.
+  Returns `{:error, :target_exists}` if another writer already created the destination.
+  """
+  @spec create_workspace_file(Path.t(), String.t(), iodata()) :: :ok | {:error, term()}
+  def create_workspace_file(root, name, data) when is_binary(root) and is_binary(name) do
+    with {:ok, path} <- resolved_path(root, name) do
+      case File.write(path, data, [:binary, :exclusive]) do
+        {:error, :eexist} -> {:error, :target_exists}
+        result -> result
+      end
+    end
+  end
+
+  def create_workspace_file(_, _, _), do: {:error, :invalid_args}
+
+  @doc """
   Deletes a workspace file by basename.
   """
   @spec delete_workspace_file(Path.t(), String.t()) :: :ok | {:error, term()}
@@ -121,7 +139,7 @@ defmodule ScrypathOps.Playbook.Store do
           {:error, :target_exists}
         else
           with {:ok, body} <- read_workspace_file(root, from_name) do
-            save_workspace_file(root, to_name, body)
+            create_workspace_file(root, to_name, body)
           end
         end
       end

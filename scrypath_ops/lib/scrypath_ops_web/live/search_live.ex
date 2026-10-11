@@ -191,31 +191,30 @@ defmodule ScrypathOpsWeb.SearchLive do
           {:ok, validated} ->
             case V1.encode(validated) do
               {:ok, json} ->
-                if workspace_playbook_exists?(root, basename) do
-                  {:noreply,
-                   put_capture_error(
-                     socket,
-                     "That playbook name is already in use — pick another basename."
-                   )}
-                else
-                  case Store.save_workspace_file(root, basename, json <> "\n") do
-                    :ok ->
-                      {:noreply,
-                       socket
-                       |> assign(:capture_basename, "")
-                       |> assign(:capture_error, nil)
-                       |> put_flash(:info, "Saved playbook #{basename}.")}
+                case Store.create_workspace_file(root, basename, json <> "\n") do
+                  :ok ->
+                    {:noreply,
+                     socket
+                     |> assign(:capture_basename, "")
+                     |> assign(:capture_error, nil)
+                     |> put_flash(:info, "Saved playbook #{basename}.")}
 
-                    {:error, reason} ->
-                      {:noreply,
-                       put_capture_error(
-                         socket,
-                         "Could not save playbook to workspace.",
-                         detail: safe_capture_reason(reason),
-                         recovery:
-                           "Check the workspace directory's permissions and available disk space, then retry saving."
-                       )}
-                  end
+                  {:error, :target_exists} ->
+                    {:noreply,
+                     put_capture_error(
+                       socket,
+                       "That playbook name is already in use — pick another basename."
+                     )}
+
+                  {:error, reason} ->
+                    {:noreply,
+                     put_capture_error(
+                       socket,
+                       "Could not save playbook to workspace.",
+                       detail: safe_capture_reason(reason),
+                       recovery:
+                         "Check the workspace directory's permissions and available disk space, then retry saving."
+                     )}
                 end
 
               {:error, reason} ->
@@ -654,7 +653,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       case Map.get(hit, key) do
         nil -> nil
         "" -> nil
-        value -> to_string(value)
+        value -> humanize_hit_value(value)
       end
     end)
   end
@@ -662,7 +661,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp hit_summary(hit) when is_map(hit) do
     hit
     |> Map.take(["id", :id, "title", :title, "name", :name, "sku", :sku])
-    |> Enum.map(fn {key, value} -> "#{key}: #{value}" end)
+    |> Enum.map(fn {key, value} -> "#{key}: #{humanize_hit_value(value)}" end)
     |> Enum.join(" · ")
     |> case do
       "" -> "Structured result payload"
@@ -671,6 +670,12 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp hit_summary(_), do: "Result payload"
+
+  defp humanize_hit_value(value) when is_binary(value), do: value
+  defp humanize_hit_value(value) when is_number(value) or is_boolean(value), do: to_string(value)
+
+  defp humanize_hit_value(value),
+    do: inspect(value, limit: 8, printable_limit: 160, charlists: :as_lists)
 
   defp emit_run(mode, outcome, duration_ms) do
     :telemetry.execute(
@@ -776,13 +781,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp workspace_playbook_exists?(root, name) do
-    case Store.list_workspace_json(root) do
-      {:ok, names} -> name in names
-      {:error, _} -> false
-    end
-  end
-
   defp keyword_to_playbook_opts_map(kw, ctx) do
     strings =
       case ctx do
@@ -842,7 +840,10 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp dispatch_opt_to_json("per_query", v) when is_list(v) do
     m =
       %{}
-      |> maybe_put_json_int("ranking_score_threshold", Keyword.get(v, :ranking_score_threshold))
+      |> maybe_put_json_number(
+        "ranking_score_threshold",
+        Keyword.get(v, :ranking_score_threshold)
+      )
       |> maybe_put_json_bool("show_ranking_score", Keyword.get(v, :show_ranking_score))
       |> maybe_put_json_bool(
         "show_ranking_score_details",
@@ -869,6 +870,10 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp maybe_put_json_int(m, _k, nil), do: m
   defp maybe_put_json_int(m, k, n) when is_integer(n), do: Map.put(m, k, n)
   defp maybe_put_json_int(m, _, _), do: m
+
+  defp maybe_put_json_number(m, _k, nil), do: m
+  defp maybe_put_json_number(m, k, n) when is_number(n) and n >= 0, do: Map.put(m, k, n)
+  defp maybe_put_json_number(m, _, _), do: m
 
   defp maybe_put_json_bool(m, _k, nil), do: m
   defp maybe_put_json_bool(m, k, b) when is_boolean(b), do: Map.put(m, k, b)

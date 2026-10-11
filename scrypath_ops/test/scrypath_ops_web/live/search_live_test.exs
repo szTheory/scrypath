@@ -229,6 +229,24 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert render(view) =~ "Merge trace"
   end
 
+  test "nested JSON hit fields render as safe structured values", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :search_stub_variant, :nested_hit)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "nested fields",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html = render(view)
+    assert html =~ "nested"
+    assert html =~ "value"
+  end
+
   test "successful single search shows validated capture preview", %{conn: conn} do
     dir = temporary_playbook_workspace()
 

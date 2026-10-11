@@ -18,6 +18,25 @@ defmodule ScrypathOps.Playbook.V1Test do
     assert validated["schema"] == "MyApp.Post"
   end
 
+  test "per-query ranking threshold preserves non-negative fractions and rejects invalid values" do
+    fractional = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "MyApp.Post",
+      "q" => "hello",
+      "opts" => %{"per_query" => %{"ranking_score_threshold" => 0.5}}
+    }
+
+    assert {:ok, ^fractional} = V1.validate(fractional)
+
+    for value <- [-0.1, "0.5"] do
+      invalid = put_in(fractional, ["opts", "per_query", "ranking_score_threshold"], value)
+
+      assert {:error, {:invalid_playbook, {:invalid_per_query_threshold, ^value}}} =
+               V1.validate(invalid)
+    end
+  end
+
   test "unknown top-level key fails validation" do
     map = Jason.decode!(@minimal_search)
     bad = Map.put(map, "extra_field", true)

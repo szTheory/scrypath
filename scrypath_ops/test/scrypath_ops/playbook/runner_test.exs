@@ -239,6 +239,27 @@ defmodule ScrypathOps.Playbook.RunnerTest do
       assert via_runner == direct
     end
 
+    test "search preserves fractional ranking score thresholds from a playbook" do
+      raw = %{
+        "playbook_format" => 1,
+        "mode" => "search",
+        "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+        "q" => "needle",
+        "opts" => %{"per_query" => %{"ranking_score_threshold" => 0.5}}
+      }
+
+      assert {:ok, validated} = V1.validate(raw)
+      opts = base_opts(per_query: [ranking_score_threshold: 0.5])
+
+      assert {:ok, %Scrypath.SearchResult{} = direct} =
+               Scrypath.search(OpsPostA, "needle", opts)
+
+      assert {:ok, %Scrypath.SearchResult{} = via_runner} =
+               Runner.run_validated(validated, [OpsPostA, OpsPostB, FacetedOpsPost], base_opts())
+
+      assert via_runner == direct
+    end
+
     test "search_many happy path matches direct Scrypath.search_many/2" do
       raw = %{
         "playbook_format" => 1,

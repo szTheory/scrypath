@@ -40,6 +40,25 @@ defmodule ScrypathOps.Playbook.StoreTest do
     assert body == ~s({"x":1})
   end
 
+  test "create_workspace_file/3 never replaces a file created concurrently", %{dir: dir} do
+    writes = ["first", "second"]
+
+    results =
+      writes
+      |> Enum.map(fn body ->
+        Task.async(fn -> {body, Store.create_workspace_file(dir, "shared.json", body)} end)
+      end)
+      |> Enum.map(&Task.await(&1, 5_000))
+
+    assert Enum.count(results, fn {_body, result} -> result == :ok end) == 1
+
+    assert Enum.count(results, fn {_body, result} -> result == {:error, :target_exists} end) ==
+             1
+
+    {winner, :ok} = Enum.find(results, fn {_body, result} -> result == :ok end)
+    assert {:ok, ^winner} = Store.read_workspace_file(dir, "shared.json")
+  end
+
   test "delete_workspace_file/2 removes file", %{dir: dir} do
     :ok = File.write!(Path.join(dir, "gone.json"), "{}")
     assert :ok = Store.delete_workspace_file(dir, "gone.json")

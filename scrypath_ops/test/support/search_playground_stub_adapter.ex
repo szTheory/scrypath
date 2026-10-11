@@ -11,7 +11,19 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   def search(_schema, text, opts) do
     wait_if_configured()
     q = Query.new(text, opts)
-    raw = %{"hits" => [], "estimatedTotalHits" => 0}
+
+    raw =
+      case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
+        :nested_hit ->
+          %{
+            "hits" => [%{"id" => %{"source" => "fixture"}, "title" => %{"nested" => ["value"]}}],
+            "estimatedTotalHits" => 1
+          }
+
+        _ ->
+          %{"hits" => [], "estimatedTotalHits" => 0}
+      end
+
     {:ok, SearchResult.new(q, raw, [], [])}
   end
 
