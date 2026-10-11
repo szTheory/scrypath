@@ -78,7 +78,41 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
 
   const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
   await expect(failedRow).toBeVisible();
+  await expect(failedRow).toContainText("Retry currently available.");
+  const rowText = await failedRow.innerText();
+  expect(rowText).toContain(`Failed job ${fixture.original_job_id}`);
+  expect(rowText).toContain("last attempt");
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
+
+  const lightPreference = page.locator("#theme-toggle button").filter({ hasText: "Light" });
+  await lightPreference.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme-preference", "light");
+  const darkPreference = page.locator("#theme-toggle button").filter({ hasText: "Dark" });
+  await darkPreference.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme-preference", "dark");
+
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(failedRow).toBeVisible();
+    const geometry = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth
+    }));
+    expect(geometry.scrollWidth, `failed-work page must not overflow at ${width}px`).toBeLessThanOrEqual(geometry.width + 1);
+    await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+    await expect(failedRow.getByTestId("failed-sync-reason")).toBeVisible();
+    await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
+  }
+
+  await page.setViewportSize({ width: 1440, height: 900 });
   const retry = failedRow.getByRole("button", { name: "Retry sync work" });
+  await retry.focus();
+  await expect(retry).toBeFocused();
+  await expect(page.getByRole("button", { name: "Refresh failed sync work" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh failed sync work" }).click();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await expect(page.getByText("Failed sync work refreshed.", { exact: true })).toBeVisible();
   await expect(retry).toBeVisible();
   await retry.click();
 
@@ -153,7 +187,13 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await page.goForward();
+  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
@@ -162,6 +202,8 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
+  await expect(page.locator("input[name='schema']:checked")).toHaveCount(0);
+  await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
