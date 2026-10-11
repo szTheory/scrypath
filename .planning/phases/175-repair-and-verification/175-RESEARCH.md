@@ -269,10 +269,12 @@ No packages were installed and no external service was mutated during research.
 | A1 | Existing DocumentObservation.check/3 can support the desired active-index verification input/output for promotion without public API change. | Evidence truth model | Plan must adapt an internal seam or surface a scope question; no public API expansion. |
 | A2 | Current disposable Playwright fixtures can expose the promotion alias/document evidence needed by OPUX-22. | Validation Architecture | Fixture-local work or environment limitation may be needed; never replace with production backend access. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **What existing source provides expected-document identity when there is no failed-work receipt?** Current document verification is invoked from recovery, where expected effects are reconstructed from the failed source item. Inspect whether schema metadata or existing fixture gives a bounded general document probe. Without authoritative expected data, label freshness not checked/unavailable. [VERIFIED: scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:538-547,675-699]
-2. **Receipt durability is limited.** The default TTL is ten minutes and state is process-local. Use locked unknown/could-not-check wording after expiry/restart; durable storage is outside current scope. [VERIFIED: scrypath_ops/lib/scrypath_ops/recovery_observation.ex:10-16,85-114,446-449]
+These are conservative planning resolutions under the standing auto-recommendation instruction, derived from locked decisions D-01 and D-05 and the in-repo evidence below; they are not new user confirmations.
+
+1. **Expected-document identity is unavailable without an authoritative source.** When no expected identity exists outside the failed-work receipt or a known disposable fixture, report document freshness as `not checked/unavailable`. Never infer a document ID or claim document success. This keeps document freshness distinct from queue/backend and contract evidence as required by D-01. The existing recovery flow reconstructs expected effects from its failed source item, and its document verification uses that expected identity. [VERIFIED: scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex:538-547,675-699]
+2. **Receipt expiry/restart stays unknown or unavailable.** The process-local receipt may expire after its ten-minute TTL or disappear on process restart; in either case, retain unknown/could-not-check wording and do not infer remote failure or success. Refresh remains observational and must not resubmit the mutation under D-05. Durable receipt storage is outside this phase's scope. [VERIFIED: scrypath_ops/lib/scrypath_ops/recovery_observation.ex:10-16,85-114,446-449]
 
 ## Sources
 
