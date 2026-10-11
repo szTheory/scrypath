@@ -158,6 +158,22 @@ async function makeStorageUnavailable(browser: Browser): Promise<{ page: Page; c
   return { page: await context.newPage(), close: () => context.close() };
 }
 
+async function makeStorageMethodThrowing(
+  browser: Browser,
+  method: "getItem" | "setItem" | "removeItem"
+): Promise<{ page: Page; close: () => Promise<void> }> {
+  const context = await browser.newContext();
+  await context.addInitScript((storageMethod) => {
+    Object.defineProperty(Storage.prototype, storageMethod, {
+      configurable: true,
+      value() {
+        throw new DOMException("Storage method denied by test", "SecurityError");
+      }
+    });
+  }, method);
+  return { page: await context.newPage(), close: () => context.close() };
+}
+
 for (const entry of entries) {
   for (const mode of modes) {
     test(`${entry.name} shell renders ${mode.name} preference and neutral floor`, async ({ page }) => {
@@ -244,7 +260,63 @@ for (const entry of entries) {
       await unavailable.close();
     }
   });
+
+  test(`${entry.name} theme remains usable when storage methods throw`, async ({ browser }) => {
+    for (const method of ["getItem", "setItem", "removeItem"] as const) {
+      const unavailable = await makeStorageMethodThrowing(browser, method);
+      const pageErrors: string[] = [];
+      unavailable.page.on("pageerror", (error) => pageErrors.push(error.message));
+
+      try {
+        await unavailable.page.emulateMedia({ colorScheme: "dark" });
+        await unavailable.page.goto(entry.url);
+        await waitForLiveConnected(unavailable.page);
+        await expectTheme(unavailable.page, "system", "dark");
+
+        await unavailable.page.getByRole("button", { name: "Use light theme" }).click();
+        await expectTheme(unavailable.page, "light", "light");
+        await unavailable.page.getByRole("button", { name: "Use system theme" }).click();
+        await expectTheme(unavailable.page, "system", "dark");
+        expect(pageErrors, `${entry.name} storage.${method} must not abort theme setup`).toEqual([]);
+      } finally {
+        await unavailable.close();
+      }
+    }
+  });
 }
+
+test("mounted Ops applies the stored theme before its deferred host bundle runs", async ({ browser }) => {
+  const context = await browser.newContext({ colorScheme: "light" });
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    if (location.origin !== "null") window.localStorage.setItem("phx:theme", "dark");
+  });
+
+  let releaseBundle = () => {};
+  const bundlePaused = new Promise<void>((resolve) => {
+    releaseBundle = resolve;
+  });
+  await page.route("**/assets/js/app.js*", async (route) => {
+    await bundlePaused;
+    await route.continue();
+  });
+
+  try {
+    const navigation = page.goto(entries[0].url);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect
+      .poll(() => page.locator(".ops-shell").evaluate((element) => getComputedStyle(element).backgroundColor))
+      .toBe("rgb(17, 20, 25)");
+
+    releaseBundle();
+    await navigation;
+    await waitForLiveConnected(page);
+    await expectTheme(page, "dark", "dark");
+  } finally {
+    releaseBundle();
+    await context.close();
+  }
+});
 
 test("mounted and standalone fixture routes keep their shell usable through errors and long content", async ({ page, browser }) => {
   const entry = entries[0];

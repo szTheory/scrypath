@@ -21,11 +21,12 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
       uids = filters[:index_uids] || []
       boom_index = "postlv_ops_post_a"
+      exit_index = Agent.get(:posture_live_test_state, & &1.exit_index)
 
-      if boom_index in uids do
-        {:error, :boom}
-      else
-        {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
+      cond do
+        exit_index in uids -> exit(:posture_backend_exit)
+        boom_index in uids -> {:error, :boom}
+        true -> {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
       end
     end
 
@@ -80,7 +81,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false} end,
+      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, exit_index: nil} end,
         name: :posture_live_test_state
       )
 
@@ -226,6 +227,29 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ "Queue last success"
     refute failed_row =~ "Last success</dt><dd>—"
     refute render(lv) =~ "Search health refreshed."
+  end
+
+  test "preserves schema identity and retained evidence when a scan task exits", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    schema = "ScrypathOps.Test.OpsPostB"
+    row_selector = "[id='posture-#{schema}']"
+    iso = "2026-04-16T18:00:00Z"
+
+    first_row = lv |> element(row_selector) |> render()
+    assert first_row =~ iso
+
+    Agent.update(:posture_live_test_state, fn state ->
+      Map.put(state, :exit_index, "postlv_ops_post_b")
+    end)
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    failed_row = lv |> element(row_selector) |> render()
+    assert failed_row =~ "posture_backend_exit"
+    assert failed_row =~ iso
+    assert failed_row =~ "source-local evidence is retained"
+    assert has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
+    refute has_element?(lv, "#posture-posture_stream")
   end
 
   test "operational age thresholds use the observation snapshot and full precision" do

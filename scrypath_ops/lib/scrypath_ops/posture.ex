@@ -17,7 +17,7 @@ defmodule ScrypathOps.Posture do
   @typedoc "Coarse posture state. `:unconfigured` = empty allowlist, `:missing_backend` = no `:backend` opt."
   @type state :: :unconfigured | :missing_backend | :degraded | :ok
 
-  @type row :: {module() | :posture_stream, {:ok, map()} | {:error, term()}}
+  @type row :: {module(), {:ok, map()} | {:error, term()}}
 
   @type t :: %__MODULE__{
           state: state(),
@@ -179,16 +179,21 @@ defmodule ScrypathOps.Posture do
   # ── internals ──────────────────────────────────────────────────────────────
 
   defp scan(allowlist, opts) do
+    outcomes =
+      Task.Supervisor.async_stream_nolink(
+        ScrypathOps.TaskSupervisor,
+        allowlist,
+        &Scrypath.sync_status(&1, opts),
+        max_concurrency: 3,
+        timeout: 15_000,
+        on_timeout: :kill_task
+      )
+
     allowlist
-    |> Task.async_stream(
-      fn mod -> {mod, Scrypath.sync_status(mod, opts)} end,
-      max_concurrency: 3,
-      timeout: 15_000,
-      on_timeout: :kill_task
-    )
+    |> Enum.zip(outcomes)
     |> Enum.map(fn
-      {:ok, {mod, res}} -> {mod, res}
-      {:exit, reason} -> {:posture_stream, {:error, {:async_stream, reason}}}
+      {mod, {:ok, result}} -> {mod, result}
+      {mod, {:exit, reason}} -> {mod, {:error, {:async_stream, reason}}}
     end)
     |> sort_rows()
   end

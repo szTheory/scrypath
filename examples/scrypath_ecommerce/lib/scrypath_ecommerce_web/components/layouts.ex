@@ -18,6 +18,18 @@ defmodule ScrypathEcommerceWeb.Layouts do
         <.live_title default="Scrypath Ecommerce" suffix=" · Scrypath">
           {assigns[:page_title]}
         </.live_title>
+        <script :if={ops_admin_path?(@conn)}>
+          (() => {
+            try {
+              const preference = localStorage.getItem("phx:theme");
+              if (preference === "light" || preference === "dark") {
+                document.documentElement.setAttribute("data-theme", preference);
+              }
+            } catch (_error) {
+              // Keep the host-mounted Ops shell usable when browser storage is denied.
+            }
+          })();
+        </script>
         <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
         <link
           :if={ops_admin_path?(@conn)}
