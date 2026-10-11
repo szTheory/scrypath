@@ -877,8 +877,17 @@
   }
 
   .ops-save-playbook {
+    min-width: 0;
     border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     padding-top: var(--spacing-ops-4);
+  }
+
+  .ops-save-playbook__form {
+    min-width: 0;
+  }
+
+  .ops-save-playbook p {
+    overflow-wrap: anywhere;
   }
 
   .ops-form-stack {
@@ -2095,6 +2104,16 @@
 .ops-modal {
   z-index: var(--z-index-ops-modal);
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+
+.ops-playbook-filename {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ops-playbook-file-actions {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (max-width: 26rem) {

@@ -9132,9 +9132,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var OpsModal = {
     mounted() {
       const pending = opsModalPendingTrigger;
-      this.returnTarget = pending && pending.isConnected ? pending : document.activeElement;
+      const disclosure = pending?.closest("details");
+      if (disclosure) disclosure.open = false;
+      const returnTargetSelector = pending?.dataset.opsModalReturn;
+      this.returnTarget = this.queryTarget(returnTargetSelector) || (pending && pending.isConnected ? pending : document.activeElement);
       opsModalPendingTrigger = null;
-      this.returnTargetName = this.returnTarget?.getAttribute("phx-value-name");
+      this.returnTargetName = pending?.getAttribute("phx-value-name") || this.targetRecordName(this.returnTarget);
+      this.focusRequest = this.el.dataset.opsModalFocusRequest || "";
       this.inerted = [];
       this.onKeydown = (e) => this.handleKeydown(e);
       this.onModalOverlayOpen = () => {
@@ -9148,10 +9152,20 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.queueInitialFocus();
     },
     updated() {
-      if (!this.el.contains(document.activeElement)) this.queueInitialFocus();
+      const request = this.el.dataset.opsModalFocusRequest || "";
+      if (request !== this.focusRequest) {
+        this.focusRequest = request;
+        window.cancelAnimationFrame(this.focusErrorFrame);
+        this.focusErrorFrame = window.requestAnimationFrame(() => {
+          if (this.el.isConnected && activeOpsModal === this && (this.el.dataset.opsModalFocusRequest || "") === request) {
+            this.focusErrorField();
+          }
+        });
+      }
     },
     destroyed() {
       window.cancelAnimationFrame(this.focusFrame);
+      window.cancelAnimationFrame(this.focusErrorFrame);
       document.removeEventListener("keydown", this.onKeydown, true);
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.restoreBackground();
@@ -9187,9 +9201,15 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       } catch (_error) {
         target = null;
       }
-      target = target && !target.matches(":disabled") ? target : null;
+      target = this.isUsableFocusTarget(target) ? target : null;
       target = target || this.focusableElements()[0] || this.el.querySelector(".modal-box") || this.el;
       target.focus({ preventScroll: true });
+    },
+    focusErrorField() {
+      const target = this.queryTarget(this.el.dataset.opsModalFocusError);
+      if (this.el.contains(target) && this.isUsableFocusTarget(target)) {
+        target.focus({ preventScroll: true });
+      }
     },
     handleKeydown(e) {
       if (activeOpsModal !== this) return;
@@ -9230,8 +9250,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (event) this.pushEvent(event, {});
     },
     restoreFocus() {
-      const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName;
-      const originalIsUsable = this.returnTarget && this.returnTarget.isConnected && sameRecord && !this.returnTarget.matches(":disabled,[hidden]") && !this.returnTarget.closest("[hidden], [inert], [aria-hidden='true']") && this.returnTarget.getClientRects().length > 0 && typeof this.returnTarget.focus === "function";
+      const originalIsUsable = this.isUsableFocusTarget(this.returnTarget, this.returnTargetName);
       if (originalIsUsable) this.returnTarget.focus({ preventScroll: true });
       if (!originalIsUsable || document.activeElement !== this.returnTarget) {
         const successor = this.querySuccessor();
@@ -9240,6 +9259,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         }
       }
       this.returnTarget = null;
+      this.returnTargetName = null;
     },
     inertBackground() {
       let branch = this.el;
@@ -9261,13 +9281,39 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.inerted = [];
     },
     querySuccessor() {
-      const selector = this.el.dataset.opsModalSuccessor;
+      const primarySelector = this.el.dataset.opsModalSuccessor;
+      const fallbackSelector = this.el.dataset.opsModalFallbackSuccessor;
+      const primaryName = this.el.dataset.opsModalSuccessorName || null;
+      for (const [selector, expectedName] of [
+        [primarySelector, primaryName],
+        [fallbackSelector, null]
+      ]) {
+        const target = this.queryTarget(selector);
+        if (this.isUsableFocusTarget(target, expectedName)) return target;
+      }
+      return null;
+    },
+    queryTarget(selector) {
       if (!selector) return null;
       try {
         return document.querySelector(selector);
       } catch (_error) {
         return null;
       }
+    },
+    targetRecordName(target) {
+      if (!target) return null;
+      return target.getAttribute("phx-value-name") || target.dataset.opsFileName || target.closest("details[data-ops-file-name]")?.dataset.opsFileName || null;
+    },
+    isUsableFocusTarget(target, expectedName = null) {
+      if (!target || !target.isConnected || typeof target.focus !== "function") return false;
+      if (target.matches(":disabled,[hidden]") || target.closest("[hidden], [inert], [aria-hidden='true']")) return false;
+      const closedDisclosure = target.closest("details:not([open])");
+      if (closedDisclosure && !(target.tagName === "SUMMARY" && target.parentElement === closedDisclosure)) {
+        return false;
+      }
+      if (expectedName && this.targetRecordName(target) !== expectedName) return false;
+      return target.getClientRects().length > 0;
     },
     closeImmediately() {
       this.el.setAttribute("hidden", "");

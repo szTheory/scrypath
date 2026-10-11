@@ -24,3 +24,16 @@ defmodule ScrypathOps.Test.OpsPostB do
     field(:title, :string)
   end
 end
+
+defmodule ScrypathOps.Test.OpsPostC do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end

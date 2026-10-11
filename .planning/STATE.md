@@ -4,17 +4,17 @@ milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: 176
 current_phase_name: Search and Playbooks
-status: planning
-stopped_at: Phase 176 Plan 176-01 ready; execution awaiting a worktree-capable GSD executor
-last_updated: "2026-10-11T16:08:01Z"
+status: executing
+stopped_at: Phase 176 plans completed by approved recovery closeout; phase-level goal verification is pending.
+last_updated: "2026-10-11T20:48:00.000Z"
 last_activity: 2026-10-11
-last_activity_desc: Phase 176 execution dispatch halted before edits because this tool cannot meet the configured worktree isolation and branch guards
-state_head: fdaf9b8752e45b17ed80f3ceaa6a9c28b741573a
+last_activity_desc: Phase 176 Plan 05 summary and recovery commit recorded; phase verification is next
+state_head: 13ebad3905c368d0e8fc86f4dcebe97d4b290f46
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 11
+  completed_plans: 16
   percent: 60
 ---
 
@@ -26,11 +26,11 @@ See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 176 — Search and Playbooks
-Plan: 176-01 — Search submit/results tracer (not started)
-Status: Planned; execution awaits a GSD executor harness that supports the configured worktree isolation
-Last activity: 2026-10-11 — execution dispatch halted before edits by the current agent tool's isolation/branch limitations
-Progress: [██████░░░░] 60% (3/5 phases; 11/16 plans complete)
+Phase: 176 (Search and Playbooks) — EXECUTING
+Plan: 5 of 5
+Status: Plans complete; phase-level goal verification is pending
+Last activity: 2026-10-11 — Plan 176-05 gates passed inline
+Progress: [██████░░░░] 60% (3/5 phases; 16/16 plans complete)
 
 ## Delivered Evidence
 
@@ -80,19 +80,19 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-11T16:08:01Z
-Stopped at: Phase 176 Plan 176-01 dispatch; no Phase 176 source edits
+Last session: 2026-10-11T19:36:57.704Z
+Stopped at: Phase 176 Plan 176-05 implementation and executable verification passed inline; GSD closeout remains blocked by the worktree commit guard.
 Resume file: None
 
 Phases 173–175 are complete in this worktree, with 11 plan summaries total (Phase 173: 4, Phase 174: 3, Phase 175: 4). The GSD progress query confirms those phases are Executed/Complete and Phase 176 is Planned. Their phase verification, reviews, security records, and validation artifacts are present under their phase directories. The current ROADMAP progress table agrees.
 
-Phase 176 has an approved UI contract, five checked plans, and confirmed state rules. Plan 176-01 is the next action. No Phase 176 implementation or product verification is claimed. The earlier Phase 173–175 blocker text in this file was stale and has been superseded by the current header, ROADMAP, summaries, and GSD progress query.
+Phase 176 has an approved UI contract, five checked plans, and confirmed state rules. Plans 176-01 through 176-04 have summaries; Plan 176-05 now has a summary recording its prior inline implementation and passing executable gates: asset build, 34 focused Playbooks tests, `mix precommit`, 286 Ops tests plus 2 doctests, root Ops UI verification, contrast (zero AA failures), and 38/38 admin-depth browser tests. Per the maintainer-approved recovery, these already-verified Phase 176 changes and summaries are consolidated into one documented recovery commit; no implementation plan is being replayed. Directly reviewed management/import screenshots from `examples/scrypath_ecommerce/test-results/phase176-management-evidence/` at mobile and desktop sizes in light and dark themes. The plan’s idempotency and concurrent-mutation assumptions remain explicitly unresolved for phase verification. Phase-level `VERIFICATION.md` is still pending.
 
-Execution dispatch was attempted and stopped before edits. The configured host resolves dispatch.isolation=harness-worktree, which requires the isolation="worktree" spawn flag. The available collaboration.spawn_agent schema cannot pass that flag and starts agents in the main checkout by default. Sequential fallback also halted safely: the executor branch guard will not commit from this linked phase worktree on gsd/phase-174-recovery-entry-diagnosis. Do not bypass these guards by changing the phase branch or disabling worktrees. Resume from this worktree using a GSD executor harness that can pass the declared isolation flag.
+The initial isolated executor could not create its normal per-task commits, leaving verified Phase 176 edits in this GSD-owned phase worktree. The maintainer authorized the recommended phase-level recovery commit, which records the existing implementation and plan summaries without changing branches, weakening worktree isolation, discarding edits, or redispatching completed work. The single recovery commit is scoped to `176-05`; earlier plans retain their summaries and are not rerun. Plan-scoped evaluation for 176-01 through 176-04 was empty when recovery began because their implementation had also been verified inline. Phase-level verification and closeout remain required.
 
-The temporary workflow.use_worktrees=false setting was restored to true. The disposable scrypath-phase176 stack and its volumes were removed after preflight; port 4002 is free, and the retained :4012 preview was untouched. A read-only Search test run occurred in the wrong checkout and is not phase verification evidence.
+The disposable scrypath_phase176_inline stack and its volume were removed after browser verification. Port 4002 is free; a read-only check found no listener on :4012, which was left untouched.
 
-Next command: $gsd-execute-phase 176, run from /Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis in a worktree-capable GSD harness. This begins the already-approved Plan 176-01; it does not repeat discussion or planning. Context can be cleared after switching to that compatible harness because the plans, context, UI contract, research, validation map, phase summaries, and this dispatch limitation are persisted.
+Next command: $gsd-execute-phase 176, from /Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis. All five plan summaries are now present, so this resumes phase-level verification and closeout without redispatching plan implementation. Do not rerun discussion, planning, or completed Phases 173–175. Context can be cleared because the implementation, tests, recovery decision, and remaining verification step are recorded here and in the plan artifacts.
 
 Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Do not replay completed phases or replan Phase 176 without new evidence. Preserve the intentional adaptive model routing in .planning/config.json and do not extend archived source receipts.
 
@@ -105,6 +105,9 @@ Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Do not repla
 | Phase 174 P03 | 8min | 2 tasks | 3 files |
 | Phase 175 P01 | 21min | 2 tasks | 4 files |
 | Phase 175 P02 | 18min | 2 tasks | 6 files |
+| Phase 176 P02 | 19min | 2 tasks | 5 files |
+| Phase 176 P03 | 30min | 2 tasks | 5 files |
+| Phase 176 P04 | 52min | 2 tasks | 4 files |
 
 ## Decisions
 
@@ -121,3 +124,12 @@ Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Do not repla
 - [Phase 175]: Promotion completion requires exact task identity and fresh selected live-index and contract evidence; task success alone remains unknown.
 - [Phase 175]: Check expected document effects only when authoritative prepared-target identity applies; otherwise show not checked.
 - [Phase 175]: Refresh reads the retained promotion task UID asynchronously and never resubmits the swap.
+- [Phase 176]: Search capture preserves the no-replace policy through the existing Store and collision guard.
+- [Phase 176]: Filename-associated save errors retain user fields and show safe actual filesystem reasons with recovery guidance.
+- [Phase 176]: Exact Search capture JSON stays in a closed native disclosure; no dependency was needed.
+- [Phase 176]: Keep valid-draft saving independent from running; only a successful Store write changes saved provenance.
+- [Phase 176]: Keep the historical run snapshot separate from the selected draft so later loads/imports cannot relabel its result or Search handoff.
+- [Phase 176]: Hide a multi-query Search handoff when one query cannot faithfully represent the captured run.
+- [Phase 176]: Keep file bytes unconsumed until explicit Import submit; phx-change only registers upload state with LiveView.
+- [Phase 176]: Render import failures once as an associated inline alert, retain the prior valid preview, and keep submitted paste open for recovery.
+- [Phase 176]: Keep the 256,000-byte ceiling and avoid new dependencies or persistence abstractions.

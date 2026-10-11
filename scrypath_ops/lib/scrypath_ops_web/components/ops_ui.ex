@@ -872,10 +872,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-sm leading-5 text-base-content/65">
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
         {@hint}
       </p>
-      <p :if={@error} id={"#{@id}-error"} class="text-ops-sm leading-5 text-error" role="alert">
+      <p :if={@error} id={"#{@id}-error"} class="text-ops-body leading-5 text-error" role="alert">
         {@error}
       </p>
     </div>
@@ -1379,6 +1379,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Disclosure with consistent operator trace/debug styling."
   attr(:summary, :string, required: true)
   attr(:id, :string, default: nil)
+  attr(:summary_id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
   attr(:open, :boolean, default: false)
   attr(:class, :any, default: nil)
@@ -1397,7 +1398,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <summary class="cursor-pointer text-ops-body font-medium text-base-content">
+      <summary
+        id={@summary_id}
+        class="cursor-pointer text-ops-body font-medium text-base-content"
+      >
         {@summary}
       </summary>
       <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
@@ -1469,6 +1473,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:action_label, :string, default: "action")
   attr(:initial_focus, :string, default: "[data-ops-modal-cancel]")
   attr(:successor, :string, default: nil)
+  attr(:successor_name, :string, default: nil)
+  attr(:fallback_successor, :string, default: nil)
+  attr(:focus_error, :string, default: nil)
+  attr(:focus_request, :integer, default: 0)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1485,6 +1493,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       data-ops-modal-cancel-event={@cancel_event}
       data-ops-modal-initial-focus={@initial_focus}
       data-ops-modal-successor={@successor}
+      data-ops-modal-successor-name={@successor_name}
+      data-ops-modal-fallback-successor={@fallback_successor}
+      data-ops-modal-focus-error={@focus_error}
+      data-ops-modal-focus-request={@focus_request}
       class="modal modal-open ops-modal z-ops-modal"
       phx-remove={
         JS.transition(

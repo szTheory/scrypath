@@ -1921,6 +1921,9 @@
   .mt-ops-4 {
     margin-top: var(--spacing-ops-4);
   }
+  .mr-2 {
+    margin-right: calc(var(--spacing) * 2);
+  }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
@@ -2101,6 +2104,9 @@
   }
   .inline {
     display: inline;
+  }
+  .inline-block {
+    display: inline-block;
   }
   .inline-flex {
     display: inline-flex;
@@ -2408,6 +2414,9 @@
   .gap-y-1 {
     row-gap: calc(var(--spacing) * 1);
   }
+  .gap-y-2 {
+    row-gap: calc(var(--spacing) * 2);
+  }
   .gap-y-4 {
     row-gap: calc(var(--spacing) * 4);
   }
@@ -2454,11 +2463,21 @@
     border-style: var(--tw-border-style);
     border-width: 1px;
   }
+  .border-t {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 1px;
+  }
   .border-accent {
     border-color: var(--color-accent);
   }
   .border-base-300 {
     border-color: var(--color-base-300);
+  }
+  .border-base-content\/10 {
+    border-color: var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-base-content) 10%, transparent);
+    }
   }
   .table-zebra {
     tbody {
@@ -2582,6 +2601,12 @@
   }
   .py-20 {
     padding-block: calc(var(--spacing) * 20);
+  }
+  .pt-2 {
+    padding-top: calc(var(--spacing) * 2);
+  }
+  .pt-3 {
+    padding-top: calc(var(--spacing) * 3);
   }
   .pt-ops-2 {
     padding-top: var(--spacing-ops-2);
@@ -3931,11 +3956,18 @@
     }
   }
   .ops-save-playbook {
+    min-width: 0;
     border-top: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     }
     padding-top: var(--spacing-ops-4);
+  }
+  .ops-save-playbook__form {
+    min-width: 0;
+  }
+  .ops-save-playbook p {
+    overflow-wrap: anywhere;
   }
   .ops-form-stack {
     display: grid;
@@ -5183,6 +5215,14 @@
 .ops-modal {
   z-index: var(--z-index-ops-modal);
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+.ops-playbook-filename {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ops-playbook-file-actions {
+  min-width: 0;
+  max-width: 100%;
 }
 @media (max-width: 26rem) {
   .ops-modal form > .flex.justify-between {

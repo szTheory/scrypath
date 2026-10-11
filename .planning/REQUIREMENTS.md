@@ -33,9 +33,9 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 ### Search and saved checks
 
-- [ ] **OPUX-23**: Operators using Search can identify the target/query controls, primary run action, and results in a clear hierarchy without redundant run actions for the same task; empty/error/partial states, disabled behavior, and optional diagnostic evidence remain usable.
-- [ ] **OPUX-24**: Operators using Playbooks can distinguish preview, execution, results, and saving, with common run/save actions prioritized and existing workspace, import, validation, and read-only behaviors preserved.
-- [ ] **OPUX-25**: Operators can discover occasional Playbook rename/duplicate/delete actions without those actions competing with common work; destructive confirmation and dialog keyboard, validation, focus containment/return, and LiveView patch behavior remain correct.
+- [x] **OPUX-23**: Operators using Search can identify the target/query controls, primary run action, and results in a clear hierarchy without redundant run actions for the same task; empty/error/partial states, disabled behavior, and optional diagnostic evidence remain usable.
+- [x] **OPUX-24**: Operators using Playbooks can distinguish preview, execution, results, and saving, with common run/save actions prioritized and existing workspace, import, validation, and read-only behaviors preserved.
+- [x] **OPUX-25**: Operators can discover occasional Playbook rename/duplicate/delete actions without those actions competing with common work; destructive confirmation and dialog keyboard, validation, focus containment/return, and LiveView patch behavior remain correct.
 
 ### Shared pattern consolidation and delivery
 
@@ -89,9 +89,9 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 | OPUX-20 | Phase 175 | Complete |
 | OPUX-21 | Phase 175 | Complete |
 | OPUX-22 | Phase 175 | Complete |
-| OPUX-23 | Phase 176 | Pending |
-| OPUX-24 | Phase 176 | Pending |
-| OPUX-25 | Phase 176 | Pending |
+| OPUX-23 | Phase 176 | Complete |
+| OPUX-24 | Phase 176 | Complete |
+| OPUX-25 | Phase 176 | Complete |
 | OPUX-26 | Phase 177 | Pending |
 | OPUX-27 | Phase 177 | Pending |
 | OPUX-28 | Phase 177 | Pending |
