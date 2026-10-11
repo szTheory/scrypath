@@ -5,8 +5,13 @@ defmodule ScrypathOps.Playbook.Store do
   All mutating APIs accept **basename-only** names (see `safe_basename?/1`). Resolved paths
   must remain under the configured root after `Path.expand/1` to mitigate traversal. Reads and
   overwrites verify the opened file descriptor against the basename's link metadata before doing
-  I/O, so a symlink cannot redirect an operation outside the workspace. Listing and destructive
-  actions accept regular files only.
+  I/O, so a symlink or hard link cannot redirect an operation outside the workspace. Overwrites
+  replace the workspace entry with a fresh inode instead of modifying an existing inode. Listing
+  and destructive actions accept single-link regular files only. The configured root must be a
+  real directory, not a symlink; ancestor symlinks are resolved before operations. Writable root
+  directories and untrusted writable ancestors are rejected. The configured root and its parent
+  must still be controlled by the trusted service account because path-based APIs cannot defend
+  against a separate same-account or privileged local actor racing directory-entry changes.
   """
 
   @basename_regex ~r/\A[\w.\-]+\.json\z/
@@ -52,7 +57,7 @@ defmodule ScrypathOps.Playbook.Store do
   @spec read_workspace_file(Path.t(), String.t()) :: {:ok, binary()} | {:error, term()}
   def read_workspace_file(root, name) when is_binary(root) and is_binary(name) do
     with {:ok, path} <- resolved_path(root, name) do
-      with_workspace_file(path, [:read, :binary, :raw], &read_all/1)
+      with_workspace_file(path, [:read, :binary, :raw], fn file, _path_info -> read_all(file) end)
     end
   end
 
@@ -60,6 +65,9 @@ defmodule ScrypathOps.Playbook.Store do
 
   @doc """
   Writes UTF-8 data to a workspace file by basename (overwrites).
+
+  Existing files are replaced with a fresh inode so an alias to the old inode cannot observe or
+  redirect the write.
   """
   @spec save_workspace_file(Path.t(), String.t(), iodata()) :: :ok | {:error, term()}
   def save_workspace_file(root, name, data) when is_binary(root) and is_binary(name) do
@@ -107,8 +115,9 @@ defmodule ScrypathOps.Playbook.Store do
   Renames a workspace JSON file by basename (`from_name` → `to_name`).
 
   Creates a hard link at the destination before removing the source, making destination creation
-  no-replace. Returns `{:error, :target_exists}` if the destination path already exists. The
-  workspace filesystem must support hard links.
+  no-replace. Returns `{:error, :target_exists}` if the destination path already exists. Filesystems
+  that do not support hard links return `{:error, :unsupported_filesystem}`; callers should offer
+  duplicate-then-delete as the safe manual alternative.
   """
   @spec rename_workspace_file(Path.t(), String.t(), String.t()) :: :ok | {:error, term()}
   def rename_workspace_file(root, from_name, to_name)
@@ -116,7 +125,12 @@ defmodule ScrypathOps.Playbook.Store do
     if safe_basename?(from_name) and safe_basename?(to_name) do
       with {:ok, from_path} <- resolved_path(root, from_name),
            {:ok, to_path} <- resolved_path(root, to_name) do
-        rename_without_replacing(from_path, to_path)
+        case :global.trans({{__MODULE__, from_path}, self()}, fn ->
+               rename_without_replacing(from_path, to_path)
+             end) do
+          :aborted -> {:error, :rename_failed}
+          result -> result
+        end
       end
     else
       {:error, :outside_workspace}
@@ -185,20 +199,101 @@ defmodule ScrypathOps.Playbook.Store do
   defp absolute_root(root) do
     root_abs = Path.expand(Path.join(root, "."))
 
-    if Path.type(root_abs) == :absolute do
-      {:ok, root_abs}
+    with true <- Path.type(root_abs) == :absolute,
+         {:ok, %File.Stat{type: :directory}} <- File.lstat(root_abs),
+         {:ok, canonical_root} <- resolve_root_symlinks(root_abs),
+         true <- trusted_directory_chain?(canonical_root) do
+      {:ok, canonical_root}
     else
-      {:error, :relative_root}
+      {:ok, %File.Stat{type: :symlink}} -> {:error, :outside_workspace}
+      {:ok, _} -> {:error, :enotdir}
+      {:error, _} = error -> error
+      false -> {:error, :outside_workspace}
     end
+  end
+
+  defp resolve_root_symlinks(path, symlink_hops \\ 0)
+
+  defp resolve_root_symlinks(_path, symlink_hops) when symlink_hops > 40,
+    do: {:error, :invalid_root}
+
+  defp resolve_root_symlinks(path, symlink_hops) do
+    [volume | components] = Path.split(path)
+    resolve_root_components(volume, components, symlink_hops)
+  end
+
+  defp resolve_root_components(current, [], _symlink_hops), do: {:ok, current}
+
+  defp resolve_root_components(current, [component | rest], symlink_hops) do
+    next = Path.join(current, component)
+
+    case File.lstat(next) do
+      {:ok, %File.Stat{type: :symlink}} when rest != [] ->
+        with {:ok, target} <- :file.read_link_all(next) do
+          target_path =
+            if Path.type(target) == :absolute,
+              do: Path.expand(target),
+              else: Path.expand(target, Path.dirname(next))
+
+          rest_path =
+            if rest == [], do: target_path, else: Path.join(target_path, Path.join(rest))
+
+          resolve_root_symlinks(Path.expand(rest_path), symlink_hops + 1)
+        end
+
+      {:ok, %File.Stat{type: :directory}} ->
+        resolve_root_components(next, rest, symlink_hops)
+
+      {:ok, %File.Stat{type: :symlink}} ->
+        {:error, :outside_workspace}
+
+      {:ok, _} ->
+        {:error, :invalid_root}
+
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp trusted_directory_chain?(root) do
+    with {:ok, %File.Stat{type: :directory} = root_info} <- File.lstat(root) do
+      root_uid = root_info.uid
+
+      root
+      |> directory_ancestors([])
+      |> Enum.with_index()
+      |> Enum.all?(fn {path, index} ->
+        case File.lstat(path) do
+          {:ok, %File.Stat{type: :directory} = info} ->
+            writable_by_others? = Bitwise.band(info.mode, 0o022) != 0
+            sticky? = Bitwise.band(info.mode, 0o1000) != 0
+            is_root = index == 0
+
+            not writable_by_others? or
+              (not is_root and sticky? and info.uid in [0, root_uid])
+
+          _ ->
+            false
+        end
+      end)
+    else
+      _ -> false
+    end
+  end
+
+  defp directory_ancestors(path, ancestors) do
+    parent = Path.dirname(path)
+    ancestors = [path | ancestors]
+    if parent == path, do: ancestors, else: directory_ancestors(parent, ancestors)
   end
 
   defp with_workspace_file(path, modes, callback) do
     case :file.open(path, modes) do
       {:ok, file} ->
         try do
-          case safe_workspace_file?(path, file) do
-            true -> callback.(file)
-            false -> {:error, :outside_workspace}
+          case safe_workspace_file_info(path, file) do
+            {:ok, path_info} -> callback.(file, path_info)
+            {:error, _} = error -> error
           end
         after
           :file.close(file)
@@ -247,21 +342,59 @@ defmodule ScrypathOps.Playbook.Store do
   end
 
   defp overwrite_workspace_file(path, data) do
-    with_workspace_file(path, [:read, :write, :binary, :raw], fn file ->
-      with {:ok, _position} <- :file.position(file, :bof),
-           :ok <- :file.truncate(file),
-           :ok <- :file.write(file, data) do
-        :ok
-      end
+    with_workspace_file(path, [:read, :binary, :raw], fn file, path_info ->
+      replace_workspace_file(path, data, file, path_info)
     end)
   end
 
-  defp safe_workspace_file?(path, file) do
-    with {:ok, %File.Stat{type: :regular} = path_info} <- File.lstat(path),
-         {:ok, descriptor_info} <- :file.read_file_info(file) do
-      same_file?(path_info, descriptor_info)
+  defp replace_workspace_file(path, data, source_file, source_info) do
+    with {:ok, temp_path, temp_file} <- open_temporary_file(path) do
+      write_result = :file.write(temp_file, data)
+      close_result = :file.close(temp_file)
+      permission_bits = Bitwise.band(source_info.mode, 0o7777)
+
+      result =
+        with :ok <- write_result,
+             :ok <- close_result,
+             :ok <- File.chmod(temp_path, permission_bits),
+             {:ok, current_info} <- safe_workspace_file_info(path, source_file),
+             true <- same_file_stats?(source_info, current_info),
+             :ok <- :file.close(source_file),
+             :ok <- File.rename(temp_path, path) do
+          :ok
+        else
+          false -> {:error, :outside_workspace}
+          {:error, _} = error -> error
+        end
+
+      if result != :ok, do: File.rm(temp_path)
+      result
+    end
+  end
+
+  defp open_temporary_file(path, attempts \\ 8)
+
+  defp open_temporary_file(_path, 0), do: {:error, :eexist}
+
+  defp open_temporary_file(path, attempts) do
+    suffix = System.unique_integer([:positive, :monotonic])
+    temp_path = Path.join(Path.dirname(path), ".#{Path.basename(path)}.#{suffix}.tmp")
+
+    case :file.open(temp_path, [:write, :binary, :raw, :exclusive]) do
+      {:ok, file} -> {:ok, temp_path, file}
+      {:error, :eexist} -> open_temporary_file(path, attempts - 1)
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp safe_workspace_file_info(path, file) do
+    with {:ok, %File.Stat{type: :regular, links: 1} = path_info} <- File.lstat(path),
+         {:ok, descriptor_info} <- :file.read_file_info(file),
+         true <- file_info(descriptor_info, :links) == 1,
+         true <- same_file?(path_info, descriptor_info) do
+      {:ok, path_info}
     else
-      _ -> false
+      _ -> {:error, :outside_workspace}
     end
   end
 
@@ -287,46 +420,52 @@ defmodule ScrypathOps.Playbook.Store do
 
   defp regular_workspace_entry?(path) do
     case File.lstat(path) do
-      {:ok, %File.Stat{type: :regular}} -> true
+      {:ok, %File.Stat{type: :regular, links: 1}} -> true
       _ -> false
     end
   end
 
   defp rename_without_replacing(from_path, to_path) do
-    with {:ok, %File.Stat{type: :regular} = source_info} <- File.lstat(from_path) do
+    with {:ok, %File.Stat{type: :regular, links: 1} = source_info} <- File.lstat(from_path) do
       case File.ln(from_path, to_path) do
         :ok ->
           case File.lstat(to_path) do
             {:ok, %File.Stat{type: :regular} = destination_info} ->
-              if same_file_stats?(source_info, destination_info) do
+              if destination_info.links == 2 and same_file_stats?(source_info, destination_info) do
                 case File.lstat(from_path) do
-                  {:ok, current_source} when current_source.type == :regular ->
+                  {:ok, %File.Stat{type: :regular, links: 2} = current_source} ->
                     if same_file_stats?(source_info, current_source) do
                       case File.rm(from_path) do
                         :ok ->
                           :ok
 
                         {:error, :enoent} ->
-                          remove_created_link(to_path, source_info)
+                          remove_created_link(to_path, destination_info)
                           {:error, :rename_failed}
 
                         {:error, _} ->
+                          remove_created_link(to_path, destination_info)
                           {:error, :rename_failed}
                       end
                     else
-                      remove_created_link(to_path, source_info)
+                      remove_created_link(to_path, destination_info)
                       {:error, :rename_failed}
                     end
 
+                  {:ok, %File.Stat{type: :regular}} ->
+                    remove_created_link(to_path, destination_info)
+                    {:error, :outside_workspace}
+
                   {:error, :enoent} ->
-                    remove_created_link(to_path, source_info)
+                    remove_created_link(to_path, destination_info)
                     {:error, :rename_failed}
 
                   _ ->
-                    remove_created_link(to_path, source_info)
+                    remove_created_link(to_path, destination_info)
                     {:error, :rename_failed}
                 end
               else
+                remove_created_link(to_path, destination_info)
                 {:error, :rename_failed}
               end
 
@@ -338,6 +477,9 @@ defmodule ScrypathOps.Playbook.Store do
 
         {:error, :eexist} ->
           {:error, :target_exists}
+
+        {:error, reason} when reason in [:enotsup, :eopnotsupp, :eperm, :exdev] ->
+          {:error, :unsupported_filesystem}
 
         {:error, _} ->
           {:error, :rename_failed}

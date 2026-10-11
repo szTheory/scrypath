@@ -38,6 +38,8 @@ verified: "2026-10-11"
 | T-176-07 | Tampering | asynchronous run attribution | high | mitigate | Bind callbacks to captured run ID, source, and criteria; stale, late, cancelled, timed-out, superseded, and partial outcomes are covered by focused tests. | closed |
 | T-176-08 | Elevation of privilege | Playbook file mutation handlers | high | mitigate | Recheck host authorization, configured root, safe basename/path, collisions, and exact typed-delete confirmation on every server event; forged-event and mutation tests pass. | closed |
 | T-176-09 | Tampering | modal focus and row identity | medium | mitigate | Carry stable file identity and a visible logical successor through patches; reject hidden, removed, or reused targets and verify browser focus return. | closed |
+| T-176-10 | Information disclosure / tampering | workspace filesystem aliases | high | mitigate | Reject symlinks and files with more than one hard link for read, list, save, rename, and delete; replace saved files with a fresh inode; tests prove an outside hard-link target remains unchanged. | closed |
+| T-176-11 | Tampering | privileged local workspace entry changes | medium | accept | Require the workspace directory tree to remain controlled by the trusted service account. Store rejects symlink roots, resolves ancestor symlinks, rejects untrusted writable ancestors, checks opened-file identity, and atomically replaces on save; a same-account or privileged actor can still race path-based operations. | closed |
 | T-176-SC | Tampering | package installs | high | mitigate | No dependency manifests changed and no package installs occurred; any future install remains gated by the planned package legitimacy check and human checkpoint. | closed |
 
 *Status: open · closed · open — below high threshold (non-blocking)*
@@ -48,7 +50,9 @@ verified: "2026-10-11"
 
 ## Accepted Risks Log
 
-No accepted risks.
+| Risk | Reason | Boundary |
+|------|--------|----------|
+| A same-account or privileged local actor can race path-based filesystem checks. | The Store resolves ancestor symlinks, rejects symlink roots and untrusted writable directory chains, and validates entry identity; fully defending against a same-account or privileged actor requires OS-specific directory-handle operations. No new dependency or native shim is justified for the current trusted-host deployment model. | Keep the workspace directory tree controlled by the trusted service account. |
 
 ---
 
@@ -56,7 +60,7 @@ No accepted risks.
 
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
-| 2026-10-11 | 10 | 10 | 0 | Codex — plan-time STRIDE register and implementation/test evidence, ASVS L1 |
+| 2026-10-11 | 12 | 12 | 0 | Codex — plan-time STRIDE register plus hard-link, save-replacement, and input-boundary regression evidence, ASVS L1 |
 
 ---
 
@@ -73,6 +77,6 @@ No accepted risks.
 
 | Metric | Count |
 |---|---|
-| Threats found | 10 |
-| Closed | 10 |
+| Threats found | 12 |
+| Closed | 12 |
 | Open | 0 |

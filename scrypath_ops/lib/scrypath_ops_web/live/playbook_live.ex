@@ -737,6 +737,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                "That playbook name is already in use — pick another basename."
              )}
 
+          {:error, :unsupported_filesystem} ->
+            {:noreply,
+             file_action_error(
+               socket,
+               "This workspace cannot safely rename files. Duplicate the playbook, then delete the original."
+             )}
+
           {:error, _} ->
             {:noreply, file_action_error(socket, "Rename failed — check permissions.")}
         end

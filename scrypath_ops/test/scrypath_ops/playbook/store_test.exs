@@ -50,10 +50,86 @@ defmodule ScrypathOps.Playbook.StoreTest do
     File.rm(dir <> "_outside.json")
   end
 
+  test "workspace root symlinks are rejected", %{dir: dir} do
+    outside_root = dir <> "_outside_root"
+    root_link = dir <> "_root_link"
+    :ok = File.mkdir_p(outside_root)
+    :ok = File.write!(Path.join(outside_root, "secret.json"), "outside")
+    :ok = File.ln_s(outside_root, root_link)
+
+    assert {:error, :outside_workspace} = Store.read_workspace_file(root_link, "secret.json")
+
+    assert {:error, :outside_workspace} =
+             Store.save_workspace_file(root_link, "secret.json", "changed")
+
+    assert {:error, :outside_workspace} = Store.list_workspace_json(root_link)
+    assert File.read!(Path.join(outside_root, "secret.json")) == "outside"
+  after
+    File.rm_rf(dir <> "_outside_root")
+    File.rm(dir <> "_root_link")
+  end
+
+  test "workspace roots with untrusted writable ancestors are rejected", %{dir: dir} do
+    parent = Path.join(dir, "unsafe-parent")
+    root = Path.join(parent, "workspace")
+    :ok = File.mkdir_p(root)
+    :ok = File.chmod(parent, 0o777)
+
+    assert {:error, :outside_workspace} = Store.list_workspace_json(root)
+    assert {:error, :outside_workspace} = Store.save_workspace_file(root, "new.json", "{}")
+  end
+
+  test "workspace roots below a static ancestor symlink use the resolved directory", %{dir: dir} do
+    physical_parent = Path.join(dir, "physical-parent")
+    physical_root = Path.join(physical_parent, "workspace")
+    linked_parent = Path.join(dir, "linked-parent")
+    :ok = File.mkdir_p(physical_root)
+    :ok = File.write!(Path.join(physical_root, "safe.json"), "inside")
+    :ok = File.ln_s(physical_parent, linked_parent)
+
+    assert {:ok, "inside"} =
+             Store.read_workspace_file(Path.join(linked_parent, "workspace"), "safe.json")
+  end
+
+  test "workspace operations reject hard links without reading or changing their targets", %{
+    dir: dir
+  } do
+    outside = dir <> "_outside.json"
+    linked = Path.join(dir, "linked.json")
+    :ok = File.write!(outside, "original")
+    :ok = File.ln(outside, linked)
+
+    assert {:error, :outside_workspace} = Store.read_workspace_file(dir, "linked.json")
+    assert {:error, :outside_workspace} = Store.save_workspace_file(dir, "linked.json", "changed")
+    assert {:error, :outside_workspace} = Store.delete_workspace_file(dir, "linked.json")
+
+    assert {:error, :outside_workspace} =
+             Store.rename_workspace_file(dir, "linked.json", "renamed.json")
+
+    assert {:ok, []} = Store.list_workspace_json(dir)
+    assert File.read!(outside) == "original"
+  after
+    File.rm(dir <> "_outside.json")
+  end
+
   test "save and read round-trip", %{dir: dir} do
     assert :ok = Store.save_workspace_file(dir, "p.json", ~s({"x":1}))
     assert {:ok, body} = Store.read_workspace_file(dir, "p.json")
     assert body == ~s({"x":1})
+  end
+
+  test "saving an existing file replaces its inode", %{dir: dir} do
+    path = Path.join(dir, "p.json")
+    :ok = File.write(path, "before")
+    :ok = File.chmod(path, 0o600)
+    before = File.stat!(path)
+
+    assert :ok = Store.save_workspace_file(dir, "p.json", "after")
+
+    after_save = File.stat!(path)
+    assert File.read!(path) == "after"
+    assert {after_save.major_device, after_save.inode} != {before.major_device, before.inode}
+    assert Bitwise.band(after_save.mode, 0o777) == 0o600
   end
 
   test "create_workspace_file/3 never replaces a file created concurrently", %{dir: dir} do
