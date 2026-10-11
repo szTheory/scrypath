@@ -230,6 +230,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     failed_row = lv |> element(row_selector) |> render()
 
     assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
+    assert failed_row =~ "Refresh health to try again."
     assert failed_row =~ "2 days ago"
     assert failed_row =~ iso
     assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")

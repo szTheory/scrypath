@@ -120,10 +120,27 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert html =~ "sync job(s) failed to apply"
     refute html =~ "Recover search"
     assert_before(html, "control-room-affected-scope", "control-room-health-link")
-    assert_before(html, "control-room-health-link", "Verify a change")
-    assert_before(html, "Verify a change", "Explore search")
-    assert has_element?(lv, "a", "Verify a change")
-    assert has_element?(lv, "a", "Explore search")
+    assert_before(html, "control-room-health-link", "control-room-secondary-intents")
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-secondary-intents'] a[data-testid='control-room-verify-change']"
+           )
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-secondary-intents'] a[data-testid='control-room-explore-search']"
+           )
+
+    refute has_element?(
+             lv,
+             "[data-testid='control-room-verdict'] [data-testid='control-room-verify-change']"
+           )
+
+    refute has_element?(
+             lv,
+             "[data-testid='control-room-verdict'] [data-testid='control-room-explore-search']"
+           )
   end
 
   test "healthy wording requires complete evidence and keeps freshness explicit", %{conn: conn} do
@@ -134,10 +151,26 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(lv, "[data-testid='control-room-verdict']", "Search health observed.")
     assert html =~ "No current sync or backend failures were observed across 2 schemas."
     assert html =~ "This check does not prove document freshness."
-    refute has_element?(lv, "[data-testid='control-room-health-link']")
-    assert has_element?(lv, "a", "Verify a change")
-    assert has_element?(lv, "a", "Explore search")
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-health-link'][href='/ops/health']",
+             "Inspect Search health"
+           )
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-secondary-intents'] a[data-testid='control-room-verify-change']"
+           )
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-secondary-intents'] a[data-testid='control-room-explore-search']"
+           )
+
     assert_before(html, "Observed search health", "No current sync or backend failures")
+    assert_before(html, "No current sync or backend failures", "control-room-health-link")
+    assert_before(html, "control-room-health-link", "control-room-secondary-intents")
   end
 
   test "partial refresh retains the prior complete observation and does not announce success", %{
@@ -169,7 +202,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert refreshed_html =~ "No current sync or backend failures were observed across 2 schemas."
     assert refreshed_html =~ "Last successful check:"
     refute refreshed_html =~ "Search health refreshed."
-    refute has_element?(lv, "[data-testid='control-room-health-link']")
+    assert has_element?(lv, "[data-testid='control-room-health-link'][href='/ops/health']")
   end
 
   test "a clean refresh reports success and updates the visible observation", %{conn: conn} do

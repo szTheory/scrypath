@@ -105,7 +105,7 @@ for (const entry of entries) {
     const unavailable = page.getByTestId("posture-row").first();
     await expect(unavailable).toContainText("fetch error");
     await expect(unavailable).toContainText("Search health could not be checked");
-    await expect(unavailable).toContainText("Refresh to try again");
+    await expect(unavailable).toContainText("Refresh health to try again");
     await expect(unavailable).not.toContainText("backend failed");
     await expect(metric(page, "Schema check errors")).toHaveAttribute("data-ops-metric-tone", "warning");
 
@@ -266,7 +266,7 @@ for (const entry of entries) {
     await refresh.click();
     await expect(page.getByTestId("posture-row").first()).toContainText("Search health could not be checked");
     await expect(page.getByTestId("posture-row").first()).toContainText("2 days ago");
-    await expect(page.getByTestId("posture-row").first()).toContainText("Refresh to try again");
+    await expect(page.getByTestId("posture-row").first()).toContainText("Refresh health to try again");
     await expect(page.getByText("Search health refreshed.", { exact: true })).toHaveCount(0);
   });
 }

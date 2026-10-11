@@ -65,14 +65,22 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(healthRoute).toBeVisible();
   const affectedScope = page.getByTestId("control-room-affected-scope");
   await expect(affectedScope).toContainText(fixture.schema.replace(/^Elixir\./, ""));
-  await expect(page.getByRole("link", { name: "Verify a change", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Explore search", exact: true })).toBeVisible();
+  const secondaryIntents = page.getByTestId("control-room-secondary-intents");
+  await expect(secondaryIntents).toBeVisible();
+  await expect(secondaryIntents.getByTestId("control-room-verify-change")).toContainText("Verify a change");
+  await expect(secondaryIntents.getByTestId("control-room-explore-search")).toContainText("Explore search");
   const scopePrecedesRoute = await page.evaluate(() => {
     const scope = document.querySelector('[data-testid="control-room-affected-scope"]');
     const route = document.querySelector('[data-testid="control-room-health-link"]');
     return Boolean(scope && route && (scope.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING));
   });
   expect(scopePrecedesRoute, "observed degraded scope must precede the primary health route").toBe(true);
+  const routePrecedesIntents = await page.evaluate(() => {
+    const route = document.querySelector('[data-testid="control-room-health-link"]');
+    const intents = document.querySelector('[data-testid="control-room-secondary-intents"]');
+    return Boolean(route && intents && (route.compareDocumentPosition(intents) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(routePrecedesIntents, "the health verdict and route must precede secondary intent cards").toBe(true);
   await healthRoute.click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
@@ -213,7 +221,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
-  await expect(page.getByText("That schema is unavailable")).toBeVisible();
+  await expect(page.getByText("That schema is unavailable.")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
   await expect(page.locator("input[name='schema']:checked")).toHaveCount(0);
   await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
@@ -236,7 +244,7 @@ test("operator promotes only this returned task pair and unique target document"
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await page.getByRole("link", { name: "Verify a change", exact: true }).click();
+  await page.getByTestId("control-room-verify-change").click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Check index contract" }).click();

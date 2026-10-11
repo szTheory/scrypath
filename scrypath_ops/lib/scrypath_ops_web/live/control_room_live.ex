@@ -139,7 +139,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             <p :if={@posture.state == :degraded} data-testid="control-room-affected-scope">
               Affected scope: {affected_scope(@posture)}
             </p>
-            <div :if={@posture.state == :degraded} class="mt-3">
+            <p :if={@posture.state == :ok}>
+              No current sync or backend failures were observed across {@posture.schema_count} schemas.
+              This check does not prove document freshness.
+            </p>
+            <div class="mt-2">
               <.ops_link_button
                 navigate={"#{@mount_path}/health"}
                 variant={:primary}
@@ -149,22 +153,33 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 Inspect Search health
               </.ops_link_button>
             </div>
-            <p :if={@posture.state == :ok}>
-              No current sync or backend failures were observed across {@posture.schema_count} schemas.
-              This check does not prove document freshness.
-            </p>
-            <div :if={@posture.state in [:ok, :degraded]} class="mt-3 flex flex-wrap gap-2">
-              <.ops_link_button navigate={"#{@mount_path}/sync-drift"} variant={:ghost} size={:sm}>
-                Verify a change
-              </.ops_link_button>
-              <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost} size={:sm}>
-                Explore search
-              </.ops_link_button>
-            </div>
             <p :if={@refresh_issue} class="mt-2 text-ops-sm text-base-content/75">
               Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
           </.ops_verdict>
+
+          <div
+            :if={@posture.state in [:ok, :degraded]}
+            class="mt-4 grid gap-4 sm:grid-cols-2"
+            data-testid="control-room-secondary-intents"
+          >
+            <.ops_intent_card
+              icon="hero-arrow-path"
+              title="Verify a change"
+              summary="Check sync and index drift before changing an index."
+              route_label="Verify a change"
+              navigate={"#{@mount_path}/sync-drift"}
+              data-testid="control-room-verify-change"
+            />
+            <.ops_intent_card
+              icon="hero-magnifying-glass"
+              title="Explore search"
+              summary="Run a query against an allowlisted schema."
+              route_label="Explore search"
+              navigate={"#{@mount_path}/search"}
+              data-testid="control-room-explore-search"
+            />
+          </div>
         </section>
 
         <section

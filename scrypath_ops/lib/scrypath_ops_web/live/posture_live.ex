@@ -415,7 +415,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                 <.link
                   :if={failed_work_present?(status)}
                   navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                  class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                  class="link link-primary mt-2 inline-flex min-h-[var(--control-h-md)] items-center"
                   data-testid="posture-failed-sync-link"
                 >
                   Inspect failed work for {module_flat_name(mod)}
@@ -435,10 +435,10 @@ defmodule ScrypathOpsWeb.PostureLive do
                     <.ops_badge kind={:error}>fetch error</.ops_badge>
                   </div>
                 </div>
-                <p class="mt-3 text-ops-sm text-error">
-                  Search health could not be checked: {inspect(reason)}. Refresh to try again.
+                <p class="mt-2 text-ops-sm text-error">
+                  Search health could not be checked: {inspect(reason)}. Refresh health to try again.
                 </p>
-                <dl class="ops-signal-metrics ops-signal-metrics--retained mt-3">
+                <dl class="ops-signal-metrics ops-signal-metrics--retained mt-2">
                   <div :for={source <- [:backend, :queue]}>
                     <dt>{source_last_success_label(source)}</dt>
                     <dd>

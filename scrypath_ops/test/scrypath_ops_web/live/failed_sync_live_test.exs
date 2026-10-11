@@ -257,7 +257,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "No schemas configured"
+    assert html =~ "No schemas configured."
     refute html =~ "No failed sync work visible"
     refute has_element?(lv, "[data-testid='failed-sync-empty-hero']")
   end
@@ -284,13 +284,13 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     {:ok, invalid_view, invalid_html} =
       live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.Gone")
 
-    assert invalid_html =~ "That schema is unavailable"
+    assert invalid_html =~ "That schema is unavailable."
     refute has_element?(invalid_view, "[data-testid='failed-sync-row']")
 
     {:ok, removed_view, _html} = live(conn, ~p"/ops/failed-sync")
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
     retry_html = render_click(removed_view, "retry", %{"id" => "501"})
-    assert retry_html =~ "That schema is unavailable"
+    assert retry_html =~ "That schema is unavailable."
     refute retry_html =~ "Retried 501"
     assert :sys.get_state(removed_view.pid).socket.assigns.selected_schema == nil
   end
@@ -429,7 +429,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute has_element?(view, "[data-testid='failed-sync-retry']")
   end
 
-  test "delete retry requires confirmation and Cancel keeps the failed row", %{conn: conn} do
+  test "delete retry requires confirmation and dismissal keeps the failed row", %{conn: conn} do
     Application.put_env(:scrypath_ops, :oban_jobs, [
       %{
         id: 502,
@@ -454,7 +454,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "fsv_ops_post_a"
     assert html =~ "doc-1"
     assert html =~ "doc-2"
-    assert html =~ "Cancel"
+    assert html =~ "Keep failed work and close"
+    assert html =~ ~s(aria-label="Keep failed work and close")
 
     html = render_click(view, "cancel_retry_delete", %{})
     refute html =~ "Confirm delete sync work"
@@ -468,7 +469,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
     html = render_change(view, "select_schema", %{"schema" => mod_str})
 
-    assert html =~ "That schema is unavailable"
+    assert html =~ "That schema is unavailable."
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.selected_schema == nil
