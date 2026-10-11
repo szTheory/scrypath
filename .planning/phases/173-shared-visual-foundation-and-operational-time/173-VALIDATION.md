@@ -1,15 +1,15 @@
 ---
 phase: "173"
 slug: "shared-visual-foundation-and-operational-time"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-06"
 ---
 
 # Phase 173 — Validation Strategy
 
-Planning validation is separate from product verification. Requirements OPUX-09–OPUX-15 remain pending until implementation has executable evidence. The task map below specifies actual plan/task IDs and runner creation prerequisites. The independent plan checker passed after one revision; product verification and Nyquist execution validation remain pending.
+Planning validation is separate from product verification. Phase 173 implementation now has passing executable evidence for OPUX-09–OPUX-15. The independent plan checker passed after one revision; all 11 task verification paths and all seven requirement rows were rechecked against their completed summaries and current-source gates. No validation gaps remain; routine human UAT is not required.
 
 ## Test Infrastructure
 
@@ -23,7 +23,7 @@ Planning validation is separate from product verification. Requirements OPUX-09�
 | Static contrast command | `make -C examples/scrypath_ecommerce contrast` |
 | Full Ops gate | `mix verify.ops_ui` from repository root; Ops `mix precommit` when implementation is complete |
 | Mounted gate | `make -C examples/scrypath_ecommerce verify-mounted` |
-| Browser gate | Planned `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh {shell\|time\|status\|copy}` creates and cleans an isolated mounted+standalone Compose stack; 173-01-T2 creates test-only routes into production PostureLive, paired deterministic app-local test-support Phase173FixtureSource providers, runner and asset readiness checks; 173-01-T3 wires the first spec and docker-playwright.sh scope, and later browser tasks wire their own scopes. Existing `make -C examples/scrypath_ecommerce verify-e2e` remains advisory. |
+| Browser gate | `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh {shell\|time\|status\|copy}` creates and cleans an isolated mounted+standalone Compose stack. 173-01-T2's production-route/asset smoke and 173-01-T3 shell suite passed; subsequent `time`, `status`, and `copy` suites passed with their own deterministic cases. Existing `make -C examples/scrypath_ecommerce verify-e2e` remains advisory. |
 | Runtime | Not measured in this planning run; focused feedback targets under 120 seconds; the full root core gate and disposable browser startup are slower plan/wave gates reported separately, with no under-120-second claim |
 
 ## Sampling Rate
@@ -38,15 +38,29 @@ Planning validation is separate from product verification. Requirements OPUX-09�
 
 | Requirement | Plan/tasks | Automated command and executable evidence |
 | --- | --- | --- |
-| OPUX-09 | 173-01-T1/T2/T3 | `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs`; `make -C examples/scrypath_ecommerce contrast`; `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh shell` — both test-only routes mount production PostureLive with entrypoint-specific built Ops assets; flat computed shell in light/dark/System at 390/1279/1280/1440, scroll-edge cues, inspected before/after images. |
-| OPUX-10 | 173-03-T1/T2/T3 | `cd scrypath_ops && mix test test/scrypath_ops_web/live/posture_live_test.exs`; `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status` — deterministic backend/queue failure inputs pass through production PostureLive/Posture/Status/State/OpsUi on both routes; degraded/failed/unknown labels and local icons appear on neutral containers, including partial retained data. |
-| OPUX-11 | 173-03-T1/T2/T3 | Same focused Ops/`status` runner — neutral zero, distinct nonzero/unavailable, unchanged Posture classification and no freshness copy. |
-| OPUX-12 | 173-01-T1/T2/T3 | `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh shell` — pointer/keyboard native preference, one visual/ARIA selection, OS System transition, reload/navigation/patch/tabs and blocked/invalid storage in both entrypoints. |
-| OPUX-13 | 173-03-T2/T3 | Focused Ops contracts plus `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status` — hover/pressed/focus/selected/disabled/busy, nested label/icon, server eligibility across patches with reduced motion. |
-| OPUX-14 | 173-02-T1/T2/T3 | `mix test test/scrypath/operator/status_test.exs`; `cd scrypath_ops && mix test test/scrypath_ops_web/live/posture_live_test.exs`; `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh time && mix verify.core --exclude integration --exclude docs_contract` in T3 after T2's atomic core commit — threshold boundaries, microsecond future, source ISO/offset and fixed successful snapshot pass through production PostureLive/Posture/Status/State/OpsUi on both routes; browser exact disclosure and failed-refresh/absent/unavailable/unused cases fail when that render path or standalone asset is stale. |
-| OPUX-15 | 173-04-T1/T2 | `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh copy` plus focused Ops LiveView test — both production PostureLive routes supply source ISO to OpsUi and entrypoint-specific JS hook; resolved/rejected/missing promise outcomes, exact payload, four-second reset, persistent failure, selectable evidence, Checked no-copy in standalone and mounted. |
+| OPUX-09 | 173-01-T1/T2/T3 | **COVERED.** Shell contract (10 tests), disposable production-route/asset smoke, `shell` browser suite (11 tests), and contrast (0 AA failures) passed. Both entrypoints, light/dark/System, responsive widths, theme state, flat shell, and scroll cues are covered; before/after images were inspected. |
+| OPUX-10 | 173-03-T1/T2/T3 | **COVERED.** Focused Ops suite (31 tests) and `status` browser suite (6 tests) passed. Production LiveViews cover neutral containers, explicit degraded/failed/unknown cues, and partial retained data. |
+| OPUX-11 | 173-03-T1/T2/T3 | **COVERED.** Same current-source Ops and `status` suites passed; neutral zero, nonzero/unavailable distinctions, queue-unused, and no freshness implication are asserted. |
+| OPUX-12 | 173-01-T1/T2/T3 | **COVERED.** Shell contract and `shell` browser suite (11 tests) passed, including pointer/keyboard preference, one visual/ARIA selection, System appearance, reload/navigation/tabs, and storage failure cases. |
+| OPUX-13 | 173-03-T2/T3 | **COVERED.** Focused Ops contracts and `status` browser suite (6 tests) passed for hover/press/focus/selected/disabled/busy, retained labels/icons, reduced motion, and server eligibility after patches. |
+| OPUX-14 | 173-02-T1/T2/T3 | **COVERED.** Root status tests (6), focused PostureLive tests (11), `time` browser suite (8), and `mix verify.core --exclude integration --exclude docs_contract` (660 tests + 4 properties) passed. Boundary/precision/future cases, fixed observation snapshot, exact ISO/UTC disclosure, and absent/unavailable/unused states are asserted in both entrypoints. |
+| OPUX-15 | 173-04-T1/T2 | **COVERED.** Current-source `copy` browser suite (10 tests), focused LiveView/shell tests, full Ops suites (244 tests + 2 doctests), and tagged accessibility suite (4 tests) passed. Exact source payload, awaited result, four-second reset, persistent rejection/unavailable guidance, selection, Checked no-copy, keyboard/touch, and failed-refresh age are covered. |
 
-All commands above are execution targets, not results. The new fixture source, routes, runner, scope dispatch and specs must be created by the named tasks before use. The standalone and mounted browser proofs must assert a source-derived production PostureLive row/control and actual built Ops assets so duplicated fixture markup cannot satisfy them. Every task's `<verify>` has an automated command and an explicit nonzero/empty-suite failure condition; the full core gate also blocks on any nonzero result. Its workspace-clean check requires committed root source in a clean execution checkout; preserve the local dirty baseline rather than discarding it. Images are inspected by the executor in the same slice, with computed style, geometry and state assertions as executable proof. The Phase 173 runner must use a unique Compose project, no published host port for its standalone service, and cleanup volumes/network; preview :4012 is excluded.
+## Per-Task Execution Results
+
+| Task | Result | Evidence |
+| --- | --- | --- |
+| 173-01-T1 | PASS | Ops shell contract: 10 tests, 0 failures. |
+| 173-01-T2 | PASS | `verify-phase173.sh shell --smoke`: both production routes and entrypoint assets reachable; disposable stack cleaned. |
+| 173-01-T3 | PASS | `verify-phase173.sh shell`: 11 browser tests, 0 failures. |
+| 173-02-T1 | PASS | Focused PostureLive suite: 11 tests, 0 failures. |
+| 173-02-T2 | PASS | Root status suite: 6 tests; focused PostureLive suite: 11 tests; 0 failures. |
+| 173-02-T3 | PASS | `verify-phase173.sh time`: 8 browser tests; root core gate: 660 tests + 4 properties, 0 failures. |
+| 173-03-T1/T2 | PASS | Focused design-token, shell, and PostureLive suite: 31 tests, 0 failures. |
+| 173-03-T3 | PASS | `verify-phase173.sh status`: 6 browser tests; contrast: 0 AA failures. |
+| 173-04-T1/T2 | PASS | `verify-phase173.sh copy`: 10 browser tests; Ops LiveView/full suite and accessibility checks passed; contrast: 0 AA failures. |
+
+Every task's `<verify>` has an automated command and an explicit nonzero/empty-suite failure condition; all planned task checks passed. The standalone and mounted browser proofs assert source-derived production PostureLive rows/controls and actual built Ops assets so duplicated fixture markup cannot satisfy them. The core gate's workspace-clean check passed in its isolated execution checkout. Images were inspected in their slices, supplemented by computed style, geometry, and state assertions. The Phase 173 runner uses a unique Compose project, no published host port for its standalone service, and removes its owned containers/volume/network; preview :4012 was excluded and remains untouched.
 
 ## Multi-Source Coverage Audit
 
@@ -69,7 +83,7 @@ Adversarial intent probe retains two project-specific prohibitions already made 
 
 ## Wave 0 Requirements
 
-173-01-T2 creates the isolated standalone service, paired app-local test-support fixture providers and test config, both routes into production PostureLive, fixed observation snapshot, and `--smoke` route/asset probe. The mounted host cannot use the Ops dependency's test/support module, so each app supplies its own provider behind the same private source contract; browser cases assert parity. 173-01-T3 wires the first browser spec and shell scope dispatch. The `time`, `status`, and `copy` specs and their docker-playwright.sh dispatch cases are then added by 173-02-T3, 173-03-T3, and 173-04-T1 respectively. No later task may invoke a scope before its spec exists. Existing Playwright infrastructure or shell-only E2EUIFixtureLive markup alone does not establish operational standalone coverage.
+173-01-T2 created the isolated standalone service, paired app-local test-support fixture providers and test config, both routes into production PostureLive, fixed observation snapshot, and `--smoke` route/asset probe. The mounted host cannot use the Ops dependency's test/support module, so each app supplies its own provider behind the same private source contract; browser cases assert parity. 173-01-T3 wired the first browser spec and shell scope dispatch. The `time`, `status`, and `copy` specs and their docker-playwright.sh dispatch cases were added by 173-02-T3, 173-03-T3, and 173-04-T1. Existing Playwright infrastructure or shell-only E2EUIFixtureLive markup alone does not establish operational standalone coverage.
 
 No new dependency, required CI service/job, or paid judge is authorized. Reuse the existing economical lanes; preserve the current dirty baseline and retained preview at :4012. Mutation fixtures, databases, networks and volumes belong to disposable verification projects.
 
@@ -79,11 +93,19 @@ No routine human UAT is planned. Executors inspect representative before/after d
 
 ## Validation Sign-Off
 
-- [x] Actual plan/task IDs and proposed executable commands replace the preliminary map; commands remain unrun.
+- [x] Actual plan/task IDs, commands, and observed passing evidence are mapped for all 11 tasks.
 - [x] Every task has automated verification and its stated failing direction, or an earlier task creates the missing harness.
 - [x] Every task has planned automated feedback; no watch-mode commands.
-- [x] Timestamp normalization, failed-check stability and standalone/mounted clipboard paths have explicit planned source-to-render proof; execution remains pending.
-- [x] All 26 approved UI considerations are lifted individually into plan must_haves.truths and OPUX-09–OPUX-15 are mapped without backstop-only acceptance; product verification remains pending.
-- [x] Focused checks are targets; full root core gate and browser startup are explicitly unmeasured slower gates.
+- [x] Timestamp normalization, failed-check stability, and standalone/mounted clipboard paths have passing source-to-render proof.
+- [x] All 26 approved UI considerations are lifted into plan must_haves.truths; all seven requirements are covered without backstop-only acceptance.
+- [x] Focused checks, full root core gate, Ops gates, contrast, and disposable browser runs passed.
 
-**Planning review:** Independent plan checker passed 2026-10-06 after one revision; see 173-PLAN-CHECK.md. No maintainer approval or product-test pass is inferred. Draft/Nyquist execution status remains unchanged.
+**Planning review:** Independent plan checker passed 2026-10-06 after one revision; see 173-PLAN-CHECK.md. This execution audit found zero uncovered requirement/task paths. No human-only UAT is pending.
+
+## Validation Audit 2026-10-10
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
