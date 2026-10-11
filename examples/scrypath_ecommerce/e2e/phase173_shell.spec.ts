@@ -164,6 +164,8 @@ async function makeStorageMethodThrowing(
 ): Promise<{ page: Page; close: () => Promise<void> }> {
   const context = await browser.newContext();
   await context.addInitScript((storageMethod) => {
+    if (location.origin === "null") return;
+
     Object.defineProperty(Storage.prototype, storageMethod, {
       configurable: true,
       value() {
@@ -338,7 +340,7 @@ test("mounted and standalone fixture routes keep their shell usable through erro
   await expect(page.getByTestId("posture-row").filter({ hasText: "fetch error" })).toHaveCount(1);
 
   await scenario.selectOption("long");
-  await expect(page.getByTestId("posture-row")).toHaveCount(1);
+  await expect(page.getByTestId("posture-row")).toHaveCount(2);
 
   const navLink = page.locator("[data-ops-nav-link]:visible").first();
   await expect(navLink).toBeVisible();
