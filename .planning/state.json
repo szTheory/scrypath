@@ -16,7 +16,7 @@
     {
       "number": "175",
       "name": "Repair and Verification",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "176",
@@ -31,8 +31,8 @@
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 175 of 5 · 40% · executing"
+    "label": "Advance to the next step (plan phase 176)",
+    "reason": "Phase 176 of 5 — needs a plan"
   },
-  "updated_at": "2026-10-11T12:24:47.015Z"
+  "updated_at": "2026-10-11T15:57:35.762Z"
 }

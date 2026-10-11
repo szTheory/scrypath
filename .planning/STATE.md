@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 175
-current_phase_name: Repair and Verification
-status: executing
-stopped_at: Planned 175-04-PLAN.md gap closure
-last_updated: "2026-10-11T15:00:22Z"
+current_phase: 176
+current_phase_name: Search and Playbooks
+status: planning
+stopped_at: Phase 175 complete, ready to plan Phase 176
+last_updated: "2026-10-11T15:57:35.741Z"
 last_activity: 2026-10-11
-last_activity_desc: Phase 175 verification gap assigned to Plan 04
-state_head: 16984e71d7320ff94bb843c3fb7c61c7d6791071
+last_activity_desc: Phase 175 complete, transitioned to Phase 176
+state_head: fdaf9b8752e45b17ed80f3ceaa6a9c28b741573a
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 16
-  completed_plans: 10
-  percent: 40
+  completed_plans: 11
+  percent: 60
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 175 (Repair and Verification) — EXECUTING
-Plan: 4 of 4
-Status: Gap closure planned; execute Plan 175-04
-Last activity: 2026-10-11 — Phase 175 verification found three failed truths from one document-observation defect
-Progress: [████░░░░░░] 40% (2/5 phases; 10/16 plans complete)
+Phase: 176 — Search and Playbooks
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-11 — Phase 175 complete, transitioned to Phase 176
+Progress: [██████░░░░] 60% (3/5 phases; 11/16 plans complete)
 
 ## Delivered Evidence
 
@@ -81,7 +81,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-11T15:00:22Z
-Stopped at: Planned 175-04-PLAN.md gap closure
+Stopped at: Phase 175 complete, ready to plan Phase 176
 Resume file: None
 
 Phase 173 is complete in this isolated worktree at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59`. All four plans and OPUX-09–OPUX-15 passed goal verification (41/41 plan truths); Ops precommit and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests, the focused PostureLive suite passed 15 tests, and mounted/standalone shell and copy browser suites passed 14/14 and 10/10. Security review closed 9/9 threats; code review had zero findings; the UI audit scored 24/24 with no human review required. These are local exact-source results; no hosted source receipt is claimed. See the four plan summaries, `173-VERIFICATION.md`, `173-SECURITY.md`, `173-REVIEW.md`, `173-UI-REVIEW.md`, and `173-VALIDATION.md`.

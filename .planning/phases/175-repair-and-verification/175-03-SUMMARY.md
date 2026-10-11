@@ -24,9 +24,13 @@ key-files:
     - .planning/phases/175-repair-and-verification/175-03-focus-return-red.json
   modified:
     - examples/scrypath_ecommerce/e2e/operator.spec.ts
+    - examples/scrypath_ecommerce/e2e/admin_shell_chrome.spec.ts
+    - examples/scrypath_ecommerce/e2e/helpers/theme-grid.ts
     - scrypath_ops/assets/css/app.css
     - scrypath_ops/priv/static/assets/css/app.css
+    - scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex
     - scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex
+    - scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs
     - scrypath_ops/assets/js/ops_hooks.js
     - scrypath_ops/priv/static/assets/js/app.js
 key-decisions:
@@ -106,11 +110,15 @@ status: complete
 ## Files Created/Modified
 
 - `examples/scrypath_ecommerce/e2e/operator.spec.ts` - mounted identity/effect assertions and responsive/theme/focus checks.
-- `scrypath_ops/assets/css/app.css` - stacks modal actions at narrow widths after the executable 320px overflow failure.
+- `scrypath_ops/assets/css/app.css` - stacks modal actions at narrow widths and adds final status hierarchy/responsive header rules.
 - `scrypath_ops/priv/static/assets/css/app.css` - rebuilt tracked CSS asset.
 - `scrypath_ops/lib/scrypath_ops_web/live/sync_drift_live.ex` - gives the promotion disclosure a stable ID and sets it as the dialog successor.
 - `scrypath_ops/assets/js/ops_hooks.js` - verifies actual browser focus before deciding the original target is usable, then uses the declared successor if needed.
 - `scrypath_ops/priv/static/assets/js/app.js` - rebuilt tracked JavaScript asset.
+- `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex` - shared status/title semantics, primary heading size, refresh labels, and responsive command-palette icon.
+- `scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs` - UI-audit regression checks for visible copy, state semantics, and heading hierarchy.
+- `examples/scrypath_ecommerce/e2e/admin_shell_chrome.spec.ts` - responsive shell state/content-fit checks across operator surfaces and viewport boundaries.
+- `examples/scrypath_ecommerce/e2e/helpers/theme-grid.ts` - exact Search heading match for the current page title.
 - `.planning/phases/175-repair-and-verification/175-03-01-red.json` - validated geometry RED evidence.
 - `.planning/phases/175-repair-and-verification/175-03-focus-return-red.json` - validated modal focus-return RED evidence.
 
@@ -143,6 +151,30 @@ The disposable fixture was available. The successful Ops test gates still emitte
 
 None.
 
+## UI Audit Follow-up
+
+The post-execution UI review exposed several mismatches with the already-approved Phase 175 contract. The Sync and drift page now uses the full visible refresh action label, distinguishes a canceled swap from a failed swap while retaining its task UID, exposes changed document/promotion outcomes as status messages (and terminal non-success as an alert), and keeps the refresh control outside the live result region. Evidence sections sit on the page floor with the approved 24px section rhythm; status surfaces are neutral with a small local semantic cue; signal-table row labels use the approved regular weight. The existing shared OpsUi compact toolbar/section spacing is retained because the UI-SPEC explicitly preserves those existing component patterns.
+
+The re-audit then confirmed the remaining visual-hierarchy gap: the contract names Sync and queue status as the primary visual anchor, while every section heading had the same size. That heading now uses the existing 24px page-heading token while remaining a semantic `h2`; all diagnostic section headings retain the existing 18px section-heading token. This adds no new token or surface.
+
+No dependency was added. Regression assertions cover the visible action label, flat evidence layout, status semantics and neutral surfaces, row typography, cancellation copy/identity, and the primary heading's one-step visual emphasis.
+
+### Follow-up verification
+
+- Focused LiveView and document-observation suites: 39 tests, 0 failures.
+- `cd scrypath_ops && mix assets.build`: passed; tracked CSS bundle rebuilt from the source token/component rules.
+- `cd scrypath_ops && mix precommit`: passed, 261 tests and 2 doctests. One earlier full-run teardown race was isolated and then cleared by the passing full rerun.
+- `HEX_HOME=/private/tmp/scrypath-hex mix verify.ops_ui`: passed, 261 tests and 2 doctests.
+- `make -C examples/scrypath_ecommerce contrast`: passed, zero AA failures.
+- `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted`: passed 4/4 disposable browser checks; owned services, network, and volume were removed. The retained :4012 preview was untouched.
+- On the final hierarchy-corrected source, `mix format --check-formatted`, the focused Sync and drift LiveView file (24 tests), `mix assets.build`, `mix precommit` (261 tests + 2 doctests), root `mix verify.ops_ui` (261 tests + 2 doctests), contrast (zero AA failures), disposable mounted proof (4/4), and root `git diff --check` passed. The pre-existing Dialyzer warning in `Scrypath.Sync.sync_related/3` remained unrelated.
+
+## Responsive-Header Follow-up
+
+Rendered inspection found that the command-palette control clipped at 390px and the command/theme labels clipped at 320px even though document width remained within the viewport. The shared header now hides theme labels through 420px while retaining each theme button's accessible name; below 360px it compacts the command-palette button to a magnifying-glass icon with the existing accessible name. The 44px minimum touch target remains intact. This adds no dependency.
+
+The existing `admin-shell` representative-layout test now verifies the compact command/theme states and content fit at 320px/390px while checking essential-control bounds on all six operator surfaces at 320px, 390px, 1279px, 1280px, and 1440px. Two stale selectors in that existing proof were corrected to current Control Room/Search markup. The containerized test passed (1 test, all six surfaces and five widths); `mix verify.ops_ui` and ScrypathOps `mix precommit` each passed 261 tests plus 2 doctests, and `make contrast` passed with zero AA failures. Chrome inspection confirmed the corrected Sync and drift header and visual hierarchy at 320px, 390px, and 1440px.
+
 ## Next Phase Readiness
 
 Plan 03 is complete. The exact-source mounted gate proves the task UID, active alias and expected seeded document, and the same-UID refresh after keyboard continuation. No live backend was queried; the retained :4012 preview was preserved.
@@ -156,4 +188,4 @@ Plan 03 is complete. The exact-source mounted gate proves the task UID, active a
 - All declared plan outputs and both RED evidence records exist.
 - The final mounted run passed all four tests and reached the confirmed swap, exact task/alias/document checks, and same-UID refresh.
 - Responsive geometry passed at 1440px, 768px, 390px, and 320px in both themes; contrast reported zero AA failures.
-- All three plan tasks are committed; the worktree diff is clean after the summary commit.
+- All three planned tasks and both RED evidence records are committed; the UI-audit follow-up is recorded above and included in the final-source gates. Phase closeout will commit its code and evidence before updating roadmap state.

@@ -39,7 +39,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 - [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-10)
 - [x] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work. (completed 2026-10-10)
-- [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
+- [x] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift. (completed 2026-10-11)
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
 - [ ] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence.
 
@@ -109,7 +109,7 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: 3/4 plans executed; Plan 04 closes the verification gap
+**Plans**: 4/4 plans complete; Plan 04 closes the verification gap
 Plans:
 **Wave 1**
 - [x] 175-01-PLAN.md — Separate recovery evidence and show the ordinary repair path
@@ -121,7 +121,7 @@ Plans:
 - [x] 175-03-PLAN.md — Prove repair journeys and responsive accessible states
 
 **Wave 4** *(gap closure after verification of Plans 01–03)*
-- [ ] 175-04-PLAN.md — Keep applicable document-observation failures from completing promotion
+- [x] 175-04-PLAN.md — Keep applicable document-observation failures from completing promotion
 
 **UI hint**: yes
 **Acceptance**: Inspect before/after Sync and drift states in both themes and relevant widths; exercise confirmation/eligibility, rendered controls, exact task and document correlations, and mounted repair/promotion paths in disposable stacks.
@@ -172,12 +172,12 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173 (4/4 plans) and 174 (3/3 plans) are complete; Phase 175 has executed three plans and needs its fourth, gap-closure plan before Phase 176.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173–175 are complete; Phase 176 is next, with its five approved plans ready for execution.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-10 |
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
-| 175. Repair and Verification | 2/3 | In Progress | - |
-| 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |
+| 175. Repair and Verification | 4/4 | Complete    | 2026-10-11 |
+| 176. Search and Playbooks | 0/5 | Planned | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
