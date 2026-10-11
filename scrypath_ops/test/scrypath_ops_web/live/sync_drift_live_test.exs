@@ -515,7 +515,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     end
   end
 
-  test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
+  test "swap observer keeps exact task outcomes and waits for fresh evidence before completion" do
     socket =
       sync_drift_socket(%{
         context_generation: 9,
@@ -531,7 +531,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert completed.assigns.promotion_status == :completed
+    assert completed.assigns.promotion_status == :unknown
     assert completed.assigns.promotion_task_id == 991
 
     {:noreply, wrong_task} =
