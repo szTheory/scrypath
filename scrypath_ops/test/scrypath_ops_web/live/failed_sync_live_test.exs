@@ -149,6 +149,58 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
+  test "explicit non-first schema keeps its diagnosed failure beside the accepted retry", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 509,
+        state: "retryable",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "search_sync",
+        attempted_at: "2026-10-10T14:15:00Z",
+        errors: [%{"error" => "the Variant source remains visible"}],
+        args: %{
+          "operation" => "upsert",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostB",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_b",
+          "document_count" => 1,
+          "document_ids" => ["variant-509"],
+          "documents" => [%{"id" => "variant-509", "data" => %{"title" => "Variant"}, "source" => "fields"}]
+        }
+      }
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "Failed job 509"
+    assert html =~ "upsert · oban · last attempt Oct 10, 2026 at 14:15 UTC"
+    assert html =~ "Retry currently available."
+    assert html =~ "the Variant source remains visible"
+    assert has_element?(view, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
+    assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
+
+    put_live_assigns(view,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+
+    accepted = render_click(view, "retry", %{"id" => "509"})
+
+    assert accepted =~ "Retry accepted"
+    assert accepted =~ "Queue job 991"
+    assert accepted =~ "Original failure #509 retained"
+    assert accepted =~ "Failed job 509"
+    refute accepted =~ "Recovery verified"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+  end
+
   test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 

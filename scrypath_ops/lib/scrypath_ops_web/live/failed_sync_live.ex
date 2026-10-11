@@ -474,6 +474,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     Enum.count(entries, & &1.retryable?)
   end
 
+  defp retry_eligibility(%{recovery: recovery}) when not is_nil(recovery),
+    do: "Retry currently available."
+
+  defp retry_eligibility(_row),
+    do: "Retry unavailable. This work item does not expose a supported retry."
+
   defp retryable_label(1), do: "1 retryable job"
   defp retryable_label(count), do: "#{count} retryable jobs"
 
@@ -630,6 +636,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 data-testid="failed-sync-reason"
               >
                 {row.reason}
+              </p>
+              <p
+                class="mt-2 break-words text-ops-body text-base-content/80"
+                data-testid="failed-sync-eligibility"
+              >
+                {retry_eligibility(row)}
               </p>
               <.ops_action_group
                 :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row.id))}
