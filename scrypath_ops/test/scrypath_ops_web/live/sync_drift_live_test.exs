@@ -66,6 +66,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
          "indexUid" => "sdv_ops_post_b"
        }}
     end
+
+    def task(uid, _config) do
+      Agent.update(:sync_drift_live_test_state, fn state ->
+        Map.update!(state, :task_calls, &[uid | &1])
+      end)
+
+      Agent.get(:sync_drift_live_test_state, fn state ->
+        %{"uid" => uid, "status" => state.task_status, "type" => "indexSwap"}
+      end)
+      |> then(&{:ok, &1})
+    end
   end
 
   defmodule SyncDriftObanInspector do
@@ -99,7 +110,16 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     end
 
     {:ok, _pid} =
-      Agent.start_link(fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
+      Agent.start_link(
+        fn ->
+          %{
+            tasks_calls: 0,
+            settings_calls: 0,
+            swap_called: false,
+            task_calls: [],
+            task_status: "processing"
+          }
+        end,
         name: :sync_drift_live_test_state
       )
 
@@ -694,6 +714,8 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       assert refreshed.assigns.promotion_status == status
       refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
     end
+
+    assert Agent.get(:sync_drift_live_test_state, & &1.task_calls) == [991, 991]
   end
 
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do

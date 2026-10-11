@@ -1,0 +1,11 @@
+{
+  "command": "cd scrypath_ops && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 HEX_HOME=/private/tmp/scrypath-hex mix test test/scrypath_ops_web/live/sync_drift_live_test.exs --only line:702 --formatter ScrypathOps.Test.ExUnitTapFormatter",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - refresh after an unconfirmed promotion checks state without submitting another swap\n1..1\n# tests 1\n# pass 0\n# fail 1",
+  "consoleOutput": "Compilation emitted the existing Dialyzer warning for lib/scrypath/sync.ex and the Ops navigation contract check; the unchanged TAP formatter report is captured in output.",
+  "targetTest": "refresh after an unconfirmed promotion checks state without submitting another swap",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs",
+  "expected": "The refresh handler should re-read the retained task UID 991 exactly once for each refresh while never submitting a second swap.",
+  "actual": "No task reads were made; the assertion received an empty task_calls list.",
+  "semanticAssessment": "The target test executed and failed at the planned task_calls assertion. The refresh handler performed only the existing reconcile, drift, and eligibility reads, confirming that it did not re-query the retained task UID."
+}
