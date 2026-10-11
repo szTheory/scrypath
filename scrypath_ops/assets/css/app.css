@@ -2042,6 +2042,17 @@
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
 }
 
+@media (max-width: 26rem) {
+  .ops-modal form > .flex.justify-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ops-modal form > .flex.justify-between > button {
+    width: 100%;
+  }
+}
+
 .ops-modal.modal-open {
   visibility: visible;
 }
