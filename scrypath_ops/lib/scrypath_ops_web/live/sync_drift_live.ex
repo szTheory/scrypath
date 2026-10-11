@@ -91,6 +91,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:promotion_identity, nil)
       |> assign(:promotion_document_observation, nil)
       |> assign(:promotion_observation_error, nil)
+      |> assign(:promotion_task_read_error, nil)
       |> assign(:confirm_swap?, false)
       |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
 
@@ -374,7 +375,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       ) do
     if generation == socket.assigns.context_generation and
          task_id == socket.assigns.promotion_task_id do
-      socket = assign(socket, :promotion_loading, false)
+      socket =
+        socket
+        |> assign(:promotion_loading, false)
+        |> assign(:promotion_task_read_error, nil)
 
       case result do
         {:ok, %{id: ^task_id, state: :succeeded}} ->
@@ -453,7 +457,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       ) do
     if generation == socket.assigns.context_generation and
          task_id == socket.assigns.promotion_task_id do
-      socket = assign(socket, :promotion_loading, false)
+      socket =
+        socket
+        |> assign(:promotion_loading, false)
+        |> assign(:promotion_task_read_error, nil)
 
       case result do
         {:ok, %OperationTask{id: ^task_id, state: :succeeded}} ->
@@ -471,8 +478,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         when state in [:enqueued, :processing] ->
           assign(socket, :promotion_status, :accepted)
 
+        {:error, reason} ->
+          preserve_promotion_failure(socket, promotion_task_read_error(reason))
+
         _error_or_mismatched_task ->
-          preserve_promotion_failure(socket)
+          preserve_promotion_failure(socket, :task_unavailable)
       end
       |> invalidate_recovery_claim()
       |> refresh_promotion_eligibility()
@@ -485,7 +495,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_async({:promotion_refresh, generation, task_id}, {:exit, _reason}, socket) do
     if generation == socket.assigns.context_generation and
          task_id == socket.assigns.promotion_task_id do
-      {:noreply, preserve_promotion_failure(socket)}
+      {:noreply, preserve_promotion_failure(socket, :task_observation_exit)}
     else
       {:noreply, socket}
     end
@@ -617,6 +627,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_identity, nil)
     |> assign(:promotion_document_observation, nil)
     |> assign(:promotion_observation_error, nil)
+    |> assign(:promotion_task_read_error, nil)
     |> assign(:confirm_swap?, false)
     |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
@@ -1121,6 +1132,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               |> assign(:promotion_identity, identity)
               |> assign(:promotion_document_observation, nil)
               |> assign(:promotion_observation_error, nil)
+              |> assign(:promotion_task_read_error, nil)
               |> start_async({:promotion_swap, generation, task_id}, fn ->
                 result = Tasks.wait_for_task(task, task_wait_opts(opts))
                 {generation, task_id, result}
@@ -1145,6 +1157,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_status, :unknown)
     |> assign(:promotion_document_observation, nil)
     |> assign(:promotion_observation_error, nil)
+    |> assign(:promotion_task_read_error, nil)
     |> start_async({:promotion_refresh, generation, task_id}, fn ->
       {generation, task_id, read_promotion_task(task_id, opts)}
     end)
@@ -1167,7 +1180,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     _error -> {:error, :task_unavailable}
   end
 
-  defp preserve_promotion_failure(socket) do
+  defp promotion_task_read_error(:task_identity_mismatch), do: :task_identity_mismatch
+  defp promotion_task_read_error(:task_unavailable), do: :task_unavailable
+  defp promotion_task_read_error(_reason), do: :task_read_failed
+
+  defp preserve_promotion_failure(socket, reason) do
     status =
       case socket.assigns.promotion_status do
         {:failed, _reason} = failed -> failed
@@ -1179,6 +1196,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_loading, false)
     |> assign(:promotion_document_observation, nil)
     |> assign(:promotion_observation_error, nil)
+    |> assign(:promotion_task_read_error, reason)
   end
 
   defp fetch_promotion_prerequisites(socket) do
@@ -1303,6 +1321,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_loading, true)
     |> assign(:promotion_document_observation, nil)
     |> assign(:promotion_observation_error, nil)
+    |> assign(:promotion_task_read_error, nil)
     |> start_async({:promotion_effects, generation, task_id}, fn ->
       observation_socket = %Phoenix.LiveView.Socket{
         assigns: observation_assigns,
@@ -1883,8 +1902,18 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               The swap task succeeded, but its expected-document observation could not be confirmed.
             </span>
             <span :if={
+              @promotion_status == :unknown &&
+                !@promotion_loading &&
+                !is_map(@promotion_document_observation) && @promotion_task_read_error
+            }>
+              The retained task result could not be confirmed ({Atom.to_string(
+                @promotion_task_read_error
+              )}). Refresh to inspect this same task; do not submit another operation.
+            </span>
+            <span :if={
               @promotion_status in [:timed_out, :unknown] &&
                 !@promotion_loading &&
+                is_nil(@promotion_task_read_error) &&
                 !is_map(@promotion_document_observation)
             }>
               The task result could not be confirmed. Refresh checks to inspect current index state.
@@ -1912,6 +1941,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               :if={
                 @promotion_status == :unknown && !@promotion_loading &&
                   @promotion_observation_error &&
+                  is_nil(@promotion_task_read_error) &&
                   !is_map(@promotion_document_observation)
               }
               class="break-words"
