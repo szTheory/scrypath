@@ -153,6 +153,18 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute row =~ "ops-schema-signal-card--error"
   end
 
+  test "healthy Search health badges use neutral treatment", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+    row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
+
+    assert html =~ "Search health"
+    assert has_element?(lv, ".ops-verdict.ops-posture-verdict")
+    assert row =~ "backend clear"
+    assert row =~ "queue observed"
+    assert row =~ "ops-badge-neutral"
+    refute row =~ "ops-badge-success"
+  end
+
   test "refresh disabled eligibility follows a server-rendered fixture patch", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
 

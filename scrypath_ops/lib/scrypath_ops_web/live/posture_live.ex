@@ -282,6 +282,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
         <.ops_verdict
           kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+          class="ops-posture-verdict"
           label="Can I trust search right now?"
           headline={@posture_headline}
         >
@@ -626,7 +627,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp backend_badge_kind(status) do
-    if length(status.backend.failed) > 0, do: :error, else: :success
+    if length(status.backend.failed) > 0, do: :error, else: :neutral
   end
 
   defp backend_badge_label(status) do
@@ -639,7 +640,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       not status.queue.observed? -> :warning
       length(status.queue.failed) > 0 -> :error
       length(status.queue.retrying) > 0 -> :warning
-      true -> :success
+      true -> :neutral
     end
   end
 

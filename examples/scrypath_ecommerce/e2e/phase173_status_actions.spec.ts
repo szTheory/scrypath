@@ -73,6 +73,16 @@ for (const entry of entries) {
     await visit(page, entry);
 
     const baseline = await surfaceFingerprint(page);
+    const healthyVerdictIcon = page.getByTestId("ops-verdict-icon");
+    await expect(healthyVerdictIcon).toHaveAttribute("data-state", "success");
+    const healthyIconColors = await healthyVerdictIcon.evaluate((icon) => ({
+      icon: getComputedStyle(icon).color,
+      headline: getComputedStyle(icon.parentElement!).color
+    }));
+    expect(healthyIconColors.icon).toBe(healthyIconColors.headline);
+    const healthyRow = page.getByTestId("posture-row").first();
+    await expect(healthyRow.locator(".ops-badge-neutral")).toHaveCount(2);
+    await expect(healthyRow.locator(".ops-badge-success")).toHaveCount(0);
     const zeroErrors = metric(page, "Schema check errors");
     await expect(zeroErrors).toHaveAttribute("data-ops-metric-tone", "neutral");
     await expect(zeroErrors.locator(".ops-metric__value")).toHaveText("0");

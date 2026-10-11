@@ -180,12 +180,26 @@ for (const entry of entries) {
             const value = document.querySelector<HTMLElement>(".ops-time__evidence-value")!;
             return { width: value.clientWidth, scrollWidth: value.scrollWidth, userSelect: getComputedStyle(value).userSelect };
           })(),
-          button: document.querySelector<HTMLElement>(".ops-time__copy")?.getBoundingClientRect().height ?? 0
+          button: (() => {
+            const node = document.querySelector<HTMLElement>(".ops-time__copy");
+            return {
+              height: node?.getBoundingClientRect().height ?? 0,
+              fontSize: node ? getComputedStyle(node).fontSize : "missing",
+              fontWeight: node ? getComputedStyle(node).fontWeight : "missing"
+            };
+          })(),
+          ageFontSize: (() => {
+            const node = document.querySelector<HTMLElement>(".ops-time--operational .ops-time__value");
+            return node ? getComputedStyle(node).fontSize : "missing";
+          })()
         }));
         expect(geometry.document).toBeLessThanOrEqual(geometry.viewport);
         expect(geometry.exact.scrollWidth).toBeLessThanOrEqual(geometry.exact.width + 1);
         expect(geometry.exact.userSelect).toBe("text");
-        expect(geometry.button).toBeGreaterThanOrEqual(40);
+        expect(geometry.button.height).toBeGreaterThanOrEqual(40);
+        expect(geometry.button.fontSize).toBe("14px");
+        expect(geometry.button.fontWeight).toBe("600");
+        expect(geometry.ageFontSize).toBe("14px");
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({ path: join(screenshotDir, `${entry.name}-copy-${theme}-${width}.png`), fullPage: true });
       }
