@@ -157,6 +157,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html2 =~ "sdv_ops_post_a"
   end
 
+  test "document freshness starts as a separate unchecked observation", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    assert html =~ "Document freshness"
+    assert html =~ "Not checked"
+    assert html =~ "Expected-document evidence has not been checked for this recovery."
+  end
+
   test "swap live rechecks current prerequisites and refuses a stale contract read" do
     socket =
       sync_drift_socket(%{
