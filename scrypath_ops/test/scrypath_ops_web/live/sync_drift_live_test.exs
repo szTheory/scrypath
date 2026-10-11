@@ -165,6 +165,32 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ "Expected-document evidence has not been checked for this recovery."
   end
 
+  test "ordinary recovery follows diagnostic evidence and links to selected failed work", %{
+    conn: conn
+  } do
+    {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "Ordinary recovery"
+    assert html =~ "Review failed sync work"
+    assert html =~ "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB"
+
+    [sync, contract, documents, recovery, promotion] =
+      [
+        "Sync and queue status",
+        "Index contract",
+        "Document freshness",
+        "Ordinary recovery",
+        "Advanced: index promotion"
+      ]
+      |> Enum.map(&:binary.match(html, &1))
+      |> Enum.map(&elem(&1, 0))
+
+    assert sync < contract
+    assert contract < documents
+    assert documents < recovery
+    assert recovery < promotion
+  end
+
   test "verified document freshness renders the exact expected effect and index", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
@@ -359,20 +385,23 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert final_socket.assigns.drift_result == nil
   end
 
-  test "recovery refresh discards prior verification and stale results cannot restore it" do
+  test "recovery refresh retains prior verification and stale results cannot replace it" do
+    checked_at = DateTime.utc_now()
+
     socket =
       sync_drift_socket(%{
         selected_schema: OpsPostA,
         context_generation: 8,
         recovery_handle: "opaque-handle",
         recovery_status: :verified,
-        recovery_checked_at: DateTime.utc_now(),
+        recovery_checked_at: checked_at,
         recovery_loading: false
       })
 
     {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, socket)
 
-    assert refreshing.assigns.recovery_status == :unknown
+    assert refreshing.assigns.recovery_status == :verified
+    assert refreshing.assigns.recovery_checked_at == checked_at
     assert refreshing.assigns.recovery_loading
     assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) == 0
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 0
@@ -384,11 +413,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         refreshing
       )
 
-    assert stale.assigns.recovery_status == :unknown
+    assert stale.assigns.recovery_status == :verified
+    assert stale.assigns.recovery_checked_at == checked_at
     assert stale.assigns.recovery_loading
   end
 
-  test "recovery results retain exact observed evidence and refresh clears it" do
+  test "recovery results retain exact observed evidence while refresh runs" do
     evidence = %{replacement_job: 45, attempt: 1, task_uid: 780, index: "posts"}
 
     document_observation = %{
@@ -411,8 +441,28 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert checked.assigns.recovery_status == :verified
     assert checked.assigns.recovery_evidence == evidence
     assert checked.assigns.recovery_document_observation == document_observation
+    checked_at = checked.assigns.recovery_checked_at
     {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, checked)
-    assert refreshing.assigns.recovery_evidence == nil
+    assert refreshing.assigns.recovery_evidence == evidence
+    assert refreshing.assigns.recovery_document_observation == document_observation
+    assert refreshing.assigns.recovery_checked_at == checked_at
+    assert refreshing.assigns.recovery_loading
+
+    {:noreply, unavailable} =
+      SyncDriftLive.handle_async(
+        {:recovery_observation, 3, "receipt"},
+        {:ok,
+         {3, "receipt",
+          {:unknown, nil, %{state: :not_checked, reason: :task_unavailable, checked_at: nil}}}},
+        refreshing
+      )
+
+    assert unavailable.assigns.recovery_status == :verified
+    assert unavailable.assigns.recovery_evidence == evidence
+    assert unavailable.assigns.recovery_document_observation == document_observation
+    assert unavailable.assigns.recovery_checked_at == checked_at
+    assert unavailable.assigns.recovery_observation_error == :task_unavailable
+    refute unavailable.assigns.recovery_loading
   end
 
   test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
