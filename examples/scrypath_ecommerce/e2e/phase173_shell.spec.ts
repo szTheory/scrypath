@@ -166,7 +166,7 @@ async function makeStorageMethodThrowing(
   await context.addInitScript((storageMethod) => {
     if (location.origin === "null") return;
 
-    Object.defineProperty(Storage.prototype, storageMethod, {
+    Object.defineProperty(window.localStorage, storageMethod, {
       configurable: true,
       value() {
         throw new DOMException("Storage method denied by test", "SecurityError");
