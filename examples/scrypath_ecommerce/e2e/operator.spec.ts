@@ -253,8 +253,68 @@ test("operator promotes only this returned task pair and unique target document"
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
-  await expect(page.getByRole("heading", { name: "Confirm index promotion" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirm index promotion" }).getByRole("button", { name: "Promote target index", exact: true }).click();
+  const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
+  await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
+  await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
+  await expect(confirmation).toContainText("Effect: replace the live alias with the prepared target index.");
+  await testInfo.attach("phase175-promotion-confirmation-before.png", {
+    body: await page.screenshot(), contentType: "image/png"
+  });
+
+  const close = confirmation.getByRole("button", { name: "Close Confirm index promotion dialog" });
+  const cancel = confirmation.getByRole("button", { name: "Cancel index swap", exact: true });
+  const confirm = confirmation.getByRole("button", { name: "Promote target index", exact: true });
+  await close.focus();
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(confirm).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+
+  for (const theme of ["light", "dark"]) {
+    await page.locator("html").evaluate((html, value) => html.setAttribute("data-theme", value), theme);
+    for (const width of [1440, 768, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      const geometry = await confirmation.evaluate((dialog) => {
+        const content = dialog.querySelector(".modal-box")!.getBoundingClientRect();
+        return {
+          viewportWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          left: content.left,
+          right: content.right,
+          actionButtons: Array.from(dialog.querySelectorAll(".modal-box form > div button")).map((button) => {
+            const buttonRect = button.getBoundingClientRect();
+            return { left: buttonRect.left, right: buttonRect.right };
+          })
+        };
+      });
+      expect(geometry.scrollWidth, `promotion confirmation must not cause page overflow at ${width}px (${theme})`).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+      expect(geometry.left, `promotion confirmation must fit the left edge at ${width}px (${theme})`).toBeGreaterThanOrEqual(0);
+      expect(geometry.right, `promotion confirmation must fit the right edge at ${width}px (${theme})`).toBeLessThanOrEqual(width + 1);
+      expect(geometry.actionButtons.every((button) => button.left >= 0 && button.right <= width + 1),
+        `promotion actions must fit the viewport at ${width}px (${theme})`).toBe(true);
+      await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
+      await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
+      if (width === 320) {
+        await testInfo.attach(`phase175-promotion-confirmation-320-${theme}.png`, {
+          body: await page.screenshot(), contentType: "image/png"
+        });
+      }
+    }
+  }
+
+  await page.locator("html").evaluate((html) => html.removeAttribute("data-theme"));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const promotionTrigger = advanced.getByRole("button", { name: "Promote target index" });
+  await cancel.click();
+  await expect(confirmation).toHaveCount(0);
+  await expect(promotionTrigger).toBeFocused();
+  await promotionTrigger.click();
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
+  await confirm.click();
 
   const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
@@ -273,6 +333,18 @@ test("operator promotes only this returned task pair and unique target document"
     document_id: fixture.document_id, expected_name: fixture.expected_name, active_document: true
   });
   expect(evidence.task_uid).toBeGreaterThan(fixture.task_baseline);
+  await expect(advanced.getByRole("button", { name: "Refresh checks" })).toBeVisible();
+  await advanced.getByRole("button", { name: "Refresh checks" }).click();
+  await expect(advanced).toContainText(`Task ${taskUid}`);
+  const refreshedEvidence = await probeSwapEvidence(request, {
+    marker: fixture.marker, taskUid, liveIndex: fixture.live_index, targetIndex: fixture.target_index,
+    taskBaseline: fixture.task_baseline, documentId: fixture.document_id
+  });
+  expect(refreshedEvidence.task_uid, "refresh must re-read the retained task without a second swap").toBe(taskUid);
+  expect(refreshedEvidence.active_document, "refresh must retain authoritative active-document proof").toBe(true);
+  await testInfo.attach("phase175-promotion-confirmation-after.png", {
+    body: await page.screenshot(), contentType: "image/png"
+  });
 
   const stale = await request.get("/dev/e2e/swap-probe", { params: {
     marker: fixture.marker, task_uid: String(fixture.task_baseline), live_index: fixture.live_index,
