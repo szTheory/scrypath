@@ -2386,6 +2386,9 @@
       margin-block-end: calc(var(--spacing-ops-page-gap) * calc(1 - var(--tw-space-y-reverse)));
     }
   }
+  .gap-x-2 {
+    column-gap: calc(var(--spacing) * 2);
+  }
   .gap-x-3 {
     column-gap: calc(var(--spacing) * 3);
   }
@@ -2589,9 +2592,6 @@
   .pb-ops-6 {
     padding-bottom: var(--spacing-ops-6);
   }
-  .pl-1 {
-    padding-left: calc(var(--spacing) * 1);
-  }
   .align-top {
     vertical-align: top;
   }
@@ -2740,12 +2740,6 @@
     color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
-    }
-  }
-  .text-base-content\/90 {
-    color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      color: color-mix(in oklab, var(--color-base-content) 90%, transparent);
     }
   }
   .text-error {
@@ -3119,11 +3113,6 @@
   .md\:grid-cols-2 {
     @media (width >= 48rem) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .md\:grid-cols-3 {
-    @media (width >= 48rem) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
   .md\:flex-row {
@@ -5131,6 +5120,15 @@
 .ops-modal {
   z-index: var(--z-index-ops-modal);
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+@media (max-width: 26rem) {
+  .ops-modal form > .flex.justify-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ops-modal form > .flex.justify-between > button {
+    width: 100%;
+  }
 }
 .ops-modal.modal-open {
   visibility: visible;
