@@ -162,7 +162,7 @@ The original inline execution did not produce per-task commits. Following the ma
 ## Verification
 
 - `cd scrypath_ops && mix assets.build` — passed.
-- `cd scrypath_ops && mix test test/scrypath_ops_web/live/playbook_live_test.exs` — 34 tests passed.
+- Focused Playbooks LiveView suite — 34 tests passed.
 - `cd scrypath_ops && mix precommit` — passed.
 - `mix verify.ops_ui` — 286 tests and 2 doctests passed.
 - `make -C examples/scrypath_ecommerce contrast` — zero AA contrast violations.
@@ -175,7 +175,7 @@ None.
 
 ## Next Phase Readiness
 
-Phase 176 implementation and executable plan gates are complete. The phase-level goal verifier remains the final closeout gate; Phase 177 is still not started and owns cross-surface pattern consolidation and delivery proof.
+Phase 176 implementation and executable plan gates are complete. Phase-level verification and review are recorded in `176-VERIFICATION.md`, `176-REVIEW.md`, and `176-UI-REVIEW.md`; Phase 177 is not started and owns cross-surface pattern consolidation and delivery proof.
 
 ## Self-Check: PASSED
 

@@ -85,3 +85,21 @@ None — existing LiveView, Ops UI, disposable browser, and contrast infrastruct
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+## Phase Closeout Verification — `3cc55bd`
+
+Final-source checks for the Search/Playbooks UI and workspace Store:
+
+| Check | Result |
+|---|---|
+| Store + Search + Playbooks focused ExUnit suite | 75 tests, 0 failures |
+| `mix verify.ops_ui` from repository root | 2 doctests, 301 tests, 0 failures |
+| Prior-phase operator status regression suite | 6 tests, 0 failures |
+| `mix assets.build` from `scrypath_ops/` | passed |
+| `make contrast` from `examples/scrypath_ecommerce/` | 0 AA failures; 43 AAA advisory findings |
+| Isolated Compose Playwright `admin_surface_depth.spec.ts` | 38 passed, 0 failed |
+| Code review | clean; 0 critical, 0 warning, 0 info findings |
+
+The browser lane uses the separate `phase176-final` Compose project with host web ports removed. Its first invocation began before the web service passed health checks and all requests were refused; after waiting for the service health check, the same 38-case suite passed. The isolated containers, network, and playbook volume were removed afterward. The retained preview was not used.
+
+The final Store change adds no dependencies. Existing compile-time Dialyzer and LiveView async-assign warnings remain outside this phase's changed files.
