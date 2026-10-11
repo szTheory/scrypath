@@ -1262,6 +1262,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       promotion_loading: false,
       promotion_task_id: nil,
       promotion_status: nil,
+      promotion_task_read_error: nil,
       confirm_swap?: false,
       recovery_status: nil,
       recovery_evidence: nil,
