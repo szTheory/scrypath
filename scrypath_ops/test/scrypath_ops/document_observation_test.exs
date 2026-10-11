@@ -28,6 +28,18 @@ defmodule ScrypathOps.DocumentObservationTest do
              DocumentObservation.check(receipt(), %{uid: 42, status: :failed}, [])
   end
 
+  test "does not verify a succeeded task payload without its exact UID" do
+    stub = stub_name("MissingTaskUid")
+    Req.Test.stub(stub, fn conn -> json(conn, 200, %{"id" => 1, "title" => "Hello"}) end)
+
+    assert {:ok, %{state: :unknown, reason: :invalid_task_payload}} =
+             DocumentObservation.check(
+               receipt(),
+               %{"status" => "succeeded"},
+               opts(stub)
+             )
+  end
+
   test "verifies exact projected JSON, including a configured document id field" do
     stub = stub_name("ExactProjection")
 

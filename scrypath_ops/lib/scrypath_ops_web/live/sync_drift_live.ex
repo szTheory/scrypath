@@ -16,6 +16,45 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Operations.Task, as: OperationTask
 
+  @promotion_observation_timeout 20_000
+  @promotion_observation_input_assigns [
+    :__changed__,
+    :flash,
+    :selected_schema,
+    :scrypath_opts,
+    :context_generation,
+    :reconcile_result,
+    :reconcile_loaded_at,
+    :reconcile_generation,
+    :reconcile_error,
+    :drift_result,
+    :drift_loaded_at,
+    :drift_generation,
+    :drift_error,
+    :drift_loading,
+    :promotion_identity,
+    :promotion_status,
+    :promotion_document_observation,
+    :promotion_observation_error,
+    :recovery_handle,
+    :recovery_origin_generation,
+    :operator_context,
+    :current_scope
+  ]
+  @promotion_observation_assigns [
+    :reconcile_result,
+    :reconcile_loaded_at,
+    :reconcile_generation,
+    :reconcile_error,
+    :drift_result,
+    :drift_loaded_at,
+    :drift_generation,
+    :drift_error,
+    :promotion_status,
+    :promotion_document_observation,
+    :promotion_observation_error
+  ]
+
   @impl true
   def mount(_params, _session, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
@@ -341,7 +380,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, %{id: ^task_id, state: :succeeded}} ->
           socket
           |> assign(:promotion_status, :unknown)
-          |> observe_promotion_effects()
+          |> start_promotion_effect_observation(generation, task_id)
 
         {:ok, _unexpected_task} ->
           assign(socket, :promotion_status, :unknown)
@@ -361,6 +400,35 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> invalidate_recovery_claim()
       |> refresh_promotion_eligibility()
       |> then(&{:noreply, &1})
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(
+        {:promotion_effects, _generation, _task_id},
+        {:ok, {generation, task_id, observed_assigns}},
+        socket
+      ) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      socket
+      |> assign(Map.put(observed_assigns, :promotion_loading, false))
+      |> refresh_promotion_eligibility()
+      |> then(&{:noreply, &1})
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async({:promotion_effects, generation, task_id}, {:exit, _reason}, socket) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      {:noreply,
+       socket
+       |> promotion_observation_failed(:observer_exit)
+       |> assign(:promotion_loading, false)
+       |> refresh_promotion_eligibility()}
     else
       {:noreply, socket}
     end
@@ -391,7 +459,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, %OperationTask{id: ^task_id, state: :succeeded}} ->
           socket
           |> assign(:promotion_status, :unknown)
-          |> observe_promotion_effects()
+          |> start_promotion_effect_observation(generation, task_id)
 
         {:ok, %OperationTask{id: ^task_id, state: :failed} = task} ->
           assign(socket, :promotion_status, {:failed, {:task_failed, task}})
@@ -1214,6 +1282,51 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         reason: :observation_error
       })
       |> assign(:promotion_observation_error, :observation_error)
+  end
+
+  defp start_promotion_effect_observation(socket, generation, task_id) do
+    observation_assigns = Map.take(socket.assigns, @promotion_observation_input_assigns)
+
+    observation_private =
+      socket.private
+      |> Map.take([:live_temp])
+      |> Map.put_new(:live_temp, %{})
+
+    observation_host_uri = socket.host_uri
+
+    socket
+    |> assign(:promotion_loading, true)
+    |> start_async({:promotion_effects, generation, task_id}, fn ->
+      observation_socket = %Phoenix.LiveView.Socket{
+        assigns: observation_assigns,
+        private: observation_private,
+        host_uri: observation_host_uri
+      }
+
+      task = Task.async(fn -> observe_promotion_effects(observation_socket) end)
+
+      observed_socket =
+        case Task.yield(task, @promotion_observation_timeout) do
+          {:ok, result} ->
+            result
+
+          {:exit, _reason} ->
+            promotion_observation_failed(observation_socket, :observation_error)
+
+          nil ->
+            Task.shutdown(task, :brutal_kill)
+            promotion_observation_failed(observation_socket, :observation_timeout)
+        end
+
+      {generation, task_id, Map.take(observed_socket.assigns, @promotion_observation_assigns)}
+    end)
+  end
+
+  defp promotion_observation_failed(socket, reason) do
+    socket
+    |> assign(:promotion_status, :unknown)
+    |> assign(:promotion_document_observation, %{state: :unknown, reason: reason})
+    |> assign(:promotion_observation_error, reason)
   end
 
   defp fresh_promotion_contract?(socket, identity) do

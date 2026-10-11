@@ -36,6 +36,22 @@ defmodule ScrypathOps.DocumentObservation do
   @doc false
   @spec check_effects(atom(), String.t(), list(), keyword()) :: {:ok, observation()}
   def check_effects(operation, active_index, expected, runtime_opts) do
+    worker =
+      Task.async(fn -> check_effects_now(operation, active_index, expected, runtime_opts) end)
+
+    case Task.yield(worker, @observation_timeout) do
+      {:ok, result} ->
+        result
+
+      nil ->
+        Task.shutdown(worker, :brutal_kill)
+        result(:unknown, :observation_timeout, %{operation: operation, index: active_index})
+    end
+  rescue
+    _ -> result(:unknown, :observation_error, %{operation: operation, index: active_index})
+  end
+
+  defp check_effects_now(operation, active_index, expected, runtime_opts) do
     receipt = %{operation: operation, index: active_index, expected: expected}
 
     with :ok <- valid_effect_target(receipt),
@@ -298,7 +314,10 @@ defmodule ScrypathOps.DocumentObservation do
     status = fetch_value(task, :status)
 
     cond do
-      not is_nil(uid) and to_string(uid) != to_string(value(receipt, :task_uid)) ->
+      is_nil(uid) ->
+        {:error, :invalid_task_payload}
+
+      to_string(uid) != to_string(value(receipt, :task_uid)) ->
         {:error, :task_uid_mismatch}
 
       is_binary(status) or is_atom(status) ->

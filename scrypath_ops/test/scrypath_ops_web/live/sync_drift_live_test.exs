@@ -702,6 +702,50 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert observed.assigns.promotion_task_id == 991
   end
 
+  test "post-promotion evidence applies only to the current generation and task" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :unknown,
+        promotion_loading: true
+      })
+
+    observed_assigns = %{
+      reconcile_result: %{schema: OpsPostA},
+      reconcile_loaded_at: DateTime.utc_now(),
+      reconcile_generation: 9,
+      reconcile_error: nil,
+      drift_result: %{schema: OpsPostA},
+      drift_loaded_at: DateTime.utc_now(),
+      drift_generation: 9,
+      drift_error: nil,
+      promotion_status: :completed,
+      promotion_document_observation: %{state: :verified},
+      promotion_observation_error: nil
+    }
+
+    assert {:noreply, observed} =
+             SyncDriftLive.handle_async(
+               {:promotion_effects, 9, 991},
+               {:ok, {9, 991, observed_assigns}},
+               socket
+             )
+
+    assert observed.assigns.promotion_status == :completed
+    assert observed.assigns.promotion_document_observation == %{state: :verified}
+    refute observed.assigns.promotion_loading
+
+    assert {:noreply, stale} =
+             SyncDriftLive.handle_async(
+               {:promotion_effects, 8, 991},
+               {:ok, {8, 991, observed_assigns}},
+               socket
+             )
+
+    assert stale.assigns == socket.assigns
+  end
+
   test "mounted promotion refresh reads the retained UID once without swapping again", %{
     conn: conn
   } do
