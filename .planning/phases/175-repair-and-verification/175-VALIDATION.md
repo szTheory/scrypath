@@ -1,9 +1,9 @@
 ---
 phase: "175"
 slug: "repair-and-verification"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: planned
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-11"
 ---
 
@@ -30,17 +30,20 @@ created: "2026-10-11"
 
 ## Requirement-Level Validation Map
 
-The plan has not assigned task IDs or waves yet. The planner must split these scenarios into concrete task rows and identify any new executable cases before plans are finalized.
+Plans 175-01 through 175-03 assign six tasks across three sequential waves. The existing focused suites and disposable mounted lane exist before Wave 1; each task extends them and has immediate executable feedback. Mounted evidence is also required at the Wave 3 gate.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| Planner assigns | TBD | TBD | OPUX-20 | Planner assigns | Queue/backend, contract, and active-document results remain separate; missing expected identity is unavailable rather than guessed; ordinary repair and advanced promotion have distinct paths. | LiveView + mounted | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs`; existing disposable operator lane | Yes; extend existing suites | ⬜ pending |
-| Planner assigns | TBD | TBD | OPUX-21 | Planner assigns | Accepted, running, terminal, and unknown are distinct; exact task/job identity is retained; refresh re-observes and never resubmits; observer failure cannot become remote failure or success. | LiveView + mounted | Focused Sync and drift suite; existing disposable operator lane where rendered lifecycle behavior changes | Yes; extend existing suites | ⬜ pending |
-| Planner assigns | TBD | TBD | OPUX-22 | Planner assigns | Current host authorization, eligibility, selected schema/index, and confirmation are rechecked before mutation; promotion is complete only after matching task and fresh active-index/document evidence. | LiveView + disposable mounted | Focused Sync and drift suite; existing disposable operator lane | Yes; extend existing suites; verify fixture evidence before relying on it | ⬜ pending |
+| 175-01-01 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-01, T-175-02 | Exact receipt identity reaches independently rendered queue, contract and active-document results; absent expected identity is not checked. | LiveView tracer | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
+| 175-01-02 | 175-01 | 1 | OPUX-20, OPUX-21 | T-175-02, T-175-03 | Common recovery handoff, lifecycle states, unknown observer failures, retained history, and refresh without mutation are rendered. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
+| 175-02-01 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-05 | Matching terminal swap plus fresh alias/contract and applicable expected-document evidence precedes completion; mismatches do not. | LiveView + document observer | `cd scrypath_ops && mix test test/scrypath_ops/document_observation_test.exs test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suites | ⬜ pending |
+| 175-02-02 | 175-02 | 2 | OPUX-21, OPUX-22 | T-175-04, T-175-06 | Same-UID refresh is observational; current host/allowlist/eligibility/target and confirmation gate the sole mutation. | LiveView rendered/async | `cd scrypath_ops && mix test test/scrypath_ops_web/live/sync_drift_live_test.exs` | Yes; extend existing suite | ⬜ pending |
+| 175-03-01 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-07, T-175-08 | Disposable mounted control flow correlates selected schema, exact UID, alias and authoritative fixture document; unsupported fixture effects are recorded as source limits. | Mounted Playwright | `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted` | Yes; extend existing suite/fixture | ⬜ pending |
+| 175-03-02 | 175-03 | 3 | OPUX-20, OPUX-21, OPUX-22 | T-175-09 | Degraded and long-ID states stay readable, focusable and contrast-compliant across themes and widths; full Ops suite remains green. | Mounted layout + contrast + ExUnit | `cd scrypath_ops && mix assets.build`; `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted`; `make -C examples/scrypath_ecommerce contrast`; `mix verify.ops_ui`; `cd scrypath_ops && mix precommit` | Yes; extend existing suites | ⬜ pending |
 
 ## Wave 0 Requirements
 
-Existing ExUnit, LiveView, disposable browser, accessibility, and contrast infrastructure covers the phase. Extend current focused tests and mounted journeys for the named evidence and mismatch cases; do not add a dependency, framework, CI service, or production backend access.
+Existing ExUnit, LiveView, disposable browser, accessibility, and contrast infrastructure covers the phase, so Wave 0 requires no new scaffold. Extend current focused tests and mounted journeys for the named evidence and mismatch cases; do not add a dependency, framework, CI service, or production backend access.
 
 ## Manual-Only Verifications
 
@@ -48,11 +51,11 @@ All acceptance behaviors must have executable verification. Compare representati
 
 ## Validation Sign-Off
 
-- [ ] Every planned task has an executable `<automated>` verify or an earlier Wave 0 task creates it.
-- [ ] No three consecutive tasks lack automated feedback.
+- [x] Every planned task has an executable `<automated>` verify using existing test infrastructure.
+- [x] No three consecutive tasks lack automated feedback; all six have immediate commands.
 - [x] Existing test and disposable mounted infrastructure is identified; no new infrastructure is required.
-- [ ] No watch-mode command is used.
-- [ ] Focused feedback remains bounded and mounted proof is scheduled at wave level.
-- [ ] `nyquist_compliant: true` set in frontmatter after plan mapping and evidence.
+- [x] No watch-mode command is used.
+- [x] Focused feedback remains bounded and mounted proof is scheduled at Wave 3.
+- [x] `nyquist_compliant: true` set after exact plan/task/command mapping; execution results remain pending.
 
-**Approval:** pending plan/task mapping and execution evidence.
+**Approval:** Plan validation map complete; execution evidence remains pending.

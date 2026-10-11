@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 completed locally on 2026-10-10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`: all four plans, OPUX-09–OPUX-15, and 41/41 plan truths passed; no hosted source receipt is claimed. Phase 174 completed locally at `2375f6b71f57037e9e636ae060828e26f59a82c6`: all three plans, OPUX-16–OPUX-19, and 19/19 goal truths passed. Phase 175 is next to discuss and plan. Phase 176 has five independently checked lookahead plans, gated until Phase 175 is complete.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 completed locally on 2026-10-10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`: all four plans, OPUX-09–OPUX-15, and 41/41 plan truths passed; no hosted source receipt is claimed. Phase 174 completed locally at `2375f6b71f57037e9e636ae060828e26f59a82c6`: all three plans, OPUX-16–OPUX-19, and 19/19 goal truths passed. Phase 175 is planned in three independently checked plans and ready to execute. Phase 176 has five independently checked lookahead plans, gated until Phase 175 is complete.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phase 173 discussion, the comp-first UI contract, checked implementation planning, execution, and local verification are complete; the next lifecycle command is `$gsd-discuss-phase 174`.
+All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phases 173 and 174 are complete, and Phase 175 has passed planning review; the next lifecycle command is `$gsd-execute-phase 175`.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173 and 174 are complete locally (Phase 173: 4/4 plans and 41/41 truths; Phase 174: 3/3 plans and 19/19 truths). Phase 175 is next to discuss and plan. Phase 176 has five plans verified by the independent checker and remains gated behind Phase 175. The required execution order is 173 → 174 → 175 → 176 → 177.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173 and 174 are complete locally (Phase 173: 4/4 plans and 41/41 truths; Phase 174: 3/3 plans and 19/19 truths). Phase 175 has three plans verified by the independent checker and is ready to execute. Phase 176 has five plans verified by the independent checker and remains gated behind Phase 175. The required execution order is 173 → 174 → 175 → 176 → 177.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -91,7 +91,7 @@ Plans:
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
-**Plans**: TBD
+**Plans**: 3 plans
 - [x] 174-01-PLAN.md
 - [x] 174-02-PLAN.md
 - [x] 174-03-PLAN.md
@@ -109,7 +109,17 @@ Plans:
   2. Operators can distinguish accepted, running, terminal success/failure, and unavailable or unknown observations while retaining exact task identity; an observation failure cannot appear as a failed remote task.
   3. Operators can review and perform only eligible, host-authorized repair or promotion behind existing confirmation gates, and see completion only when the matching task/index/document evidence supports it rather than when work is merely accepted or an unrelated historical task finishes.
 
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+- [ ] 175-01-PLAN.md — Separate recovery evidence and show the ordinary repair path
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 175-02-PLAN.md — Gate promotion and verify its correlated outcome
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 175-03-PLAN.md — Prove repair journeys and responsive accessible states
+
 **UI hint**: yes
 **Acceptance**: Inspect before/after Sync and drift states in both themes and relevant widths; exercise confirmation/eligibility, rendered controls, exact task and document correlations, and mounted repair/promotion paths in disposable stacks.
 
@@ -159,12 +169,12 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173 (4/4 plans) and 174 (3/3 plans) are complete; Phase 175 is next to discuss and plan.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173 (4/4 plans) and 174 (3/3 plans) are complete; Phase 175 (3 plans) is ready to execute.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-10 |
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
-| 175. Repair and Verification | 0/TBD | Not started | - |
+| 175. Repair and Verification | 0/3 | Planned | - |
 | 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |
 | 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
