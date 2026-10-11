@@ -1866,7 +1866,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               The backend accepted this swap. Waiting for its terminal result.
             </span>
             <span :if={@promotion_status == :completed}>Index swap completed.</span>
-            <span :if={@promotion_status in [:timed_out, :unknown]}>
+            <span :if={@promotion_status == :unknown && is_map(@promotion_document_observation)}>
+              The swap task succeeded, but its expected-document observation could not be confirmed.
+            </span>
+            <span :if={
+              @promotion_status in [:timed_out, :unknown] &&
+                !is_map(@promotion_document_observation)
+            }>
               The task result could not be confirmed. Refresh checks to inspect current index state.
             </span>
             <span :if={match?({:failed, {:cancelled, _}}, @promotion_status)}>
@@ -1878,7 +1884,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             }>
               The swap task failed. Refresh checks to inspect current index state.
             </span>
-            <p :if={@promotion_status == :completed} class="break-words">
+            <p
+              :if={
+                @promotion_status == :completed ||
+                  (@promotion_status == :unknown && is_map(@promotion_document_observation))
+              }
+              class="break-words"
+            >
               Expected document effect: {promotion_document_copy(@promotion_document_observation)}
             </p>
             <p :if={@promotion_status == :unknown && @promotion_observation_error} class="break-words">
