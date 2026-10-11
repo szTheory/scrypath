@@ -156,7 +156,7 @@ for (const entry of entries) {
 
     for (const theme of ["light", "dark"] as const) {
       await setTheme(page, theme);
-      for (const width of [390, 1279, 1280, 1440]) {
+      for (const width of [320, 390, 1279, 1280, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
         await expect(page.getByTestId("posture-row").filter({ hasText: entry.schema })).toHaveCount(1);
 
@@ -181,6 +181,8 @@ for (const entry of entries) {
           expect(row.scrollWidth, `${entry.name} row overflow at ${width}px`).toBeLessThanOrEqual(row.width + 1);
           expect(row.overflowWrap).toBe("anywhere");
         }
+        await expect(longSchema.locator("h3")).toContainText("VeryLongSchemaIdentifierForNarrowOperatorDisplays");
+        await expect(longSchema).not.toContainText("...");
         expect(geometry.rowGap).toBe("24px");
         expect(geometry.refreshHeight).toBeGreaterThanOrEqual(40);
         for (const height of geometry.inspectHeights) expect(height).toBeGreaterThanOrEqual(40);
@@ -190,6 +192,23 @@ for (const entry of entries) {
           path: join(screenshotDir, `${entry.name}-status-${theme}-${width}.png`),
           fullPage: true
         });
+      }
+
+      await chooseScenario(page, "failed");
+      for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        const row = page.getByTestId("posture-row").filter({ hasText: entry.schema });
+        const link = row.getByTestId("posture-failed-sync-link");
+        await expect(link).toHaveAttribute("href", new RegExp(`schema=${encodeURIComponent(entry.schema)}$`));
+        await expect(link).toBeVisible();
+        await link.focus();
+        const focus = await link.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return { width: style.outlineWidth, offset: style.outlineOffset, style: style.outlineStyle };
+        });
+        expect(focus).toEqual({ width: "2px", offset: "2px", style: "solid" });
+        const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        expect(pageWidth, `${entry.name} failed-work page overflow at ${width}px`).toBeLessThanOrEqual(width);
       }
     }
   });
