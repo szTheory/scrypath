@@ -1893,7 +1893,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             >
               Expected document effect: {promotion_document_copy(@promotion_document_observation)}
             </p>
-            <p :if={@promotion_status == :unknown && @promotion_observation_error} class="break-words">
+            <p
+              :if={
+                @promotion_status == :unknown && @promotion_observation_error &&
+                  !is_map(@promotion_document_observation)
+              }
+              class="break-words"
+            >
               The selected live-index or contract effect could not be confirmed ({inspect(
                 @promotion_observation_error
               )}).
