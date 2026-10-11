@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 📋 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 9 independently checked plans; Phase 173 remains next to execute)
+- 🚧 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 9 independently checked plans; Phase 173 complete, Phase 174 next)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 has an approved UI contract and four independently checked implementation plans; Phase 176 has five independently checked lookahead plans. Phase 173 remains first in the execution chain; no implementation has started.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phase 173 completed locally on 2026-10-10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`: all four plans, OPUX-09–OPUX-15, and 41/41 plan truths passed; no hosted source receipt is claimed. Phase 174 is next to discuss and plan. Phase 176 has five independently checked lookahead plans, gated behind Phases 173–175.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phase 173 discussion, the comp-first UI contract and checked implementation planning are complete; the next lifecycle command is `$gsd-execute-phase 173`. No phase execution has begun.
+All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phase 173 discussion, the comp-first UI contract, checked implementation planning, execution, and local verification are complete; the next lifecycle command is `$gsd-discuss-phase 174`.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 has four plans verified by the independent checker, and Phase 176 has five plans verified by the independent checker. Phases 174–175 and 177 remain unplanned; the required execution order is still 173 → 174 → 175 → 176 → 177. No implementation or product verification has started.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phase 173 is complete locally (4/4 plans; OPUX-09–OPUX-15; verification 41/41); Phase 174 is next and unplanned. Phase 176 has five plans verified by the independent checker but remains gated behind Phases 174–175. The required execution order is 173 → 174 → 175 → 176 → 177.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -37,7 +37,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 ## Phases
 
-- [ ] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view.
+- [x] **Phase 173: Shared Visual Foundation and Operational Time** - Operators see one calm, truthful visual language and usable time/copy feedback in the existing shell and representative Search health view. (completed 2026-10-10)
 - [ ] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work.
 - [ ] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift.
 - [ ] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls.
@@ -57,24 +57,24 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
   4. Operators can read stable human-readable last-success times, inspect the exact timestamp and timezone, and distinguish absent or unobserved success from observed success.
   5. In standalone and mounted Ops, operators can copy the full ISO last-success timestamp by keyboard or pointer and receive brief confirmation only after success; denied/unavailable clipboard access is explained, and routine Checked metadata offers no copy action.
 
-**Plans**: 4 plans
+**Plans**: 4/4 plans complete
 Plans:
 
 **Wave 1**
 
-- [ ] 173-01-PLAN.md — Neutral shell, one theme preference, and isolated dual-entrypoint browser runner
+- [x] 173-01-PLAN.md — Neutral shell, one theme preference, and isolated dual-entrypoint browser runner
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 173-02-PLAN.md — Lossless operational timestamps and snapshot-stable exact evidence
+- [x] 173-02-PLAN.md — Lossless operational timestamps and snapshot-stable exact evidence
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 173-03-PLAN.md — Local status cues, neutral metrics, and coherent quiet actions
+- [x] 173-03-PLAN.md — Local status cues, neutral metrics, and coherent quiet actions
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 173-04-PLAN.md — Truthful timestamp copying and feedback in standalone and mounted Ops
+- [x] 173-04-PLAN.md — Truthful timestamp copying and feedback in standalone and mounted Ops
 
 **UI hint**: yes
 **Canonical refs**: `.planning/research/v1.43/SCOPE.md`, `.planning/reference/OPERATOR-UI-REFINEMENT.md`, `.planning/reference/OPERATOR-UI-QUALITY.md`, `PRODUCT.md`, `DESIGN.md`, `.impeccable/config.json`, `.planning/research/v1.42/UI-SYSTEM.md`, `.planning/research/v1.42/UI-AUTOMATION.md`, `scrypath_ops/assets/css/DESIGN-TOKENS.md`
@@ -155,11 +155,11 @@ Plans:
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is ready to execute four checked plans; execution has not started.
+**Execution order:** 173 → 174 → 175 → 176 → 177. Phase 173 is complete (4/4 plans); Phase 174 is next to discuss and plan.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 173. Shared Visual Foundation and Operational Time | 0/4 | Planned — ready to execute | - |
+| 173. Shared Visual Foundation and Operational Time | 4/4 | Complete    | 2026-10-10 |
 | 174. Recovery Entry and Diagnosis | 0/TBD | Not started | - |
 | 175. Repair and Verification | 0/TBD | Not started | - |
 | 176. Search and Playbooks | 0/5 | Planned — waiting for Phases 173–175 | - |

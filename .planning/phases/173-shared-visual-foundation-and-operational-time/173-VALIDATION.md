@@ -38,13 +38,17 @@ Planning validation is separate from product verification. Phase 173 implementat
 
 | Requirement | Plan/tasks | Automated command and executable evidence |
 | --- | --- | --- |
-| OPUX-09 | 173-01-T1/T2/T3 | **COVERED.** Shell contract (10 tests), disposable production-route/asset smoke, `shell` browser suite (11 tests), and contrast (0 AA failures) passed. Both entrypoints, light/dark/System, responsive widths, theme state, flat shell, and scroll cues are covered; before/after images were inspected. |
+| OPUX-09 | 173-01-T1/T2/T3 | **COVERED.** Shell contract (10 tests), disposable production-route/asset smoke, and contrast (0 AA failures) passed. The current-source `shell` browser suite passed 14/14 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`; both entrypoints, light/dark/System, responsive widths, pre-paint theme, storage failures, flat shell, and scroll cues are covered. |
 | OPUX-10 | 173-03-T1/T2/T3 | **COVERED.** Focused Ops suite (31 tests) and `status` browser suite (6 tests) passed. Production LiveViews cover neutral containers, explicit degraded/failed/unknown cues, and partial retained data. |
 | OPUX-11 | 173-03-T1/T2/T3 | **COVERED.** Same current-source Ops and `status` suites passed; neutral zero, nonzero/unavailable distinctions, queue-unused, and no freshness implication are asserted. |
-| OPUX-12 | 173-01-T1/T2/T3 | **COVERED.** Shell contract and `shell` browser suite (11 tests) passed, including pointer/keyboard preference, one visual/ARIA selection, System appearance, reload/navigation/tabs, and storage failure cases. |
+| OPUX-12 | 173-01-T1/T2/T3 | **COVERED.** Shell contract passed. The current-source `shell` browser suite passed 14/14 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`, including pointer/keyboard preference, one visual/ARIA selection, System appearance, pre-paint theme, reload/navigation/cross-tab behavior, and get/set/remove storage failures. |
 | OPUX-13 | 173-03-T2/T3 | **COVERED.** Focused Ops contracts and `status` browser suite (6 tests) passed for hover/press/focus/selected/disabled/busy, retained labels/icons, reduced motion, and server eligibility after patches. |
 | OPUX-14 | 173-02-T1/T2/T3 | **COVERED.** Root status tests (6), focused PostureLive tests (11), `time` browser suite (8), and `mix verify.core --exclude integration --exclude docs_contract` (660 tests + 4 properties) passed. Boundary/precision/future cases, fixed observation snapshot, exact ISO/UTC disclosure, and absent/unavailable/unused states are asserted in both entrypoints. |
-| OPUX-15 | 173-04-T1/T2 | **COVERED.** Current-source `copy` browser suite (10 tests), focused LiveView/shell tests, full Ops suites (244 tests + 2 doctests), and tagged accessibility suite (4 tests) passed. Exact source payload, awaited result, four-second reset, persistent rejection/unavailable guidance, selection, Checked no-copy, keyboard/touch, and failed-refresh age are covered. |
+| OPUX-15 | 173-04-T1/T2 | **COVERED.** The current-source `copy` browser suite passed 10/10 at `b12a7c47157b4fb88b05237b7e2525d11896fd59`; Ops `mix precommit` and root `mix verify.ops_ui` each passed 246 tests plus 2 doctests. Exact source payload, awaited result, four-second reset, persistent rejection/unavailable guidance, selection, Checked no-copy, keyboard/touch, and failed-refresh age are covered in both entrypoints. |
+
+### Final-source refresh
+
+At `b12a7c47157b4fb88b05237b7e2525d11896fd59`, the shell suite passed 14/14 and the timestamp-copy suite passed 10/10. The independent UI review scored 24/24 with no human-review item; the code review reported zero findings. No requirement coverage gap or manual-only item remains.
 
 ## Per-Task Execution Results
 

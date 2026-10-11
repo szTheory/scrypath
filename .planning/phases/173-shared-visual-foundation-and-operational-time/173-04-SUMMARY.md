@@ -102,6 +102,7 @@ status: complete
 - Registered the shared `OpsTimestampCopy` hook in mounted and standalone bundles. It calls `navigator.clipboard.writeText` directly from user activation, waits for its result, and displays brief success only after resolution. Rejection or unavailable clipboard access opens/retains selectable evidence and gives persistent, dismissible manual-copy guidance.
 - Reused a shared four-second information-feedback timer, reset it on repeated success, cleared stale success on retry, and preserved snapshot-relative age through clipboard actions and failed refreshes.
 - Added deterministic Playwright coverage for both production entrypoints, including exact payload, delayed success, rejection/unavailable clipboard, repeat timing, dismissal/focus, missing evidence, keyboard/touch, and responsive light/dark layouts. Captured eight final screenshots at mobile and desktop widths; inspected representative mounted-light-mobile and standalone-dark-desktop captures.
+- The final UI review follow-up moved operational age and Copy timestamp to the specified 14px body/action size, with a 600 action weight. Healthy backend/queue badges and the Search health success icon now use neutral treatment; no health classification changed.
 - Added no dependencies.
 
 ## Task Commits
@@ -113,7 +114,7 @@ status: complete
 ## Verification
 
 - `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh copy` at exact source SHA `18423e149422a45f34f79ed2635262f996fc472c` — 10/10 Playwright cases passed for mounted and standalone routes. The disposable Compose containers, volume, and network were removed.
-- Ops `mix verify.ops_ui` and `mix precommit` — each passed 2 doctests and 244 tests with zero failures. `mix opsui.test_a11y` passed 4 tests. Focused PostureLive and shell tests passed 24 cases; root `mix test test/scrypath/operator/status_test.exs` passed 6.
+- Ops `mix verify.ops_ui` and `mix precommit` — each passed 2 doctests and 244 tests with zero failures. `mix opsui.test_a11y` passed 4 tests. Focused PostureLive and shell tests passed 24 cases; `mix test` on the [operator status test](../../../test/scrypath/operator/status_test.exs) passed 6.
 - Root `mix verify.core --exclude integration --exclude docs_contract` passed 660 tests and 4 properties with zero failures, plus Credo (65 checks across 242 files), warning-free compilation, formatting/workspace checks, and documentation build. This core-source proof was collected at `6d7f87b9a8bfc21c145f96bd6cddc24a7cead83e`; subsequent changes were Ops-only.
 - `make -C examples/scrypath_ecommerce contrast` passed with zero AA failures and 43 AAA advisories. JavaScript syntax, runner shell syntax, formatting, and `git diff --check` passed.
 - Final screenshots are under `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase173/scrypath_phase173_copy_18423e14_86786/screenshots/`: mounted and standalone, light and dark, 390px and 1440px. The exact ISO remains readable/selectable and the success message is visibly adjacent to its source evidence.
@@ -131,6 +132,20 @@ The disposable browser run and its cleanup passed. No unresolved implementation 
 ## User Setup Required
 
 None.
+
+## Final UI review follow-up
+
+- Source commit `5d8d7e4bdd415538d2af8f2896d8ecdbd1e3b7a0` resolves the three findings from the initial UI review: neutral healthy backend/queue badges, a Search health-only neutral success icon, and 14px operational age/copy text. The refreshed [173-UI-REVIEW.md](173-UI-REVIEW.md) scores 24/24 and records `needs_human_review: false`.
+- The committed source tree passed `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status` (6/6 mounted/standalone browser cases) and `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh copy` (10/10), including 14px age and 14px/600 copy-action assertions at 390px and 1440px in both themes. The browser runs were recorded at exact SHA `5d8d7e4bdd415538d2af8f2896d8ecdbd1e3b7a0`; both disposable Compose stacks cleaned up.
+- `mix verify.ops_ui` and Ops `mix precommit` each passed 2 doctests and 245 tests; `mix opsui.test_a11y` passed 4 tests. `make -C examples/scrypath_ecommerce contrast` reported zero AA failures and 43 AAA advisories. No dependency was added.
+- Current screenshots are under `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase173/scrypath_phase173_copy_5d8d7e4b_51739/screenshots/` and `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase173/scrypath_phase173_status_5d8d7e4b_47751/screenshots/`.
+
+## Final review corrections and source-current proof
+
+- Review follow-up at source SHA `b12a7c47157b4fb88b05237b7e2525d11896fd59` guards individual `localStorage` reads/writes/removals in both browser bundles with an in-memory fallback. The mounted Ops route seeds the selected theme before stylesheet paint. Posture scans now use a supervised unlinked stream and preserve the schema identity when a check task exits abnormally. No dependency was added.
+- The current-source mounted/standalone shell browser suite passed 14/14 at `b12a7c4`, covering light/dark/System modes, first paint, navigation/cross-tab behavior, long identifiers, and denied storage methods. The current-source copy suite passed 10/10 at the same SHA, covering successful and failed clipboard outcomes in both entrypoints. Each disposable Compose project removed its containers, volume, and network; the retained preview on port 4012 was not used.
+- Ops `mix precommit` and root `mix verify.ops_ui` passed 2 doctests and 246 tests each with zero failures; the focused PostureLive suite passed 15 tests. `mix assets.build` passed after the browser-bundle changes. The root core gate remains the earlier exact-source proof at `6d7f87b`; its covered core files were unchanged by these Ops and example-host corrections.
+- The final code review is clean with zero findings at `b12a7c4`. The refreshed UI audit scores 24/24 at that SHA and needs no human review. The security register has 9/9 threats closed, with `threats_open: 0`.
 
 ## Next Phase Readiness
 

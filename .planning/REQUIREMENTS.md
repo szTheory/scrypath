@@ -1,22 +1,22 @@
 # Requirements: Scrypath — v1.43 ScrypathOps UI refinement
 
 **Defined:** 2026-10-06
-**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. Implementation has not started.
+**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-15 are complete and verified locally in Phase 173; OPUX-16–OPUX-28 remain pending.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.43 Requirements
 
-Refine the six existing operator surfaces. Continue the OPUX family after completed v1.42 OPUX-01–OPUX-08; none of the new requirements is completed by initialization.
+Refine the six existing operator surfaces. Continue the OPUX family after completed v1.42 OPUX-01–OPUX-08. At initialization none of the v1.43 requirements was complete; Phase 173 has since closed OPUX-09–OPUX-15.
 
 ### Shared visual foundation
 
-- [ ] **OPUX-09**: Operators see a flat neutral page background throughout the operator shell in explicit light/dark, OS-driven System appearance, and responsive layouts; decorative shell gradients are removed without removing functional scroll-edge cues.
-- [ ] **OPUX-10**: Operators can identify degraded, failed, and unknown states through explicit text and restrained local icon/badge cues on neutral summary/schema surfaces, without broad yellow fills or whole-record status outlines.
-- [ ] **OPUX-11**: Operators see zero-error counts as ordinary neutral metrics rather than green success outlines; nonzero and unavailable values remain distinguishable, and zero errors do not imply overall health or document freshness.
-- [ ] **OPUX-12**: Operators see exactly one selected theme preference with matching accessible state. System alone looks selected while appearance follows OS changes; preference survives reload/navigation and remains coherent across tabs.
-- [ ] **OPUX-13**: Operators can recognize and use shared quiet actions with deliberate hover, keyboard focus, pressed, selected, disabled, and busy states in both themes; busy refresh/actions retain meaningful icons and labels across existing usages.
-- [ ] **OPUX-14**: Operators can read operational last-success times in a human-readable form and access the exact timestamp/timezone; the display remains stable between checks, and absent or unobserved success stays distinct from an observed success.
-- [ ] **OPUX-15**: Operators can copy an operational last-success timestamp as full ISO evidence using a discoverable keyboard-accessible control in standalone and mounted Ops. “Timestamp copied” appears briefly only after clipboard success; unavailable/denied access is explained truthfully, and routine Checked metadata has no copy control.
+- [x] **OPUX-09**: Operators see a flat neutral page background throughout the operator shell in explicit light/dark, OS-driven System appearance, and responsive layouts; decorative shell gradients are removed without removing functional scroll-edge cues.
+- [x] **OPUX-10**: Operators can identify degraded, failed, and unknown states through explicit text and restrained local icon/badge cues on neutral summary/schema surfaces, without broad yellow fills or whole-record status outlines.
+- [x] **OPUX-11**: Operators see zero-error counts as ordinary neutral metrics rather than green success outlines; nonzero and unavailable values remain distinguishable, and zero errors do not imply overall health or document freshness.
+- [x] **OPUX-12**: Operators see exactly one selected theme preference with matching accessible state. System alone looks selected while appearance follows OS changes; preference survives reload/navigation and remains coherent across tabs.
+- [x] **OPUX-13**: Operators can recognize and use shared quiet actions with deliberate hover, keyboard focus, pressed, selected, disabled, and busy states in both themes; busy refresh/actions retain meaningful icons and labels across existing usages.
+- [x] **OPUX-14**: Operators can read operational last-success times in a human-readable form and access the exact timestamp/timezone; the display remains stable between checks, and absent or unobserved success stays distinct from an observed success.
+- [x] **OPUX-15**: Operators can copy an operational last-success timestamp as full ISO evidence using a discoverable keyboard-accessible control in standalone and mounted Ops. “Timestamp copied” appears briefly only after clipboard success; unavailable/denied access is explained truthfully, and routine Checked metadata has no copy control.
 
 ### Recovery entry and diagnosis
 
@@ -75,13 +75,13 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 
 | Requirement | Phase | Status |
 | --- | --- | --- |
-| OPUX-09 | Phase 173 | Pending |
-| OPUX-10 | Phase 173 | Pending |
-| OPUX-11 | Phase 173 | Pending |
-| OPUX-12 | Phase 173 | Pending |
-| OPUX-13 | Phase 173 | Pending |
-| OPUX-14 | Phase 173 | Pending |
-| OPUX-15 | Phase 173 | Pending |
+| OPUX-09 | Phase 173 | Complete |
+| OPUX-10 | Phase 173 | Complete |
+| OPUX-11 | Phase 173 | Complete |
+| OPUX-12 | Phase 173 | Complete |
+| OPUX-13 | Phase 173 | Complete |
+| OPUX-14 | Phase 173 | Complete |
+| OPUX-15 | Phase 173 | Complete |
 | OPUX-16 | Phase 174 | Pending |
 | OPUX-17 | Phase 174 | Pending |
 | OPUX-18 | Phase 174 | Pending |
@@ -101,8 +101,8 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 - Mapped to exactly one approved phase: 20
 - Unmapped: 0
 - Approved: 20
-- Implemented or verified: 0
+- Implemented or verified: 7 (OPUX-09–OPUX-15)
 
 ---
 *Requirements defined: 2026-10-06 from the approved milestone brief.*
-*Last updated: 2026-10-06 after explicit requirements and roadmap approval.*
+*Last updated: 2026-10-10 after local Phase 173 completion and verification.*

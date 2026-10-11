@@ -131,6 +131,14 @@ status: complete
 
 Plan 04 implements and verifies truthful timestamp copying from validated source ISO values in both browser bundles, including persistent rejection/unavailable feedback and manual selection recovery.
 
+## Post-review adjustment
+
+The final Phase 173 UI audit at source SHA `5d8d7e4bdd415538d2af8f2896d8ecdbd1e3b7a0` identified two remaining healthy-state color cues: backend/queue badges and the Search health verdict icon. Commit `5d8d7e4` makes those cues neutral (scoping the verdict treatment to Search health so other Ops verdicts keep their existing presentation). The exact-SHA mounted/standalone status suite passed 6/6, and the refreshed audit scored 24/24 with no human-review item. Final Ops-wide gate and screenshot details are recorded in `173-04-SUMMARY.md`.
+
+## Final reliability follow-up
+
+Final code review added supervised, unlinked posture-check tasks and retains each task result alongside its allowlisted schema. Abnormal task exits therefore preserve schema identity, prior evidence, and the recovery link instead of taking down the LiveView. The named `Task.Supervisor` is part of the Ops application tree; a focused LiveView regression test covers the abnormal-exit path. The final Ops-wide gates passed 2 doctests and 246 tests with zero failures.
+
 ---
 *Phase: 173-shared-visual-foundation-and-operational-time*
 *Completed: 2026-10-10*
