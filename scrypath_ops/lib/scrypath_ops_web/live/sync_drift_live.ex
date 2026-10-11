@@ -49,6 +49,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:promotion_task_id, nil)
       |> assign(:promotion_status, nil)
       |> assign(:promotion_loading, false)
+      |> assign(:promotion_identity, nil)
+      |> assign(:promotion_document_observation, nil)
+      |> assign(:promotion_observation_error, nil)
       |> assign(:confirm_swap?, false)
       |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
 
@@ -152,6 +155,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_event("refresh_promotion_checks", _params, socket) do
     if current_selection?(socket) do
       socket = socket |> refresh_reconcile() |> refresh_drift() |> refresh_promotion_eligibility()
+
+      socket =
+        case socket.assigns.promotion_task_id do
+          task_id when not is_nil(task_id) -> start_promotion_refresh(socket, task_id)
+          _ -> socket
+        end
+
       {:noreply, socket}
     else
       {:noreply, unavailable(socket)}
@@ -330,9 +340,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       case result do
         {:ok, %{id: ^task_id, state: :succeeded}} ->
           socket
-          |> assign(:promotion_status, :completed)
-          |> load_reconcile_on_mount()
-          |> refresh_drift()
+          |> assign(:promotion_status, :unknown)
+          |> observe_promotion_effects()
 
         {:ok, _unexpected_task} ->
           assign(socket, :promotion_status, :unknown)
@@ -364,6 +373,51 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
        socket
        |> assign(:promotion_loading, false)
        |> assign(:promotion_status, :unknown)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(
+        {:promotion_refresh, _generation, _task_id},
+        {:ok, {generation, task_id, result}},
+        socket
+      ) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      socket = assign(socket, :promotion_loading, false)
+
+      case result do
+        {:ok, %OperationTask{id: ^task_id, state: :succeeded}} ->
+          socket
+          |> assign(:promotion_status, :unknown)
+          |> observe_promotion_effects()
+
+        {:ok, %OperationTask{id: ^task_id, state: :failed} = task} ->
+          assign(socket, :promotion_status, {:failed, {:task_failed, task}})
+
+        {:ok, %OperationTask{id: ^task_id, state: :cancelled} = task} ->
+          assign(socket, :promotion_status, {:failed, {:cancelled, task}})
+
+        {:ok, %OperationTask{id: ^task_id, state: state}}
+        when state in [:enqueued, :processing] ->
+          assign(socket, :promotion_status, :accepted)
+
+        _error_or_mismatched_task ->
+          preserve_promotion_failure(socket)
+      end
+      |> invalidate_recovery_claim()
+      |> refresh_promotion_eligibility()
+      |> then(&{:noreply, &1})
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async({:promotion_refresh, generation, task_id}, {:exit, _reason}, socket) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      {:noreply, preserve_promotion_failure(socket)}
     else
       {:noreply, socket}
     end
@@ -492,6 +546,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:promotion_task_id, nil)
     |> assign(:promotion_status, nil)
     |> assign(:promotion_loading, false)
+    |> assign(:promotion_identity, nil)
+    |> assign(:promotion_document_observation, nil)
+    |> assign(:promotion_observation_error, nil)
     |> assign(:confirm_swap?, false)
     |> assign(:promotion_eligibility, {:blocked, :reconcile_not_current})
   end
@@ -987,11 +1044,15 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             {:ok, %{task: task}} ->
               task_id = Map.fetch!(task, :uid)
               generation = socket.assigns.context_generation
+              identity = current_promotion_identity(socket)
 
               socket
               |> assign(:promotion_task_id, task_id)
               |> assign(:promotion_status, :accepted)
               |> assign(:promotion_loading, true)
+              |> assign(:promotion_identity, identity)
+              |> assign(:promotion_document_observation, nil)
+              |> assign(:promotion_observation_error, nil)
               |> start_async({:promotion_swap, generation, task_id}, fn ->
                 result = Tasks.wait_for_task(task, task_wait_opts(opts))
                 {generation, task_id, result}
@@ -1005,6 +1066,46 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           put_flash(socket, :error, "Index promotion blocked: #{promotion_reason(reason)}")
       end
     end)
+  end
+
+  defp start_promotion_refresh(socket, task_id) do
+    generation = socket.assigns.context_generation
+    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+
+    socket
+    |> assign(:promotion_loading, true)
+    |> start_async({:promotion_refresh, generation, task_id}, fn ->
+      {generation, task_id, read_promotion_task(task_id, opts)}
+    end)
+  end
+
+  defp read_promotion_task(task_id, opts) do
+    client = Keyword.get(opts, :meilisearch_client) || Scrypath.Meilisearch.Client
+
+    with {:ok, payload} <- client.task(task_id, opts),
+         {:ok, normalized} <- Scrypath.Meilisearch.normalize_task(payload, :poll),
+         true <- normalized.uid == task_id,
+         true <- normalized.type == "indexSwap" do
+      {:ok, Scrypath.Operations.task_from_backend(normalized, source: :meilisearch)}
+    else
+      false -> {:error, :task_identity_mismatch}
+      {:error, _reason} = error -> error
+      _other -> {:error, :task_unavailable}
+    end
+  rescue
+    _error -> {:error, :task_unavailable}
+  end
+
+  defp preserve_promotion_failure(socket) do
+    case socket.assigns.promotion_status do
+      {:failed, _reason} ->
+        assign(socket, :promotion_loading, false)
+
+      _status ->
+        socket
+        |> assign(:promotion_status, :unknown)
+        |> assign(:promotion_loading, false)
+    end
   end
 
   defp fetch_promotion_prerequisites(socket) do
@@ -1057,6 +1158,122 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp refresh_promotion_eligibility(socket) do
     result = PromotionEligibility.evaluate(promotion_context(socket))
     assign(socket, :promotion_eligibility, result)
+  end
+
+  defp current_promotion_identity(socket) do
+    reconcile = socket.assigns.reconcile_result || %{}
+    reindex = Map.get(reconcile, :reindex, %{})
+
+    %{
+      schema: socket.assigns.selected_schema,
+      generation: socket.assigns.context_generation,
+      live_index: Map.get(reindex, :live_index),
+      target_index: Map.get(reindex, :target_index)
+    }
+  end
+
+  defp observe_promotion_effects(socket) do
+    socket = socket |> load_reconcile_on_mount() |> refresh_drift()
+    identity = socket.assigns.promotion_identity
+    generation = socket.assigns.context_generation
+
+    with %{schema: schema, generation: ^generation, live_index: live, target_index: target} <-
+           identity,
+         true <- current_selection?(socket) and schema == socket.assigns.selected_schema,
+         true <-
+           is_binary(live) and live != "" and is_binary(target) and target != "" and
+             live != target,
+         true <- fresh_promotion_contract?(socket, identity),
+         {:ok, document_observation} <- observe_prepared_target_documents(socket, identity) do
+      socket
+      |> assign(:promotion_status, :completed)
+      |> assign(:promotion_document_observation, document_observation)
+      |> assign(:promotion_observation_error, nil)
+    else
+      {:error, reason} ->
+        socket
+        |> assign(:promotion_status, :unknown)
+        |> assign(:promotion_document_observation, %{state: :unknown, reason: reason})
+        |> assign(:promotion_observation_error, reason)
+
+      _ ->
+        socket
+        |> assign(:promotion_status, :unknown)
+        |> assign(:promotion_document_observation, %{
+          state: :not_checked,
+          reason: :index_or_contract_unavailable
+        })
+        |> assign(:promotion_observation_error, :index_or_contract_unavailable)
+    end
+  rescue
+    _ ->
+      socket
+      |> assign(:promotion_status, :unknown)
+      |> assign(:promotion_document_observation, %{
+        state: :not_checked,
+        reason: :observation_error
+      })
+      |> assign(:promotion_observation_error, :observation_error)
+  end
+
+  defp fresh_promotion_contract?(socket, identity) do
+    generation = socket.assigns.context_generation
+    reconcile = socket.assigns.reconcile_result
+    drift = socket.assigns.drift_result
+    reindex = if is_map(reconcile), do: Map.get(reconcile, :reindex, %{}), else: %{}
+
+    is_nil(socket.assigns.reconcile_error) and is_nil(socket.assigns.drift_error) and
+      socket.assigns.reconcile_generation == generation and
+      socket.assigns.drift_generation == generation and is_map(reconcile) and is_map(drift) and
+      Map.get(reconcile, :schema) == identity.schema and
+      Map.get(drift, :schema) == identity.schema and
+      Map.get(reconcile, :index) ==
+        Scrypath.Meilisearch.index_name(identity.schema, socket.assigns.scrypath_opts) and
+      Map.get(reconcile, :index) == Map.get(drift, :index) and
+      Map.get(reindex, :live_index) == identity.live_index and
+      Map.get(reindex, :target_index) == identity.target_index and
+      drift_mismatch_count(drift) == 0
+  rescue
+    _ -> false
+  end
+
+  defp observe_prepared_target_documents(socket, identity) do
+    case socket.assigns.recovery_handle do
+      handle when is_binary(handle) ->
+        context = recovery_host_context(socket, identity.schema)
+
+        with receipt when is_map(receipt) <- RecoveryObservation.lookup(context, handle),
+             true <- Map.get(receipt, :schema) == OperatorSelection.canonical(identity.schema),
+             true <- Map.get(receipt, :index) == identity.target_index,
+             true <-
+               Map.get(receipt, :endpoint) ==
+                 endpoint_identity(Keyword.get(socket.assigns.scrypath_opts, :meilisearch_url)),
+             {:ok, expected} <-
+               read_expected_effects(identity.schema, receipt, socket.assigns.scrypath_opts),
+             {:ok, observation} <-
+               ScrypathOps.DocumentObservation.check_effects(
+                 expected.operation,
+                 identity.live_index,
+                 expected.expected,
+                 ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+                 |> Keyword.put(
+                   :document_id_field,
+                   Scrypath.Schema.Metadata.document_id(identity.schema)
+                 )
+               ) do
+          if observation.state == :verified do
+            {:ok, observation}
+          else
+            {:error, {:prepared_target_effect_unconfirmed, observation.state, observation.reason}}
+          end
+        else
+          false -> {:ok, %{state: :not_checked, reason: :no_applicable_prepared_target_effect}}
+          _ -> {:ok, %{state: :not_checked, reason: :no_applicable_prepared_target_effect}}
+        end
+
+      _ ->
+        {:ok, %{state: :not_checked, reason: :no_authoritative_prepared_target_effect}}
+    end
   end
 
   defp promotion_context(socket) do
@@ -1125,6 +1342,20 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_status_title(:timed_out), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(:unknown), do: "Index swap outcome unconfirmed"
   defp promotion_status_title(_), do: "Index swap status"
+
+  defp promotion_document_copy(%{state: :verified}),
+    do: "The prepared target's expected document effect was observed in the selected live index."
+
+  defp promotion_document_copy(%{state: :not_checked, reason: reason}),
+    do:
+      "Expected document freshness was not checked (#{inspect(reason)}). No authoritative target effect was available."
+
+  defp promotion_document_copy(%{reason: reason}),
+    do:
+      "Expected document freshness could not be confirmed (#{inspect(reason)}). Refresh checks to inspect this same task."
+
+  defp promotion_document_copy(_),
+    do: "Expected document freshness has not been checked for this promotion."
 
   defp task_wait_opts(opts) do
     opts
@@ -1499,8 +1730,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <span :if={match?({:failed, _}, @promotion_status)}>
               The swap task failed. Refresh checks to inspect current index state.
             </span>
+            <p :if={@promotion_status == :completed} class="break-words">
+              Expected document effect: {promotion_document_copy(@promotion_document_observation)}
+            </p>
+            <p :if={@promotion_status == :unknown && @promotion_observation_error} class="break-words">
+              The selected live-index or contract effect could not be confirmed ({inspect(
+                @promotion_observation_error
+              )}).
+            </p>
             <.ops_button
-              :if={@promotion_status != :accepted}
+              :if={@promotion_status != :accepted || !@promotion_loading}
               phx-click="refresh_promotion_checks"
               size={:sm}
             >

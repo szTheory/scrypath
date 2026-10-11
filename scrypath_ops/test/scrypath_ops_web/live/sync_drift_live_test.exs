@@ -55,7 +55,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     def swap_indexes(_indexes, _config) do
       Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.put(state, :swap_called, true)
+        state
+        |> Map.put(:swap_called, true)
+        |> Map.update!(:swap_calls, &(&1 + 1))
       end)
 
       {:ok,
@@ -65,6 +67,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
          "type" => "indexSwap",
          "indexUid" => "sdv_ops_post_b"
        }}
+    end
+
+    def task(uid, _config) do
+      Agent.update(:sync_drift_live_test_state, fn state ->
+        Map.update!(state, :task_calls, &[uid | &1])
+      end)
+
+      Agent.get(:sync_drift_live_test_state, fn state ->
+        %{"uid" => uid, "status" => state.task_status, "type" => "indexSwap"}
+      end)
+      |> then(&{:ok, &1})
     end
   end
 
@@ -99,7 +112,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     end
 
     {:ok, _pid} =
-      Agent.start_link(fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
+      Agent.start_link(
+        fn ->
+          %{
+            tasks_calls: 0,
+            settings_calls: 0,
+            swap_called: false,
+            swap_calls: 0,
+            task_calls: [],
+            task_status: "processing"
+          }
+        end,
         name: :sync_drift_live_test_state
       )
 
@@ -515,7 +538,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     end
   end
 
-  test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
+  test "swap observer keeps exact task outcomes and waits for fresh evidence before completion" do
     socket =
       sync_drift_socket(%{
         context_generation: 9,
@@ -531,7 +554,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert completed.assigns.promotion_status == :completed
+    assert completed.assigns.promotion_status == :unknown
     assert completed.assigns.promotion_task_id == 991
 
     {:noreply, wrong_task} =
@@ -655,21 +678,75 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.promotion_loading
   end
 
-  test "refresh after an unconfirmed promotion checks state without submitting another swap" do
-    for status <- [:timed_out, :unknown] do
-      socket =
-        sync_drift_socket(%{
-          promotion_task_id: 991,
-          promotion_status: status,
-          promotion_loading: false
-        })
+  test "a successful swap task without fresh index evidence is not promotion completion" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true,
+        reconcile_result: nil,
+        reconcile_error: :backend_unavailable,
+        drift_result: nil,
+        drift_error: :backend_unavailable
+      })
 
-      {:noreply, refreshed} = SyncDriftLive.handle_event("refresh_promotion_checks", %{}, socket)
+    assert {:noreply, observed} =
+             SyncDriftLive.handle_async(
+               {:promotion_swap, 9, 991},
+               {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
+               socket
+             )
 
-      assert refreshed.assigns.promotion_task_id == 991
-      assert refreshed.assigns.promotion_status == status
-      refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
-    end
+    assert observed.assigns.promotion_status == :unknown
+    assert observed.assigns.promotion_task_id == 991
+  end
+
+  test "mounted promotion refresh reads the retained UID once without swapping again", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    :sys.replace_state(lv.pid, fn state ->
+      socket = %{
+        state.socket
+        | assigns:
+            Map.merge(state.socket.assigns, %{
+              promotion_task_id: 991,
+              promotion_status: :unknown,
+              promotion_loading: false,
+              promotion_identity: nil,
+              __changed__:
+                Map.merge(state.socket.assigns.__changed__, %{
+                  promotion_task_id: true,
+                  promotion_status: true,
+                  promotion_loading: true
+                })
+            })
+      }
+
+      %{state | socket: socket}
+    end)
+
+    assert :sys.get_state(lv.pid).socket.assigns.promotion_status == :unknown
+
+    lv
+    |> element("button[phx-click='refresh_reconcile']")
+    |> render_click()
+
+    lv
+    |> element("#index-promotion button", "Refresh checks")
+    |> render_click()
+    |> then(fn _ -> render_async(lv) end)
+
+    lv
+    |> element("#index-promotion button", "Refresh checks")
+    |> render_click()
+    |> then(fn _ -> render_async(lv) end)
+
+    assert Agent.get(:sync_drift_live_test_state, & &1.task_calls) == [991, 991]
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+    assert :sys.get_state(lv.pid).socket.assigns.promotion_task_id == 991
   end
 
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do

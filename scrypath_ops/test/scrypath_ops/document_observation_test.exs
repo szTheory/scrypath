@@ -52,6 +52,28 @@ defmodule ScrypathOps.DocumentObservationTest do
              )
   end
 
+  test "checks prepared effects against the explicitly resolved active index" do
+    stub = stub_name("ActiveIndexEffect")
+
+    Req.Test.stub(stub, fn conn ->
+      assert conn.method == "GET"
+      assert conn.request_path == "/indexes/live-articles/documents/1"
+      json(conn, 200, %{"id" => 1, "title" => "Prepared"})
+    end)
+
+    assert {:ok,
+            %{
+              state: :verified,
+              evidence: %{operation: :upsert, index: "live-articles", expected_count: 1}
+            }} =
+             DocumentObservation.check_effects(
+               :upsert,
+               "live-articles",
+               [%{id: 1, data: %{title: "Prepared"}}],
+               opts(stub)
+             )
+  end
+
   test "marks an exact-field mismatch and missing upsert document as failed" do
     mismatch_stub = stub_name("Mismatch")
 
