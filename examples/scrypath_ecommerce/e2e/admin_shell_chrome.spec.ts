@@ -527,13 +527,30 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         ]);
         await assertReadableControl(page.locator(".ops-command-hint"), "command action", 14, 40);
         await assertReadableControl(page.locator("#theme-toggle button").first(), "theme target", 0, 44);
+        if (width <= 420) {
+          const commandHint = page.locator(".ops-command-hint");
+          await expect(commandHint).toHaveAttribute("aria-label", "Jump to surface");
+          const themeLabels = await page.locator("#theme-toggle button span").all();
+          expect(themeLabels).toHaveLength(3);
+          for (const label of themeLabels) await expect(label).toBeHidden();
+          const contentFits = await commandHint.evaluate((element) => element.scrollWidth <= element.clientWidth + 1);
+          expect(contentFits, `command action content fits at ${width}px`).toBe(true);
+
+          if (width <= 360) {
+            await expect(commandHint.locator(".ops-command-hint__icon")).toBeVisible();
+            await expect(commandHint.locator("span")).toBeHidden();
+            await assertReadableControl(commandHint, "compact command action", 14, 44);
+          } else {
+            await expect(commandHint.locator("span")).toBeVisible();
+          }
+        }
         const heading = page.locator("#ops-main h3:visible").first();
         if (await heading.count()) await assertReadableControl(heading, `${surface.name} record heading`, 16);
         const primary = {
-          "Control Room": page.getByTestId("intent-incident"),
+          "Control Room": page.getByTestId("control-room-health-link"),
           "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
-          "Sync/Drift": page.getByRole("button", { name: "Refresh sync status", exact: true }),
+          "Sync/Drift": page.getByRole("button", { name: "Refresh sync and queue status", exact: true }),
           "Search": page.getByRole("button", { name: "Run search", exact: true }),
           "Playbooks": page.getByRole("button", { name: "Load preview", exact: true }).first()
         }[surface.name]!;

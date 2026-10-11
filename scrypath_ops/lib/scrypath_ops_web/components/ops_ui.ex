@@ -5,6 +5,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
+  import ScrypathOpsWeb.CoreComponents, only: [icon: 1]
 
   use Gettext, backend: ScrypathOpsWeb.Gettext
 
@@ -53,6 +54,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
+      <.icon name="hero-magnifying-glass" class="ops-command-hint__icon size-4" />
       <span>Jump to surface</span>
       <kbd class="ops-kbd">⌘K</kbd>
     </button>
@@ -125,6 +127,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:meta, :string, default: nil)
   attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
+  attr(:prominent_title, :boolean, default: false)
   slot(:actions)
   slot(:inner_block, required: true)
 
@@ -138,7 +141,13 @@ defmodule ScrypathOpsWeb.OpsUi do
     <section aria-labelledby={@heading_id} class={["space-y-3", @class]}>
       <.ops_toolbar class="items-start gap-3">
         <div class="min-w-0 space-y-1">
-          <h2 id={@heading_id} class="text-ops-h2 font-semibold leading-ops-tight text-base-content">
+          <h2
+            id={@heading_id}
+            class={[
+              if(@prominent_title, do: "text-ops-h1", else: "text-ops-h2"),
+              "font-semibold leading-ops-tight text-base-content"
+            ]}
+          >
             {@title}
           </h2>
           <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
@@ -242,6 +251,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Refresh action paired with the time of the latest check."
   attr(:id, :string, required: true)
   attr(:checked_at, :any, default: nil)
+  attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
 
@@ -264,6 +274,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
       <.ops_refresh_button
         id={@id}
+        label={@label}
         aria_label={@aria_label}
         variant={@variant}
         size={@size}
@@ -331,6 +342,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:title, :string, required: true)
   attr(:role, :string, default: nil)
+  attr(:neutral, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:actions)
@@ -341,15 +353,24 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface ops-notice-surface--raised",
-        tone_class(@kind),
+        if(@neutral, do: "ops-notice-surface--neutral", else: tone_class(@kind)),
         @class
       ]}
+      data-status-kind={@kind}
       role={@role}
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
-          <p class="font-semibold">{@title}</p>
+          <p class="ops-notice-surface__title font-semibold">
+            <span
+              :if={@neutral}
+              class="ops-notice-surface__cue"
+              aria-hidden="true"
+            >
+            </span>
+            {@title}
+          </p>
           <div class="mt-1 text-base-content/80">{render_slot(@inner_block)}</div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">

@@ -72,7 +72,7 @@ export async function gotoSyncDrift(page: Page): Promise<void> {
 export async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
 export async function gotoPlaybooks(page: Page): Promise<void> {
