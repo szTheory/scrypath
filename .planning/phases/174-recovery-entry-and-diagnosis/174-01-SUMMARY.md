@@ -25,12 +25,11 @@ tech-stack:
     - Show retry eligibility from the existing RecoveryAction and keep acceptance adjacent to the source failure.
 
 key-files:
-  created:
-    - .planning/phases/174-recovery-entry-and-diagnosis/deferred-items.md
   modified:
     - scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex
     - scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs
     - examples/scrypath_ecommerce/e2e/operator.spec.ts
+    - examples/scrypath_ecommerce/e2e/harness.spec.ts
 
 key-decisions:
   - "Keep URL schema identity and the existing host gate as the authorities for recovery actions."
@@ -94,7 +93,7 @@ Each task was committed atomically:
 - `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex` - Visible eligibility copy for each failed-work row.
 - `scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs` - Explicit-schema retry and fail-closed/security assertions.
 - `examples/scrypath_ecommerce/e2e/operator.spec.ts` - Mounted schema/history/theme/focus/responsive journey.
-- `.planning/phases/174-recovery-entry-and-diagnosis/deferred-items.md` - Records unrelated existing verifier failures.
+- `examples/scrypath_ecommerce/e2e/harness.spec.ts` - Exact Search page heading locator so the page heading is distinct from its search empty-state heading.
 
 ## Decisions Made
 
@@ -108,8 +107,8 @@ None. No new dependencies, routes, retry policies, or authorization paths were i
 ## Issues Encountered
 
 - The first local Mix run lacked fetched dependencies. `mix deps.get` fetched only lockfile-pinned dependencies into the worktree; Hex cache was redirected to `/private/tmp` because the default user cache was not writable.
-- `make -C examples/scrypath_ecommerce verify-mounted` ran the new recovery journey successfully (3 browser tests passed), but the full command failed its unrelated showcase smoke test because a non-exact "Search" heading locator also matches "Run a search to see results." This is recorded in `deferred-items.md`.
-- `mix precommit` ran 250 tests and 2 doctests, with 2 unrelated existing Sync and drift test teardown failures from stopping an already stopped GenServer. This is recorded in `deferred-items.md`; the focused FailedSyncLive suite passed with 16 tests and no failures.
+- The first mounted run exposed a substring heading locator collision between the Search page title and its empty-state title. The harness now requests an exact heading match; the complete mounted gate then passed all 4 browser tests, including the recovery journey.
+- An initial `mix precommit` invocation reported two Sync/drift teardown failures. A rerun with the project's Elixir 1.19/OTP 28 toolchain passed 2 doctests and all 250 tests with 0 failures.
 
 ## User Setup Required
 
