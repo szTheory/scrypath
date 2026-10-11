@@ -155,6 +155,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   def handle_event("refresh_promotion_checks", _params, socket) do
     if current_selection?(socket) do
       socket = socket |> refresh_reconcile() |> refresh_drift() |> refresh_promotion_eligibility()
+
+      socket =
+        case socket.assigns.promotion_task_id do
+          task_id when not is_nil(task_id) -> start_promotion_refresh(socket, task_id)
+          _ -> socket
+        end
+
       {:noreply, socket}
     else
       {:noreply, unavailable(socket)}
@@ -366,6 +373,51 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
        socket
        |> assign(:promotion_loading, false)
        |> assign(:promotion_status, :unknown)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async(
+        {:promotion_refresh, _generation, _task_id},
+        {:ok, {generation, task_id, result}},
+        socket
+      ) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      socket = assign(socket, :promotion_loading, false)
+
+      case result do
+        {:ok, %OperationTask{id: ^task_id, state: :succeeded}} ->
+          socket
+          |> assign(:promotion_status, :unknown)
+          |> observe_promotion_effects()
+
+        {:ok, %OperationTask{id: ^task_id, state: :failed} = task} ->
+          assign(socket, :promotion_status, {:failed, {:task_failed, task}})
+
+        {:ok, %OperationTask{id: ^task_id, state: :cancelled} = task} ->
+          assign(socket, :promotion_status, {:failed, {:cancelled, task}})
+
+        {:ok, %OperationTask{id: ^task_id, state: state}}
+        when state in [:enqueued, :processing] ->
+          assign(socket, :promotion_status, :accepted)
+
+        _error_or_mismatched_task ->
+          preserve_promotion_failure(socket)
+      end
+      |> invalidate_recovery_claim()
+      |> refresh_promotion_eligibility()
+      |> then(&{:noreply, &1})
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_async({:promotion_refresh, generation, task_id}, {:exit, _reason}, socket) do
+    if generation == socket.assigns.context_generation and
+         task_id == socket.assigns.promotion_task_id do
+      {:noreply, preserve_promotion_failure(socket)}
     else
       {:noreply, socket}
     end
@@ -1016,6 +1068,46 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     end)
   end
 
+  defp start_promotion_refresh(socket, task_id) do
+    generation = socket.assigns.context_generation
+    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+
+    socket
+    |> assign(:promotion_loading, true)
+    |> start_async({:promotion_refresh, generation, task_id}, fn ->
+      {generation, task_id, read_promotion_task(task_id, opts)}
+    end)
+  end
+
+  defp read_promotion_task(task_id, opts) do
+    client = Keyword.get(opts, :meilisearch_client) || Scrypath.Meilisearch.Client
+
+    with {:ok, payload} <- client.task(task_id, opts),
+         {:ok, normalized} <- Scrypath.Meilisearch.normalize_task(payload, :poll),
+         true <- normalized.uid == task_id,
+         true <- normalized.type == "indexSwap" do
+      {:ok, Scrypath.Operations.task_from_backend(normalized, source: :meilisearch)}
+    else
+      false -> {:error, :task_identity_mismatch}
+      {:error, _reason} = error -> error
+      _other -> {:error, :task_unavailable}
+    end
+  rescue
+    _error -> {:error, :task_unavailable}
+  end
+
+  defp preserve_promotion_failure(socket) do
+    case socket.assigns.promotion_status do
+      {:failed, _reason} ->
+        assign(socket, :promotion_loading, false)
+
+      _status ->
+        socket
+        |> assign(:promotion_status, :unknown)
+        |> assign(:promotion_loading, false)
+    end
+  end
+
   defp fetch_promotion_prerequisites(socket) do
     mod = socket.assigns.selected_schema
     operator_opts = socket.assigns.scrypath_opts
@@ -1647,7 +1739,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               )}).
             </p>
             <.ops_button
-              :if={@promotion_status != :accepted}
+              :if={@promotion_status != :accepted || !@promotion_loading}
               phx-click="refresh_promotion_checks"
               size={:sm}
             >
