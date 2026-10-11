@@ -255,6 +255,7 @@ test("operator promotes only this returned task pair and unique target document"
   await advanced.getByRole("button", { name: "Promote target index" }).click();
   const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
   await expect(confirmation).toBeVisible();
+  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#index-promotion-summary");
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
   await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
@@ -308,9 +309,12 @@ test("operator promotes only this returned task pair and unique target document"
   await page.locator("html").evaluate((html) => html.removeAttribute("data-theme"));
   await page.setViewportSize({ width: 1440, height: 900 });
   const promotionTrigger = advanced.getByRole("button", { name: "Promote target index" });
+  const promotionSummary = page.locator("#index-promotion-summary");
   await cancel.click();
   await expect(confirmation).toHaveCount(0);
-  await expect(promotionTrigger).toBeFocused();
+  await expect(promotionSummary).toBeFocused();
+  await promotionSummary.press("Enter");
+  await expect(promotionTrigger).toBeVisible();
   await promotionTrigger.click();
   await expect(confirmation).toBeVisible();
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);

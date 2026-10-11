@@ -1694,7 +1694,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         class="ops-panel mt-4"
         open={@promotion_status != nil}
       >
-        <summary class="cursor-pointer p-4 font-semibold">Advanced: index promotion</summary>
+        <summary
+          id="index-promotion-summary"
+          class="cursor-pointer p-4 font-semibold"
+        >
+          Advanced: index promotion
+        </summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">
             Promotion changes the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
@@ -1772,6 +1777,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         description="Meilisearch will change the live alias after its swap task completes."
         action_label="promote index"
         cancel_event="cancel_swap_live"
+        successor="#index-promotion-summary"
       >
         <.form for={%{}} phx-submit="swap_live" class="space-y-3">
           <p>

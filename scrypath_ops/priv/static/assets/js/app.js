@@ -9231,8 +9231,14 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     },
     restoreFocus() {
       const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName;
-      const target = this.returnTarget && this.returnTarget.isConnected && sameRecord ? this.returnTarget : this.querySuccessor();
-      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+      const originalIsUsable = this.returnTarget && this.returnTarget.isConnected && sameRecord && !this.returnTarget.matches(":disabled,[hidden]") && !this.returnTarget.closest("[hidden], [inert], [aria-hidden='true']") && this.returnTarget.getClientRects().length > 0 && typeof this.returnTarget.focus === "function";
+      if (originalIsUsable) this.returnTarget.focus({ preventScroll: true });
+      if (!originalIsUsable || document.activeElement !== this.returnTarget) {
+        const successor = this.querySuccessor();
+        if (successor && successor !== this.returnTarget && typeof successor.focus === "function") {
+          successor.focus({ preventScroll: true });
+        }
+      }
       this.returnTarget = null;
     },
     inertBackground() {

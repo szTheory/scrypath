@@ -628,10 +628,23 @@ const OpsModal = {
   restoreFocus() {
     // LiveView can reuse a connected button for the next record after deletion.
     const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName
-    const target = this.returnTarget && this.returnTarget.isConnected && sameRecord
-      ? this.returnTarget
-      : this.querySuccessor()
-    if (target && typeof target.focus === "function") target.focus({preventScroll: true})
+    const originalIsUsable = this.returnTarget && this.returnTarget.isConnected && sameRecord &&
+      !this.returnTarget.matches(":disabled,[hidden]") &&
+      !this.returnTarget.closest("[hidden], [inert], [aria-hidden='true']") &&
+      this.returnTarget.getClientRects().length > 0 &&
+      typeof this.returnTarget.focus === "function"
+    if (originalIsUsable) this.returnTarget.focus({preventScroll: true})
+
+    // A descendant of closed <details> can still report a client rect even
+    // though the browser refuses to focus it. Verify the result before using
+    // the caller's stable successor.
+    if (!originalIsUsable || document.activeElement !== this.returnTarget) {
+      const successor = this.querySuccessor()
+      if (successor && successor !== this.returnTarget && typeof successor.focus === "function") {
+        successor.focus({preventScroll: true})
+      }
+    }
+
     this.returnTarget = null
   },
   inertBackground() {
