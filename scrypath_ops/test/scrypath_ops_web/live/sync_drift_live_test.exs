@@ -1035,6 +1035,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute refreshed.assigns.promotion_loading
     assert is_nil(refreshed.assigns.promotion_document_observation)
     assert is_nil(refreshed.assigns.promotion_observation_error)
+    assert refreshed.assigns.promotion_task_read_error == :task_observation_exit
 
     html =
       refreshed.assigns
@@ -1042,8 +1043,10 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       |> Phoenix.HTML.Safe.to_iodata()
       |> IO.iodata_to_binary()
 
-    assert html =~ "The task result could not be confirmed."
+    assert html =~ "The retained task result could not be confirmed (task_observation_exit)."
+    assert html =~ "Refresh to inspect this same task; do not submit another operation."
     refute html =~ "Expected document effect:"
+    refute html =~ "The selected live-index or contract effect could not be confirmed"
 
     refute html =~
              "The swap task succeeded, but its expected-document observation could not be confirmed."
