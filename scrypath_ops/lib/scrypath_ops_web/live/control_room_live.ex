@@ -2,10 +2,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   @moduledoc """
   Intent-first landing for `/ops`.
 
-  Shows a glanceable search-health summary and routes the operator to the surface that
-  matches the job they brought: incident triage, change verification, or exploration.
-  The deep per-schema health table lives on `ScrypathOpsWeb.PostureLive` — this page
-  is the overview, not a duplicate of it.
+  Shows the current fleet observation and routes operators to the matching surface.
+  The deep per-schema health table lives on `ScrypathOpsWeb.PostureLive`.
   """
 
   use ScrypathOpsWeb, :live_view
@@ -22,6 +20,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       |> assign(:orientation_href, @orientation_href)
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
+      |> assign(:refresh_issue, nil)
       |> load_summary()
 
     {:ok, socket}
@@ -29,17 +28,49 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   @impl true
   def handle_event("refresh", _params, socket) do
-    socket =
-      socket
-      |> load_summary()
-      |> put_flash(:info, "Search health refreshed.")
+    summary = Posture.summary(socket.assigns.schema_allowlist, socket.assigns.scrypath_opts)
 
-    {:noreply, socket}
+    if complete_observation?(summary) do
+      socket =
+        socket
+        |> assign(:posture, summary)
+        |> assign(:last_successful_posture, summary)
+        |> assign(:refresh_issue, nil)
+        |> put_flash(:info, "Search health refreshed.")
+
+      {:noreply, socket}
+    else
+      socket =
+        socket
+        |> retain_observation_or_show_partial(summary)
+        |> assign(:refresh_issue, summary)
+
+      {:noreply, socket}
+    end
   end
 
   defp load_summary(socket) do
     summary = Posture.summary(socket.assigns.schema_allowlist, socket.assigns.scrypath_opts)
-    assign(socket, :posture, summary)
+    socket = assign(socket, :posture, summary)
+
+    if complete_observation?(summary) do
+      assign(socket, :last_successful_posture, summary)
+    else
+      assign(socket, :last_successful_posture, nil)
+    end
+  end
+
+  defp complete_observation?(%Posture{state: state, error_count: 0, schema_count: count})
+       when state in [:ok, :degraded] and count > 0,
+       do: true
+
+  defp complete_observation?(_summary), do: false
+
+  defp retain_observation_or_show_partial(socket, summary) do
+    case socket.assigns.last_successful_posture do
+      %Posture{} = previous -> assign(socket, :posture, previous)
+      nil -> assign(socket, :posture, summary)
+    end
   end
 
   @impl true
@@ -56,7 +87,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
             title="Control Room"
-            subtitle="Recover search, verify a change before promotion, or inspect and save a useful search check."
+            subtitle="Current search health, then one safe next step."
           />
           <.ops_refresh_control
             id="control-room-refresh"
@@ -69,63 +100,71 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         <section aria-labelledby="control-room-health-heading" class="space-y-4">
           <h2 id="control-room-health-heading" class="sr-only">Search health</h2>
 
-          <.ops_config_empty :if={@posture.state == :unconfigured} kind={:no_schemas} />
-          <.ops_config_empty :if={@posture.state == :missing_backend} kind={:missing_backend} />
+          <.ops_notice
+            :if={@refresh_issue}
+            kind={:warning}
+            title="Search health refresh incomplete."
+            role="status"
+            data-testid="control-room-refresh-issue"
+          >
+            {@refresh_issue.evidence} The last successful observation is retained below; this refresh did not confirm current health.
+            <span data-testid="control-room-refresh-affected-scope">
+              Affected scope: {affected_scope(@refresh_issue)}
+            </span>
+          </.ops_notice>
+
+          <div :if={@posture.state == :unconfigured} data-testid="control-room-unconfigured">
+            <.ops_empty_state title="No search schemas configured.">
+              Configure the host application's schema allowlist to inspect search health.
+            </.ops_empty_state>
+          </div>
+
+          <div :if={@posture.state == :missing_backend} data-testid="control-room-missing-backend">
+            <.ops_empty_state title="Search backend not configured.">
+              Configure the Scrypath runtime in the host application before checking search health.
+            </.ops_empty_state>
+          </div>
 
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.badge_kind(@posture.state)}
-            label="Can I trust search right now?"
-            headline={@posture.headline}
+            label={
+              if @refresh_issue, do: "Last successful observation", else: "Observed search health"
+            }
+            headline={verdict_headline(@posture)}
             class="ops-verdict--hero"
+            data-testid="control-room-verdict"
           >
-            <:actions>
-              <.ops_link_button navigate={"#{@mount_path}/health"} variant={:ghost} size={:sm}>
-                View search health <span aria-hidden="true">→</span>
+            <p :if={@posture.state == :degraded}>{@posture.evidence}</p>
+            <p :if={@posture.state == :degraded} data-testid="control-room-affected-scope">
+              Affected scope: {affected_scope(@posture)}
+            </p>
+            <div :if={@posture.state == :degraded} class="mt-3">
+              <.ops_link_button
+                navigate={"#{@mount_path}/health"}
+                variant={:primary}
+                size={:sm}
+                data-testid="control-room-health-link"
+              >
+                Inspect Search health
               </.ops_link_button>
-            </:actions>
-            <p>{@posture.evidence}</p>
-            <p class="mt-2 text-ops-sm text-base-content/60">
-              {schema_health_label(@posture.schema_count)} · {fetch_health_label(@posture.error_count)} · {backend_health_label(
-                @posture.backend_failed_count
-              )}
+            </div>
+            <p :if={@posture.state == :ok}>
+              No current sync or backend failures were observed across {@posture.schema_count} schemas.
+              This check does not prove document freshness.
+            </p>
+            <div :if={@posture.state in [:ok, :degraded]} class="mt-3 flex flex-wrap gap-2">
+              <.ops_link_button navigate={"#{@mount_path}/sync-drift"} variant={:ghost} size={:sm}>
+                Verify a change
+              </.ops_link_button>
+              <.ops_link_button navigate={"#{@mount_path}/search"} variant={:ghost} size={:sm}>
+                Explore search
+              </.ops_link_button>
+            </div>
+            <p :if={@refresh_issue} class="mt-2 text-ops-sm text-base-content/75">
+              Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
           </.ops_verdict>
-        </section>
-
-        <section aria-labelledby="control-room-intents-heading" class="space-y-3">
-          <.ops_heading level={2} id="control-room-intents-heading">
-            What do you need to do?
-          </.ops_heading>
-          <div class="grid gap-4 md:grid-cols-3">
-            <.ops_intent_card
-              icon="hero-wrench-screwdriver"
-              kind={intent_tone(@posture)}
-              recommended={@posture.state in [:degraded, :missing_backend]}
-              title="Recover search"
-              summary="Recover search when something looks wrong. Check schema health, work failed syncs, then confirm drift."
-              route_label="Start recovery"
-              navigate={"#{@mount_path}/health"}
-              data-testid="intent-incident"
-            >
-            </.ops_intent_card>
-            <.ops_intent_card
-              icon="hero-arrow-up-tray"
-              title="Verify a change"
-              summary="Verify a change before promotion. Reconcile, compare contract drift, then use the gated swap."
-              route_label="Pre-flight sync drift"
-              navigate={"#{@mount_path}/sync-drift"}
-              data-testid="intent-change"
-            />
-            <.ops_intent_card
-              icon="hero-map"
-              title="Inspect and save a search check"
-              summary="Inspect a search result, then save a useful check. Queries stay bounded and read-only."
-              route_label="Explore search"
-              navigate={"#{@mount_path}/search"}
-              data-testid="intent-explore"
-            />
-          </div>
         </section>
 
         <section
@@ -142,18 +181,31 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     """
   end
 
-  defp intent_tone(%Posture{state: :degraded}), do: :warning
-  defp intent_tone(%Posture{state: :missing_backend}), do: :error
-  defp intent_tone(_), do: :neutral
+  defp verdict_headline(%Posture{state: :degraded}), do: "Search health needs attention."
+  defp verdict_headline(%Posture{state: :ok}), do: "Search health observed."
 
-  defp schema_health_label(1), do: "1 schema checked"
-  defp schema_health_label(count), do: "#{count} schemas checked"
+  defp affected_scope(%Posture{rows: rows}) do
+    rows
+    |> Enum.flat_map(&row_scope/1)
+    |> Enum.join("; ")
+  end
 
-  defp fetch_health_label(0), do: "All fetches healthy"
-  defp fetch_health_label(1), do: "1 fetch needs attention"
-  defp fetch_health_label(count), do: "#{count} fetches need attention"
+  defp row_scope({schema, {:error, reason}}) do
+    ["#{inspect(schema)}: schema health could not be checked (#{inspect(reason)})"]
+  end
 
-  defp backend_health_label(0), do: "All backends healthy"
-  defp backend_health_label(1), do: "1 backend needs attention"
-  defp backend_health_label(count), do: "#{count} backends need attention"
+  defp row_scope({schema, {:ok, status}}) do
+    backend_count = length(status.backend.failed)
+    queue_count = length(status.queue.failed)
+
+    []
+    |> maybe_scope(schema, backend_count, "backend task(s) failed")
+    |> maybe_scope(schema, queue_count, "queue job(s) failed")
+  end
+
+  defp maybe_scope(items, _schema, 0, _reason), do: items
+
+  defp maybe_scope(items, schema, count, reason) do
+    ["#{inspect(schema)}: #{count} #{reason}" | items]
+  end
 end
