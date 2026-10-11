@@ -60,7 +60,20 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-  await page.getByRole("link", { name: "Start recovery" }).click();
+  const healthRoute = page.getByRole("link", { name: "Inspect Search health", exact: true });
+  await expect(healthRoute).toHaveCount(1);
+  await expect(healthRoute).toBeVisible();
+  const affectedScope = page.getByTestId("control-room-affected-scope");
+  await expect(affectedScope).toContainText(fixture.schema.replace(/^Elixir\./, ""));
+  await expect(page.getByRole("link", { name: "Verify a change", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Explore search", exact: true })).toBeVisible();
+  const scopePrecedesRoute = await page.evaluate(() => {
+    const scope = document.querySelector('[data-testid="control-room-affected-scope"]');
+    const route = document.querySelector('[data-testid="control-room-health-link"]');
+    return Boolean(scope && route && (scope.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(scopePrecedesRoute, "observed degraded scope must precede the primary health route").toBe(true);
+  await healthRoute.click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
   const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
@@ -223,7 +236,7 @@ test("operator promotes only this returned task pair and unique target document"
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await page.getByRole("link", { name: "Pre-flight sync drift" }).click();
+  await page.getByRole("link", { name: "Verify a change", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Check index contract" }).click();
