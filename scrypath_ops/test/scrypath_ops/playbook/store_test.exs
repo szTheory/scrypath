@@ -79,6 +79,14 @@ defmodule ScrypathOps.Playbook.StoreTest do
     assert {:error, :outside_workspace} = Store.save_workspace_file(root, "new.json", "{}")
   end
 
+  test "a sticky world-writable workspace root is rejected", %{dir: dir} do
+    root = Path.join(dir, "sticky-root")
+    :ok = File.mkdir_p(root)
+    :ok = File.chmod(root, 0o1777)
+
+    assert {:error, :outside_workspace} = Store.list_workspace_json(root)
+  end
+
   test "workspace roots below a static ancestor symlink use the resolved directory", %{dir: dir} do
     physical_parent = Path.join(dir, "physical-parent")
     physical_root = Path.join(physical_parent, "workspace")

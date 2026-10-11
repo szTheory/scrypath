@@ -259,15 +259,17 @@ defmodule ScrypathOps.Playbook.Store do
     with {:ok, %File.Stat{type: :directory} = root_info} <- File.lstat(root) do
       root_uid = root_info.uid
 
-      root
-      |> directory_ancestors([])
+      ancestors = directory_ancestors(root, [])
+      root_index = length(ancestors) - 1
+
+      ancestors
       |> Enum.with_index()
       |> Enum.all?(fn {path, index} ->
         case File.lstat(path) do
           {:ok, %File.Stat{type: :directory} = info} ->
             writable_by_others? = Bitwise.band(info.mode, 0o022) != 0
             sticky? = Bitwise.band(info.mode, 0o1000) != 0
-            is_root = index == 0
+            is_root = index == root_index
 
             not writable_by_others? or
               (not is_root and sticky? and info.uid in [0, root_uid])
@@ -381,9 +383,23 @@ defmodule ScrypathOps.Playbook.Store do
     temp_path = Path.join(Path.dirname(path), ".#{Path.basename(path)}.#{suffix}.tmp")
 
     case :file.open(temp_path, [:write, :binary, :raw, :exclusive]) do
-      {:ok, file} -> {:ok, temp_path, file}
-      {:error, :eexist} -> open_temporary_file(path, attempts - 1)
-      {:error, reason} -> {:error, reason}
+      {:ok, file} ->
+        # Keep replacement contents private while the named temp file is populated.
+        case File.chmod(temp_path, 0o600) do
+          :ok ->
+            {:ok, temp_path, file}
+
+          {:error, reason} ->
+            :file.close(file)
+            File.rm(temp_path)
+            {:error, reason}
+        end
+
+      {:error, :eexist} ->
+        open_temporary_file(path, attempts - 1)
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
