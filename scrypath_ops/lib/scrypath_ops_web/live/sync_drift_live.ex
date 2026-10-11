@@ -1142,6 +1142,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket
     |> assign(:promotion_loading, true)
+    |> assign(:promotion_status, :unknown)
+    |> assign(:promotion_document_observation, nil)
+    |> assign(:promotion_observation_error, nil)
     |> start_async({:promotion_refresh, generation, task_id}, fn ->
       {generation, task_id, read_promotion_task(task_id, opts)}
     end)
@@ -1165,15 +1168,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp preserve_promotion_failure(socket) do
-    case socket.assigns.promotion_status do
-      {:failed, _reason} ->
-        assign(socket, :promotion_loading, false)
+    status =
+      case socket.assigns.promotion_status do
+        {:failed, _reason} = failed -> failed
+        _status -> :unknown
+      end
 
-      _status ->
-        socket
-        |> assign(:promotion_status, :unknown)
-        |> assign(:promotion_loading, false)
-    end
+    socket
+    |> assign(:promotion_status, status)
+    |> assign(:promotion_loading, false)
+    |> assign(:promotion_document_observation, nil)
+    |> assign(:promotion_observation_error, nil)
   end
 
   defp fetch_promotion_prerequisites(socket) do
@@ -1296,6 +1301,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket
     |> assign(:promotion_loading, true)
+    |> assign(:promotion_document_observation, nil)
+    |> assign(:promotion_observation_error, nil)
     |> start_async({:promotion_effects, generation, task_id}, fn ->
       observation_socket = %Phoenix.LiveView.Socket{
         assigns: observation_assigns,
@@ -1866,11 +1873,18 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               The backend accepted this swap. Waiting for its terminal result.
             </span>
             <span :if={@promotion_status == :completed}>Index swap completed.</span>
-            <span :if={@promotion_status == :unknown && is_map(@promotion_document_observation)}>
+            <span :if={@promotion_status == :unknown && @promotion_loading}>
+              Checking the retained swap task and current index evidence.
+            </span>
+            <span :if={
+              @promotion_status == :unknown && !@promotion_loading &&
+                is_map(@promotion_document_observation)
+            }>
               The swap task succeeded, but its expected-document observation could not be confirmed.
             </span>
             <span :if={
               @promotion_status in [:timed_out, :unknown] &&
+                !@promotion_loading &&
                 !is_map(@promotion_document_observation)
             }>
               The task result could not be confirmed. Refresh checks to inspect current index state.
@@ -1886,8 +1900,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </span>
             <p
               :if={
-                @promotion_status == :completed ||
-                  (@promotion_status == :unknown && is_map(@promotion_document_observation))
+                (@promotion_status == :completed ||
+                   (@promotion_status == :unknown && is_map(@promotion_document_observation))) &&
+                  !@promotion_loading
               }
               class="break-words"
             >
@@ -1895,7 +1910,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </p>
             <p
               :if={
-                @promotion_status == :unknown && @promotion_observation_error &&
+                @promotion_status == :unknown && !@promotion_loading &&
+                  @promotion_observation_error &&
                   !is_map(@promotion_document_observation)
               }
               class="break-words"

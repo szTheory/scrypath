@@ -991,6 +991,27 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     mounted_socket = :sys.get_state(lv.pid).socket
     generation = mounted_socket.assigns.context_generation
 
+    pending_html =
+      mounted_socket.assigns
+      |> Map.merge(%{
+        promotion_task_id: 991,
+        promotion_status: :unknown,
+        promotion_loading: true,
+        promotion_document_observation: %{state: :verified},
+        promotion_observation_error: nil
+      })
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert pending_html =~ "Checking the retained swap task and current index evidence."
+    refute pending_html =~ "Expected document effect:"
+
+    refute pending_html =~
+             "The swap task succeeded, but its expected-document observation could not be confirmed."
+
+    refute pending_html =~ "The task result could not be confirmed."
+
     socket = %{
       mounted_socket
       | assigns:
@@ -1016,14 +1037,16 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert is_nil(refreshed.assigns.promotion_observation_error)
 
     html =
-      refreshed
+      refreshed.assigns
       |> SyncDriftLive.render()
       |> Phoenix.HTML.Safe.to_iodata()
       |> IO.iodata_to_binary()
 
     assert html =~ "The task result could not be confirmed."
     refute html =~ "Expected document effect:"
-    refute html =~ "The swap task succeeded, but its expected-document observation could not be confirmed."
+
+    refute html =~
+             "The swap task succeeded, but its expected-document observation could not be confirmed."
   end
 
   test "mounted promotion refresh reads the retained UID once without swapping again", %{
