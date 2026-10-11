@@ -465,6 +465,56 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute unavailable.assigns.recovery_loading
   end
 
+  test "recovery lifecycle states retain the receipt identity and distinguish observer errors" do
+    evidence = %{replacement_job: 45, attempt: 2, task_uid: 781, index: "posts"}
+
+    observation = %{
+      state: :verified,
+      operation: :delete,
+      index: "posts",
+      expected_ids: ["post-45"]
+    }
+
+    for {status, document_observation} <- [
+          {:accepted, nil},
+          {:running, nil},
+          {:failed, nil},
+          {:cancelled, %{state: :cancelled, operation: :delete, index: "posts"}},
+          {:unknown, %{state: :unknown, reason: :transport_error}}
+        ] do
+      socket =
+        sync_drift_socket(%{
+          context_generation: 6,
+          recovery_handle: "receipt",
+          recovery_status: :verified,
+          recovery_evidence: evidence,
+          recovery_document_observation: observation,
+          recovery_checked_at: ~U[2026-01-02 03:04:05Z]
+        })
+
+      {:noreply, result} =
+        SyncDriftLive.handle_async(
+          {:recovery_observation, 6, "receipt"},
+          {:ok, {6, "receipt", {status, evidence, document_observation}}},
+          socket
+        )
+
+      if status == :unknown do
+        assert result.assigns.recovery_status == :verified
+        assert result.assigns.recovery_evidence == evidence
+        assert result.assigns.recovery_document_observation == observation
+        assert result.assigns.recovery_checked_at == ~U[2026-01-02 03:04:05Z]
+        assert result.assigns.recovery_observation_error == :transport_error
+      else
+        assert result.assigns.recovery_status == status
+        assert result.assigns.recovery_evidence == evidence
+        assert result.assigns.recovery_document_observation == document_observation
+        assert result.assigns.recovery_checked_at
+        assert is_nil(result.assigns.recovery_observation_error)
+      end
+    end
+  end
+
   test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
     socket =
       sync_drift_socket(%{

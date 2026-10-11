@@ -43,6 +43,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:recovery_status, nil)
       |> assign(:recovery_evidence, nil)
       |> assign(:recovery_document_observation, nil)
+      |> assign(:recovery_observation_error, nil)
       |> assign(:recovery_checked_at, nil)
       |> assign(:recovery_loading, false)
       |> assign(:promotion_task_id, nil)
@@ -169,8 +170,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       _ ->
         {:noreply,
          socket
-         |> assign(:recovery_status, :unknown)
-         |> assign(:recovery_evidence, nil)
+         |> assign(:recovery_observation_error, :receipt_unavailable)
          |> assign(:recovery_loading, false)}
     end
   end
@@ -255,6 +255,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           {status, %{} = evidence, document_observation} ->
             {status, Map.put(evidence, :document_observation, document_observation)}
 
+          {status, nil, document_observation} ->
+            {status, %{document_observation: document_observation}}
+
           {status, %{} = evidence} ->
             {status, evidence}
 
@@ -268,12 +271,35 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       evidence =
         if is_map(evidence), do: Map.delete(evidence, :document_observation), else: evidence
 
+      observation_error =
+        case document_observation do
+          %{state: :not_checked, reason: reason} -> reason
+          %{state: :unknown, reason: reason} -> reason
+          _ -> nil
+        end
+
+      {status, evidence, document_observation} =
+        if observation_error do
+          {
+            socket.assigns.recovery_status || status,
+            socket.assigns.recovery_evidence || evidence,
+            socket.assigns.recovery_document_observation || document_observation
+          }
+        else
+          {status, evidence, document_observation}
+        end
+
       {:noreply,
        socket
        |> assign(:recovery_status, status)
        |> assign(:recovery_evidence, evidence)
        |> assign(:recovery_document_observation, document_observation)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
+       |> assign(:recovery_observation_error, observation_error)
+       |> then(fn socket ->
+         if observation_error,
+           do: socket,
+           else: assign(socket, :recovery_checked_at, DateTime.utc_now())
+       end)
        |> assign(:recovery_loading, false)}
     else
       {:noreply, socket}
@@ -285,10 +311,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          handle == socket.assigns.recovery_handle do
       {:noreply,
        socket
-       |> assign(:recovery_status, :unknown)
-       |> assign(:recovery_evidence, nil)
-       |> assign(:recovery_document_observation, nil)
-       |> assign(:recovery_checked_at, DateTime.utc_now())
+       |> assign(:recovery_observation_error, :observer_exit)
        |> assign(:recovery_loading, false)}
     else
       {:noreply, socket}
@@ -348,6 +371,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
 
+  defp recovery_status_label(nil), do: "Not checked"
   defp recovery_status_label(:accepted), do: "Retry accepted"
   defp recovery_status_label(:running), do: "Retry running"
 
@@ -356,26 +380,56 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp recovery_status_label(:verified), do: "Recovery verified"
   defp recovery_status_label(:failed), do: "Recovery failed"
-  defp recovery_status_label(:timed_out), do: "Recovery check timed out"
-  defp recovery_status_label(_), do: "Recovery unknown"
+  defp recovery_status_label(:cancelled), do: "Recovery canceled"
+  defp recovery_status_label(_), do: "Recovery outcome could not be checked"
 
   defp recovery_status_kind(:verified), do: :success
   defp recovery_status_kind(:failed), do: :error
+  defp recovery_status_kind(:cancelled), do: :error
 
   defp recovery_status_kind(status) when status in [:accepted, :running, :queue_only_completed],
     do: :warning
 
   defp recovery_status_kind(_), do: :neutral
 
+  defp recovery_status_copy(:accepted),
+    do:
+      "The queue accepted this retry; refresh to observe this same job. Refresh never resubmits work."
+
+  defp recovery_status_copy(:running),
+    do: "This retry is still running; refresh to observe the same job, attempt, and task."
+
+  defp recovery_status_copy(:queue_only_completed),
+    do: "The queue job completed, but backend and document evidence are not confirmed."
+
+  defp recovery_status_copy(:verified),
+    do: "The exact retry task and its expected active-index effect were observed."
+
+  defp recovery_status_copy(:failed),
+    do: "The exact retry job or backend task failed. Review its result before retrying."
+
+  defp recovery_status_copy(:cancelled),
+    do: "The exact retry job or backend task was canceled. Review its result before retrying."
+
+  defp recovery_status_copy(:unknown),
+    do:
+      "This operation's outcome could not be checked. Refresh this same operation; do not submit another retry."
+
+  defp recovery_status_copy(_),
+    do:
+      "No recovery result has been checked yet. Review failed sync work to start an eligible retry."
+
   defp document_observation_title(nil), do: "Not checked"
   defp document_observation_title(%{state: :not_checked}), do: "Not checked"
   defp document_observation_title(%{state: :verified}), do: "Expected documents observed"
   defp document_observation_title(%{state: :running}), do: "Document task is still running"
   defp document_observation_title(%{state: :failed}), do: "Document task failed"
+  defp document_observation_title(%{state: :cancelled}), do: "Document task was canceled"
   defp document_observation_title(_), do: "Could not check document freshness"
 
   defp document_observation_kind(%{state: :verified}), do: :success
   defp document_observation_kind(%{state: :failed}), do: :error
+  defp document_observation_kind(%{state: :cancelled}), do: :error
   defp document_observation_kind(%{state: :running}), do: :warning
   defp document_observation_kind(_), do: :info
 
@@ -397,6 +451,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp document_observation_copy(%{state: :failed}),
     do: "The exact backend task failed; inspect its task result before retrying."
+
+  defp document_observation_copy(%{state: :cancelled}),
+    do: "The exact backend task was canceled; inspect its task result before retrying."
 
   defp document_observation_copy(%{reason: reason}),
     do:
@@ -429,6 +486,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
     |> assign(:recovery_document_observation, nil)
+    |> assign(:recovery_observation_error, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
     |> assign(:promotion_task_id, nil)
@@ -460,6 +518,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_origin_generation, nil)
     |> assign(:recovery_status, nil)
     |> assign(:recovery_evidence, nil)
+    |> assign(:recovery_document_observation, nil)
+    |> assign(:recovery_observation_error, nil)
     |> assign(:recovery_checked_at, nil)
     |> assign(:recovery_loading, false)
   end
@@ -472,11 +532,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     context = recovery_host_context(socket, schema)
 
     socket =
+      if socket.assigns.recovery_handle == handle do
+        socket
+      else
+        socket
+        |> assign(:recovery_status, nil)
+        |> assign(:recovery_evidence, nil)
+        |> assign(:recovery_document_observation, nil)
+        |> assign(:recovery_observation_error, nil)
+        |> assign(:recovery_checked_at, nil)
+      end
+
+    socket =
       socket
       |> assign(:recovery_handle, handle)
-      |> assign(:recovery_status, :unknown)
-      |> assign(:recovery_evidence, nil)
       |> assign(:recovery_loading, true)
+      |> assign(:recovery_observation_error, nil)
 
     start_async(socket, {:recovery_observation, generation, handle}, fn ->
       result = observe_recovery(context, handle, schema, opts, operator_opts)
@@ -494,10 +565,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       nil ->
         Task.shutdown(task, :brutal_kill)
-        :timed_out
+        {:unknown, nil, unchecked_document_observation(%{}, :observation_timeout)}
     end
   rescue
-    _ -> :unknown
+    _ -> {:unknown, nil, unchecked_document_observation(%{}, :observation_error)}
   end
 
   defp observe_recovery_now(context, handle, schema, opts, operator_opts) do
@@ -510,15 +581,21 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          {:ok, job} <- read_recovery_job(receipt),
          {:ok, queue_state} <- validate_recovery_job(job, receipt) do
       status =
-        case receipt.task_uid do
-          task_uid when is_integer(task_uid) ->
-            verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts)
+        case queue_state do
+          :failed ->
+            :failed
 
-          _ when queue_state == :completed ->
+          :cancelled ->
+            :cancelled
+
+          :running ->
+            :running
+
+          :completed when is_nil(receipt.task_uid) ->
             :queue_only_completed
 
-          _ when queue_state == :running ->
-            :running
+          _ when is_integer(receipt.task_uid) ->
+            verify_task_and_documents(receipt.task_uid, receipt, schema, opts, operator_opts)
 
           _ ->
             :accepted
@@ -534,13 +611,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           {status, evidence, nil}
       end
     else
-      false -> :unknown
-      :unknown -> :unknown
+      false -> {:unknown, nil, unchecked_document_observation(%{}, :identity_mismatch)}
+      :unknown -> {:unknown, nil, unchecked_document_observation(%{}, :receipt_unavailable)}
       {:error, :job_running} -> :running
       {:error, :queue_only_completed} -> :queue_only_completed
-      {:error, :job_failed} -> :failed
-      {:error, _} -> :unknown
-      _ -> :unknown
+      {:error, reason} -> {:unknown, nil, unchecked_document_observation(%{}, reason)}
+      _ -> {:unknown, nil, unchecked_document_observation(%{}, :observation_unavailable)}
     end
   end
 
@@ -599,23 +675,45 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp verify_task_and_documents(task_uid, receipt, schema, opts, operator_opts) do
     with {:ok, task} <- read_recovery_task(task_uid, opts),
-         :ok <- validate_recovery_task(task, receipt, task_uid),
-         {:ok, expected} <- read_expected_effects(schema, receipt, operator_opts),
-         {:ok, observation} <-
-           ScrypathOps.DocumentObservation.check(
-             Map.merge(receipt, expected),
-             task,
-             Keyword.put(opts, :document_id_field, Scrypath.Schema.Metadata.document_id(schema))
-           ) do
-      {observation.state,
-       observation
-       |> Map.put(:operation, expected.operation)
-       |> Map.put(:index, receipt.index)
-       |> Map.put(:expected_ids, expected_document_ids(expected))}
+         :ok <- validate_recovery_task(task, receipt, task_uid) do
+      task_status = Map.get(task, "status") || Map.get(task, :status)
+
+      if to_string(task_status) in ["canceled", "cancelled"] do
+        {:cancelled,
+         %{
+           state: :cancelled,
+           reason: :task_cancelled,
+           checked_at: DateTime.utc_now(),
+           operation: receipt.operation,
+           index: receipt.index,
+           expected_ids: nil
+         }}
+      else
+        with {:ok, expected} <- read_expected_effects(schema, receipt, operator_opts),
+             {:ok, observation} <-
+               ScrypathOps.DocumentObservation.check(
+                 Map.merge(receipt, expected),
+                 task,
+                 Keyword.put(
+                   opts,
+                   :document_id_field,
+                   Scrypath.Schema.Metadata.document_id(schema)
+                 )
+               ) do
+          {observation.state,
+           observation
+           |> Map.put(:operation, expected.operation)
+           |> Map.put(:index, receipt.index)
+           |> Map.put(:expected_ids, expected_document_ids(expected))}
+        else
+          {:error, reason} -> {:unknown, unchecked_document_observation(receipt, reason)}
+        end
+      end
     else
       {:error, :job_running} -> {:running, nil}
       {:error, :queue_only_completed} -> {:queue_only_completed, nil}
       {:error, :job_failed} -> {:failed, nil}
+      {:error, :job_cancelled} -> {:cancelled, nil}
       {:error, reason} -> {:unknown, unchecked_document_observation(receipt, reason)}
       _ -> {:unknown, unchecked_document_observation(receipt, :observation_unavailable)}
     end
@@ -648,7 +746,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     %{
       state: :not_checked,
       reason: reason,
-      checked_at: DateTime.utc_now(),
+      checked_at: nil,
       operation: Map.get(receipt, :operation),
       index: Map.get(receipt, :index),
       expected_ids: nil
@@ -735,7 +833,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, :completed}
 
       state in ["discarded", "cancelled", "canceled"] ->
-        {:error, :job_failed}
+        {:ok, if(state == "discarded", do: :failed, else: :cancelled)}
 
       true ->
         {:error, :job_not_verifiable}
@@ -836,18 +934,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
         {:error, reason} ->
           socket
-          |> assign(:reconcile_result, nil)
-          |> assign(:reconcile_loaded_at, nil)
-          |> assign(:reconcile_generation, nil)
           |> assign(:reconcile_error, reason)
           |> refresh_promotion_eligibility()
           |> put_flash(:error, "Reconcile failed: #{inspect(reason)}")
       end
     else
       socket
-      |> assign(:reconcile_result, nil)
-      |> assign(:reconcile_loaded_at, nil)
-      |> assign(:reconcile_generation, nil)
       |> assign(:reconcile_error, :missing_backend)
       |> refresh_promotion_eligibility()
       |> put_flash(:error, "Select a schema and configure Scrypath runtime.")
@@ -872,16 +964,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
         {:error, reason} ->
           socket
-          |> assign(:drift_result, nil)
-          |> assign(:drift_loaded_at, nil)
-          |> assign(:drift_generation, nil)
           |> assign(:drift_error, reason)
           |> refresh_promotion_eligibility()
       end
     else
       socket
-      |> assign(:drift_result, nil)
-      |> assign(:drift_generation, nil)
       |> assign(:drift_error, :missing_backend)
       |> refresh_promotion_eligibility()
     end
@@ -1103,38 +1190,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </.form>
       </.ops_panel>
 
-      <.ops_panel :if={@recovery_handle} class="mt-4" id="recovery-observation">
-        <.ops_section
-          title="Retry observation"
-          subtitle="This read checks the accepted queue job, its exact Meilisearch task, and the active index documents."
-          meta={if @recovery_checked_at, do: "checked #{format_dt(@recovery_checked_at)}"}
-        >
-          <:actions>
-            <.ops_button
-              phx-click="refresh_recovery_status"
-              phx-disable-with="Checking…"
-              disabled={@recovery_loading || !@selected_schema}
-            >
-              Refresh recovery status
-            </.ops_button>
-          </:actions>
-          <.ops_status
-            kind={recovery_status_kind(@recovery_status)}
-            title={recovery_status_label(@recovery_status)}
-          >
-            A refresh observes this retry and never submits work.
-          </.ops_status>
-          <p :if={@recovery_evidence} class="mt-2 text-ops-body" data-testid="recovery-evidence">
-            Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
-            <span :if={@recovery_evidence.task_uid}>
-              · Meilisearch task {@recovery_evidence.task_uid}
-            </span>
-            ·
-            <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
-          </p>
-        </.ops_section>
-      </.ops_panel>
-
       <.ops_empty_state :if={@selection_error == :no_schemas} title="No schemas configured">
         Add allowlisted schemas before loading sync or drift observations.
       </.ops_empty_state>
@@ -1204,6 +1259,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           >
             Sync status is not available yet. Refresh sync status to check again.
           </p>
+          <.ops_status
+            :if={@reconcile_error}
+            kind={:error}
+            title="Sync and queue status could not be checked"
+            role="alert"
+          >
+            Reason: {inspect(@reconcile_error)}. Any displayed values retain their last checked time; refresh to check again.
+          </.ops_status>
         </.ops_section>
       </.ops_panel>
 
@@ -1237,7 +1300,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           </div>
 
           <.ops_status
-            :if={!@drift_loading}
+            :if={@drift_loading && @drift_result}
+            kind={:info}
+            title="Checking index contract"
+            role="status"
+          >
+            The last contract result remains visible with its checked time while this check runs.
+          </.ops_status>
+
+          <.ops_status
+            :if={!@drift_loading || is_nil(@drift_result)}
             kind={drift_status_kind(@drift_result, @drift_error)}
             title={drift_status_title(@drift_result, @drift_error)}
             role={if @drift_error, do: "alert"}
@@ -1245,7 +1317,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             {drift_status_copy(@drift_result, @drift_error)}
           </.ops_status>
 
-          <.ops_signal_table :if={@drift_result && !@drift_loading}>
+          <.ops_signal_table :if={@drift_result}>
             <thead>
               <tr>
                 <th scope="col">Field</th>
@@ -1272,7 +1344,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             </tbody>
           </.ops_signal_table>
           <.ops_data_card
-            :if={@drift_result && !@drift_loading}
+            :if={@drift_result}
             title="Contract dimensions"
             class="mt-3"
           >
@@ -1297,6 +1369,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               do: "checked #{format_dt(@recovery_document_observation.checked_at)}"
           }
         >
+          <p :if={@recovery_loading} role="status" aria-label="Checking document freshness">
+            Checking the expected effect for this same recovery operation. Any previous result remains available with its checked time.
+          </p>
           <.ops_status
             kind={document_observation_kind(@recovery_document_observation)}
             title={document_observation_title(@recovery_document_observation)}
@@ -1316,6 +1391,67 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               <span :for={id <- @recovery_document_observation.expected_ids} class="break-all">
                 <.ops_inline_code>{id}</.ops_inline_code>
               </span>
+            </p>
+          </div>
+        </.ops_section>
+      </.ops_panel>
+
+      <.ops_panel :if={@selected_schema} class="mt-4" id="ordinary-recovery">
+        <.ops_section
+          title="Ordinary recovery"
+          subtitle="Review the selected schema's failed work and use its existing eligible retry action."
+          meta={if @recovery_checked_at, do: "last checked #{format_dt(@recovery_checked_at)}"}
+        >
+          <:actions>
+            <.link
+              navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
+              class="link link-primary"
+            >
+              Review failed sync work
+            </.link>
+            <.ops_button
+              :if={@recovery_handle}
+              phx-click="refresh_recovery_status"
+              phx-disable-with="Checking…"
+              disabled={@recovery_loading || !@selected_schema}
+            >
+              Refresh recovery status
+            </.ops_button>
+          </:actions>
+          <p class="text-ops-body text-base-content/75">
+            Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
+          </p>
+          <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
+            <p :if={@recovery_loading} role="status" aria-label="Checking recovery status">
+              Checking this same recovery operation. The last observed result remains visible until this check finishes.
+            </p>
+            <.ops_status
+              kind={recovery_status_kind(@recovery_status)}
+              title={
+                if @recovery_observation_error,
+                  do: "Recovery refresh could not be checked",
+                  else: recovery_status_label(@recovery_status)
+              }
+              role={if @recovery_observation_error, do: "alert", else: "status"}
+            >
+              {recovery_status_copy(@recovery_status)}
+              <span :if={@recovery_observation_error}>
+                Check detail: {inspect(@recovery_observation_error)}.
+              </span>
+            </.ops_status>
+            <p
+              :if={@recovery_evidence}
+              class="text-ops-body break-all"
+              data-testid="recovery-evidence"
+            >
+              Schema:
+              <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
+              · Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
+              <span :if={@recovery_evidence.task_uid}>
+                · Meilisearch task {@recovery_evidence.task_uid}
+              </span>
+              · Active index
+              <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
             </p>
           </div>
         </.ops_section>
