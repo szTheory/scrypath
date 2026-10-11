@@ -20,12 +20,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       end)
 
       uids = filters[:index_uids] || []
-      boom_index = "postlv_ops_post_a"
+      boom_indexes = Agent.get(:posture_live_test_state, & &1.boom_indexes)
+      boom_reason = Agent.get(:posture_live_test_state, & &1.boom_reason)
       exit_index = Agent.get(:posture_live_test_state, & &1.exit_index)
 
       cond do
         exit_index in uids -> exit(:posture_backend_exit)
-        boom_index in uids -> {:error, :boom}
+        Enum.any?(boom_indexes, &(&1 in uids)) -> {:error, boom_reason}
         true -> {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
       end
     end
@@ -81,7 +82,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false, exit_index: nil} end,
+      Agent.start(
+        fn ->
+          %{
+            tasks_calls: 0,
+            swap_called: false,
+            exit_index: nil,
+            boom_indexes: ["postlv_ops_post_a"],
+            boom_reason: :boom
+          }
+        end,
         name: :posture_live_test_state
       )
 
@@ -248,7 +258,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ "posture_backend_exit"
     assert failed_row =~ iso
     assert failed_row =~ "source-local evidence is retained"
-    assert has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
+    refute has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
     refute has_element?(lv, "#posture-posture_stream")
   end
 
@@ -309,21 +319,70 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute html =~ mismatched_iso
   end
 
-  test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
+  test "schema records are one-level surfaces with an adjacent exact-schema failed-work handoff",
+       %{
+         conn: conn
+       } do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 2,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_b",
+        "finishedAt" => "2026-04-17T18:00:00Z"
+      }
+    ])
+
     {:ok, lv, _html} = live(conn, ~p"/ops/health")
 
-    assert has_element?(lv, "[data-testid='posture-next-checks']")
+    assert has_element?(lv, "[aria-label='Per-schema search health'] > article[aria-labelledby]")
+    refute has_element?(lv, "[data-testid='posture-next-checks']")
 
-    html = render(lv)
-    assert html =~ "Degraded"
-    assert html =~ "/ops/failed-sync"
-    assert html =~ "/ops/sync-drift"
-    assert has_element?(lv, "a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostB'] [data-testid='posture-failed-sync-link']"
+           )
 
-    [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
-    [section | _] = String.split(rest, "</section>", parts: 2)
-    li_opens = Regex.scan(~r/<li[\s>]/, section)
-    assert length(li_opens) <= 5
+    assert has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostB'] a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']"
+           )
+  end
+
+  test "fetch failures sort first and ties retain alphabetical full-module order", %{conn: conn} do
+    Agent.update(:posture_live_test_state, fn state ->
+      %{state | boom_indexes: ["postlv_ops_post_a", "postlv_ops_post_b"]}
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    row_ids =
+      Regex.scan(~r/id="(posture-ScrypathOps\.Test\.OpsPost[AB])"/, render(lv),
+        capture: :all_but_first
+      )
+      |> List.flatten()
+
+    assert row_ids == ["posture-ScrypathOps.Test.OpsPostA", "posture-ScrypathOps.Test.OpsPostB"]
+    refute has_element?(lv, "[data-testid='posture-failed-sync-link']")
+  end
+
+  test "hostile fetch reasons remain escaped text and do not expose markup", %{conn: conn} do
+    hostile = "</p><script>alert(1)</script>"
+
+    Agent.update(:posture_live_test_state, fn state ->
+      %{state | boom_reason: hostile}
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+
+    assert row =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+    refute row =~ "<script>alert(1)</script>"
+
+    refute has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostA'] [data-testid='posture-failed-sync-link']"
+           )
   end
 
   test "posture promotion handoff keeps the selected schema and does not swap directly" do

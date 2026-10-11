@@ -48,7 +48,6 @@ defmodule ScrypathOpsWeb.PostureLive do
       |> assign(:posture_state, :ok)
       |> assign(:posture_headline, "—")
       |> assign(:posture_evidence, "")
-      |> assign(:next_checks, [])
 
     {:ok, load_posture(socket)}
   end
@@ -126,7 +125,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   def handle_params(_params, _uri, socket) do
-    {:noreply, refresh_next_checks(socket)}
+    {:noreply, socket}
   end
 
   defp load_posture(socket) do
@@ -140,7 +139,6 @@ defmodule ScrypathOpsWeb.PostureLive do
     |> assign(:posture_headline, summary.headline)
     |> assign(:posture_evidence, summary.evidence)
     |> assign(:posture_summary, summary)
-    |> refresh_next_checks()
   end
 
   defp posture_summary(%{assigns: %{phase173_fixture?: true}} = socket) do
@@ -178,17 +176,6 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp fail_phase173_refresh(socket), do: socket
-
-  defp refresh_next_checks(%{assigns: %{posture_summary: summary}} = socket)
-       when is_struct(summary, ScrypathOps.Posture) do
-    assign(
-      socket,
-      :next_checks,
-      summary |> ScrypathOps.Posture.next_checks(socket.assigns.mount_path) |> Enum.take(5)
-    )
-  end
-
-  defp refresh_next_checks(socket), do: socket
 
   # Map the shared summary back onto this view's legacy `posture_rows` assign,
   # which the per-schema table and empty-state guards still pattern-match on.
@@ -312,31 +299,6 @@ defmodule ScrypathOpsWeb.PostureLive do
         </.ops_metric_grid>
       </section>
 
-      <.ops_panel :if={@next_checks != []}>
-        <section
-          data-testid="posture-next-checks"
-          aria-labelledby="posture-jtbd-heading"
-          class="space-y-1"
-        >
-          <.ops_heading level={2} id="posture-jtbd-heading">Next checks</.ops_heading>
-          <p class="text-ops-body text-base-content/80">{@posture_evidence}</p>
-          <ol class="mt-3 list-decimal list-inside space-y-2 text-ops-body text-base-content/90">
-            <li :for={check <- @next_checks} class="pl-1">
-              <span>{check.text}</span>
-              <span :if={check[:navigate]} class="ml-2">
-                <.link navigate={check.navigate} class="link link-primary">Open this check</.link>
-              </span>
-              <span :if={check[:href]} class="ml-2">
-                <a href={check.href} class="link link-primary">Open guide</a>
-              </span>
-              <span :if={check[:mix]} class="mt-1 block font-mono text-ops-sm text-base-content/70">
-                {check.mix}
-              </span>
-            </li>
-          </ol>
-        </section>
-      </.ops_panel>
-
       <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
@@ -344,170 +306,158 @@ defmodule ScrypathOpsWeb.PostureLive do
       <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
       <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-4" />
 
-      <.ops_panel :if={match?({:ok, _}, @posture_rows)}>
-        <.ops_section
-          id="posture-fleet-heading"
-          title="Per-schema signals"
-          subtitle="Schemas with the most issues appear first. Review backend tasks, queue status, and each schema's last successful sync."
-        >
-          <div class="ops-schema-signal-list">
-            <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
-              <article
-                data-testid="posture-row"
-                id={"posture-#{inspect(mod)}"}
-                class="ops-schema-signal-card"
-              >
-                <%= case row do %>
-                  <% {:ok, status} -> %>
-                    <div class="ops-schema-signal-card__header">
-                      <div class="min-w-0">
-                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
-                        </h3>
-                        <p class="mt-1 text-ops-sm text-base-content/65">
-                          Index
-                          <.ops_inline_code>{status.index}</.ops_inline_code>
-                          · sync mode <strong>{status.mode}</strong>
-                        </p>
-                      </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={backend_badge_kind(status)}>
-                          {backend_badge_label(status)}
-                        </.ops_badge>
-                        <.ops_badge kind={queue_badge_kind(status)}>
-                          {queue_badge_label(status)}
-                        </.ops_badge>
-                      </div>
-                    </div>
-
-                    <div class="ops-schema-signal-card__groups">
-                      <section
-                        aria-label={"Backend task signals for #{inspect(mod)}"}
-                        class="ops-signal-group"
-                      >
-                        <p class="ops-signal-group__title">Backend tasks</p>
-                        <dl class="ops-signal-metrics">
-                          <div>
-                            <dt>Pending</dt>
-                            <dd>{length(status.backend.pending)}</dd>
-                          </div>
-                          <div>
-                            <dt>Failed</dt>
-                            <dd>{length(status.backend.failed)}</dd>
-                          </div>
-                          <div class="ops-signal-metrics__wide">
-                            <dt>Last success</dt>
-                            <dd>
-                              <.ops_time
-                                id={"posture-time-backend-#{inspect(mod)}"}
-                                dt={state_at(status.backend.last_succeeded)}
-                                source_iso={state_source_iso(status.backend.last_succeeded)}
-                                snapshot_at={source_ref(@posture_summary, mod, :backend)[:checked_at]}
-                                state_text={time_state_text(status.backend.last_succeeded)}
-                                operational
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                      </section>
-
-                      <section
-                        aria-label={"Queue job signals for #{inspect(mod)}"}
-                        class="ops-signal-group"
-                      >
-                        <p class="ops-signal-group__title">Queue jobs</p>
-                        <dl :if={status.queue.observed?} class="ops-signal-metrics">
-                          <div>
-                            <dt>Pending</dt>
-                            <dd>{length(status.queue.pending)}</dd>
-                          </div>
-                          <div>
-                            <dt>Retrying</dt>
-                            <dd>{length(status.queue.retrying)}</dd>
-                          </div>
-                          <div>
-                            <dt>Failed</dt>
-                            <dd>{length(status.queue.failed)}</dd>
-                          </div>
-                          <div class="ops-signal-metrics__wide">
-                            <dt>Last success</dt>
-                            <dd>
-                              <.ops_time
-                                id={"posture-time-queue-#{inspect(mod)}"}
-                                dt={state_at(status.queue.last_succeeded)}
-                                source_iso={state_source_iso(status.queue.last_succeeded)}
-                                snapshot_at={source_ref(@posture_summary, mod, :queue)[:checked_at]}
-                                state_text={queue_time_state_text(status)}
-                                operational
-                              />
-                            </dd>
-                          </div>
-                        </dl>
-                        <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
-                          {queue_unobserved_copy(status)}
-                        </p>
-                      </section>
-                    </div>
-                    <.link
-                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
-                      data-testid="posture-failed-sync-link"
+      <section
+        :if={match?({:ok, _}, @posture_rows)}
+        class="ops-schema-signal-list"
+        aria-label="Per-schema search health"
+      >
+        <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
+          <article
+            data-testid="posture-row"
+            id={"posture-#{inspect(mod)}"}
+            aria-labelledby={"posture-title-#{inspect(mod)}"}
+            class="ops-schema-signal-card"
+          >
+            <%= case row do %>
+              <% {:ok, status} -> %>
+                <div class="ops-schema-signal-card__header">
+                  <div class="min-w-0">
+                    <h3
+                      id={"posture-title-#{inspect(mod)}"}
+                      class="font-mono text-ops-h3 font-semibold text-base-content"
                     >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
-                  <% {:error, reason} -> %>
-                    <div class="ops-schema-signal-card__header">
-                      <div class="min-w-0">
-                        <h3 class="font-mono text-ops-h3 font-semibold text-base-content">
-                          {inspect(mod)}
-                        </h3>
-                        <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                      </div>
-                      <div class="ops-schema-signal-card__badges">
-                        <.ops_badge kind={:error}>fetch error</.ops_badge>
-                      </div>
-                    </div>
-                    <p class="mt-3 text-ops-sm text-error">
-                      Search health could not be checked: {inspect(reason)}. Refresh to try again.
+                      {inspect(mod)}
+                    </h3>
+                    <p class="mt-1 text-ops-sm text-base-content/65">
+                      Index
+                      <.ops_inline_code>{status.index}</.ops_inline_code>
+                      · sync mode <strong>{status.mode}</strong>
                     </p>
-                    <dl class="ops-signal-metrics ops-signal-metrics--retained mt-3">
-                      <div :for={source <- [:backend, :queue]}>
-                        <dt>{source_last_success_label(source)}</dt>
+                  </div>
+                  <div class="ops-schema-signal-card__badges">
+                    <.ops_badge kind={backend_badge_kind(status)}>
+                      {backend_badge_label(status)}
+                    </.ops_badge>
+                    <.ops_badge kind={queue_badge_kind(status)}>
+                      {queue_badge_label(status)}
+                    </.ops_badge>
+                  </div>
+                </div>
+
+                <div class="ops-schema-signal-card__groups">
+                  <section
+                    aria-label={"Backend task signals for #{inspect(mod)}"}
+                    class="ops-signal-group"
+                  >
+                    <p class="ops-signal-group__title">Backend tasks</p>
+                    <dl class="ops-signal-metrics">
+                      <div>
+                        <dt>Pending</dt>
+                        <dd>{length(status.backend.pending)}</dd>
+                      </div>
+                      <div>
+                        <dt>Failed</dt>
+                        <dd>{length(status.backend.failed)}</dd>
+                      </div>
+                      <div class="ops-signal-metrics__wide">
+                        <dt>Last success</dt>
                         <dd>
                           <.ops_time
-                            id={"posture-time-retained-#{source}-#{inspect(mod)}"}
-                            dt={retained_state_at(@posture_summary, mod, source)}
-                            source_iso={retained_source_iso(@posture_summary, mod, source)}
-                            snapshot_at={retained_snapshot_at(@posture_summary, mod, source)}
-                            state_text={retained_state_text(@posture_summary, mod, source, reason)}
-                            retained_text={retained_evidence_text(@posture_summary, mod, source)}
+                            id={"posture-time-backend-#{inspect(mod)}"}
+                            dt={state_at(status.backend.last_succeeded)}
+                            source_iso={state_source_iso(status.backend.last_succeeded)}
+                            snapshot_at={source_ref(@posture_summary, mod, :backend)[:checked_at]}
+                            state_text={time_state_text(status.backend.last_succeeded)}
                             operational
                           />
                         </dd>
                       </div>
                     </dl>
-                    <.link
-                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                      class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
-                      data-testid="posture-failed-sync-link"
-                    >
-                      Inspect failed work for {module_flat_name(mod)}
-                    </.link>
-                <% end %>
-              </article>
-            <% end %>
-          </div>
-        </.ops_section>
-      </.ops_panel>
+                  </section>
 
-      <.ops_handoff :if={match?({:ok, _}, @posture_rows)}>
-        <:step
-          navigate={"#{@mount_path}/failed-sync"}
-          hint="When you've spotted a failing schema —"
-        >
-          Work the failed-sync queue
-        </:step>
-      </.ops_handoff>
+                  <section
+                    aria-label={"Queue job signals for #{inspect(mod)}"}
+                    class="ops-signal-group"
+                  >
+                    <p class="ops-signal-group__title">Queue jobs</p>
+                    <dl :if={status.queue.observed?} class="ops-signal-metrics">
+                      <div>
+                        <dt>Pending</dt>
+                        <dd>{length(status.queue.pending)}</dd>
+                      </div>
+                      <div>
+                        <dt>Retrying</dt>
+                        <dd>{length(status.queue.retrying)}</dd>
+                      </div>
+                      <div>
+                        <dt>Failed</dt>
+                        <dd>{length(status.queue.failed)}</dd>
+                      </div>
+                      <div class="ops-signal-metrics__wide">
+                        <dt>Last success</dt>
+                        <dd>
+                          <.ops_time
+                            id={"posture-time-queue-#{inspect(mod)}"}
+                            dt={state_at(status.queue.last_succeeded)}
+                            source_iso={state_source_iso(status.queue.last_succeeded)}
+                            snapshot_at={source_ref(@posture_summary, mod, :queue)[:checked_at]}
+                            state_text={queue_time_state_text(status)}
+                            operational
+                          />
+                        </dd>
+                      </div>
+                    </dl>
+                    <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                      {queue_unobserved_copy(status)}
+                    </p>
+                  </section>
+                </div>
+                <.link
+                  :if={failed_work_present?(status)}
+                  navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                  class="link link-primary mt-3 inline-flex min-h-[var(--control-h-md)] items-center"
+                  data-testid="posture-failed-sync-link"
+                >
+                  Inspect failed work for {module_flat_name(mod)}
+                </.link>
+              <% {:error, reason} -> %>
+                <div class="ops-schema-signal-card__header">
+                  <div class="min-w-0">
+                    <h3
+                      id={"posture-title-#{inspect(mod)}"}
+                      class="font-mono text-ops-h3 font-semibold text-base-content"
+                    >
+                      {inspect(mod)}
+                    </h3>
+                    <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
+                  </div>
+                  <div class="ops-schema-signal-card__badges">
+                    <.ops_badge kind={:error}>fetch error</.ops_badge>
+                  </div>
+                </div>
+                <p class="mt-3 text-ops-sm text-error">
+                  Search health could not be checked: {inspect(reason)}. Refresh to try again.
+                </p>
+                <dl class="ops-signal-metrics ops-signal-metrics--retained mt-3">
+                  <div :for={source <- [:backend, :queue]}>
+                    <dt>{source_last_success_label(source)}</dt>
+                    <dd>
+                      <.ops_time
+                        id={"posture-time-retained-#{source}-#{inspect(mod)}"}
+                        dt={retained_state_at(@posture_summary, mod, source)}
+                        source_iso={retained_source_iso(@posture_summary, mod, source)}
+                        snapshot_at={retained_snapshot_at(@posture_summary, mod, source)}
+                        state_text={retained_state_text(@posture_summary, mod, source, reason)}
+                        retained_text={retained_evidence_text(@posture_summary, mod, source)}
+                        operational
+                      />
+                    </dd>
+                  </div>
+                </dl>
+            <% end %>
+          </article>
+        <% end %>
+      </section>
     </Layouts.app>
     """
   end
@@ -534,6 +484,10 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp posture_row_rank(_), do: 3
+
+  defp failed_work_present?(status) do
+    status.backend.failed != [] or status.queue.failed != []
+  end
 
   defp posture_schema_count({:ok, rows}), do: length(rows)
   defp posture_schema_count(_), do: 0
