@@ -353,3 +353,19 @@ Native Chromium was intermittent on repeated contrast runs: with the repository'
 
 The final task-owned Compose project `phase177-shared-after` was stopped with `down` and no `-v`; its `phase177-shared-after_e2e_playbooks` volume remains. No `phase177-shared-after` container remains, and the preview on port 4012 was not contacted. Original test-results were restored alongside the final 90 direct images, 60 supplementary images, and three rendered contrast reports after Playwright cleaned its output directory.
 
+
+## Plan 177-03 operational LiveView evidence
+
+Plan 177-03 rechecked the Control Room, Search health, Failed sync work, and Sync and drift against the approved scan paths and the Plan 177-01 rendered baseline. No new template, copy, route, hierarchy, or action mismatch was established, so no LiveView or test source was changed. The Plan 177-02 CSS correction is limited to the shared contrast roles recorded above; the direct after matrix already covers the affected shared presentation. Plan 177-03 did not alter any view, so it did not create a new visual delta requiring another before/after capture.
+
+The existing assertions cover the plan's behavior contracts: Control Room keeps degraded reasons/scope ahead of the route, only reports healthy posture with complete evidence, and retains its last complete observation during partial refresh. Search health keeps error signals first, preserves the exact selected schema in failed-work handoffs, and orders ties by full module name. Failed sync work retains selected-schema identity beside an accepted retry, preserves the triage summary, distinguishes zero/one work, and refuses retry for invalid or removed selections. Sync and drift preserves diagnostic ordering and selected-schema handoff, retains exact observed recovery evidence during refresh, distinguishes receipt identity from observer errors, and does not change the current selection's linked destination.
+
+### Plan 177-03 verification
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| Focused operational LiveView suites | PASS — 68 tests, 0 failures | Control Room, Search health, Failed sync work, and Sync and drift named suites. |
+| `mix verify.ops_ui` | PASS — 2 doctests, 302 tests, 0 failures | Invoked from the repository root as required by the verification task. Existing Dialyzer/LiveView async warnings remain advisory. |
+| Mounted recovery lane | Not rerun | No recovery LiveView source changed, so the plan's conditional mounted check was not invalidated. |
+
+**Disposition:** source no-change audit; existing tests and the source-bound baseline cover the approved ordering, identity, truthful states, and safe action semantics. No route, backend behavior, action eligibility, or operator copy changed.
