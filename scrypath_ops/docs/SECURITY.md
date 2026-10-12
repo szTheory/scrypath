@@ -1,6 +1,6 @@
 # ScrypathOps security boundary
 
-`ScrypathOps` provides an optional Phoenix and LiveView operator interface. It does not provide authentication for `/ops`; the host application owns that boundary. Protect both ordinary HTTP requests and LiveView WebSocket connections before exposing the routes to a network.
+`ScrypathOps` provides an optional Phoenix and LiveView operator interface. It does not provide authentication for `/ops`; the host application owns that boundary. Protect ordinary HTTP requests and both LiveView WebSocket and long-poll connections before exposing the routes to a network.
 
 ## What `OPSUI_AUTH_MODE` does
 
@@ -10,13 +10,13 @@ The `sigra` value additionally requires `:sudo_confirm_path`. It does not automa
 
 ## Protecting the operator routes
 
-Before exposing `/ops`, configure a trusted edge or host boundary that authenticates and authorizes both the initial HTTP request and the LiveView WebSocket upgrade. A localhost bind, Phoenix's ordinary browser pipeline, signed cookies, CSRF protection, `check_origin`, and `OPSUI_AUTH_MODE` do not establish operator authorization on their own.
+Before exposing `/ops`, configure a trusted edge or host boundary that authenticates and authorizes the initial HTTP request and both LiveView transports: WebSocket upgrades and long-poll requests. A localhost bind, Phoenix's ordinary browser pipeline, signed cookies, CSRF protection, `check_origin`, and `OPSUI_AUTH_MODE` do not establish operator authorization on their own.
 
 If authentication is performed inside Phoenix, ensure the host's route and LiveView design runs its authentication and authorization checks for every LiveView mount and sensitive event. The `scrypath_ops_routes/2` helper owns its `live_session` and currently does not accept a host `on_mount` option; use a host-controlled routing arrangement that composes the required checks, or enforce authentication at a trusted edge.
 
 ## LiveView origin and transport
 
-LiveView uses the `/live` WebSocket. Configure `check_origin` on `ScrypathOpsWeb.Endpoint` for real hostnames in production, and document the upstream host list when TLS terminates at a reverse proxy. Prefer an explicit allow-list over `false` outside local development. Origin checking protects the WebSocket origin boundary; it is not authentication.
+The endpoint mounts LiveView's WebSocket and long-poll transports at `/live`. Configure `check_origin` on `ScrypathOpsWeb.Endpoint` for real hostnames in production, and document the upstream host list when TLS terminates at a reverse proxy. Prefer an explicit allow-list over `false` outside local development. Origin checking protects the WebSocket origin boundary; it is not authentication and does not replace authorization for long-poll requests.
 
 Either terminate TLS at a reverse proxy or configure Phoenix/Bandit for native TLS. When TLS terminates at the proxy, ensure forwarded scheme and identity headers are trusted only from that proxy, and align Phoenix `force_ssl` / HSTS settings with the edge.
 

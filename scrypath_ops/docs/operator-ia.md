@@ -32,9 +32,10 @@ ships a Phoenix + LiveView shell but does not replace your organization’s iden
 
 The **`scrypath_ops_routes/2`** helper creates its own **`live_session`** and installs only the
 ScrypathOps shell `on_mount` hook; it currently has no option for a host authentication hook.
-Protect both the initial HTTP request and LiveView WebSocket connection at a trusted edge, or
-mount host-controlled routes that run authentication and authorization checks for each LiveView
-mount and sensitive event. See Phoenix **[`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3)**
+Protect the initial HTTP request and both LiveView WebSocket and long-poll connections at a
+trusted edge, or mount host-controlled routes that run authentication and authorization checks
+for each LiveView mount and sensitive event. See Phoenix
+**[`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3)**
 and **[`on_mount`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount)**.
 Read [**`docs/SECURITY.md`**](SECURITY.md) before exposing `/ops` on a network.
 
