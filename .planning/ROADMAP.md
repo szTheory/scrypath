@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 21 total plans: 16 complete and 5 planned; Phase 177 next to execute)
+- 🚧 **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 approved phases, 21/21 plans complete; phase verification passed, milestone audit in progress)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phases 173–176 are complete locally; their per-phase verification, review, security, and validation records live under their phase directories. Phase 177 is the only remaining phase and has five plans ready to execute.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phases 173–177 are complete locally; all five have phase verification, and Phase 177 records 69/69 verified truths.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All completion and archive records precede the enclosing final exact-source attestation. Its receipt is external to the final source. No completed phase should be replayed. The v1.43 requirements and roadmap are approved. Phases 173–176 are complete; Phase 177 is planned and ready to execute.
+All phase plans are complete. The exact-source candidate closeout passed; the terminal merged-source attestation follows after final milestone records are committed. No completed phase should be replayed. The v1.43 requirements and roadmap remain the approved scope.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -27,7 +27,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 
 **Milestone goal:** Operators can inspect, recover, and verify search across the six existing surfaces with a calmer shared visual language, clear safe actions, and truthful task/index/document evidence.
 
-**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173–176 are complete locally: 16/16 completed plans have executable verification and review artifacts recorded. Phase 177 has five plans ready to execute. The required execution order is 173 → 174 → 175 → 176 → 177.
+**Status:** Requirements and roadmap explicitly approved on 2026-10-06. Phases 173–177 are complete locally: 21/21 plans have summaries and all five phase verifications pass. The milestone-wide audit is the next lifecycle gate. The required execution order 173 → 174 → 175 → 176 → 177 is complete.
 
 **Overview:** Establish the shared light/dark visual treatment and operational time behavior first, then refine the recovery entry, diagnosis, repair, and verification journey. Clarify Search and Playbooks within that visual world, and finish by consolidating patterns demonstrated on all six surfaces with source-bounded delivery evidence. Each phase proves its own changed behavior with relevant executable checks and direct before/after visual inspection; Phase 177 does not defer earlier acceptance. Reuse the v1.42 inventories as orientation and recheck touched source, without replaying completed fixes.
 
@@ -41,7 +41,7 @@ The original Phase170 NOT READY decision and frozen17/18 snapshot remain histori
 - [x] **Phase 174: Recovery Entry and Diagnosis** - Operators can identify affected work and reach the next safe recovery action across Control Room, Search health, and Failed sync work. (completed 2026-10-10)
 - [x] **Phase 175: Repair and Verification** - Operators can distinguish observation, repair, and promotion, then verify actual outcomes in Sync and drift. (completed 2026-10-11)
 - [x] **Phase 176: Search and Playbooks** - Operators can run searches and saved checks with clear common actions, results, and safe occasional controls. (completed 2026-10-11)
-- [ ] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence.
+- [x] **Phase 177: Shared Patterns and Delivery Proof** - Operators encounter the demonstrated patterns consistently on all six surfaces and maintainers can inspect source-bounded delivery evidence. (completed 2026-10-12)
 
 ## Phase Details
 
@@ -166,19 +166,19 @@ Plans:
   2. Operators can use the refined paths in light, dark, and System appearance at narrow and desktop widths, with keyboard/focus and reduced-motion behavior intact; direct before/after inspection and relevant executable layout/state/contrast proof are available for every slice, with mounted evidence for changed recovery seams.
   3. Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, see the explicit release or no-release decision, and inspect task-owned cleanup or intentional preview retention without extending archived receipts beyond their source.
 
-**Plans**: 5 plans
-- [ ] 177-01-PLAN.md — Document the delivered design vocabulary and capture the full six-surface visual baseline.
-- [ ] 177-02-PLAN.md — Correct demonstrated shared component/token drift and verify the affected UI.
-- [ ] 177-03-PLAN.md — Preserve identity and state semantics across Control Room, Search health, Failed sync work, and Sync and drift.
-- [ ] 177-04-PLAN.md — Preserve Search and Playbooks provenance and complete matched six-surface image evidence.
-- [ ] 177-05-PLAN.md — Link all twenty requirements to actual source-bounded delivery evidence and closeout.
+**Plans**: 5/5 plans complete
+- [x] 177-01-PLAN.md — Document the delivered design vocabulary and capture the full six-surface visual baseline.
+- [x] 177-02-PLAN.md — Correct demonstrated shared component/token drift and verify the affected UI.
+- [x] 177-03-PLAN.md — Preserve identity and state semantics across Control Room, Search health, Failed sync work, and Sync and drift.
+- [x] 177-04-PLAN.md — Preserve Search and Playbooks provenance and complete matched six-surface image evidence.
+- [x] 177-05-PLAN.md — Link all twenty requirements to actual source-bounded delivery evidence and closeout.
 
 **UI hint**: yes
 **Acceptance**: Check six-surface consistency and shared tokens against demonstrated use; consolidate evidence already produced by each slice and run only the final source-specific checks required by the existing delivery gates. No paid judge or pending routine human UAT.
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. Phases 173–176 are complete; Phase 177 is planned with five plans and is next to execute.
+**Execution order:** 173 → 174 → 175 → 176 → 177. All five phases and all 21 plans are complete.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -186,4 +186,4 @@ Plans:
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
 | 175. Repair and Verification | 4/4 | Complete    | 2026-10-11 |
 | 176. Search and Playbooks | 5/5 | Complete    | 2026-10-11 |
-| 177. Shared Patterns and Delivery Proof | 0/5 | Planned     | - |
+| 177. Shared Patterns and Delivery Proof | 5/5 | Complete    | 2026-10-12 |
