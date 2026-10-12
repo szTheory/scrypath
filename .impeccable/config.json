@@ -10,7 +10,7 @@
           ".planning/phases/176-search-and-playbooks/176-comps.html"
         ],
         "createdAt": "2026-10-11T13:31:19.454Z",
-        "reason": "Repository inspection found no thick colored one-sided card border: separators and rail are 1px neutral; warning is a false positive for this static comp file."
+        "reason": "assistant inspection: the comp uses neutral one-pixel surface borders and no side-tab accent stripe; impeccable detect returned no findings"
       }
     ]
   }
