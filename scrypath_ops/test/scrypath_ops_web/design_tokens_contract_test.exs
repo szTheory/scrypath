@@ -175,6 +175,20 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert css() =~ ".ops-btn:disabled"
   end
 
+  test "muted text and neutral links override Tailwind's utility layer for AA contrast" do
+    overrides =
+      css()
+      |> String.split("/* Cascade-safe operator text contrast.", parts: 2)
+      |> List.last()
+
+    refute overrides == css()
+    refute overrides =~ "@layer"
+    assert overrides =~ ".ops-shell .text-base-content\\/60"
+    assert overrides =~ "color: var(--ops-text-muted)"
+    assert overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
+    assert overrides =~ "color: var(--color-base-content)"
+  end
+
   test "refresh hook reapplies server eligibility after a LiveView patch" do
     hooks = File.read!(Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand())
 

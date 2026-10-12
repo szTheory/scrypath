@@ -3495,12 +3495,6 @@
     background-color: var(--ops-bg);
     background-image: none;
   }
-  .ops-header .text-base-content\/60 {
-    color: var(--ops-text-muted);
-  }
-  .ops-shell .text-base-content\/60 {
-    color: var(--ops-text-muted);
-  }
   .ops-panel {
     border: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
@@ -5566,6 +5560,15 @@
   @supports (color: color-mix(in lab, red, red)) {
     background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
   }
+}
+.ops-header .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+.ops-shell .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+.ops-shell a.link:not(.link-primary):not(.text-primary) {
+  color: var(--color-base-content);
 }
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {

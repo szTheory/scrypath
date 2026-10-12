@@ -470,14 +470,6 @@
     background-image: none;
   }
 
-  .ops-header .text-base-content\/60 {
-    color: var(--ops-text-muted);
-  }
-
-  .ops-shell .text-base-content\/60 {
-    color: var(--ops-text-muted);
-  }
-
   .ops-panel {
     border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
     border-radius: var(--radius-ops-lg);
@@ -2487,4 +2479,18 @@
 
 .ops-flash--error > .alert {
   background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
+}
+
+/* Cascade-safe operator text contrast.
+   Keep these outside Tailwind's ordered layers so readable roles beat generated utilities. */
+.ops-header .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+
+.ops-shell .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+
+.ops-shell a.link:not(.link-primary):not(.text-primary) {
+  color: var(--color-base-content);
 }

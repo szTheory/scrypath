@@ -57,7 +57,12 @@ the contrast gate.
 `color-mix(in oklch, var(--color-base-content) NN%, transparent)` declarations for
 the consumers above. `contrast-pairs.mjs` entries that use `css_var: "ops-text-muted"`
 remain part of the D-15 lockstep contract: the manifest selector, token name, and
-`64%` alpha must match `app.css`.
+`64%` alpha must match `app.css`. Header and shell overrides are unlayered after
+Tailwind's utility layer so the floor remains effective when an opacity utility is present.
+
+Text links inside `.ops-shell` use `--color-base-content` unless the template explicitly
+selects a primary color. This prevents an inline link from inheriting a muted container
+color while keeping muted supporting copy on `--ops-text-muted`.
 
 `--color-primary-strong` is allowed only for text-bearing interactive/selected fills:
 `.ops-nav-item-active` and `.bg-primary.text-primary-content`. Decorative primary and
