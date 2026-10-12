@@ -166,7 +166,12 @@ Plans:
   2. Operators can use the refined paths in light, dark, and System appearance at narrow and desktop widths, with keyboard/focus and reduced-motion behavior intact; direct before/after inspection and relevant executable layout/state/contrast proof are available for every slice, with mounted evidence for changed recovery seams.
   3. Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, see the explicit release or no-release decision, and inspect task-owned cleanup or intentional preview retention without extending archived receipts beyond their source.
 
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 177-01-PLAN.md — Document the delivered design vocabulary and inspect the six-surface baseline.
+- [ ] 177-02-PLAN.md — Correct demonstrated shared component/token drift and verify the affected UI.
+- [ ] 177-03-PLAN.md — Preserve each surface’s task identity and verify any proven template/copy correction.
+- [ ] 177-04-PLAN.md — Link all twenty requirements to actual source-bounded delivery evidence and closeout.
+
 **UI hint**: yes
 **Acceptance**: Check six-surface consistency and shared tokens against demonstrated use; consolidate evidence already produced by each slice and run only the final source-specific checks required by the existing delivery gates. No paid judge or pending routine human UAT.
 
@@ -180,4 +185,4 @@ Plans:
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
 | 175. Repair and Verification | 4/4 | Complete    | 2026-10-11 |
 | 176. Search and Playbooks | 5/5 | Complete    | 2026-10-11 |
-| 177. Shared Patterns and Delivery Proof | 0/TBD | Not started | - |
+| 177. Shared Patterns and Delivery Proof | 0/4 | Planned     | - |
