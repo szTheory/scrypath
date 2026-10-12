@@ -27,12 +27,77 @@ import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
-import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"
+import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy} from "./ops_hooks"
+
+const createMemoryStorage = () => {
+  const entries = new Map()
+  return {
+    get length() { return entries.size },
+    clear() { entries.clear() },
+    getItem(key) { return entries.get(key) ?? null },
+    key(index) { return Array.from(entries.keys())[index] ?? null },
+    removeItem(key) { entries.delete(key) },
+    setItem(key, value) { entries.set(String(key), String(value)) }
+  }
+}
+
+const memoryStorage = createMemoryStorage()
+const safeLocalStorage = {
+  get length() {
+    try {
+      return window.localStorage.length
+    } catch (_error) {
+      return memoryStorage.length
+    }
+  },
+  clear() {
+    memoryStorage.clear()
+    try {
+      window.localStorage.clear()
+    } catch (_error) {
+      // Keep the in-memory fallback available when browser storage is denied.
+    }
+  },
+  getItem(key) {
+    try {
+      const value = window.localStorage.getItem(key)
+      if (value === null) memoryStorage.removeItem(key)
+      else memoryStorage.setItem(key, value)
+      return value
+    } catch (_error) {
+      return memoryStorage.getItem(key)
+    }
+  },
+  key(index) {
+    try {
+      return window.localStorage.key(index) ?? memoryStorage.key(index)
+    } catch (_error) {
+      return memoryStorage.key(index)
+    }
+  },
+  removeItem(key) {
+    memoryStorage.removeItem(key)
+    try {
+      window.localStorage.removeItem(key)
+    } catch (_error) {
+      // The current page still observes the in-memory removal.
+    }
+  },
+  setItem(key, value) {
+    memoryStorage.setItem(key, value)
+    try {
+      window.localStorage.setItem(key, value)
+    } catch (_error) {
+      // The current page still observes the in-memory value.
+    }
+  }
+}
 
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal},
+  localStorage: safeLocalStorage,
+  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy},
 })
 
 // Show progress bar on live navigation and form submits

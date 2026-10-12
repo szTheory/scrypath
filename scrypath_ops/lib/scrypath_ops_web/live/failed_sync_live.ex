@@ -26,7 +26,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:context_generation, 0)
       |> assign(:inspection, nil)
       |> assign(:load_error, nil)
-      |> assign(:compact_mode, false)
       |> assign(:last_refresh_at, nil)
       |> assign(:recovery_receipts, %{})
       |> assign(:delete_confirmation, nil)
@@ -39,8 +38,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   @impl true
   def handle_event("refresh", _params, socket) do
-    {:noreply,
-     if(current_selection?(socket), do: refresh_inspection(socket), else: unavailable(socket))}
+    socket =
+      if current_selection?(socket), do: refresh_inspection(socket), else: unavailable(socket)
+
+    socket =
+      if is_nil(socket.assigns.load_error),
+        do: put_flash(socket, :info, "Failed sync work refreshed."),
+        else: socket
+
+    {:noreply, socket}
   end
 
   def handle_event("retry", %{"id" => id}, socket) do
@@ -81,10 +87,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       _ ->
         {:noreply, unavailable(socket)}
     end
-  end
-
-  def handle_event("toggle_compact", _params, socket) do
-    {:noreply, assign(socket, :compact_mode, not socket.assigns.compact_mode)}
   end
 
   defp resolve_selection(socket, params) do
@@ -472,6 +474,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     Enum.count(entries, & &1.retryable?)
   end
 
+  defp retry_eligibility(%{recovery: recovery}) when not is_nil(recovery),
+    do: "Retry currently available."
+
+  defp retry_eligibility(_row),
+    do: "Retry unavailable. This work item does not expose a supported retry."
+
   defp retryable_label(1), do: "1 retryable job"
   defp retryable_label(count), do: "#{count} retryable jobs"
 
@@ -501,17 +509,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           title={@page_title}
           subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
         />
-        <div class="flex flex-wrap gap-2">
-          <.ops_button phx-click="refresh" variant={:primary} data-ops-refresh>
-            Refresh failed sync work
-          </.ops_button>
-          <.ops_button phx-click="toggle_compact" variant={:ghost}>
-            {if @compact_mode, do: "Show reason rollups", else: "Hide reason rollups"}
-          </.ops_button>
-        </div>
+        <.ops_refresh_control
+          id="failed-sync-refresh"
+          checked_at={@last_refresh_at}
+          phx-click="refresh"
+          aria_label="Refresh failed sync work"
+        />
       </.ops_toolbar>
 
-      <.ops_trail mount_path={@mount_path} current={:failed_sync} />
+      <.ops_trail current={:failed_sync} />
 
       <.ops_panel>
         <.form for={%{}} id="failed-sync-schema-form" phx-change="select_schema">
@@ -524,7 +530,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         </.form>
       </.ops_panel>
 
-      <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured">
+      <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured.">
         Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
         in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
@@ -533,7 +539,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_status
         :if={@load_error == :unavailable}
         kind={:error}
-        title="That schema is unavailable"
+        title="That schema is unavailable."
         role="alert"
       >
         Select an allowlisted schema to continue.
@@ -572,10 +578,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
             · dominant reason:
             <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
-            · <.ops_time label="Refreshed" dt={@last_refresh_at} />
           </.ops_status>
 
-          <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-ops-body text-base-content/80">
+          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ops-body text-base-content/80">
             <span>
               <strong>{@inspection.counts.total}</strong>
               failed sync {if @inspection.counts.total == 1, do: "job", else: "jobs"}
@@ -585,7 +590,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <span class="sr-only" id="failed-sync-rollups-heading">Failure reasons</span>
             <span
               :for={{label, count} <- reason_counts(@inspection)}
-              :if={!@compact_mode}
               class="rounded-full border border-base-300 px-2 py-0.5 text-ops-sm"
             >
               {label}: {count}
@@ -615,7 +619,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             </:actions>
           </.ops_empty_hero>
 
-          <div :if={@inspection.counts.total > 0} class="mt-3 grid gap-2">
+          <div :if={@inspection.counts.total > 0} class="mt-2 grid gap-2">
             <.ops_result_row
               :for={row <- sorted_entries(@inspection)}
               title={"Failed job #{inspect(row.id)}"}
@@ -633,10 +637,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               >
                 {row.reason}
               </p>
+              <p
+                class="mt-2 break-words text-ops-body text-base-content/80"
+                data-testid="failed-sync-eligibility"
+              >
+                {retry_eligibility(row)}
+              </p>
               <.ops_action_group
                 :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row.id))}
                 tone={:advanced}
-                class="mt-3 items-start"
+                class="mt-2 items-start"
               >
                 <.ops_button
                   phx-click="retry"
@@ -650,7 +660,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               </.ops_action_group>
               <.ops_status
                 :if={receipt = recovery_receipt(@recovery_receipts, row.id)}
-                class="mt-3"
+                class="mt-2"
                 kind={:info}
                 title="Retry accepted"
                 role="status"
@@ -670,7 +680,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 id={"failed-detail-#{row.id}"}
                 summary="Diagnostics"
                 variant={:compact}
-                class="mt-3"
+                class="mt-2"
               >
                 <.ops_code_block :if={map_size(row.metadata) > 0} variant={:embedded}>
                   {inspect(row.metadata, pretty: true)}
@@ -692,7 +702,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
           hint="When the queue's clear —"
         >
-          Verify sync drift
+          Check sync and drift
         </:step>
       </.ops_handoff>
 
@@ -738,10 +748,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               type="button"
               phx-click="cancel_retry_delete"
               variant={:ghost}
-              aria-label="Cancel delete sync work"
+              aria-label="Keep failed work and close"
               data-ops-modal-cancel
             >
-              Cancel
+              Keep failed work and close
             </.ops_button>
             <.ops_button type="submit" variant={:danger}>Retry delete sync work</.ops_button>
           </div>

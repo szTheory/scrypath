@@ -60,8 +60,29 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-  await page.getByRole("link", { name: "Start recovery" }).click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  const healthRoute = page.getByRole("link", { name: "Inspect Search health", exact: true });
+  await expect(healthRoute).toHaveCount(1);
+  await expect(healthRoute).toBeVisible();
+  const affectedScope = page.getByTestId("control-room-affected-scope");
+  await expect(affectedScope).toContainText(fixture.schema.replace(/^Elixir\./, ""));
+  const secondaryIntents = page.getByTestId("control-room-secondary-intents");
+  await expect(secondaryIntents).toBeVisible();
+  await expect(secondaryIntents.getByTestId("control-room-verify-change")).toContainText("Verify a change");
+  await expect(secondaryIntents.getByTestId("control-room-explore-search")).toContainText("Explore search");
+  const scopePrecedesRoute = await page.evaluate(() => {
+    const scope = document.querySelector('[data-testid="control-room-affected-scope"]');
+    const route = document.querySelector('[data-testid="control-room-health-link"]');
+    return Boolean(scope && route && (scope.compareDocumentPosition(route) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(scopePrecedesRoute, "observed degraded scope must precede the primary health route").toBe(true);
+  const routePrecedesIntents = await page.evaluate(() => {
+    const route = document.querySelector('[data-testid="control-room-health-link"]');
+    const intents = document.querySelector('[data-testid="control-room-secondary-intents"]');
+    return Boolean(route && intents && (route.compareDocumentPosition(intents) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(routePrecedesIntents, "the health verdict and route must precede secondary intent cards").toBe(true);
+  await healthRoute.click();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
   const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
   await expect(variantHandoff).toBeVisible();
@@ -78,7 +99,41 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
 
   const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
   await expect(failedRow).toBeVisible();
+  await expect(failedRow).toContainText("Retry currently available.");
+  const rowText = await failedRow.innerText();
+  expect(rowText).toContain(`Failed job ${fixture.original_job_id}`);
+  expect(rowText).toContain("last attempt");
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
+
+  const lightPreference = page.locator("#theme-toggle button").filter({ hasText: "Light" });
+  await lightPreference.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme-preference", "light");
+  const darkPreference = page.locator("#theme-toggle button").filter({ hasText: "Dark" });
+  await darkPreference.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme-preference", "dark");
+
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(failedRow).toBeVisible();
+    const geometry = await page.evaluate(() => ({
+      width: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth
+    }));
+    expect(geometry.scrollWidth, `failed-work page must not overflow at ${width}px`).toBeLessThanOrEqual(geometry.width + 1);
+    await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+    await expect(failedRow.getByTestId("failed-sync-reason")).toBeVisible();
+    await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
+  }
+
+  await page.setViewportSize({ width: 1440, height: 900 });
   const retry = failedRow.getByRole("button", { name: "Retry sync work" });
+  await retry.focus();
+  await expect(retry).toBeFocused();
+  await expect(page.getByRole("button", { name: "Refresh failed sync work" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh failed sync work" }).click();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await expect(page.getByText("Failed sync work refreshed.", { exact: true })).toBeVisible();
   await expect(retry).toBeVisible();
   await retry.click();
 
@@ -153,15 +208,23 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await page.goForward();
+  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
+  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
-  await expect(page.getByText("That schema is unavailable")).toBeVisible();
+  await expect(page.getByText("That schema is unavailable.")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
+  await expect(page.locator("input[name='schema']:checked")).toHaveCount(0);
+  await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
@@ -181,7 +244,7 @@ test("operator promotes only this returned task pair and unique target document"
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await page.getByRole("link", { name: "Pre-flight sync drift" }).click();
+  await page.getByTestId("control-room-verify-change").click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Check index contract" }).click();
@@ -190,8 +253,72 @@ test("operator promotes only this returned task pair and unique target document"
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
-  await expect(page.getByRole("heading", { name: "Confirm index promotion" })).toBeVisible();
-  await page.getByRole("dialog", { name: "Confirm index promotion" }).getByRole("button", { name: "Promote target index", exact: true }).click();
+  const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#index-promotion-summary");
+  await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
+  await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
+  await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
+  await expect(confirmation).toContainText("Effect: replace the live alias with the prepared target index.");
+  await testInfo.attach("phase175-promotion-confirmation-before.png", {
+    body: await page.screenshot(), contentType: "image/png"
+  });
+
+  const close = confirmation.getByRole("button", { name: "Close Confirm index promotion dialog" });
+  const cancel = confirmation.getByRole("button", { name: "Cancel index swap", exact: true });
+  const confirm = confirmation.getByRole("button", { name: "Promote target index", exact: true });
+  await close.focus();
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(confirm).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+
+  for (const theme of ["light", "dark"]) {
+    await page.locator("html").evaluate((html, value) => html.setAttribute("data-theme", value), theme);
+    for (const width of [1440, 768, 390, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      const geometry = await confirmation.evaluate((dialog) => {
+        const content = dialog.querySelector(".modal-box")!.getBoundingClientRect();
+        return {
+          viewportWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          left: content.left,
+          right: content.right,
+          actionButtons: Array.from(dialog.querySelectorAll(".modal-box form > div button")).map((button) => {
+            const buttonRect = button.getBoundingClientRect();
+            return { left: buttonRect.left, right: buttonRect.right };
+          })
+        };
+      });
+      expect(geometry.scrollWidth, `promotion confirmation must not cause page overflow at ${width}px (${theme})`).toBeLessThanOrEqual(geometry.viewportWidth + 1);
+      expect(geometry.left, `promotion confirmation must fit the left edge at ${width}px (${theme})`).toBeGreaterThanOrEqual(0);
+      expect(geometry.right, `promotion confirmation must fit the right edge at ${width}px (${theme})`).toBeLessThanOrEqual(width + 1);
+      expect(geometry.actionButtons.every((button) => button.left >= 0 && button.right <= width + 1),
+        `promotion actions must fit the viewport at ${width}px (${theme})`).toBe(true);
+      await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
+      await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
+      if (width === 320) {
+        await testInfo.attach(`phase175-promotion-confirmation-320-${theme}.png`, {
+          body: await page.screenshot(), contentType: "image/png"
+        });
+      }
+    }
+  }
+
+  await page.locator("html").evaluate((html) => html.removeAttribute("data-theme"));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const promotionTrigger = advanced.getByRole("button", { name: "Promote target index" });
+  const promotionSummary = page.locator("#index-promotion-summary");
+  await cancel.click();
+  await expect(confirmation).toHaveCount(0);
+  await expect(promotionSummary).toBeFocused();
+  await promotionSummary.press("Enter");
+  await expect(promotionTrigger).toBeVisible();
+  await promotionTrigger.click();
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
+  await confirm.click();
 
   const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
@@ -210,6 +337,18 @@ test("operator promotes only this returned task pair and unique target document"
     document_id: fixture.document_id, expected_name: fixture.expected_name, active_document: true
   });
   expect(evidence.task_uid).toBeGreaterThan(fixture.task_baseline);
+  await expect(advanced.getByRole("button", { name: "Refresh checks" })).toBeVisible();
+  await advanced.getByRole("button", { name: "Refresh checks" }).click();
+  await expect(advanced).toContainText(`Task ${taskUid}`);
+  const refreshedEvidence = await probeSwapEvidence(request, {
+    marker: fixture.marker, taskUid, liveIndex: fixture.live_index, targetIndex: fixture.target_index,
+    taskBaseline: fixture.task_baseline, documentId: fixture.document_id
+  });
+  expect(refreshedEvidence.task_uid, "refresh must re-read the retained task without a second swap").toBe(taskUid);
+  expect(refreshedEvidence.active_document, "refresh must retain authoritative active-document proof").toBe(true);
+  await testInfo.attach("phase175-promotion-confirmation-after.png", {
+    body: await page.screenshot(), contentType: "image/png"
+  });
 
   const stale = await request.get("/dev/e2e/swap-probe", { params: {
     marker: fixture.marker, task_uid: String(fixture.task_baseline), live_index: fixture.live_index,

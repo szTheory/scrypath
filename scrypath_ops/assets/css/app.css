@@ -25,19 +25,19 @@
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  --color-base-100: #141923;
-  --color-base-200: #0c0f14;
-  --color-base-300: #2a3446;
-  --color-base-content: #f4f1ea;
-  --color-primary: #6c5ce7;
-  --color-primary-content: #f4f1ea;
-  --color-primary-strong: #5b4ad1;
+  --color-base-100: #191e25;
+  --color-base-200: #111419;
+  --color-base-300: #353d48;
+  --color-base-content: #f1f2f4;
+  --color-primary: #aaa0ff;
+  --color-primary-content: #111419;
+  --color-primary-strong: #aaa0ff;
   --color-secondary: #c17a3e;
   --color-secondary-content: #0c0f14;
-  --color-accent: #5b4ad1;
-  --color-accent-content: #f4f1ea;
-  --color-neutral: #2a3446;
-  --color-neutral-content: #f4f1ea;
+  --color-accent: #aaa0ff;
+  --color-accent-content: #111419;
+  --color-neutral: #353d48;
+  --color-neutral-content: #f1f2f4;
   --color-info: #5ca9e6;
   --color-info-content: #0c0f14;
   --color-success: #4fae74;
@@ -54,10 +54,13 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #0c0f14;
-  --ops-surface-1: #141923;
-  --ops-surface-2: #1b2230;
+  --ops-bg: #111419;
+  --ops-surface-1: #191e25;
+  --ops-surface-2: #222831;
+  --ops-selection: #302b4c;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-warning-text: #f2c66d;
+  --ops-error-text: #ffaaa2;
 }
 
 @plugin "../vendor/daisyui-theme" {
@@ -65,17 +68,17 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  --color-base-100: #fffdf8;
-  --color-base-200: #faf7f2;
-  --color-base-300: #ded8ce;
-  --color-base-content: #141923;
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f6f3;
+  --color-base-300: #d9d8d2;
+  --color-base-content: #202124;
   --color-primary: #5b4ad1;
-  --color-primary-content: #f4f1ea;
+  --color-primary-content: #ffffff;
   --color-primary-strong: #5b4ad1;
   --color-secondary: #a85d2e;
   --color-secondary-content: #fffdf8;
-  --color-accent: #6c5ce7;
-  --color-accent-content: #fffdf8;
+  --color-accent: #5b4ad1;
+  --color-accent-content: #ffffff;
   --color-neutral: #2a3446;
   --color-neutral-content: #f4f1ea;
   --color-info: #5ca9e6;
@@ -94,10 +97,13 @@
   --border: 1.5px;
   --depth: 1;
   --noise: 0;
-  --ops-bg: #faf7f2;
-  --ops-surface-1: #fffdf8;
-  --ops-surface-2: #faf7f2;
+  --ops-bg: #f7f6f3;
+  --ops-surface-1: #ffffff;
+  --ops-surface-2: #efeee9;
+  --ops-selection: #eeebff;
   --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  --ops-warning-text: #805000;
+  --ops-error-text: #ad2922;
 }
 
 /* Add variants based on LiveView classes */
@@ -338,6 +344,8 @@
     transition-timing-function: var(--ease-ops-standard);
   }
 
+  .ops-command-hint__icon { display: none; }
+
   .ops-command-hint:hover {
     border-color: color-mix(in oklch, var(--color-primary) 34%, transparent);
     background: color-mix(in oklch, var(--color-primary) 8%, transparent);
@@ -351,6 +359,24 @@
   .ops-command-hint:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+  }
+
+  @media (max-width: 420px) {
+    .ops-header .ops-command-hint { width: fit-content; }
+
+    .ops-header .ops-theme-toggle__button > span { display: none; }
+  }
+
+  @media (max-width: 360px) {
+    .ops-header .ops-command-hint {
+      width: var(--control-h-lg);
+      min-height: var(--control-h-lg);
+      padding: 0;
+    }
+
+    .ops-header .ops-command-hint > span { display: none; }
+
+    .ops-header .ops-command-hint__icon { display: block; }
   }
 
   .ops-nav-trigger,
@@ -440,17 +466,8 @@
   }
 
   .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 14%, transparent), transparent 34rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-
-  .ops-header .text-base-content\/60 {
-    color: var(--ops-text-muted);
-  }
-
-  .ops-shell .text-base-content\/60 {
-    color: var(--ops-text-muted);
+    background-color: var(--ops-bg);
+    background-image: none;
   }
 
   .ops-panel {
@@ -527,11 +544,8 @@
     background: color-mix(in oklch, var(--color-base-100) 92%, transparent);
   }
 
-  /* Shared tinted-surface internals for notice/status idioms. ops_notice and ops_status
-     are the same surface (rounded control radius, 1px tone border, body text, panel
-     padding); only ops_status adds resting elevation + a titled/action header. Both route
-     here so tone/padding/radius can't drift between the two. Tone comes from `.ops-tone-*`
-     composed at the call site. */
+  /* Shared notice/status base. Tinted notices use `.ops-tone-*`; ops_status can opt into
+     a neutral surface with a local cue for its data status kind. */
   .ops-notice-surface {
     border-width: 1px;
     border-style: solid;
@@ -543,6 +557,44 @@
 
   .ops-notice-surface--raised {
     box-shadow: var(--shadow-ops-surface);
+  }
+
+  .ops-notice-surface--neutral {
+    border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
+    box-shadow: none;
+  }
+
+  .ops-notice-surface__title {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-ops-2);
+  }
+
+  .ops-notice-surface__cue {
+    flex: none;
+    width: 0.375rem;
+    height: 0.375rem;
+    margin-top: 0.45em;
+    border-radius: 9999px;
+    background: var(--color-info);
+  }
+
+  .ops-notice-surface--neutral[data-status-kind="success"] .ops-notice-surface__cue {
+    background: var(--color-success);
+  }
+
+  .ops-notice-surface--neutral[data-status-kind="warning"] .ops-notice-surface__cue,
+  .ops-notice-surface--neutral[data-status-kind="partial"] .ops-notice-surface__cue {
+    background: var(--color-warning);
+  }
+
+  .ops-notice-surface--neutral[data-status-kind="error"] .ops-notice-surface__cue {
+    background: var(--color-error);
+  }
+
+  .ops-notice-surface--neutral[data-status-kind="running"] .ops-notice-surface__cue {
+    background: var(--color-primary);
   }
 
   .ops-tone-info {
@@ -571,50 +623,51 @@
     background: color-mix(in oklch, var(--color-primary) 10%, transparent);
   }
 
-  /* Metric tiles keep the muted-panel fill; tone only accents the border. The border
-     color settles over --duration-ops-status so a count flipping on Refresh catches the
-     eye without a snap (state, not layout). */
+  /* Metrics and verdicts group information on neutral surfaces. State is localized to
+     readable icon/value cues so a failure never paints an entire container. */
   .ops-metric {
-    transition: border-color var(--duration-ops-status) var(--ease-ops-standard);
+    border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
   }
 
-  .ops-metric-success {
-    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
+  .ops-metric__cue {
+    display: inline-flex;
+    margin-right: 0.375rem;
+    vertical-align: -0.125em;
   }
 
-  .ops-metric-warning {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  .ops-metric__cue--warning,
+  .ops-verdict__icon--warning,
+  .ops-verdict__icon--partial {
+    color: var(--ops-warning-text);
   }
 
-  .ops-metric-error {
-    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
+  .ops-metric__cue--error,
+  .ops-verdict__icon--error,
+  .ops-metric__value--error {
+    color: var(--ops-error-text);
   }
 
-  .ops-metric-info {
-    border-color: color-mix(in oklch, var(--color-info) 48%, transparent);
+  .ops-metric__value--warning {
+    color: var(--ops-warning-text);
   }
 
-  /* :partial settles like :warning (shared tone family); :running uses the brand
-     primary so an in-flight count reads as "working", not as a problem. */
-  .ops-metric-partial {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
+  .ops-verdict__icon--success {
+    color: var(--color-success);
   }
 
-  .ops-metric-running {
-    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+  .ops-posture-verdict .ops-verdict__icon--success {
+    color: var(--color-base-content);
   }
 
-  /* Trust-verdict hero. Tone surface comes from `.ops-tone-*` (or `.ops-verdict-neutral`);
-     the surface color settles over --duration-ops-status when the verdict changes.
-     A2 (signature tone-settle): the verdict surface, its status dot, AND the page's metric
-     borders all transition on the SAME --duration-ops-status + --ease-ops-standard pair, so a
-     Refresh that flips posture reads as ONE coherent beat ("the answer just moved") rather than
-     6 independent flickers. Pure CSS — no JS hook, no stagger; coordination is the shared timing
-     token, which is the restrained move for an ops console. */
+  .ops-verdict__icon--running,
+  .ops-verdict__icon--neutral {
+    color: var(--color-base-content);
+  }
+
+  /* A verdict keeps one neutral surface across all states. Only its icon carries tone. */
   .ops-verdict {
-    transition:
-      background-color var(--duration-ops-status) var(--ease-ops-standard),
-      border-color var(--duration-ops-status) var(--ease-ops-standard);
+    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
   }
 
   .ops-verdict-neutral {
@@ -622,49 +675,14 @@
     background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
   }
 
-  /* Landing hero: the verdict is the single most important answer on the page, so it
-     gets extra presence (lift + a larger dot). Only properties no utility sets on the
-     root are touched here, so it survives Tailwind's utility layer. */
+  /* Landing hero retains its existing hierarchy; status remains localized to the icon. */
   .ops-verdict--hero {
     box-shadow: var(--shadow-ops-raised);
   }
 
-  .ops-verdict--hero .ops-verdict__dot {
-    width: 0.625rem;
-    height: 0.625rem;
-  }
-
-  .ops-verdict__dot {
+  .ops-verdict__icon {
     flex: none;
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 999px;
-    background: color-mix(in oklch, var(--color-base-content) 40%, transparent);
-    /* Settle the dot's tone in lockstep with the surface (same token pair) so the verdict
-       reads as a single beat — the dot is the loudest tone signal, so a snapping dot would
-       break the "one answer moved" coherence A2 is built for. */
-    transition: background-color var(--duration-ops-status) var(--ease-ops-standard);
-  }
-
-  .ops-verdict.ops-tone-success .ops-verdict__dot {
-    background: var(--color-success);
-  }
-
-  .ops-verdict.ops-tone-warning .ops-verdict__dot,
-  .ops-verdict.ops-tone-partial .ops-verdict__dot {
-    background: var(--color-warning);
-  }
-
-  .ops-verdict.ops-tone-error .ops-verdict__dot {
-    background: var(--color-error);
-  }
-
-  .ops-verdict.ops-tone-info .ops-verdict__dot {
-    background: var(--color-info);
-  }
-
-  .ops-verdict.ops-tone-running .ops-verdict__dot {
-    background: var(--color-primary);
+    display: inline-flex;
   }
 
   /* Segmented-control button: shares the control-height authority instead of a raw
@@ -795,7 +813,40 @@
      utility at the call site so it wins over daisyUI's component-layer radius. */
   .ops-btn {
     min-height: var(--control-h-md);
-    transition: transform var(--duration-ops-instant) var(--ease-ops-standard);
+    transition:
+      transform var(--duration-ops-instant) var(--ease-ops-standard),
+      background-color var(--duration-ops-fast) var(--ease-ops-standard),
+      border-color var(--duration-ops-fast) var(--ease-ops-standard);
+  }
+
+  .ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: color-mix(in oklch, var(--color-base-content) 18%, transparent);
+    background: var(--ops-surface-2);
+  }
+
+  .ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error) {
+    border-color: color-mix(in oklch, var(--color-base-content) 24%, transparent);
+    background: color-mix(in oklch, var(--color-base-content) 12%, var(--ops-surface-2));
+  }
+
+  .ops-btn[aria-pressed="true"] {
+    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
+    background: var(--ops-selection);
+    color: var(--color-primary);
+  }
+
+  .ops-btn:disabled {
+    cursor: not-allowed;
+  }
+
+  .ops-btn:disabled:hover,
+  .ops-btn:disabled:active {
+    transform: none;
+  }
+
+  .ops-btn:disabled:hover:not(.btn-primary):not(.btn-error),
+  .ops-btn:disabled:active:not(.btn-primary):not(.btn-error) {
+    background: transparent;
   }
 
   .btn.ops-icon-btn {
@@ -807,9 +858,28 @@
     transform: scale(0.97);
   }
 
+  .ops-refresh-button.phx-click-loading {
+    cursor: progress;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ops-refresh-button.phx-click-loading svg {
+      animation: spin 1s linear infinite;
+    }
+  }
+
   .ops-save-playbook {
+    min-width: 0;
     border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     padding-top: var(--spacing-ops-4);
+  }
+
+  .ops-save-playbook__form {
+    min-width: 0;
+  }
+
+  .ops-save-playbook p {
+    overflow-wrap: anywhere;
   }
 
   .ops-form-stack {
@@ -901,15 +971,72 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .ops-time--operational {
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.375rem 0.75rem;
+    font-size: var(--text-ops-body);
+    line-height: var(--leading-ops-body);
+  }
+
+  .ops-time__details {
+    min-width: 0;
+    flex: 1 1 100%;
+    color: var(--color-base-content);
+  }
+
+  .ops-time__details > summary {
+    width: fit-content;
+    min-height: var(--control-h-lg);
+    color: var(--color-primary);
+    cursor: pointer;
+  }
+
+  .ops-time__evidence {
+    min-width: 0;
+    padding-block: 0.375rem;
+  }
+
+  .ops-time__evidence p + p {
+    margin-top: 0.5rem;
+  }
+
+  .ops-time__evidence-label {
+    display: block;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-xs);
+  }
+
+  .ops-time__evidence-value {
+    display: block;
+    min-width: 0;
+    user-select: text;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+  }
+
+  .ops-time__retained {
+    min-width: 0;
+    flex: 1 1 100%;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-xs);
+    line-height: var(--leading-ops-body);
+    overflow-wrap: anywhere;
+  }
+
   .ops-time__copy {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
+    min-height: var(--control-h-md);
+    justify-content: flex-start;
+    gap: 0.375rem;
+    padding-inline: 0.5rem;
     flex: none;
     border-radius: var(--radius-ops-control);
-    color: color-mix(in oklch, var(--color-base-content) 58%, transparent);
+    color: var(--color-primary);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
     transition:
       background-color var(--duration-ops-fast) var(--ease-ops-standard),
       color var(--duration-ops-fast) var(--ease-ops-standard),
@@ -923,6 +1050,34 @@
 
   .ops-time__copy:active {
     transform: scale(0.96);
+  }
+
+  .ops-time__feedback {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 100%;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ops-text-muted);
+    font-size: var(--text-ops-sm);
+    line-height: var(--leading-ops-body);
+    overflow-wrap: anywhere;
+  }
+
+  .ops-time__feedback[hidden] {
+    display: none;
+  }
+
+  .ops-time__feedback[data-state="error"] {
+    color: var(--ops-error-text);
+  }
+
+  .ops-time__feedback-dismiss {
+    min-height: var(--control-h-sm);
+    flex: none;
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
   }
 
   .ops-schema-picker {
@@ -1178,7 +1333,7 @@
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
   }
 
-  /* Contextual breadcrumb trail (ops_trail): Control Room › group › page. Quiet
+  /* Contextual breadcrumb trail (ops_trail): group › page. Quiet
      by design — it orients, it doesn't compete with the header nav or the verdict. */
   .ops-trail__list {
     display: flex;
@@ -1193,17 +1348,6 @@
 
   .ops-trail__crumb {
     color: var(--ops-text-muted);
-  }
-
-  .ops-trail__link {
-    border-radius: var(--radius-ops-sm);
-    transition: color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-trail__link:hover {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
 
   .ops-trail__current {
@@ -1455,6 +1599,20 @@
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
+  /* Search can return many hits. Use a light divider list instead of repeating full cards. */
+  .ops-search-hit.ops-result-row {
+    gap: var(--spacing-ops-2);
+    border: 0;
+    border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-radius: 0;
+    background: transparent;
+    padding: var(--spacing-ops-2) 0;
+  }
+
+  .ops-search-hit.ops-result-row:first-child {
+    border-top: 0;
+  }
+
   /* Hover/press parity for interactive-feeling rows: the same restrained transform/elevation
      vocabulary buttons (.ops-btn:active) and cards (.ops-intent-card:hover) already use, scoped
      to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
@@ -1464,9 +1622,17 @@
     box-shadow: var(--shadow-ops-mid);
   }
 
+  .ops-search-hit.ops-result-row:hover {
+    box-shadow: none;
+  }
+
   .ops-result-row:active,
   .ops-object-item:active {
     transform: scale(0.995);
+  }
+
+  .ops-search-hit.ops-result-row:active {
+    transform: none;
   }
 
   @media (min-width: 768px) {
@@ -1523,7 +1689,7 @@
 
   .ops-schema-signal-list {
     display: grid;
-    gap: var(--spacing-ops-3);
+    gap: var(--spacing-ops-section);
   }
 
   .ops-schema-signal-card {
@@ -1539,18 +1705,6 @@
     transition:
       border-color var(--duration-ops-status) var(--ease-ops-standard),
       box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-schema-signal-card--success {
-    border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--warning {
-    border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--error {
-    border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
   }
 
   .ops-schema-signal-card__header {
@@ -1635,9 +1789,22 @@
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset;
   }
 
-  .ops-brand-mark {
+  .ops-wordmark {
     flex: none;
-    color: var(--color-base-content);
+    display: block;
+    width: 7.5rem;
+    min-height: var(--control-h-lg);
+    line-height: 0;
+  }
+
+  .ops-wordmark img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ops-wordmark .ops-wordmark__dark {
+    display: none;
   }
 
   #flash-group {
@@ -1671,12 +1838,6 @@
     border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
   }
 
-  .ops-flash > .alert {
-    border: 0;
-    border-radius: calc(var(--radius-ops-overlay) - 1px);
-    box-shadow: none;
-  }
-
   @media (max-width: 640px) {
     #flash-group {
       top: auto;
@@ -1684,13 +1845,6 @@
       bottom: 1rem;
     }
 
-    /* DK-10: shell radial wash tuned for mobile — 14%→10% alpha, 34rem→28rem extent.
-       Both themes (not dark-scoped). Base .ops-shell at L242 is byte-unchanged. */
-    .ops-shell {
-      background:
-        radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 28rem),
-        linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-    }
   }
 
   /* Command palette (⌘K) + cheat-sheet overlay. */
@@ -1779,7 +1933,6 @@
     cursor: pointer;
   }
 
-  .ops-cmdk__item:hover,
   .ops-cmdk__item.is-active {
     background: color-mix(in oklch, var(--color-primary) 14%, transparent);
   }
@@ -1927,8 +2080,8 @@
   background-color: var(--color-primary-strong);
 }
 
-/* Theme toggle: pill position follows `html[data-theme-effective]` and selected state
-   follows `html[data-theme-preference]` plus the root script's aria/data sync. */
+/* Theme toggle selection follows the stored preference. Effective System appearance is
+   handled by theme tokens and never selects Light or Dark on the control. */
 .ops-theme-toggle {
   isolation: isolate;
 }
@@ -1939,20 +2092,19 @@
   min-width: var(--control-h-lg);
   min-height: var(--control-h-lg);
   border-radius: 999px;
-  transition-property: background-color, color, box-shadow;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-base-content);
+  transition-property: background-color, border-color, color;
   transition-duration: var(--duration-ops-fast);
   transition-timing-function: var(--ease-ops-standard);
 }
 
-.ops-theme-toggle__button[data-theme-selected="true"],
-.ops-theme-toggle__button[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-#theme-toggle-pill {
-  transition-property: background-color, border-color, box-shadow;
-  transition-duration: var(--duration-ops-fast);
-  transition-timing-function: var(--ease-ops-standard);
+.ops-theme-toggle__button[data-theme-selected="true"] {
+  border-color: color-mix(in oklch, var(--color-primary) 24%, transparent);
+  background: var(--ops-selection);
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 /* One-shot reveals. Opacity/transform only — never animate <details> height (auto
@@ -1966,6 +2118,27 @@
 .ops-modal {
   z-index: var(--z-index-ops-modal);
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
+}
+
+.ops-playbook-filename {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ops-playbook-file-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 26rem) {
+  .ops-modal form > .flex.justify-between {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ops-modal form > .flex.justify-between > button {
+    width: 100%;
+  }
 }
 
 .ops-modal.modal-open {
@@ -2050,26 +2223,6 @@
   }
 }
 
-html[data-theme-effective="light"] #theme-toggle-pill {
-  left: 33.333333%;
-}
-
-html[data-theme-effective="dark"] #theme-toggle-pill {
-  left: 66.666667%;
-}
-
-html[data-theme-preference="system"] #theme-toggle [data-phx-theme="system"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-html[data-theme-preference="light"] #theme-toggle [data-phx-theme="light"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
-html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-
 /* Helper utility for ops_code_block — --ops-surface-2 is an @plugin token, not @theme, so Tailwind v4 cannot auto-generate bg-ops-surface-2. */
 .bg-ops-surface-2 {
   background: var(--ops-surface-2);
@@ -2116,40 +2269,18 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   }
 }
 
-[data-theme="dark"] .ops-shell {
-  background:
-    radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem),
-    linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
+[data-theme="dark"] .ops-wordmark .ops-wordmark__light {
+  display: none;
+}
+[data-theme="dark"] .ops-wordmark .ops-wordmark__dark {
+  display: block;
 }
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 10%, transparent), transparent 30rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
+  html:not([data-theme="light"]) .ops-wordmark .ops-wordmark__light {
+    display: none;
   }
-}
-
-@media (max-width: 640px) {
-  [data-theme="dark"] .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-@media (prefers-color-scheme: dark) and (max-width: 640px) {
-  html:not([data-theme="light"]) .ops-shell {
-    background:
-      radial-gradient(circle at top left, color-mix(in oklch, var(--color-primary) 8%, transparent), transparent 24rem),
-      linear-gradient(180deg, var(--color-base-200), var(--color-base-100));
-  }
-}
-
-[data-theme="dark"] .ops-brand-mark {
-  filter: drop-shadow(0 0 0.45rem color-mix(in oklch, var(--color-primary) 45%, transparent));
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-brand-mark {
-    filter: drop-shadow(0 0 0.45rem color-mix(in oklch, var(--color-primary) 45%, transparent));
+  html:not([data-theme="light"]) .ops-wordmark .ops-wordmark__dark {
+    display: block;
   }
 }
 
@@ -2163,30 +2294,6 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
     border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
     background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
     box-shadow: var(--shadow-ops-panel-dark);
-  }
-}
-
-[data-theme="dark"] .ops-theme-toggle__pill {
-  border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-  background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-theme-toggle__pill {
-    border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-    background: color-mix(in oklch, var(--ops-surface-1) 96%, transparent);
-    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-  }
-}
-
-[data-theme="dark"] .ops-theme-toggle__button[data-theme-selected="true"],
-[data-theme="dark"] .ops-theme-toggle__button[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--color-primary-strong), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-theme-toggle__button[data-theme-selected="true"],
-  html:not([data-theme="light"]) .ops-theme-toggle__button[aria-pressed="true"] {
-    box-shadow: 0 0 0 2px var(--color-primary-strong), var(--shadow-ops-glow);
   }
 }
 
@@ -2356,4 +2463,34 @@ html[data-theme-preference="dark"] #theme-toggle [data-phx-theme="dark"] {
   color: var(--color-base-content);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+/* Alert utilities outrank the component layer; these semantic toast surfaces must win in both themes. */
+.ops-flash > .alert {
+  border: 0;
+  border-radius: calc(var(--radius-ops-overlay) - 1px);
+  color: var(--color-base-content);
+  box-shadow: none;
+}
+
+.ops-flash--info > .alert {
+  background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-info) 10%);
+}
+
+.ops-flash--error > .alert {
+  background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
+}
+
+/* Cascade-safe operator text contrast.
+   Keep these outside Tailwind's ordered layers so readable roles beat generated utilities. */
+.ops-header .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+
+.ops-shell .text-base-content\/60 {
+  color: var(--ops-text-muted);
+}
+
+.ops-shell a.link:not(.link-primary):not(.text-primary) {
+  color: var(--color-base-content);
 }

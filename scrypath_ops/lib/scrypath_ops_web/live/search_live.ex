@@ -48,7 +48,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       socket
       |> assign(:guide_href, @guide_href)
-      |> assign(:page_title, "Search & federation")
+      |> assign(:page_title, "Search")
       |> assign(:mode, :single)
       |> assign(:q, "")
       |> assign(:page_size, SearchPlayground.default_page_size())
@@ -59,6 +59,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
+      |> assign(:submitted_search, nil)
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
       |> assign_capture_defaults()
@@ -130,16 +131,17 @@ defmodule ScrypathOpsWeb.SearchLive do
     {:noreply, socket}
   end
 
-  def handle_event("capture_change", %{"capture" => fields}, socket) do
-    title = fields |> Map.get("title", "") |> to_string()
-    description = fields |> Map.get("description", "") |> to_string()
-    basename = fields |> Map.get("basename", "") |> to_string()
+  def handle_event("capture_change", %{"capture" => fields}, socket) when is_map(fields) do
+    title = fields |> Map.get("title", "") |> text_input()
+    description = fields |> Map.get("description", "") |> text_input()
+    basename = fields |> Map.get("basename", "") |> text_input()
 
     socket =
       socket
       |> assign(:capture_title, title)
       |> assign(:capture_description, description)
       |> assign(:capture_basename, basename)
+      |> assign(:capture_error, nil)
       |> recompute_capture_preview()
 
     {:noreply, socket}
@@ -147,30 +149,37 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   def handle_event("capture_change", _, socket), do: {:noreply, socket}
 
-  def handle_event("save_search_capture", %{"capture" => cap}, socket) do
+  def handle_event("save_search_capture", %{"capture" => cap}, socket) when is_map(cap) do
     root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    basename = cap |> Map.get("basename", "") |> to_string() |> String.trim()
-    title = cap |> Map.get("title", "") |> to_string()
-    description = cap |> Map.get("description", "") |> to_string()
+    basename = cap |> Map.get("basename", "") |> text_input() |> String.trim()
+    title = cap |> Map.get("title", "") |> text_input()
+    description = cap |> Map.get("description", "") |> text_input()
+
+    socket =
+      socket
+      |> assign(:capture_title, title)
+      |> assign(:capture_description, description)
+      |> assign(:capture_basename, basename)
+      |> assign(:capture_error, nil)
+      |> recompute_capture_preview()
 
     cond do
       root in [nil, ""] ->
         {:noreply,
-         put_flash(
+         put_capture_error(
            socket,
-           :error,
-           "Playbook workspace is not configured — set SCRYPATH_OPS_PLAYBOOK_DIR, reload, then save again."
+           "Could not save playbook to workspace.",
+           recovery: "Configure a playbook workspace directory, then retry saving."
          )}
 
       socket.assigns.capture_base == nil ->
-        {:noreply, put_flash(socket, :error, "Run a search first — nothing to save yet.")}
+        {:noreply, put_capture_error(socket, "Run a search first — nothing to save yet.")}
 
       not Store.safe_basename?(basename) ->
         {:noreply,
-         put_flash(
+         put_capture_error(
            socket,
-           :error,
-           "Filename must match *.json basename rules (letters, digits, ., -, _)."
+           "Filename must be a .json basename using letters, digits, periods, hyphens or underscores."
          )}
 
       true ->
@@ -182,73 +191,98 @@ defmodule ScrypathOpsWeb.SearchLive do
           {:ok, validated} ->
             case V1.encode(validated) do
               {:ok, json} ->
-                if workspace_playbook_exists?(root, basename) do
-                  {:noreply,
-                   put_flash(
-                     socket,
-                     :error,
-                     "That playbook name is already in use — pick another basename."
-                   )}
-                else
-                  case Store.save_workspace_file(root, basename, json <> "\n") do
-                    :ok ->
-                      {:noreply,
-                       socket
-                       |> assign(:capture_basename, "")
-                       |> put_flash(:info, "Saved playbook #{basename}.")}
+                case Store.create_workspace_file(root, basename, json <> "\n") do
+                  :ok ->
+                    {:noreply,
+                     socket
+                     |> assign(:capture_basename, "")
+                     |> assign(:capture_error, nil)
+                     |> put_flash(:info, "Saved playbook #{basename}.")}
 
-                    {:error, _} ->
-                      {:noreply,
-                       put_flash(socket, :error, "Save failed — check directory permissions.")}
-                  end
+                  {:error, :target_exists} ->
+                    {:noreply,
+                     put_capture_error(
+                       socket,
+                       "That playbook name is already in use — pick another basename."
+                     )}
+
+                  {:error, reason} ->
+                    {:noreply,
+                     put_capture_error(
+                       socket,
+                       "Could not save playbook to workspace.",
+                       detail: safe_capture_reason(reason),
+                       recovery:
+                         "Check the workspace directory's permissions and available disk space, then retry saving."
+                     )}
                 end
 
-              {:error, _} ->
-                {:noreply, put_flash(socket, :error, "Could not encode playbook for saving.")}
+              {:error, reason} ->
+                {:noreply,
+                 put_capture_error(
+                   socket,
+                   "Could not save playbook to workspace.",
+                   detail: "Playbook encoding failed: #{inspect(reason)}",
+                   recovery:
+                     "Review the search criteria and optional metadata, then retry saving."
+                 )}
             end
 
-          {:error, _} ->
+          {:error, reason} ->
             {:noreply,
-             put_flash(
+             put_capture_error(
                socket,
-               :error,
-               "Playbook preview is not valid — adjust fields and try again."
+               "Could not save playbook to workspace.",
+               detail: "Playbook validation failed: #{inspect(reason)}",
+               recovery: "Review the search criteria and optional metadata, then retry saving."
              )}
         end
     end
   end
 
   def handle_event("save_search_capture", _, socket) do
-    {:noreply, put_flash(socket, :error, "Missing save fields.")}
+    {:noreply, put_capture_error(socket, "Enter a filename ending in .json, then retry saving.")}
   end
 
-  def handle_event("search", params, socket) do
+  def handle_event("search", params, socket) when is_map(params) do
     # Two-step so the loading skeleton paints before the bounded read runs (S2). The
     # Scrypath search dispatch is synchronous; deferring it to handle_info/2 lets LiveView
     # push the `:searching` frame first. Clear prior results immediately so the skeleton
     # isn't drawn over a stale result panel.
-    send(self(), {:run_search, params})
+    submission = capture_search_submission(params, socket)
+    send(self(), {:run_search, submission})
 
     socket =
       socket
+      |> assign(:submitted_search, submission)
+      |> assign(:mode, submission.mode)
+      |> assign(:q, submission.query)
+      |> assign(:page_size, submission.page_size)
+      |> assign(:selected_schema, submission.schema)
+      |> assign(:selected_multi_schemas, submission.schemas)
       |> assign(:result_single, nil)
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
       |> assign(:searching, true)
+      |> assign_capture_defaults()
 
     {:noreply, socket}
   end
 
+  def handle_event("search", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Search input was invalid. Check the fields and retry.")}
+  end
+
   @impl true
-  def handle_info({:run_search, params}, socket) do
+  def handle_info({:run_search, submission}, socket) do
     start_ms = System.monotonic_time(:millisecond)
 
-    q = params["q"] |> to_string() |> String.trim()
-    page_size = parse_page_size_param(params["page_size"], socket.assigns.page_size)
+    q = submission.query
+    page_size = submission.page_size
 
     allowlist = socket.assigns.schema_allowlist
     scrypath_opts = socket.assigns.scrypath_opts
-    mode = socket.assigns.mode
+    mode = submission.mode
 
     base_socket =
       socket
@@ -265,10 +299,10 @@ defmodule ScrypathOpsWeb.SearchLive do
          {:ok, opts} <- build_opts(scrypath_opts, page_size, mode) do
       case mode do
         :single ->
-          run_single(base_socket, params, q, opts, allowlist, start_ms)
+          run_single(base_socket, submission, opts, allowlist, start_ms)
 
         :multi ->
-          run_multi(base_socket, params, q, opts, allowlist, start_ms)
+          run_multi(base_socket, submission, opts, allowlist, start_ms)
       end
     else
       {:error, {:page_size_out_of_range, _, _} = err} ->
@@ -289,12 +323,10 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp run_single(socket, params, q, opts, allowlist, start_ms) do
-    mod =
-      case params["schema"] do
-        nil -> socket.assigns.selected_schema
-        s -> module_in_allowlist(s, allowlist) || socket.assigns.selected_schema
-      end
+  defp run_single(socket, submission, opts, allowlist, start_ms) do
+    mod = submission.schema
+    q = submission.query
+    page_size = submission.page_size
 
     socket = assign(socket, :selected_schema, mod)
 
@@ -329,7 +361,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   search_path(socket,
                     mode: :single,
                     q: q,
-                    page_size: socket.assigns.page_size,
+                    page_size: page_size,
                     schema: mod
                   )
               )
@@ -344,14 +376,10 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp run_multi(socket, params, q, opts, allowlist, start_ms) do
-    selected =
-      params
-      |> Map.get("schemas", Map.get(params, "schemas[]", []))
-      |> List.wrap()
-      |> Enum.map(&module_in_allowlist(&1, allowlist))
-      |> Enum.reject(&is_nil/1)
-      |> Enum.uniq()
+  defp run_multi(socket, submission, opts, allowlist, start_ms) do
+    selected = submission.schemas
+    q = submission.query
+    page_size = submission.page_size
 
     socket = assign(socket, :selected_multi_schemas, selected)
 
@@ -401,7 +429,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   search_path(socket,
                     mode: :multi,
                     q: q,
-                    page_size: socket.assigns.page_size,
+                    page_size: page_size,
                     schemas: selected
                   )
               )
@@ -429,6 +457,42 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
+  defp capture_search_submission(params, socket) do
+    allowlist = socket.assigns.schema_allowlist
+
+    schema = module_in_allowlist(params["schema"], allowlist)
+
+    schemas = capture_multi_schemas(params, allowlist, socket)
+
+    %{
+      id: System.unique_integer([:positive, :monotonic]),
+      mode: socket.assigns.mode,
+      schema: schema,
+      schemas: schemas,
+      query: params |> Map.get("q", "") |> text_input() |> String.trim(),
+      page_size: parse_page_size_param(params["page_size"], socket.assigns.page_size)
+    }
+  end
+
+  defp capture_multi_schemas(params, allowlist, _socket) do
+    raw =
+      cond do
+        Map.has_key?(params, "schemas") -> params["schemas"]
+        Map.has_key?(params, "schemas[]") -> params["schemas[]"]
+        true -> []
+      end
+
+    raw
+    |> List.wrap()
+    |> Enum.flat_map(fn
+      value when is_binary(value) -> String.split(value, ",", trim: true)
+      _value -> []
+    end)
+    |> Enum.map(&module_in_allowlist(&1, allowlist))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+  end
+
   defp put_search_limit(opts, page_size, :multi) do
     Keyword.merge(opts, federation_limit: page_size, federation_offset: 0)
   end
@@ -438,7 +502,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp parse_page_size_param(raw, fallback) do
-    case Integer.parse(to_string(raw || "")) do
+    case Integer.parse(text_input(raw || "")) do
       {n, _} -> n
       :error -> fallback
     end
@@ -460,7 +524,10 @@ defmodule ScrypathOpsWeb.SearchLive do
       params
       |> Map.get("schemas", Map.get(params, "schemas[]", nil))
       |> List.wrap()
-      |> Enum.flat_map(fn value -> String.split(to_string(value), ",", trim: true) end)
+      |> Enum.flat_map(fn
+        value when is_binary(value) -> String.split(value, ",", trim: true)
+        _value -> []
+      end)
 
     selected =
       raw
@@ -523,6 +590,10 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp search_status_badge_kind(%{searching: true}), do: :running
 
+  defp search_status_badge_kind(%{run_error: error}) when not is_nil(error), do: :error
+
+  defp search_status_badge_kind(%{result_multi: %{failures: [_ | _]}}), do: :warning
+
   defp search_status_badge_kind(%{result_single: r1, result_multi: r2})
        when not is_nil(r1) or not is_nil(r2), do: :success
 
@@ -530,10 +601,49 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp search_status_badge_label(%{searching: true}), do: "Running…"
 
+  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Failed"
+
+  defp search_status_badge_label(%{result_multi: %{failures: [_ | _]}}), do: "Partial"
+
   defp search_status_badge_label(%{result_single: r1, result_multi: r2})
        when not is_nil(r1) or not is_nil(r2), do: "Last run loaded"
 
-  defp search_status_badge_label(_), do: "Run a probe"
+  defp search_status_badge_label(_), do: "Not run"
+
+  defp search_outcome(%{searching: true}), do: "Search running."
+  defp search_outcome(%{run_error: error}) when not is_nil(error), do: nil
+
+  defp search_outcome(%{result_single: %{hits: hits}, submitted_search: submission})
+       when not is_nil(submission) do
+    if hits == [] do
+      "Search completed: no matching documents (0 hits) in #{inspect(submission.schema)}."
+    else
+      "Search completed: #{length(hits)} #{pluralize(length(hits), "hit")} from #{inspect(submission.schema)}."
+    end
+  end
+
+  defp search_outcome(%{result_multi: %{ordered: ordered, failures: failures}})
+       when is_list(ordered) and is_list(failures) do
+    hit_count =
+      Enum.reduce(ordered, 0, fn {_schema, result}, count -> count + length(result.hits) end)
+
+    no_hit_count = Enum.count(ordered, fn {_schema, result} -> result.hits == [] end)
+    returned_count = length(ordered)
+
+    if failures == [] do
+      "Search completed: #{hit_count} #{pluralize(hit_count, "hit")} across #{returned_count} #{pluralize(returned_count, "index")}; #{no_hit_count} #{pluralize(no_hit_count, "index")} returned no matches."
+    else
+      "Partial search: #{hit_count} #{pluralize(hit_count, "hit")} from #{returned_count} #{pluralize(returned_count, "index")}; #{no_hit_count} #{pluralize(no_hit_count, "index")} returned no matches and #{length(failures)} #{pluralize(length(failures), "index")} failed."
+    end
+  end
+
+  defp search_outcome(_), do: nil
+
+  defp pluralize(1, "hit"), do: "hit"
+  defp pluralize(1, "index"), do: "index"
+  defp pluralize(_count, "hit"), do: "hits"
+  defp pluralize(_count, "index"), do: "indexes"
+  defp pluralize(_count, _singular), do: "s"
 
   # Lead a single-index hit row with its most human field (name/title/sku) so result
   # titles read meaningfully instead of "Hit 1 / Hit 2" (P29). Falls back to the
@@ -553,7 +663,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       case Map.get(hit, key) do
         nil -> nil
         "" -> nil
-        value -> to_string(value)
+        value -> humanize_hit_value(value)
       end
     end)
   end
@@ -561,7 +671,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp hit_summary(hit) when is_map(hit) do
     hit
     |> Map.take(["id", :id, "title", :title, "name", :name, "sku", :sku])
-    |> Enum.map(fn {key, value} -> "#{key}: #{value}" end)
+    |> Enum.map(fn {key, value} -> "#{key}: #{humanize_hit_value(value)}" end)
     |> Enum.join(" · ")
     |> case do
       "" -> "Structured result payload"
@@ -570,6 +680,15 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp hit_summary(_), do: "Result payload"
+
+  defp humanize_hit_value(value) when is_binary(value), do: value
+  defp humanize_hit_value(value) when is_number(value) or is_boolean(value), do: to_string(value)
+
+  defp humanize_hit_value(value),
+    do: inspect(value, limit: 8, printable_limit: 160, charlists: :as_lists)
+
+  defp text_input(value) when is_binary(value), do: value
+  defp text_input(_value), do: ""
 
   defp emit_run(mode, outcome, duration_ms) do
     :telemetry.execute(
@@ -585,9 +704,27 @@ defmodule ScrypathOpsWeb.SearchLive do
     |> assign(:capture_title, "")
     |> assign(:capture_description, "")
     |> assign(:capture_basename, "")
+    |> assign(:capture_error, nil)
     |> assign(:capture_preview_json, nil)
     |> assign(:capture_preview_ok?, false)
   end
+
+  defp put_capture_error(socket, message, opts \\ []) do
+    error = %{
+      message: message,
+      detail: Keyword.get(opts, :detail),
+      recovery: Keyword.get(opts, :recovery)
+    }
+
+    assign(socket, :capture_error, error)
+  end
+
+  defp safe_capture_reason(reason) when is_atom(reason), do: inspect(reason)
+
+  defp safe_capture_reason({category, reason}) when is_atom(category) and is_atom(reason),
+    do: inspect({category, reason})
+
+  defp safe_capture_reason(_), do: "unknown filesystem error"
 
   defp assign_search_capture_single(socket, mod, q, opts_kw) do
     base = %{
@@ -657,13 +794,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp workspace_playbook_exists?(root, name) do
-    case Store.list_workspace_json(root) do
-      {:ok, names} -> name in names
-      {:error, _} -> false
-    end
-  end
-
   defp keyword_to_playbook_opts_map(kw, ctx) do
     strings =
       case ctx do
@@ -723,7 +853,10 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp dispatch_opt_to_json("per_query", v) when is_list(v) do
     m =
       %{}
-      |> maybe_put_json_int("ranking_score_threshold", Keyword.get(v, :ranking_score_threshold))
+      |> maybe_put_json_number(
+        "ranking_score_threshold",
+        Keyword.get(v, :ranking_score_threshold)
+      )
       |> maybe_put_json_bool("show_ranking_score", Keyword.get(v, :show_ranking_score))
       |> maybe_put_json_bool(
         "show_ranking_score_details",
@@ -751,6 +884,10 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp maybe_put_json_int(m, k, n) when is_integer(n), do: Map.put(m, k, n)
   defp maybe_put_json_int(m, _, _), do: m
 
+  defp maybe_put_json_number(m, _k, nil), do: m
+  defp maybe_put_json_number(m, k, n) when is_number(n) and n >= 0, do: Map.put(m, k, n)
+  defp maybe_put_json_number(m, _, _), do: m
+
   defp maybe_put_json_bool(m, _k, nil), do: m
   defp maybe_put_json_bool(m, k, b) when is_boolean(b), do: Map.put(m, k, b)
   defp maybe_put_json_bool(m, _, _), do: m
@@ -773,7 +910,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           />
         </.ops_toolbar>
 
-        <.ops_trail mount_path={@mount_path} current={:search} />
+        <.ops_trail current={:search} />
 
         <.ops_notice
           id="search-honesty-panel"
@@ -839,11 +976,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                   schemas={@schema_allowlist}
                   selected={@selected_schema}
                   disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
-                  class="font-mono text-ops-sm"
+                  class="font-mono text-ops-body"
                 />
 
                 <div :if={@mode == :multi} class="space-y-2">
-                  <p id="search-schemas-hint" class="text-ops-sm leading-5 text-base-content/70">
+                  <p id="search-schemas-hint" class="text-ops-body leading-5 text-base-content/70">
                     Choose up to {SearchPlayground.max_schemas_allowed()} indexes for this run.
                   </p>
                   <.ops_checkbox_list
@@ -878,7 +1015,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 legend="Limits / safety"
                 disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
-                <p id="search-limits-copy" class="text-ops-sm leading-5 text-base-content/70">
+                <p id="search-limits-copy" class="text-ops-body leading-5 text-base-content/70">
                   Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
                 </p>
                 <.ops_field id="search_page_size" label="Page size" class="w-full max-w-xs">
@@ -917,11 +1054,67 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </.ops_badge>
               </div>
 
+              <p
+                :if={search_outcome(assigns)}
+                id="search-outcome"
+                data-testid="search-outcome"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                class="text-ops-body text-base-content/80"
+              >
+                {search_outcome(assigns)}
+              </p>
+
+              <dl
+                :if={@submitted_search}
+                id="search-run-attribution"
+                data-run-id={@submitted_search.id}
+                class="grid min-w-0 gap-x-6 gap-y-2 border-t border-base-content/10 pt-3 text-ops-body sm:grid-cols-2"
+              >
+                <div>
+                  <dt class="text-ops-sm text-base-content/70">Last run</dt>
+                  <dd data-testid="search-submitted-mode">
+                    {if @submitted_search.mode == :single, do: "Single index", else: "Multi-index"}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-ops-sm text-base-content/70">Submitted query</dt>
+                  <dd data-testid="search-submitted-query" class="min-w-0 break-words">
+                    {if @submitted_search.query == "",
+                      do: "(empty query)",
+                      else: @submitted_search.query}
+                  </dd>
+                </div>
+                <div>
+                  <dt class="text-ops-sm text-base-content/70">Page size</dt>
+                  <dd data-testid="search-submitted-page-size">{@submitted_search.page_size}</dd>
+                </div>
+                <div class="min-w-0">
+                  <dt class="text-ops-sm text-base-content/70">Submitted index(es)</dt>
+                  <dd
+                    data-testid="search-submitted-targets"
+                    class="min-w-0 break-all font-mono text-ops-body"
+                  >
+                    <%= if @submitted_search.mode == :single do %>
+                      <span :if={@submitted_search.schema}>
+                        {inspect(@submitted_search.schema)}
+                      </span>
+                      <span :if={is_nil(@submitted_search.schema)}>No index selected</span>
+                    <% else %>
+                      <%= for schema <- @submitted_search.schemas do %>
+                        <span class="mr-2 inline-block">{inspect(schema)}</span>
+                      <% end %>
+                      <span :if={@submitted_search.schemas == []}>No index selected</span>
+                    <% end %>
+                  </dd>
+                </div>
+              </dl>
+
               <div
                 :if={@searching}
                 class="space-y-3"
-                role="status"
-                aria-label="Running search"
+                aria-hidden="true"
               >
                 <p class="text-ops-body text-base-content/70">
                   Running search...
@@ -936,7 +1129,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 role="alert"
               >
                 <p>{format_run_error(@run_error)}</p>
-                <p class="mt-2 text-ops-sm">
+                <p class="mt-2 text-ops-body">
                   Fix the query options or operator config, then run search again.
                 </p>
               </.ops_status>
@@ -951,16 +1144,6 @@ defmodule ScrypathOpsWeb.SearchLive do
                 data-testid="search-empty-hero"
               >
                 Choose an index, enter a query, inspect the answer, then save a useful check.
-                <:actions>
-                  <.ops_button
-                    type="submit"
-                    form="ops-search-playground-form"
-                    variant={:primary}
-                    disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                  >
-                    Run current search
-                  </.ops_button>
-                </:actions>
               </.ops_empty_hero>
 
               <div :if={@result_single} class="space-y-3">
@@ -968,7 +1151,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
 
               <div :if={@result_multi} class="space-y-3">
-                <div id="search-federation-status" role="status" class="text-ops-body space-y-2">
+                <div id="search-federation-status" class="text-ops-body space-y-2">
                   <p :if={@result_multi.failures == []} class="text-base-content/70">
                     All selected indexes returned results on this run.
                   </p>
@@ -978,11 +1161,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                     class="rounded-ops-control border p-4 ops-tone-warning"
                   >
                     <p class="font-semibold">Some indexes did not return results.</p>
-                    <p class="mt-1 text-ops-sm">
+                    <p class="mt-1 text-ops-body">
                       Failures are per index and do not cancel the whole response. Next: open failure details, adjust entries or backend, then run search again.
                     </p>
-                    <p class="mt-2 text-ops-sm text-base-content/70">
-                      <code class="text-ops-sm">:all</code>
+                    <p class="mt-2 text-ops-body text-base-content/70">
+                      <code class="text-ops-body">:all</code>
                       entries expanded follow declaration order before limits apply when multi-search uses global expansion.
                     </p>
                     <.ops_disclosure
@@ -990,15 +1173,15 @@ defmodule ScrypathOpsWeb.SearchLive do
                       variant={:compact}
                       class="mt-2"
                     >
-                      <ul class="list-inside list-disc font-mono text-ops-sm">
+                      <ul class="list-inside list-disc font-mono text-ops-body">
                         <%= for %{schema: s, reason: r} <- @result_multi.failures do %>
                           <li>{inspect(s)} — {inspect(r)}</li>
                         <% end %>
                       </ul>
-                      <p :if={@show_all_footnote} class="mt-2 text-ops-sm text-base-content/80">
-                        <code class="text-ops-sm">:all</code>
+                      <p :if={@show_all_footnote} class="mt-2 text-ops-body text-base-content/80">
+                        <code class="text-ops-body">:all</code>
                         entries expanded to the configured global schema list in declaration order before limits apply; empty registry and missing
-                        <code class="text-ops-sm">otp_app</code>
+                        <code class="text-ops-body">otp_app</code>
                         errors match library invalid_options / all_expansion vocabulary.
                       </p>
                     </.ops_disclosure>
@@ -1023,7 +1206,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   variant={:compact}
                   class="ops-path-trace"
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-body">
                     <%= for {mod, hit} <- MultiSearchResult.merge_projection(@result_multi) do %>
                       <li>{inspect(mod)} — {inspect(hit)}</li>
                     <% end %>
@@ -1039,7 +1222,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   variant={:compact}
                   class="ops-path-trace"
                 >
-                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-sm">
+                  <ol class="mt-2 list-inside list-decimal font-mono text-ops-body">
                     <%= for pair <- @result_multi.merge_hit_order do %>
                       <li>{inspect(pair)}</li>
                     <% end %>
@@ -1051,7 +1234,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   summary="Federation metadata"
                   variant={:compact}
                 >
-                  <p class="mt-2 text-ops-sm text-base-content/60">
+                  <p class="mt-2 text-ops-body text-base-content/60">
                     Per-entry weights are uniform when the backend does not expose per-entry overrides.
                   </p>
                   <.ops_code_block variant={:compact} class="mt-2">
@@ -1059,24 +1242,64 @@ defmodule ScrypathOpsWeb.SearchLive do
                   </.ops_code_block>
                 </.ops_disclosure>
 
-                <div class="space-y-3">
-                  <.ops_heading level={2}>Index details</.ops_heading>
-                  <%= for {mod, sres} <- @result_multi.ordered do %>
-                    <.ops_data_card title={inspect(mod)}>
-                      <p class="text-ops-sm text-base-content/70">
-                        Hits: {length(sres.hits)} · estimatedTotalHits: {Map.get(
-                          sres.raw,
-                          "estimatedTotalHits"
-                        )}
-                      </p>
-                      <.ops_disclosure summary="Raw per-schema result" variant={:compact} class="mt-2">
-                        <.ops_code_block variant={:compact}>
-                          {inspect(sres.raw, pretty: true)}
-                        </.ops_code_block>
-                      </.ops_disclosure>
-                    </.ops_data_card>
-                  <% end %>
-                </div>
+                <section id="search-index-results" aria-label="Per-index results" class="space-y-3">
+                  <article
+                    :for={{mod, sres} <- @result_multi.ordered}
+                    class="min-w-0 rounded-ops-control border border-base-content/10 p-4"
+                    data-index-outcome={if sres.hits == [], do: "no-hits", else: "returned"}
+                  >
+                    <h3 class="break-all font-mono text-ops-body font-semibold">{inspect(mod)}</h3>
+                    <p class="mt-1 text-ops-body text-base-content/80">
+                      <%= if sres.hits == [] do %>
+                        No matching documents returned for this index.
+                      <% else %>
+                        {length(sres.hits)} {pluralize(length(sres.hits), "hit")} returned.
+                      <% end %>
+                    </p>
+                    <div :if={sres.hits != []} class="mt-3 grid min-w-0">
+                      <%= for {hit, idx} <- Enum.with_index(sres.hits, 1) do %>
+                        <.ops_result_row
+                          title={hit_title(hit, idx)}
+                          subtitle={hit_summary(hit)}
+                          class="ops-search-hit"
+                        >
+                          <.ops_disclosure summary="Raw hit payload" variant={:compact}>
+                            <.ops_code_block variant={:compact}>
+                              {inspect(hit, pretty: true)}
+                            </.ops_code_block>
+                          </.ops_disclosure>
+                        </.ops_result_row>
+                      <% end %>
+                    </div>
+                    <.ops_disclosure
+                      summary={"Raw response for #{inspect(mod)}"}
+                      variant={:compact}
+                      class="mt-2"
+                    >
+                      <.ops_code_block variant={:compact}>
+                        {inspect(sres.raw, pretty: true)}
+                      </.ops_code_block>
+                    </.ops_disclosure>
+                  </article>
+
+                  <article
+                    :for={failure <- @result_multi.failures}
+                    class="min-w-0 rounded-ops-control border border-base-content/10 p-4"
+                    data-index-outcome="failed"
+                  >
+                    <h3 class="break-all font-mono text-ops-body font-semibold">
+                      Index failed: {inspect(failure.schema)}
+                    </h3>
+                    <p class="mt-1 break-words text-ops-body text-base-content/80">
+                      Reason: <code>{inspect(failure.reason)}</code>. Check this index and its backend configuration, then run search again.
+                    </p>
+                    <.ops_disclosure summary="Raw failure detail" variant={:compact} class="mt-2">
+                      <.ops_code_block variant={:compact}>
+                        {inspect(failure, pretty: true)}
+                      </.ops_code_block>
+                    </.ops_disclosure>
+                  </article>
+                </section>
               </div>
             </section>
           </div>
@@ -1109,11 +1332,11 @@ defmodule ScrypathOpsWeb.SearchLive do
                   as={:capture}
                   phx-change="capture_change"
                   phx-submit="save_search_capture"
-                  class="mt-4 max-w-2xl space-y-4"
+                  class="ops-save-playbook__form mt-4 max-w-2xl space-y-4"
                   id="search-capture-form"
                 >
                   <div class="grid gap-3 md:grid-cols-2">
-                    <.ops_field id="capture_title" label="Title">
+                    <.ops_field id="capture_title" label="Search title">
                       <.ops_text_input
                         id="capture_title"
                         name="capture[title]"
@@ -1121,15 +1344,23 @@ defmodule ScrypathOpsWeb.SearchLive do
                         placeholder="Optional"
                       />
                     </.ops_field>
-                    <.ops_field id="capture_basename" label="Basename (.json)">
+                    <.ops_field id="capture_basename" label="Filename">
                       <.ops_text_input
                         id="capture_basename"
                         name="capture[basename]"
                         value={@capture_basename}
-                        class="font-mono text-ops-body"
+                        hint="Use a filename ending in .json. Choose a new .json filename; Search capture cannot replace an existing file."
+                        error={@capture_error && @capture_error.message}
+                        class="min-w-0 font-mono text-ops-body"
                         placeholder="my-search.json"
                         required
                       />
+                      <p
+                        id="capture_basename-hint"
+                        class="text-ops-body leading-6 text-base-content/70"
+                      >
+                        Use a filename ending in .json. Choose a new .json filename; Search capture cannot replace an existing file.
+                      </p>
                     </.ops_field>
                   </div>
                   <.ops_field id="capture_description" label="Description">
@@ -1141,6 +1372,26 @@ defmodule ScrypathOpsWeb.SearchLive do
                     />
                   </.ops_field>
 
+                  <div
+                    :if={@capture_error}
+                    class="min-w-0 space-y-1 text-ops-body leading-6 text-error"
+                    data-testid="search-capture-error"
+                    role="alert"
+                  >
+                    <p id="capture_basename-error" class="break-words">
+                      {@capture_error.message}
+                    </p>
+                    <p :if={@capture_error.detail} class="break-words text-base-content/75">
+                      Reason: {@capture_error.detail}
+                    </p>
+                    <p
+                      :if={@capture_error.recovery}
+                      class="break-words text-base-content/75"
+                    >
+                      {@capture_error.recovery}
+                    </p>
+                  </div>
+
                   <p
                     :if={@capture_preview_ok?}
                     class="text-ops-sm text-base-content/70"
@@ -1148,12 +1399,16 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >
                     Playbook preview is ready
                   </p>
-                  <.ops_code_block
+                  <.ops_disclosure
                     :if={@capture_preview_json}
-                    data-testid="search-capture-preview-pre"
+                    id="search-capture-json"
+                    summary="Exact playbook JSON"
+                    variant={:compact}
                   >
-                    {@capture_preview_json}
-                  </.ops_code_block>
+                    <.ops_code_block data-testid="search-capture-preview-pre">
+                      {@capture_preview_json}
+                    </.ops_code_block>
+                  </.ops_disclosure>
 
                   <.ops_button type="submit" variant={:primary}>
                     Save playbook

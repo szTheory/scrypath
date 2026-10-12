@@ -20,7 +20,7 @@ import {
   gotoControlRoom,
   gotoFailedSync,
   gotoPlaybooks,
-  gotoPosture,
+  gotoSearchHealth,
   gotoSearch,
   gotoSyncDrift,
   THEME_MODES,
@@ -50,7 +50,7 @@ const DARK_THEME_MODES = THEME_MODES.filter(
 
 const SHELL_SURFACES: ShellSurface[] = [
   { name: "Control Room", prepare: gotoControlRoom },
-  { name: "Posture", prepare: gotoPosture },
+  { name: "Search health", prepare: gotoSearchHealth },
   { name: "Failed Sync", prepare: gotoFailedSync },
   { name: "Sync/Drift", prepare: gotoSyncDrift },
   { name: "Search", prepare: gotoSearch },

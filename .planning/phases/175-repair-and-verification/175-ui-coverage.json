@@ -1,0 +1,266 @@
+{
+  "items": [
+    {
+      "requirement_id": "E1",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "With no allowlisted schemas, show the named configuration-empty guidance and no action targeting an implicit schema.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "While queue/backend observation runs, retain the last complete observed values with their snapshot and expose a named busy refresh control.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A failed queue/backend observation names its unavailable source and reason, retains known evidence, and offers refresh without claiming a remote operation failed.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "For a selected schema, show queue and backend observations under separate labels with full schema and index identity; do not roll them into contract or document success.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "When only one observation source is available, keep that known result and identify the other source as unavailable instead of substituting zero or healthy.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Schema modules and index names wrap or reflow within the existing selector/result layout; essential identity is not clipped and the page does not gain horizontal overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "No configured schema uses the empty guidance; one or many configured schemas keep an explicit selected target and never silently switch actions to a different schema.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long schema modules, index names, and observation reasons remain readable at narrow widths and are not available only through a tooltip.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Before contract or document checks run, identify each result as not checked; no empty result is presented as a matching contract or present document.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "During either check, name the in-flight observation and leave the independent contract/document result visible without changing it to success.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A contract-check or document-observation failure identifies which check could not be checked, retains its reason, and remains unknown rather than a remote task failure.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Show declared-versus-live contract findings and expected-document presence as independent results with their applicable index/document evidence.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "If contract evidence is complete but document evidence is unavailable (or vice versa), retain the known result and explicitly label the other one incomplete; one cannot stand in for the other.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long field names, index names, document identifiers, and mismatch reasons wrap within the named evidence region without hiding row labels or causing page-level horizontal scroll.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero mismatches and multiple mismatch rows use explicit counts and the same result structure; zero contract drift never implies that expected documents are present.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full field/document/index identifiers and mismatch reasons remain selectable and readable without truncating the only evidence.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "An accepted recovery check displays progress while preserving its exact queue job/attempt and backend task UID; refreshing checks the same operation and never resubmits it.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Timeout, transport failure, missing task, or malformed evidence says the outcome could not be checked and remains unknown; only authoritative evidence may show remote failure or success.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long recovery status and reason text wraps beside the complete task/job identity without forcing page-level horizontal scrolling.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full schema, index, queue job, attempt, and task identifiers remain readable at narrow widths and stay beside their own outcome.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "While promotion is accepted or running, retain its exact task UID and live/target index identities, prevent a duplicate submission, and do not call it complete.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Eligibility blocks retain a concrete reason; terminal failed/canceled tasks remain distinct from unknown observation and keep the task UID visible.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The confirmation and promotion result reflow or scroll within their existing named container so full identity and alias-effect text remain visible without page overflow.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The confirmation and result keep full schema, live index, target index, alias effect, and task UID readable without clipping or tooltip-only access.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A non-focus-moving operation status announces the changed progress once, preserves focus, and does not repeat unrelated evidence.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Visible feedback names whether the remote task failed or the observation failed; unknown observation never uses copy or color that asserts remote failure.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long asynchronous status and error messages wrap within the feedback region and cannot create page-level horizontal overflow or cover their related controls.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Full operation references and their state labels remain visible and readable; no tooltip or color-only cue is required to understand the outcome.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    }
+  ],
+  "coverage": {
+    "applicable": 28,
+    "resolved": 28,
+    "unresolved": 0,
+    "unclassified": 0,
+    "byVerification": {
+      "explicit": 28,
+      "backstop": 0
+    }
+  }
+}

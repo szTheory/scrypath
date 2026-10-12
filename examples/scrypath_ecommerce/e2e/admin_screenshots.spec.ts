@@ -38,11 +38,11 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
   await capture(page, testInfo, "00-control-room");
 
-  await page.goto("/admin/search/posture");
+  await page.goto("/admin/search/health");
   await waitForLiveConnected(page);
   await page.locator("[data-ops-refresh]").click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
-  await capture(page, testInfo, "01-posture-health");
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
+  await capture(page, testInfo, "01-search-health");
 
   await page.goto("/admin/search/failed-sync");
   await waitForLiveConnected(page);
@@ -56,23 +56,20 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(failedRow.getByRole("region", { name: "Technical details" })).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");
 
-  await page.getByRole("button", { name: "Hide reason rollups" }).click();
-  await capture(page, testInfo, "03-failed-sync-compact");
-
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await page.getByRole("button", { name: "Check index contract" }).click();
   await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
-  await capture(page, testInfo, "04-sync-drift-loaded");
+  await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
-  await capture(page, testInfo, "05-search-single-results");
+  await capture(page, testInfo, "04-search-single-results");
 
   await page.getByRole("button", { name: "Multi index" }).click();
   const firstSchema = page.locator("input[name='schemas[]']").first();
@@ -81,7 +78,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   }
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByText("Federation summary")).toBeVisible();
-  await capture(page, testInfo, "06-search-multi-results");
+  await capture(page, testInfo, "05-search-multi-results");
 
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
@@ -98,9 +95,9 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   );
   await page.getByRole("button", { name: "Import from paste" }).click();
   await expect(page.getByTestId("playbook-preview-marker")).toBeVisible();
-  await capture(page, testInfo, "07-playbook-preview");
+  await capture(page, testInfo, "06-playbook-preview");
 
   await page.getByRole("button", { name: "Run saved playbook" }).click();
   await expect(page.getByText("Playbook run completed", { exact: true })).toBeVisible();
-  await capture(page, testInfo, "08-playbook-run-result");
+  await capture(page, testInfo, "07-playbook-run-result");
 });

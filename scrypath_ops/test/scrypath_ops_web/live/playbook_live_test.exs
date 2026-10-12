@@ -85,11 +85,106 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_workspace)
     end)
 
-    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
 
     assert html =~ ~s(data-testid="playbooks-empty-hero")
     assert html =~ "No playbooks yet"
     assert html =~ ~s(href="#playbook-import")
+    refute has_element?(view, "details[data-testid='playbook-manage-actions']")
+  end
+
+  test "catalog management is contextual, closed, and wraps long filenames", %{conn: conn} do
+    dir = workspace_dir("catalog-actions")
+    long_name = "playbook-" <> String.duplicate("long-segment-", 10) <> ".json"
+    names = ["one.json", "two.json", long_name]
+
+    Enum.each(names, fn name ->
+      File.write!(Path.join(dir, name), playbook_json("query for #{name}"))
+    end)
+
+    configure_workspace(dir)
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    Enum.each(names, fn name ->
+      dom_id = Base.url_encode64(name, padding: false)
+
+      assert has_element?(
+               view,
+               "details#playbook-manage-#{dom_id}[data-ops-file-name='#{name}']:not([open]) > summary#playbook-manage-summary-#{dom_id}",
+               "Manage file actions"
+             )
+
+      assert has_element?(view, "#playbook-row-#{dom_id} .ops-playbook-filename", name)
+
+      assert has_element?(
+               view,
+               "details#playbook-manage-#{dom_id} button[aria-label='Duplicate #{name}']"
+             )
+
+      assert has_element?(
+               view,
+               "details#playbook-manage-#{dom_id} button[aria-label='Rename #{name}']"
+             )
+
+      assert has_element?(
+               view,
+               "details#playbook-manage-#{dom_id} button[aria-label='Delete #{name}']"
+             )
+
+      assert has_element?(view, "#playbook-primary-#{dom_id}", "Load preview")
+
+      assert has_element?(
+               view,
+               "#playbook-row-#{dom_id} button[aria-label='Run #{name} without preview']"
+             )
+    end)
+  end
+
+  test "read-only examples omit management and reject forged file mutations", %{conn: conn} do
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
+
+    on_exit(fn ->
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    examples_dir = Application.app_dir(:scrypath_ops, "priv/playbooks")
+    [example_path | _] = Path.wildcard(Path.join(examples_dir, "*.json"))
+    example_name = Path.basename(example_path)
+    original = File.read!(example_path)
+
+    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
+    assert html =~ "Examples (read-only)"
+    assert has_element?(view, "#playbook-row-#{Base.url_encode64(example_name, padding: false)}")
+    refute has_element?(view, "details[data-testid='playbook-manage-actions']")
+    refute has_element?(view, "button[phx-click='dup_open']")
+    refute has_element?(view, "button[phx-click='rename_open']")
+    refute has_element?(view, "button[phx-click='request_delete']")
+
+    render_click(view, "dup_open", %{"name" => example_name})
+    refute has_element?(view, "#duplicate-playbook-modal")
+
+    render_click(view, "rename_open", %{"name" => example_name})
+
+    view
+    |> form("form[phx-submit='rename_submit']", %{"new_name" => "changed-example.json"})
+    |> render_submit()
+
+    assert has_element?(
+             view,
+             "#rename-playbook-modal [role='alert']",
+             "Configure a playbook workspace directory"
+           )
+
+    assert File.read!(example_path) == original
+    refute File.exists?(Path.join(examples_dir, "changed-example.json"))
+    render_click(view, "rename_cancel", %{})
+
+    render_click(view, "request_delete", %{"name" => example_name})
+    render_click(view, "confirm_delete", %{"confirm" => example_name})
+    assert File.read!(example_path) == original
   end
 
   test "upload and paste controls have persistent labels and format help", %{conn: conn} do
@@ -111,6 +206,176 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(for="playbook-paste-json")
     assert html =~ "Playbook JSON"
     assert html =~ "JSON only"
+  end
+
+  test "paste import accepts the exact byte ceiling and retains the preview after an oversized attempt",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    for size <- [255_999, 256_000] do
+      json = sized_playbook_json(size, "paste-#{size}")
+      assert byte_size(json) == size
+
+      view
+      |> form("form[phx-submit='import_paste']", %{json: json})
+      |> render_submit()
+
+      assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
+      assert has_element?(view, "#playbook-summary", "paste-#{size}")
+    end
+
+    too_large = sized_playbook_json(256_001, "paste-too-large")
+    assert byte_size(too_large) == 256_001
+
+    html =
+      view
+      |> form("form[phx-submit='import_paste']", %{json: too_large})
+      |> render_submit()
+
+    assert html =~ "Maximum size is 256,000 bytes"
+    assert html =~ "The previous valid preview remains selected."
+    assert has_element?(view, "#playbook-import details[open]")
+    assert has_element?(view, "#playbook-summary", "paste-256000")
+    assert :sys.get_state(view.pid).socket.assigns.paste_json == too_large
+  end
+
+  test "malformed and empty paste imports keep a prior valid preview and retain the entered value",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: playbook_json("prior preview")})
+    |> render_submit()
+
+    for invalid_json <- ["", "{"] do
+      html =
+        view
+        |> form("form[phx-submit='import_paste']", %{json: invalid_json})
+        |> render_submit()
+
+      assert html =~ "The previous valid preview remains selected."
+      assert has_element?(view, "#playbook-import details[open]")
+      assert has_element?(view, "#playbook-summary", "prior preview")
+      assert :sys.get_state(view.pid).socket.assigns.paste_json == invalid_json
+    end
+  end
+
+  test "non-text paste payload returns an import error without crashing the LiveView", %{
+    conn: conn
+  } do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    html = render_submit(view, "import_paste", %{"json" => %{"unexpected" => "object"}})
+
+    assert Process.alive?(view.pid)
+    assert html =~ "Paste content must be text."
+    refute has_element?(view, "#playbook-preview")
+  end
+
+  test "uploaded playbook is not imported until submit and malformed upload preserves the preview",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    empty_html =
+      view
+      |> form("form[phx-submit='import_upload']")
+      |> render_submit()
+
+    assert has_element?(view, "#playbook-import-error", "Choose a JSON file first.")
+    assert empty_html =~ "No previous valid preview is available."
+    refute has_element?(view, "#flash-error")
+
+    assert is_binary(upload_playbook(view, "selected.json", playbook_json("uploaded on submit")))
+
+    refute has_element?(view, "#playbook-preview")
+    refute has_element?(view, "#playbook-draft-origin")
+
+    view
+    |> form("form[phx-submit='import_upload']")
+    |> render_submit()
+
+    assert has_element?(view, "#playbook-draft-origin", "selected.json")
+    assert has_element?(view, "#playbook-summary", "uploaded on submit")
+
+    assert is_binary(upload_playbook(view, "malformed.json", "{"))
+
+    html =
+      view
+      |> form("form[phx-submit='import_upload']")
+      |> render_submit()
+
+    assert html =~ "This file is not valid playbook JSON."
+    assert html =~ "The previous valid preview remains selected."
+
+    assert has_element?(
+             view,
+             "#playbook-import-error",
+             "The previous valid preview remains selected."
+           )
+
+    refute has_element?(view, "#flash-error")
+    assert has_element?(view, "#playbook-draft-origin", "selected.json")
+    assert has_element?(view, "#playbook-summary", "uploaded on submit")
+  end
+
+  test "file uploads require explicit submit, enforce the byte ceiling, and preserve the selected preview on failure",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: playbook_json("prior upload preview")})
+    |> render_submit()
+
+    _ =
+      Enum.reduce_while([255_999, 256_000], "prior upload preview", fn size, prior_query ->
+        filename = "upload-#{size}.json"
+        json = sized_playbook_json(size, "upload-#{size}")
+        assert byte_size(json) == size
+
+        assert is_binary(upload_playbook(view, filename, json))
+        assert :sys.get_state(view.pid).socket.assigns.draft_playbook["q"] == prior_query
+        assert has_element?(view, "#playbook-preview", prior_query)
+
+        view
+        |> form("form[phx-submit='import_upload']")
+        |> render_submit()
+
+        assert has_element?(view, "#playbook-draft-origin", filename)
+        assert has_element?(view, "#playbook-preview", "upload-#{size}")
+        {:cont, "upload-#{size}"}
+      end)
+
+    too_large = sized_playbook_json(256_001, "upload-too-large")
+    assert byte_size(too_large) == 256_001
+    assert {:error, _reasons} = upload_playbook(view, "too-large.json", too_large)
+
+    upload_config = :sys.get_state(view.pid).socket.assigns.uploads.playbook_file
+
+    assert Enum.any?(upload_config.errors, fn {_ref, reason} -> reason == :too_large end),
+           inspect(upload_config)
+
+    html =
+      view
+      |> form("form[phx-submit='import_upload']")
+      |> render_submit()
+
+    assert html =~ "256,000-byte"
+    assert has_element?(view, "#playbook-upload-error", "256,000-byte")
+    assert html =~ "The previous valid preview remains selected."
+    assert has_element?(view, "#playbook-draft-origin", "upload-256000.json")
+    assert has_element?(view, "#playbook-preview", "upload-256000")
+
+    assert is_binary(upload_playbook(view, "malformed.json", "{"))
+
+    malformed_html =
+      view
+      |> form("form[phx-submit='import_upload']")
+      |> render_submit()
+
+    assert malformed_html =~ "This file is not valid playbook JSON."
+    assert malformed_html =~ "The previous valid preview remains selected."
+    assert has_element?(view, "#playbook-draft-origin", "upload-256000.json")
+    assert has_element?(view, "#playbook-preview", "upload-256000")
   end
 
   test "file dialogs expose unique names, contextual Cancel, and a successor target", %{
@@ -151,6 +416,9 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(aria-label="Cancel rename")
     assert html =~ ~s(for="rename-new-name-input")
     assert html =~ ~s(data-ops-modal-initial-focus="#rename-new-name-input")
+    assert html =~ ~s(data-ops-modal-successor-name="")
+    assert html =~ ~s(data-ops-modal-fallback-successor="#playbook-catalog-heading")
+    assert html =~ ~s(data-ops-modal-focus-error="#rename-new-name-input")
 
     view
     |> form("form[phx-change='rename_change']", %{"new_name" => "invalid/name.json"})
@@ -169,6 +437,21 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
              view,
              "#rename-new-name-input[aria-describedby*='rename-new-name-input-error']"
            )
+
+    assert has_element?(view, "#rename-playbook-modal[data-ops-modal-focus-request='1']")
+
+    view
+    |> form("form[phx-change='rename_change']", %{"new_name" => "two.json"})
+    |> render_change()
+
+    view
+    |> form("form[phx-submit='rename_submit']", %{"new_name" => "two.json"})
+    |> render_submit()
+
+    assert has_element?(view, "#rename-playbook-modal [role='alert']", "already in use")
+    assert has_element?(view, "#rename-new-name-input[value='two.json']")
+    assert File.read!(Path.join(dir, "one.json")) == "{}\n"
+    assert File.read!(Path.join(dir, "two.json")) == "{}\n"
 
     render_click(view, "rename_cancel", %{})
     render_click(view, "dup_open", %{"name" => "one.json"})
@@ -190,6 +473,34 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
              ~s(data-ops-modal-successor="#playbook-primary-#{Base.url_encode64("two.json", padding: false)}")
 
     assert html =~ ~s(aria-label="Cancel delete")
+
+    html =
+      view
+      |> form("form[phx-submit='confirm_delete']", %{"confirm" => " one.json "})
+      |> render_submit()
+
+    assert html =~ ~s(value=" one.json ")
+
+    assert has_element?(
+             view,
+             "#delete-playbook-modal [role='alert']",
+             "match the filename exactly"
+           )
+
+    assert File.exists?(Path.join(dir, "one.json"))
+
+    view
+    |> form("form[phx-submit='confirm_delete']", %{"confirm" => "one.json"})
+    |> render_submit()
+
+    refute File.exists?(Path.join(dir, "one.json"))
+    assert File.exists?(Path.join(dir, "two.json"))
+    refute has_element?(view, "#delete-playbook-modal")
+
+    assert has_element?(
+             view,
+             "#playbook-primary-#{Base.url_encode64("two.json", padding: false)}"
+           )
   end
 
   test "paste import validates and shows preview marker", %{conn: conn} do
@@ -210,6 +521,170 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "data-testid=\"playbook-preview-marker\""
+  end
+
+  test "imported draft replaces loaded provenance and can be saved before a run", %{conn: conn} do
+    dir = workspace_dir("provenance")
+    configure_workspace(dir)
+    :ok = File.write!(Path.join(dir, "previous.json"), playbook_json("old query"))
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    render_click(view, "load", %{"name" => "previous.json"})
+
+    imported =
+      playbook_json("new query", %{"title" => "New title", "description" => "New details"})
+
+    html =
+      view
+      |> form("form[phx-submit='import_paste']", %{json: imported})
+      |> render_submit()
+
+    assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
+    assert has_element?(view, "#playbook-draft-origin", "pasted JSON")
+    refute has_element?(view, "#playbook-draft-origin", "previous.json")
+    assert html =~ "Saving a workspace playbook replaces a file with the same filename."
+    assert html =~ "Run playbook"
+
+    html =
+      view
+      |> form("form[phx-submit='save']", %{basename: "captured.json"})
+      |> render_submit()
+
+    assert html =~ "Saved captured.json"
+    assert has_element?(view, "#playbook-draft-origin", "Workspace file")
+    assert has_element?(view, "#playbook-draft-origin", "captured.json")
+    refute has_element?(view, "#playbook-run-outcome")
+
+    saved = Jason.decode!(File.read!(Path.join(dir, "captured.json")))
+    assert saved["q"] == "new query"
+    assert saved["title"] == "New title"
+    assert saved["description"] == "New details"
+  end
+
+  test "failed workspace write keeps the filename and draft with concrete recovery guidance", %{
+    conn: conn
+  } do
+    dir = workspace_dir("failed-save")
+    blocker = Path.join(dir, "not-a-directory")
+    :ok = File.write!(blocker, "file")
+    configure_workspace(blocker)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    json = playbook_json("retain this draft")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> render_submit()
+
+    html =
+      view
+      |> form("form[phx-submit='save']", %{basename: "retained.json"})
+      |> render_submit()
+
+    assert has_element?(view, "#save_basename[value='retained.json']")
+    assert has_element?(view, "#save-basename-error", "Could not save playbook to workspace.")
+    assert html =~ ":enotdir"
+
+    assert has_element?(
+             view,
+             "#save-basename-error",
+             "Check the workspace directory's permissions"
+           )
+
+    assert has_element?(view, "#save-basename-error", "available disk space, then retry saving.")
+
+    assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
+    assert has_element?(view, "#playbook-summary", "retain this draft")
+    refute html =~ "Saved retained.json"
+  end
+
+  test "a completed run stays attributed to its submitted playbook after importing another draft",
+       %{
+         conn: conn
+       } do
+    dir = workspace_dir("run-snapshot")
+    configure_workspace(dir)
+    :ok = File.write!(Path.join(dir, "submitted.json"), playbook_json("submitted query"))
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    render_click(view, "load", %{"name" => "submitted.json"})
+    render_click(view, "run", %{})
+    render_async(view)
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: playbook_json("current draft query")})
+    |> render_submit()
+
+    assert has_element?(view, "#playbook-preview", "current draft query")
+    assert has_element?(view, "#playbook-run-outcome", "Last completed run")
+    assert has_element?(view, "#playbook-run-outcome", "submitted.json")
+    assert has_element?(view, "#playbook-run-outcome", "submitted query")
+    refute has_element?(view, "#playbook-run-outcome", "current draft query")
+    assert has_element?(view, "#playbook-run-outcome a[href*='q=submitted+query']")
+  end
+
+  test "saving a changed draft does not relabel the earlier run or its Search handoff", %{
+    conn: conn
+  } do
+    dir = workspace_dir("run-snapshot-save")
+    configure_workspace(dir)
+    :ok = File.write!(Path.join(dir, "submitted.json"), playbook_json("submitted query"))
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+    render_click(view, "load", %{"name" => "submitted.json"})
+    render_click(view, "run", %{})
+    render_async(view)
+
+    view
+    |> form("form[phx-submit='import_paste']", %{
+      json: playbook_json("saved current query", %{"title" => "Saved current draft"})
+    })
+    |> render_submit()
+
+    view
+    |> form("form[phx-submit='save']", %{basename: "current.json"})
+    |> render_submit()
+
+    assert has_element?(view, "#playbook-preview", "saved current query")
+    assert has_element?(view, "#playbook-draft-origin", "Workspace file · current.json")
+    assert has_element?(view, "#playbook-run-outcome", "Last completed run")
+    assert has_element?(view, "#playbook-run-outcome", "submitted.json")
+    assert has_element?(view, "#playbook-run-outcome", "submitted query")
+    refute has_element?(view, "#playbook-run-outcome", "saved current query")
+    assert has_element?(view, "#playbook-run-outcome a[href*='q=submitted+query']")
+  end
+
+  test "read-only example preview names its source and explains workspace setup", %{conn: conn} do
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
+
+    on_exit(fn ->
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
+    render_click(view, "load", %{"name" => "single-index-probe.json"})
+
+    assert html =~ "Examples (read-only)"
+    assert has_element?(view, "#playbook-draft-origin", "Read-only example")
+    assert has_element?(view, "#playbook-draft-origin", "single-index-probe.json")
+    assert has_element?(view, "#playbook-preview", "Run playbook")
+
+    assert has_element?(
+             view,
+             "#playbook-save-guidance",
+             "Configure a playbook workspace directory"
+           )
+
+    assert has_element?(
+             view,
+             "#playbook-save-guidance button[disabled]",
+             "Save playbook to workspace"
+           )
+
+    refute has_element?(view, "form[phx-submit='save']")
   end
 
   test "run with stub adapter shows explicit lifecycle transition to success", %{conn: conn} do
@@ -516,6 +991,84 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     refute html =~ "data-testid=\"run-failure-panel\""
   end
 
+  test "explicit cancellation retains the source captured for that run", %{conn: conn} do
+    previous_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    previous_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
+    Application.put_env(:scrypath_ops, :search_stub_waiter, self())
+
+    on_exit(fn ->
+      if previous_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, previous_variant)
+
+      if previous_waiter == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_waiter),
+        else: Application.put_env(:scrypath_ops, :search_stub_waiter, previous_waiter)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: playbook_json("cancelled query")})
+    |> render_submit()
+
+    assert render_click(view, "run", %{}) =~ "Running playbook"
+    assert_receive {:playbook_run_adapter_started, _runner_pid}
+
+    render_click(view, "cancel_run", %{})
+    html = render_async(view)
+
+    assert html =~ "Playbook run cancelled before a result was applied."
+    assert has_element?(view, "#playbook-run-outcome", "pasted JSON")
+    assert has_element?(view, "#playbook-run-outcome", "cancelled query")
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.run_ui.phase == :error
+    assert assigns.run_error == :cancelled
+    assert assigns.run_snapshot.draft["q"] == "cancelled query"
+  end
+
+  test "timeout keeps the captured run identity and ignores its canceled late result", %{
+    conn: conn
+  } do
+    previous_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    previous_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
+    Application.put_env(:scrypath_ops, :search_stub_waiter, self())
+
+    on_exit(fn ->
+      if previous_variant == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_variant),
+        else: Application.put_env(:scrypath_ops, :search_stub_variant, previous_variant)
+
+      if previous_waiter == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_waiter),
+        else: Application.put_env(:scrypath_ops, :search_stub_waiter, previous_waiter)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: playbook_json("timed-out query")})
+    |> render_submit()
+
+    assert render_click(view, "run", %{}) =~ "Running playbook"
+    assert_receive {:playbook_run_adapter_started, _runner_pid}
+    run_id = :sys.get_state(view.pid).socket.assigns.run_ui.run_id
+    send(view.pid, {:playbook_run_timeout, run_id})
+    html = render(view)
+
+    assert html =~ "Playbook run timed out before a result was applied."
+    assert has_element?(view, "#playbook-run-outcome", "pasted JSON")
+    assert has_element?(view, "#playbook-run-outcome", "timed-out query")
+
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.run_ui.phase == :error
+    assert assigns.run_error == :timed_out
+    assert assigns.run_snapshot.draft["q"] == "timed-out query"
+  end
+
   test "loading a new playbook while running cancels and resets the active run", %{conn: conn} do
     dir =
       Path.join(
@@ -526,8 +1079,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     :ok = File.mkdir_p!(dir)
     prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    prev_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
     Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-    Application.put_env(:scrypath_ops, :search_stub_variant, :slow_ok)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
+    Application.put_env(:scrypath_ops, :search_stub_waiter, self())
 
     on_exit(fn ->
       File.rm_rf(dir)
@@ -539,6 +1094,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       if prev_variant == nil,
         do: Application.delete_env(:scrypath_ops, :search_stub_variant),
         else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+
+      if prev_waiter == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_waiter),
+        else: Application.put_env(:scrypath_ops, :search_stub_waiter, prev_waiter)
     end)
 
     one_json =
@@ -567,6 +1126,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     render_click(view, "load", %{"name" => "one.json"})
     running_html = render_click(view, "run", %{})
     assert running_html =~ "Running playbook"
+    assert_receive {:playbook_run_adapter_started, _runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
     assert load_html =~ "Loaded playbook from disk."
@@ -584,8 +1144,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     :ok = File.mkdir_p!(dir)
     prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
+    prev_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
     Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-    Application.put_env(:scrypath_ops, :search_stub_variant, :slow_ok)
+    Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
+    Application.put_env(:scrypath_ops, :search_stub_waiter, self())
 
     on_exit(fn ->
       File.rm_rf(dir)
@@ -597,6 +1159,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       if prev_variant == nil,
         do: Application.delete_env(:scrypath_ops, :search_stub_variant),
         else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
+
+      if prev_waiter == nil,
+        do: Application.delete_env(:scrypath_ops, :search_stub_waiter),
+        else: Application.put_env(:scrypath_ops, :search_stub_waiter, prev_waiter)
     end)
 
     one_json =
@@ -624,11 +1190,14 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     render_click(view, "load", %{"name" => "one.json"})
     assert render_click(view, "run", %{}) =~ "Running playbook"
+    assert_receive {:playbook_run_adapter_started, _first_runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
     assert load_html =~ "Loaded playbook from disk."
 
     assert render_click(view, "run", %{}) =~ "Running playbook"
+    assert_receive {:playbook_run_adapter_started, current_runner_pid}
+    send(current_runner_pid, :continue_playbook_run)
 
     html = render_async(view)
     assert html =~ "Run finished"
@@ -755,6 +1324,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ "Confirmation must match the filename exactly."
     assert has_element?(view, "#delete-playbook-modal [role='alert']", "Confirmation must match")
     assert has_element?(view, "#delete-confirm-input[aria-invalid='true']")
+    assert has_element?(view, "#delete-confirm-input[value='wrong-name.json']")
     assert File.exists?(path)
   end
 
@@ -931,6 +1501,62 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     Regex.scan(~r/href="(https:\/\/github\.com\/szTheory\/scrypath\/blob\/main\/[^"]+)"/, html)
     |> Enum.map(fn [_, href] -> href end)
     |> Enum.uniq()
+  end
+
+  defp workspace_dir(label) do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_#{label}_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    on_exit(fn -> File.rm_rf(dir) end)
+    dir
+  end
+
+  defp configure_workspace(dir) do
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+  end
+
+  defp playbook_json(query, metadata \\ %{}) do
+    %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => "ScrypathOps.Test.OpsPostA",
+      "q" => query,
+      "opts" => %{}
+    }
+    |> Map.merge(metadata)
+    |> Jason.encode!()
+  end
+
+  defp sized_playbook_json(size, query) do
+    json = playbook_json(query)
+    padding = size - byte_size(json)
+    true = padding >= 0
+    json <> String.duplicate(" ", padding)
+  end
+
+  defp upload_playbook(view, filename, content) do
+    upload =
+      file_input(view, "form[phx-submit='import_upload']", :playbook_file, [
+        %{
+          name: filename,
+          content: content,
+          size: byte_size(content),
+          type: "application/json"
+        }
+      ])
+
+    render_upload(upload, filename)
   end
 
   defp put_live_assigns(view, assigns) do

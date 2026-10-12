@@ -10,6 +10,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOpsWeb.OpsUi
   alias ScrypathOpsWeb.PostureLive
 
   defmodule PostureFakeClient do
@@ -19,12 +20,14 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       end)
 
       uids = filters[:index_uids] || []
-      boom_index = "postlv_ops_post_a"
+      boom_indexes = Agent.get(:posture_live_test_state, & &1.boom_indexes)
+      boom_reason = Agent.get(:posture_live_test_state, & &1.boom_reason)
+      exit_index = Agent.get(:posture_live_test_state, & &1.exit_index)
 
-      if boom_index in uids do
-        {:error, :boom}
-      else
-        {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
+      cond do
+        exit_index in uids -> exit(:posture_backend_exit)
+        Enum.any?(boom_indexes, &(&1 in uids)) -> {:error, boom_reason}
+        true -> {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
       end
     end
 
@@ -79,7 +82,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
     # A linked Agent can exit with the test process before the callback runs.
     {:ok, _pid} =
-      Agent.start(fn -> %{tasks_calls: 0, swap_called: false} end,
+      Agent.start(
+        fn ->
+          %{
+            tasks_calls: 0,
+            swap_called: false,
+            exit_index: nil,
+            boom_indexes: ["postlv_ops_post_a"],
+            boom_reason: :boom
+          }
+        end,
         name: :posture_live_test_state
       )
 
@@ -126,7 +138,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   end
 
   test "renders posture rows with sync_status and surfaces errors first", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
@@ -134,25 +146,244 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
-    refute html =~ ~r/>\s*Refresh posture\s*</
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh posture checks']")
+    refute html =~ "Posture"
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
   end
 
-  test "posture shows next checks block with ordered items and failed-sync egress", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/posture")
+  test "degraded search health uses neutral containers and local failure cues", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+    row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
 
-    assert has_element?(lv, "[data-testid='posture-next-checks']")
-
-    html = render(lv)
     assert html =~ "Degraded"
-    assert html =~ "/ops/failed-sync"
-    assert html =~ "/ops/sync-drift"
-    assert has_element?(lv, "a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']")
+    assert row =~ "backend failed"
+    assert row =~ "queue failed"
+    assert has_element?(lv, "[data-testid='ops-verdict-icon'][data-state='warning']")
+    assert has_element?(lv, ".ops-metric__value--warning")
+    refute html =~ "ops-metric-success"
+    refute row =~ "ops-schema-signal-card--warning"
+    refute row =~ "ops-schema-signal-card--error"
+  end
 
-    [_before, rest] = String.split(html, ~s(data-testid="posture-next-checks"), parts: 2)
-    [section | _] = String.split(rest, "</section>", parts: 2)
-    li_opens = Regex.scan(~r/<li[\s>]/, section)
-    assert length(li_opens) <= 5
+  test "healthy Search health badges use neutral treatment", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+    row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
+
+    assert html =~ "Search health"
+    assert has_element?(lv, ".ops-verdict.ops-posture-verdict")
+    assert row =~ "backend clear"
+    assert row =~ "queue observed"
+    assert row =~ "ops-badge-neutral"
+    refute row =~ "ops-badge-success"
+  end
+
+  test "refresh disabled eligibility follows a server-rendered fixture patch", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+
+    refresh = "#search-health-refresh"
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='true']:not([disabled])")
+
+    lv
+    |> element("#phase173-fixture-controls")
+    |> render_change(%{"scenario" => "refresh-disabled"})
+
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='false'][disabled]")
+
+    lv
+    |> element("#phase173-fixture-controls")
+    |> render_change(%{"scenario" => "healthy"})
+
+    assert has_element?(lv, "#{refresh}[data-ops-refresh-eligible='true']:not([disabled])")
+  end
+
+  test "renders production last-success evidence from its successful observation snapshot", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health")
+
+    iso = "2026-10-04T13:02:05.123456-04:00"
+
+    row =
+      lv
+      |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']")
+      |> render()
+
+    assert row =~ "2 days ago"
+    assert row =~ ~s(datetime="#{iso}")
+    assert row =~ iso
+    assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
+    assert row =~ "Exact timestamp"
+    assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
+    assert row =~ ~s(aria-label="Copy timestamp")
+    assert row =~ ~s(role="status")
+  end
+
+  test "keeps prior source-local timestamps when a later refresh is unavailable", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=refresh-failure")
+    row_selector = "[id='posture-ScrypathOps.Phase173FixtureSchema']"
+    first_row = lv |> element(row_selector) |> render()
+    iso = "2026-10-04T13:02:05.123456-04:00"
+
+    assert first_row =~ "2 days ago"
+    assert first_row =~ iso
+
+    lv |> element("#search-health-refresh") |> render_click()
+    failed_row = lv |> element(row_selector) |> render()
+
+    assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
+    assert failed_row =~ "Refresh health to try again."
+    assert failed_row =~ "2 days ago"
+    assert failed_row =~ iso
+    assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")
+    assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
+    assert failed_row =~ "Queue last success"
+    refute failed_row =~ "Last success</dt><dd>—"
+    refute render(lv) =~ "Search health refreshed."
+  end
+
+  test "preserves schema identity and retained evidence when a scan task exits", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    schema = "ScrypathOps.Test.OpsPostB"
+    row_selector = "[id='posture-#{schema}']"
+    iso = "2026-04-16T18:00:00Z"
+
+    first_row = lv |> element(row_selector) |> render()
+    assert first_row =~ iso
+
+    Agent.update(:posture_live_test_state, fn state ->
+      Map.put(state, :exit_index, "postlv_ops_post_b")
+    end)
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    failed_row = lv |> element(row_selector) |> render()
+    assert failed_row =~ "posture_backend_exit"
+    assert failed_row =~ iso
+    assert failed_row =~ "source-local evidence is retained"
+    refute has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
+    refute has_element?(lv, "#posture-posture_stream")
+  end
+
+  test "operational age thresholds use the observation snapshot and full precision" do
+    {:ok, snapshot_at, _offset} = DateTime.from_iso8601("2026-10-06T13:18:42.318-04:00")
+
+    for {seconds, expected} <- [
+          {59, "just now"},
+          {60, "1 min ago"},
+          {3_599, "59 mins ago"},
+          {3_600, "1 hr ago"},
+          {86_399, "23 hrs ago"},
+          {86_400, "1 day ago"},
+          {604_799, "6 days ago"},
+          {604_800, "Sep 29, 2026 at 17:18:42 UTC"}
+        ] do
+      dt = DateTime.add(snapshot_at, -seconds, :second)
+      html = render_time(dt, snapshot_at)
+      assert html =~ expected
+    end
+
+    microsecond_future = DateTime.add(snapshot_at, 1, :microsecond)
+    future_html = render_time(microsecond_future, snapshot_at)
+    assert future_html =~ "After this check"
+    assert future_html =~ "Oct 6, 2026 at 17:18:42 UTC"
+  end
+
+  test "operational no-time and unavailable states remain distinct and have no evidence control" do
+    {:ok, snapshot_at, _offset} = DateTime.from_iso8601("2026-10-06T13:18:42.318-04:00")
+
+    for state_text <- [
+          "No success observed",
+          "Success time not observed",
+          "Not observed: :backend_unavailable",
+          "Queue not used"
+        ] do
+      html = render_time(nil, snapshot_at, state_text)
+      assert html =~ state_text
+      refute html =~ "<details"
+      refute html =~ "Copy timestamp"
+      refute html =~ "data-ops-timestamp-copy"
+    end
+  end
+
+  test "unmatched source ISO is not used as timestamp evidence" do
+    {:ok, dt, _offset} = DateTime.from_iso8601("2026-10-04T13:02:05.123456-04:00")
+    mismatched_iso = "2026-10-05T11:12:13.456-04:00"
+
+    html =
+      render_component(&OpsUi.ops_time/1, %{
+        dt: dt,
+        snapshot_at: dt,
+        source_iso: mismatched_iso,
+        operational: true
+      })
+
+    assert html =~ DateTime.to_iso8601(dt)
+    refute html =~ mismatched_iso
+  end
+
+  test "schema records are one-level surfaces with an adjacent exact-schema failed-work handoff",
+       %{
+         conn: conn
+       } do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 2,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "postlv_ops_post_b",
+        "finishedAt" => "2026-04-17T18:00:00Z"
+      }
+    ])
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    assert has_element?(lv, "[aria-label='Per-schema search health'] > article[aria-labelledby]")
+    refute has_element?(lv, "[data-testid='posture-next-checks']")
+
+    assert has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostB'] [data-testid='posture-failed-sync-link']"
+           )
+
+    assert has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostB'] a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB']"
+           )
+  end
+
+  test "fetch failures sort first and ties retain alphabetical full-module order", %{conn: conn} do
+    Agent.update(:posture_live_test_state, fn state ->
+      %{state | boom_indexes: ["postlv_ops_post_a", "postlv_ops_post_b"]}
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+
+    row_ids =
+      Regex.scan(~r/id="(posture-ScrypathOps\.Test\.OpsPost[AB])"/, render(lv),
+        capture: :all_but_first
+      )
+      |> List.flatten()
+
+    assert row_ids == ["posture-ScrypathOps.Test.OpsPostA", "posture-ScrypathOps.Test.OpsPostB"]
+    refute has_element?(lv, "[data-testid='posture-failed-sync-link']")
+  end
+
+  test "hostile fetch reasons remain escaped text and do not expose markup", %{conn: conn} do
+    hostile = "</p><script>alert(1)</script>"
+
+    Agent.update(:posture_live_test_state, fn state ->
+      %{state | boom_reason: hostile}
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/health")
+    row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+
+    assert row =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
+    refute row =~ "<script>alert(1)</script>"
+
+    refute has_element?(
+             lv,
+             "[id='posture-ScrypathOps.Test.OpsPostA'] [data-testid='posture-failed-sync-link']"
+           )
   end
 
   test "posture promotion handoff keeps the selected schema and does not swap directly" do
@@ -251,7 +482,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Posture / health",
+      page_title: "Search health",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: posture_scrypath_opts(),
       auto_refresh: false,
@@ -269,7 +500,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     %Phoenix.LiveView.Socket{
       assigns: Map.merge(base_assigns, overrides),
-      host_uri: URI.parse("https://scrypath.example/ops/posture")
+      host_uri: URI.parse("https://scrypath.example/ops/health")
     }
   end
 
@@ -306,6 +537,16 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     }
 
     OperatorContext.build(scope, session)
+  end
+
+  defp render_time(dt, snapshot_at, state_text \\ "No success observed") do
+    render_component(&OpsUi.ops_time/1, %{
+      dt: dt,
+      snapshot_at: snapshot_at,
+      source_iso: if(dt, do: DateTime.to_iso8601(dt)),
+      state_text: state_text,
+      operational: true
+    })
   end
 
   defp flash_value(socket, key) do

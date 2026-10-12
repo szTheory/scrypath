@@ -35,6 +35,7 @@ config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
   ],
   check_origin: false,
   code_reloader: true,
+  reloadable_apps: [:scrypath_ecommerce, :scrypath_ops, :scrypath],
   debug_errors: true,
   secret_key_base: "yI2OZCaE0jxrrKvzStetQm6ISHqX8wN8gbUw/KnMtc5hhAydwaBZzbeYgulTQyOT",
   watchers: [
@@ -65,6 +66,15 @@ config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
 # configured to run both http and https servers on
 # different ports.
 
+# Watch the mounted app and path dependencies so UI edits rebuild and reload in-place.
+config :phoenix_live_reload,
+  dirs: [
+    Path.expand("..", __DIR__),
+    Path.expand("../../lib", __DIR__),
+    Path.expand("../../scrypath_ops/lib", __DIR__),
+    Path.expand("../../scrypath_ops/priv/static", __DIR__)
+  ]
+
 # Reload browser tabs when matching files change.
 config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
   live_reload: [
@@ -74,7 +84,10 @@ config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
       ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$",
       # Router, Controllers, LiveViews and LiveComponents
       ~r"lib/scrypath_ecommerce_web/router\.ex$",
-      ~r"lib/scrypath_ecommerce_web/(controllers|live|components)/.*\.(ex|heex)$"
+      ~r"lib/scrypath_ecommerce_web/(controllers|live|components)/.*\.(ex|heex)$",
+      ~r"lib/scrypath/.*\.ex$",
+      ~r"scrypath_ops/lib/.*\.(ex|heex)$",
+      ~r"scrypath_ops/priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"
     ]
   ]
 

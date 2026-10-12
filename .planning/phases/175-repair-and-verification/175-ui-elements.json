@@ -1,0 +1,7 @@
+[
+  {"id":"E1","text":"Selected-schema selector and sync/queue observations with empty, loading, error, populated, partial, multi-schema, and long-identifier states.","elements":["form","list-collection","interactive-control","static-content"]},
+  {"id":"E2","text":"Index-contract and active-index document-freshness results, shown separately with table rows, check controls, status labels, mismatch details, and long identities.","elements":["list-collection","interactive-control","static-content"]},
+  {"id":"E3","text":"Ordinary recovery operation result and refresh control, including accepted, running, completed, failed, canceled, unknown, and long operation identity.","elements":["interactive-control","static-content"]},
+  {"id":"E4","text":"Advanced index-promotion disclosure, guarded action, and explicit confirmation dialog with eligibility, operation state, and long schema/index/task details.","elements":["interactive-control","static-content"]},
+  {"id":"E5","text":"Non-focus-moving async operation status and feedback messages with visible state text and exact operation references.","elements":["interactive-control","static-content"]}
+]

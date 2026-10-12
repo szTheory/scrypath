@@ -126,8 +126,8 @@ defmodule ScrypathOpsWeb.OpsA11yContractTest do
   end
 
   describe "ops DOM semantics" do
-    test "/ops/posture", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+    test "/ops/health", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/ops/health")
       assert_ops_a11y_shell!(html, search: false)
     end
 

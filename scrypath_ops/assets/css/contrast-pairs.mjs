@@ -93,14 +93,35 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "timestamp text container"
   },
-  // app.css line 763 — timestamp copy icon button
+  // app.css — exact timestamp evidence labels
   {
-    selector: ".ops-time__copy",
-    alpha: 0.58,
+    selector: ".ops-time__evidence-label",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
     fg_token: "base-content",
     bg_token: "base-100",
-    role: "ui",
-    note: "timestamp copy icon button"
+    role: "text",
+    note: "exact timestamp evidence label"
+  },
+  // app.css — timestamp copy outcome feedback
+  {
+    selector: ".ops-time__feedback",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "timestamp copy success feedback"
+  },
+  // app.css — retained source-evidence note
+  {
+    selector: ".ops-time__retained",
+    css_var: "ops-text-muted",
+    alpha: 0.64,
+    fg_token: "base-content",
+    bg_token: "base-100",
+    role: "text",
+    note: "retained operational evidence note"
   },
   // app.css line 877 — sidebar nav group label
   {

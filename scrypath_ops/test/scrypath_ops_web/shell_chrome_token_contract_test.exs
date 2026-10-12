@@ -13,7 +13,7 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   defp css, do: File.read!(@app_css)
   defp design_tokens, do: File.read!(@design_tokens)
 
-  test ".ops-shell wash keeps exactly one radial layer plus one linear floor per rule" do
+  test ".ops-shell keeps a flat neutral background without decorative gradients" do
     blocks =
       Regex.scan(
         ~r/(?:^|\n)\s*(?:\[data-theme="dark"\]\s+|html:not\(\[data-theme="light"\]\)\s+)?\.ops-shell\s*\{([^{}]*)\}/,
@@ -24,15 +24,15 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
     assert blocks != [], "Expected at least one .ops-shell background rule."
 
     for body <- blocks do
-      assert Regex.scan(~r/radial-gradient/, body) |> length() == 1,
-             ".ops-shell must keep exactly one quiet radial wash per rule."
-
-      assert Regex.scan(~r/linear-gradient/, body) |> length() == 1,
-             ".ops-shell must keep exactly one linear page-floor gradient per rule."
-
-      assert body =~ "circle at top left",
-             ".ops-shell radial wash must stay anchored at the top-left brand corner."
+      refute Regex.match?(~r/(?:radial|linear)-gradient/, body),
+             ".ops-shell must not reintroduce the rejected decorative wash."
     end
+
+    assert Regex.match?(
+             ~r/\.ops-shell\s*\{[^{}]*background-color:\s*var\(--ops-bg\);[^{}]*background-image:\s*none;/,
+             css()
+           ),
+           ".ops-shell must use the flat neutral page background."
   end
 
   test ".ops-header dark seated separation is mirrored in explicit and system dark" do
@@ -54,9 +54,15 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   test "theme toggle shell selectors and dark mirrors are present" do
     source = css()
 
-    for selector <- [".ops-theme-toggle", ".ops-theme-toggle__pill", ".ops-theme-toggle__button"] do
+    for selector <- [".ops-theme-toggle", ".ops-theme-toggle__button"] do
       assert source =~ selector, "Expected #{selector} to have a CSS contract."
     end
+
+    refute source =~ ".ops-theme-toggle__pill",
+           "Theme appearance belongs to the selected preference button without a second pill indicator."
+
+    assert Regex.match?(~r/\.ops-theme-toggle__button\[data-theme-selected="true"\]/, source),
+           "Theme preference selection must stay on the selected theme button."
 
     assert Regex.match?(
              ~r/\[data-theme="dark"\]\s+\.ops-theme-toggle\s*\{[^{}]*box-shadow:[^{}]*var\(--shadow-ops-panel-dark\)/,
@@ -93,23 +99,23 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
            ".ops-nav-item-active system-dark glow must mirror explicit dark."
   end
 
-  test "live brand mark selector is the shell proof target, not only the stale route mark" do
+  test "horizontal wordmark variants switch for explicit and system dark themes" do
     source = css()
 
-    assert source =~ ".ops-brand-mark",
-           "The live inline SVG brand mark needs a CSS/proof selector."
+    assert source =~ ".ops-wordmark",
+           "The live horizontal wordmark needs a CSS selector."
 
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-brand-mark\s*\{/,
+             ~r/\[data-theme="dark"\]\s+\.ops-wordmark\s+\.ops-wordmark__dark\s*\{/,
              source
            ),
-           ".ops-brand-mark explicit-dark treatment must exist."
+           "The inverse wordmark must be shown for explicit dark theme."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-brand-mark\s*\{/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-wordmark\s+\.ops-wordmark__dark\s*\{/,
              source
            ),
-           ".ops-brand-mark system-dark treatment must mirror explicit dark."
+           "The inverse wordmark must be shown for system dark theme."
   end
 
   test "palette and flash overlay shadows are mirrored in both dark paths" do

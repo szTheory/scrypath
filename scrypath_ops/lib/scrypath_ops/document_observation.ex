@@ -33,6 +33,46 @@ defmodule ScrypathOps.DocumentObservation do
     _ -> result(:unknown, :observation_error, %{})
   end
 
+  @doc false
+  @spec check_effects(atom(), String.t(), list(), keyword()) :: {:ok, observation()}
+  def check_effects(operation, active_index, expected, runtime_opts) do
+    worker =
+      Task.async(fn -> check_effects_now(operation, active_index, expected, runtime_opts) end)
+
+    case Task.yield(worker, @observation_timeout) do
+      {:ok, result} ->
+        result
+
+      nil ->
+        Task.shutdown(worker, :brutal_kill)
+        result(:unknown, :observation_timeout, %{operation: operation, index: active_index})
+    end
+  rescue
+    _ -> result(:unknown, :observation_error, %{operation: operation, index: active_index})
+  end
+
+  defp check_effects_now(operation, active_index, expected, runtime_opts) do
+    receipt = %{operation: operation, index: active_index, expected: expected}
+
+    with :ok <- valid_effect_target(receipt),
+         {:ok, bounded, encoded_size} <- bounded_expected(receipt),
+         {:ok, base_url} <- configured_base_url(runtime_opts),
+         request <- request(runtime_opts, base_url),
+         :ok <- observe_operation(request, receipt, bounded, runtime_opts) do
+      result(:verified, nil, %{
+        operation: operation,
+        index: active_index,
+        expected_count: length(bounded),
+        expected_bytes: encoded_size
+      })
+    else
+      {:error, reason} ->
+        result(state_for_reason(reason), reason, %{operation: operation, index: active_index})
+    end
+  rescue
+    _ -> result(:unknown, :observation_error, %{operation: operation, index: active_index})
+  end
+
   defp check_now(receipt, task, runtime_opts) do
     base_evidence = %{
       operation: value(receipt, :operation),
@@ -263,12 +303,21 @@ defmodule ScrypathOps.DocumentObservation do
 
   defp valid_receipt(_), do: {:error, :invalid_receipt}
 
+  defp valid_effect_target(%{operation: operation, index: index})
+       when operation in [:upsert, :delete] and is_binary(index) and index != "",
+       do: :ok
+
+  defp valid_effect_target(_), do: {:error, :invalid_effect_target}
+
   defp task_status(task, receipt) when is_map(task) do
     uid = fetch_value(task, :uid) || fetch_value(task, :task_uid) || fetch_value(task, :taskUid)
     status = fetch_value(task, :status)
 
     cond do
-      not is_nil(uid) and to_string(uid) != to_string(value(receipt, :task_uid)) ->
+      is_nil(uid) ->
+        {:error, :invalid_task_payload}
+
+      to_string(uid) != to_string(value(receipt, :task_uid)) ->
         {:error, :task_uid_mismatch}
 
       is_binary(status) or is_atom(status) ->

@@ -18,6 +18,8 @@ config :scrypath_ecommerce, sandbox: true
 
 config :scrypath_ecommerce, Oban, testing: :manual
 
+config :scrypath_ops, :phase173_fixture_source, ScrypathEcommerce.Phase173FixtureSource
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,

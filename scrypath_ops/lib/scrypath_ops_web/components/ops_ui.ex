@@ -5,6 +5,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
+  import ScrypathOpsWeb.CoreComponents, only: [icon: 1]
 
   use Gettext, backend: ScrypathOpsWeb.Gettext
 
@@ -53,6 +54,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label="Jump to surface"
       aria-keyshortcuts="Meta+K Control+K"
     >
+      <.icon name="hero-magnifying-glass" class="ops-command-hint__icon size-4" />
       <span>Jump to surface</span>
       <kbd class="ops-kbd">⌘K</kbd>
     </button>
@@ -125,6 +127,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:meta, :string, default: nil)
   attr(:id, :string, default: nil)
   attr(:class, :any, default: nil)
+  attr(:prominent_title, :boolean, default: false)
   slot(:actions)
   slot(:inner_block, required: true)
 
@@ -138,7 +141,13 @@ defmodule ScrypathOpsWeb.OpsUi do
     <section aria-labelledby={@heading_id} class={["space-y-3", @class]}>
       <.ops_toolbar class="items-start gap-3">
         <div class="min-w-0 space-y-1">
-          <h2 id={@heading_id} class="text-ops-h2 font-semibold leading-ops-tight text-base-content">
+          <h2
+            id={@heading_id}
+            class={[
+              if(@prominent_title, do: "text-ops-h1", else: "text-ops-h2"),
+              "font-semibold leading-ops-tight text-base-content"
+            ]}
+          >
             {@title}
           </h2>
           <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
@@ -183,7 +192,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -197,8 +206,14 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Contextual refresh action for operator status surfaces."
+  attr(:id, :string,
+    required: true,
+    doc: "Unique DOM id required by the LiveView refresh hook."
+  )
+
   attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
+  attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
     default: :ghost,
@@ -210,23 +225,63 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-disable-with disabled data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+      ~w(phx-click data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
   )
 
   def ops_refresh_button(assigns) do
     ~H"""
     <.ops_button
+      id={@id}
       variant={@variant}
       size={@size}
-      class={["gap-1.5", @class]}
+      class={["gap-1.5 ops-refresh-button", @class]}
+      disabled={@disabled}
+      data-ops-refresh-eligible={if @disabled, do: "false", else: "true"}
       data-ops-refresh
+      phx-hook="OpsRefreshButton"
       aria-label={@aria_label}
-      phx-disable-with="Refreshing..."
       {@rest}
     >
       <ScrypathOpsWeb.CoreComponents.icon name="hero-arrow-path" class="size-3.5" />
       <span>{@label}</span>
     </.ops_button>
+    """
+  end
+
+  @doc "Refresh action paired with the time of the latest check."
+  attr(:id, :string, required: true)
+  attr(:checked_at, :any, default: nil)
+  attr(:label, :string, default: "Refresh")
+  attr(:aria_label, :string, required: true)
+  attr(:disabled, :boolean, default: false)
+
+  attr(:variant, :atom,
+    default: :ghost,
+    values: [:default, :primary, :secondary, :danger, :ghost]
+  )
+
+  attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
+  attr(:class, :any, default: nil)
+
+  attr(:rest, :global,
+    include:
+      ~w(phx-click data-testid title phx-value-id phx-value-mode phx-value-name phx-value-schema)
+  )
+
+  def ops_refresh_control(assigns) do
+    ~H"""
+    <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
+      <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
+      <.ops_refresh_button
+        id={@id}
+        label={@label}
+        aria_label={@aria_label}
+        variant={@variant}
+        size={@size}
+        disabled={@disabled}
+        {@rest}
+      />
+    </div>
     """
   end
 
@@ -287,6 +342,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:title, :string, required: true)
   attr(:role, :string, default: nil)
+  attr(:neutral, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   slot(:actions)
@@ -297,15 +353,24 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface ops-notice-surface--raised",
-        tone_class(@kind),
+        if(@neutral, do: "ops-notice-surface--neutral", else: tone_class(@kind)),
         @class
       ]}
+      data-status-kind={@kind}
       role={@role}
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="min-w-0">
-          <p class="font-semibold">{@title}</p>
+          <p class="ops-notice-surface__title font-semibold">
+            <span
+              :if={@neutral}
+              class="ops-notice-surface__cue"
+              aria-hidden="true"
+            >
+            </span>
+            {@title}
+          </p>
           <div class="mt-1 text-base-content/80">{render_slot(@inner_block)}</div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
@@ -327,9 +392,21 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_metric(assigns) do
     ~H"""
-    <div class={["ops-metric ops-muted-panel px-3 py-2", metric_tone_class(@kind)]}>
+    <div class="ops-metric ops-muted-panel px-3 py-2" data-ops-metric-tone={@kind}>
       <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
-      <p class="mt-1 font-mono text-ops-lg font-semibold tabular-nums">{@value}</p>
+      <p class={[
+        "ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums",
+        metric_value_class(@kind)
+      ]}>
+        <span
+          :if={metric_cue(@kind)}
+          class={["ops-metric__cue", metric_cue_class(@kind)]}
+          aria-hidden="true"
+        >
+          <ScrypathOpsWeb.CoreComponents.icon name={metric_cue(@kind)} class="size-3.5" />
+        </span>
+        {@value}
+      </p>
     </div>
     """
   end
@@ -401,7 +478,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Posture summary and Sync Drift promotion
+  the Control Room landing; also used for the Search health summary and Sync and drift promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -435,7 +512,14 @@ defmodule ScrypathOpsWeb.OpsUi do
             {@label}
           </p>
           <p class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content">
-            <span class="ops-verdict__dot" aria-hidden="true"></span>
+            <span
+              class={["ops-verdict__icon", verdict_icon_class(@kind)]}
+              data-testid="ops-verdict-icon"
+              data-state={@kind}
+              aria-hidden="true"
+            >
+              <ScrypathOpsWeb.CoreComponents.icon name={verdict_icon(@kind)} class="size-5" />
+            </span>
             {@headline}
           </p>
           <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
@@ -456,17 +540,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Contextual breadcrumb trail for ScrypathOps surfaces.
 
-  A short "where am I" trail — `Control Room › <group> › <page>` — not a map of the
-  whole product (that's the primary shell nav's job). Siblings are deliberately omitted; the
-  group label (Triage / Explore) is context, not a link. Renders nothing on the
-  Control Room landing (a breadcrumb that says "you are at the top" is noise).
+  A short context trail — `<group> › <page>` — not a map of the whole product (that's
+  the primary shell nav's job). Siblings are deliberately omitted; the group label
+  (Recover / Explore) is context, not a link. Renders nothing on the Control Room
+  landing (a breadcrumb that says "you are at the top" is noise).
   """
   attr(:current, :atom,
     required: true,
     values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :playbooks]
   )
 
-  attr(:mount_path, :string, required: true)
   attr(:class, :any, default: nil)
 
   def ops_trail(assigns) do
@@ -475,12 +558,6 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <nav :if={@trail} aria-label="Breadcrumb" class={["ops-trail", @class]}>
       <ol class="ops-trail__list">
-        <li>
-          <.link navigate={@mount_path} class="ops-trail__crumb ops-trail__link">
-            Control Room
-          </.link>
-        </li>
-        <li class="ops-trail__sep" aria-hidden="true">›</li>
         <li><span class="ops-trail__crumb ops-trail__group">{elem(@trail, 0)}</span></li>
         <li class="ops-trail__sep" aria-hidden="true">›</li>
         <li>
@@ -493,9 +570,9 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  defp trail_for(:posture), do: {"Recover", "Posture"}
-  defp trail_for(:failed_sync), do: {"Recover", "Failed Sync"}
-  defp trail_for(:sync_drift), do: {"Recover", "Sync Drift"}
+  defp trail_for(:posture), do: {"Recover", "Search health"}
+  defp trail_for(:failed_sync), do: {"Recover", "Failed sync work"}
+  defp trail_for(:sync_drift), do: {"Recover", "Sync and drift"}
   defp trail_for(:search), do: {"Explore", "Search"}
   defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
   defp trail_for(_), do: nil
@@ -795,10 +872,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-sm leading-5 text-base-content/65">
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
         {@hint}
       </p>
-      <p :if={@error} id={"#{@id}-error"} class="text-ops-sm leading-5 text-error" role="alert">
+      <p :if={@error} id={"#{@id}-error"} class="text-ops-body leading-5 text-error" role="alert">
         {@error}
       </p>
     </div>
@@ -1166,24 +1243,36 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact timestamp that shows a human scan value, exact ISO on hover, and copy affordance."
-  attr(:dt, :any, required: true)
+  @doc "Compact time metadata or snapshot-relative operational evidence with a native exact-value disclosure."
+  attr(:id, :string, default: nil)
+  attr(:dt, :any, default: nil)
+  attr(:snapshot_at, :any, default: nil)
+  attr(:source_iso, :string, default: nil)
   attr(:label, :string, default: nil)
-  attr(:copy, :boolean, default: true)
+  attr(:state_text, :string, default: "No success observed")
+  attr(:retained_text, :string, default: nil)
+  attr(:operational, :boolean, default: false)
+  attr(:copy, :boolean, default: false)
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do
+    exact = exact_dt(assigns.dt, assigns.source_iso)
+    human = if exact, do: human_dt(assigns.dt, assigns.snapshot_at), else: assigns.state_text
+
     assigns =
       assigns
-      |> assign(:exact, exact_dt(assigns.dt))
-      |> assign(:human, human_dt(assigns.dt))
-      |> assign(
-        :aria_label,
-        time_aria_label(assigns.label, human_dt(assigns.dt), exact_dt(assigns.dt))
-      )
+      |> assign(:exact, exact)
+      |> assign(:human, human)
+      |> assign(:utc_iso, utc_iso(assigns.dt))
+      |> assign(:utc_absolute, utc_absolute(assigns.dt))
+      |> assign(:aria_label, time_aria_label(assigns.label, human, assigns.operational))
 
     ~H"""
-    <span class={["ops-time", @class]}>
+    <span
+      id={@id}
+      class={["ops-time", @operational && "ops-time--operational", @class]}
+      phx-hook={if(@operational && @exact, do: "OpsTimestampCopy")}
+    >
       <span :if={@label} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
         <time
@@ -1195,7 +1284,18 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@human}
         </time>
         <button
-          :if={@copy}
+          :if={@operational}
+          type="button"
+          class="ops-time__copy"
+          data-ops-timestamp-copy={@exact}
+          aria-label="Copy timestamp"
+          title="Copy timestamp"
+        >
+          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-4" />
+          <span>Copy timestamp</span>
+        </button>
+        <button
+          :if={@copy && !@operational}
           type="button"
           class="ops-time__copy"
           phx-click={JS.dispatch("phx:copy_to_clipboard", detail: %{text: @exact})}
@@ -1204,8 +1304,41 @@ defmodule ScrypathOpsWeb.OpsUi do
         >
           <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
         </button>
+        <div
+          :if={@operational}
+          class="ops-time__feedback"
+          data-ops-timestamp-feedback
+          data-state="neutral"
+          hidden
+        >
+          <p role="status" aria-live="polite" aria-atomic="true" data-ops-timestamp-message></p>
+          <button
+            type="button"
+            class="ops-time__feedback-dismiss"
+            data-ops-timestamp-dismiss
+            aria-label="Dismiss copy message"
+            hidden
+          >
+            Dismiss
+          </button>
+        </div>
+        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
+        <details :if={@operational} class="ops-time__details">
+          <summary>Exact timestamp</summary>
+          <div class="ops-time__evidence">
+            <p>
+              <span class="ops-time__evidence-label">Source ISO</span>
+              <code class="ops-time__evidence-value">{@exact}</code>
+            </p>
+            <p>
+              <span class="ops-time__evidence-label">UTC equivalent</span>
+              <time datetime={@utc_iso}>{@utc_absolute}</time>
+            </p>
+          </div>
+        </details>
       <% else %>
-        <span class="ops-time__value">—</span>
+        <span class="ops-time__value">{@human}</span>
+        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
       <% end %>
     </span>
     """
@@ -1246,6 +1379,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Disclosure with consistent operator trace/debug styling."
   attr(:summary, :string, required: true)
   attr(:id, :string, default: nil)
+  attr(:summary_id, :string, default: nil)
   attr(:variant, :atom, default: :default, values: [:default, :compact])
   attr(:open, :boolean, default: false)
   attr(:class, :any, default: nil)
@@ -1264,7 +1398,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       ]}
       {@rest}
     >
-      <summary class="cursor-pointer text-ops-body font-medium text-base-content">
+      <summary
+        id={@summary_id}
+        class="cursor-pointer text-ops-body font-medium text-base-content"
+      >
         {@summary}
       </summary>
       <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
@@ -1291,7 +1428,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
   # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
-  # evidence code blocks (Failed Sync, search/merge payloads) must stay calm (D-04a/c).
+  # evidence code blocks (Failed sync work, search/merge payloads) must stay calm (D-04a/c).
   attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -1336,6 +1473,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:action_label, :string, default: "action")
   attr(:initial_focus, :string, default: "[data-ops-modal-cancel]")
   attr(:successor, :string, default: nil)
+  attr(:successor_name, :string, default: nil)
+  attr(:fallback_successor, :string, default: nil)
+  attr(:focus_error, :string, default: nil)
+  attr(:focus_request, :integer, default: 0)
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1352,6 +1493,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       data-ops-modal-cancel-event={@cancel_event}
       data-ops-modal-initial-focus={@initial_focus}
       data-ops-modal-successor={@successor}
+      data-ops-modal-successor-name={@successor_name}
+      data-ops-modal-fallback-successor={@fallback_successor}
+      data-ops-modal-focus-error={@focus_error}
+      data-ops-modal-focus-request={@focus_request}
       class="modal modal-open ops-modal z-ops-modal"
       phx-remove={
         JS.transition(
@@ -1602,41 +1747,77 @@ defmodule ScrypathOpsWeb.OpsUi do
     |> String.trim("-")
   end
 
-  defp exact_dt(nil), do: nil
+  defp exact_dt(nil, _source_iso), do: nil
 
-  defp exact_dt(%DateTime{} = dt) do
+  defp exact_dt(%DateTime{} = dt, source_iso) when is_binary(source_iso) do
+    case DateTime.from_iso8601(source_iso) do
+      {:ok, parsed, _offset} ->
+        if DateTime.compare(parsed, dt) == :eq, do: source_iso, else: DateTime.to_iso8601(dt)
+
+      _other ->
+        DateTime.to_iso8601(dt)
+    end
+  end
+
+  defp exact_dt(%DateTime{} = dt, _source_iso), do: DateTime.to_iso8601(dt)
+
+  defp utc_iso(nil), do: nil
+
+  defp utc_iso(%DateTime{} = dt) do
     dt
-    |> DateTime.truncate(:second)
+    |> DateTime.shift_zone!("Etc/UTC")
     |> DateTime.to_iso8601()
   end
 
-  defp human_dt(nil), do: "—"
+  defp utc_absolute(nil), do: nil
 
-  defp human_dt(%DateTime{} = dt) do
-    diff = DateTime.diff(DateTime.utc_now(), dt, :second)
+  defp utc_absolute(%DateTime{} = dt) do
+    utc = DateTime.shift_zone!(dt, "Etc/UTC")
 
-    cond do
-      diff >= 0 and diff < 60 ->
-        "just now"
+    "#{Calendar.strftime(utc, "%b")} #{utc.day}, #{utc.year} at #{Calendar.strftime(utc, "%H:%M:%S")} UTC"
+  end
 
-      diff >= 0 and diff < 3_600 ->
-        minutes = div(diff, 60)
-        "#{minutes} #{pluralize(minutes, "min")} ago"
+  defp human_dt(nil, _snapshot_at), do: "—"
 
-      diff >= 0 and diff < 86_400 ->
-        hours = div(diff, 3_600)
-        "#{hours} #{pluralize(hours, "hr")} ago"
+  defp human_dt(%DateTime{} = dt, snapshot_at) do
+    reference = if match?(%DateTime{}, snapshot_at), do: snapshot_at, else: DateTime.utc_now()
 
-      true ->
-        Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
+    case DateTime.compare(dt, reference) do
+      :gt -> "After this check · #{utc_absolute(dt)}"
+      _not_future -> relative_age(DateTime.diff(reference, dt, :microsecond), dt)
     end
   end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 60 * 1_000_000,
+    do: "just now"
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 3_600 * 1_000_000 do
+    minutes = div(diff_microseconds, 60 * 1_000_000)
+    "#{minutes} #{pluralize(minutes, "min")} ago"
+  end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 86_400 * 1_000_000 do
+    hours = div(diff_microseconds, 3_600 * 1_000_000)
+    "#{hours} #{pluralize(hours, "hr")} ago"
+  end
+
+  defp relative_age(diff_microseconds, _dt) when diff_microseconds < 604_800 * 1_000_000 do
+    days = div(diff_microseconds, 86_400 * 1_000_000)
+    "#{days} #{pluralize(days, "day")} ago"
+  end
+
+  defp relative_age(_diff_microseconds, dt), do: utc_absolute(dt)
 
   defp pluralize(1, unit), do: unit
   defp pluralize(_count, unit), do: "#{unit}s"
 
-  defp time_aria_label(nil, human, exact), do: "#{human}; exact timestamp #{exact}"
-  defp time_aria_label(label, human, exact), do: "#{label} #{human}; exact timestamp #{exact}"
+  defp time_aria_label(label, human, true) do
+    prefix = if label, do: "#{label} ", else: ""
+    "#{prefix}#{human}; open Exact timestamp for source ISO and UTC equivalent"
+  end
+
+  defp time_aria_label(nil, human, false), do: "#{human}"
+  defp time_aria_label(label, human, false), do: "#{label} #{human}"
 
   defp nav_group_label(:recover), do: "Recover"
   defp nav_group_label(:explore), do: "Explore"
@@ -1663,18 +1844,33 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp tone_chip_class(:neutral), do: "ops-muted-panel"
   defp tone_chip_class(kind), do: tone_class(kind)
 
-  # Metric tiles keep their muted-panel background and only accent the border by tone,
-  # so they route through their own border-only modifiers (not the full tinted surface).
-  defp metric_tone_class(:success), do: "ops-metric-success"
-  defp metric_tone_class(:warning), do: "ops-metric-warning"
-  defp metric_tone_class(:error), do: "ops-metric-error"
-  defp metric_tone_class(:info), do: "ops-metric-info"
-  defp metric_tone_class(:partial), do: "ops-metric-partial"
-  defp metric_tone_class(:running), do: "ops-metric-running"
-  defp metric_tone_class(_), do: nil
+  defp metric_cue(:warning), do: "hero-exclamation-triangle"
+  defp metric_cue(:error), do: "hero-x-circle"
+  defp metric_cue(_kind), do: nil
 
-  # The verdict hero uses the full tinted surface for non-neutral states; neutral gets a
-  # quiet muted surface (so "nothing to watch yet" never reads as info-blue).
+  defp metric_cue_class(:warning), do: "ops-metric__cue--warning"
+  defp metric_cue_class(:error), do: "ops-metric__cue--error"
+  defp metric_cue_class(_kind), do: nil
+
+  defp metric_value_class(:warning), do: "ops-metric__value--warning"
+  defp metric_value_class(:error), do: "ops-metric__value--error"
+  defp metric_value_class(_kind), do: nil
+
+  defp verdict_icon(:success), do: "hero-check-circle"
+  defp verdict_icon(:warning), do: "hero-exclamation-triangle"
+  defp verdict_icon(:error), do: "hero-x-circle"
+  defp verdict_icon(:partial), do: "hero-exclamation-circle"
+  defp verdict_icon(:running), do: "hero-arrow-path"
+  defp verdict_icon(_kind), do: "hero-information-circle"
+
+  defp verdict_icon_class(:success), do: "ops-verdict__icon--success"
+  defp verdict_icon_class(:warning), do: "ops-verdict__icon--warning"
+  defp verdict_icon_class(:error), do: "ops-verdict__icon--error"
+  defp verdict_icon_class(:partial), do: "ops-verdict__icon--partial"
+  defp verdict_icon_class(:running), do: "ops-verdict__icon--running"
+  defp verdict_icon_class(_kind), do: "ops-verdict__icon--neutral"
+
+  # The verdict uses a neutral surface for every state; tone is localized to its icon.
   defp verdict_tone_class(:neutral), do: "ops-verdict-neutral"
   defp verdict_tone_class(kind), do: tone_class(kind)
 

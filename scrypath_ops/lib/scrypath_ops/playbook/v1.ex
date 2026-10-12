@@ -390,13 +390,24 @@ defmodule ScrypathOps.Playbook.V1 do
 
   defp validate_per_query_object(pq) when is_map(pq) do
     case Map.keys(pq) |> Enum.reject(&MapSet.member?(@per_query_keys, &1)) do
-      [] -> :ok
+      [] -> validate_per_query_fields(pq)
       bad -> {:error, {:invalid_playbook, {:unknown_per_query_keys, bad}}}
     end
   end
 
   defp validate_per_query_object(other),
     do: {:error, {:invalid_playbook, {:invalid_per_query, other}}}
+
+  defp validate_per_query_fields(pq) do
+    validate_per_query_threshold(Map.get(pq, "ranking_score_threshold"))
+  end
+
+  defp validate_per_query_threshold(nil), do: :ok
+
+  defp validate_per_query_threshold(value) when is_number(value) and value >= 0, do: :ok
+
+  defp validate_per_query_threshold(value),
+    do: {:error, {:invalid_playbook, {:invalid_per_query_threshold, value}}}
 
   defp validate_global_schemas(nil), do: :ok
 

@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "authority": "github-actions-exact-sha",
+  "repository": "szTheory/scrypath",
+  "head_sha": "5ed440954ba70d2b94d8b480d625530e26a809ac",
+  "source": {
+    "head_sha": "5ed440954ba70d2b94d8b480d625530e26a809ac"
+  },
+  "workflow": {
+    "id": "262102420",
+    "name": "CI",
+    "path": ".github/workflows/ci.yml"
+  },
+  "run_id": "37183050686",
+  "run_attempt": 1,
+  "run_url": "https://github.com/szTheory/scrypath/actions/runs/37183050686",
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-04T06:31:24Z",
+  "updated_at": "2026-10-04T06:41:42Z",
+  "jobs": [
+    {
+      "id": "111379348722",
+      "name": "core (required)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348722"
+    },
+    {
+      "id": "111379348856",
+      "name": "package (required)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348856"
+    },
+    {
+      "id": "111379348851",
+      "name": "repository-contracts (required)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348851"
+    },
+    {
+      "id": "111379348907",
+      "name": "backend (required)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348907"
+    },
+    {
+      "id": "111379348787",
+      "name": "ecommerce-mounted (required)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348787"
+    },
+    {
+      "id": "111379348916",
+      "name": "coverage (advisory)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379348916"
+    },
+    {
+      "id": "111379933615",
+      "name": "closeout-attestation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/job/111379933615"
+    }
+  ],
+  "coverage_artifact": {
+    "id": "11295319359",
+    "name": "coverage-report-5ed440954ba70d2b94d8b480d625530e26a809ac",
+    "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11295319359",
+    "digest": "sha256:afb11456941577f290432349234ff8a757fd200a157391ae5e3a56a38b51a69b",
+    "expires_at": "2026-10-11T06:32:37Z"
+  },
+  "attestation_artifact": {
+    "id": "11295917815",
+    "name": "closeout-attestation-5ed440954ba70d2b94d8b480d625530e26a809ac",
+    "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/11295917815",
+    "digest": "sha256:6003ca13d6047409de980f802105cb1993849ca79690b63b463b24ab3a7cd3d4",
+    "expires_at": "2026-10-11T06:35:59Z"
+  },
+  "attestation_archive": {
+    "sha256": "6003ca13d6047409de980f802105cb1993849ca79690b63b463b24ab3a7cd3d4"
+  },
+  "attestation_member": {
+    "name": "closeout-attestation.json",
+    "sha256": "707b2791d1ca4565d813dddea250a9cf07a060569455b8622107108afaab9c73",
+    "content": {
+      "schema": 1,
+      "authority": "github-actions-exact-sha",
+      "repository": "szTheory/scrypath",
+      "workflow": "CI",
+      "run_id": "37183050686",
+      "run_attempt": "1",
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/37183050686",
+      "event": "workflow_dispatch",
+      "head_sha": "5ed440954ba70d2b94d8b480d625530e26a809ac",
+      "required_jobs": [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)"
+      ],
+      "coverage": {
+        "outcome": "success",
+        "artifact_id": "11295319359",
+        "artifact_url": "https://github.com/szTheory/scrypath/actions/runs/37183050686/artifacts/11295319359",
+        "artifact_digest": "afb11456941577f290432349234ff8a757fd200a157391ae5e3a56a38b51a69b"
+      }
+    }
+  },
+  "collected_at_utc": "2026-10-04T06:42:38.404Z",
+  "limitations": [
+    "This receipt joins GitHub run, attempt, job, artifact, archive, and attestation facts; it does not decide semantic readiness or maintainer approval.",
+    "GitHub artifact availability and API facts can expire or change; retain this receipt with the dated assessment."
+  ]
+}

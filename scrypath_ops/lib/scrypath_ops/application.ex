@@ -22,7 +22,8 @@ defmodule ScrypathOps.Application do
     base_children = [
       ScrypathOpsWeb.Telemetry,
       ScrypathOps.RecoveryObservation,
-      {Phoenix.PubSub, name: ScrypathOps.PubSub}
+      {Phoenix.PubSub, name: ScrypathOps.PubSub},
+      {Task.Supervisor, name: ScrypathOps.TaskSupervisor}
     ]
 
     standalone_children =

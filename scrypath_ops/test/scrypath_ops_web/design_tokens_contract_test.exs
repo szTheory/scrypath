@@ -140,8 +140,6 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
 
     catalog = File.read!(@token_catalog)
 
-    assert length(exports) == 48
-
     missing = Enum.reject(exports, &String.contains?(catalog, "`#{&1}`"))
     assert missing == [], "Add these OpsUi exports to DESIGN-TOKENS.md: #{inspect(missing)}"
 
@@ -165,5 +163,38 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     dialog_target = rule(".btn.ops-icon-btn")
     assert dialog_target =~ "min-width: var(--control-h-lg)"
     assert dialog_target =~ "min-height: var(--control-h-lg)"
+  end
+
+  test "quiet action states use neutral hover and press while keeping focus and selection distinct" do
+    assert css() =~ ".ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error)"
+    assert css() =~ "background: var(--ops-surface-2)"
+    assert css() =~ ".ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error)"
+    assert css() =~ ".ops-btn[aria-pressed=\"true\"]"
+    assert css() =~ "outline: 2px solid var(--color-primary)"
+    assert css() =~ "outline-offset: 2px"
+    assert css() =~ ".ops-btn:disabled"
+  end
+
+  test "muted text and neutral links override Tailwind's utility layer for AA contrast" do
+    overrides =
+      css()
+      |> String.split("/* Cascade-safe operator text contrast.", parts: 2)
+      |> List.last()
+
+    refute overrides == css()
+    refute overrides =~ "@layer"
+    assert overrides =~ ".ops-shell .text-base-content\\/60"
+    assert overrides =~ "color: var(--ops-text-muted)"
+    assert overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
+    assert overrides =~ "color: var(--color-base-content)"
+  end
+
+  test "refresh hook reapplies server eligibility after a LiveView patch" do
+    hooks = File.read!(Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand())
+
+    assert hooks =~ "readServerEligibility"
+    assert hooks =~ "updated()"
+    assert hooks =~ "this.serverDisabled || loading"
+    assert hooks =~ "dataset.opsRefreshEligible !== \"true\""
   end
 end

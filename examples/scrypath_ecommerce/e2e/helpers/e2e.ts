@@ -34,7 +34,7 @@ type SeedResult = {
 
 /**
  * Named operational scenarios understood by /dev/e2e/seed (SEED-01). Each drives the
- * operator UI into a deterministic posture for the screenshot/audit harness:
+ * operator UI into a deterministic health state for the screenshot/audit harness:
  *   all_green — catalog synced, no failed sync, no drift (verdict trusts search)
  *   degraded  — catalog synced, drift only (verdict degraded)
  *   incident  — catalog synced, all failed-sync reason classes + drift (can't-fully-trust)

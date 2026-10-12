@@ -8654,6 +8654,119 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/ops_hooks.js
   var opsModalPendingTrigger = null;
   var activeOpsModal = null;
+  var OPS_INFO_DISMISS_MS = 4e3;
+  var scheduleInfoDismiss = (owner, dismiss) => {
+    window.clearTimeout(owner.dismissTimer);
+    owner.dismissTimer = window.setTimeout(dismiss, OPS_INFO_DISMISS_MS);
+  };
+  var OpsRefreshButton = {
+    mounted() {
+      this.readServerEligibility = () => {
+        this.serverDisabled = this.el.dataset.opsRefreshEligible !== "true";
+      };
+      this.syncLoadingState = () => {
+        const loading = this.el.classList.contains("phx-click-loading");
+        this.el.disabled = this.serverDisabled || loading;
+        if (loading) this.el.setAttribute("aria-busy", "true");
+        else this.el.removeAttribute("aria-busy");
+      };
+      this.readServerEligibility();
+      this.loadingObserver = new MutationObserver(this.syncLoadingState);
+      this.loadingObserver.observe(this.el, { attributes: true, attributeFilter: ["class"] });
+      this.syncLoadingState();
+    },
+    updated() {
+      this.readServerEligibility();
+      this.syncLoadingState();
+    },
+    destroyed() {
+      this.loadingObserver.disconnect();
+    }
+  };
+  var OpsToast = {
+    mounted() {
+      this.scheduleDismiss();
+    },
+    updated() {
+      this.scheduleDismiss();
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+    },
+    scheduleDismiss() {
+      if (!this.el.classList.contains("ops-flash--info")) {
+        window.clearTimeout(this.dismissTimer);
+        return;
+      }
+      scheduleInfoDismiss(this, () => {
+        this.el.querySelector('button[aria-label="Close notification"]')?.click();
+      });
+    }
+  };
+  var OpsTimestampCopy = {
+    mounted() {
+      this.latestAttempt = 0;
+      this.onCopyClick = async (event) => {
+        const trigger = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-copy]") : null;
+        if (!trigger || !this.el.contains(trigger)) return;
+        event.preventDefault();
+        const attempt = ++this.latestAttempt;
+        this.clearFeedback();
+        try {
+          const exact = trigger.dataset.opsTimestampCopy;
+          const clipboard = navigator.clipboard;
+          if (!exact || typeof clipboard?.writeText !== "function") throw new Error("Clipboard unavailable");
+          await clipboard.writeText(exact);
+          if (attempt !== this.latestAttempt || !trigger.isConnected) return;
+          this.showFeedback("Timestamp copied", "success", false);
+          scheduleInfoDismiss(this, () => {
+            if (attempt === this.latestAttempt) this.clearFeedback();
+          });
+        } catch (_error) {
+          if (attempt !== this.latestAttempt || !trigger.isConnected) return;
+          this.el.querySelector("details.ops-time__details")?.setAttribute("open", "");
+          this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true);
+        }
+      };
+      this.onDismissClick = (event) => {
+        const dismiss = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-dismiss]") : null;
+        if (!dismiss || !this.el.contains(dismiss)) return;
+        event.preventDefault();
+        this.latestAttempt += 1;
+        this.clearFeedback();
+        this.el.querySelector("[data-ops-timestamp-copy]")?.focus();
+      };
+      this.el.addEventListener("click", this.onCopyClick);
+      this.el.addEventListener("click", this.onDismissClick);
+    },
+    destroyed() {
+      window.clearTimeout(this.dismissTimer);
+      this.el.removeEventListener("click", this.onCopyClick);
+      this.el.removeEventListener("click", this.onDismissClick);
+    },
+    clearFeedback() {
+      window.clearTimeout(this.dismissTimer);
+      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
+      const message = this.el.querySelector("[data-ops-timestamp-message]");
+      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
+      if (feedback) {
+        feedback.hidden = true;
+        feedback.dataset.state = "neutral";
+      }
+      if (message) message.textContent = "";
+      if (dismiss) dismiss.hidden = true;
+    },
+    showFeedback(text, state, dismissible) {
+      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
+      const message = this.el.querySelector("[data-ops-timestamp-message]");
+      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
+      if (!feedback || !message || !dismiss) return;
+      feedback.dataset.state = state;
+      message.textContent = text;
+      dismiss.hidden = !dismissible;
+      feedback.hidden = false;
+    }
+  };
   document.addEventListener("click", (e) => {
     const trigger = e.target instanceof Element ? e.target.closest("[data-ops-modal-trigger]") : null;
     if (trigger) opsModalPendingTrigger = trigger;
@@ -8663,6 +8776,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.cmdk = this.el.querySelector("#ops-cmdk");
       this.sheet = document.getElementById(this.el.dataset.cheatsheet);
       this.input = this.cmdk.querySelector("[data-cmdk-input]");
+      this.list = this.cmdk.querySelector("#ops-cmdk-list");
       this.empty = this.cmdk.querySelector("[data-cmdk-empty]");
       this.items = Array.from(this.cmdk.querySelectorAll("[data-cmdk-item]"));
       this.visible = this.items.slice();
@@ -8672,6 +8786,11 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
       this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
+      this.onCmdkPointerOver = (e) => {
+        const item = e.target instanceof Element ? e.target.closest("[data-cmdk-item]") : null;
+        const index = this.visible.indexOf(item);
+        if (index >= 0 && index !== this.activeIndex) this.setActive(index);
+      };
       this.onCommandOpenClick = (e) => {
         const opener = e.target instanceof Element ? e.target.closest("[data-ops-command-open]") : null;
         if (!opener) return;
@@ -8682,6 +8801,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.addEventListener("click", this.onCommandOpenClick);
       this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
+      this.list.addEventListener("pointerover", this.onCmdkPointerOver);
       this.sheet.addEventListener("keydown", this.onSheetKeydown);
       this.cmdk.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.close()));
       this.sheet.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.closeSheet()));
@@ -8693,6 +8813,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
       this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
+      this.list.removeEventListener("pointerover", this.onCmdkPointerOver);
       this.sheet.removeEventListener("keydown", this.onSheetKeydown);
     },
     isTyping() {
@@ -9011,9 +9132,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var OpsModal = {
     mounted() {
       const pending = opsModalPendingTrigger;
-      this.returnTarget = pending && pending.isConnected ? pending : document.activeElement;
+      const disclosure = pending?.closest("details");
+      if (disclosure) disclosure.open = false;
+      const returnTargetSelector = pending?.dataset.opsModalReturn;
+      this.returnTarget = this.queryTarget(returnTargetSelector) || (pending && pending.isConnected ? pending : document.activeElement);
       opsModalPendingTrigger = null;
-      this.returnTargetName = this.returnTarget?.getAttribute("phx-value-name");
+      this.returnTargetName = pending?.getAttribute("phx-value-name") || this.targetRecordName(this.returnTarget);
+      this.focusRequest = this.el.dataset.opsModalFocusRequest || "";
       this.inerted = [];
       this.onKeydown = (e) => this.handleKeydown(e);
       this.onModalOverlayOpen = () => {
@@ -9027,10 +9152,20 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.queueInitialFocus();
     },
     updated() {
-      if (!this.el.contains(document.activeElement)) this.queueInitialFocus();
+      const request = this.el.dataset.opsModalFocusRequest || "";
+      if (request !== this.focusRequest) {
+        this.focusRequest = request;
+        window.cancelAnimationFrame(this.focusErrorFrame);
+        this.focusErrorFrame = window.requestAnimationFrame(() => {
+          if (this.el.isConnected && activeOpsModal === this && (this.el.dataset.opsModalFocusRequest || "") === request) {
+            this.focusErrorField();
+          }
+        });
+      }
     },
     destroyed() {
       window.cancelAnimationFrame(this.focusFrame);
+      window.cancelAnimationFrame(this.focusErrorFrame);
       document.removeEventListener("keydown", this.onKeydown, true);
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       this.restoreBackground();
@@ -9066,9 +9201,15 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       } catch (_error) {
         target = null;
       }
-      target = target && !target.matches(":disabled") ? target : null;
+      target = this.isUsableFocusTarget(target) ? target : null;
       target = target || this.focusableElements()[0] || this.el.querySelector(".modal-box") || this.el;
       target.focus({ preventScroll: true });
+    },
+    focusErrorField() {
+      const target = this.queryTarget(this.el.dataset.opsModalFocusError);
+      if (this.el.contains(target) && this.isUsableFocusTarget(target)) {
+        target.focus({ preventScroll: true });
+      }
     },
     handleKeydown(e) {
       if (activeOpsModal !== this) return;
@@ -9109,10 +9250,16 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (event) this.pushEvent(event, {});
     },
     restoreFocus() {
-      const sameRecord = this.returnTarget?.getAttribute("phx-value-name") === this.returnTargetName;
-      const target = this.returnTarget && this.returnTarget.isConnected && sameRecord ? this.returnTarget : this.querySuccessor();
-      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+      const originalIsUsable = this.isUsableFocusTarget(this.returnTarget, this.returnTargetName);
+      if (originalIsUsable) this.returnTarget.focus({ preventScroll: true });
+      if (!originalIsUsable || document.activeElement !== this.returnTarget) {
+        const successor = this.querySuccessor();
+        if (successor && successor !== this.returnTarget && typeof successor.focus === "function") {
+          successor.focus({ preventScroll: true });
+        }
+      }
       this.returnTarget = null;
+      this.returnTargetName = null;
     },
     inertBackground() {
       let branch = this.el;
@@ -9134,13 +9281,39 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.inerted = [];
     },
     querySuccessor() {
-      const selector = this.el.dataset.opsModalSuccessor;
+      const primarySelector = this.el.dataset.opsModalSuccessor;
+      const fallbackSelector = this.el.dataset.opsModalFallbackSuccessor;
+      const primaryName = this.el.dataset.opsModalSuccessorName || null;
+      for (const [selector, expectedName] of [
+        [primarySelector, primaryName],
+        [fallbackSelector, null]
+      ]) {
+        const target = this.queryTarget(selector);
+        if (this.isUsableFocusTarget(target, expectedName)) return target;
+      }
+      return null;
+    },
+    queryTarget(selector) {
       if (!selector) return null;
       try {
         return document.querySelector(selector);
       } catch (_error) {
         return null;
       }
+    },
+    targetRecordName(target) {
+      if (!target) return null;
+      return target.getAttribute("phx-value-name") || target.dataset.opsFileName || target.closest("details[data-ops-file-name]")?.dataset.opsFileName || null;
+    },
+    isUsableFocusTarget(target, expectedName = null) {
+      if (!target || !target.isConnected || typeof target.focus !== "function") return false;
+      if (target.matches(":disabled,[hidden]") || target.closest("[hidden], [inert], [aria-hidden='true']")) return false;
+      const closedDisclosure = target.closest("details:not([open])");
+      if (closedDisclosure && !(target.tagName === "SUMMARY" && target.parentElement === closedDisclosure)) {
+        return false;
+      }
+      if (expectedName && this.targetRecordName(target) !== expectedName) return false;
+      return target.getClientRects().length > 0;
     },
     closeImmediately() {
       this.el.setAttribute("hidden", "");
@@ -9151,10 +9324,82 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
 
   // js/app.js
   var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+  var createMemoryStorage = () => {
+    const entries = /* @__PURE__ */ new Map();
+    return {
+      get length() {
+        return entries.size;
+      },
+      clear() {
+        entries.clear();
+      },
+      getItem(key) {
+        return entries.get(key) ?? null;
+      },
+      key(index) {
+        return Array.from(entries.keys())[index] ?? null;
+      },
+      removeItem(key) {
+        entries.delete(key);
+      },
+      setItem(key, value) {
+        entries.set(String(key), String(value));
+      }
+    };
+  };
+  var memoryStorage = createMemoryStorage();
+  var safeLocalStorage = {
+    get length() {
+      try {
+        return window.localStorage.length;
+      } catch (_error) {
+        return memoryStorage.length;
+      }
+    },
+    clear() {
+      memoryStorage.clear();
+      try {
+        window.localStorage.clear();
+      } catch (_error) {
+      }
+    },
+    getItem(key) {
+      try {
+        const value = window.localStorage.getItem(key);
+        if (value === null) memoryStorage.removeItem(key);
+        else memoryStorage.setItem(key, value);
+        return value;
+      } catch (_error) {
+        return memoryStorage.getItem(key);
+      }
+    },
+    key(index) {
+      try {
+        return window.localStorage.key(index) ?? memoryStorage.key(index);
+      } catch (_error) {
+        return memoryStorage.key(index);
+      }
+    },
+    removeItem(key) {
+      memoryStorage.removeItem(key);
+      try {
+        window.localStorage.removeItem(key);
+      } catch (_error) {
+      }
+    },
+    setItem(key, value) {
+      memoryStorage.setItem(key, value);
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (_error) {
+      }
+    }
+  };
   var liveSocket = new LiveSocket2("/live", Socket, {
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal }
+    localStorage: safeLocalStorage,
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

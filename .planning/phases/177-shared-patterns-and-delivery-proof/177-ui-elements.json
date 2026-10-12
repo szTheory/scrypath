@@ -1,0 +1,32 @@
+[
+  {
+    "id": "E1",
+    "text": "Control Room shared shell, posture summary, and intent cards. Covers no-schema or missing-runtime setup, refresh loading, unavailable observations, populated verdict and evidence, partial source visibility, zero/one/many schema layouts, full identifiers, and narrow reflow.",
+    "elements": ["list-collection", "nav", "interactive-control", "static-content"]
+  },
+  {
+    "id": "E2",
+    "text": "Search health shared shell, fleet verdict, four metrics, and per-schema signals. Covers empty configuration, refresh loading, fetch errors and unavailable observations, populated worst-first signals, partial source evidence, schema-count layouts, full identifiers, and narrow reflow.",
+    "elements": ["list-collection", "nav", "interactive-control", "static-content"]
+  },
+  {
+    "id": "E3",
+    "text": "Failed sync work shared shell, selected-schema controls, rollup, and failed-job rows. Covers empty history or configuration, refresh/recovery loading, row-level failures, populated retryable and retained history, partial observations, zero/one/many jobs, full task identifiers/reasons, and narrow reflow.",
+    "elements": ["form", "list-collection", "nav", "interactive-control", "static-content"]
+  },
+  {
+    "id": "E4",
+    "text": "Sync and drift shared shell, schema controls, recovery observation, sync/queue evidence, contract drift, freshness, and gated promotion. Covers unavailable and empty states, observation/action loading, failure and recovery guidance, populated distinct evidence groups, partial or unknown outcomes, zero/one/many records, long identifiers/reasons, and narrow reflow.",
+    "elements": ["form", "list-collection", "nav", "interactive-control", "static-content"]
+  },
+  {
+    "id": "E5",
+    "text": "Search shared shell, target/mode/query/limit form, Run search action, and attributed result collection. Covers not-run, zero-hit, populated, partial per-index failures, request/validation/loading states, target counts, long queries/identifiers, and narrow reflow.",
+    "elements": ["form", "list-collection", "nav", "interactive-control", "static-content"]
+  },
+  {
+    "id": "E6",
+    "text": "Playbooks shared shell, workspace catalog, import and preview controls, run outcome, and Search handoff. Covers empty/read-only workspace, pending import/run/save, actual file or run failures, populated catalog/preview/result, partial outcomes and missing facts, zero/one/many files/results, long filenames/identifiers, and narrow reflow.",
+    "elements": ["form", "list-collection", "nav", "interactive-control", "static-content"]
+  }
+]

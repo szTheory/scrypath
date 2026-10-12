@@ -32,6 +32,22 @@ if (( ready_count < 3 )); then
 fi
 
 case "$scope" in
+  phase173_shell)
+    echo "Running Phase 173 shell proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_shell.spec.ts --workers=1 --retries=0
+    ;;
+  phase173_time)
+    echo "Running Phase 173 operational-time proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_time.spec.ts --workers=1 --retries=0
+    ;;
+  phase173_status)
+    echo "Running Phase 173 status and action proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_status_actions.spec.ts --workers=1 --retries=0
+    ;;
+  phase173_copy)
+    echo "Running Phase 173 timestamp-copy proof against mounted and standalone PostureLive..."
+    exec npx playwright test e2e/phase173_copy.spec.ts --workers=1 --retries=0
+    ;;
   focused)
     echo "Running focused mounted integration/browser proof..."
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0
@@ -60,7 +76,7 @@ case "$scope" in
     exit 1
     ;;
   *)
-    echo "Unsupported E2E_SCOPE '$scope' (expected focused or full)." >&2
+    echo "Unsupported E2E_SCOPE '$scope' (expected phase173_shell, phase173_time, phase173_status, phase173_copy, focused, or full)." >&2
     exit 64
     ;;
 esac

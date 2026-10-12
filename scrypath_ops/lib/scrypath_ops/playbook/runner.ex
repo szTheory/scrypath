@@ -200,7 +200,7 @@ defmodule ScrypathOps.Playbook.Runner do
 
   defp coerce_opt("per_query", %{} = m) do
     Enum.reduce(m, [], fn
-      {"ranking_score_threshold", n}, acc when is_integer(n) ->
+      {"ranking_score_threshold", n}, acc when is_number(n) and n >= 0 ->
         [{:ranking_score_threshold, n} | acc]
 
       {"show_ranking_score", b}, acc when is_boolean(b) ->

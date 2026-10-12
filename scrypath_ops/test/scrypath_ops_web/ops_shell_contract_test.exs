@@ -117,8 +117,8 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   defp assert_ops_shell!(html, title_fragment) do
     assert html =~ "data-phx-session"
     assert html =~ title_fragment
-    assert html =~ ~r/href="\/ops\/assets\/css\/app(?:-[^"]+)?\.css(?:\?[^"]*)?"/
-    assert html =~ ~r/src="\/ops\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
+    assert html =~ ~r/href="\/assets\/css\/app(?:-[^"]+)?\.css(?:\?[^"]*)?"/
+    assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(id="flash-group")
     assert Regex.scan(~r/id=\"flash-group\"/, html) |> length() == 1
     assert html =~ ~s(id="ops-main")
@@ -133,7 +133,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
            )
            |> length() == 2
 
-    assert html =~ ~s(href="/ops/posture")
+    assert html =~ ~s(href="/ops/health")
     assert html =~ ~s(id="ops-shell-frame")
     assert html =~ ~s(phx-hook="OpsNavDrawer")
     assert html =~ ~s(class="ops-sidebar")
@@ -146,15 +146,13 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(aria-expanded="false")
     assert html =~ ~s(aria-label="Close navigation")
     assert html =~ ~s(data-ops-nav-link)
-    # v1.5 brand: the shell header renders the inline-SVG brand mark (decorative,
-    # aria-hidden) with the copper "/" accent — no more <img src="/ops/images/logo.svg">.
-    # "ScrypathOps" below is its accessible name.
-    assert html =~ ~s(ops-brand-mark)
-    assert html =~ ~s(fill="#C17A3E")
-    assert html =~ "ScrypathOps"
+    # The shell renders the canonical horizontal wordmark in both themes; the
+    # enclosing logo-only home link retains its accessible name.
+    assert html =~ ~s(ops-wordmark)
+    assert html =~ ~s(src="/ops/images/scrypath-wordmark.svg")
+    assert html =~ ~s(src="/ops/images/scrypath-wordmark-inverse.svg")
+    assert html =~ ~s(aria-label="Scrypath home")
     assert html =~ ~s(class="ops-theme-toggle)
-    assert html =~ ~s(id="theme-toggle-pill")
-    assert html =~ ~s(ops-theme-toggle__pill)
     assert Regex.scan(~r/class=\"[^\"]*ops-theme-toggle__button/, html) |> length() == 3
     assert Regex.scan(~r/data-phx-theme=\"(?:system|light|dark)\"/, html) |> length() == 3
     assert html =~ ~s(aria-label="Theme preference")
@@ -187,9 +185,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   describe "ops shell markers" do
-    test "/ops/posture", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/ops/posture")
-      assert_ops_shell!(html, "Posture / health")
+    test "/ops/health", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/ops/health")
+      assert_ops_shell!(html, "Search health")
     end
 
     test "/ops/failed-sync", %{conn: conn} do
@@ -199,12 +197,12 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
     test "/ops/sync-drift", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift")
-      assert_ops_shell!(html, "Sync / drift")
+      assert_ops_shell!(html, "Sync and drift")
     end
 
     test "/ops/search", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/ops/search")
-      assert_ops_shell!(html, "Search &amp; federation")
+      assert_ops_shell!(html, "Search")
     end
   end
 
@@ -212,6 +210,10 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     source = File.read!(@root_template)
 
     assert source =~ "syncThemeButtons"
+    assert source =~ "normalizeTheme"
+    assert source =~ "readStoredTheme"
+    assert source =~ "currentPreference = normalizeTheme(theme)"
+    assert source =~ "Keep the current page usable when browser storage is denied."
     assert source =~ "querySelectorAll(\"[data-phx-theme]\")"
     assert source =~ "setAttribute(\"aria-pressed\""
     assert source =~ "setAttribute(\"data-theme-selected\""
@@ -221,8 +223,16 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "phx:page-loading-stop"
   end
 
+  test "theme preference buttons show their choices beside the icons", %{conn: conn} do
+    {:ok, _lv, html} = live(conn, ~p"/ops/health")
+
+    assert html =~ ~s(<span>System</span>)
+    assert html =~ ~s(<span>Light</span>)
+    assert html =~ ~s(<span>Dark</span>)
+  end
+
   test "shortcut sheet advertises command palette shortcut across platforms", %{conn: conn} do
-    {:ok, _lv, html} = live(conn, ~p"/ops/posture")
+    {:ok, _lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "Command or Control K"
     assert html =~ "<kbd"
@@ -239,17 +249,36 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
   end
 
   test "standalone and mounted LiveSockets share all operator hooks" do
-    assert File.read!(@app_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "./ops_hooks"|
+    assert Regex.match?(
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast,\s*OpsTimestampCopy\s*\}\s+from\s+"\.\/ops_hooks"/,
+             File.read!(@app_js)
+           )
+
+    assert Regex.match?(
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast,\s*OpsTimestampCopy\s*\}\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/scrypath_ops\/assets\/js\/ops_hooks"/,
+             File.read!(@host_js)
+           )
 
     assert File.read!(@host_js) =~
-             ~S|import {CommandPalette, OpsNavDrawer, OpsModal} from "../../../../scrypath_ops/assets/js/ops_hooks"|
+             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }"
 
-    assert File.read!(@host_js) =~ "hooks: { CommandPalette, OpsNavDrawer, OpsModal }"
     refute File.read!(@host_js) =~ "const CommandPalette ="
   end
 
-  test "flash component exposes durable passive alert chrome" do
+  test "timestamp copy waits for browser outcome and uses shared info timeout" do
+    source = File.read!(@ops_hooks)
+
+    assert source =~ "const OPS_INFO_DISMISS_MS = 4000"
+    assert source =~ "await clipboard.writeText(exact)"
+    assert source =~ "Could not copy timestamp. Select and copy the exact value."
+
+    assert source =~
+             "this.el.querySelector(\"details.ops-time__details\")?.setAttribute(\"open\", \"\")"
+
+    assert source =~ "data-ops-timestamp-copy"
+  end
+
+  test "flash component exposes persistent, correctly announced feedback" do
     info =
       render_component(&CoreComponents.flash/1,
         kind: :info,
@@ -262,7 +291,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
         flash: %{"error" => "Search sync failed."}
       )
 
-    assert info =~ ~s(role="alert")
+    assert info =~ ~s(role="status")
     assert info =~ "ops-flash"
     assert info =~ "ops-flash--info"
     assert info =~ "Saved playbook."

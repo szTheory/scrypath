@@ -1,0 +1,536 @@
+{
+  "items": [
+    {
+      "requirement_id": "E1",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "An empty query remains a valid exploratory query. An absent allowlist or backend shows the specific setup guidance in Copywriting Contract beside the unavailable action; no duplicate Run button appears in the empty result state.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The sole Run search action retains its label and busy semantics while the existing guard prevents duplicate submission; the dispatched mode, targets, query and page size are captured together.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Invalid input or request/setup failure retains editable criteria and presents the actual reason plus the Copywriting Contract recovery path; failure is not announced as a completed response.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Single and multi-index modes use labeled native controls, complete target identifiers, query and page-size fields followed by one Run search submit in the declared reading order.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Missing required targets or invalid page-size/options receive associated validation without dispatching incomplete criteria; an intentionally blank query is not treated as incomplete.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero eligible schemas uses setup guidance; one and many use the existing selection controls and actual configured multi-index cap, with complete identifiers and truthful selected counts.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E1",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Not run and successful zero-hit responses use their distinct Copywriting Contract rows. Zero hits remain a successful response and retain the actual submitted criteria.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A new submission clears or replaces run-specific results and capture under the existing ownership rules; pending response copy stays tied to the dispatched criteria, never later form edits.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Whole-request failure and per-index failure expose the actual reason and recovery step; a failed index does not erase returned results or become zero hits.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Returned hit summaries and counts lead; attribution shows actual submitted mode, targets, query and page size. Raw hit/per-index/merge evidence remains available in closed labeled disclosures.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A response with any failed index is visibly partial; returned, zero-hit and failed indexes remain distinguishable while the failure reason and next check stay visible with diagnostics closed.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero hits uses the zero-hit state; one or many hits use correct counts and the same result pattern. Single/multi responses preserve per-index identity without implying one global relevance score.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E2",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Before an eligible actual response there is no available capture form. An eligible zero-hit single response or partial multi response can expose Save as playbook; required filename validation remains visible.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Pending save retains the submitted-run criteria and typed metadata; success feedback follows the actual completed write rather than the button event.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Occupied filenames are rejected for Search capture. Validation/configuration/write errors retain field values and associated reasons plus the approved save recovery guidance in Copywriting Contract.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Optional title and description may remain blank. A partial response captures its validated query criteria rather than returned documents or a promise that every index succeeded; mode changes preserve capture invalidation.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E3",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "No files uses the empty-workspace Copywriting Contract row with visible Import JSON and the existing Search route; read-only examples retain their actual workspace explanation.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Catalog refresh or file action feedback retains meaningful file/action context; a pending operation does not announce that a file was saved, renamed, duplicated or deleted.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Load/run/file-operation failures retain the actual affected filename and reason, keep unaffected catalog work reachable, and never advertise the failed file as a valid ready preview.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Catalog rows show full filenames with Load preview and Run without preview outside a closed in-flow Manage disclosure. Read-only rows omit mutation controls and explain why.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "A failed file load or operation remains attributable to its row while other available files stay reachable; do not fabricate a complete catalog or ready preview from unavailable evidence.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero files uses the empty state; one/many share the same row controls, correct counts and spacing. Occasional mutations stay within the same-file disclosure regardless of catalog size.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E4",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Without a valid draft the selected-preview task stays empty with load/import guidance and cannot claim a runnable or saved playbook. Missing workspace/runtime setup uses concrete adjacent guidance.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Loading/importing/saving retains truthful current draft provenance; a configured workspace enables an attempted write, not a writable-permissions or successful-persistence guarantee.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Invalid preview and failed save retain the responsible draft/filename and entered values where practical, with associated actual reasons and the approved configuration/write recovery copy.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The preview shows workspace/example/imported-unsaved provenance and structured mode/query/page-size/target facts. Run playbook leads; Save remains a separate reachable persistence task.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Optional draft metadata may be absent. Valid drafts can save independently of execution; runtime/allowlist eligibility governs running. Missing facts do not become invented saved or run status.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero selected targets reflects actual draft validity, not an invented ready state; single/multi previews show the real target collection and correct counts using the same structured summary.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E5",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Before execution, the outcome region states that no run exists; a retained earlier outcome is explicitly earlier and never attributed to a new unrun preview.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Running output and Cancel retain captured run id, source and criteria. One-run, timeout, supersede and late-reply guards remain authoritative through preview/import changes.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Error, timeout and cancellation remain distinct, attached to the actual run and its existing recovery guidance. Cancellation never claims remote rollback; stale replies cannot apply to the current run.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "populated",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Completed summaries show captured source and criteria with truthful counts; the Search handoff uses that run. Saving changes current draft provenance only and does not relabel earlier execution.",
+      "reason": null,
+      "probe": "What does the normal populated (happy-path) state look like at a typical volume of content?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Any per-index failure makes the run summary partial. Returned and failed indexes remain distinguishable through the existing summary/diagnostics without adding a Playbook hit browser.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "zero-one-many",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Zero, one and many returned hits/index outcomes use truthful counts and partial/failed distinctions; zero hits does not imply execution failure or prevent an otherwise valid independent save.",
+      "reason": null,
+      "probe": "How does the layout read at zero, one, and many items (singular vs plural copy, spacing)?"
+    },
+    {
+      "requirement_id": "E6",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "File selection and paste start with labeled empty controls; no file choice or pasted content automatically imports, saves or runs a playbook.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Pending import keeps the chosen source and current preview identity truthful; the existing native upload/submit flow consumes the file only through its explicit import action.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Malformed or oversized JSON shows associated concrete validation and recovery feedback, retains inputs where practical and explicitly says whether the previous valid preview remains; upload and paste reject 256,001 bytes.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Incomplete JSON remains an invalid input, not a ready or saved draft. Optional valid metadata can be absent; accepted input stays within the exact 256,000-byte bound and runtime validation occurs at execution.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E7",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "empty",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "An empty required destination or deletion confirmation cannot mutate files and retains the visible filename/hint; Delete initially focuses Cancel, Rename/Duplicate the editable destination.",
+      "reason": null,
+      "probe": "What is shown when there is no data — zero items, an unfilled form, or absent media?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "loading",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "The active dialog retains file identity, focus containment and background inertness through submission and ordinary patches; do not repeatedly steal field focus or announce premature success.",
+      "reason": null,
+      "probe": "What is shown while data or content is still loading (skeleton, spinner, progressive reveal)?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "error",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Invalid confirmation, collision, configuration or write failure keeps the dialog and entered value, exposes the actual associated reason, and focuses the relevant invalid field as declared.",
+      "reason": null,
+      "probe": "What is shown when the load or submit fails (message, retry affordance, partial fallback)?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "partial",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Incomplete/mismatched exact-filename deletion confirmation remains in the dialog without deleting. Server basename/path/authorization and occupied-destination checks remain effective regardless of hidden controls.",
+      "reason": null,
+      "probe": "What is shown for partial or incomplete data — some fields or rows present, others missing?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "overflow",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "At desktop, narrow and changed breakpoints, this surface reflows without horizontal document overflow; full identifiers, criteria and exact JSON remain readable through wrapping or bounded internal evidence scrolling, with controls and focus targets reachable.",
+      "reason": null,
+      "probe": "What happens when content exceeds its container — scroll, clip, wrap, or truncate?"
+    },
+    {
+      "requirement_id": "E8",
+      "category": "long-text",
+      "status": "resolved",
+      "verification": "explicit",
+      "resolution": "Long filenames, module names, query values, errors and action labels wrap/reflow with complete accessible context; required instructions and the only visible error stay at 14px body size rather than becoming clipped, hover-only or small metadata.",
+      "reason": null,
+      "probe": "What happens with unusually long text — truncation, wrapping, ellipsis, or reflow?"
+    }
+  ],
+  "coverage": {
+    "applicable": 58,
+    "resolved": 58,
+    "unresolved": 0,
+    "unclassified": 0,
+    "byVerification": {
+      "explicit": 58,
+      "backstop": 0
+    }
+  }
+}

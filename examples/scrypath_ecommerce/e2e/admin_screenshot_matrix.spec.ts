@@ -1,7 +1,8 @@
 /**
  * Admin UI screenshot matrix (HARNESS-01).
  *
- * Captures the cross-product 6 screens × {light, dark} × {mobile 390px, desktop 1440px},
+ * Captures the existing screen/state set across light, dark, and system-dark themes at
+ * mobile (390px), intermediate (768px), and desktop (1440px) widths,
  * each in the operational state that best exercises it. Seeding is driven through the
  * named operational scenarios added in SEED-01 (/dev/e2e/seed): incident / all_green /
  * empty. To keep the matrix deterministic and cheap, captures are grouped by scenario so
@@ -21,6 +22,12 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import {
+  assertSystemDarkInvariants,
+  THEME_MODES,
+  themeSlug,
+  type ThemeMode
+} from "./helpers/theme-grid";
+import {
   drainSearchQueue,
   seedScenario,
   waitForLiveConnected,
@@ -30,18 +37,17 @@ import {
 
 const screenshotDir = process.env.ADMIN_SCREENSHOT_DIR || "test-results/admin-screenshots";
 
-type Theme = "light" | "dark";
-type ViewportName = "mobile" | "desktop";
+type ViewportName = "mobile" | "intermediate" | "desktop";
 
 const VIEWPORTS: Record<ViewportName, { width: number; height: number }> = {
   mobile: { width: 390, height: 844 },
+  intermediate: { width: 768, height: 900 },
   desktop: { width: 1440, height: 900 }
 };
 
-const THEMES: Theme[] = ["light", "dark"];
-const VIEWPORT_NAMES: ViewportName[] = ["mobile", "desktop"];
+const VIEWPORT_NAMES: ViewportName[] = ["mobile", "intermediate", "desktop"];
 
-// A single capture target: which screen, what posture state label, and the per-page
+// A single capture target: which screen, what health state label, and the per-page
 // preparation (navigate + trigger + wait for the load-bearing content) before the shot.
 type ScreenCapture = {
   index: string;
@@ -53,22 +59,32 @@ type ScreenCapture = {
 async function shoot(
   browser: Browser,
   capture: ScreenCapture,
-  theme: Theme,
+  mode: ThemeMode,
   viewport: ViewportName
 ): Promise<void> {
-  const context = await browser.newContext({ viewport: VIEWPORTS[viewport] });
-  await context.addInitScript(
-    ([key, value]) => {
-      window.localStorage.setItem(key, value);
-    },
-    ["phx:theme", theme]
-  );
+  const dimensions = VIEWPORTS[viewport];
+  const context = await browser.newContext({
+    viewport: dimensions,
+    ...(mode.kind === "system" ? { colorScheme: mode.colorScheme } : {})
+  });
+  if (mode.kind === "explicit") {
+    await context.addInitScript(
+      ([key, value]) => {
+        window.localStorage.setItem(key, value);
+      },
+      ["phx:theme", mode.theme]
+    );
+  }
 
   const page = await context.newPage();
   try {
     await capture.prepare(page);
+    if (mode.kind === "system") {
+      expect(await page.evaluate(() => window.localStorage.getItem("phx:theme"))).toBeNull();
+      await assertSystemDarkInvariants(page);
+    }
     await mkdir(screenshotDir, { recursive: true });
-    const name = `${capture.index}-${capture.screen}--${theme}--${viewport}--${capture.state}`;
+    const name = `${capture.index}-${capture.screen}--${themeSlug(mode)}--${viewport}-${dimensions.width}--${capture.state}`;
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: path.join(screenshotDir, `${name}.png`), fullPage: true });
   } finally {
@@ -98,9 +114,9 @@ function describeScenario(scenario: SeedScenario, captures: ScreenCapture[]): vo
     }
 
     for (const capture of captures) {
-      for (const theme of THEMES) {
+      for (const mode of THEME_MODES) {
         for (const viewport of VIEWPORT_NAMES) {
-          await shoot(browser, capture, theme, viewport);
+          await shoot(browser, capture, mode, viewport);
         }
       }
     }
@@ -115,11 +131,11 @@ async function gotoControlRoom(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
 }
 
-async function gotoPosture(page: Page): Promise<void> {
-  await page.goto("/admin/search/posture");
+async function gotoSearchHealth(page: Page): Promise<void> {
+  await page.goto("/admin/search/health");
   await waitForLiveConnected(page);
   await page.locator("[data-ops-refresh]").click();
-  await expect(page.getByRole("heading", { name: "Posture", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
 }
 
 async function gotoFailedSync(page: Page): Promise<void> {
@@ -142,7 +158,7 @@ async function gotoSyncDrift(page: Page): Promise<void> {
 async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search & federation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
 async function gotoPlaybooks(page: Page): Promise<void> {
@@ -158,10 +174,10 @@ async function runSearch(page: Page, query: string): Promise<void> {
 
 // ── Scenario groups ──────────────────────────────────────────────────────────
 
-// incident: red posture, populated failed sync, contract drift, can't-fully-trust verdict.
+// incident: unhealthy search, populated failed sync, contract drift, can't-fully-trust verdict.
 describeScenario("incident", [
   { index: "00", screen: "control-room", state: "incident", prepare: gotoControlRoom },
-  { index: "01", screen: "posture", state: "incident", prepare: gotoPosture },
+  { index: "01", screen: "search-health", state: "incident", prepare: gotoSearchHealth },
   {
     index: "02",
     screen: "failed-sync",
@@ -175,10 +191,10 @@ describeScenario("incident", [
   { index: "03", screen: "sync-drift", state: "drift", prepare: gotoSyncDrift }
 ]);
 
-// all_green: healthy posture, trusted verdict, search returns results.
+// all_green: healthy search, trusted verdict, search returns results.
 describeScenario("all_green", [
   { index: "04", screen: "control-room", state: "all-green", prepare: gotoControlRoom },
-  { index: "05", screen: "posture", state: "all-green", prepare: gotoPosture },
+  { index: "05", screen: "search-health", state: "all-green", prepare: gotoSearchHealth },
   {
     index: "06",
     screen: "search",

@@ -9,9 +9,21 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
 
   @impl true
   def search(_schema, text, opts) do
-    maybe_sleep()
+    wait_if_configured()
     q = Query.new(text, opts)
-    raw = %{"hits" => [], "estimatedTotalHits" => 0}
+
+    raw =
+      case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
+        :nested_hit ->
+          %{
+            "hits" => [%{"id" => %{"source" => "fixture"}, "title" => %{"nested" => ["value"]}}],
+            "estimatedTotalHits" => 1
+          }
+
+        _ ->
+          %{"hits" => [], "estimatedTotalHits" => 0}
+      end
+
     {:ok, SearchResult.new(q, raw, [], [])}
   end
 
@@ -19,7 +31,11 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   def search_many(entries, opts) when is_list(entries) do
     case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
       :slow_ok ->
-        maybe_sleep()
+        wait_if_configured()
+        ok_result(entries, opts)
+
+      :paused ->
+        wait_if_configured()
         ok_result(entries, opts)
 
       :partial ->
@@ -42,10 +58,21 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
     {:ok, FacetSearchResult.new(raw)}
   end
 
-  defp maybe_sleep do
+  defp wait_if_configured do
     case Application.get_env(:scrypath_ops, :search_stub_variant, :ok) do
-      :slow_ok -> Process.sleep(75)
-      _ -> :ok
+      :slow_ok ->
+        Process.sleep(75)
+
+      :paused ->
+        waiter = Application.fetch_env!(:scrypath_ops, :search_stub_waiter)
+        send(waiter, {:playbook_run_adapter_started, self()})
+
+        receive do
+          :continue_playbook_run -> :ok
+        end
+
+      _ ->
+        :ok
     end
   end
 
@@ -70,14 +97,29 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
 
   defp partial_result(entries, opts) do
     {:ok, ms} = ok_result(entries, opts)
-    [first | _] = ms.ordered
-    {mod, _} = first
+    [{failed_schema, _failed_result} | successful] = ms.ordered
+
+    ordered =
+      successful
+      |> Enum.with_index()
+      |> Enum.map(fn
+        {{schema, result}, 0} ->
+          raw = %{
+            "hits" => [%{"id" => "partial-hit", "title" => "Partial result"}],
+            "estimatedTotalHits" => 1
+          }
+
+          {schema, SearchResult.new(result.query, raw, [], [])}
+
+        {entry, _index} ->
+          entry
+      end)
 
     {:ok,
      MultiSearchResult.new(
-       ordered: ms.ordered,
-       by_schema: ms.by_schema,
-       failures: [%{schema: mod, reason: :stub}]
+       ordered: ordered,
+       by_schema: Map.new(ordered),
+       failures: [%{schema: failed_schema, reason: :stub}]
      )}
   end
 

@@ -1,0 +1,11 @@
+{
+  "command": "cd scrypath_ops && ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.4.1 HEX_HOME=/private/tmp/scrypath-hex mix test test/scrypath_ops_web/live/sync_drift_live_test.exs --only line:658 --formatter ScrypathOps.Test.ExUnitTapFormatter",
+  "exitCode": 2,
+  "output": "TAP version 13\nnot ok 1 - a successful swap task without fresh index evidence is not promotion completion\n1..1\n# tests 1\n# pass 0\n# fail 1",
+  "consoleOutput": "Mix/compilation emitted the existing Dialyzer warning for lib/scrypath/sync.ex and the Ops navigation contract check; the unchanged TAP formatter report is captured in output.",
+  "targetTest": "a successful swap task without fresh index evidence is not promotion completion",
+  "targetFile": "scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs",
+  "expected": "promotion_status is :unknown when the succeeded task is not accompanied by current live-index evidence",
+  "actual": "promotion_status was :completed from the succeeded task alone",
+  "semanticAssessment": "The target test executed and failed at the assertion for the planned behavior; the LiveView marked the promotion complete despite unavailable reconcile and contract evidence."
+}

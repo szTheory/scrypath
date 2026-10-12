@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en" data-candidate="warm" data-mode="light" data-preference="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 173 — Search health visual treatments</title>
+  <style>
+    /* Standalone review comp. Query parameters candidate=warm|cool and mode=light|dark
+       choose a capture. Theme preference is fixed to System; data-mode is effective
+       appearance and deliberately independent of preference selection. */
+    :root {
+      color-scheme: light;
+      --page: #f7f6f3; --surface: #ffffff; --raised: #efeee9;
+      --border: #d9d8d2; --text: #202124; --muted: #55585e;
+      --accent: #5b4ad1; --accent-soft: #eeebff;
+      --warning: #805000; --warning-soft: #fbf4e6;
+      --error: #ad2922; --error-soft: #fbefed;
+      --focus: #5b4ad1; --shadow: 0 1px 2px rgb(32 33 36 / 5%);
+    }
+    html[data-candidate="cool"] {
+      --page: #f2f4f7; --surface: #ffffff; --raised: #e9edf2;
+      --border: #d2d9e2; --text: #202631; --muted: #505b69;
+      --accent: #5145bd; --accent-soft: #eae8fb;
+      --warning: #785000; --warning-soft: #f8f1e3;
+      --error: #ad2922; --error-soft: #faeeec; --focus: #5145bd;
+    }
+    html[data-mode="dark"] {
+      color-scheme: dark;
+      --page: #111419; --surface: #191e25; --raised: #222831;
+      --border: #353d48; --text: #f1f2f4; --muted: #bec3ca;
+      --accent: #aaa0ff; --accent-soft: #302b4c;
+      --warning: #f2c66d; --warning-soft: #3a3020;
+      --error: #ffaaa2; --error-soft: #3b2726; --focus: #aaa0ff;
+      --shadow: 0 1px 2px rgb(0 0 0 / 18%);
+    }
+    html[data-mode="dark"][data-candidate="cool"] {
+      --page: #101720; --surface: #192330; --raised: #222f3e;
+      --border: #364556; --text: #eff3f8; --muted: #c3ccd6;
+      --accent: #b0a8ff; --accent-soft: #302f52;
+      --warning: #f0c873; --warning-soft: #393121;
+      --error: #ffaaa2; --error-soft: #3b2726; --focus: #b0a8ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--text); font: 400 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    button { color: inherit; font: inherit; }
+    .shell-frame { min-height: 100vh; background: var(--page); }
+    .sidebar { display: none; }
+    .shell-content { min-width: 0; }
+    .header { position: sticky; top: 0; z-index: 2; min-height: 64px; padding: 8px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .mobile-brand { display: none; align-items: center; gap: 12px; min-width: 0; }
+    .drawer-trigger { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 6px; background: var(--raised); }
+    .brand-pair { position: relative; display: block; width: 120px; height: 27px; flex: none; }
+    .brand-pair img { position: absolute; inset: 0; display: block; width: 120px; height: auto; }
+    .brand-pair .brand-dark { display: none; }
+    html[data-mode="dark"] .brand-pair .brand-light { display: none; }
+    html[data-mode="dark"] .brand-pair .brand-dark { display: block; }
+    .command { min-height: 40px; min-width: 220px; max-width: 420px; flex: 1; margin-inline: auto; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); background: var(--raised); }
+    .command kbd { margin-left: auto; padding: 1px 6px; border: 1px solid var(--border); border-radius: 4px; }
+    .theme { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--raised); }
+    .theme button { min-width: 44px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+    .theme button[aria-pressed="true"] { color: var(--text); background: var(--surface); box-shadow: var(--shadow); font-weight: 600; }
+    .nav-groups { display: grid; gap: 12px; padding: 0 12px 16px; }
+    .nav-group { display: grid; gap: 4px; }
+    .nav-group-label { padding-inline: 10px; color: var(--muted); font-size: 11px; line-height: 1.3; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .nav-item { min-height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; color: var(--muted); text-decoration: none; }
+    .nav-item.active { border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+    .nav-glyph { display: inline-flex; width: 20px; height: 20px; flex: none; align-items: center; justify-content: center; }
+    .nav-glyph svg, .icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .drawer-trigger svg { width: 20px; height: 20px; }
+    .page { width: 100%; min-width: 0; margin: 0 auto; padding: 16px 16px 24px; }
+    .page-inner { width: 100%; max-width: 1280px; min-width: 0; margin: 0 auto; display: grid; gap: 24px; }
+    .toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+    h1 { margin: 0; font-size: 24px; line-height: 1.3; font-weight: 600; }
+    h2 { margin: 0; font-size: 18px; line-height: 1.3; font-weight: 600; }
+    h3 { margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600; }
+    h4 { margin: 0; font-size: 14px; line-height: 1.5; font-weight: 600; }
+    p { margin: 0; }
+    .subtitle { max-width: 68ch; margin-top: 4px; color: var(--muted); }
+    .toolbar-actions { flex: 0 0 auto; text-align: right; }
+    .refresh { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); cursor: pointer; }
+    .refresh:hover { background: var(--raised); }
+    .refresh.focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .refresh:active { transform: scale(.97); }
+    .checked { margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--text); font-weight: 600; }
+    .summary { display: grid; grid-template-columns: minmax(260px, 1fr) 2fr; gap: 16px; }
+    .verdict, .schema { min-width: 0; padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: var(--shadow); }
+    .verdict-line { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: var(--warning); }
+    .verdict strong { display: block; margin-top: 8px; font-size: 18px; line-height: 1.3; font-weight: 600; }
+    .verdict-copy { margin-top: 4px; color: var(--muted); }
+    .state-label { color: var(--warning); font-weight: 600; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .metric { min-width: 0; min-height: 100px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+    .metric-label { color: var(--muted); font-size: 12px; line-height: 1.3; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .metric-value { display: block; margin-top: 8px; font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: 18px; line-height: 1.3; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .metric-help { margin-top: 2px; color: var(--muted); }
+    .error-value { color: var(--error); }
+    .section { display: grid; gap: 12px; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+    .section-subtitle { color: var(--muted); }
+    .schema-list { display: grid; gap: 24px; }
+    .schema { display: grid; gap: 16px; overflow-wrap: anywhere; }
+    .schema-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .mono { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; overflow-wrap: anywhere; }
+    .secondary { margin-top: 4px; color: var(--muted); }
+    .badge { min-height: 26px; display: inline-flex; align-items: center; flex: 0 0 auto; gap: 6px; padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--warning) 32%, var(--border)); border-radius: 999px; background: var(--surface); color: var(--warning); font-size: 12px; font-weight: 600; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .group { min-width: 0; padding-top: 12px; border-top: 1px solid var(--border); }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+    .stat { min-width: 0; }
+    .stat.wide { grid-column: 1 / -1; }
+    .row { margin: 0; }
+    .row dt { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .row dd { min-width: 0; margin: 2px 0 0; overflow: hidden; font: 600 14px/1.5 ui-monospace, "Cascadia Code", Menlo, monospace; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+    .row.wide dd { overflow: visible; white-space: normal; }
+    .state-error { color: var(--error); font-weight: 600; }
+    .state-unknown { color: var(--muted); }
+    .time-block { display: grid; gap: 4px; }
+    .time-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+    .copy { min-height: 40px; padding: 0 8px; border: 0; border-radius: 4px; color: var(--accent); background: transparent; text-decoration: underline; text-underline-offset: 2px; }
+    .exact { user-select: text; color: var(--text); overflow-wrap: anywhere; }
+    .exact-hint { color: var(--muted); font-size: 12px; }
+    .action-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .quiet { min-height: 40px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid transparent; border-radius: 6px; background: transparent; cursor: pointer; }
+    .quiet.hover { background: var(--raised); }
+    .quiet.pressed { background: color-mix(in srgb, var(--text) 12%, var(--raised)); }
+    .quiet.focus { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .quiet[disabled] { color: var(--muted); opacity: .72; cursor: not-allowed; }
+    .quiet[aria-busy="true"] { cursor: progress; }
+    .action-hint { color: var(--muted); }
+    .state-specimens { display: grid; gap: 8px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .specimen-label { color: var(--muted); font-size: 12px; }
+    .time-specimens { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px 16px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .feedback-specimens { display: grid; gap: 8px; padding-top: 12px; border-top: 1px dashed var(--border); }
+    .feedback-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .feedback-caption { min-width: 148px; color: var(--muted); font-size: 12px; }
+    .feedback { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+    .feedback.success { color: var(--text); }
+    .feedback.error { color: var(--error); }
+    .time-case { min-width: 0; }
+    .time-case strong { display: block; font-weight: 600; }
+    .time-case p { margin-top: 4px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    @media (min-width: 1280px) {
+      .sidebar { position: fixed; inset: 0 auto 0 0; z-index: 1; display: flex; width: 272px; flex-direction: column; border-right: 1px solid var(--border); background: var(--surface); }
+      .sidebar-brand { height: 64px; display: flex; align-items: center; padding: 0 16px; }
+      .shell-content { margin-left: 272px; }
+      .header { padding-inline: 32px; }
+      .page { padding-inline: 32px; }
+    }
+    @media (max-width: 1279px) {
+      .header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 16px; }
+      .mobile-brand { grid-column: 1 / -1; display: flex; }
+      .command { width: 100%; min-width: 0; max-width: none; margin: 0; justify-content: center; }
+      .command kbd { display: none; }
+      .theme { justify-self: end; }
+    }
+    @media (max-width: 900px) {
+      .summary { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 767px) {
+      .facts { grid-template-columns: 1fr; gap: 8px; }
+    }
+    @media (max-width: 640px) {
+      .header { padding: 8px 16px; }
+      .brand-pair, .brand-pair img { width: 120px; }
+      .page { padding: 16px 16px 24px; }
+      .toolbar { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .toolbar-actions { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; }
+      .checked { margin: 0; }
+      .section-head { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .verdict, .schema { padding: 16px; }
+      .schema-head { flex-direction: column; }
+      .metrics { grid-template-columns: 1fr; }
+      .time-specimens { grid-template-columns: 1fr; }
+      .feedback-caption { min-width: 100%; }
+    }
+    @media (max-width: 380px) {
+      .header { padding-inline: 12px; }
+      .page { padding-inline: 12px; }
+      .theme button { padding-inline: 6px; }
+      .metric { padding: 8px; }
+      .metric-label { overflow-wrap: anywhere; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell-frame">
+    <aside class="sidebar" aria-label="Operator primary">
+      <div class="sidebar-brand"><span class="brand-pair"><img class="brand-light" src="../../../scrypath_ops/priv/static/images/scrypath-wordmark.svg" alt="Scrypath"><img class="brand-dark" src="../../../scrypath_ops/priv/static/images/scrypath-wordmark-inverse.svg" alt=""></span></div>
+      <nav class="nav-groups" aria-label="Operator primary">
+        <section class="nav-group"><p class="nav-group-label">Home</p><a class="nav-item" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25c-.621 0-1.125-.504-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25c-.621 0-1.125-.504-1.125-1.125v-2.25Z"/></svg></span>Control Room</a></section>
+        <section class="nav-group"><p class="nav-group-label">Recover</p><a class="nav-item active" aria-current="page" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg></span>Search health</a><a class="nav-item" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg></span>Failed sync work</a><a class="nav-item" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg></span>Sync and drift</a></section>
+        <section class="nav-group"><p class="nav-group-label">Explore</p><a class="nav-item" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg></span>Search</a><a class="nav-item" href="#"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg></span>Playbooks</a></section>
+      </nav>
+    </aside>
+    <div class="shell-content">
+      <header class="header">
+        <div class="mobile-brand"><button class="drawer-trigger" aria-label="Open navigation"><svg viewBox="0 0 24 24" class="icon"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg></button><span class="brand-pair"><img class="brand-light" src="../../../scrypath_ops/priv/static/images/scrypath-wordmark.svg" alt="Scrypath"><img class="brand-dark" src="../../../scrypath_ops/priv/static/images/scrypath-wordmark-inverse.svg" alt=""></span></div>
+        <div class="command" role="button" tabindex="0" aria-label="Jump to surface"><span>Jump to surface</span><kbd>⌘K</kbd></div>
+        <div class="theme" role="group" aria-label="Theme preference">
+          <button aria-pressed="true" data-theme-selected="true">System</button><button aria-pressed="false" data-theme-selected="false">Light</button><button aria-pressed="false" data-theme-selected="false">Dark</button>
+        </div>
+      </header>
+      <main class="page" id="ops-main" aria-labelledby="page-title">
+        <div class="page-inner">
+          <div class="toolbar">
+            <div><h1 id="page-title">Search health</h1><p class="subtitle">Check sync and backend health for every configured schema. Start here when something looks wrong.</p></div>
+            <div class="toolbar-actions"><button class="refresh focus"><span aria-hidden="true">↻</span> Refresh health</button><p class="checked">Checked <time datetime="2026-10-06T13:18:42.318-04:00">Oct 6, 1:18 PM EDT</time></p></div>
+          </div>
+          <p class="crumb">Search <span aria-hidden="true">/</span> <strong>Search health</strong></p>
+          <section class="summary" aria-label="Current search health">
+            <div class="verdict"><p class="metric-label">Can I trust search right now?</p><p class="verdict-line"><span class="dot" aria-hidden="true"></span><span class="state-label">Degraded</span></p><strong>Some search work needs attention</strong><p class="verdict-copy">Backend failures were observed for one schema. Another schema could not be checked; unavailable evidence is not proof of remote failure or document freshness.</p></div>
+            <div class="metrics">
+              <div class="metric"><p class="metric-label">Schemas</p><strong class="metric-value">3</strong><p class="metric-help">configured</p></div>
+              <div class="metric"><p class="metric-label">Schema check errors</p><strong class="metric-value state-label">1</strong><p class="metric-help">observation unavailable</p></div>
+              <div class="metric"><p class="metric-label">Failed backend tasks</p><strong class="metric-value error-value">2</strong><p class="metric-help">terminal failures</p></div>
+              <div class="metric"><p class="metric-label">Queues observed</p><strong class="metric-value">1</strong><p class="metric-help">one active queue checked</p></div>
+            </div>
+          </section>
+          <section class="section" aria-labelledby="schema-list-title">
+            <div class="section-head"><h2 id="schema-list-title">Per-schema signals</h2><p class="section-subtitle">Schemas with the most issues appear first.</p></div>
+            <div class="schema-list">
+              <article class="schema">
+                <header class="schema-head"><div><h3 class="mono">ScrypathEcommerce.Catalog.ProductIndex</h3><p class="secondary">Index <span class="mono">scrypath_ecommerce_products_east-coast-primary</span> · sync mode <strong>oban</strong></p></div><span class="badge"><span aria-hidden="true">!</span> Needs attention</span></header>
+                <div class="facts">
+                  <section class="group"><h4>Backend tasks</h4><div class="stats"><div class="stat"><dl class="row"><dt>Pending</dt><dd>1</dd></dl></div><div class="stat"><dl class="row"><dt>Failed</dt><dd class="state-error">2</dd></dl></div><div class="stat wide"><dl class="row wide"><dt>Last success</dt><dd class="time-block"><span class="time-line"><time>2 days ago</time><button class="copy" aria-label="Copy exact timestamp">Copy timestamp</button></span><code class="exact mono">2026-10-04T13:02:05.123456-04:00</code><span class="exact-hint">Exact source ISO timestamp; value remains selectable.</span></dd></dl></div></div></section>
+                  <section class="group"><h4>Queue jobs</h4><div class="stats"><div class="stat"><dl class="row"><dt>Pending</dt><dd>0</dd></dl></div><div class="stat"><dl class="row"><dt>Retrying</dt><dd>1</dd></dl></div><div class="stat"><dl class="row"><dt>Failed</dt><dd class="state-error">3</dd></dl></div></div><p class="exact-hint">Queue observation checked at the same snapshot; failed entries remain visible as retained evidence.</p></section>
+                </div>
+                <div class="action-row"><button class="quiet">View failed sync work <span aria-hidden="true">→</span></button><span class="action-hint">Open retained failure details before choosing recovery.</span></div>
+                <div class="feedback-specimens" aria-label="Timestamp copy feedback state specimens"><p class="specimen-label">Timestamp copy feedback examples · mutually exclusive outcomes</p><div class="feedback-row"><span class="feedback-caption">Clipboard write resolved</span><p class="feedback success" role="status">Timestamp copied</p></div><div class="feedback-row"><span class="feedback-caption">Permission denied or unavailable</span><p class="feedback error" role="alert">Could not copy timestamp. Select and copy the exact value above.</p></div></div>
+                <div class="state-specimens" aria-label="Shared quiet action state specimens">
+                  <p class="specimen-label">Review-only shared quiet action states · default, hover, pressed, focus, disabled, busy</p>
+                  <div class="action-row" style="padding:0;border:0"><button class="quiet hover">View failed sync work <span aria-hidden="true">→</span></button><button class="quiet pressed">View failed sync work <span aria-hidden="true">→</span></button><button class="quiet focus">View failed sync work <span aria-hidden="true">→</span></button><button class="quiet" disabled aria-describedby="disabled-reason">View failed sync work <span aria-hidden="true">→</span></button><button class="quiet" aria-busy="true">View failed sync work <span aria-hidden="true">→</span></button></div>
+                  <p id="disabled-reason" class="action-hint">Disabled · unavailable for the current state. Busy · preserve the action label and icon.</p>
+                </div>
+              </article>
+              <article class="schema">
+                <header class="schema-head"><div><h3 class="mono">ScrypathEcommerce.Catalog.FeaturedProductIndex</h3><p class="secondary">Index <span class="mono">scrypath_ecommerce_featured_products</span> · sync mode <strong>manual</strong></p></div><span class="badge"><span aria-hidden="true">!</span> Observation unavailable</span></header>
+                <div class="facts">
+                  <section class="group"><h4>Backend tasks</h4><div class="stats"><div class="stat"><dl class="row"><dt>Pending</dt><dd class="state-unknown">Not observed</dd></dl></div><div class="stat"><dl class="row"><dt>Failed</dt><dd class="state-unknown">Not observed</dd></dl></div><div class="stat wide"><dl class="row wide"><dt>Last success</dt><dd class="state-unknown">Not observed · backend request timed out</dd></dl></div></div></section>
+                  <section class="group"><h4>Queue jobs</h4><p>Queue not used for this manual sync mode.</p></section>
+                </div>
+              </article>
+            </div>
+            <div class="time-specimens" aria-label="Last-success time state examples">
+              <h3>Operational time state examples · same shared time component</h3>
+              <div class="time-case"><strong>Future relative to this check</strong><p>After this check · Oct 6, 2026, 5:20 PM UTC</p><code class="exact mono">2026-10-06T13:20:00.000001-04:00</code></div>
+              <div class="time-case"><strong>Observed source with no success</strong><p>No success observed in the retained observation window.</p></div>
+              <div class="time-case"><strong>Unavailable source</strong><p>Not observed · backend request timed out.</p></div>
+              <div class="time-case"><strong>Age boundaries from check snapshot</strong><p>Just now under 1 minute · whole minutes under 1 hour · hours under 1 day · days under 7 days · absolute UTC from 7 days onward.</p></div>
+              <div class="time-case"><strong>Routine check time</strong><p>Checked Oct 6, 1:18 PM EDT · no copy action.</p></div>
+              <div class="time-case"><strong>Observed zero-error count</strong><p>Failed backend tasks: <span class="metric-value">0</span></p><p>No semantic fill, outline, or success inference.</p></div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    document.documentElement.dataset.candidate = params.get("candidate") === "cool" ? "cool" : "warm";
+    document.documentElement.dataset.mode = params.get("mode") === "dark" ? "dark" : "light";
+  </script>
+</body>
+</html>

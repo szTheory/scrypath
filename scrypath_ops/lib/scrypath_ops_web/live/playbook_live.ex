@@ -30,7 +30,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   def mount(_params, _session, socket) do
     workspace_root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
     examples_dir = examples_playbooks_dir()
-    workspace_writable? = workspace_root != nil
+    workspace_configured? = workspace_root != nil
     {files, examples_mode?} = list_workspace_files(workspace_root, examples_dir)
     catalog = build_catalog_entries(workspace_root, examples_dir, files, examples_mode?)
     playbook_schema_doc = DocResolver.resolve(:playbook_schema)
@@ -40,25 +40,33 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       |> assign(:page_title, "Saved playbooks")
       |> assign(:workspace_root, workspace_root)
       |> assign(:examples_dir, examples_dir)
-      |> assign(:workspace_writable?, workspace_writable?)
+      |> assign(:workspace_configured?, workspace_configured?)
       |> assign(:examples_mode?, examples_mode?)
       |> assign(:workspace_files, files)
       |> assign(:catalog_entries, catalog)
       |> assign(:file_action_error, nil)
+      |> assign(:modal_focus_request, 0)
+      |> assign(:delete_confirmation, nil)
       |> assign(:rename_modal, nil)
       |> assign(:duplicate_modal, nil)
       |> assign(:schema_allowlist, Schemas.allowlist())
       |> assign(:scrypath_opts, Schemas.scrypath_opts())
       |> assign(:draft_playbook, nil)
+      |> assign(:draft_origin, nil)
       |> assign(:preview_json, nil)
       |> assign(:preview_marker, false)
       |> assign(:selected_basename, nil)
+      |> assign(:run_snapshot, nil)
       |> assign(:run_result, nil)
       |> assign(:run_error, nil)
       |> assign(:run_failure_enriched, nil)
       |> assign(:run_ui, %{phase: :idle, run_id: 0, started_monotonic: nil})
       |> assign(:delete_pending, nil)
       |> assign(:save_basename, "")
+      |> assign(:save_error, nil)
+      |> assign(:import_error, nil)
+      |> assign(:paste_json, "")
+      |> assign(:paste_open, false)
       |> assign(:playbook_schema_doc, playbook_schema_doc)
       |> assign(:max_import_bytes, @max_import_bytes)
       |> allow_upload(:playbook_file,
@@ -72,44 +80,94 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   @impl true
-  def handle_event("import_paste", %{"json" => raw}, socket) do
-    socket = maybe_supersede_running_run(socket)
-    bin = raw |> to_string()
+  def handle_event("import_paste", %{"json" => raw}, socket) when is_binary(raw) do
+    socket =
+      socket
+      |> maybe_supersede_running_run()
+      |> assign(:paste_open, true)
+
+    bin = raw
 
     if byte_size(bin) > @max_import_bytes do
-      {:noreply, put_flash(socket, :error, "Paste exceeds the maximum import size.")}
+      {:noreply,
+       socket
+       |> assign(:paste_json, bin)
+       |> import_failure(
+         :paste,
+         %{kind: :imported, name: "pasted JSON"},
+         "Maximum size is 256,000 bytes."
+       )}
     else
-      {:noreply, apply_decoded(socket, bin, :paste)}
+      {:noreply,
+       socket
+       |> assign(:paste_json, bin)
+       |> apply_decoded(bin, :paste, %{kind: :imported, name: "pasted JSON"})}
     end
+  end
+
+  def handle_event("import_paste", _params, socket) do
+    socket =
+      socket
+      |> maybe_supersede_running_run()
+      |> assign(:paste_open, true)
+      |> assign(:paste_json, "")
+
+    {:noreply,
+     import_failure(
+       socket,
+       :paste,
+       %{kind: :imported, name: "pasted JSON"},
+       "Paste content must be text."
+     )}
   end
 
   def handle_event("import_upload", _params, socket) do
     socket = maybe_supersede_running_run(socket)
+    upload = socket.assigns.uploads.playbook_file
 
-    consume_uploaded_entries(socket, :playbook_file, fn %{path: path}, _entry ->
-      case File.read(path) do
-        {:ok, bin} -> {:ok, bin}
-        {:error, _} -> {:error, :read_failed}
-      end
-    end)
-    |> case do
-      {socket, []} ->
-        {:noreply, put_flash(socket, :error, "Choose a JSON file first.")}
+    case playbook_upload_error_reason(upload) do
+      reason when not is_nil(reason) ->
+        {:noreply,
+         import_failure(
+           socket,
+           :upload,
+           %{kind: :imported, name: "uploaded file"},
+           upload_error_text(reason)
+         )}
 
-      {socket, [bin]} when is_binary(bin) ->
-        {:noreply, apply_decoded(socket, bin, :upload)}
+      nil ->
+        case Phoenix.LiveView.uploaded_entries(socket, :playbook_file) do
+          {[], []} ->
+            {:noreply,
+             import_failure(
+               socket,
+               :upload,
+               %{kind: :imported, name: "uploaded file"},
+               "Choose a JSON file first."
+             )}
 
-      {socket, [{:error, _}]} ->
-        {:noreply, put_flash(socket, :error, "Could not read the uploaded file.")}
+          {_completed, [_pending | _]} ->
+            {:noreply,
+             put_flash(
+               socket,
+               :info,
+               "Wait for the selected playbook file to finish uploading, then retry importing."
+             )}
 
-      {socket, _} ->
-        {:noreply, put_flash(socket, :error, "Unexpected upload result.")}
+          _ ->
+            import_uploaded_entries(socket)
+        end
     end
   end
 
+  # LiveView tracks selected upload files through the form change binding. This
+  # event only completes the upload preflight; bytes are consumed on explicit
+  # Import submit below.
+  def handle_event("validate_upload", _params, socket), do: {:noreply, socket}
+
   def handle_event("load", %{"name" => name}, socket) do
     socket = maybe_supersede_running_run(socket)
-    name = to_string(name)
+    name = text_param(name)
 
     cond do
       not Store.safe_basename?(name) ->
@@ -120,8 +178,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           {:ok, bin} ->
             socket =
               socket
-              |> assign(:selected_basename, name)
-              |> apply_decoded(bin, :load)
+              |> apply_decoded(bin, :load, %{kind: :workspace, name: name})
 
             {:noreply, socket}
 
@@ -137,8 +194,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             {:ok, bin} ->
               socket =
                 socket
-                |> assign(:selected_basename, name)
-                |> apply_decoded(bin, :load)
+                |> apply_decoded(bin, :load, %{kind: :example, name: name})
 
               {:noreply, socket}
 
@@ -156,7 +212,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   def handle_event("run_now", %{"name" => name}, socket) do
     socket = maybe_supersede_running_run(socket)
-    name = to_string(name)
+    name = text_param(name)
 
     with :ok <- validate_catalog_name(name),
          {:ok, bin} <- read_catalog_playbook(socket, name),
@@ -164,10 +220,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
          preview <- Jason.encode!(validated, pretty: true) do
       socket =
         socket
+        |> assign(:draft_origin, catalog_origin(socket, name))
         |> assign(:selected_basename, name)
         |> assign(:draft_playbook, validated)
         |> assign(:preview_json, preview)
         |> assign(:preview_marker, true)
+        |> assign(:save_basename, "")
+        |> assign(:save_error, nil)
+        |> assign(:import_error, nil)
         |> put_flash(:info, flash_for_import(:load))
         |> schedule_playbook_run()
 
@@ -221,20 +281,30 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("save", %{"basename" => basename}, socket) do
-    basename = basename |> to_string() |> String.trim()
+    basename = basename |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
+    socket = socket |> assign(:save_basename, basename) |> assign(:save_error, nil)
 
     cond do
-      not socket.assigns.workspace_writable? ->
+      root == nil ->
+        message = "Configure a playbook workspace directory, then retry saving."
+
         {:noreply,
-         put_flash(socket, :error, "Saving requires a configured playbook workspace directory.")}
+         socket
+         |> assign(:save_error, "Could not save playbook to workspace. #{message}")
+         |> put_flash(:error, "Could not save playbook to workspace.")}
 
       not Store.safe_basename?(basename) ->
-        {:noreply, put_flash(socket, :error, "Filename must match *.json basename rules.")}
+        {:noreply,
+         socket
+         |> assign(:save_error, "Use a filename ending in .json.")
+         |> put_flash(:error, "Filename must match *.json basename rules.")}
 
       socket.assigns.draft_playbook == nil ->
         {:noreply,
-         put_flash(socket, :error, "Nothing to save — import or load a playbook first.")}
+         socket
+         |> assign(:save_error, "Import or load a valid playbook before saving.")
+         |> put_flash(:error, "Nothing to save — import or load a playbook first.")}
 
       true ->
         case V1.encode(socket.assigns.draft_playbook) do
@@ -245,34 +315,52 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                  socket
                  |> reload_workspace_catalog()
                  |> assign(:save_basename, "")
+                 |> assign(:save_error, nil)
+                 |> assign(:draft_origin, %{kind: :workspace, name: basename})
+                 |> assign(:selected_basename, basename)
                  |> put_flash(:info, "Saved #{basename}")}
 
-              {:error, _} ->
+              {:error, reason} ->
                 {:noreply,
-                 put_flash(socket, :error, "Save failed — check directory permissions.")}
+                 socket
+                 |> assign(:save_error, save_failure_message(reason))
+                 |> put_flash(:error, "Could not save playbook to workspace.")}
             end
 
           {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Could not encode playbook for saving.")}
+            {:noreply,
+             socket
+             |> assign(:save_error, "Could not encode playbook for saving.")
+             |> put_flash(:error, "Could not encode playbook for saving.")}
         end
     end
   end
 
   def handle_event("request_delete", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
 
     if Store.safe_basename?(name) do
-      {:noreply, socket |> assign(:file_action_error, nil) |> assign(:delete_pending, name)}
+      {:noreply,
+       socket
+       |> assign(:file_action_error, nil)
+       |> assign(:delete_confirmation, nil)
+       |> assign(:delete_pending, name)}
     else
       {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
     end
   end
 
   def handle_event("cancel_delete", _params, socket) do
-    {:noreply, assign(socket, :delete_pending, nil)}
+    {:noreply,
+     socket
+     |> assign(:delete_pending, nil)
+     |> assign(:delete_confirmation, nil)}
   end
 
   def handle_event("confirm_delete", %{"confirm" => typed}, socket) do
+    typed = text_param(typed)
+    socket = assign(socket, :delete_confirmation, typed)
+
     socket =
       Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
         confirm_delete(socket, typed)
@@ -286,7 +374,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("rename_open", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
 
     if Store.safe_basename?(name) do
       {:noreply,
@@ -301,7 +389,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   def handle_event("rename_change", %{"new_name" => new_name}, socket) do
     case socket.assigns.rename_modal do
       modal when is_map(modal) ->
-        {:noreply, assign(socket, :rename_modal, Map.put(modal, :new_name, to_string(new_name)))}
+        {:noreply, assign(socket, :rename_modal, Map.put(modal, :new_name, text_param(new_name)))}
 
       _ ->
         {:noreply, socket}
@@ -322,7 +410,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       %{from: from} ->
         socket =
           update(socket, :rename_modal, fn modal ->
-            Map.put(modal, :new_name, to_string(new_name))
+            Map.put(modal, :new_name, text_param(new_name))
           end)
 
         rename_submit_impl(socket, from, new_name)
@@ -330,15 +418,16 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   def handle_event("dup_open", %{"name" => name}, socket) do
-    name = to_string(name)
+    name = text_param(name)
     root = socket.assigns.workspace_root
 
     cond do
       not Store.safe_basename?(name) ->
         {:noreply, put_flash(socket, :error, "Invalid playbook file name.")}
 
-      not socket.assigns.workspace_writable? or root == nil ->
-        {:noreply, put_flash(socket, :error, "Duplicate requires a writable workspace.")}
+      not socket.assigns.workspace_configured? or root == nil ->
+        {:noreply,
+         put_flash(socket, :error, "Configure a playbook workspace directory to duplicate files.")}
 
       true ->
         case Store.suggest_duplicate_basename(root, name) do
@@ -362,7 +451,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     case socket.assigns.duplicate_modal do
       modal when is_map(modal) ->
         {:noreply,
-         assign(socket, :duplicate_modal, Map.put(modal, :new_name, to_string(to_name)))}
+         assign(socket, :duplicate_modal, Map.put(modal, :new_name, text_param(to_name)))}
 
       _ ->
         {:noreply, socket}
@@ -379,7 +468,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       %{from: from} ->
         socket =
           update(socket, :duplicate_modal, fn modal ->
-            Map.put(modal, :new_name, to_string(to_name))
+            Map.put(modal, :new_name, text_param(to_name))
           end)
 
         dup_submit_impl(socket, from, to_name)
@@ -457,47 +546,167 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
-  defp apply_decoded(socket, bin, source) do
+  defp apply_decoded(socket, bin, source, origin) do
     case decode_and_validate_playbook(bin) do
       {:ok, validated} ->
         preview = Jason.encode!(validated, pretty: true)
 
         socket
         |> assign(:draft_playbook, validated)
+        |> assign(:draft_origin, origin)
         |> assign(:preview_json, preview)
         |> assign(:preview_marker, true)
+        |> assign(:selected_basename, selected_name(origin))
+        |> assign(:save_basename, "")
+        |> assign(:save_error, nil)
+        |> assign(:import_error, nil)
         |> assign(:run_failure_enriched, nil)
         |> put_flash(:info, flash_for_import(source))
 
       {:error, {:invalid_playbook, reason}} ->
-        socket
-        |> assign(:draft_playbook, nil)
-        |> assign(:preview_json, nil)
-        |> assign(:preview_marker, false)
-        |> assign(:run_failure_enriched, nil)
-        |> put_flash(
-          :error,
+        import_failure(
+          socket,
+          source,
+          origin,
           "Playbook failed validation: #{format_validation_reason(reason)}"
         )
 
       {:error, :invalid_json} ->
-        socket
-        |> assign(:run_failure_enriched, nil)
-        |> put_flash(:error, "This file is not valid playbook JSON.")
+        import_failure(socket, source, origin, "This file is not valid playbook JSON.")
     end
+  end
+
+  defp import_failure(socket, source, _origin, detail) when source in [:paste, :upload] do
+    message =
+      if socket.assigns.draft_playbook do
+        "Could not import playbook JSON. #{detail} The previous valid preview remains selected."
+      else
+        "Could not import playbook JSON. #{detail} No previous valid preview is available."
+      end
+
+    assign(socket, :import_error, message)
+  end
+
+  defp import_failure(socket, _source, origin, detail) do
+    message =
+      "Could not import playbook JSON from #{origin.name}. #{detail} No valid preview is selected."
+
+    socket
+    |> assign(:draft_playbook, nil)
+    |> assign(:draft_origin, nil)
+    |> assign(:preview_json, nil)
+    |> assign(:preview_marker, false)
+    |> assign(:selected_basename, nil)
+    |> assign(:import_error, message)
+    |> assign(:run_failure_enriched, nil)
+  end
+
+  defp import_uploaded_entries(socket) do
+    case consume_uploaded_entries(socket, :playbook_file, fn %{path: path}, entry ->
+           case File.read(path) do
+             {:ok, bin} -> {:ok, {bin, entry.client_name}}
+             {:error, _} -> {:ok, {:error, :read_failed}}
+           end
+         end) do
+      [] ->
+        {:noreply, put_flash(socket, :error, "Choose a JSON file first.")}
+
+      [{bin, filename}] when is_binary(bin) and is_binary(filename) ->
+        {:noreply,
+         apply_decoded(socket, bin, :upload, %{kind: :imported, name: Path.basename(filename)})}
+
+      [{:error, reason}] ->
+        {:noreply,
+         import_failure(
+           socket,
+           :upload,
+           %{kind: :imported, name: "uploaded file"},
+           if(reason == :read_failed,
+             do: "Could not read the uploaded file.",
+             else: "The uploaded file could not be processed."
+           )
+         )}
+
+      _ ->
+        {:noreply,
+         import_failure(
+           socket,
+           :upload,
+           %{kind: :imported, name: "uploaded file"},
+           "The uploaded file could not be processed."
+         )}
+    end
+  end
+
+  defp playbook_upload_error_reason(upload) do
+    upload.errors
+    |> Enum.map(fn {_ref, reason} -> reason end)
+    |> List.first()
+  end
+
+  defp playbook_upload_error_messages(upload) do
+    upload.errors
+    |> Enum.map(fn {_ref, reason} -> reason end)
+    |> Enum.uniq()
+    |> Enum.map(&upload_error_text/1)
+  end
+
+  defp upload_described_by(upload, import_error) do
+    upload_errors? = playbook_upload_error_messages(upload) != []
+
+    [
+      "#{upload.ref}-hint",
+      if(import_error, do: "playbook-import-error"),
+      if(upload_errors?, do: "playbook-upload-error")
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+  end
+
+  defp upload_error_text(:too_large), do: "This file exceeds the 256,000-byte import limit."
+  defp upload_error_text(:not_accepted), do: "Choose a file ending in .json."
+  defp upload_error_text(:too_many_files), do: "Choose one playbook JSON file at a time."
+  defp upload_error_text(:external_client_failure), do: "The file upload could not be completed."
+
+  defp upload_error_text({:writer_failure, _reason}),
+    do: "The file upload could not be completed."
+
+  defp upload_error_text(_), do: "The selected file could not be accepted."
+
+  defp selected_name(%{kind: kind, name: name}) when kind in [:workspace, :example], do: name
+  defp selected_name(_origin), do: nil
+
+  defp text_param(value) when is_binary(value), do: value
+  defp text_param(_value), do: ""
+
+  defp catalog_origin(socket, name) do
+    if socket.assigns.workspace_root,
+      do: %{kind: :workspace, name: name},
+      else: %{kind: :example, name: name}
   end
 
   defp flash_for_import(:paste), do: "Imported playbook from paste."
   defp flash_for_import(:upload), do: "Imported playbook from file."
   defp flash_for_import(:load), do: "Loaded playbook from disk."
 
+  defp save_failure_message(reason) when is_atom(reason) do
+    "Could not save playbook to workspace. Filesystem reason: #{inspect(reason)}. " <>
+      "Check the workspace directory's permissions and available disk space, then retry saving."
+  end
+
+  defp save_failure_message(_reason) do
+    "Could not save playbook to workspace. The filesystem returned an unclassified write error. " <>
+      "Check the workspace directory's permissions and available disk space, then retry saving."
+  end
+
   defp rename_submit_impl(socket, from, new_name) do
-    new_name = new_name |> to_string() |> String.trim()
+    new_name = new_name |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
 
     cond do
-      not socket.assigns.workspace_writable? or root == nil ->
-        {:noreply, file_action_error(socket, "Rename requires a writable workspace.")}
+      not socket.assigns.workspace_configured? or root == nil ->
+        {:noreply,
+         file_action_error(socket, "Configure a playbook workspace directory to rename files.")}
 
       not Store.safe_basename?(new_name) ->
         {:noreply, file_action_error(socket, "Filename must match *.json basename rules.")}
@@ -512,7 +721,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
             socket =
               if socket.assigns.selected_basename == from do
-                assign(socket, :selected_basename, new_name)
+                socket
+                |> assign(:selected_basename, new_name)
+                |> assign(:draft_origin, %{kind: :workspace, name: new_name})
               else
                 socket
               end
@@ -526,6 +737,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                "That playbook name is already in use — pick another basename."
              )}
 
+          {:error, :unsupported_filesystem} ->
+            {:noreply,
+             file_action_error(
+               socket,
+               "This workspace cannot safely rename files. Duplicate the playbook, then delete the original."
+             )}
+
           {:error, _} ->
             {:noreply, file_action_error(socket, "Rename failed — check permissions.")}
         end
@@ -533,12 +751,13 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   defp dup_submit_impl(socket, from, to_name) do
-    to_name = to_name |> to_string() |> String.trim()
+    to_name = to_name |> text_param() |> String.trim()
     root = socket.assigns.workspace_root
 
     cond do
-      not socket.assigns.workspace_writable? or root == nil ->
-        {:noreply, file_action_error(socket, "Duplicate requires a writable workspace.")}
+      not socket.assigns.workspace_configured? or root == nil ->
+        {:noreply,
+         file_action_error(socket, "Configure a playbook workspace directory to duplicate files.")}
 
       not Store.safe_basename?(to_name) ->
         {:noreply, file_action_error(socket, "Filename must match *.json basename rules.")}
@@ -749,10 +968,12 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         draft = assigns.draft_playbook
         allowlist = assigns.schema_allowlist
         scrypath_opts = assigns.scrypath_opts
+        snapshot = %{run_id: run_id, draft: draft, origin: assigns.draft_origin}
 
         Process.send_after(self(), {:playbook_run_timeout, run_id}, @playbook_run_timeout_ms)
 
         socket
+        |> assign(:run_snapshot, snapshot)
         |> assign(:run_result, nil)
         |> assign(:run_error, nil)
         |> assign(:run_failure_enriched, nil)
@@ -770,6 +991,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
     socket
     |> cancel_active_run({:shutdown, :superseded})
+    |> assign(:run_snapshot, nil)
     |> assign(:run_result, nil)
     |> assign(:run_error, nil)
     |> assign(:run_failure_enriched, nil)
@@ -817,35 +1039,110 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp run_result_summary(%SearchResult{} = r), do: "Run finished — hits: #{length(r.hits)}"
 
+  defp run_result_summary(%MultiSearchResult{failures: failures} = r) when failures != [],
+    do: "Partial response — #{length(r.ordered)} schema(s) returned; #{length(failures)} failed."
+
   defp run_result_summary(%MultiSearchResult{} = r),
     do: "Run finished — #{length(r.ordered)} schema(s)."
 
   defp run_result_summary(_), do: "Run finished."
 
-  # Loop the operator back to Search with this playbook's query pre-filled, mapping the
-  # playbook mode (search / search_many) onto the Search UI mode (single / multi). Schema
-  # is left to the Search default to avoid leaking the inspect() module format here.
-  defp search_loopback_path(mount_path, playbook) when is_map(playbook) do
-    mode = if Map.get(playbook, "mode") == "search_many", do: "multi", else: "single"
-    query = playbook |> Map.get("q") |> to_string()
-    "#{mount_path}/search?" <> URI.encode_query(%{"mode" => mode, "q" => query})
+  # Search can represent one query for one or more targets. Keep the handoff exact for
+  # single-target playbooks and shared-query federated playbooks; omit it when entries
+  # have different queries rather than sending the operator to a different search.
+  defp search_loopback_path(mount_path, %{"mode" => "search", "schema" => schema} = playbook) do
+    params = %{"mode" => "single", "q" => Map.get(playbook, "q", ""), "schema" => schema}
+    "#{mount_path}/search?" <> URI.encode_query(add_page_size(params, playbook))
   end
 
-  defp playbook_summary(nil), do: []
+  defp search_loopback_path(
+         mount_path,
+         %{"mode" => "search_many", "entries" => entries} = playbook
+       )
+       when is_list(entries) and entries != [] do
+    queries = Enum.map(entries, fn [_schema, query, _opts] -> query end)
 
-  defp playbook_summary(playbook) when is_map(playbook) do
+    if length(Enum.uniq(queries)) == 1 do
+      schemas = Enum.map(entries, fn [schema, _query, _opts] -> schema end)
+      params = %{"mode" => "multi", "q" => hd(queries), "schemas" => Enum.join(schemas, ",")}
+      "#{mount_path}/search?" <> URI.encode_query(add_page_size(params, playbook))
+    end
+  end
+
+  defp search_loopback_path(_mount_path, _playbook), do: nil
+
+  defp add_page_size(params, playbook) do
+    page_size = get_in(playbook, ["opts", "page", "size"])
+    if is_integer(page_size), do: Map.put(params, "page_size", page_size), else: params
+  end
+
+  defp playbook_summary(nil, _origin), do: []
+
+  defp playbook_summary(playbook, origin) when is_map(playbook) do
     opts = Map.get(playbook, "opts") || %{}
     page = Map.get(opts, "page") || %{}
+    entries = Map.get(playbook, "entries") || []
+    multi? = Map.get(playbook, "mode") == "search_many"
 
     [
+      {"Search title", Map.get(playbook, "title")},
+      {"Description", Map.get(playbook, "description")},
       {"Mode", Map.get(playbook, "mode")},
-      {"Schema", Map.get(playbook, "schema")},
+      {if(multi?, do: "Targets and queries", else: "Index"),
+       if(multi?, do: entry_target_query_label(entries), else: Map.get(playbook, "schema"))},
       {"Query", Map.get(playbook, "q")},
-      {"Entries", playbook |> Map.get("entries") |> entry_count_label()},
-      {"Page size", Map.get(page, "size")}
+      {"Entries", entry_count_label(entries)},
+      {"Page size / limit", page_summary(playbook, page)},
+      {"Draft source", draft_origin_label(origin)},
+      {"Persistence", persistence_label(origin)}
     ]
     |> Enum.reject(fn {_label, value} -> value in [nil, "", []] end)
   end
+
+  defp page_summary(playbook, page) do
+    shared = Map.get(page, "size")
+
+    cond do
+      is_integer(shared) -> shared
+      Map.get(playbook, "mode") == "search_many" -> multi_page_summary(playbook)
+      true -> "Backend default"
+    end
+  end
+
+  defp multi_page_summary(%{"entries" => entries}) when is_list(entries) do
+    if Enum.all?(entries, fn [_schema, _query, opts] -> get_in(opts, ["page", "size"]) == nil end) do
+      "Backend default per target"
+    else
+      Enum.map_join(entries, "\n", fn
+        [schema, _query, opts] ->
+          "#{schema}: #{get_in(opts, ["page", "size"]) || "backend default"}"
+      end)
+    end
+  end
+
+  defp multi_page_summary(_playbook), do: "Backend default per target"
+
+  defp entry_target_query_label(entries) when is_list(entries) do
+    Enum.map_join(entries, "\n", fn
+      [schema, query, _opts] -> "#{schema} — #{query}"
+      _other -> "Invalid entry"
+    end)
+  end
+
+  defp entry_target_query_label(_), do: nil
+
+  defp draft_origin_label(%{kind: :workspace, name: name}), do: "Workspace file · #{name}"
+  defp draft_origin_label(%{kind: :example, name: name}), do: "Read-only example · #{name}"
+
+  defp draft_origin_label(%{kind: :imported, name: name}),
+    do: "Imported draft · not saved · #{name}"
+
+  defp draft_origin_label(_), do: nil
+
+  defp persistence_label(%{kind: :workspace, name: name}), do: "Saved in workspace · #{name}"
+  defp persistence_label(%{kind: :example, name: name}), do: "Read-only example · #{name}"
+  defp persistence_label(%{kind: :imported}), do: "Not saved"
+  defp persistence_label(_), do: nil
 
   defp entry_count_label(entries) when is_list(entries),
     do: "#{length(entries)} schema query entries"
@@ -863,17 +1160,54 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   end
 
   defp run_failure_copy_context(socket) do
-    playbook = socket.assigns.draft_playbook || %{}
+    snapshot = socket.assigns.run_snapshot || %{}
+    playbook = Map.get(snapshot, :draft) || %{}
+    origin = Map.get(snapshot, :origin) || %{}
     opts = Map.get(playbook, "opts") || %{}
     page = Map.get(opts, "page") || %{}
 
     []
-    |> maybe_put_context(:basename, socket.assigns.selected_basename)
+    |> maybe_put_context(:basename, Map.get(origin, :name))
     |> maybe_put_context(:mode, Map.get(playbook, "mode"))
-    |> maybe_put_context(:schema, Map.get(playbook, "schema"))
+    |> maybe_put_context(:schema, Map.get(playbook, "schema") || snapshot_target_names(playbook))
     |> maybe_put_context(:page_size, page["size"])
     |> maybe_put_context(:max_page_size, ScrypathOps.SearchPlayground.max_page_size_allowed())
   end
+
+  defp snapshot_target_names(%{"entries" => entries}) when is_list(entries) do
+    Enum.map(entries, fn
+      [schema, _query, _opts] -> schema
+      _ -> nil
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp snapshot_target_names(_playbook), do: nil
+
+  defp run_snapshot_current?(nil, _draft, _origin), do: false
+
+  defp run_snapshot_current?(snapshot, draft, origin) do
+    snapshot.draft == draft and snapshot.origin == origin
+  end
+
+  defp earlier_run?(snapshot, draft, origin),
+    do: not run_snapshot_current?(snapshot, draft, origin)
+
+  defp run_outcome_heading(:running, _earlier?), do: "Current run"
+  defp run_outcome_heading(:ok, true), do: "Last completed run"
+  defp run_outcome_heading(:error, true), do: "Earlier run"
+  defp run_outcome_heading(_phase, _earlier?), do: "Run outcome"
+
+  defp run_configuration_available?(allowlist, opts),
+    do: allowlist != [] and Keyword.has_key?(opts, :backend)
+
+  defp result_kind(%MultiSearchResult{failures: [_ | _]}), do: :partial
+  defp result_kind(_), do: :success
+
+  defp result_title(%MultiSearchResult{failures: [_ | _]}),
+    do: "Some indexes did not return results."
+
+  defp result_title(_), do: "Playbook run completed"
 
   defp maybe_put_context(context, _key, nil), do: context
   defp maybe_put_context(context, key, value), do: Keyword.put(context, key, value)
@@ -923,7 +1257,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           </div>
         </.ops_toolbar>
 
-        <.ops_trail mount_path={@mount_path} current={:playbooks} />
+        <.ops_trail current={:playbooks} />
 
         <.ops_notice
           id="playbook-honesty-panel"
@@ -938,19 +1272,19 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             <.ops_heading level={2} id="playbook-catalog-heading" tabindex={-1}>
               Workspace files
             </.ops_heading>
-            <.ops_button phx-click="refresh_list" variant={:ghost}>
-              Reload playbooks
-            </.ops_button>
+            <div class="flex flex-wrap gap-2">
+              <.ops_link_button href="#playbook-import" variant={:default}>
+                Import JSON
+              </.ops_link_button>
+              <.ops_button phx-click="refresh_list" variant={:ghost}>
+                Reload playbooks
+              </.ops_button>
+            </div>
           </.ops_toolbar>
 
           <p :if={@examples_mode?} class="text-ops-body text-base-content/80">
-            Examples (read-only) — set <code class="text-ops-body">SCRYPATH_OPS_PLAYBOOK_DIR</code>
-            to enable saving and deleting under a dedicated directory. See
-            <.link class="link link-hover" navigate={"#{@mount_path}/search"}>
-              Search & federation
-            </.link>
-            to export a playbook JSON, then use <strong>Import playbook JSON</strong>
-            below.
+            <strong>Examples (read-only)</strong> Examples can be previewed and run. Configure a
+            playbook workspace directory to enable saving and file changes.
           </p>
 
           <.ops_empty_hero
@@ -976,7 +1310,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               id={"playbook-row-#{playbook_dom_id(row.name)}"}
               active={row.name == @selected_basename}
             >
-              <div class="flex min-w-0 flex-col gap-0.5">
+              <div class="flex min-w-0 flex-col gap-1">
                 <span class="text-ops-body font-semibold text-base-content">{row.display_title}</span>
                 <span
                   :if={row.description != ""}
@@ -984,7 +1318,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 >
                   {row.description}
                 </span>
-                <span class="font-mono text-ops-sm text-base-content/65">{row.name}</span>
+                <span class="ops-playbook-filename font-mono text-ops-body text-base-content/65">
+                  {row.name}
+                </span>
               </div>
               <:actions>
                 <.ops_action_group>
@@ -1013,101 +1349,88 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                     Run without preview
                   </.ops_button>
                 </.ops_action_group>
-                <.ops_action_group :if={@workspace_writable?} tone={:secondary}>
-                  <.ops_button
-                    phx-click="dup_open"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="duplicate"
-                    variant={:default}
-                    size={:xs}
-                  >
-                    Duplicate
-                  </.ops_button>
-                  <.ops_button
-                    phx-click="rename_open"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="rename"
-                    variant={:default}
-                    size={:xs}
-                  >
-                    Rename
-                  </.ops_button>
-                </.ops_action_group>
-                <.ops_action_group :if={@workspace_writable?} tone={:danger}>
-                  <.ops_button
-                    phx-click="request_delete"
-                    phx-value-name={row.name}
-                    data-ops-modal-trigger="delete"
-                    variant={:danger}
-                    size={:xs}
-                  >
-                    Delete
-                  </.ops_button>
-                </.ops_action_group>
+                <.ops_disclosure
+                  :if={@workspace_configured?}
+                  id={"playbook-manage-#{playbook_dom_id(row.name)}"}
+                  summary_id={"playbook-manage-summary-#{playbook_dom_id(row.name)}"}
+                  summary="Manage file actions"
+                  data-testid="playbook-manage-actions"
+                  data-ops-file-name={row.name}
+                  class="ops-playbook-file-actions"
+                >
+                  <div class="grid gap-ops-2" role="group" aria-label={"Actions for #{row.name}"}>
+                    <div class="flex flex-wrap gap-2">
+                      <.ops_button
+                        phx-click="dup_open"
+                        phx-value-name={row.name}
+                        data-ops-modal-trigger="duplicate"
+                        data-ops-modal-return={"#playbook-manage-summary-#{playbook_dom_id(row.name)}"}
+                        variant={:default}
+                        size={:xs}
+                        aria-label={"Duplicate #{row.name}"}
+                      >
+                        Duplicate
+                      </.ops_button>
+                      <.ops_button
+                        phx-click="rename_open"
+                        phx-value-name={row.name}
+                        data-ops-modal-trigger="rename"
+                        data-ops-modal-return={"#playbook-manage-summary-#{playbook_dom_id(row.name)}"}
+                        variant={:default}
+                        size={:xs}
+                        aria-label={"Rename #{row.name}"}
+                      >
+                        Rename
+                      </.ops_button>
+                    </div>
+                    <div class="border-t border-base-content/10 pt-2">
+                      <.ops_button
+                        phx-click="request_delete"
+                        phx-value-name={row.name}
+                        data-ops-modal-trigger="delete"
+                        data-ops-modal-return={"#playbook-manage-summary-#{playbook_dom_id(row.name)}"}
+                        variant={:danger}
+                        size={:xs}
+                        aria-label={"Delete #{row.name}"}
+                      >
+                        Delete
+                      </.ops_button>
+                    </div>
+                  </div>
+                </.ops_disclosure>
               </:actions>
             </.ops_object_item>
           </.ops_object_list>
 
           <div class="divider" />
 
-          <section id="playbook-import" aria-labelledby="playbook-import-heading" class="space-y-4">
-            <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
-            <.ops_upload_box
-              label="Import playbook file"
-              control_id={@uploads.playbook_file.ref}
-              hint={"JSON only, max #{@max_import_bytes} bytes. Preview before running."}
-              class="max-w-xl"
-            >
-              <.form for={%{}} phx-submit="import_upload" class="space-y-3">
-                <.live_file_input
-                  upload={@uploads.playbook_file}
-                  aria-describedby={"#{@uploads.playbook_file.ref}-hint"}
-                  class="file-input file-input-bordered w-full max-w-md"
-                />
-                <.ops_button type="submit" variant={:primary}>
-                  Import playbook JSON
-                </.ops_button>
-              </.form>
-            </.ops_upload_box>
-
-            <details class="max-w-xl">
-              <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
-              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
-                <.ops_field
-                  id="playbook-paste-json"
-                  label="Playbook JSON"
-                  hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
-                >
-                  <.ops_textarea
-                    id="playbook-paste-json"
-                    name="json"
-                    hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
-                    class="font-mono text-ops-sm"
-                    placeholder="Paste playbook JSON"
-                  />
-                </.ops_field>
-                <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
-              </.form>
-            </details>
-          </section>
-
-          <div :if={@draft_playbook} class="space-y-4">
-            <div class="divider" />
-            <.ops_heading level={2}>Preview</.ops_heading>
+          <section
+            :if={@draft_playbook}
+            id="playbook-preview"
+            aria-labelledby="playbook-preview-heading"
+            class="space-y-4"
+          >
+            <.ops_heading level={2} id="playbook-preview-heading">Preview</.ops_heading>
             <p
               :if={@preview_marker}
-              class="text-ops-sm text-base-content/70"
+              class="text-ops-body text-base-content/70"
               data-testid="playbook-preview-marker"
             >
               Playbook preview is ready
             </p>
             <.ops_data_card title="Playbook summary" subtitle="Check this before running.">
-              <dl class="grid gap-2 text-ops-body sm:grid-cols-2">
-                <div :for={{label, value} <- playbook_summary(@draft_playbook)}>
+              <dl id="playbook-summary" class="grid gap-3 text-ops-body sm:grid-cols-2">
+                <div
+                  :for={{label, value} <- playbook_summary(@draft_playbook, @draft_origin)}
+                  id={if label == "Draft source", do: "playbook-draft-origin"}
+                  class="min-w-0"
+                >
                   <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
                     {label}
                   </dt>
-                  <dd class="mt-0.5 font-mono text-ops-sm text-base-content">{value}</dd>
+                  <dd class="mt-1 whitespace-pre-wrap break-words text-ops-body text-base-content">
+                    {value}
+                  </dd>
                 </div>
               </dl>
             </.ops_data_card>
@@ -1117,13 +1440,15 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
             <div class="flex flex-wrap gap-2 items-end">
               <.ops_button
-                :if={@schema_allowlist != [] && Keyword.has_key?(@scrypath_opts, :backend)}
                 phx-click="run"
                 variant={:primary}
                 size={:md}
-                disabled={@run_ui.phase == :running}
+                disabled={
+                  @run_ui.phase == :running ||
+                    !run_configuration_available?(@schema_allowlist, @scrypath_opts)
+                }
               >
-                Run saved playbook
+                Run playbook
               </.ops_button>
               <.ops_button
                 :if={@run_ui.phase == :running}
@@ -1133,27 +1458,104 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               >
                 Cancel run
               </.ops_button>
-              <p
-                :if={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                class="text-ops-body text-base-content/70"
-              >
-                Configure schema allowlist and Scrypath backend to enable runs (see README).
-              </p>
             </div>
 
-            <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
-              <span>
-                Applying results for run <code class="text-ops-sm">{@run_ui.run_id}</code> only.
-              </span>
-            </.ops_notice>
+            <p :if={@schema_allowlist == []} class="text-ops-body text-base-content/75">
+              Add allowlisted schema modules with <code>schema_allowlist</code>
+              under <code>:scrypath_ops</code>
+              or <code>SCRYPATH_OPS_SCHEMAS</code>, then reload this screen.
+            </p>
+            <p
+              :if={!Keyword.has_key?(@scrypath_opts, :backend)}
+              class="text-ops-body text-base-content/75"
+            >
+              Configure the host application's Scrypath backend to enable playbook runs.
+            </p>
 
+            <div class="max-w-2xl space-y-2">
+              <.ops_heading level={3}>Save playbook to workspace</.ops_heading>
+              <p class="text-ops-body text-base-content/75">
+                Saving a workspace playbook replaces a file with the same filename. Rename and duplicate require an unused destination.
+              </p>
+              <div :if={@workspace_configured?}>
+                <.form
+                  id="playbook-save-form"
+                  for={%{}}
+                  phx-submit="save"
+                  class="flex flex-wrap gap-3 items-end"
+                >
+                  <.ops_field id="save_basename" label="Filename" class="w-64">
+                    <.ops_text_input
+                      id="save_basename"
+                      name="basename"
+                      value={@save_basename}
+                      class="font-mono text-ops-body"
+                      placeholder="my-playbook.json"
+                      aria-describedby={
+                        if @save_error,
+                          do: "save_basename-hint save-basename-error",
+                          else: "save_basename-hint"
+                      }
+                    />
+                    <p id="save_basename-hint" class="text-ops-body text-base-content/70">
+                      Use a filename ending in .json.
+                    </p>
+                    <p
+                      :if={@save_error}
+                      id="save-basename-error"
+                      role="alert"
+                      class="text-ops-body text-error"
+                    >
+                      {@save_error}
+                    </p>
+                  </.ops_field>
+                  <.ops_button type="submit" variant={:secondary}>
+                    Save playbook to workspace
+                  </.ops_button>
+                </.form>
+              </div>
+              <div
+                :if={!@workspace_configured?}
+                id="playbook-save-guidance"
+                class="flex flex-wrap items-center gap-3"
+              >
+                <.ops_button type="button" variant={:secondary} disabled>
+                  Save playbook to workspace
+                </.ops_button>
+                <p class="text-ops-body text-base-content/75">
+                  <%= if @examples_mode? do %>
+                    Examples can be previewed and run. Configure a playbook workspace directory to enable saving and file changes.
+                  <% else %>
+                    Configure a playbook workspace directory, then retry saving.
+                  <% end %>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section
+            :if={@run_snapshot}
+            id="playbook-run-outcome"
+            aria-labelledby="playbook-run-outcome-heading"
+            class="space-y-4"
+          >
+            <.ops_heading level={2} id="playbook-run-outcome-heading">
+              {run_outcome_heading(
+                @run_ui.phase,
+                earlier_run?(@run_snapshot, @draft_playbook, @draft_origin)
+              )}
+            </.ops_heading>
+            <.ops_notice :if={@run_ui.phase == :running} kind={:running} title="Running playbook">
+              Applying results for run <code>{@run_snapshot.run_id}</code> only.
+            </.ops_notice>
             <.ops_notice
               :if={@run_ui.phase == :error && @run_failure_enriched}
               kind={:error}
-              title={to_string(@run_failure_enriched.failure_class)}
+              title="Playbook run could not complete."
               role="alert"
               data-testid="run-failure-panel"
             >
+              <p class="text-ops-body">Failure category: {@run_failure_enriched.failure_class}</p>
               <p>{@run_failure_enriched.message}</p>
               <div class="mt-3 flex flex-wrap gap-2">
                 <a
@@ -1178,48 +1580,108 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                 </.ops_button>
               </div>
             </.ops_notice>
-
             <.ops_status
               :if={@run_ui.phase == :ok && @run_result}
-              kind={:success}
-              title="Playbook run completed"
+              kind={result_kind(@run_result)}
+              title={result_title(@run_result)}
             >
               {run_result_summary(@run_result)}
-              <span :if={@selected_basename}>
-                · file <code>{@selected_basename}</code>
-              </span>
-              <span :if={@draft_playbook && Map.get(@draft_playbook, "mode")}>
-                · mode <code>{Map.get(@draft_playbook, "mode")}</code>
-              </span>
             </.ops_status>
-
+            <.ops_data_card title="Submitted run criteria" subtitle="Captured when this run started.">
+              <dl class="grid gap-3 text-ops-body sm:grid-cols-2">
+                <div
+                  :for={{label, value} <- playbook_summary(@run_snapshot.draft, @run_snapshot.origin)}
+                  id={if label == "Draft source", do: "playbook-run-source"}
+                  class="min-w-0"
+                >
+                  <dt class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">
+                    {label}
+                  </dt>
+                  <dd class="mt-1 whitespace-pre-wrap break-words text-ops-body text-base-content">
+                    {value}
+                  </dd>
+                </div>
+              </dl>
+            </.ops_data_card>
             <.ops_link_button
-              :if={@run_ui.phase == :ok && @draft_playbook}
-              navigate={search_loopback_path(@mount_path, @draft_playbook)}
+              :if={@run_ui.phase == :ok && search_loopback_path(@mount_path, @run_snapshot.draft)}
+              navigate={search_loopback_path(@mount_path, @run_snapshot.draft)}
               variant={:ghost}
               size={:sm}
             >
               Explore this query in Search <span aria-hidden="true">→</span>
             </.ops_link_button>
+          </section>
 
-            <div :if={@workspace_writable?} class="space-y-2 max-w-md">
-              <.ops_heading level={3}>Save playbook to workspace</.ops_heading>
-              <.form for={%{}} phx-submit="save" class="flex flex-wrap gap-2 items-end">
-                <.ops_field id="save_basename" label="Basename (.json)" class="w-64">
-                  <.ops_text_input
-                    id="save_basename"
-                    name="basename"
-                    value={@save_basename}
+          <div class="divider" />
+
+          <section id="playbook-import" aria-labelledby="playbook-import-heading" class="space-y-4">
+            <.ops_heading level={2} id="playbook-import-heading">Import playbook JSON</.ops_heading>
+            <p
+              :if={@import_error}
+              id="playbook-import-error"
+              role="alert"
+              class="text-ops-body text-error"
+            >
+              {@import_error}
+            </p>
+            <.ops_upload_box
+              label="Import playbook file"
+              control_id={@uploads.playbook_file.ref}
+              hint={"JSON only, max #{@max_import_bytes} bytes. Preview before running."}
+              class="max-w-xl"
+            >
+              <.form
+                for={%{}}
+                phx-change="validate_upload"
+                phx-submit="import_upload"
+                class="space-y-3"
+              >
+                <.live_file_input
+                  upload={@uploads.playbook_file}
+                  aria-describedby={upload_described_by(@uploads.playbook_file, @import_error)}
+                  class="file-input file-input-bordered w-full max-w-md"
+                />
+                <div
+                  :if={playbook_upload_error_messages(@uploads.playbook_file) != []}
+                  id="playbook-upload-error"
+                  role="alert"
+                  class="text-ops-body text-error"
+                >
+                  <p :for={message <- playbook_upload_error_messages(@uploads.playbook_file)}>
+                    {message}
+                  </p>
+                </div>
+                <.ops_button type="submit" variant={:primary}>Import playbook JSON</.ops_button>
+              </.form>
+            </.ops_upload_box>
+
+            <details open={@paste_open} class="max-w-xl">
+              <summary class="cursor-pointer text-ops-body link link-hover">Or paste JSON</summary>
+              <.form for={%{}} phx-submit="import_paste" class="mt-2 space-y-2">
+                <.ops_field
+                  id="playbook-paste-json"
+                  label="Playbook JSON"
+                  hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                >
+                  <.ops_textarea
+                    id="playbook-paste-json"
+                    name="json"
+                    value={@paste_json}
+                    hint={"Paste a valid playbook JSON document (max #{@max_import_bytes} bytes)."}
+                    aria-describedby={
+                      if @import_error,
+                        do: "playbook-paste-json-hint playbook-import-error",
+                        else: "playbook-paste-json-hint"
+                    }
                     class="font-mono text-ops-body"
-                    placeholder="my-playbook.json"
+                    placeholder="Paste playbook JSON"
                   />
                 </.ops_field>
-                <.ops_button type="submit" variant={:primary}>
-                  Save playbook to workspace
-                </.ops_button>
+                <.ops_button type="submit" variant={:ghost}>Import from paste</.ops_button>
               </.form>
-            </div>
-          </div>
+            </details>
+          </section>
 
           <.ops_modal
             :if={@delete_pending}
@@ -1229,6 +1691,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             action_label="delete"
             initial_focus="[data-ops-modal-cancel]"
             successor={delete_successor(@catalog_entries, @delete_pending)}
+            successor_name={delete_successor_name(@catalog_entries, @delete_pending)}
+            focus_error="#delete-confirm-input"
+            focus_request={@modal_focus_request}
             cancel_event="cancel_delete"
           >
             <.form for={%{}} phx-submit="confirm_delete" class="space-y-3">
@@ -1242,6 +1707,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   id="delete-confirm-input"
                   error={@file_action_error}
                   name="confirm"
+                  value={@delete_confirmation}
                   hint="Enter the exact filename shown above to confirm this irreversible deletion."
                   class="font-mono text-ops-body"
                   autocomplete="off"
@@ -1268,7 +1734,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             description={"Rename #{@rename_modal.from}."}
             action_label="rename"
             initial_focus="#rename-new-name-input"
-            successor="#playbook-catalog-heading"
+            successor={"#playbook-manage-summary-#{playbook_dom_id(@rename_modal.new_name)}"}
+            successor_name={@rename_modal.new_name}
+            fallback_successor="#playbook-catalog-heading"
+            focus_error="#rename-new-name-input"
+            focus_request={@modal_focus_request}
             cancel_event="rename_cancel"
           >
             <.form for={%{}} phx-change="rename_change" phx-submit="rename_submit" class="space-y-3">
@@ -1309,6 +1779,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
             description={"Create a copy of #{@duplicate_modal.from}."}
             action_label="duplicate"
             initial_focus="#dup-to-name-input"
+            successor={"#playbook-manage-summary-#{playbook_dom_id(@duplicate_modal.from)}"}
+            successor_name={@duplicate_modal.from}
+            fallback_successor="#playbook-catalog-heading"
+            focus_error="#dup-to-name-input"
+            focus_request={@modal_focus_request}
             cancel_event="dup_cancel"
           >
             <.form for={%{}} phx-change="dup_change" phx-submit="dup_submit" class="space-y-3">
@@ -1348,14 +1823,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
 
   defp confirm_delete(socket, typed) do
     pending = socket.assigns.delete_pending
-    typed = typed |> to_string() |> String.trim()
+    typed = text_param(typed)
     root = socket.assigns.workspace_root
 
     cond do
       pending == nil ->
         socket
 
-      not socket.assigns.workspace_writable? ->
+      not socket.assigns.workspace_configured? ->
         file_action_error(socket, "Delete is disabled for read-only examples.")
 
       typed != pending ->
@@ -1368,12 +1843,14 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               socket
               |> reload_workspace_catalog()
               |> assign(:delete_pending, nil)
+              |> assign(:delete_confirmation, nil)
 
             socket =
               if socket.assigns.selected_basename == pending do
                 socket
                 |> assign(:selected_basename, nil)
                 |> assign(:draft_playbook, nil)
+                |> assign(:draft_origin, nil)
                 |> assign(:preview_json, nil)
                 |> assign(:preview_marker, false)
                 |> assign(:run_result, nil)
@@ -1390,7 +1867,11 @@ defmodule ScrypathOpsWeb.PlaybookLive do
     end
   end
 
-  defp file_action_error(socket, message), do: assign(socket, :file_action_error, message)
+  defp file_action_error(socket, message) do
+    socket
+    |> assign(:file_action_error, message)
+    |> update(:modal_focus_request, &(&1 + 1))
+  end
 
   defp delete_description(name) do
     "This permanently deletes #{name} from the playbook workspace. This cannot be undone."
@@ -1399,13 +1880,19 @@ defmodule ScrypathOpsWeb.PlaybookLive do
   defp playbook_dom_id(name), do: Base.url_encode64(name, padding: false)
 
   defp delete_successor(entries, pending) do
+    case delete_successor_name(entries, pending) do
+      nil -> "#playbook-catalog-heading"
+      name -> "#playbook-primary-#{playbook_dom_id(name)}"
+    end
+  end
+
+  defp delete_successor_name(entries, pending) do
     index = Enum.find_index(entries, &(&1.name == pending))
 
     if is_integer(index) and index < length(entries) - 1 do
-      next = Enum.at(entries, index + 1)
-      "#playbook-primary-#{playbook_dom_id(next.name)}"
+      Enum.at(entries, index + 1).name
     else
-      "#playbook-catalog-heading"
+      nil
     end
   end
 

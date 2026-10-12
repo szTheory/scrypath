@@ -46,7 +46,7 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
           />
         </.ops_field>
         <.ops_status kind={:partial} title="Queue state unavailable">
-          Backend tasks remain visible. Refresh queue posture before retrying sync work.
+          Backend tasks remain visible. Refresh queue status before retrying sync work.
         </.ops_status>
         <.ops_disclosure id="long-diagnostics" summary="Diagnostics">
           <.ops_code_block>{String.duplicate("long_backend_identifier_", 30)}</.ops_code_block>

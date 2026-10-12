@@ -8,6 +8,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
+  alias ScrypathOps.Test.OpsPostC
   alias ScrypathOps.Test.SearchPlaygroundStubAdapter
   alias ScrypathOpsWeb.OpsUi
 
@@ -20,7 +21,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     prev_adapter = Application.get_env(:scrypath_ops, :search_playground_adapter)
     prev_stub_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
 
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB, OpsPostC])
     Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
     Application.put_env(:scrypath_ops, :sync_mode, :manual)
     Application.put_env(:scrypath_ops, :index_prefix, "sltlv")
@@ -63,9 +64,20 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ ~s(data-testid="search-empty-hero")
     assert html =~ "Run a search to see results"
     assert html =~ "Choose an index, enter a query, inspect the answer, then save a useful check."
-    assert html =~ ~s(form="ops-search-playground-form")
     refute html =~ "Index details"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
+
+    submit_buttons =
+      Regex.scan(~r/<button\b[^>]*>/, html)
+      |> Enum.count(fn [button] -> String.contains?(button, ~s(type="submit")) end)
+
+    assert submit_buttons == 1
+
+    ordered_markers =
+      ["Search target", "Search text", "Page size", "Run search", "Results"]
+      |> Enum.map(fn marker -> :binary.match(html, marker) |> elem(0) end)
+
+    assert ordered_markers == Enum.sort(ordered_markers)
   end
 
   test "empty schema_allowlist shows OPSUI guard copy and disables targeting", %{conn: conn} do
@@ -157,7 +169,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Multi index"
   end
 
-  test "multi search with stub partial shows L1 partial copy", %{conn: conn} do
+  test "partial multi search distinguishes returned, no-hit and failed indexes", %{conn: conn} do
     Application.put_env(:scrypath_ops, :search_stub_variant, :partial)
 
     {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
@@ -167,12 +179,24 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     |> render_submit(%{
       "q" => "hello",
       "page_size" => "10",
-      "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB), inspect(OpsPostC)]
     })
 
-    # The bounded read is deferred to a :run_search message (S2 loading state);
-    # render/1 flushes it and returns the result HTML.
-    assert render(view) =~ "Some indexes did not return results."
+    html = render(view)
+    assert html =~ "Some indexes did not return results."
+
+    assert html =~
+             "Partial search: 1 hit from 2 indexes; 1 index returned no matches and 1 index failed."
+
+    assert html =~ "Partial result"
+    assert html =~ "No matching documents returned for this index."
+    assert html =~ "Index failed: #{inspect(OpsPostA)}"
+    assert html =~ ~s(<code>:stub</code>)
+    assert html =~ "Check this index and its backend configuration, then run search again."
+    assert html =~ ~s(data-index-outcome="returned")
+    assert html =~ ~s(data-index-outcome="no-hits")
+    assert html =~ ~s(data-index-outcome="failed")
+    refute html =~ ~r/<details[^>]*open/
   end
 
   test "page_size above ceiling surfaces 50 in error messaging", %{conn: conn} do
@@ -205,27 +229,30 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert render(view) =~ "Merge trace"
   end
 
+  test "nested JSON hit fields render as safe structured values", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :search_stub_variant, :nested_hit)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "nested fields",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html = render(view)
+    assert html =~ "nested"
+    assert html =~ "value"
+  end
+
   test "successful single search shows validated capture preview", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_search_capture_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
+    dir = temporary_playbook_workspace()
 
     {:ok, view, html} = live(conn, ~p"/ops/search")
     refute html =~ "Save as playbook"
+    refute has_element?(view, "#search-capture-form")
 
     view
     |> element("#ops-search-playground-form")
@@ -239,7 +266,347 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Save as playbook"
     assert html =~ "Playbook preview is ready"
     assert html =~ ~s(data-testid="playbook-preview-marker")
-    assert html =~ ~s(data-testid="search-capture-preview-pre")
+    assert has_element?(view, "details#search-capture-json")
+    refute has_element?(view, "details#search-capture-json[open]")
+
+    assert has_element?(view, "#search-capture-form")
+    assert has_element?(view, "label[for='capture_basename']", "Filename")
+    assert has_element?(view, "label[for='capture_title']", "Search title")
+    assert has_element?(view, "#capture_basename-hint")
+
+    view
+    |> element("#search-capture-form")
+    |> render_submit(%{
+      "capture" => %{
+        "basename" => "zero-hit-check.json",
+        "title" => "Zero hit check",
+        "description" => "Saved from the returned empty search."
+      }
+    })
+
+    saved = Path.join(dir, "zero-hit-check.json") |> File.read!() |> Jason.decode!()
+    assert saved["mode"] == "search"
+    assert saved["schema"] == inspect(OpsPostA)
+    assert saved["q"] == "hello"
+    assert saved["title"] == "Zero hit check"
+    assert saved["description"] == "Saved from the returned empty search."
+    refute Map.has_key?(saved, "hits")
+    refute Map.has_key?(saved, "result")
+    refute File.read!(Path.join(dir, "zero-hit-check.json")) =~ "partial-hit"
+    assert render(view) =~ "Saved playbook zero-hit-check.json."
+  end
+
+  test "malformed capture fields return a field error without crashing the LiveView", %{
+    conn: conn
+  } do
+    temporary_playbook_workspace()
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "hello",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html =
+      render_submit(view, "capture_change", %{
+        "capture" => %{"basename" => %{"unexpected" => "object"}}
+      })
+
+    assert Process.alive?(view.pid)
+    assert html =~ "search-capture-form"
+
+    html =
+      render_submit(view, "save_search_capture", %{
+        "capture" => %{"basename" => %{"unexpected" => "object"}}
+      })
+
+    assert Process.alive?(view.pid)
+    assert html =~ "Filename must be a .json basename"
+
+    render_submit(view, "search", %{
+      "q" => %{"unexpected" => "object"},
+      "page_size" => %{"unexpected" => "object"},
+      "schema" => %{"unexpected" => "object"},
+      "schemas" => [%{"unexpected" => "object"}]
+    })
+
+    assert Process.alive?(view.pid)
+  end
+
+  test "eligible partial multi response saves criteria without response documents", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :search_stub_variant, :partial)
+    dir = temporary_playbook_workspace()
+
+    {:ok, view, html} = live(conn, ~p"/ops/search?mode=multi")
+    refute html =~ "Save as playbook"
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "partial criteria",
+      "page_size" => "9",
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB), inspect(OpsPostC)]
+    })
+
+    html = render(view)
+    assert html =~ "Some indexes did not return results."
+    assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save as playbook")
+
+    view
+    |> element("#search-capture-form")
+    |> render_submit(%{
+      "capture" => %{
+        "basename" => "partial-check.json",
+        "title" => "Partial check",
+        "description" => "The criteria were saved, not returned documents."
+      }
+    })
+
+    saved = Path.join(dir, "partial-check.json") |> File.read!() |> Jason.decode!()
+    assert saved["mode"] == "search_many"
+
+    assert Enum.map(saved["entries"], &hd/1) == [
+             inspect(OpsPostA),
+             inspect(OpsPostB),
+             inspect(OpsPostC)
+           ]
+
+    assert Enum.all?(saved["entries"], fn [_schema, query, _opts] ->
+             query == "partial criteria"
+           end)
+
+    assert saved["title"] == "Partial check"
+    refute Map.has_key?(saved, "hits")
+    refute File.read!(Path.join(dir, "partial-check.json")) =~ "partial-hit"
+    refute File.read!(Path.join(dir, "partial-check.json")) =~ "Partial result"
+  end
+
+  test "collision retains capture fields and leaves the occupied file untouched", %{conn: conn} do
+    dir = temporary_playbook_workspace()
+    occupied = Path.join(dir, "occupied.json")
+    original = ~s({"original":true})
+    File.write!(occupied, original)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "collision criteria",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    view
+    |> element("#search-capture-form")
+    |> render_submit(%{
+      "capture" => %{
+        "basename" => "occupied.json",
+        "title" => "Keep this title",
+        "description" => "Keep this description"
+      }
+    })
+
+    html = render(view)
+    assert html =~ "That playbook name is already in use — pick another basename."
+    assert has_element?(view, "#capture_basename[value='occupied.json'][aria-invalid='true']")
+    assert has_element?(view, "#capture_title[value='Keep this title']")
+    assert has_element?(view, "#capture_description")
+    assert html =~ "Keep this description"
+    assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
+    assert File.read!(occupied) == original
+    refute html =~ "Saved playbook occupied.json."
+  end
+
+  test "missing workspace setup retains fields and gives the approved recovery guidance", %{
+    conn: conn
+  } do
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+
+    on_exit(fn ->
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "setup criteria",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    view
+    |> element("#search-capture-form")
+    |> render_submit(%{
+      "capture" => %{
+        "basename" => "keep-me.json",
+        "title" => "Setup title",
+        "description" => "Setup description"
+      }
+    })
+
+    html = render(view)
+    assert html =~ "Could not save playbook to workspace."
+    assert html =~ "Configure a playbook workspace directory, then retry saving."
+    assert has_element?(view, "#capture_basename[value='keep-me.json']")
+    assert has_element?(view, "#capture_title[value='Setup title']")
+    assert html =~ "Setup description"
+    assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
+    refute html =~ "Saved playbook keep-me.json."
+  end
+
+  test "workspace write failure retains fields and exposes the actual reason", %{conn: conn} do
+    root_file =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_workspace_file_#{:erlang.unique_integer([:positive])}"
+      )
+
+    File.write!(root_file, "not a directory")
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, root_file)
+
+    on_exit(fn ->
+      File.rm(root_file)
+
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "write failure criteria",
+      "page_size" => "10",
+      "schema" => inspect(OpsPostA)
+    })
+
+    view
+    |> element("#search-capture-form")
+    |> render_submit(%{
+      "capture" => %{
+        "basename" => "write-error.json",
+        "title" => "Write title",
+        "description" => "Write description"
+      }
+    })
+
+    html = render(view)
+    assert html =~ "Could not save playbook to workspace."
+    assert html =~ "Reason: :enotdir"
+
+    assert has_element?(
+             view,
+             "[data-testid='search-capture-error']",
+             "Check the workspace directory's permissions and available disk space, then retry saving."
+           )
+
+    assert has_element?(view, "#capture_basename[value='write-error.json']")
+    assert has_element?(view, "#capture_title[value='Write title']")
+    assert html =~ "Write description"
+    refute html =~ "Saved playbook write-error.json."
+  end
+
+  test "search result and capture attribution stay bound to the submitted criteria", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "  original probe  ",
+      "page_size" => "7",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html = render(view)
+    assert html =~ ~s(id="search-run-attribution")
+    assert html =~ "Last run"
+    assert html =~ "Single index"
+    assert html =~ inspect(OpsPostA)
+    assert html =~ "original probe"
+    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
+    assert html =~ "Search completed: no matching documents"
+    refute html =~ "Run current search"
+
+    render_patch(
+      view,
+      ~p"/ops/search?mode=single&q=edited%20criteria&page_size=22&schema=#{inspect(OpsPostB)}"
+    )
+
+    html = render(view)
+    assert html =~ ~s(value="edited criteria")
+    assert html =~ "Single index"
+    assert html =~ inspect(OpsPostA)
+    assert html =~ "original probe"
+    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
+    assert html =~ ~s(data-testid="playbook-preview-marker")
+
+    view
+    |> element(~s([data-testid="search-mode-multi"]))
+    |> render_click()
+
+    render_patch(view, ~p"/ops/search?mode=multi&q=multi%20edit&page_size=22")
+
+    html = render(view)
+    assert html =~ ~s(data-testid="search-mode-multi")
+    assert html =~ "original probe"
+    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
+    refute html =~ ~s(data-testid="playbook-preview-marker")
+  end
+
+  test "an empty query remains a valid submitted search", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/ops/search")
+    assert html =~ "Run a search to see results"
+    refute html =~ "Run current search"
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "",
+      "page_size" => "5",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html = render(view)
+    assert html =~ "Search completed: no matching documents"
+    assert html =~ "(empty query)"
+    refute html =~ "Select a query"
+  end
+
+  test "missing Search targets fail validation without reusing a prior selection", %{conn: conn} do
+    {:ok, single_view, _html} = live(conn, ~p"/ops/search")
+
+    single_view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{"q" => "probe", "page_size" => "5", "schema" => ""})
+
+    single_html = render(single_view)
+    assert single_html =~ "No schema selected."
+    assert single_html =~ "No index selected"
+    refute single_html =~ "Search completed:"
+    refute single_html =~ "Playbook preview is ready"
+
+    {:ok, multi_view, _html} = live(conn, ~p"/ops/search?mode=multi")
+
+    multi_view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{"q" => "probe", "page_size" => "5", "schemas" => []})
+
+    multi_html = render(multi_view)
+    assert multi_html =~ "Select at least one schema for multi-search."
+    assert multi_html =~ "No index selected"
+    refute multi_html =~ "Search completed:"
   end
 
   test "multi search_many total failure shows hard error alert, not partial banner", %{conn: conn} do
@@ -258,6 +625,31 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     html = render(view)
     assert html =~ "Search could not run"
     assert html =~ "stub_hard_failure"
+    assert html =~ "Fix the query options or operator config, then run search again."
+    assert html =~ "ops-badge-error"
+    refute html =~ ~s(data-testid="search-outcome")
     refute html =~ "Some indexes did not return results."
+  end
+
+  defp temporary_playbook_workspace do
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath_ops_search_capture_#{:erlang.unique_integer([:positive])}"
+      )
+
+    :ok = File.mkdir_p!(dir)
+    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
+
+    on_exit(fn ->
+      File.rm_rf(dir)
+
+      if previous == nil,
+        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
+        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
+    end)
+
+    dir
   end
 end

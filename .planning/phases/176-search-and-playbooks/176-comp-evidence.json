@@ -1,0 +1,704 @@
+{
+  "kind": "static-design-comp-only",
+  "capturedAt": "2026-10-10T19:38:05.504Z",
+  "renderer": "Playwright Chromium; in-memory HTML; all network requests aborted",
+  "checks": [
+    "horizontal overflow",
+    "40px minimum representative form/button targets",
+    "full filename wrapping",
+    "Manage closed by default and visible actions when expanded",
+    "delete dialog viewport geometry",
+    "initial delete dialog focuses Cancel",
+    "invalid confirmation retains value/error and focuses filename"
+  ],
+  "results": [
+    {
+      "screen": "search",
+      "mode": "light",
+      "width": 1440,
+      "file": "176-search-light-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "pageHeight": 2287,
+      "visibleSections": 3,
+      "focusTargets": [
+        {
+          "label": "Single index",
+          "height": 40
+        },
+        {
+          "label": "Multi index",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.Product",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.ArchivedProduct",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.LegacyProduct",
+          "height": 40
+        },
+        {
+          "label": "Query",
+          "height": 40
+        },
+        {
+          "label": "Page size",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Title (optional)",
+          "height": 40
+        },
+        {
+          "label": "Description (optional)",
+          "height": 80
+        },
+        {
+          "label": "Save as playbook",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "search-screen"
+    },
+    {
+      "screen": "search",
+      "mode": "light",
+      "width": 390,
+      "file": "176-search-light-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "pageHeight": 3245,
+      "visibleSections": 3,
+      "focusTargets": [
+        {
+          "label": "Single index",
+          "height": 40
+        },
+        {
+          "label": "Multi index",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.Product",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.ArchivedProduct",
+          "height": 42
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.LegacyProduct",
+          "height": 42
+        },
+        {
+          "label": "Query",
+          "height": 40
+        },
+        {
+          "label": "Page size",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Title (optional)",
+          "height": 40
+        },
+        {
+          "label": "Description (optional)",
+          "height": 80
+        },
+        {
+          "label": "Save as playbook",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "search-screen"
+    },
+    {
+      "screen": "search",
+      "mode": "dark",
+      "width": 1440,
+      "file": "176-search-dark-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "pageHeight": 2287,
+      "visibleSections": 3,
+      "focusTargets": [
+        {
+          "label": "Single index",
+          "height": 40
+        },
+        {
+          "label": "Multi index",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.Product",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.ArchivedProduct",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.LegacyProduct",
+          "height": 40
+        },
+        {
+          "label": "Query",
+          "height": 40
+        },
+        {
+          "label": "Page size",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Title (optional)",
+          "height": 40
+        },
+        {
+          "label": "Description (optional)",
+          "height": 80
+        },
+        {
+          "label": "Save as playbook",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "search-screen"
+    },
+    {
+      "screen": "search",
+      "mode": "dark",
+      "width": 390,
+      "file": "176-search-dark-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "pageHeight": 3245,
+      "visibleSections": 3,
+      "focusTargets": [
+        {
+          "label": "Single index",
+          "height": 40
+        },
+        {
+          "label": "Multi index",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.Product",
+          "height": 40
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.ArchivedProduct",
+          "height": 42
+        },
+        {
+          "label": "Scrypath.Examples.Catalog.LegacyProduct",
+          "height": 42
+        },
+        {
+          "label": "Query",
+          "height": 40
+        },
+        {
+          "label": "Page size",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Title (optional)",
+          "height": 40
+        },
+        {
+          "label": "Description (optional)",
+          "height": 80
+        },
+        {
+          "label": "Save as playbook",
+          "height": 40
+        },
+        {
+          "label": "Run search",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "search-screen"
+    },
+    {
+      "screen": "playbooks",
+      "mode": "light",
+      "width": 1440,
+      "file": "176-playbooks-light-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "pageHeight": 1872,
+      "visibleSections": 5,
+      "focusTargets": [
+        {
+          "label": "Rename",
+          "height": 40
+        },
+        {
+          "label": "Duplicate",
+          "height": 40
+        },
+        {
+          "label": "Delete",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Run playbook",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Save playbook to workspace",
+          "height": 40
+        },
+        {
+          "label": "Import playbook file",
+          "height": 40
+        },
+        {
+          "label": "Import playbook JSON",
+          "height": 40
+        },
+        {
+          "label": "Playbook JSON",
+          "height": 80
+        },
+        {
+          "label": "Import from paste",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "playbooks-screen"
+    },
+    {
+      "screen": "playbooks",
+      "mode": "light",
+      "width": 390,
+      "file": "176-playbooks-light-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "pageHeight": 2773,
+      "visibleSections": 5,
+      "focusTargets": [
+        {
+          "label": "Rename",
+          "height": 40
+        },
+        {
+          "label": "Duplicate",
+          "height": 40
+        },
+        {
+          "label": "Delete",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Run playbook",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Save playbook to workspace",
+          "height": 40
+        },
+        {
+          "label": "Import playbook file",
+          "height": 40
+        },
+        {
+          "label": "Import playbook JSON",
+          "height": 40
+        },
+        {
+          "label": "Playbook JSON",
+          "height": 80
+        },
+        {
+          "label": "Import from paste",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "playbooks-screen"
+    },
+    {
+      "screen": "playbooks",
+      "mode": "dark",
+      "width": 1440,
+      "file": "176-playbooks-dark-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "pageHeight": 1872,
+      "visibleSections": 5,
+      "focusTargets": [
+        {
+          "label": "Rename",
+          "height": 40
+        },
+        {
+          "label": "Duplicate",
+          "height": 40
+        },
+        {
+          "label": "Delete",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Run playbook",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Save playbook to workspace",
+          "height": 40
+        },
+        {
+          "label": "Import playbook file",
+          "height": 40
+        },
+        {
+          "label": "Import playbook JSON",
+          "height": 40
+        },
+        {
+          "label": "Playbook JSON",
+          "height": 80
+        },
+        {
+          "label": "Import from paste",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "playbooks-screen"
+    },
+    {
+      "screen": "playbooks",
+      "mode": "dark",
+      "width": 390,
+      "file": "176-playbooks-dark-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "pageHeight": 2773,
+      "visibleSections": 5,
+      "focusTargets": [
+        {
+          "label": "Rename",
+          "height": 40
+        },
+        {
+          "label": "Duplicate",
+          "height": 40
+        },
+        {
+          "label": "Delete",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Load preview",
+          "height": 40
+        },
+        {
+          "label": "Run without preview",
+          "height": 40
+        },
+        {
+          "label": "Run playbook",
+          "height": 40
+        },
+        {
+          "label": "Filename",
+          "height": 40
+        },
+        {
+          "label": "Save playbook to workspace",
+          "height": 40
+        },
+        {
+          "label": "Import playbook file",
+          "height": 40
+        },
+        {
+          "label": "Import playbook JSON",
+          "height": 40
+        },
+        {
+          "label": "Playbook JSON",
+          "height": 80
+        },
+        {
+          "label": "Import from paste",
+          "height": 40
+        }
+      ],
+      "fullFilenamesWrap": true,
+      "openManageCount": 0,
+      "activeScreen": "playbooks-screen"
+    },
+    {
+      "screen": "manage-open",
+      "mode": "light",
+      "width": 1440,
+      "file": "176-playbooks-manage-open-light-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "openManageCount": 1,
+      "actionsVisible": true,
+      "longFilenameVisible": true
+    },
+    {
+      "screen": "manage-open",
+      "mode": "light",
+      "width": 390,
+      "file": "176-playbooks-manage-open-light-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "openManageCount": 1,
+      "actionsVisible": true,
+      "longFilenameVisible": true
+    },
+    {
+      "screen": "manage-open",
+      "mode": "dark",
+      "width": 1440,
+      "file": "176-playbooks-manage-open-dark-1440.png",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "openManageCount": 1,
+      "actionsVisible": true,
+      "longFilenameVisible": true
+    },
+    {
+      "screen": "manage-open",
+      "mode": "dark",
+      "width": 390,
+      "file": "176-playbooks-manage-open-dark-390.png",
+      "viewport": 390,
+      "documentWidth": 390,
+      "openManageCount": 1,
+      "actionsVisible": true,
+      "longFilenameVisible": true
+    },
+    {
+      "screen": "delete-dialog-invalid-confirmation",
+      "mode": "light",
+      "width": 1440,
+      "file": "176-playbooks-delete-dialog-invalid-light-1440.png",
+      "viewport": 1440,
+      "dialogVisible": true,
+      "focusedControl": "confirm-name",
+      "errorVisible": true,
+      "dialogWidth": 480,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-invalid-confirmation",
+      "mode": "light",
+      "width": 390,
+      "file": "176-playbooks-delete-dialog-invalid-light-390.png",
+      "viewport": 390,
+      "dialogVisible": true,
+      "focusedControl": "confirm-name",
+      "errorVisible": true,
+      "dialogWidth": 356,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-invalid-confirmation",
+      "mode": "dark",
+      "width": 1440,
+      "file": "176-playbooks-delete-dialog-invalid-dark-1440.png",
+      "viewport": 1440,
+      "dialogVisible": true,
+      "focusedControl": "confirm-name",
+      "errorVisible": true,
+      "dialogWidth": 480,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-invalid-confirmation",
+      "mode": "dark",
+      "width": 390,
+      "file": "176-playbooks-delete-dialog-invalid-dark-390.png",
+      "viewport": 390,
+      "dialogVisible": true,
+      "focusedControl": "confirm-name",
+      "errorVisible": true,
+      "dialogWidth": 356,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-initial",
+      "mode": "light",
+      "width": 1440,
+      "file": "176-playbooks-delete-dialog-initial-light-1440.png",
+      "viewport": 1440,
+      "dialogVisible": true,
+      "focusedControl": "cancel-delete",
+      "dialogWidth": 480,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-initial",
+      "mode": "light",
+      "width": 390,
+      "file": "176-playbooks-delete-dialog-initial-light-390.png",
+      "viewport": 390,
+      "dialogVisible": true,
+      "focusedControl": "cancel-delete",
+      "dialogWidth": 356,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-initial",
+      "mode": "dark",
+      "width": 1440,
+      "file": "176-playbooks-delete-dialog-initial-dark-1440.png",
+      "viewport": 1440,
+      "dialogVisible": true,
+      "focusedControl": "cancel-delete",
+      "dialogWidth": 480,
+      "dialogWithinViewport": true
+    },
+    {
+      "screen": "delete-dialog-initial",
+      "mode": "dark",
+      "width": 390,
+      "file": "176-playbooks-delete-dialog-initial-dark-390.png",
+      "viewport": 390,
+      "dialogVisible": true,
+      "focusedControl": "cancel-delete",
+      "dialogWidth": 356,
+      "dialogWithinViewport": true
+    }
+  ]
+}

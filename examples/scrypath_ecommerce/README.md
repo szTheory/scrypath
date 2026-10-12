@@ -5,9 +5,9 @@ catalog, live Meilisearch, Postgres, browser E2E coverage, and the optional
 operator UI mounted inside the host app.
 
 **Start here:** run `make docker-dev`, open the URL block it prints, search for
-`quantum`, then visit `/admin/search/posture`. You will see the same Scrypath
+`quantum`, then visit `/admin/search/health`. You will see the same Scrypath
 ideas from the guides in one place: tenant-scoped search, category facets,
-related-data propagation, failed sync triage, and zero-downtime swap posture.
+related-data propagation, failed sync triage, and zero-downtime index swap readiness.
 
 **Iterating on UI:** `make docker-dev` runs the app in Docker with the repository
 bind-mounted and named `deps` / `_build` volumes. HEEx, CSS, and LiveView edits
@@ -35,7 +35,7 @@ API and operational semantics in the main guides.
   documents, which is the shape real apps need when associated records appear
   in search results.
 - The optional Scrypath operator UI mounted by the host app under
-  `/admin/search/*`, including posture, failed sync work, and the search
+  `/admin/search/*`, including search health, failed sync work, and the search
   playground.
 - Browser E2E coverage that exercises the storefront and operator surfaces
   against real Postgres and real Meilisearch.
@@ -127,7 +127,7 @@ route list:
 Scrypath e-commerce demo is ready.
   Storefront        http://127.0.0.1:4002
   Control room      http://127.0.0.1:4002/admin/search
-  Posture           http://127.0.0.1:4002/admin/search/posture
+  Search health     http://127.0.0.1:4002/admin/search/health
 ```
 
 Then open:
@@ -135,7 +135,7 @@ Then open:
 | Route | What to look for |
 | ----- | ---------------- |
 | http://localhost:4002 | Tenant-scoped storefront search with category facets and realistic product cards. |
-| http://localhost:4002/admin/search/posture | Operator posture for schema/index visibility and swap readiness. |
+| http://localhost:4002/admin/search/health | Search health by schema, with sync/backend status and swap readiness. |
 | http://localhost:4002/admin/search/failed-sync | Failed sync triage without exposing raw backend payloads. |
 | http://localhost:4002/admin/search/search | Bounded search playground for operator inspection. |
 
@@ -165,8 +165,8 @@ Meilisearch access. If dependency manifests change, rebuild once with
    Switch tenants to see how tenant scope changes the visible catalog.
 2. Use the category facets. The facet labels are human catalog names, while
    Scrypath still sends precise filter values to Meilisearch.
-3. Open the operator posture page. This is the maintainer view of search
-   posture: schemas, queue/backend signals, and prepared index workflow.
+3. Open the Search health page. This is the maintainer view of configured schemas,
+   queue/backend signals, and prepared index workflow.
 4. Open failed sync work. The page is intentionally operational: enough context
    to triage, without making raw backend payloads the primary interface.
 5. Open the search playground when you want to inspect a bounded operator search

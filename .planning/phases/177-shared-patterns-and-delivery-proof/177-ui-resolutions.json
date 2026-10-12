@@ -1,0 +1,338 @@
+[
+  {
+    "requirement_id": "E1",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "When allowed schemas or runtime setup are absent, show the existing specific setup guidance; do not represent missing observations as a healthy zero-error posture."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Refresh remains tied to the current posture and keeps its in-flight state; do not infer completion from dispatch or briefly show a healthy verdict before observations return."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep the unavailable source, inspected reason, and existing Search health destination visible; preserve any other known posture evidence."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Lead with the actual trust verdict and its evidence, then preserve the three distinct intent routes for recovery, pre-promotion verification, and search exploration."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep known sources and unavailable queue/backend observations separately labeled; never infer overall health from a partial response."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, wrap full schema/task identifiers and reasons or use existing bounded evidence scrolling; keep controls reachable and avoid document-level horizontal overflow."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Render zero, one, and many configured schemas with truthful counts and grouping; counts alone do not imply search health or successful recovery."
+  },
+  {
+    "requirement_id": "E1",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long schema labels, task identifiers, and diagnostic reasons wrap or reflow with full accessible context; actions retain their text label or accessible name."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "No-schema and missing-runtime states retain the exact configuration guidance; do not confuse unavailable configuration with an empty but healthy fleet."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Refresh Search health keeps its label, current selection, and busy state together; do not present old observations as the result of an in-flight refresh."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Show each fetch error with its inspected reason and the existing failed-work route; keep independent schema evidence available."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Show the actual summary verdict and four fleet metrics before the worst-first per-schema signal cards, with Backend and Queue evidence distinct."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "An unavailable queue/backend observation remains explicit beside known values; zero errors or a last success does not imply full health."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, full schema/index identifiers and reasons wrap or use existing bounded scrolling without hiding controls or causing document overflow."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Zero, one, and many schemas retain accurate counts, plural wording, and per-schema grouping; order remains worst-first where applicable."
+  },
+  {
+    "requirement_id": "E2",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long schema/index names and fetch reasons remain fully readable through wrapping or reflow; error context is not hover-only or clipped."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Show “No failed sync jobs” only for an observed empty result, with the existing recovery-confirmation guidance; missing schema/runtime configuration remains a separate setup state."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep selected-schema identity, refresh/recovery context, and the in-flight state together; acceptance or dispatch must not imply completed repair."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Identify the selected schema, show the actual failure reason and backend/queue next step, and retain any known failed-job history."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep newest evidence first, distinguish retryable rows from retained history, and show Retry accepted separately from authoritative completion."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep known failed rows attributable while unavailable observations remain explicit; do not replace retained history with a fabricated complete or empty result."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, full job/source identifiers and reasons wrap or use existing bounded scrolling; retry controls remain reachable without document overflow."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Zero, one, and many failed jobs use truthful counts and existing row grouping; do not offer retry for an ineligible item or imply all work is recoverable."
+  },
+  {
+    "requirement_id": "E3",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long source/job identifiers and failure reasons wrap with full context; errors and action labels remain available without hover or clipping."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep no schemas, no drift, and not-yet-available observations distinct; a missing observation never becomes an empty-success state."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Preserve separate recovery observation, sync/queue refresh, and promotion in-flight identities; refresh observes accepted recovery and never submits work."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Distinguish a failed drift observation from a remote operation failure; retain the actual reason and the documented safe next step for each."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep sync/queue evidence, contract drift, freshness, operation outcome, and gated promotion visually and semantically separate."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep accepted, running, terminal, unknown, and unavailable observations distinct and attached to the exact task/index identity."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, full schema/task identifiers, timestamps, and reasons wrap or use existing bounded evidence scrolling without document overflow."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Use truthful zero/one/many grouping for schemas and operations; counts do not imply repair, promotion, or successful reconciliation."
+  },
+  {
+    "requirement_id": "E4",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long identifiers and operation reasons wrap or reflow with the safe next step still visible and the complete accessible context retained."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep not-run, successful zero-hit, and unavailable schema/runtime states distinct; a blank query remains a valid exploratory query where the existing contract allows it."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "The single Run search action retains dispatched mode, targets, query, and page-size identity with its busy guard; later form edits do not relabel the in-flight request."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Show the actual request/validation reason and the documented correction-and-rerun step; preserve partial per-index outcomes and details."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Attribute returned results to the actual submitted mode, targets, query, and limits; keep the Results region adjacent and explicitly labeled."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Expose each returned, zero-hit, and failed index separately with its reason and next step; a failed index does not erase results or become zero hits."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, long queries, identifiers, and response values wrap or use existing bounded disclosure scrolling; controls remain reachable without document overflow."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Show accurate target and hit counts; zero hits remains a successful response, and single/multi-index outcomes remain attributed per index."
+  },
+  {
+    "requirement_id": "E5",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long queries, module names, index identifiers, errors, and action labels wrap/reflow with full accessible context; no required reason is clipped or hover-only."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "empty",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep an empty workspace distinct from read-only examples, no selected valid preview, and no run yet; each state retains its own existing import/load guidance."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "loading",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Import, preview, run, save, and file operations retain the current file/draft/run identity while pending; do not announce persistence or completion before it is authoritative."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "error",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep actual import, load, save, or run failure attached to the affected file/run with its correction; leave unaffected catalog work reachable."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "populated",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Keep catalog management, selected preview, run action, outcome, and Search handoff as distinct tasks with source and submitted criteria attributable."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "partial",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Preserve per-index partial outcomes and workspace/read-only/imported provenance; missing configuration or permissions never becomes invented ready, saved, or complete status."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "overflow",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "At desktop, intermediate, and narrow widths, filenames, run identifiers, criteria, and diagnostics wrap or use existing bounded scrolling without document overflow."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "zero-one-many",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Render zero, one, and many files/results with truthful counts and stable row grouping; zero hits is distinct from no run and from failure."
+  },
+  {
+    "requirement_id": "E6",
+    "category": "long-text",
+    "status": "resolved",
+    "verification": "explicit",
+    "resolution": "Long filenames, query criteria, run identifiers, and error reasons wrap/reflow with full accessible context; icon-only file actions keep explicit accessible names."
+  }
+]

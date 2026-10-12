@@ -1,0 +1,77 @@
+[
+  {
+    "id": "E1",
+    "text": "Search query form (form, list-collection, interactive-control, static-content): Native single/multi mode choice, complete index selection, query input, page-size field and sole submit; not-run, valid, missing-backend/allowlist disabled, busy, validation/failure, and long-index/query behavior.",
+    "elements": [
+      "form",
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E2",
+    "text": "Search result summary and hit collection (list-collection, interactive-control, static-content): Submitted mode/index/query/page-size attribution; populated hits; zero hits; complete, partial, and failed responses; per-index missing/failure explanations; raw payload/response disclosures; long module names and values.",
+    "elements": [
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E3",
+    "text": "Save-as-playbook capture form (form, interactive-control, static-content): Eligible submitted-run criteria and metadata, optional JSON disclosure, successful zero-hit/partial eligibility, occupied filename rejection, malformed field/save error, preserved values, and long filename.",
+    "elements": [
+      "form",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E4",
+    "text": "Playbook catalog collection (list-collection, interactive-control, static-content): Empty/one/many files, workspace versus read-only example row, long filename wrapping, Load preview/Run without preview, Manage disclosure and hidden mutation eligibility.",
+    "elements": [
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E5",
+    "text": "Selected Playbook preview and save form (form, list-collection, interactive-control, static-content): Workspace file/read-only example/imported unsaved provenance; populated and invalid preview; single Run playbook action; missing configuration; independent save fields and replacement behavior.",
+    "elements": [
+      "form",
+      "list-collection",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E6",
+    "text": "Playbook run outcome and Search handoff (list-collection, nav, interactive-control, static-content): Running/error/timeout/cancel/success/partial; actual run id, source and submitted criteria; retained earlier run beside a different current imported draft; long identifiers and optional diagnostics.",
+    "elements": [
+      "list-collection",
+      "nav",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E7",
+    "text": "Playbook import controls (form, interactive-control, static-content): Native upload and paste disclosure, empty selection, in-flight/error/invalid/oversized input, retained prior valid preview explanation, and read-only workspace guidance.",
+    "elements": [
+      "form",
+      "interactive-control",
+      "static-content"
+    ]
+  },
+  {
+    "id": "E8",
+    "text": "Playbook file action dialog (form, interactive-control, static-content): Rename/duplicate/delete dialogs, long/exact filename, invalid typed confirmation, disabled or failed action, focus containment, Escape/cancel, LiveView patch and logical focus return.",
+    "elements": [
+      "form",
+      "interactive-control",
+      "static-content"
+    ]
+  }
+]

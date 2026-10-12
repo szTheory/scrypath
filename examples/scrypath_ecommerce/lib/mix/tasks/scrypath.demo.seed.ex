@@ -16,19 +16,19 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
   ## Named operational scenarios (`--scenario`)
 
   Each scenario parameterizes the SAME catalog + injection logic so the operator
-  UI can be driven into a deterministic posture covering every screen's state
+  UI can be driven into deterministic search-health states covering every screen's state
   range. The catalog fixtures are unchanged between scenarios; only the
   injected operational signals (failed sync + contract drift + whether products
   are synced) differ:
 
     * `all_green` — full catalog seeded + synced; NO failed-sync injection, NO
-      drift. Posture reads all-healthy, the verdict trusts search.
+      drift. Search health reports no errors, and the verdict trusts search.
     * `degraded` — catalog seeded + synced; contract drift injected (the live
-      index drops a declared filterable) but NO failed-sync. Posture shows a
+      index drops a declared filterable) but NO failed-sync. Search health shows a
       partial/warning, the verdict is degraded.
     * `incident` (default) — all reason classes of failed-sync work injected
       (transport / validation / backend / queue / unknown, mixing retryable and
-      terminal jobs) PLUS contract drift. Posture reads red, the verdict can't
+      terminal jobs) PLUS contract drift. Search health reports failures, so the verdict can't
       fully trust search. This preserves the historical `make dev` / E2E
       behavior.
     * `empty` — catalog tables truncated and the live index cleared after
@@ -207,7 +207,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     end
   end
 
-  # Sync the SKU/Variant index so the allowlist holds >1 schema: Posture shows a second
+  # Sync the SKU/Variant index so the allowlist holds >1 schema: Search health shows a second
   # row, Search multi-index/federation lights up, and the federated playbook can run.
   # e2e.prepare_search already prepared both Product and Variant indexes before seeding.
   # Variants are read back from the DB (the fixtures already persisted them) and synced

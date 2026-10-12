@@ -23,6 +23,10 @@ Personas: on-call engineer recovering search; search owner checking an index cha
 | Operational truth | A successful retry can coexist with retained failure history. A task acceptance is not task completion, and a clean settings contract is not proof of document freshness. Never force a green aggregate to manufacture a success story. |
 | States | Cover populated, empty, setup-missing, loading, error, partial, disabled, stale, long-content, zero/one/many, and keyboard/mobile cases where applicable. |
 
+## Motion reference
+
+Whenever considering or reviewing UI animation or micro-interactions, cross-reference [Emil Kowalski's design-engineering work](https://emilkowal.ski/skill) and the [emilkowalski/skills collection](https://github.com/emilkowalski/skills). Use it to sharpen decisions about whether motion helps, its timing, and how it responds to interruption; keep Scrypath's infrastructural motion style, shared tokens, and reduced-motion support as the implementation contract.
+
 ## Efficient verification and change control
 
 1. Capture current rendering and establish a named user problem before changing a pattern. Preserve useful existing behavior and tests; do not repeat completed palette/brand work without an invalidator.

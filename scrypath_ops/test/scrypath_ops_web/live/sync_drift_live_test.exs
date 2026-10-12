@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOps.RecoveryObservation
   alias ScrypathOpsWeb.SyncDriftLive
   alias Scrypath.Operations.Task, as: OperationTask
 
@@ -55,7 +56,9 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     def swap_indexes(_indexes, _config) do
       Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.put(state, :swap_called, true)
+        state
+        |> Map.put(:swap_called, true)
+        |> Map.update!(:swap_calls, &(&1 + 1))
       end)
 
       {:ok,
@@ -65,6 +68,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
          "type" => "indexSwap",
          "indexUid" => "sdv_ops_post_b"
        }}
+    end
+
+    def task(uid, _config) do
+      Agent.update(:sync_drift_live_test_state, fn state ->
+        Map.update!(state, :task_calls, &[uid | &1])
+      end)
+
+      Agent.get(:sync_drift_live_test_state, fn state ->
+        %{"uid" => uid, "status" => state.task_status, "type" => "indexSwap"}
+      end)
+      |> then(&{:ok, &1})
     end
   end
 
@@ -99,7 +113,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     end
 
     {:ok, _pid} =
-      Agent.start_link(fn -> %{tasks_calls: 0, settings_calls: 0, swap_called: false} end,
+      Agent.start_link(
+        fn ->
+          %{
+            tasks_calls: 0,
+            settings_calls: 0,
+            swap_called: false,
+            swap_calls: 0,
+            task_calls: [],
+            task_status: "processing"
+          }
+        end,
         name: :sync_drift_live_test_state
       )
 
@@ -131,7 +155,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
 
-    assert html =~ "queue posture"
+    assert html =~ "queue status"
 
     assert html =~
              "Check sync status and compare the schema contract with its live index."
@@ -155,6 +179,82 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     assert html2 =~ ":settings"
     assert html2 =~ "sdv_ops_post_a"
+  end
+
+  test "document freshness starts as a separate unchecked observation", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    assert html =~ "Document freshness"
+    assert html =~ "Not checked"
+    assert html =~ "Expected-document evidence has not been checked for this recovery."
+    assert has_element?(lv, "#document-freshness-result[role='status']")
+    assert has_element?(lv, "#document-freshness-result.ops-notice-surface--neutral")
+  end
+
+  test "ordinary recovery follows diagnostic evidence and links to selected failed work", %{
+    conn: conn
+  } do
+    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "Ordinary recovery"
+    assert html =~ "Review failed sync work"
+    assert html =~ "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB"
+
+    assert has_element?(
+             lv,
+             "button[aria-label='Refresh sync and queue status']",
+             "Refresh sync and queue status"
+           )
+
+    refute has_element?(lv, ".ops-panel #sync-reconcile-heading")
+    refute has_element?(lv, ".ops-panel #sync-drift-heading")
+    refute has_element?(lv, ".ops-panel #document-freshness")
+    refute has_element?(lv, ".ops-panel #ordinary-recovery")
+    refute html =~ ~s(scope="row" class="font-medium align-top")
+    assert has_element?(lv, "h2#sync-reconcile-heading.text-ops-h1")
+    assert has_element?(lv, "h2#sync-drift-heading.text-ops-h2")
+    assert has_element?(lv, "h2#document-freshness.text-ops-h2")
+
+    [sync, contract, documents, recovery, promotion] =
+      [
+        "Sync and queue status",
+        "Index contract",
+        "Document freshness",
+        "Ordinary recovery",
+        "Advanced: index promotion"
+      ]
+      |> Enum.map(&:binary.match(html, &1))
+      |> Enum.map(&elem(&1, 0))
+
+    assert sync < contract
+    assert contract < documents
+    assert documents < recovery
+    assert recovery < promotion
+  end
+
+  test "verified document freshness renders the exact expected effect and index", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assigns =
+      :sys.get_state(lv.pid).socket.assigns
+      |> Map.put(:recovery_document_observation, %{
+        state: :verified,
+        operation: :upsert,
+        index: "sdv_ops_post_b",
+        expected_ids: ["post-6001"],
+        checked_at: DateTime.utc_now()
+      })
+
+    html =
+      assigns
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert html =~ "Expected documents observed"
+    assert html =~ "Expected effect: upsert"
+    assert html =~ "sdv_ops_post_b"
+    assert html =~ "post-6001"
   end
 
   test "swap live rechecks current prerequisites and refuses a stale contract read" do
@@ -326,20 +426,23 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert final_socket.assigns.drift_result == nil
   end
 
-  test "recovery refresh discards prior verification and stale results cannot restore it" do
+  test "recovery refresh retains prior verification and stale results cannot replace it" do
+    checked_at = DateTime.utc_now()
+
     socket =
       sync_drift_socket(%{
         selected_schema: OpsPostA,
         context_generation: 8,
         recovery_handle: "opaque-handle",
         recovery_status: :verified,
-        recovery_checked_at: DateTime.utc_now(),
+        recovery_checked_at: checked_at,
         recovery_loading: false
       })
 
     {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, socket)
 
-    assert refreshing.assigns.recovery_status == :unknown
+    assert refreshing.assigns.recovery_status == :verified
+    assert refreshing.assigns.recovery_checked_at == checked_at
     assert refreshing.assigns.recovery_loading
     assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) == 0
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 0
@@ -351,28 +454,109 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         refreshing
       )
 
-    assert stale.assigns.recovery_status == :unknown
+    assert stale.assigns.recovery_status == :verified
+    assert stale.assigns.recovery_checked_at == checked_at
     assert stale.assigns.recovery_loading
   end
 
-  test "recovery results retain exact observed evidence and refresh clears it" do
+  test "recovery results retain exact observed evidence while refresh runs" do
     evidence = %{replacement_job: 45, attempt: 1, task_uid: 780, index: "posts"}
+
+    document_observation = %{
+      state: :verified,
+      operation: :upsert,
+      index: "posts",
+      expected_ids: ["post-45"],
+      checked_at: DateTime.utc_now()
+    }
+
     socket = sync_drift_socket(%{context_generation: 3, recovery_handle: "receipt"})
 
     {:noreply, checked} =
       SyncDriftLive.handle_async(
         {:recovery_observation, 3, "receipt"},
-        {:ok, {3, "receipt", {:verified, evidence}}},
+        {:ok, {3, "receipt", {:verified, evidence, document_observation}}},
         socket
       )
 
     assert checked.assigns.recovery_status == :verified
     assert checked.assigns.recovery_evidence == evidence
+    assert checked.assigns.recovery_document_observation == document_observation
+    checked_at = checked.assigns.recovery_checked_at
     {:noreply, refreshing} = SyncDriftLive.handle_event("refresh_recovery_status", %{}, checked)
-    assert refreshing.assigns.recovery_evidence == nil
+    assert refreshing.assigns.recovery_evidence == evidence
+    assert refreshing.assigns.recovery_document_observation == document_observation
+    assert refreshing.assigns.recovery_checked_at == checked_at
+    assert refreshing.assigns.recovery_loading
+
+    {:noreply, unavailable} =
+      SyncDriftLive.handle_async(
+        {:recovery_observation, 3, "receipt"},
+        {:ok,
+         {3, "receipt",
+          {:unknown, nil, %{state: :not_checked, reason: :task_unavailable, checked_at: nil}}}},
+        refreshing
+      )
+
+    assert unavailable.assigns.recovery_status == :verified
+    assert unavailable.assigns.recovery_evidence == evidence
+    assert unavailable.assigns.recovery_document_observation == document_observation
+    assert unavailable.assigns.recovery_checked_at == checked_at
+    assert unavailable.assigns.recovery_observation_error == :task_unavailable
+    refute unavailable.assigns.recovery_loading
   end
 
-  test "swap observer distinguishes terminal outcomes from unconfirmed observations and keeps task identity" do
+  test "recovery lifecycle states retain the receipt identity and distinguish observer errors" do
+    evidence = %{replacement_job: 45, attempt: 2, task_uid: 781, index: "posts"}
+
+    observation = %{
+      state: :verified,
+      operation: :delete,
+      index: "posts",
+      expected_ids: ["post-45"]
+    }
+
+    for {status, document_observation} <- [
+          {:accepted, nil},
+          {:running, nil},
+          {:failed, nil},
+          {:cancelled, %{state: :cancelled, operation: :delete, index: "posts"}},
+          {:unknown, %{state: :unknown, reason: :transport_error}}
+        ] do
+      socket =
+        sync_drift_socket(%{
+          context_generation: 6,
+          recovery_handle: "receipt",
+          recovery_status: :verified,
+          recovery_evidence: evidence,
+          recovery_document_observation: observation,
+          recovery_checked_at: ~U[2026-01-02 03:04:05Z]
+        })
+
+      {:noreply, result} =
+        SyncDriftLive.handle_async(
+          {:recovery_observation, 6, "receipt"},
+          {:ok, {6, "receipt", {status, evidence, document_observation}}},
+          socket
+        )
+
+      if status == :unknown do
+        assert result.assigns.recovery_status == :verified
+        assert result.assigns.recovery_evidence == evidence
+        assert result.assigns.recovery_document_observation == observation
+        assert result.assigns.recovery_checked_at == ~U[2026-01-02 03:04:05Z]
+        assert result.assigns.recovery_observation_error == :transport_error
+      else
+        assert result.assigns.recovery_status == status
+        assert result.assigns.recovery_evidence == evidence
+        assert result.assigns.recovery_document_observation == document_observation
+        assert result.assigns.recovery_checked_at
+        assert is_nil(result.assigns.recovery_observation_error)
+      end
+    end
+  end
+
+  test "swap observer keeps exact task outcomes and waits for fresh evidence before completion" do
     socket =
       sync_drift_socket(%{
         context_generation: 9,
@@ -388,7 +572,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         socket
       )
 
-    assert completed.assigns.promotion_status == :completed
+    assert completed.assigns.promotion_status == :unknown
     assert completed.assigns.promotion_task_id == 991
 
     {:noreply, wrong_task} =
@@ -512,29 +696,415 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert stale.assigns.promotion_loading
   end
 
-  test "refresh after an unconfirmed promotion checks state without submitting another swap" do
-    for status <- [:timed_out, :unknown] do
-      socket =
-        sync_drift_socket(%{
-          promotion_task_id: 991,
-          promotion_status: status,
-          promotion_loading: false
-        })
+  test "promotion result announces its outcome and distinguishes cancellation", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    base = :sys.get_state(lv.pid).socket.assigns
 
-      {:noreply, refreshed} = SyncDriftLive.handle_event("refresh_promotion_checks", %{}, socket)
+    accepted_html =
+      base
+      |> Map.merge(%{
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true
+      })
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
 
-      assert refreshed.assigns.promotion_task_id == 991
-      assert refreshed.assigns.promotion_status == status
-      refute Agent.get(:sync_drift_live_test_state, & &1.swap_called)
-    end
+    assert accepted_html =~ ~s(id="promotion-status-result")
+    assert accepted_html =~ ~s(role="status")
+    assert accepted_html =~ "Index swap accepted"
+
+    cancelled_html =
+      base
+      |> Map.merge(%{
+        promotion_task_id: 991,
+        promotion_status:
+          {:failed,
+           {:cancelled,
+            %OperationTask{
+              source: :meilisearch,
+              kind: :index_swap,
+              id: 991,
+              state: :cancelled
+            }}},
+        promotion_loading: false
+      })
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert cancelled_html =~ ~s(id="promotion-status-result")
+    assert cancelled_html =~ ~s(role="alert")
+    assert cancelled_html =~ "Index swap canceled"
+    assert cancelled_html =~ "The swap task was canceled."
+    assert cancelled_html =~ "991"
+    refute cancelled_html =~ "The swap task failed."
+  end
+
+  test "a successful swap task without fresh index evidence is not promotion completion" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true,
+        reconcile_result: nil,
+        reconcile_error: :backend_unavailable,
+        drift_result: nil,
+        drift_error: :backend_unavailable
+      })
+
+    assert {:noreply, observed} =
+             SyncDriftLive.handle_async(
+               {:promotion_swap, 9, 991},
+               {:ok, {9, 991, {:ok, %{id: 991, state: :succeeded}}}},
+               socket
+             )
+
+    assert observed.assigns.promotion_status == :unknown
+    assert observed.assigns.promotion_task_id == 991
+  end
+
+  test "a correlated prepared-target document mismatch keeps promotion unconfirmed", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state |> Map.put(:ready, true) |> Map.put(:task_status, "succeeded")
+    end)
+
+    stub = Module.concat(__MODULE__, "PromotionDocumentMismatch")
+    test_pid = self()
+
+    Req.Test.stub(stub, fn conn ->
+      assert conn.method == "GET"
+      assert conn.request_path == "/indexes/sdv_ops_post_a/documents/7301"
+      send(test_pid, :prepared_target_document_read)
+
+      conn
+      |> Plug.Conn.put_resp_content_type("application/json")
+      |> Plug.Conn.send_resp(200, Jason.encode!(%{"id" => 7301, "title" => "Stale"}))
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    handle = prepare_promotion_observation(lv, stub, [promotion_failed_job()])
+
+    lv
+    |> render_click("refresh_promotion_checks", %{})
+    |> then(fn _ -> render_async(lv) end)
+
+    result = :sys.get_state(lv.pid).socket.assigns
+    html = render(lv)
+
+    assert result.promotion_status == :unknown
+
+    assert result.promotion_document_observation.reason ==
+             {:prepared_target_effect_unconfirmed, :failed, :document_mismatch}
+
+    assert result.promotion_task_id == 991
+    assert result.recovery_handle == handle
+    assert result.promotion_identity.live_index == "sdv_ops_post_a"
+    assert result.promotion_identity.target_index == "sdv_ops_post_a__reindex"
+    assert html =~ "Index swap outcome unconfirmed"
+    assert html =~ "document_mismatch"
+    assert html =~ "991"
+    assert_receive :prepared_target_document_read
+    assert has_element?(lv, "#index-promotion button", "Refresh checks")
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+  end
+
+  test "a correlated receipt with unavailable expected-effect source stays unconfirmed", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state |> Map.put(:ready, true) |> Map.put(:task_status, "succeeded")
+    end)
+
+    stub = Module.concat(__MODULE__, "UnavailablePromotionEffectSource")
+    Req.Test.stub(stub, fn conn -> Plug.Conn.send_resp(conn, 503, "unavailable") end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    handle = prepare_promotion_observation(lv, stub, [])
+
+    lv
+    |> render_click("refresh_promotion_checks", %{})
+    |> then(fn _ -> render_async(lv) end)
+
+    result = :sys.get_state(lv.pid).socket.assigns
+    html = render(lv)
+
+    assert result.promotion_status == :unknown
+
+    assert result.promotion_document_observation.reason ==
+             {:prepared_target_effect_unconfirmed, :unknown, :source_unavailable}
+
+    assert result.promotion_task_id == 991
+    assert result.recovery_handle == handle
+    assert html =~ "Index swap outcome unconfirmed"
+    assert html =~ "source_unavailable"
+    refute html =~ "Index swap completed"
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+  end
+
+  test "an unavailable expected-document read keeps a succeeded swap unconfirmed across refreshes",
+       %{
+         conn: conn
+       } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state |> Map.put(:ready, true) |> Map.put(:task_status, "succeeded")
+    end)
+
+    stub = Module.concat(__MODULE__, "UnavailablePromotionDocumentRead")
+    test_pid = self()
+
+    Req.Test.stub(stub, fn conn ->
+      assert conn.method == "GET"
+      assert conn.request_path == "/indexes/sdv_ops_post_a/documents/7301"
+      send(test_pid, :prepared_target_document_read)
+      Plug.Conn.send_resp(conn, 503, "unavailable")
+    end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    handle = prepare_promotion_observation(lv, stub, [promotion_failed_job()])
+
+    lv
+    |> render_click("refresh_promotion_checks", %{})
+    |> then(fn _ -> render_async(lv) end)
+
+    result = :sys.get_state(lv.pid).socket.assigns
+    html = render(lv)
+
+    assert result.promotion_status == :unknown
+
+    assert result.promotion_document_observation.reason ==
+             {:prepared_target_effect_unconfirmed, :unknown, :document_observation_http_error}
+
+    assert result.promotion_task_id == 991
+    assert result.recovery_handle == handle
+    assert result.promotion_identity.schema == OpsPostA
+    assert result.promotion_identity.live_index == "sdv_ops_post_a"
+    assert result.promotion_identity.target_index == "sdv_ops_post_a__reindex"
+
+    assert html =~
+             "The swap task succeeded, but its expected-document observation could not be confirmed."
+
+    assert html =~ "Expected document effect:"
+    assert html =~ "document_observation_http_error"
+    assert html =~ "991"
+    refute html =~ "The selected live-index or contract effect could not be confirmed"
+    refute html =~ "Index swap failed"
+    refute html =~ "Index swap completed"
+    assert_receive :prepared_target_document_read
+    assert has_element?(lv, "#index-promotion button", "Refresh checks")
+
+    lv
+    |> render_click("refresh_promotion_checks", %{})
+    |> then(fn _ -> render_async(lv) end)
+
+    refreshed = :sys.get_state(lv.pid).socket.assigns
+    assert refreshed.promotion_status == :unknown
+    assert refreshed.promotion_task_id == 991
+    assert refreshed.recovery_handle == handle
+    assert Agent.get(:sync_drift_live_test_state, & &1.task_calls) == [991, 991]
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+  end
+
+  test "promotion without an applicable receipt says document freshness was not checked", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, fn state ->
+      state |> Map.put(:ready, true) |> Map.put(:task_status, "succeeded")
+    end)
+
+    stub = Module.concat(__MODULE__, "NoApplicablePromotionEffect")
+    Req.Test.stub(stub, fn conn -> Plug.Conn.send_resp(conn, 503, "unused") end)
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    prepare_promotion_observation(lv, stub, [], false)
+
+    lv
+    |> render_click("refresh_promotion_checks", %{})
+    |> then(fn _ -> render_async(lv) end)
+
+    result = :sys.get_state(lv.pid).socket.assigns
+    html = render(lv)
+
+    assert result.promotion_status == :completed
+    assert result.promotion_document_observation.state == :not_checked
+
+    assert result.promotion_document_observation.reason ==
+             :no_authoritative_prepared_target_effect
+
+    assert html =~ "Expected document freshness was not checked"
+    refute html =~ "Expected documents observed"
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+  end
+
+  test "post-promotion evidence applies only to the current generation and task" do
+    socket =
+      sync_drift_socket(%{
+        context_generation: 9,
+        promotion_task_id: 991,
+        promotion_status: :unknown,
+        promotion_loading: true
+      })
+
+    observed_assigns = %{
+      reconcile_result: %{schema: OpsPostA},
+      reconcile_loaded_at: DateTime.utc_now(),
+      reconcile_generation: 9,
+      reconcile_error: nil,
+      drift_result: %{schema: OpsPostA},
+      drift_loaded_at: DateTime.utc_now(),
+      drift_generation: 9,
+      drift_error: nil,
+      promotion_status: :completed,
+      promotion_document_observation: %{state: :verified},
+      promotion_observation_error: nil
+    }
+
+    assert {:noreply, observed} =
+             SyncDriftLive.handle_async(
+               {:promotion_effects, 9, 991},
+               {:ok, {9, 991, observed_assigns}},
+               socket
+             )
+
+    assert observed.assigns.promotion_status == :completed
+    assert observed.assigns.promotion_document_observation == %{state: :verified}
+    refute observed.assigns.promotion_loading
+
+    assert {:noreply, stale} =
+             SyncDriftLive.handle_async(
+               {:promotion_effects, 8, 991},
+               {:ok, {8, 991, observed_assigns}},
+               socket
+             )
+
+    assert stale.assigns == socket.assigns
+  end
+
+  test "promotion task refresh failure clears the previous document observation", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    mounted_socket = :sys.get_state(lv.pid).socket
+    generation = mounted_socket.assigns.context_generation
+
+    pending_html =
+      mounted_socket.assigns
+      |> Map.merge(%{
+        promotion_task_id: 991,
+        promotion_status: :unknown,
+        promotion_loading: true,
+        promotion_document_observation: %{state: :verified},
+        promotion_observation_error: nil
+      })
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert pending_html =~ "Checking the retained swap task and current index evidence."
+    refute pending_html =~ "Expected document effect:"
+
+    refute pending_html =~
+             "The swap task succeeded, but its expected-document observation could not be confirmed."
+
+    refute pending_html =~ "The task result could not be confirmed."
+
+    socket = %{
+      mounted_socket
+      | assigns:
+          Map.merge(mounted_socket.assigns, %{
+            promotion_task_id: 991,
+            promotion_status: :completed,
+            promotion_loading: true,
+            promotion_document_observation: %{state: :verified},
+            promotion_observation_error: nil
+          })
+    }
+
+    assert {:noreply, refreshed} =
+             SyncDriftLive.handle_async(
+               {:promotion_refresh, generation, 991},
+               {:exit, :task_unavailable},
+               socket
+             )
+
+    assert refreshed.assigns.promotion_status == :unknown
+    refute refreshed.assigns.promotion_loading
+    assert is_nil(refreshed.assigns.promotion_document_observation)
+    assert is_nil(refreshed.assigns.promotion_observation_error)
+    assert refreshed.assigns.promotion_task_read_error == :task_observation_exit
+
+    html =
+      refreshed.assigns
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    assert html =~ "The retained task result could not be confirmed (task_observation_exit)."
+    assert html =~ "Refresh to inspect this same task; do not submit another operation."
+    refute html =~ "Expected document effect:"
+    refute html =~ "The selected live-index or contract effect could not be confirmed"
+
+    refute html =~
+             "The swap task succeeded, but its expected-document observation could not be confirmed."
+  end
+
+  test "mounted promotion refresh reads the retained UID once without swapping again", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+
+    :sys.replace_state(lv.pid, fn state ->
+      socket = %{
+        state.socket
+        | assigns:
+            Map.merge(state.socket.assigns, %{
+              promotion_task_id: 991,
+              promotion_status: :unknown,
+              promotion_loading: false,
+              promotion_identity: nil,
+              __changed__:
+                Map.merge(state.socket.assigns.__changed__, %{
+                  promotion_task_id: true,
+                  promotion_status: true,
+                  promotion_loading: true
+                })
+            })
+      }
+
+      %{state | socket: socket}
+    end)
+
+    assert :sys.get_state(lv.pid).socket.assigns.promotion_status == :unknown
+
+    lv
+    |> element("button[phx-click='refresh_reconcile']")
+    |> render_click()
+
+    lv
+    |> element("#index-promotion button", "Refresh checks")
+    |> render_click()
+    |> then(fn _ -> render_async(lv) end)
+
+    lv
+    |> element("#index-promotion button", "Refresh checks")
+    |> render_click()
+    |> then(fn _ -> render_async(lv) end)
+
+    assert Agent.get(:sync_drift_live_test_state, & &1.task_calls) == [991, 991]
+    assert Agent.get(:sync_drift_live_test_state, & &1.swap_calls) == 0
+    assert :sys.get_state(lv.pid).socket.assigns.promotion_task_id == 991
   end
 
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
-    assert has_element?(lv, "a[href='/ops']", "Recheck search health")
-    assert has_element?(lv, "a[href='/ops/posture?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(lv, "a[href='/ops']", "Return to Control Room")
+    assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
@@ -575,6 +1145,90 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert updated_socket.assigns.local_ui_state == :keep
   end
 
+  defp prepare_promotion_observation(lv, stub, oban_jobs, register_receipt? \\ true) do
+    socket = :sys.get_state(lv.pid).socket
+    assigns = socket.assigns
+    schema_name = Atom.to_string(OpsPostA) |> String.replace_prefix("Elixir.", "")
+
+    host_context = %{
+      host: socket.host_uri.host || "unknown",
+      org: nil,
+      schema: schema_name,
+      generation: assigns.recovery_origin_generation
+    }
+
+    handle =
+      if register_receipt? do
+        {:ok, handle} =
+          RecoveryObservation.register(host_context, %{
+            replacement_job: 520,
+            attempt: 2,
+            operation: :upsert,
+            schema: schema_name,
+            index: "sdv_ops_post_a__reindex",
+            backend: "Elixir.Scrypath.Meilisearch",
+            source_failure: %{id: 520},
+            task_uid: 812,
+            endpoint: "http://localhost:7700"
+          })
+
+        handle
+      end
+
+    opts =
+      Keyword.merge(assigns.scrypath_opts,
+        sync_mode: :oban,
+        oban: Oban,
+        oban_queue: :scrypath_sync,
+        oban_inspector: SyncDriftObanInspector,
+        oban_jobs: oban_jobs,
+        req_options: [plug: {Req.Test, stub}]
+      )
+
+    :sys.replace_state(lv.pid, fn state ->
+      current = state.socket
+
+      next_assigns =
+        Map.merge(current.assigns, %{
+          scrypath_opts: opts,
+          promotion_task_id: 991,
+          promotion_status: :unknown,
+          promotion_loading: false,
+          promotion_identity: %{
+            schema: OpsPostA,
+            generation: current.assigns.context_generation,
+            live_index: "sdv_ops_post_a",
+            target_index: "sdv_ops_post_a__reindex"
+          },
+          recovery_handle: handle
+        })
+
+      %{state | socket: %{current | assigns: next_assigns}}
+    end)
+
+    handle
+  end
+
+  defp promotion_failed_job do
+    schema_name = Atom.to_string(OpsPostA) |> String.replace_prefix("Elixir.", "")
+
+    %{
+      id: 520,
+      state: "discarded",
+      worker: "Scrypath.Oban.UpsertWorker",
+      queue: "scrypath_sync",
+      args: %{
+        "operation" => "upsert",
+        "schema" => schema_name,
+        "backend" => "Elixir.Scrypath.Meilisearch",
+        "index" => "sdv_ops_post_a__reindex",
+        "document_count" => 1,
+        "document_ids" => [7301],
+        "documents" => [%{"id" => 7301, "data" => %{"title" => "Prepared"}}]
+      }
+    }
+  end
+
   defp sync_drift_socket(overrides) do
     scope = %{
       user: %{id: "user_123"},
@@ -587,7 +1241,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Sync / drift",
+      page_title: "Sync and drift",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: sync_drift_scrypath_opts(),
       selected_schema: OpsPostA,
@@ -608,6 +1262,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       promotion_loading: false,
       promotion_task_id: nil,
       promotion_status: nil,
+      promotion_task_read_error: nil,
       confirm_swap?: false,
       recovery_status: nil,
       recovery_evidence: nil,

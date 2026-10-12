@@ -1,0 +1,47 @@
+# Disposable mounted + standalone Ops browser targets for Phase 173.
+services:
+  postgres:
+    volumes:
+      - ./scripts/phase173-create-database.sh:/docker-entrypoint-initdb.d/10-phase173-create-database.sh:ro
+
+  web:
+    environment:
+      E2E_SCOPE: ${E2E_SCOPE:-phase173_shell}
+      PHASE173_STANDALONE_BASE_URL: http://standalone_ops:4003
+
+  standalone_ops:
+    build:
+      context: ../..
+      dockerfile: examples/scrypath_ecommerce/Dockerfile
+    working_dir: /app/scrypath_ops
+    command: ["sh", "/app/examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh"]
+    environment:
+      MIX_ENV: test
+      PHX_SERVER: "true"
+      PORT: "4003"
+      SCRYPATH_OPS_PORT: "4003"
+      SCRYPATH_OPS_TEST_DATABASE: scrypath_ops_phase173_test
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail http://127.0.0.1:4003/ops/phase173/health >/dev/null"]
+      interval: 2s
+      timeout: 5s
+      start_period: 5m
+      retries: 60
+    init: true
+
+  browser:
+    environment:
+      E2E_SCOPE: ${E2E_SCOPE:-phase173_shell}
+      PHASE173_STANDALONE_BASE_URL: http://standalone_ops:4003
+    depends_on:
+      standalone_ops:
+        condition: service_healthy

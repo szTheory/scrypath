@@ -30,6 +30,15 @@ At release boot, **`config/runtime.exs`** evaluates **`SCRYPATH_OPS_PLAYBOOK_DIR
 (e.g. **`/var/lib/scrypath_ops/playbooks`**) so behavior does not depend on release CWD.
 Document the same path in runbooks and container specs.
 
+The configured workspace root must be a real directory, not a symlink. Ancestor symlinks are
+resolved before operations, and the Store rejects a workspace root writable by group/other or
+ancestors writable by untrusted users (a root-owned sticky ancestor such as `/tmp` is permitted).
+Keep the directory tree controlled by the trusted service account; path-based APIs cannot protect
+against a same-account or privileged local actor changing entries concurrently. The Store rejects
+symbolic and multiply-linked file entries, and replaces existing playbooks with a fresh inode on
+save while preserving permission bits. Filesystems that do not support hard links refuse the
+no-overwrite rename operation; use Duplicate, verify the copy, then Delete the original.
+
 ## GitOps and review
 
 - Treat playbook JSON like **config**: branch, PR, and review. Prefer small, focused diffs.
