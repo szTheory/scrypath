@@ -1,31 +1,27 @@
-# ScrypathOps security notes
+# ScrypathOps security boundary
 
-This document describes how the optional operator Phoenix surface should be run safely. It complements the library’s operational guidance in the parent repository.
+`ScrypathOps` provides an optional Phoenix and LiveView operator interface. It does not provide authentication for `/ops`; the host application owns that boundary. Protect both ordinary HTTP requests and LiveView WebSocket connections before exposing the routes to a network.
 
-## Development defaults
+## What `OPSUI_AUTH_MODE` does
 
-Local `MIX_ENV=dev` keeps the app easy to boot: `config/dev.exs` sets **`validate_opsui_auth_on_start`** to **`false`**, so **`OPSUI_AUTH_MODE`** is not required for **`mix phx.server`**. Treat dev as **trusted-operator workstations only**—do not infer safety from “localhost” inside shared containers without an explicit boundary (see production section).
+The application validates `OPSUI_AUTH_MODE` at startup against the string allow-list `basic`, `proxy_headers`, and `sigra`. If unset, it defaults to `basic`. Selecting an allowed value does **not** install Basic authentication, trusted proxy-header handling, or Sigra authorization. The validator checks configuration only; it is not a route guard or a fail-closed exposure check.
 
-`config/test.exs` also sets **`:validate_opsui_auth_on_start`** to **`false`** so **`mix test`** does not require **`OPSUI_AUTH_MODE`**.
+The `sigra` value additionally requires `:sudo_confirm_path`. It does not automatically attach `ScrypathOps.Integrations.Sigra.OnMount` to the routes created by `scrypath_ops_routes/2`. That macro installs the ScrypathOps shell hook only. Do not infer that choosing `sigra` enables action authorization or audit behavior.
 
-## Production requirements
+## Protecting the operator routes
 
-In **`MIX_ENV=prod`**, `config/prod.exs` sets **`validate_opsui_auth_on_start`** to **`true`**. The OTP application refuses to start unless **`OPSUI_AUTH_MODE`** is set to one of the documented modes implemented in **`ScrypathOps.Security`** (today: **`basic`** or **`proxy_headers`**). This fail-closed default prevents accidentally exposing `/ops` behind only stock Phoenix plugs.
+Before exposing `/ops`, configure a trusted edge or host boundary that authenticates and authorizes both the initial HTTP request and the LiveView WebSocket upgrade. A localhost bind, Phoenix's ordinary browser pipeline, signed cookies, CSRF protection, `check_origin`, and `OPSUI_AUTH_MODE` do not establish operator authorization on their own.
 
-## WebSocket and check_origin
+If authentication is performed inside Phoenix, ensure the host's route and LiveView design runs its authentication and authorization checks for every LiveView mount and sensitive event. The `scrypath_ops_routes/2` helper owns its `live_session` and currently does not accept a host `on_mount` option; use a host-controlled routing arrangement that composes the required checks, or enforce authentication at a trusted edge.
 
-LiveView uses the **`/live`** WebSocket. Configure **`check_origin`** on **`ScrypathOpsWeb.Endpoint`** for real hostnames in production, and document the upstream host list when TLS terminates at a reverse proxy. Prefer an explicit allow-list over `false` outside local development.
+## LiveView origin and transport
 
-## Cookies and CSRF
+LiveView uses the `/live` WebSocket. Configure `check_origin` on `ScrypathOpsWeb.Endpoint` for real hostnames in production, and document the upstream host list when TLS terminates at a reverse proxy. Prefer an explicit allow-list over `false` outside local development. Origin checking protects the WebSocket origin boundary; it is not authentication.
 
-The browser pipeline uses signed session cookies and CSRF protection for standard Phoenix forms and LiveView. Keep **`secret_key_base`** on a secure path (runtime env or secrets manager) and rotate with your incident response policy.
+Either terminate TLS at a reverse proxy or configure Phoenix/Bandit for native TLS. When TLS terminates at the proxy, ensure forwarded scheme and identity headers are trusted only from that proxy, and align Phoenix `force_ssl` / HSTS settings with the edge.
 
-## Reverse proxy TLS vs in-app TLS
+## Secrets and telemetry
 
-Either terminate TLS at a reverse proxy (common) or configure Phoenix/Bandit for native TLS. When TLS terminates in the proxy, ensure **`x-forwarded-proto`** and related headers are trustworthy and that Phoenix’s **`force_ssl`** / HSTS configuration matches your edge.
+Keep `secret_key_base` on a secure path (runtime environment or a secrets manager) and rotate it according to the host application's incident policy.
 
-## Telemetry metadata
-
-OPSUI telemetry must stay **low-cardinality**: prefer coarse events such as screen viewed or command outcome buckets. Do **not** attach raw search query text, full URLs with secrets, or per-record identifiers to metadata. Align with **`docs/search-backend-sre.md`** in the parent repo for operational expectations and cardinality discipline.
-
-The **`validate_opsui_auth_on_start`** application environment is documented here so operators understand why tests and dev differ from production.
+OPSUI telemetry must stay low-cardinality: prefer coarse events such as screen viewed or command outcome buckets. Do not attach raw search query text, full URLs with secrets, or per-record identifiers to metadata. See `../../docs/search-backend-sre.md` for operational expectations and cardinality discipline.
