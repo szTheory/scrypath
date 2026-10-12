@@ -189,6 +189,10 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert overrides =~ "color: var(--color-base-content)"
   end
 
+  test "operational failure copy uses the theme-aware error text token" do
+    assert rule(".ops-state-text--error") =~ "color: var(--ops-error-text)"
+  end
+
   test "refresh hook reapplies server eligibility after a LiveView patch" do
     hooks = File.read!(Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand())
 

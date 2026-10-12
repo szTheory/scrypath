@@ -62,7 +62,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
     assert html =~ "Control Room"
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh Control Room health']")
     assert has_element?(lv, "[data-testid='control-room-missing-backend']")
     assert html =~ "Search backend not configured."
 
@@ -73,6 +73,12 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     refute html =~ "Start recovery"
     refute has_element?(lv, "[data-testid='control-room-health-link']")
     assert has_element?(lv, "a", "Read the operator guide")
+
+    lv |> element("#control-room-refresh") |> render_click()
+    refreshed = render(lv)
+    assert refreshed =~ "Search backend not configured."
+    refute has_element?(lv, "[data-testid='control-room-refresh-issue']")
+    refute refreshed =~ "Search health refreshed."
   end
 
   test "unconfigured schemas show their exact setup guidance without recovery", %{conn: conn} do
@@ -87,6 +93,12 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     refute has_element?(lv, "[data-testid='control-room-health-link']")
     refute html =~ "Recover search"
     refute html =~ "0 schemas"
+
+    lv |> element("#control-room-refresh") |> render_click()
+    refreshed = render(lv)
+    assert refreshed =~ "No search schemas configured."
+    refute has_element?(lv, "[data-testid='control-room-refresh-issue']")
+    refute refreshed =~ "Search health refreshed."
   end
 
   test "degraded state leads with observed reason and affected scope before its single route", %{

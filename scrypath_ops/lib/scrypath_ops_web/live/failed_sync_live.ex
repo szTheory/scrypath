@@ -49,9 +49,12 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     {:noreply, socket}
   end
 
-  def handle_event("retry", %{"id" => id}, socket) do
-    {:noreply, request_retry(socket, id)}
+  def handle_event("retry", %{"id" => id, "source" => source}, socket)
+      when is_binary(id) and is_binary(source) do
+    {:noreply, request_retry(socket, work_identity(source, id))}
   end
+
+  def handle_event("retry", _params, socket), do: {:noreply, retry_unavailable(socket)}
 
   def handle_event("confirm_retry_delete", _params, socket) do
     socket =
@@ -59,10 +62,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         nil ->
           socket
 
-        id ->
+        identity ->
           if current_selection?(socket) do
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              retry_failed_work(socket, id)
+              retry_failed_work(socket, identity)
             end)
           else
             unavailable(socket)
@@ -215,44 +218,54 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     end
   end
 
-  defp request_retry(socket, id) do
+  defp request_retry(socket, identity) do
     cond do
       not current_selection?(socket) ->
         unavailable(socket)
 
-      Map.has_key?(Map.get(socket.assigns, :recovery_receipts, %{}), to_string(id)) ->
-        put_flash(socket, :info, "A retry for job #{id} is already accepted.")
+      Map.has_key?(Map.get(socket.assigns, :recovery_receipts, %{}), identity) ->
+        put_flash(socket, :info, "A retry for #{retry_subject(identity)} is already accepted.")
 
       true ->
-        case failed_work_row(socket, id) do
+        case failed_work_row(socket, identity) do
           nil ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              put_flash(socket, :error, "Could not find that failed job.")
+              retry_unavailable(socket)
             end)
 
           %{operation: :delete, recovery: recovery} when not is_nil(recovery) ->
-            assign(socket, :delete_confirmation, to_string(id))
+            assign(socket, :delete_confirmation, identity)
 
           %{recovery: recovery} when not is_nil(recovery) ->
             Gating.gate_sensitive_action(socket, :failed_work_retry, fn ->
-              retry_failed_work(socket, id)
+              retry_failed_work(socket, identity)
             end)
 
           _row ->
-            put_flash(socket, :error, "That job does not expose a retry action.")
+            put_flash(
+              socket,
+              :error,
+              "Retry unavailable. This work item does not expose a supported retry. " <>
+                "Refresh failed sync work and review its current state."
+            )
         end
     end
   end
 
-  defp retry_failed_work(socket, id) do
-    case failed_work_row(socket, id) do
+  defp retry_failed_work(socket, identity) do
+    case failed_work_row(socket, identity) do
       nil ->
-        put_flash(socket, :error, "Could not find that failed job.")
+        retry_unavailable(socket)
 
       row ->
         case FailedWork.recovery_action(row) do
           nil ->
-            put_flash(socket, :error, "That job does not expose a retry action.")
+            put_flash(
+              socket,
+              :error,
+              "Retry unavailable. This work item does not expose a supported retry. " <>
+                "Refresh failed sync work and review its current state."
+            )
 
           recovery ->
             runtime_opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
@@ -263,14 +276,28 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
                 socket
                 |> refresh_inspection()
-                |> update(:recovery_receipts, &Map.put(&1, to_string(id), receipt))
+                |> update(:recovery_receipts, &Map.put(&1, identity, receipt))
                 |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
 
               {:error, reason} ->
-                put_flash(socket, :error, "Retry failed: #{inspect(reason)}")
+                put_flash(
+                  socket,
+                  :error,
+                  "Retry failed: #{inspect(reason)}. Refresh failed sync work and review the " <>
+                    "current eligibility before trying again."
+                )
             end
         end
     end
+  end
+
+  defp retry_unavailable(socket) do
+    put_flash(
+      socket,
+      :error,
+      "Retry unavailable. This work item no longer exposes a retry action. " <>
+        "Refresh failed sync work and review its current state."
+    )
   end
 
   defp accepted_receipt(socket, row, recovery, result, runtime_opts) do
@@ -377,7 +404,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp field(map, key) when is_map(map), do: Map.get(map, key)
   defp field(_, _), do: nil
 
-  defp recovery_receipt(receipts, id), do: Map.get(receipts, to_string(id))
+  defp recovery_receipt(receipts, row) do
+    Map.get(receipts, work_identity(row.source, row.id))
+  end
 
   defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
@@ -392,10 +421,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "#{base}/sync-drift?#{query}"
   end
 
-  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, id)
-       when is_binary(id) do
+  defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, identity)
+       when is_tuple(identity) do
     Enum.find(entries, fn row ->
-      to_string(row.id) == id and row.operation == :delete and row.recovery
+      work_identity(row.source, row.id) == identity and row.operation == :delete and row.recovery
     end)
   end
 
@@ -415,12 +444,23 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     "Retry deletion of #{count} documents for #{module_flat_name(row.schema)} in #{delete_confirmation_index(row)}."
   end
 
-  defp failed_work_row(socket, id) do
+  defp failed_work_row(socket, identity) do
     inspection = Map.get(socket.assigns, :inspection)
 
     if inspection do
-      Enum.find(inspection.entries, &(to_string(&1.id) == to_string(id)))
+      Enum.find(inspection.entries, &(work_identity(&1.source, &1.id) == identity))
     end
+  end
+
+  defp work_identity(source, id), do: {to_string(source), to_string(id)}
+
+  defp retry_subject({"oban", id}), do: "queue job #{id}"
+  defp retry_subject({"meilisearch", id}), do: "backend task #{id}"
+  defp retry_subject({source, id}), do: "#{source} work item #{id}"
+
+  defp failed_work_dom_id(row) do
+    {source, id} = work_identity(row.source, row.id)
+    "failed-detail-#{source}-#{id}"
   end
 
   defp empty_counts(rows) do
@@ -455,10 +495,19 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     do: "No failed sync work visible"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 1}}),
-    do: "1 failed sync job needs triage"
+    do: "1 failed sync work item needs triage"
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: total}}),
-    do: "#{total} failed sync jobs need triage"
+    do: "#{total} failed sync work items need triage"
+
+  defp failed_work_title(%{source: :oban, id: id}),
+    do: "Failed queue job #{inspect(id)}"
+
+  defp failed_work_title(%{source: :meilisearch, id: id}),
+    do: "Failed backend task #{inspect(id)}"
+
+  defp failed_work_title(%{source: source, id: id}),
+    do: "Failed work item #{inspect(id)} (#{inspect(source)})"
 
   defp dominant_reason_class(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
@@ -480,8 +529,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp retry_eligibility(_row),
     do: "Retry unavailable. This work item does not expose a supported retry."
 
-  defp retryable_label(1), do: "1 retryable job"
-  defp retryable_label(count), do: "#{count} retryable jobs"
+  defp retryable_label(1), do: "1 retryable work item"
+  defp retryable_label(count), do: "#{count} retryable work items"
 
   defp reason_counts(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
@@ -533,7 +582,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured.">
         Add allowlisted schema modules with
         <.ops_inline_code>schema_allowlist</.ops_inline_code>
-        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync jobs.
+        in <.ops_inline_code>:scrypath_ops</.ops_inline_code>, then refresh failed sync work.
       </.ops_empty_state>
 
       <.ops_status
@@ -564,13 +613,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         role="alert"
       >
         The selected schema could not be inspected. Check backend and queue configuration, then
-        refresh failed sync jobs. Reason:
+        refresh failed sync work. Reason:
         <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
       <.ops_panel :if={@inspection}>
         <section aria-labelledby="failed-sync-rollups-heading">
+          <span id="failed-sync-rollups-heading" class="sr-only">Failed sync work summary</span>
+
           <.ops_status
+            :if={@inspection.counts.total > 0}
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
           >
@@ -580,14 +632,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
           </.ops_status>
 
-          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ops-body text-base-content/80">
+          <div
+            :if={@inspection.counts.total > 0}
+            class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ops-body text-base-content/80"
+          >
             <span>
               <strong>{@inspection.counts.total}</strong>
-              failed sync {if @inspection.counts.total == 1, do: "job", else: "jobs"}
+              failed sync {if @inspection.counts.total == 1, do: "work item", else: "work items"}
             </span>
             <span aria-hidden="true">·</span>
             <span>{retryable_label(retryable_count(@inspection))}</span>
-            <span class="sr-only" id="failed-sync-rollups-heading">Failure reasons</span>
             <span
               :for={{label, count} <- reason_counts(@inspection)}
               class="rounded-full border border-base-300 px-2 py-0.5 text-ops-sm"
@@ -602,11 +656,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             id="failed-sync-table-heading"
             class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            Failed sync jobs
+            Failed sync work items
           </h2>
           <.ops_empty_hero
             :if={@inspection.counts.total == 0}
-            title="No failed sync jobs"
+            title="No failed sync work"
             icon="hero-shield-check"
             class="mt-3"
             data-testid="failed-sync-empty-hero"
@@ -622,8 +676,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           <div :if={@inspection.counts.total > 0} class="mt-2 grid gap-2">
             <.ops_result_row
               :for={row <- sorted_entries(@inspection)}
-              title={"Failed job #{inspect(row.id)}"}
+              title={failed_work_title(row)}
               subtitle={"#{row.operation} · #{row.source} · last attempt #{format_dt(row.last_attempt_at || row.failed_at)}"}
+              data-work-source={row.source}
+              data-work-id={row.id}
               data-testid="failed-sync-row"
             >
               <:meta>
@@ -644,13 +700,14 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 {retry_eligibility(row)}
               </p>
               <.ops_action_group
-                :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row.id))}
+                :if={row.recovery && is_nil(recovery_receipt(@recovery_receipts, row))}
                 tone={:advanced}
                 class="mt-2 items-start"
               >
                 <.ops_button
                   phx-click="retry"
                   phx-value-id={row.id}
+                  phx-value-source={row.source}
                   data-testid="failed-sync-retry"
                   variant={:primary}
                   size={:xs}
@@ -659,7 +716,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 </.ops_button>
               </.ops_action_group>
               <.ops_status
-                :if={receipt = recovery_receipt(@recovery_receipts, row.id)}
+                :if={receipt = recovery_receipt(@recovery_receipts, row)}
                 class="mt-2"
                 kind={:info}
                 title="Retry accepted"
@@ -677,7 +734,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 </.link>
               </.ops_status>
               <.ops_disclosure
-                id={"failed-detail-#{row.id}"}
+                id={failed_work_dom_id(row)}
                 summary="Diagnostics"
                 variant={:compact}
                 class="mt-2"

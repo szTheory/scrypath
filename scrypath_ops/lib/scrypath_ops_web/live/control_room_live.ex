@@ -30,22 +30,34 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   def handle_event("refresh", _params, socket) do
     summary = Posture.summary(socket.assigns.schema_allowlist, socket.assigns.scrypath_opts)
 
-    if complete_observation?(summary) do
-      socket =
-        socket
-        |> assign(:posture, summary)
-        |> assign(:last_successful_posture, summary)
-        |> assign(:refresh_issue, nil)
-        |> put_flash(:info, "Search health refreshed.")
+    cond do
+      setup_state?(summary) ->
+        socket =
+          socket
+          |> assign(:posture, summary)
+          |> assign(:last_successful_posture, nil)
+          |> assign(:refresh_issue, nil)
+          |> clear_flash(:info)
 
-      {:noreply, socket}
-    else
-      socket =
-        socket
-        |> retain_observation_or_show_partial(summary)
-        |> assign(:refresh_issue, summary)
+        {:noreply, socket}
 
-      {:noreply, socket}
+      complete_observation?(summary) ->
+        socket =
+          socket
+          |> assign(:posture, summary)
+          |> assign(:last_successful_posture, summary)
+          |> assign(:refresh_issue, nil)
+          |> put_flash(:info, "Search health refreshed.")
+
+        {:noreply, socket}
+
+      true ->
+        socket =
+          socket
+          |> retain_observation_or_show_partial(summary)
+          |> assign(:refresh_issue, summary)
+
+        {:noreply, socket}
     end
   end
 
@@ -65,6 +77,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
        do: true
 
   defp complete_observation?(_summary), do: false
+
+  defp setup_state?(%Posture{state: state}) when state in [:unconfigured, :missing_backend],
+    do: true
+
+  defp setup_state?(_summary), do: false
 
   defp retain_observation_or_show_partial(socket, summary) do
     case socket.assigns.last_successful_posture do
@@ -93,7 +110,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             id="control-room-refresh"
             checked_at={@posture.refreshed_at}
             phx-click="refresh"
-            aria_label="Refresh search health"
+            aria_label="Refresh Control Room health"
           />
         </.ops_toolbar>
 

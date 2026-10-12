@@ -67,6 +67,46 @@ async function setTheme(page: Page, preference: "light" | "dark"): Promise<void>
   await expect(page.locator("html")).toHaveAttribute("data-theme-effective", preference);
 }
 
+async function expectSearchHealthGroupContract(page: Page): Promise<void> {
+  const backend = page.getByRole("region", { name: /Backend task signals/ });
+  const queue = page.getByRole("region", { name: /Queue job signals/ });
+  await expect(backend).toHaveCount(1);
+  await expect(queue).toHaveCount(1);
+  await expect(backend.locator(".ops-signal-group__title")).toHaveText("Backend tasks");
+  await expect(queue.locator(".ops-signal-group__title")).toHaveText("Queue jobs");
+
+  const groupStyles = await page.locator(".ops-signal-group").evaluateAll((groups) =>
+    groups.map((group) => {
+      const style = getComputedStyle(group);
+      return {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        border: [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth],
+        borderStyles: [style.borderTopStyle, style.borderRightStyle, style.borderBottomStyle, style.borderLeftStyle],
+        borderRadius: style.borderRadius,
+        boxShadow: style.boxShadow
+      };
+    })
+  );
+  expect(groupStyles).toHaveLength(2);
+  for (const style of groupStyles) {
+    expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(style.backgroundImage).toBe("none");
+    expect(style.border).toEqual(["0px", "0px", "0px", "0px"]);
+    expect(style.borderStyles).toEqual(["none", "none", "none", "none"]);
+    expect(style.borderRadius).toBe("0px");
+    expect(style.boxShadow).toBe("none");
+  }
+
+  for (const title of [backend.locator(".ops-signal-group__title"), queue.locator(".ops-signal-group__title")]) {
+    const type = await title.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return { fontSize: style.fontSize, fontWeight: style.fontWeight, lineHeight: style.lineHeight };
+    });
+    expect(type).toEqual({ fontSize: "16px", fontWeight: "600", lineHeight: "20.8px" });
+  }
+}
+
 for (const entry of entries) {
   test(`${entry.name} Search health keeps status local and distinguishes unknown, unused, and empty`, async ({ page }) => {
     test.info().annotations.push({ type: "source-sha", description: process.env.SCRYPATH_SOURCE_SHA || "unknown" });
@@ -138,11 +178,26 @@ for (const entry of entries) {
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
         await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+        await expectSearchHealthGroupContract(page);
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: join(screenshotDir, `${entry.name}-degraded-${theme}-${width}.png`),
           fullPage: true
         });
+      }
+
+      await visit(page, entry, "refresh-failure");
+      await setTheme(page, theme);
+      await page.locator("#search-health-refresh").click();
+      const retained = page.locator(".ops-time__retained");
+      await expect(retained).toHaveCount(2);
+      for (const explanation of await retained.all()) {
+        await expect(explanation).toContainText(
+          "Current observation is unavailable; this source-local evidence is retained from check"
+        );
+        await expect
+          .poll(() => explanation.evaluate((node) => getComputedStyle(node).fontSize))
+          .toBe("14px");
       }
     }
   });
@@ -229,7 +284,10 @@ for (const entry of entries) {
     await page.mouse.down();
     const pressedBackground = await refresh.evaluate((button) => getComputedStyle(button).backgroundColor);
     expect(pressedBackground).not.toBe(hoverBackground);
+    await page.mouse.move(1, 1);
     await page.mouse.up();
+    await expect(refresh).toBeEnabled();
+    await expect(refresh).not.toHaveAttribute("aria-busy", "true");
 
     await refresh.focus();
     await page.keyboard.press("Tab");

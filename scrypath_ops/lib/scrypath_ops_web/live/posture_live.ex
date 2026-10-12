@@ -57,19 +57,28 @@ defmodule ScrypathOpsWeb.PostureLive do
     start_ms = System.monotonic_time(:millisecond)
     socket = socket |> fail_phase173_refresh() |> load_posture()
     duration_ms = System.monotonic_time(:millisecond) - start_ms
+    summary = socket.assigns.posture_summary
+    observation_available? = posture_observation_available?(summary)
 
     # Low-cardinality telemetry: no per-schema labels (CONTEXT D-08).
     :telemetry.execute(
       [:scrypath_ops, :posture, :refresh],
       %{duration_ms: duration_ms, schema_count: length(socket.assigns.schema_allowlist)},
-      %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
+      %{
+        outcome:
+          cond do
+            not observation_available? -> :unavailable
+            summary.error_count > 0 -> :degraded
+            true -> :ok
+          end
+      }
     )
 
     socket =
-      if socket.assigns.aggregate_error_count > 0 do
-        socket
-      else
+      if observation_available? and summary.error_count == 0 do
         put_flash(socket, :info, "Search health refreshed.")
+      else
+        socket
       end
 
     {:noreply, socket}
@@ -216,7 +225,7 @@ defmodule ScrypathOpsWeb.PostureLive do
           checked_at={@last_refresh_at}
           disabled={@phase173_fixture? and @phase173_scenario == "refresh-disabled"}
           phx-click="refresh"
-          aria_label="Refresh search health"
+          aria_label="Refresh Search health"
         />
       </.ops_toolbar>
 
@@ -275,7 +284,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         >
           {@posture_evidence}
         </.ops_verdict>
-        <.ops_metric_grid cols={4}>
+        <.ops_metric_grid cols={4} data-testid="posture-metric-grid">
           <.ops_metric
             label="Schemas"
             value={posture_schema_count(@posture_rows)}
@@ -288,8 +297,8 @@ defmodule ScrypathOpsWeb.PostureLive do
           />
           <.ops_metric
             label="Failed backend tasks"
-            value={posture_backend_failed_count(@posture_rows)}
-            kind={ScrypathOps.Posture.metric_tone(posture_backend_failed_count(@posture_rows))}
+            value={posture_backend_failed_value(@posture_rows)}
+            kind={posture_backend_failed_tone(@posture_rows)}
           />
           <.ops_metric
             label="Queues observed"
@@ -429,13 +438,15 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {inspect(mod)}
                     </h3>
-                    <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
+                    <p class="mt-1 text-ops-body ops-state-text--error">
+                      fetch error: {inspect(reason)}
+                    </p>
                   </div>
                   <div class="ops-schema-signal-card__badges">
                     <.ops_badge kind={:error}>fetch error</.ops_badge>
                   </div>
                 </div>
-                <p class="mt-2 text-ops-sm text-error">
+                <p class="mt-2 text-ops-body ops-state-text--error">
                   Search health could not be checked: {inspect(reason)}. Refresh health to try again.
                 </p>
                 <dl class="ops-signal-metrics ops-signal-metrics--retained mt-2">
@@ -493,13 +504,39 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp posture_schema_count(_), do: 0
 
   defp posture_backend_failed_count({:ok, rows}) do
-    Enum.reduce(rows, 0, fn
-      {_mod, {:ok, status}}, acc -> acc + length(status.backend.failed)
-      _row, acc -> acc
-    end)
+    if Enum.any?(rows, fn {_mod, result} -> match?({:error, _}, result) end) do
+      :unknown
+    else
+      Enum.reduce(rows, 0, fn
+        {_mod, {:ok, status}}, acc -> acc + length(status.backend.failed)
+      end)
+    end
   end
 
-  defp posture_backend_failed_count(_), do: 0
+  defp posture_backend_failed_count(_), do: :unknown
+
+  defp posture_backend_failed_value(rows) do
+    case posture_backend_failed_count(rows) do
+      :unknown -> "Unknown"
+      count -> count
+    end
+  end
+
+  defp posture_backend_failed_tone(rows) do
+    case posture_backend_failed_count(rows) do
+      :unknown -> :warning
+      count -> ScrypathOps.Posture.metric_tone(count)
+    end
+  end
+
+  defp posture_observation_available?(%ScrypathOps.Posture{
+         state: state,
+         schema_count: schema_count
+       })
+       when state in [:ok, :degraded] and schema_count > 0,
+       do: true
+
+  defp posture_observation_available?(_summary), do: false
 
   defp posture_queue_observed_count({:ok, rows}) do
     Enum.count(rows, fn

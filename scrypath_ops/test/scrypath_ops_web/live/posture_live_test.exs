@@ -142,12 +142,54 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert html =~ "data-testid=\"posture-row\""
     assert html =~ "fetch error: :boom"
+    assert has_element?(lv, ".ops-state-text--error")
     assert html =~ "Queue not used"
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
     refute html =~ "Posture"
-    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+    assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh Search health']")
+    assert has_element?(lv, ".ops-state-text--error.text-ops-body")
+    metric = lv |> element("[data-testid='posture-metric-grid'] > div:nth-child(3)") |> render()
+    assert metric =~ "Failed backend tasks"
+    assert metric =~ "Unknown"
+    refute metric =~ ">0</p>"
+  end
+
+  test "refreshing setup states does not announce a completed health check", %{conn: conn} do
+    handler_id = "posture-refresh-setup-#{System.unique_integer([:positive])}"
+    parent = self()
+
+    :telemetry.attach(
+      handler_id,
+      [:scrypath_ops, :posture, :refresh],
+      fn _event, measurements, metadata, _config ->
+        send(parent, {:posture_refresh, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [])
+    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+
+    {:ok, unconfigured, unconfigured_html} = live(conn, ~p"/ops/health")
+    assert unconfigured_html =~ "No schemas configured"
+
+    unconfigured |> element("#search-health-refresh") |> render_click()
+    refute render(unconfigured) =~ "Search health refreshed."
+    assert_receive {:posture_refresh, %{schema_count: 0}, %{outcome: :unavailable}}
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+    Application.delete_env(:scrypath_ops, :backend)
+
+    {:ok, missing_backend, missing_backend_html} = live(conn, ~p"/ops/health")
+    assert missing_backend_html =~ "Runtime not configured"
+
+    missing_backend |> element("#search-health-refresh") |> render_click()
+    refute render(missing_backend) =~ "Search health refreshed."
+    assert_receive {:posture_refresh, %{schema_count: 1}, %{outcome: :unavailable}}
   end
 
   test "degraded search health uses neutral containers and local failure cues", %{conn: conn} do
