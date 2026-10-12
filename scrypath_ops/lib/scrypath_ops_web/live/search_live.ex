@@ -503,8 +503,8 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp parse_page_size_param(raw, fallback) do
     case Integer.parse(text_input(raw || "")) do
-      {n, _} -> n
-      :error -> fallback
+      {n, ""} -> n
+      _ -> fallback
     end
   end
 

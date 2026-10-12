@@ -213,6 +213,22 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert render(view) =~ "50"
   end
 
+  test "page size rejects numeric prefixes with trailing text", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/search?page_size=12junk")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "prefix probe",
+      "page_size" => "12junk",
+      "schema" => inspect(OpsPostA)
+    })
+
+    html = render(view)
+    assert html =~ ~s(data-testid="search-submitted-page-size">15</)
+    refute html =~ ~s(data-testid="search-submitted-page-size">12</)
+  end
+
   test "merge stub exposes merge trace block", %{conn: conn} do
     Application.put_env(:scrypath_ops, :search_stub_variant, :merge)
 
