@@ -232,7 +232,12 @@ background (below the 4.5:1 AA threshold for small text).
 **Eyebrow text:** `var(--color-secondary)` as eyebrow text on a `--ops-surface-1` background
 is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label text.
 
-### AA pairing evidence
+### Historical AA pairing evidence (Phase 131)
+
+These ratios preserve the Phase 131 palette snapshot; they do not describe current token
+values or establish current contrast. For current token-pair results, run
+`make -C examples/scrypath_ecommerce contrast`; for rendered browser coverage, run
+`make -C examples/scrypath_ecommerce contrast-matrix`.
 
 | Pairing | Theme | Ratio | AA verdict |
 | --- | --- | --- | --- |

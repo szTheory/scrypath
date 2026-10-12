@@ -32,6 +32,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     end
   end
 
+  defmodule RejectingOban do
+    def insert(_changeset), do: {:error, :queue_unavailable}
+  end
+
   defmodule Elixir.Oban.Job do
     defstruct [:id, :worker, :queue, :state, :attempt, :max_attempts, :args]
 
@@ -152,7 +156,15 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   test "explicit non-first schema keeps its diagnosed failure beside the accepted retry", %{
     conn: conn
   } do
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 402,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "fsv_ops_post_b",
+        "error" => %{"message" => "the Variant backend task failed"}
+      }
+    ])
 
     Application.put_env(:scrypath_ops, :oban_jobs, [
       %{
@@ -178,7 +190,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
 
-    assert html =~ "Failed job 509"
+    assert html =~ "Failed queue job 509"
+    assert html =~ "Failed backend task 402"
     assert html =~ "upsert · oban · last attempt Oct 10, 2026 at 14:15 UTC"
     assert html =~ "Retry currently available."
     assert html =~ "the Variant source remains visible"
@@ -195,26 +208,100 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
       }
     )
 
-    accepted = render_click(view, "retry", %{"id" => "509"})
+    accepted = render_click(view, "retry", %{"source" => "oban", "id" => "509"})
 
     assert accepted =~ "Retry accepted"
     assert accepted =~ "Queue job 991"
     assert accepted =~ "Original failure #509 retained"
-    assert accepted =~ "Failed job 509"
+    assert accepted =~ "Failed queue job 509"
     refute accepted =~ "Recovery verified"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+  end
+
+  test "retry identity includes its source when backend and queue IDs collide", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 501,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "fsv_ops_post_a",
+        "error" => %{"message" => "the backend task remains failed"}
+      }
+    ])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 501,
+        state: "retryable",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "search_sync",
+        args: %{
+          "operation" => "upsert",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_a",
+          "document_count" => 1,
+          "document_ids" => ["collision-501"],
+          "documents" => [
+            %{
+              "id" => "collision-501",
+              "data" => %{"title" => "Queue job"},
+              "source" => "fields"
+            }
+          ]
+        }
+      }
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    assert has_element?(view, "[data-work-source='meilisearch'][data-work-id='501']")
+
+    assert has_element?(
+             view,
+             "[data-work-source='oban'][data-work-id='501'] [data-testid='failed-sync-retry']"
+           )
+
+    put_live_assigns(view,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+
+    accepted =
+      view
+      |> element(
+        "[data-work-source='oban'][data-work-id='501'] [data-testid='failed-sync-retry']"
+      )
+      |> render_click()
+
+    backend_row =
+      view |> element("[data-work-source='meilisearch'][data-work-id='501']") |> render()
+
+    queue_row = view |> element("[data-work-source='oban'][data-work-id='501']") |> render()
+
+    assert accepted =~ "Retry accepted"
+    assert queue_row =~ "Original failure #501 retained"
+    assert queue_row =~ "data-testid=\"recovery-receipt\""
+    refute backend_row =~ "data-testid=\"recovery-receipt\""
+    assert :sys.get_state(view.pid).socket.assigns.recovery_receipts[{"oban", "501"}]
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
   end
 
   test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "2 failed sync jobs need triage"
+    assert html =~ "2 failed sync work items need triage"
     assert html =~ "dominant reason"
-    assert html =~ "1 retryable job"
-    assert html =~ "2 failed sync jobs"
+    assert html =~ "1 retryable work item"
+    assert html =~ "2 failed sync work items"
     assert html =~ "data-testid=\"failed-sync-row\""
     assert html =~ "data-testid=\"failed-sync-retry\""
-    assert html =~ "Failed sync jobs"
+    assert html =~ "Failed sync work items"
     assert html =~ "Refresh failed sync work"
     assert html =~ "Retry sync work"
     assert html =~ "index missing"
@@ -234,22 +321,65 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :oban_jobs, [])
 
-    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
 
     assert html =~ ~s(data-testid="failed-sync-empty-hero")
-    assert html =~ "No failed sync jobs"
+    assert html =~ "No failed sync work"
     assert html =~ "Refresh this view"
+    assert html =~ ~s(aria-labelledby="failed-sync-rollups-heading")
+    assert has_element?(view, "#failed-sync-rollups-heading", "Failed sync work summary")
+    refute html =~ "No failed sync work visible"
+    refute html =~ "dominant reason"
+    refute html =~ "0 failed sync work items"
+    refute html =~ "unknown"
     refute html =~ "data-testid=\"failed-sync-row\""
   end
 
-  test "one failed job uses singular copy", %{conn: conn} do
+  test "retry failures keep the row and explain how to recover", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 516,
+        state: "retryable",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "search_sync",
+        errors: [%{"error" => "original sync failure remains visible"}],
+        args: %{
+          "operation" => "upsert",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_a",
+          "document_count" => 1,
+          "document_ids" => [516],
+          "documents" => [
+            %{"id" => 516, "data" => %{"title" => "Retry me"}, "source" => "fields"}
+          ]
+        }
+      }
+    ])
+
+    Application.put_env(:scrypath_ops, :oban, RejectingOban)
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    failed = render_click(view, "retry", %{"source" => "oban", "id" => "516"})
+
+    assert failed =~
+             "Retry failed: :queue_unavailable. Refresh failed sync work and review the current eligibility before trying again."
+
+    assert failed =~ "Failed queue job 516"
+    assert failed =~ "original sync failure remains visible"
+  end
+
+  test "one failed work item uses singular copy", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
 
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "1 failed sync job needs triage"
-    assert html =~ "1 retryable job"
-    refute html =~ "1 failed sync jobs need triage"
+    assert html =~ "1 failed sync work item needs triage"
+    assert html =~ "1 retryable work item"
+    refute html =~ "1 failed sync work items need triage"
   end
 
   test "empty allowlist shows setup rather than healthy zero work", %{conn: conn} do
@@ -289,7 +419,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, removed_view, _html} = live(conn, ~p"/ops/failed-sync")
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
-    retry_html = render_click(removed_view, "retry", %{"id" => "501"})
+    retry_html = render_click(removed_view, "retry", %{"source" => "oban", "id" => "501"})
     assert retry_html =~ "That schema is unavailable."
     refute retry_html =~ "Retried 501"
     assert :sys.get_state(removed_view.pid).socket.assigns.selected_schema == nil
@@ -316,7 +446,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     }
 
     {:noreply, socket} =
-      ScrypathOpsWeb.FailedSyncLive.handle_event("retry", %{"id" => "501"}, socket)
+      ScrypathOpsWeb.FailedSyncLive.handle_event(
+        "retry",
+        %{"source" => "oban", "id" => "501"},
+        socket
+      )
 
     assert inspect(socket.redirected) =~ "/sudo/confirm"
     assert inspect(socket.redirected) =~ "return_to=%2Fops%2Ffailed-sync"
@@ -336,7 +470,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
       }
     )
 
-    html = render_click(view, "retry", %{"id" => "501"})
+    html = render_click(view, "retry", %{"source" => "oban", "id" => "501"})
 
     assert html =~ "Retry accepted"
     assert html =~ "Queue job 991"
@@ -348,11 +482,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert assigns.last_refresh_at != nil
     assert assigns.load_error == nil
     assert assigns.inspection != nil
-    assert assigns.recovery_receipts["501"].replacement_job == 991
+    assert assigns.recovery_receipts[{"oban", "501"}].replacement_job == 991
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
-    repeated = render_click(view, "retry", %{"id" => "501"})
-    assert repeated =~ "A retry for job 501 is already accepted"
+    repeated = render_click(view, "retry", %{"source" => "oban", "id" => "501"})
+    assert repeated =~ "A retry for queue job 501 is already accepted"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
     generation = assigns.context_generation
@@ -390,9 +524,25 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Retry unavailable. This work item does not expose a supported retry."
     refute has_element?(view, "[data-testid='failed-sync-retry']")
 
-    rejected = render_click(view, "retry", %{"id" => "515"})
-    assert rejected =~ "That job does not expose a retry action"
-    assert rejected =~ "Failed job 515"
+    rejected = render_click(view, "retry", %{"source" => "oban", "id" => "515"})
+
+    assert rejected =~
+             "Retry unavailable. This work item does not expose a supported retry. Refresh failed sync work and review its current state."
+
+    assert rejected =~ "Failed queue job 515"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+  end
+
+  test "malformed retry identities fail closed without crashing or inserting", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+
+    html =
+      render_click(view, "retry", %{
+        "source" => %{"nested" => "oban"},
+        "id" => ["501"]
+      })
+
+    assert html =~ "Retry unavailable. This work item no longer exposes a retry action."
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
@@ -448,7 +598,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     ])
 
     {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
-    html = render_click(view, "retry", %{"id" => "502"})
+    html = render_click(view, "retry", %{"source" => "oban", "id" => "502"})
 
     assert html =~ "Confirm delete sync work"
     assert html =~ "fsv_ops_post_a"
@@ -459,7 +609,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "cancel_retry_delete", %{})
     refute html =~ "Confirm delete sync work"
-    assert html =~ "Failed job 502"
+    assert html =~ "Failed queue job 502"
     refute html =~ "Retry accepted"
   end
 

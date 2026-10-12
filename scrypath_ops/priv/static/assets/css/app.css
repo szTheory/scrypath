@@ -3383,9 +3383,6 @@
     .ops-header .ops-command-hint {
       width: fit-content;
     }
-    .ops-header .ops-theme-toggle__button > span {
-      display: none;
-    }
   }
   @media (max-width: 360px) {
     .ops-header .ops-command-hint {
@@ -3717,6 +3714,9 @@
   }
   .ops-metric__value--warning {
     color: var(--ops-warning-text);
+  }
+  .ops-state-text--error {
+    color: var(--ops-error-text);
   }
   .ops-verdict__icon--success {
     color: var(--color-success);
@@ -4091,7 +4091,7 @@
     min-width: 0;
     flex: 1 1 100%;
     color: var(--ops-text-muted);
-    font-size: var(--text-ops-xs);
+    font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
     overflow-wrap: anywhere;
   }
@@ -4770,22 +4770,17 @@
   }
   .ops-signal-group {
     min-width: 0;
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 8%, transparent);
-    }
-    border-radius: var(--radius-ops-control);
-    background: var(--ops-surface-2);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--ops-surface-2) 48%, transparent);
-    }
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: none;
+    box-shadow: none;
     padding: var(--spacing-ops-3);
   }
   .ops-signal-group__title {
-    font-size: var(--text-ops-sm);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: var(--text-ops-md);
+    font-weight: 600;
+    line-height: var(--leading-ops-tight);
     color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklch, var(--color-base-content) 64%, transparent);

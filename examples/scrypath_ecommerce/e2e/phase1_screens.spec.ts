@@ -34,7 +34,7 @@ test("search health", async ({ page }, testInfo) => {
 
 test("failed sync (collapsed + expanded evidence)", async ({ page }, testInfo) => {
   await page.goto("/admin/search/failed-sync");
-  await page.getByRole("heading", { name: "Failed sync work" }).waitFor();
+  await page.getByRole("heading", { name: "Failed sync work", exact: true }).waitFor();
   await page.waitForTimeout(300);
   await capture(page, testInfo, "03-failed-sync");
   // Expand the first evidence disclosure to show the new chevron affordance + rhythm.

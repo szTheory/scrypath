@@ -27,16 +27,17 @@ Version **1** interchange for saved searches is **JSON** and **ops-local** (vali
 ## Securing `/ops`
 
 Authentication and authorization for **`/ops`** are **host-owned** concerns: **`scrypath_ops`**
-ships a Phoenix + LiveView shell and documents boot-time guards (for example
-**`OPSUI_AUTH_MODE`** in **`docs/SECURITY.md`**), but it does **not** replace your
-organization’s identity layer.
+ships a Phoenix + LiveView shell but does not replace your organization’s identity layer.
+**`OPSUI_AUTH_MODE`** validates a configuration value; it is not an authentication guard.
 
-Wire the operator routes the same way you would any internal admin UI: wrap them in a
-**`live_session`** with **`on_mount`** hooks that enforce your session or token rules, or
-terminate TLS and authenticate at the edge before traffic reaches Phoenix. See Phoenix
+The **`scrypath_ops_routes/2`** helper creates its own **`live_session`** and installs only the
+ScrypathOps shell `on_mount` hook; it currently has no option for a host authentication hook.
+Protect the initial HTTP request and both LiveView WebSocket and long-poll connections at a
+trusted edge, or mount host-controlled routes that run authentication and authorization checks
+for each LiveView mount and sensitive event. See Phoenix
 **[`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3)**
-and **`on_mount`** callbacks in
-**[`Phoenix.LiveView`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount)**.
+and **[`on_mount`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount)**.
+Read [**`docs/SECURITY.md`**](SECURITY.md) before exposing `/ops` on a network.
 
 ## Navigation
 

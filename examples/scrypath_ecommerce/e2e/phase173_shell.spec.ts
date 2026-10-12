@@ -110,6 +110,29 @@ async function captureShell(page: Page, entry: Entry, theme: string, width: numb
   await expect(page.locator("#theme-toggle button")).toHaveCount(3);
   await expect(page.locator("#theme-toggle button span")).toHaveText(["System", "Light", "Dark"]);
 
+  const controls = await page.locator("#theme-toggle button").evaluateAll((buttons) =>
+    buttons.map((button) => {
+      const rect = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return {
+        width: rect.width,
+        height: rect.height,
+        minWidth: parseFloat(style.minWidth),
+        minHeight: parseFloat(style.minHeight),
+        selected: button.getAttribute("data-theme-selected"),
+        pressed: button.getAttribute("aria-pressed")
+      };
+    })
+  );
+  expect(controls).toHaveLength(3);
+  for (const control of controls) {
+    expect(control.width).toBeGreaterThanOrEqual(44);
+    expect(control.height).toBeGreaterThanOrEqual(44);
+    expect(control.minWidth).toBeGreaterThanOrEqual(44);
+    expect(control.minHeight).toBeGreaterThanOrEqual(44);
+        expect(control.selected).toBe(control.pressed);
+  }
+
   const geometry = await page.evaluate(() => ({
     viewportWidth: window.innerWidth,
     documentWidth: document.documentElement.scrollWidth,
@@ -190,8 +213,9 @@ for (const entry of entries) {
         .poll(() => page.locator(".ops-shell").evaluate((element) => getComputedStyle(element).backgroundColor))
         .toBe(expectedFloor);
 
-      await captureShell(page, entry, mode.name, 1440);
-      await captureShell(page, entry, mode.name, 390);
+      for (const width of [320, 390, 420, 421, 1440]) {
+        await captureShell(page, entry, mode.name, width);
+      }
       for (const width of [1279, 1280]) {
         await page.setViewportSize({ width, height: 900 });
         const documentWidth = await page.evaluate(() => document.documentElement.scrollWidth);
