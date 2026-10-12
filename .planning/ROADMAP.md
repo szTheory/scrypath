@@ -167,7 +167,7 @@ Plans:
   3. Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, see the explicit release or no-release decision, and inspect task-owned cleanup or intentional preview retention without extending archived receipts beyond their source.
 
 **Plans**: 5 plans
-- [ ] 177-01-PLAN.md — Document the delivered design vocabulary and inspect the six-surface baseline.
+- [ ] 177-01-PLAN.md — Document the delivered design vocabulary and capture the full six-surface visual baseline.
 - [ ] 177-02-PLAN.md — Correct demonstrated shared component/token drift and verify the affected UI.
 - [ ] 177-03-PLAN.md — Preserve identity and state semantics across Control Room, Search health, Failed sync work, and Sync and drift.
 - [ ] 177-04-PLAN.md — Preserve Search and Playbooks provenance and complete matched six-surface image evidence.

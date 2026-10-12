@@ -122,6 +122,12 @@ Retain these screen-specific scan paths; they are derived from the current LiveV
 
 The compiled probe reports **48 applicable, 48 resolved explicitly, 0 unresolved, 0 unclassified, 0 backstops**. These are acceptance criteria for any changed UI, not passing application tests or a substitute for the Copywriting Contract.
 
+### Direct visual evidence matrix
+
+The existing `admin_screenshot_matrix.spec.ts` is the direct visual evidence source for the six surfaces. Extend its existing representative scenario/state captures across three theme modes—explicit light, explicit dark, and System-dark—and three viewport sizes: 390×844, 768×900, and 1440×900. System-dark means `localStorage["phx:theme"]` is unset, Playwright emulates `colorScheme: "dark"`, and the page is asserted to retain System mode while resolving to the dark theme. Output names identify screen, state, theme mode, and viewport width.
+
+For every changed UI slice, inspect matched before/after images at the same route and representative state for all nine theme/viewport combinations. If that exact route/state is absent from the existing fixtures, add only the required fixture-backed capture to this same matrix. Direct images establish visual review; ExUnit, browser assertions, layout/state probes, and contrast checks remain separate executable evidence and must still pass. Images do not establish behavior by themselves.
+
 The six inputs cover Control Room, Search health, Failed sync work, Sync and drift, Search, and Playbooks plus their shared navigation shell. Collections apply on all surfaces; forms apply where present. No media surface is in scope. Phase 173/176 shell and theme decisions remain inherited. The explicit per-surface kinds and category resolutions are recorded below; no item was dismissed or left for a human backstop.
 
 Inputs: [177-ui-elements.json](177-ui-elements.json) and [177-ui-resolutions.json](177-ui-resolutions.json). Report: [177-ui-coverage.json](177-ui-coverage.json). Re-run from the repository root: node /Users/jon/.codex/gsd-core/bin/lib/ui-consideration-probe.cjs .planning/phases/177-shared-patterns-and-delivery-proof/177-ui-elements.json .planning/phases/177-shared-patterns-and-delivery-proof/177-ui-resolutions.json (resolve the installed runtime path on other hosts). Each row lifts as an explicit truth.
