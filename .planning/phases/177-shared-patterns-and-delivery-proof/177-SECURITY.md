@@ -1,8 +1,8 @@
 ---
 phase: "177"
 slug: "shared-patterns-and-delivery-proof"
-status: blocked
-threats_open: 1
+status: verified
+threats_open: 0
 asvs_level: 1
 created: "2026-10-12"
 ---
@@ -25,19 +25,19 @@ created: "2026-10-12"
 
 | Threat ID | Category | Component | Severity | Disposition | Mitigation | Status |
 |-----------|----------|-----------|----------|-------------|------------|--------|
-| T-177-01 | Tampering | `DESIGN.md`, `DESIGN-TOKENS.md`, screenshot matrix, six-surface audit | medium | mitigate | Derive docs from source; assert System-dark capture and record each image's route/state/theme/viewport, source SHA, and path. | open — below high threshold (non-blocking) |
+| T-177-01 | Tampering | `DESIGN.md`, `DESIGN-TOKENS.md`, screenshot matrix, six-surface audit | medium | mitigate | Derive docs from source; assert System-dark capture and record each image's route/state/theme/viewport, source SHA, and path. | closed |
 | T-177-02 | Tampering | Shared status/action components and token CSS | high | mitigate | Limit edits to audited findings; run Ops behavior tests and inspect changed consumers. | closed |
 | T-177-03 | Tampering | Four surface-specific LiveViews and action links | high | mitigate | Preserve exact identity/action gates; run named LiveView tests and mounted proof for changed recovery handoffs. | closed |
 | T-177-04 | Tampering | Search/Playbooks rendering, tests, and image evidence | high | mitigate | Preserve submitted/file identity; record matched image paths and full source SHAs. | closed |
-| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted review/check evidence against the exact source; unresolved records block OPUX-28 completion. | open |
+| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted review/check evidence against the exact source; unresolved records block OPUX-28 completion. | closed |
 | T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | closed |
 | T-177-SC | Tampering | Package installation | high | mitigate | Preserve the no-dependency boundary; require package-legitimacy review and a human gate if install scope changes. | closed |
 
-**Verification evidence:** The security auditor found T-177-02 through T-177-04, T-177-06, and T-177-SC closed. Evidence is recorded in the auditor result: CSS diff and contract tests; existing identity/action assertions and focused suites; the Search/Playbooks identity assertions and source-bounded image inventory; the cleanup ledger and retained preview inventory; and no package manifest or lockfile changes.
+**Verification evidence:** The follow-up security audit verified all seven unique threats closed at exact source `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`. Evidence includes the corrected design guide and source-matched screenshot assertions/metadata (T-177-01); CSS diff and contract tests (T-177-02); identity/action assertions and focused suites (T-177-03); Search/Playbooks identity assertions and source-bounded image inventory (T-177-04); hosted required checks plus exact-source closeout artifact (T-177-05); the cleanup ledger and retained preview inventory (T-177-06); and no package manifest or lockfile changes (T-177-SC).
 
-**T-177-01 finding:** `DESIGN.md:21` described the shell's top-level gap as the 24px `space-y-ops-page-gap`; `layouts.ex:278–279` uses `space-y-4`, as `DESIGN-TOKENS.md:99` states. System-dark capture and image metadata requirements were otherwise present. This medium-severity documentation mismatch is non-blocking and will be corrected before re-audit.
+**T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 finding:** PR #98 required checks passed on exact head `39e6a44c4a16084ec0738de5ea29a5e61b18b842`, while its formal review list is empty and `closeout-attestation` is skipped on PR runs. The user-approved prior merge authorization waives only the formal-review gate; it is not a review record. The final exact-source closeout attestation has not run, so this threat remains blocking. `177-05-SUMMARY.md` and `REQUIREMENTS.md` currently mark OPUX-28 complete prematurely and must be corrected until the terminal attestation succeeds.
+**T-177-05 resolution:** PR #98 run [38318747952](https://github.com/szTheory/scrypath/actions/runs/38318747952) tested exact head `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; all five required jobs and `ops-ui-path` succeeded. The review API is empty. The user's prior CI-conditioned merge authorization waives only the formal-review gate; it is not represented as a review or reviewed source. Exact-source closeout run [38319195947](https://github.com/szTheory/scrypath/actions/runs/38319195947) covered the same SHA and passed all required jobs, coverage, and `closeout-attestation`. The coverage artifact is `11778055844` (`sha256:2cc8b21a75c844531a1e4545827fb6dae41607838478af6bfc83dd40290240e1`); the closeout artifact is `11778310823` (`sha256:6184b3afaeabff682321903d1a834f653b673df0a2bc31f96e27120ffe0ed3ab`), expiring 2026-10-19. The `deep-quality` and `ecommerce-e2e` advisory jobs failed and remain visible follow-ups; neither is a required gate. A new final-source attestation is still required after the remaining phase bookkeeping changes.
 
 ## Accepted Risks Log
 
@@ -48,6 +48,7 @@ No accepted risks. The formal-review waiver is a narrow process waiver and is no
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
 | 2026-10-12 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor |
+| 2026-10-12 | 7 | 7 | 0 | gsd-security-auditor (follow-up at `dd0f89e`) |
 
 ## Unregistered Flags
 
@@ -57,7 +58,7 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
-- [ ] `threats_open: 0` confirmed
-- [ ] `status: verified` set in frontmatter
+- [x] `threats_open: 0` confirmed
+- [x] `status: verified` set in frontmatter
 
-**Approval:** blocked — 1 high-severity threat remains open.
+**Approval:** verified — all seven unique threats are mitigated or closed. The formal-review waiver is procedural only and is not an accepted technical risk. Final-source attestation must be rerun after the remaining tracking records are committed.
