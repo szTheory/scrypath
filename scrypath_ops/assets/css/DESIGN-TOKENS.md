@@ -1,6 +1,7 @@
 # ScrypathOps design tokens
 
-The brand + design-system contract for the `/ops` operator shell. Tokens live in the
+The shared token/component contract for the ScrypathOps operator shell. The shell is
+mount-path agnostic; the ecommerce example mounts it at `/admin/search`. Tokens live in the
 `@theme` block of [`app.css`](./app.css); the `.ops-*` component classes in the same
 file consume them. This doc is the catalog — change a value here only by changing it in
 `app.css`.
@@ -130,6 +131,28 @@ inventory names every current export; add new exports here with their role consu
 | `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
 | `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
 | `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
+
+### Six-surface examples
+
+These examples describe current consumers, not a requirement to make each route share one
+template. Preserve the task-specific scan order documented in the root [`DESIGN.md`](../../../DESIGN.md).
+
+| Surface | Existing pattern | Component/source example |
+| --- | --- | --- |
+| Control Room | Observation → verdict or setup state → safe destination | Labelled native `<section>`, `ops_verdict`, `ops_link_button`, three `ops_intent_card` destinations |
+| Search health | Fleet verdict and metrics → worst-first schema evidence | `ops_verdict`, `ops_metric_grid`, schema articles with distinct Backend and Queue groups |
+| Failed sync work | Selected schema and inspection → failed rows → eligible retry and recovery | `ops_schema_select`, `ops_result_row`, `ops_action_group`, `ops_modal`, `ops_handoff` |
+| Sync and drift | Reconciliation → contract → freshness/recovery → gated promotion | `ops_section`, `ops_signal_table`, `ops_data_card`, native advanced `<details>` |
+| Search | Target/query form → attributed per-index Results → capture | `ops_fieldset`, `ops_segmented_control`, `ops_schema_select`, `ops_result_row`, `ops_disclosure` |
+| Playbooks | Workspace catalog → preview → run outcome → import | `ops_object_list`, `ops_object_item`, labelled preview/outcome sections, native import controls |
+
+### Superseded rules
+
+| Retired treatment | Current rule |
+| --- | --- |
+| Decorative shell wash and separate sliding theme-selection pill | Keep `.ops-shell` flat; use the three visible System/Light/Dark buttons and their explicit selected state. |
+| Extra top margins on direct `:ops` shell children | Let the shell's `space-y-4` own the page rhythm; add spacing inside the component group that needs it. |
+| Broad status-colored verdict or metric surfaces | Keep summary surfaces neutral; use explicit status text and a local theme-safe icon/value cue. |
 
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
