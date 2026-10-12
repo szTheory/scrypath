@@ -32,7 +32,7 @@ key-files:
 key-decisions:
   - "Do not publish or version-bump Scrypath separately in this phase; the changed lib/ files ship in Hex, so normal Release Please patch cadence applies after merge."
   - "Accept the user's prior CI-conditioned merge authorization as an explicit waiver of the formal-review gate; retain the exact check evidence and make no formal-review claim."
-requirements-completed: [OPUX-28]
+requirements-completed: []
 coverage:
   - id: P177-05-A
     description: Every approved OPUX requirement has one ordered local evidence row with a full source SHA, source limits, and shared hosted-evidence boundary.
@@ -51,14 +51,14 @@ coverage:
         status: pass
     human_judgment: false
   - id: P177-05-C
-    description: Formal-review checkpoint resolved under explicit owner waiver; exact PR-head required checks pass, with final-source attestation left for phase closeout.
+    description: Formal-review checkpoint waived by the owner; exact PR-head checks are recorded, while final-source attestation remains a blocking closeout gate.
     requirement: OPUX-28
     verification:
       - kind: other
-        ref: "PR #96 exact head 38e5752523c9906854af678e5a57f62bbb1d2d25; five required checks successful; user-waived formal review (no review claimed)"
-        status: pass
+        ref: "PR #98 audit snapshot at exact head 39e6a44c4a16084ec0738de5ea29a5e61b18b842; five required checks successful; final-source closeout attestation pending"
+        status: partial
     human_judgment: true
-    rationale: "The user explicitly waived the formal-review checkpoint using the earlier CI-conditioned merge authorization. Exact-source CI evidence exists; the waiver is not represented as a formal review."
+    rationale: "The user explicitly waived only the formal-review checkpoint using the earlier CI-conditioned merge authorization. The waiver is not represented as a formal review; the final exact-source attestation remains required before OPUX-28 completion."
 duration: 25min
 completed: 2026-10-12
 status: complete
@@ -83,7 +83,7 @@ status: complete
 1. **Task 1: Create the requirement evidence trace** — `1b53b1a` (`docs(177-05): add OPUX evidence trace`).
 2. **Task 2: Join hosted evidence and record package/release and cleanup facts** — package/release and cleanup are in `6ca54e0`; this commit records the actual PR/check snapshot and updates the summary.
 
-The resumed checkpoint is satisfied by the user's explicit waiver of the formal-review requirement; no review is fabricated. OPUX-28 is complete under that documented exception because all required checks passed at exact merged PR head `38e5752523c9906854af678e5a57f62bbb1d2d25`. The current trace/requirements/summary bookkeeping must still be committed and then covered by the final exact-source closeout gate; no attestation is claimed here.
+The formal-review checkpoint is waived by the user's explicit authorization; no review is fabricated. OPUX-28 remains pending because final exact-source closeout attestation has not run. PR #98's required checks passed at audit snapshot head `39e6a44c4a16084ec0738de5ea29a5e61b18b842`; that snapshot is not evidence for later branch commits. The trace, this summary, and all other completion bookkeeping must be committed before the final exact-source closeout gate.
 
 ## Decisions Made
 
@@ -98,7 +98,7 @@ The resumed checkpoint is satisfied by the user's explicit waiver of the formal-
 
 ## Blocking evidence
 
-The five required checks pass on the exact merged PR head, but the non-required `deep-quality (advisory)` check failed because the root and three application lockfiles resolve `decimal 3.1.1`; retain this as an open dependency-audit follow-up. Main CI completed successfully at merge commit `ab9eb4a28f724c468ef76b4c59355333bc23f174`, while closeout-attestation was skipped. The final source attestation is intentionally not run until all post-merge bookkeeping is committed and exact-source gates pass.
+At PR #98 audit snapshot head `39e6a44c4a16084ec0738de5ea29a5e61b18b842`, the five required checks passed; `deep-quality (advisory)` failed because the root and three application lockfiles resolve `decimal 3.1.1`, while PR-only `coverage (advisory)` and `closeout-attestation` were skipped. Keep the dependency advisory visible as a follow-up; do not change dependency scope as part of this security repair. These check results apply only to that recorded SHA. Refresh them after tracked edits, and keep OPUX-28 incomplete until exact-source closeout succeeds.
 
 ## Self-Check: PASSED
 

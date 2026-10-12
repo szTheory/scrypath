@@ -18,7 +18,7 @@ Use the system sans-serif stack for interface copy and the technical monospace s
 
 ## Layout
 
-The shared shell owns the top-level page rhythm with the 24px `space-y-ops-page-gap` role. Keep its direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
+The shared shell owns the top-level page rhythm with `space-y-4`; the 24px `space-y-ops-page-gap` role is used for deliberate group spacing inside selected surfaces. Keep the shell's direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
 
 The six routes have different scan paths: Control Room goes from fleet observation to verdict and three task routes; Search health goes from fleet summary to worst-first schema evidence; Failed sync work goes from selected schema to eligible jobs and recovery; Sync and drift separates reconciliation, contract, freshness, recovery, and gated promotion; Search keeps target/query controls next to submitted attribution and per-index results; Playbooks separates its catalog, preview, run outcome, and import. Preserve these task-specific orders.
 
