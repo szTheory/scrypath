@@ -1,8 +1,8 @@
 ---
 phase: 177-shared-patterns-and-delivery-proof
-verified: 2026-10-12T23:21:58Z
-status: gaps_found
-score: 68/69 must-haves verified
+verified: 2026-10-12T23:44:42Z
+status: passed
+score: 69/69 must-haves verified
 covered_files:
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-01-PLAN.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-01-SUMMARY.md
@@ -27,32 +27,28 @@ covered_files:
 covered_digest: "v3:sha256:e8b312d6932a3c4a2419591c16c9dbb4b4bc795786bb52e856ee9ea05ed8ea8c"
 behavior_unverified: 0
 overrides_applied: 0
-gaps:
-  - truth: "Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, with a final-source attestation after all phase bookkeeping is committed."
-    status: failed
-    reason: "Closeout run 38319195947 attests only dd0f89ebdb21e991b3831b98ba84713d3460fb1a. Current phase head 47ee6a477c31cbb944bba37ec02c3acd31366743 includes later tracked phase records; the existing receipt explicitly excludes later bookkeeping."
-    artifacts:
-      - path: .planning/phases/177-shared-patterns-and-delivery-proof/177-OPUX-TRACE.md
-        issue: "It states that the dd0f89e receipt does not cover later bookkeeping and requires a terminal closeout after all records are committed."
-      - path: .planning/phases/177-shared-patterns-and-delivery-proof/177-05-SUMMARY.md
-        issue: "The receipt is described as a snapshot, with terminal attestation still required after phase and roadmap bookkeeping."
-    missing:
-      - "After this report and all remaining phase/roadmap bookkeeping are committed, run terminal exact-source closeout against the resulting final merge source and retain its immutable receipt externally. Do not reuse run 38319195947 for that newer source."
+re_verification:
+  previous_status: gaps_found
+  previous_score: 68/69 must-haves verified
+  gaps_closed:
+    - "Final-source exact-SHA closeout after phase bookkeeping"
+  gaps_remaining: []
+  regressions: []
 human_verification: []
 ---
 
 # Phase 177: Shared Patterns and Delivery Proof Verification Report
 
 **Phase Goal:** Operators receive a consistent six-surface workspace, and maintainers can trace the delivered behavior to bounded, reviewable evidence.
-**Verified:** 2026-10-12T23:21:58Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-10-12T23:44:42Z
+**Status:** passed
+**Re-verification:** Yes — exact-source closeout gap closed
 
 ## Goal Achievement
 
-The shared design system and operator workflows are present, connected, and backed by source-bound UI and executable evidence. The final delivery-proof condition remains open: the passing closeout receipt is for an earlier source than the current phase head. This is a deterministic missing-artifact gap, not a request for routine human UAT.
+The shared design system and operator workflows are present, connected, and backed by source-bound UI and executable evidence. The previously missing terminal closeout now passes on the current exact source `e051c3e959953591afdcccaeed5ea11b97a34529`; its coverage and closeout artifact IDs and digests are recorded below.
 
-The roadmap's three criteria are represented by the 69 detailed plan truths; they are not double-counted. One plan truth fails: Plan 177-05's final-source ordering condition, which is also the OPUX-28 roadmap gap.
+The roadmap's three criteria are represented by the 69 detailed plan truths; they are not double-counted. The sole prior gap, Plan 177-05's final-source ordering condition, is now closed.
 
 ### Observable Truths
 
@@ -60,9 +56,9 @@ The roadmap's three criteria are represented by the 69 detailed plan truths; the
 |---|---|---|---|
 | 1 | Across Control Room, Search health, Failed sync work, Sync and drift, Search, and Playbooks, shared grouping, actions, statuses, and feedback are grounded in current components/tokens and documented without arbitrary export counts or retired styling. | ✓ VERIFIED | DESIGN.md and DESIGN-TOKENS.md describe rendered source. The dynamic contract discovers current OpsUi exports and checks catalog coverage. The focused current-source test at line 136 passed (1 test, 0 failures); Plan 01 artifact checks passed 5/5. Component classes, CSS roles, and documented examples were manually traced. |
 | 2 | The six surfaces preserve truthful state distinctions, evidence order, identity, action eligibility, and responsive/theme behavior, with matched direct visual evidence and executable checks. | ✓ VERIFIED | Plans 177-01 through 177-04 provide 63 plan truths; prior phase verification reports 173-176 establish underlying tested workflows, while Phase 177's LiveView suites and Ops UI gate cover operational, Search, and Playbooks behavior. The UI audit records 90 inspected direct images and 90 matching after images (10 representative states × Light/Dark/System-dark × 390/768/1440 widths), plus 60 separate interaction images. Three rendered contrast scenarios have 0 AA failures. Product UI source is unchanged after 6f227c062655d031e2bcb1484c939ad28ccc5290; commits since dd0f89e only update phase records. |
-| 3 | All 20 requirements have committed, source-bounded delivery evidence and exact final-source closeout after final bookkeeping. | ✗ FAILED | The ordered trace rows and prior exact-SHA PR checks exist. The owner waived only the absent formal-review gate; the PR review API was empty and no formal review is claimed. Run 38319195947 passed on dd0f89ebdb21e991b3831b98ba84713d3460fb1a, but current head is 47ee6a477c31cbb944bba37ec02c3acd31366743 and includes later phase records. The trace disclaims coverage of those records and requires a terminal closeout after all are committed. |
+| 3 | All 20 requirements have committed, source-bounded delivery evidence and exact final-source closeout after final bookkeeping. | ✓ VERIFIED | Closeout workflow [38322328937](https://github.com/szTheory/scrypath/actions/runs/38322328937) completed successfully on the current exact HEAD `e051c3e959953591afdcccaeed5ea11b97a34529`. All five required jobs passed; coverage artifact `11778464009` has digest `sha256:0c38b6699e7be8f1b9dd14fc7532ba4ee6c36a74f28c871695b7fd1481a558cb`, and closeout artifact `11779835787` has digest `sha256:b811423adb95ff24e270b17522d0f8b43052bbdd91142937af11c24ed183727a`. The run's closeout job validated the exact-source joins. The prior formal-review gate remains narrowly waived by the owner; no formal review or reviewed source SHA is claimed. |
 
-**Plan-truth accounting:** 68/69 verified. The single failed truth is the Plan 177-05 final-source ordering condition. Its pending-state/concurrency guard is satisfied because no final-source receipt is claimed for the newer head.
+**Plan-truth accounting:** 69/69 verified. The Plan 177-05 final-source ordering condition is closed by the exact-HEAD closeout run; the prior run on `dd0f89e` remains historical evidence only.
 
 ### Plan 177-01 State Matrix (48 truths)
 
@@ -84,7 +80,7 @@ The 48 rows in 177-UI-AUDIT.md are acceptance criteria, not evidence on their ow
 | 177-02: contrast roles, contract coverage, and matched visual results (4 truths) | ✓ VERIFIED | app.css places role overrides after Tailwind layers; catalog and contract test cover selectors/cascade. The 27 before/after pairs and 90-image matrix are inventoried; rendered contrast checks report 0 AA failures. |
 | 177-03: operational workflow order, identity, state and action semantics (7 truths) | ✓ VERIFIED | Four focused LiveView suites (68 tests) and mix verify.ops_ui (302 tests) passed at unchanged product source. The no-drift disposition is backed by actual LiveView source and tests; recovery source did not change, so conditional mounted rerun did not apply. |
 | 177-04: Search/Playbooks provenance, criteria/results and evidence limits (4 truths) | ✓ VERIFIED | Focused suites (55 tests), 38 browser depth tests, and the 90-image filename-matched matrix are recorded at unchanged source 6f227c0. Source and test files remain present and wired; depth screenshots are not counted as direct matrix evidence. |
-| 177-05: trace uniqueness, explicit unknowns, exact SHA fields, final-source ordering, idempotency, concurrency (6 truths) | 5 ✓ / 1 ✗ | The trace has 20 ordered unique rows and full source SHAs, explicitly describes absent review and the owner's narrow waiver, lists exact PR/check SHAs, release decision, and task-owned cleanup/preview retention. Idempotency and pending-state guards are recorded. Final-source ordering fails because no receipt exists for the current post-bookkeeping head. |
+| 177-05: trace uniqueness, explicit unknowns, exact SHA fields, final-source ordering, idempotency, concurrency (6 truths) | ✓ VERIFIED | The trace has 20 ordered unique rows and full source SHAs, explicitly describes absent review and the owner's narrow waiver, lists exact PR/check SHAs, release decision, and task-owned cleanup/preview retention. The current-source closeout run below closes final-source ordering; idempotency and concurrency guards remain satisfied. |
 
 ### Required Artifacts
 
@@ -107,7 +103,7 @@ Declared artifacts passed the artifact query (Plans 01–05: 5/5, 3/3, 4/4, 3/3,
 | DESIGN.md | app.css, token catalog, UI audit | Documented patterns follow rendered roles and recorded baseline | WIRED | Guide links implementation authorities; audit describes matching scan paths and source. |
 | Screenshot matrix | UI audit | Captures recorded with route/state/theme/viewport identity | WIRED | Spec and audit inventories match retained images; 90 before/after pairs. |
 | REQUIREMENTS.md | OPUX trace | One row per approved ID and source-bounded evidence | WIRED | Requirement list and trace contain OPUX-09–OPUX-28 exactly once each. |
-| OPUX trace | final closeout receipt | Attest exact final source after all records are committed | NOT WIRED YET | Existing run is for dd0f89e; current final source is newer and no terminal receipt exists. |
+| OPUX trace | final closeout receipt | Attest exact final source after all records are committed | WIRED | Run 38322328937's closeout job validated joins for exact source `e051c3e959953591afdcccaeed5ea11b97a34529`; artifact 11779835787 is retained with its digest above. |
 
 ### Data-Flow Trace (Level 4)
 
@@ -126,7 +122,9 @@ Declared artifacts passed the artifact query (Plans 01–05: 5/5, 3/3, 4/4, 3/3,
 | Operational state, recovery identity and action eligibility | Phase 177-03 focused suites and Ops UI gate at unchanged source | 68 focused tests; 302 Ops tests, 0 failures, recorded run | ✓ PASS |
 | Search/Playbooks submitted identity, states and interactions | Phase 177-04 focused suite and admin_surface_depth.spec.ts at unchanged source | 55 focused tests and 38 browser tests, 0 failures, recorded run | ✓ PASS |
 | Responsive/theme/contrast evidence | Source-bound direct matrix and rendered contrast reports | 90 matched pairs; 0 AA failures across three reports | ✓ PASS |
-| Final-source closeout | Run 38319195947 | Passed on dd0f89e; does not cover current head | ✗ STALE FOR CURRENT HEAD |
+| Final-source closeout | [Run 38322328937](https://github.com/szTheory/scrypath/actions/runs/38322328937) | Success on exact HEAD `e051c3e959953591afdcccaeed5ea11b97a34529`; all five required jobs and closeout attestation passed. Coverage artifact 11778464009 and closeout artifact 11779835787 have the exact digests recorded above. | ✓ PASS |
+
+The run's `deep-quality (advisory)` and `ecommerce-e2e (advisory)` jobs failed. They are non-required advisory jobs; the required `ecommerce-mounted` job passed. Coverage and compatibility advisory jobs passed. These advisory failures do not negate the required gates or exact-source closeout. The path-scoped Ops UI job was skipped on this workflow-dispatch run.
 
 ### Probe Execution
 
@@ -138,7 +136,7 @@ Skipped: this UI/evidence phase declares no probe scripts or probe-based accepta
 |---|---|---|---|
 | OPUX-26 | 177-01 through 177-04 | ✓ SATISFIED | Shared vocabulary, token/component catalog, export contract, and six-surface source audit. |
 | OPUX-27 | 177-01 through 177-04 | ✓ SATISFIED | Matched image evidence plus behavior, layout/depth and contrast evidence; no changed recovery source required a new mounted lane. |
-| OPUX-28 | 177-05 | ✗ BLOCKED | Trace and earlier hosted checks exist; final post-bookkeeping exact-source attestation is absent for current source. |
+| OPUX-28 | 177-05 | ✓ SATISFIED | Trace, explicit release/cleanup records, exact-SHA required checks and terminal closeout attestation on current source `e051c3e959953591afdcccaeed5ea11b97a34529`. |
 
 No orphaned requirements: REQUIREMENTS.md maps only OPUX-26, OPUX-27 and OPUX-28 to Phase 177, and each appears in the plans.
 
@@ -160,10 +158,10 @@ None. The remaining closeout is an exact-source automated attestation that must 
 
 ### Gaps Summary
 
-OPUX-26 and OPUX-27 are verified. OPUX-28 remains incomplete because the latest closeout receipt attests dd0f89ebdb21e991b3831b98ba84713d3460fb1a, while current source is 47ee6a477c31cbb944bba37ec02c3acd31366743. Intervening tracked changes are phase records and do not alter product UI, but phase contract requires attestation after this bookkeeping. Commit this report with the remaining phase records, then run terminal exact-source closeout for the resulting final merge source and retain the immutable receipt outside the source it attests. The owner's formal-review waiver is limited to that process gate; no formal review or reviewed source SHA is claimed.
+OPUX-26, OPUX-27, and OPUX-28 are verified. The earlier exact-source receipt on `dd0f89e` did not cover later bookkeeping; run 38322328937 now supplies successful terminal closeout evidence on exact HEAD `e051c3e959953591afdcccaeed5ea11b97a34529`. Five required jobs passed, as did coverage and closeout attestation. `deep-quality` and `ecommerce-e2e` advisory jobs failed and remain accurately disclosed; they are non-required. The formal-review waiver is a narrow owner process waiver only. The review API was empty; no formal review or reviewed source SHA is claimed.
 
 ---
 
-_Verified: 2026-10-12T23:21:58Z_  
+_Verified: 2026-10-12T23:44:42Z_  
 _Verifier: the agent (gsd-verifier)_
 
