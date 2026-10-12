@@ -14,7 +14,7 @@ affects: [phase-177-closeout]
 actuals:
   tokens: 5000
   tasks: 2
-  commits: 2
+  commits: 3
 tech-stack:
   added: []
   patterns:
@@ -69,13 +69,14 @@ status: halted
 - Compared the final diff with the package allowlist. `lib/scrypath/operator/state.ex` and `lib/scrypath/operator/status.ex` ship in Hex, so the decision is no separate release or version bump in this phase; the standard Release Please patch train applies after merge.
 - Recorded exact Phase 177 disposable-project cleanup, confirmed no Phase 177 containers/networks/volumes remain, and preserved the maintainer preview and its volumes. Read-only inspection found its web container exited; it was not contacted or restarted.
 - Validated exactly twenty unique ordered IDs, full SHAs in every row, resolving local links, and a clean `git diff --check`.
+- Published draft [PR #96](https://github.com/szTheory/scrypath/pull/96). At head `6ca54e08b24bff993b4645b6db1e402ef0705fde`, the review API returned no reviews and the five required checks were in progress with matching full `head_sha` values; the trace records those actual run URLs and results.
 
 ## Task Commits
 
 1. **Task 1: Create the requirement evidence trace** — `1b53b1a` (`docs(177-05): add OPUX evidence trace`).
-2. **Task 2: Record package/release and cleanup evidence** — this summary commit.
+2. **Task 2: Join hosted evidence and record package/release and cleanup facts** — package/release and cleanup are in `6ca54e0`; this commit records the actual PR/check snapshot and updates the summary.
 
-The branch had no published head or PR when this local closeout record was prepared. The plan's next action is to push the branch and create a draft PR, then inspect its actual reviews and required checks. If any exact-source record is missing, pending, failed, or mismatched, this plan remains halted and OPUX-28 remains incomplete.
+The trace update is a tracked change after the `6ca54e0` PR head and will advance the branch again when committed. The new head's review and five required checks must be inspected independently. Because no review exists and all checks at `6ca54e0` were still in progress, this plan remains halted and OPUX-28 remains incomplete.
 
 ## Decisions Made
 
@@ -90,7 +91,7 @@ The branch had no published head or PR when this local closeout record was prepa
 
 ## Blocking evidence
 
-No reviewed PR source, review record, or required hosted-check run was available at the time recorded. The final source attestation is intentionally not run. Continue only after the actual draft PR review and each required check are present for the same exact full SHA, then re-evaluate whether any bookkeeping update would advance the source before closeout.
+The initial local trace was drafted before a PR existed. Draft PR #96 now provides a real review/check boundary, but the review API is empty and the five checks on `6ca54e08b24bff993b4645b6db1e402ef0705fde` were in progress. This trace/summary update will create a new PR head, so the earlier runs do not prove the new source. The final source attestation is intentionally not run. Continue only after the actual review and all required checks are present for one exact full SHA, with no later tracked writes.
 
 ---
 *Phase: 177-shared-patterns-and-delivery-proof*
