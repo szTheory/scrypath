@@ -1,7 +1,7 @@
 # Requirements: Scrypath — v1.43 ScrypathOps UI refinement
 
 **Defined:** 2026-10-06
-**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-15 are complete and verified locally in Phase 173; OPUX-16–OPUX-19 are complete and verified locally in Phase 174; OPUX-20–OPUX-28 remain pending.
+**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-15 are complete and verified locally in Phase 173; OPUX-16–OPUX-19 are complete and verified locally in Phase 174; OPUX-20–OPUX-25 are complete in Phases 175–176; OPUX-26–OPUX-27 remain pending. OPUX-28 is complete under the documented owner waiver for the absent formal PR review; no formal review is claimed, and final-source attestation remains a separate pending closeout gate.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.43 Requirements
@@ -41,7 +41,7 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 - [ ] **OPUX-26**: Operators encounter the same demonstrated section/object grouping, action, status, and feedback patterns across all six surfaces; the existing component/token system owns those patterns, superseded styling is removed, and DESIGN.md plus the component/token catalog describe the delivered vocabulary without a fixed arbitrary component count.
 - [ ] **OPUX-27**: Operators can use the refined workflows in both themes, at narrow/desktop widths, with keyboard/focus and reduced-motion behavior intact. Each slice supplies direct before/after image inspection and relevant automated layout/state/contrast proof; changed recovery seams also receive mounted evidence in existing lanes, with no paid judge or pending routine human UAT.
-- [ ] **OPUX-28**: Maintainers can trace every delivered requirement to committed verification and reviewed PR-first source/CI evidence, including an explicit release/no-release decision and cleanup or intentional preview retention; completion bookkeeping precedes final-source attestation and archived evidence remains within its source limits.
+- [x] **OPUX-28**: Maintainers can trace every delivered requirement to committed verification and PR-first source/CI evidence, including an explicit release/no-release decision and cleanup or intentional preview retention; completion bookkeeping precedes final-source attestation and archived evidence remains within its source limits. **Owner waiver:** the user waived the absent formal review using the prior CI-conditioned merge authorization. No formal review is claimed; the five required checks passed on the exact merged PR head. Final-source attestation remains pending until all closeout bookkeeping is committed and exact-source gates pass.
 
 ## Verification and design contract
 
@@ -94,7 +94,7 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 | OPUX-25 | Phase 176 | Complete |
 | OPUX-26 | Phase 177 | Pending |
 | OPUX-27 | Phase 177 | Pending |
-| OPUX-28 | Phase 177 | Pending |
+| OPUX-28 | Phase 177 | Complete (owner waiver; no formal review claimed) |
 
 **Coverage:**
 - v1.43 requirements: 20 total

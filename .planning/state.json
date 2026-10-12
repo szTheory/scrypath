@@ -26,13 +26,13 @@
     {
       "number": "177",
       "name": "Shared Patterns and Delivery Proof",
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
   "next": {
     "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 177)",
-    "reason": "Phase 177 of 5 — needs a plan"
+    "label": "Advance to the next step",
+    "reason": "Phase 177 of 5 · 76% · executing"
   },
-  "updated_at": "2026-10-11T22:56:44.944Z"
+  "updated_at": "2026-10-12T01:44:12.438Z"
 }

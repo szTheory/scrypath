@@ -11,7 +11,7 @@
  *
  * Output:
  *   - ADMIN_SCREENSHOT_DIR (default test-results/admin-screenshots/)
- *   - files named NN-screen--theme--viewport--state.png
+ *   - files named NN-screen--theme--viewport-width--state.png
  *
  * Theme is set via the documented mechanism: the root template's inline script reads
  * localStorage["phx:theme"] on load (light | dark | <absent => system>). We set it with
