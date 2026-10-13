@@ -575,7 +575,7 @@
     flex: none;
     width: 0.375rem;
     height: 0.375rem;
-    margin-top: 0.45em;
+    margin-top: var(--spacing-ops-1);
     border-radius: 9999px;
     background: var(--color-info);
   }
@@ -1020,7 +1020,7 @@
     min-width: 0;
     flex: 1 1 100%;
     color: var(--ops-text-muted);
-    font-size: var(--text-ops-xs);
+    font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
     overflow-wrap: anywhere;
   }

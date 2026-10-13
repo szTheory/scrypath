@@ -143,7 +143,10 @@ for (const entry of entries) {
     await expect(unusedRow.getByRole("region", { name: /Queue job signals/ }).locator(".ops-signal-metrics")).toHaveCount(0);
 
     await chooseScenario(page, "empty");
-    await expect(page.getByText("No schemas configured", { exact: true })).toBeVisible();
+    await expect(page.getByText("No search schemas configured", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Configure the host application's schema allowlist to inspect search health.", { exact: true })
+    ).toBeVisible();
     await expect(page.getByTestId("posture-row")).toHaveCount(0);
     await expect(page.locator(".ops-metric")).toHaveCount(0);
 

@@ -82,7 +82,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops")
 
     assert has_element?(lv, "[data-testid='control-room-unconfigured']")
-    assert html =~ "No search schemas configured."
+    assert html =~ "No search schemas configured"
     assert html =~ "schema allowlist to inspect search health"
     refute has_element?(lv, "[data-testid='control-room-health-link']")
     refute html =~ "Recover search"
