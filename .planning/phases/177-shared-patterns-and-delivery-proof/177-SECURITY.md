@@ -1,8 +1,8 @@
 ---
 phase: "177"
 slug: "shared-patterns-and-delivery-proof"
-status: verified
-threats_open: 0
+status: blocked
+threats_open: 1
 asvs_level: 1
 created: "2026-10-12"
 ---
@@ -29,15 +29,17 @@ created: "2026-10-12"
 | T-177-02 | Tampering | Shared status/action components and token CSS | high | mitigate | Limit edits to audited findings; run Ops behavior tests and inspect changed consumers. | closed |
 | T-177-03 | Tampering | Four surface-specific LiveViews and action links | high | mitigate | Preserve exact identity/action gates; run named LiveView tests and mounted proof for changed recovery handoffs. | closed |
 | T-177-04 | Tampering | Search/Playbooks rendering, tests, and image evidence | high | mitigate | Preserve submitted/file identity; record matched image paths and full source SHAs. | closed |
-| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted review/check evidence against the exact source; unresolved records block OPUX-28 completion. | closed |
-| T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | closed |
+| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted review/check evidence against the exact source; unresolved records block OPUX-28 completion. | open |
+| T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | open — below high threshold (non-blocking) |
 | T-177-SC | Tampering | Package installation | high | mitigate | Preserve the no-dependency boundary; require package-legitimacy review and a human gate if install scope changes. | closed |
 
-**Verification evidence:** The follow-up security audit verified all seven unique threats closed at exact source `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`. Evidence includes the corrected design guide and source-matched screenshot assertions/metadata (T-177-01); CSS diff and contract tests (T-177-02); identity/action assertions and focused suites (T-177-03); Search/Playbooks identity assertions and source-bounded image inventory (T-177-04); hosted required checks plus exact-source closeout artifact (T-177-05); the cleanup ledger and retained preview inventory (T-177-06); and no package manifest or lockfile changes (T-177-SC).
+**Historical verification evidence:** A follow-up audit verified all seven unique threats closed at exact source `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`. That result is superseded for current-source gating. The current audit is recorded below; its source is `1174a53f87d73c4e658029866a49c41d345452d9`.
 
 **T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 resolution:** PR #98 run [38318747952](https://github.com/szTheory/scrypath/actions/runs/38318747952) tested exact head `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; all five required jobs and `ops-ui-path` succeeded. The review API is empty. The user's prior CI-conditioned merge authorization waives only the formal-review gate; it is not represented as a review or reviewed source. Exact-source closeout run [38319195947](https://github.com/szTheory/scrypath/actions/runs/38319195947) covered the same SHA and passed all required jobs, coverage, and `closeout-attestation`. The coverage artifact is `11778055844` (`sha256:2cc8b21a75c844531a1e4545827fb6dae41607838478af6bfc83dd40290240e1`); the closeout artifact is `11778310823` (`sha256:6184b3afaeabff682321903d1a834f653b673df0a2bc31f96e27120ffe0ed3ab`), expiring 2026-10-19. The `deep-quality` and `ecommerce-e2e` advisory jobs failed and remain visible follow-ups; neither is a required gate. A new final-source attestation is still required after the remaining phase bookkeeping changes.
+**T-177-05 current status:** Historical PR #98 checks and closeout run [38319195947](https://github.com/szTheory/scrypath/actions/runs/38319195947) covered `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; the later PR head `e051c3e959953591afdcccaeed5ea11b97a34529` is also behind current source `1174a53f87d73c4e658029866a49c41d345452d9`. GitHub has no check-run record for `1174a53f87d73c4e658029866a49c41d345452d9`. The formal-review waiver remains separate and does not close this high-severity gap. Keep Phase 177 blocked until current-source required checks and closeout attestation succeed.
+
+**T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The relevant containers are now absent from Docker and event history did not recover their IDs. This remains an open medium-severity recordkeeping gap below the configured blocking threshold; it is not accepted as a risk.
 
 ## Accepted Risks Log
 
@@ -58,10 +60,10 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
-- [x] `threats_open: 0` confirmed
-- [x] `status: verified` set in frontmatter
+- [ ] `threats_open: 0` confirmed
+- [ ] `status: verified` set in frontmatter
 
-**Approval:** verified — all seven unique threats are mitigated or closed. The formal-review waiver is procedural only and is not an accepted technical risk. Final-source attestation must be rerun after the remaining tracking records are committed.
+**Approval:** blocked — current-source hosted evidence for T-177-05 is absent. T-177-06 remains open below the high-severity threshold. The formal-review waiver is procedural only and is not an accepted technical risk.
 
 ## Security Audit 2026-10-12
 
@@ -70,3 +72,11 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 | Threats found | 7 |
 | Closed | 7 |
 | Open | 0 |
+
+## Security Audit 2026-10-13
+
+| Metric | Count |
+|---|---|
+| Threats found | 7 |
+| Closed | 5 |
+| Open | 2 |
