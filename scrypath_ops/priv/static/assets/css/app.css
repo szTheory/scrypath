@@ -4101,6 +4101,7 @@
     min-width: 0;
     flex: 1 1 100%;
     color: var(--ops-text-muted);
+    font-family: var(--font-sans);
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
     overflow-wrap: anywhere;

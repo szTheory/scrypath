@@ -125,6 +125,12 @@ for (const entry of entries) {
       getComputedStyle(grid).gridTemplateColumns.split(" ").length
     );
     expect(mobileRetainedColumns, "mobile retained evidence should give each source a full reading width").toBe(1);
+    const retainedCopy = retainedEvidence.locator(".ops-time__retained").first();
+    const bodyFont = await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily);
+    await expect(retainedCopy, "retained explanation uses the body font, not timestamp monospace").toHaveCSS(
+      "font-family",
+      bodyFont
+    );
     await mkdir(screenshotDir, { recursive: true });
     await page.screenshot({
       path: join(screenshotDir, `${entry.name}-unavailable-mobile-390.png`),
