@@ -104,7 +104,7 @@ for (const entry of entries) {
     await chooseScenario(page, "unavailable");
     const unavailable = page.getByTestId("posture-row").first();
     const unavailableReason =
-      "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again.";
+      "Search health could not be checked: A configured search health source could not be read. Refresh health to try again.";
     await expect(unavailable).toContainText(unavailableReason);
     await expect(unavailable).toContainText("Refresh health to try again");
     await expect(unavailable).not.toContainText("backend failed");
@@ -129,9 +129,10 @@ for (const entry of entries) {
     await chooseScenario(page, "unknown");
     const unknownQueue = page.getByTestId("posture-row").first();
     await expect(unknownQueue).toContainText(
-      "Queue observations unavailable; no queue counts are reported as zero."
+      "Search health could not be checked: A configured search health source could not be read."
     );
     await expect(unknownQueue).not.toContainText("phase173_queue_unavailable");
+    await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
     await expect(unknownQueue).not.toContainText("queue failed");
     await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
 

@@ -580,7 +580,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     do: "The configured search backend is not supported."
 
   defp fetch_error_copy(_reason),
-    do: "The search backend did not provide a readable status."
+    do: "A configured search health source could not be read."
 
   defp retained_evidence_text(summary, schema, source) do
     case source_ref(summary, schema, source) do

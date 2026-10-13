@@ -143,7 +143,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ "data-testid=\"posture-row\""
 
     assert html =~
-             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
 
     refute html =~ ":boom"
     assert html =~ ~s(class="mt-2 flex items-start gap-ops-2 text-ops-body text-error")
@@ -237,7 +237,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     failed_row = lv |> element(row_selector) |> render()
 
     assert failed_row =~
-             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
 
     refute failed_row =~ "phase173_backend_unavailable"
 
@@ -270,7 +270,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     failed_row = lv |> element(row_selector) |> render()
 
     assert failed_row =~
-             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
 
     refute failed_row =~ "posture_backend_exit"
     assert failed_row =~ iso
