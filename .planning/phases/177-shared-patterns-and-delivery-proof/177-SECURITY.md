@@ -37,7 +37,7 @@ created: "2026-10-12"
 
 **T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 current status:** PR #98 and both [required-check run 38330057790](https://github.com/szTheory/scrypath/actions/runs/38330057790) and [candidate exact-source closeout run 38330050879](https://github.com/szTheory/scrypath/actions/runs/38330050879) cover candidate HEAD `715179afa9530ae370701d7b6c388e13da350841`. All five required jobs passed on both runs; the PR path-scoped Ops UI job, closeout attestation, and coverage also passed. The closeout artifact is `11781394344` with digest `sha256:d33e45bcd2d7365fdae5da762259fe6017d62e5870088cd5153dd0bf78a54715`. Those records remain valid for that candidate SHA, but current committed HEAD is `4c0f91c66934345b7393f0937c87c60b1600d597`; GitHub has no check-run record for this HEAD, and terminal merged-source attestation is pending. The exact-source mitigation therefore remains open for current HEAD. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
+**T-177-05 current status:** PR #98 and both [required-check run 38330057790](https://github.com/szTheory/scrypath/actions/runs/38330057790) and [candidate exact-source closeout run 38330050879](https://github.com/szTheory/scrypath/actions/runs/38330050879) cover candidate HEAD `715179afa9530ae370701d7b6c388e13da350841`. All five required jobs passed on both runs; the PR path-scoped Ops UI job, closeout attestation, and coverage also passed. The closeout artifact is `11781394344` with digest `sha256:d33e45bcd2d7365fdae5da762259fe6017d62e5870088cd5153dd0bf78a54715`. Those records remain valid only for that candidate SHA. A later local audit at `4c0f91c66934345b7393f0937c87c60b1600d597` found no hosted check record and kept this mitigation open. The worktree now also contains the user-directed mounted favicon change at source commit `69c35cd8b4e8452fea7e7e33729a7643205f40d5`, which adds fixed routes to the existing traversal-safe static asset plug and uses the already-bundled Scrypath SVG/ICO. Its focused host-render/asset test passed 5/5; this local result does not close T-177-05. PR #98 is still draft at the older candidate, with no current-head hosted checks or terminal merged-source attestation. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
 
 **T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The baseline project IDs are recorded, while the after-stack IDs are absent from the contemporaneous cleanup record; current Docker inventory shows no Phase 177 resources and preserves the retained preview. The missing historical identity record remains an open medium-severity gap below the configured blocking threshold; it is not accepted as a risk.
 
@@ -53,7 +53,7 @@ No accepted risks. The formal-review waiver is a narrow process waiver and is no
 | 2026-10-12 | 7 | 7 | 0 | gsd-security-auditor (follow-up at `dd0f89e`; historical source) |
 | 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (first current-source pass at `1174a53`) |
 | 2026-10-13 | 7 | 6 | 1 (0 blocking, 1 non-blocking) | gsd-security-auditor (candidate exact-source pass at `715179a`) |
-| 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (current committed HEAD `4c0f91c`) |
+| 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (source snapshot `4c0f91c`; superseded by later local commits) |
 
 ## Unregistered Flags
 
@@ -66,7 +66,7 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 - [ ] `threats_open: 0` confirmed — one high-severity threat remains open
 - [ ] `status: verified` set in frontmatter — phase is blocked pending exact-source evidence
 
-**Approval:** blocked — T-177-05 remains open at current HEAD `4c0f91c66934345b7393f0937c87c60b1600d597` until exact-source checks and terminal merged-source attestation are available. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
+**Approval:** blocked — T-177-05 remains open because current branch source and later planning records are not covered by hosted exact-source checks, and terminal merged-source attestation is unavailable. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
 
 ## Security Audit 2026-10-12
 

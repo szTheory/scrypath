@@ -91,7 +91,7 @@ Plans:
   3. Failed sync work exposes the failure reason, work/source identity, and eligibility of the common supported recovery action before optional verbose evidence; retained failure history and safety gates remain visible.
   4. After changing schema in the rendered UI, operators keep that allowed selection through recovery handoffs, refresh, and back navigation; invalid or unavailable targets never turn into actions on another schema.
 
-**Plans**: 3 plans
+**Plans**: 3/3 plans complete
 - [x] 174-01-PLAN.md
 - [x] 174-02-PLAN.md
 - [x] 174-03-PLAN.md

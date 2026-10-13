@@ -1,6 +1,6 @@
 ---
 phase: 174-recovery-entry-and-diagnosis
-verified: 2026-10-11T03:30:00Z
+verified: 2026-10-13T02:21:45Z
 status: passed
 score: 19/19 must-haves verified
 covered_files:
@@ -19,17 +19,21 @@ covered_files:
   - scrypath_ops/test/scrypath_ops_web/live/control_room_live_test.exs
   - scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs
   - scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs
-covered_digest: "v3:sha256:23619eca6317370d4088a63acc029724b63d49eaf1a7edc533d0c9d7d0742e4b"
+covered_digest: "v3:sha256:7d60c552a21020a5f1c8eb2af956757817c9e51c8de1e53995dbdcd77216afd3"
 behavior_unverified: 0
 overrides_applied: 0
+decision_coverage:
+  honored: 5
+  total: 5
+  not_honored: []
 ---
 
 # Phase 174: Recovery Entry and Diagnosis Verification Report
 
 **Phase Goal:** Operators can enter an incident, identify the affected schema/work and next safe action, and carry their chosen allowed schema through diagnosis.
-**Verified:** 2026-10-11T03:30:00Z
+**Verified:** 2026-10-13T02:21:45Z
 **Status:** passed
-**Re-verification:** No — initial verification
+**Re-verification:** No — initial verification mode; the prior report had no `gaps:` section, so its claims were not carried forward.
 
 ## Goal Achievement
 
@@ -37,131 +41,126 @@ overrides_applied: 0
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
-| 1 | Control Room leads with observed state, affected scope, and one safe health route in the required reading order; secondary intents and guide remain subordinate. | ✓ VERIFIED | `control_room_live.ex` renders observation and affected scope before the health route, then secondary intents and guide. The exact-revision LiveView suite asserts DOM order and the mounted journey follows the route. |
-| 2 | Search health presents worst-first schema records with complete identity and times, one meaningful surface per schema, plain Backend/Queue groups, and concise contextual checks. | ✓ VERIFIED | `posture_live.ex` preserves `posture_rows_worst_first/1`, full module identity and `ops_time` evidence, one article per schema, plain groups, and an exact-schema link only for observed failed work. Focused order/group/handoff tests pass. |
-| 3 | Failed sync rows expose failure reason, work/source identity, attempt time, and current retry eligibility before diagnostics; supported retry acceptance remains beside source work and does not claim completion. | ✓ VERIFIED | `failed_sync_live.ex` derives current action with `FailedWork.recovery_action/1`, renders failure fields before collapsed Diagnostics, gates retry through `Gating.gate_sensitive_action/3`, and renders the accepted receipt beside the source row. Named explicit-schema retry test passes. |
-| 4 | Operators retain a selected allowed schema through recovery handoffs, refresh, reload, and history; invalid or unavailable schemas cannot redirect an action to another schema. | ✓ VERIFIED | Route and event paths resolve against the live allowlist with `OperatorSelection.resolve/2`; schema-specific destinations use `OperatorSelection.path/3`; selection changes clear observations/receipts/confirmations and advance generation. The mounted browser spec exercises Variant handoff, refresh, reload, Back/Forward, and invalid schema. Exact-revision mounted gate passed 4/4. |
-| 5 | Each failed-work row presents complete identity, operation, attempt time, reason, and eligibility before diagnostics; untrusted values remain text. | ✓ VERIFIED | LiveView template and hostile-value test cover identity/order/escaping; test “hostile failure values remain escaped text” is active. Exact-revision Ops UI suite passed 252 tests and 2 doctests. |
-| 6 | Retry is offered only for eligible work under the selected allowed schema, and submission rechecks current eligibility and host authorization. | ✓ VERIFIED | `request_retry/2` re-resolves selection, reloads `failed_work_row/2`, derives recovery action, and gates sensitive work at event time; focused explicit-schema retry test passed. |
-| 7 | Accepted receipt identifies replacement work beside source failure and remains accepted/unknown until current outcome evidence exists. | ✓ VERIFIED | Receipt carries replacement job, operation, index, context, and generation; rendered receipt is next to source failure and links to diagnosis observation without declaring completion. Focused retry test passed. |
-| 8 | Unsupported retry, empty work, no-schema setup, and missing-runtime setup have distinct truthful states without unsupported actions. | ✓ VERIFIED | Separate empty, no-schema, missing-backend, and ineligible-row rendering branches exist; the ineligible-work and missing-backend tests are active. |
-| 9 | Explicit unknown/removed schema fails closed; selection changes invalidate prior observations, receipts, confirmations, and generations. | ✓ VERIFIED | `resolve_selection/2`, `unavailable/1`, and `maybe_advance_generation/2` clear actionable state and invalidate observation handles. LiveView and mounted tests cover invalid/removed targets and stale context. |
-| 10 | Canonical non-first schema survives handoff, refresh, reload, and browser history. | ✓ VERIFIED | `operator.spec.ts` selects Variant and asserts schema-preserving URLs across health/failed-sync handoff, refresh, reload, and Back/Forward; exact-revision mounted gate passed 4/4. |
-| 11 | Narrow layouts keep values readable without document overflow, with visible focus and both themes. | ✓ VERIFIED | Mounted browser specs exercise 320px/390px and rail/desktop widths, full values, focus, and light/dark theme state. Exact-revision status lane passed 6/6 in mounted and standalone contexts; contrast reported 0 AA failures. |
-| 12 | Control Room toolbar and refresh remain available; incomplete refresh retains the prior successful observation and does not announce success. | ✓ VERIFIED | `handle_event/3` only replaces the last observation on complete evidence; test “partial refresh retains the prior complete observation and does not announce success” passed. |
-| 13 | Control Room verdict presents observed reason and scope, routes degraded state to Search health, and healthy copy requires complete observations without implying freshness. | ✓ VERIFIED | `complete_observation?/1` requires successful observations for configured schemas; template includes the document-freshness caveat and status-specific route. Degraded DOM-order test passed. |
-| 14 | Change/search intents stay secondary, the guide tertiary, and repeated recovery explanation is absent. | ✓ VERIFIED | Source renders one verdict route followed by secondary intent cards and a quiet guide. Mounted operator journey asserts the route hierarchy and destinations. |
-| 15 | Unconfigured schemas and missing backend have distinct setup guidance and do not offer recovery or fabricate healthy zero. | ✓ VERIFIED | Separate `:unconfigured` and `:missing_backend` states render distinct messages; the unconfigured setup test passed and missing-backend coverage exists in the failed-work lane. |
-| 16 | Search health retains the page contract and renders configured aggregate observations, neutral zero counts, and explicit unknown values. | ✓ VERIFIED | `PostureLive` binds to `Posture.summary/2`, renders configured-only aggregates and explicit unavailable states. Validation records the exact-revision aggregate/status matrix; focused Ops UI suite passed. |
-| 17 | Schema records preserve worst-first/tie order and complete identity/index/mode/state in one surface with plain backend/queue groups. | ✓ VERIFIED | `posture_rows_worst_first/1` retains source ordering, each schema is a labelled article, and the named fetch-failure/tie-order test passed. |
-| 18 | Last-success evidence remains source/snapshot-bound; contextual next-check link is adjacent to the exact schema and appears only for observed failed work. | ✓ VERIFIED | `ops_time` renders source and snapshot metadata; failed-refresh tests preserve the previous snapshot, and the article/handoff test covers the exact-schema conditional link. |
-| 19 | Search health remains usable at narrow widths with complete values, no overflow, keyboard focus, and light/dark state. | ✓ VERIFIED | Exact-revision mounted/standalone status lane exercised 320/390/1279/1280/1440 widths and both themes; recorded 6/6 pass and 0 AA contrast failures. |
+| 1 | Control Room presents current observed state, affected search scope, and one next safe action in a clear order. | ✓ VERIFIED | `control_room_live.ex` calls `Posture.summary/2`, renders degraded reason and affected scope before the health route, then secondary intents and the guide. `control_room_live_test.exs` checks DOM order and setup states; the mounted operator journey covers entry and navigation. |
+| 2 | Search health presents worst-first schema records with complete identifiers/times, one surface per schema, plain Backend/Queue groups, and contextual next checks. | ✓ VERIFIED | `posture_live.ex` ranks fetch/backend/queue/clean states, sorts ties by full module identity, renders one labelled article per schema and uses `OperatorSelection.path/3` for an observed-failure handoff. Named ordering and exact-handoff tests pass. |
+| 3 | Failed sync rows expose failure reason, source/work identity, attempt time, and current recovery eligibility before verbose diagnostics. | ✓ VERIFIED | `failed_sync_live.ex` renders row identity, operation/source, attempt time, reason, eligibility, and collapsed Diagnostics in that order. The named explicit-schema LiveView test asserts these values; hostile strings are rendered escaped. |
+| 4 | A selected allowed schema remains paired with recovery diagnosis across handoffs, refresh, reload, and browser history; invalid targets cannot redirect actions to another schema. | ✓ VERIFIED | `OperatorSelection.resolve/2` matches strings to the current allowlist without atom creation; route and selector events use it. The mounted `operator.spec.ts` journey selects Variant and asserts handoff, refresh, reload, Back/Forward, and unavailable forged targets. Exact-source mounted gate passed 4/4. |
+| 5 | Retry is offered only for a currently eligible row under the selected allowed schema, and authorization/eligibility are checked at submission. | ✓ VERIFIED | `request_retry/2` re-resolves the selection, reloads `failed_work_row/2`, derives `FailedWork.recovery_action/1`, and gates the action with `Gating.gate_sensitive_action/3`. The ineligible-row and denied/stale authorization tests assert no insert. |
+| 6 | An accepted receipt identifies replacement work beside the retained source failure and does not claim completion before outcome evidence. | ✓ VERIFIED | `accepted_receipt/5` captures replacement job and source context; the template keeps the receipt inside its failed row and labels it accepted. The named retry test asserts the original row remains and refutes a completion claim. |
+| 7 | Unsupported retry, empty work, no-schema setup, and missing-backend setup have distinct truthful states without unsupported actions. | ✓ VERIFIED | Separate rendering branches and tests cover empty inspection, unconfigured schemas, missing backend, and ineligible work. No retry action renders for unsupported states. |
+| 8 | Unknown or removed schema values fail closed, and changing selection clears old observations, receipts, confirmations, and generations. | ✓ VERIFIED | `resolve_selection/2`, `current_selection/1`, and `unavailable/1` validate against the current allowlist; `maybe_advance_generation/2` invalidates receipt handles and clears context. Named tests assert removed/forged targets refuse retry and a changed schema clears receipts and increments generation. |
+| 9 | The non-first schema remains selected through rendered handoff, refresh, reload, and browser Back/Forward. | ✓ VERIFIED | The mounted operator test asserts the canonical Variant query and checked selector after each history/refresh/reload transition; `verify-mounted` passed all four browser checks at the same application source. |
+| 10 | Narrow recovery views keep full values readable, avoid document overflow, show keyboard focus, and preserve both theme states. | ✓ VERIFIED | `operator.spec.ts` checks 320px/390px geometry, schema selection, reason visibility, retry focus, and stored light/dark preferences. The exact-source mounted journey passed. |
+| 11 | Control Room refresh retains its last complete observation on partial evidence and never announces success for an incomplete refresh. | ✓ VERIFIED | `retain_observation_or_show_partial/2` preserves the last successful posture; named `partial refresh retains the prior complete observation and does not announce success` test passed individually (1 test, 0 failures). |
+| 12 | Healthy Control Room wording requires complete observations and does not imply document freshness. | ✓ VERIFIED | `complete_observation?/1` requires successful evidence for configured schemas; healthy copy explicitly says the check does not prove freshness. Tests cover healthy, no-prior-observation, and missing-backend states. |
+| 13 | Secondary verify/search intents and the operator guide remain subordinate to the incident verdict without repeated recovery explanation. | ✓ VERIFIED | Template order is verdict/route, secondary intent cards, then guide. Control Room render-order test and mounted navigation assertions cover the hierarchy. |
+| 14 | Unconfigured schemas and missing backend have distinct guidance and do not fabricate healthy zero or offer recovery. | ✓ VERIFIED | Distinct `:unconfigured`/`:missing_backend` branches use separate setup messages; named Control Room and FailedSyncLive tests assert each state and absence of recovery actions. |
+| 15 | Search health aggregate observations appear only for configured evidence; unavailable values remain explicit rather than becoming healthy zeroes. | ✓ VERIFIED | `PostureLive` binds aggregate values from `Posture.summary/2`; configured-only, unknown/unused queue, and missing-backend cases are covered by the focused Search health suite (26/26). |
+| 16 | Per-schema records retain the established worst-first/tie order and complete schema, index, mode, and status identity in one surface. | ✓ VERIFIED | `posture_rows_worst_first/1` ranks observed failure classes and ties by `inspect(mod)`; template provides one article with full module, index, mode, and local status. The named fetch-failure/tie-order test passed in the focused suite. |
+| 17 | Backend and Queue groups, source/snapshot-bound last-success times, and exact-schema next checks preserve observed meaning. | ✓ VERIFIED | The schema article renders plain task/job groups; `OpsUi.ops_time/1` receives source timestamp and successful-observation snapshot. Failed refresh retains source-local timestamps; exact-schema handoff appears only when failed work was observed. |
+| 18 | Search health narrow and rail layouts retain complete values, reachable focus, and light/dark states. | ✓ VERIFIED | `phase173_status_actions.spec.ts` asserts long identifiers at 320/390/1279/1280/1440px in both themes, page/row widths, focused handoff, and contrast. Mounted and standalone status checks passed 6/6; contrast had 0 AA failures. |
+| 19 | Failed-work and health values remain safe and truthful when backend-provided content is hostile or incomplete. | ✓ VERIFIED | HEEx interpolates remote values as text; tests verify hostile failure markup is escaped and backend error bodies do not leak. Missing or partial observations remain explicit and do not create a failed-work handoff without observed failed work. |
 
 **Score:** 19/19 truths verified (0 present, behavior-unverified)
 
 ### Required Artifacts
 
-All plan artifacts exist and are substantive (`gsd-tools query verify.artifacts` returned `all_passed: true`, 3/3 for each plan). The implementation and test artifacts are wired through their LiveViews, tests, and mounted browser entrypoints.
+The artifact query passed 3/3 declared artifacts for each plan. Direct source review confirms substantive implementations; router, LiveView, test, and mounted browser paths use them.
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
-| `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex` | Failure diagnosis, current retry eligibility, URL-backed selected schema | ✓ VERIFIED | Substantive handlers, render states, receipt context, and gates; routed by the existing LiveView and tested. |
-| `scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs` | Rendered-state and event-time security proof | ✓ VERIFIED | Active assertions cover retry eligibility, invalid targets, hostile values, and retained receipts. |
-| `examples/scrypath_ecommerce/e2e/operator.spec.ts` | Mounted selector/handoff/history/responsive proof | ✓ VERIFIED | Mounted journey is in the existing Playwright lane and exact-source gate passed. |
-| `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex` | State, scope, and safe route | ✓ VERIFIED | Calls `Posture.summary/2`; renders health/setup/partial states and mounted-prefix route. |
-| `scrypath_ops/test/scrypath_ops_web/live/control_room_live_test.exs` | Render order, setup, and refresh assertions | ✓ VERIFIED | Named partial-refresh test passed; validation records 6/6 on final source. |
-| `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex` | Truthful worst-first health records and exact-schema handoff | ✓ VERIFIED | Calls live posture source, renders complete records and `OperatorSelection.path/3` handoff. |
-| `scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs` | Render/order/identity/hostile-error assertions | ✓ VERIFIED | Named article/handoff and ordering tests passed; validation records 17/17. |
-| `examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts` | Responsive theme/focus assertions | ✓ VERIFIED | Existing mounted and standalone lane; exact-source matrix passed. |
-| `examples/scrypath_ecommerce/e2e/harness.spec.ts` | Exact heading locator for mounted journey | ✓ VERIFIED | Used by operator journey; exact-match selector resolves a heading collision. |
+| `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex` | Incident state, scope, and safe route | ✓ VERIFIED | Reads live `Posture.summary/2`; route mounted by `router.ex`; render and refresh tests exercise output. |
+| `scrypath_ops/test/scrypath_ops_web/live/control_room_live_test.exs` | Render, order, setup, and refresh proof | ✓ VERIFIED | Active value and transition assertions, including partial refresh retention and no false success. |
+| `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex` | Search health records and exact-schema handoffs | ✓ VERIFIED | Reads posture summary and renders real per-schema records, aggregate state, operational timestamps, and conditional links. |
+| `scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs` | Ordering, identity, provenance, and escaping proof | ✓ VERIFIED | Active assertions cover worst-first order, exact-schema link, retained timestamps, and hostile error behavior. |
+| `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex` | Failure diagnosis and guarded retry | ✓ VERIFIED | Routed LiveView reads `Scrypath.failed_sync_work/2`, validates schema, rechecks work, gates retry, and retains receipt beside source row. |
+| `scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs` | Render and event-time safety proof | ✓ VERIFIED | Active tests cover explicit schema, ineligible/removed work, host authorization, receipt, duplicate protection, and escaping. |
+| `examples/scrypath_ecommerce/e2e/operator.spec.ts` | Rendered recovery and schema-history proof | ✓ VERIFIED | Existing mounted Playwright lane exercises the non-first schema from entry through accepted work, handoff, and history. |
+| `examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts` | Responsive Search health proof | ✓ VERIFIED | Existing mounted and standalone lanes assert status semantics, full values, focus, widths, and themes. |
+| `examples/scrypath_ecommerce/e2e/harness.spec.ts` | Unambiguous mounted page heading locator | ✓ VERIFIED | Exact heading helper is used by the mounted operator journey. |
 
 ### Key Link Verification
 
-The CLI key-link evaluator could not interpret these plan links because their `from` fields are descriptive function names, not relative file paths. Manual source tracing confirmed each connection below; the recorded mounted and LiveView evidence exercises the routes/actions.
+The plan link checker returned 0 verified because each plan uses descriptive function names in `from:` rather than repository file paths. Manual tracing verified the actual connections below.
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
-| `FailedSyncLive.handle_params/3` and `select_schema` | `OperatorSelection.resolve/2` | Resolve against current host allowlist | WIRED | Both route parameters and selector events call `resolve/2`; invalid resolution clears selection. |
-| FailedSyncLive selected schema | `OperatorSelection.path/3` | Exact schema and mount prefix | WIRED | Selector, diagnosis, and sync-drift links use helper-generated schema paths. |
-| Retry event | `Gating.gate_sensitive_action/3` and current failed row | Revalidate selection, row, eligibility, authorization | WIRED | `request_retry/2` reloads the row and derives `FailedWork.recovery_action/1` inside the event path; action passes through host gate. |
-| Accepted receipt | `RecoveryObservation` context | Host/org/schema/generation-bound lookup | WIRED | Receipt registration carries context; schema change invalidates handle and clears receipt/generation state. |
-| `Posture.summary/2` state/evidence | Control Room verdict/route | Status-appropriate destination | WIRED | LiveView gets runtime posture summary and renders configured health states; tests assert partial retention and DOM order. |
-| Control Room health route | Generic mounted Search health entry | Existing mount prefix, generic cold entry | WIRED | Route is `#{@mount_path}/health`; mounted journey follows the rendered link. |
-| `Posture.summary/2` and worst-first row ordering | Search health aggregate/article | Render observed records | WIRED | LiveView receives Posture result and renders retained row order as schema articles. |
-| Schema row evidence | `OperatorSelection.path/3` | Same schema in Failed sync work destination | WIRED | Handoff uses the row's exact module; named article/handoff test passes. |
-| Operational source/snapshot | `OpsUi.ops_time/1` | Preserve last-success provenance | WIRED | Both source and snapshot times are passed to `ops_time`; retained evidence tests preserve prior source-local timestamp. |
+| Control Room route | `ControlRoomLive` | `/ops` LiveView route | WIRED | `router.ex` maps `/` to the LiveView; it reads current Posture summary. |
+| `ControlRoomLive` | Search health | mounted health route | WIRED | Degraded and healthy verdicts link to `#{@mount_path}/health`; mounted journey follows the link. |
+| Search health | `Posture.summary/2` | allowlist and runtime observations | WIRED | Production path calls the posture aggregator and renders returned rows and counts. |
+| Search health row | `OperatorSelection.path/3` | exact canonical schema | WIRED | Conditional handoff uses the row module; unit test asserts exact query. |
+| Failed sync route/selector | `OperatorSelection.resolve/2` | current schema allowlist | WIRED | Route params and selector events resolve against live allowlist; invalid values clear selected state. |
+| Failed sync selected schema | `OperatorSelection.path/3` | exact destination and mount prefix | WIRED | Diagnosis and contextual destinations are helper-generated; mounted Variant query is asserted. |
+| Retry event | current failed row and host gate | recheck then action | WIRED | Event reloads the row, derives current recovery action, and calls `Gating.gate_sensitive_action/3` before mutation. |
+| Accepted receipt | `RecoveryObservation` | host/org/schema/generation context | WIRED | Receipt registration and lookup are context-bound; selection changes invalidate handles and clear receipts. |
+| Mounted operator entry | browser journey | rendered handoff/history | WIRED | Existing `operator.spec.ts` test begins at Control Room and follows actual rendered links and selected-schema route. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
 |---|---|---|---|---|
-| `control_room_live.ex` | posture | `Posture.summary/2` reads configured schema/backend/queue observations | Yes | ✓ FLOWING |
-| `posture_live.ex` | posture_rows | Posture summary and allowlisted schema observations | Yes | ✓ FLOWING |
-| `failed_sync_live.ex` | inspection.entries | `Scrypath.failed_sync_work/2` for selected allowlisted schema | Yes | ✓ FLOWING |
-| Mounted e2e surfaces | rendered state/URLs | LiveView responses backed by disposable runtime scenario | Yes | ✓ FLOWING |
+| `control_room_live.ex` | `posture` | `Posture.summary/2` from configured schema/backend/queue observations | Yes | ✓ FLOWING |
+| `posture_live.ex` | `posture_rows`, aggregate values, timestamps | `Posture.summary/2` and allowlisted per-schema backend/queue observations | Yes | ✓ FLOWING |
+| `failed_sync_live.ex` | `inspection.entries` | `Scrypath.failed_sync_work/2` for selected allowlisted schema | Yes | ✓ FLOWING |
 
 ### Behavioral Spot-Checks
 
-| Behavior | Command | Result | Status |
+| Behavior | Command / evidence | Result | Status |
 |---|---|---|---|
-| Selected non-first schema retains diagnosis beside accepted retry | `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/failed_sync_live_test.exs:152` | 1 test, 0 failures | ✓ PASS |
-| Partial refresh retains last complete observation without success feedback | `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/control_room_live_test.exs:176` | 1 test, 0 failures | ✓ PASS |
-| Schema article has adjacent exact-schema failed-work handoff | `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/posture_live_test.exs:323` | 1 test, 0 failures | ✓ PASS |
-| Fetch failures sort first and ties preserve full-module order | `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1 mix test test/scrypath_ops_web/live/posture_live_test.exs:353` | 1 test, 0 failures | ✓ PASS |
+| Partial Control Room refresh retains complete prior evidence | `mix test test/scrypath_ops_web/live/control_room_live_test.exs:176` | 1 test, 0 failures | ✓ PASS |
+| Schema change clears recovery context after retry | `mix test test/scrypath_ops_web/live/failed_sync_live_test.exs:326` | 1 test, 0 failures | ✓ PASS |
+| Failed Search health refresh retains source-local evidence | `mix test test/scrypath_ops_web/live/posture_live_test.exs:252` | 1 test, 0 failures | ✓ PASS |
+| Ops UI, rendered recovery, and responsive health behavior | Current-run evidence at source-equivalent revision `73dfbf8c5ca75950621b2d48b21013adac857477`: `mix verify.ops_ui` (2 doctests + 305 tests), mounted recovery 4/4, mounted/standalone status 6/6 | All passed | ✓ PASS |
+| Wider root regression scope | `mix test --exclude integration --exclude docs_contract` at the same application source | 4 properties + 660 tests, 0 failures (85 excluded) | ✓ PASS |
+| Contrast | `make -C examples/scrypath_ecommerce contrast` | 0 AA failures; 43 AAA advisories | ✓ PASS |
+
+The individually run tests above exercised state transitions directly. The supplied current-run revision differs from this worktree HEAD only in documentation/evidence commits: application source diff against `e92d5ae4e1131f792aab0185933c2c480885836e` is empty. The UI review scored 22/24 with no implementation blocker; its screenshots could not be tied to this worktree, so the verdict relies on executable DOM, keyboard, viewport, theme, and contrast assertions.
 
 ### Probe Execution
 
-Not applicable. This is a LiveView/UI phase; plans and success criteria do not declare probe-based verification or migration/tooling probes.
+Not applicable: this is an operator UI phase, not a migration or tooling phase; no phase-declared or conventional phase probe applies.
 
 ### Requirements Coverage
 
+All plan requirement IDs cross-reference to the four Phase 174 entries in `.planning/REQUIREMENTS.md`; no requirement assigned to Phase 174 is orphaned.
+
 | Requirement | Source Plan | Description | Status | Evidence |
 |---|---|---|---|---|
-| OPUX-16 | 174-02 | Control Room incident orientation and next safe action | ✓ SATISFIED | Posture/scope/route implementation, LiveView order and refresh tests, mounted journey; exact-source gate passed. |
-| OPUX-17 | 174-03 | Search health schema records and next-check actions | ✓ SATISFIED | Worst-first record implementation, order/handoff tests, responsive/theme lane; exact-source gate passed. |
-| OPUX-18 | 174-01 | Failed sync diagnosis and common supported recovery action | ✓ SATISFIED | Current eligibility and host-gated retry implementation, accepted receipt test, mounted recovery journey. |
-| OPUX-19 | 174-01 | Preserve chosen allowed schema through recovery diagnosis | ✓ SATISFIED | URL-backed selection, invalid-target clearing, rendered route/history assertions, exact-source mounted journey. |
+| OPUX-16 | 174-02 | Control Room identifies current state, affected scope, and safe action in clear order without duplicated explanations or competing controls. | ✓ SATISFIED | Control Room implementation/tests and mounted operator route assertions. |
+| OPUX-17 | 174-03 | Search health shows worst-first readable schema records with plain diagnostic groups, clear spacing, and concise contextual checks. | ✓ SATISFIED | Posture LiveView and ordering/handoff tests; mounted/standalone responsive checks. |
+| OPUX-18 | 174-01 | Failed work presents reason, identity, and recovery availability before verbose evidence while retaining history and safety gates. | ✓ SATISFIED | FailedSync LiveView, current-row event gate, named retry and hostile-value tests, mounted journey. |
+| OPUX-19 | 174-01 | Allowed schema selection survives handoffs, refresh, and browser history; invalid targets cannot become actions on another schema. | ✓ SATISFIED | Allowlist resolution, invalid/removed selection tests, and mounted Variant history flow. |
 
-All four requirement IDs are mapped to this phase in `.planning/REQUIREMENTS.md`; no additional Phase 174 requirement mapping is orphaned.
+### Decision Coverage
+
+All trackable CONTEXT.md decisions are honored by shipped artifacts. (`verification.status` decision-coverage query: 5/5; 0 not honored.)
+
+### Test Quality Audit
+
+| Test File | Linked Requirement | Active | Skipped | Circular | Assertion Level | Verdict |
+|---|---|---:|---:|---:|---|---|
+| `failed_sync_live_test.exs` | OPUX-18, OPUX-19 | Yes | 0 | 0 | Value and behavioral | PASS |
+| `control_room_live_test.exs` | OPUX-16 | Yes | 0 | 0 | Value and behavioral | PASS |
+| `posture_live_test.exs` | OPUX-17 | Yes | 0 | 0 | Value and behavioral | PASS |
+| `operator.spec.ts`, `phase173_status_actions.spec.ts` | OPUX-16–19 | Yes | 0 | 0 | End-to-end behavioral | PASS |
+
+Disabled-test scan found no skipped requirement tests. The test files do not generate expected values from the system under test. Assertions check exact content, order, links, state, and user-visible transitions.
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |---|---:|---|---|---|
-| — | — | None in phase-owned implementation/test files. Empty values occur only in tests or legitimate empty-state branches; no unreferenced debt markers or user-visible stubs found. | — | — |
-
-The linked test files contain no disabled/skipped declarations or circular expected-value generation.
-
-### Exact-Source Gates and Review Evidence
-
-- `git rev-parse HEAD` is `2375f6b71f57037e9e636ae060828e26f59a82c6`, matching the source revision recorded in `174-VALIDATION.md` and `174-UI-REVIEW.md`.
-- `174-VALIDATION.md` records `mix verify.ops_ui` (252 tests + 2 doctests), mounted operator journey 4/4, contrast 0 AA failures, and Phase 173 regression lanes shell 14/14, status 6/6, time 8/8, copy 10/10 at that exact revision.
-- `174-SECURITY.md` marks all 7 threats closed, with no accepted risks or dependency changes. The implementation contains the listed allowlist re-resolution, host gate, context-bound receipt invalidation, and escaped rendering.
-- `174-REVIEW.md` finding WR-01 was fixed; `174-REVIEW-DISPOSITION.md` records the DOM-order correction and focused 6/6 result. The correction is present at the validation/UI-review source revision.
-- UI review could not capture runtime screenshots; the report classifies visual balance/color distribution as supporting evidence, not an acceptance gate. Automated responsive, focus, theme, and contrast criteria pass, so this is nonblocking.
-
-### Test Quality Audit
-
-| Test File | Linked Req | Active | Skipped | Circular | Assertion Level | Verdict |
-|---|---|---:|---:|---:|---|---|
-| `failed_sync_live_test.exs` | OPUX-18, OPUX-19 | Yes | 0 | No | Behavioral | PASS |
-| `control_room_live_test.exs` | OPUX-16 | Yes | 0 | No | Behavioral | PASS |
-| `posture_live_test.exs` | OPUX-17 | Yes | 0 | No | Behavioral | PASS |
-| `operator.spec.ts` | OPUX-16, OPUX-18, OPUX-19 | Yes | 0 | No | Behavioral/mounted | PASS |
-| `phase173_status_actions.spec.ts` | OPUX-17 | Yes | 0 | No | Behavioral/rendered layout | PASS |
-
-**Disabled tests on requirements:** 0. **Circular patterns detected:** 0. **Insufficient assertions:** 0.
+| — | — | None found in phase implementation or linked tests | — | Debt-marker, placeholder, empty-implementation, hardcoded-stub, and console-only scans found no issue. Current-source code review reported 0 findings. |
 
 ### Human Verification Required
 
-None. The phase contract keeps runtime screenshot comparison supporting-only, and the visual-review limitation does not leave an acceptance criterion dependent on pending human UAT.
+None. The phase criteria are covered by exact-source LiveView and mounted browser behavior checks, including route completion, focus, narrow-width geometry, stored themes, and contrast. No user-facing criterion remains unexercised.
 
 ### Gaps Summary
 
-No goal or requirement gaps remain. The three plans' implementation artifacts are substantive and wired; data flows from current Posture and failed-work sources; selected schema identity is preserved across rendered navigation and fails closed for unavailable targets. The executable exact-source gates and focused tests pass. The key-link CLI limitation was resolved through manual source tracing rather than treated as a code defect.
+No goal or requirement gaps found. The three plan artifact sets are substantive and wired into the `/ops` LiveViews and executable tests. Source, retry authorization, selected-schema continuity, and observed-data flow are verified. Fingerprint covers the three plans/summaries plus all nine changed implementation and test files.
 
 ---
 
-_Verified: 2026-10-11T03:30:00Z_  
+_Verified: 2026-10-13T02:21:45Z_
 _Verifier: the agent (gsd-verifier)_
-
