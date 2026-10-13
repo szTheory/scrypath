@@ -57,19 +57,23 @@ defmodule ScrypathOpsWeb.PostureLive do
     start_ms = System.monotonic_time(:millisecond)
     socket = socket |> fail_phase173_refresh() |> load_posture()
     duration_ms = System.monotonic_time(:millisecond) - start_ms
+    summary = socket.assigns.posture_summary
+
+    refresh_succeeded? =
+      summary.state in [:ok, :degraded] and summary.schema_count > 0 and summary.error_count == 0
 
     # Low-cardinality telemetry: no per-schema labels (CONTEXT D-08).
     :telemetry.execute(
       [:scrypath_ops, :posture, :refresh],
       %{duration_ms: duration_ms, schema_count: length(socket.assigns.schema_allowlist)},
-      %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
+      %{outcome: if(refresh_succeeded?, do: :ok, else: :degraded)}
     )
 
     socket =
-      if socket.assigns.aggregate_error_count > 0 do
-        socket
-      else
+      if refresh_succeeded? do
         put_flash(socket, :info, "Search health refreshed.")
+      else
+        socket
       end
 
     {:noreply, socket}

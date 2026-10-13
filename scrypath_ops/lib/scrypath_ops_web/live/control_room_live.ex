@@ -107,8 +107,23 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             role="status"
             data-testid="control-room-refresh-issue"
           >
-            {@refresh_issue.evidence} The last successful observation is retained below; this refresh did not confirm current health.
-            <span data-testid="control-room-refresh-affected-scope">
+            {@refresh_issue.evidence}
+            <span :if={@last_successful_posture}>
+              The last complete observation is retained below; this refresh did not confirm current health.
+            </span>
+            <span :if={is_nil(@last_successful_posture) and @refresh_issue.state in [:ok, :degraded]}>
+              No prior complete observation is available; this partial result does not confirm current health.
+            </span>
+            <span :if={
+              is_nil(@last_successful_posture) and
+                @refresh_issue.state in [:unconfigured, :missing_backend]
+            }>
+              No schema health observation was possible; resolve the setup guidance below before refreshing.
+            </span>
+            <span
+              :if={@refresh_issue.schema_count > 0}
+              data-testid="control-room-refresh-affected-scope"
+            >
               Affected scope: {affected_scope(@refresh_issue)}
             </span>
           </.ops_notice>
@@ -129,7 +144,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.badge_kind(@posture.state)}
             label={
-              if @refresh_issue, do: "Last successful observation", else: "Observed search health"
+              cond do
+                @refresh_issue && @last_successful_posture -> "Last successful observation"
+                @refresh_issue || @posture.error_count > 0 -> "Partial observation"
+                true -> "Observed search health"
+              end
             }
             headline={verdict_headline(@posture)}
             class="ops-verdict--hero"
@@ -153,8 +172,17 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 Inspect Search health
               </.ops_link_button>
             </div>
-            <p :if={@refresh_issue} class="mt-2 text-ops-sm text-base-content/75">
+            <p
+              :if={@refresh_issue && @last_successful_posture}
+              class="mt-2 text-ops-sm text-base-content/75"
+            >
               Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
+            </p>
+            <p
+              :if={@refresh_issue && is_nil(@last_successful_posture)}
+              class="mt-2 text-ops-sm text-base-content/75"
+            >
+              Incomplete observation checked: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
           </.ops_verdict>
 

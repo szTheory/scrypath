@@ -183,6 +183,31 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute row =~ "ops-badge-success"
   end
 
+  test "refresh without configured schemas does not report a successful observation", %{
+    conn: conn
+  } do
+    attach_posture_refresh_telemetry()
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=empty")
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    assert_receive {:posture_refresh, %{schema_count: 0}, %{outcome: :degraded}}
+    refute render(lv) =~ "Search health refreshed."
+  end
+
+  test "refresh without a backend does not report a successful observation", %{conn: conn} do
+    Application.delete_env(:scrypath_ops, :backend)
+    attach_posture_refresh_telemetry()
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
+
+    assert html =~ "Runtime not configured"
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    assert_receive {:posture_refresh, %{schema_count: 2}, %{outcome: :degraded}}
+    refute render(lv) =~ "Search health refreshed."
+  end
+
   test "refresh disabled eligibility follows a server-rendered fixture patch", %{conn: conn} do
     {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
 
@@ -519,6 +544,23 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       assigns: Map.merge(base_assigns, overrides),
       host_uri: URI.parse("https://scrypath.example/ops/health")
     }
+  end
+
+  defp attach_posture_refresh_telemetry do
+    test_pid = self()
+    handler_id = "posture-refresh-test-#{System.unique_integer([:positive])}"
+
+    assert :ok =
+             :telemetry.attach(
+               handler_id,
+               [:scrypath_ops, :posture, :refresh],
+               fn _event, measurements, metadata, _config ->
+                 send(test_pid, {:posture_refresh, measurements, metadata})
+               end,
+               nil
+             )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
   end
 
   defp posture_scrypath_opts do
