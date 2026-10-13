@@ -128,7 +128,10 @@ for (const entry of entries) {
 
     await chooseScenario(page, "unknown");
     const unknownQueue = page.getByTestId("posture-row").first();
-    await expect(unknownQueue).toContainText(":phase173_queue_unavailable");
+    await expect(unknownQueue).toContainText(
+      "Queue observations unavailable; no queue counts are reported as zero."
+    );
+    await expect(unknownQueue).not.toContainText("phase173_queue_unavailable");
     await expect(unknownQueue).not.toContainText("queue failed");
     await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
 
