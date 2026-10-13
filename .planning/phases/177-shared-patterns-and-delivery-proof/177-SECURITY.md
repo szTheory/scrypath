@@ -37,7 +37,7 @@ created: "2026-10-12"
 
 **T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 current status:** PR #98 is draft at head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`. Exact-head [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required jobs and both Ops UI checks; the Website build also passed. The `deep-quality (advisory)` job failed and `ecommerce-e2e (advisory)` was skipped. Its full-source closeout and terminal merged-main attestation are still pending, so this threat remains open. The run tests only this exact candidate SHA. Earlier candidate closeout evidence at `715179afa9530ae370701d7b6c388e13da350841` remains historical and does not extend to current source. The worktree includes the user-directed mounted favicon change at `69c35cd8b4e8452fea7e7e33729a7643205f40d5`, which adds fixed routes to the existing traversal-safe static asset plug and uses the already-bundled Scrypath SVG/ICO. Its focused host-render/asset test passed 5/5. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
+**T-177-05 current status:** PR #98 head `83cc3dfda33a30ba38ece7e0bbfc13383c01edc7` merged as `32193307418c00cd83d14d55c208ae145ca51eb3`; the branch and merge commits have the same tree. [Run 38339367275](https://github.com/szTheory/scrypath/actions/runs/38339367275) passed all five required jobs and closeout attestation at the exact branch SHA. [Run 38340671440](https://github.com/szTheory/scrypath/actions/runs/38340671440) passed the same gates at the exact merge SHA and produced closeout artifact `11785854024`. These records close the exact-source check and final-attestation parts of the mitigation. The live PR review API returns `[]`: there is no review decision or reviewed SHA. The owner's narrow formal-review waiver is recorded as a waiver, not a review, and does not satisfy the plan's declared reviewed-source evidence. T-177-05 therefore remains open and blocking. The earlier `deep-quality` failure and skipped `ecommerce-e2e` were advisory; the current threat finding is the missing review record, not missing required checks or closeout attestation. The user-directed mounted Scrypath favicon uses the existing bundled SVG/ICO and traversal-safe static asset plug; its focused host-render/asset test passed 5/5.
 
 **T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The baseline project IDs are recorded, while the after-stack IDs are absent from the contemporaneous cleanup record; current Docker inventory shows no Phase 177 resources and preserves the retained preview. The missing historical identity record remains an open medium-severity gap below the configured blocking threshold; it is not accepted as a risk.
 
@@ -64,9 +64,9 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
 - [ ] `threats_open: 0` confirmed — one high-severity threat remains open
-- [ ] `status: verified` set in frontmatter — phase is blocked pending exact-source evidence
+- [ ] `status: verified` set in frontmatter — phase is blocked pending reviewed-source evidence for T-177-05
 
-**Approval:** blocked — T-177-05 remains open because current branch source and later planning records are not covered by hosted exact-source checks, and terminal merged-source attestation is unavailable. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
+**Approval:** blocked — exact-source required checks and branch/merge closeout attestations now pass, but T-177-05 remains open because the live PR review API has no review decision or reviewed SHA. The owner's waiver is procedural only and is not represented as a review or accepted risk. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk.
 
 ## Security Audit 2026-10-12
 
@@ -111,3 +111,5 @@ This audit snapshot predates the favicon and Phase 174 closeout commits and is n
 | Threats found | 7 |
 | Closed | 5 |
 | Open | 2 |
+
+This audit covers branch SHA `83cc3dfda33a30ba38ece7e0bbfc13383c01edc7`. Exact branch run 38339367275 and exact merge run 38340671440 both passed the five required jobs and closeout attestation; the merge run produced artifact `11785854024`. The branch and merge trees match. T-177-05 remains the sole blocking threat because the live review API returned no review decision or reviewed SHA. T-177-06 remains open below the `high` blocking threshold. No summary declared an unregistered threat flag.
