@@ -15,11 +15,11 @@
 
 ## Current Posture
 
-**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. Phases 173–177 are complete locally; all five have phase verification, and Phase 177 records 69/69 verified truths.** Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
+**v1.43 scope/version, inventory reuse, all 20 requirements, and this five-phase roadmap were explicitly approved on 2026-10-06. All 22 plans across Phases 173–177 have summaries. Phase 177's prior 69/69 verification predates Plan 06 and is being refreshed after the route-boundary follow-up.** PR [#101](https://github.com/szTheory/scrypath/pull/101) merged at `f0e05bc8857f56f2a030faa45d4da09a510ef625` after the five required checks passed at exact candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`. The owner explicitly waived the independent-review gate for this PR; the review API is empty, and no review is claimed. Provisional verifier-enabling and terminal post-transition closeouts remain pending. Numbering continues at Phase 173. v1.42 completed Phase172:8 plans,8 requirements, independent verification38/38 truths,6/6 integration connections and5/5 flows. See the [milestone audit](milestones/v1.42-MILESTONE-AUDIT.md).
 
 PR91 delivered the operator UI and recovery corrections; ReleasePleasePR92 published Scrypath0.3.15 at `8dd20e8966acd17a4ef5acec653c00dc31faab49`. [Publish run37181522723](https://github.com/szTheory/scrypath/actions/runs/37181522723) passed live Hex/consumer/HexDocs and package/tag parity. Both task-owned verifier stacks are removed; preview4012 is intentionally retained for optional feedback.
 
-All phase plans are complete. The exact-source candidate closeout passed; the terminal merged-source attestation follows after final milestone records are committed. No completed phase should be replayed. The v1.43 requirements and roadmap remain the approved scope.
+All phase plans are summarized (22/22); Phase 177 source verification and its two distinct closeouts are still in progress. The earlier exact-source candidate closeout applies to its recorded SHA only; it does not attest PR #101 or the resulting terminal source. No completed phase should be replayed. The v1.43 requirements and roadmap remain the approved scope.
 
 The original Phase170 NOT READY decision and frozen17/18 snapshot remain historical; its separately authorized tracking replacement and later READY assessment remain distinct in the v1.41 archive. Nothing in v1.42 rewrites those decisions or resolves inherited assumptions beyond their stated limits.
 
@@ -166,19 +166,20 @@ Plans:
   2. Operators can use the refined paths in light, dark, and System appearance at narrow and desktop widths, with keyboard/focus and reduced-motion behavior intact; direct before/after inspection and relevant executable layout/state/contrast proof are available for every slice, with mounted evidence for changed recovery seams.
   3. Maintainers can trace all 20 requirements to committed verification and reviewed PR-first source/CI evidence, see the explicit release or no-release decision, and inspect task-owned cleanup or intentional preview retention without extending archived receipts beyond their source.
 
-**Plans**: 5/5 plans complete
+**Plans**: 6/6 plans executed
 - [x] 177-01-PLAN.md — Document the delivered design vocabulary and capture the full six-surface visual baseline.
 - [x] 177-02-PLAN.md — Correct demonstrated shared component/token drift and verify the affected UI.
 - [x] 177-03-PLAN.md — Preserve identity and state semantics across Control Room, Search health, Failed sync work, and Sync and drift.
 - [x] 177-04-PLAN.md — Preserve Search and Playbooks provenance and complete matched six-surface image evidence.
 - [x] 177-05-PLAN.md — Link all twenty requirements to actual source-bounded delivery evidence and closeout.
+- [x] 177-06-PLAN.md — Bind the mounted route follow-up to exact-head CI, record the explicit owner review waiver, and hand off separate closeouts.
 
 **UI hint**: yes
 **Acceptance**: Check six-surface consistency and shared tokens against demonstrated use; consolidate evidence already produced by each slice and run only the final source-specific checks required by the existing delivery gates. No paid judge or pending routine human UAT.
 
 ## Progress
 
-**Execution order:** 173 → 174 → 175 → 176 → 177. All five phases and all 21 plans are complete.
+**Execution order:** 173 → 174 → 175 → 176 → 177. All 22 plans have summaries; Phase 177's current-source verification and closeout remain in progress.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -186,4 +187,4 @@ Plans:
 | 174. Recovery Entry and Diagnosis | 3/3 | Complete    | 2026-10-10 |
 | 175. Repair and Verification | 4/4 | Complete    | 2026-10-11 |
 | 176. Search and Playbooks | 5/5 | Complete    | 2026-10-11 |
-| 177. Shared Patterns and Delivery Proof | 5/5 | Complete    | 2026-10-12 |
+| 177. Shared Patterns and Delivery Proof | 6/6 | In Progress |  |
