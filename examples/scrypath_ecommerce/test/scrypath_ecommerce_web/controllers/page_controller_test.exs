@@ -6,7 +6,19 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Tenant-scoped catalog search"
+    html = html_response(conn, 200)
+
+    assert html =~ "Tenant-scoped catalog search"
+    assert html =~ ~s(rel="icon" type="image/svg+xml" href="/favicon.svg")
+  end
+
+  test "storefront favicon serves the Scrypath brand mark", %{conn: conn} do
+    conn = get(conn, "/favicon.svg")
+
+    assert response(conn, 200) ==
+             File.read!(Application.app_dir(:scrypath_ecommerce, "priv/static/favicon.svg"))
+
+    assert Plug.Conn.get_resp_header(conn, "content-type") == ["image/svg+xml"]
   end
 
   test "GET /admin/search/health", %{conn: conn} do
@@ -70,6 +82,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
 
     refute html =~ "/admin/search/assets/css/app.css"
     refute html =~ "/admin/search/favicon.svg"
+    assert html =~ ~s(href="/favicon.svg")
   end
 
   test "a sibling path does not receive the mounted ScrypathOps shell" do
