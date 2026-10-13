@@ -407,7 +407,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         </dd>
                       </div>
                     </dl>
-                    <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                    <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
                       {queue_unobserved_copy(status)}
                     </p>
                   </section>
@@ -429,14 +429,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {inspect(mod)}
                     </h3>
-                    <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                  </div>
-                  <div class="ops-schema-signal-card__badges">
-                    <.ops_badge kind={:error}>fetch error</.ops_badge>
                   </div>
                 </div>
-                <p class="mt-2 text-ops-sm text-error">
-                  Search health could not be checked: {inspect(reason)}. Refresh health to try again.
+                <p class="mt-2 flex items-start gap-ops-2 text-ops-body text-error">
+                  <.icon name="hero-exclamation-circle" class="mt-ops-1 size-4 shrink-0" />
+                  <span>
+                    Search health could not be checked: {inspect(reason)}. Refresh health to try again.
+                  </span>
                 </p>
                 <dl class="ops-signal-metrics ops-signal-metrics--retained mt-2">
                   <div :for={source <- [:backend, :queue]}>

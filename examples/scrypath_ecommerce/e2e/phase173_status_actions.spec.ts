@@ -103,11 +103,27 @@ for (const entry of entries) {
 
     await chooseScenario(page, "unavailable");
     const unavailable = page.getByTestId("posture-row").first();
-    await expect(unavailable).toContainText("fetch error");
-    await expect(unavailable).toContainText("Search health could not be checked");
+    const unavailableReason =
+      "Search health could not be checked: :phase173_backend_unavailable. Refresh health to try again.";
+    await expect(unavailable).toContainText(unavailableReason);
     await expect(unavailable).toContainText("Refresh health to try again");
     await expect(unavailable).not.toContainText("backend failed");
     await expect(metric(page, "Schema check errors")).toHaveAttribute("data-ops-metric-tone", "warning");
+    await expect(
+      unavailable.locator("p").filter({ hasText: unavailableReason })
+    ).toHaveCSS("font-size", "14px");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const retainedEvidence = unavailable.locator(".ops-signal-metrics--retained");
+    const retainedColumns = await retainedEvidence.evaluate((grid) =>
+      getComputedStyle(grid).gridTemplateColumns.split(" ").length
+    );
+    expect(retainedColumns, "retained backend and queue evidence should each get a readable column").toBe(2);
+    await mkdir(screenshotDir, { recursive: true });
+    await page.screenshot({
+      path: join(screenshotDir, `${entry.name}-unavailable-mobile-390.png`),
+      fullPage: true
+    });
 
     await chooseScenario(page, "unknown");
     const unknownQueue = page.getByTestId("posture-row").first();
@@ -128,7 +144,9 @@ for (const entry of entries) {
 
     await chooseScenario(page, "partial");
     await expect(page.getByTestId("posture-row")).toHaveCount(2);
-    await expect(page.getByTestId("posture-row").filter({ hasText: "fetch error" })).toHaveCount(1);
+    await expect(
+      page.getByTestId("posture-row").filter({ hasText: "Search health could not be checked" })
+    ).toHaveCount(1);
     await expect(page.getByTestId("posture-row").filter({ hasText: entry.schema })).toHaveCount(1);
 
     for (const theme of ["light", "dark"] as const) {
@@ -225,6 +243,15 @@ for (const entry of entries) {
 
     const box = await refresh.boundingBox();
     expect(box).not.toBeNull();
+    // This check isolates :active styling; the real action path is exercised
+    // later in the test, so cancel this pointer-generated click before LiveView
+    // can disable the button and move focus during its request.
+    await page.evaluate(() => {
+      window.addEventListener("click", (event) => event.stopImmediatePropagation(), {
+        capture: true,
+        once: true
+      });
+    });
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
     const pressedBackground = await refresh.evaluate((button) => getComputedStyle(button).backgroundColor);

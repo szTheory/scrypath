@@ -141,8 +141,12 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
-    assert html =~ "fetch error: :boom"
+
+    assert html =~ "Search health could not be checked: :boom. Refresh health to try again."
+    assert html =~ ~s(class="mt-2 flex items-start gap-ops-2 text-ops-body text-error")
+    assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
+    assert html =~ ~s(class="text-ops-body text-base-content/75")
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
@@ -229,8 +233,11 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     lv |> element("#search-health-refresh") |> render_click()
     failed_row = lv |> element(row_selector) |> render()
 
-    assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
-    assert failed_row =~ "Refresh health to try again."
+    assert failed_row =~
+             "Search health could not be checked: :phase173_backend_unavailable. Refresh health to try again."
+
+    assert failed_row =~ "text-ops-body text-error"
+
     assert failed_row =~ "2 days ago"
     assert failed_row =~ iso
     assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")
