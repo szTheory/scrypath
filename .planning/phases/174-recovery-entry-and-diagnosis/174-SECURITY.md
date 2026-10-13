@@ -51,3 +51,11 @@ No accepted risks.
 - [x] `status: verified` set in frontmatter
 
 **Approval:** verified 2026-10-10
+
+## Security Audit 2026-10-13
+
+| Metric | Count |
+|---|---|
+| Threats found | 7 |
+| Closed | 7 |
+| Open | 0 |
