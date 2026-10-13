@@ -10,10 +10,10 @@ findings:
   - id: WR-01
     severity: warning
     disposition: fixed
-    title: "Sibling paths are treated as mounted Ops routes"
+    title: "Mounted Ops test does not exclude the storefront favicon link"
 open: 0
 total: 2
-recorded: "2026-10-13T13:40:00Z"
+recorded: "2026-10-13T17:16:51Z"
 ---
 
 # Phase 177: Code Review Disposition
@@ -21,7 +21,7 @@ recorded: "2026-10-13T13:40:00Z"
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | IN-01 | info | fixed | Updated the screenshot filename comment to include the emitted viewport-width segment. (not in the current review) |
-| WR-01 | warning | fixed | exact mount boundary and passing sibling-path regression test (not in the current review) |
+| WR-01 | warning | fixed | Added an assertion that the mounted Ops page does not reference the storefront `/favicon.svg` path. |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.

@@ -28,6 +28,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     assert html =~ "Search health"
     assert html =~ ~s(href="/admin/search/favicon.svg")
     assert html =~ ~s(rel="icon" type="image/x-icon" href="/admin/search/favicon.ico")
+    refute html =~ ~s(href="/favicon.svg")
     assert html =~ ~r|href="/admin/search/assets/css/app\.css\?v=[a-f0-9]{64}"|
     assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(href="/admin/search/failed-sync")
