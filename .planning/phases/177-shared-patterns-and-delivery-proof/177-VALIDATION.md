@@ -22,7 +22,7 @@ validated: "2026-10-12"
 | **Full phase UI command** | `mix verify.ops_ui`, plus only the affected existing screenshot, contrast, browser, or mounted target |
 | **Estimated runtime** | Not measured in the current shell; record observed duration when the corresponding lane runs |
 
-There is no approved new framework, dependency, CI service, or paid visual judge in scope. The final exact-SHA closeout is `node scripts/ci_monitor.cjs closeout --push --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)"`, after all tracked completion bookkeeping.
+There is no approved new framework, dependency, CI service, or paid visual judge in scope. Exact hosted evidence covers PR #98 branch SHA `83cc3dfda33a30ba38ece7e0bbfc13383c01edc7`, its same-tree merge SHA `32193307418c00cd83d14d55c208ae145ca51eb3`, and current `main` SHA `017c7389544291b30146d25b73239ed33296d7b7`. Future source changes require their own exact-SHA closeout via `node scripts/ci_monitor.cjs closeout --push --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)"`.
 
 ## Sampling Rate
 
@@ -38,7 +38,7 @@ There is no approved new framework, dependency, CI service, or paid visual judge
 |---------|------|------|-------------|------------|-----------------|-----------|-----------------------------|-------------|--------|
 | 177-01 T1–T3; 177-02 T1–T2; 177-03 T1–T2; 177-04 T1–T2 | Plans 177-01 through 177-04 | Waves 1–4 | OPUX-26 | — | Preserve contextual grouping, eligibility, truthful states, complete identity/reasons, and distinct safe actions across six surfaces. | ExUnit behavioral suites + Ops UI gate; catalog contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 HEX_HOME=/private/tmp/scrypath-phase177-hex mix verify.ops_ui` (rerun: 2 doctests, 302 tests, 0 failures); Plan 177-01 token contract 8 tests, Plan 177-02 contract 9 tests; Plans 177-03/04 six named LiveView suites (68 and 55 focused tests) recorded passing in summaries | ✅ Existing tests | ✅ green |
 | 177-01 T2–T3; 177-02 T2; 177-03 T1–T2; 177-04 T1–T2 | Plans 177-01 through 177-04 | Waves 1–4 | OPUX-27 | — | Preserve keyboard access, visible focus, reduced motion, theme behavior, safe task identity, and responsive content/control reachability. | ExUnit + browser/layout/contrast; direct six-surface image inspection | Existing run records: `npm run test:e2e:admin-depth` (38 passed); full Ops gate above; `make contrast` (0 AA failures); `make contrast-matrix` (3 scenarios); 90-image matrix (10 route/state captures × 3 themes × 3 widths), with selected before/after pairs directly inspected. Evidence and image/source limits are documented in `177-UI-AUDIT.md` and summaries; these browser/image lanes were not rerun in this audit. | ✅ Existing screenshot matrix and lanes | ✅ green (per recorded exact-source evidence) |
-| 177-05 T1–T3 | Plan 177-05 | Wave 5 | OPUX-28 | T-177-05, T-177-06 | Bind claims to source identities and exact check SHAs; preserve unresolved hosted facts and task-owned cleanup boundaries. | Trace artifact validator + hosted evidence + package gate + final attestation | 20-row ordered trace validator and `git diff --check` passed; summary records `mix verify.package` (81 tests, package built). PR #98 run 38318747952 and exact-source closeout run 38319195947 passed on `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; five required jobs, coverage, and closeout attestation succeeded. Owner's formal-review waiver is separate and no review is claimed. `deep-quality` and `ecommerce-e2e` advisory jobs failed; they are non-required and remain disclosed. Run a fresh exact-source closeout after final phase bookkeeping. | ✅ Trace and hosted evidence exist | ✅ green; final phase-source closeout is the terminal gate |
+| 177-05 T1–T3 | Plan 177-05 | Wave 5 | OPUX-28 | T-177-05, T-177-06 | Bind claims to source identities and exact check SHAs; preserve unresolved hosted facts and task-owned cleanup boundaries. | Trace artifact validator + hosted evidence + package gate + final attestation | 20-row ordered trace validator and `git diff --check` passed; summary records `mix verify.package` (81 tests, package built). PR #98 run 38339367275 passed at exact branch SHA `83cc3dfda33a30ba38ece7e0bbfc13383c01edc7`; merge closeout run 38340671440 passed at exact merge SHA `32193307418c00cd83d14d55c208ae145ca51eb3`, whose tree matches the branch. Current `main` run 38395852546 passed the five required jobs, coverage, and closeout attestation at `017c7389544291b30146d25b73239ed33296d7b7`. The owner accepted only the missing independent-review evidence as a one-time waiver; no review is claimed. `deep-quality` and `ecommerce-e2e` advisory jobs failed and remain disclosed. | ✅ Trace and hosted evidence exist | ✅ green; no validation coverage gap |
 
 ## Wave 0 Requirements
 
@@ -59,9 +59,9 @@ There is no approved new framework, dependency, CI service, or paid visual judge
 - [x] Wave 0 creates no new framework/dependency and covers only actual missing validation artifacts.
 - [x] No watch-mode flags are used.
 - [x] Feedback latency is recorded from actual runs; no runtime estimate is invented. The rerun of `mix verify.ops_ui` completed in about 17 seconds after dependency compilation began.
-- [x] `nyquist_compliant: true` set after executable and artifact coverage was confirmed; each requirement has passing verification or completed visual evidence, and the exact-source closeout on `dd0f89e` passed. The terminal closeout will be rerun after the remaining verification and roadmap bookkeeping is committed.
+- [x] `nyquist_compliant: true` set after executable and artifact coverage was confirmed; each requirement has passing verification or completed visual evidence, and exact branch, merge, and current-main closeout evidence is recorded above. Any future source delta must be re-attested at its own exact SHA.
 
-**Approval:** Validated — no Nyquist coverage gaps remain. OPUX-26/27 have passing executable, browser, contrast, and recorded visual evidence. OPUX-28 has a validated trace, package boundary, exact PR-head required checks, the user's explicit formal-review waiver, and a successful exact-source closeout snapshot. The new terminal closeout must follow the final phase bookkeeping.
+**Approval:** Validated — no Nyquist coverage gaps remain. OPUX-26/27 have passing executable, browser, contrast, and recorded visual evidence. OPUX-28 has a validated trace, package boundary, exact PR-head and merge required checks, exact closeout attestations, and the user's explicit one-time formal-review waiver. T-177-06 remains a documented medium-severity recordkeeping gap below the blocking threshold; it is not a validation coverage gap.
 
 ## Validation Audit 2026-10-12
 
@@ -69,4 +69,12 @@ There is no approved new framework, dependency, CI service, or paid visual judge
 |---|---|
 | Gaps found | 1 |
 | Resolved | 1 |
+| Escalated | 0 |
+
+## Validation Audit 2026-10-13
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
 | Escalated | 0 |
