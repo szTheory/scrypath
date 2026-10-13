@@ -104,10 +104,11 @@ for (const entry of entries) {
     await chooseScenario(page, "unavailable");
     const unavailable = page.getByTestId("posture-row").first();
     const unavailableReason =
-      "Search health could not be checked: :phase173_backend_unavailable. Refresh health to try again.";
+      "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again.";
     await expect(unavailable).toContainText(unavailableReason);
     await expect(unavailable).toContainText("Refresh health to try again");
     await expect(unavailable).not.toContainText("backend failed");
+    await expect(unavailable).not.toContainText("phase173_backend_unavailable");
     await expect(metric(page, "Schema check errors")).toHaveAttribute("data-ops-metric-tone", "warning");
     await expect(
       unavailable.locator("p").filter({ hasText: unavailableReason })

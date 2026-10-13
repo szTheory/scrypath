@@ -142,7 +142,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert html =~ "data-testid=\"posture-row\""
 
-    assert html =~ "Search health could not be checked: :boom. Refresh health to try again."
+    assert html =~
+             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+
+    refute html =~ ":boom"
     assert html =~ ~s(class="mt-2 flex items-start gap-ops-2 text-ops-body text-error")
     assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
@@ -234,7 +237,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     failed_row = lv |> element(row_selector) |> render()
 
     assert failed_row =~
-             "Search health could not be checked: :phase173_backend_unavailable. Refresh health to try again."
+             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+
+    refute failed_row =~ "phase173_backend_unavailable"
 
     assert failed_row =~ "text-ops-body text-error"
 
@@ -263,7 +268,11 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     lv |> element("#search-health-refresh") |> render_click()
 
     failed_row = lv |> element(row_selector) |> render()
-    assert failed_row =~ "posture_backend_exit"
+
+    assert failed_row =~
+             "Search health could not be checked: The search backend did not provide a readable status. Refresh health to try again."
+
+    refute failed_row =~ "posture_backend_exit"
     assert failed_row =~ iso
     assert failed_row =~ "source-local evidence is retained"
     refute has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
@@ -374,18 +383,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute has_element?(lv, "[data-testid='posture-failed-sync-link']")
   end
 
-  test "hostile fetch reasons remain escaped text and do not expose markup", %{conn: conn} do
-    hostile = "</p><script>alert(1)</script>"
+  test "backend error bodies do not leak into the operator interface", %{conn: conn} do
+    secret = "private credential from response body"
 
     Agent.update(:posture_live_test_state, fn state ->
-      %{state | boom_reason: hostile}
+      %{state | boom_reason: {:http_error, 503, %{"message" => secret}}}
     end)
 
     {:ok, lv, _html} = live(conn, ~p"/ops/health")
     row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
 
-    assert row =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
-    refute row =~ "<script>alert(1)</script>"
+    assert row =~ "The search backend returned HTTP 503."
+    assert row =~ "No successful observation recorded."
+    refute row =~ secret
 
     refute has_element?(
              lv,
