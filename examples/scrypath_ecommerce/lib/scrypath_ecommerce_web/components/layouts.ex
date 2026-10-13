@@ -61,7 +61,7 @@ defmodule ScrypathEcommerceWeb.Layouts do
   end
 
   defp ops_admin_path?(%Plug.Conn{request_path: path}) when is_binary(path) do
-    String.starts_with?(path, "/admin/search")
+    path == "/admin/search" or String.starts_with?(path, "/admin/search/")
   end
 
   defp ops_admin_path?(_), do: false
