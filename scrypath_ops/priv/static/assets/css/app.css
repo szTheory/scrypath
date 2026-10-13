@@ -4797,6 +4797,9 @@
     gap: var(--spacing-ops-2);
     margin-top: var(--spacing-ops-2);
   }
+  .ops-signal-metrics--retained {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .ops-signal-metrics > div {
     min-width: 0;
   }

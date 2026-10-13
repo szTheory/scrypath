@@ -57,19 +57,23 @@ defmodule ScrypathOpsWeb.PostureLive do
     start_ms = System.monotonic_time(:millisecond)
     socket = socket |> fail_phase173_refresh() |> load_posture()
     duration_ms = System.monotonic_time(:millisecond) - start_ms
+    summary = socket.assigns.posture_summary
+
+    refresh_succeeded? =
+      summary.state in [:ok, :degraded] and summary.schema_count > 0 and summary.error_count == 0
 
     # Low-cardinality telemetry: no per-schema labels (CONTEXT D-08).
     :telemetry.execute(
       [:scrypath_ops, :posture, :refresh],
       %{duration_ms: duration_ms, schema_count: length(socket.assigns.schema_allowlist)},
-      %{outcome: if(socket.assigns.aggregate_error_count > 0, do: :degraded, else: :ok)}
+      %{outcome: if(refresh_succeeded?, do: :ok, else: :degraded)}
     )
 
     socket =
-      if socket.assigns.aggregate_error_count > 0 do
-        socket
-      else
+      if refresh_succeeded? do
         put_flash(socket, :info, "Search health refreshed.")
+      else
+        socket
       end
 
     {:noreply, socket}
@@ -407,7 +411,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         </dd>
                       </div>
                     </dl>
-                    <p :if={!status.queue.observed?} class="text-ops-sm text-base-content/75">
+                    <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
                       {queue_unobserved_copy(status)}
                     </p>
                   </section>
@@ -429,14 +433,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {inspect(mod)}
                     </h3>
-                    <p class="mt-1 text-ops-sm text-error">fetch error: {inspect(reason)}</p>
-                  </div>
-                  <div class="ops-schema-signal-card__badges">
-                    <.ops_badge kind={:error}>fetch error</.ops_badge>
                   </div>
                 </div>
-                <p class="mt-2 text-ops-sm text-error">
-                  Search health could not be checked: {inspect(reason)}. Refresh health to try again.
+                <p class="mt-2 flex items-start gap-ops-2 text-ops-body text-error">
+                  <.icon name="hero-exclamation-circle" class="mt-ops-1 size-4 shrink-0" />
+                  <span>
+                    Search health could not be checked: {fetch_error_copy(reason)} Refresh health to try again.
+                  </span>
                 </p>
                 <dl class="ops-signal-metrics ops-signal-metrics--retained mt-2">
                   <div :for={source <- [:backend, :queue]}>
@@ -447,7 +450,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         dt={retained_state_at(@posture_summary, mod, source)}
                         source_iso={retained_source_iso(@posture_summary, mod, source)}
                         snapshot_at={retained_snapshot_at(@posture_summary, mod, source)}
-                        state_text={retained_state_text(@posture_summary, mod, source, reason)}
+                        state_text={retained_state_text(@posture_summary, mod, source)}
                         retained_text={retained_evidence_text(@posture_summary, mod, source)}
                         operational
                       />
@@ -557,13 +560,31 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp retained_state_text(summary, schema, source, reason) do
+  defp retained_state_text(summary, schema, source) do
     case source_ref(summary, schema, source) do
       %{unused?: true} -> "Queue not used"
       %{state: state} -> time_state_text(state)
-      nil -> "Not observed: #{inspect(reason)}"
+      nil -> "No successful observation recorded."
     end
   end
+
+  defp fetch_error_copy({:http_error, status, _body}) when is_integer(status),
+    do: "The search backend returned HTTP #{status}."
+
+  defp fetch_error_copy({:transport_error, _exception}),
+    do: "Could not connect to the search backend."
+
+  defp fetch_error_copy({:invalid_task_payload, _details}),
+    do: "The search backend returned an invalid task response."
+
+  defp fetch_error_copy({:task_history_truncated, _details}),
+    do: "Search task history exceeded its configured limit."
+
+  defp fetch_error_copy({:unsupported_operator_backend, _backend}),
+    do: "The configured search backend is not supported."
+
+  defp fetch_error_copy(_reason),
+    do: "A configured search health source could not be read."
 
   defp retained_evidence_text(summary, schema, source) do
     case source_ref(summary, schema, source) do

@@ -29,6 +29,14 @@ root layout must load the operator stylesheet for those routes:
 <link phx-track-static rel="stylesheet" href="/admin/search/assets/css/app.css" />
 ```
 
+It should also use the bundled Scrypath favicon for the mounted operator routes, using the
+same mount prefix as the router:
+
+```heex
+<link rel="icon" type="image/svg+xml" href="/admin/search/favicon.svg" />
+<link rel="icon" type="image/x-icon" href="/admin/search/favicon.ico" />
+```
+
 The host JavaScript should also handle the operator shell events:
 
 - `phx:set-theme` — set or clear `data-theme` on `document.documentElement` and persist the

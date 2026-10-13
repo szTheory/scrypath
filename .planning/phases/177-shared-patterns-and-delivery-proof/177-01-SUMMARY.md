@@ -32,10 +32,10 @@ coverage:
     requirement: OPUX-26
     verification:
       - kind: integration
-        ref: `mix verify.ops_ui` — 2 doctests and 301 tests, 0 failures; task-local Hex cache.
+        ref: "`mix verify.ops_ui` — 2 doctests and 301 tests, 0 failures; task-local Hex cache."
         status: pass
       - kind: unit
-        ref: `test/scrypath_ops_web/design_tokens_contract_test.exs` — 8 tests, 0 failures.
+        ref: "`test/scrypath_ops_web/design_tokens_contract_test.exs` — 8 tests, 0 failures."
         status: pass
     status: partial
   - id: P177-01-B
@@ -43,13 +43,13 @@ coverage:
     requirement: OPUX-27
     verification:
       - kind: browser
-        ref: `screenshots-matrix` — 3 scenario groups, 90 retained images, all nine combinations per capture.
+        ref: "`screenshots-matrix` — 3 scenario groups, 90 retained images, all nine combinations per capture."
         status: pass
       - kind: browser
-        ref: `admin_surface_depth.spec.ts` — 38 tests, 0 failures; 60 selected supplementary images.
+        ref: "`admin_surface_depth.spec.ts` — 38 tests, 0 failures; 60 selected supplementary images."
         status: pass
       - kind: other
-        ref: `make -C examples/scrypath_ecommerce contrast` — 0 AA failures; 43 AAA advisory findings.
+        ref: "`make -C examples/scrypath_ecommerce contrast` — 0 AA failures; 43 AAA advisory findings."
         status: pass
     status: partial
 completed: 2026-10-12

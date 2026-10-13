@@ -1,98 +1,94 @@
 # Phase 174 — UI Review
 
-**Audited:** 2026-10-11 (post-fix verification)  
-**Baseline:** Approved [174-UI-SPEC.md](174-UI-SPEC.md), with Phase 173 shared visual foundation  
-**Screenshots:** Not captured (localhost:8080 answered, but desktop, mobile, and tablet Playwright captures all failed)  
-**Interaction captures:** off (workflow.ui_interaction_capture is false)
-**Exact source revision verified:** `2375f6b71f57037e9e636ae060828e26f59a82c6`
-
----
+**Audited:** 2026-10-13
+**Baseline:** Approved [174-UI-SPEC.md](174-UI-SPEC.md), Phase 174 decisions D-01–D-05, and Phase 173 shared visual foundation
+**Source revision:** `e92d5ae4e1131f792aab0185933c2c480885836e`
+**Screenshots:** Not captured. `localhost:8080` answered, but it was not verified to serve this worktree; the known `localhost:4012` preview serves the normal checkout and was excluded.
+**Interaction captures:** off (`workflow.ui_interaction_capture=false`)
 
 ## Pillar Scores
 
 | Pillar | Score | Key Finding |
 |--------|-------|-------------|
-| 1. Copywriting | 4/4 | Fetch-error, delete-dismissal, setup, and invalid-selection copy matches the contract. |
-| 2. Visuals | 3/4 | The secondary intent cards now follow the verdict as specified; runtime screenshots remain unavailable for assessing composed hierarchy and responsive balance. |
-| 3. Color | 3/4 | Tokenized state and accent roles are consistent and the recorded contrast gate reports 0 AA failures; actual 60/30/10 surface distribution was not visually measurable in this audit. |
-| 4. Typography | 4/4 | The three phase surfaces use the shared `text-ops-*` hierarchy and monospace identifiers; no phase-specific size or weight override was found. |
-| 5. Spacing | 4/4 | The reviewed phase-owned 12px gaps now use the allowed 8px/16px values; remaining 12px values are existing shared/legacy rhythm outside the reviewed edits. |
-| 6. Experience Design | 4/4 | The delete dismissal and current action states are covered by the exact-revision mounted browser and LiveView suites. |
+| 1. Copywriting | 4/4 | Partial refresh now distinguishes retained prior evidence from the case where no complete observation exists; tests assert no false success. |
+| 2. Visuals | 3/4 | Contracted verdict → primary health route → secondary intents hierarchy is present, but current-source composition could not be inspected in a screenshot. |
+| 3. Color | 3/4 | Semantic theme tokens, visible state text, and prior 0-AA-failure evidence support compliance; the 60/30/10 composition is not visually measurable at this revision. |
+| 4. Typography | 4/4 | Audited phase surfaces use the shared `text-ops-*` hierarchy and monospace technical identities, without phase-specific type overrides. |
+| 5. Spacing | 4/4 | Phase-owned additions use the contract’s 4/8/16/24/32px scale; no new arbitrary spacing appears in the audited templates. |
+| 6. Experience Design | 4/4 | Partial-refresh, empty/setup, unavailable, and retry states are explicit; current-source Control Room and Search health tests pass. |
 
 **Overall: 22/24**
 
----
+## Top 3 Priority Fixes
 
-## Remaining Recommendations
+1. **Capture Control Room and Search health at `e92d5ae4` from this worktree when a matching preview is available** — the current composition and responsive balance remain unverified visually — capture desktop, tablet, and mobile views from a server proven to use this worktree.
+2. **Capture a matching-source view of the warning/error states** — the current UI relies on semantic state color plus text, but color distribution cannot be assessed from source alone — inspect both light and dark themes and confirm accent stays within the contract’s interaction-only roles.
+3. **Use a matching-source screenshot for the remaining visual judgment** — the responsive/focus/theme browser matrix has since passed 6/6 against the current source; only composed card balance and surface distribution remain visually unobserved — capture Control Room and Search health if a preview tied to this worktree becomes available.
 
-1. **Capture representative runtime views when available** — this review could not capture screenshots, so actual 60/30/10 distribution and composed card balance remain visually unmeasured; this is supporting design evidence, not a phase acceptance gate.
-
-## Disposition of Prior Findings
-
-- **Resolved:** Control Room’s “Verify a change” and “Explore search” actions are now `ops_intent_card` cards after the verdict. The existing generic **Inspect Search health** route remains primary for degraded state and is also present in the healthy Control Room intent set as required by the updated markup.
-- **Resolved:** Reviewed phase-owned 12px gaps were replaced with 8px/16px spacing (`mt-2`/`mt-4` and `gap-x-2`). Remaining `mt-3` values around the empty hero and operator reference, and the pre-existing modal field gap, were not part of those corrections and remain legacy markup.
-- **Resolved:** Search health fetch-error copy now says “Refresh health to try again.”
-- **Resolved:** Delete-dialog dismissal visibly reads and is labelled “Keep failed work and close.”
-- **Resolved:** Failed sync setup and invalid-selection headings now match the punctuation in the contract.
-- **Still limited:** Runtime screenshots were unavailable, so page-level color/surface distribution and responsive card balance remain unmeasured. This does not replace the automated responsive, focus, route, and contrast assertions. Interaction capture remains off.
-
----
+These are evidence gaps, not identified implementation blockers. No further code change is indicated by this audit.
 
 ## Detailed Findings
 
 ### Pillar 1: Copywriting (4/4)
 
-- **Resolved since prior review:** Fetch-error guidance now reads “Refresh health to try again,” delete dismissal now reads “Keep failed work and close,” and setup/invalid-selection headings use the contract punctuation. See `posture_live.ex:438-440` and `failed_sync_live.ex:533-545,746-756`.
-- **Strength:** Control Room’s healthy freshness caveat, degraded scope, both setup states, failed-work empty state, and retry eligibility language closely match the contract. See `control_room_live.ex:116-155` and `failed_sync_live.ex:533-546, 607-645`.
+- The added no-prior-observation state says, “No prior complete observation is available; this partial result does not confirm current health.” It avoids presenting the healthy copy as a fresh result. See `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex:107-133`.
+- If a prior complete observation exists, the notice identifies it as retained and says the refresh did not confirm current health. If schemas or backend are unavailable, the notice points to the setup guidance instead. This keeps the message aligned with the evidence available.
+- Search health refresh no longer exposes raw backend error terms. It uses bounded, actionable copy, including HTTP status where appropriate, and tells the operator to refresh. See `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:430-466`.
+- Current-source tests assert the partial observation copy, retained-evidence distinction, absence of “Search health refreshed.”, empty-allowlist outcome, and missing-backend outcome.
 
 ### Pillar 2: Visuals (3/4)
 
-- **Resolved since prior review:** The two secondary intents now render as `ops_intent_card` cards after the verdict, restoring the contracted health → secondary-intent hierarchy. The generic health destination remains in the verdict for degraded state. See `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex:128-180`.
-- **Strength:** Search health uses one labelled article per schema with identity first, then plain backend/queue groups and a contextual handoff; it avoids nested diagnostic cards. See `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex:314-422`.
-- **Evidence limit:** No screenshots were captured in the prior audit, so page-level visual balance and composed responsive appearance could not be inspected directly. Exact-revision automated evidence is listed under Pillar 6 and in Verification Evidence Reviewed; it does not replace a runtime visual capture.
+- Control Room keeps the title and refresh in the toolbar, then renders one health verdict, its state/scope, the single primary **Inspect Search health** route, secondary intent cards, and the quiet guide. See `control_room_live.ex:87-217`.
+- Search health keeps one article per schema with identity-first content and plain backend/queue groups; failed sync details remain disclosure-based rather than nested diagnostic cards. See `posture_live.ex:314-458` and `failed_sync_live.ex:600-694`.
+- **WARNING:** No screenshot from this source revision was captured. Port 8080 answered but could not be tied to this worktree, and the known port 4012 preview serves another checkout. Visual composition, card balance, and mobile stacking therefore remain code-derived rather than directly observed.
 
 ### Pillar 3: Color (3/4)
 
-- **Strength:** The implementation uses shared semantic tokens (`text-error`, neutral text, and `link-primary`) rather than screen-specific hex values. In the inspected surfaces, accent is applied to actual links/actions; degraded/failure copy is paired with explicit text and badges. See `posture_live.ex:418-439` and `failed_sync_live.ex:630-676`.
-- **Strength:** Phase 174’s recorded contrast result is `0 AA failures` (43 AAA advisories). The contract sets AA as the required threshold.
-- **WARNING:** The 60/30/10 composition is not supported by a measured runtime screenshot in this audit. Do not infer it from token compliance alone; capture representative Control Room and schema-record screens if the distribution needs a visual sign-off.
+- State meaning is conveyed with explicit labels and text, not hue alone. Failure copy uses the semantic `text-error` role; links and primary actions use shared interaction styles. The phase UI contract prohibits full warning/error surface fills and reserves accent for actual links/actions, navigation, selection, and focus.
+- The current-source contrast gate reports 0 AA failures (43 AAA advisories) at tested source revision `73dfbf8c5ca75950621b2d48b21013adac857477`.
+- **WARNING:** There is no screenshot at `e92d5ae4`, so the 60/30/10 surface distribution and light/dark composition are not confirmed for this revision. Prior contrast evidence is not proof of current visual distribution.
+
 ### Pillar 4: Typography (4/4)
 
-- **Strength:** Phase-owned headings and body copy use the shared `text-ops-h*` and `text-ops-body` roles, while complete schema and work identifiers use the monospace role. The phase templates add no arbitrary font-size declarations or screen-specific type tokens. See `posture_live.ex:325-335`, `failed_sync_live.ex:601-645`, and `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex:25-90`.
-- The status browser lane recorded long-identifier coverage across narrow and rail widths, which supports the contract’s wrapping requirement; the phase summary reports the responsive status lane passing.
+- Shared components provide the heading/body hierarchy (`text-ops-h1`, `text-ops-h2`, `text-ops-h3`, `text-ops-body`, `text-ops-sm`); schema/module identities use monospace. The three phase LiveViews introduce no arbitrary font-size or weight override in the inspected templates.
+- Full schema and work identities remain present in the markup, consistent with the contract’s wrap-instead-of-shrink rule. Responsive visual wrapping is backed by the earlier browser matrix, not a screenshot from this revision.
 
 ### Pillar 5: Spacing (4/4)
 
-- **Resolved since prior review:** The reviewed phase-owned gaps now use 8px (`mt-2`, `gap-x-2`) or 16px (`mt-4`) values in Control Room, Search health, and Failed sync rows.
-- **Boundary:** Existing `mt-3` on the Failed sync empty hero and operator reference and `space-y-3` inside the pre-existing modal remain. They are not among the phase-added gaps described by the corrected scope and were not changed in this source-only audit.
-- **Strength:** The revised layout continues to use shared page, panel, and section rhythm tokens.
+- Phase 174 permits only 4px, 8px, 16px, 24px, 32px, 48px, and 64px for newly introduced spacing. The current-source additions use `gap-ops-2`/`mt-ops-1` (4/8px) in Search health and the reviewed Control Room rhythm uses 8px/16px steps. See `posture_live.ex:438-444` and `control_room_live.ex:87-191`.
+- Existing `mt-3` spacing in Failed sync empty/reference content and pre-existing shared control geometry are inherited Phase 173 values, not new Phase 174 overrides. No new arbitrary pixel/rem spacing was found in the inspected phase templates.
 
 ### Pillar 6: Experience Design (4/4)
 
-- **Strength:** The phase has explicit empty, unavailable, fetch-error, partial-refresh, retry-accepted, and eligibility states. Search health uses the exact selected schema for its conditional handoff; invalid schema selection clears the rows and action state in the LiveView logic. See `posture_live.ex:314-422` and `failed_sync_live.ex:92-170, 533-569, 646-689`.
-- **Resolved since prior review:** The delete-dialog dismissal now clearly communicates that failed work stays available and preserves the contracted initial-focus target. See `failed_sync_live.ex:709-756`.
-- **Evidence:** Exact revision `2375f6b71f57037e9e636ae060828e26f59a82c6` passed the mounted operator journey (4/4), full Ops UI suite (252 tests + 2 doctests), and all Phase 173 browser regression scopes. Interaction capture was off; the executable browser and LiveView journeys assert the relevant routes, selection/history, and actions.
+- The Control Room now distinguishes (a) a partial refresh with a retained complete observation, (b) partial evidence with no prior complete observation, and (c) setup states where no schema health observation was possible. It preserves evidence and omits success feedback when the refresh is incomplete.
+- Search health derives refresh success and telemetry outcome from nonempty schema observations with zero observation errors. Current tests assert degraded telemetry and no success feedback for both no configured schemas and missing backend; current tests also verify safe fetch-error copy and avoid leaking response-body content.
+- Focused current-source verification: `mix test test/scrypath_ops_web/live/control_room_live_test.exs test/scrypath_ops_web/live/posture_live_test.exs` — **26 tests, 0 failures** using Elixir 1.19.5 / OTP 28. A compiler type warning was printed from `scrypath/lib/scrypath/sync.ex` and is outside this UI review’s scope.
+- The prior exact-source browser evidence at `2375f6b71f57037e9e636ae060828e26f59a82c6` recorded mounted operator journeys 4/4, Phase 173 responsive/theme status 6/6, and 0 AA contrast failures. This evidence predates the current source and is reported as historical support, not a current exact-SHA browser pass.
 
----
+## Registry Safety
 
-## Verification Evidence Reviewed
+Skipped: `.planning/phases/174-recovery-entry-and-diagnosis/174-UI-SPEC.md` records `shadcn_initialized: false`, and no `components.json` is present. No third-party UI registry blocks are declared.
 
-- Exact revision `2375f6b71f57037e9e636ae060828e26f59a82c6`: Ops UI suite passed 252 tests + 2 doctests; mounted operator journeys passed 4/4; contrast reported 0 AA failures and 43 AAA advisories.
-- The exact-revision Phase 173 regression browser scopes passed: shell 14/14, status 6/6, time 8/8, and copy 10/10, each against mounted and standalone routes.
-- Earlier Phase 174 plans also recorded the Search health mounted/standalone matrix passing 6/6; its long-content/focus/theme criteria are covered by that browser lane and the repeated contrast gate.
-- `.planning/phases/173-shared-visual-foundation-and-operational-time/173-03-SUMMARY.md` documents Phase 173’s earlier exact-SHA status run at `14d985e73ea579020cd26a0f8225c197b9c2fea3`; this is prior foundation evidence, not Phase 174 verification.
-- Audit captures were attempted from `http://localhost:8080`; all three Playwright CLI captures failed. No new captures were attempted in this source/evidence-only follow-up. Interaction capture was off.
-- Registry audit skipped: `components.json` is absent and the UI-SPEC says shadcn is not initialized.
+## Verification Update After Audit
+
+The UI review was written against application source commit `e92d5ae4e1131f792aab0185933c2c480885836e`. The source was unchanged in the documentation-only commits through tested revision `73dfbf8c5ca75950621b2d48b21013adac857477`. At that tested revision, `mix verify.ops_ui` passed 2 doctests and 305 tests, the mounted operator journey passed 4/4, the mounted/standalone responsive status matrix passed 6/6, and contrast had 0 AA failures. The remaining visual recommendation is limited to a screenshot that can be tied to this worktree.
 
 ## Files Audited
 
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-UI-SPEC.md`
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-CONTEXT.md`
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-DISCUSSION-LOG.md`
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-01-PLAN.md`, `174-02-PLAN.md`, `174-03-PLAN.md`
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-01-SUMMARY.md`, `174-02-SUMMARY.md`, `174-03-SUMMARY.md`
+- `.planning/phases/174-recovery-entry-and-diagnosis/174-VALIDATION.md`, `174-VERIFICATION.md`, `174-REVIEW-DISPOSITION.md`
 - `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex`
 - `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex`
 - `scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex`
 - `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex`
-- `scrypath_ops/assets/css/app.css`
-- `scrypath_ops/assets/css/contrast-pairs.mjs`
+- `scrypath_ops/test/scrypath_ops_web/live/control_room_live_test.exs`
+- `scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs`
+- `scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs`
+- `scrypath_ops/assets/css/app.css`, `scrypath_ops/assets/css/DESIGN-TOKENS.md`
 - `examples/scrypath_ecommerce/e2e/operator.spec.ts`
 - `examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts`
-- `.planning/phases/174-recovery-entry-and-diagnosis/174-UI-SPEC.md`, plans, summaries, and validation record
-- The Phase 176 comps hook finding is outside this Phase 174 review and is not assessed here.
+- `.planning/phases/173-shared-visual-foundation-and-operational-time/173-UI-SPEC.md`

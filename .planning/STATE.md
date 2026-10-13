@@ -2,35 +2,34 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 177
-current_phase_name: Shared Patterns and Delivery Proof
-status: planning
-stopped_at: Phase 177 plans revised and validated; next: $gsd-execute-phase 177
-last_updated: "2026-10-12T00:00:52.594Z"
-last_activity: 2026-10-11
-last_activity_desc: Phase 177 plan set revised and validated
-state_head: f2982371b0df6f90e1b5f158922b119aca63c13f
+current_phase: 174
+status: completed
+stopped_at: Phase 174 complete — PR #98 current-head required checks passed; Phase 177 terminal source gate remains blocking
+last_updated: "2026-10-13T02:49:38.000Z"
+last_activity: 2026-10-13
+last_activity_desc: Phase 174 closeout recorded; exact-head PR checks passed; terminal source attestation remains open
+state_head: bebeb863493d1667ffa5f8c9fa3e890b484c5c1a
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 21
-  completed_plans: 16
-  percent: 80
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: approved v1.43 ScrypathOps UI refinement; Phases 173–176 are complete, and Phase 177 has five plans ready to execute.
+See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish PR #98's exact-source closeout and merged-main attestation; all five phase plan sets are complete, but T-177-05 still blocks the milestone audit.
 
 ## Current Position
 
-Phase: 177 — Shared Patterns and Delivery Proof
-Plan: 0 of 5 (not started)
-Status: Ready to execute
-Last activity: 2026-10-11 — Phase 177 plan set revised and validated
-Progress: [████████░░] 80% by phase (4/5 phases; 16/21 plans complete)
+Phase: 174
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-10-12 — Phase 174 verified; Phase 177 closeout remains blocked
+Progress: [██████████] 100% by phase (5/5 phases; 21/21 plans complete)
 
 ## Delivered Evidence
 
@@ -39,6 +38,8 @@ Progress: [████████░░] 80% by phase (4/5 phases; 16/21 plans
 - ReleasePR92 merged8dd20e8966acd17a4ef5acec653c00dc31faab49; `scrypath-v0.3.15` published. Run37181522723 passed publish/live Hex/consumer/HexDocs/tag parity; release-mainCI37181522706 passed required and scopedOps.
 - Final exact-source closeout [run37183050686](https://github.com/szTheory/scrypath/actions/runs/37183050686) passed at `5ed440954ba70d2b94d8b480d625530e26a809ac`, including required gates, coverage and closeout attestation; the full browser lane passed104 tests and mounted lane4. Planning tag `v1.42` points to this source. PR93 merged the completed archive before this final run.
 - All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. The original dated handoff commit was planning-only. Later user-directed local UI follow-ups are recorded separately below; they are not part of the archived Phase172 plans, verification, or exact-source receipt. The archived v1.42 tracker's `state_head` identifies that attested input; the current v1.43 header serves GSD freshness tracking and does not extend the v1.42 receipt. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
+
+- Phase177: 5/5 plans complete; verification passed 69/69 truths. Earlier candidate closeout [run38322328937](https://github.com/szTheory/scrypath/actions/runs/38322328937) passed all five required jobs plus coverage and exact-SHA attestation on `e051c3e959953591afdcccaeed5ea11b97a34529`. Latest PR #98 checks [run38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required jobs and both Ops UI checks on exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; the Website build also passed. `deep-quality (advisory)` failed, and `ecommerce-e2e (advisory)` was skipped. Candidate closeout on the final tracking source and merged-main attestation remain pending. The user waived only the formal-review gate; no review is claimed.
 
 ## Post-Archive Follow-Up
 
@@ -80,19 +81,21 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-12T00:00:52.533Z
-Stopped at: Phase 177 plans revised and validated
-Resume file: .planning/phases/177-shared-patterns-and-delivery-proof/177-01-PLAN.md
+Last session: 2026-10-13T02:49:38Z
+Stopped at: Phase 174 complete; PR #98 exact-head checks passed; Phase 177 terminal source gate remains blocking
+Resume file: .planning/phases/177-shared-patterns-and-delivery-proof/177-SECURITY.md
 
-Phases 173–176 are complete in this worktree, with 16 plan summaries total (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5). Their phase verification, reviews, security records, and validation artifacts are present under their phase directories. The current ROADMAP progress table agrees.
+Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
+
+User-directed follow-up: the mounted ScrypathOps UI links the bundled Scrypath SVG/ICO favicon under its mount path. The focused e-commerce controller suite passed 5/5; current-head hosted required and Ops UI checks passed on the PR #98 head above.
 
 Phase 176 closed with all 75/75 phase truths verified, OPUX-23–OPUX-25 satisfied, and no open review or security findings. At exact source `3cc55bdcf7b6e6bcd06572dd17c9be9ab31d7dd2`, `mix verify.ops_ui` passed 2 doctests and 301 tests; the focused Store/Search/Playbook suite passed 75 tests; the operator browser matrix passed 38/38; asset build, root regression tests, and AA contrast checks passed. Implementation and verification details, including the accepted local-host trust boundary and spec-less Store idempotency/concurrency assumptions, are recorded in the phase artifacts. The disposable Phase 176 browser stack was removed; preview port 4012 was left untouched.
 
 The initial isolated executor could not create its normal per-task commits. The maintainer-approved recovery recorded the already-verified Phase 176 delta without replaying completed implementation. Final source commits are `ec13329`, `3cbbb91`, and `3cc55bd`; phase closeout records preserve the recovery decision, reviews, validation, security posture, and verification result.
 
-Next command: `$gsd-execute-phase 177`, from `/Users/jon/projects/scrypath/.claude/worktrees/phase-174-recovery-entry-diagnosis`. Phase 176 is complete, and Phase 177 is planned with five sequenced plans; execution is the correct next step. Do not replay Phases 173–176. Context can be cleared because the completed implementation, verification, plan sequence, and exact next step are recorded here and in the phase artifacts.
+Next command after the exact-source candidate and merged-main closeout attestations: `$gsd-secure-phase 177`, from a planning-only successor based on the attested main SHA. It re-audits T-177-05 against immutable terminal evidence without extending the attested source. Run `$gsd-audit-milestone v1.43` only after the high-severity closeout threat is closed. Do not replay Phases 173–177. The archived v1.33 Phase 124 gate remains acknowledged and deferred per the maintainer's earlier choice.
 
-Keep the v1.43 execution order 173 → 174 → 175 → 176 → 177. Phases 173–176 are complete and Phase 177 is next. Do not replay completed phases or replan Phase 176 without new evidence. Preserve the intentional adaptive model routing in .planning/config.json and do not extend archived source receipts.
+The v1.43 execution order 173 → 174 → 175 → 176 → 177 is complete. Preserve the intentional adaptive model routing in .planning/config.json and do not extend archived source receipts.
 
 ## Performance Metrics
 

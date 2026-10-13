@@ -337,7 +337,9 @@ test("mounted and standalone fixture routes keep their shell usable through erro
   const scenario = page.getByTestId("phase173-fixture-scenario");
   await scenario.selectOption("partial");
   await expect(page.getByTestId("posture-row")).toHaveCount(2);
-  await expect(page.getByTestId("posture-row").filter({ hasText: "fetch error" })).toHaveCount(1);
+  await expect(
+    page.getByTestId("posture-row").filter({ hasText: "Search health could not be checked" })
+  ).toHaveCount(1);
 
   await scenario.selectOption("long");
   await expect(page.getByTestId("posture-row")).toHaveCount(2);

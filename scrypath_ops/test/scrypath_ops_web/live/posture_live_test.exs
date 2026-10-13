@@ -141,8 +141,15 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/health")
 
     assert html =~ "data-testid=\"posture-row\""
-    assert html =~ "fetch error: :boom"
+
+    assert html =~
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
+
+    refute html =~ ":boom"
+    assert html =~ ~s(class="mt-2 flex items-start gap-ops-2 text-ops-body text-error")
+    assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
+    assert html =~ ~s(class="text-ops-body text-base-content/75")
     assert html =~ "Backend tasks"
     assert html =~ "Queue jobs"
     assert html =~ "Last success"
@@ -174,6 +181,31 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ "queue observed"
     assert row =~ "ops-badge-neutral"
     refute row =~ "ops-badge-success"
+  end
+
+  test "refresh without configured schemas does not report a successful observation", %{
+    conn: conn
+  } do
+    attach_posture_refresh_telemetry()
+    {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=empty")
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    assert_receive {:posture_refresh, %{schema_count: 0}, %{outcome: :degraded}}
+    refute render(lv) =~ "Search health refreshed."
+  end
+
+  test "refresh without a backend does not report a successful observation", %{conn: conn} do
+    Application.delete_env(:scrypath_ops, :backend)
+    attach_posture_refresh_telemetry()
+    {:ok, lv, html} = live(conn, ~p"/ops/health")
+
+    assert html =~ "Runtime not configured"
+
+    lv |> element("#search-health-refresh") |> render_click()
+
+    assert_receive {:posture_refresh, %{schema_count: 2}, %{outcome: :degraded}}
+    refute render(lv) =~ "Search health refreshed."
   end
 
   test "refresh disabled eligibility follows a server-rendered fixture patch", %{conn: conn} do
@@ -229,8 +261,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     lv |> element("#search-health-refresh") |> render_click()
     failed_row = lv |> element(row_selector) |> render()
 
-    assert failed_row =~ "Search health could not be checked: :phase173_backend_unavailable"
-    assert failed_row =~ "Refresh health to try again."
+    assert failed_row =~
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
+
+    refute failed_row =~ "phase173_backend_unavailable"
+
+    assert failed_row =~ "text-ops-body text-error"
+
     assert failed_row =~ "2 days ago"
     assert failed_row =~ iso
     assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")
@@ -256,7 +293,11 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     lv |> element("#search-health-refresh") |> render_click()
 
     failed_row = lv |> element(row_selector) |> render()
-    assert failed_row =~ "posture_backend_exit"
+
+    assert failed_row =~
+             "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
+
+    refute failed_row =~ "posture_backend_exit"
     assert failed_row =~ iso
     assert failed_row =~ "source-local evidence is retained"
     refute has_element?(lv, "a[href='/ops/failed-sync?schema=#{schema}']")
@@ -367,18 +408,19 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute has_element?(lv, "[data-testid='posture-failed-sync-link']")
   end
 
-  test "hostile fetch reasons remain escaped text and do not expose markup", %{conn: conn} do
-    hostile = "</p><script>alert(1)</script>"
+  test "backend error bodies do not leak into the operator interface", %{conn: conn} do
+    secret = "private credential from response body"
 
     Agent.update(:posture_live_test_state, fn state ->
-      %{state | boom_reason: hostile}
+      %{state | boom_reason: {:http_error, 503, %{"message" => secret}}}
     end)
 
     {:ok, lv, _html} = live(conn, ~p"/ops/health")
     row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
 
-    assert row =~ "&lt;script&gt;alert(1)&lt;/script&gt;"
-    refute row =~ "<script>alert(1)</script>"
+    assert row =~ "The search backend returned HTTP 503."
+    assert row =~ "No successful observation recorded."
+    refute row =~ secret
 
     refute has_element?(
              lv,
@@ -502,6 +544,23 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       assigns: Map.merge(base_assigns, overrides),
       host_uri: URI.parse("https://scrypath.example/ops/health")
     }
+  end
+
+  defp attach_posture_refresh_telemetry do
+    test_pid = self()
+    handler_id = "posture-refresh-test-#{System.unique_integer([:positive])}"
+
+    assert :ok =
+             :telemetry.attach(
+               handler_id,
+               [:scrypath_ops, :posture, :refresh],
+               fn _event, measurements, metadata, _config ->
+                 send(test_pid, {:posture_refresh, measurements, metadata})
+               end,
+               nil
+             )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
   end
 
   defp posture_scrypath_opts do

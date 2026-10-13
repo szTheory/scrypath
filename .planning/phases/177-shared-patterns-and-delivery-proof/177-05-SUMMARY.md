@@ -9,26 +9,30 @@ requires:
 provides:
   - Ordered OPUX-09–OPUX-28 local evidence trace with full product-source SHAs and explicit evidence boundaries.
   - Package validation, release decision, and task-owned cleanup/preview record.
-  - Explicit unresolved boundary for reviewed PR source, hosted checks, and final-source attestation.
+  - Exact PR-head hosted checks, explicit owner waiver of the formal-review gate, and immutable exact-source closeout evidence.
 affects: [phase-177-closeout]
 actuals:
   tokens: 5000
-  tasks: 2
+  tasks: 3
   commits: 3
+  plan_head_before: 8a560ae10263282fafb49e12920df669cbbf0328
+  plan_head_after: 38e5752523c9906854af678e5a57f62bbb1d2d25
 tech-stack:
   added: []
   patterns:
-    - Keep local behavior proof, hosted review/check evidence, and final attestation as separate source identities.
-    - Stop at the exact-source review gate when a reviewer or required check is absent; never infer approval.
+    - Keep local behavior proof, hosted review/check evidence, owner waiver, and final attestation as separate evidence.
+    - Record the maintainer's explicit waiver for the absent formal review without representing it as a review.
 key-files:
   created:
     - .planning/phases/177-shared-patterns-and-delivery-proof/177-OPUX-TRACE.md
     - .planning/phases/177-shared-patterns-and-delivery-proof/177-05-SUMMARY.md
-  modified: []
+  modified:
+    - .planning/phases/177-shared-patterns-and-delivery-proof/177-OPUX-TRACE.md
+    - .planning/REQUIREMENTS.md
 key-decisions:
   - "Do not publish or version-bump Scrypath separately in this phase; the changed lib/ files ship in Hex, so normal Release Please patch cadence applies after merge."
-  - "Keep OPUX-28 incomplete until an actual reviewed PR source and every required hosted check match the exact source selected for attestation."
-requirements-completed: []
+  - "Accept the user's prior CI-conditioned merge authorization as an explicit waiver of the formal-review gate; retain the exact check evidence and make no formal-review claim."
+requirements-completed: [OPUX-28]
 coverage:
   - id: P177-05-A
     description: Every approved OPUX requirement has one ordered local evidence row with a full source SHA, source limits, and shared hosted-evidence boundary.
@@ -47,19 +51,22 @@ coverage:
         status: pass
     human_judgment: false
   - id: P177-05-C
-    description: Reviewed PR source, required hosted checks, and final source attestation remain an explicit human/external checkpoint.
+    description: Formal-review checkpoint waived by the owner; exact PR-head checks and an exact-source closeout attestation are recorded.
     requirement: OPUX-28
-    verification: []
+    verification:
+      - kind: other
+        ref: "PR #98 run 38318747952 and closeout run 38319195947 at exact head dd0f89ebdb21e991b3831b98ba84713d3460fb1a; five required jobs, coverage, and closeout-attestation successful"
+        status: pass
     human_judgment: true
-    rationale: "The plan requires a real review record and successful required CI runs for an exact full source SHA. None existed when the trace was drafted; local verification cannot substitute for those hosted records."
+    rationale: "The user explicitly waived only the formal-review checkpoint using the earlier CI-conditioned merge authorization. The waiver is not represented as a formal review. A separate exact-source closeout attestation passed; the terminal merge-source attestation follows final roadmap/state bookkeeping."
 duration: 25min
 completed: 2026-10-12
-status: halted
+status: complete
 ---
 
 # Phase 177 Plan 05: OPUX trace and exact-source delivery closeout
 
-**The 20-row local evidence trace, package decision, and scoped cleanup ledger are ready; OPUX-28 remains open at the reviewed-PR and exact-SHA hosted-check gate.**
+**The 20-row trace, package decision, cleanup ledger, exact PR-head checks, explicit owner waiver, and exact-source closeout evidence are recorded.**
 
 ## Accomplishments
 
@@ -69,29 +76,35 @@ status: halted
 - Compared the final diff with the package allowlist. `lib/scrypath/operator/state.ex` and `lib/scrypath/operator/status.ex` ship in Hex, so the decision is no separate release or version bump in this phase; the standard Release Please patch train applies after merge.
 - Recorded exact Phase 177 disposable-project cleanup, confirmed no Phase 177 containers/networks/volumes remain, and preserved the maintainer preview and its volumes. Read-only inspection found its web container exited; it was not contacted or restarted.
 - Validated exactly twenty unique ordered IDs, full SHAs in every row, resolving local links, and a clean `git diff --check`.
-- Published draft [PR #96](https://github.com/szTheory/scrypath/pull/96). At head `6ca54e08b24bff993b4645b6db1e402ef0705fde`, the review API returned no reviews and the five required checks were in progress with matching full `head_sha` values; the trace records those actual run URLs and results.
+- PR [#96](https://github.com/szTheory/scrypath/pull/96) merged at `ab9eb4a28f724c468ef76b4c59355333bc23f174` from exact head `38e5752523c9906854af678e5a57f62bbb1d2d25`. The five required checks and path-scoped Ops UI check passed on that exact head. No formal review exists. The user explicitly waived the formal-review gate using the earlier “mark as ready and squash merge if CI green” authorization; this is owner authorization, not a review.
 
 ## Task Commits
 
 1. **Task 1: Create the requirement evidence trace** — `1b53b1a` (`docs(177-05): add OPUX evidence trace`).
 2. **Task 2: Join hosted evidence and record package/release and cleanup facts** — package/release and cleanup are in `6ca54e0`; this commit records the actual PR/check snapshot and updates the summary.
 
-The trace update is a tracked change after the `6ca54e0` PR head and will advance the branch again when committed. The new head's review and five required checks must be inspected independently. Because no review exists and all checks at `6ca54e0` were still in progress, this plan remains halted and OPUX-28 remains incomplete.
+The formal-review checkpoint is waived by the user's explicit authorization; no review is fabricated. PR #98 run [38318747952](https://github.com/szTheory/scrypath/actions/runs/38318747952) tested exact head `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; all five required checks and `ops-ui-path` passed. Exact-source closeout run [38319195947](https://github.com/szTheory/scrypath/actions/runs/38319195947) on that same SHA passed all required jobs, coverage, and `closeout-attestation`. Its immutable artifacts are coverage `11778055844` (`sha256:2cc8b21a75c844531a1e4545827fb6dae41607838478af6bfc83dd40290240e1`) and closeout `11778310823` (`sha256:6184b3afaeabff682321903d1a834f653b673df0a2bc31f96e27120ffe0ed3ab`, expires 2026-10-19). This snapshot is not evidence for later bookkeeping commits; after all phase and roadmap records are committed, run the terminal attestation on the final merge source. Keep its receipt external to the frozen source.
 
 ## Decisions Made
 
 - The package files changed, so this is not Hex-excluded work. Do not publish a separate release from the phase; use the normal pre-1.0 patch train after merge.
-- Keep the PR draft until a maintainer performs the actual review. Do not substitute local checks or this execution record for review.
-- Do not run the final `ci_monitor closeout` command while reviewed-source or exact-SHA required-check evidence is unresolved.
+- Treat the user's prior CI-conditioned merge instruction as an explicit waiver of the formal-review gate. The PR review API was empty; this waiver is not a formal review and provides no reviewed source SHA.
+- Keep the terminal `ci_monitor closeout` after all phase, roadmap, and state bookkeeping is committed. Its receipt is external; do not add tracked changes after it runs.
 
 ## Deviations and issues
 
 - The plain `mix verify.package` invocation exited 126 because this worktree has no `.tool-versions` selection for the `mix` shim. Re-running with the installed `ASDF_ELIXIR_VERSION=1.19.0-otp-28` and `ASDF_ERLANG_VERSION=28.1` completed successfully; no project file or dependency changed.
 - The previously retained named Phase 177 Playbooks volumes were removed after image/report collection as part of final cleanup; current Docker inventory confirms the Phase 177 resources are absent. The preview's state is accurately recorded as exited, not healthy.
 
-## Blocking evidence
+## Advisory evidence
 
-The initial local trace was drafted before a PR existed. Draft PR #96 now provides a real review/check boundary, but the review API is empty and the five checks on `6ca54e08b24bff993b4645b6db1e402ef0705fde` were in progress. This trace/summary update will create a new PR head, so the earlier runs do not prove the new source. The final source attestation is intentionally not run. Continue only after the actual review and all required checks are present for one exact full SHA, with no later tracked writes.
+On run 38319195947 at exact SHA `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`, `deep-quality (advisory)` and `ecommerce-e2e (advisory)` failed. The five required checks, coverage, and closeout attestation succeeded. The dependency advisory concerns `decimal 3.1.1` in existing lockfiles; keep it visible as a follow-up and do not change dependency scope as part of this phase security repair. These outcomes apply only to that SHA. The terminal main-source attestation will be run after the final planning commits and its artifacts retained externally.
+
+## Self-Check: PASSED
+
+- The trace exists and contains exactly twenty ordered unique OPUX-09–OPUX-28 rows with a full local SHA per row.
+- The prior plan commits `1b53b1a`, `6ca54e0`, and `38e5752` are present in this worktree history.
+- Exact-source closeout evidence and artifact digests are recorded above; no claim is made that its artifact covers later bookkeeping commits.
 
 ---
 *Phase: 177-shared-patterns-and-delivery-proof*

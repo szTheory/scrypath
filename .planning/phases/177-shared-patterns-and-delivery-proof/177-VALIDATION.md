@@ -1,10 +1,11 @@
 ---
 phase: "177"
 slug: "shared-patterns-and-delivery-proof"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-11"
+validated: "2026-10-12"
 ---
 
 # Phase 177 — Validation Strategy
@@ -35,9 +36,9 @@ There is no approved new framework, dependency, CI service, or paid visual judge
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command / Evidence | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-----------------------------|-------------|--------|
-| Assigned in PLAN.md | Assigned in PLAN.md | Assigned in PLAN.md | OPUX-26 | — | Preserve existing action eligibility and distinguish unavailable evidence from success. | ExUnit contract + direct six-surface comparison | `mix verify.ops_ui`; before/after visual record for each changed slice | ✅ Existing contract and lanes | ⬜ pending |
-| Assigned in PLAN.md | Assigned in PLAN.md | Assigned in PLAN.md | OPUX-27 | — | Preserve keyboard access, visible focus, reduced motion, theme behavior, and safe task identity. | ExUnit + focused browser/layout/contrast; direct before/after inspection | `mix verify.ops_ui`; existing `make screenshots-matrix` expanded to light/dark/System-dark × 390/768/1440; affected `make contrast` / `make contrast-matrix`; `make verify-mounted` only for a changed recovery seam | ✅ Existing screenshot matrix and lanes; matrix extension planned in 177-01 | ⬜ pending |
-| Assigned in PLAN.md | Assigned in PLAN.md | Assigned in PLAN.md | OPUX-28 | — | Bind each claim to its source, exact reviewed PR head SHA, and the SHA each required check actually tested. | Artifact/content validation + hosted PR evidence | The committed requirement trace and exact-SHA PR/review/required checks; final `ci_monitor.cjs closeout` after bookkeeping | ✅ Existing closeout helper; trace is phase deliverable | ⬜ pending |
+| 177-01 T1–T3; 177-02 T1–T2; 177-03 T1–T2; 177-04 T1–T2 | Plans 177-01 through 177-04 | Waves 1–4 | OPUX-26 | — | Preserve contextual grouping, eligibility, truthful states, complete identity/reasons, and distinct safe actions across six surfaces. | ExUnit behavioral suites + Ops UI gate; catalog contract | `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 HEX_HOME=/private/tmp/scrypath-phase177-hex mix verify.ops_ui` (rerun: 2 doctests, 302 tests, 0 failures); Plan 177-01 token contract 8 tests, Plan 177-02 contract 9 tests; Plans 177-03/04 six named LiveView suites (68 and 55 focused tests) recorded passing in summaries | ✅ Existing tests | ✅ green |
+| 177-01 T2–T3; 177-02 T2; 177-03 T1–T2; 177-04 T1–T2 | Plans 177-01 through 177-04 | Waves 1–4 | OPUX-27 | — | Preserve keyboard access, visible focus, reduced motion, theme behavior, safe task identity, and responsive content/control reachability. | ExUnit + browser/layout/contrast; direct six-surface image inspection | Existing run records: `npm run test:e2e:admin-depth` (38 passed); full Ops gate above; `make contrast` (0 AA failures); `make contrast-matrix` (3 scenarios); 90-image matrix (10 route/state captures × 3 themes × 3 widths), with selected before/after pairs directly inspected. Evidence and image/source limits are documented in `177-UI-AUDIT.md` and summaries; these browser/image lanes were not rerun in this audit. | ✅ Existing screenshot matrix and lanes | ✅ green (per recorded exact-source evidence) |
+| 177-05 T1–T3 | Plan 177-05 | Wave 5 | OPUX-28 | T-177-05, T-177-06 | Bind claims to source identities and exact check SHAs; preserve unresolved hosted facts and task-owned cleanup boundaries. | Trace artifact validator + hosted evidence + package gate + final attestation | 20-row ordered trace validator and `git diff --check` passed; summary records `mix verify.package` (81 tests, package built). PR #98 run 38318747952 and exact-source closeout run 38319195947 passed on `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`; five required jobs, coverage, and closeout attestation succeeded. Owner's formal-review waiver is separate and no review is claimed. `deep-quality` and `ecommerce-e2e` advisory jobs failed; they are non-required and remain disclosed. Run a fresh exact-source closeout after final phase bookkeeping. | ✅ Trace and hosted evidence exist | ✅ green; final phase-source closeout is the terminal gate |
 
 ## Wave 0 Requirements
 
@@ -49,15 +50,23 @@ There is no approved new framework, dependency, CI service, or paid visual judge
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Direct before/after rendered-image inspection across the six surfaces | OPUX-27 | Visual pattern drift and hierarchy need direct inspection in addition to automated layout/state/contrast evidence. This is an execution record, not pending routine human UAT. | The existing screenshot matrix captures each representative state for all six surfaces in explicit light, explicit dark, and System-dark at 390×844, 768×900, and 1440×900. System-dark leaves `phx:theme` unset, emulates dark `colorScheme`, and asserts System mode and effective dark. For each changed slice inspect matched before/after images for all nine theme/viewport combinations; if its exact route/state is not in the current fixtures, add a fixture-backed entry to that existing matrix. Record generated paths and exact source/route/state/theme/viewport identities. Automated behavior/layout/contrast evidence stays separate and complementary. |
-| Reviewed PR source and hosted required checks | OPUX-28 | Local test results cannot establish that a reviewer approved the delivered PR head or that hosted checks ran on that same SHA. | Record PR URL, reviewed head SHA, review commit, each required run URL and tested SHA, and outcome. Leave unavailable evidence explicitly unresolved. |
+| Owner disposition of the formal-review gate | OPUX-28 | The review API was empty; only the maintainer can waive the formal-review checkpoint. | The user authorized use of the prior CI-conditioned merge approval as a narrow waiver. Record it as owner authorization, not as a review. Exact PR-head required checks and final-source closeout are independently evidenced. |
 
 ## Validation Sign-Off
 
-- [ ] Every planned task has an automated verification command or documented artifact gate.
-- [ ] Sampling continuity has no three consecutive tasks without executable or artifact verification.
-- [ ] Wave 0 creates no new framework/dependency and covers only actual missing validation artifacts.
-- [ ] No watch-mode flags are used.
-- [ ] Feedback latency is recorded from actual runs; no runtime estimate is invented.
-- [ ] `nyquist_compliant: true` is set after execution evidence is complete.
+- [x] Every planned task has an automated verification command or documented artifact gate.
+- [x] Sampling continuity has no three consecutive tasks without executable or artifact verification.
+- [x] Wave 0 creates no new framework/dependency and covers only actual missing validation artifacts.
+- [x] No watch-mode flags are used.
+- [x] Feedback latency is recorded from actual runs; no runtime estimate is invented. The rerun of `mix verify.ops_ui` completed in about 17 seconds after dependency compilation began.
+- [x] `nyquist_compliant: true` set after executable and artifact coverage was confirmed; each requirement has passing verification or completed visual evidence, and the exact-source closeout on `dd0f89e` passed. The terminal closeout will be rerun after the remaining verification and roadmap bookkeeping is committed.
 
-**Approval:** pending
+**Approval:** Validated — no Nyquist coverage gaps remain. OPUX-26/27 have passing executable, browser, contrast, and recorded visual evidence. OPUX-28 has a validated trace, package boundary, exact PR-head required checks, the user's explicit formal-review waiver, and a successful exact-source closeout snapshot. The new terminal closeout must follow the final phase bookkeeping.
+
+## Validation Audit 2026-10-12
+
+| Metric | Count |
+|---|---|
+| Gaps found | 1 |
+| Resolved | 1 |
+| Escalated | 0 |

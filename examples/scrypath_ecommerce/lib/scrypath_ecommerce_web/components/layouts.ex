@@ -18,6 +18,18 @@ defmodule ScrypathEcommerceWeb.Layouts do
         <.live_title default="Scrypath Ecommerce" suffix=" · Scrypath">
           {assigns[:page_title]}
         </.live_title>
+        <link
+          :if={ops_admin_path?(@conn)}
+          rel="icon"
+          type="image/svg+xml"
+          href="/admin/search/favicon.svg"
+        />
+        <link
+          :if={ops_admin_path?(@conn)}
+          rel="icon"
+          type="image/x-icon"
+          href="/admin/search/favicon.ico"
+        />
         <script :if={ops_admin_path?(@conn)}>
           (() => {
             try {

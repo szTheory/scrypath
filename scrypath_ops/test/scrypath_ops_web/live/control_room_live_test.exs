@@ -205,6 +205,29 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(lv, "[data-testid='control-room-health-link'][href='/ops/health']")
   end
 
+  test "partial refresh without a prior complete observation is labeled accurately", %{conn: conn} do
+    put_healthy_posture_config!()
+    Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+    {:ok, lv, _initial_html} = live(conn, ~p"/ops")
+
+    lv |> element("#control-room-refresh") |> render_click()
+
+    refreshed_html = render(lv)
+
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-refresh-issue']",
+             "No prior complete observation is available"
+           )
+
+    assert has_element?(lv, "[data-testid='control-room-verdict']", "Partial observation")
+    assert refreshed_html =~ "Incomplete observation checked:"
+    refute refreshed_html =~ "The last successful observation is retained below"
+    refute refreshed_html =~ "Last successful observation"
+    refute refreshed_html =~ "Last successful check:"
+    refute refreshed_html =~ "Search health refreshed."
+  end
+
   test "a clean refresh reports success and updates the visible observation", %{conn: conn} do
     put_healthy_posture_config!()
     {:ok, lv, _html} = live(conn, ~p"/ops")

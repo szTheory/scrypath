@@ -23,6 +23,8 @@ defmodule ScrypathOpsWeb.Router do
 
         forward("/assets", ScrypathOpsWeb.AssetPlug, path_prefix: "assets")
         forward("/images", ScrypathOpsWeb.AssetPlug, path_prefix: "images")
+        forward("/favicon.svg", ScrypathOpsWeb.AssetPlug, path_prefix: "favicon.svg")
+        forward("/favicon.ico", ScrypathOpsWeb.AssetPlug, path_prefix: "favicon.ico")
 
         live_session :ops,
           on_mount: [{ScrypathOpsWeb.Live.OnMount, :default}],

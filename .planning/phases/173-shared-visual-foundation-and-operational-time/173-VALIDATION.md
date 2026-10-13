@@ -9,7 +9,7 @@ created: "2026-10-06"
 
 # Phase 173 — Validation Strategy
 
-Planning validation is separate from product verification. Phase 173 implementation now has passing executable evidence for OPUX-09–OPUX-15. The independent plan checker passed after one revision; all 11 task verification paths and all seven requirement rows were rechecked against their completed summaries and current-source gates. No validation gaps remain; routine human UAT is not required.
+Planning validation is separate from product verification. Phase 173 has executable evidence for OPUX-09–OPUX-15. Historical per-task gates and their source SHAs are recorded below; the final-source audit at `1174a53f87d73c4e658029866a49c41d345452d9` rechecked all seven requirements and 11 task paths, and reran the shell, status, and PostureLive regression suites. It did not rerun unchanged time, clipboard, root-core, contrast, or full Ops gates at that SHA; their prior passing receipts remain identified by their original SHAs. The independent plan checker passed after one revision.
 
 ## Test Infrastructure
 
@@ -79,7 +79,7 @@ Deferred later-phase recovery/repair/search consolidation, ticking clock, local-
 
 ## Spec-less Edge and Prohibition Disposition
 
-No Phase 173 SPEC exists. The deterministic edge probe in `/tmp/scrypath-173-edge-coverage.json` reported 10 rows: four `unclassified` and six classified. The four unclassified rows remain **flagged assumptions**, not silent passes: OPUX-09 assumes existing shell semantics at every changed breakpoint (173-01-T3); OPUX-11 assumes zero and unavailable remain distinct under partial observation (173-03-T1/T3); OPUX-12 assumes current-page preference remains usable under storage policy denial (173-01-T1/T3); OPUX-15 assumes Clipboard API rejection and absence can be induced in both bundles (173-04-T2). Executors record actual outcomes; an unmet assumption requires plan revision.
+No Phase 173 SPEC exists. The deterministic edge probe in `/tmp/scrypath-173-edge-coverage.json` reported 10 rows: four `unclassified` and six classified. The four initial unclassified assumptions are now resolved by behavioral evidence: OPUX-09 breakpoint behavior is exercised by the shell browser matrix; OPUX-11 zero/unavailable/partial distinctions are exercised by the status browser matrix and PostureLive tests; OPUX-12 denied-storage behavior is exercised by shell cases in both entrypoints; and OPUX-15 clipboard rejection and absence are exercised by the copy browser cases in both bundles (prior exact-source run at `b12a7c47157b4fb88b05237b7e2525d11896fd59`).
 
 Classified rows resolve to explicit tests: OPUX-10 empty/encoding uses zero-config, one/many schema rows and long Unicode identifiers/reasons that wrap without truncation (173-03-T2/T3). OPUX-13 empty/encoding requires meaningful nonempty action labels and long Unicode labels that retain icon/target and wrap (173-03-T2/T3). OPUX-14 boundary/precision tests exactly 59/60/3599/3600/86399/86400/604799/604800 seconds, microsecond-future comparison before flooring, source fractional/offset preservation, and full UTC display (173-02-T2/T3). No backstop-only acceptance is used.
 
@@ -113,3 +113,33 @@ No routine human UAT is planned. Executors inspect representative before/after d
 | Gaps found | 0 |
 | Resolved | 0 |
 | Escalated | 0 |
+
+## Final-source adversarial coverage audit 2026-10-12
+
+**Source SHA:** `1174a53f87d73c4e658029866a49c41d345452d9` (`fix(ops): keep source errors accurate and private`). The source delta changes the generic fetch-error explanation and updates its regression assertions; the current-source regression set also checks queue-error sanitization and response-body redaction. The commit does not change theme handling, timestamp normalization/rendering, clipboard behavior, or the browser runner.
+
+### Tests run at the exact source SHA
+
+| Suite | Result | Behavioral coverage relevant to the audit |
+| --- | --- | --- |
+| `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status` | **6/6 passed** across mounted and standalone entrypoints | Sanitized unavailable and queue-error copy; no fixture/internal error detail leakage; 14px recovery guidance; two readable retained-evidence columns at 390px; failed/healthy/disabled refresh transitions, busy/focus/press states, retry guidance, and no false success. Disposable runner cleanup passed. |
+| `bash examples/scrypath_ecommerce/scripts/verify-phase173.sh shell` | **14/14 passed** across mounted and standalone entrypoints | System/light/dark preference, keyboard/pointer selection, OS changes, reload/navigation, cross-tab synchronization, denied/throwing storage, and responsive shell behavior. Disposable runner cleanup passed. |
+| `cd scrypath_ops && mix test test/scrypath_ops_web/live/posture_live_test.exs` | **17/17 passed** | Generic backend and queue errors remain sanitized; an HTTP 503 response body containing a private credential is not rendered; retained evidence and exact timestamp source behavior remain covered. |
+
+The browser counts are suite totals across both entrypoints, not a count per entrypoint. The 14px assertion is against the unavailable-reason paragraph; it is not a claim that every UI text role was measured in this run.
+
+### Requirement and task comparison
+
+| Requirement | Current or preserved executable evidence | Coverage decision |
+| --- | --- | --- |
+| OPUX-09 | Exact-source shell suite 14/14; earlier 10-case Ops shell contract and contrast receipt remain recorded above. | **Covered.** Current browser run exercises the mounted and standalone responsive shells. |
+| OPUX-10 | Exact-source status suite 6/6 and PostureLive 17/17. | **Covered.** Neutral containers, local state cues, partial retained data, and safe failure copy are exercised. |
+| OPUX-11 | Exact-source status suite 6/6 and PostureLive 17/17. | **Covered.** Zero, unavailable, unknown queue, unused queue, empty, and partial states remain distinguishable. |
+| OPUX-12 | Exact-source shell suite 14/14. | **Covered.** Theme preference and storage-denial behavior run through both entrypoints. |
+| OPUX-13 | Exact-source status suite 6/6 and PostureLive 17/17; existing design-token contract receipt remains in the task history. | **Covered.** Refresh affordance states, keyboard focus, reduced motion, server eligibility after patches, and retry behavior are exercised. |
+| OPUX-14 | Exact-source PostureLive suite 17/17; `time` browser suite (8 cases) and root core gate (660 tests + 4 properties) retain their earlier exact-source receipts at `012649917e6dd0cf82dbb7d0154ccd37ac45bc43`. | **Covered, with carried-forward browser/core receipts.** The 1174 commit does not modify timestamp source, snapshot, disclosure, or root core code. The 8-case browser suite and root core gate were not rerun at 1174. |
+| OPUX-15 | Exact-source PostureLive suite 17/17; `copy` browser suite (10 cases) and Ops/root Ops gates retain their earlier receipts at `b12a7c47157b4fb88b05237b7e2525d11896fd59` and prior listed SHAs. | **Covered, with carried-forward browser receipt.** The 1174 commit does not modify the clipboard hook or copy UI. The 10-case copy suite was not rerun at 1174. |
+
+The 11 task paths remain accounted for: 173-01-T1/T2/T3 are backed by the shell contract/smoke receipts plus the exact-source dual-entrypoint shell run; 173-02-T1/T2 by PostureLive and root status unit receipts, and 173-02-T3 by the preserved time/core receipts; 173-03-T1/T2/T3 by the exact-source PostureLive/status suites plus the preserved token/contrast receipts; 173-04-T1/T2 by the preserved dual-entrypoint copy suite and exact-source PostureLive suite. Thus the final-source run refreshes the behavior touched by 1174 while the unaffected time/copy gates remain explicitly historical rather than being represented as rerun.
+
+**Gap result:** 0 uncovered requirements; 0 escalations. No test was weakened and no new dependency was introduced. The unchanged time, copy, core, contrast, and full Ops checks are not reported as executed at `1174a53f`.

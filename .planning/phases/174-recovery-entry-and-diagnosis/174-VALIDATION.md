@@ -5,7 +5,7 @@ status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-10"
-updated: "2026-10-11"
+updated: "2026-10-13"
 ---
 
 # Phase 174 — Validation Strategy
@@ -34,11 +34,11 @@ updated: "2026-10-11"
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Failure Direction | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|-------------------|--------|
 | 174-01-T1 | 174-01 | 1 | OPUX-18, OPUX-19 | T-174-01, T-174-02, T-174-03 | The focused LiveView route resolves its explicit allowed schema, renders the matching failed row, invokes current host-gated retry, and shows accepted work beside its source failure. | LiveView route/render/action | cd scrypath_ops && mix test test/scrypath_ops_web/live/failed_sync_live_test.exs | Yes; extend failed_sync_live_test.exs | Fails if route selection differs from the explicit schema, row/receipt identities diverge, current eligibility or host authorization is bypassed, accepted work replaces the source failure, the exact-schema href loses query/prefix, or completion is claimed. | ✅ pass — 16 tests |
-| 174-01-T2 | 174-01 | 1 | OPUX-18, OPUX-19 | T-174-01, T-174-02, T-174-03, T-174-04 | Forged/removed schema, stale context, denied host gate, hostile values, and browser presentation/history cases fail closed while preserving the selected schema. | LiveView render/action/security + mounted Playwright/browser history | make -C examples/scrypath_ecommerce verify-mounted<br>cd scrypath_ops && mix test test/scrypath_ops_web/live/failed_sync_live_test.exs | Yes; extend assertions and operator.spec.ts | Fails if unavailable rows show actions, stale/forged targets affect another schema, receipt state survives changed context, host denial inserts work, hostile output becomes markup, history changes identity, or layout/focus/theme checks regress. | ✅ pass — 16 ExUnit tests; mounted 4/4 |
-| 174-02-T1 | 174-02 | 2 | OPUX-16 | T-174-05 | Control Room never presents partial/unavailable observations as healthy and setup states do not imply recovery. | LiveView render/state | cd scrypath_ops && mix test test/scrypath_ops_web/live/control_room_live_test.exs | Yes; extend assertions | Fails if there is more than one primary health route, state/scope order is wrong, a setup state offers recovery, or refresh failure erases prior evidence or reports success. | ✅ pass — 6 tests |
-| 174-02-T2 | 174-02 | 2 | OPUX-16 | T-174-05 | The mounted landing page exposes one primary route and keeps change/search intents secondary. | Mounted Playwright/navigation | make -C examples/scrypath_ecommerce verify-mounted | Yes; extend operator.spec.ts | Fails if the primary link is absent/duplicated, the scope is hidden, or secondary intents become the incident route. | ✅ pass — mounted 4/4 |
-| 174-03-T1 | 174-03 | 2 | OPUX-17 | T-174-06 | Worst-first schema records preserve complete identity/time, plain groups, truthful unknowns, exact handoff, and escaped error output. | LiveView render/order/security | cd scrypath_ops && mix test test/scrypath_ops_web/live/posture_live_test.exs | Yes; extend assertions | Fails if ordering/groups/record semantics drift, unknown becomes zero, retained evidence changes snapshot, a link loses schema identity, or a hostile reason creates markup. | ✅ pass — 17 tests |
-| 174-03-T2 | 174-03 | 2 | OPUX-17 | T-174-06 | Both entrypoints keep long schema/index values readable with no overflow and preserve focus/theme behavior. | Mounted and standalone Playwright + contrast | bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status && make -C examples/scrypath_ecommerce contrast | Yes; extend existing lane | Fails if status cases collapse, required content clips, contextual links disappear, width overflows at 320px/390px or rail boundaries, keyboard focus is missing, or any AA pair fails. | ✅ pass — browser 6/6; 0 AA failures |
+| 174-01-T2 | 174-01 | 1 | OPUX-18, OPUX-19 | T-174-01, T-174-02, T-174-03, T-174-04 | Forged/removed schema, stale context, denied host gate, hostile values, and browser presentation/history cases fail closed while preserving the selected schema. | LiveView render/action/security + mounted Playwright/browser history | make -C examples/scrypath_ecommerce verify-mounted<br>cd scrypath_ops && mix test test/scrypath_ops_web/live/failed_sync_live_test.exs | Yes; extend assertions and operator.spec.ts | Fails if unavailable rows show actions, stale/forged targets affect another schema, receipt state survives changed context, host denial inserts work, hostile output becomes markup, history changes identity, or layout/focus/theme checks regress. | ✅ pass — current full Ops suite; mounted 4/4 at `73dfbf8` |
+| 174-02-T1 | 174-02 | 2 | OPUX-16 | T-174-05 | Control Room never presents partial/unavailable observations as healthy and setup states do not imply recovery. | LiveView render/state | cd scrypath_ops && mix test test/scrypath_ops_web/live/control_room_live_test.exs | Yes; extend assertions | Fails if there is more than one primary health route, state/scope order is wrong, a setup state offers recovery, or refresh failure erases prior evidence or reports success. | ✅ pass — 7 tests, including no-prior-complete-observation state |
+| 174-02-T2 | 174-02 | 2 | OPUX-16 | T-174-05 | The mounted landing page exposes one primary route and keeps change/search intents secondary. | Mounted Playwright/navigation | make -C examples/scrypath_ecommerce verify-mounted | Yes; extend operator.spec.ts | Fails if the primary link is absent/duplicated, the scope is hidden, or secondary intents become the incident route. | ✅ pass — current mounted suite 4/4 at `73dfbf8` |
+| 174-03-T1 | 174-03 | 2 | OPUX-17 | T-174-06 | Worst-first schema records preserve complete identity/time, plain groups, truthful unknowns, exact handoff, and escaped error output. | LiveView render/order/security | cd scrypath_ops && mix test test/scrypath_ops_web/live/posture_live_test.exs | Yes; extend assertions | Fails if ordering/groups/record semantics drift, unknown becomes zero, retained evidence changes snapshot, a link loses schema identity, or a hostile reason creates markup. | ✅ pass — 19 tests, including empty-allowlist and missing-backend refresh outcomes |
+| 174-03-T2 | 174-03 | 2 | OPUX-17 | T-174-06 | Both entrypoints keep long schema/index values readable with no overflow and preserve focus/theme behavior. | Mounted and standalone Playwright + contrast | bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status && make -C examples/scrypath_ecommerce contrast | Yes; extend existing lane | Fails if status cases collapse, required content clips, contextual links disappear, width overflows at 320px/390px or rail boundaries, keyboard focus is missing, or any AA pair fails. | ✅ pass — current browser 6/6; 0 AA failures at `73dfbf8` |
 
 ## Wave 0 Requirements
 
@@ -72,12 +72,13 @@ All acceptance behavior has automated verification. Compare representative light
 
 ## Final Exact-Revision Evidence
 
-Source revision: `2375f6b71f57037e9e636ae060828e26f59a82c6`.
+Tested source revision: `73dfbf8c5ca75950621b2d48b21013adac857477` (application source unchanged since `e92d5ae4e1131f792aab0185933c2c480885836e`).
 
-- `cd scrypath_ops && mix verify.ops_ui` — 252 tests + 2 doctests, 0 failures.
-- `make -C examples/scrypath_ecommerce verify-mounted` — 4/4 mounted operator journeys passed.
+- `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix verify.ops_ui` — 2 doctests and 305 tests, 0 failures.
+- `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test --exclude integration --exclude docs_contract` — 4 properties and 660 tests, 0 failures; 85 tagged tests excluded by the documented command.
+- `BUILDX_CONFIG=/private/tmp/scrypath-buildx make -C examples/scrypath_ecommerce verify-mounted` — 4/4 mounted operator journeys passed; isolated containers, volume, and network were removed.
+- `BUILDX_CONFIG=/private/tmp/scrypath-buildx bash examples/scrypath_ecommerce/scripts/verify-phase173.sh status` — 6/6 mounted and standalone browser checks passed for theme, focus, state, and responsive behavior; isolated resources were removed.
 - `make -C examples/scrypath_ecommerce contrast` — 0 AA failures (43 AAA advisories).
-- Phase 173 regression lanes, all mounted and standalone at this exact source revision: shell 14/14, status 6/6, time 8/8, and copy 10/10.
-- `cd scrypath_ops && mix test test/scrypath_ops_web/live/control_room_live_test.exs` — 6 tests, 0 failures after the final reading-order correction.
+- Focused `ControlRoomLive` and `PostureLive` tests — 26 tests, 0 failures, including the new no-prior-observation, empty-allowlist, and missing-backend cases.
 
 **Approval:** automated phase validation and phase-goal verification passed (19/19 must-haves; see `174-VERIFICATION.md`).

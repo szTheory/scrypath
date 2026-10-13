@@ -26,13 +26,13 @@
     {
       "number": "177",
       "name": "Shared Patterns and Delivery Proof",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (plan phase 177)",
-    "reason": "Phase 177 of 5 — needs a plan"
+    "command": "/gsd:secure-phase 177",
+    "label": "Re-audit Phase 177 security",
+    "reason": "All plans are complete, but T-177-05 remains blocking until exact-source and merged-main closeout evidence is recorded."
   },
-  "updated_at": "2026-10-11T22:56:44.944Z"
+  "updated_at": "2026-10-13T02:51:09.000Z"
 }
