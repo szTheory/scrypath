@@ -32,6 +32,8 @@ created: "2026-10-12"
 | T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | accept | Exact-source hosted checks and closeout evidence passed; the project owner accepts the missing independent-review record for PR #98 as a one-time waiver, without representing it as a review. | accepted — review gap waived |
 | T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | open — below high threshold (non-blocking) |
 | T-177-SC | Tampering | Package installation | high | mitigate | Preserve the no-dependency boundary; require package-legitimacy review and a human gate if install scope changes. | closed |
+| T-177-07 | Tampering | Follow-up PR review/check identities and OPUX trace | high | accept | Scope the owner's one-time waiver to PR #101; preserve the empty review API and exact check/head identities, and never represent owner authorization as independent approval. | accepted — PR #101 only |
+| T-177-08 | Repudiation | Pre-transition and terminal closeout identities | high | mitigate | Keep Stage A explicitly provisional; require a second exact-SHA closeout after verification, phase completion, and the full post-completion transition, with no later tracked writes. | mitigated by enforced two-stage gate; Stage B pending |
 
 **Historical verification evidence:** A follow-up audit verified all seven unique threats closed at exact source `dd0f89ebdb21e991b3831b98ba84713d3460fb1a`. That result is superseded for current-source gating. A later audit at `1174a53f87d73c4e658029866a49c41d345452d9` reopened T-177-05 because hosted checks did not yet cover that source. The current exact-source audit is recorded below at `715179afa9530ae370701d7b6c388e13da350841`.
 
@@ -46,6 +48,7 @@ created: "2026-10-12"
 | Risk ID | Scope | Accepted by | Basis and limits |
 |---|---|---|---|
 | AR-177-01 | Missing independent formal-review decision and reviewed SHA for PR #98 (T-177-05) | Project owner, 2026-10-13 | The owner directed that prior merge approval serve as a one-time waiver and asked to unblock the phase. Exact branch and merge required checks and closeout attestations passed. No independent review is claimed. Future changes still require their applicable review gate. |
+| AR-177-02 | Missing independent formal-review decision for PR #101 (T-177-07) | Project owner, 2026-10-13 | The owner authorized marking PR #101 ready and squash-merging if required CI was green. All five required jobs passed at exact head `431d2d3265ae0d77c565baf169ed95ba018f0d16`; the review API returned no reviews. This waiver applies only to PR #101; no independent review is claimed. |
 
 ## Security Audit Trail
 
@@ -126,3 +129,19 @@ This audit covers branch SHA `83cc3dfda33a30ba38ece7e0bbfc13383c01edc7` and merg
 | Open | 1 |
 
 T-177-05 is accepted only for the missing independent-review record, as documented in AR-177-01. Exact branch and merge required checks and closeout attestations passed. T-177-06 is the only remaining open threat and is medium severity, below the configured high blocking threshold. The latest `main` exact-SHA run, [38395852546](https://github.com/szTheory/scrypath/actions/runs/38395852546) at `017c7389544291b30146d25b73239ed33296d7b7`, also passed the five required jobs, coverage, and closeout attestation (artifact `11812741735`); `deep-quality` and `ecommerce-e2e` advisory jobs failed. This later `main` run is supplemental repository evidence, not a substitute for PR review. No independent review is claimed, and no summary declared an unregistered threat flag.
+
+## Current-source Security Audit — 2026-10-13, PR #101 closeout
+
+Plan 177-06 adds T-177-07 and T-177-08 to the existing register. T-177-07 is accepted under AR-177-02 only for PR #101: the five required jobs passed at candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`, the review API was empty, and the owner authorized the conditional squash merge. No independent review is claimed.
+
+Stage A run [38427260705](https://github.com/szTheory/scrypath/actions/runs/38427260705) is explicitly provisional at `05e8eea34feb985ce5112f3a4c0abb420b77bc39`. The five required jobs, coverage, and `closeout-attestation` succeeded at that SHA. Coverage artifact `11829386332` has digest `sha256:87083b515e351d6a2d7809b048fa27bb0b27d1545ca4d71cb2f160c3c10c4427`; closeout artifact `11829895992` has digest `sha256:ec4802eb9ec4f0a2ea076d168f9f1ab6e50360a0f1fc8494b96f78a9e60c2fc5`. At capture, the overall workflow was still running because `ecommerce-e2e (advisory)` had not completed; `deep-quality (advisory)` failed. The exact jobs and artifacts are preserved in `/private/tmp/phase177-stage-a-provisional-05e8eea34feb985ce5112f3a4c0abb420b77bc39.json`. This run is not terminal evidence.
+
+T-177-08 is mitigated by the enforced sequence, not by the provisional artifact: Stage B remains a required post-transition gate and cannot be described as complete until its own exact-SHA jobs and immutable receipt pass. T-177-06 remains the only open threat; its medium-severity historical container-ID gap is below the configured high blocking threshold and remains unaccepted. Current register: 9 unique threats, 8 closed or explicitly accepted, 1 open below threshold, 0 blocking. The `threats_open: 0` frontmatter therefore remains the blocking-threat count.
+
+## Security Audit 2026-10-13
+
+| Metric | Count |
+|---|---|
+| Threats found | 9 |
+| Closed | 8 |
+| Open | 1 |
