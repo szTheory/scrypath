@@ -10,7 +10,7 @@
           ".planning/phases/176-search-and-playbooks/176-comps.html"
         ],
         "createdAt": "2026-10-11T13:31:19.454Z",
-        "reason": "assistant inspection: the comp uses neutral one-pixel surface borders and no side-tab accent stripe; impeccable detect returned no findings"
+        "reason": "Agent: current comp uses only 1px neutral borders and direct Impeccable detection reports no findings; the side-tab treatment is absent"
       }
     ]
   }

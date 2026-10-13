@@ -3,13 +3,12 @@ gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: 177
-current_phase_name: Shared Patterns and Delivery Proof
-status: verifying
-stopped_at: Completed Phase 177 Plan 06; Phase 177 ready for verification and provisional closeout
-last_updated: "2026-10-13T15:48:58.836Z"
+status: completed
+stopped_at: Phase 177 complete — terminal Stage B closeout pending
+last_updated: "2026-10-13T18:04:41Z"
 last_activity: 2026-10-13
-last_activity_desc: "Phase 177 Plan 06 committed; PR #101 merged after green required CI under owner review waiver"
-state_head: 2c16cb06f7d9ad6cfb91bb70964e08c70fe784b4
+last_activity_desc: Phase 177 verification passed 72/72; Stage A passed provisionally; terminal Stage B pending
+state_head: c7f3fe3873d6729ff3aff275f8a95517719968a2
 progress:
   total_phases: 5
   completed_phases: 5
@@ -22,15 +21,15 @@ progress:
 
 ## Project Reference
 
-See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: refresh Phase 177 verification for the route-boundary follow-up. PR #101 merged at `f0e05bc8857f56f2a030faa45d4da09a510ef625` after all five required checks passed at candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`. The owner explicitly waived this PR's independent-review gate; GitHub has no review record, and no review is claimed. Provisional verifier-enabling and terminal post-transition closeouts remain pending.
+See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish Phase 177's terminal closeout, then re-audit T-177-05. Phase verification passes 72/72. Provisional Stage A run 38438171113 passed required jobs, coverage, and attestation at exact SHA `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; advisory `deep-quality` and `ecommerce-e2e` failed. Stage B must run after all post-transition tracked records are committed. PR #101 merged at `f0e05bc8857f56f2a030faa45d4da09a510ef625` after all five required checks passed at candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`. The owner explicitly waived this PR's independent-review gate; GitHub has no review record, and no review is claimed.
 
 ## Current Position
 
-Phase: 177 (Shared Patterns and Delivery Proof) — VERIFYING
-Plan: 6 of 6
-Status: Phase complete — ready for verification
-Last activity: 2026-10-13 — Phase 177 Plan 06 committed; PR #101 merged after green required CI under owner review waiver
-Progress: [██████████] 100% plans (5/5 phases; 22/22 plans); Phase 177 verification and closeout remain pending
+Phase: 177
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-10-13 — Phase 177 complete
+Progress: [████████████████████] 22/22 plans (100%; 5/5 phases); Phase 177 verification passed 72/72, Stage A passed provisionally, and terminal Stage B remains pending
 
 ## Delivered Evidence
 
@@ -40,7 +39,7 @@ Progress: [██████████] 100% plans (5/5 phases; 22/22 plans);
 - Final exact-source closeout [run37183050686](https://github.com/szTheory/scrypath/actions/runs/37183050686) passed at `5ed440954ba70d2b94d8b480d625530e26a809ac`, including required gates, coverage and closeout attestation; the full browser lane passed104 tests and mounted lane4. Planning tag `v1.42` points to this source. PR93 merged the completed archive before this final run.
 - All completion/audit/archive records preceded that attestation. Its source and retained preview worktree remain unchanged. The original dated handoff commit was planning-only. Later user-directed local UI follow-ups are recorded separately below; they are not part of the archived Phase172 plans, verification, or exact-source receipt. The archived v1.42 tracker's `state_head` identifies that attested input; the current v1.43 header serves GSD freshness tracking and does not extend the v1.42 receipt. The collected receipt is retained at `reference/v1.42-final-receipt.json`; its immutable artifact IDs/digests remain useful after the hosted artifacts expire.
 
-- Phase177's original five plans had a 69/69 verification at the earlier source; Plan 06 adds the route-boundary follow-up. PR [#101](https://github.com/szTheory/scrypath/pull/101) merged at `f0e05bc8857f56f2a030faa45d4da09a510ef625` from CI-checked head `431d2d3265ae0d77c565baf169ed95ba018f0d16`. All five required checks and `ops-ui-path` passed on that exact head; Website `build-and-check` passed, while `deep-quality (advisory)` failed and coverage, ecommerce E2E, path-scoped Ops UI, and closeout were skipped. The owner explicitly waived PR #101's independent-review gate conditional on green required CI; GitHub reviews remain empty, and no independent review is claimed. Refreshed phase verification, provisional closeout, and terminal merged-source closeout remain pending.
+- Phase 177 verification passes 72/72 must-haves. Provisional Stage A [run 38438171113](https://github.com/szTheory/scrypath/actions/runs/38438171113) passed all five required jobs, coverage, and closeout attestation at exact SHA `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; advisory `deep-quality` and `ecommerce-e2e` failed and remain nonblocking. Its artifacts and digests are preserved in the external provisional receipt. Terminal Stage B must attest the final post-transition SHA after remaining tracked lifecycle records are committed; no terminal receipt is claimed yet. PR [#101](https://github.com/szTheory/scrypath/pull/101) merged at `f0e05bc8857f56f2a030faa45d4da09a510ef625` from CI-checked head `431d2d3265ae0d77c565baf169ed95ba018f0d16`. All five required checks and `ops-ui-path` passed on that exact head; Website `build-and-check` passed. The owner explicitly waived PR #101's independent-review gate conditional on green required CI; GitHub reviews remain empty, and no independent review is claimed.
 
 ## Post-Archive Follow-Up
 
@@ -82,19 +81,19 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-13T15:46:39.232Z
-Stopped at: Completed Phase 177 Plan 06; Phase 177 ready for verification and provisional closeout
-Resume file: .planning/phases/177-shared-patterns-and-delivery-proof/177-VERIFICATION.md
+Last session: 2026-10-13T18:04:41Z
+Stopped at: Phase 177 transition bookkeeping complete; terminal Stage B closeout is next
+Resume file: None
 
-Phases 173–177 have complete plan sets and 22 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 6). Phase 174 remains current-source verified at 19/19 must-haves. Phase 177's earlier 69/69 verification predates Plan 06 and is being refreshed. PR #101 is merged: required CI passed at exact candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`, merge `f0e05bc8857f56f2a030faa45d4da09a510ef625`; the owner explicitly waived independent review, and the GitHub review API is empty. Both provisional verifier-enabling and terminal post-transition closeouts remain pending. T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
+Phases 173–177 have complete plan sets and 22 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 6). Phase 177 verification passes 72/72. Stage A run 38438171113 passed provisionally on `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; its required jobs, coverage, and attestation passed, with advisory `deep-quality` and `ecommerce-e2e` failures disclosed. Stage B must run after tracked transition commits and applies only to its own exact SHA. PR #101 is merged: required CI passed at exact candidate head `431d2d3265ae0d77c565baf169ed95ba018f0d16`, merge `f0e05bc8857f56f2a030faa45d4da09a510ef625`; the owner explicitly waived independent review, and the GitHub review API is empty. After Stage B, `$gsd-secure-phase 177` re-audits T-177-05; only then run the v1.43 milestone audit. T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
-User-directed follow-up: the mounted ScrypathOps UI links the bundled Scrypath SVG/ICO favicon under its mount path. The focused e-commerce controller suite passed 5/5; current-head hosted required and Ops UI checks passed on the PR #98 head above.
+User-directed favicon follow-up: the storefront root serves the canonical Scrypath favicon, and the mounted ScrypathOps UI links the bundled SVG/ICO assets under its mount path. Route-boundary tests ensure `/admin/searching` does not receive mounted Ops assets.
 
 Phase 176 closed with all 75/75 phase truths verified, OPUX-23–OPUX-25 satisfied, and no open review or security findings. At exact source `3cc55bdcf7b6e6bcd06572dd17c9be9ab31d7dd2`, `mix verify.ops_ui` passed 2 doctests and 301 tests; the focused Store/Search/Playbook suite passed 75 tests; the operator browser matrix passed 38/38; asset build, root regression tests, and AA contrast checks passed. Implementation and verification details, including the accepted local-host trust boundary and spec-less Store idempotency/concurrency assumptions, are recorded in the phase artifacts. The disposable Phase 176 browser stack was removed; preview port 4012 was left untouched.
 
 The initial isolated executor could not create its normal per-task commits. The maintainer-approved recovery recorded the already-verified Phase 176 delta without replaying completed implementation. Final source commits are `ec13329`, `3cbbb91`, and `3cc55bd`; phase closeout records preserve the recovery decision, reviews, validation, security posture, and verification result.
 
-Next command after the exact-source candidate and merged-main closeout attestations: `$gsd-secure-phase 177`, from a planning-only successor based on the attested main SHA. It re-audits T-177-05 against immutable terminal evidence without extending the attested source. Run `$gsd-audit-milestone v1.43` only after the high-severity closeout threat is closed. Do not replay Phases 173–177. The archived v1.33 Phase 124 gate remains acknowledged and deferred per the maintainer's earlier choice.
+Immediate non-GSD action: run terminal Stage B exact-source closeout after this transition commit is pushed. Next GSD command after Stage B: `$gsd-secure-phase 177`, from a planning-only successor based on the attested SHA. It re-audits T-177-05 against immutable terminal evidence without extending the attested source. Run `$gsd-audit-milestone v1.43` only after the high-severity closeout threat is closed. Do not replay Phases 173–177. The archived v1.33 Phase 124 gate remains acknowledged and deferred per the maintainer's earlier choice.
 
 The v1.43 execution order 173 → 174 → 175 → 176 → 177 is complete. Preserve the intentional adaptive model routing in .planning/config.json and do not extend archived source receipts.
 
@@ -137,3 +136,5 @@ The v1.43 execution order 173 → 174 → 175 → 176 → 177 is complete. Prese
 - [Phase 176]: Render import failures once as an associated inline alert, retain the prior valid preview, and keep submitted paste open for recovery.
 - [Phase 176]: Keep the 256,000-byte ceiling and avoid new dependencies or persistence abstractions.
 - [Phase 177]: Apply the user's CI-conditional squash-merge authorization as a one-time owner waiver of PR #101's independent-review gate; no GitHub review is claimed.
+- [Phase 177]: Keep Stage A provisional and run terminal Stage B only after all post-completion transition writes are committed; retain its receipt externally.
+- [Phase 177]: Run `$gsd-secure-phase 177` after Stage B and before `$gsd-audit-milestone v1.43` to close T-177-05.

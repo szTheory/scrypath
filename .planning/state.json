@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 177 of 5 · 100% · ready to verify"
+    "command": "/gsd:secure-phase 177",
+    "label": "Re-audit Phase 177 security evidence",
+    "reason": "After terminal Stage B closeout, resolve T-177-05 before auditing v1.43"
   },
-  "updated_at": "2026-10-13T15:46:21.375Z"
+  "updated_at": "2026-10-13T18:04:41Z"
 }

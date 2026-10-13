@@ -1,7 +1,7 @@
 # Requirements: Scrypath — v1.43 ScrypathOps UI refinement
 
 **Defined:** 2026-10-06
-**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-25 are complete in Phases 173–176; OPUX-26–OPUX-28 are complete in Phase 177. Exact-source candidate closeout run 38322328937 passed on `e051c3e959953591afdcccaeed5ea11b97a34529`; terminal closeout for the final merged source follows after all remaining tracked records are committed. The owner waived only the absent formal PR review; no formal review is claimed.
+**Status:** Approved by the maintainer on 2026-10-06 together with the five-phase roadmap. OPUX-09–OPUX-25 are complete in Phases 173–176; OPUX-26–OPUX-28 pass the Phase 177 verifier (72/72 must-haves). Provisional Stage A run 38438171113 passed on `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; terminal Stage B must run after all post-transition tracked records are committed. The owner waived only PR #101's absent formal review; no formal review is claimed. Run `$gsd-secure-phase 177` after Stage B before the milestone audit.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## v1.43 Requirements
@@ -41,7 +41,7 @@ Refine the six existing operator surfaces. Continue the OPUX family after comple
 
 - [x] **OPUX-26**: Operators encounter the same demonstrated section/object grouping, action, status, and feedback patterns across all six surfaces; the existing component/token system owns those patterns, superseded styling is removed, and DESIGN.md plus the component/token catalog describe the delivered vocabulary without a fixed arbitrary component count.
 - [x] **OPUX-27**: Operators can use the refined workflows in both themes, at narrow/desktop widths, with keyboard/focus and reduced-motion behavior intact. Each slice supplies direct before/after image inspection and relevant automated layout/state/contrast proof; changed recovery seams also receive mounted evidence in existing lanes, with no paid judge or pending routine human UAT.
-- [x] **OPUX-28**: Maintainers can trace every delivered requirement to committed verification and PR-first source/CI evidence, including an explicit release/no-release decision and cleanup or intentional preview retention; completion bookkeeping precedes final-source attestation and archived evidence remains within its source limits. **Owner waiver:** the user waived only the absent formal review using the prior CI-conditioned merge authorization. No formal review is claimed. Candidate exact-source closeout passed on `e051c3e959953591afdcccaeed5ea11b97a34529`; terminal merged-source closeout will run after remaining tracked records are committed.
+- [x] **OPUX-28**: Maintainers can trace every delivered requirement to committed verification and PR-first source/CI evidence, including an explicit release/no-release decision and cleanup or intentional preview retention; completion bookkeeping precedes final-source attestation and archived evidence remains within its source limits. **Owner waiver:** the user waived only PR #101's absent formal review using the prior CI-conditioned merge authorization. No formal review is claimed. Phase verification passes 72/72; provisional Stage A run 38438171113 passed at `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; terminal Stage B remains pending for the final post-transition SHA.
 
 ## Verification and design contract
 
@@ -105,4 +105,4 @@ Approved roadmap mapping. Each requirement appears in exactly one phase; every r
 
 ---
 *Requirements defined: 2026-10-06 from the approved milestone brief.*
-*Last updated: 2026-10-12 after Phase 177 verification and candidate exact-source closeout.*
+*Last updated: 2026-10-13 after Phase 177 verification and provisional Stage A closeout.*
