@@ -26,7 +26,8 @@ defmodule ScrypathEcommerceWeb.Layouts do
         />
         <link
           :if={ops_admin_path?(@conn)}
-          rel="alternate icon"
+          rel="icon"
+          type="image/x-icon"
           href="/admin/search/favicon.ico"
         />
         <script :if={ops_admin_path?(@conn)}>

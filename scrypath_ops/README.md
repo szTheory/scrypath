@@ -34,7 +34,7 @@ same mount prefix as the router:
 
 ```heex
 <link rel="icon" type="image/svg+xml" href="/admin/search/favicon.svg" />
-<link rel="alternate icon" href="/admin/search/favicon.ico" />
+<link rel="icon" type="image/x-icon" href="/admin/search/favicon.ico" />
 ```
 
 The host JavaScript should also handle the operator shell events:
