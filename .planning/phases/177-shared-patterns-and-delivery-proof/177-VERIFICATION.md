@@ -1,8 +1,8 @@
 ---
 phase: 177-shared-patterns-and-delivery-proof
-verified: 2026-10-13T14:05:34Z
-status: gaps_found
-score: 65/68 must-haves verified
+verified: 2026-10-13T17:40:44Z
+status: passed
+score: 72/72 must-haves verified
 covered_files:
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-01-PLAN.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-01-SUMMARY.md
@@ -14,6 +14,8 @@ covered_files:
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-04-SUMMARY.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-05-PLAN.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-05-SUMMARY.md
+  - .planning/phases/177-shared-patterns-and-delivery-proof/177-06-PLAN.md
+  - .planning/phases/177-shared-patterns-and-delivery-proof/177-06-SUMMARY.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-OPUX-TRACE.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-REVIEW-DISPOSITION.md
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-REVIEW.md
@@ -22,7 +24,9 @@ covered_files:
   - .planning/phases/177-shared-patterns-and-delivery-proof/177-VALIDATION.md
   - DESIGN.md
   - examples/scrypath_ecommerce/e2e/admin_screenshot_matrix.spec.ts
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web.ex
   - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex
+  - examples/scrypath_ecommerce/priv/static/favicon.svg
   - examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/page_controller_test.exs
   - scrypath_ops/assets/css/DESIGN-TOKENS.md
   - scrypath_ops/assets/css/app.css
@@ -40,46 +44,30 @@ covered_files:
   - scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs
   - scrypath_ops/test/scrypath_ops_web/live/search_live_test.exs
   - scrypath_ops/test/scrypath_ops_web/live/sync_drift_live_test.exs
-covered_digest: "v3:sha256:a787c58407a45563b31e149f99b93c314df5421773951bd977f242fce34ec2c3"
+covered_digest: "v3:sha256:4f61e4595e5e793cdf1023cf59ff85d3c5d4e303af652e2ecc0e8fcc13d0d00d"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
-  previous_status: passed
-  previous_score: 69/69 must-haves verified
+  previous_status: human_needed
+  previous_score: 72/72 must-haves verified
   gaps_closed: []
-  gaps_remaining:
-    - "Current Phase 177 follow-up source and final-source delivery evidence are not joined to exact hosted checks and an updated trace."
+  gaps_remaining: []
   regressions: []
 advisory: []
-gaps:
-  - truth: "OPUX-28 binds the current Phase 177 source and final bookkeeping to exact, reviewable delivery evidence."
-    status: failed
-    reason: "The route-boundary follow-up is locally verified at source snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2, but the OPUX trace still points OPUX-26/27 to 6f227c062655d031e2bcb1484c939ad28ccc5290 and hosted checks/closeout to earlier PR or main SHAs. No current-source hosted required-check record or final-source closeout is present. Local tests and the clean GSD review are local evidence; they are not hosted CI or a formal PR review."
-    artifacts:
-      - path: .planning/phases/177-shared-patterns-and-delivery-proof/177-OPUX-TRACE.md
-        issue: "The trace does not add the current route-boundary follow-up SHA and evidence status to OPUX-27, or identify current-source hosted checks as unresolved."
-      - path: .planning/phases/177-shared-patterns-and-delivery-proof/177-VALIDATION.md
-        issue: "The validation ledger records local follow-up checks at 633765dc71fde47366f6f31a6b584cd0d04905b2 and explicitly says they are not hosted CI; it provides no current-source hosted check runs."
-      - path: examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex
-        issue: "The route-boundary predicate is a post-PR follow-up and is not covered by the recorded PR #98 required-check SHA."
-    missing:
-      - "Add the current follow-up source SHA and local regression evidence to the OPUX requirement trace, leaving unavailable hosted facts explicit."
-      - "Run and record the required hosted checks against the current reviewed PR source; the one-time PR #98 formal-review waiver does not waive source-matched CI."
-      - "After verification and remaining bookkeeping are committed, record a final-source closeout for that exact frozen source."
 ---
 
 # Phase 177: Shared Patterns and Delivery Proof Verification Report
 
 **Phase Goal:** Operators receive a consistent six-surface workspace, and maintainers can trace the delivered behavior to bounded, reviewable evidence.
-**Verified:** 2026-10-13T14:05:34Z
-**Status:** gaps_found
-**Re-verification:** Yes — current-source follow-up after stale source evidence
+**Verified:** 2026-10-13T17:40:44Z
+**Status:** passed
+**Re-verification:** Yes — after exact-source evidence was added for the route-boundary follow-up
 
 ## Goal Achievement
 
-The six-surface UI and its evidence exist in the current worktree and remain substantive and wired. The route-boundary follow-up is implemented: the ecommerce host includes mounted Ops assets only at /admin/search or slash-delimited descendants. Its sibling-path regression test passes. The remaining blocker is the delivery-proof contract: the committed trace and hosted check/closeout records still refer to earlier source identities and do not cover this current follow-up.
+The six-surface UI and its evidence remain substantive and wired. The route-boundary follow-up is implemented, and the storefront favicon is now served from the shared canonical asset. The refreshed trace records PR #101's exact checked head and merge source; Stage A run 38438171113 completed successfully at current HEAD `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`, with all five required jobs, coverage, and closeout-attestation successful. Advisory `deep-quality` and `ecommerce-e2e` failed; those jobs are nonblocking. Stage A is provisional only; the separate Stage B terminal receipt remains pending under the post-execution gate.
 
-The previous report passed at its then-current source and had no open gaps. This pass rechecked the full roadmap and all five plans. There are 68 plan truths; the roadmap criteria are mapped below and are not double-counted.
+The prior report had one current-source delivery-proof gap and one human-needed cleanup-boundary confirmation. This pass rechecked all six plans and the roadmap criteria. All 72 plan truths are verified; the roadmap criteria are mapped below and are not double-counted. The maintainer accepted the verifier's recommendation to confirm the cleanup boundary from the recorded evidence: only `phase177-baseline` and `phase177-shared-after` were removed as Phase-owned disposable projects; `scrypath-ui-v142` and its volumes were retained. The prohibition's boundary is now human-confirmed.
 
 ### Roadmap Success Criteria
 
@@ -87,7 +75,7 @@ The previous report passed at its then-current source and had no open gaps. This
 |---|---|---|---|
 | 1 | All six surfaces use the demonstrated shared grouping, action, status, and feedback vocabulary, with a source-grounded catalog and no arbitrary export count or superseded styling. | ✓ VERIFIED | Current DESIGN.md, DESIGN-TOKENS.md, OpsUi, and app.css were inspected. The export contract discovers current components dynamically; the current local mix verify.ops_ui run passed 305 tests. |
 | 2 | Refined paths remain usable across themes and widths with keyboard/focus and reduced-motion support, backed by direct before/after inspection and executable layout/state/contrast evidence; changed recovery seams receive mounted proof. | ✓ VERIFIED | The audit inventories 90 direct baseline and 90 after images across ten representative states, three themes, and three widths; 60 depth captures per side are supplemental. Browser/layout, contrast, LiveView, and mounted lanes are recorded separately. The current route predicate does not change an operator surface's appearance or a recovery handoff. |
-| 3 | Maintainers can trace all requirements to committed verification and source-matched delivery evidence, with release and cleanup decisions, before final-source attestation. | ✗ FAILED | The trace has 20 ordered unique rows and accurately records prior PR #98 and main evidence, but it does not join current follow-up SHA 633765dc71fde47366f6f31a6b584cd0d04905b2 to current hosted checks or a final-source attestation. See the OPUX-28 gap. |
+| 3 | Maintainers can trace all requirements to committed verification and source-matched delivery evidence, with release and cleanup decisions, before final-source attestation. | ✓ VERIFIED | The 20-row trace and validation ledger distinguish local source evidence, exact PR #101 head `431d2d3265ae0d77c565baf169ed95ba018f0d16`, merge `f0e05bc8857f56f2a030faa45d4da09a510ef625`, and this worktree HEAD `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`. All five required jobs, coverage, and closeout-attestation succeeded at this HEAD in provisional run [38438171113](https://github.com/szTheory/scrypath/actions/runs/38438171113). The trace preserves release and cleanup decisions. Stage B is still pending and is not claimed as completed. |
 
 ### Observable Truths
 
@@ -135,22 +123,32 @@ The audit limits its direct-image claims to ten representative states, not all 4
 | 3 | Search and Playbooks retain labels, accessible names, task order, and responsive reflow. | ✓ VERIFIED | Current LiveView markup/tests and the recorded depth/layout lane; the audit inventories images at all three widths and themes. |
 | 4 | Each changed slice has matched direct images and separate executable evidence. | ✓ VERIFIED | Plans 177-03/04 made no Search/Playbooks source changes. The audit records 90 matched direct before/after files and separate browser/contrast results. The later host mount-path predicate does not alter these operator surfaces. |
 
-#### Plan 177-05: Trace and delivery proof (6 truths)
+#### Plan 177-05: Trace and delivery proof (5 truths)
 
 | # | Truth | Status | Evidence |
 |---|---|---|---|
 | 1 | The trace has exactly one ordered row for each OPUX-09–OPUX-28 requirement. | ✓ VERIFIED | The trace contains 20 ordered unique requirement rows. |
-| 2 | Every current local-evidence field is linked or explicitly unresolved; absent exact-source hosted checks cannot look complete. | ✗ FAILED | The trace identifies historical PR/main runs but does not identify current follow-up SHA 633765dc71fde47366f6f31a6b584cd0d04905b2 or mark its hosted status unresolved. |
-| 3 | Full local, reviewed-source, and required-check SHAs are traceable. | ✗ FAILED | Full SHAs exist for prior trace sources and CI jobs. The latest follow-up SHA and its local checks appear only in the validation ledger, outside the requirement trace. |
-| 4 | Plan summaries, verification/audit, release and cleanup records precede the final-source attestation. | ✗ FAILED | Prior closeout receipts predate the current route fix and this report refresh. No closeout attests the frozen source containing the follow-up and this verification. |
+| 2 | Every current local-evidence field is linked or explicitly unresolved; absent exact-source hosted checks cannot look complete. | ✓ VERIFIED | OPUX-27/28 rows identify the route-boundary local source and results, current PR #101 hosted source/checks, review waiver, and merge. Stage A is reported separately as provisional at current HEAD; no terminal receipt is claimed. |
+| 3 | Full local, reviewed-source, and required-check SHAs are traceable. | ✓ VERIFIED | The trace lists full PR head `431d2d3265ae0d77c565baf169ed95ba018f0d16`, each required-check identity, merge `f0e05bc8857f56f2a030faa45d4da09a510ef625`, and earlier local evidence with its limits. Stage A check jobs are at `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`. |
+| 4 | Plan summaries, verification/audit, release and cleanup records precede the final-source attestation. | ✓ VERIFIED (sequencing contract) | The plan's post-execution gate places Stage B after the refreshed verification, `phase.complete`, and the complete transition. Stage A is explicitly provisional; Stage B is still pending and is not asserted as a completed receipt by this verifier. |
 | 5 | Rechecking the trace does not create duplicate rows or rewrite historical source limits. | ✓ VERIFIED | The trace retains one row per ID, preserves earlier report source/scenario limits, and keeps the review/CI boundary explicit. |
-| 6 | Attestation remains pending while current-source review/check identities are unknown. | ✓ VERIFIED | Validation distinguishes current local checks from prior hosted evidence; no current hosted run or attestation is falsely claimed for SHA 633765dc71fde47366f6f31a6b584cd0d04905b2. |
+|  | Plan 177-05 prohibition: avoid cleanup outside owned disposable projects and preserve the retained preview. | ✓ VERIFIED (maintainer-confirmed) | The trace records only `phase177-baseline` and `phase177-shared-after` as Phase-owned disposable projects removed and records `scrypath-ui-v142` and its volumes as preserved. The maintainer accepted the verifier's recommendation to confirm that recorded boundary. |
 
-**Score:** 65/68 plan truths verified. The three failed truths share one cause: current local follow-up evidence is not joined to current-source hosted delivery checks and closeout.
+#### Plan 177-06: Route-boundary and exact-source delivery follow-up (5 truths)
+
+| # | Truth | Status | Evidence |
+|---|---|---|---|
+| 1 | The mounted Ops asset predicate includes `/admin/search` and slash-delimited descendants while excluding sibling paths. | ✓ VERIFIED | Current layout uses the exact route boundary; the sibling-path regression test exists. The earlier full focused controller suite passed 7/7, and the favicon behavior test passed 1/1 on this HEAD. |
+| 2 | The 20-row trace names current route-boundary source/local regression evidence and keeps unavailable hosted facts unresolved. | ✓ VERIFIED | OPUX-27 names source snapshot `633765dc71fde47366f6f31a6b584cd0d04905b2`, local test lanes, PR #101, and their respective source limits; exactly 20 unique ordered requirement rows remain. |
+| 3 | Exact PR head has passing required checks and independent review or a scoped owner waiver. | ✓ VERIFIED | PR #101's five required checks passed at exact head `431d2d3265ae0d77c565baf169ed95ba018f0d16`; owner waiver is explicitly scoped to PR #101. The GitHub review API was empty; no independent approval is claimed. |
+| 4 | A pre-transition closeout enables verification and is marked provisional, never final. | ✓ VERIFIED | Run [38438171113](https://github.com/szTheory/scrypath/actions/runs/38438171113) completed successfully on exact HEAD `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; `core`, `package`, `repository-contracts`, `backend`, `ecommerce-mounted`, coverage, and `closeout-attestation` succeeded. Artifacts `11833243776` (`sha256:65f4a568ad46befe8bc252d202aa2ae7b05f11f5e4dc4c9b9d3db071648882d4`) and `11833394257` (`sha256:a1e98c319793f63868094a2162cb5ef1159d438fb7fc67a50097c2c42e51d4f5`) both identify this SHA. Stage A is provisional. Advisory `deep-quality` and `ecommerce-e2e` failed; neither is a required job. |
+| 5 | Historical PRs, local GSD review, advisory jobs, and earlier receipts are not presented as proof of the new PR head. | ✓ VERIFIED | The trace separates historical PR #96/#98 evidence, PR #101 exact-head checks/owner waiver, and Stage A current-branch evidence; no independent review or terminal Stage B receipt is claimed. |
+
+**Score:** 72/72 plan truths verified. The Plan 177-05 cleanup-boundary prohibition was resolved through maintainer confirmation; no human verification remains pending.
 
 ## Required Artifacts
 
-Artifact verification passed for all 16 declared artifacts: Plan 177-01 5/5, 177-02 3/3, 177-03 4/4, 177-04 3/3, and 177-05 1/1. Each was checked for existence, substance, and wiring.
+Artifact verification passed for all 20 declared artifacts: Plan 177-01 5/5, 177-02 3/3, 177-03 4/4, 177-04 3/3, Plan 177-05 1/1, and Plan 177-06 4/4. Each was checked for existence, substance, and wiring.
 
 | Artifact | Expected | Status | Details |
 |---|---|---|---|
@@ -160,12 +158,13 @@ Artifact verification passed for all 16 declared artifacts: Plan 177-01 5/5, 177
 | Six ScrypathOps LiveViews and test modules | Real state rendering, actions, and data attribution | ✓ VERIFIED | Each LiveView has a corresponding test module; current full Ops gate passed. |
 | admin_screenshot_matrix.spec.ts | Direct images for six surfaces, themes, and widths | ✓ VERIFIED | Uses 390×844, 768×900, 1440×900 and asserts unoverridden System-dark. 90 baseline and 90 after PNGs exist. |
 | 177-UI-AUDIT.md | Source/route/state/theme/viewport image record | ✓ VERIFIED | Enumerates ten representative states, image sets, scan paths, and evidence limits. |
-| 177-OPUX-TRACE.md | Twenty-row requirement and delivery trace | ⚠️ PARTIAL | Historical rows and SHAs are substantive and ordered; current route-boundary follow-up has not been incorporated. |
+| 177-OPUX-TRACE.md / 177-VALIDATION.md | Twenty-row requirement trace and local/hosted evidence ledger | ✓ VERIFIED | Exact PR #101 candidate, owner waiver, merge SHA, local source/test limits, release decision, and cleanup/retention state are linked; Stage A evidence is separately recorded in this report as provisional. |
 | layouts.ex and page_controller_test.exs | Exact mount-root/sibling route boundary | ✓ VERIFIED | Predicate matches /admin/search and slash-delimited descendants. The sibling-path test asserts /admin/searching omits Ops CSS and favicon. |
+| scrypath_ecommerce_web.ex, layouts.ex, and priv/static/favicon.svg | Storefront favicon is served from the canonical Scrypath asset | ✓ VERIFIED | `Plug.Static` allows the asset; the root layout links it outside the mounted Ops shell; static bytes match the canonical Ops favicon exactly. |
 
 ## Key Link Verification
 
-The GSD link query could not resolve semantic/document links or glob paths (0/17 automatic matches). I manually traced the links through imports, class names, routes, tests, audit entries, and the trace. Historical links are wired; the current follow-up-to-trace/hosted-evidence join remains the gap above.
+The GSD link query returned no automatic matches for these semantic/document links, so I traced the links manually through imports, route predicates, tests, artifact identities, and trace references. Existing UI links remain wired. The Plan 177-06 lifecycle link from frozen source to terminal closeout is owned by the explicit post-execution gate; Stage B is pending and intentionally outside this pre-completion verifier verdict.
 
 | From | To | Via | Status | Details |
 |---|---|---|---|---|
@@ -177,7 +176,10 @@ The GSD link query could not resolve semantic/document links or glob paths (0/17
 | Six LiveViews | Six LiveView test modules | Render state and action assertions | ✓ WIRED | All named modules exist and are part of the current Ops verification gate. |
 | search_live.ex | playbook_live.ex | Search capture preserves submitted criteria | ✓ WIRED | Search tests assert criteria persistence; Playbooks tests preserve imported/run provenance. |
 | REQUIREMENTS.md | OPUX trace | One row per approved requirement | ✓ WIRED | Phase mapping lists OPUX-26/27/28; trace rows cover OPUX-09–28 exactly once. |
-| Current route follow-up | Requirement trace and hosted exact-source evidence | Source SHA and test/check identity | ✗ NOT WIRED | Local verification is in the validation ledger, but the trace and hosted records remain on earlier SHAs. |
+| Route-follow-up trace | Validation ledger | Current local evidence, PR #101 head/checks, merge SHA | ✓ WIRED | Both records identify the same candidate and merge; historical evidence and owner waiver are source-bounded. |
+| `scrypath_ecommerce_web.ex` | `priv/static/favicon.svg` | `Plug.Static` static path allowlist | ✓ WIRED | Static path includes `favicon.svg`; the asset is byte-identical to `scrypath_ops/priv/static/favicon.svg`. |
+| `layouts.ex` | `/favicon.svg` | Root layout link outside Ops mount | ✓ WIRED | Storefront root renders the favicon link; the mounted Ops route retains its package favicon. |
+| Frozen tracked source | `scripts/ci_monitor.cjs closeout` | Post-execution lifecycle gate | ⚪ POST-EXECUTION GATE | Stage B follows verification, `phase.complete`, and the complete transition; no terminal receipt is claimed at this verifier boundary. |
 
 ## Data-Flow Trace (Level 4)
 
@@ -188,18 +190,21 @@ The GSD link query could not resolve semantic/document links or glob paths (0/17
 | Search | Submitted query, mode, targets, per-index result | Search submission and existing search context | Yes; returned, zero-hit, and failed outcomes retain submitted identity | ✓ FLOWING |
 | Playbooks | Workspace files, selected draft, run snapshot/result | Existing workspace Store and Runner | Yes; file and run provenance remain visible in renders/tests | ✓ FLOWING |
 | Ecommerce root layout | conn.request_path | LiveView request path | Yes; exact root and slash descendants load mounted assets; sibling path does not | ✓ FLOWING |
+| Ecommerce favicon | Static SVG asset | Canonical `scrypath_ops/priv/static/favicon.svg` bytes copied to allowed storefront static path | Yes; `Plug.Static` serves the concrete SVG bytes | ✓ FLOWING |
 
 ## Behavioral Spot-Checks
 
 | Behavior | Command / evidence | Result | Status |
 |---|---|---|---|
 | Sibling path does not receive mounted Ops shell | ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs --name-pattern 'a sibling path does not receive the mounted ScrypathOps shell' | 1 test, 0 failures (5 excluded), current worktree HEAD 907e2bd89be4ca95117b13f1c3ff35aacc18264d; application source matches snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2. | ✓ PASS |
+| Storefront favicon renders and serves expected bytes | `mix test test/scrypath_ecommerce_web/controllers/page_controller_test.exs --name-pattern 'storefront favicon serves the Scrypath brand mark'` | 1 test, 0 failures; static asset SHA-256 `d51a225e98fa177265ea2bc32b95fbf981666d5a1433aced12fa020ff5329325`, identical to Ops asset. | ✓ PASS |
+| Live storefront root and favicon routes | Parent-recorded HTTP smoke check of `/` and `/favicon.svg` | Both returned HTTP 200; returned favicon bytes match the canonical asset. | ✓ PASS (parent-recorded) |
 | Ecommerce page-controller routes | Focused controller suite at local source snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2 | 6/6 tests, 0 failures (recorded local run). | ✓ PASS |
 | Core behavior, excluding integration/docs contract | mix verify.core --exclude integration --exclude docs_contract at local source snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2 | 660 tests, 0 failures (recorded local run). | ✓ PASS |
 | ScrypathOps rendered behavior and contracts | HEX_HOME=/private/tmp/scrypath-hex-cache mix verify.ops_ui at local source snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2 | 305 tests, 0 failures (recorded local run). | ✓ PASS |
 | Mounted browser shell behavior and cleanup | bash scripts/verify-phase173.sh shell at local source snapshot 633765dc71fde47366f6f31a6b584cd0d04905b2 | 14/14 browser tests; complete cleanup (recorded local run). | ✓ PASS |
 | Direct images and existing surface-depth behavior | UI audit plus admin_surface_depth.spec.ts run record | 90 baseline + 90 after images; 60 supplemental images per side; 38 browser tests recorded passing. Local evidence, not hosted CI. | ✓ PASS |
-| Exact-source hosted checks for route follow-up | No run record at SHA 633765dc71fde47366f6f31a6b584cd0d04905b2 | Linked PR #98 and main runs cover different SHAs. | ✗ GAP |
+| Provisional exact-source closeout checks | GitHub Actions run 38438171113 on `a53273e885904c8e2e5ae05f0e3a4ec51131e37b` | Five required jobs, coverage, and closeout-attestation succeeded; the overall workflow completed successfully. Advisory `deep-quality` and `ecommerce-e2e` failed. Coverage artifact 11833243776 and closeout artifact 11833394257 have the digests recorded above. | ✓ PASS — provisional only |
 
 ## Probe Execution
 
@@ -211,13 +216,13 @@ Skipped: this UI and delivery-evidence phase declares no probe scripts or probe-
 |---|---|---|---|---|
 | OPUX-26 | 177-01 through 177-04 | Shared demonstrated patterns and source-grounded design/token documentation | ✓ SATISFIED | Current design/catalog/component sources, dynamic export contract, audit, and local Ops gate. |
 | OPUX-27 | 177-01 through 177-04 | Six-surface usability across themes/widths with direct image and executable evidence | ✓ SATISFIED | 90 matched image pairs, separate depth/contrast evidence, current local behavior checks, and route-boundary regression test. No operator visual slice changed. |
-| OPUX-28 | 177-05 | Requirement trace, exact-source delivery evidence, release decision, cleanup record, and final attestation | ✗ BLOCKED | Historical PR #98/current-main evidence is exact for its recorded SHAs. Current follow-up has local checks but no current-source hosted checks or final attestation; it is absent from the trace. |
+| OPUX-28 | 177-05 and 177-06 | Requirement trace, exact-source delivery evidence, release decision, cleanup record, and staged closeout | ✓ SATISFIED at verifier boundary | Trace contains 20 rows and separates local evidence, PR #101 checked head/owner waiver, merge SHA, and current Stage A checks. Required jobs plus coverage and closeout-attestation pass at current HEAD. Stage A is provisional; terminal Stage B remains pending in the post-execution gate. |
 
 No orphaned requirements: REQUIREMENTS.md maps Phase 177 only to OPUX-26, OPUX-27, and OPUX-28; all three appear in plans.
 
 ### Decision Coverage
 
-All 10 trackable decisions in 177-CONTEXT.md are honored by current artifacts and source (non-blocking decision gate).
+The decision-coverage query returned `honored: 10`, `total: 10`, `not_honored: []` (non-blocking decision gate).
 
 ### Test Quality Audit
 
@@ -244,13 +249,13 @@ None. No new-scope blocker was promoted without deterministic evidence.
 
 ## Human Verification Required
 
-None. Direct visual review is already recorded in the Phase 177 audit, and the current route predicate does not alter the operator surfaces. No routine UAT is pending. The remaining issue is current-source delivery evidence, classified as a blocking gap rather than human UAT.
+None pending. The maintainer accepted the recommendation to confirm the cleanup boundary using the trace's recorded evidence. Direct UI review was already recorded in the Phase 177 audit and reused as authorized; no routine UAT remains.
 
 ## Gaps Summary
 
-The six-surface workspace, source-grounded catalog, truthful behavior, responsive/theme evidence, and route-boundary regression are present and locally verified. The 20-row trace and prior hosted checks remain valid for their recorded SHAs. OPUX-28 is incomplete for the current follow-up source: its local SHA and test results are not joined into the requirement trace, required hosted checks do not cover that source, and no final-source attestation covers the refreshed verification. The formal-review waiver remains limited to the missing independent review for PR #98; it does not replace exact-source checks or closeout.
+The six-surface workspace, source-grounded catalog, truthful behavior, responsive/theme evidence, favicon route, and route-boundary regression are present and verified. The 20-row trace and exact PR #101 evidence are source-bounded. Stage A run 38438171113 completed successfully at exact HEAD `a53273e885904c8e2e5ae05f0e3a4ec51131e37b`; the five required jobs, coverage, and closeout-attestation passed, while advisory `deep-quality` and `ecommerce-e2e` failed. The run remains provisional only. The maintainer confirmed the cleanup boundary from the recorded evidence. Terminal Stage B remains pending until after this verification, `phase.complete`, and the full post-completion transition.
 
 ---
 
-_Verified: 2026-10-13T14:05:34Z_
+_Verified: 2026-10-13T17:40:44Z_
 _Verifier: the agent (gsd-verifier)_
