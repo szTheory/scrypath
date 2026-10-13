@@ -23,7 +23,7 @@
 
 1. **Capture Control Room and Search health at `e92d5ae4` from this worktree when a matching preview is available** — the current composition and responsive balance remain unverified visually — capture desktop, tablet, and mobile views from a server proven to use this worktree.
 2. **Capture a matching-source view of the warning/error states** — the current UI relies on semantic state color plus text, but color distribution cannot be assessed from source alone — inspect both light and dark themes and confirm accent stays within the contract’s interaction-only roles.
-3. **Refresh the responsive/focus/theme browser evidence after the latest delta** — prior Phase 174 evidence covers these contracts but predates this source revision — rerun the existing mounted/standalone browser matrix against the exact current source when that verification lane is available.
+3. **Use a matching-source screenshot for the remaining visual judgment** — the responsive/focus/theme browser matrix has since passed 6/6 against the current source; only composed card balance and surface distribution remain visually unobserved — capture Control Room and Search health if a preview tied to this worktree becomes available.
 
 These are evidence gaps, not identified implementation blockers. No further code change is indicated by this audit.
 
@@ -45,7 +45,7 @@ These are evidence gaps, not identified implementation blockers. No further code
 ### Pillar 3: Color (3/4)
 
 - State meaning is conveyed with explicit labels and text, not hue alone. Failure copy uses the semantic `text-error` role; links and primary actions use shared interaction styles. The phase UI contract prohibits full warning/error surface fills and reserves accent for actual links/actions, navigation, selection, and focus.
-- Phase 174’s recorded contrast gate reports 0 AA failures (43 AAA advisories) at the earlier exact revision `2375f6b71f57037e9e636ae060828e26f59a82c6`.
+- The current-source contrast gate reports 0 AA failures (43 AAA advisories) at tested source revision `73dfbf8c5ca75950621b2d48b21013adac857477`.
 - **WARNING:** There is no screenshot at `e92d5ae4`, so the 60/30/10 surface distribution and light/dark composition are not confirmed for this revision. Prior contrast evidence is not proof of current visual distribution.
 
 ### Pillar 4: Typography (4/4)
@@ -68,6 +68,10 @@ These are evidence gaps, not identified implementation blockers. No further code
 ## Registry Safety
 
 Skipped: `.planning/phases/174-recovery-entry-and-diagnosis/174-UI-SPEC.md` records `shadcn_initialized: false`, and no `components.json` is present. No third-party UI registry blocks are declared.
+
+## Verification Update After Audit
+
+The UI review was written against application source commit `e92d5ae4e1131f792aab0185933c2c480885836e`. The source was unchanged in the documentation-only commits through tested revision `73dfbf8c5ca75950621b2d48b21013adac857477`. At that tested revision, `mix verify.ops_ui` passed 2 doctests and 305 tests, the mounted operator journey passed 4/4, the mounted/standalone responsive status matrix passed 6/6, and contrast had 0 AA failures. The remaining visual recommendation is limited to a screenshot that can be tied to this worktree.
 
 ## Files Audited
 
