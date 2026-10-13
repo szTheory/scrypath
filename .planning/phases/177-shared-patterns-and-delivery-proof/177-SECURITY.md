@@ -1,8 +1,8 @@
 ---
 phase: "177"
 slug: "shared-patterns-and-delivery-proof"
-status: verified
-threats_open: 0
+status: blocked
+threats_open: 1
 asvs_level: 1
 created: "2026-10-12"
 ---
@@ -29,7 +29,7 @@ created: "2026-10-12"
 | T-177-02 | Tampering | Shared status/action components and token CSS | high | mitigate | Limit edits to audited findings; run Ops behavior tests and inspect changed consumers. | closed |
 | T-177-03 | Tampering | Four surface-specific LiveViews and action links | high | mitigate | Preserve exact identity/action gates; run named LiveView tests and mounted proof for changed recovery handoffs. | closed |
 | T-177-04 | Tampering | Search/Playbooks rendering, tests, and image evidence | high | mitigate | Preserve submitted/file identity; record matched image paths and full source SHAs. | closed |
-| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted check and closeout evidence against the exact source; disclose any separate formal-review waiver without representing it as a review. | closed |
+| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted check and closeout evidence against the exact source; disclose any separate formal-review waiver without representing it as a review. | open — blocking |
 | T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | open — below high threshold (non-blocking) |
 | T-177-SC | Tampering | Package installation | high | mitigate | Preserve the no-dependency boundary; require package-legitimacy review and a human gate if install scope changes. | closed |
 
@@ -37,9 +37,9 @@ created: "2026-10-12"
 
 **T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 current status:** PR #98 and both [required-check run 38330057790](https://github.com/szTheory/scrypath/actions/runs/38330057790) and [exact-source closeout run 38330050879](https://github.com/szTheory/scrypath/actions/runs/38330050879) cover audited HEAD `715179afa9530ae370701d7b6c388e13da350841`. All five required jobs passed on both runs; the PR path-scoped Ops UI job, closeout attestation, and coverage also passed. The closeout artifact is `11781394344` with digest `sha256:d33e45bcd2d7365fdae5da762259fe6017d62e5870088cd5153dd0bf78a54715`. This closes the exact-source check-evidence gap. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
+**T-177-05 current status:** PR #98 and both [required-check run 38330057790](https://github.com/szTheory/scrypath/actions/runs/38330057790) and [candidate exact-source closeout run 38330050879](https://github.com/szTheory/scrypath/actions/runs/38330050879) cover candidate HEAD `715179afa9530ae370701d7b6c388e13da350841`. All five required jobs passed on both runs; the PR path-scoped Ops UI job, closeout attestation, and coverage also passed. The closeout artifact is `11781394344` with digest `sha256:d33e45bcd2d7365fdae5da762259fe6017d62e5870088cd5153dd0bf78a54715`. Those records remain valid for that candidate SHA, but current committed HEAD is `4c0f91c66934345b7393f0937c87c60b1600d597`; GitHub has no check-run record for this HEAD, and terminal merged-source attestation is pending. The exact-source mitigation therefore remains open for current HEAD. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
 
-**T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The relevant containers are now absent from Docker and event history did not recover their IDs. This remains an open medium-severity recordkeeping gap below the configured blocking threshold; it is not accepted as a risk.
+**T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The baseline project IDs are recorded, while the after-stack IDs are absent from the contemporaneous cleanup record; current Docker inventory shows no Phase 177 resources and preserves the retained preview. The missing historical identity record remains an open medium-severity gap below the configured blocking threshold; it is not accepted as a risk.
 
 ## Accepted Risks Log
 
@@ -52,7 +52,8 @@ No accepted risks. The formal-review waiver is a narrow process waiver and is no
 | 2026-10-12 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor |
 | 2026-10-12 | 7 | 7 | 0 | gsd-security-auditor (follow-up at `dd0f89e`; historical source) |
 | 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (first current-source pass at `1174a53`) |
-| 2026-10-13 | 7 | 6 | 1 (0 blocking, 1 non-blocking) | gsd-security-auditor (exact-source pass at `715179a`) |
+| 2026-10-13 | 7 | 6 | 1 (0 blocking, 1 non-blocking) | gsd-security-auditor (candidate exact-source pass at `715179a`) |
+| 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (current committed HEAD `4c0f91c`) |
 
 ## Unregistered Flags
 
@@ -62,10 +63,10 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
-- [x] `threats_open: 0` confirmed (no open threat meets the configured high-severity blocking threshold)
-- [x] `status: verified` set in frontmatter
+- [ ] `threats_open: 0` confirmed — one high-severity threat remains open
+- [ ] `status: verified` set in frontmatter — phase is blocked pending exact-source evidence
 
-**Approval:** verified — T-177-05 is closed by required checks and exact-source closeout at `715179afa9530ae370701d7b6c388e13da350841`. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
+**Approval:** blocked — T-177-05 remains open at current HEAD `4c0f91c66934345b7393f0937c87c60b1600d597` until exact-source checks and terminal merged-source attestation are available. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
 
 ## Security Audit 2026-10-12
 
@@ -75,7 +76,7 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 | Closed | 7 |
 | Open | 0 |
 
-## Security Audit 2026-10-13
+## Security Audit 2026-10-13 — first current-source pass at `1174a53`
 
 | Metric | Count |
 |---|---|
@@ -83,7 +84,7 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 | Closed | 5 |
 | Open | 2 |
 
-## Security Audit 2026-10-13 — exact source `715179afa9530ae370701d7b6c388e13da350841`
+## Security Audit 2026-10-13 — candidate exact source `715179afa9530ae370701d7b6c388e13da350841` (superseded for current-HEAD gating)
 
 | Metric | Count |
 |---|---|
@@ -91,12 +92,22 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 | Closed | 6 |
 | Open | 1 (0 blocking, 1 below threshold) |
 
-`T-177-05` is closed by the exact-HEAD PR checks and closeout attestation linked above. `T-177-06` remains open because Plan 177-02 did not retain the full task-owned container IDs; repository artifacts, current Docker inventory/events, and searched temporary evidence did not recover them. This is a medium recordkeeping gap, is not accepted, and is below `block_on: high`. The exact-source run's `deep-quality` and `ecommerce-e2e` advisory jobs failed; both are outside the required gate and remain disclosed. No unregistered threat flags were found.
+At candidate SHA `715179afa9530ae370701d7b6c388e13da350841`, T-177-05 was closed by the exact-HEAD PR checks and closeout attestation linked above. This result does not cover current HEAD `4c0f91c66934345b7393f0937c87c60b1600d597`; terminal merged-source attestation remains pending. T-177-06 remains open because the after-stack container IDs were not retained in the contemporaneous cleanup record; the current Docker inventory shows the retained preview and no Phase 177 resources. This is a medium recordkeeping gap, is not accepted, and is below `block_on: high`. The exact-source run's `deep-quality` and `ecommerce-e2e` advisory jobs failed; both are outside the required gate and remain disclosed. No unregistered threat flags were found.
+
+## Current HEAD Security Audit — 2026-10-13 at `4c0f91c66934345b7393f0937c87c60b1600d597`
+
+| Metric | Count |
+|---|---|
+| Threats found | 7 |
+| Closed | 5 |
+| Open | 2 (1 blocking, 1 below threshold) |
+
+`T-177-01` is closed in this worktree: `DESIGN.md:21` matches the 16px `space-y-4` shell spacing, and the 24px token is used for inner grouping. `T-177-05` is open and blocking because current HEAD has no matching hosted check or terminal attestation. `T-177-06` remains open below threshold because the after-stack container IDs were not retained. No unregistered threat flags were found.
 
 ## Security Audit 2026-10-13
 
 | Metric | Count |
 |---|---|
 | Threats found | 7 |
-| Closed | 6 |
-| Open | 1 |
+| Closed | 5 |
+| Open | 2 |
