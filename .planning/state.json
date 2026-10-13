@@ -30,9 +30,9 @@
     }
   ],
   "next": {
-    "command": "/gsd:secure-phase 177",
-    "label": "Re-audit Phase 177 security",
-    "reason": "All plans are complete, but T-177-05 remains blocking until exact-source and merged-main closeout evidence is recorded."
+    "command": "/gsd:progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 177 of 5 · 100% · executing"
   },
-  "updated_at": "2026-10-13T02:51:09.000Z"
+  "updated_at": "2026-10-13T13:27:44.985Z"
 }
