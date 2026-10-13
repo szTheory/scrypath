@@ -163,17 +163,24 @@ for (const entry of entries) {
     await expect(queueGroup.locator("details")).toHaveCount(0);
 
     await visitScenario(page, entry, "unknown");
-    await expect(row).toContainText("Search health could not be checked: :phase173_queue_unavailable");
-    await expect(row).toContainText("Not observed: :phase173_queue_unavailable");
+    await expect(row).toContainText(
+      "Search health could not be checked: A configured search health source could not be read."
+    );
+    await expect(row).not.toContainText("phase173_queue_unavailable");
+    await expect(row).toContainText("No successful observation recorded.");
     await expect(row.locator("details")).toHaveCount(0);
 
     await visitScenario(page, entry, "unavailable");
-    await expect(row).toContainText("Not observed: :phase173_backend_unavailable");
+    await expect(row).toContainText("No successful observation recorded.");
+    await expect(row).not.toContainText("phase173_backend_unavailable");
     await expect(row.locator("details")).toHaveCount(0);
 
     await visitScenario(page, entry, "refresh-failure");
     await page.locator("#search-health-refresh").click();
-    await expect(row).toContainText("Search health could not be checked: :phase173_backend_unavailable");
+    await expect(row).toContainText(
+      "Search health could not be checked: A configured search health source could not be read."
+    );
+    await expect(row).not.toContainText("phase173_backend_unavailable");
     await expect(row).toContainText("Current observation is unavailable; this source-local evidence is retained from check");
     await expect(row.locator(".ops-time__value").first()).toHaveText("2 days ago");
     await expect(row.locator(".ops-time__evidence-value").first()).toHaveText(sourceIso);
