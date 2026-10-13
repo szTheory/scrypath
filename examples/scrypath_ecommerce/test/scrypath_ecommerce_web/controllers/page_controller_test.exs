@@ -1,5 +1,8 @@
 defmodule ScrypathEcommerceWeb.PageControllerTest do
   use ScrypathEcommerceWeb.ConnCase
+  require Phoenix.LiveViewTest
+
+  alias ScrypathEcommerceWeb.Layouts
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")
@@ -64,6 +67,18 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
   test "GET / keeps ScrypathOps mounted asset out of storefront", %{conn: conn} do
     conn = get(conn, ~p"/")
     html = html_response(conn, 200)
+
+    refute html =~ "/admin/search/assets/css/app.css"
+    refute html =~ "/admin/search/favicon.svg"
+  end
+
+  test "a sibling path does not receive the mounted ScrypathOps shell" do
+    html =
+      Phoenix.LiveViewTest.render_component(&Layouts.root/1, %{
+        conn: %Plug.Conn{request_path: "/admin/searching"},
+        flash: %{},
+        inner_content: Phoenix.HTML.raw("")
+      })
 
     refute html =~ "/admin/search/assets/css/app.css"
     refute html =~ "/admin/search/favicon.svg"
