@@ -1,68 +1,69 @@
 # Phase 173 — UI Review
 
-**Audited:** 2026-10-12
-**Source:** `1174a53f87d73c4e658029866a49c41d345452d9`
-**Baseline:** Approved [173-UI-SPEC.md](173-UI-SPEC.md), interpreted with the accepted compact-header follow-up in [175-03-SUMMARY.md](../175-repair-and-verification/175-03-SUMMARY.md#L172)
-**Screenshots:** Captured by the exact-source Phase 173 status E2E run. Inspected mounted unavailable at 390px: `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase173/scrypath_phase173_status_1174a53f_45633/screenshots/mounted-unavailable-mobile-390.png`. The run also produced mounted and standalone status views at 320/390/1279/1280/1440px in both themes. `localhost:8080` served the unrelated Traefik Proxy dashboard, so no extra app screenshot was taken.
+**Audited:** 2026-10-13
+
+**Source:** `5f6cb2f62bea579cdc92857efa79cf6c3a80d4eb` (`5f6cb2f` stacks retained evidence below 480px and applies the body font to retained explanation copy)
+
+**Baseline:** Approved [173-UI-SPEC.md](173-UI-SPEC.md), with the documented compact-header follow-up in [175-03-SUMMARY.md](../175-repair-and-verification/175-03-SUMMARY.md)
+
+**Screenshots:** Captured by exact-source Phase 173 browser lanes and inspected. Mounted and standalone 390px unavailable-state screenshots are from audited SHA `5f6cb2f` at `/private/tmp/scrypath-phase173-candidate-artifacts/scrypath-phase173/scrypath_phase173_status_5f6cb2f6_71711/screenshots/`. Status passed 6/6 at this SHA, including the responsive column and computed body-font assertions. Time, shell, and copy screenshots remain from `422670f` under `scrypath_phase173_time_422670f2_77019/screenshots/`, `scrypath_phase173_shell_422670f2_79505/screenshots/`, and `scrypath_phase173_copy_422670f2_81614/screenshots/`; the retained-copy style does not affect those states. The contrast run at `422670f` reported zero AA failures and 43 AAA advisories; `5f6cb2f` changes no color rules.
 **Interaction captures:** off (workflow.ui_interaction_capture is absent; default is false)
 
-The current-source mounted/standalone status browser suite passed 6/6 at this SHA and cleaned up its disposable Compose resources. The token contrast check passed at this source with 0 AA failures and 43 AAA advisories. The inspected mobile capture shows one readable 14px unavailable explanation and the retained two-column backend/queue evidence. Its “Fixture scenario” selector belongs to the test harness, not the shipped interface.
+The exact-source browser receipts report status 6/6 at `5f6cb2f`, time 8/8, shell 14/14, and copy 10/10 at `422670f`; contrast reported zero AA failures. These receipts supplement, but do not replace, visual inspection. No localhost capture was attempted because the supplied exact-source artifacts cover both production entrypoints and ambient port 8080 is unrelated. Status screenshots visibly include the test-only “Fixture scenario” control; it is excluded from the shipped-interface score.
 
 ## Pillar Scores
 
 | Pillar | Score | Key Finding |
 |--------|-------|-------------|
-| 1. Copywriting | 4/4 | Observation errors now use safe, operator-readable summaries; response bodies and raw exception details stay out of the rendered row. |
-| 2. Visuals | 4/4 | Current mobile capture preserves the status hierarchy and retained evidence; the compact theme icons are an accepted responsive exception. |
-| 3. Color | 4/4 | Neutral surfaces and local status cues follow the contract; the current contrast check has zero AA failures. |
-| 4. Typography | 4/4 | Error and queue explanations use the 14px body role, asserted in the current browser suite. |
-| 5. Spacing | 3/4 | Layout rhythm and targets match the contract; a decorative cue retains a fractional `.45em` offset outside the named scale. |
-| 6. Experience Design | 4/4 | Current status coverage exercises mounted and standalone paths, error/empty/partial states, retained evidence, refresh, and responsive behavior. |
+| 1. Copywriting | 4/4 | Empty-state guidance now matches the host allowlist contract; unavailable and clipboard outcomes are explicit and sanitized. |
+| 2. Visuals | 4/4 | The unavailable-state evidence now stacks at mobile width with a clear, scannable source order. |
+| 3. Color | 4/4 | Neutral surfaces/local status cues follow the palette contract; contrast gate reports no AA failures. |
+| 4. Typography | 4/4 | Retained explanations use the 14px body role and body font, with a computed-font assertion in the exact-source status lane. |
+| 5. Spacing | 4/4 | The retained evidence stacks at 390px and keeps the full-width reading measure without disrupting the desktop two-column layout. |
+| 6. Experience Design | 4/4 | Status semantics and recovery context remain explicit; retained evidence is now scannable on mobile. |
 
-**Overall: 23/24**
+**Overall: 24/24**
 
-No blocker remains. The only product polish warning is the fractional notice-cue offset; the remaining priorities below preserve the verified privacy and responsive behavior.
+No remaining actionable UI finding was identified against the approved contract and documented later responsive resolution. No product source was changed during this re-audit.
 
-## Top 3 Priority Fixes
+## Priority Fixes
 
-1. **Replace the fractional notice-cue offset** — `.45em` is outside the approved spacing scale — align the cue with flex geometry or an existing named value when this shared rule is next touched.
-2. **Keep the error-summary mapping and redaction regression** — operators get a useful HTTP/transport summary without seeing response-body secrets or raw exception terms — retain the source mapping and the LiveView assertion that rejects secret body content.
-3. **Keep the compact-header exception explicitly covered** — Phase 175 found real label clipping at narrow widths and approved hidden theme labels through 420px — preserve the accessible names, 44px targets, and 320/390px coverage.
+No remaining priority fix. The narrow retained-evidence layout and its body-font treatment are both resolved and asserted by the exact-source status lane.
 
 ## Detailed Findings
 
 ### Pillar 1: Copywriting (4/4)
 
-- [posture_live.ex](../../../scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex#L437) now renders one unavailable sentence plus refresh guidance. `fetch_error_copy/1` maps known HTTP, transport, invalid-payload, truncated-history, and unsupported-backend cases to safe descriptions; the fallback is also sanitized ([posture_live.ex](../../../scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex#L567)).
-- **Privacy pass:** the HTTP 503 case displays the status code without rendering its response body. [The regression test](../../../scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs#L386) asserts that a fixture credential in the body is absent from the rendered row. The browser test asserts the safe fallback and rejects the former raw fixture atom ([phase173_status_actions.spec.ts](../../../examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts#L104)).
-- Retained evidence copy is derived only from the retained snapshot; it no longer interpolates a raw error reason. Empty, queue-unused, partial, retry, and observation-history copy remains explicit.
+- The no-schema state now says “No search schemas configured” and tells the host developer to configure the schema allowlist ([control_room_live.ex](../../../scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex#L132), [ops_ui.ex](../../../scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex#L815)).
+- Search-health failures retain a concise retry instruction and sanitized cause ([posture_live.ex](../../../scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex#L441), `fetch_error_copy/1` at line 567). Browser proof asserts generic exception details do not leak.
+- Operational absence states distinguish “No success observed,” “Queue not used,” and unavailable retained evidence. Clipboard feedback says “Timestamp copied” only on success and gives manual-copy guidance on failure. These match the approved Copywriting Contract.
 
 ### Pillar 2: Visuals (4/4)
 
-- The exact-source 390px capture has a clear Search health heading, purpose statement, refresh action, degraded/unavailable summary, neutral metric surfaces, and retained backend/queue evidence. The error icon stays beside the single reason, and the technical evidence wraps within the two-column retained grid. The same run captures mounted/standalone cases, both themes, and responsive/rail boundaries.
-- **Accepted exception, not a finding:** At widths up to 420px, theme text labels are visually hidden while native buttons keep their accessible names and 44px targets. Phase 175 documented real 320/390px clipping and approved this behavior; see [175-03-SUMMARY.md](../175-repair-and-verification/175-03-SUMMARY.md#L172). Do not revive the old Phase 173 label-visibility warning.
-- The fixture scenario selector in the E2E capture is test-only and is excluded from the product score.
+- Mounted and standalone screenshots show a consistent Search health focal point, neutral summary/metric/schema grouping, explicit local severity cues, readable schema identifiers, and visible failed-work navigation. Mobile 320/390 and the 1279/1280 rail transition remain within the viewport.
+- The updated mounted and standalone 390px unavailable-state screenshots show backend and queue retention evidence stacked at full reading width. Both keep the source label, “No success observed,” and retained-check explanation together without horizontal overflow. The E2E spec checks two columns on desktop and one at 390px.
+- **Documented compact-header exception:** Phase 175 recorded that visible theme labels and the command control clipped at 320/390px, then hid theme labels through 420px while retaining button accessible names and 44px targets. This remains a divergence from Phase 173's visible-label preference, but it is an explicit later responsive resolution with its own rendered proof; it is not raised as a new defect here.
 
 ### Pillar 3: Color (4/4)
 
-- [app.css](../../../scrypath_ops/assets/css/app.css#L23) defines the warm-neutral light and neutral dark palettes. The reviewed screens keep status color local to warning/error cues, use neutral metric/schema surfaces, and reserve violet for selection and interaction.
-- The exact-source token contrast command passed: 0 AA failures and 43 AAA advisories. The advisories remain advisory; no contrast blocker was found.
+- Light and dark captures use flat neutral page/shell floors and neutral resting cards. Violet stays on navigation selection and links; warning/failure meaning uses localized icon/value/badge cues and explicit text rather than a whole-card fill.
+- `make -C examples/scrypath_ecommerce contrast` passed with zero AA failures and 43 AAA advisories on the audited candidate source. The advisories do not include an AA defect.
 
 ### Pillar 4: Typography (4/4)
 
-- The unavailable reason and queue-unobserved explanation use `text-ops-body` (14px) in [posture_live.ex](../../../scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex#L410). The current status E2E asserts 14px for the unavailable reason; the new 390px image shows the copy remains legible as it wraps.
-- Exact timestamps and optional technical context use the existing compact/monospace roles allowed by the UI contract. No new type role was added for this correction.
+- Page and section headings preserve the existing hierarchy. Essential explanatory and failure text uses the 14px body role; operational age and copy actions also use the body/action role. Exact timestamps and identifiers retain the technical monospace role.
+- `.ops-time__retained` uses `var(--font-sans)` and the 14px body role ([app.css](../../../scrypath_ops/assets/css/app.css#L1019)). The exact-source status E2E asserts its computed `font-family` equals the page body font, and both new mobile screenshots show the explanatory copy in the proportional body face. Monospace remains on identifiers and exact timestamp evidence as intended.
 
-### Pillar 5: Spacing (3/4)
+### Pillar 5: Spacing (4/4)
 
-- The retained backend/queue grid uses two equal `minmax(0, 1fr)` columns and the existing 8px gap; the browser test checks the two-column layout at 390px. Status E2E also verifies the 24px schema rhythm, no page/row overflow, and 40px-or-greater action targets at narrow and rail-boundary widths.
-- **WARNING:** [app.css](../../../scrypath_ops/assets/css/app.css#L578) still sets the notice cue's `margin-top: 0.45em`. This is a small decorative alignment detail rather than a page-layout defect, but it is not part of the approved spacing scale.
+- Main Search health sections and schema cards keep the contract's named spacing tokens and 24px schema rhythm; action targets remain usable in the reviewed mobile and desktop captures. The earlier fractional status-cue offset is now the named `ops-1` token.
+- The retained-state grid now uses one column at viewport widths of 480px and below and keeps two columns on desktop ([app.css](../../../scrypath_ops/assets/css/app.css#L1759)). The exact-source browser assertion verifies the desktop/mobile column counts, and the new 390px screenshots confirm the full-width source explanations.
 
 ### Pillar 6: Experience Design (4/4)
 
-- The exact-source status suite passed 6/6 across mounted and standalone routes. It covers healthy/degraded/unavailable, unknown/unused queue, empty, and partial outcomes; checks the sanitized failure message and 14px role; preserves retained evidence; and asserts responsive layout behavior.
-- The Search health summary does not turn unavailable/unknown observations into zero or success, and refresh remains an explicit recovery action. Current responsive shell behavior was separately exercised by the 14/14 shell suite at `749c9d1b`; that earlier run is not represented as an exact-`1174a53f` shell rerun.
-- The status run does not itself re-run clipboard outcomes. The timestamp-copy implementation is unchanged by the final sanitization fix; its earlier Phase 173 proof remains recorded in `173-04-SUMMARY.md` at `b12a7c4`, and is not relabeled as a 1174a53f browser run.
+- The source-backed browser lanes exercise mounted and standalone status, time, shell, and clipboard paths, including error/unknown states, theme/storage behavior, keyboard/touch disclosure and copy, clipboard failure feedback, and responsive breakpoints. Screenshot evidence confirms the copy fixes: the exact ISO and UTC explanation remain selectable and legible on mobile.
+- The unavailable state retains the prior evidence and labels its observation boundary while keeping retry guidance in the summary. The reflow improves mobile scanability without changing source meaning or dropping either data group.
+- Interaction capture was off; no interaction screenshot is claimed. Interaction behavior above is supported by the recorded Playwright receipts and source-derived assertions.
 
 ## Registry Safety
 
@@ -74,12 +75,15 @@ No blocker remains. The only product polish warning is the fractional notice-cue
 - `.planning/phases/173-shared-visual-foundation-and-operational-time/173-CONTEXT.md`
 - `.planning/phases/173-shared-visual-foundation-and-operational-time/173-01-PLAN.md` through `173-04-PLAN.md`
 - `.planning/phases/173-shared-visual-foundation-and-operational-time/173-01-SUMMARY.md` through `173-04-SUMMARY.md`
-- `.planning/phases/175-repair-and-verification/175-03-SUMMARY.md`
-- `scrypath_ops/assets/css/app.css`
-- `scrypath_ops/assets/css/DESIGN-TOKENS.md`
+- `.planning/phases/175-repair-and-verification/175-03-SUMMARY.md` (compact-header exception)
+- `scrypath_ops/assets/css/app.css` and `scrypath_ops/priv/static/assets/css/app.css`
 - `scrypath_ops/lib/scrypath_ops_web/components/layouts.ex`
 - `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex`
+- `scrypath_ops/lib/scrypath_ops_web/live/control_room_live.ex`
 - `scrypath_ops/lib/scrypath_ops_web/live/posture_live.ex`
 - `scrypath_ops/test/scrypath_ops_web/live/posture_live_test.exs`
+- `examples/scrypath_ecommerce/e2e/phase173_shell.spec.ts`
 - `examples/scrypath_ecommerce/e2e/phase173_status_actions.spec.ts`
-- Current mounted/standalone status screenshots and browser results under `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase173/scrypath_phase173_status_1174a53f_45633/`
+- `examples/scrypath_ecommerce/e2e/phase173_time.spec.ts`
+- `examples/scrypath_ecommerce/e2e/phase173_copy.spec.ts`
+- Current mounted and standalone screenshots under `/private/tmp/scrypath-phase173-candidate-artifacts/scrypath-phase173/`.
