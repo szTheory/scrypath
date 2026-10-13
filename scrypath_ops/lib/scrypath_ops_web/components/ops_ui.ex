@@ -812,14 +812,10 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <.ops_empty_state
       :if={@kind == :no_schemas}
-      title="No schemas configured"
+      title="No search schemas configured"
       class={@class}
     >
-      Add allowlisted schema modules with
-      <.ops_inline_code>schema_allowlist</.ops_inline_code>
-      in
-      <.ops_inline_code>:scrypath_ops</.ops_inline_code>
-      or <.ops_inline_code>SCRYPATH_OPS_SCHEMAS</.ops_inline_code>. Then refresh this screen.
+      Configure the host application's schema allowlist to inspect search health.
       <:actions :for={action <- @actions}>
         {render_slot(action)}
       </:actions>

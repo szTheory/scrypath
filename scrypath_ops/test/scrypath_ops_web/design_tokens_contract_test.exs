@@ -156,6 +156,19 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert cta =~ "min-height: var(--control-h-lg)"
     assert cta =~ "font-size: var(--text-ops-body)"
 
+    retained = rule(".ops-time__retained")
+    assert retained =~ "font-size: var(--text-ops-body)"
+    assert rule(".ops-notice-surface__cue") =~ "margin-top: var(--spacing-ops-1)"
+
+    posture_live = File.read!(Path.join(@web_root, "live/posture_live.ex"))
+    assert posture_live =~ "space-y-ops-4"
+    assert posture_live =~ "gap-ops-4"
+    refute posture_live =~ "space-y-4"
+    refute posture_live =~ "gap-4"
+    refute posture_live =~ "mt-2"
+    refute posture_live =~ "mt-4"
+    refute posture_live =~ "mb-4"
+
     nav_targets = rule(".ops-nav-trigger,\n  .ops-nav-close")
     assert nav_targets =~ "min-width: var(--control-h-lg)"
     assert nav_targets =~ "min-height: var(--control-h-lg)"

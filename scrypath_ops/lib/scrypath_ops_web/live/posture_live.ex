@@ -210,7 +210,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       page_title={@page_title}
       ops_main_width={:wide}
     >
-      <.ops_toolbar class="items-end gap-4">
+      <.ops_toolbar class="items-end gap-ops-4">
         <.ops_page_header
           title="Search health"
           subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
@@ -230,9 +230,9 @@ defmodule ScrypathOpsWeb.PostureLive do
         :if={@phase173_fixture?}
         id="phase173-fixture-controls"
         phx-change="phase173_scenario"
-        class="mb-4 max-w-sm"
+        class="mb-ops-4 max-w-sm"
       >
-        <label for="phase173-fixture-scenario" class="mb-1 block text-ops-sm font-medium">
+        <label for="phase173-fixture-scenario" class="mb-ops-1 block text-ops-sm font-medium">
           Fixture scenario
         </label>
         <select
@@ -268,7 +268,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       <section
         :if={match?({:ok, _}, @posture_rows)}
         aria-labelledby="posture-summary-heading"
-        class="space-y-4"
+        class="space-y-ops-4"
       >
         <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
         <.ops_verdict
@@ -303,12 +303,12 @@ defmodule ScrypathOpsWeb.PostureLive do
         </.ops_metric_grid>
       </section>
 
-      <p :if={@auto_refresh} class="mt-2 text-ops-body text-base-content/70">
+      <p :if={@auto_refresh} class="mt-ops-2 text-ops-body text-base-content/70">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
 
-      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-4" />
-      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-4" />
+      <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-ops-4" />
+      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-ops-4" />
 
       <section
         :if={match?({:ok, _}, @posture_rows)}
@@ -332,7 +332,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {inspect(mod)}
                     </h3>
-                    <p class="mt-1 text-ops-sm text-base-content/65">
+                    <p class="mt-ops-1 text-ops-sm text-base-content/65">
                       Index
                       <.ops_inline_code>{status.index}</.ops_inline_code>
                       · sync mode <strong>{status.mode}</strong>
@@ -419,7 +419,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                 <.link
                   :if={failed_work_present?(status)}
                   navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                  class="link link-primary mt-2 inline-flex min-h-[var(--control-h-md)] items-center"
+                  class="link link-primary mt-ops-2 inline-flex min-h-[var(--control-h-md)] items-center"
                   data-testid="posture-failed-sync-link"
                 >
                   Inspect failed work for {module_flat_name(mod)}
@@ -435,13 +435,13 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </h3>
                   </div>
                 </div>
-                <p class="mt-2 flex items-start gap-ops-2 text-ops-body text-error">
+                <p class="mt-ops-2 flex items-start gap-ops-2 text-ops-body text-error">
                   <.icon name="hero-exclamation-circle" class="mt-ops-1 size-4 shrink-0" />
                   <span>
                     Search health could not be checked: {fetch_error_copy(reason)} Refresh health to try again.
                   </span>
                 </p>
-                <dl class="ops-signal-metrics ops-signal-metrics--retained mt-2">
+                <dl class="ops-signal-metrics ops-signal-metrics--retained mt-ops-2">
                   <div :for={source <- [:backend, :queue]}>
                     <dt>{source_last_success_label(source)}</dt>
                     <dd>

@@ -114,12 +114,23 @@ for (const entry of entries) {
       unavailable.locator("p").filter({ hasText: unavailableReason })
     ).toHaveCSS("font-size", "14px");
 
-    await page.setViewportSize({ width: 390, height: 844 });
     const retainedEvidence = unavailable.locator(".ops-signal-metrics--retained");
-    const retainedColumns = await retainedEvidence.evaluate((grid) =>
+    const desktopRetainedColumns = await retainedEvidence.evaluate((grid) =>
       getComputedStyle(grid).gridTemplateColumns.split(" ").length
     );
-    expect(retainedColumns, "retained backend and queue evidence should each get a readable column").toBe(2);
+    expect(desktopRetainedColumns, "desktop retains backend and queue evidence side by side").toBe(2);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileRetainedColumns = await retainedEvidence.evaluate((grid) =>
+      getComputedStyle(grid).gridTemplateColumns.split(" ").length
+    );
+    expect(mobileRetainedColumns, "mobile retained evidence should give each source a full reading width").toBe(1);
+    const retainedCopy = retainedEvidence.locator(".ops-time__retained").first();
+    const bodyFont = await page.locator("body").evaluate((element) => getComputedStyle(element).fontFamily);
+    await expect(retainedCopy, "retained explanation uses the body font, not timestamp monospace").toHaveCSS(
+      "font-family",
+      bodyFont
+    );
     await mkdir(screenshotDir, { recursive: true });
     await page.screenshot({
       path: join(screenshotDir, `${entry.name}-unavailable-mobile-390.png`),
@@ -143,7 +154,10 @@ for (const entry of entries) {
     await expect(unusedRow.getByRole("region", { name: /Queue job signals/ }).locator(".ops-signal-metrics")).toHaveCount(0);
 
     await chooseScenario(page, "empty");
-    await expect(page.getByText("No schemas configured", { exact: true })).toBeVisible();
+    await expect(page.getByText("No search schemas configured", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Configure the host application's schema allowlist to inspect search health.", { exact: true })
+    ).toBeVisible();
     await expect(page.getByTestId("posture-row")).toHaveCount(0);
     await expect(page.locator(".ops-metric")).toHaveCount(0);
 

@@ -146,7 +146,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
 
     refute html =~ ":boom"
-    assert html =~ ~s(class="mt-2 flex items-start gap-ops-2 text-ops-body text-error")
+    assert html =~ ~s(class="mt-ops-2 flex items-start gap-ops-2 text-ops-body text-error")
     assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
     assert html =~ ~s(class="text-ops-body text-base-content/75")
