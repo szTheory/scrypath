@@ -114,12 +114,17 @@ for (const entry of entries) {
       unavailable.locator("p").filter({ hasText: unavailableReason })
     ).toHaveCSS("font-size", "14px");
 
-    await page.setViewportSize({ width: 390, height: 844 });
     const retainedEvidence = unavailable.locator(".ops-signal-metrics--retained");
-    const retainedColumns = await retainedEvidence.evaluate((grid) =>
+    const desktopRetainedColumns = await retainedEvidence.evaluate((grid) =>
       getComputedStyle(grid).gridTemplateColumns.split(" ").length
     );
-    expect(retainedColumns, "retained backend and queue evidence should each get a readable column").toBe(2);
+    expect(desktopRetainedColumns, "desktop retains backend and queue evidence side by side").toBe(2);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const mobileRetainedColumns = await retainedEvidence.evaluate((grid) =>
+      getComputedStyle(grid).gridTemplateColumns.split(" ").length
+    );
+    expect(mobileRetainedColumns, "mobile retained evidence should give each source a full reading width").toBe(1);
     await mkdir(screenshotDir, { recursive: true });
     await page.screenshot({
       path: join(screenshotDir, `${entry.name}-unavailable-mobile-390.png`),
