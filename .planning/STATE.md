@@ -2,13 +2,13 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 177
+current_phase: 173
 status: completed
-stopped_at: Phase 177 complete — all phases complete
-last_updated: "2026-10-12T23:46:43.577Z"
+stopped_at: Phase 173 complete — all phases complete
+last_updated: "2026-10-13T01:42:03.142Z"
 last_activity: 2026-10-12
-last_activity_desc: Phase 177 complete
-state_head: 52947845247854099be41caae0b25cc346561374
+last_activity_desc: Phase 173 complete
+state_head: e0eae2eae913c42aa880dea221ce7918c12aa5b5
 progress:
   total_phases: 5
   completed_phases: 5
@@ -25,10 +25,10 @@ See PROJECT.md (updated 2026-10-10). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 177
+Phase: 173
 Plan: Not started
 Status: All phases complete
-Last activity: 2026-10-12 — Phase 177 complete
+Last activity: 2026-10-12 — Phase 173 complete
 Progress: [██████████] 100% by phase (5/5 phases; 21/21 plans complete)
 
 ## Delivered Evidence
@@ -82,7 +82,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-12T00:00:52.533Z
-Stopped at: Phase 177 complete — all phases complete
+Stopped at: Phase 173 complete — all phases complete
 Resume file: .planning/phases/177-shared-patterns-and-delivery-proof/177-01-PLAN.md
 
 Phases 173–177 are complete in this worktree, with 21 plan summaries total (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 177 verifies 69/69 plan truths and records the candidate exact-source closeout; the terminal merged-source attestation will run after the remaining records are committed. The phase counts agree with ROADMAP.md.
