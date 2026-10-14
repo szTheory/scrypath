@@ -1,6 +1,27 @@
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { dimensions, previewSourceErrors, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { dimensions, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+
+test("Playwright output cleanup preserves UI review evidence", async () => {
+  const demoRoot = fileURLToPath(new URL("../", import.meta.url));
+  const temporaryDemo = await mkdtemp(path.join(tmpdir(), "scrypath-ui-review-output-"));
+  const reviewDirectory = path.join(temporaryDemo, path.relative(demoRoot, reviewArtifactRoot));
+  const playwrightDirectory = path.join(temporaryDemo, "test-results");
+  try {
+    await mkdir(reviewDirectory, { recursive: true });
+    await mkdir(playwrightDirectory, { recursive: true });
+    const evidence = path.join(reviewDirectory, "capture.json");
+    await writeFile(evidence, "preserve this review");
+    await rm(playwrightDirectory, { recursive: true, force: true });
+    assert.equal(await readFile(evidence, "utf8"), "preserve this review");
+  } finally {
+    await rm(temporaryDemo, { recursive: true, force: true });
+  }
+});
 
 function fixture() {
   const source = { tree_sha256: "current" };

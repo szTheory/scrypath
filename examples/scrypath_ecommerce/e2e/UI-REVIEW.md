@@ -11,7 +11,9 @@ cd examples/scrypath_ecommerce
 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run ui:review
 ```
 
-This uses the existing Playwright and axe dependencies. It captures seven screens in light, dark, and system-dark at 1440px, 768px, and 390px: 63 entry-state observations, plus full-page, hover, focus, and compact navigation evidence. Each run writes a separate ignored directory under `test-results/ui-review/` with an HTML gallery, visible copy, headings/controls, accessibility findings, browser errors, a source fingerprint, and a pending `review.json`.
+This uses the existing Playwright and axe dependencies. It captures seven screens in light, dark, and system-dark at 1440px, 768px, and 390px: 63 entry-state observations, plus full-page, hover, focus, and compact navigation evidence. Each run writes a separate ignored directory under `ui-review-artifacts/` with an HTML gallery, visible copy, headings/controls, accessibility findings, browser errors, a source fingerprint, and a pending `review.json`.
+
+Review artifacts live outside Playwright’s `test-results/` cleanup boundary and survive ordinary test runs. They remain local and ignored by Git; keep review records and captures together when archiving or deliberately removing a run.
 
 The command navigates and opens compact navigation, but does not seed data, submit searches, save files, retry work, or promote indexes. Loading a LiveView can perform its ordinary observations. It leaves the maintainer's browser, theme preference, and data untouched. It does not install dependencies, call a model API, or promote a baseline.
 
@@ -47,7 +49,7 @@ Use `mix verify.ops_ui` and focused demo/LiveView proofs when their scope is aff
 Populate `review.json` with per-surface and per-dimension verdicts, reviewed capture IDs, concrete rationale, findings, and journey/state coverage receipts. Preserve unknown/uncovered states. A new capture starts pending and cannot silently become accepted just because checks pass. Validate the review record with:
 
 ```sh
-npm run ui:review:check -- test-results/ui-review/REPLACE_WITH_RUN_DIRECTORY
+npm run ui:review:check -- ui-review-artifacts/REPLACE_WITH_RUN_DIRECTORY
 ```
 
 The checker refuses missing surfaces/themes/widths, missing review dimensions, stale source/capture bindings, missing or changed artifacts, mechanical failures, unfinished coverage, and open findings. It checks completeness/provenance; it cannot verify a reviewer looked at an image or certify good taste. An advisory must name its evidence and reason; don't downgrade a demonstrated task blocker to make the record pass. The pilot remains `needs-work` until its known and newly discovered blockers are addressed.
