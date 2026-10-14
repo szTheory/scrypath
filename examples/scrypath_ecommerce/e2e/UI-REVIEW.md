@@ -8,8 +8,11 @@ From the checkout actually mounted by the preview container:
 
 ```sh
 cd examples/scrypath_ecommerce
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run ui:preflight
 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run ui:review
 ```
+
+Start with the read-only preflight before editing, restarting or collecting screenshots. It prints the verified checkout, command working directory, branch, source fingerprint, Docker mount/main provenance and pending local files; it launches no browser and creates no artifacts. It also reads remote main and refuses stale local main refs; a remote lookup failure cannot establish latest-source status. Refresh and reconcile main when needed. Compare the branch with `.planning/UI-PREVIEW.json`, account for pending source edits before a worktree handoff, and anchor subsequent commands to the verified checkout. See the [incident lessons](../../../.planning/reference/UI-WORKTREE-LEARNINGS.md) for the causes and prevention rules.
 
 This uses the existing Playwright and axe dependencies. It captures seven screens in light, dark, and system-dark at 1440px, 768px, and 390px: 63 entry-state observations, plus full-page, hover, focus, and compact navigation evidence. Each run writes a separate ignored directory under `ui-review-artifacts/` with an HTML gallery, visible copy, headings/controls, accessibility findings, browser errors, a source fingerprint, and a pending `review.json`.
 

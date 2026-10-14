@@ -46,6 +46,7 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
   assert.deepEqual(previewSourceErrors("/current", "/current", true), []);
   assert.equal(previewSourceErrors("/current", "/old", false).length, 2);
   assert.equal(previewSourceErrors("/current", "/current", true, false).length, 1);
+  assert.ok(previewSourceErrors("/current", "/current", true, true, false).some((error) => error.includes("stale against the remote")));
   const { source, manifest, review } = fixture();
   manifest.runtime.source_match = false;
   assert.ok(reviewErrors(review, manifest, "capture-digest", source).some((error) => error.includes("provenance")));

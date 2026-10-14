@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "ui:preflight": "node e2e/ui-review.mjs --preflight",
     "ui:review": "node e2e/ui-review.mjs",
     "ui:review:check": "node e2e/ui-review.mjs --check",
     "ui:review:selftest": "node --test e2e/ui-review.selftest.mjs",

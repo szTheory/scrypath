@@ -40,11 +40,12 @@ export async function sourceIdentity() {
   return { head: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).toString().trim(), tree_sha256: hash.digest("hex") };
 }
 
-export function previewSourceErrors(expected, mounted, mainIncluded, endpointMatches = true) {
+export function previewSourceErrors(expected, mounted, mainIncluded, endpointMatches = true, mainCurrent = true) {
   const errors = [];
   if (expected !== mounted) errors.push(`Preview source mismatch: ${mounted}; expected ${expected}.`);
   if (!mainIncluded) errors.push("Checkout does not include origin/main. Reconcile newer merged work before reviewing the current UI.");
   if (!endpointMatches) errors.push("Review URL does not match the verified preview container's published loopback port.");
+  if (!mainCurrent) errors.push("origin/main is stale against the remote main ref. Refresh and reconcile main before treating this preview as latest.");
   return errors;
 }
 
@@ -201,6 +202,17 @@ async function captureAll() {
   if (failures || manifest.source_changed_during_capture) process.exitCode = 1;
 }
 
+async function preflight() {
+  const runtime = await verifyPreviewSource();
+  const remoteMain = execFileSync("git", ["ls-remote", "--exit-code", "origin", "refs/heads/main"], { cwd: repoRoot, encoding: "utf8", timeout: 10000 }).trim().split(/\s+/)[0];
+  const errors = previewSourceErrors(await realpath(repoRoot), runtime.mount, runtime.main_included, true, remoteMain === runtime.main_ref);
+  if (errors.length) throw new Error(errors.join("\n"));
+  const source = await sourceIdentity();
+  const branch = execFileSync("git", ["branch", "--show-current"], { cwd: repoRoot, encoding: "utf8" }).trim();
+  const pending = execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: repoRoot, encoding: "utf8" }).split("\n").filter(Boolean);
+  console.log(JSON.stringify({ checkout: repoRoot, command_cwd: process.cwd(), branch, source, runtime: { ...runtime, remote_main_current: true }, pending_work: pending }, null, 2));
+}
+
 async function checkReview(directory) {
   await verifyPreviewSource();
   const manifestBytes = await readFile(path.join(directory, "capture.json"));
@@ -220,8 +232,9 @@ async function checkReview(directory) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    if (process.argv[2] === "--check" && process.argv[3]) await checkReview(path.resolve(process.argv[3]));
+    if (process.argv[2] === "--preflight" && process.argv.length === 3) await preflight();
+    else if (process.argv[2] === "--check" && process.argv[3]) await checkReview(path.resolve(process.argv[3]));
     else if (process.argv.length === 2) await captureAll();
-    else throw new Error("Usage: node e2e/ui-review.mjs [--check CAPTURE_DIRECTORY]");
+    else throw new Error("Usage: node e2e/ui-review.mjs [--preflight | --check CAPTURE_DIRECTORY]");
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
