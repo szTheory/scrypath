@@ -247,7 +247,9 @@ for (const entry of entries) {
     await visit(page, entry);
     const refresh = page.locator("#search-health-refresh");
 
+    const idleBackground = await refresh.evaluate((button) => getComputedStyle(button).backgroundColor);
     await refresh.hover();
+    await expect.poll(() => refresh.evaluate((button) => getComputedStyle(button).backgroundColor)).not.toBe(idleBackground);
     const hoverBackground = await refresh.evaluate((button) => getComputedStyle(button).backgroundColor);
     expect(hoverBackground).not.toBe("rgba(0, 0, 0, 0)");
     expect(hoverBackground).not.toBe(await page.locator('#theme-toggle [aria-pressed="true"]').evaluate((button) => getComputedStyle(button).backgroundColor));
@@ -265,8 +267,7 @@ for (const entry of entries) {
     });
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
-    const pressedBackground = await refresh.evaluate((button) => getComputedStyle(button).backgroundColor);
-    expect(pressedBackground).not.toBe(hoverBackground);
+    await expect.poll(() => refresh.evaluate((button) => getComputedStyle(button).backgroundColor)).not.toBe(hoverBackground);
     await page.mouse.up();
 
     await refresh.focus();

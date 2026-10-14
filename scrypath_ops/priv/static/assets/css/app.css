@@ -3114,6 +3114,16 @@
       flex-direction: column;
     }
   }
+  .sm\:flex-row {
+    @media (width >= 40rem) {
+      flex-direction: row;
+    }
+  }
+  .sm\:justify-end {
+    @media (width >= 40rem) {
+      justify-content: flex-end;
+    }
+  }
   .sm\:p-ops-panel {
     @media (width >= 40rem) {
       padding: var(--spacing-ops-panel);
@@ -4136,6 +4146,7 @@
     row-gap: var(--spacing-ops-1);
   }
   .ops-schema-picker__name {
+    overflow-wrap: anywhere;
     font-size: var(--text-ops-body);
     font-weight: 600;
     color: var(--color-base-content);

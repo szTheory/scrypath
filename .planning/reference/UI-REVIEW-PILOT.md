@@ -1,6 +1,6 @@
 # Whole-app UI review pilot — 2026-10-13
 
-**Result: needs work.** Automation is available and the first entry-state capture completed; the product experience has not passed. This was a distinct in-thread critique, not an independent reviewer attestation. Maintainer examples were treated as non-exhaustive regression checks.
+**Historical pilot result: needs work at the source below.** The subsequent three-batch implementation and current verification are recorded in [UI-BASELINE-RESULTS.md](UI-BASELINE-RESULTS.md); do not route back into this historical repair list. Automation is available and the first entry-state capture completed; the product experience has not passed. This was a distinct in-thread critique, not an independent reviewer attestation. Maintainer examples were treated as non-exhaustive regression checks.
 
 ## Evidence
 

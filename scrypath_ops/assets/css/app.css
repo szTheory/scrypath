@@ -1085,6 +1085,7 @@
   }
 
   .ops-schema-picker__name {
+    overflow-wrap: anywhere;
     font-size: var(--text-ops-body);
     font-weight: 600;
     color: var(--color-base-content);

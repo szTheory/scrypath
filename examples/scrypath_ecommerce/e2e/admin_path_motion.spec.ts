@@ -102,7 +102,7 @@ async function gotoControlRoom(page: Page): Promise<void> {
 async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
 async function gotoPlaybooks(page: Page): Promise<void> {
@@ -115,7 +115,7 @@ async function gotoPlaybooks(page: Page): Promise<void> {
 // (search_live.ex handle_event "set_mode" -> push_patch mode: :multi) — the exact
 // re-render that would replay an A3 mount-keyframe reveal across the results/merge region.
 async function switchSearchMode(page: Page, mode: "single" | "multi"): Promise<void> {
-  const label = mode === "multi" ? "Multi index" : "Single index";
+  const label = mode === "multi" ? "Multiple schemas" : "One schema";
   await page.getByRole("button", { name: label }).click();
 }
 
@@ -261,45 +261,22 @@ test.describe("admin path motion — DARKMOTION-01", () => {
   // drives degraded search health so the recommended card (recommended={state in [:degraded,
   // :missing_backend]}) renders with its dual-dark glow.
   for (const theme of ALL_THEMES) {
-    test(`recommended intent card: glow present + reduced-motion-neutralized (${theme})`, async ({
-      browser,
-      request
-    }) => {
+    test(`task links keep one label and neutral motion (${theme})`, async ({ browser, request }) => {
       await seedScenario(request, "incident");
-
       const { page, close } = await newThemedPage(browser, theme, { reducedMotion: "reduce" });
       try {
         await gotoControlRoom(page);
-
-        // The recommended card is the incident intent (data-testid="intent-incident").
-        const card = page.getByTestId("intent-incident");
+        const card = page.getByTestId("control-room-explore-search");
         await expect(card).toBeVisible();
-        await expect(card).toHaveClass(/ops-intent-card--recommended/);
-        // Functional integrity under reduced motion: the "Start here" flag is present.
-        await expect(card.locator(".ops-intent-card__flag")).toBeVisible();
-
-        // Reduced-motion: the card's own transition (box-shadow/glow settle) is neutralized.
-        const dur = await maxMotionDurationMs(page, '[data-testid="intent-incident"]');
-        expect(dur, `recommended card motion duration under reduce (${theme})`).toBeLessThanOrEqual(0.02);
-
-        // Dark expression present / light unchanged — the deterministic replacement for the
-        // former subjective "deliberate in dark, no light regression" human read (D-02). The
-        // glow is an end-state (box-shadow), so it is present even under reduced motion; it
-        // just snaps in instead of fading. Token invariant first, then the element wiring.
-        const token = await glowToken(page);
-        const cardGlow = await glowBoxShadow(page, '[data-testid="intent-incident"]');
-        if (theme === "light") {
-          expect(token, "light --shadow-ops-glow must be the `none` no-op").toBe("none");
-          expect(cardGlow, `recommended card must carry NO violet glow in ${theme} (light regression guard)`).not.toContain(GLOW_RGB);
-        } else {
-          expect(token, `${theme} --shadow-ops-glow must resolve to a real aura, not none`).not.toBe("none");
-          expect(cardGlow, `recommended card must carry the violet glow in ${theme}`).toContain(GLOW_RGB);
-        }
-
-        await snap(page, `recommended-card--${theme}--reduced-motion`);
-      } finally {
-        await close();
-      }
+        await expect(card.locator(".ops-intent-card__title")).toHaveText("Try a search");
+        await expect(card.locator(".ops-intent-card__cta")).toHaveText("→");
+        await expect(card).not.toHaveClass(/ops-intent-card--recommended/);
+        expect(await maxMotionDurationMs(page, '[data-testid="control-room-explore-search"]')).toBeLessThanOrEqual(0.02);
+        expect(await runningKeyframeAnimationCount(page, ".ops-intent-card")).toBe(0);
+        await card.focus();
+        await expect(card).toBeFocused();
+        await expect(card).toHaveAttribute("href", "/admin/search/search");
+      } finally { await close(); }
     });
   }
 

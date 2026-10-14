@@ -3,7 +3,7 @@ import { seedScenario, waitForLiveConnected } from "./helpers/e2e";
 
 // This suite changes only its disposable verifier's catalog/files, never the feedback preview.
 test.beforeEach(async ({ baseURL }) => {
-  test.skip(!baseURL || new URL(baseURL).port === "4002", "Use the isolated Docker verifier or a dedicated local port.");
+  test.skip(!baseURL || (["127.0.0.1", "localhost"].includes(new URL(baseURL).hostname) && new URL(baseURL).port === "4002"), "Use the isolated Docker verifier or a dedicated local port.");
 });
 
 test("query → saved inputs → replay keeps results and edited drafts distinct", async ({ page, request }) => {
@@ -104,7 +104,7 @@ test("saved-search errors copy diagnostics only after the browser succeeds", asy
   await waitForLiveConnected(page);
   await page.locator("#playbook-import details > summary").click();
   await page.locator("#playbook-paste-json").fill(JSON.stringify({
-    playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "quantum", opts: { page: { size: 999 } }
+    playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "quantum", opts: { filter: { missing_filterable_field: "example" } }
   }));
   await page.locator("#playbook-import details button[type=submit]").click();
   await page.getByRole("button", { name: "Run search", exact: true }).click();
@@ -119,4 +119,34 @@ test("saved-search errors copy diagnostics only after the browser succeeds", asy
   await copy.focus(); await page.keyboard.press("Enter");
   await expect(failure.locator("[data-ops-copy-feedback]")).toHaveText("Diagnostics copied");
   expect(JSON.parse(await page.evaluate(() => (window as any).copiedDiagnostics))).toBeTruthy();
+});
+
+
+test("saved-search rows keep readable text above actions on compact screens", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/admin/search/playbooks");
+  await waitForLiveConnected(page);
+  const row = page.locator(".ops-saved-searches > .ops-object-item").first();
+  const title = row.locator("span.font-semibold").first();
+  const preview = row.getByRole("button", { name: "Preview", exact: true });
+  const titleBox = (await title.boundingBox())!;
+  const previewBox = (await preview.boundingBox())!;
+  expect(titleBox.width, "title uses the readable row width").toBeGreaterThan(250);
+  expect(previewBox.y, "actions follow title and metadata").toBeGreaterThan(titleBox.y + titleBox.height);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+
+test("storefront puts compact results before secondary facets without inventing a zero count", async ({ page, request }) => {
+  await seedScenario(request, "incident");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await waitForLiveConnected(page);
+  await expect(page.getByTestId("storefront-search-unavailable")).toBeVisible();
+  await expect(page.getByText("0 visible hits", { exact: true })).toHaveCount(0);
+  const results = (await page.getByTestId("storefront-results").boundingBox())!;
+  const facets = (await page.locator(".storefront-search__filters").boundingBox())!;
+  const query = (await page.getByPlaceholder("Search the catalog").boundingBox())!;
+  expect(results.y).toBeGreaterThan(query.y);
+  expect(facets.y).toBeGreaterThanOrEqual(results.y + results.height);
 });

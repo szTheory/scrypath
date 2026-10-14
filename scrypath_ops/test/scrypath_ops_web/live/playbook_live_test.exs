@@ -57,6 +57,24 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     :ok
   end
 
+  test "import errors explain an invalid result limit without an internal tuple", %{conn: conn} do
+    {:ok, view, _} = live(conn, ~p"/ops/playbooks")
+
+    json =
+      Jason.encode!(%{
+        playbook_format: 1,
+        mode: "search",
+        schema: "ScrypathOps.Test.OpsPostA",
+        q: "a",
+        opts: %{page: %{size: 999}}
+      })
+
+    html = view |> form("form[phx-submit='import_paste']", %{json: json}) |> render_submit()
+    assert html =~ "Results per schema must be between 1 and 50; received 999."
+    refute html =~ ":page_size_out_of_range"
+    refute has_element?(view, "button[phx-click=run]")
+  end
+
   test "mount shows honesty panel", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
     html = render(view)
@@ -1130,7 +1148,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert_receive {:playbook_run_adapter_started, _runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
-    assert load_html =~ "Loaded playbook from disk."
+    assert load_html =~ "Loaded saved search."
     refute load_html =~ "Search canceled before results were returned."
     refute render_async(view) =~ "Search canceled before results were returned."
   end
@@ -1194,7 +1212,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert_receive {:playbook_run_adapter_started, _first_runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
-    assert load_html =~ "Loaded playbook from disk."
+    assert load_html =~ "Loaded saved search."
 
     assert render_click(view, "run", %{}) =~ "Running search"
     assert_receive {:playbook_run_adapter_started, current_runner_pid}

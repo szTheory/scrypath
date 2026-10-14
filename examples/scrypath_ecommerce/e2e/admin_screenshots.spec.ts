@@ -51,9 +51,9 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
   await expect(failedRow.getByText(/unknown_module.*NotARealBackend/)).toBeVisible();
-  await failedRow.getByText("Diagnostics", { exact: true }).click();
+  await failedRow.getByText("Job details", { exact: true }).click();
   await expect(failedRow.locator("details")).toHaveAttribute("open", "");
-  await expect(failedRow.getByRole("region", { name: "Technical details" })).toBeVisible();
+  await expect(failedRow.locator("details dl")).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");
 
   await page.goto("/admin/search/sync-drift");
@@ -65,13 +65,13 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
 
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Search" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
   await capture(page, testInfo, "04-search-single-results");
 
-  await page.getByRole("button", { name: "Multi index" }).click();
+  await page.getByRole("button", { name: "Multiple schemas" }).click();
   const firstSchema = page.locator("input[name='schemas[]']").first();
   if (!(await firstSchema.isChecked())) {
     await firstSchema.check();
@@ -97,7 +97,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByTestId("playbook-preview-marker")).toBeVisible();
   await capture(page, testInfo, "06-playbook-preview");
 
-  await page.getByRole("button", { name: "Run saved playbook" }).click();
-  await expect(page.getByText("Playbook run completed", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Run search" }).click();
+  await expect(page.getByText("Search completed", { exact: true })).toBeVisible();
   await capture(page, testInfo, "07-playbook-run-result");
 });

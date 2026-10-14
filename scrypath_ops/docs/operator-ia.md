@@ -28,7 +28,7 @@ The default mount is `/ops`; host apps can choose another prefix. The demo uses 
 
 A successful observation reports what was checked. Unavailable, partial or retained evidence stays labeled. Settings agreement and operation completion do not, by themselves, prove expected documents are searchable.
 
-Timestamps display UTC by default. The Time control switches to your browser's local zone and remembers your choice. Click or focus a timestamp to copy its original source value; copy failures expose that exact value for manual copying.
+Timestamps display UTC by default. The Time control switches to your browser's local zone and remembers your choice. Click a timestamp, or focus it and press Enter, to copy its original source value; copy failures expose that exact value for manual copying.
 
 Saved searches use the existing **Playbook v1 JSON format** and `/playbooks` route. The Storage folder is a server-side directory, not a team or account. See the [file format](playbook-schema-v1.md) and [persistence setup](team-playbook-persistence.md).
 

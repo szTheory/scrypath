@@ -1,6 +1,6 @@
 # Scrypath UI baseline
 
-**Direction recorded:** 2026-10-14, direct maintainer feedback. **Status:** scoped; implementation and product acceptance remain open. This is the next UI follow-up, not a replay of Phases 173–177 or a new phase-completion receipt.
+**Direction recorded:** 2026-10-14, direct maintainer feedback. **Status:** all three batches implemented and verified; delivery tracked in PR #105. See [baseline results](UI-BASELINE-RESULTS.md). This is the next UI follow-up, not a replay of Phases 173–177 or a new phase-completion receipt.
 
 ## Purpose and boundaries
 
@@ -86,4 +86,4 @@ Progress reports should show **which of the three tasks now succeeds, which batc
 
 ## Handoff
 
-Continue from [continue.md](continue.md) in the checkout named by `../UI-PREVIEW.json`. Run `npm run ui:preflight` before product edits/capture, preserve the seed-disabled retained preview, and use disposable data for stateful verification. Start with a current whole-inventory critique, then implement batch 1 and proceed through the remaining baseline work with bounded confirmation. Do not run `$gsd-execute-phase 173`, `174`, or `176` again; no new numbered phase is created by this document. Additional maintainer feedback extends the existing ledger, not a competing backlog.
+All three batches and their task/state/render criteria are complete for this baseline. See [UI-BASELINE-RESULTS.md](UI-BASELINE-RESULTS.md) and the reconciled feedback ledger. Finish PR #105 delivery if still open; otherwise resume only against new concrete feedback. Existing brand and preview data remain intact. Do not replay completed Phases 173–177 or restart batch 1/persona discovery. Use `continue.md` and `UI-PREVIEW.json` to find the canonical checkout.

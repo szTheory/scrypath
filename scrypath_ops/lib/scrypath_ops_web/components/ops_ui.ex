@@ -1314,9 +1314,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_object_item(assigns) do
     ~H"""
     <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0 flex-1">{render_slot(@inner_block)}</div>
-        <div :if={@actions != []} class="flex flex-wrap justify-end gap-2">
+      <div class="flex flex-col items-start justify-between gap-3 sm:flex-row">
+        <div class="min-w-0 w-full flex-1">{render_slot(@inner_block)}</div>
+        <div :if={@actions != []} class="flex flex-wrap gap-2 sm:justify-end">
           {render_slot(@actions)}
         </div>
       </div>

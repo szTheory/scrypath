@@ -668,9 +668,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
       else: %{kind: :example, name: name}
   end
 
-  defp flash_for_import(:paste), do: "Imported playbook from paste."
-  defp flash_for_import(:upload), do: "Imported playbook from file."
-  defp flash_for_import(:load), do: "Loaded playbook from disk."
+  defp flash_for_import(:paste), do: "Imported saved search from paste."
+  defp flash_for_import(:upload), do: "Imported saved search from file."
+  defp flash_for_import(:load), do: "Loaded saved search."
 
   defp save_failure_message(reason) when is_atom(reason) do
     "Could not save this search. Filesystem reason: #{inspect(reason)}. " <>
@@ -764,6 +764,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
         end
     end
   end
+
+  defp format_validation_reason({:page_size_out_of_range, n, max}),
+    do: "Results per schema must be between 1 and #{max}; received #{n}."
 
   defp format_validation_reason(reason) do
     reason |> inspect() |> String.slice(0, 240)

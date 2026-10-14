@@ -1,26 +1,15 @@
 # Continue — Scrypath UI baseline
 
-## Last action
+## Current state
 
-Captured the maintainer's non-exhaustive home/navigation/health/failed-work/Sync-and-drift feedback, traced its domain semantics, and scoped a systematic implementation pass in `.planning/reference/UI-BASELINE-PLAN.md`. New recommendations remain unimplemented. The latest retained-preview preflight passed at source `e4fef536`; rerun it now rather than assuming freshness.
+All three baseline batches are implemented and verified on `fix/ui-task-baseline` in `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`. Delivery is [PR #105](https://github.com/szTheory/scrypath/pull/105); read its current merge/check state before doing anything. The maintainer authorized marking ready and squash merging after required CI is green. Finish that delivery if still open; if merged, there is no remaining baseline implementation or phase replay to do.
 
-## Next action
+Evidence: [UI-BASELINE-RESULTS.md](UI-BASELINE-RESULTS.md), the reconciled `../UI-FEEDBACK.md`, and final local reviewed capture `examples/scrypath_ecommerce/ui-review-artifacts/2026-10-14T22-45-57-728Z`. Full 168-case browser inventory: 167 passed initially; one test-only paint-timing assertion corrected and its full status suite rechecked 6/6; Ops: 309 tests + 2 doctests; demo: 12 tests; review tooling: 7 tests. The review checker validates current source/artifact binding and completeness, not taste or an independent reviewer identity. Required hosted checks must cover the final delivered commit. Unchanged dependency-audit advisories remain separate and disclosed.
 
-Read `.planning/UI-PREVIEW.json` and work in its canonical checkout (the root shell checkout is different and dirty). Run `npm run ui:preflight` from that checkout's `examples/scrypath_ecommerce`. Read `.planning/reference/UI-BASELINE-PLAN.md`, `.planning/reference/OPERATOR-UI-QUALITY.md` and `.planning/UI-FEEDBACK.md`. Capture/critique the whole current inventory and primary journeys, identify unreported defects, then implement batch 1 and continue through batches 2–3 with tests and rendered confirmation. Produce reviewable product changes, not another planning-only cycle. Use the existing UI-review protocol; read applicable design/writing skills without stacking contradictory visual directions.
+## Preview and next work
 
-## Why
+`../UI-PREVIEW.json` is the canonical pointer. The retained preview is `http://127.0.0.1:4002/admin/search`, container `scrypath_ecommerce-web-1`; startup seeding is disabled. It retains incident data, so some warnings/search unavailability are expected. Preserve its database, indexes and volumes. The root checkout is a different dirty historical branch; do not reset/stash/copy it or transport old product files.
 
-The maintainer has supplied enough direction: prioritize task hierarchy, clear domain language, good controls and visual consistency within the existing brand. Trying search is primary; health and exact recovery remain important. Their examples reveal systemic causes, not a complete checklist. Personas/JTBD already exist as maintained hypotheses; no new workshop or brand refresh is needed. The finish criteria are the three tasks and whole-app checks in the plan, not an aesthetic score or an old phase receipt.
+The three tasks are trying search, understanding/recovering a problem, and saving/reusing inputs. The implementation includes unreported clipboard, stationary-pointer selection, long-name and compact-layout defects, not just the maintainer's examples. New feedback should extend the same ledger and maintained `OPERATOR-UI-QUALITY.md`; no new persona workshop, brand refresh or numbered phase is needed. Do not replay Phases 173–177 or route from historical STATE frontmatter. No speculative new work is authorized by a completed baseline.
 
-## Open threads
-
-- New feedback and recommendations are planning only; do not report them as fixed. Whole-app visual acceptance remains open. Older captures are historical/pending and become stale after relevant source changes.
-- Batch 2 includes consistent time display/copy, meaningful retry rows/receipts, settings autoload/details and the entire lower Sync/drift journey. Keep real Oban IDs, separate task/job/state/category/replay meanings, and never infer freshness from absence of failures.
-- Latest completed delivery: PRs #102/#103/#104; lessons/preflight PR #104 merged at `bd4c7b91`. Check actual main when resuming. Required-CI-green squash-merge permission was given earlier; no independent reviewer identity or historical waiver may be invented. Existing advisory dependency audit failures remain separately disclosed.
-
-## Do not
-
-- Do not replay completed Phases 173–177 or route from the historical phase-174 frontmatter in STATE. No new numbered phase or active GSD slice was created for this follow-up.
-- Do not edit/reset/stash the dirty root checkout, copy old files wholesale, reseed/replace retained preview data, or run destructive preview teardown. Use seed-disabled documented preview Compose and disposable verification stacks.
-- Do not optimize only the maintainer's strings, add endless cards/pills/disclosures, redesign the brand, auto-accept screenshots, or call capture success a design pass. Preserve exact scope/provenance, unknown/stale states, delete/promotion guards and accepted-versus-completed outcomes.
-- Keep artifacts under `ui-review-artifacts/`, outside Playwright cleanup. Respect explicit absolute command working directories. Checkpoint owned changes before any worktree transition.
+All stateful checks used only the owned `scrypath_ui_baseline` Compose project (ports 4013/4014 and separate saved-file volume); remove only that disposable stack if it still exists. Never tear down the retained `scrypath_ecommerce` preview or unrelated containers. Repeated full tests require a fresh owned search backend: the 1000-task history bound correctly blocks promotion after accumulated test runs; never raise the limit or weaken a guard to force green.

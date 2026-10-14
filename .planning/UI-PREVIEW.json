@@ -6,9 +6,11 @@
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "UI baseline implemented; verification and PR delivery in progress; seed-disabled retained preview",
+  "status": "Three-batch UI baseline implemented and verified; seed-disabled retained preview; delivery tracked by PR #105",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
-  "lessons": ".planning/reference/UI-WORKTREE-LEARNINGS.md"
+  "lessons": ".planning/reference/UI-WORKTREE-LEARNINGS.md",
+  "baseline_pr": "https://github.com/szTheory/scrypath/pull/105",
+  "baseline_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-14T22-45-57-728Z"
 }

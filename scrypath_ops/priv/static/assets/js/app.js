@@ -8867,7 +8867,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
       this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
-      this.onCmdkPointerOver = (e) => {
+      this.onCmdkPointerMove = (e) => {
         const item = e.target instanceof Element ? e.target.closest("[data-cmdk-item]") : null;
         const index = this.visible.indexOf(item);
         if (index >= 0 && index !== this.activeIndex) this.setActive(index);
@@ -8882,7 +8882,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.addEventListener("click", this.onCommandOpenClick);
       this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
-      this.list.addEventListener("pointerover", this.onCmdkPointerOver);
+      this.list.addEventListener("pointermove", this.onCmdkPointerMove);
       this.sheet.addEventListener("keydown", this.onSheetKeydown);
       this.cmdk.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.close()));
       this.sheet.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.closeSheet()));
@@ -8894,7 +8894,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
       this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
-      this.list.removeEventListener("pointerover", this.onCmdkPointerOver);
+      this.list.removeEventListener("pointermove", this.onCmdkPointerMove);
       this.sheet.removeEventListener("keydown", this.onSheetKeydown);
     },
     isTyping() {

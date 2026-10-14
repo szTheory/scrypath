@@ -172,7 +172,9 @@ const CommandPalette = {
     this.onModalOverlayOpen = () => this.closeForModal()
     this.onCmdkKeydown = e => this.overlayKeydown(e, this.cmdk)
     this.onSheetKeydown = e => this.overlayKeydown(e, this.sheet)
-    this.onCmdkPointerOver = e => {
+    // Layout/filter/open changes can emit pointerover beneath a stationary mouse.
+    // Only deliberate movement should replace the keyboard selection.
+    this.onCmdkPointerMove = e => {
       const item = e.target instanceof Element
         ? e.target.closest("[data-cmdk-item]")
         : null
@@ -192,7 +194,7 @@ const CommandPalette = {
     document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.addEventListener("click", this.onCommandOpenClick)
     this.cmdk.addEventListener("keydown", this.onCmdkKeydown)
-    this.list.addEventListener("pointerover", this.onCmdkPointerOver)
+    this.list.addEventListener("pointermove", this.onCmdkPointerMove)
     this.sheet.addEventListener("keydown", this.onSheetKeydown)
 
     this.cmdk.querySelectorAll("[data-cmdk-close]").forEach(el =>
@@ -207,7 +209,7 @@ const CommandPalette = {
     document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.removeEventListener("click", this.onCommandOpenClick)
     this.cmdk.removeEventListener("keydown", this.onCmdkKeydown)
-    this.list.removeEventListener("pointerover", this.onCmdkPointerOver)
+    this.list.removeEventListener("pointermove", this.onCmdkPointerMove)
     this.sheet.removeEventListener("keydown", this.onSheetKeydown)
   },
   isTyping() {
