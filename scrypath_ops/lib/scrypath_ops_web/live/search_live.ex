@@ -168,8 +168,8 @@ defmodule ScrypathOpsWeb.SearchLive do
         {:noreply,
          put_capture_error(
            socket,
-           "Could not save playbook to workspace.",
-           recovery: "Configure a playbook workspace directory, then retry saving."
+           "Could not save this search.",
+           recovery: "Configure a storage folder, then retry saving."
          )}
 
       socket.assigns.capture_base == nil ->
@@ -197,23 +197,23 @@ defmodule ScrypathOpsWeb.SearchLive do
                      socket
                      |> assign(:capture_basename, "")
                      |> assign(:capture_error, nil)
-                     |> put_flash(:info, "Saved playbook #{basename}.")}
+                     |> put_flash(:info, "Saved search #{basename}.")}
 
                   {:error, :target_exists} ->
                     {:noreply,
                      put_capture_error(
                        socket,
-                       "That playbook name is already in use — pick another basename."
+                       "That filename is already in use. Choose another."
                      )}
 
                   {:error, reason} ->
                     {:noreply,
                      put_capture_error(
                        socket,
-                       "Could not save playbook to workspace.",
+                       "Could not save this search.",
                        detail: safe_capture_reason(reason),
                        recovery:
-                         "Check the workspace directory's permissions and available disk space, then retry saving."
+                         "Check the storage folder's permissions and available disk space, then retry saving."
                      )}
                 end
 
@@ -221,8 +221,8 @@ defmodule ScrypathOpsWeb.SearchLive do
                 {:noreply,
                  put_capture_error(
                    socket,
-                   "Could not save playbook to workspace.",
-                   detail: "Playbook encoding failed: #{inspect(reason)}",
+                   "Could not save this search.",
+                   detail: "Saved search encoding failed: #{inspect(reason)}",
                    recovery:
                      "Review the search criteria and optional metadata, then retry saving."
                  )}
@@ -232,8 +232,8 @@ defmodule ScrypathOpsWeb.SearchLive do
             {:noreply,
              put_capture_error(
                socket,
-               "Could not save playbook to workspace.",
-               detail: "Playbook validation failed: #{inspect(reason)}",
+               "Could not save this search.",
+               detail: "Saved search validation failed: #{inspect(reason)}",
                recovery: "Review the search criteria and optional metadata, then retry saving."
              )}
         end
@@ -906,19 +906,15 @@ defmodule ScrypathOpsWeb.SearchLive do
         <.ops_toolbar class="items-end">
           <.ops_page_header
             title={@page_title}
-            subtitle="Choose an index, run a query, inspect the answer, then save a repeatable check."
+            subtitle="Run queries against your schemas. Save useful searches to run again."
           />
         </.ops_toolbar>
 
         <.ops_trail current={:search} />
 
-        <.ops_notice
-          id="search-honesty-panel"
-          kind={:warning}
-          title="Non-production search playground"
-        >
-          Exploratory queries may be logged by Meilisearch or proxies. Do not paste production secrets or PII; keep page size and schema lists bounded.
-        </.ops_notice>
+        <p id="search-honesty-panel" class="text-ops-sm text-base-content/70">
+          Queries may be logged by Meilisearch. Keep secrets and personal data out of search text.
+        </p>
 
         <div class="space-y-ops-page-gap" aria-describedby="search-honesty-panel">
           <.ops_empty_state :if={@schema_allowlist == []} title="No schemas configured">
@@ -944,10 +940,10 @@ defmodule ScrypathOpsWeb.SearchLive do
               as={:search}
               phx-submit="search"
               id="ops-search-playground-form"
-              class="ops-form-stack"
+              class="ops-form-stack ops-search-form"
             >
               <.ops_fieldset
-                legend="Search target"
+                legend="Schemas"
                 disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
                 <.ops_segmented_control
@@ -955,33 +951,26 @@ defmodule ScrypathOpsWeb.SearchLive do
                   event="set_mode"
                   selected={to_string(@mode)}
                   disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-                  items={[{"Single index", "single"}, {"Multi index", "multi"}]}
+                  items={[{"One schema", "single"}, {"Multiple schemas", "multi"}]}
                 />
-                <p :if={@mode == :single} class="text-ops-body text-base-content/80">
-                  Choose one index for this search.
-                </p>
-                <p :if={@mode == :multi} class="text-ops-body text-base-content/80">
-                  Compare multiple indexes. Merged order is a federation view, not one global score. <a
-                    class="link link-hover text-primary"
-                    href={@guide_href}
-                  >Read semantics</a>.
+                <p :if={@mode == :multi} class="text-ops-sm text-base-content/70">
+                  Each schema returns its own results.
+                  <a class="link link-hover" href={@guide_href}>About combined ranking</a>
                 </p>
 
                 <.ops_schema_select
                   :if={@mode == :single && @schema_allowlist != []}
                   id="search_schema"
                   name="schema"
-                  label="Index"
-                  hint="Choose the index for this run."
+                  label="Schema"
                   schemas={@schema_allowlist}
                   selected={@selected_schema}
                   disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
-                  class="font-mono text-ops-body"
                 />
 
                 <div :if={@mode == :multi} class="space-y-2">
                   <p id="search-schemas-hint" class="text-ops-body leading-5 text-base-content/70">
-                    Choose up to {SearchPlayground.max_schemas_allowed()} indexes for this run.
+                    Choose up to {SearchPlayground.max_schemas_allowed()} schemas.
                   </p>
                   <.ops_checkbox_list
                     name="schemas[]"
@@ -991,44 +980,35 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </div>
               </.ops_fieldset>
 
-              <.ops_fieldset
-                legend="Query"
+              <fieldset
+                class="ops-search-query"
                 disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
               >
-                <.ops_field
-                  id="search_q"
-                  label="Search text"
-                  hint="Search text is sent to the selected index or indexes."
-                >
+                <legend class="sr-only">Query and result limit</legend>
+                <.ops_field id="search_q" label="Search text">
                   <.ops_text_input
                     id="search_q"
                     name="q"
                     value={@q}
-                    placeholder="Try a product or operator probe"
-                    hint="Search text is sent to the selected index or indexes."
+                    placeholder="Enter a query, or leave blank to browse"
                     aria-describedby="search-honesty-panel"
                   />
                 </.ops_field>
-              </.ops_fieldset>
-
-              <.ops_fieldset
-                legend="Limits / safety"
-                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-              >
-                <p id="search-limits-copy" class="text-ops-body leading-5 text-base-content/70">
-                  Page size is capped at {SearchPlayground.max_page_size_allowed()} hits per request.
-                </p>
-                <.ops_field id="search_page_size" label="Page size" class="w-full max-w-xs">
+                <.ops_field
+                  id="search_page_size"
+                  label="Results per schema"
+                  hint={"Maximum #{SearchPlayground.max_page_size_allowed()}"}
+                >
                   <.ops_number_input
                     id="search_page_size"
                     name="page_size"
                     value={@page_size}
                     min="1"
                     max={SearchPlayground.max_page_size_allowed()}
-                    aria-describedby="search-honesty-panel search-limits-copy"
+                    aria-describedby="search_page_size-hint"
                   />
                 </.ops_field>
-              </.ops_fieldset>
+              </fieldset>
 
               <.ops_button
                 type="submit"
@@ -1091,7 +1071,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   <dd data-testid="search-submitted-page-size">{@submitted_search.page_size}</dd>
                 </div>
                 <div class="min-w-0">
-                  <dt class="text-ops-sm text-base-content/70">Submitted index(es)</dt>
+                  <dt class="text-ops-sm text-base-content/70">Submitted schemas</dt>
                   <dd
                     data-testid="search-submitted-targets"
                     class="min-w-0 break-all font-mono text-ops-body"
@@ -1100,12 +1080,12 @@ defmodule ScrypathOpsWeb.SearchLive do
                       <span :if={@submitted_search.schema}>
                         {inspect(@submitted_search.schema)}
                       </span>
-                      <span :if={is_nil(@submitted_search.schema)}>No index selected</span>
+                      <span :if={is_nil(@submitted_search.schema)}>No schema selected</span>
                     <% else %>
                       <%= for schema <- @submitted_search.schemas do %>
                         <span class="mr-2 inline-block">{inspect(schema)}</span>
                       <% end %>
-                      <span :if={@submitted_search.schemas == []}>No index selected</span>
+                      <span :if={@submitted_search.schemas == []}>No schema selected</span>
                     <% end %>
                   </dd>
                 </div>
@@ -1143,7 +1123,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 icon="hero-magnifying-glass"
                 data-testid="search-empty-hero"
               >
-                Choose an index, enter a query, inspect the answer, then save a useful check.
+                Select a schema above and run a search. An empty query browses the index.
               </.ops_empty_hero>
 
               <div :if={@result_single} class="space-y-3">
@@ -1310,7 +1290,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             class="space-y-3"
           >
             <h2 id="search-capture-heading" class="sr-only">
-              Save as playbook
+              Save search
             </h2>
             <div class="ops-save-playbook">
               <.ops_button
@@ -1319,12 +1299,12 @@ defmodule ScrypathOpsWeb.SearchLive do
                 phx-click={JS.toggle(to: "#search-capture-form-panel")}
                 aria-controls="search-capture-form-panel"
               >
-                Save as playbook
+                Save search
               </.ops_button>
 
               <div id="search-capture-form-panel" style="display: none;">
                 <p class="mt-3 max-w-2xl text-ops-body text-base-content/70">
-                  Save this run only after the result is worth reusing.
+                  Save the query and options, not the returned results.
                 </p>
 
                 <.form
@@ -1349,7 +1329,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                         id="capture_basename"
                         name="capture[basename]"
                         value={@capture_basename}
-                        hint="Use a filename ending in .json. Choose a new .json filename; Search capture cannot replace an existing file."
+                        hint="Choose a new filename ending in .json. Existing files are kept."
                         error={@capture_error && @capture_error.message}
                         class="min-w-0 font-mono text-ops-body"
                         placeholder="my-search.json"
@@ -1359,7 +1339,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                         id="capture_basename-hint"
                         class="text-ops-body leading-6 text-base-content/70"
                       >
-                        Use a filename ending in .json. Choose a new .json filename; Search capture cannot replace an existing file.
+                        Choose a new filename ending in .json. Existing files are kept.
                       </p>
                     </.ops_field>
                   </div>
@@ -1397,12 +1377,12 @@ defmodule ScrypathOpsWeb.SearchLive do
                     class="text-ops-sm text-base-content/70"
                     data-testid="playbook-preview-marker"
                   >
-                    Playbook preview is ready
+                    Query inputs ready to save
                   </p>
                   <.ops_disclosure
                     :if={@capture_preview_json}
                     id="search-capture-json"
-                    summary="Exact playbook JSON"
+                    summary="Saved search JSON"
                     variant={:compact}
                   >
                     <.ops_code_block data-testid="search-capture-preview-pre">
@@ -1411,7 +1391,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   </.ops_disclosure>
 
                   <.ops_button type="submit" variant={:primary}>
-                    Save playbook
+                    Save search
                   </.ops_button>
                 </.form>
               </div>

@@ -667,7 +667,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await gotoSearch(page);
           const query = `phase176-no-hit-${Date.now()}-${viewport.width}`;
           const queryInput = page.getByLabel("Search text");
-          await page.getByLabel("Page size").fill("10");
+          await page.getByLabel("Results per schema").fill("10");
           await queryInput.fill(query);
           await queryInput.press("Enter");
           await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
@@ -795,7 +795,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await expect(page.getByRole("link", { name: "Import JSON" })).toBeVisible();
           const initialRow = page.locator(".ops-object-item").filter({ hasText: catalogName });
           await expect(initialRow.getByRole("button", { name: `Run ${catalogName} without preview` })).toBeVisible();
-          await expect(page.getByRole("button", { name: "Load preview" }).first()).toBeVisible();
+          await expect(page.getByRole("button", { name: "Preview" }).first()).toBeVisible();
           await expectPlaybookDocumentToFit(page);
 
           if (evidenceDir) {
@@ -813,7 +813,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
           await expect(page.locator("#playbook-draft-origin")).toContainText("Imported draft · not saved");
           await expect(page.locator("#playbook-draft-origin")).toContainText("pasted JSON");
-          await expect(page.getByRole("button", { name: "Run playbook" })).toBeEnabled();
+          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
           await expect(page.getByRole("button", { name: "Save playbook to workspace" })).toBeEnabled();
           await expect(page.getByText("Saving a workspace playbook replaces a file with the same filename.")).toBeVisible();
           await expect(page.locator("#playbook-run-outcome")).toHaveCount(0);
@@ -831,9 +831,9 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           expect(saved.opts.page.size).toBe(10);
 
           const row = page.locator(".ops-object-item").filter({ hasText: basename });
-          await row.getByRole("button", { name: "Load preview" }).click();
+          await row.getByRole("button", { name: "Preview" }).click();
           await expect(page.locator("#playbook-draft-origin")).toContainText(`Workspace file · ${basename}`);
-          await page.getByRole("button", { name: "Run playbook" }).click();
+          await page.getByRole("button", { name: "Run search" }).click();
           await expect(page.locator("#playbook-run-outcome")).toContainText("Playbook run completed");
           await expect(page.locator("#playbook-run-source")).toContainText(basename);
           await expect(page.locator("#playbook-run-outcome")).toContainText("ScrypathEcommerce.Catalog.Product");
@@ -948,7 +948,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await page.getByRole("button", { name: "Import playbook JSON" }).click();
           await expect(page.locator("#playbook-draft-origin")).toContainText(uploadedName);
           await expect(page.locator("#playbook-preview")).toContainText(uploadedQuery);
-          await expect(page.getByRole("button", { name: "Run playbook" })).toBeEnabled();
+          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
           await expect(page.locator("#playbook-run-outcome")).toHaveCount(0);
           await expectPlaybookDocumentToFit(page);
 

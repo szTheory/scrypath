@@ -25,6 +25,8 @@ defmodule ScrypathEcommerceWeb.E2EObanInspector do
           errors: job.errors,
           attempt: job.attempt,
           max_attempts: job.max_attempts,
+          completed_at: job.completed_at,
+          scheduled_at: job.scheduled_at,
           attempted_at: job.attempted_at
         }
       end)

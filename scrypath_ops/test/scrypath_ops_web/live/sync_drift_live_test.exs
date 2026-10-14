@@ -42,15 +42,19 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
         Map.update!(state, :settings_calls, &(&1 + 1))
       end)
 
-      if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
-        {:ok,
-         %{
-           "searchableAttributes" => ["*"],
-           "filterableAttributes" => [],
-           "sortableAttributes" => []
-         }}
+      if settings = Agent.get(:sync_drift_live_test_state, &Map.get(&1, :applied_settings)) do
+        {:ok, settings}
       else
-        {:error, :settings}
+        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
+          {:ok,
+           %{
+             "searchableAttributes" => ["*"],
+             "filterableAttributes" => [],
+             "sortableAttributes" => []
+           }}
+        else
+          {:error, :settings}
+        end
       end
     end
 
@@ -108,34 +112,30 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     Application.put_env(:scrypath_ops, :oban_inspector, SyncDriftObanInspector)
     Application.put_env(:scrypath_ops, :oban_jobs, [])
 
-    if pid = Process.whereis(:sync_drift_live_test_state) do
-      Agent.stop(pid)
-    end
-
-    {:ok, _pid} =
-      Agent.start_link(
-        fn ->
-          %{
-            tasks_calls: 0,
-            settings_calls: 0,
-            swap_called: false,
-            swap_calls: 0,
-            task_calls: [],
-            task_status: "processing"
-          }
-        end,
-        name: :sync_drift_live_test_state
-      )
+    start_supervised!(%{
+      id: :sync_drift_live_test_state,
+      start:
+        {Agent, :start_link,
+         [
+           fn ->
+             %{
+               tasks_calls: 0,
+               settings_calls: 0,
+               swap_called: false,
+               swap_calls: 0,
+               task_calls: [],
+               task_status: "processing"
+             }
+           end,
+           [name: :sync_drift_live_test_state]
+         ]}
+    })
 
     on_exit(fn ->
       Enum.each(previous, fn
         {k, nil} -> Application.delete_env(:scrypath_ops, k)
         {k, v} -> Application.put_env(:scrypath_ops, k, v)
       end)
-
-      if pid = Process.whereis(:sync_drift_live_test_state) do
-        Agent.stop(pid)
-      end
     end)
 
     :ok
@@ -152,84 +152,86 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
-  test "loads reconcile on mount and scopes drift errors separately", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift")
-
-    assert html =~ "queue status"
-
-    assert html =~
-             "Check sync status and compare the schema contract with its live index."
-
-    assert html =~ "Check current backend tasks and queued work for this schema."
-    assert html =~ "Index contract"
+  test "automatically reads settings and keeps their errors separate from sync", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    html = render_async(lv)
+    assert html =~ "Sync status"
+    assert html =~ "Index settings could not be checked"
     assert html =~ "sdv_ops_post_a"
-    refute html =~ ":settings"
-
-    # `load_drift` now defers the bounded backend read to a `:run_drift` message so the
-    # loading skeleton paints first (S3). The click shows the in-flight state; rendering
-    # again flushes the deferred read and surfaces the drift result.
-    loading_html =
-      lv
-      |> element("button", "Check index contract")
-      |> render_click()
-
-    assert loading_html =~ "Loading contract drift"
-
-    html2 = render(lv)
-
-    assert html2 =~ ":settings"
-    assert html2 =~ "sdv_ops_post_a"
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
+    assert has_element?(lv, "#sync-drift-refresh[aria-label='Refresh sync and index settings']")
+    refute has_element?(lv, "#sync-reconcile-heading.text-ops-h1")
   end
 
-  test "document freshness starts as a separate unchecked observation", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
-
-    assert html =~ "Document freshness"
-    assert html =~ "Not checked"
-    assert html =~ "Expected-document evidence has not been checked for this recovery."
-    assert has_element?(lv, "#document-freshness-result[role='status']")
-    assert has_element?(lv, "#document-freshness-result.ops-notice-surface--neutral")
+  test "ordinary browsing omits recovery placeholders and keeps a scoped handoff", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    render_async(lv)
+    refute has_element?(lv, "#document-freshness-result")
+    refute has_element?(lv, "#ordinary-recovery")
+    assert has_element?(lv, "h2#sync-reconcile-heading.text-ops-h2")
+    assert has_element?(lv, "h2#sync-drift-heading.text-ops-h2")
+    assert has_element?(lv, "#index-promotion")
+    assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
   end
 
-  test "ordinary recovery follows diagnostic evidence and links to selected failed work", %{
+  test "a settings response from a previous selection or superseded read is ignored" do
+    socket =
+      sync_drift_socket(%{
+        selected_schema: OpsPostB,
+        context_generation: 5,
+        drift_request: 3,
+        drift_loading: true
+      })
+
+    for key <- [{:index_settings, 4, 3}, {:index_settings, 5, 2}] do
+      {:noreply, result} = SyncDriftLive.handle_async(key, {:ok, {:error, :old_read}}, socket)
+      assert result.assigns.drift_loading
+      assert result.assigns.drift_error == nil
+    end
+  end
+
+  test "settings show actual differences without counting overlapping categories twice", %{
     conn: conn
   } do
-    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    Agent.update(
+      :sync_drift_live_test_state,
+      &Map.put(&1, :applied_settings, %{
+        "searchableAttributes" => ["*"],
+        "filterableAttributes" => ["unexpected"],
+        "sortableAttributes" => []
+      })
+    )
 
-    assert html =~ "Ordinary recovery"
-    assert html =~ "Review failed sync work"
-    assert html =~ "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB"
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    html = render_async(lv)
 
     assert has_element?(
              lv,
-             "button[aria-label='Refresh sync and queue status']",
-             "Refresh sync and queue status"
+             "[role='region'][aria-label='Index settings differences'][tabindex='0']"
            )
 
-    refute has_element?(lv, ".ops-panel #sync-reconcile-heading")
-    refute has_element?(lv, ".ops-panel #sync-drift-heading")
-    refute has_element?(lv, ".ops-panel #document-freshness")
-    refute has_element?(lv, ".ops-panel #ordinary-recovery")
-    refute html =~ ~s(scope="row" class="font-medium align-top")
-    assert has_element?(lv, "h2#sync-reconcile-heading.text-ops-h1")
-    assert has_element?(lv, "h2#sync-drift-heading.text-ops-h2")
-    assert has_element?(lv, "h2#document-freshness.text-ops-h2")
+    assert has_element?(lv, "th", "Declared in schema")
+    assert html =~ "unexpected"
+    assert html =~ "Not declared"
+    refute html =~ "Dimension mismatches"
+    refute html =~ "version 1"
+  end
 
-    [sync, contract, documents, recovery, promotion] =
-      [
-        "Sync and queue status",
-        "Index contract",
-        "Document freshness",
-        "Ordinary recovery",
-        "Advanced: index promotion"
-      ]
-      |> Enum.map(&:binary.match(html, &1))
-      |> Enum.map(&elem(&1, 0))
-
-    assert sync < contract
-    assert contract < documents
-    assert documents < recovery
-    assert recovery < promotion
+  test "failed settings refresh retains the previous comparison and its original check time", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    render_async(lv)
+    before = :sys.get_state(lv.pid).socket.assigns
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, false))
+    lv |> element("button[phx-click='load_drift']") |> render_click()
+    html = render_async(lv)
+    after_check = :sys.get_state(lv.pid).socket.assigns
+    assert after_check.drift_result == before.drift_result
+    assert after_check.drift_loaded_at == before.drift_loaded_at
+    assert after_check.drift_error == :settings
+    assert html =~ "Previous comparisons keep their original checked time"
   end
 
   test "verified document freshness renders the exact expected effect and index", %{conn: conn} do

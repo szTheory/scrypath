@@ -273,7 +273,7 @@ defmodule ScrypathOps.Posture do
   defp classify(%Posture{state: :degraded} = summary) do
     %{
       summary
-      | headline: "Degraded",
+      | headline: failure_headline(summary),
         evidence: degraded_evidence(summary)
     }
   end
@@ -281,31 +281,37 @@ defmodule ScrypathOps.Posture do
   defp classify(%Posture{state: :ok} = summary) do
     %{
       summary
-      | headline: "No fetch errors observed",
+      | headline: "No sync failures found",
         evidence:
-          "This check found no schema fetch errors. Keep failed work and drift checks in the loop before treating the fleet as ready for promotion."
+          "No failed jobs or Meilisearch tasks were found. This does not confirm document visibility."
     }
   end
 
-  # Name the real cause so "Degraded" never reads as a vague alarm. Fetch errors and
-  # stuck failed sync work are distinct signals; report whichever (or both) fired.
-  defp degraded_evidence(%Posture{
-         error_count: err,
-         backend_failed_count: backend_failed,
-         queue_failed_count: queue_failed
-       }) do
-    stuck = backend_failed + queue_failed
+  defp failure_headline(%Posture{error_count: errors}) when errors > 0,
+    do: "Search health could not be fully checked"
 
-    parts =
-      [
-        err > 0 && "#{err} schema(s) report fetch errors on this check",
-        stuck > 0 &&
-          "#{stuck} sync job(s) failed to apply and will not self-heal (the live index may be missing documents)"
-      ]
-      |> Enum.filter(& &1)
+  defp failure_headline(%Posture{queue_failed_count: jobs, backend_failed_count: 0}),
+    do: "#{jobs} sync #{if jobs == 1, do: "job failed", else: "jobs failed"}"
 
-    Enum.join(parts, "; ") <>
-      " — treat as incident triage, not green. Work the failed-sync queue first."
+  defp failure_headline(%Posture{queue_failed_count: 0, backend_failed_count: tasks}),
+    do: "#{tasks} Meilisearch #{if tasks == 1, do: "task failed", else: "tasks failed"}"
+
+  defp failure_headline(_), do: "Sync jobs and Meilisearch tasks failed"
+
+  defp degraded_evidence(summary) do
+    cond do
+      summary.error_count > 0 ->
+        "#{summary.error_count} schema #{if summary.error_count == 1, do: "check is", else: "checks are"} unavailable. Any displayed successful observations are partial."
+
+      summary.backend_failed_count > 0 and summary.queue_failed_count > 0 ->
+        "#{summary.queue_failed_count} sync jobs and #{summary.backend_failed_count} Meilisearch tasks failed. Review failed sync work; search documents may be out of date."
+
+      summary.backend_failed_count > 0 ->
+        "Review the failed Meilisearch tasks. Some search documents may be missing or out of date."
+
+      true ->
+        "Review failed sync work before retrying. Some search documents may be missing or out of date."
+    end
   end
 
   defp operator_mix_guide_path do

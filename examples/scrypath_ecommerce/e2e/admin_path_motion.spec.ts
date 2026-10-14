@@ -108,7 +108,7 @@ async function gotoSearch(page: Page): Promise<void> {
 async function gotoPlaybooks(page: Page): Promise<void> {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
 }
 
 // Switch the Search playground into multi-index mode. This is a `push_patch`
@@ -395,12 +395,12 @@ test.describe("admin path motion — DARKMOTION-01", () => {
       try {
         await gotoPlaybooks(page);
 
-        // The catalog list renders selectable playbook rows; each row's "Load preview"
+        // The catalog list renders selectable playbook rows; each row's "Preview"
         // button selects that playbook (phx-click="load"), which re-renders the list with
-        // the chosen row carrying .ops-object-item-active. (Use the exact "Load preview"
+        // the chosen row carrying .ops-object-item-active. (Use the exact "Preview"
         // name — a substring "Load" also matches the unrelated "Reload playbooks" button.)
         // Need at least two catalog entries to move A->B.
-        const loadButtons = page.getByRole("button", { name: "Load preview" });
+        const loadButtons = page.getByRole("button", { name: "Preview" });
         const count = await loadButtons.count();
         test.skip(count < 2, "needs >= 2 catalog playbooks to exercise A->B selection");
 

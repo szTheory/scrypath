@@ -4,7 +4,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   `Scrypath.index_contract_drift/2`.
 
   On mount, **reconcile** loads automatically (without `include_index_contract_drift`).
-  **Index contract drift** loads only after the explicit control.
+  Index settings load automatically in a bounded, generation-scoped asynchronous read.
   """
 
   use ScrypathOpsWeb, :live_view
@@ -77,6 +77,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       |> assign(:drift_generation, nil)
       |> assign(:drift_error, nil)
       |> assign(:drift_loading, false)
+      |> assign(:drift_request, 0)
       |> assign(:recovery_handle, nil)
       |> assign(:recovery_origin_generation, nil)
       |> assign(:recovery_status, nil)
@@ -130,6 +131,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       if selected do
         socket
         |> load_reconcile_on_mount()
+        |> maybe_load_settings()
         |> maybe_start_recovery(
           Map.get(params, "recovery"),
           Map.get(params, "recovery_generation")
@@ -179,11 +181,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   @impl true
   def handle_event("refresh_reconcile", _params, socket) do
     if current_selection?(socket) do
-      socket = refresh_reconcile(socket)
+      socket = socket |> refresh_reconcile() |> start_settings_read()
 
       socket =
         if is_nil(socket.assigns.reconcile_error),
-          do: put_flash(socket, :info, "Sync and queue status refreshed."),
+          do: put_flash(socket, :info, "Sync refreshed; index settings are being checked."),
           else: socket
 
       {:noreply, socket}
@@ -230,12 +232,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     # The contract-drift call is fast but synchronous; deferring it to handle_info/2
     # lets LiveView push the `:drift_loading` frame first. Event name unchanged.
     if current_selection?(socket) do
-      send(self(), {:run_drift, socket.assigns.context_generation})
-
-      {:noreply,
-       socket
-       |> assign(:drift_loading, true)
-       |> assign(:promotion_eligibility, {:blocked, :check_in_progress})}
+      {:noreply, start_settings_read(socket)}
     else
       {:noreply, unavailable(socket)}
     end
@@ -288,7 +285,70 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     if generation == socket.assigns.context_generation and current_selection?(socket) do
       {:noreply, refresh_drift(socket)}
     else
-      {:noreply, assign(socket, :drift_loading, false)}
+      {:noreply, socket}
+    end
+  end
+
+  defp maybe_load_settings(socket) do
+    if connected?(socket) and is_nil(socket.assigns.drift_result) and
+         not socket.assigns.drift_loading and is_nil(socket.assigns.drift_error) and
+         Keyword.has_key?(socket.assigns.scrypath_opts, :backend),
+       do: start_settings_read(socket),
+       else: socket
+  end
+
+  defp start_settings_read(%{assigns: %{drift_loading: true}} = socket), do: socket
+
+  defp start_settings_read(socket) do
+    schema = socket.assigns.selected_schema
+    generation = socket.assigns.context_generation
+    opts = ScrypathOps.Schemas.runtime_opts(socket.assigns.scrypath_opts)
+    request = Map.get(socket.assigns, :drift_request, 0) + 1
+
+    socket
+    |> assign(:drift_request, request)
+    |> assign(:drift_loading, true)
+    |> assign(:promotion_eligibility, {:blocked, :check_in_progress})
+    |> start_async({:index_settings, generation, request}, fn ->
+      task =
+        Task.async(fn -> Scrypath.index_contract_drift(schema, opts) end)
+
+      case Task.yield(task, 15_000) || Task.shutdown(task, :brutal_kill) do
+        {:ok, result} -> result
+        {:exit, reason} -> {:error, {:settings_read_failed, reason}}
+        nil -> {:error, :settings_read_timeout}
+      end
+    end)
+  end
+
+  @impl true
+  def handle_async({:index_settings, generation, request}, outcome, socket) do
+    if generation == socket.assigns.context_generation and
+         request == Map.get(socket.assigns, :drift_request, 0) and current_selection?(socket) do
+      result =
+        case outcome do
+          {:ok, result} -> result
+          {:exit, reason} -> {:error, {:settings_read_failed, reason}}
+        end
+
+      socket = assign(socket, :drift_loading, false)
+
+      socket =
+        case result do
+          {:ok, report} ->
+            socket
+            |> assign(:drift_result, report)
+            |> assign(:drift_error, nil)
+            |> assign(:drift_loaded_at, DateTime.utc_now())
+            |> assign(:drift_generation, generation)
+
+          {:error, reason} ->
+            assign(socket, :drift_error, reason)
+        end
+
+      {:noreply, refresh_promotion_eligibility(socket)}
+    else
+      {:noreply, socket}
     end
   end
 
@@ -1083,6 +1143,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp refresh_drift(socket) do
+    socket = assign(socket, :drift_request, Map.get(socket.assigns, :drift_request, 0) + 1)
     mod = socket.assigns.selected_schema
     opts = socket.assigns.scrypath_opts
 
@@ -1532,17 +1593,96 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     key
     |> to_string()
     |> String.replace("_", " ")
+    |> String.capitalize()
   end
 
-  defp drift_dimension_rows(%{dimensions: dimensions}) when is_map(dimensions) do
-    dimensions
-    |> Enum.map(fn {key, dimension} ->
-      {drift_dimension_label(key), Map.get(dimension, :match, false)}
+  defp setting_differences(%{dimensions: dimensions}) do
+    categories = [
+      fields: "searchableAttributes",
+      filterable_attributes: "filterableAttributes",
+      sortable_attributes: "sortableAttributes",
+      faceting: "faceting"
+    ]
+
+    specific =
+      Enum.flat_map(categories, fn {key, _wire} ->
+        case Map.get(dimensions, key) do
+          %{match: false, details: details} ->
+            Enum.flat_map(details, &difference_rows(drift_dimension_label(key), &1))
+
+          _ ->
+            []
+        end
+      end)
+
+    covered =
+      for {key, wire} <- categories, match?(%{match: false}, Map.get(dimensions, key)), do: wire
+
+    other =
+      case Map.get(dimensions, :settings) do
+        %{match: false, details: details} ->
+          details
+          |> Enum.reject(&(Map.get(&1, :key) in covered))
+          |> Enum.flat_map(fn detail ->
+            difference_rows(to_string(Map.get(detail, :key, "Setting")), detail)
+          end)
+
+        _ ->
+          []
+      end
+
+    specific ++ other
+  end
+
+  defp difference_rows(label, {:only_declared, value}),
+    do: [%{label: label, declared: display_setting(value), live: "Missing"}]
+
+  defp difference_rows(label, {:only_applied, value}),
+    do: [%{label: label, declared: "Not declared", live: display_setting(value)}]
+
+  defp difference_rows(label, %{declared: declared, applied: applied})
+       when is_map(declared) and is_map(applied) do
+    (Map.keys(declared) ++ Map.keys(applied))
+    |> Enum.uniq()
+    |> Enum.sort()
+    |> Enum.filter(&(Map.get(declared, &1) != Map.get(applied, &1)))
+    |> Enum.map(fn key ->
+      %{
+        label: "#{label} · #{key}",
+        declared: display_setting(Map.get(declared, key)),
+        live: display_setting(Map.get(applied, key))
+      }
     end)
-    |> Enum.sort_by(fn {label, match?} -> {match?, label} end)
   end
 
-  defp drift_dimension_rows(_), do: []
+  defp difference_rows(label, %{declared: declared, applied: applied}),
+    do: [%{label: label, declared: display_setting(declared), live: display_setting(applied)}]
+
+  defp difference_rows(label, {:truncated, true}),
+    do: [
+      %{
+        label: label,
+        declared: "Additional differences omitted by the report limit",
+        live: "Use the library report for full inspection"
+      }
+    ]
+
+  defp difference_rows(label, detail),
+    do: [%{label: label, declared: inspect(detail), live: "Comparison details unavailable"}]
+
+  defp display_setting(value) when is_binary(value), do: value
+  defp display_setting(value), do: Jason.encode!(value, pretty: true)
+
+  defp matching_settings(%{dimensions: dimensions}) do
+    dimensions
+    |> Enum.filter(fn {_key, dim} -> dim.match end)
+    |> Enum.map_join(", ", fn {key, _dim} -> drift_dimension_label(key) end)
+  end
+
+  defp sync_mode_label(:oban), do: "Background sync · Oban"
+  defp sync_mode_label(:inline), do: "Inline sync"
+  defp sync_mode_label(:manual), do: "Manual sync"
+  defp sync_mode_label(mode), do: to_string(mode)
 
   @impl true
   def render(assigns) do
@@ -1554,14 +1694,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       page_title={@page_title}
       ops_main_width={:wide}
     >
-      <.ops_page_header
-        title="Sync and drift"
-        subtitle="Check sync status and compare the schema contract with its live index."
-      />
+      <.ops_toolbar class="items-end gap-4">
+        <.ops_page_header
+          title="Sync and drift"
+          subtitle="Check sync work and compare declared settings with Meilisearch."
+        />
+        <.ops_refresh_control
+          id="sync-drift-refresh"
+          checked_at={@reconcile_loaded_at}
+          phx-click="refresh_reconcile"
+          aria_label="Refresh sync and index settings"
+          disabled={!@selected_schema}
+        />
+      </.ops_toolbar>
 
       <.ops_trail current={:sync_drift} class="mt-4" />
 
-      <div class="mt-ops-4">
+      <div>
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="sync-schema-select"
@@ -1587,54 +1736,33 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_section
         id="sync-reconcile-heading"
-        title="Sync and queue status"
-        subtitle="Check current backend tasks and queued work for this schema."
-        prominent_title
+        title="Sync status"
       >
-        <:actions>
-          <.ops_refresh_control
-            id="sync-drift-refresh"
-            checked_at={@reconcile_loaded_at}
-            phx-click="refresh_reconcile"
-            label="Refresh sync and queue status"
-            aria_label="Refresh sync and queue status"
-            disabled={!@selected_schema}
-          />
-        </:actions>
-
-        <.ops_signal_table :if={@reconcile_result}>
-          <thead>
-            <tr>
-              <th scope="col">Signal</th>
-              <th scope="col">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row" class="align-top">Index</th>
-              <td>
-                <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" class="align-top">Mode</th>
-              <td>{reconcile_signal_label(@reconcile_result.mode)}</td>
-            </tr>
-            <tr>
-              <th scope="row" class="align-top">Drift signals</th>
-              <td>
-                <div class="flex flex-wrap gap-1">
-                  <.ops_badge
-                    :for={signal <- @reconcile_result.drift_signals}
-                    kind={:neutral}
-                  >
-                    {reconcile_signal_label(signal)}
-                  </.ops_badge>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </.ops_signal_table>
+        <dl :if={@reconcile_result} class="ops-facts">
+          <div>
+            <dt>Meilisearch index</dt>
+            <dd>
+              <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+            </dd>
+          </div>
+          <div>
+            <dt>Synchronization</dt>
+            <dd>{sync_mode_label(@reconcile_result.mode)}</dd>
+          </div>
+          <div>
+            <dt>Current work</dt>
+            <dd>
+              <span :if={@reconcile_result.drift_signals == []}>
+                No pending or failed work found. Document visibility is checked separately.
+              </span>
+              <ul :if={@reconcile_result.drift_signals != []} class="space-y-1">
+                <li :for={signal <- @reconcile_result.drift_signals}>
+                  {reconcile_signal_label(signal)}
+                </li>
+              </ul>
+            </dd>
+          </div>
+        </dl>
 
         <p
           :if={@reconcile_result == nil && @selected_schema}
@@ -1655,18 +1783,25 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_section
         id="sync-drift-heading"
-        title="Index contract"
-        subtitle="Compare the selected schema contract with its live index."
-        meta={if @drift_loaded_at, do: "last loaded #{format_dt(@drift_loaded_at)}"}
+        title="Index settings"
+        subtitle="Differences between your schema declarations and the live index. This check makes no changes."
         class="mt-6"
       >
+        <:metadata>
+          <.ops_time
+            :if={@drift_loaded_at}
+            id="settings-checked-at"
+            label="Checked"
+            dt={@drift_loaded_at}
+          />
+        </:metadata>
         <:actions>
           <.ops_button
             phx-click="load_drift"
             phx-disable-with="Checking…"
             disabled={@drift_loading || !@selected_schema}
           >
-            {if @drift_result, do: "Refresh contract check", else: "Check index contract"}
+            Refresh settings
           </.ops_button>
         </:actions>
 
@@ -1674,22 +1809,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           :if={@drift_loading}
           class="space-y-3"
           role="status"
-          aria-label="Loading contract drift"
+          aria-label="Loading index settings"
         >
           <p class="text-ops-body text-base-content/70">
-            Comparing the declared contract against the live index…
+            Comparing declared settings with Meilisearch…
           </p>
-          <.ops_loading lines={4} label="Loading contract drift" />
+          <.ops_loading lines={4} label="Loading index settings" />
         </div>
 
         <.ops_status
           :if={@drift_loading && @drift_result}
           kind={:info}
-          title="Checking index contract"
+          title="Checking index settings"
           role="status"
           neutral
         >
-          The last contract result remains visible with its checked time while this check runs.
+          The previous settings comparison remains below until this check finishes.
         </.ops_status>
 
         <.ops_status
@@ -1702,59 +1837,68 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           {drift_status_copy(@drift_result, @drift_error)}
         </.ops_status>
 
-        <.ops_signal_table :if={@drift_result}>
-          <thead>
-            <tr>
-              <th scope="col">Field</th>
-              <th scope="col">Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row" class="align-top">Summary</th>
-              <td>Index contract snapshot</td>
-            </tr>
-            <tr>
-              <th scope="row" class="align-top">Version · index</th>
-              <td class="font-mono text-ops-sm tabular-nums">
-                version {@drift_result.version} · index {@drift_result.index}
-              </td>
-            </tr>
-            <tr>
-              <th scope="row" class="align-top">Dimension mismatches</th>
-              <td class="font-mono text-ops-sm tabular-nums">
-                {drift_mismatch_count(@drift_result)} of {map_size(@drift_result.dimensions)}
-              </td>
-            </tr>
-          </tbody>
-        </.ops_signal_table>
-        <.ops_data_card
-          :if={@drift_result}
-          title="Contract dimensions"
-          class="mt-3"
-        >
-          <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <.ops_tone_chip
-              :for={{label, match?} <- drift_dimension_rows(@drift_result)}
-              kind={if match?, do: :success, else: :warning}
-              label={label}
-              value={if match?, do: "matches", else: "differs"}
-            />
-          </div>
-        </.ops_data_card>
+        <div :if={@drift_result} class="space-y-3">
+          <.ops_table
+            :if={setting_differences(@drift_result) != []}
+            tabindex="0"
+            role="region"
+            aria-label="Index settings differences"
+          >
+            <thead>
+              <tr>
+                <th scope="col">Setting</th>
+                <th scope="col">Declared in schema</th>
+                <th scope="col">Live in Meilisearch</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr :for={difference <- setting_differences(@drift_result)}>
+                <th scope="row" class="align-top">{difference.label}</th>
+                <td class="align-top">
+                  <pre class="whitespace-pre-wrap break-words text-ops-sm">{difference.declared}</pre>
+                </td>
+                <td class="align-top">
+                  <pre class="whitespace-pre-wrap break-words text-ops-sm">{difference.live}</pre>
+                </td>
+              </tr>
+            </tbody>
+          </.ops_table>
+          <.ops_disclosure
+            :if={match?(%{match: false}, Map.get(@drift_result.dimensions, :settings))}
+            summary="Full settings values"
+            variant={:compact}
+          >
+            <p class="text-ops-sm text-base-content/70">
+              Includes attribute rules and ordering from this comparison.
+            </p>
+            <.ops_code_block variant={:embedded}>
+              {Jason.encode!(Map.get(@drift_result.dimensions, :settings).details, pretty: true)}
+            </.ops_code_block>
+          </.ops_disclosure>
+          <p :if={matching_settings(@drift_result) != ""} class="text-ops-sm text-base-content/70">
+            Matching: {matching_settings(@drift_result)}.
+          </p>
+        </div>
       </.ops_section>
 
       <.ops_section
-        :if={@selected_schema}
+        :if={
+          @selected_schema &&
+            (@recovery_handle || @recovery_observation_error || @recovery_document_observation)
+        }
         id="document-freshness"
         class="mt-6"
         title="Document freshness"
         subtitle="Check the expected effect for the exact recovery task in this schema's active index."
-        meta={
-          if @recovery_document_observation && @recovery_document_observation.checked_at,
-            do: "checked #{format_dt(@recovery_document_observation.checked_at)}"
-        }
       >
+        <:metadata>
+          <.ops_time
+            :if={@recovery_document_observation && @recovery_document_observation.checked_at}
+            id="documents-checked-at"
+            label="Checked"
+            dt={@recovery_document_observation.checked_at}
+          />
+        </:metadata>
         <p :if={@recovery_loading} role="status" aria-label="Checking document freshness">
           Checking the expected effect for this same recovery operation. Any previous result remains available with its checked time.
         </p>
@@ -1785,13 +1929,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_section>
 
       <.ops_section
-        :if={@selected_schema}
+        :if={
+          @selected_schema &&
+            (@recovery_handle || @recovery_observation_error || @recovery_document_observation)
+        }
         id="ordinary-recovery"
         class="mt-6"
-        title="Ordinary recovery"
-        subtitle="Review the selected schema's failed work and use its existing eligible retry action."
-        meta={if @recovery_checked_at, do: "last checked #{format_dt(@recovery_checked_at)}"}
+        title="Retry status"
+        subtitle="Follow the exact retry from its queue job to Meilisearch and document visibility."
       >
+        <:metadata>
+          <.ops_time
+            :if={@recovery_checked_at}
+            id="recovery-checked-at"
+            label="Checked"
+            dt={@recovery_checked_at}
+          />
+        </:metadata>
         <:actions>
           <.link
             navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
@@ -1861,7 +2015,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </summary>
         <div class="space-y-3 px-4 pb-4">
           <p class="text-ops-body text-base-content/75">
-            Promotion changes the live alias for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
+            Promotion swaps the live and prepared indexes for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
           </p>
           <.ops_status
             kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
@@ -1981,7 +2135,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         :if={@confirm_swap? && @selected_schema}
         id="confirm-index-promotion"
         title="Confirm index promotion"
-        description="Meilisearch will change the live alias after its swap task completes."
+        description="Meilisearch will exchange the live and prepared indexes when its swap task completes."
         action_label="promote index"
         cancel_event="cancel_swap_live"
         successor="#index-promotion-summary"
@@ -1999,7 +2153,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Target index:
             <.ops_inline_code>{promotion_index(@reconcile_result, :target_index)}</.ops_inline_code>
           </p>
-          <p>Effect: replace the live alias with the prepared target index.</p>
+          <p>Effect: replace live index contents and settings with the prepared target.</p>
           <div class="flex justify-between gap-2">
             <.ops_button
               type="button"
@@ -2023,17 +2177,19 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp drift_status_kind(result, nil),
     do: if(drift_mismatch_count(result) == 0, do: :success, else: :warning)
 
-  defp drift_status_title(_result, error) when not is_nil(error), do: "Drift check failed"
-  defp drift_status_title(nil, nil), do: "Drift not loaded"
+  defp drift_status_title(_result, error) when not is_nil(error),
+    do: "Index settings could not be checked"
+
+  defp drift_status_title(nil, nil), do: "Index settings not checked"
 
   defp drift_status_title(result, nil) do
     if drift_mismatch_count(result) == 0,
-      do: "No contract drift detected",
-      else: "Contract drift detected"
+      do: "Index settings match",
+      else: "Index settings differ"
   end
 
   defp drift_status_copy(_result, error) when not is_nil(error) do
-    "Reconcile above remains usable. Fix the drift check input or backend state, then reload contract drift. Reason: #{inspect(error)}"
+    "Sync status is checked separately. Previous comparisons keep their original checked time. Check the Meilisearch connection, then refresh settings. Reason: #{inspect(error)}"
   end
 
   defp drift_status_copy(nil, nil) do
@@ -2046,17 +2202,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     if mismatches == 0 do
       "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
     else
-      "#{mismatches} contract #{if mismatches == 1, do: "dimension differs", else: "dimensions differ"} from the live index. Review the differences before promoting a target index."
+      "Review the declared and live values below. No settings have been changed."
     end
   end
 
   defp drift_mismatch_count(%{dimensions: dimensions}) when is_map(dimensions) do
     Enum.count(dimensions, fn {_key, dimension} -> not Map.get(dimension, :match, false) end)
-  end
-
-  defp format_dt(nil), do: "—"
-
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%Y-%m-%d %H:%M:%SZ")
   end
 end

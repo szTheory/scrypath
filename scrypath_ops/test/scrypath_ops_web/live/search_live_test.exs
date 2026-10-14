@@ -51,19 +51,19 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
   test "mount shows non-production strip and primary CTA", %{conn: conn} do
     {:ok, _lv, html} = live(conn, ~p"/ops/search")
 
-    assert html =~ "Non-production search playground"
+    assert html =~ "Queries may be logged by Meilisearch"
 
     assert html =~
-             "Choose an index, run a query, inspect the answer, then save a repeatable check."
+             "Run queries against your schemas. Save useful searches to run again."
 
     assert html =~ "Run search"
     assert html =~ "ops-form-stack"
     assert html =~ "ops-fieldset__legend"
     assert html =~ ~s(for="search_q")
-    assert html =~ ~s(aria-describedby="search-honesty-panel search_q-hint")
+    assert html =~ ~s(aria-describedby="search-honesty-panel")
     assert html =~ ~s(data-testid="search-empty-hero")
     assert html =~ "Run a search to see results"
-    assert html =~ "Choose an index, enter a query, inspect the answer, then save a useful check."
+    assert html =~ "Select a schema above and run a search. An empty query browses the index."
     refute html =~ "Index details"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
 
@@ -74,7 +74,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert submit_buttons == 1
 
     ordered_markers =
-      ["Search target", "Search text", "Page size", "Run search", "Results"]
+      ["Schemas", "Search text", "Results per schema", "Run search", "search-results-heading"]
       |> Enum.map(fn marker -> :binary.match(html, marker) |> elem(0) end)
 
     assert ordered_markers == Enum.sort(ordered_markers)
@@ -176,7 +176,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     {:ok, _lv, html} = live(conn, ~p"/ops/search?mode=multi")
 
     assert html =~ ~s(data-testid="search-mode-multi")
-    assert html =~ "Multi index"
+    assert html =~ "Multiple schemas"
   end
 
   test "partial multi search distinguishes returned, no-hit and failed indexes", %{conn: conn} do
@@ -261,7 +261,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     dir = temporary_playbook_workspace()
 
     {:ok, view, html} = live(conn, ~p"/ops/search")
-    refute html =~ "Save as playbook"
+    refute html =~ "Save search"
     refute has_element?(view, "#search-capture-form")
 
     view
@@ -273,8 +273,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Save as playbook"
-    assert html =~ "Playbook preview is ready"
+    assert html =~ "Save search"
+    assert html =~ "Query inputs ready to save"
     assert html =~ ~s(data-testid="playbook-preview-marker")
     assert has_element?(view, "details#search-capture-json")
     refute has_element?(view, "details#search-capture-json[open]")
@@ -303,7 +303,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     refute Map.has_key?(saved, "hits")
     refute Map.has_key?(saved, "result")
     refute File.read!(Path.join(dir, "zero-hit-check.json")) =~ "partial-hit"
-    assert render(view) =~ "Saved playbook zero-hit-check.json."
+    assert render(view) =~ "Saved search zero-hit-check.json."
   end
 
   test "malformed capture fields return a field error without crashing the LiveView", %{
@@ -351,7 +351,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     dir = temporary_playbook_workspace()
 
     {:ok, view, html} = live(conn, ~p"/ops/search?mode=multi")
-    refute html =~ "Save as playbook"
+    refute html =~ "Save search"
 
     view
     |> element("#ops-search-playground-form")
@@ -363,7 +363,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html = render(view)
     assert html =~ "Some indexes did not return results."
-    assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save as playbook")
+    assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save search")
 
     view
     |> element("#search-capture-form")
@@ -421,14 +421,14 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "That playbook name is already in use — pick another basename."
+    assert html =~ "That filename is already in use. Choose another."
     assert has_element?(view, "#capture_basename[value='occupied.json'][aria-invalid='true']")
     assert has_element?(view, "#capture_title[value='Keep this title']")
     assert has_element?(view, "#capture_description")
     assert html =~ "Keep this description"
     assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
     assert File.read!(occupied) == original
-    refute html =~ "Saved playbook occupied.json."
+    refute html =~ "Saved search occupied.json."
   end
 
   test "missing workspace setup retains fields and gives the approved recovery guidance", %{
@@ -464,13 +464,13 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Could not save playbook to workspace."
-    assert html =~ "Configure a playbook workspace directory, then retry saving."
+    assert html =~ "Could not save this search."
+    assert html =~ "Configure a storage folder, then retry saving."
     assert has_element?(view, "#capture_basename[value='keep-me.json']")
     assert has_element?(view, "#capture_title[value='Setup title']")
     assert html =~ "Setup description"
     assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
-    refute html =~ "Saved playbook keep-me.json."
+    refute html =~ "Saved search keep-me.json."
   end
 
   test "workspace write failure retains fields and exposes the actual reason", %{conn: conn} do
@@ -513,19 +513,19 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Could not save playbook to workspace."
+    assert html =~ "Could not save this search."
     assert html =~ "Reason: :enotdir"
 
     assert has_element?(
              view,
              "[data-testid='search-capture-error']",
-             "Check the workspace directory's permissions and available disk space, then retry saving."
+             "Check the storage folder's permissions and available disk space, then retry saving."
            )
 
     assert has_element?(view, "#capture_basename[value='write-error.json']")
     assert has_element?(view, "#capture_title[value='Write title']")
     assert html =~ "Write description"
-    refute html =~ "Saved playbook write-error.json."
+    refute html =~ "Saved search write-error.json."
   end
 
   test "search result and capture attribution stay bound to the submitted criteria", %{conn: conn} do
@@ -603,9 +603,9 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     single_html = render(single_view)
     assert single_html =~ "No schema selected."
-    assert single_html =~ "No index selected"
+    assert single_html =~ "No schema selected"
     refute single_html =~ "Search completed:"
-    refute single_html =~ "Playbook preview is ready"
+    refute single_html =~ "Query inputs ready to save"
 
     {:ok, multi_view, _html} = live(conn, ~p"/ops/search?mode=multi")
 
@@ -615,7 +615,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     multi_html = render(multi_view)
     assert multi_html =~ "Select at least one schema for multi-search."
-    assert multi_html =~ "No index selected"
+    assert multi_html =~ "No schema selected"
     refute multi_html =~ "Search completed:"
   end
 

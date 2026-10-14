@@ -211,8 +211,8 @@ async function expectThemeButtonState(page: Page, theme: "system" | "light" | "d
   const selected = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
   await expect(selected).toBeVisible();
 
-  const selectedShadow = await selected.evaluate((el) => getComputedStyle(el).boxShadow);
-  expect(selectedShadow, `${theme} theme button must expose a visible selected indicator`).not.toBe("none");
+  const selectedFill = await selected.evaluate(el => getComputedStyle(el).backgroundColor);
+  expect(selectedFill, `${theme} selected preference has a visible neutral fill`).not.toBe("rgba(0, 0, 0, 0)");
 
   const ariaPressed = await selected.getAttribute("aria-pressed");
   if (ariaPressed !== null) {
@@ -227,9 +227,7 @@ async function expectThemeButtonState(page: Page, theme: "system" | "light" | "d
 
 async function expectShellWash(page: Page): Promise<void> {
   const background = await readComputedStyle(page, ".ops-shell", "background-image");
-  const radialCount = (background.match(/radial-gradient/g) ?? []).length;
-  expect(radialCount, ".ops-shell should keep one quiet radial wash").toBe(1);
-  expect(background, ".ops-shell keeps its structural floor gradient").toContain("linear-gradient");
+  expect(background, "the current shell floor is flat").toBe("none");
 }
 
 async function expectHeaderChrome(page: Page, viewport: ViewportName): Promise<void> {
@@ -384,7 +382,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await assertOperatorGeometry(page, "390px header", [
       ".ops-header .ops-nav-trigger", ".ops-header .ops-command-hint", ".ops-header #theme-toggle"
     ]);
-    await page.getByRole("button", { name: "Jump to surface", exact: true }).click();
+    await page.getByRole("button", { name: "Go to…", exact: true }).click();
     await expect(page.locator("#ops-cmdk")).toBeVisible();
   });
 
@@ -529,7 +527,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         await assertReadableControl(page.locator("#theme-toggle button").first(), "theme target", 0, 44);
         if (width <= 420) {
           const commandHint = page.locator(".ops-command-hint");
-          await expect(commandHint).toHaveAttribute("aria-label", "Jump to surface");
+          await expect(commandHint).toHaveAttribute("aria-label", "Go to…");
           const themeLabels = await page.locator("#theme-toggle button span").all();
           expect(themeLabels).toHaveLength(3);
           for (const label of themeLabels) await expect(label).toBeHidden();
@@ -550,9 +548,9 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           "Control Room": page.getByTestId("control-room-health-link"),
           "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
-          "Sync/Drift": page.getByRole("button", { name: "Refresh sync and queue status", exact: true }),
+          "Sync/Drift": page.getByRole("button", { name: "Refresh sync and index settings", exact: true }),
           "Search": page.getByRole("button", { name: "Run search", exact: true }),
-          "Playbooks": page.getByRole("button", { name: "Load preview", exact: true }).first()
+          "Playbooks": page.getByRole("button", { name: "Preview", exact: true }).first()
         }[surface.name]!;
         await primary.click({ trial: true });
         await assertReadableControl(primary, `${surface.name} common action`, 14, 40);

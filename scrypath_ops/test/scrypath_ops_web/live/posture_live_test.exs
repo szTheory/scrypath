@@ -150,8 +150,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
     assert html =~ ~s(class="text-ops-body text-base-content/75")
-    assert html =~ "Backend tasks"
-    assert html =~ "Queue jobs"
+    assert html =~ "Meilisearch tasks"
+    assert html =~ "Background sync · Oban"
     assert html =~ "Last success"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
@@ -161,11 +161,11 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
     row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
 
-    assert html =~ "Degraded"
-    assert row =~ "backend failed"
-    assert row =~ "queue failed"
+    assert html =~ "Sync jobs and Meilisearch tasks failed"
+    assert row =~ "Meilisearch tasks failed"
+    assert row =~ "Sync jobs failed"
     assert has_element?(lv, "[data-testid='ops-verdict-icon'][data-state='warning']")
-    assert has_element?(lv, ".ops-metric__value--warning")
+    assert has_element?(lv, ".ops-badge-error")
     refute html =~ "ops-metric-success"
     refute row =~ "ops-schema-signal-card--warning"
     refute row =~ "ops-schema-signal-card--error"
@@ -177,9 +177,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert html =~ "Search health"
     assert has_element?(lv, ".ops-verdict.ops-posture-verdict")
-    assert row =~ "backend clear"
-    assert row =~ "queue observed"
-    assert row =~ "ops-badge-neutral"
+    refute row =~ "backend clear"
+    refute row =~ "queue observed"
+    refute row =~ "ops-badge-neutral"
     refute row =~ "ops-badge-success"
   end
 
@@ -243,9 +243,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ ~s(datetime="#{iso}")
     assert row =~ iso
     assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
-    assert row =~ "Exact timestamp"
+    refute row =~ "Exact timestamp"
     assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
-    assert row =~ ~s(aria-label="Copy timestamp")
+    assert row =~ ~s(aria-label="Copy timestamp:)
     assert row =~ ~s(role="status")
   end
 

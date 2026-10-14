@@ -60,15 +60,15 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
-  const healthRoute = page.getByRole("link", { name: "Inspect Search health", exact: true });
+  const healthRoute = page.getByRole("link", { name: "View search health", exact: true });
   await expect(healthRoute).toHaveCount(1);
   await expect(healthRoute).toBeVisible();
   const affectedScope = page.getByTestId("control-room-affected-scope");
   await expect(affectedScope).toContainText(fixture.schema.replace(/^Elixir\./, ""));
   const secondaryIntents = page.getByTestId("control-room-secondary-intents");
   await expect(secondaryIntents).toBeVisible();
-  await expect(secondaryIntents.getByTestId("control-room-verify-change")).toContainText("Verify a change");
-  await expect(secondaryIntents.getByTestId("control-room-explore-search")).toContainText("Explore search");
+  await expect(secondaryIntents.getByTestId("control-room-verify-change")).toContainText("Check sync and settings");
+  await expect(secondaryIntents.getByTestId("control-room-explore-search")).toContainText("Try a search");
   const scopePrecedesRoute = await page.evaluate(() => {
     const scope = document.querySelector('[data-testid="control-room-affected-scope"]');
     const route = document.querySelector('[data-testid="control-room-health-link"]');
@@ -84,7 +84,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await healthRoute.click();
   await expect(page.getByRole("heading", { name: "Search health", exact: true })).toBeVisible();
   await waitForLiveConnected(page);
-  const variantHandoff = page.getByTestId("posture-failed-sync-link").filter({ hasText: "Variant" });
+  const variantHandoff = page.getByTestId("posture-row").filter({ has: page.getByRole("heading", { name: "Variant", exact: true }) }).getByTestId("posture-failed-sync-link");
   await expect(variantHandoff).toBeVisible();
   await variantHandoff.click();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
@@ -97,12 +97,12 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.getByRole("radio", { name: /Variant/ }).check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
-  const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });
+  const failedRow = page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` });
   await expect(failedRow).toBeVisible();
-  await expect(failedRow).toContainText("Retry currently available.");
+  await expect(failedRow.getByTestId("failed-sync-retry")).toBeEnabled();
   const rowText = await failedRow.innerText();
-  expect(rowText).toContain(`Failed job ${fixture.original_job_id}`);
-  expect(rowText).toContain("last attempt");
+  expect(rowText).toContain(`Oban job #${fixture.original_job_id}`);
+  expect(rowText).toContain("Last attempt");
   await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
 
@@ -127,7 +127,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   }
 
   await page.setViewportSize({ width: 1440, height: 900 });
-  const retry = failedRow.getByRole("button", { name: "Retry sync work" });
+  const retry = failedRow.getByRole("button", { name: "Retry" });
   await retry.focus();
   await expect(retry).toBeFocused();
   await expect(page.getByRole("button", { name: "Refresh failed sync work" })).toBeVisible();
@@ -140,9 +140,9 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const receipt = failedRow.getByTestId("recovery-receipt");
   await expect(receipt).toBeVisible();
   await scanNonContrastA11y(page, testInfo, "retry-accepted-dark-desktop");
-  await expect(receipt).toContainText(`Original failure #${fixture.original_job_id} retained`);
+  await expect(receipt).toContainText(`Original job #${fixture.original_job_id} is retained`);
   const receiptText = await receipt.innerText();
-  const acceptedMatch = receiptText.match(/Queue job (\d+)/);
+  const acceptedMatch = receiptText.match(/Oban job #(\d+)/);
   expect(acceptedMatch, "rendered receipt must identify the accepted queue job").not.toBeNull();
   const acceptedJobId = Number(acceptedMatch![1]);
   expect(acceptedJobId).not.toBe(fixture.original_job_id);
@@ -218,7 +218,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable.")).toBeVisible();
@@ -228,7 +228,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
 });
 
 test("operator promotes only this returned task pair and unique target document", async ({ page, request }, testInfo) => {
@@ -247,8 +247,8 @@ test("operator promotes only this returned task pair and unique target document"
   await page.getByTestId("control-room-verify-change").click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh settings" }).click();
+  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
   const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
   await advanced.locator("summary").click();
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
@@ -259,7 +259,7 @@ test("operator promotes only this returned task pair and unique target document"
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
   await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
-  await expect(confirmation).toContainText("Effect: replace the live alias with the prepared target index.");
+  await expect(confirmation).toContainText("Effect: replace live index contents and settings with the prepared target.");
   await testInfo.attach("phase175-promotion-confirmation-before.png", {
     body: await page.screenshot(), contentType: "image/png"
   });

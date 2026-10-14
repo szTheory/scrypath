@@ -213,7 +213,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       <.ops_toolbar class="items-end gap-ops-4">
         <.ops_page_header
           title="Search health"
-          subtitle="Check sync and backend health for every configured schema. Start here when something looks wrong."
+          subtitle="Find sync failures and pending work by schema."
         />
         <.ops_refresh_control
           id="search-health-refresh"
@@ -274,33 +274,18 @@ defmodule ScrypathOpsWeb.PostureLive do
         <.ops_verdict
           kind={ScrypathOps.Posture.badge_kind(@posture_state)}
           class="ops-posture-verdict"
-          label="Can I trust search right now?"
           headline={@posture_headline}
         >
           {@posture_evidence}
         </.ops_verdict>
-        <.ops_metric_grid cols={4}>
-          <.ops_metric
-            label="Schemas"
-            value={posture_schema_count(@posture_rows)}
-            kind={:neutral}
-          />
-          <.ops_metric
-            label="Schema check errors"
-            value={@aggregate_error_count}
-            kind={ScrypathOps.Posture.metric_tone(@aggregate_error_count)}
-          />
-          <.ops_metric
-            label="Failed backend tasks"
-            value={posture_backend_failed_count(@posture_rows)}
-            kind={ScrypathOps.Posture.metric_tone(posture_backend_failed_count(@posture_rows))}
-          />
-          <.ops_metric
-            label="Queues observed"
-            value={posture_queue_observed_count(@posture_rows)}
-            kind={:neutral}
-          />
-        </.ops_metric_grid>
+        <p class="text-ops-sm text-base-content/70">
+          {posture_schema_count(@posture_rows)} configured schemas ·
+          Background sync observed for {posture_queue_observed_count(@posture_rows)} schemas.
+          <span :if={@aggregate_error_count > 0}>{@aggregate_error_count} checks unavailable.</span>
+          <span :if={posture_backend_failed_count(@posture_rows) > 0}>
+            {posture_backend_failed_count(@posture_rows)} failed Meilisearch tasks.
+          </span>
+        </p>
       </section>
 
       <p :if={@auto_refresh} class="mt-ops-2 text-ops-body text-base-content/70">
@@ -332,21 +317,29 @@ defmodule ScrypathOpsWeb.PostureLive do
                   <div class="min-w-0">
                     <h3
                       id={"posture-title-#{inspect(mod)}"}
-                      class="font-mono text-ops-h3 font-semibold text-base-content"
+                      class="text-ops-h3 font-semibold text-base-content"
+                      title={inspect(mod)}
                     >
-                      {inspect(mod)}
+                      {mod |> Module.split() |> List.last()}
                     </h3>
                     <p class="mt-ops-1 text-ops-sm text-base-content/65">
-                      Index
+                      <span class="break-all">{inspect(mod)}</span>
+                      <br /> Meilisearch index
                       <.ops_inline_code>{status.index}</.ops_inline_code>
-                      · sync mode <strong>{status.mode}</strong>
+                      · {sync_mode_label(status.mode)}
                     </p>
                   </div>
                   <div class="ops-schema-signal-card__badges">
-                    <.ops_badge kind={backend_badge_kind(status)}>
+                    <.ops_badge :if={status.backend.failed != []} kind={backend_badge_kind(status)}>
                       {backend_badge_label(status)}
                     </.ops_badge>
-                    <.ops_badge kind={queue_badge_kind(status)}>
+                    <.ops_badge
+                      :if={
+                        !status.queue.observed? || status.queue.failed != [] ||
+                          status.queue.retrying != []
+                      }
+                      kind={queue_badge_kind(status)}
+                    >
                       {queue_badge_label(status)}
                     </.ops_badge>
                   </div>
@@ -357,13 +350,19 @@ defmodule ScrypathOpsWeb.PostureLive do
                     aria-label={"Backend task signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">Backend tasks</p>
+                    <p class="ops-signal-group__title">Meilisearch tasks</p>
+                    <p
+                      :if={status.backend.pending == [] && status.backend.failed == []}
+                      class="text-ops-sm text-base-content/70"
+                    >
+                      No pending or failed tasks.
+                    </p>
                     <dl class="ops-signal-metrics">
-                      <div>
+                      <div :if={status.backend.pending != []}>
                         <dt>Pending</dt>
                         <dd>{length(status.backend.pending)}</dd>
                       </div>
-                      <div>
+                      <div :if={status.backend.failed != []}>
                         <dt>Failed</dt>
                         <dd>{length(status.backend.failed)}</dd>
                       </div>
@@ -387,17 +386,26 @@ defmodule ScrypathOpsWeb.PostureLive do
                     aria-label={"Queue job signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">Queue jobs</p>
+                    <p class="ops-signal-group__title">Background sync · Oban</p>
+                    <p
+                      :if={
+                        status.queue.observed? && status.queue.pending == [] &&
+                          status.queue.retrying == [] && status.queue.failed == []
+                      }
+                      class="text-ops-sm text-base-content/70"
+                    >
+                      No pending, retrying or failed jobs.
+                    </p>
                     <dl :if={status.queue.observed?} class="ops-signal-metrics">
-                      <div>
+                      <div :if={status.queue.pending != []}>
                         <dt>Pending</dt>
                         <dd>{length(status.queue.pending)}</dd>
                       </div>
-                      <div>
+                      <div :if={status.queue.retrying != []}>
                         <dt>Retrying</dt>
                         <dd>{length(status.queue.retrying)}</dd>
                       </div>
-                      <div>
+                      <div :if={status.queue.failed != []}>
                         <dt>Failed</dt>
                         <dd>{length(status.queue.failed)}</dd>
                       </div>
@@ -426,17 +434,19 @@ defmodule ScrypathOpsWeb.PostureLive do
                   class="link link-primary mt-ops-2 inline-flex min-h-[var(--control-h-md)] items-center"
                   data-testid="posture-failed-sync-link"
                 >
-                  Inspect failed work for {module_flat_name(mod)}
+                  View failed sync work
                 </.link>
               <% {:error, reason} -> %>
                 <div class="ops-schema-signal-card__header">
                   <div class="min-w-0">
                     <h3
                       id={"posture-title-#{inspect(mod)}"}
-                      class="font-mono text-ops-h3 font-semibold text-base-content"
+                      class="text-ops-h3 font-semibold text-base-content"
+                      title={inspect(mod)}
                     >
-                      {inspect(mod)}
+                      {mod |> Module.split() |> List.last()}
                     </h3>
+                    <p class="mt-ops-1 break-all text-ops-sm text-base-content/70">{inspect(mod)}</p>
                   </div>
                 </div>
                 <p class="mt-ops-2 flex items-start gap-ops-2 text-ops-body text-error">
@@ -525,14 +535,18 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp state_source_iso(_state), do: nil
 
-  defp time_state_text(nil), do: "No success observed"
-  defp time_state_text(%Scrypath.Operator.State{at: nil}), do: "Success time not observed"
+  defp time_state_text(nil), do: "No completed task in available history"
+  defp time_state_text(%Scrypath.Operator.State{at: nil}), do: "Completion time unavailable"
   defp time_state_text(%Scrypath.Operator.State{}), do: ""
 
   defp queue_time_state_text(%{queue: %{observed?: false}}), do: "Queue not used"
+
+  defp queue_time_state_text(%{queue: %{last_succeeded: nil}}),
+    do: "No completed job in available history"
+
   defp queue_time_state_text(%{queue: %{last_succeeded: state}}), do: time_state_text(state)
 
-  defp source_last_success_label(:backend), do: "Backend last success"
+  defp source_last_success_label(:backend), do: "Meilisearch last success"
   defp source_last_success_label(:queue), do: "Queue last success"
 
   defp source_ref(%ScrypathOps.Posture{last_success_refs: refs}, schema, source) do
@@ -610,7 +624,9 @@ defmodule ScrypathOpsWeb.PostureLive do
   end
 
   defp backend_badge_label(status) do
-    if length(status.backend.failed) > 0, do: "backend failed", else: "backend clear"
+    if length(status.backend.failed) > 0,
+      do: "Meilisearch tasks failed",
+      else: "No failed Meilisearch tasks"
   end
 
   defp queue_badge_kind(status) do
@@ -627,11 +643,16 @@ defmodule ScrypathOpsWeb.PostureLive do
     cond do
       not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
       not status.queue.observed? -> "Queue observations unavailable"
-      length(status.queue.failed) > 0 -> "queue failed"
-      length(status.queue.retrying) > 0 -> "queue retrying"
-      true -> "queue observed"
+      length(status.queue.failed) > 0 -> "Sync jobs failed"
+      length(status.queue.retrying) > 0 -> "Jobs retrying"
+      true -> "No failed sync jobs"
     end
   end
+
+  defp sync_mode_label(:oban), do: "Background sync · Oban"
+  defp sync_mode_label(:inline), do: "Inline sync"
+  defp sync_mode_label(:manual), do: "Manual sync"
+  defp sync_mode_label(mode), do: "Sync: #{mode}"
 
   defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
 

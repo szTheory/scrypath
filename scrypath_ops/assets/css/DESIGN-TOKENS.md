@@ -460,3 +460,20 @@ only and never affects the exit code.
 - Schema cards and workspace paths wrap long identifiers without expanding the page. Record headings use the 16px h3 role.
 - Code regions expose a name and keyboard focus for contained scrolling. The native schema select has an explicit accessible name. Phoenix upload labels use the generated upload reference.
 - Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
+
+## Task baseline controls
+
+The flat navigation orders Search immediately after Control Room. Native schema radios
+remain visible; a single schema is context rather than a disabled picker. Search uses
+one form surface with query and result limit beside one another on wider screens.
+Saved searches use separator rows rather than cards nested inside action containers.
+
+`.ops-time__stamp` is a plain timestamp button with a small copy icon, no link underline,
+and normal keyboard focus. One UTC/local preference applies to all shared time values.
+Copying preserves the original ISO string and source precision; failed copying reveals
+selectable exact text and persistent recovery feedback. Unknown values have no button.
+Retained source evidence wraps into one column on mobile and two columns on wider screens.
+
+Index settings use a real declared/live comparison with a focusable scroll region when
+needed. Specific differences replace overlapping mismatch counts and raw report-version
+metadata. Settings agreement is separate from operation completion and document visibility.

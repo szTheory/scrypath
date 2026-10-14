@@ -89,6 +89,13 @@ defmodule ScrypathOpsWeb.Layouts do
             </div>
 
             <div class="flex shrink-0 items-center gap-3">
+              <label class="ops-time-preference">
+                <span>Time</span>
+                <select aria-label="Time zone" data-ops-time-zone>
+                  <option value="utc">UTC</option>
+                  <option value="local">Local</option>
+                </select>
+              </label>
               <.theme_toggle />
             </div>
           </div>
@@ -225,7 +232,7 @@ defmodule ScrypathOpsWeb.Layouts do
     <nav class="ops-primary-nav" aria-label="Operator primary">
       <div class="ops-nav-groups">
         <section :for={section <- @nav_sections} class="ops-nav-group">
-          <p class="ops-nav-group__label">{section.label}</p>
+          <p :if={section.label} class="ops-nav-group__label">{section.label}</p>
           <ul class="ops-nav-list">
             <li :for={item <- section.items}>
               <.link
@@ -293,34 +300,28 @@ defmodule ScrypathOpsWeb.Layouts do
   defp nav_sections(mount_path) do
     [
       %{
-        label: "Home",
+        label: nil,
         items: [
           %{
             path: mount_path,
             label: "Control Room",
             title: "Control Room",
-            group: :home,
             icon: "hero-rectangle-group"
           }
+          | Enum.map(
+              ScrypathOpsWeb.Nav.primary(mount_path),
+              &Map.put(&1, :icon, nav_item_icon(&1))
+            )
         ]
       }
-      | mount_path
-        |> ScrypathOpsWeb.Nav.primary()
-        |> Enum.map(&Map.put(&1, :icon, nav_item_icon(&1)))
-        |> Enum.chunk_by(& &1.group)
-        |> Enum.map(fn items -> %{label: nav_group_label(hd(items).group), items: items} end)
     ]
   end
-
-  defp nav_group_label(:recover), do: "Recover"
-  defp nav_group_label(:explore), do: "Explore"
-  defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
 
   defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
   defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
   defp nav_item_icon(%{label: "Sync and drift"}), do: "hero-arrows-right-left"
   defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
-  defp nav_item_icon(%{label: "Playbooks"}), do: "hero-book-open"
+  defp nav_item_icon(%{label: "Saved searches"}), do: "hero-book-open"
   defp nav_item_icon(_item), do: "hero-square-2-stack"
 
   @doc """

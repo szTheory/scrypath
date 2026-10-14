@@ -171,7 +171,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(phx-hook="CommandPalette")
     assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
     assert Regex.scan(~r/data-ops-command-open/, html) |> length() == 1
-    assert Regex.scan(~r/aria-label=\"Jump to surface\"/, html) |> length() == 1
+    assert Regex.scan(~r/aria-label=\"Go to…\"/, html) |> length() == 1
     assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
     assert html =~ ~s(id="ops-cmdk")
     assert html =~ ~s(id="ops-cheatsheet")
@@ -273,7 +273,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert source =~ "Could not copy timestamp. Select and copy the exact value."
 
     assert source =~
-             "this.el.querySelector(\"details.ops-time__details\")?.setAttribute(\"open\", \"\")"
+             "this.el.querySelector(\"[data-ops-time-fallback]\")"
 
     assert source =~ "data-ops-timestamp-copy"
   end

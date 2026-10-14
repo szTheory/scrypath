@@ -35,10 +35,6 @@ async function chooseScenario(page: Page, scenario: string): Promise<void> {
   await waitForLiveConnected(page);
 }
 
-function metric(page: Page, label: string) {
-  return page.locator(".ops-metric").filter({ hasText: label });
-}
-
 async function surfaceFingerprint(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const style = (selector: string) => {
@@ -50,7 +46,6 @@ async function surfaceFingerprint(page: Page): Promise<string[]> {
 
     return [
       style(".ops-verdict"),
-      style(".ops-metric"),
       style(".ops-schema-signal-card")
     ];
   });
@@ -81,23 +76,20 @@ for (const entry of entries) {
     }));
     expect(healthyIconColors.icon).toBe(healthyIconColors.headline);
     const healthyRow = page.getByTestId("posture-row").first();
-    await expect(healthyRow.locator(".ops-badge-neutral")).toHaveCount(2);
+    await expect(healthyRow.locator(".ops-badge-neutral")).toHaveCount(0);
     await expect(healthyRow.locator(".ops-badge-success")).toHaveCount(0);
-    const zeroErrors = metric(page, "Schema check errors");
-    await expect(zeroErrors).toHaveAttribute("data-ops-metric-tone", "neutral");
-    await expect(zeroErrors.locator(".ops-metric__value")).toHaveText("0");
-    await expect(metric(page, "Failed backend tasks")).toHaveAttribute("data-ops-metric-tone", "neutral");
+    await expect(page.locator(".ops-metric")).toHaveCount(0);
+    await expect(healthyRow).toContainText("No pending or failed tasks.");
     await expect(page.getByTestId("posture-row").first()).toContainText(entry.schema);
 
     await chooseScenario(page, "failed");
-    await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+    await expect(page.locator(".ops-verdict")).toContainText("Sync jobs and Meilisearch tasks failed");
     await expect(page.locator('[data-testid="ops-verdict-icon"][data-state="warning"]')).toBeVisible();
     const failed = page.getByTestId("posture-row").first();
-    await expect(failed).toContainText("backend failed");
-    await expect(failed).toContainText("queue failed");
+    await expect(failed).toContainText("Meilisearch tasks failed");
+    await expect(failed).toContainText("Sync jobs failed");
     await expect(failed.locator("[data-testid='posture-failed-sync-link']")).toBeVisible();
-    await expect(metric(page, "Failed backend tasks")).toHaveAttribute("data-ops-metric-tone", "warning");
-    await expect(metric(page, "Failed backend tasks").locator(".ops-metric__value--warning")).toHaveText("1");
+    await expect(failed.locator(".ops-badge-error")).toHaveCount(2);
     await expect(page.locator(".ops-metric-success, .ops-schema-signal-card--warning, .ops-schema-signal-card--error")).toHaveCount(0);
     expect(await surfaceFingerprint(page)).toEqual(baseline);
 
@@ -107,9 +99,9 @@ for (const entry of entries) {
       "Search health could not be checked: A configured search health source could not be read. Refresh health to try again.";
     await expect(unavailable).toContainText(unavailableReason);
     await expect(unavailable).toContainText("Refresh health to try again");
-    await expect(unavailable).not.toContainText("backend failed");
+    await expect(unavailable).not.toContainText("Meilisearch tasks failed");
     await expect(unavailable).not.toContainText("phase173_backend_unavailable");
-    await expect(metric(page, "Schema check errors")).toHaveAttribute("data-ops-metric-tone", "warning");
+    await expect(page.locator(".ops-verdict")).toContainText("could not be fully checked");
     await expect(
       unavailable.locator("p").filter({ hasText: unavailableReason })
     ).toHaveCSS("font-size", "14px");
@@ -144,7 +136,7 @@ for (const entry of entries) {
     );
     await expect(unknownQueue).not.toContainText("phase173_queue_unavailable");
     await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
-    await expect(unknownQueue).not.toContainText("queue failed");
+    await expect(unknownQueue).not.toContainText("Sync jobs failed");
     await expect(unknownQueue.locator(".ops-schema-signal-card__groups")).toHaveCount(0);
 
     await chooseScenario(page, "queue-unused");
@@ -174,7 +166,7 @@ for (const entry of entries) {
       await mkdir(screenshotDir, { recursive: true });
       for (const width of [390, 1440]) {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
-        await expect(page.locator(".ops-verdict")).toContainText("Degraded");
+        await expect(page.locator(".ops-verdict")).toContainText("Sync jobs and Meilisearch tasks failed");
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({
           path: join(screenshotDir, `${entry.name}-degraded-${theme}-${width}.png`),
@@ -311,7 +303,7 @@ for (const entry of entries) {
     await chooseScenario(page, "refresh-failure");
     await refresh.click();
     await expect(page.getByTestId("posture-row").first()).toContainText("Search health could not be checked");
-    await expect(page.getByTestId("posture-row").first()).toContainText("2 days ago");
+    await expect(page.getByTestId("posture-row").first().locator("time").first()).toHaveAttribute("datetime", "2026-10-04T13:02:05.123456-04:00");
     await expect(page.getByTestId("posture-row").first()).toContainText("Refresh health to try again");
     await expect(page.getByText("Search health refreshed.", { exact: true })).toHaveCount(0);
   });

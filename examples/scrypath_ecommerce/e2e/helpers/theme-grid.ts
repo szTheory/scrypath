@@ -65,8 +65,8 @@ export async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Check index contract" }).click();
-  await expect(page.getByText("Contract dimensions", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh settings" }).click();
+  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
 }
 
 export async function gotoSearch(page: Page): Promise<void> {
@@ -78,7 +78,7 @@ export async function gotoSearch(page: Page): Promise<void> {
 export async function gotoPlaybooks(page: Page): Promise<void> {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
 }
 
 export async function runSearch(page: Page, query: string): Promise<void> {

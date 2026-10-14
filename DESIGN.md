@@ -20,7 +20,7 @@ Use the system sans-serif stack for interface copy and the technical monospace s
 
 The shared shell owns the top-level page rhythm with `space-y-4`; the 24px `space-y-ops-page-gap` role is used for deliberate group spacing inside selected surfaces. Keep the shell's direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
 
-The six routes have different scan paths: Control Room goes from fleet observation to verdict and three task routes; Search health goes from fleet summary to worst-first schema evidence; Failed sync work goes from selected schema to eligible jobs and recovery; Sync and drift separates reconciliation, contract, freshness, recovery, and gated promotion; Search keeps target/query controls next to submitted attribution and per-index results; Playbooks separates its catalog, preview, run outcome, and import. Preserve these task-specific orders.
+Navigation is a flat list with Search directly after Control Room. The six routes have distinct tasks: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. Routes and Playbook APIs/JSON remain unchanged.
 
 ## Elevation & Depth
 
@@ -38,12 +38,14 @@ Use visible native radio rows for schema choices and plain context for a single 
 
 | Surface | Demonstrated grouping |
 | --- | --- |
-| Control Room | A labelled health section holds the refresh issue, observed verdict or specific setup state, Search health handoff, and three distinct intent cards. |
-| Search health | A summary verdict and four metrics precede worst-first schema cards; Backend and Queue observations stay separately labelled. |
-| Failed sync work | Schema selection and observation summary precede retryable job evidence, confirmation, retained details, and the recovery handoff. |
-| Sync and drift | Reconciliation, contract drift, document freshness, ordinary recovery, and advanced promotion remain separate sections. |
-| Search | Target mode, schemas, query, and page size lead into a labelled Results section with attributed per-index outcomes and an independent capture action. |
-| Playbooks | Workspace files lead into separate preview, run outcome, Search handoff, and import tasks. |
+| Control Room | A short problem/scope/action summary, followed by Try a search and Check sync and settings. |
+| Search health | A cause-specific summary and worst-first schemas. Positive work counts stay visible; empty sources use one neutral statement. Unknown and retained evidence remain explicit. |
+| Failed sync work | Native schema selection, compact cohort summary, source-qualified IDs, error and eligible Retry. Retry queued is distinct from completion; delete confirmation remains protected. |
+| Sync and drift | Header Refresh checks sync and settings. Settings load automatically with bounded generation-scoped reads; real differences use declared/live columns. Correlated document/retry sections appear only with applicable evidence; promotion remains advanced and confirmed. |
+| Search | A compact form contains schemas, query and per-schema limit. Results stay attributed to submitted criteria. Saving preserves inputs, never returned documents. |
+| Saved searches | A flat catalog offers Preview and Run, with secondary file actions. Storage folder is secondary context. Draft, saved file and run provenance remain separate. |
+
+Timestamps are single, keyboard-accessible copy buttons with restrained text styling and a small clipboard affordance. UTC is the default; one Time control beside theme preferences switches display to the browser's local zone and persists that choice. Each absolute time names its zone; the original source precision is copied unchanged. Copy feedback waits for the browser outcome. On failure, the exact value becomes selectable without an extra disclosure. Unknown times have no copy control. Retained observations keep their source identity and original check time.
 
 The dynamic design-token contract requires every current `OpsUi` export to appear in `DESIGN-TOKENS.md`; it does not prescribe a fixed export count.
 
