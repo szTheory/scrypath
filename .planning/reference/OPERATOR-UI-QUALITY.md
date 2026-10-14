@@ -6,7 +6,58 @@
 
 Build a conventional, legible operator interface from the existing Phoenix components and design tokens. Use the principle of least surprise and established patterns from comparable operational tools. Improve the consistency of the system with each change. The maintainer can explore a running preview and give direction while work proceeds; routine acceptance must not require human UAT.
 
-Personas: on-call engineer recovering search; search owner checking an index change; operator inspecting/saving a search; first-run operator configuring the host. Inventory all six existing surfaces and their three job loops before changing shared behavior. Start with the incident-recovery loop and fix demonstrated issues in shared controls and adjacent surfaces. Keep the existing brand and proven behaviors as the baseline.
+The maintained operator audience and job model is in the **Experience model** section below. Treat roles as task contexts that may overlap, not fictional demographic personas. It is a maintainer-curated hypothesis grounded in Scrypath's supported workflows and direct feedback, not validated adopter research. Inventory the six existing surfaces against relevant job IDs before changing shared behavior. Start with the incident-recovery loop and fix demonstrated issues in shared controls and adjacent surfaces. Keep the existing brand and proven behaviors as the baseline.
+
+## Experience model: roles, jobs, and language
+
+**Reviewed:** 2026-10-13. **Evidence status:** repo-supported workflows and maintainer feedback; no adopter interview or usage study is claimed by this model. Stable IDs make the model easy to reference from a phase without copying persona prose into every plan.
+
+### Task contexts
+
+| ID | Context | What this person is trying to do | Evidence boundary |
+| --- | --- | --- | --- |
+| `ROLE-INT` | Ecto/Phoenix integrator | Add search to an existing schema and host app with a small, understandable setup. | Core product direction and shipped API/examples; relative adopter priority is not measured here. |
+| `ROLE-OPS` | Operator or on-call engineer | Determine whether search is usable, inspect failed work, and choose a safe recovery step. | Existing optional ScrypathOps workflows and maintainer feedback; role frequency is unknown. |
+| `ROLE-OWNER` | Search/index owner | Check a search or index change, inspect results by target, and preserve a useful bounded check. | Existing Search/Playbooks capabilities and approved UI scope; actual workflow frequency is unvalidated. |
+
+These are contexts, not mutually exclusive people. A library maintainer is a contributor/support stakeholder, not automatically an end-user persona. “First run” is a setup state that can affect any role, not a separate invented demographic.
+
+### Jobs to evaluate
+
+| ID | When… | Help me… | So I can… | Done means… |
+| --- | --- | --- | --- | --- |
+| `JOB-01` | I am adding search to an existing Ecto schema. | Declare what is indexed and connect it to my Phoenix context. | Ship search without adopting a second application model. | I can identify the minimum setup and see a record returned through the supported search path. |
+| `JOB-02` | I am choosing how writes reach the search index. | Select inline, Oban-backed, or manual sync and understand its consistency and delete/backfill implications. | Choose an operational tradeoff deliberately. | I can state what is accepted, what may still be pending, and how visibility will be checked. |
+| `JOB-03` | Search looks unhealthy or sync work fails. | Identify the affected schema/work, inspect the evidence, and take an eligible bounded recovery action. | Restore service without losing failure history or retrying the wrong work. | The exact work is correlated and the post-recovery check reports observed visibility or an honest unknown. |
+| `JOB-04` | I am changing index settings or promoting an index. | Compare the declared/live settings and verify the active index's document visibility. | Avoid treating configuration agreement as proof that users can search the expected records. | Fresh evidence names the selected schema/index and separates settings, task outcome, and document visibility. |
+| `JOB-05` | I need to investigate or preserve a search behavior. | Run a bounded query against explicit targets, inspect per-target results, and save/replay the check when useful. | Compare behavior without implying separate indexes are one merged index. | The query, targets, result provenance, and saved/executed state remain distinguishable. |
+
+These jobs describe product intent, not proof of demand. Direct maintainer feedback is evidence about the reported experience only; code/tests prove supported behavior, not that the model is complete or that adopters prioritize it.
+
+### Internal concepts and user-facing language
+
+Translate from the implementation model into the user's task while preserving distinctions that affect a decision. Do not rename public APIs, internal types, or domain concepts merely to make every screen sound nontechnical. Scrypath's audience includes working Elixir/Phoenix engineers; precise technical terms are appropriate when they identify the object the user must act on.
+
+| Internal concept | User-facing starting term | Keep this distinction explicit |
+| --- | --- | --- |
+| Oban `Job` / queued sync work | **Queue job** or **sync work** | It is work in the host application's queue. Do not call it a Meilisearch task. |
+| Meilisearch task UID | **Backend task**; say **Meilisearch task** when the backend is otherwise ambiguous | Acceptance is not completion; retain the task ID until an exact terminal result is observed. |
+| Ecto schema / module | **Schema**, with its readable module name available in diagnostic context | Do not erase schema scope behind a vague “collection” label; the selected schema controls evidence and recovery. |
+| Declared/live index settings comparison | **Index settings** in the primary path; **contract** may remain in advanced detail | Matching settings do not prove documents are fresh or visible. |
+| Active-index document check | **Documents visible in the active index** / **Check document visibility** | State the selected schema/index and observation time; do not infer visibility from queue or settings status. |
+| Saved Playbook JSON | **Playbook** as the artifact name, explained on first use as a saved, bounded search check | A saved definition is not a result or a completed run. Preserve draft, saved, and run provenance. |
+| Multi-schema/federated search | **Search across selected schemas** when orienting a new user; keep per-schema detail | Per-target results remain separate; do not promise a merged index or combined relevance score. |
+| Search result hydration from the app Repo | **Load matching Ecto records from the app** in explanatory docs | It is an app-side lookup after search, not a Meilisearch operation; preserve failure/consistency semantics. |
+
+This is a decision aid, not a blind find/replace glossary. For each new or changed screen, ask whether the person needs the internal term to choose an action. If yes, keep it and define it briefly; otherwise lead with the task or observed outcome and retain exact technical evidence in context. Add a mapping only when real copy or a repeated misunderstanding demonstrates a need.
+
+### Keeping the model current
+
+- Review only the role/job rows touched when a new UI phase, API/workflow change, repeated support issue, adopter report, or maintainer feedback invalidates an assumption. Do not schedule a recurring persona-gardening ceremony.
+- Record the observation source and date beside any adopted change. Keep “maintainer hypothesis,” “repository capability,” and “adopter-validated” evidence distinct; never promote one category into another by repetition.
+- Revise or retire stable IDs explicitly when the job changes; do not silently repurpose an ID. Keep the model small and remove roles/jobs that no longer guide a real decision.
+- Each frontend `UI-SPEC.md` should name the relevant `ROLE-*` and `JOB-*` IDs, the user's trigger, the decision/outcome the interface supports, the exact states that can change the copy, and the evidence used. A role/JTBD match is not a visual-quality pass.
+- Review copy for task fit, accuracy, consistency, accessibility, and actual state provenance. The installed UX-writing skill is an editorial aid; its generic word-count, reading-grade, and comprehension figures are heuristics, not Scrypath acceptance thresholds.
 
 ## Design rules
 
@@ -28,6 +79,8 @@ Personas: on-call engineer recovering search; search owner checking an index cha
 Whenever considering or reviewing UI animation or micro-interactions, cross-reference [Emil Kowalski's design-engineering work](https://emilkowal.ski/skill) and the [emilkowalski/skills collection](https://github.com/emilkowalski/skills). Use it to sharpen decisions about whether motion helps, its timing, and how it responds to interruption; keep Scrypath's infrastructural motion style, shared tokens, and reduced-motion support as the implementation contract.
 
 ## Efficient verification and change control
+
+The executable pilot and required agent review loop are documented in [`docs/operator-ui-review.md`](../../docs/operator-ui-review.md). Start with the whole screen/journey inventory; maintainer examples are regression checks, not the review's boundary. Review unreported problems explicitly before repairing. The capture command produces pending evidence, never automatic aesthetic acceptance.
 
 1. Capture current rendering and establish a named user problem before changing a pattern. Preserve useful existing behavior and tests; do not repeat completed palette/brand work without an invalidator.
 2. Use existing LiveView checks for state boundaries, fast token/contrast checks for shared styles, and browser tests for actual navigation, focus, geometry, and real service seams. Exercise changed inputs through rendered forms or controls in the same plan; direct handler calls alone cannot prove event wiring. Cross-screen tests must change the selected schema before handing off, not only enter a non-first schema directly.

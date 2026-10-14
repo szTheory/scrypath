@@ -262,6 +262,11 @@ operator routes, demo tenants, and Compose launch path, see
 That demo README also documents the bind-mounted Compose dev mode for fast UI
 iteration without rebuilding dependency layers after every HEEx/CSS change.
 
+For rendered UI and content review, follow [the UI review loop](docs/operator-ui-review.md).
+`npm run ui:review` in the demo captures the running preview without seeding it;
+the output starts pending and includes the complete current screen inventory.
+It supplements state/functional proofs and does not add a required CI lane.
+
 Run locally:
 
 ```sh

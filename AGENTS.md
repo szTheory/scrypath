@@ -105,6 +105,10 @@ Agents should default to the repo's **green-main release train** posture:
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
+## UI work
+
+For storefront or ScrypathOps changes, follow [docs/operator-ui-review.md](docs/operator-ui-review.md). Review the full current screen and journey inventory before narrowing to maintainer feedback. Use the maintained roles/jobs and internal-to-user language map, inspect rendered screenshots and actual copy, record unreported problems and coverage gaps, batch coherent repairs, and confirm once. Run `npm run ui:review` from the demo in the checkout actually mounted by the preview. Captures and passing code tests alone are not a design pass; never auto-update an unreviewed visual baseline or claim independent review when none occurred. Keep the existing lean CI posture and preserve retained preview data.
+
 
 
 <!-- GSD:profile-start -->

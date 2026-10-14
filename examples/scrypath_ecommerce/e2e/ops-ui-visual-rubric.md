@@ -1,24 +1,16 @@
-# Scrypath Ops UI Visual Judge Rubric
+# Scrypath UI critique rubric
 
-Review the screenshots as an adversarial product/design reviewer for an Elixir/Phoenix maintainer tool.
+Current authority is the repository's `DESIGN.md` and maintained operator role/job/language model. This optional judge sees a sampled set of screenshots, so it cannot certify whole-app coverage, user journeys, hidden states, or backend outcomes. It is supplemental; the complete workflow is `docs/operator-ui-review.md`.
 
-Pass only when these claims hold:
+Review the supplied images against these claims and report uncertainty when an image cannot support one:
 
-- Dark mode is the signature theme: raised surfaces are visibly separated from the shell floor without noisy decoration.
-- Search result rows, Sync/Drift panels, Playbooks cards, and Control Room verdict surfaces read as distinct operator surfaces.
-- Copper appears as one earned Scrypath-branded key fact on the recommended Control Room intent card, not as a status tone.
-- No dark verdict or card surface shows a warm copper/cream halo where a cool violet/slate depth treatment is expected.
-- The shared shell wash reads as one quiet top-left violet ambient glow, not a discrete purple blob, and it does not compete with header/nav, command palette, flash, or page evidence.
-- The operator can quickly tell current search health and the next recovery or explore action.
-- Light mode does not look visually degraded relative to the dark review target.
+- The operator can identify the current observation, affected object, limits, and safe next action.
+- Each surface has a task-specific hierarchy rather than interchangeable dashboard cards. Primary actions, secondary evidence, and advanced controls have distinguishable importance.
+- Light mode uses the current cool neutral floor; dark mode has clear neutral surface separation. The shell is flat. Do not request the retired violet background wash, copper/cream halos, status-colored cards, or a new palette.
+- Active navigation uses the documented soft selection. The theme picker has one legible neutral selected preference, and primary actions and focus cues remain distinct.
+- Typography, spacing, borders, density, and color work as a coherent system across the supplied screens; compact layouts do not hide essential decisions or overflow.
+- Copy helps complete the task, uses consistent precise terms, and separates queue jobs from backend tasks, accepted work from completion, settings agreement from document visibility, and saved definitions from run outcomes. Don't erase relevant engineering terms or request a blanket terminology replacement.
+- Look for unreported issues beyond known maintainer examples: excessive explanation, jargon without context, competing actions, misleading empty/success states, inaccessible contrasts, truncation, and inconsistent handoffs.
+- Preserve useful incumbent behavior and brand details. Recommend the smallest coherent repair with a concrete user consequence and evidence; a taste preference or numeric beauty score isn't sufficient.
 
-Treat these as findings:
-
-- Decorative copper used like warning/success/status.
-- Flat dark sections where rows/cards merge into the page floor.
-- Hover/active emphasis that looks generic, ambiguous, or visually noisy.
-- Visual hierarchy that makes health, recovery, or exploration hard to scan.
-- Warm halo, washed-out contrast, overlapping content, or unprofessional spacing.
-- A saturated or detached purple shell background blob, multiple glow blobs, or shell wash that visually fights the active operator evidence.
-
-Do not report generic taste preferences. Report only issues likely to reduce operator trust, scanability, accessibility, or Scrypath brand fit.
+Review the operator-guide destination and missing interaction/state coverage separately. A screenshot filename, mock response, or successful axe scan does not establish a design pass. Never auto-update screenshot baselines to clear findings.
