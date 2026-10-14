@@ -452,40 +452,39 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp failed_sync_status_kind(_inspection), do: :warning
 
   defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 0}}),
-    do: "No failed sync work visible"
+    do: "No failed or retrying sync work"
 
-  defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: 1}}),
-    do: "1 failed sync job needs triage"
-
-  defp failed_sync_status_title(%FailedSyncWorkInspection{counts: %{total: total}}),
-    do: "#{total} failed sync jobs need triage"
-
-  defp dominant_reason_class(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
-    by_class
-    |> maybe_map_from_struct()
-    |> Enum.max_by(fn {_class, count} -> count end, fn -> {:unknown, 0} end)
-    |> elem(0)
+  defp failed_sync_status_title(%FailedSyncWorkInspection{entries: entries}) do
+    failed = Enum.count(entries, &(&1.state == :failed))
+    retrying = Enum.count(entries, &(&1.state == :retrying))
+    "#{failed} failed · #{retrying} retrying"
   end
 
   defp maybe_map_from_struct(%_{} = struct), do: Map.from_struct(struct)
   defp maybe_map_from_struct(map) when is_map(map), do: map
 
-  defp retryable_count(%FailedSyncWorkInspection{entries: entries}) do
-    Enum.count(entries, & &1.retryable?)
-  end
+  defp retry_eligibility(%{source: :meilisearch}),
+    do:
+      "Meilisearch tasks cannot be retried here. Resubmit the source change through your application."
 
-  defp retry_eligibility(%{recovery: recovery}) when not is_nil(recovery),
-    do: "Retry currently available."
+  defp retry_eligibility(%{operation: :unknown}),
+    do: "The operation is unknown, so this item cannot be retried here."
 
-  defp retry_eligibility(_row),
-    do: "Retry unavailable. This work item does not expose a supported retry."
+  defp retry_eligibility(_),
+    do: "The original documents or document IDs are unavailable for retry."
 
-  defp retryable_label(1), do: "1 retryable job"
-  defp retryable_label(count), do: "#{count} retryable jobs"
+  defp operation_label(:upsert), do: "Add or update documents"
+  defp operation_label(:delete), do: "Delete documents"
+  defp operation_label(_), do: "Unknown operation"
+  defp source_label(:meilisearch), do: "Meilisearch task"
+  defp source_label(_), do: "Oban job"
+  defp state_label(:retrying), do: "Retry scheduled"
+  defp state_label(_), do: "Failed"
 
   defp reason_counts(%FailedSyncWorkInspection{counts: %{by_class: by_class}}) do
     by_class
     |> maybe_map_from_struct()
+    |> Enum.filter(fn {_class, count} -> count > 0 end)
     |> Enum.map(fn {class, count} -> {reason_class_label(class), count} end)
     |> Enum.sort_by(&elem(&1, 0))
   end
@@ -507,7 +506,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
-          subtitle="Inspect failed queue/backend work by newest evidence first. Retry only after the failure class and row evidence make sense."
+          subtitle="Review failed operations and scheduled retries."
         />
         <.ops_refresh_control
           id="failed-sync-refresh"
@@ -525,7 +524,6 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             id="schema-select"
             schemas={@schema_allowlist}
             selected={@selected_schema}
-            hint="Choose a schema to inspect its failed sync work."
           />
         </.form>
       </div>
@@ -574,63 +572,59 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             kind={failed_sync_status_kind(@inspection)}
             title={failed_sync_status_title(@inspection)}
           >
-            Selected schema:
-            <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
-            · dominant reason:
-            <strong>{reason_class_label(dominant_reason_class(@inspection))}</strong>
+            <span :if={@inspection.counts.total == 0}>
+              No failures were found in the available history. Pending work and document visibility are checked separately.
+            </span>
+            <span :if={@inspection.counts.total > 0}>
+              Review the error before retrying. Scheduled retries may also run automatically.
+            </span>
           </.ops_status>
 
-          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-ops-body text-base-content/80">
-            <span>
-              <strong>{@inspection.counts.total}</strong>
-              failed sync {if @inspection.counts.total == 1, do: "job", else: "jobs"}
+          <p
+            :if={@inspection.counts.total > 0}
+            class="mt-2 text-ops-sm text-base-content/70"
+            id="failed-sync-rollups-heading"
+          >
+            Error categories:
+            <span :for={{label, count} <- reason_counts(@inspection)} class="mr-3">
+              {label} {count}
             </span>
-            <span aria-hidden="true">·</span>
-            <span>{retryable_label(retryable_count(@inspection))}</span>
-            <span class="sr-only" id="failed-sync-rollups-heading">Failure reasons</span>
-            <span
-              :for={{label, count} <- reason_counts(@inspection)}
-              class="rounded-full border border-base-300 px-2 py-0.5 text-ops-sm"
-            >
-              {label}: {count}
-            </span>
-          </div>
+          </p>
         </section>
 
-        <section aria-labelledby="failed-sync-table-heading" class="mt-4">
+        <section
+          :if={@inspection.counts.total > 0}
+          aria-labelledby="failed-sync-table-heading"
+          class="mt-4"
+        >
           <h2
             id="failed-sync-table-heading"
             class="text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            Failed sync jobs
+            Operations needing attention
           </h2>
-          <.ops_empty_hero
-            :if={@inspection.counts.total == 0}
-            title="No failed sync jobs"
-            icon="hero-shield-check"
-            class="mt-3"
-            data-testid="failed-sync-empty-hero"
-          >
-            Nothing needs retry for this schema. If you are confirming recovery, check sync drift before changing indexes.
-            <:actions>
-              <.ops_button phx-click="refresh" variant={:default}>
-                Refresh this view
-              </.ops_button>
-            </:actions>
-          </.ops_empty_hero>
-
           <div :if={@inspection.counts.total > 0} class="mt-2 grid gap-2">
             <.ops_result_row
               :for={row <- sorted_entries(@inspection)}
-              title={"Failed job #{inspect(row.id)}"}
-              subtitle={"#{row.operation} · #{row.source} · last attempt #{format_dt(row.last_attempt_at || row.failed_at)}"}
+              title={operation_label(row.operation)}
               data-testid="failed-sync-row"
             >
               <:meta>
-                <.ops_badge kind={:warning}>{reason_class_label(row.reason_class)}</.ops_badge>
-                <.ops_badge kind={:error}>{row.state}</.ops_badge>
-                <.ops_badge :if={row.retryable?} kind={:partial}>retryable</.ops_badge>
+                <.ops_badge kind={if row.state == :retrying, do: :warning, else: :error}>
+                  {state_label(row.state)}
+                </.ops_badge>
+                <span class="text-ops-sm text-base-content/70">
+                  {source_label(row.source)} #{row.id}
+                </span>
               </:meta>
+              <p class="mt-2 text-ops-sm text-base-content/70">
+                Last attempt
+                <.ops_time
+                  id={"failed-attempt-#{row.source}-#{row.id}"}
+                  dt={row.last_attempt_at || row.failed_at}
+                  operational
+                />
+              </p>
               <p
                 class="mt-2 break-words text-ops-body text-base-content/85"
                 data-testid="failed-sync-reason"
@@ -638,6 +632,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 {row.reason}
               </p>
               <p
+                :if={is_nil(row.recovery)}
                 class="mt-2 break-words text-ops-body text-base-content/80"
                 data-testid="failed-sync-eligibility"
               >
@@ -655,19 +650,21 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                   variant={:primary}
                   size={:xs}
                 >
-                  Retry sync work
+                  Retry
                 </.ops_button>
               </.ops_action_group>
               <.ops_status
                 :if={receipt = recovery_receipt(@recovery_receipts, row.id)}
                 class="mt-2"
                 kind={:info}
-                title="Retry accepted"
+                title="Retry queued"
                 role="status"
                 data-testid="recovery-receipt"
               >
-                Queue job {receipt.replacement_job} · {receipt.operation} · <.ops_inline_code>{receipt.index}</.ops_inline_code>.
-                Original failure #{row.id} retained.
+                Oban job #{receipt.replacement_job} will {if receipt.operation == :delete,
+                  do: "delete",
+                  else: "add or update"} documents in <.ops_inline_code>{receipt.index}</.ops_inline_code>.
+                Completion has not been confirmed. Original job #{row.id} is retained.
                 <.link
                   :if={receipt.handle}
                   navigate={recovery_handoff_path(@mount_path, @selected_schema, receipt)}
@@ -678,29 +675,43 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               </.ops_status>
               <.ops_disclosure
                 id={"failed-detail-#{row.id}"}
-                summary="Diagnostics"
+                summary="Job details"
                 variant={:compact}
                 class="mt-2"
               >
-                <.ops_code_block :if={map_size(row.metadata) > 0} variant={:embedded}>
-                  {inspect(row.metadata, pretty: true)}
-                </.ops_code_block>
+                <dl class="ops-facts">
+                  <div>
+                    <dt>Operation</dt>
+                    <dd>{row.operation}</dd>
+                  </div>
+                  <div>
+                    <dt>Error category</dt>
+                    <dd>{reason_class_label(row.reason_class)}</dd>
+                  </div>
+                  <div :for={{key, value} <- Enum.sort(row.metadata)}>
+                    <dt>{key |> to_string() |> String.replace("_", " ")}</dt>
+                    <dd class="break-all">{if is_binary(value), do: value, else: inspect(value)}</dd>
+                  </div>
+                </dl>
               </.ops_disclosure>
             </.ops_result_row>
           </div>
         </section>
 
-        <.ops_disclosure summary="Operator reference" class="mt-3">
-          <p class="text-ops-sm text-base-content/75">
-            See <.ops_inline_code>mix scrypath.failed</.ops_inline_code>, <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>, and <.ops_inline_code>guides/operator-mix-tasks.md</.ops_inline_code>.
-          </p>
-        </.ops_disclosure>
+        <p class="text-ops-sm">
+          <a
+            class="link link-hover"
+            href="https://github.com/szTheory/scrypath/blob/main/guides/drift-recovery.md"
+          >
+            Help with sync failures and recovery
+          </a>
+        </p>
       </div>
 
       <.ops_handoff :if={@inspection && @selected_schema}>
         <:step
           navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
-          hint="When the queue's clear —"
+          hint="Check pending work and index settings —"
         >
           Check sync and drift
         </:step>
@@ -759,11 +770,5 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       </.ops_modal>
     </Layouts.app>
     """
-  end
-
-  defp format_dt(nil), do: "—"
-
-  defp format_dt(%DateTime{} = dt) do
-    Calendar.strftime(dt, "%b %d, %Y at %H:%M UTC")
   end
 end

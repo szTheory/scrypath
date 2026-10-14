@@ -87,7 +87,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
             title="Control Room"
-            subtitle="Current search health, then one safe next step."
+            subtitle="Try a search or check how your indexes are syncing."
           />
           <.ops_refresh_control
             id="control-room-refresh"
@@ -147,20 +147,20 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               cond do
                 @refresh_issue && @last_successful_posture -> "Last successful observation"
                 @refresh_issue || @posture.error_count > 0 -> "Partial observation"
-                true -> "Observed search health"
+                true -> nil
               end
             }
             headline={verdict_headline(@posture)}
             class="ops-verdict--hero"
             data-testid="control-room-verdict"
           >
-            <p :if={@posture.state == :degraded}>{@posture.evidence}</p>
+            <p :if={@posture.error_count > 0}>{@posture.evidence}</p>
             <p :if={@posture.state == :degraded} data-testid="control-room-affected-scope">
-              Affected scope: {affected_scope(@posture)}
+              {affected_names(@posture)} · Search results may be out of date.
             </p>
             <p :if={@posture.state == :ok}>
-              No current sync or backend failures were observed across {@posture.schema_count} schemas.
-              This check does not prove document freshness.
+              No failed sync jobs or Meilisearch tasks were found across {@posture.schema_count} schemas.
+              Document visibility is checked separately.
             </p>
             <div class="mt-2">
               <.ops_link_button
@@ -169,7 +169,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
                 size={:sm}
                 data-testid="control-room-health-link"
               >
-                Inspect Search health
+                View search health
               </.ops_link_button>
             </div>
             <p
@@ -192,20 +192,20 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             data-testid="control-room-secondary-intents"
           >
             <.ops_intent_card
-              icon="hero-arrow-path"
-              title="Verify a change"
-              summary="Check sync and index drift before changing an index."
-              route_label="Verify a change"
-              navigate={"#{@mount_path}/sync-drift"}
-              data-testid="control-room-verify-change"
-            />
-            <.ops_intent_card
               icon="hero-magnifying-glass"
-              title="Explore search"
-              summary="Run a query against an allowlisted schema."
-              route_label="Explore search"
+              title="Try a search"
+              summary="Query your schemas and inspect the results."
+              route_label="Try a search"
               navigate={"#{@mount_path}/search"}
               data-testid="control-room-explore-search"
+            />
+            <.ops_intent_card
+              icon="hero-arrows-right-left"
+              title="Check sync and settings"
+              summary="See pending work and compare your declared settings with Meilisearch."
+              route_label="Check sync and settings"
+              navigate={"#{@mount_path}/sync-drift"}
+              data-testid="control-room-verify-change"
             />
           </div>
         </section>
@@ -224,8 +224,19 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
     """
   end
 
-  defp verdict_headline(%Posture{state: :degraded}), do: "Search health needs attention."
-  defp verdict_headline(%Posture{state: :ok}), do: "Search health observed."
+  defp verdict_headline(%Posture{state: :degraded} = summary), do: summary.headline
+  defp verdict_headline(%Posture{state: :ok}), do: "No sync failures found"
+
+  defp affected_names(%Posture{rows: rows}) do
+    rows
+    |> Enum.filter(fn {_schema, result} ->
+      case result do
+        {:ok, status} -> status.backend.failed != [] or status.queue.failed != []
+        _ -> true
+      end
+    end)
+    |> Enum.map_join(", ", fn {schema, _} -> inspect(schema) end)
+  end
 
   defp affected_scope(%Posture{rows: rows}) do
     rows

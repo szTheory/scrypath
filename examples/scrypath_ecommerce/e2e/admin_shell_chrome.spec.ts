@@ -211,8 +211,8 @@ async function expectThemeButtonState(page: Page, theme: "system" | "light" | "d
   const selected = page.locator(`#theme-toggle [data-phx-theme="${theme}"]`);
   await expect(selected).toBeVisible();
 
-  const selectedShadow = await selected.evaluate((el) => getComputedStyle(el).boxShadow);
-  expect(selectedShadow, `${theme} theme button must expose a visible selected indicator`).not.toBe("none");
+  await expect.poll(() => selected.evaluate(el => getComputedStyle(el).backgroundColor),
+    { message: `${theme} selected preference has a visible neutral fill` }).not.toBe("rgba(0, 0, 0, 0)");
 
   const ariaPressed = await selected.getAttribute("aria-pressed");
   if (ariaPressed !== null) {
@@ -227,9 +227,7 @@ async function expectThemeButtonState(page: Page, theme: "system" | "light" | "d
 
 async function expectShellWash(page: Page): Promise<void> {
   const background = await readComputedStyle(page, ".ops-shell", "background-image");
-  const radialCount = (background.match(/radial-gradient/g) ?? []).length;
-  expect(radialCount, ".ops-shell should keep one quiet radial wash").toBe(1);
-  expect(background, ".ops-shell keeps its structural floor gradient").toContain("linear-gradient");
+  expect(background, "the current shell floor is flat").toBe("none");
 }
 
 async function expectHeaderChrome(page: Page, viewport: ViewportName): Promise<void> {
@@ -299,10 +297,10 @@ async function expectActiveNavChrome(
 
   const bg = await readComputedStyle(page, ".ops-nav-item-active", "background-color");
   const color = await readComputedStyle(page, ".ops-nav-item-active", "color");
-  const shadow = await readComputedStyle(page, ".ops-nav-item-active", "box-shadow");
+  for (const item of await active.all()) await expect(item).toHaveAttribute("aria-current", "page");
   expect(bg, ".ops-nav-item-active must have a visible selected fill").not.toBe("rgba(0, 0, 0, 0)");
   expect(color, ".ops-nav-item-active must resolve readable text color").not.toBe("rgba(0, 0, 0, 0)");
-  expect(shadow, ".ops-nav-item-active keeps shell depth/glow contract").not.toBe("none");
+
 }
 
 async function expectMobileNavigationDrawer(page: Page): Promise<void> {
@@ -357,11 +355,11 @@ async function triggerSearchSaveFlash(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
   const basename = `${SHELL_PLAYBOOK_PREFIX}${Date.now()}.json`;
-  await page.getByRole("button", { name: "Save as playbook" }).click();
-  await page.getByLabel("Basename (.json)").fill(basename);
-  await page.getByRole("button", { name: "Save playbook" }).click();
-  await expect(page.locator("#flash-group [role='alert']:not([hidden])")).toContainText(
-    `Saved playbook ${basename}.`
+  await page.getByRole("button", { name: "Save search" }).click();
+  await page.getByLabel("Filename").fill(basename);
+  await page.locator("#search-capture-form button[type=submit]").click();
+  await expect(page.locator("#flash-group [role='status']:not([hidden])")).toContainText(
+    `Saved search ${basename}.`
   );
 }
 
@@ -384,7 +382,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await assertOperatorGeometry(page, "390px header", [
       ".ops-header .ops-nav-trigger", ".ops-header .ops-command-hint", ".ops-header #theme-toggle"
     ]);
-    await page.getByRole("button", { name: "Jump to surface", exact: true }).click();
+    await page.getByRole("button", { name: "Go to…", exact: true }).click();
     await expect(page.locator("#ops-cmdk")).toBeVisible();
   });
 
@@ -397,7 +395,9 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
 
     const row = page.locator(".ops-object-item").filter({ hasText: basename });
     await expect(row).toHaveCount(1);
-    const renameTrigger = row.getByRole("button", { name: "Rename" });
+    const summary = row.getByTestId("playbook-manage-actions").locator("summary");
+    await summary.click();
+    const renameTrigger = row.getByRole("button", { name: /^Rename / });
 
     await pressCommandPaletteShortcut(page);
     await expect(page.locator("#ops-cmdk")).toBeVisible();
@@ -415,7 +415,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await page.keyboard.press("Control+K");
     await expect(page.locator("#ops-cmdk")).toBeHidden();
 
-    const close = modal.getByRole("button", { name: "Close Rename playbook dialog" });
+    const close = modal.getByRole("button", { name: "Close Rename saved search dialog" });
     await assertDialogCycle(page, [close, input, cancel, submit], "rename");
     await expect(page.locator(".ops-header")).toHaveAttribute("inert", "");
     await input.focus();
@@ -427,12 +427,12 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(modal).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(modal).toBeHidden();
-    await expect(renameTrigger).toBeFocused();
+    await expect(summary).toBeFocused();
 
     await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
     await page.getByRole("button", { name: "Open navigation" }).click();
     await expect(page.locator("#ops-mobile-nav")).toBeVisible();
-    await row.getByRole("button", { name: "Duplicate" }).evaluate((element: HTMLButtonElement) => element.click());
+    await row.locator("button[phx-click=dup_open]").evaluate((element: HTMLButtonElement) => element.click());
     const duplicate = page.locator("#duplicate-playbook-modal");
     const duplicateInput = page.locator("#dup-to-name-input");
     await expect(duplicateInput).toBeFocused();
@@ -440,7 +440,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await page.keyboard.press("Shift+/");
     await expect(page.locator("#ops-cheatsheet")).toBeHidden();
     await assertDialogCycle(page, [
-      duplicate.getByRole("button", { name: "Close Duplicate playbook dialog" }),
+      duplicate.getByRole("button", { name: "Close Duplicate saved search dialog" }),
       duplicateInput, duplicate.getByRole("button", { name: "Cancel duplicate" }),
       duplicate.getByRole("button", { name: "Duplicate", exact: true })
     ], "duplicate");
@@ -449,9 +449,9 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(duplicateInput).toBeFocused();
     await duplicate.getByRole("button", { name: "Cancel duplicate" }).click();
     await expect(duplicate).toBeHidden();
-    await expect(row.getByRole("button", { name: "Duplicate" })).toBeFocused();
+    await expect(summary).toBeFocused();
 
-    const deleteTrigger = row.getByRole("button", { name: "Delete" });
+    const deleteTrigger = row.locator("button[phx-click=request_delete]");
     await openShortcutSheet(page);
     await deleteTrigger.evaluate((element: HTMLButtonElement) => element.click());
     await expect(page.locator("#ops-cheatsheet")).toBeHidden();
@@ -459,7 +459,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(deleteModal).toBeVisible();
     await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
     await assertDialogCycle(page, [
-      deleteModal.getByRole("button", { name: "Close Delete playbook file dialog" }),
+      deleteModal.getByRole("button", { name: "Close Delete saved search dialog" }),
       page.locator("#delete-confirm-input"),
       deleteModal.getByRole("button", { name: "Cancel delete" }),
       deleteModal.getByRole("button", { name: "Confirm delete" })
@@ -467,13 +467,14 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     const successorSelector = await deleteModal.getAttribute("data-ops-modal-successor");
     expect(successorSelector).toBeTruthy();
 
-    await deleteTrigger.evaluate((el) => el.remove());
+    await summary.evaluate((el) => el.remove());
     await deleteModal.getByRole("button", { name: "Cancel delete" }).click();
     await expect(deleteModal).toBeHidden();
     const successor = page.locator(successorSelector as string);
     await expect(successor).toBeFocused();
     await page.reload();
     await expect(row).toBeVisible();
+    await row.getByTestId("playbook-manage-actions").locator("summary").click();
     await row.getByRole("button", { name: "Delete" }).click();
     await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
     const afterDelete = await deleteModal.getAttribute("data-ops-modal-successor");
@@ -492,7 +493,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
     await gotoPlaybooks(page);
     const row = page.locator(".ops-object-item").filter({ hasText: basename });
-    await row.getByRole("button", { name: "Rename", exact: true }).click();
+    await row.getByTestId("playbook-manage-actions").locator("summary").click();
+    await row.getByRole("button", { name: /^Rename / }).click();
     const modal = page.locator("#rename-playbook-modal");
     const input = page.locator("#rename-new-name-input");
     await input.fill("invalid/name.json");
@@ -508,7 +510,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(modal).toBeHidden();
     await expect(row).toHaveCount(0);
     await expect(page.locator(".ops-object-item").filter({ hasText: renamed })).toHaveCount(1);
-    await expect(page.locator("#playbook-catalog-heading")).toBeFocused();
+    await expect(page.locator(".ops-object-item").filter({ hasText: renamed }).getByTestId("playbook-manage-actions").locator("summary")).toBeFocused();
     await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
   });
 
@@ -529,7 +531,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         await assertReadableControl(page.locator("#theme-toggle button").first(), "theme target", 0, 44);
         if (width <= 420) {
           const commandHint = page.locator(".ops-command-hint");
-          await expect(commandHint).toHaveAttribute("aria-label", "Jump to surface");
+          await expect(commandHint).toHaveAttribute("aria-label", "Go to…");
           const themeLabels = await page.locator("#theme-toggle button span").all();
           expect(themeLabels).toHaveLength(3);
           for (const label of themeLabels) await expect(label).toBeHidden();
@@ -550,17 +552,17 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           "Control Room": page.getByTestId("control-room-health-link"),
           "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
-          "Sync/Drift": page.getByRole("button", { name: "Refresh sync and queue status", exact: true }),
+          "Sync/Drift": page.getByRole("button", { name: "Refresh sync and index settings", exact: true }),
           "Search": page.getByRole("button", { name: "Run search", exact: true }),
-          "Playbooks": page.getByRole("button", { name: "Load preview", exact: true }).first()
+          "Playbooks": page.getByRole("button", { name: "Preview", exact: true }).first()
         }[surface.name]!;
         await primary.click({ trial: true });
         await assertReadableControl(primary, `${surface.name} common action`, 14, 40);
         await page.evaluate(() => window.scrollTo(0, 0));
         if (width === 390 && surface.name === "Failed Sync") {
           const summary = page.locator("#failed-sync-rollups-heading").locator("..");
-          await expect(summary.locator("span.rounded-full")).toHaveCount(5);
-          await expect(summary).toContainText("5 failed sync jobs");
+          await expect(summary.locator("#failed-sync-rollups-heading span")).toHaveCount(5);
+          await expect(summary).toContainText("unknown 1");
           expect((await summary.boundingBox())!.height, "total plus five reason counts remain compact").toBeLessThanOrEqual(160);
           await expect(page.getByRole("radio")).toHaveCount(2);
         }
@@ -572,17 +574,17 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     }
   });
 
-  test("[layout] long content and five-schema native select", async ({ page }, testInfo) => {
+  test("[layout] long content and five-schema native radio group", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 320, height: 900 });
     await page.goto("/admin/search/ui-fixtures");
     await waitForLiveConnected(page);
-    const select = page.getByRole("combobox", { name: "Schema" });
-    await expect(select.locator("option")).toHaveCount(5);
-    await select.focus();
-    await select.selectOption("ScrypathEcommerce.Catalog.Inventory.Warehouse.StockKeepingUnitWithAnIntentionallyLongName");
+    await expect(page.getByRole("radio")).toHaveCount(5);
+    const selected = page.getByRole("radio", { name: /StockKeepingUnitWithAnIntentionallyLongName/ });
+    await selected.check();
     await expect(page.locator("#selected-schema")).toContainText("StockKeepingUnitWithAnIntentionallyLongName");
-    await expect(select).toBeFocused();
-    await assertReadableControl(select, "schema select", 14, 40);
+    await selected.focus();
+    await expect(selected).toBeFocused();
+    await assertReadableControl(selected.locator(".."), "schema radio row", 14, 40);
     await page.getByText("Diagnostics", { exact: true }).click();
     await page.evaluate(() => window.scrollTo(0, 0));
     await assertOperatorGeometry(page, "long identifiers 320px", [".ops-command-hint", "#theme-toggle"]);
@@ -608,7 +610,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
             }
 
             await expect(page.locator("#theme-toggle")).toHaveCount(1);
-            await expect(page.locator("#theme-toggle-pill")).toHaveCount(1);
+            await expect(page.locator("#theme-toggle-pill")).toHaveCount(0);
+            await expect(page.locator("#theme-toggle button[aria-pressed=true]")).toHaveCount(1);
             await expect(page.locator("#flash-group")).toHaveCount(1);
             await expect(page.locator(".ops-shell")).toBeVisible();
 
@@ -671,14 +674,14 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await lightButton.click();
           await expectThemeRootState(page, "light");
           await expectThemeButtonState(page, "light");
-          const lightPillLeft = await readComputedStyle(page, "#theme-toggle-pill", "left");
+          await expect(lightButton).toHaveAttribute("aria-pressed", "true");
 
           await darkButton.click();
           await expectThemeRootState(page, "dark");
           await expectThemeButtonState(page, "dark");
-          const darkPillLeft = await readComputedStyle(page, "#theme-toggle-pill", "left");
-
-          expect(darkPillLeft, "#theme-toggle-pill must move when switching light -> dark").not.toBe(lightPillLeft);
+          await expect(lightButton).toHaveAttribute("aria-pressed", "false");
+          await expect(darkButton).toHaveAttribute("aria-pressed", "true");
+          await expect(page.locator("#theme-toggle-pill")).toHaveCount(0);
         } finally {
           await close();
         }
@@ -739,6 +742,8 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await expect(page.locator("#ops-cmdk [data-cmdk-item][aria-selected='true']")).toHaveCount(0);
 
           await openCommandPalette(page);
+          await expect(page.locator("[data-cmdk-input]")).toHaveAttribute("aria-activedescendant", "ops-cmdk-item-0");
+          await expect(page.locator("#ops-cmdk-item-0")).toHaveAttribute("aria-selected", "true");
           await expect(page.locator("#ops-cmdk-item-0")).toHaveAttribute("href", "/admin/search");
           await page.keyboard.press("Enter");
           await expect(page).toHaveURL(/\/admin\/search$/);
@@ -786,7 +791,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
             await assertSystemDarkInvariants(page);
           }
 
-          const flash = page.locator("#flash-group [role='alert']:not([hidden])").first();
+          const flash = page.locator("#flash-group [role='status']:not([hidden])").first();
           await expect(flash).toBeVisible();
           await expect(flash).toHaveClass(/ops-flash/);
           await expect(flash).toHaveClass(/ops-flash--info/);

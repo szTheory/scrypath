@@ -2,45 +2,51 @@
 
 ScrypathOps is an optional Phoenix and LiveView interface for inspecting search indexing and sync operations. It complements the library's `Scrypath.*` APIs and Mix tasks; it does not replace them or provide host-application authentication.
 
-## Personas
+## Start with your task
 
-- **On-call engineers** need to see current search health, inspect failed work, and choose a safe recovery action.
-- **Search owners** need to understand index contract and document visibility, then run bounded searches without implying that separate indexes form one merged index.
-- **Library maintainers** need reproducible status, verification commands, and documentation that matches the code.
-- **First-run operators** need to distinguish missing setup from an empty catalog or a failed observation, with a clear next step.
-
-## Jobs-to-be-done
-
-The shared path is **observe → diagnose → recover or explore → verify**. An accepted job or a clean settings contract does not prove that documents are visible in the active index. Preserve that distinction when reading status and recovery results.
+- **Try search:** select a schema, enter a query and inspect the returned records. Search shows which query and schemas produced the results, even if you edit the controls afterward.
+- **Investigate a sync problem:** open Search health, select the affected schema in Failed sync work and review the error. Retry only supported operations. A queued retry is not a completed update; follow its status to check Meilisearch and document visibility.
+- **Reuse a query:** save its inputs from Search, then preview or run it in Saved searches. A saved file contains queries and options, not results or pass/fail expectations. It can include multiple schemas.
+- **Check an index change:** Sync and drift compares your declared settings with Meilisearch automatically. It makes no settings changes. Index promotion remains an advanced action with explicit checks and confirmation.
 
 ## Navigation
 
-The default mount prefix is `/ops`; host applications may mount the interface at another path. Routes below show the default prefix. The Control Room at `/ops/` is the landing page and is not a primary navigation item. The retired `/ops/posture` route redirects to `/ops/health` for saved links.
+The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health.
 
-| Group | Destination | Route | Use and next reference |
-| --- | --- | --- | --- |
-| Home | Control Room | `/ops/` | Read the current summary, then follow the task-specific health, verification, or search handoff. |
-| Recover | Search health | `/ops/health` | Inspect per-schema backend and queue observations. See [Meilisearch operations](../../guides/meilisearch-operations.md). |
-| Recover | Failed sync work | `/ops/failed-sync` | Inspect retained failure evidence before retrying or quarantining work. See [operator Mix tasks](../../guides/operator-mix-tasks.md). |
-| Recover | Sync and drift | `/ops/sync-drift` | Reconcile accepted work, inspect index-contract drift, then verify active-index visibility. See [drift recovery](../../guides/drift-recovery.md) and [sync modes and visibility](../../guides/sync-modes-and-visibility.md). |
-| Explore | Search | `/ops/search` | Run an allowlisted query and inspect results by their submitted target. See [multi-index search](../../guides/multi-index-search.md). |
-| Explore | Playbooks | `/ops/playbooks` | Preview, run, save, and import bounded search playbooks. See the [playbook format](playbook-schema-v1.md) and [team persistence](team-playbook-persistence.md). |
+| Destination | Default route | Purpose |
+| --- | --- | --- |
+| Control Room | `/ops/` | Search entry point and current sync summary. |
+| Search | `/ops/search` | Query configured schemas and inspect attributed results. |
+| Search health | `/ops/health` | Inspect Meilisearch tasks and background sync by schema. |
+| Failed sync work | `/ops/failed-sync` | Review failures and scheduled retries; retry eligible operations. |
+| Sync and drift | `/ops/sync-drift` | Inspect current work, compare index settings and follow a correlated retry. |
+| Saved searches | `/ops/playbooks` | Preview, run, save or import search inputs. |
 
-The primary navigation contract below is machine-checked against `ScrypathOpsWeb.Nav.primary/0`. Its JSON is kept inside an HTML comment so it stays available to verification without appearing in the rendered guide.
+## Reading operational evidence
+
+**Oban jobs** run background synchronization in your application. **Meilisearch tasks** apply changes in the search service. They have separate IDs and states. Pending jobs are not necessarily stuck; a count alone does not establish a backlog. An empty failed-work list does not prove the index is current.
+
+A successful observation reports what was checked. Unavailable, partial or retained evidence stays labeled. Settings agreement and operation completion do not, by themselves, prove expected documents are searchable.
+
+Timestamps display UTC by default. The Time control switches to your browser's local zone and remembers your choice. Click a timestamp, or focus it and press Enter, to copy its original source value; copy failures expose that exact value for manual copying.
+
+Saved searches use the existing **Playbook v1 JSON format** and `/playbooks` route. The Storage folder is a server-side directory, not a team or account. See the [file format](playbook-schema-v1.md) and [persistence setup](team-playbook-persistence.md).
+
+## Further help
+
+- [Sync modes and visibility](../../guides/sync-modes-and-visibility.md)
+- [Failure recovery](../../guides/drift-recovery.md)
+- [Meilisearch operations](../../guides/meilisearch-operations.md)
+- [Operator Mix tasks](../../guides/operator-mix-tasks.md)
+- [Multi-index search](../../guides/multi-index-search.md)
+
+The hidden navigation contract is checked against `ScrypathOpsWeb.Nav.primary/0`.
 
 <!-- scrypath:nav-contract-begin -->
 <!--
-[{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/search","label":"Search"},{"route":"/ops/playbooks","label":"Playbooks"}]
+[{"route":"/ops/search","label":"Search"},{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/playbooks","label":"Saved searches"}]
 -->
 <!-- scrypath:nav-contract-end -->
-
-## Handoffs
-
-- **Incident response:** Control Room → Search health → Failed sync work → Sync and drift → Control Room. Confirm the correlated task and document observation before treating recovery as complete.
-- **Change preflight:** Control Room → Sync and drift → inspect the declared contract and current document evidence → Search health. Index promotion is an advanced, confirmed action.
-- **Search exploration:** Control Room → Search → capture the submitted targets and criteria → Playbooks to save or replay the bounded check.
-
-The contextual trail identifies the current task group and page; sibling routes remain available in primary navigation. Each page's next-step handoff should direct operators to the next safe action without implying that an unobserved state is healthy.
 
 ## Security boundary
 

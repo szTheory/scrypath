@@ -55,24 +55,18 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     end)
   end
 
-  test "operator-ia.md spine: major ## headings appear in JTBD / nav order" do
-    assert @operator_ia =~ "## Personas"
-    assert @operator_ia =~ "## Jobs-to-be-done"
+  test "guide starts with tasks and keeps the operational distinctions" do
+    assert @operator_ia =~ "## Start with your task"
     assert @operator_ia =~ "## Navigation"
-
-    personas = @operator_ia |> :binary.match("## Personas") |> elem(0)
-    jobs = @operator_ia |> :binary.match("## Jobs-to-be-done") |> elem(0)
-    nav = @operator_ia |> :binary.match("## Navigation") |> elem(0)
-
-    assert personas < jobs
-    assert jobs < nav
+    assert @operator_ia =~ "Oban jobs"
+    assert @operator_ia =~ "Meilisearch tasks"
+    assert @operator_ia =~ "not a completed update"
   end
 
-  test "operator-ia.md navigation table keeps a Route column for ops surfaces" do
-    assert @operator_ia =~ "| Route |"
-    assert @operator_ia =~ "| Group | Destination | Route | Use and next reference |"
-    assert @operator_ia =~ "/ops/health"
-    assert @operator_ia =~ "redirects to `/ops/health`"
+  test "guide documents the current flat navigation and legacy route" do
+    assert @operator_ia =~ "| Destination | Default route | Purpose |"
+    assert @operator_ia =~ "/ops/posture"
+    assert @operator_ia =~ "Saved searches"
   end
 
   test "machine-readable nav JSON stays hidden from the rendered guide" do
@@ -101,31 +95,25 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert length(items) == 5
 
     expected_path_strings = [
+      "/ops/search",
       "/ops/health",
       "/ops/failed-sync",
       "/ops/sync-drift",
-      "/ops/search",
       "/ops/playbooks"
     ]
 
     expected_labels = [
+      "Search",
       "Search health",
       "Failed sync work",
       "Sync and drift",
-      "Search",
-      "Playbooks"
+      "Saved searches"
     ]
 
     assert Enum.map(items, &(&1.path |> to_string())) == expected_path_strings
     assert Enum.map(items, & &1.label) == expected_labels
 
-    assert Enum.map(items, & &1.title) == [
-             "Search health",
-             "Failed sync work",
-             "Sync and drift",
-             "Search",
-             "Saved playbooks"
-           ]
+    assert Enum.map(items, & &1.title) == expected_labels
   end
 
   test "every live route in live_session :ops appears in Nav.primary/0" do
@@ -152,7 +140,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @sync_drift_live =~
              "OperatorSelection.path(@mount_path, \"health\", @selected_schema)"
 
-    assert @failed_sync_live =~ "Retry sync work"
-    assert @failed_sync_live =~ "summary=\"Diagnostics\""
+    assert @failed_sync_live =~ "phx-click=\"retry\""
+    assert @failed_sync_live =~ "summary=\"Job details\""
   end
 end

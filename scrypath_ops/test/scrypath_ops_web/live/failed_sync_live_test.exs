@@ -178,9 +178,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
 
-    assert html =~ "Failed job 509"
-    assert html =~ "upsert · oban · last attempt Oct 10, 2026 at 14:15 UTC"
-    assert html =~ "Retry currently available."
+    assert html =~ "Oban job #509"
+    assert html =~ ~s(datetime="2026-10-10T14:15:00Z")
+    assert html =~ "Add or update documents"
+    refute html =~ "Retry currently available."
     assert html =~ "the Variant source remains visible"
     assert has_element?(view, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
@@ -197,10 +198,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     accepted = render_click(view, "retry", %{"id" => "509"})
 
-    assert accepted =~ "Retry accepted"
-    assert accepted =~ "Queue job 991"
-    assert accepted =~ "Original failure #509 retained"
-    assert accepted =~ "Failed job 509"
+    assert accepted =~ "Retry queued"
+    assert accepted =~ "Oban job #991"
+    assert accepted =~ "Original job #509 is retained"
+    assert accepted =~ "Oban job #509"
     refute accepted =~ "Recovery verified"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
   end
@@ -208,26 +209,26 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "2 failed sync jobs need triage"
-    assert html =~ "dominant reason"
-    assert html =~ "1 retryable job"
-    assert html =~ "2 failed sync jobs"
+    assert html =~ "1 failed · 1 retrying"
+    refute html =~ "dominant reason"
+    assert html =~ "Retry scheduled"
+    assert html =~ "Operations needing attention"
     assert html =~ "data-testid=\"failed-sync-row\""
     assert html =~ "data-testid=\"failed-sync-retry\""
-    assert html =~ "Failed sync jobs"
+    assert html =~ "Operations needing attention"
     assert html =~ "Refresh failed sync work"
-    assert html =~ "Retry sync work"
+    assert html =~ "Retry"
     assert html =~ "index missing"
-    assert html =~ "upsert · oban"
-    assert html =~ "Diagnostics"
+    assert html =~ "Oban job"
+    assert html =~ "Job details"
     row_html = lv |> element("article[data-testid='failed-sync-row']:nth-of-type(2)") |> render()
-    retry_pos = row_html |> :binary.match("Retry sync work") |> elem(0)
-    diagnostics_pos = row_html |> :binary.match("Diagnostics") |> elem(0)
+    retry_pos = row_html |> :binary.match("Retry") |> elem(0)
+    diagnostics_pos = row_html |> :binary.match("Job details") |> elem(0)
     assert retry_pos < diagnostics_pos
     # Reason-class rollup tiles (the single, branded representation of by-class counts).
-    assert html =~ "transport: 0"
-    assert html =~ "validation: 0"
-    assert html =~ "unknown: 2"
+    refute html =~ "transport 0"
+    refute html =~ "validation 0"
+    assert html =~ "unknown 2"
   end
 
   test "zero failed sync work shows the empty hero", %{conn: conn} do
@@ -236,9 +237,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ ~s(data-testid="failed-sync-empty-hero")
-    assert html =~ "No failed sync jobs"
-    assert html =~ "Refresh this view"
+    refute html =~ ~s(data-testid="failed-sync-empty-hero")
+    assert html =~ "No failed or retrying sync work"
+    refute html =~ "Refresh this view"
     refute html =~ "data-testid=\"failed-sync-row\""
   end
 
@@ -247,8 +248,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "1 failed sync job needs triage"
-    assert html =~ "1 retryable job"
+    assert html =~ "0 failed · 1 retrying"
+    assert html =~ "Retry scheduled"
     refute html =~ "1 failed sync jobs need triage"
   end
 
@@ -338,9 +339,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "retry", %{"id" => "501"})
 
-    assert html =~ "Retry accepted"
-    assert html =~ "Queue job 991"
-    assert html =~ "Original failure #501 retained"
+    assert html =~ "Retry queued"
+    assert html =~ "Oban job #991"
+    assert html =~ "Original job #501 is retained"
     refute html =~ "Recovery verified"
 
     assigns = :sys.get_state(view.pid).socket.assigns
@@ -364,7 +365,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     changed_assigns = :sys.get_state(view.pid).socket.assigns
     assert changed_assigns.context_generation == generation + 1
     assert changed_assigns.recovery_receipts == %{}
-    refute render(view) =~ "Original failure #501 retained"
+    refute render(view) =~ "Original job #501 is retained"
   end
 
   test "ineligible failed work explains the unavailable retry and never inserts", %{conn: conn} do
@@ -387,12 +388,12 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
 
-    assert html =~ "Retry unavailable. This work item does not expose a supported retry."
+    assert html =~ "The original documents or document IDs are unavailable for retry."
     refute has_element?(view, "[data-testid='failed-sync-retry']")
 
     rejected = render_click(view, "retry", %{"id" => "515"})
     assert rejected =~ "That job does not expose a retry action"
-    assert rejected =~ "Failed job 515"
+    assert rejected =~ "Oban job #515"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
@@ -459,8 +460,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "cancel_retry_delete", %{})
     refute html =~ "Confirm delete sync work"
-    assert html =~ "Failed job 502"
-    refute html =~ "Retry accepted"
+    assert html =~ "Oban job #502"
+    refute html =~ "Retry queued"
   end
 
   test "schema selector rejects non-allowlisted module strings without crashing", %{conn: conn} do

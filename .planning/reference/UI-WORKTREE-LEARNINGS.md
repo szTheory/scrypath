@@ -5,7 +5,7 @@ phase: null
 generated: "2026-10-14"
 counts:
   decisions: 3
-  lessons: 6
+  lessons: 7
   patterns: 4
   surprises: 3
 source_artifacts:
@@ -80,6 +80,12 @@ Keep captures bound to the source they observed. If files disappear or become st
 
 **Context:** The missing confirmation matrix was disclosed. Historical pilot files were copied unchanged, surviving contact sheets were kept separately, and a fresh matrix remained pending design review.
 **Source:** [Reconciliation report](UI-WORKTREE-RECONCILIATION.md), final artifact check.
+
+### Stateful verification needs a fresh owned search history
+Use a disposable backend per full mutation run. Re-seeding catalog records does not erase Meilisearch task history. Repeated suites can legitimately exceed the bounded history window and block promotion; reset only the owned test service rather than raising limits, fabricating evidence or weakening the guard.
+
+**Context:** During baseline verification, accumulated test history exceeded the 1000-task bound. The guard correctly refused promotion; a fresh owned search service supported the full 168-case inventory, with the separate transition-timing recheck recorded in the results. Retained preview data stayed untouched.
+**Source:** [Baseline results](UI-BASELINE-RESULTS.md), evidence receipts.
 
 ## Patterns
 

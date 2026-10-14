@@ -16,7 +16,7 @@
   </header>
 
   <.form for={@form} phx-change="search" class="storefront-search__layout">
-    <aside class="storefront-search__filters" aria-label="Search filters">
+    <div class="storefront-search__controls">
       <label class="storefront-search__search-field">
         <span>Tenant</span>
         <select name={@form[:tenant_id].name}>
@@ -37,39 +37,7 @@
         />
       </label>
 
-      <section class="storefront-search__facet-group" aria-labelledby="category-facet-heading">
-        <h2 id="category-facet-heading">Categories</h2>
-        <label
-          :for={bucket <- @category_facets}
-          class="storefront-search__facet"
-        >
-          <input
-            type="checkbox"
-            name={@form[:category_id].name}
-            value={bucket.value}
-            checked={to_string(bucket.value) == to_string(@category_id)}
-          />
-          <span>{category_label(@category_labels, bucket.value)}</span>
-          <small>{bucket.count} products</small>
-        </label>
-        <p :if={@category_facets == []} class="storefront-search__facet-empty">
-          {case @search_state do
-            :unavailable -> "Categories are unavailable until search can be checked."
-            :no_tenant -> "Categories appear after a tenant catalog is seeded."
-            :ready -> "No categories match this search."
-          end}
-        </p>
-      </section>
-
-      <section class="storefront-search__facet-group" aria-labelledby="demo-notes-heading">
-        <h2 id="demo-notes-heading">Demo path</h2>
-        <p>
-          Try "quantum", "studio", "scanner", or "cable". The admin UI is mounted under
-          <strong>/admin/search</strong>
-          using the host app repo and Scrypath config.
-        </p>
-      </section>
-    </aside>
+    </div>
 
     <section class="storefront-search__results" aria-label="Search results" data-testid="storefront-results">
       <div class="storefront-search__results-header">
@@ -77,7 +45,8 @@
           <p class="storefront-search__eyebrow">Active tenant</p>
           <h2>{@tenant && @tenant.name || "No tenant seeded"}</h2>
         </div>
-        <p>{length(@results.hits)} visible hits</p>
+        <p :if={@search_state == :ready}>{length(@results.hits)} visible hits</p>
+        <p :if={@search_state == :unavailable}>Results unavailable</p>
       </div>
 
       <article :for={hit <- @results.hits} class="storefront-search__result" data-testid="storefront-result">
@@ -120,5 +89,40 @@
         <p>Adjust the query or filters, then search again.</p>
       </div>
     </section>
+
+    <aside class="storefront-search__filters" aria-label="Search filters">
+      <section class="storefront-search__facet-group" aria-labelledby="category-facet-heading">
+        <h2 id="category-facet-heading">Categories</h2>
+        <label
+          :for={bucket <- @category_facets}
+          class="storefront-search__facet"
+        >
+          <input
+            type="checkbox"
+            name={@form[:category_id].name}
+            value={bucket.value}
+            checked={to_string(bucket.value) == to_string(@category_id)}
+          />
+          <span>{category_label(@category_labels, bucket.value)}</span>
+          <small>{bucket.count} products</small>
+        </label>
+        <p :if={@category_facets == []} class="storefront-search__facet-empty">
+          {case @search_state do
+            :unavailable -> "Categories are unavailable until search can be checked."
+            :no_tenant -> "Categories appear after a tenant catalog is seeded."
+            :ready -> "No categories match this search."
+          end}
+        </p>
+      </section>
+
+      <section class="storefront-search__facet-group" aria-labelledby="demo-notes-heading">
+        <h2 id="demo-notes-heading">Demo path</h2>
+        <p>
+          Try "quantum", "studio", "scanner", or "cable". The admin UI is mounted under
+          <strong>/admin/search</strong>
+          using the host app repo and Scrypath config.
+        </p>
+      </section>
+    </aside>
   </.form>
 </main>

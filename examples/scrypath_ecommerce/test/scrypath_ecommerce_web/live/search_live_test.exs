@@ -162,5 +162,7 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     assert html =~ "Categories are unavailable until search can be checked."
     assert html =~ ~s(href="/admin/search/health")
     refute html =~ "No matching results yet"
+    refute html =~ "0 visible hits"
+    assert html =~ "Results unavailable"
   end
 end

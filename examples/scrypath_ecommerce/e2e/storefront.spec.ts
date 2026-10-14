@@ -163,5 +163,5 @@ test("empty searches show a useful zero-results state", async ({ page, request }
 
   const results = page.getByTestId("storefront-results");
   await expect(results.getByText("No matching results yet")).toBeVisible();
-  await expect(results).toContainText("Adjust query or filters");
+  await expect(results).toContainText("Adjust the query or filters");
 });

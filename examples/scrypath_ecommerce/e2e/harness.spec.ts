@@ -24,5 +24,5 @@ test("showcase navigation exposes storefront and operator surfaces", async ({ pa
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 
   await page.goto("/admin/search/playbooks");
-  await expect(page.getByRole("heading", { name: "Saved playbooks" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
 });

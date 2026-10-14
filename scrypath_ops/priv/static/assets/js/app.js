@@ -10,9 +10,9 @@
   };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
-      for (let key of __getOwnPropNames(from))
-        if (!__hasOwnProp.call(to, key) && key !== except)
-          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+      for (let key2 of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key2) && key2 !== except)
+          __defProp(to, key2, { get: () => from[key2], enumerable: !(desc = __getOwnPropDesc(from, key2)) || desc.enumerable });
     }
     return to;
   };
@@ -76,8 +76,8 @@
           addEvent(window2, "resize", repaint);
         }, topbar2 = {
           config: function(opts) {
-            for (var key in opts)
-              if (options.hasOwnProperty(key)) options[key] = opts[key];
+            for (var key2 in opts)
+              if (options.hasOwnProperty(key2)) options[key2] = opts[key2];
           },
           show: function(delay) {
             if (showing) return;
@@ -753,8 +753,8 @@
     static xhrRequest(req, method, endPoint, headers, body, timeout, ontimeout, callback) {
       req.open(method, endPoint, true);
       req.timeout = timeout;
-      for (let [key, value] of Object.entries(headers)) {
-        req.setRequestHeader(key, value);
+      for (let [key2, value] of Object.entries(headers)) {
+        req.setRequestHeader(key2, value);
       }
       req.onerror = () => callback && callback(null);
       req.onreadystatechange = () => {
@@ -782,12 +782,12 @@
     }
     static serialize(obj, parentKey) {
       let queryStr = [];
-      for (var key in obj) {
-        if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+      for (var key2 in obj) {
+        if (!Object.prototype.hasOwnProperty.call(obj, key2)) {
           continue;
         }
-        let paramKey = parentKey ? `${parentKey}[${key}]` : key;
-        let paramVal = obj[key];
+        let paramKey = parentKey ? `${parentKey}[${key2}]` : key2;
+        let paramVal = obj[key2];
         if (typeof paramVal === "object") {
           queryStr.push(this.serialize(paramVal, paramKey));
         } else {
@@ -1377,11 +1377,11 @@
       this.conn.onmessage = (event) => this.onConnMessage(event);
       this.conn.onclose = (event) => this.onConnClose(event);
     }
-    getSession(key) {
-      return this.sessionStore && this.sessionStore.getItem(key);
+    getSession(key2) {
+      return this.sessionStore && this.sessionStore.getItem(key2);
     }
-    storeSession(key, val) {
-      this.sessionStore && this.sessionStore.setItem(key, val);
+    storeSession(key2, val) {
+      this.sessionStore && this.sessionStore.setItem(key2, val);
     }
     connectWithFallback(fallbackTransport, fallbackThreshold = 2500) {
       clearTimeout(this.fallbackTimer);
@@ -1583,8 +1583,8 @@
      *                 `onOpen`, `onClose`, `onError,` and `onMessage`
      */
     off(refs) {
-      for (let key in this.stateChangeCallbacks) {
-        this.stateChangeCallbacks[key] = this.stateChangeCallbacks[key].filter(([ref]) => {
+      for (let key2 in this.stateChangeCallbacks) {
+        this.stateChangeCallbacks[key2] = this.stateChangeCallbacks[key2].filter(([ref]) => {
           return refs.indexOf(ref) === -1;
         });
       }
@@ -1953,18 +1953,18 @@
     canPushState() {
       return typeof history.pushState !== "undefined";
     },
-    dropLocal(localStorage, namespace, subkey) {
-      return localStorage.removeItem(this.localKey(namespace, subkey));
+    dropLocal(localStorage2, namespace, subkey) {
+      return localStorage2.removeItem(this.localKey(namespace, subkey));
     },
-    updateLocal(localStorage, namespace, subkey, initial, func) {
-      const current = this.getLocal(localStorage, namespace, subkey);
-      const key = this.localKey(namespace, subkey);
+    updateLocal(localStorage2, namespace, subkey, initial, func) {
+      const current = this.getLocal(localStorage2, namespace, subkey);
+      const key2 = this.localKey(namespace, subkey);
       const newVal = current === null ? initial : func(current);
-      localStorage.setItem(key, JSON.stringify(newVal));
+      localStorage2.setItem(key2, JSON.stringify(newVal));
       return newVal;
     },
-    getLocal(localStorage, namespace, subkey) {
-      return JSON.parse(localStorage.getItem(this.localKey(namespace, subkey)));
+    getLocal(localStorage2, namespace, subkey) {
+      return JSON.parse(localStorage2.getItem(this.localKey(namespace, subkey)));
     },
     updateCurrentState(callback) {
       if (!this.canPushState()) {
@@ -2163,24 +2163,24 @@
       childrenCids.forEach((childCid) => parentCids.delete(childCid));
       return parentCids;
     },
-    private(el, key) {
-      return el[PHX_PRIVATE] && el[PHX_PRIVATE][key];
+    private(el, key2) {
+      return el[PHX_PRIVATE] && el[PHX_PRIVATE][key2];
     },
-    deletePrivate(el, key) {
-      el[PHX_PRIVATE] && delete el[PHX_PRIVATE][key];
+    deletePrivate(el, key2) {
+      el[PHX_PRIVATE] && delete el[PHX_PRIVATE][key2];
     },
-    putPrivate(el, key, value) {
+    putPrivate(el, key2, value) {
       if (!el[PHX_PRIVATE]) {
         el[PHX_PRIVATE] = {};
       }
-      el[PHX_PRIVATE][key] = value;
+      el[PHX_PRIVATE][key2] = value;
     },
-    updatePrivate(el, key, defaultVal, updateFunc) {
-      const existing = this.private(el, key);
+    updatePrivate(el, key2, defaultVal, updateFunc) {
+      const existing = this.private(el, key2);
       if (existing === void 0) {
-        this.putPrivate(el, key, updateFunc(defaultVal));
+        this.putPrivate(el, key2, updateFunc(defaultVal));
       } else {
-        this.putPrivate(el, key, updateFunc(existing));
+        this.putPrivate(el, key2, updateFunc(existing));
       }
     },
     syncPendingAttrs(fromEl, toEl) {
@@ -2296,28 +2296,28 @@
           }
       }
     },
-    triggerCycle(el, key, currentCycle) {
-      const [cycle, trigger] = this.private(el, key);
+    triggerCycle(el, key2, currentCycle) {
+      const [cycle, trigger] = this.private(el, key2);
       if (!currentCycle) {
         currentCycle = cycle;
       }
       if (currentCycle === cycle) {
-        this.incCycle(el, key);
+        this.incCycle(el, key2);
         trigger();
       }
     },
-    once(el, key) {
-      if (this.private(el, key) === true) {
+    once(el, key2) {
+      if (this.private(el, key2) === true) {
         return false;
       }
-      this.putPrivate(el, key, true);
+      this.putPrivate(el, key2, true);
       return true;
     },
-    incCycle(el, key, trigger = function() {
+    incCycle(el, key2, trigger = function() {
     }) {
-      let [currentCycle] = this.private(el, key) || [0, trigger];
+      let [currentCycle] = this.private(el, key2) || [0, trigger];
       currentCycle++;
-      this.putPrivate(el, key, [currentCycle, trigger]);
+      this.putPrivate(el, key2, [currentCycle, trigger]);
       return currentCycle;
     },
     // maintains or adds privately used hook information
@@ -3621,16 +3621,16 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       var childrenOnly = options.childrenOnly === true;
       var fromNodesLookup = /* @__PURE__ */ Object.create(null);
       var keyedRemovalList = [];
-      function addKeyedRemoval(key) {
-        keyedRemovalList.push(key);
+      function addKeyedRemoval(key2) {
+        keyedRemovalList.push(key2);
       }
       function walkDiscardedChildNodes(node, skipKeyedNodes) {
         if (node.nodeType === ELEMENT_NODE) {
           var curChild = node.firstChild;
           while (curChild) {
-            var key = void 0;
-            if (skipKeyedNodes && (key = getNodeKey(curChild))) {
-              addKeyedRemoval(key);
+            var key2 = void 0;
+            if (skipKeyedNodes && (key2 = getNodeKey(curChild))) {
+              addKeyedRemoval(key2);
             } else {
               onNodeDiscarded(curChild);
               if (curChild.firstChild) {
@@ -3655,9 +3655,9 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         if (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE$1) {
           var curChild = node.firstChild;
           while (curChild) {
-            var key = getNodeKey(curChild);
-            if (key) {
-              fromNodesLookup[key] = curChild;
+            var key2 = getNodeKey(curChild);
+            if (key2) {
+              fromNodesLookup[key2] = curChild;
             }
             indexTree(curChild);
             curChild = curChild.nextSibling;
@@ -3670,9 +3670,9 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         var curChild = el.firstChild;
         while (curChild) {
           var nextSibling = curChild.nextSibling;
-          var key = getNodeKey(curChild);
-          if (key) {
-            var unmatchedFromEl = fromNodesLookup[key];
+          var key2 = getNodeKey(curChild);
+          if (key2) {
+            var unmatchedFromEl = fromNodesLookup[key2];
             if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) {
               curChild.parentNode.replaceChild(unmatchedFromEl, curChild);
               morphEl(unmatchedFromEl, curChild);
@@ -4186,8 +4186,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.trackBefore("updated", container, container);
       liveSocket2.time("morphdom", () => {
         this.streams.forEach(([ref, inserts, deleteIds, reset]) => {
-          inserts.forEach(([key, streamAt, limit, updateOnly]) => {
-            this.streamInserts[key] = { ref, streamAt, limit, reset, updateOnly };
+          inserts.forEach(([key2, streamAt, limit, updateOnly]) => {
+            this.streamInserts[key2] = { ref, streamAt, limit, reset, updateOnly };
           });
           if (reset !== void 0) {
             dom_default.all(document, `[${PHX_STREAM_REF}="${ref}"]`, (child) => {
@@ -4693,14 +4693,14 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       if (source[KEYED]) {
         this.mergeKeyed(target, source);
       } else {
-        for (const key in source) {
-          const val = source[key];
-          const targetVal = target[key];
+        for (const key2 in source) {
+          const val = source[key2];
+          const targetVal = target[key2];
           const isObjVal = isObject(val);
           if (isObjVal && val[STATIC] === void 0 && isObject(targetVal)) {
             this.doMutableMerge(targetVal, val);
           } else {
-            target[key] = val;
+            target[key2] = val;
           }
         }
       }
@@ -4764,13 +4764,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         this.mergeKeyed(merged, source);
       } else {
         merged = { ...target, ...source };
-        for (const key in merged) {
-          const val = source[key];
-          const targetVal = target[key];
+        for (const key2 in merged) {
+          const val = source[key2];
+          const targetVal = target[key2];
           if (isObject(val) && val[STATIC] === void 0 && isObject(targetVal)) {
-            merged[key] = this.cloneMerge(targetVal, val, pruneMagicId);
+            merged[key2] = this.cloneMerge(targetVal, val, pruneMagicId);
           } else if (val === void 0 && isObject(targetVal)) {
-            merged[key] = this.cloneMerge(targetVal, {}, pruneMagicId);
+            merged[key2] = this.cloneMerge(targetVal, {}, pruneMagicId);
           }
         }
       }
@@ -5592,12 +5592,12 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
           "__disconnected",
           "__cleanup__"
         ]);
-        for (const key in callbacks) {
-          if (Object.prototype.hasOwnProperty.call(callbacks, key)) {
-            this[key] = callbacks[key];
-            if (protectedProps.has(key)) {
+        for (const key2 in callbacks) {
+          if (Object.prototype.hasOwnProperty.call(callbacks, key2)) {
+            this[key2] = callbacks[key2];
+            if (protectedProps.has(key2)) {
               console.warn(
-                `Hook object for element #${el.id} overwrites core property '${key}'!`
+                `Hook object for element #${el.id} overwrites core property '${key2}'!`
               );
             }
           }
@@ -5762,9 +5762,9 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       );
     }
   };
-  var prependFormDataKey = (key, prefix) => {
-    const isArray = key.endsWith("[]");
-    let baseKey = isArray ? key.slice(0, -2) : key;
+  var prependFormDataKey = (key2, prefix) => {
+    const isArray = key2.endsWith("[]");
+    let baseKey = isArray ? key2.slice(0, -2) : key2;
     baseKey = baseKey.replace(/([^\[\]]+)(\]?$)/, `${prefix}$1$2`);
     if (isArray) {
       baseKey += "[]";
@@ -5788,43 +5788,43 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     }
     const formData = new FormData(form);
     const toRemove = [];
-    formData.forEach((val, key, _index) => {
+    formData.forEach((val, key2, _index) => {
       if (val instanceof File) {
-        toRemove.push(key);
+        toRemove.push(key2);
       }
     });
-    toRemove.forEach((key) => formData.delete(key));
+    toRemove.forEach((key2) => formData.delete(key2));
     const params = new URLSearchParams();
     const { inputsUnused, onlyHiddenInputs } = Array.from(form.elements).reduce(
       (acc, input) => {
         const { inputsUnused: inputsUnused2, onlyHiddenInputs: onlyHiddenInputs2 } = acc;
-        const key = input.name;
-        if (!key) {
+        const key2 = input.name;
+        if (!key2) {
           return acc;
         }
-        if (inputsUnused2[key] === void 0) {
-          inputsUnused2[key] = true;
+        if (inputsUnused2[key2] === void 0) {
+          inputsUnused2[key2] = true;
         }
-        if (onlyHiddenInputs2[key] === void 0) {
-          onlyHiddenInputs2[key] = true;
+        if (onlyHiddenInputs2[key2] === void 0) {
+          onlyHiddenInputs2[key2] = true;
         }
         const isUsed = dom_default.private(input, PHX_HAS_FOCUSED) || dom_default.private(input, PHX_HAS_SUBMITTED);
         const isHidden = input.type === "hidden";
-        inputsUnused2[key] = inputsUnused2[key] && !isUsed;
-        onlyHiddenInputs2[key] = onlyHiddenInputs2[key] && isHidden;
+        inputsUnused2[key2] = inputsUnused2[key2] && !isUsed;
+        onlyHiddenInputs2[key2] = onlyHiddenInputs2[key2] && isHidden;
         return acc;
       },
       { inputsUnused: {}, onlyHiddenInputs: {} }
     );
-    for (const [key, val] of formData.entries()) {
-      if (onlyNames.length === 0 || onlyNames.indexOf(key) >= 0) {
-        const isUnused = inputsUnused[key];
-        const hidden = onlyHiddenInputs[key];
-        if (isUnused && !(submitter && submitter.name == key) && !hidden) {
-          params.append(prependFormDataKey(key, "_unused_"), "");
+    for (const [key2, val] of formData.entries()) {
+      if (onlyNames.length === 0 || onlyNames.indexOf(key2) >= 0) {
+        const isUnused = inputsUnused[key2];
+        const hidden = onlyHiddenInputs[key2];
+        if (isUnused && !(submitter && submitter.name == key2) && !hidden) {
+          params.append(prependFormDataKey(key2, "_unused_"), "");
         }
         if (typeof val === "string") {
-          params.append(key, val);
+          params.append(key2, val);
         }
       }
     }
@@ -7058,8 +7058,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         if (!meta) {
           meta = {};
         }
-        for (const key in value) {
-          meta[key] = value[key];
+        for (const key2 in value) {
+          meta[key2] = value[key2];
         }
       }
       return meta;
@@ -8489,14 +8489,14 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
           const phxChange = this.binding("change");
           const input = e.target;
           if (this.blockPhxChangeWhileComposing && e.isComposing) {
-            const key = `composition-listener-${type}`;
-            if (!dom_default.private(input, key)) {
-              dom_default.putPrivate(input, key, true);
+            const key2 = `composition-listener-${type}`;
+            if (!dom_default.private(input, key2)) {
+              dom_default.putPrivate(input, key2, true);
               input.addEventListener(
                 "compositionend",
                 () => {
                   input.dispatchEvent(new Event(type, { bubbles: true }));
-                  dom_default.deletePrivate(input, key);
+                  dom_default.deletePrivate(input, key2);
                 },
                 { once: true }
               );
@@ -8651,6 +8651,72 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/app.js
   var import_topbar = __toESM(require_topbar());
 
+  // js/ops_clipboard.js
+  var attempts = /* @__PURE__ */ new WeakMap();
+  document.addEventListener("click", async (event) => {
+    const button = event.target instanceof Element ? event.target.closest("[data-ops-copy-text]") : null;
+    if (!button) return;
+    const group = button.closest("[data-ops-copy-group]");
+    const feedback = group?.querySelector("[data-ops-copy-feedback]");
+    const fallback = group?.querySelector("[data-ops-copy-fallback]");
+    if (!feedback || !fallback) return;
+    const attempt = (attempts.get(button) || 0) + 1;
+    attempts.set(button, attempt);
+    const source = button.dataset.opsCopyText;
+    feedback.textContent = "";
+    fallback.hidden = true;
+    try {
+      if (typeof navigator.clipboard?.writeText !== "function") throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(source);
+      if (!button.isConnected || attempts.get(button) !== attempt || source !== button.dataset.opsCopyText) return;
+      feedback.textContent = "Diagnostics copied";
+      setTimeout(() => {
+        if (attempts.get(button) === attempt) feedback.textContent = "";
+      }, 4e3);
+    } catch (_) {
+      if (!button.isConnected || attempts.get(button) !== attempt || source !== button.dataset.opsCopyText) return;
+      feedback.textContent = "Could not copy. Select and copy the details below.";
+      fallback.hidden = false;
+    }
+  });
+
+  // js/ops_time.js
+  var key = "scrypath:time-zone";
+  var preference = "utc";
+  try {
+    preference = localStorage.getItem(key) === "local" ? "local" : "utc";
+  } catch (_) {
+  }
+  function formatTimes(root = document) {
+    const options = { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", timeZoneName: "short", ...preference === "utc" ? { timeZone: "UTC" } : {} };
+    const formatter = new Intl.DateTimeFormat(void 0, options);
+    root.querySelectorAll("[data-ops-time-value]").forEach((time) => {
+      const date = new Date(time.getAttribute("datetime"));
+      if (Number.isNaN(date.getTime())) return;
+      time.textContent = formatter.format(date);
+    });
+  }
+  function syncTimePreference() {
+    document.querySelectorAll("[data-ops-time-zone]").forEach((select) => {
+      select.value = preference;
+    });
+    formatTimes();
+  }
+  document.addEventListener("change", (event) => {
+    if (!event.target.matches("[data-ops-time-zone]")) return;
+    preference = event.target.value === "local" ? "local" : "utc";
+    try {
+      localStorage.setItem(key, preference);
+    } catch (_) {
+    }
+    syncTimePreference();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key !== key && event.key !== null) return;
+    preference = event.newValue === "local" ? "local" : "utc";
+    syncTimePreference();
+  });
+
   // js/ops_hooks.js
   var opsModalPendingTrigger = null;
   var activeOpsModal = null;
@@ -8706,6 +8772,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   var OpsTimestampCopy = {
     mounted() {
       this.latestAttempt = 0;
+      formatTimes(this.el);
+      this.sourceValue = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy;
       this.onCopyClick = async (event) => {
         const trigger = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-copy]") : null;
         if (!trigger || !this.el.contains(trigger)) return;
@@ -8724,7 +8792,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
           });
         } catch (_error) {
           if (attempt !== this.latestAttempt || !trigger.isConnected) return;
-          this.el.querySelector("details.ops-time__details")?.setAttribute("open", "");
+          const fallback = this.el.querySelector("[data-ops-time-fallback]");
+          if (fallback) fallback.hidden = false;
           this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true);
         }
       };
@@ -8739,13 +8808,25 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.el.addEventListener("click", this.onCopyClick);
       this.el.addEventListener("click", this.onDismissClick);
     },
+    updated() {
+      const current = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy;
+      if (current !== this.sourceValue) {
+        this.latestAttempt += 1;
+        this.clearFeedback();
+        this.sourceValue = current;
+      }
+      formatTimes(this.el);
+    },
     destroyed() {
+      this.latestAttempt += 1;
       window.clearTimeout(this.dismissTimer);
       this.el.removeEventListener("click", this.onCopyClick);
       this.el.removeEventListener("click", this.onDismissClick);
     },
     clearFeedback() {
       window.clearTimeout(this.dismissTimer);
+      const fallback = this.el.querySelector("[data-ops-time-fallback]");
+      if (fallback) fallback.hidden = true;
       const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
       const message = this.el.querySelector("[data-ops-timestamp-message]");
       const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
@@ -8786,7 +8867,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.onModalOverlayOpen = () => this.closeForModal();
       this.onCmdkKeydown = (e) => this.overlayKeydown(e, this.cmdk);
       this.onSheetKeydown = (e) => this.overlayKeydown(e, this.sheet);
-      this.onCmdkPointerOver = (e) => {
+      this.onCmdkPointerMove = (e) => {
         const item = e.target instanceof Element ? e.target.closest("[data-cmdk-item]") : null;
         const index = this.visible.indexOf(item);
         if (index >= 0 && index !== this.activeIndex) this.setActive(index);
@@ -8801,7 +8882,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.addEventListener("click", this.onCommandOpenClick);
       this.cmdk.addEventListener("keydown", this.onCmdkKeydown);
-      this.list.addEventListener("pointerover", this.onCmdkPointerOver);
+      this.list.addEventListener("pointermove", this.onCmdkPointerMove);
       this.sheet.addEventListener("keydown", this.onSheetKeydown);
       this.cmdk.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.close()));
       this.sheet.querySelectorAll("[data-cmdk-close]").forEach((el) => el.addEventListener("click", () => this.closeSheet()));
@@ -8813,7 +8894,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen);
       document.removeEventListener("click", this.onCommandOpenClick);
       this.cmdk.removeEventListener("keydown", this.onCmdkKeydown);
-      this.list.removeEventListener("pointerover", this.onCmdkPointerOver);
+      this.list.removeEventListener("pointermove", this.onCmdkPointerMove);
       this.sheet.removeEventListener("keydown", this.onSheetKeydown);
     },
     isTyping() {
@@ -9321,6 +9402,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       this.restoreBackground();
     }
   };
+  window.addEventListener("phx:page-loading-stop", () => syncTimePreference());
+  syncTimePreference();
 
   // js/app.js
   var csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
@@ -9333,17 +9416,17 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       clear() {
         entries.clear();
       },
-      getItem(key) {
-        return entries.get(key) ?? null;
+      getItem(key2) {
+        return entries.get(key2) ?? null;
       },
       key(index) {
         return Array.from(entries.keys())[index] ?? null;
       },
-      removeItem(key) {
-        entries.delete(key);
+      removeItem(key2) {
+        entries.delete(key2);
       },
-      setItem(key, value) {
-        entries.set(String(key), String(value));
+      setItem(key2, value) {
+        entries.set(String(key2), String(value));
       }
     };
   };
@@ -9363,14 +9446,14 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       } catch (_error) {
       }
     },
-    getItem(key) {
+    getItem(key2) {
       try {
-        const value = window.localStorage.getItem(key);
-        if (value === null) memoryStorage.removeItem(key);
-        else memoryStorage.setItem(key, value);
+        const value = window.localStorage.getItem(key2);
+        if (value === null) memoryStorage.removeItem(key2);
+        else memoryStorage.setItem(key2, value);
         return value;
       } catch (_error) {
-        return memoryStorage.getItem(key);
+        return memoryStorage.getItem(key2);
       }
     },
     key(index) {
@@ -9380,17 +9463,17 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         return memoryStorage.key(index);
       }
     },
-    removeItem(key) {
-      memoryStorage.removeItem(key);
+    removeItem(key2) {
+      memoryStorage.removeItem(key2);
       try {
-        window.localStorage.removeItem(key);
+        window.localStorage.removeItem(key2);
       } catch (_error) {
       }
     },
-    setItem(key, value) {
-      memoryStorage.setItem(key, value);
+    setItem(key2, value) {
+      memoryStorage.setItem(key2, value);
       try {
-        window.localStorage.setItem(key, value);
+        window.localStorage.setItem(key2, value);
       } catch (_error) {
       }
     }

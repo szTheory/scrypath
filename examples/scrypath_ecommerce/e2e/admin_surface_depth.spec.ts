@@ -38,6 +38,7 @@ import {
 } from "./helpers/theme-grid";
 
 const GLOW_RGB = "108, 92, 231";
+const DARK_SURFACE_2_RGB = "rgb(34, 40, 49)";
 const COPPER_RGB = "193, 122, 62";
 const ELEVATION_DELTA_FLOOR = 0.0045;
 const FLAT_SURFACE_DELTA_FLOOR = 0.011;
@@ -414,10 +415,10 @@ async function preparePopulatedPlaybooks(page: Page): Promise<void> {
   await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
 
   const basename = `surface-depth-${Date.now()}.json`;
-  await page.getByRole("button", { name: "Save as playbook" }).click();
+  await page.getByRole("button", { name: "Save search" }).click();
   await page.getByLabel("Filename").fill(basename);
-  await page.getByRole("button", { name: "Save playbook" }).click();
-  await expect(page.getByText(new RegExp(`Saved playbook ${basename.replace(".", "\\.")}`))).toBeVisible();
+  await page.locator("#search-capture-form button[type=submit]").click();
+  await expect(page.getByText(new RegExp(`Saved search ${basename.replace(".", "\\.")}`))).toBeVisible();
 
   await gotoPlaybooks(page);
   await expect(page.locator(".ops-object-item").first()).toBeVisible();
@@ -495,6 +496,8 @@ const DEPTH_TARGETS: DepthTarget[] = [
     prepare: preparePopulatedPlaybooks
   }
 ];
+
+test.use({ actionTimeout: 10_000 });
 
 test.describe("admin surface depth — SCREEN-DARK-01", () => {
   test.describe.configure({ timeout: 120_000 });
@@ -667,19 +670,19 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await gotoSearch(page);
           const query = `phase176-no-hit-${Date.now()}-${viewport.width}`;
           const queryInput = page.getByLabel("Search text");
-          await page.getByLabel("Page size").fill("10");
+          await page.getByLabel("Results per schema").fill("10");
           await queryInput.fill(query);
           await queryInput.press("Enter");
           await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
           await expect(page.getByText("No matching documents", { exact: true })).toBeVisible();
-          await expect(page.getByRole("button", { name: "Save as playbook" })).toBeVisible();
-          await page.getByRole("button", { name: "Save as playbook" }).click();
+          await expect(page.getByRole("button", { name: "Save search" })).toBeVisible();
+          await page.getByRole("button", { name: "Save search" }).click();
 
           const captureForm = page.locator("#search-capture-form");
           await expect(captureForm).toBeVisible();
           await expect(page.locator("#search-capture-json")).not.toHaveAttribute("open", "");
           await expect(
-            page.getByText("Choose a new .json filename; Search capture cannot replace an existing file.")
+            page.getByText("Choose a new filename ending in .json. Existing files are kept.")
           ).toBeVisible();
           await expectSearchDocumentToFit(page);
 
@@ -702,10 +705,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await page.getByLabel("Filename").fill(occupiedName!);
           await page.getByLabel("Search title").fill("A long but optional zero-hit search title for responsive coverage");
           await page.getByLabel("Description").fill("Criteria-only capture from an eligible zero-hit Search response; this description remains available after a rejected collision.");
-          await page.getByRole("button", { name: "Save playbook" }).click();
+          await page.locator("#search-capture-form button[type=submit]").click();
 
           const captureError = page.getByTestId("search-capture-error");
-          await expect(captureError).toContainText("That playbook name is already in use — pick another basename.");
+          await expect(captureError).toContainText("That filename is already in use. Choose another.");
           await expect(page.getByLabel("Filename")).toHaveValue(occupiedName!);
           await expect(page.getByLabel("Search title")).toHaveValue("A long but optional zero-hit search title for responsive coverage");
           await expect(page.getByLabel("Description")).toHaveValue("Criteria-only capture from an eligible zero-hit Search response; this description remains available after a rejected collision.");
@@ -730,8 +733,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
           const basename = `surface-depth-search-capture-${themeSlug(mode)}-${viewport.width}-${Date.now()}.json`;
           await page.getByLabel("Filename").fill(basename);
-          await page.getByRole("button", { name: "Save playbook" }).click();
-          await expect(page.getByText(`Saved playbook ${basename}.`, { exact: true })).toBeVisible();
+          await page.locator("#search-capture-form button[type=submit]").click();
+          await expect(page.getByText(`Saved search ${basename}.`, { exact: true })).toBeVisible();
 
           const saved = JSON.parse(readFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "utf8"));
           expect(saved.mode).toBe("search");
@@ -795,7 +798,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await expect(page.getByRole("link", { name: "Import JSON" })).toBeVisible();
           const initialRow = page.locator(".ops-object-item").filter({ hasText: catalogName });
           await expect(initialRow.getByRole("button", { name: `Run ${catalogName} without preview` })).toBeVisible();
-          await expect(page.getByRole("button", { name: "Load preview" }).first()).toBeVisible();
+          await expect(page.getByRole("button", { name: "Preview", exact: true }).first()).toBeVisible();
           await expectPlaybookDocumentToFit(page);
 
           if (evidenceDir) {
@@ -813,16 +816,16 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
           await expect(page.locator("#playbook-draft-origin")).toContainText("Imported draft · not saved");
           await expect(page.locator("#playbook-draft-origin")).toContainText("pasted JSON");
-          await expect(page.getByRole("button", { name: "Run playbook" })).toBeEnabled();
-          await expect(page.getByRole("button", { name: "Save playbook to workspace" })).toBeEnabled();
-          await expect(page.getByText("Saving a workspace playbook replaces a file with the same filename.")).toBeVisible();
+          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
+          await expect(page.locator("#playbook-save-form button[type=submit]")).toBeEnabled();
+          await expect(page.getByText("Saving replaces the file with the same name. Use a new filename to keep both.")).toBeVisible();
           await expect(page.locator("#playbook-run-outcome")).toHaveCount(0);
           await expectPlaybookDocumentToFit(page);
 
           await page.getByLabel("Filename").fill(basename);
-          await page.getByRole("button", { name: "Save playbook to workspace" }).click();
+          await page.getByRole("button", { name: "Save search" }).click();
           await expect(page.getByText(`Saved ${basename}`, { exact: true })).toBeVisible();
-          await expect(page.locator("#playbook-draft-origin")).toContainText(`Workspace file · ${basename}`);
+          await expect(page.locator("#playbook-draft-origin")).toContainText(`Saved file · ${basename}`);
 
           const saved = JSON.parse(readFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "utf8"));
           expect(saved.title).toBe(source.title);
@@ -831,10 +834,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           expect(saved.opts.page.size).toBe(10);
 
           const row = page.locator(".ops-object-item").filter({ hasText: basename });
-          await row.getByRole("button", { name: "Load preview" }).click();
-          await expect(page.locator("#playbook-draft-origin")).toContainText(`Workspace file · ${basename}`);
-          await page.getByRole("button", { name: "Run playbook" }).click();
-          await expect(page.locator("#playbook-run-outcome")).toContainText("Playbook run completed");
+          await row.getByRole("button", { name: "Preview", exact: true }).click();
+          await expect(page.locator("#playbook-draft-origin")).toContainText(`Saved file · ${basename}`);
+          await page.getByRole("button", { name: "Run search" }).click();
+          await expect(page.locator("#playbook-run-outcome")).toContainText("Search completed");
           await expect(page.locator("#playbook-run-source")).toContainText(basename);
           await expect(page.locator("#playbook-run-outcome")).toContainText("ScrypathEcommerce.Catalog.Product");
           await expectPlaybookDocumentToFit(page);
@@ -873,7 +876,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
           const shortcutRow = page.locator(".ops-object-item").filter({ hasText: catalogName });
           await shortcutRow.getByRole("button", { name: `Run ${catalogName} without preview` }).click();
-          await expect(page.locator("#playbook-run-outcome")).toContainText("Playbook run completed");
+          await expect(page.locator("#playbook-run-outcome")).toContainText("Search completed");
           await expect(page.locator("#playbook-run-source")).toContainText(catalogName);
           await expectPlaybookDocumentToFit(page);
         } finally {
@@ -945,12 +948,17 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           // File selection is only preparation. The preview and run state stay empty until submit.
           await expect(page.locator("#playbook-preview")).toHaveCount(0);
           await expect(page.locator("#playbook-run-outcome")).toHaveCount(0);
-          await page.getByRole("button", { name: "Import playbook JSON" }).click();
+          await page.getByRole("button", { name: "Import saved search" }).click();
           await expect(page.locator("#playbook-draft-origin")).toContainText(uploadedName);
           await expect(page.locator("#playbook-preview")).toContainText(uploadedQuery);
-          await expect(page.getByRole("button", { name: "Run playbook" })).toBeEnabled();
+          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
           await expect(page.locator("#playbook-run-outcome")).toHaveCount(0);
           await expectPlaybookDocumentToFit(page);
+
+          const importNotice = page.locator("#flash-info");
+          await expect(importNotice).toContainText("Imported saved search from file.");
+          await importNotice.getByRole("button", { name: "Close notification" }).click();
+          await expect(importNotice).toHaveCount(0);
 
           const pasteSummary = page.locator("#playbook-import details > summary");
           if (!(await page.locator("#playbook-import details").evaluate((el) => (el as HTMLDetailsElement).open))) {
@@ -960,7 +968,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await page.locator("#playbook-paste-json").fill(longInvalidJson);
           await page.getByRole("button", { name: "Import from paste" }).click();
 
-          await expect(page.locator("#playbook-import-error")).toContainText("This file is not valid playbook JSON.");
+          await expect(page.locator("#playbook-import-error")).toContainText("This file is not valid saved search JSON.");
           await expect(page.locator("#playbook-import-error")).toContainText("The previous valid preview remains selected.");
           await expect(page.locator("#playbook-paste-json")).toHaveValue(longInvalidJson);
           await expect(page.locator("#playbook-import details")).toHaveJSProperty("open", true);
@@ -1020,7 +1028,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
         await page.getByRole("button", { name: "Import from paste" }).click();
         await expect(page.locator("#playbook-preview")).toContainText("modal focus contract");
         await page.locator("#save_basename").fill(sourceName);
-        await page.getByRole("button", { name: "Save playbook to workspace" }).click();
+        await page.getByRole("button", { name: "Save search" }).click();
 
         const sourceId = playbookDomId(sourceName);
         const sourceManage = page.locator(`#playbook-manage-${sourceId}`);
@@ -1042,7 +1050,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           "the background import section is inert while a file dialog is open"
         ).toBe(true);
 
-        await page.getByRole("button", { name: "Close Duplicate playbook dialog" }).click();
+        await page.getByRole("button", { name: "Close Duplicate saved search dialog" }).click();
         await expect(duplicateDialog).toHaveCount(0);
         await expect(sourceSummary).toBeFocused();
 
@@ -1079,7 +1087,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
         await renameInput.fill("bad/name.json");
         await expect(renameInput).toBeFocused();
         await page.getByRole("button", { name: "Rename", exact: true }).click();
-        await expect(page.locator("#rename-new-name-input-error")).toContainText("basename rules");
+        await expect(page.locator("#rename-new-name-input-error")).toContainText("Filename");
         await expect(renameInput).toHaveValue("bad/name.json");
         await expect(renameInput).toBeFocused();
 
@@ -1104,7 +1112,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
         const deleteDialog = page.locator("#delete-playbook-modal");
         const deleteInput = page.locator("#delete-confirm-input");
         const deleteCancel = page.getByRole("button", { name: "Cancel delete" });
-        const closeDelete = page.getByRole("button", { name: "Close Delete playbook file dialog" });
+        const closeDelete = page.getByRole("button", { name: "Close Delete saved search dialog" });
         await expect(deleteDialog).toBeVisible();
         await expect(deleteCancel).toBeFocused();
         await expect(page.locator(`#playbook-manage-${copyId}`)).toHaveJSProperty("open", false);
@@ -1190,7 +1198,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
             await input.fill("bad/name.json");
             await page.getByRole("button", { name: "Rename", exact: true }).click();
-            await expect(page.locator("#rename-new-name-input-error")).toContainText("basename rules");
+            await expect(page.locator("#rename-new-name-input-error")).toContainText("Filename");
             await expect(input).toHaveValue("bad/name.json");
             await expect(input).toBeFocused();
             await expect(page.locator("#rename-new-name-input-error")).toHaveCSS("font-size", "14px");

@@ -48,11 +48,11 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="button"
       class={["ops-command-hint", @class]}
       data-ops-command-open
-      aria-label="Jump to surface"
+      aria-label="Go to…"
       aria-keyshortcuts="Meta+K Control+K"
     >
       <.icon name="hero-magnifying-glass" class="ops-command-hint__icon size-4" />
-      <span>Jump to surface</span>
+      <span>Go to…</span>
       <kbd class="ops-kbd">⌘K</kbd>
     </button>
     """
@@ -126,6 +126,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:class, :any, default: nil)
   attr(:prominent_title, :boolean, default: false)
   slot(:actions)
+  slot(:metadata)
   slot(:inner_block, required: true)
 
   def ops_section(assigns) do
@@ -148,7 +149,8 @@ defmodule ScrypathOpsWeb.OpsUi do
             {@title}
           </h2>
           <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
-          <p :if={@meta} class="font-mono text-ops-sm tabular-nums text-base-content/60">{@meta}</p>
+          <p :if={@meta} class="text-ops-sm tabular-nums text-base-content/70">{@meta}</p>
+          <div :if={@metadata != []}>{render_slot(@metadata)}</div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap items-center justify-end gap-2">
           {render_slot(@actions)}
@@ -567,11 +569,6 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  defp trail_for(:posture), do: {"Recover", "Search health"}
-  defp trail_for(:failed_sync), do: {"Recover", "Failed sync work"}
-  defp trail_for(:sync_drift), do: {"Recover", "Sync and drift"}
-  defp trail_for(:search), do: {"Explore", "Search"}
-  defp trail_for(:playbooks), do: {"Explore", "Playbooks"}
   defp trail_for(_), do: nil
 
   @doc """
@@ -658,7 +655,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
-      <span class="ops-intent-card__cta">{@route_label} <span aria-hidden="true">→</span></span>
+      <span class="ops-intent-card__cta" aria-hidden="true">→</span>
     </.link>
     """
   end
@@ -1235,7 +1232,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact time metadata or snapshot-relative operational evidence with a native exact-value disclosure."
+  @doc "Time metadata with a shared UTC/local display preference and exact-source clipboard feedback."
   attr(:id, :string, default: nil)
   attr(:dt, :any, default: nil)
   attr(:snapshot_at, :any, default: nil)
@@ -1249,61 +1246,33 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_time(assigns) do
     exact = exact_dt(assigns.dt, assigns.source_iso)
-    human = if exact, do: human_dt(assigns.dt, assigns.snapshot_at), else: assigns.state_text
 
     assigns =
       assigns
       |> assign(:exact, exact)
-      |> assign(:human, human)
-      |> assign(:utc_iso, utc_iso(assigns.dt))
-      |> assign(:utc_absolute, utc_absolute(assigns.dt))
-      |> assign(:aria_label, time_aria_label(assigns.label, human, assigns.operational))
+      |> assign(:human, if(exact, do: utc_absolute(assigns.dt), else: assigns.state_text))
+      |> assign(:age, if(exact, do: human_dt(assigns.dt, assigns.snapshot_at), else: nil))
+      |> assign(:time_id, assigns.id || "ops-time-#{System.unique_integer([:positive])}")
 
     ~H"""
-    <span
-      id={@id}
-      class={["ops-time", @operational && "ops-time--operational", @class]}
-      phx-hook={if(@operational && @exact, do: "OpsTimestampCopy")}
-    >
-      <span :if={@label} class="ops-time__label">{@label}</span>
+    <span id={@time_id} class={["ops-time", @class]} phx-hook={if @exact, do: "OpsTimestampCopy"}>
+      <span :if={@label && @label != ""} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
-        <time
-          class="ops-time__value"
-          datetime={@exact}
-          title={@exact}
-          aria-label={@aria_label}
-        >
-          {@human}
-        </time>
         <button
-          :if={@operational}
           type="button"
-          class="ops-time__copy"
+          class="ops-time__stamp"
           data-ops-timestamp-copy={@exact}
-          aria-label="Copy timestamp"
-          title="Copy timestamp"
+          aria-label={"Copy timestamp: #{@exact}"}
+          title={"#{@age} · #{@exact} · Click to copy"}
         >
-          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-4" />
-          <span>Copy timestamp</span>
+          <time class="ops-time__value" datetime={@exact} data-ops-time-value>{@human}</time>
+          <ScrypathOpsWeb.CoreComponents.icon
+            name="hero-clipboard-document"
+            class="ops-time__affordance size-3.5"
+          />
         </button>
-        <button
-          :if={@copy && !@operational}
-          type="button"
-          class="ops-time__copy"
-          phx-click={JS.dispatch("phx:copy_to_clipboard", detail: %{text: @exact})}
-          aria-label={"Copy exact timestamp #{@exact}"}
-          title={"Copy exact timestamp #{@exact}"}
-        >
-          <ScrypathOpsWeb.CoreComponents.icon name="hero-clipboard-document" class="size-3.5" />
-        </button>
-        <div
-          :if={@operational}
-          class="ops-time__feedback"
-          data-ops-timestamp-feedback
-          data-state="neutral"
-          hidden
-        >
-          <p role="status" aria-live="polite" aria-atomic="true" data-ops-timestamp-message></p>
+        <span class="ops-time__feedback" data-ops-timestamp-feedback data-state="neutral" hidden>
+          <span role="status" aria-live="polite" aria-atomic="true" data-ops-timestamp-message></span>
           <button
             type="button"
             class="ops-time__feedback-dismiss"
@@ -1313,25 +1282,12 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             Dismiss
           </button>
-        </div>
-        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
-        <details :if={@operational} class="ops-time__details">
-          <summary>Exact timestamp</summary>
-          <div class="ops-time__evidence">
-            <p>
-              <span class="ops-time__evidence-label">Source ISO</span>
-              <code class="ops-time__evidence-value">{@exact}</code>
-            </p>
-            <p>
-              <span class="ops-time__evidence-label">UTC equivalent</span>
-              <time datetime={@utc_iso}>{@utc_absolute}</time>
-            </p>
-          </div>
-        </details>
+        </span>
+        <code data-ops-time-fallback hidden class="break-all select-all">{@exact}</code>
       <% else %>
         <span class="ops-time__value">{@human}</span>
-        <p :if={@retained_text && @operational} class="ops-time__retained">{@retained_text}</p>
       <% end %>
+      <span :if={@retained_text} class="ops-time__retained">{@retained_text}</span>
     </span>
     """
   end
@@ -1358,9 +1314,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_object_item(assigns) do
     ~H"""
     <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0 flex-1">{render_slot(@inner_block)}</div>
-        <div :if={@actions != []} class="flex flex-wrap justify-end gap-2">
+      <div class="flex flex-col items-start justify-between gap-3 sm:flex-row">
+        <div class="min-w-0 w-full flex-1">{render_slot(@inner_block)}</div>
+        <div :if={@actions != []} class="flex flex-wrap gap-2 sm:justify-end">
           {render_slot(@actions)}
         </div>
       </div>
@@ -1538,10 +1494,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_command_palette(assigns) do
     items =
       [
-        %{path: assigns.mount_path, label: "Control Room", hint: "Home · trust verdict"}
+        %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
         | Enum.map(
             ScrypathOpsWeb.Nav.primary(assigns.mount_path),
-            &%{path: &1.path, label: &1.label, hint: "#{nav_group_label(&1.group)} · #{&1.title}"}
+            &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}
           )
       ]
       |> Enum.with_index()
@@ -1569,14 +1525,14 @@ defmodule ScrypathOpsWeb.OpsUi do
           <input
             type="text"
             class="ops-cmdk__input"
-            placeholder="Jump to a surface…"
-            aria-label="Search surfaces"
+            placeholder="Find a page…"
+            aria-label="Find a page"
             aria-controls="ops-cmdk-list"
             autocomplete="off"
             spellcheck="false"
             data-cmdk-input
           />
-          <ul id="ops-cmdk-list" class="ops-cmdk__list" role="listbox" aria-label="Surfaces">
+          <ul id="ops-cmdk-list" class="ops-cmdk__list" role="listbox" aria-label="Pages">
             <li :for={item <- @items}>
               <.link
                 id={item.id}
@@ -1592,7 +1548,7 @@ defmodule ScrypathOpsWeb.OpsUi do
               </.link>
             </li>
           </ul>
-          <p class="ops-cmdk__empty" data-cmdk-empty hidden>No matching surface.</p>
+          <p class="ops-cmdk__empty" data-cmdk-empty hidden>No matching page.</p>
         </div>
       </div>
 
@@ -1618,11 +1574,11 @@ defmodule ScrypathOpsWeb.OpsUi do
                   <kbd class="ops-kbd">K</kbd>
                 </span>
               </dt>
-              <dd>Jump to any surface</dd>
+              <dd>Go to a page</dd>
             </div>
             <div class="ops-cheatsheet__row">
               <dt><kbd class="ops-kbd">r</kbd></dt>
-              <dd>Refresh this surface</dd>
+              <dd>Refresh this page</dd>
             </div>
             <div class="ops-cheatsheet__row">
               <dt><kbd class="ops-kbd">?</kbd></dt>
@@ -1665,17 +1621,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_workspace_mode_indicator(assigns) do
     ~H"""
-    <span class={["inline-flex max-w-full flex-wrap items-center gap-1.5 text-ops-sm", @class]}>
-      <.ops_badge kind={if @mode == :examples, do: :warning, else: :neutral}>
-        {if @mode == :examples, do: "Examples (read-only)", else: "Workspace"}
-      </.ops_badge>
-      <span
-        :if={@path && @mode == :workspace}
-        class="max-w-full break-all font-mono text-ops-body text-base-content/70"
-      >
-        {@path}
-      </span>
+    <span :if={@mode == :examples} class={["text-ops-sm text-base-content/70", @class]}>
+      Read-only examples
     </span>
+    <details :if={@mode == :workspace && @path} class={["text-ops-sm text-base-content/70", @class]}>
+      <summary class="cursor-pointer">Storage folder</summary>
+      <code class="block max-w-full break-all py-2">{@path}</code>
+    </details>
     """
   end
 
@@ -1742,14 +1694,6 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   defp exact_dt(%DateTime{} = dt, _source_iso), do: DateTime.to_iso8601(dt)
 
-  defp utc_iso(nil), do: nil
-
-  defp utc_iso(%DateTime{} = dt) do
-    dt
-    |> DateTime.shift_zone!("Etc/UTC")
-    |> DateTime.to_iso8601()
-  end
-
   defp utc_absolute(nil), do: nil
 
   defp utc_absolute(%DateTime{} = dt) do
@@ -1792,17 +1736,12 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp pluralize(1, unit), do: unit
   defp pluralize(_count, unit), do: "#{unit}s"
 
-  defp time_aria_label(label, human, true) do
-    prefix = if label, do: "#{label} ", else: ""
-    "#{prefix}#{human}; open Exact timestamp for source ISO and UTC equivalent"
-  end
-
-  defp time_aria_label(nil, human, false), do: "#{human}"
-  defp time_aria_label(label, human, false), do: "#{label} #{human}"
-
-  defp nav_group_label(:recover), do: "Recover"
-  defp nav_group_label(:explore), do: "Explore"
-  defp nav_group_label(group), do: group |> to_string() |> String.capitalize()
+  defp nav_hint("Search"), do: "Query your schemas"
+  defp nav_hint("Search health"), do: "Failures and pending work"
+  defp nav_hint("Failed sync work"), do: "Review errors and retry"
+  defp nav_hint("Sync and drift"), do: "Sync work and index settings"
+  defp nav_hint("Saved searches"), do: "Reuse queries and options"
+  defp nav_hint(_), do: ""
 
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
   defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"

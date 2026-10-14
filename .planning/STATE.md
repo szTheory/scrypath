@@ -19,11 +19,15 @@ progress:
 
 # Project State
 
-## Active UI follow-up — 2026-10-13
+## UI baseline follow-up — verified 2026-10-14
 
-The UI recovery and review pilot merged in [PR #102](https://github.com/szTheory/scrypath/pull/102) at `5d464b45`; evidence preservation merged in [PR #103](https://github.com/szTheory/scrypath/pull/103) at `d3b92222`. The lessons/preflight follow-up is on `docs/ui-worktree-lessons` in the checkout named by `UI-PREVIEW.json`; port 4002 serves that checkout. Read `reference/UI-WORKTREE-LEARNINGS.md`, `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for prevention rules, verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. These follow-ups do not themselves close the milestone or replace its frozen receipts.
+**Resume here:** [reference/continue.md](reference/continue.md). The three baseline batches are implemented and verified on `fix/ui-task-baseline`, PR [#105](https://github.com/szTheory/scrypath/pull/105). Browser inventory: 167/168 full-run passes plus the corrected transition assertion in a 6/6 scoped recheck; Ops: 309 tests + 2 doctests; demo: 12 tests; review safeguards: 7 tests. All 63 entry captures were reviewed, source binding checked and feedback reconciled. Check PR #105 for final required CI/merge state; if merged, the baseline has no remaining implementation work. Port 4002 serves the canonical checkout in `UI-PREVIEW.json` with seeding disabled; mutating checks use an isolated stack. Preserve current brand and preview data.
 
-## Project Reference
+The maintainer authorized a systematic whole-UI pass including unreported problems and squash merge after required CI is green. The maintained role/job/language authority is `reference/OPERATOR-UI-QUALITY.md`; all reported feedback remains in `UI-FEEDBACK.md`. Read `reference/UI-BASELINE-PLAN.md` for the three concrete task outcomes; do not restart discovery or implement another aesthetic direction.
+
+PRs #102–104 delivered the preceding source recovery, artifact preservation and preflight safeguards. This follow-up does not reopen completed Phases 173–177. The numbered-phase frontmatter and project-reference chronology below are historical, not active routing instructions.
+
+## Historical project reference
 
 See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish PR #98's exact-source closeout and merged-main attestation; all five phase plan sets are complete, but T-177-05 still blocks the milestone audit.
 

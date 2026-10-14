@@ -99,7 +99,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(
              lv,
              "[data-testid='control-room-verdict']",
-             "Search health needs attention."
+             "1 Meilisearch task failed"
            )
 
     assert has_element?(lv, "[data-testid='control-room-affected-scope']", "OpsPostA")
@@ -107,17 +107,17 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     assert has_element?(
              lv,
              "[data-testid='control-room-affected-scope']",
-             "backend task(s) failed"
+             "Search results may be out of date."
            )
 
     assert has_element?(
              lv,
              "[data-testid='control-room-health-link'][href='/ops/health']",
-             "Inspect Search health"
+             "View search health"
            )
 
-    assert length(:binary.matches(html, "Inspect Search health")) == 1
-    assert html =~ "sync job(s) failed to apply"
+    assert length(:binary.matches(html, "View search health")) == 1
+    assert html =~ "Meilisearch task failed"
     refute html =~ "Recover search"
     assert_before(html, "control-room-affected-scope", "control-room-health-link")
     assert_before(html, "control-room-health-link", "control-room-secondary-intents")
@@ -148,14 +148,14 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     {:ok, lv, html} = live(conn, ~p"/ops")
 
-    assert has_element?(lv, "[data-testid='control-room-verdict']", "Search health observed.")
-    assert html =~ "No current sync or backend failures were observed across 2 schemas."
-    assert html =~ "This check does not prove document freshness."
+    assert has_element?(lv, "[data-testid='control-room-verdict']", "No sync failures found")
+    assert html =~ "No failed sync jobs or Meilisearch tasks were found across 2 schemas."
+    assert html =~ "Document visibility is checked separately."
 
     assert has_element?(
              lv,
              "[data-testid='control-room-health-link'][href='/ops/health']",
-             "Inspect Search health"
+             "View search health"
            )
 
     assert has_element?(
@@ -168,8 +168,8 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
              "[data-testid='control-room-secondary-intents'] a[data-testid='control-room-explore-search']"
            )
 
-    assert_before(html, "Observed search health", "No current sync or backend failures")
-    assert_before(html, "No current sync or backend failures", "control-room-health-link")
+    refute html =~ "Observed search health"
+    assert_before(html, "No failed sync jobs or Meilisearch tasks", "control-room-health-link")
     assert_before(html, "control-room-health-link", "control-room-secondary-intents")
   end
 
@@ -179,7 +179,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     put_healthy_posture_config!()
     {:ok, lv, initial_html} = live(conn, ~p"/ops")
 
-    assert initial_html =~ "No current sync or backend failures were observed across 2 schemas."
+    assert initial_html =~ "No failed sync jobs or Meilisearch tasks were found across 2 schemas."
 
     Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
     lv |> element("#control-room-refresh") |> render_click()
@@ -199,7 +199,10 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
            )
 
     assert refreshed_html =~ "Last successful observation"
-    assert refreshed_html =~ "No current sync or backend failures were observed across 2 schemas."
+
+    assert refreshed_html =~
+             "No failed sync jobs or Meilisearch tasks were found across 2 schemas."
+
     assert refreshed_html =~ "Last successful check:"
     refute refreshed_html =~ "Search health refreshed."
     assert has_element?(lv, "[data-testid='control-room-health-link'][href='/ops/health']")

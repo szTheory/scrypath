@@ -8,12 +8,13 @@ defmodule ScrypathOps.Playbook.RunFailure do
   @type context :: keyword()
 
   @registry [
-    {:playbook_not_validated, "validation", "Playbook must be validated before it can run.",
+    {:playbook_not_validated, "validation", "Validate the saved search before running it.",
      :playbook_schema, :none},
     {:stub_hard_failure, "backend", "Search adapter returned a forced hard failure.",
      :playbook_troubleshooting, :schema_mode},
-    {:invalid_playbook_shape, "validation", "Playbook shape is not valid for execution.",
-     :playbook_schema, :schema_mode},
+    {:invalid_playbook_shape, "validation",
+     "The saved search does not match the supported JSON format.", :playbook_schema,
+     :schema_mode},
     {{:config, :missing_backend}, "config", "Scrypath backend is not configured.",
      :playbook_operator_config, :mode},
     {{:config, :empty_allowlist}, "config", "Schema allowlist is empty.",
@@ -63,10 +64,10 @@ defmodule ScrypathOps.Playbook.RunFailure do
   defp normalize_reason(reason), do: inspect(reason, limit: 120)
 
   defp unknown_message(reason),
-    do: "Playbook run failed: #{inspect(reason, limit: 120)}."
+    do: "Search failed: #{inspect(reason, limit: 120)}."
 
   defp page_size_message({:page_size_out_of_range, size, max}),
-    do: "Playbook run failed: page.size #{size} is outside 1..#{max}."
+    do: "Search failed: page.size #{size} is outside 1..#{max}."
 
   defp sanitize_context(context) when is_list(context) do
     context

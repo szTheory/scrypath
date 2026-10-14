@@ -1,3 +1,5 @@
+import "./ops_clipboard"
+import {formatTimes, syncTimePreference} from "./ops_time"
 // Shared hooks for standalone and mounted ScrypathOps LiveSockets.
 let opsModalPendingTrigger = null
 let activeOpsModal = null
@@ -55,6 +57,8 @@ const OpsToast = {
 const OpsTimestampCopy = {
   mounted() {
     this.latestAttempt = 0
+    formatTimes(this.el)
+    this.sourceValue = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy
     this.onCopyClick = async event => {
       const trigger = event.target instanceof Element
         ? event.target.closest("[data-ops-timestamp-copy]")
@@ -81,7 +85,8 @@ const OpsTimestampCopy = {
       } catch (_error) {
         if (attempt !== this.latestAttempt || !trigger.isConnected) return
 
-        this.el.querySelector("details.ops-time__details")?.setAttribute("open", "")
+        const fallback = this.el.querySelector("[data-ops-time-fallback]")
+        if (fallback) fallback.hidden = false
         this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true)
       }
     }
@@ -100,13 +105,25 @@ const OpsTimestampCopy = {
     this.el.addEventListener("click", this.onCopyClick)
     this.el.addEventListener("click", this.onDismissClick)
   },
+  updated() {
+    const current = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy
+    if (current !== this.sourceValue) {
+      this.latestAttempt += 1
+      this.clearFeedback()
+      this.sourceValue = current
+    }
+    formatTimes(this.el)
+  },
   destroyed() {
+    this.latestAttempt += 1
     window.clearTimeout(this.dismissTimer)
     this.el.removeEventListener("click", this.onCopyClick)
     this.el.removeEventListener("click", this.onDismissClick)
   },
   clearFeedback() {
     window.clearTimeout(this.dismissTimer)
+    const fallback = this.el.querySelector("[data-ops-time-fallback]")
+    if (fallback) fallback.hidden = true
     const feedback = this.el.querySelector("[data-ops-timestamp-feedback]")
     const message = this.el.querySelector("[data-ops-timestamp-message]")
     const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]")
@@ -155,7 +172,9 @@ const CommandPalette = {
     this.onModalOverlayOpen = () => this.closeForModal()
     this.onCmdkKeydown = e => this.overlayKeydown(e, this.cmdk)
     this.onSheetKeydown = e => this.overlayKeydown(e, this.sheet)
-    this.onCmdkPointerOver = e => {
+    // Layout/filter/open changes can emit pointerover beneath a stationary mouse.
+    // Only deliberate movement should replace the keyboard selection.
+    this.onCmdkPointerMove = e => {
       const item = e.target instanceof Element
         ? e.target.closest("[data-cmdk-item]")
         : null
@@ -175,7 +194,7 @@ const CommandPalette = {
     document.addEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.addEventListener("click", this.onCommandOpenClick)
     this.cmdk.addEventListener("keydown", this.onCmdkKeydown)
-    this.list.addEventListener("pointerover", this.onCmdkPointerOver)
+    this.list.addEventListener("pointermove", this.onCmdkPointerMove)
     this.sheet.addEventListener("keydown", this.onSheetKeydown)
 
     this.cmdk.querySelectorAll("[data-cmdk-close]").forEach(el =>
@@ -190,7 +209,7 @@ const CommandPalette = {
     document.removeEventListener("ops:modal-overlay-open", this.onModalOverlayOpen)
     document.removeEventListener("click", this.onCommandOpenClick)
     this.cmdk.removeEventListener("keydown", this.onCmdkKeydown)
-    this.list.removeEventListener("pointerover", this.onCmdkPointerOver)
+    this.list.removeEventListener("pointermove", this.onCmdkPointerMove)
     this.sheet.removeEventListener("keydown", this.onSheetKeydown)
   },
   isTyping() {
@@ -739,3 +758,6 @@ const OpsModal = {
 }
 
 export {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy}
+
+window.addEventListener("phx:page-loading-stop", () => syncTimePreference())
+syncTimePreference()

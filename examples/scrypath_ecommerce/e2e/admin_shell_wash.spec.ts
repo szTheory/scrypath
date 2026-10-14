@@ -168,84 +168,16 @@ function violetScore([r, g, b]: Rgb): number {
   return (r + b) / 2 - g;
 }
 
-function washBias(sampleColor: Rgb, floorColor: Rgb): number {
-  return violetScore(sampleColor) - violetScore(floorColor);
-}
-
 function assertShellWashImage(image: PngImage, viewport: ViewportName, label: string): void {
   const margin = viewport === "mobile" ? 28 : 36;
-  const near = sample(image, margin, margin);
-  const midPoint = viewport === "mobile" ? 172 : 240;
-  const farPoint = viewport === "mobile" ? 340 : 560;
-  const mid = sample(image, Math.min(image.width - margin, midPoint), Math.min(image.height - margin, midPoint));
-  const far = sample(image, Math.min(image.width - margin, farPoint), Math.min(image.height - margin, farPoint));
-  const bottomLeft = sample(image, margin, image.height - margin);
-  const bottomRight = sample(image, image.width - margin, image.height - margin);
-
-  const nearBias = washBias(near, bottomRight);
-  const midBias = washBias(mid, bottomRight);
-  const farBias = washBias(far, bottomRight);
-
-  console.info(
-    `${label}: shell wash bias near=${nearBias.toFixed(2)} mid=${midBias.toFixed(2)} far=${farBias.toFixed(2)} bottom-edge-delta=${colorDistance(bottomLeft, bottomRight).toFixed(2)}`
-  );
-
-  expect(
-    nearBias,
-    `${label}: top-left wash must be visible enough to prove the brand glow exists`
-  ).toBeGreaterThanOrEqual(1.1);
-  expect(
-    nearBias,
-    `${label}: top-left wash must stay quiet, not a saturated blob`
-  ).toBeLessThanOrEqual(24);
-  expect(
-    midBias,
-    `${label}: violet wash must decay away from the top-left origin`
-  ).toBeLessThan(nearBias);
-  expect(
-    farBias,
-    `${label}: far diagonal sample must be close to the floor`
-  ).toBeLessThanOrEqual(Math.max(2.2, nearBias * 0.4));
-  expect(
-    colorDistance(bottomLeft, bottomRight),
-    `${label}: lower edge must not contain a second horizontal violet blob`
-  ).toBeLessThanOrEqual(4.5);
-
-  const allowedRadius = viewport === "mobile" ? 410 : 520;
-  let outsideHot = 0;
-  let outsideTotal = 0;
-
-  for (let y = margin; y < image.height - margin; y += 18) {
-    const rowFloor = sample(image, image.width - margin, y, 4);
-    for (let x = margin; x < image.width - margin; x += 18) {
-      if (Math.hypot(x, y) <= allowedRadius) continue;
-      outsideTotal += 1;
-      if (washBias(sample(image, x, y, 4), rowFloor) > 3.2) {
-        outsideHot += 1;
-      }
-    }
+  const expected: Rgb = [17, 20, 25];
+  for (const [x, y] of [[margin, margin], [image.width / 2, image.height / 2], [image.width - margin, image.height - margin]]) {
+    expect(colorDistance(sample(image, x, y), expected), `${label}: flat charcoal floor`).toBeLessThanOrEqual(1.5);
   }
-
-  const outsideHotRatio = outsideTotal === 0 ? 0 : outsideHot / outsideTotal;
-  expect(
-    outsideHotRatio,
-    `${label}: violet pixels outside the bounded wash envelope`
-  ).toBeLessThanOrEqual(0.015);
 }
 
-async function expectShellWashGradientContract(page: Page, viewport: ViewportName): Promise<void> {
-  const background = await readComputedStyle(page, ".ops-shell", "background-image");
-  const radialCount = (background.match(/radial-gradient/g) ?? []).length;
-  const linearCount = (background.match(/linear-gradient/g) ?? []).length;
-  expect(radialCount, ".ops-shell should keep exactly one radial wash").toBe(1);
-  expect(linearCount, ".ops-shell should keep exactly one floor gradient").toBe(1);
-  expect(background, ".ops-shell wash must originate at top left").toMatch(
-    /at (left top|0% 0%|0px 0px)/
-  );
-  expect(
-    background,
-    viewport === "mobile" ? "mobile wash should fade by the 24rem contract" : "desktop wash should fade by the 30rem contract"
-  ).toMatch(viewport === "mobile" ? /(384px|24rem)/ : /(480px|30rem)/);
+async function expectShellWashGradientContract(page: Page, _viewport: ViewportName): Promise<void> {
+  expect(await readComputedStyle(page, ".ops-shell", "background-image"), "no retired shell wash").toBe("none");
 }
 
 test.describe("admin shell wash -- SHELL-DARK-01", () => {

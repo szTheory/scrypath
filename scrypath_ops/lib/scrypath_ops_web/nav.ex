@@ -14,6 +14,12 @@ defmodule ScrypathOpsWeb.Nav do
   def primary(mount_path \\ "/ops") do
     [
       %{
+        path: "#{mount_path}/search",
+        label: "Search",
+        title: "Search",
+        group: :explore
+      },
+      %{
         path: "#{mount_path}/health",
         label: "Search health",
         title: "Search health",
@@ -32,15 +38,9 @@ defmodule ScrypathOpsWeb.Nav do
         group: :recover
       },
       %{
-        path: "#{mount_path}/search",
-        label: "Search",
-        title: "Search",
-        group: :explore
-      },
-      %{
         path: "#{mount_path}/playbooks",
-        label: "Playbooks",
-        title: "Saved playbooks",
+        label: "Saved searches",
+        title: "Saved searches",
         group: :explore
       }
     ]

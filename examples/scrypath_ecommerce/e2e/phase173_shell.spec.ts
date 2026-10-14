@@ -185,7 +185,7 @@ for (const entry of entries) {
       await expectTheme(page, mode.preference, mode.colorScheme);
       await expectSourceRow(page, entry);
 
-      const expectedFloor = mode.colorScheme === "dark" ? "rgb(17, 20, 25)" : "rgb(247, 246, 243)";
+      const expectedFloor = mode.colorScheme === "dark" ? "rgb(17, 20, 25)" : "rgb(243, 245, 248)";
       await expect
         .poll(() => page.locator(".ops-shell").evaluate((element) => getComputedStyle(element).backgroundColor))
         .toBe(expectedFloor);
