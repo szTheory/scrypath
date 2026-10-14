@@ -21,6 +21,8 @@ progress:
 
 ## Active UI follow-up — 2026-10-13
 
+**Resume here:** [reference/continue.md](reference/continue.md). On 2026-10-14 the maintainer confirmed enough signal for a systematic whole-UI implementation pass after compaction, including unreported problems. Work in `UI-PREVIEW.json`'s checkout, verify source/preview, implement the three baseline batches with rendered/state proof, and proceed without another persona/discovery loop. Preserve the current brand. New feedback through CONTENT-20/UI-23/UX-06/DATA-02/AUTO-05 is recorded; the resulting product changes are not yet implemented. Historical phase frontmatter below is not the resume target.
+
 **2026-10-14 direction:** [UI-BASELINE-PLAN.md](reference/UI-BASELINE-PLAN.md) scopes three repair batches for task hierarchy, natural language and controls within the current brand. Trying search is a primary task; health/recovery remains explicit when needed. All new home/navigation/health/saved-search/timestamp feedback is captured in `UI-FEEDBACK.md`. The existing role/job model is updated in place; no persona workshop, brand refresh, phase replay or product acceptance is claimed. Next: batch 1 evidence critique and implementation planning, then coherent repairs with current-source proof.
 
 **Continued feedback, 2026-10-14:** CONTENT-13–16, UI-15/16, DOC-04 and UX-04 record redundant schema actions, shared UTC/local display proposal, failed-sync empty-state duplication/zero badges, meaningless empty “dominant reason”, raw help references and conditional next-step guidance. The maintainer is still reviewing; assess useful handoffs before removal and resolve time-preference placement/default during the batch. These extend batch 2 and the shared disclosure rule; implementation remains open.
