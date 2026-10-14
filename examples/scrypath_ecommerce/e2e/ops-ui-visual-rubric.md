@@ -1,6 +1,6 @@
 # Scrypath UI critique rubric
 
-Current authority is the repository's `DESIGN.md` and maintained operator role/job/language model. This optional judge sees a sampled set of screenshots, so it cannot certify whole-app coverage, user journeys, hidden states, or backend outcomes. It is supplemental; the complete workflow is `docs/operator-ui-review.md`.
+Current authority is the repository's `DESIGN.md` and maintained operator role/job/language model. This optional judge sees a sampled set of screenshots, so it cannot certify whole-app coverage, user journeys, hidden states, or backend outcomes. It is supplemental; the complete workflow is `examples/scrypath_ecommerce/e2e/UI-REVIEW.md`.
 
 Review the supplied images against these claims and report uncertainty when an image cannot support one:
 

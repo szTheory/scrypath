@@ -27,7 +27,7 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 
 export async function sourceIdentity() {
-  const paths = ["AGENTS.md", "DESIGN.md", ".planning/reference/OPERATOR-UI-QUALITY.md", "scrypath_ops/lib", "scrypath_ops/assets", "scrypath_ops/priv/static", "scrypath_ops/docs", "examples/scrypath_ecommerce/lib", "examples/scrypath_ecommerce/assets", "examples/scrypath_ecommerce/priv/static", "examples/scrypath_ecommerce/e2e", "examples/scrypath_ecommerce/package.json", "docs/operator-ui-review.md"];
+  const paths = ["AGENTS.md", "PRODUCT.md", "DESIGN.md", ".planning/reference/OPERATOR-UI-QUALITY.md", "scrypath_ops/lib", "scrypath_ops/assets", "scrypath_ops/priv/static", "scrypath_ops/docs", "examples/scrypath_ecommerce/lib", "examples/scrypath_ecommerce/assets", "examples/scrypath_ecommerce/priv/static", "examples/scrypath_ecommerce/e2e", "examples/scrypath_ecommerce/package.json"];
   const files = [...new Set(execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...paths], { cwd: repoRoot }).toString().split("\0").filter(Boolean))].sort();
   const hash = createHash("sha256");
   for (const file of files) {

@@ -54,4 +54,8 @@ Broader product copy, query/preview hierarchy, warning treatment, failure-count 
 
 ## Continue
 
+Delivery follow-up: [PR #102](https://github.com/szTheory/scrypath/pull/102) carries this scoped recovery and tooling. The first hosted run caught an unresolved ExDoc link and package allowlist mismatch for the repository-only UI guide; it now lives beside its runner at `examples/scrypath_ecommerce/e2e/UI-REVIEW.md`, outside the Hex artifact. The mounted navigation test now scopes its exact link to the operator navigation rather than also matching the unavailable-search recovery link. Existing dependency-audit advisories remain a separate open follow-up; no dependency or audit exception was added here.
+
+Local confirmation of those CI repairs: release-metadata/docs contracts passed 79 tests; `mix docs --warnings-as-errors` passed; the read-only navigation suite passed 2 tests and review-tool self-tests passed 6 tests. The original hosted failure remains retained rather than represented as a clean first pass. A new hosted run must validate the final candidate before merge.
+
 Use this checkout for UI work and its branch for delivery. Do not restart Phases 173–177 from the root checkout. Prepare the verified follow-up for PR review, then continue the broader task-language/hierarchy batch from the whole-app pilot. For a retained preview restart, use `compose.yaml`, `compose.dev.yaml`, and `compose.preview.yaml` with project `scrypath_ecommerce`; preserve volumes.

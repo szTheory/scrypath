@@ -80,7 +80,7 @@ Whenever considering or reviewing UI animation or micro-interactions, cross-refe
 
 ## Efficient verification and change control
 
-The executable pilot and required agent review loop are documented in [`docs/operator-ui-review.md`](../../docs/operator-ui-review.md). Start with the whole screen/journey inventory; maintainer examples are regression checks, not the review's boundary. Review unreported problems explicitly before repairing. The capture command produces pending evidence, never automatic aesthetic acceptance.
+The executable pilot and required agent review loop are documented in [`examples/scrypath_ecommerce/e2e/UI-REVIEW.md`](../../examples/scrypath_ecommerce/e2e/UI-REVIEW.md). Start with the whole screen/journey inventory; maintainer examples are regression checks, not the review's boundary. Review unreported problems explicitly before repairing. The capture command produces pending evidence, never automatic aesthetic acceptance.
 
 1. Capture current rendering and establish a named user problem before changing a pattern. Preserve useful existing behavior and tests; do not repeat completed palette/brand work without an invalidator.
 2. Use existing LiveView checks for state boundaries, fast token/contrast checks for shared styles, and browser tests for actual navigation, focus, geometry, and real service seams. Exercise changed inputs through rendered forms or controls in the same plan; direct handler calls alone cannot prove event wiring. Cross-screen tests must change the selected schema before handing off, not only enter a non-first schema directly.

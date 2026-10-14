@@ -92,7 +92,7 @@ and `compose.dev.yaml`. This sets `DEMO_SEED_ON_START=0`, so a source restart ke
 the existing catalog and incident data. Normal first-time startup still seeds by
 default; run the explicit seed command when a reset is intended. UI review checks
 the Docker source mount and URL before capturing; see
-[`docs/operator-ui-review.md`](../../docs/operator-ui-review.md).
+[the UI review loop](e2e/UI-REVIEW.md).
 That path is for automated proof, not the nicest click-through loop.
 
 ### Running several demos at once (host-port lanes)

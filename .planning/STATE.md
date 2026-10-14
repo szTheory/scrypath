@@ -19,6 +19,10 @@ progress:
 
 # Project State
 
+## Active UI follow-up — 2026-10-13
+
+Current work is the maintained UI recovery and review pilot in [PR #102](https://github.com/szTheory/scrypath/pull/102), on `fix/ui-experience-reconciliation` in the checkout named by `UI-PREVIEW.json`. Port 4002 serves that checkout. Read `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. This follow-up does not itself close the milestone or replace its frozen receipts.
+
 ## Project Reference
 
 See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish PR #98's exact-source closeout and merged-main attestation; all five phase plan sets are complete, but T-177-05 still blocks the milestone audit.
