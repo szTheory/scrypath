@@ -2,14 +2,14 @@ defmodule Mix.Tasks.ScrypathOps.CheckNavContract do
   @shortdoc "Compare operator-ia.md nav-contract fence to ScrypathOpsWeb.Nav.primary/0"
 
   @moduledoc """
-  Verifies the machine-readable JSON block in `docs/operator-ia.md` matches
+  Verifies the hidden machine-readable JSON block in `docs/operator-ia.md` matches
   `ScrypathOpsWeb.Nav.primary/0` (order, routes, labels).
 
   Run from the `scrypath_ops` app directory:
 
       mix scrypath_ops.check_nav_contract
 
-  Pass `--write` to replace the fenced JSON from `Nav.primary/0`.
+  Pass `--write` to replace the hidden JSON from `Nav.primary/0`.
   """
 
   use Mix.Task
@@ -22,8 +22,6 @@ defmodule Mix.Tasks.ScrypathOps.CheckNavContract do
     {opts, _, _} = OptionParser.parse(args, switches: [write: :boolean])
 
     Mix.Task.run("compile")
-    # Verified route paths resolve against the endpoint at runtime (~p in `Nav.primary/0`).
-    Mix.Task.run("app.start")
 
     doc_path = Path.join([File.cwd!(), "docs", "operator-ia.md"])
     doc = File.read!(doc_path)
@@ -69,10 +67,21 @@ defmodule Mix.Tasks.ScrypathOps.CheckNavContract do
             Mix.raise("missing #{@end_marker} after nav-contract begin in docs/operator-ia.md")
 
           [inner, _] ->
-            String.trim(inner)
+            inner
+            |> String.trim()
+            |> strip_html_comment()
         end
     end
   end
+
+  defp strip_html_comment("<!--" <> rest) do
+    case String.split(rest, "-->", parts: 2) do
+      [json, _] -> String.trim(json)
+      [_] -> Mix.raise("unclosed HTML comment in the nav contract")
+    end
+  end
+
+  defp strip_html_comment(json), do: json
 
   defp rewrite_fence(doc, from_nav) do
     encoded = Jason.encode!(from_nav)
@@ -82,9 +91,9 @@ defmodule Mix.Tasks.ScrypathOps.CheckNavContract do
 
     head <>
       @begin_marker <>
-      "\n" <>
+      "\n<!--\n" <>
       encoded <>
-      "\n" <>
+      "\n-->\n" <>
       @end_marker <>
       tail
   end

@@ -19,6 +19,12 @@ defmodule ScrypathEcommerceWeb.Layouts do
           {assigns[:page_title]}
         </.live_title>
         <link
+          :if={!ops_admin_path?(@conn)}
+          rel="icon"
+          type="image/svg+xml"
+          href="/favicon.svg"
+        />
+        <link
           :if={ops_admin_path?(@conn)}
           rel="icon"
           type="image/svg+xml"

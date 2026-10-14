@@ -15,7 +15,7 @@ This uses the existing Playwright and axe dependencies. It captures seven screen
 
 The command navigates and opens compact navigation, but does not seed data, submit searches, save files, retry work, or promote indexes. Loading a LiveView can perform its ordinary observations. It leaves the maintainer's browser, theme preference, and data untouched. It does not install dependencies, call a model API, or promote a baseline.
 
-Verify the preview's mount/source before claiming source-specific UI evidence; a local source fingerprint does not prove a remote server runs that checkout. Record container mount/URL, HEAD plus working-tree fingerprint, browser/platform, and observed data state in the review. Store local artifacts locally; don't upload tenant or operational data as a side effect.
+The runner verifies that the preview container's `/app` bind mount resolves to the checkout running the command, the URL matches its published loopback port, and HEAD includes locally known `origin/main`. A mismatch stops capture before launching a browser. `UI_REVIEW_CONTAINER` selects a different Docker preview container when needed. Keep `origin/main` current before calling the preview latest; the guard records the locally known main ref and does not fetch or certify remote freshness. Record container mount/URL, HEAD plus working-tree fingerprint, browser/platform, and observed data state in the review. Store local artifacts locally; don't upload tenant or operational data as a side effect.
 
 ## Review before repairing
 

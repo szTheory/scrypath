@@ -2,7 +2,7 @@
 // Observe the running UI without seeding, recovery actions, or a paid model call.
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -39,6 +39,29 @@ export async function sourceIdentity() {
   return { head: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).toString().trim(), tree_sha256: hash.digest("hex") };
 }
 
+export function previewSourceErrors(expected, mounted, mainIncluded, endpointMatches = true) {
+  const errors = [];
+  if (expected !== mounted) errors.push(`Preview source mismatch: ${mounted}; expected ${expected}.`);
+  if (!mainIncluded) errors.push("Checkout does not include origin/main. Reconcile newer merged work before reviewing the current UI.");
+  if (!endpointMatches) errors.push("Review URL does not match the verified preview container's published loopback port.");
+  return errors;
+}
+
+async function verifyPreviewSource() {
+  const container = process.env.UI_REVIEW_CONTAINER || "scrypath_ecommerce-web-1";
+  const runtime = JSON.parse(execFileSync("docker", ["inspect", container, "--format", '{"mounts":{{json .Mounts}},"ports":{{json .NetworkSettings.Ports}}}'], { encoding: "utf8" }));
+  const source = runtime.mounts.find((mount) => mount.Type === "bind" && mount.Destination === "/app")?.Source;
+  if (!source) throw new Error(`${container} has no source bind mount at /app; runtime source is unverified.`);
+  const mounted = await realpath(source.replace(/^\/host_mnt(?=\/)/, ""));
+  const expected = await realpath(repoRoot);
+  const mainIncluded = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim() === execFileSync("git", ["rev-parse", "origin/main"], { cwd: repoRoot, encoding: "utf8" }).trim();
+  const url = new URL(process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002");
+  const endpointMatches = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) && Object.values(runtime.ports).flatMap((ports) => ports || []).some((binding) => binding.HostPort === (url.port || "80") && ["127.0.0.1", "::1"].includes(binding.HostIp));
+  const errors = previewSourceErrors(expected, mounted, mainIncluded, endpointMatches);
+  if (errors.length) throw new Error(errors.join("\n"));
+  return { container, source_match: true, mount: mounted, main_included: true, main_ref: execFileSync("git", ["rev-parse", "origin/main"], { cwd: repoRoot, encoding: "utf8" }).trim() };
+}
+
 export function reviewTemplate(manifest, digest) {
   const row = (id) => ({ id, verdict: "pending", evidence: [], rationale: "" });
   return {
@@ -58,6 +81,7 @@ export function reviewErrors(review, manifest, digest, currentSource) {
   if (manifest.source.tree_sha256 !== currentSource.tree_sha256) errors.push("Source changed after capture; recapture affected evidence.");
   if (manifest.captures.length !== surfaces.length * themes.length * viewports.length || manifest.captures.some((capture) => capture.error)) errors.push("Capture matrix is incomplete.");
   if (manifest.source_changed_during_capture) errors.push("Source changed during capture.");
+  if (!manifest.runtime?.source_match || !manifest.runtime?.main_included) errors.push("Preview checkout or merged-main provenance is unverified.");
   if (manifest.captures.some((capture) => capture.checks?.length)) errors.push("Mechanical findings remain in the capture; fix and recapture.");
   if (manifest.captures.some((capture) => ["viewport.png", "full.png", "copy.json"].some((key) => !capture.files?.[key]))) errors.push("A required screenshot or copy artifact is missing.");
   const expectedIds = new Set(surfaces.flatMap((surface) => themes.flatMap((theme) => viewports.map(({ width }) => `${surface.id}--${theme}--${width}`))));
@@ -150,12 +174,13 @@ async function captureSurface(browser, surface, theme, viewport, output) {
 }
 
 async function captureAll() {
+  const runtime = await verifyPreviewSource();
   const output = path.resolve(demoRoot, "test-results/ui-review", new Date().toISOString().replace(/[:.]/g, "-"));
   await mkdir(output, { recursive: true });
   const source = await sourceIdentity();
   const { chromium } = await import("@playwright/test");
   const browser = await chromium.launch();
-  const manifest = { schema: "scrypath.ui-capture.v1", generated_at: new Date().toISOString(), source, base_url: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", environment: { platform: process.platform, browser: browser.version() }, scope: "Observed entry states, hover, focus, and mobile navigation. No seeding, search submission, saving, retry, or promotion. Runtime source/mount identity must be checked separately.", captures: [] };
+  const manifest = { schema: "scrypath.ui-capture.v1", generated_at: new Date().toISOString(), source, runtime, base_url: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", environment: { platform: process.platform, browser: browser.version() }, scope: "Observed entry states, hover, focus, and mobile navigation. No seeding, search submission, saving, retry, or promotion. Docker source mount and inclusion of locally known origin/main verified before capture.", captures: [] };
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
       const capture = await captureSurface(browser, surface, theme, viewport, output);
@@ -176,6 +201,7 @@ async function captureAll() {
 }
 
 async function checkReview(directory) {
+  await verifyPreviewSource();
   const manifestBytes = await readFile(path.join(directory, "capture.json"));
   const manifest = JSON.parse(manifestBytes);
   const review = JSON.parse(await readFile(path.join(directory, "review.json")));

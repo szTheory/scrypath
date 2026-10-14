@@ -37,8 +37,8 @@ daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / ex
 | `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
 | `accent` | `#5b4ad1` | `#aaa0ff` | restrained active-theme brand accent |
 | `base-100` | `#ffffff` | `#191e25` | surfaces |
-| `base-200` | `#f7f6f3` | `#111419` | app background, muted panels |
-| `base-300` | `#d9d8d2` | `#353d48` | borders, dividers |
+| `base-200` | `#f3f5f8` | `#111419` | app background, muted panels |
+| `base-300` | `#dce2e9` | `#353d48` | borders, dividers, light theme-preference tray |
 | `base-content` | `#202124` | `#f1f2f4` | text |
 | `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
 
@@ -77,10 +77,11 @@ free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surfa
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#f7f6f3` | `#111419` | Flat page floor and shell background |
+| `--ops-bg` | `#f3f5f8` | `#111419` | Flat page floor and shell background |
 | `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#efeee9` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
-| `--ops-selection` | `#eeebff` | `#302b4c` | Selected theme-preference button backing |
+| `--ops-surface-2` | `#edf1f5` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
+| `--ops-selection` | `#eeebff` | `#302b4c` | Soft selected fill for active navigation and explicitly selected actions |
+| `--ops-theme-selection` | `#ffffff` | `#222831` | Neutral selected surface in the System/Light/Dark preference control |
 
 Dark 4-step neutral ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
 
@@ -158,6 +159,11 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | Decorative shell wash and separate sliding theme-selection pill | Keep `.ops-shell` flat; use the three visible System/Light/Dark buttons and their explicit selected state. |
 | Extra top margins on direct `:ops` shell children | Let the shell's `space-y-4` own the page rhythm; add spacing inside the component group that needs it. |
 | Broad status-colored verdict or metric surfaces | Keep summary surfaces neutral; use explicit status text and a local theme-safe icon/value cue. |
+| Hidden radios presented as schema cards | One schema is read-only context; multiple schemas use visible native radios in plain stacked rows, with full module names available. |
+| Panels around individual actions or native disclosures | Action groups provide spacing; buttons carry their own affordance. Disclosures remain unframed. Group rows with headings, spacing, or separators. |
+| Repeated “Operator workspace” page eyebrow | The actual page heading provides orientation. |
+
+Search health diagnostic groups share their schema's surface with a single divider where useful, rather than another boxed card. Keep full identifiers and last-success evidence readable. Schema choices use the same radio treatment at all current allowlist counts; revisit only when real list size demonstrates a need for another control. One schema is read-only context when it is the resolved selection; an unresolved scope remains unselected and offers an explicit valid choice, including with one allowed schema. Never make the first option look selected when the server rejected the URL scope. Keep any genuine danger styling and confirmation on the action itself, not on a surrounding decorative panel.
 
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and

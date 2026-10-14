@@ -93,7 +93,13 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
   test "schema picker keeps labels, names, and control semantics across empty and populated counts" do
     for count <- [0, 1, 4, 5] do
       schemas = for index <- 1..count//1, do: Module.concat(["PickerSchema#{index}"])
-      html = render_component(&OpsUi.ops_schema_select/1, %{id: "picker", schemas: schemas})
+
+      html =
+        render_component(&OpsUi.ops_schema_select/1, %{
+          id: "picker",
+          schemas: schemas,
+          selected: List.first(schemas)
+        })
 
       if count == 0 do
         assert html == ""
@@ -102,12 +108,16 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
         assert html =~ "Schema"
         assert html =~ ~s(name="schema")
 
-        if count <= 4 do
+        if count == 1 do
+          assert html =~ ~s(type="hidden" name="schema" value="PickerSchema1")
+          refute html =~ ~s(type="radio")
+          refute html =~ ~s(<select)
+        else
           assert html =~ ~s(type="radio")
           assert html =~ ~r/for="picker-[^"]+"/
-        else
-          assert html =~ ~s(<select)
-          assert html =~ ~s(id="picker")
+          assert html =~ ~s(class="ops-schema-picker__radio")
+          refute html =~ ~s(class="sr-only")
+          refute html =~ ~s(<select)
         end
       end
     end

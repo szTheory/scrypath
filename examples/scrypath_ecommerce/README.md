@@ -86,6 +86,13 @@ make dev PGHOST=127.0.0.1
 ```
 
 Use `make up` for the image-only `MIX_ENV=test` stack that Playwright and CI use.
+
+For a retained feedback preview, add `-f compose.preview.yaml` after `compose.yaml`
+and `compose.dev.yaml`. This sets `DEMO_SEED_ON_START=0`, so a source restart keeps
+the existing catalog and incident data. Normal first-time startup still seeds by
+default; run the explicit seed command when a reset is intended. UI review checks
+the Docker source mount and URL before capturing; see
+[`docs/operator-ui-review.md`](../../docs/operator-ui-review.md).
 That path is for automated proof, not the nicest click-through loop.
 
 ### Running several demos at once (host-port lanes)

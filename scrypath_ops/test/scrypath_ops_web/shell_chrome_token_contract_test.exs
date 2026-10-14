@@ -77,14 +77,14 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
            ".ops-theme-toggle system-dark treatment must mirror --shadow-ops-panel-dark."
   end
 
-  test "active nav keeps the AA primary-strong selected fill and mirrored dark glow" do
+  test "active nav uses the documented soft selected surface and mirrored dark treatment" do
     source = css()
 
     assert Regex.match?(
-             ~r/\.ops-nav-item-active\s*\{[^{}]*background:\s*var\(--color-primary-strong\)/,
+             ~r/\.ops-nav-item-active\s*\{[^{}]*background:\s*var\(--ops-selection\)/,
              source
            ),
-           ".ops-nav-item-active must use the AA-safe --color-primary-strong fill."
+           ".ops-nav-item-active must use the documented soft --ops-selection fill."
 
     assert Regex.match?(
              ~r/\[data-theme="dark"\]\s+\.ops-nav-item-active\s*\{[^{}]*box-shadow:[^{}]*var\(--shadow-ops-glow\)/,

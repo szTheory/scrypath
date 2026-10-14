@@ -40,7 +40,7 @@
       <section class="storefront-search__facet-group" aria-labelledby="category-facet-heading">
         <h2 id="category-facet-heading">Categories</h2>
         <label
-          :for={bucket <- Map.get(@results.facets.distribution, :category_id, [])}
+          :for={bucket <- @category_facets}
           class="storefront-search__facet"
         >
           <input
@@ -52,6 +52,13 @@
           <span>{category_label(@category_labels, bucket.value)}</span>
           <small>{bucket.count} products</small>
         </label>
+        <p :if={@category_facets == []} class="storefront-search__facet-empty">
+          {case @search_state do
+            :unavailable -> "Categories are unavailable until search can be checked."
+            :no_tenant -> "Categories appear after a tenant catalog is seeded."
+            :ready -> "No categories match this search."
+          end}
+        </p>
       </section>
 
       <section class="storefront-search__facet-group" aria-labelledby="demo-notes-heading">
@@ -97,9 +104,20 @@
         </dl>
       </article>
 
-      <div :if={@results.hits == []} class="storefront-search__empty">
+      <div :if={@search_state == :unavailable} class="storefront-search__empty" data-testid="storefront-search-unavailable">
+        <h2>Search unavailable</h2>
+        <p>Search could not be completed. Check Search health before treating this as an empty catalog.</p>
+        <a href="/admin/search/health">Open Search health</a>
+      </div>
+
+      <div :if={@search_state == :no_tenant} class="storefront-search__empty" data-testid="storefront-no-tenant">
+        <h2>No tenant catalog is available</h2>
+        <p>Seed a tenant and its products before searching.</p>
+      </div>
+
+      <div :if={@search_state == :ready && @results.hits == []} class="storefront-search__empty">
         <h2>No matching results yet</h2>
-        <p>Adjust query or filters, then run search again to confirm index visibility.</p>
+        <p>Adjust the query or filters, then search again.</p>
       </div>
     </section>
   </.form>

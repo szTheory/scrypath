@@ -70,8 +70,16 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
 
   test "operator-ia.md navigation table keeps a Route column for ops surfaces" do
     assert @operator_ia =~ "| Route |"
+    assert @operator_ia =~ "| Group | Destination | Route | Use and next reference |"
     assert @operator_ia =~ "/ops/health"
     assert @operator_ia =~ "redirects to `/ops/health`"
+  end
+
+  test "machine-readable nav JSON stays hidden from the rendered guide" do
+    assert Regex.match?(~r/<!--\s*\[\{"route":/, @operator_ia)
+
+    visible_markdown = Regex.replace(~r/<!--.*?-->/s, @operator_ia, "")
+    refute Regex.match?(~r/^\s*\[\{"route":/m, visible_markdown)
   end
 
   test "every live /ops route in router.ex is documented in operator-ia.md" do

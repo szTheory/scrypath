@@ -1,0 +1,6 @@
+# Retained feedback preview: restart source without replacing catalog/incident data.
+# Use after compose.yaml and compose.dev.yaml. First-time setup can use normal seeding.
+services:
+  web:
+    environment:
+      DEMO_SEED_ON_START: "0"

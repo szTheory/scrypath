@@ -23,9 +23,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_page_header(assigns) do
     ~H"""
     <div class="space-y-1">
-      <p class="ops-copper-eyebrow">
-        Operator workspace
-      </p>
       <h1
         id={@title_id}
         class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
@@ -507,7 +504,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
-            class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/55"
+            class="ops-verdict__label text-ops-sm font-semibold uppercase tracking-wide"
           >
             {@label}
           </p>
@@ -1011,15 +1008,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:rest, :global, include: ~w(phx-change))
 
   def ops_schema_select(assigns) do
+    schema_items = schema_picker_items(assigns.schemas, assigns.selected)
+
+    single_schema_item =
+      if length(schema_items) == 1 && hd(schema_items).selected, do: hd(schema_items)
+
     assigns =
       assigns
-      |> assign(:schema_items, schema_picker_items(assigns.schemas, assigns.selected))
-      |> assign(:compact_schema_picker?, length(assigns.schemas) <= 4)
+      |> assign(:schema_items, schema_items)
+      |> assign(:single_schema_item, single_schema_item)
       |> assign(:description_ids, schema_descriptions(assigns))
-      |> assign(
-        :options,
-        Enum.map(assigns.schemas, &{module_flat_name(&1), module_flat_name(&1)})
-      )
 
     ~H"""
     <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
@@ -1032,13 +1030,24 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@error}
         </p>
 
-        <div :if={@compact_schema_picker?} class="ops-schema-picker__cards">
+        <div :if={@single_schema_item} class="ops-schema-picker__single">
+          <input type="hidden" name={@name} value={@single_schema_item.name} />
+          <span class="ops-schema-picker__name">{@single_schema_item.short_name}</span>
+          <span
+            :if={@single_schema_item.name != @single_schema_item.short_name}
+            class="ops-schema-picker__module-name"
+          >
+            {@single_schema_item.name}
+          </span>
+        </div>
+
+        <div :if={is_nil(@single_schema_item)} class="ops-schema-picker__options max-w-xl">
           <label
             :for={item <- @schema_items}
             for={"#{@id}-#{item.dom_id}"}
             class={[
-              "ops-schema-option",
-              item.selected && "ops-schema-option--selected"
+              "ops-schema-picker__option",
+              item.selected && "ops-schema-picker__option--selected"
             ]}
           >
             <input
@@ -1047,27 +1056,17 @@ defmodule ScrypathOpsWeb.OpsUi do
               name={@name}
               value={item.name}
               checked={item.selected}
-              class="sr-only"
+              class="ops-schema-picker__radio"
               aria-describedby={@description_ids}
               aria-invalid={@error && "true"}
             />
-            <span class="ops-schema-option__main">{item.short_name}</span>
-            <span class="ops-schema-option__meta">{item.namespace}</span>
+            <span class="ops-schema-picker__choice-copy">
+              <span class="ops-schema-picker__name">{item.short_name}</span>
+              <span :if={item.name != item.short_name} class="ops-schema-picker__module-name">
+                {item.name}
+              </span>
+            </span>
           </label>
-        </div>
-
-        <div :if={!@compact_schema_picker?} class="max-w-xl">
-          <.ops_select
-            id={@id}
-            name={@name}
-            options={@options}
-            selected={module_flat_name(@selected)}
-            class="font-mono text-ops-body"
-            aria-label={@label}
-            aria-describedby={@description_ids}
-            aria-invalid={@error && "true"}
-            disabled={@disabled}
-          />
         </div>
       </fieldset>
     </div>
@@ -1144,7 +1143,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_checkbox_list(assigns) do
     ~H"""
-    <div class={["ops-data-card p-ops-3", @class]}>
+    <div class={["space-y-ops-2", @class]}>
       <label
         :for={{label, value} <- @options}
         class="flex min-h-[var(--control-h-sm)] cursor-pointer items-center gap-2 text-ops-body"
@@ -1169,13 +1168,10 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_action_group(assigns) do
     ~H"""
-    <div class={[
-      "flex flex-wrap items-center gap-ops-control-gap",
-      @tone == :secondary && "rounded-ops-control border border-base-300 bg-base-100/70 p-ops-2",
-      @tone == :advanced && ["rounded-ops-control border p-ops-2", tone_class(:warning)],
-      @tone == :danger && ["rounded-ops-control border p-ops-2", tone_class(:error)],
-      @class
-    ]}>
+    <div
+      class={["ops-action-group flex flex-wrap items-center gap-ops-control-gap", @class]}
+      data-action-tone={@tone}
+    >
       {render_slot(@inner_block)}
     </div>
     """
@@ -1707,38 +1703,27 @@ defmodule ScrypathOpsWeb.OpsUi do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
   end
 
+  defp schema_short_name(nil), do: ""
+
+  defp schema_short_name(name), do: name |> String.split(".") |> List.last()
+
   defp schema_picker_items(schemas, selected) do
     selected_name = module_flat_name(selected)
 
     Enum.map(schemas, fn schema ->
       name = module_flat_name(schema)
-      {namespace, short_name} = schema_name_parts(name)
 
       %{
         name: name,
-        namespace: namespace,
-        short_name: short_name,
+        short_name: schema_short_name(name),
         dom_id: schema_dom_id(name),
         selected: name == selected_name
       }
     end)
   end
 
-  defp schema_name_parts(nil), do: {"", ""}
-
-  defp schema_name_parts(name) do
-    parts = String.split(name, ".")
-
-    case parts do
-      [] -> {"", ""}
-      [only] -> {"", only}
-      _ -> {parts |> Enum.drop(-1) |> Enum.join("."), List.last(parts)}
-    end
-  end
-
   defp schema_dom_id(name) do
     name
-    |> to_string()
     |> String.replace(~r/[^A-Za-z0-9_-]+/, "-")
     |> String.trim("-")
   end

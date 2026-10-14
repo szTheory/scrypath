@@ -1267,7 +1267,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
           Playbooks repeat saved Search checks. Do not paste production secrets or PII; keep page size and selected indexes within configured caps.
         </.ops_notice>
 
-        <.ops_panel class="space-y-6">
+        <div class="space-y-ops-page-gap">
           <.ops_toolbar>
             <.ops_heading level={2} id="playbook-catalog-heading" tabindex={-1}>
               Workspace files
@@ -1353,7 +1353,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   :if={@workspace_configured?}
                   id={"playbook-manage-#{playbook_dom_id(row.name)}"}
                   summary_id={"playbook-manage-summary-#{playbook_dom_id(row.name)}"}
-                  summary="Manage file actions"
+                  summary="File actions"
                   data-testid="playbook-manage-actions"
                   data-ops-file-name={row.name}
                   class="ops-playbook-file-actions"
@@ -1815,7 +1815,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               </div>
             </.form>
           </.ops_modal>
-        </.ops_panel>
+        </div>
       </div>
     </Layouts.app>
     """

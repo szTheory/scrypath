@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { dimensions, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { dimensions, previewSourceErrors, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
 
 function fixture() {
   const source = { tree_sha256: "current" };
   const captures = surfaces.flatMap(({ id: surface }) => themes.flatMap((theme) => viewports.map(({ width }) => ({ id: `${surface}--${theme}--${width}`, surface, checks: [], files: { "viewport.png": {}, "full.png": {}, "copy.json": {} } }))));
-  const manifest = { source, captures };
+  const manifest = { source, runtime: { source_match: true, main_included: true }, captures };
   const review = reviewTemplate(manifest, "capture-digest");
   review.status = "reviewed";
   for (const row of review.surfaces) Object.assign(row, { verdict: "acceptable", rationale: "Fixture only, never a product review.", evidence: captures.filter(({ surface }) => surface === row.id).map(({ id }) => id) });
@@ -19,6 +19,15 @@ test("a capture is pending until all review dimensions and state evidence are su
   const errors = reviewErrors(reviewTemplate(manifest, "capture-digest"), manifest, "capture-digest", source);
   assert.ok(errors.some((error) => error.includes("pending")));
   assert.ok(errors.some((error) => error.includes("Journey/state")));
+});
+
+test("a different preview worktree or omitted main commits cannot masquerade as latest", () => {
+  assert.deepEqual(previewSourceErrors("/current", "/current", true), []);
+  assert.equal(previewSourceErrors("/current", "/old", false).length, 2);
+  assert.equal(previewSourceErrors("/current", "/current", true, false).length, 1);
+  const { source, manifest, review } = fixture();
+  manifest.runtime.source_match = false;
+  assert.ok(reviewErrors(review, manifest, "capture-digest", source).some((error) => error.includes("provenance")));
 });
 
 test("reviewing reported screens alone cannot omit the rest of the inventory", () => {

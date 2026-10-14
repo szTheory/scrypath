@@ -111,7 +111,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       assert has_element?(
                view,
                "details#playbook-manage-#{dom_id}[data-ops-file-name='#{name}']:not([open]) > summary#playbook-manage-summary-#{dom_id}",
-               "Manage file actions"
+               "File actions"
              )
 
       assert has_element?(view, "#playbook-row-#{dom_id} .ops-playbook-filename", name)
