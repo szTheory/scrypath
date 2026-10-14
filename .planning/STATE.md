@@ -21,7 +21,7 @@ progress:
 
 ## Active UI follow-up — 2026-10-13
 
-The UI recovery and review pilot merged in [PR #102](https://github.com/szTheory/scrypath/pull/102) at `5d464b45`. The artifact-preservation follow-up is on `fix/ui-review-artifact-preservation` in the checkout named by `UI-PREVIEW.json`; port 4002 serves that checkout. Read `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. These follow-ups do not themselves close the milestone or replace its frozen receipts.
+The UI recovery and review pilot merged in [PR #102](https://github.com/szTheory/scrypath/pull/102) at `5d464b45`; evidence preservation merged in [PR #103](https://github.com/szTheory/scrypath/pull/103) at `d3b92222`. The lessons/preflight follow-up is on `docs/ui-worktree-lessons` in the checkout named by `UI-PREVIEW.json`; port 4002 serves that checkout. Read `reference/UI-WORKTREE-LEARNINGS.md`, `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for prevention rules, verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. These follow-ups do not themselves close the milestone or replace its frozen receipts.
 
 ## Project Reference
 
