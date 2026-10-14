@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const demoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+export const reviewArtifactRoot = path.join(demoRoot, "ui-review-artifacts");
 const repoRoot = path.resolve(demoRoot, "../..");
 export const surfaces = [
   { id: "storefront", route: "/", role: "ROLE-INT", jobs: ["JOB-01", "JOB-02"], purpose: "Verify tenant-scoped search and facets; reach operator help when search fails." },
@@ -175,7 +176,7 @@ async function captureSurface(browser, surface, theme, viewport, output) {
 
 async function captureAll() {
   const runtime = await verifyPreviewSource();
-  const output = path.resolve(demoRoot, "test-results/ui-review", new Date().toISOString().replace(/[:.]/g, "-"));
+  const output = path.join(reviewArtifactRoot, new Date().toISOString().replace(/[:.]/g, "-"));
   await mkdir(output, { recursive: true });
   const source = await sourceIdentity();
   const { chromium } = await import("@playwright/test");

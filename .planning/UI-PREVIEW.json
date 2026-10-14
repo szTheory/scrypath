@@ -1,11 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
-  "branch": "fix/ui-experience-reconciliation",
-  "base_main": "f0e05bc8857f56f2a030faa45d4da09a510ef625",
+  "branch": "fix/ui-review-artifact-preservation",
+  "base_main": "5d464b453ae5243e85dadef913d9e9852dcc84be",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
   "status": "verified retained preview; consult delivery PR for merge state",
-  "delivery_pr": "https://github.com/szTheory/scrypath/pull/102"
+  "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
+  "tooling_branch": "fix/ui-review-artifact-preservation"
 }

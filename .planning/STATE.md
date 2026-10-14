@@ -21,7 +21,7 @@ progress:
 
 ## Active UI follow-up — 2026-10-13
 
-Current work is the maintained UI recovery and review pilot in [PR #102](https://github.com/szTheory/scrypath/pull/102), on `fix/ui-experience-reconciliation` in the checkout named by `UI-PREVIEW.json`. Port 4002 serves that checkout. Read `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. This follow-up does not itself close the milestone or replace its frozen receipts.
+The UI recovery and review pilot merged in [PR #102](https://github.com/szTheory/scrypath/pull/102) at `5d464b45`. The artifact-preservation follow-up is on `fix/ui-review-artifact-preservation` in the checkout named by `UI-PREVIEW.json`; port 4002 serves that checkout. Read `reference/UI-WORKTREE-RECONCILIATION.md` and `UI-FEEDBACK.md` for verified fixes and remaining work. The milestone position and phase receipts below are historical context; do not replay completed Phases 173–177 or infer current delivery from their older PR/check snapshots. These follow-ups do not themselves close the milestone or replace its frozen receipts.
 
 ## Project Reference
 
