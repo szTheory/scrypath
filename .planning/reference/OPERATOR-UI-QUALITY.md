@@ -6,11 +6,19 @@
 
 Build a conventional, legible operator interface from the existing Phoenix components and design tokens. Use the principle of least surprise and established patterns from comparable operational tools. Improve the consistency of the system with each change. The maintainer can explore a running preview and give direction while work proceeds; routine acceptance must not require human UAT.
 
-The maintained operator audience and job model is in the **Experience model** section below. Treat roles as task contexts that may overlap, not fictional demographic personas. It is a maintainer-curated hypothesis grounded in Scrypath's supported workflows and direct feedback, not validated adopter research. Inventory the six existing surfaces against relevant job IDs before changing shared behavior. Start with the incident-recovery loop and fix demonstrated issues in shared controls and adjacent surfaces. Keep the existing brand and proven behaviors as the baseline.
+The maintained operator audience and job model is in the **Experience model** section below. Treat roles as task contexts that may overlap, not fictional demographic personas. It is a maintainer-curated hypothesis grounded in Scrypath's supported workflows and direct feedback, not validated adopter research. Inventory the six existing surfaces against relevant job IDs before changing shared behavior. Follow the task priorities below and fix demonstrated issues in shared controls and adjacent surfaces. Keep the existing brand and proven behaviors as the baseline.
 
 ## Experience model: roles, jobs, and language
 
-**Reviewed:** 2026-10-13. **Evidence status:** repo-supported workflows and maintainer feedback; no adopter interview or usage study is claimed by this model. Stable IDs make the model easy to reference from a phase without copying persona prose into every plan.
+**Reviewed:** 2026-10-14. **Evidence status:** repo-supported workflows and maintainer feedback; no adopter interview or usage study is claimed by this model. Stable IDs make the model easy to reference from a phase without copying persona prose into every plan.
+
+### Current task priorities
+
+**Maintainer direction, 2026-10-14:** establish a usable baseline for content, information hierarchy, controls, and visual consistency within the existing brand. A future brand refresh is separate work. Trying and inspecting search is a primary everyday task, not merely an optional destination after recovery. Failures still deserve immediate attention when present. This supersedes the earlier incident-recovery-first review order; it does not establish measured adopter frequency or change operational guarantees.
+
+Use three concrete browser tasks to orient the existing job model: try a query and understand its results (`JOB-05`); understand a problem and reach the appropriate recovery/check (`JOB-03`/`JOB-04`); save and rerun useful search inputs (`JOB-05`). `JOB-01`/`JOB-02` remain the setup and consistency context for those tasks. Do not invent new personas or duplicate the job table for this baseline. Maintainer corrections to these tasks are useful; a persona workshop or human UAT is not a prerequisite for routine repairs.
+
+See [UI-BASELINE-PLAN.md](UI-BASELINE-PLAN.md) for the bounded repair sequence, behavioral benchmarks, and observable finish criteria. That plan is a delivery checklist, not another persona or terminology authority.
 
 ### Task contexts
 
@@ -41,11 +49,14 @@ Translate from the implementation model into the user's task while preserving di
 | Internal concept | User-facing starting term | Keep this distinction explicit |
 | --- | --- | --- |
 | Oban `Job` / queued sync work | **Queue job** or **sync work** | It is work in the host application's queue. Do not call it a Meilisearch task. |
-| Meilisearch task UID | **Backend task**; say **Meilisearch task** when the backend is otherwise ambiguous | Acceptance is not completion; retain the task ID until an exact terminal result is observed. |
+| Meilisearch task UID | **Meilisearch task** in the supported v1 UI; **backend task** in implementation-neutral context | Acceptance is not completion; retain the task ID until an exact terminal result is observed. |
 | Ecto schema / module | **Schema**, with its readable module name available in diagnostic context | Do not erase schema scope behind a vague “collection” label; the selected schema controls evidence and recovery. |
 | Declared/live index settings comparison | **Index settings** in the primary path; **contract** may remain in advanced detail | Matching settings do not prove documents are fresh or visible. |
 | Active-index document check | **Documents visible in the active index** / **Check document visibility** | State the selected schema/index and observation time; do not infer visibility from queue or settings status. |
-| Saved Playbook JSON | **Playbook** as the artifact name, explained on first use as a saved, bounded search check | A saved definition is not a result or a completed run. Preserve draft, saved, and run provenance. |
+| Saved Playbook JSON | **Saved search** is the 2026-10-14 recommended UI term; **Playbook** remains the API/file-format name | A saved definition can contain multiple schema/query entries. It is not a stored result, pass/fail test, scheduled job or completed run. Preserve draft, saved, and run provenance; align nav and headings when implementing the change. |
+| `playbook_workspace_dir` | **Storage folder** in details or configuration/error guidance | This is a server-side directory for saved JSON files, not a separate team/account concept. Preserve scope and exact path where actionable. |
+| Schema allowlist | **Configured schemas** in ordinary task guidance | Keep authorization/allowlist policy explicit in setup or access errors when it changes what the user can do; enforcement is unchanged. |
+| `sync_mode: :oban` | **Background sync · Oban**, with inline/manual context when relevant | This describes the write path, not completion or freshness. Keep exact configured mode available in technical detail. |
 | Multi-schema/federated search | **Search across selected schemas** when orienting a new user; keep per-schema detail | Per-target results remain separate; do not promise a merged index or combined relevance score. |
 | Search result hydration from the app Repo | **Load matching Ecto records from the app** in explanatory docs | It is an app-side lookup after search, not a Meilisearch operation; preserve failure/consistency semantics. |
 
