@@ -1561,7 +1561,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <.ops_trail current={:sync_drift} class="mt-4" />
 
-      <.ops_panel class="mt-4">
+      <div class="mt-ops-4">
         <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="sync-schema-select"
@@ -1569,7 +1569,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             selected={@selected_schema}
           />
         </.form>
-      </.ops_panel>
+      </div>
 
       <.ops_empty_state :if={@selection_error == :no_schemas} title="No schemas configured">
         Add allowlisted schemas before loading sync or drift observations.

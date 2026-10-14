@@ -519,7 +519,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
       <.ops_trail current={:failed_sync} />
 
-      <.ops_panel>
+      <div>
         <.form for={%{}} id="failed-sync-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="schema-select"
@@ -528,7 +528,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             hint="Choose a schema to inspect its failed sync work."
           />
         </.form>
-      </.ops_panel>
+      </div>
 
       <.ops_empty_state :if={@load_error == :no_schemas} title="No schemas configured.">
         Add allowlisted schema modules with
@@ -568,7 +568,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         <.ops_inline_code>{inspect(@load_error)}</.ops_inline_code>
       </.ops_status>
 
-      <.ops_panel :if={@inspection}>
+      <div :if={@inspection} class="space-y-ops-page-gap">
         <section aria-labelledby="failed-sync-rollups-heading">
           <.ops_status
             kind={failed_sync_status_kind(@inspection)}
@@ -695,7 +695,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             See <.ops_inline_code>mix scrypath.failed</.ops_inline_code>, <.ops_inline_code>guides/drift-recovery.md</.ops_inline_code>, and <.ops_inline_code>guides/operator-mix-tasks.md</.ops_inline_code>.
           </p>
         </.ops_disclosure>
-      </.ops_panel>
+      </div>
 
       <.ops_handoff :if={@inspection && @selected_schema}>
         <:step

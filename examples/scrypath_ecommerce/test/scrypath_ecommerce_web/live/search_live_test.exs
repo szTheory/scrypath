@@ -30,25 +30,35 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
         send(pid, {:search, schema_module, query})
       end
 
-      {:ok,
-       %{
-         "hits" => [
+      case query.text do
+        "backend-error" ->
+          {:error, :backend_unavailable}
+
+        "no-matches" ->
+          {:ok, %{"hits" => [], "facetDistribution" => %{"category_id" => %{}}, "totalHits" => 0}}
+
+        _ ->
+          {:ok,
            %{
-             "id" => 101,
-             "name" => "Quantum CyberPhone X",
-             "description" => "Pocket quantum processor",
-             "category_id" => "1",
-             "category_name" => "Smartphones"
-           }
-         ],
-         "facetDistribution" => %{
-           "category_id" => %{
-             to_string(Application.fetch_env!(:scrypath_ecommerce, :search_live_test_category_id)) =>
-               2
-           }
-         },
-         "totalHits" => 1
-       }}
+             "hits" => [
+               %{
+                 "id" => 101,
+                 "name" => "Quantum CyberPhone X",
+                 "description" => "Pocket quantum processor",
+                 "category_id" => "1",
+                 "category_name" => "Smartphones"
+               }
+             ],
+             "facetDistribution" => %{
+               "category_id" => %{
+                 to_string(
+                   Application.fetch_env!(:scrypath_ecommerce, :search_live_test_category_id)
+                 ) => 2
+               }
+             },
+             "totalHits" => 1
+           }}
+      end
     end
 
     @impl true
@@ -134,5 +144,23 @@ defmodule ScrypathEcommerceWeb.SearchLiveTest do
     assert html =~ ~s(data-testid="storefront-results")
     assert html =~ ~s(data-testid="storefront-result")
     assert html =~ "Category"
+  end
+
+  test "explains when the current search has no matching category facets", %{conn: conn} do
+    assert {:ok, _view, html} = live(conn, ~p"/?q=no-matches")
+
+    assert html =~ "No matching results yet"
+    assert html =~ "No categories match this search."
+    refute html =~ "2 products"
+  end
+
+  test "does not present a backend failure as an empty result set", %{conn: conn} do
+    assert {:ok, _view, html} = live(conn, ~p"/?q=backend-error")
+
+    assert html =~ "Search unavailable"
+    assert html =~ "Check Search health before treating this as an empty catalog."
+    assert html =~ "Categories are unavailable until search can be checked."
+    assert html =~ ~s(href="/admin/search/health")
+    refute html =~ "No matching results yet"
   end
 end

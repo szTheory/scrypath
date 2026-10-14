@@ -8,7 +8,7 @@ The implementation authority is [`app.css`](scrypath_ops/assets/css/app.css), it
 
 ## Colors
 
-The page floor is warm neutral in light (`#f7f6f3`) and dark charcoal in dark (`#111419`). Resting surfaces use white / `#191e25`; the next neutral surface uses `#efeee9` / `#222831`. Primary interaction is violet (`#5b4ad1` / `#aaa0ff`). Use the named semantic status tokens and their AA-checked foreground pairs for warnings and failures. Status color stays local to explicit text or an icon; verdict, metric, and record surfaces remain neutral.
+The page floor is cool neutral in light (`#f3f5f8`) and dark charcoal in dark (`#111419`). Resting surfaces use white / `#191e25`; the next neutral surface uses `#edf1f5` / `#222831`. Primary interaction is violet (`#5b4ad1` / `#aaa0ff`), with active navigation on a soft selected fill. The System/Light/Dark picker uses a neutral selected surface. Use the named semantic status tokens and their AA-checked foreground pairs for warnings and failures. Status color stays local to explicit text or an icon; verdict, metric, and record surfaces remain neutral.
 
 System appearance follows the operating-system preference when no explicit theme is selected. The visible System, Light, and Dark controls represent the saved preference, not just the effective colors.
 
@@ -31,6 +31,8 @@ Hierarchy comes from neutral surface steps, spacing, borders, and restrained sha
 Use the existing `ops` radius roles: control, surface, and overlay. Keep buttons, fields, panels, records, and dialogs on those named radii rather than introducing one-off corner values. Focus remains the global 2px `:focus-visible` outline with a 2px offset.
 
 ## Components
+
+Use visible native radio rows for schema choices and plain context for a single schema. Page headings stand on their own without a repeated “Operator workspace” kicker. Action groups, diagnostic subgroups, and disclosures do not add another card around a button, row, or existing task surface. Prefer headings, spacing, and separators; preserve real danger feedback and protected confirmation behavior.
 
 `ScrypathOpsWeb.OpsUi` is the shared component authority. Use the component whose semantics fit: `ops_verdict` for a neutral decision summary, `ops_status` or `ops_notice` for explicit operational feedback, `ops_result_row` for evidence, `ops_object_item` for a managed playbook, and `ops_disclosure` / `ops_code_block` for secondary technical detail. Shared components should align shared function while each LiveView retains its own route, evidence order, and recovery language.
 

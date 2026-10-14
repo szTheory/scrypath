@@ -21,17 +21,17 @@ defmodule ScrypathEcommerceWeb.SearchLive do
     tenants = Catalog.list_tenants()
     categories = if tenant, do: Catalog.list_categories(tenant), else: []
 
-    results =
+    {results, search_state} =
       if tenant do
-        Product
-        |> Scrypath.search(text, search_opts(tenant.id, category_id))
-        |> case do
-          {:ok, results} -> results
-          {:error, _reason} -> empty_results()
+        case Scrypath.search(Product, text, search_opts(tenant.id, category_id)) do
+          {:ok, results} -> {results, :ready}
+          {:error, _reason} -> {empty_results(), :unavailable}
         end
       else
-        empty_results()
+        {empty_results(), :no_tenant}
       end
+
+    category_facets = Map.get(results.facets.distribution, :category_id, [])
 
     {:noreply,
      socket
@@ -39,8 +39,10 @@ defmodule ScrypathEcommerceWeb.SearchLive do
      |> assign(:tenants, tenants)
      |> assign(:categories, categories)
      |> assign(:category_labels, category_labels(categories))
+     |> assign(:category_facets, category_facets)
      |> assign(:product_summaries, product_summaries(results.hits))
      |> assign(:results, results)
+     |> assign(:search_state, search_state)
      |> assign(:category_id, category_id)
      |> assign(:form, to_form(search_form_params(text, category_id, tenant), as: :search))}
   end

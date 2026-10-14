@@ -1,82 +1,51 @@
-# Operator information architecture
+# ScrypathOps operator guide
 
-Canonical contract for the optional **ScrypathOps** Phoenix shell: who uses it, what jobs they bring, and how primary navigation maps to routes and follow-up docs or Mix tasks.
+ScrypathOps is an optional Phoenix and LiveView interface for inspecting search indexing and sync operations. It complements the library's `Scrypath.*` APIs and Mix tasks; it does not replace them or provide host-application authentication.
 
 ## Personas
 
-- **On-call engineer** — owns incident response when search indexing or sync pipelines misbehave; needs fast triage signals and safe recovery hooks.
-- **Library maintainer** — ships Scrypath releases, runs verification tasks, and keeps Hex packaging and docs honest with runtime behavior.
-- **Search owner** — accountable for relevance, federation semantics, and operational health across environments without pretending indexes are magically unified.
-- **First-run operator** — arrives with the console freshly mounted (an `unconfigured` or `missing_backend` verdict) and asks "why is everything empty / what is this?"; needs orientation and a setup-oriented next step, not a diagnostic one. The Control Room verdict + intent cards are their onboarding (no separate tour); config-empty states carry the guidance to wire schemas/backend, and the first green verdict is their success signal.
+- **On-call engineers** need to see current search health, inspect failed work, and choose a safe recovery action.
+- **Search owners** need to understand index contract and document visibility, then run bounded searches without implying that separate indexes form one merged index.
+- **Library maintainers** need reproducible status, verification commands, and documentation that matches the code.
+- **First-run operators** need to distinguish missing setup from an empty catalog or a failed observation, with a clear next step.
 
 ## Jobs-to-be-done
 
-1. **When** an alert fires that search or sync looks unhealthy, **I need** one place to see search health and sync signals, **so that** I can decide whether to page deeper or recover — **done when** I can tell “healthy / degraded / broken” with explicit next checks (ships fully in phase 45).
-2. **When** sync jobs fail or retry, **I need** a bounded list of failed work with reasons, **so that** I can retry or quarantine safely — **done when** I can open failed-work detail from the same nav priority as health (ships fully in phase 45).
-3. **When** someone asks “is the index in sync?”, **I need** read-only drift and visibility plus links to existing Mix tasks and guides, **so that** I never bypass the library’s public APIs — **done when** I can jump to `mix scrypath.*` docs and drift guides without duplicate prose here (shipped phase 45 — see `/ops/sync-drift` and **`phase 45`** in the nav table below).
-4. **When** we expose multi-index or federated search, **I need** the UI to state merge and honesty rules up front, **so that** operators do not assume a single merged index — **done when** the shell links to federation docs and phase-46 inspectors (ships fully in phase 46).
-5. **When** I need a quick CLI snapshot during an incident, **I need** the same priorities reflected in nav as in terminal workflows, **so that** muscle memory matches between OPSUI and Mix — **done when** primary nav order matches jobs 1–4 above.
-6. **When** onboarding a teammate to operator workflows, **I need** a short mapping from job to route and docs, **so that** they self-serve without reading the whole repo — **done when** this table is kept in sync with `router.ex` on every nav change.
-7. **When** planning roadmap work, **I need** triage (health + failed sync) ranked above exploratory search, **so that** the product does not imply search debugging is co-equal with outage response — **done when** nav order stays health → failed sync → sync/drift → search.
-8. **When** I want to replay a bounded search or multi-index run from disk, **I need** an ops-local JSON playbook library with the same honesty and dispatch rails as the playground, **so that** I can iterate without pasting large payloads into chat — **done when** I can import, preview, and run validated playbooks under an explicit workspace directory (see `/ops/playbooks`); deploy layout and GitOps live in [team-playbook-persistence.md](team-playbook-persistence.md).
-
-### Playbook (saved playbooks)
-
-Version **1** interchange for saved searches is **JSON** and **ops-local** (validated beside the OPSUI code, not as a separate Hex-published schema package). Normative fields, caps, and banned secret keys are documented in [playbook-schema-v1.md](playbook-schema-v1.md).
-
-## Securing `/ops`
-
-Authentication and authorization for **`/ops`** are **host-owned** concerns: **`scrypath_ops`**
-ships a Phoenix + LiveView shell and documents boot-time guards (for example
-**`OPSUI_AUTH_MODE`** in **`docs/SECURITY.md`**), but it does **not** replace your
-organization’s identity layer.
-
-Wire the operator routes the same way you would any internal admin UI: wrap them in a
-**`live_session`** with **`on_mount`** hooks that enforce your session or token rules, or
-terminate TLS and authenticate at the edge before traffic reaches Phoenix. See Phoenix
-**[`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3)**
-and **`on_mount`** callbacks in
-**[`Phoenix.LiveView`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount)**.
+The shared path is **observe → diagnose → recover or explore → verify**. An accepted job or a clean settings contract does not prove that documents are visible in the active index. Preserve that distinction when reading status and recovery results.
 
 ## Navigation
 
-The former `/ops/posture` path redirects to `/ops/health` so saved links continue to work.
+The default mount prefix is `/ops`; host applications may mount the interface at another path. Routes below show the default prefix. The Control Room at `/ops/` is the landing page and is not a primary navigation item. The retired `/ops/posture` route redirects to `/ops/health` for saved links.
 
-The `/ops` root (`/ops/`) is the **Control Room** landing: a glanceable search-health summary plus three intent task-cards that route by the job the operator brought — incident triage (→ `/ops/health`), shipping a change (→ `/ops/sync-drift`), or explore & capture (→ `/ops/search`). It is the start page, not a sixth nav item; the per-schema health view stays on `/ops/health`.
+| Group | Destination | Route | Use and next reference |
+| --- | --- | --- | --- |
+| Home | Control Room | `/ops/` | Read the current summary, then follow the task-specific health, verification, or search handoff. |
+| Recover | Search health | `/ops/health` | Inspect per-schema backend and queue observations. See [Meilisearch operations](../../guides/meilisearch-operations.md). |
+| Recover | Failed sync work | `/ops/failed-sync` | Inspect retained failure evidence before retrying or quarantining work. See [operator Mix tasks](../../guides/operator-mix-tasks.md). |
+| Recover | Sync and drift | `/ops/sync-drift` | Reconcile accepted work, inspect index-contract drift, then verify active-index visibility. See [drift recovery](../../guides/drift-recovery.md) and [sync modes and visibility](../../guides/sync-modes-and-visibility.md). |
+| Explore | Search | `/ops/search` | Run an allowlisted query and inspect results by their submitted target. See [multi-index search](../../guides/multi-index-search.md). |
+| Explore | Playbooks | `/ops/playbooks` | Preview, run, save, and import bounded search playbooks. See the [playbook format](playbook-schema-v1.md) and [team persistence](team-playbook-persistence.md). |
 
-Primary shell navigation under `/ops` is grouped by the job the operator brought, in **recover-first order**: the **Recover** chain comes first (health → failed sync → read-only sync/drift, ordered as the incident walk), then **Explore** (bounded search and federation honesty → saved playbooks). Search is **not** co-equal with recovery work — Explore stays below the Recover chain.
+The primary navigation contract below is machine-checked against `ScrypathOpsWeb.Nav.primary/0`. Its JSON is kept inside an HTML comment so it stays available to verification without appearing in the rendered guide.
 
-### Journey loops & handoffs
-
-The surfaces thread into two task groups — **Recover** (health → failed sync → sync drift) and **Explore** (search → playbooks) — and three named loops, each a hub-and-spoke trip from the Control Room. Within a group the steps are sequential; the primary shell nav stays free so a power user is never trapped.
-
-- **Incident-response loop** (on-call): Control Room verdict (degraded) → Search health (which schemas?) → Failed sync work (why? retry) → Sync and drift (did it stick?) → Control Room (verdict green). The loop closes on the verdict flipping green — that round-trip is the success signal.
-- **Ship-a-change preflight loop** (search owner / maintainer): Control Room ("shipping a change") → Sync and drift (refresh sync status → check the index contract) → optionally open **Advanced: index promotion** → re-check Search health.
-- **Explore → capture loop** (search owner): Control Room ("explore") → Search (probe) → capture → Playbooks (save/run) → back to Search.
-
-Two shared components carry this structure so it stays consistent (principle of least surprise):
-
-- **`ops_trail`** — a contextual breadcrumb (`<group> › <page>`), not a map of the whole product. Siblings live in the primary shell nav; the landing shows no trail.
-- **`ops_handoff`** — the unified "Next step" page footer. One eyebrow + imperative grammar on every triage/explore surface so the bottom of each page reliably tells the operator where to go next, and the loops visibly close.
-
-### Sync recovery and index promotion
-
-Sync and drift keeps the ordinary recovery checks usable on their own: refresh sync and queue status, then run the index contract check. A prior failed-sync event remains useful incident history and continues to block index promotion until it is resolved; it does not prevent the operator from checking whether newly accepted recovery work reached the backend and active index.
-
-Index promotion is a separate advanced action. Its readiness and server-side guard use the same current, schema-and-index scoped checks. A confirmation names the schema, live index, target index, and alias change. Backend task acceptance is shown as **accepted** with its exact task ID; only that task's terminal success is shown as **Index swap completed**. Timeout or failure keeps the task identity visible and offers check refresh without submitting another swap.
-
-Use **backend task** for Meilisearch work and **queue job** for Oban work. A clean index contract describes declared settings and the live index contract; it does not prove that projected documents are present. Recovery verification is based on the correlated task and active-index document observation described by the incident flow.
-
-| Job | Primary persona | Nav label | Route | Scrypath / doc / Mix follow-up |
-| --- | --- | --- | --- | --- |
-| 1 | On-call engineer | Search health | /ops/health | Phase 45 — health dashboards; until then see [guides/meilisearch-operations.md](../../guides/meilisearch-operations.md) |
-| 2 | On-call engineer | Failed sync work | /ops/failed-sync | Phase 45 — failed work UI; today use `mix scrypath.failed` from [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 3 | Search owner | Sync and drift | /ops/sync-drift | Shipped **phase 45** — read-only reconcile + lazy index contract drift in OPSUI; still use `mix scrypath.status`, [guides/drift-recovery.md](../../guides/drift-recovery.md), [guides/sync-modes-and-visibility.md](../../guides/sync-modes-and-visibility.md) |
-| 4 | Search owner | Search | /ops/search | Shipped in phase 46 — bounded single/multi playground with federation-honest inspector; semantics in [guides/multi-index-search.md](../../guides/multi-index-search.md) |
-| 4b | Search owner | Playbooks | /ops/playbooks | JSON format and caps in [playbook-schema-v1.md](playbook-schema-v1.md); persistence and workspace authority in [team-playbook-persistence.md](team-playbook-persistence.md); runs use the same `SearchPlayground` dispatch path as `/ops/search` |
 <!-- scrypath:nav-contract-begin -->
+<!--
 [{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/search","label":"Search"},{"route":"/ops/playbooks","label":"Playbooks"}]
+-->
 <!-- scrypath:nav-contract-end -->
-| 5 | Library maintainer | Sync and drift | /ops/sync-drift | Mix tasks index: [guides/operator-mix-tasks.md](../../guides/operator-mix-tasks.md) |
-| 6 | Library maintainer | Search health | /ops/health | Library verification: [CONTRIBUTING.md](../../CONTRIBUTING.md) |
-| 7 | On-call engineer | Failed sync work | /ops/failed-sync | SRE-style expectations: [docs/search-backend-sre.md](../../docs/search-backend-sre.md) |
+
+## Handoffs
+
+- **Incident response:** Control Room → Search health → Failed sync work → Sync and drift → Control Room. Confirm the correlated task and document observation before treating recovery as complete.
+- **Change preflight:** Control Room → Sync and drift → inspect the declared contract and current document evidence → Search health. Index promotion is an advanced, confirmed action.
+- **Search exploration:** Control Room → Search → capture the submitted targets and criteria → Playbooks to save or replay the bounded check.
+
+The contextual trail identifies the current task group and page; sibling routes remain available in primary navigation. Each page's next-step handoff should direct operators to the next safe action without implying that an unobserved state is healthy.
+
+## Security boundary
+
+Authentication and authorization for the mounted operator routes belong to the host application. ScrypathOps provides the Phoenix and LiveView interface and documents its boot-time guard in [Security](SECURITY.md); it does not replace the host's identity layer.
+
+Place the routes inside a `live_session` whose `on_mount` hooks enforce the host's session or token policy, or authenticate and terminate TLS at a trusted edge before requests reach Phoenix. See Phoenix [`live_session/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Router.html#live_session/3) and [`on_mount`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-on_mount).
+
+The optional `scrypath_ops` application is maintained in this repository and is not part of the published `scrypath` Hex package. This guide therefore links to its rendered repository documentation; the core library API and adoption guides are published separately through HexDocs.

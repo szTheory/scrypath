@@ -13,12 +13,14 @@ const MODEL = process.env.OPS_UI_LLM_MODEL || "gpt-4.1";
 const REQUIRED = process.env.OPS_UI_LLM_JUDGE_REQUIRED === "1" || process.argv.includes("--required");
 
 const REVIEW_SHOTS = [
-  "00-control-room--dark--desktop--incident.png",
-  "03-sync-drift--dark--desktop--drift.png",
-  "06-search--dark--desktop--results.png",
-  "08-search--dark--mobile--zero-results.png",
-  "09-playbooks--dark--desktop--empty-workspace.png",
-  "04-control-room--light--desktop--all-green.png"
+  "00-control-room--dark--desktop-1440--incident.png",
+  "01-search-health--light--desktop-1440--incident.png",
+  "02-failed-sync--dark--mobile-390--populated.png",
+  "03-sync-drift--dark--desktop-1440--drift.png",
+  "06-search--dark--desktop-1440--results.png",
+  "08-search--dark--mobile-390--zero-results.png",
+  "09-playbooks--dark--desktop-1440--empty-workspace.png",
+  "04-control-room--light--desktop-1440--all-green.png"
 ];
 
 const JUDGE_SCHEMA = {
@@ -136,15 +138,15 @@ async function imageContent(filename) {
 async function runMock() {
   return {
     schema: "scrypath.ops-ui-visual-judge.v1",
-    status: "pass",
-    summary: "Mock visual judge completed with no findings.",
+    status: "mock",
+    summary: "Mock exercises report wiring only; no UI review or acceptance is claimed.",
     findings: [],
     screens_reviewed: REVIEW_SHOTS,
     claim_verdicts: [
       {
-        claim: "Shell wash reads as one quiet top-left violet ambient glow and not a discrete purple blob.",
-        status: "pass",
-        evidence: "Mock mode assumes deterministic shell wash gate supplied the blocking visual proof.",
+        claim: "Mock output is not visual evidence.",
+        status: "needs_review",
+        evidence: "No screenshot was inspected in mock mode.",
         screens: REVIEW_SHOTS
       }
     ],

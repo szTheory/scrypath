@@ -105,6 +105,12 @@ Agents should default to the repo's **green-main release train** posture:
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
+## UI work
+
+For the retained maintainer preview, read `.planning/UI-PREVIEW.json` first and use its named checkout. Verify the container bind mount, URL, branch, and inclusion of current `main` before editing or collecting UI evidence. Never assume the shell's starting checkout is the running app. Preserve pending local work and reconcile it explicitly before changing worktrees. The UI capture command rejects a mismatched preview source/port or omitted merged-main baseline.
+
+For storefront or ScrypathOps changes, follow [examples/scrypath_ecommerce/e2e/UI-REVIEW.md](examples/scrypath_ecommerce/e2e/UI-REVIEW.md). Review the full current screen and journey inventory before narrowing to maintainer feedback. Use the maintained roles/jobs and internal-to-user language map, inspect rendered screenshots and actual copy, record unreported problems and coverage gaps, batch coherent repairs, and confirm once. Run `npm run ui:review` from the demo in the checkout actually mounted by the preview. Captures and passing code tests alone are not a design pass; never auto-update an unreviewed visual baseline or claim independent review when none occurred. Keep the existing lean CI posture and preserve retained preview data.
+
 
 
 <!-- GSD:profile-start -->

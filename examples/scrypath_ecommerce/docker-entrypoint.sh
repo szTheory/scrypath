@@ -23,7 +23,9 @@ cd /app/examples/scrypath_ecommerce
 
 mix ecto.create --quiet
 mix ecto.migrate --quiet
-mix scrypath.demo.seed
+if [ "${DEMO_SEED_ON_START:-1}" = "1" ]; then
+  mix scrypath.demo.seed
+fi
 
 base_url="${DEMO_BASE_URL:-http://127.0.0.1:${PORT:-4002}}"
 cat <<URLS

@@ -308,7 +308,11 @@ defmodule ScrypathOpsWeb.PostureLive do
       </p>
 
       <.ops_config_empty :if={@posture_rows == :empty_allowlist} kind={:no_schemas} class="mt-ops-4" />
-      <.ops_config_empty :if={@posture_rows == :missing_backend} kind={:missing_backend} class="mt-ops-4" />
+      <.ops_config_empty
+        :if={@posture_rows == :missing_backend}
+        kind={:missing_backend}
+        class="mt-ops-4"
+      />
 
       <section
         :if={match?({:ok, _}, @posture_rows)}

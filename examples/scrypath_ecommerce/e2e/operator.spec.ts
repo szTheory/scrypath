@@ -92,9 +92,9 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await waitForLiveConnected(page);
 
   // A real selection change advances this page's generation independently of the destination.
-  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Product/ }) }).click();
+  await page.getByRole("radio", { name: /Product/ }).check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-  await page.locator(".ops-schema-option").filter({ has: page.getByRole("radio", { name: /Variant/ }) }).click();
+  await page.getByRole("radio", { name: /Variant/ }).check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
   const failedRow = page.getByTestId("failed-sync-row").filter({ has: page.getByRole("heading", { name: `Failed job ${fixture.original_job_id}` }) });

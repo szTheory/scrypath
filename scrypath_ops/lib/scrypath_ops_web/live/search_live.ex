@@ -920,7 +920,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           Exploratory queries may be logged by Meilisearch or proxies. Do not paste production secrets or PII; keep page size and schema lists bounded.
         </.ops_notice>
 
-        <.ops_panel class="space-y-6" aria-describedby="search-honesty-panel">
+        <div class="space-y-ops-page-gap" aria-describedby="search-honesty-panel">
           <.ops_empty_state :if={@schema_allowlist == []} title="No schemas configured">
             Add allowlisted schema modules with <code class="text-ops-body">schema_allowlist</code>
             under <code class="text-ops-body">:scrypath_ops</code>
@@ -1417,7 +1417,7 @@ defmodule ScrypathOpsWeb.SearchLive do
               </div>
             </div>
           </section>
-        </.ops_panel>
+        </div>
       </div>
     </Layouts.app>
     """

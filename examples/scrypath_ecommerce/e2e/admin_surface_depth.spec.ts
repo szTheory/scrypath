@@ -337,21 +337,30 @@ async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> 
   const card = ".ops-schema-signal-card";
   await expect(page.locator(card).first()).toBeVisible();
 
-  const surface2 = await darkSurface2(page);
   const bg = await readComputedStyle(page, card, "backgroundColor");
   const shadow = await readComputedStyle(page, card, "boxShadow");
-  expect(bg, "search health signal cards use the dark surface-2 depth token").toBe(surface2);
+  expect(bg, "search health signal cards use the dark surface-2 depth token").toBe(DARK_SURFACE_2_RGB);
   expect(shadow, "search health signal cards must keep seated dark-panel depth").not.toBe("none");
 
   const signalGroup = ".ops-signal-group";
   await expect(page.locator(signalGroup).first()).toBeVisible();
-  const border = await readComputedStyle(page, signalGroup, "borderColor");
-  const ratio = contrastRatio(border, surface2);
-  console.info(`search health signal-group border contrast ratio: ${ratio.toFixed(3)}:1`);
-  expect(
-    ratio,
-    `search health signal-group border ratio must stay at or above ${DK13_ROW_BORDER_TRIGGER}:1`
-  ).toBeGreaterThanOrEqual(DK13_ROW_BORDER_TRIGGER);
+  const groups = await page.locator(signalGroup).evaluateAll((elements) =>
+    elements.map((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        shadow: style.boxShadow,
+        borderedSides: [style.borderTopWidth, style.borderRightWidth,
+          style.borderBottomWidth, style.borderLeftWidth]
+          .filter((width) => parseFloat(width) > 0).length
+      };
+    })
+  );
+  for (const group of groups) {
+    expect(group.background, "diagnostic groups share their schema surface").toBe("rgba(0, 0, 0, 0)");
+    expect(group.shadow, "diagnostic groups do not add another elevated card").toBe("none");
+    expect(group.borderedSides, "a group can have a divider, never a surrounding box").toBeLessThanOrEqual(1);
+  }
 
   await expect(page.locator(".ops-signal-metrics dd").first()).toBeVisible();
 }
