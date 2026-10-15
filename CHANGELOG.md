@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.16](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.15...scrypath-v0.3.16) (2026-10-15)
+
+
+### Bug Fixes
+
+* bound the mounted Ops shell path ([#101](https://github.com/szTheory/scrypath/issues/101)) ([f0e05bc](https://github.com/szTheory/scrypath/commit/f0e05bc8857f56f2a030faa45d4da09a510ef625))
+* **ops-ui:** clarify search results, saving, and health details ([#106](https://github.com/szTheory/scrypath/issues/106)) ([29c287c](https://github.com/szTheory/scrypath/commit/29c287c8e732cddd13e435ccf601e06a39a65837))
+* **ops-ui:** clarify search, saved searches, and recovery ([#105](https://github.com/szTheory/scrypath/issues/105)) ([b98933c](https://github.com/szTheory/scrypath/commit/b98933cecefdbed97264d3560ea13cc0fb131187))
+* **ops-ui:** improve mobile retained evidence ([017c738](https://github.com/szTheory/scrypath/commit/017c7389544291b30146d25b73239ed33296d7b7))
+* **ops-ui:** restore plain controls and verify preview source ([#102](https://github.com/szTheory/scrypath/issues/102)) ([5d464b4](https://github.com/szTheory/scrypath/commit/5d464b453ae5243e85dadef913d9e9852dcc84be))
+* **tooling:** preserve UI review evidence across test runs ([#103](https://github.com/szTheory/scrypath/issues/103)) ([d3b9222](https://github.com/szTheory/scrypath/commit/d3b922224f8a0c4930956abcdc950c5796666650))
+* **tooling:** preserve worktree lessons and check preview before edits ([#104](https://github.com/szTheory/scrypath/issues/104)) ([bd4c7b9](https://github.com/szTheory/scrypath/commit/bd4c7b91e7df637c4e1c72763440dab055c25f9a))
+
 ## [0.3.15](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.14...scrypath-v0.3.15) (2026-10-04)
 
 
