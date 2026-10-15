@@ -141,6 +141,6 @@ test("health stages align, icons are consistent, refresh is singular and setting
   await expect(page.locator("#settings-checked-at")).toBeVisible();
   await expect(page.getByRole("button",{name:"Refresh settings",exact:true})).toHaveCount(0);
   await expect(page.getByText("Not enabled for filtering",{exact:true})).toBeVisible();
-  await expect(page.getByText("Sync failures need review",{exact:true})).toBeVisible();
+  await expect(page.getByText(/\d+ failed sync operations?/)).toBeVisible();
   await page.screenshot({path:`${artifacts}/settings.png`,fullPage:true});
 });

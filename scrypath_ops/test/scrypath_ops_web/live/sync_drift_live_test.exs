@@ -161,6 +161,63 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
     assert has_element?(lv, "#sync-drift-refresh[aria-label='Refresh sync and index settings']")
     refute has_element?(lv, "#sync-reconcile-heading.text-ops-h1")
+    assert has_element?(lv, "#settings-checked-at", "Not available")
+    refute has_element?(lv, "#settings-checked-at button")
+  end
+
+  test "settings reserve their metadata row before hydration and identify their own check", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    html = conn |> get(~p"/ops/sync-drift") |> html_response(200)
+    assert html =~ ~s(id="settings-checked-at")
+    assert html =~ "Settings checked"
+    assert html =~ "Checking…"
+
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    render_async(lv)
+    assert has_element?(lv, "#settings-checked-at time[datetime]")
+    assert has_element?(lv, "#settings-checked-at .ops-time__label", "Settings checked")
+    assert has_element?(lv, ".ops-time__label", "Sync checked")
+  end
+
+  test "sync activity counts separate pending work, scheduled retries and terminal failures", %{
+    conn: conn
+  } do
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban, Oban)
+    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
+    job = %{id: 1, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
+    Application.put_env(:scrypath_ops, :oban_jobs, [job, %{job | id: 2, state: "retryable"}])
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    render_async(lv)
+    assert has_element?(lv, ".ops-sync-work", "1 background job pending · 1 scheduled retry")
+    refute has_element?(lv, ".ops-sync-work [data-tone='error']")
+
+    assert has_element?(
+             lv,
+             ".ops-sync-work a[href='/ops/health?schema=ScrypathOps.Test.OpsPostA']"
+           )
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      job,
+      %{job | id: 2, state: "retryable"},
+      %{job | id: 3, state: "discarded"}
+    ])
+
+    {:ok, updated_lv, _html} = live(conn, ~p"/ops/sync-drift")
+    render_async(updated_lv)
+
+    assert has_element?(
+             updated_lv,
+             ".ops-sync-work [data-tone='error']",
+             "1 failed sync operation"
+           )
+
+    assert has_element?(
+             updated_lv,
+             ".ops-sync-work a[href='/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA']"
+           )
   end
 
   test "ordinary browsing omits recovery placeholders and keeps a scoped handoff", %{conn: conn} do

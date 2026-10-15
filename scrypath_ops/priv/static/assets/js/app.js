@@ -8645,7 +8645,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   };
   var LiveSocket2 = LiveSocket;
 
-  // ../_build/test/phoenix-colocated/scrypath_ops/index.js
+  // ../_build/dev/phoenix-colocated/scrypath_ops/index.js
   var hooks = {};
 
   // js/app.js

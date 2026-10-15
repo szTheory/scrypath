@@ -22,5 +22,6 @@
   "iteration3_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-15T17-53-27-914Z",
   "iteration3_pr": "https://github.com/szTheory/scrypath/pull/107",
   "iteration3_implementation": "ec8430f2c211f34d51c42e4f0a31b7890044cb4f",
-  "iteration3_verification_stack_removed": true
+  "iteration3_verification_stack_removed": true,
+  "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md"
 }

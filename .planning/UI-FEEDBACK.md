@@ -169,4 +169,16 @@ Primary documentation checked 2026-10-15: Meilisearch's [multi-search API](https
 
 New-tab help guidance checked 2026-10-15: [W3C technique G201](https://www.w3.org/WAI/WCAG22/Techniques/general/G201) advises an advance visible and accessible indication when activation opens a new tab/window. This is advisory guidance, not a claim that all links must open new tabs or that the technique itself is a mandatory WCAG criterion. Here, the maintainer's task-preservation preference supplies the reason for contextual help to use a new tab.
 
-Collection status: 25 entries in this new round, all open. Source triage and recommendations are recorded; no product implementation, preview restart, reseed or new rendered verification has been performed for these items. The prior pass remains delivered. Review beyond these examples when the coherent batch is implemented.
+Delivery update: all 25 entries in this round were implemented and verified in [iteration 3](reference/UI-ITERATION-3-RESULTS.md). The paragraphs above retain the original source triage and dated observations.
+
+## Scoped follow-up — 2026-10-15 afternoon
+
+All five items below are implemented and verified. Evidence, preserved behavior and review limits are in [the Sync/drift follow-up](reference/UI-SYNC-LAYOUT-FOLLOWUP.md).
+
+| ID | Maintainer feedback | Disposition |
+| --- | --- | --- |
+| UI-54 | Settings checked metadata arrives after initial load, shifting the layout. Use a truthful placeholder or skeleton until the result arrives. | Permanent metadata row with equal pending/loaded geometry; responsive and clipboard/time-zone transition regression. |
+| UI-55 | Index settings differ title and body start at different positions because of the status cue (15:12 screenshot). | Cue has its own shared status column; title and body align, including wrapping. |
+| CONTENT-33 | Two Checked timestamps seem duplicated. | Explicit Sync checked / Settings checked labels; independent read times remain truthful. |
+| UI-56 | Sync/drift is busy and hierarchy unclear; the comparison table gradient conflicts with the rest of the UI (15:15 screenshot). | Shorter copy, row-local explanation, secondary full details/promotion/related links, flat table with AA-readable headings. |
+| CONTENT-34 | Background sync jobs are pending or retrying does not explain normality, magnitude, action or useful cross-reference. | Observed counts distinguish pending work, scheduled retries and terminal failures; links retain schema scope and Help explains the stages. No inference of backlog from a snapshot. |

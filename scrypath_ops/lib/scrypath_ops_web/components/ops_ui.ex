@@ -250,6 +250,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Refresh action paired with the time of the latest check."
   attr(:id, :string, required: true)
   attr(:checked_at, :any, default: nil)
+  attr(:checked_label, :string, default: "Checked")
   attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
@@ -270,7 +271,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_refresh_control(assigns) do
     ~H"""
     <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
-      <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
+      <.ops_time :if={@checked_at} label={@checked_label} dt={@checked_at} />
       <.ops_refresh_button
         id={@id}
         label={@label}
@@ -360,17 +361,22 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0">
+        <div class={[
+          "ops-notice-surface__copy min-w-0",
+          @neutral && "ops-notice-surface__copy--cued"
+        ]}>
+          <span
+            :if={@neutral}
+            class="ops-notice-surface__cue"
+            aria-hidden="true"
+          >
+          </span>
           <p class="ops-notice-surface__title font-semibold">
-            <span
-              :if={@neutral}
-              class="ops-notice-surface__cue"
-              aria-hidden="true"
-            >
-            </span>
             {@title}
           </p>
-          <div class="mt-1 text-base-content/80">{render_slot(@inner_block)}</div>
+          <div class="ops-notice-surface__body mt-1 text-base-content/80">
+            {render_slot(@inner_block)}
+          </div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -1274,7 +1280,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       |> assign(:time_id, assigns.id || "ops-time-#{System.unique_integer([:positive])}")
 
     ~H"""
-    <span id={@time_id} class={["ops-time", @class]} phx-hook={if @exact, do: "OpsTimestampCopy"}>
+    <span id={@time_id} class={["ops-time", @class]} phx-hook="OpsTimestampCopy">
       <span :if={@label && @label != ""} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
         <button

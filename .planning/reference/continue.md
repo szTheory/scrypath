@@ -6,4 +6,6 @@ Canonical checkout: `/Users/jon/projects/scrypath/.claude/worktrees/ui-experienc
 
 Next: review the delivered preview or address new concrete maintainer feedback as a new scoped pass. Historical handoffs and intermediate captures do not supersede the final results. The separate dependency advisory remains outside this UI task.
 
+The 2026-10-15 afternoon Sync and drift follow-up is also implemented: stable settings metadata, scoped check labels, shared notice alignment, quieter comparison hierarchy and meaningful activity counts. See [UI-SYNC-LAYOUT-FOLLOWUP.md](UI-SYNC-LAYOUT-FOLLOWUP.md) for the feedback and final verification. The original iteration-3 matrix remains historical; follow-up confirmation has its own source receipt.
+
 The disposable verification stack has been removed; do not reuse 4013/4014 as running targets. The final source-bound screenshots and receipts remain locally available. Check the draft PR for hosted CI status; the existing dependency advisory is separately tracked.
