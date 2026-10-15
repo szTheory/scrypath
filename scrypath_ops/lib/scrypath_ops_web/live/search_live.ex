@@ -14,26 +14,6 @@ defmodule ScrypathOpsWeb.SearchLive do
   alias ScrypathOps.Schemas
   alias ScrypathOps.SearchPlayground
 
-  attr(:result, :any, required: true)
-  attr(:guide_href, :string, required: true)
-
-  def empty_or_hits_single(assigns) do
-    ~H"""
-    <%= if @result.hits == [] do %>
-      <.ops_empty_state title="No matching documents">
-        Try different search text or another schema.
-        <a class="ops-text-action" href={@guide_href}>Search help</a>
-      </.ops_empty_state>
-    <% else %>
-      <div class="grid gap-2">
-        <%= for {hit, idx} <- Enum.with_index(@result.hits, 1) do %>
-          <.result_hit hit={hit} position={idx} />
-        <% end %>
-      </div>
-    <% end %>
-    """
-  end
-
   @impl true
   def mount(_params, _session, socket) do
     allowlist = Schemas.allowlist()
@@ -44,6 +24,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:page_title, "Search")
       |> assign(:mode, :single)
       |> assign(:q, "")
+      |> assign(:page_size_error, nil)
       |> assign(:page_size, SearchPlayground.default_page_size())
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
@@ -63,7 +44,6 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    prev_mode = socket.assigns.mode
     allowlist = socket.assigns.schema_allowlist
 
     mode =
@@ -94,13 +74,6 @@ defmodule ScrypathOpsWeb.SearchLive do
           )
       end
 
-    socket =
-      if prev_mode != socket.assigns.mode do
-        assign_capture_defaults(socket)
-      else
-        socket
-      end
-
     {:noreply, socket}
   end
 
@@ -126,7 +99,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       socket
       |> assign(:mode, :multi)
-      |> assign_capture_defaults()
       |> push_patch(to: search_path(socket, mode: :multi))
 
     {:noreply, socket}
@@ -136,7 +108,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     socket =
       socket
       |> assign(:mode, :single)
-      |> assign_capture_defaults()
       |> push_patch(to: search_path(socket, mode: :single))
 
     {:noreply, socket}
@@ -262,6 +233,42 @@ defmodule ScrypathOpsWeb.SearchLive do
     # push the `:searching` frame first. Clear prior results immediately so the skeleton
     # isn't drawn over a stale result panel.
     submission = capture_search_submission(params, socket)
+
+    if SearchPlayground.validate_page_size(submission.page_size) == :ok do
+      start_search(socket, submission)
+    else
+      {:noreply,
+       socket
+       |> assign(:q, submission.query)
+       |> assign(:page_size, submission.page_size)
+       |> assign(
+         :page_size_error,
+         "Enter a whole number from 1 to #{SearchPlayground.max_page_size_allowed()}."
+       )}
+    end
+  end
+
+  def handle_event("search_page", %{"direction" => direction}, socket) do
+    submission = socket.assigns.submitted_search
+
+    if submission && !socket.assigns.searching && direction in ["next", "previous"] do
+      page = max(1, submission.page + if(direction == "next", do: 1, else: -1))
+
+      start_search(socket, %{
+        submission
+        | id: System.unique_integer([:positive, :monotonic]),
+          page: page
+      })
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("search", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Search input was invalid. Check the fields and retry.")}
+  end
+
+  defp start_search(socket, submission) do
     send(self(), {:run_search, submission})
 
     socket =
@@ -276,13 +283,10 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
       |> assign(:searching, true)
+      |> assign(:page_size_error, nil)
       |> assign_capture_defaults()
 
     {:noreply, socket}
-  end
-
-  def handle_event("search", _params, socket) do
-    {:noreply, put_flash(socket, :error, "Search input was invalid. Check the fields and retry.")}
   end
 
   @impl true
@@ -308,7 +312,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign_capture_defaults()
 
     with :ok <- SearchPlayground.validate_page_size(page_size),
-         {:ok, opts} <- build_opts(scrypath_opts, page_size, mode) do
+         {:ok, opts} <- build_opts(scrypath_opts, page_size, mode, submission.page) do
       case mode do
         :single ->
           run_single(base_socket, submission, opts, allowlist, start_ms)
@@ -456,12 +460,12 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp build_opts(scrypath_opts, page_size, mode) do
+  defp build_opts(scrypath_opts, page_size, mode, page) do
     if Keyword.has_key?(scrypath_opts, :backend) do
       opts =
         scrypath_opts
         |> ScrypathOps.Schemas.runtime_opts()
-        |> put_search_limit(page_size, mode)
+        |> put_search_limit(page_size, mode, page)
 
       {:ok, opts}
     else
@@ -482,6 +486,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       schema: schema,
       schemas: schemas,
       query: params |> Map.get("q", "") |> text_input() |> String.trim(),
+      page: 1,
       page_size: parse_page_size_param(params["page_size"], socket.assigns.page_size)
     }
   end
@@ -505,18 +510,22 @@ defmodule ScrypathOpsWeb.SearchLive do
     |> Enum.uniq()
   end
 
-  defp put_search_limit(opts, page_size, :multi) do
-    Keyword.merge(opts, federation_limit: page_size, federation_offset: 0)
+  defp put_search_limit(opts, page_size, :multi, page) do
+    Keyword.merge(opts, federation_limit: page_size, federation_offset: (page - 1) * page_size)
   end
 
-  defp put_search_limit(opts, page_size, _mode) do
-    Keyword.merge(opts, page: [size: page_size])
+  defp put_search_limit(opts, page_size, _mode, page) do
+    Keyword.merge(opts, page: [size: page_size, number: page])
   end
 
   defp parse_page_size_param(raw, fallback) do
-    case Integer.parse(text_input(raw || "")) do
-      {n, _} -> n
-      :error -> fallback
+    if is_nil(raw) do
+      fallback
+    else
+      case Integer.parse(text_input(raw)) do
+        {n, ""} -> n
+        _ -> text_input(raw)
+      end
     end
   end
 
@@ -596,10 +605,6 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp module_in_allowlist(_, _), do: nil
 
-  defp schema_options(allowlist) do
-    Enum.map(allowlist, &{inspect(&1), inspect(&1)})
-  end
-
   defp search_status_badge_kind(%{searching: true}), do: :running
 
   defp search_status_badge_kind(%{run_error: error}) when not is_nil(error), do: :error
@@ -625,37 +630,36 @@ defmodule ScrypathOpsWeb.SearchLive do
   defp search_outcome(%{searching: true}), do: "Search running."
   defp search_outcome(%{run_error: error}) when not is_nil(error), do: nil
 
-  defp search_outcome(%{result_single: %{hits: hits}, submitted_search: submission})
-       when not is_nil(submission) do
-    if hits == [] do
-      "Search completed: no matching documents (0 hits) in #{inspect(submission.schema)}."
-    else
-      "Search completed: #{length(hits)} #{pluralize(length(hits), "hit")} from #{inspect(submission.schema)}."
-    end
-  end
+  defp search_outcome(%{result_single: %{hits: hits}}),
+    do: "#{length(hits)} #{if length(hits) == 1, do: "result", else: "results"} shown"
 
-  defp search_outcome(%{result_multi: %{ordered: ordered, failures: failures}})
-       when is_list(ordered) and is_list(failures) do
-    hit_count =
-      Enum.reduce(ordered, 0, fn {_schema, result}, count -> count + length(result.hits) end)
-
-    no_hit_count = Enum.count(ordered, fn {_schema, result} -> result.hits == [] end)
-    returned_count = length(ordered)
-
-    if failures == [] do
-      "Search completed: #{hit_count} #{pluralize(hit_count, "hit")} across #{returned_count} #{pluralize(returned_count, "index")}; #{no_hit_count} #{pluralize(no_hit_count, "index")} returned no matches."
-    else
-      "Partial search: #{hit_count} #{pluralize(hit_count, "hit")} from #{returned_count} #{pluralize(returned_count, "index")}; #{no_hit_count} #{pluralize(no_hit_count, "index")} returned no matches and #{length(failures)} #{pluralize(length(failures), "index")} failed."
-    end
+  defp search_outcome(%{result_multi: %{ordered: ordered}}) do
+    count = Enum.reduce(ordered, 0, fn {_, result}, n -> n + length(result.hits) end)
+    "#{count} #{if count == 1, do: "result", else: "results"} shown"
   end
 
   defp search_outcome(_), do: nil
 
-  defp pluralize(1, "hit"), do: "hit"
-  defp pluralize(1, "index"), do: "index"
-  defp pluralize(_count, "hit"), do: "hits"
-  defp pluralize(_count, "index"), do: "indexes"
-  defp pluralize(_count, _singular), do: "s"
+  defp result_count(%{result_single: %{hits: hits}}), do: length(hits)
+
+  defp result_count(%{result_multi: %{ordered: ordered}}),
+    do: Enum.reduce(ordered, 0, fn {_, r}, n -> n + length(r.hits) end)
+
+  defp result_count(_), do: 0
+
+  defp successful_empty?(assigns),
+    do:
+      !assigns.searching && is_nil(assigns.run_error) && result_count(assigns) == 0 &&
+        (assigns.result_single != nil || match?(%{failures: []}, assigns.result_multi))
+
+  defp source_data(raw),
+    do:
+      inspect(raw,
+        pretty: true,
+        limit: :infinity,
+        printable_limit: :infinity,
+        charlists: :as_lists
+      )
 
   defp submitted_schemas(%{mode: :single, schema: schema}),
     do: if(schema, do: [inspect(schema)], else: [])
@@ -671,33 +675,17 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> Enum.map(&(&1 |> String.split(".") |> List.last()))
       |> Enum.join(", ")
 
-    "Showing #{query} in #{sources} (limit #{submission.page_size}). Run search to apply your changes."
+    "Showing #{query} in #{sources} (limit #{submission.page_size}). Run search to update these results."
   end
 
-  defp combined_order_rows(result) do
-    hits =
-      Enum.reduce(result.by_schema, %{}, fn {schema, source}, acc ->
-        id_field = schema |> Scrypath.Schema.Metadata.document_id() |> Atom.to_string()
+  defp combined_hits(%{merge_hit_order: order} = result) when is_list(order),
+    do: MultiSearchResult.merge_projection(result)
 
-        Enum.reduce(source.hits, acc, fn hit, acc ->
-          id = Map.get(hit, "id") || Map.get(hit, id_field)
-
-          title =
-            Enum.find_value(~w(name title sku), fn key ->
-              case Map.get(hit, key) do
-                value when is_binary(value) and value != "" -> value
-                _ -> nil
-              end
-            end)
-
-          if is_nil(id), do: acc, else: Map.put(acc, {schema, to_string(id)}, title)
-        end)
+  defp combined_hits(result),
+    do:
+      Enum.flat_map(result.ordered, fn {schema, source} ->
+        Enum.map(source.hits, &{schema, &1})
       end)
-
-    Enum.map(result.merge_hit_order, fn {schema, id} ->
-      {schema, id, Map.get(hits, {schema, to_string(id)}) || "Document #{id}"}
-    end)
-  end
 
   defp text_input(value) when is_binary(value), do: value
   defp text_input(_value), do: ""
@@ -967,31 +955,29 @@ defmodule ScrypathOpsWeb.SearchLive do
                   disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
                   items={[{"One schema", "single"}, {"Multiple schemas", "multi"}]}
                 />
-                <p :if={@mode == :multi} class="text-ops-sm text-base-content/70">
-                  Results are grouped by schema.
-                  <a class="ops-text-action" href={@guide_href}>How ordering works</a>
-                </p>
-
                 <.ops_schema_select
-                  :if={@mode == :single && @schema_allowlist != []}
+                  :if={@schema_allowlist != []}
                   id="search_schema"
-                  name="schema"
-                  label="Schema"
+                  name={if @mode == :multi, do: "schemas[]", else: "schema"}
+                  label={if @mode == :multi, do: "Schemas", else: "Schema"}
+                  multiple={@mode == :multi}
                   schemas={@schema_allowlist}
-                  selected={@selected_schema}
+                  selected={if @mode == :multi, do: @selected_multi_schemas, else: @selected_schema}
                   disabled={!Keyword.has_key?(@scrypath_opts, :backend)}
                 />
-
-                <div :if={@mode == :multi} class="space-y-2">
-                  <p id="search-schemas-hint" class="text-ops-body leading-5 text-base-content/70">
-                    Choose up to {SearchPlayground.max_schemas_allowed()} schemas.
-                  </p>
-                  <.ops_checkbox_list
-                    name="schemas[]"
-                    options={schema_options(@schema_allowlist)}
-                    selected={Enum.map(@selected_multi_schemas, &inspect/1)}
-                  />
-                </div>
+                <p :if={@mode == :multi} class="ops-search-query-hint">
+                  One combined result list.
+                  <.ops_help_link href={@guide_href}>How ordering works</.ops_help_link>
+                </p>
+                <p
+                  :if={
+                    @mode == :multi &&
+                      length(@schema_allowlist) > SearchPlayground.max_schemas_allowed()
+                  }
+                  class="ops-search-query-hint"
+                >
+                  Choose up to {SearchPlayground.max_schemas_allowed()} schemas.
+                </p>
               </fieldset>
 
               <fieldset
@@ -1013,8 +999,8 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </.ops_field>
                 <.ops_field
                   id="search_page_size"
-                  label="Result limit"
-                  hint={"1–#{SearchPlayground.max_page_size_allowed()} results per search"}
+                  label="Results per page"
+                  error={@page_size_error}
                 >
                   <.ops_number_input
                     id="search_page_size"
@@ -1022,20 +1008,47 @@ defmodule ScrypathOpsWeb.SearchLive do
                     value={@page_size}
                     min="1"
                     max={SearchPlayground.max_page_size_allowed()}
-                    aria-describedby="search_page_size-hint"
+                    error={@page_size_error}
+                    required
+                    aria-describedby="search-limit-help"
                   />
+                  <p id="search-limit-help" class="ops-search-query-hint">
+                    Up to {SearchPlayground.max_page_size_allowed()} per page.
+                    <.ops_help_link href={"#{@mount_path}/help#limits"}>
+                      About this limit
+                    </.ops_help_link>
+                  </p>
                 </.ops_field>
               </fieldset>
 
-              <.ops_button
-                type="submit"
-                variant={:primary}
-                size={:md}
-                phx-disable-with="Running…"
-                disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
-              >
-                Run search
-              </.ops_button>
+              <div class="ops-search-actions">
+                <.ops_button
+                  type="submit"
+                  variant={:primary}
+                  size={:md}
+                  phx-disable-with="Running…"
+                  disabled={@schema_allowlist == [] or !Keyword.has_key?(@scrypath_opts, :backend)}
+                >
+                  Run search
+                </.ops_button>
+                <.ops_button
+                  :if={@capture_base != nil}
+                  id="search-save-toggle"
+                  variant={:default}
+                  size={:md}
+                  phx-click={
+                    JS.toggle(to: "#search-capture-form-panel")
+                    |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                      to: "#search-save-toggle"
+                    )
+                    |> JS.focus(to: "#capture_title")
+                  }
+                  aria-controls="search-capture-form-panel"
+                  aria-expanded="false"
+                >
+                  Save search
+                </.ops_button>
+              </div>
             </.form>
 
             <section
@@ -1046,9 +1059,21 @@ defmodule ScrypathOpsWeb.SearchLive do
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2
                   id="search-results-heading"
+                  aria-label="Results"
                   class="text-ops-h2 font-semibold leading-ops-tight"
                 >
-                  Results
+                  <span :if={!search_outcome(assigns) || successful_empty?(assigns)}>Results</span>
+                  <span
+                    :if={search_outcome(assigns) && !successful_empty?(assigns)}
+                    id="search-outcome"
+                    data-testid="search-outcome"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    class="ops-search-outcome"
+                  >
+                    {search_outcome(assigns)}
+                  </span>
                 </h2>
                 <div class="flex flex-wrap items-center gap-3">
                   <.ops_badge
@@ -1065,23 +1090,6 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >
                     Open Saved searches <span aria-hidden="true">→</span>
                   </.link>
-                  <.ops_button
-                    :if={@capture_base != nil}
-                    id="search-save-toggle"
-                    variant={:default}
-                    size={:sm}
-                    phx-click={
-                      JS.toggle(to: "#search-capture-form-panel")
-                      |> JS.toggle_attribute({"aria-expanded", "true", "false"},
-                        to: "#search-save-toggle"
-                      )
-                      |> JS.focus(to: "#capture_title")
-                    }
-                    aria-controls="search-capture-form-panel"
-                    aria-expanded="false"
-                  >
-                    Save search
-                  </.ops_button>
                 </div>
               </div>
               <section
@@ -1092,7 +1100,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 <h2 id="search-capture-heading" class="sr-only">
                   Save search
                 </h2>
-                <div class="ops-save-playbook">
+                <div class="ops-save-playbook ops-search-save">
                   <div id="search-capture-form-panel" style="display: none;">
                     <p class="mt-3 max-w-2xl text-ops-body text-base-content/70">
                       Save the last-run query and options to Saved searches on this server. Results are not stored.
@@ -1111,6 +1119,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                           <.ops_text_input
                             id="capture_title"
                             name="capture[title]"
+                            data-ops-max-bytes="200"
                             value={@capture_title}
                             placeholder="Optional"
                           />
@@ -1118,6 +1127,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                         <.ops_field
                           id="capture_basename"
                           label="Filename"
+                          error={@capture_error && @capture_error.message}
                           hint="Choose a new .json filename. Existing files are kept."
                         >
                           <.ops_text_input
@@ -1136,20 +1146,18 @@ defmodule ScrypathOpsWeb.SearchLive do
                         <.ops_textarea
                           id="capture_description"
                           name="capture[description]"
+                          data-ops-max-bytes="2000"
                           value={@capture_description}
                           placeholder="Optional"
                         />
                       </.ops_field>
 
                       <div
-                        :if={@capture_error}
+                        :if={@capture_error && (@capture_error.detail || @capture_error.recovery)}
                         class="min-w-0 space-y-1 text-ops-body leading-6 text-error"
                         data-testid="search-capture-error"
                         role="alert"
                       >
-                        <p id="capture_basename-error" class="break-words">
-                          {@capture_error.message}
-                        </p>
                         <p :if={@capture_error.detail} class="break-words text-base-content/75">
                           Reason: {@capture_error.detail}
                         </p>
@@ -1182,18 +1190,6 @@ defmodule ScrypathOpsWeb.SearchLive do
                   </div>
                 </div>
               </section>
-
-              <p
-                :if={search_outcome(assigns)}
-                id="search-outcome"
-                data-testid="search-outcome"
-                role="status"
-                aria-live="polite"
-                aria-atomic="true"
-                class="text-ops-body text-base-content/80"
-              >
-                {search_outcome(assigns)}
-              </p>
 
               <p
                 :if={@submitted_search}
@@ -1233,108 +1229,116 @@ defmodule ScrypathOpsWeb.SearchLive do
                 </p>
               </.ops_status>
 
-              <div :if={@result_single} class="space-y-3">
-                <.empty_or_hits_single result={@result_single} guide_href={@guide_href} />
+              <.ops_empty_hero
+                :if={successful_empty?(assigns)}
+                role="status"
+                aria-live="polite"
+                title={
+                  if @submitted_search.page > 1, do: "No more results", else: "No matching documents"
+                }
+                icon="hero-magnifying-glass"
+              >
+                {if @submitted_search.page > 1,
+                  do: "Return to the previous page or try another query.",
+                  else: "Try fewer words, check the spelling or leave the query blank to browse."}
+              </.ops_empty_hero>
+
+              <div :if={@result_single && @result_single.hits != []} class="ops-search-hits">
+                <.result_hit
+                  :for={{hit, idx} <- Enum.with_index(@result_single.hits, 1)}
+                  hit={hit}
+                  position={(@submitted_search.page - 1) * @submitted_search.page_size + idx}
+                  schema={@submitted_search.schema}
+                />
               </div>
 
               <div :if={@result_multi} class="space-y-3">
-                <div id="search-federation-status" class="text-ops-body space-y-2">
-                  <div
-                    :if={@result_multi.failures != []}
-                    id="search-partial-live"
-                    class="rounded-ops-control border p-4 ops-tone-warning"
-                  >
-                    <p class="font-semibold">Some schemas could not be searched.</p>
-                    <p class="mt-1 text-ops-body">
-                      Results below include the schemas that responded. Review the affected schemas in Failure details before running again.
-                    </p>
-                    <p class="mt-2 text-ops-body text-base-content/70">
-                      <code class="text-ops-body">:all</code>
-                      entries expanded follow declaration order before limits apply when multi-search uses global expansion.
-                    </p>
-                    <.ops_disclosure
-                      summary={"Failure details (#{length(@result_multi.failures)})"}
-                      variant={:compact}
-                      class="mt-2"
-                    >
-                      <ul class="list-inside list-disc font-mono text-ops-body">
-                        <%= for %{schema: s, reason: r} <- @result_multi.failures do %>
-                          <li>{inspect(s)} — {inspect(r)}</li>
-                        <% end %>
-                      </ul>
-                      <p :if={@show_all_footnote} class="mt-2 text-ops-body text-base-content/80">
-                        <code class="text-ops-body">:all</code>
-                        entries expanded to the configured global schema list in declaration order before limits apply; empty registry and missing
-                        <code class="text-ops-body">otp_app</code>
-                        errors match library invalid_options / all_expansion vocabulary.
-                      </p>
-                    </.ops_disclosure>
-                  </div>
-                </div>
-
-                <details
-                  :if={@result_multi.merge_hit_order && @result_multi.merge_hit_order != []}
-                  class="ops-value-details ops-combined-order"
+                <.ops_verdict
+                  :if={@result_multi.failures != []}
+                  kind={:warning}
+                  headline="Some schemas could not be searched"
                 >
-                  <summary>Combined result order ({length(@result_multi.merge_hit_order)})</summary>
-                  <p class="ops-search-query-hint">
-                    The order returned by Meilisearch across the selected schemas.
-                    <a href={@guide_href}>How ordering works</a>
-                  </p>
-                  <ol>
-                    <li :for={{schema, id, title} <- combined_order_rows(@result_multi)}>
-                      <strong>{title}</strong>
-                      <span>{schema |> Module.split() |> List.last()}</span>
-                      <code>{id}</code>
+                  Results include only the schemas that responded.
+                  <ul class="mt-2 space-y-1">
+                    <li :for={failure <- @result_multi.failures} data-index-outcome="failed">
+                      <strong>{inspect(failure.schema)}</strong>: {inspect(failure.reason)}
                     </li>
-                  </ol>
-                </details>
-
-                <section id="search-index-results" aria-label="Per-index results" class="space-y-3">
-                  <article
-                    :for={{mod, sres} <- @result_multi.ordered}
-                    class="min-w-0 rounded-ops-control border border-base-content/10 p-4"
-                    data-index-outcome={if sres.hits == [], do: "no-hits", else: "returned"}
-                  >
-                    <h3 class="break-all font-mono text-ops-body font-semibold">{inspect(mod)}</h3>
-                    <p class="mt-1 text-ops-body text-base-content/80">
-                      <%= if sres.hits == [] do %>
-                        No matching documents returned for this index.
-                      <% else %>
-                        {length(sres.hits)} {pluralize(length(sres.hits), "hit")} returned.
-                      <% end %>
-                    </p>
-                    <div :if={sres.hits != []} class="mt-3 grid min-w-0">
-                      <%= for {hit, idx} <- Enum.with_index(sres.hits, 1) do %>
-                        <.result_hit hit={hit} position={idx} schema={mod} />
-                      <% end %>
-                    </div>
-                    <.ops_disclosure
-                      summary={"Raw response for #{inspect(mod)}"}
-                      variant={:compact}
-                      class="mt-2"
-                    >
-                      <.ops_code_block variant={:compact} text={inspect(sres.raw, pretty: true)} />
-                    </.ops_disclosure>
-                  </article>
-
-                  <article
-                    :for={failure <- @result_multi.failures}
-                    class="min-w-0 rounded-ops-control border border-base-content/10 p-4"
-                    data-index-outcome="failed"
-                  >
-                    <h3 class="break-all font-mono text-ops-body font-semibold">
-                      Index failed: {inspect(failure.schema)}
-                    </h3>
-                    <p class="mt-1 break-words text-ops-body text-base-content/80">
-                      Reason: <code>{inspect(failure.reason)}</code>. Check this index and its backend configuration, then run search again.
-                    </p>
-                    <.ops_disclosure summary="Raw failure detail" variant={:compact} class="mt-2">
-                      <.ops_code_block variant={:compact} text={inspect(failure, pretty: true)} />
-                    </.ops_disclosure>
-                  </article>
-                </section>
+                  </ul>
+                </.ops_verdict>
+                <p :if={combined_hits(@result_multi) != []} class="ops-search-query-hint">
+                  {if is_list(@result_multi.merge_hit_order),
+                    do: "Meilisearch's combined order.",
+                    else: "Grouped by schema; combined ranking is unavailable for this response."}
+                  <.ops_help_link href={@guide_href}>How ordering works</.ops_help_link>
+                </p>
+                <div class="ops-search-hits" id="search-combined-results">
+                  <.result_hit
+                    :for={{{schema, hit}, idx} <- Enum.with_index(combined_hits(@result_multi), 1)}
+                    hit={hit}
+                    schema={schema}
+                    position={(@submitted_search.page - 1) * @submitted_search.page_size + idx}
+                  />
+                </div>
               </div>
+
+              <nav
+                :if={
+                  @submitted_search && !@searching && !@run_error &&
+                    (@submitted_search.page > 1 ||
+                       result_count(assigns) == @submitted_search.page_size)
+                }
+                aria-label="Result pages"
+                class="ops-search-pagination"
+              >
+                <.ops_button
+                  phx-click="search_page"
+                  phx-value-direction="previous"
+                  disabled={@submitted_search.page == 1}
+                >
+                  Previous
+                </.ops_button>
+                <span>Page {@submitted_search.page}</span>
+                <.ops_button
+                  phx-click="search_page"
+                  phx-value-direction="next"
+                  disabled={
+                    result_count(assigns) < @submitted_search.page_size ||
+                      (@result_multi && @result_multi.failures != [])
+                  }
+                >
+                  Next
+                </.ops_button>
+              </nav>
+
+              <.ops_disclosure
+                :if={@result_single || @result_multi}
+                summary="Response data"
+                variant={:compact}
+                class="ops-run-data"
+              >
+                <p class="ops-search-query-hint">
+                  Complete returned data for this page, in Elixir format.
+                </p>
+                <.ops_code_block
+                  :if={@result_single}
+                  text={source_data(@result_single.raw)}
+                  copy
+                  copy_label="Copy response data"
+                />
+                <div :if={@result_multi} class="space-y-3">
+                  <p class="ops-search-query-hint">
+                    Per-schema data reconstructed from the combined response; not the original HTTP response. A schema with no hits on this page may still have matches.
+                  </p>
+                  <section :for={{schema, source} <- @result_multi.ordered}>
+                    <h3 class="text-ops-body font-semibold">{inspect(schema)}</h3>
+                    <.ops_code_block
+                      text={source_data(source.raw)}
+                      copy
+                      copy_label={"Copy response data for #{inspect(schema)}"}
+                    />
+                  </section>
+                </div>
+              </.ops_disclosure>
             </section>
           </div>
         </div>

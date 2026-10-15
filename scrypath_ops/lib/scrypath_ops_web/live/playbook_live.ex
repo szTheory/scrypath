@@ -1460,6 +1460,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_field id="save_basename" label="Filename" class="w-64">
                     <.ops_text_input
                       id="save_basename"
+                      required
                       name="basename"
                       value={@save_basename}
                       class="font-mono text-ops-body"
@@ -1648,6 +1649,9 @@ defmodule ScrypathOpsWeb.PlaybookLive do
                   <.ops_textarea
                     id="playbook-paste-json"
                     name="json"
+                    required
+                    data-ops-json
+                    data-ops-max-bytes={@max_import_bytes}
                     value={@paste_json}
                     hint={"Paste a valid saved search JSON document (max #{@max_import_bytes} bytes)."}
                     aria-describedby={
@@ -1731,6 +1735,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               >
                 <.ops_text_input
                   id="rename-new-name-input"
+                  required
                   error={@file_action_error}
                   name="new_name"
                   value={@rename_modal.new_name}
@@ -1776,6 +1781,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               >
                 <.ops_text_input
                   id="dup-to-name-input"
+                  required
                   error={@file_action_error}
                   name="to_name"
                   value={@duplicate_modal.new_name}

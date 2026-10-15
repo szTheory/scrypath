@@ -71,7 +71,7 @@ test("active, backend-failed, retrying and completed observations have distinct 
       await expect(queue.locator("[data-tone=error]")).toHaveCount(0);
       await expect(row.getByRole("link", {name: /View failed sync work/})).toBeVisible();
     } else if (scenario === "retrying") {
-      await expect(queue.locator("[data-tone=warning]")).toContainText("Retrying");
+      await expect(queue.locator("[data-tone=retrying]")).toContainText("Retrying");
     } else {
       await expect(backend).toContainText("No pending or failed tasks.");
       await expect(row.locator("[data-tone=error], [data-tone=warning]")).toHaveCount(0);
@@ -107,6 +107,9 @@ test("readable results retain submitted criteria, copy exact data and lead to th
   await expect(attribution).toBeVisible();
   await expect(attribution).toContainText("quantum");
   await expect(attribution).toHaveAttribute("data-run-id", run!);
+  await expect(save).toBeDisabled();
+  await page.getByLabel("Search text").fill("quantum");
+  await expect(save).toBeEnabled();
   await save.click();
   await expect(page.locator("#capture_title")).toBeFocused();
   await expect(page.locator("#search-capture-form-panel")).toContainText("Saved searches on this server");
@@ -131,21 +134,21 @@ test("multi-schema result limit applies to the combined response and help is loc
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
   await page.getByRole("button", {name: "Multiple schemas", exact: true}).click();
-  await expect(page.getByRole("link", {name: "How ordering works", exact: true})).toHaveAttribute("href", "/admin/search/help#ranking");
-  await page.getByLabel("Result limit", {exact: true}).fill("3");
+  await expect(page.getByRole("link", {name: /^How ordering works/}).first()).toHaveAttribute("href", "/admin/search/help#ranking");
+  await page.getByLabel("Results per page", {exact: true}).fill("3");
   await page.getByRole("button", {name: "Run search", exact: true}).click();
   await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-limit", "3");
   await expect(page.locator(".ops-readable-hit")).toHaveCount(3);
   await expect(page.getByText("All selected indexes returned results on this run.", {exact: true})).toHaveCount(0);
-  await page.getByText("Combined result order (3)", {exact: true}).click();
-  await expect(page.locator(".ops-combined-order li")).toHaveCount(3);
-  await expect(page.locator(".ops-combined-order")).not.toContainText("%{");
+  await expect(page.locator("#search-combined-results .ops-readable-hit")).toHaveCount(3);
+  await expect(page.locator(".ops-combined-order")).toHaveCount(0);
 });
 
 test("generic fields remain readable across compact themes without guessing data types", async ({page}) => {
   await page.goto("/admin/search/ui-fixtures");
   await waitForLiveConnected(page);
   const hit = page.locator("#typed-result-fixture");
+  await hit.getByText(/^Fields \(/).click();
   await expect(hit).toContainText("false");
   await expect(hit).toContainText("null");
   await expect(hit).toContainText("custom-key-42");

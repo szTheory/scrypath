@@ -1,5 +1,5 @@
 defmodule ScrypathOps.SearchPlaygroundTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias ScrypathOps.SearchPlayground
   alias ScrypathOps.SearchPlayground.Adapter.Scrypath, as: ScrypathAdapter
@@ -16,6 +16,22 @@ defmodule ScrypathOps.SearchPlaygroundTest do
     Application.put_env(:scrypath_ops, :search_playground_max_page_size, 50)
     result = SearchPlayground.validate_page_size(51)
     assert inspect(result) =~ "50"
+  end
+
+  test "host can raise the response budget independently of the per-query library page guard" do
+    prev = Application.get_env(:scrypath_ops, :search_playground_max_page_size)
+    on_exit(fn -> Application.put_env(:scrypath_ops, :search_playground_max_page_size, prev) end)
+    Application.put_env(:scrypath_ops, :search_playground_max_page_size, 200)
+    assert SearchPlayground.max_page_size_allowed() == 200
+    assert SearchPlayground.validate_page_size(150) == :ok
+
+    assert {:error, {:invalid_playbook, {:page_size_out_of_range, 51, 50}}} =
+             ScrypathOps.Playbook.V1.validate(%{
+               "playbook_format" => 1,
+               "mode" => "search_many",
+               "entries" => [["MyApp.Product", "", %{"page" => %{"size" => 51}}]],
+               "opts" => %{}
+             })
   end
 
   test "adapter/0 defaults to Scrypath adapter module" do

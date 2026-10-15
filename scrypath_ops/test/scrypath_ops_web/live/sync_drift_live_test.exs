@@ -225,7 +225,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     render_async(lv)
     before = :sys.get_state(lv.pid).socket.assigns
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, false))
-    lv |> element("button[phx-click='load_drift']") |> render_click()
+    lv |> element("#sync-drift-refresh") |> render_click()
     html = render_async(lv)
     after_check = :sys.get_state(lv.pid).socket.assigns
     assert after_check.drift_result == before.drift_result

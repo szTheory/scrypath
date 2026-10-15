@@ -14,7 +14,7 @@ System appearance follows the operating-system preference when no explicit theme
 
 ## Typography
 
-Use the system sans-serif stack for interface copy and the technical monospace stack for exact identifiers and evidence. The established scale is 24px page title, 18px section heading, 16px subsection or record heading, and 14px body, values, labels, help, and action copy. The 11px/12px exceptions are for short timestamps, badges, eyebrows, and optional metadata only.
+Use the system sans-serif stack for interface copy and the technical monospace stack for exact identifiers and evidence. The established scale is 24px page title, 18px section heading, 16px subsection or record heading, and 14px body, values, labels, help, and action copy. The 11px/12px exceptions are for short timestamps, badges, contextual notes/help, and optional metadata only.
 
 ## Layout
 
@@ -62,10 +62,10 @@ The dynamic design-token contract requires every current `OpsUi` export to appea
 
 ## Follow-up interaction contracts
 
-Search uses a flat form: mode and schema choices precede query and result limit, with privacy guidance beside the query. The limit bounds the combined response in multi-schema mode; this interface offers no next-page control. Keep the host-configured ceiling and existing dispatch semantics.
+Search uses a flat form: mode and schema choices precede query and result limit, with privacy guidance beside the query. The limit bounds the combined response in multi-schema mode; Previous and Next use supported page/offset requests. Keep the default request budget of 50 and allow the host to choose a positive budget independently of the core multi-query per-entry guard.
 
-Readable results use returned data only, with modest title/description heuristics and explicit scalar, nested and missing-value treatment. Never infer associations from identifier suffixes or fetch database records for presentation. Exact complete Elixir payloads remain inspectable and copyable. Keep combined order compact and source-qualified rather than repeating whole payloads.
+Readable results use returned data only, with modest title/description heuristics and explicit scalar, nested and missing-value treatment. Never infer associations from identifier suffixes or fetch database records for presentation. Exact complete Elixir payloads remain inspectable and copyable. Use one compact primary list in backend combined order. Keep full typed fields and raw inspection available; no-hit source projections do not establish no matches.
 
-Submitted criteria stay quiet while controls match. Show the last-run context when draft controls differ; results and saved inputs still belong to the submitted run. Put Save search before the hit list and explain the server-side Saved searches destination. Readiness flags do not need visible narration.
+Submitted criteria stay quiet while controls match. Show the last-run context when draft controls differ; results and saved inputs still belong to the submitted run. Put Save search beside Run search, disabled while inputs differ from the submitted run and explain the server-side Saved searches destination. Readiness flags do not need visible narration.
 
-Use native Help for task explanations and optional external developer docs for deeper setup. Health distinguishes Schema module, Meilisearch index, document tasks and configured synchronization method. Color and icons mark nonzero retry/failure counts locally; pending work alone is not a failure. Native selects inherit the shared chevron spacing instead of overriding their background image or end padding.
+Use a restrained `ops_help_link` for task-adjacent Help in a new tab; meaningful fragment headings remain visible below the sticky shell. Use native Help for task explanations and optional external developer docs for deeper setup. Health distinguishes Schema module, Meilisearch index, document tasks and configured synchronization method. Use consistent icons for pending, retrying and failed activity; reserve error color for failures. pending work alone is not a failure. Native selects inherit the shared chevron spacing instead of overriding their background image or end padding.

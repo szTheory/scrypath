@@ -859,13 +859,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_field(assigns) do
     ~H"""
-    <div class={["space-y-ops-field", @class]}>
+    <div id={"#{@id}-field"} phx-hook="OpsFieldValidation" class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
       <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
         {@hint}
       </p>
-      <p :if={@error} id={"#{@id}-error"} class="text-ops-body leading-5 text-error" role="alert">
+      <p
+        id={"#{@id}-error"}
+        class="ops-field-error text-ops-body leading-5 text-error"
+        role={if @error, do: "alert"}
+        hidden={!@error}
+        data-ops-field-error
+        data-server-error={@error}
+      >
         {@error}
       </p>
     </div>
@@ -890,6 +897,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       name={@name}
       type="text"
+      data-ops-validate
       value={@value}
       placeholder={@placeholder}
       aria-describedby={@describedby}
@@ -919,6 +927,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       name={@name}
       type="number"
+      data-ops-validate
       value={@value}
       min={@min}
       max={@max}
@@ -947,6 +956,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <textarea
       id={@id}
       name={@name}
+      data-ops-validate
       placeholder={@placeholder}
       aria-describedby={@describedby}
       aria-invalid={@error && "true"}
@@ -1001,14 +1011,23 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:disabled, :boolean, default: false)
   attr(:schemas, :list, required: true)
   attr(:selected, :any, default: nil)
+  attr(:multiple, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(phx-change))
 
   def ops_schema_select(assigns) do
-    schema_items = schema_picker_items(assigns.schemas, assigns.selected)
+    schema_items =
+      if assigns.multiple do
+        Enum.map(assigns.schemas, fn schema ->
+          hd(schema_picker_items([schema], if(schema in List.wrap(assigns.selected), do: schema)))
+        end)
+      else
+        schema_picker_items(assigns.schemas, assigns.selected)
+      end
 
     single_schema_item =
-      if length(schema_items) == 1 && hd(schema_items).selected, do: hd(schema_items)
+      if !assigns.multiple && length(schema_items) == 1 && hd(schema_items).selected,
+        do: hd(schema_items)
 
     assigns =
       assigns
@@ -1049,7 +1068,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             <input
               id={"#{@id}-#{item.dom_id}"}
-              type="radio"
+              type={if @multiple, do: "checkbox", else: "radio"}
               name={@name}
               value={item.name}
               checked={item.selected}
@@ -1374,7 +1393,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_code_block(assigns) do
     ~H"""
-    <div class="ops-code-block">
+    <div class={["ops-code-block", @copy && @text && "ops-code-block--copyable"]}>
       <div :if={@copy && @text} class="ops-code-toolbar">
         <button
           type="button"
@@ -1401,6 +1420,22 @@ defmodule ScrypathOpsWeb.OpsUi do
         {@rest}
       >{if is_nil(@text), do: render_slot(@inner_block), else: @text}</pre>
     </div>
+    """
+  end
+
+  @doc "Task-adjacent help in a new tab, preserving the current task."
+  attr(:href, :string, required: true)
+  slot(:inner_block, required: true)
+
+  def ops_help_link(assigns) do
+    ~H"""
+    <a href={@href} class="ops-help-link" target="_blank" rel="noopener">
+      <span>{render_slot(@inner_block)}</span>
+      <.icon name="hero-arrow-top-right-on-square" class="size-3.5" />
+      <span class="sr-only">
+        (opens in a new tab)
+      </span>
+    </a>
     """
   end
 

@@ -1,12 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
-  "branch": "fix/ui-feedback-baseline",
+  "branch": "fix/ui-iteration-3",
   "base_main": "29c287c8e732cddd13e435ccf601e06a39a65837",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Follow-up delivered via PR #106; preview product matches main; healthy, seed-disabled retained data",
+  "status": "Iteration 3 implemented and verified; seed-disabled retained data",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -17,5 +17,7 @@
   "followup_results": ".planning/reference/UI-FOLLOWUP-RESULTS.md",
   "followup_pr": "https://github.com/szTheory/scrypath/pull/106",
   "followup_merge": "29c287c8e732cddd13e435ccf601e06a39a65837",
-  "verification_stack_removed": true
+  "verification_stack_removed": true,
+  "iteration3_results": ".planning/reference/UI-ITERATION-3-RESULTS.md",
+  "iteration3_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-15T17-53-27-914Z"
 }

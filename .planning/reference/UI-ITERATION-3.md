@@ -1,5 +1,7 @@
 # Scrypath UI iteration 3 — execution brief
 
+**Delivery update, 2026-10-15:** all three batches implemented and verified. See [UI-ITERATION-3-RESULTS.md](UI-ITERATION-3-RESULTS.md). The original execution brief is retained below as the scope record.
+
 Status: feedback collection concluded by the maintainer on 2026-10-15. All 25 entries remain unimplemented. The maintainer wants to compact, then request implementation of one systematic pass comparable to the previous two. This brief removes the need to rediscover scope or run another planning-only cycle; it is not a numbered GSD phase or a product completion claim.
 
 ## Starting point

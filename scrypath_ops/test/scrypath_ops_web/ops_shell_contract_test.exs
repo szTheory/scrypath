@@ -260,7 +260,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
            )
 
     assert File.read!(@host_js) =~
-             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft }"
+             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }"
 
     refute File.read!(@host_js) =~ "const CommandPalette ="
   end

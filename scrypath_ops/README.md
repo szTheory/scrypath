@@ -65,12 +65,12 @@ Publishing the **`scrypath`** Hex package is done **only** from the **parent** l
 
 ## Search playground bounds
 
-The `/ops/search` playground validates **`page.size`** and schema breadth **before** calling `Scrypath`, using the same ceilings as `Scrypath.MultiSearch.Entries` (page **≤ 50**, default **≤ 10** schemas per multi-search).
+The `/ops/search` playground validates the response size and schema breadth **before** calling `Scrypath`. Requests default to at most **50** results per page and **10** schemas per multi-search. Single-search pages use `page`; multi-schema pages use the combined `federation_limit` and `federation_offset`. These request budgets are separate from the core multi-search per-query page ceiling.
 
 | Config key (`config :scrypath_ops, …`) | Meaning |
 | --- | --- |
 | `:search_playground_default_page_size` | Default page size (**15** if unset or invalid). Clamped to **`1..max_page_size`**. |
-| `:search_playground_max_page_size` | Upper bound for **`page.size`** in the UI (**50** max, aligned with the library). Hosts may set a lower ceiling in **`[1, 50]`**. |
+| `:search_playground_max_page_size` | Maximum results per UI page, single or combined (**50** by default). Hosts may choose a positive request budget. Previous/Next browse further matches; the core multi-search per-query page guard remains separate. |
 | `:search_playground_max_schemas` | Maximum schemas selectable in multi mode (**1..10**; invalid values fall back to **10**). |
 | `:search_playground_adapter` | Behaviour implementing `ScrypathOps.SearchPlayground.Adapter` — defaults to `ScrypathOps.SearchPlayground.Adapter.Scrypath`. **Intended for tests and local stubs only**; production should keep the default. |
 

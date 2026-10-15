@@ -363,7 +363,7 @@ async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> 
     expect(group.borderedSides, "a group can have a divider, never a surrounding box").toBeLessThanOrEqual(1);
   }
 
-  await expect(page.locator(".ops-signal-metrics dd").first()).toBeVisible();
+  await expect(page.locator(".ops-signal-success dd").first()).toBeVisible();
 }
 
 async function expectSearchDocumentToFit(page: Page): Promise<void> {
@@ -406,14 +406,17 @@ async function preparePopulatedPlaybooks(page: Page): Promise<void> {
   await expect(submitted).toHaveAttribute("data-schemas", JSON.stringify(["ScrypathEcommerce.Catalog.Product"]));
   await expect(submitted).toContainText("quantum");
   await expect(submitted).toHaveAttribute("data-limit", "15");
-  await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
-  await expect(page.locator(".ops-result-row").first()).toBeVisible();
+  await expect(page.locator("#search-results-heading")).toBeVisible();
+  await expect(page.locator(".ops-readable-hit").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Run current search" })).toHaveCount(0);
 
   await query.fill("a later query edit");
   await expect(submitted).toContainText("quantum");
   await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
 
+  await expect(page.locator("#search-save-toggle")).toBeDisabled();
+  await query.fill("quantum");
+  await expect(page.locator("#search-save-toggle")).toBeEnabled();
   const basename = `surface-depth-${Date.now()}.json`;
   await page.getByRole("button", { name: "Save search" }).click();
   await page.getByLabel("Filename").fill(basename);
@@ -447,13 +450,13 @@ const DEPTH_TARGETS: DepthTarget[] = [
     id: "search-results",
     scenario: "all_green",
     captureIndex: "06",
-    selectors: [".ops-result-row"]
+    selectors: [".ops-readable-hit"]
   },
   {
     id: "search-zero-results",
     scenario: "empty",
     captureIndex: "08",
-    selectors: [".ops-muted-panel"]
+    selectors: [".ops-empty-hero"]
   },
   {
     id: "control-room-intents",
@@ -466,14 +469,14 @@ const DEPTH_TARGETS: DepthTarget[] = [
     id: "search-health-signal-cards",
     scenario: "incident",
     captureIndex: "01",
-    selectors: [".ops-schema-signal-card", ".ops-signal-group", ".ops-signal-metrics"],
+    selectors: [".ops-schema-signal-card", ".ops-signal-group", ".ops-signal-success"],
     prepare: gotoSearchHealth
   },
   {
     id: "failed-sync-notice",
     scenario: "incident",
     captureIndex: "02",
-    selectors: [".ops-notice-surface"],
+    selectors: [".ops-verdict"],
     prepare: gotoFailedSync
   },
   {
@@ -532,7 +535,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 await expect(page.locator(".ops-search-hit").first()).toHaveCSS("box-shadow", "none");
                 break;
               case "search-zero-results":
-                await expectRaisedAboveFloor(page, ".ops-muted-panel", "search zero-results muted panel");
+                await expectRaisedAboveFloor(page, ".ops-empty-hero", "search zero-results empty state");
                 break;
               case "control-room-intents":
                 await expect(page.getByTestId("control-room-verify-change")).toBeVisible();
@@ -549,7 +552,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 break;
               }
               case "failed-sync-notice":
-                await expectRaisedAboveFloor(page, ".ops-notice-surface", "failed-sync notice surface");
+                await expectRaisedAboveFloor(page, ".ops-verdict", "failed-sync verdict surface");
                 break;
               case "sync-drift": {
                 await expectRaisedAboveFloor(page, ".ops-panel", "sync-drift section panel");
@@ -616,8 +619,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await query.fill("quantum");
           await expect(page.getByRole("button", { name: "Run search" })).toHaveCount(1);
           await query.press("Enter");
-          await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
-          await expect(page.locator(".ops-result-row").first()).toBeVisible();
+          await expect(page.locator("#search-results-heading")).toBeVisible();
+          await expect(page.locator(".ops-readable-hit").first()).toBeVisible();
           const submitted = page.locator("#search-run-attribution");
           await expect(submitted).toHaveAttribute("data-mode", "single");
           await expect(submitted).toHaveAttribute("data-schemas", JSON.stringify(["ScrypathEcommerce.Catalog.Product"]));
@@ -670,10 +673,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await gotoSearch(page);
           const query = `phase176-no-hit-${Date.now()}-${viewport.width}`;
           const queryInput = page.getByLabel("Search text");
-          await page.getByLabel("Result limit", { exact: true }).fill("10");
+          await page.getByLabel("Results per page", { exact: true }).fill("10");
           await queryInput.fill(query);
           await queryInput.press("Enter");
-          await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
+          await expect(page.locator("#search-results-heading")).toBeVisible();
           await expect(page.getByText("No matching documents", { exact: true })).toBeVisible();
           await expect(page.getByRole("button", { name: "Save search" })).toBeVisible();
           await page.getByRole("button", { name: "Save search" }).click();
@@ -707,7 +710,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await page.getByLabel("Description").fill("Criteria-only capture from an eligible zero-hit Search response; this description remains available after a rejected collision.");
           await page.locator("#search-capture-form button[type=submit]").click();
 
-          const captureError = page.getByTestId("search-capture-error");
+          const captureError = page.locator("#capture_basename-error");
           await expect(captureError).toContainText("That filename is already in use. Choose another.");
           await expect(page.getByLabel("Filename")).toHaveValue(occupiedName!);
           await expect(page.getByLabel("Search title")).toHaveValue("A long but optional zero-hit search title for responsive coverage");
@@ -968,8 +971,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await page.locator("#playbook-paste-json").fill(longInvalidJson);
           await page.getByRole("button", { name: "Import from paste" }).click();
 
-          await expect(page.locator("#playbook-import-error")).toContainText("This file is not valid saved search JSON.");
-          await expect(page.locator("#playbook-import-error")).toContainText("The previous valid preview remains selected.");
+          await expect(page.locator("#playbook-paste-json-error")).toContainText("Check the JSON syntax");
+          await expect(page.locator("#playbook-paste-json")).toHaveAttribute("aria-invalid", "true");
           await expect(page.locator("#playbook-paste-json")).toHaveValue(longInvalidJson);
           await expect(page.locator("#playbook-import details")).toHaveJSProperty("open", true);
           await expect(page.locator("#playbook-draft-origin")).toContainText(uploadedName);
@@ -1087,7 +1090,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
         await renameInput.fill("bad/name.json");
         await expect(renameInput).toBeFocused();
         await page.getByRole("button", { name: "Rename", exact: true }).click();
-        await expect(page.locator("#rename-new-name-input-error")).toContainText("Filename");
+        await expect(page.locator("#rename-new-name-input-error")).toContainText("Use a .json filename");
         await expect(renameInput).toHaveValue("bad/name.json");
         await expect(renameInput).toBeFocused();
 
@@ -1198,7 +1201,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
             await input.fill("bad/name.json");
             await page.getByRole("button", { name: "Rename", exact: true }).click();
-            await expect(page.locator("#rename-new-name-input-error")).toContainText("Filename");
+            await expect(page.locator("#rename-new-name-input-error")).toContainText("Use a .json filename");
             await expect(input).toHaveValue("bad/name.json");
             await expect(input).toBeFocused();
             await expect(page.locator("#rename-new-name-input-error")).toHaveCSS("font-size", "14px");

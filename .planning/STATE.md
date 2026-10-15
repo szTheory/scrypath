@@ -19,15 +19,9 @@ progress:
 
 # Project State
 
-## UI iteration 3 — ready for the next start instruction
+## UI iteration 3 — implemented and verified (2026-10-15)
 
-**Resume here:** [reference/continue.md](reference/continue.md), then [UI-ITERATION-3.md](reference/UI-ITERATION-3.md). The maintainer concluded feedback collection and is compacting before requesting implementation. All **25 new entries remain open and unimplemented**: CONTENT-27 through CONTENT-32, UI-38 through UI-53, UX-08/09 and DOC-07. The next instruction should execute the three coherent batches, review beyond the examples and verify rendered journeys; no new discussion/planning-only cycle or replay of Phases 173–177.
-
-[UI-FEEDBACK.md](UI-FEEDBACK.md) preserves exact feedback, source evidence and uncertainty. Twelve original screenshots are retained locally in ignored `examples/scrypath_ecommerce/ui-review-artifacts/maintainer-feedback-2026-10-15/`, with verified hashes. The brief maps all 25 entries to Search/forms/results, health/recovery/settings, and contextual Help/shared finishing, and carries the critical result-limit, source-count, raw-data, save-scope, task, settings and fragment-target facts.
-
-Canonical checkout: `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, current branch `fix/ui-feedback-baseline`; see `UI-PREVIEW.json`. Final handoff preflight passed against the retained seed-disabled port-4002 container: mount/source match, current remote main included, product fingerprint `b46d12d5fa55d822eb59b2c023b1cc5fcb73a26bb570c40ba462bdb331803bee`. Reverify before implementation. Preserve brand, data/volumes and untracked `my-search.json`; use owned disposable resources for mutation tests.
-
-The previous two passes are delivered in PRs #105/#106. Latest main delivery: `29c287c8e732cddd13e435ccf601e06a39a65837`; [UI-FOLLOWUP-RESULTS.md](reference/UI-FOLLOWUP-RESULTS.md) records prior evidence and caveats. Later local commits are feedback/handoff checkpoints, not missing product implementation. The separate dependency advisory remains open and out of scope. Numbered-phase frontmatter and chronology below are historical; the active entry point is this UI handoff.
+All three requested batches are delivered in canonical branch `fix/ui-iteration-3`. See [results](reference/UI-ITERATION-3-RESULTS.md): 317 Ops tests + 2 doctests, 38 demo tests, 98 affected browser cases plus 16 final shared/contrast checks, and a source-bound 72-view rendered review. All 25 new feedback items have dispositions. The preview and maintainer saved file remain preserved. No numbered phase is reopened; historical frontmatter and chronology below are retained.
 
 ## Historical project reference
 

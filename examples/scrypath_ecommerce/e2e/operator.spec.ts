@@ -247,7 +247,7 @@ test("operator promotes only this returned task pair and unique target document"
   await page.getByTestId("control-room-verify-change").click();
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
   await waitForLiveConnected(page);
-  await page.getByRole("button", { name: "Refresh settings" }).click();
+  await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
   await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
   const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
   await advanced.locator("summary").click();

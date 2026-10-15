@@ -8651,6 +8651,107 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   // js/app.js
   var import_topbar = __toESM(require_topbar());
 
+  // js/ops_validation.js
+  var touched = /* @__PURE__ */ new WeakSet();
+  var pendingFocus = null;
+  var pointerButton = null;
+  function focusInvalid(field) {
+    pendingFocus = field;
+    requestAnimationFrame(() => {
+      if (pendingFocus === field && field.isConnected) field.focus();
+    });
+  }
+  document.addEventListener("pointerdown", (event) => {
+    pendingFocus = null;
+    pointerButton = event.target instanceof Element ? event.target.closest("button") : null;
+  }, true);
+  document.addEventListener("pointerup", () => {
+    pointerButton = null;
+  }, true);
+  document.addEventListener("keydown", () => {
+    pendingFocus = null;
+  }, true);
+  var filename = /^[A-Za-z0-9_.-]+\.json$/;
+  function errorFor(field) {
+    const value = field.value;
+    const label = field.labels?.[0]?.textContent.trim() || "this field";
+    if (field.validity.badInput) return "Enter a whole number.";
+    if (field.required && !value.trim()) return `Enter ${label.toLowerCase()}.`;
+    if (field.type === "number" && value === "" && !field.required) return "";
+    if (field.type === "number" && (value === "" || !Number.isInteger(Number(value)) || Number(value) < Number(field.min) || field.max && Number(value) > Number(field.max))) return `Enter a whole number from ${field.min} to ${field.max}.`;
+    if (/basename|new-name|to-name/.test(field.id) && value && !filename.test(value)) return "Use a .json filename with letters, numbers, hyphens or underscores. Avoid folder paths.";
+    if (field.dataset.opsMaxBytes && new TextEncoder().encode(value).length > Number(field.dataset.opsMaxBytes)) return `Shorten ${label.toLowerCase()} to ${field.dataset.opsMaxBytes} bytes or fewer. Non-English characters may use several bytes.`;
+    if (field.dataset.opsJson !== void 0 && value.trim()) {
+      try {
+        const data = JSON.parse(value);
+        if (!data || Array.isArray(data) || typeof data !== "object") return "Paste a JSON object for a saved search.";
+      } catch (_) {
+        return "Check the JSON syntax: use double quotes and match brackets and braces.";
+      }
+    }
+    if (field.validity.patternMismatch) return "Match the requested format.";
+    return "";
+  }
+  function validate(field, edited = false) {
+    if (!field.matches?.("[data-ops-validate]") || field.disabled) return true;
+    const error = errorFor(field);
+    const message = document.getElementById(`${field.id}-error`);
+    if (message?.dataset.serverError && !edited && !error) return true;
+    if (message) {
+      message.textContent = error;
+      message.hidden = !error;
+      message.removeAttribute("data-server-error");
+    }
+    if (message) {
+      if (error) message.setAttribute("role", "alert");
+      else message.removeAttribute("role");
+    }
+    field.setAttribute("aria-invalid", error ? "true" : "false");
+    const ids = new Set((field.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+    if (error) ids.add(`${field.id}-error`);
+    else ids.delete(`${field.id}-error`);
+    field.setAttribute("aria-describedby", [...ids].join(" "));
+    return !error;
+  }
+  document.addEventListener("focusout", (event) => {
+    const field = event.target;
+    if (!field.matches?.("[data-ops-validate]")) return;
+    touched.add(field);
+    if (pointerButton && event.relatedTarget === pointerButton) return;
+    validate(field);
+  });
+  document.addEventListener("input", (event) => {
+    pendingFocus = null;
+    if (touched.has(event.target)) validate(event.target, true);
+  });
+  document.addEventListener("invalid", (event) => {
+    if (!event.target.matches?.("[data-ops-validate]")) return;
+    event.preventDefault();
+    touched.add(event.target);
+    validate(event.target);
+    const invalid = [...event.target.form.querySelectorAll("[data-ops-validate]")].find((field) => !field.validity.valid);
+    if (invalid) focusInvalid(invalid);
+  }, true);
+  document.addEventListener("submit", (event) => {
+    const fields = [...event.target.querySelectorAll("[data-ops-validate]")];
+    const invalid = fields.filter((field) => {
+      touched.add(field);
+      return !validate(field);
+    });
+    if (invalid.length) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      focusInvalid(invalid[0]);
+    }
+  }, true);
+  var OpsFieldValidation = {
+    updated() {
+      const field = this.el.querySelector("[data-ops-validate]");
+      if (field && touched.has(field) && !this.el.querySelector("[data-server-error]")?.dataset.serverError) validate(field);
+      if (field && pendingFocus === field) focusInvalid(field);
+    }
+  };
+
   // js/ops_search.js
   var OpsSearchDraft = {
     mounted() {
@@ -8663,6 +8764,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         const submitted = JSON.parse(context.dataset.schemas);
         const changed = mode !== context.dataset.mode || String(data.get("q") || "").trim() !== context.dataset.query || Number(data.get("page_size")) !== Number(context.dataset.limit) || JSON.stringify(schemas) !== JSON.stringify(submitted.sort());
         context.hidden = !changed;
+        const save = document.getElementById("search-save-toggle");
+        if (save) {
+          save.disabled = changed;
+          save.title = changed ? "Run search to save the updated inputs" : "Save the inputs for these results";
+        }
+        const panel = document.getElementById("search-capture-form-panel");
+        if (changed && panel) panel.style.display = "none";
       };
       this.el.addEventListener("input", this.syncDraft);
       this.el.addEventListener("change", this.syncDraft);
@@ -8674,6 +8782,20 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     destroyed() {
       this.el.removeEventListener("input", this.syncDraft);
       this.el.removeEventListener("change", this.syncDraft);
+    }
+  };
+  var OpsHelpAnchor = {
+    mounted() {
+      this.reveal = () => {
+        const id = decodeURIComponent(location.hash.slice(1));
+        const target = id && document.getElementById(id);
+        if (target && this.el.contains(target)) target.scrollIntoView({ block: "start" });
+      };
+      window.addEventListener("hashchange", this.reveal);
+      requestAnimationFrame(this.reveal);
+    },
+    destroyed() {
+      window.removeEventListener("hashchange", this.reveal);
     }
   };
 
@@ -9490,7 +9612,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
     localStorage: safeLocalStorage,
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

@@ -67,7 +67,7 @@ Unknown top-level keys remain **rejected** — only the keys listed for each mod
 
 Sources of truth in code (defaults align with **`Scrypath.MultiSearch.Entries`**):
 
-- **`page.size`**: validated with **`ScrypathOps.SearchPlayground.validate_page_size/1`** — typically **1** through **`ScrypathOps.SearchPlayground.max_page_size_allowed/0`** (library ceiling **50**, host config may lower it).
+- **`page.size`**: validated with **`ScrypathOps.SearchPlayground.validate_page_size/1`** — **1** through the host response budget returned by **`ScrypathOps.SearchPlayground.max_page_size_allowed/0`** (default **50**). The host may raise or lower that budget for single-search responses. Multi-search shared/entry `page.size` additionally retains the core per-query ceiling of **50**; `federation_limit` is the separate combined-response budget.
 - **Entry count** (`search_many`): **`length(entries) ≤ ScrypathOps.SearchPlayground.max_schemas_allowed/0`** (default **10**, host config may lower to **1..10**).
 
 ## Federation notes
