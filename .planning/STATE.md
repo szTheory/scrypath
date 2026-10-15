@@ -19,9 +19,9 @@ progress:
 
 # Project State
 
-## UI follow-up — locally verified 2026-10-15
+## UI follow-up — delivered 2026-10-15
 
-**Resume here:** [reference/continue.md](reference/continue.md). The maintainer authorized and the agent implemented the second 24-item review round on `fix/ui-feedback-baseline`, after merged PR #105. Outcomes and exact test/run caveats: [UI-FOLLOWUP-RESULTS.md](reference/UI-FOLLOWUP-RESULTS.md). Current next action is PR delivery on green current-head required CI and Ops. Standing squash-merge approval applies; do not ask again or replay completed phases.
+**Resume here:** [reference/continue.md](reference/continue.md). The maintainer authorized and the agent implemented the second 24-item review round on `fix/ui-feedback-baseline`, after merged PR #105. Outcomes and exact test/run caveats: [UI-FOLLOWUP-RESULTS.md](reference/UI-FOLLOWUP-RESULTS.md). PR [#106](https://github.com/szTheory/scrypath/pull/106) is squash merged to `29c287c8e732cddd13e435ccf601e06a39a65837` after all required exact-head checks and Ops passed. Preview product source matches main; no UI work remains to execute. Next useful action: review the live app and capture new feedback. Dependency audit remains advisory-red and has a separate pending task. Do not replay completed phases.
 
 All feedback is reconciled in `UI-FEEDBACK.md`. Ops: 313 tests + 2 doctests; demo: 38 tests; review tooling: 7 tests. The 175 browser cases are covered through full and corrected scoped runs; the final rendered matrix has 72 captures, zero mechanical findings and a distinct in-thread critique. Preserve the established brand, retained port-4002 preview data and untracked `my-search.json`. Canonical checkout: `UI-PREVIEW.json`. The numbered-phase frontmatter and chronology below are historical routing context, not a request to resume those phases.
 

@@ -4,7 +4,9 @@ The maintainer's second review round is implemented and locally verified on `fix
 
 ## Current next action
 
-Finish PR delivery for this branch: required current-head CI plus path-scoped Ops must be green before ready/squash merge. The maintainer already authorized that merge condition. Use `scripts/ci_monitor.cjs` for CI; do not fabricate a formal reviewer or reopen historical trust gates. Once merged, there is no remaining implementation from this pass; the next useful action is reviewing the updated app and recording genuinely new feedback.
+**Delivery complete:** [PR #106](https://github.com/szTheory/scrypath/pull/106) squash merged to `29c287c8e732cddd13e435ccf601e06a39a65837` after all five required exact-head checks and Ops passed. The preview checkout includes current main with no product differences. Local closeout bookkeeping is an unpublished maintainer checkpoint only; it contains no missing UI work. Do not push/replay it as another UI implementation cycle.
+
+No GSD phase or implementation command is needed for this completed pass. The next useful action is reviewing the updated app, especially Search → Save/reuse and Help, then recording genuinely new feedback. The separate unsuppressed dependency advisory task is `../todos/pending/2026-10-15-dependency-audit-followup.md`; it is open, not accepted or resolved by this UI delivery.
 
 ## Canonical preview and preservation
 
@@ -18,4 +20,4 @@ Ops: 313 tests + 2 doctests; demo: 38 tests on a separate database partition; re
 
 The new `indexing_failure` seed was actually exercised only on disposable data: Meilisearch task 691 failed with `invalid_document_id`, and health displayed it. Fixed health snapshots and typed-hit fixtures are labeled examples, not live recovery evidence. Shared configured mode is not per-call override discovery. No pagination, new dependency, public library API, format change or brand refresh.
 
-Verification owns only Compose project `scrypath_ui_followup`, ports 4013/4014, and `/private/tmp/scrypath-followup-saved`. Tear down only that owned project/volumes when delivery checks finish. Never tear down the retained preview or unrelated stacks. Fresh owned backends keep task-history bounds deterministic; do not weaken a 1000-task guard to force green.
+Verification used only Compose project `scrypath_ui_followup`, ports 4013/4014, and `/private/tmp/scrypath-followup-saved`. Its containers, network and seven named volumes are now removed; local screenshots/logs remain available. Never tear down the retained preview or unrelated stacks. Fresh owned backends keep task-history bounds deterministic; do not weaken a 1000-task guard to force green.
