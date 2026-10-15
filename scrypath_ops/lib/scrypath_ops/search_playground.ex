@@ -3,13 +3,13 @@ defmodule ScrypathOps.SearchPlayground do
   Bounded search playground limits and adapter dispatch for `/ops/search`.
 
   Validates `page.size` before any `Scrypath` call so operators see explicit
-  errors instead of silent library rejection. Schema breadth caps align with
-  `Scrypath.MultiSearch.Entries` defaults (`max_schemas: 10`, page ceiling **50**).
+  errors instead of silent library rejection. Schema breadth aligns with the library default (`max_schemas: 10`).
+  The host controls the response budget; this is not the per-query multi-search page cap.
   """
 
   alias ScrypathOps.SearchPlayground.Adapter
 
-  @library_max_page 50
+  @default_max_page 50
   @library_default_max_schemas 10
 
   @doc """
@@ -26,18 +26,19 @@ defmodule ScrypathOps.SearchPlayground do
   end
 
   @doc """
-  Effective maximum `page.size` allowed in the playground (**1..50**).
+  Effective maximum `page.size` allowed in the playground (default **50**).
 
   Hosts may set `:search_playground_max_page_size` under `:scrypath_ops`; values
-  are clamped to the library ceiling and never below **1**.
+  must be positive. This bounds one single or combined response, not all matches.
+  The core per-query multi-search page guard is separate and remains unchanged.
   """
   @spec max_page_size_allowed() :: pos_integer()
   def max_page_size_allowed do
     raw =
-      Application.get_env(:scrypath_ops, :search_playground_max_page_size) || @library_max_page
+      Application.get_env(:scrypath_ops, :search_playground_max_page_size) || @default_max_page
 
-    raw = if is_integer(raw), do: raw, else: @library_max_page
-    raw |> min(@library_max_page) |> max(1)
+    raw = if is_integer(raw), do: raw, else: @default_max_page
+    max(raw, 1)
   end
 
   @doc """

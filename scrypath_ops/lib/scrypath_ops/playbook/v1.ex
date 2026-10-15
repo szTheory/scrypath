@@ -11,7 +11,8 @@ defmodule ScrypathOps.Playbook.V1 do
   ## Caps
 
   * **`page.size`** is validated with **`ScrypathOps.SearchPlayground.validate_page_size/1`**
-    (aligned with the library ceiling, typically **1..50**).
+    (host response budget, default **1..50**). Multi-search entry pages retain
+    the core per-query ceiling of **50** independently of that host budget.
   * **`search_many`** entry count must not exceed **`ScrypathOps.SearchPlayground.max_schemas_allowed/0`**
     (library default **10**). Out-of-range values are **rejected**, not clamped.
 
@@ -321,7 +322,7 @@ defmodule ScrypathOps.Playbook.V1 do
          :ok <- validate_per_query_object(Map.get(opts, "per_query")),
          :ok <- validate_shared_many_fields(opts, ctx),
          :ok <- validate_otp_app(Map.get(opts, "otp_app"), ctx) do
-      validate_page_size_if_present(Map.get(opts, "page"))
+      validate_page_size_if_present(Map.get(opts, "page"), ctx)
     end
   end
 
@@ -362,15 +363,18 @@ defmodule ScrypathOps.Playbook.V1 do
   defp validate_page_object(other),
     do: {:error, {:invalid_playbook, {:invalid_page, other}}}
 
-  defp validate_page_size_if_present(nil), do: :ok
+  defp validate_page_size_if_present(nil, _ctx), do: :ok
 
-  defp validate_page_size_if_present(page) when is_map(page) do
+  defp validate_page_size_if_present(page, ctx) when is_map(page) do
     case Map.get(page, "size") do
       nil ->
         :ok
 
       size when is_integer(size) ->
-        case SearchPlayground.validate_page_size(size) do
+        case if(ctx != :search && size > 50,
+               do: {:error, {:page_size_out_of_range, size, 50}},
+               else: SearchPlayground.validate_page_size(size)
+             ) do
           :ok ->
             :ok
 
@@ -383,7 +387,7 @@ defmodule ScrypathOps.Playbook.V1 do
     end
   end
 
-  defp validate_page_size_if_present(other),
+  defp validate_page_size_if_present(other, _ctx),
     do: {:error, {:invalid_playbook, {:invalid_page, other}}}
 
   defp validate_per_query_object(nil), do: :ok

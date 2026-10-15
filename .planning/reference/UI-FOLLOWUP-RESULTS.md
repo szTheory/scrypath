@@ -37,3 +37,14 @@ Final capture: `examples/scrypath_ecommerce/ui-review-artifacts/2026-10-15T13-22
 No new dependency, public library API, Playbook format, result-limit behavior, pagination controls, per-user storage model or association hydration. Typed display uses modest heuristics over returned values; nested readable views are bounded and complete raw data remains available. The interface reports the shared host-configured sync mode, not undiscovered per-call overrides. Fixed fixture snapshots are never live recovery proof.
 
 The retained `scrypath_ecommerce-web-1` preview remains on port 4002 with seeding disabled. Its intentional incident/index-settings state is preserved, including unavailable storefront facets; tests use the separate `scrypath_ui_followup` project on 4013/4014. User-created `priv/playbooks/my-search.json` remains untracked and unchanged, SHA256 `3c8de6b45b9b3bc6f5daff18ce71da1ee817b5270ddc57a8c064f59a1a42c0f7`.
+
+
+## Delivery and remaining advisory
+
+[PR #106](https://github.com/szTheory/scrypath/pull/106) was marked ready and squash merged on **2026-10-15 at 13:35:07 UTC**, under the maintainer's standing approval. Merged main: `29c287c8e732cddd13e435ccf601e06a39a65837`. Required `core`, `package`, `repository-contracts`, `backend`, and `ecommerce-mounted`, plus path-scoped Ops, all passed on PR source `54e4d334b9c13ef0231d460d7b3c188d549f93b8`: [CI run 38743007949](https://github.com/szTheory/scrypath/actions/runs/38743007949). Compatibility and Phoenix example checks also passed. No claim that every advisory lane is green.
+
+The unsuppressed dependency-audit advisory remains red for unchanged locked Bandit 1.12.5, Cloak Ecto 1.3.0, Decimal 3.1.1 and Cloak 1.1.4. The Bandit finding is newly surfaced in this run. These are tracked in [the dependency follow-up](../todos/pending/2026-10-15-dependency-audit-followup.md), without silently upgrading dependencies or accepting/suppressing their risks as part of this UI pass.
+
+The canonical preview checkout was merged with current `origin/main` and has **zero product/source differences** from merged main. The final rendered-review source binding still passes. Only local closeout bookkeeping follows the delivered source; it does not contain unmerged product changes. The unrelated dirty root checkout was preserved; its preview-pointer metadata alone was refreshed.
+
+All containers, network and seven named volumes of the owned `scrypath_ui_followup` project were removed after verification. The retained port-4002 preview remains healthy; the maintainer's saved file hash is unchanged. No task-owned UI implementation remains pending.

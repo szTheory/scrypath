@@ -10,6 +10,6 @@ defmodule ScrypathOpsWeb.HelpLiveTest do
     assert has_element?(view, "nav a[href='/ops/help'][aria-current=page]")
     assert has_element?(view, "section#saved-searches")
     assert has_element?(view, "section#sync")
-    assert has_element?(view, "p#ranking")
+    assert has_element?(view, "section#ranking h3")
   end
 end

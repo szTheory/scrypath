@@ -506,7 +506,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
           title={@page_title}
-          subtitle="Review failed operations and scheduled retries."
+          subtitle="Review sync failures and scheduled retries for a schema."
         />
         <.ops_refresh_control
           id="failed-sync-refresh"
@@ -568,9 +568,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
       <div :if={@inspection} class="space-y-ops-page-gap">
         <section aria-labelledby="failed-sync-rollups-heading">
-          <.ops_status
+          <.ops_verdict
             kind={failed_sync_status_kind(@inspection)}
-            title={failed_sync_status_title(@inspection)}
+            headline={failed_sync_status_title(@inspection)}
           >
             <span :if={@inspection.counts.total == 0}>
               No failures were found in the available history. Pending work and document visibility are checked separately.
@@ -578,7 +578,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <span :if={@inspection.counts.total > 0}>
               Review the error before retrying. Scheduled retries may also run automatically.
             </span>
-          </.ops_status>
+          </.ops_verdict>
 
           <p
             :if={@inspection.counts.total > 0}
@@ -698,13 +698,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
           </div>
         </section>
 
-        <p class="text-ops-sm">
-          <a
-            class="link link-hover"
-            href="https://github.com/szTheory/scrypath/blob/main/guides/drift-recovery.md"
-          >
+        <p :if={@inspection.counts.total > 0} class="ops-search-query-hint">
+          <.ops_help_link href={"#{@mount_path}/help#recovery"}>
             Help with sync failures and recovery
-          </a>
+          </.ops_help_link>
         </p>
       </div>
 
