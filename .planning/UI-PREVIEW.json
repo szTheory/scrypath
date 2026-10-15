@@ -1,16 +1,18 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
-  "branch": "fix/ui-task-baseline",
-  "base_main": "bd4c7b91e7df637c4e1c72763440dab055c25f9a",
+  "branch": "fix/ui-feedback-baseline",
+  "base_main": "b98933cecefdbed97264d3560ea13cc0fb131187",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Three-batch UI baseline implemented and verified; seed-disabled retained preview; delivery tracked by PR #105",
+  "status": "Follow-up implemented and locally verified; PR delivery pending required current-head CI",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
   "lessons": ".planning/reference/UI-WORKTREE-LEARNINGS.md",
   "baseline_pr": "https://github.com/szTheory/scrypath/pull/105",
-  "baseline_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-14T22-45-57-728Z"
+  "baseline_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-14T22-45-57-728Z",
+  "followup_review": "examples/scrypath_ecommerce/ui-review-artifacts/2026-10-15T13-22-55-099Z",
+  "followup_results": ".planning/reference/UI-FOLLOWUP-RESULTS.md"
 }

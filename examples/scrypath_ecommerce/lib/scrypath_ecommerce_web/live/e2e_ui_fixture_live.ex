@@ -2,6 +2,7 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
   @moduledoc false
   # Dev/test-only rendered component boundaries; no backend operations or global config changes.
   use ScrypathOpsWeb, :live_view
+  import ScrypathOpsWeb.ResultUi
 
   @schemas [
     ScrypathEcommerce.Catalog.Product,
@@ -14,7 +15,22 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
-     assign(socket, schemas: @schemas, selected: hd(@schemas), page_title: "Component boundaries")}
+     assign(socket,
+       hit_fixture: %{
+         "name" => "Travel scanner",
+         "description" =>
+           "A compact scanner with a readable description, useful for judging a search match.",
+         "id" => "custom-key-42",
+         "available" => false,
+         "inventory_count" => 0,
+         "note" => nil,
+         "options" => %{"colors" => ["Slate", "Copper"], "portable" => true},
+         "price_cents" => 1299
+       },
+       schemas: @schemas,
+       selected: hd(@schemas),
+       page_title: "Component boundaries"
+     )}
   end
 
   @impl true
@@ -52,6 +68,10 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
           <.ops_code_block>{String.duplicate("long_backend_identifier_", 30)}</.ops_code_block>
         </.ops_disclosure>
       </.ops_panel>
+      <section id="typed-result-fixture" aria-label="Example returned hit" class="mt-6">
+        <.ops_heading>Example returned hit</.ops_heading>
+        <.result_hit hit={@hit_fixture} position={1} />
+      </section>
     </Layouts.app>
     """
   end

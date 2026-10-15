@@ -94,7 +94,11 @@ defmodule ScrypathOps.Phase173FixtureSource do
               "invalid-time",
               "queue-unused",
               "refresh-failure",
-              "refresh-disabled"
+              "refresh-disabled",
+              "processing",
+              "backend-failed",
+              "retrying",
+              "completed"
             ],
        do: scenario
 
@@ -127,6 +131,31 @@ defmodule ScrypathOps.Phase173FixtureSource do
       oban_jobs: jobs_for(scenario)
     ]
   end
+
+  # These fixed snapshots demonstrate transient states without pausing a live backend.
+  defp tasks_for("processing") do
+    [
+      task(840, "succeeded", "phase173_phase173_fixture_schema", @task_finished),
+      task(845, "processing", "phase173_phase173_fixture_schema", nil),
+      task(846, "enqueued", "phase173_phase173_fixture_schema", nil)
+    ]
+  end
+
+  defp tasks_for("backend-failed") do
+    [
+      task(847, "failed", "phase173_phase173_fixture_schema", @snapshot)
+      |> Map.put("error", %{
+        "code" => "missing_document_id",
+        "message" => "Document is missing its id field."
+      })
+    ]
+  end
+
+  defp tasks_for("retrying"),
+    do: [task(840, "succeeded", "phase173_phase173_fixture_schema", @task_finished)]
+
+  defp tasks_for("completed"),
+    do: [task(848, "succeeded", "phase173_phase173_fixture_schema", @snapshot)]
 
   defp tasks_for("empty"), do: []
 
@@ -165,6 +194,44 @@ defmodule ScrypathOps.Phase173FixtureSource do
 
   defp tasks_for(_scenario) do
     [task(840, "succeeded", "phase173_phase173_fixture_schema", @task_finished)]
+  end
+
+  defp jobs_for("processing") do
+    jobs_for("healthy") ++
+      [
+        %{
+          id: 910,
+          state: "executing",
+          worker: "Scrypath.Oban.UpsertWorker",
+          queue: "scrypath_sync"
+        }
+      ]
+  end
+
+  defp jobs_for("retrying") do
+    jobs_for("healthy") ++
+      [
+        %{
+          id: 911,
+          state: "retryable",
+          worker: "Scrypath.Oban.UpsertWorker",
+          queue: "scrypath_sync",
+          attempted_at: "2026-10-06T13:17:42-04:00",
+          scheduled_at: "2026-10-06T13:19:42-04:00"
+        }
+      ]
+  end
+
+  defp jobs_for("completed") do
+    [
+      %{
+        id: 912,
+        state: "completed",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "scrypath_sync",
+        completed_at: @snapshot
+      }
+    ]
   end
 
   defp jobs_for("empty"), do: []

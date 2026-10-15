@@ -31,15 +31,15 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
            ".ops-data-card system-dark fill must mirror var(--ops-surface-2)."
   end
 
-  test ".ops-result-row dark fill references --ops-surface-2" do
+  test "non-search result rows keep the dark surface-2 fill" do
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
              css()
            ),
            ".ops-result-row explicit-dark fill must reference var(--ops-surface-2), not a hardcoded color."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
              css()
            ),
            ".ops-result-row system-dark fill must mirror var(--ops-surface-2)."
@@ -47,13 +47,13 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
 
   test "dark hover-border boost resolves to primary 55% on the paired row/item selector" do
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row:hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
              css()
            ),
            "Dark hover-border boost must keep the paired .ops-result-row/.ops-object-item selector at primary 55%."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
              css()
            ),
            "System-dark hover-border boost must mirror the paired selector at primary 55%."

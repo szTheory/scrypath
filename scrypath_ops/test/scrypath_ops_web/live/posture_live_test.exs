@@ -150,8 +150,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
     assert html =~ "Queue not used"
     assert html =~ ~s(class="text-ops-body text-base-content/75")
-    assert html =~ "Meilisearch tasks"
-    assert html =~ "Background sync · Oban"
+    assert html =~ "Meilisearch document tasks"
+    assert html =~ "Manual sync"
     assert html =~ "Last success"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
@@ -246,7 +246,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute row =~ "Exact timestamp"
     assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
     assert row =~ ~s(aria-label="Copy timestamp:)
-    assert row =~ ~s(role="status")
+    refute row =~ ~s(data-ops-timestamp-message)
+    assert has_element?(lv, "[data-ops-client-toast]")
   end
 
   test "keeps prior source-local timestamps when a later refresh is unavailable", %{conn: conn} do

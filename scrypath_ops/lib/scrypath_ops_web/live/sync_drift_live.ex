@@ -1871,9 +1871,10 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <p class="text-ops-sm text-base-content/70">
               Includes attribute rules and ordering from this comparison.
             </p>
-            <.ops_code_block variant={:embedded}>
-              {Jason.encode!(Map.get(@drift_result.dimensions, :settings).details, pretty: true)}
-            </.ops_code_block>
+            <.ops_code_block
+              variant={:embedded}
+              text={Jason.encode!(Map.get(@drift_result.dimensions, :settings).details, pretty: true)}
+            />
           </.ops_disclosure>
           <p :if={matching_settings(@drift_result) != ""} class="text-ops-sm text-base-content/70">
             Matching: {matching_settings(@drift_result)}.

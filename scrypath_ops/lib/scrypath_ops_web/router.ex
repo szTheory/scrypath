@@ -36,6 +36,7 @@ defmodule ScrypathOpsWeb.Router do
           live("/sync-drift", ScrypathOpsWeb.SyncDriftLive)
           live("/search", ScrypathOpsWeb.SearchLive)
           live("/playbooks", ScrypathOpsWeb.PlaybookLive)
+          live("/help", ScrypathOpsWeb.HelpLive)
         end
       end
     end

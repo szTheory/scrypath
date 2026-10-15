@@ -13,7 +13,7 @@ test("query → saved inputs → replay keeps results and edited drafts distinct
   await page.getByRole("radio", { name: /Product/ }).check();
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run search", exact: true }).click();
-  await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
+  await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
   await expect(page.getByTestId("search-outcome")).toContainText(/completed.*hits/i);
   await page.getByRole("button", { name: "Save search", exact: true }).first().click();
   const filename = `ui-baseline-${Date.now()}.json`;
@@ -34,7 +34,7 @@ test("query → saved inputs → replay keeps results and edited drafts distinct
   await page.getByRole("link", { name: /Explore this query in Search/ }).click();
   await expect(page.locator("#search_q")).toHaveValue("quantum");
   await page.getByRole("button", { name: "Run search", exact: true }).click();
-  await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
+  await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
 });
 
 test("settings load automatically, show declared/live values and follow a real selection change", async ({ page, request }) => {
@@ -87,13 +87,13 @@ test("shared time preference persists, converts local time and copies exact sour
   await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (value: string) => { (window as any).copiedTime = value; } } }));
   await time.focus();
   await page.keyboard.press("Enter");
-  await expect(time.locator("..").locator("[data-ops-timestamp-message]")).toHaveText("Timestamp copied");
+  await expect(page.locator("[data-ops-notification-message]")).toHaveText("Timestamp copied");
   expect(await page.evaluate(() => (window as any).copiedTime)).toBe(source);
   await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: {} }));
   await time.click();
-  await expect(time.locator("..").locator("[data-ops-time-fallback]")).toBeVisible();
-  await expect(time.locator("..").locator("[data-ops-time-fallback]")).toHaveText(source);
-  await expect(time.locator("..").locator("[data-ops-timestamp-message]")).toContainText("Could not copy");
+  await expect(page.locator("[data-ops-notification-source]")).toBeVisible();
+  await expect(page.locator("[data-ops-notification-source]")).toHaveText(source);
+  await expect(page.locator("[data-ops-notification-message]")).toContainText("Could not copy");
   expect(await time.evaluate(node => getComputedStyle(node).textDecorationLine)).toBe("none");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await context.close();
@@ -113,11 +113,11 @@ test("saved-search errors copy diagnostics only after the browser succeeds", asy
   const copy = failure.getByRole("button", { name: "Copy diagnostics" });
   await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new Error("Denied")) } }));
   await copy.click();
-  await expect(failure.locator("[data-ops-copy-feedback]")).toContainText("Could not copy");
-  await expect(failure.locator("[data-ops-copy-fallback]")).toBeVisible();
+  await expect(page.locator("[data-ops-notification-message]")).toContainText("Could not copy");
+  await expect(page.locator("[data-ops-notification-source]")).toBeVisible();
   await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (text: string) => { (window as any).copiedDiagnostics = text; } } }));
   await copy.focus(); await page.keyboard.press("Enter");
-  await expect(failure.locator("[data-ops-copy-feedback]")).toHaveText("Diagnostics copied");
+  await expect(page.locator("[data-ops-notification-message]")).toHaveText("Diagnostics copied");
   expect(JSON.parse(await page.evaluate(() => (window as any).copiedDiagnostics))).toBeTruthy();
 });
 

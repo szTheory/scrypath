@@ -12,7 +12,8 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
     ScrypathOpsWeb.SyncDriftLive => "/sync-drift",
     ScrypathOpsWeb.SearchLive => "/search",
-    ScrypathOpsWeb.PlaybookLive => "/playbooks"
+    ScrypathOpsWeb.PlaybookLive => "/playbooks",
+    ScrypathOpsWeb.HelpLive => "/help"
   }
 
   def on_mount(:default, _params, session, socket) do

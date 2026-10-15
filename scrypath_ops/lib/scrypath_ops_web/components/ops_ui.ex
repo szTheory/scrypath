@@ -1271,19 +1271,6 @@ defmodule ScrypathOpsWeb.OpsUi do
             class="ops-time__affordance size-3.5"
           />
         </button>
-        <span class="ops-time__feedback" data-ops-timestamp-feedback data-state="neutral" hidden>
-          <span role="status" aria-live="polite" aria-atomic="true" data-ops-timestamp-message></span>
-          <button
-            type="button"
-            class="ops-time__feedback-dismiss"
-            data-ops-timestamp-dismiss
-            aria-label="Dismiss copy message"
-            hidden
-          >
-            Dismiss
-          </button>
-        </span>
-        <code data-ops-time-fallback hidden class="break-all select-all">{@exact}</code>
       <% else %>
         <span class="ops-time__value">{@human}</span>
       <% end %>
@@ -1380,24 +1367,40 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
-  slot(:inner_block, required: true)
+  attr(:text, :string, default: nil)
+  attr(:copy, :boolean, default: false)
+  attr(:copy_label, :string, default: "Copy payload")
+  slot(:inner_block)
 
   def ops_code_block(assigns) do
     ~H"""
-    <pre
-      tabindex="0"
-      role="region"
-      aria-label={@label}
-      class={[
-        "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-        @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
-        @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
-        @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
-        @shimmer && "ops-code-block--shimmer",
-        @class
-      ]}
-      {@rest}
-    >{render_slot(@inner_block)}</pre>
+    <div class="ops-code-block">
+      <div :if={@copy && @text} class="ops-code-toolbar">
+        <button
+          type="button"
+          class="ops-quiet-action"
+          data-ops-copy-text={@text}
+          data-ops-copy-success="Payload copied"
+          aria-label={@copy_label}
+        >
+          <.icon name="hero-clipboard-document" class="size-4" /> Copy
+        </button>
+      </div>
+      <pre
+        tabindex="0"
+        role="region"
+        aria-label={@label}
+        class={[
+          "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
+          @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
+          @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
+          @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
+          @shimmer && "ops-code-block--shimmer",
+          @class
+        ]}
+        {@rest}
+      >{if is_nil(@text), do: render_slot(@inner_block), else: @text}</pre>
+    </div>
     """
   end
 

@@ -31,6 +31,9 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
       terminal jobs) PLUS contract drift. Search health reports failures, so the verdict can't
       fully trust search. This preserves the historical `make dev` / E2E
       behavior.
+    * `indexing_failure` — synced catalog plus a real document rejection from Meilisearch
+      (invalid document ID). The failed task stays in service history. Use a disposable
+      demo when exploring failure scenarios.
     * `empty` — catalog tables truncated and the live index cleared after
       preparation; NO products synced, NO failed work, NO drift. Every screen
       renders its empty state (no synced schemas / no failed work / no results /
@@ -107,7 +110,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     }
   ]
 
-  @scenarios ~w(all_green degraded incident empty)
+  @scenarios ~w(all_green degraded incident empty indexing_failure)
   @default_scenario "incident"
 
   @impl true
@@ -177,6 +180,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     |> sync_products!()
 
     variant_count = sync_variants!()
+    if scenario == "indexing_failure", do: inject_indexing_failure!()
 
     failed_count =
       if scenario == "incident", do: inject_failed_sync_work!(ops), else: 0
@@ -355,6 +359,33 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
         }
       ]
     }
+  end
+
+  defp inject_indexing_failure! do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    index = product_index_name(config)
+
+    with {:ok, task} <-
+           Scrypath.Meilisearch.Client.upsert_documents(
+             index,
+             [
+               %Scrypath.Document{
+                 id: "invalid demo ID",
+                 source: :custom,
+                 data: %{
+                   "name" => "Demo rejected document",
+                   "description" => "Invalid document ID"
+                 }
+               }
+             ],
+             config
+           ),
+         {:error, {:task_failed, _failed_task}} <-
+           Scrypath.Meilisearch.Tasks.wait_for_task(task, config) do
+      :ok
+    else
+      result -> Mix.raise("Expected a Meilisearch document rejection, got: #{inspect(result)}")
+    end
   end
 
   # ── Contract drift injection ─────────────────────────────────────────────────

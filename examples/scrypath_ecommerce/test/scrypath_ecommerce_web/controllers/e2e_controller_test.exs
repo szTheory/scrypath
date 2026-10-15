@@ -296,9 +296,10 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
       assert %{"error" => "invalid integer parameter"} = json_response(conn, 400)
     end
 
-    test "returns stable failed-work and swap outcome summary without leaking raw payloads", %{
-      conn: conn
-    } do
+    test "returns stable failed-work summary without inventing swap outcomes or leaking raw payloads",
+         %{
+           conn: conn
+         } do
       seed_conn = post(conn, ~p"/dev/e2e/seed", scenario: "e2e_search_catalog")
 
       assert %{
@@ -319,20 +320,17 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
                "failed_count" => failed_count,
                "retryable" => retryable,
                "first_failed_work_id" => first_failed_work_id,
-               "reason_class_counts" => reason_class_counts,
-               "swap_terminal_success" => swap_terminal_success,
-               "swap_terminal_state" => swap_terminal_state,
-               "active_index" => active_index,
-               "active_index_visible" => active_index_visible
+               "reason_class_counts" => reason_class_counts
              } = body
 
       assert is_integer(failed_count)
       assert is_boolean(retryable)
       assert is_map(reason_class_counts)
-      assert is_boolean(swap_terminal_success)
-      assert swap_terminal_state in ["completed", "pending", "not_started", "unknown"]
-      assert is_binary(active_index)
-      assert is_boolean(active_index_visible)
+      # This cohort endpoint has no operation receipt to attest a swap outcome.
+      for key <- ~w(swap_terminal_success swap_terminal_state active_index active_index_visible) do
+        refute Map.has_key?(body, key)
+      end
+
       assert first_failed_work_id == nil or is_integer(first_failed_work_id)
       refute Map.has_key?(body, "args")
       refute Map.has_key?(body, "documents")

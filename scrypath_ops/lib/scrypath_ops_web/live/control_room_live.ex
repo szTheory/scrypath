@@ -10,14 +10,11 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   alias ScrypathOps.Posture
 
-  @orientation_href "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/operator-ia.md"
-
   @impl true
   def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:page_title, "Control Room")
-      |> assign(:orientation_href, @orientation_href)
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> assign(:refresh_issue, nil)
@@ -208,16 +205,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               data-testid="control-room-verify-change"
             />
           </div>
-        </section>
-
-        <section
-          aria-labelledby="control-room-orient-heading"
-          class="flex flex-wrap items-center justify-end gap-3 pt-ops-2 text-ops-body text-base-content/55"
-        >
-          <h2 id="control-room-orient-heading" class="sr-only">Operator guide</h2>
-          <a href={@orientation_href} class="link link-hover">
-            Read the operator guide <span aria-hidden="true">→</span>
-          </a>
         </section>
       </div>
     </Layouts.app>

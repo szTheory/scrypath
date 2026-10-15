@@ -91,7 +91,7 @@ defmodule ScrypathOpsWeb.Layouts do
             <div class="flex shrink-0 items-center gap-3">
               <label class="ops-time-preference">
                 <span>Time</span>
-                <select aria-label="Time zone" data-ops-time-zone>
+                <select class="ops-form-control" aria-label="Time zone" data-ops-time-zone>
                   <option value="utc">UTC</option>
                   <option value="local">Local</option>
                 </select>
@@ -226,7 +226,10 @@ defmodule ScrypathOpsWeb.Layouts do
   attr(:page_title, :string, default: nil)
 
   defp ops_primary_nav(assigns) do
-    assigns = assign(assigns, :nav_sections, nav_sections(assigns.mount_path))
+    assigns =
+      assigns
+      |> assign(:nav_sections, nav_sections(assigns.mount_path))
+      |> assign(:help_path, "#{assigns.mount_path}/help")
 
     ~H"""
     <nav class="ops-primary-nav" aria-label="Operator primary">
@@ -249,6 +252,19 @@ defmodule ScrypathOpsWeb.Layouts do
             </li>
           </ul>
         </section>
+      </div>
+      <div class="ops-nav-help">
+        <.link
+          navigate={@help_path}
+          class={["ops-nav-item", @page_title == "Help" && "ops-nav-item-active"]}
+          aria-current={if @page_title == "Help", do: "page", else: nil}
+          data-ops-nav-link
+        >
+          <span class="ops-nav-item__icon" aria-hidden="true">
+            <.icon name="hero-question-mark-circle" class="size-4" />
+          </span>
+          <span class="ops-nav-item__label">Help</span>
+        </.link>
       </div>
     </nav>
     """
@@ -312,6 +328,7 @@ defmodule ScrypathOpsWeb.Layouts do
               ScrypathOpsWeb.Nav.primary(mount_path),
               &Map.put(&1, :icon, nav_item_icon(&1))
             )
+            |> Enum.reject(&(&1[:group] == :support))
         ]
       }
     ]
@@ -337,6 +354,29 @@ defmodule ScrypathOpsWeb.Layouts do
   def flash_group(assigns) do
     ~H"""
     <div id={@id} aria-live="polite">
+      <div
+        id="ops-client-toast"
+        class="ops-flash ops-flash--info"
+        data-ops-client-toast
+        phx-update="ignore"
+        hidden
+      >
+        <div class="alert w-full max-w-full text-wrap">
+          <.icon name="hero-information-circle" class="size-5 shrink-0" />
+          <div class="min-w-0 flex-1">
+            <p data-ops-notification-message aria-live="polite" aria-atomic="true"></p>
+            <pre data-ops-notification-source hidden tabindex="0" class="ops-notification-source"></pre>
+          </div>
+          <button
+            type="button"
+            data-ops-notification-close
+            aria-label="Close notification"
+            class="cursor-pointer"
+          >
+            <.icon name="hero-x-mark" class="size-5" />
+          </button>
+        </div>
+      </div>
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
 

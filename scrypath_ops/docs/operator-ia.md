@@ -11,7 +11,7 @@ ScrypathOps is an optional Phoenix and LiveView interface for inspecting search 
 
 ## Navigation
 
-The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health.
+The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Help lives at the bottom of the sidebar and explains the installed UI. This repository guide provides developer and integration context. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health.
 
 | Destination | Default route | Purpose |
 | --- | --- | --- |
@@ -21,6 +21,7 @@ The default mount is `/ops`; host apps can choose another prefix. The demo uses 
 | Failed sync work | `/ops/failed-sync` | Review failures and scheduled retries; retry eligible operations. |
 | Sync and drift | `/ops/sync-drift` | Inspect current work, compare index settings and follow a correlated retry. |
 | Saved searches | `/ops/playbooks` | Preview, run, save or import search inputs. |
+| Help | `/ops/help` | Task-focused help within the installed interface. |
 
 ## Reading operational evidence
 
@@ -44,7 +45,7 @@ The hidden navigation contract is checked against `ScrypathOpsWeb.Nav.primary/0`
 
 <!-- scrypath:nav-contract-begin -->
 <!--
-[{"route":"/ops/search","label":"Search"},{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/playbooks","label":"Saved searches"}]
+[{"route":"/ops/search","label":"Search"},{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/playbooks","label":"Saved searches"},{"route":"/ops/help","label":"Help"}]
 -->
 <!-- scrypath:nav-contract-end -->
 

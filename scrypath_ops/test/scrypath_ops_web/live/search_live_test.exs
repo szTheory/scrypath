@@ -49,7 +49,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
   end
 
   test "mount shows non-production strip and primary CTA", %{conn: conn} do
-    {:ok, _lv, html} = live(conn, ~p"/ops/search")
+    {:ok, view, html} = live(conn, ~p"/ops/search")
 
     assert html =~ "Queries may be logged by Meilisearch"
 
@@ -58,12 +58,12 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     assert html =~ "Run search"
     assert html =~ "ops-form-stack"
-    assert html =~ "ops-fieldset__legend"
+    assert html =~ "ops-search-targets"
     assert html =~ ~s(for="search_q")
     assert html =~ ~s(aria-describedby="search-honesty-panel")
-    assert html =~ ~s(data-testid="search-empty-hero")
-    assert html =~ "Run a search to see results"
-    assert html =~ "Select a schema above and run a search. An empty query browses the index."
+    refute html =~ ~s(data-testid="search-empty-hero")
+    refute has_element?(view, "#search-results-heading")
+    refute html =~ "Select a schema above and run a search. An empty query browses the index."
     refute html =~ "Index details"
     refute html =~ ~s(<h2 class="text-heading font-semibold">Results</h2>)
 
@@ -74,7 +74,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert submit_buttons == 1
 
     ordered_markers =
-      ["Schemas", "Search text", "Results per schema", "Run search", "search-results-heading"]
+      ["Search mode", "search_schema", "Search text", "Result limit", "Run search"]
       |> Enum.map(fn marker -> :binary.match(html, marker) |> elem(0) end)
 
     assert ordered_markers == Enum.sort(ordered_markers)
@@ -193,7 +193,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Some indexes did not return results."
+    assert html =~ "Some schemas could not be searched."
 
     assert html =~
              "Partial search: 1 hit from 2 indexes; 1 index returned no matches and 1 index failed."
@@ -236,7 +236,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
     })
 
-    assert render(view) =~ "Merge trace"
+    assert render(view) =~ "Combined result order"
   end
 
   test "nested JSON hit fields render as safe structured values", %{conn: conn} do
@@ -274,8 +274,9 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html = render(view)
     assert html =~ "Save search"
-    assert html =~ "Query inputs ready to save"
-    assert html =~ ~s(data-testid="playbook-preview-marker")
+    refute html =~ "Query inputs ready to save"
+    assert has_element?(view, "#search-capture-json")
+    assert html =~ ~s(id="search-capture-json")
     assert has_element?(view, "details#search-capture-json")
     refute has_element?(view, "details#search-capture-json[open]")
 
@@ -362,7 +363,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Some indexes did not return results."
+    assert html =~ "Some schemas could not be searched."
     assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save search")
 
     view
@@ -541,11 +542,16 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html = render(view)
     assert html =~ ~s(id="search-run-attribution")
-    assert html =~ "Last run"
-    assert html =~ "Single index"
+
+    assert has_element?(
+             view,
+             "#search-run-attribution[data-query='original probe'][data-limit='7']"
+           )
+
+    assert has_element?(view, "#search-run-attribution[data-mode=single]")
     assert html =~ inspect(OpsPostA)
     assert html =~ "original probe"
-    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
+    assert has_element?(view, "#search-run-attribution[data-limit='7']")
     assert html =~ "Search completed: no matching documents"
     refute html =~ "Run current search"
 
@@ -556,11 +562,11 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html = render(view)
     assert html =~ ~s(value="edited criteria")
-    assert html =~ "Single index"
+    assert has_element?(view, "#search-run-attribution[data-mode=single]")
     assert html =~ inspect(OpsPostA)
     assert html =~ "original probe"
-    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
-    assert html =~ ~s(data-testid="playbook-preview-marker")
+    assert has_element?(view, "#search-run-attribution[data-limit='7']")
+    assert html =~ ~s(id="search-capture-json")
 
     view
     |> element(~s([data-testid="search-mode-multi"]))
@@ -571,13 +577,13 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     html = render(view)
     assert html =~ ~s(data-testid="search-mode-multi")
     assert html =~ "original probe"
-    assert html =~ ~s(data-testid="search-submitted-page-size">7</)
-    refute html =~ ~s(data-testid="playbook-preview-marker")
+    assert has_element?(view, "#search-run-attribution[data-limit='7']")
+    refute html =~ ~s(id="search-capture-json")
   end
 
   test "an empty query remains a valid submitted search", %{conn: conn} do
     {:ok, view, html} = live(conn, ~p"/ops/search")
-    assert html =~ "Run a search to see results"
+    refute has_element?(view, "#search-results-heading")
     refute html =~ "Run current search"
 
     view
@@ -590,7 +596,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     html = render(view)
     assert html =~ "Search completed: no matching documents"
-    assert html =~ "(empty query)"
+    assert html =~ "all documents"
     refute html =~ "Select a query"
   end
 
@@ -615,7 +621,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     multi_html = render(multi_view)
     assert multi_html =~ "Select at least one schema for multi-search."
-    assert multi_html =~ "No schema selected"
+    assert multi_html =~ "Select at least one schema for multi-search."
     refute multi_html =~ "Search completed:"
   end
 
@@ -638,7 +644,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Fix the query options or operator config, then run search again."
     assert html =~ "ops-badge-error"
     refute html =~ ~s(data-testid="search-outcome")
-    refute html =~ "Some indexes did not return results."
+    refute html =~ "Some schemas could not be searched."
   end
 
   defp temporary_playbook_workspace do

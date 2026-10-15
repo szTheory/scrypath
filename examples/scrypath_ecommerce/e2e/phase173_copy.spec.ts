@@ -32,7 +32,7 @@ async function settle(page, index, success = true) {
 }
 const stamp = page => page.locator(`[data-ops-timestamp-copy='${sourceIso}']`);
 const container = page => stamp(page).locator("..");
-const message = page => container(page).locator("[data-ops-timestamp-message]");
+const message = page => page.locator("[data-ops-notification-message]");
 const calls = page => page.evaluate(() => (window as any).copyState.calls);
 
 for (const entry of entries) {
@@ -53,10 +53,10 @@ for (const entry of entries) {
     await expect.poll(async () => (await calls(page)).length).toBe(1);
     await settle(page, 0, false);
     await expect(message(page)).toContainText("Could not copy");
-    const fallback = container(page).locator("[data-ops-time-fallback]");
+    const fallback = page.locator("[data-ops-notification-source]");
     await expect(fallback).toHaveText(sourceIso); await expect(fallback).toBeVisible();
     await page.clock.fastForward(10_000); await expect(message(page)).toBeVisible();
-    await container(page).getByRole("button", { name: "Dismiss copy message" }).click();
+    await page.locator("#ops-client-toast").getByRole("button", { name: "Close notification" }).click();
     await expect(stamp(page)).toBeFocused(); await expect(fallback).toBeHidden();
     await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: {} }));
     await stamp(page).click(); await expect(message(page)).toContainText("Could not copy");
@@ -71,7 +71,7 @@ for (const entry of entries) {
       await page.clock.fastForward(attempt === 0 ? 3000 : 2000);
     }
     await expect(message(page)).toBeVisible();
-    await page.clock.fastForward(2000); await expect(message(page)).toBeHidden();
+    await page.clock.fastForward(2000); await expect(page.locator("#ops-client-toast")).toBeHidden();
   });
   test(`${entry.name} keyboard and touch copy the same source and retain focus`, async ({ page, browser }) => {
     await visit(page, entry); await installClipboard(page);

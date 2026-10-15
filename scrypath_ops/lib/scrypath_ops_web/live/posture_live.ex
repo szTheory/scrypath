@@ -254,7 +254,11 @@ defmodule ScrypathOpsWeb.PostureLive do
                 "invalid-time",
                 "queue-unused",
                 "refresh-failure",
-                "refresh-disabled"
+                "refresh-disabled",
+                "processing",
+                "backend-failed",
+                "retrying",
+                "completed"
               ]
             }
             value={scenario}
@@ -279,11 +283,11 @@ defmodule ScrypathOpsWeb.PostureLive do
           {@posture_evidence}
         </.ops_verdict>
         <p class="text-ops-sm text-base-content/70">
-          {posture_schema_count(@posture_rows)} configured schemas ·
-          Background sync observed for {posture_queue_observed_count(@posture_rows)} schemas.
-          <span :if={@aggregate_error_count > 0}>{@aggregate_error_count} checks unavailable.</span>
-          <span :if={posture_backend_failed_count(@posture_rows) > 0}>
-            {posture_backend_failed_count(@posture_rows)} failed Meilisearch tasks.
+          {posture_schema_count(@posture_rows)} {if posture_schema_count(@posture_rows) == 1,
+            do: "schema",
+            else: "schemas"} · {sync_summary(@scrypath_opts)}
+          <span :if={@aggregate_error_count > 0}>
+            · {@aggregate_error_count} {if @aggregate_error_count == 1, do: "check", else: "checks"} unavailable
           </span>
         </p>
       </section>
@@ -322,12 +326,20 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {mod |> Module.split() |> List.last()}
                     </h3>
-                    <p class="mt-ops-1 text-ops-sm text-base-content/65">
-                      <span class="break-all">{inspect(mod)}</span>
-                      <br /> Meilisearch index
-                      <.ops_inline_code>{status.index}</.ops_inline_code>
-                      · {sync_mode_label(status.mode)}
-                    </p>
+                    <dl class="ops-schema-identifiers">
+                      <div>
+                        <dt>Schema module</dt>
+                        <dd>
+                          <.ops_inline_code>{inspect(mod)}</.ops_inline_code>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Meilisearch index</dt>
+                        <dd>
+                          <.ops_inline_code>{status.index}</.ops_inline_code>
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
                   <div class="ops-schema-signal-card__badges">
                     <.ops_badge :if={status.backend.failed != []} kind={backend_badge_kind(status)}>
@@ -342,6 +354,14 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {queue_badge_label(status)}
                     </.ops_badge>
+                    <.link
+                      :if={failed_work_present?(status)}
+                      navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
+                      class="ops-text-action"
+                      data-testid="posture-failed-sync-link"
+                    >
+                      View failed sync work <span aria-hidden="true">→</span>
+                    </.link>
                   </div>
                 </div>
 
@@ -350,7 +370,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     aria-label={"Backend task signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">Meilisearch tasks</p>
+                    <p class="ops-signal-group__title">Meilisearch document tasks</p>
                     <p
                       :if={status.backend.pending == [] && status.backend.failed == []}
                       class="text-ops-sm text-base-content/70"
@@ -362,8 +382,8 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <dt>Pending</dt>
                         <dd>{length(status.backend.pending)}</dd>
                       </div>
-                      <div :if={status.backend.failed != []}>
-                        <dt>Failed</dt>
+                      <div :if={status.backend.failed != []} data-tone="error">
+                        <dt><.icon name="hero-exclamation-circle" class="size-3.5" /> Failed</dt>
                         <dd>{length(status.backend.failed)}</dd>
                       </div>
                       <div class="ops-signal-metrics__wide">
@@ -386,7 +406,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     aria-label={"Queue job signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">Background sync · Oban</p>
+                    <p class="ops-signal-group__title">{sync_mode_label(status.mode)}</p>
                     <p
                       :if={
                         status.queue.observed? && status.queue.pending == [] &&
@@ -401,12 +421,12 @@ defmodule ScrypathOpsWeb.PostureLive do
                         <dt>Pending</dt>
                         <dd>{length(status.queue.pending)}</dd>
                       </div>
-                      <div :if={status.queue.retrying != []}>
-                        <dt>Retrying</dt>
+                      <div :if={status.queue.retrying != []} data-tone="warning">
+                        <dt><.icon name="hero-arrow-path" class="size-3.5" /> Retrying</dt>
                         <dd>{length(status.queue.retrying)}</dd>
                       </div>
-                      <div :if={status.queue.failed != []}>
-                        <dt>Failed</dt>
+                      <div :if={status.queue.failed != []} data-tone="error">
+                        <dt><.icon name="hero-exclamation-circle" class="size-3.5" /> Failed</dt>
                         <dd>{length(status.queue.failed)}</dd>
                       </div>
                       <div class="ops-signal-metrics__wide">
@@ -428,14 +448,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </p>
                   </section>
                 </div>
-                <.link
-                  :if={failed_work_present?(status)}
-                  navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
-                  class="link link-primary mt-ops-2 inline-flex min-h-[var(--control-h-md)] items-center"
-                  data-testid="posture-failed-sync-link"
-                >
-                  View failed sync work
-                </.link>
               <% {:error, reason} -> %>
                 <div class="ops-schema-signal-card__header">
                   <div class="min-w-0">
@@ -509,23 +521,14 @@ defmodule ScrypathOpsWeb.PostureLive do
   defp posture_schema_count({:ok, rows}), do: length(rows)
   defp posture_schema_count(_), do: 0
 
-  defp posture_backend_failed_count({:ok, rows}) do
-    Enum.reduce(rows, 0, fn
-      {_mod, {:ok, status}}, acc -> acc + length(status.backend.failed)
-      _row, acc -> acc
-    end)
+  defp sync_summary(opts) do
+    case Keyword.get(opts, :sync_mode, :inline) do
+      :oban -> "Background sync with Oban"
+      :inline -> "Inline sync"
+      :manual -> "Manual sync"
+      _ -> "Sync mode unavailable"
+    end
   end
-
-  defp posture_backend_failed_count(_), do: 0
-
-  defp posture_queue_observed_count({:ok, rows}) do
-    Enum.count(rows, fn
-      {_mod, {:ok, status}} -> status.queue.observed?
-      _row -> false
-    end)
-  end
-
-  defp posture_queue_observed_count(_), do: 0
 
   defp state_at(%Scrypath.Operator.State{at: at}), do: at
   defp state_at(_state), do: nil

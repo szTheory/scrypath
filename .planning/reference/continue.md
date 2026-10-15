@@ -1,15 +1,21 @@
-# Continue — Scrypath UI baseline
+# Continue — Scrypath UI follow-up
 
-## Current state
+The maintainer's second review round is implemented and locally verified on `fix/ui-feedback-baseline` in `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`. All 24 follow-up entries are preserved and reconciled in `../UI-FEEDBACK.md`; `UI-FOLLOWUP-RESULTS.md` records behavior, tests, rendered evidence and limits. Earlier feedback-only pauses are superseded. Do not restart planning or replay Phases 173–177.
 
-All three baseline batches are implemented and verified on `fix/ui-task-baseline` in `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`. Delivery is [PR #105](https://github.com/szTheory/scrypath/pull/105); read its current merge/check state before doing anything. The maintainer authorized marking ready and squash merging after required CI is green. Finish that delivery if still open; if merged, there is no remaining baseline implementation or phase replay to do.
+## Current next action
 
-Evidence: [UI-BASELINE-RESULTS.md](UI-BASELINE-RESULTS.md), the reconciled `../UI-FEEDBACK.md`, and final local reviewed capture `examples/scrypath_ecommerce/ui-review-artifacts/2026-10-14T22-45-57-728Z`. Full 168-case browser inventory: 167 passed initially; one test-only paint-timing assertion corrected and its full status suite rechecked 6/6; Ops: 309 tests + 2 doctests; demo: 12 tests; review tooling: 7 tests. The review checker validates current source/artifact binding and completeness, not taste or an independent reviewer identity. Required hosted checks must cover the final delivered commit. Unchanged dependency-audit advisories remain separate and disclosed.
+Finish PR delivery for this branch: required current-head CI plus path-scoped Ops must be green before ready/squash merge. The maintainer already authorized that merge condition. Use `scripts/ci_monitor.cjs` for CI; do not fabricate a formal reviewer or reopen historical trust gates. Once merged, there is no remaining implementation from this pass; the next useful action is reviewing the updated app and recording genuinely new feedback.
 
-## Preview and next work
+## Canonical preview and preservation
 
-`../UI-PREVIEW.json` is the canonical pointer. The retained preview is `http://127.0.0.1:4002/admin/search`, container `scrypath_ecommerce-web-1`; startup seeding is disabled. It retains incident data, so some warnings/search unavailability are expected. Preserve its database, indexes and volumes. The root checkout is a different dirty historical branch; do not reset/stash/copy it or transport old product files.
+`../UI-PREVIEW.json` points to the canonical checkout above. Retained preview: `http://127.0.0.1:4002/admin/search`, `scrypath_ecommerce-web-1`, startup seeding disabled. Preserve its incident/index-settings data, databases, search indexes and volumes. Root checkout is a different dirty historical branch: do not reset/stash/copy its product files.
 
-The three tasks are trying search, understanding/recovering a problem, and saving/reusing inputs. The implementation includes unreported clipboard, stationary-pointer selection, long-name and compact-layout defects, not just the maintainer's examples. New feedback should extend the same ledger and maintained `OPERATOR-UI-QUALITY.md`; no new persona workshop, brand refresh or numbered phase is needed. Do not replay Phases 173–177 or route from historical STATE frontmatter. No speculative new work is authorized by a completed baseline.
+Never stage/delete/reset `examples/scrypath_ecommerce/priv/playbooks/my-search.json`; it is the maintainer's server-saved file and remains untracked, SHA256 `3c8de6b45b9b3bc6f5daff18ce71da1ee817b5270ddc57a8c064f59a1a42c0f7`.
 
-All stateful checks used only the owned `scrypath_ui_baseline` Compose project (ports 4013/4014 and separate saved-file volume); remove only that disposable stack if it still exists. Never tear down the retained `scrypath_ecommerce` preview or unrelated containers. Repeated full tests require a fresh owned search backend: the 1000-task history bound correctly blocks promotion after accumulated test runs; never raise the limit or weaken a guard to force green.
+## Evidence and boundaries
+
+Ops: 313 tests + 2 doctests; demo: 38 tests on a separate database partition; review tooling: 7 tests. All 175 browser cases covered through full and repaired focused runs, with transparent run history in the results report. Final reviewed matrix: `examples/scrypath_ecommerce/ui-review-artifacts/2026-10-15T13-22-55-099Z`, 72 views and zero mechanical findings. Populated/raw/draft/save/toast shots are in `ui-review-artifacts/followup-journeys/`. Complete review source binding must stay valid.
+
+The new `indexing_failure` seed was actually exercised only on disposable data: Meilisearch task 691 failed with `invalid_document_id`, and health displayed it. Fixed health snapshots and typed-hit fixtures are labeled examples, not live recovery evidence. Shared configured mode is not per-call override discovery. No pagination, new dependency, public library API, format change or brand refresh.
+
+Verification owns only Compose project `scrypath_ui_followup`, ports 4013/4014, and `/private/tmp/scrypath-followup-saved`. Tear down only that owned project/volumes when delivery checks finish. Never tear down the retained preview or unrelated stacks. Fresh owned backends keep task-history bounds deterministic; do not weaken a 1000-task guard to force green.

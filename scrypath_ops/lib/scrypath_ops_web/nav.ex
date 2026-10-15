@@ -42,6 +42,12 @@ defmodule ScrypathOpsWeb.Nav do
         label: "Saved searches",
         title: "Saved searches",
         group: :explore
+      },
+      %{
+        path: "#{mount_path}/help",
+        label: "Help",
+        title: "Help",
+        group: :support
       }
     ]
   end

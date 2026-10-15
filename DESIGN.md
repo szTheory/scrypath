@@ -20,7 +20,7 @@ Use the system sans-serif stack for interface copy and the technical monospace s
 
 The shared shell owns the top-level page rhythm with `space-y-4`; the 24px `space-y-ops-page-gap` role is used for deliberate group spacing inside selected surfaces. Keep the shell's direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
 
-Navigation is a flat list with Search directly after Control Room. The six routes have distinct tasks: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. Routes and Playbook APIs/JSON remain unchanged.
+Navigation is a flat list with Search directly after Control Room. The six task routes have distinct purposes: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. A quiet Help destination at the bottom of navigation explains these tasks inside the installed app. Existing task routes and Playbook APIs/JSON remain unchanged; Help adds `/help` under the configured mount.
 
 ## Elevation & Depth
 
@@ -42,10 +42,10 @@ Use visible native radio rows for schema choices and plain context for a single 
 | Search health | A cause-specific summary and worst-first schemas. Positive work counts stay visible; empty sources use one neutral statement. Unknown and retained evidence remain explicit. |
 | Failed sync work | Native schema selection, compact cohort summary, source-qualified IDs, error and eligible Retry. Retry queued is distinct from completion; delete confirmation remains protected. |
 | Sync and drift | Header Refresh checks sync and settings. Settings load automatically with bounded generation-scoped reads; real differences use declared/live columns. Correlated document/retry sections appear only with applicable evidence; promotion remains advanced and confirmed. |
-| Search | A compact form contains schemas, query and per-schema limit. Results stay attributed to submitted criteria. Saving preserves inputs, never returned documents. |
+| Search | A compact form contains schemas, query and result limit. Results stay attributed to submitted criteria. Saving preserves inputs, never returned documents. |
 | Saved searches | A flat catalog offers Preview and Run, with secondary file actions. Storage folder is secondary context. Draft, saved file and run provenance remain separate. |
 
-Timestamps are single, keyboard-accessible copy buttons with restrained text styling and a small clipboard affordance. UTC is the default; one Time control beside theme preferences switches display to the browser's local zone and persists that choice. Each absolute time names its zone; the original source precision is copied unchanged. Copy feedback waits for the browser outcome. On failure, the exact value becomes selectable without an extra disclosure. Unknown times have no copy control. Retained observations keep their source identity and original check time.
+Timestamps are single, keyboard-accessible copy buttons with restrained text styling and a small clipboard affordance. UTC is the default; one Time control beside theme preferences switches display to the browser's local zone and persists that choice. Each absolute time names its zone; the original source precision is copied unchanged. Copy feedback waits for the browser outcome and uses the shared overlay toast without changing page geometry or moving focus. Failure feedback persists with selectable exact source content. Unknown times have no copy control. Retained observations keep their source identity and original check time.
 
 The dynamic design-token contract requires every current `OpsUi` export to appear in `DESIGN-TOKENS.md`; it does not prescribe a fixed export count.
 
@@ -56,6 +56,16 @@ The dynamic design-token contract requires every current `OpsUi` export to appea
 - Do pair status color with a visible label and keep action feedback attached to the action that produced it.
 - Do keep Search results attributable to submitted targets and criteria, and Playbook outcomes attributable to their saved file or imported draft.
 - Don't infer health or completion from zero counts, accepted dispatch, a toast alone, or a color.
-- Don't merge the six scan paths into a generic card template, add decoration that competes with operational evidence, or add a dependency for a pattern that the existing LiveView and component seams already cover.
+- Don't merge distinct scan paths into a generic card template, add decoration that competes with operational evidence, or add a dependency for a pattern that the existing LiveView and component seams already cover.
 - Don't restore the earlier shell wash or sliding selection pill. The current shell is flat and the three native theme buttons expose the selected preference with `aria-pressed`.
 - Don't add arbitrary top margins between direct shell children or animate layout/reflow and result-list insertion; the shared rhythm and motion rules already define those behaviors.
+
+## Follow-up interaction contracts
+
+Search uses a flat form: mode and schema choices precede query and result limit, with privacy guidance beside the query. The limit bounds the combined response in multi-schema mode; this interface offers no next-page control. Keep the host-configured ceiling and existing dispatch semantics.
+
+Readable results use returned data only, with modest title/description heuristics and explicit scalar, nested and missing-value treatment. Never infer associations from identifier suffixes or fetch database records for presentation. Exact complete Elixir payloads remain inspectable and copyable. Keep combined order compact and source-qualified rather than repeating whole payloads.
+
+Submitted criteria stay quiet while controls match. Show the last-run context when draft controls differ; results and saved inputs still belong to the submitted run. Put Save search before the hit list and explain the server-side Saved searches destination. Readiness flags do not need visible narration.
+
+Use native Help for task explanations and optional external developer docs for deeper setup. Health distinguishes Schema module, Meilisearch index, document tasks and configured synchronization method. Color and icons mark nonzero retry/failure counts locally; pending work alone is not a failure. Native selects inherit the shared chevron spacing instead of overriding their background image or end padding.
