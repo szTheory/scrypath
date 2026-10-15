@@ -25,6 +25,8 @@ progress:
 
 All feedback is reconciled in `UI-FEEDBACK.md`. Ops: 313 tests + 2 doctests; demo: 38 tests; review tooling: 7 tests. The 175 browser cases are covered through full and corrected scoped runs; the final rendered matrix has 72 captures, zero mechanical findings and a distinct in-thread critique. Preserve the established brand, retained port-4002 preview data and untracked `my-search.json`. Canonical checkout: `UI-PREVIEW.json`. The numbered-phase frontmatter and chronology below are historical routing context, not a request to resume those phases.
 
+The next review round is being collected: CONTENT-27, UI-38, UX-08, UI-39 and UI-40 record result-limit rationale, blur/error presentation, app-wide validation, single/multi option consistency and contextual-help styling. The maintainer wants a coherent batch, not piecemeal edits; source triage is recorded but this round has no product implementation yet. Resume from the current handoff and feedback ledger.
+
 ## Historical project reference
 
 See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish PR #98's exact-source closeout and merged-main attestation; all five phase plan sets are complete, but T-177-05 still blocks the milestone audit.

@@ -8,6 +8,10 @@ The maintainer's second review round is implemented and locally verified on `fix
 
 No GSD phase or implementation command is needed for this completed pass. The next useful action is reviewing the updated app, especially Search → Save/reuse and Help, then recording genuinely new feedback. The separate unsuppressed dependency advisory task is `../todos/pending/2026-10-15-dependency-audit-followup.md`; it is open, not accepted or resolved by this UI delivery.
 
+## New feedback collection — 2026-10-15
+
+The maintainer is reviewing the delivered UI and asks to batch the next changes coherently. New entries CONTENT-27, UI-38, UX-08, UI-39 and UI-40 in `../UI-FEEDBACK.md` preserve the 50-result-cap question, on-blur field errors, an app-wide validation review, inconsistent single/multi schema option styling, and the oversized inline help link/contextual-help pattern. Source causes are recorded; no product edits or broad input audit have occurred in this round. Continue capturing new feedback and synthesize one batch; do not dispatch isolated cuts or reopen the delivered pass. Keep all native/server guards and avoid a generic validation framework or tooltip system without need.
+
 ## Canonical preview and preservation
 
 `../UI-PREVIEW.json` points to the canonical checkout above. Retained preview: `http://127.0.0.1:4002/admin/search`, `scrypath_ecommerce-web-1`, startup seeding disabled. Preserve its incident/index-settings data, databases, search indexes and volumes. Root checkout is a different dirty historical branch: do not reset/stash/copy its product files.
