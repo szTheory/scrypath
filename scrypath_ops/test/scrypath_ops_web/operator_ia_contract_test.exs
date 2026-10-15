@@ -90,16 +90,17 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     end
   end
 
-  test "Nav.primary/0 exposes five ordered ops routes with canonical labels" do
+  test "Nav.primary/0 exposes six ordered ops routes with canonical labels" do
     items = Nav.primary()
-    assert length(items) == 5
+    assert length(items) == 6
 
     expected_path_strings = [
       "/ops/search",
       "/ops/health",
       "/ops/failed-sync",
       "/ops/sync-drift",
-      "/ops/playbooks"
+      "/ops/playbooks",
+      "/ops/help"
     ]
 
     expected_labels = [
@@ -107,7 +108,8 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       "Search health",
       "Failed sync work",
       "Sync and drift",
-      "Saved searches"
+      "Saved searches",
+      "Help"
     ]
 
     assert Enum.map(items, &(&1.path |> to_string())) == expected_path_strings

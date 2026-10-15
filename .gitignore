@@ -20,5 +20,6 @@
 # generated local browser/demo artifacts
 examples/scrypath_ecommerce/node_modules/
 examples/scrypath_ecommerce/test-results/
+examples/scrypath_ecommerce/playwright-report/
 examples/scrypath_ecommerce/ui-review-artifacts/
 tmp_phx/

@@ -1,6 +1,6 @@
 # Scrypath UI review loop
 
-Review the product experience across its current inventory. Maintainer feedback is a set of regression checks, not an exhaustive defect list or a request to optimize isolated screenshots. The pilot includes the storefront, all six operator surfaces, and the operator-guide handoff.
+Review the product experience across its current inventory. Maintainer feedback is a set of regression checks, not an exhaustive defect list or a request to optimize isolated screenshots. The pilot includes the storefront, all six task surfaces, and native Help.
 
 ## Run against the retained preview
 
@@ -14,7 +14,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:4002 npm run ui:review
 
 Start with the read-only preflight before editing, restarting or collecting screenshots. It prints the verified checkout, command working directory, branch, source fingerprint, Docker mount/main provenance and pending local files; it launches no browser and creates no artifacts. It also reads remote main and refuses stale local main refs; a remote lookup failure cannot establish latest-source status. Refresh and reconcile main when needed. Compare the branch with `.planning/UI-PREVIEW.json`, account for pending source edits before a worktree handoff, and anchor subsequent commands to the verified checkout. See the [incident lessons](../../../.planning/reference/UI-WORKTREE-LEARNINGS.md) for the causes and prevention rules.
 
-This uses the existing Playwright and axe dependencies. It captures seven screens in light, dark, and system-dark at 1440px, 768px, and 390px: 63 entry-state observations, plus full-page, hover, focus, and compact navigation evidence. Each run writes a separate ignored directory under `ui-review-artifacts/` with an HTML gallery, visible copy, headings/controls, accessibility findings, browser errors, a source fingerprint, and a pending `review.json`.
+This uses the existing Playwright and axe dependencies. It captures eight screens in light, dark, and system-dark at 1440px, 768px, and 390px: 72 entry-state observations, plus full-page, hover, focus, and compact navigation evidence. Each run writes a separate ignored directory under `ui-review-artifacts/` with an HTML gallery, visible copy, headings/controls, accessibility findings, browser errors, a source fingerprint, and a pending `review.json`.
 
 Review artifacts live outside Playwright’s `test-results/` cleanup boundary and survive ordinary test runs. They remain local and ignored by Git; keep review records and captures together when archiving or deliberately removing a run.
 
@@ -66,3 +66,12 @@ For GSD work, run this loop during UI planning to establish the current problems
 - [Playwright visual comparisons](https://playwright.dev/docs/test-snapshots): reviewed references and matching render environments matter.
 - [Playwright accessibility testing](https://playwright.dev/docs/accessibility-testing) and [W3C evaluation guidance](https://www.w3.org/WAI/test-evaluate/): automated checks need complementary evaluation.
 - [UX Writing Skill](https://github.com/content-designer/ux-writing-skill): purposeful, concise, conversational, accurate task copy; generic length/readability figures are editorial heuristics here.
+
+
+## Follow-up state coverage
+
+The test-only health scenarios `processing`, `backend-failed`, `retrying`, and `completed` expose the two stages separately with fixed task/job identities and observation times. These are labeled snapshots, not live recovery evidence. The existing UI fixture adds heterogeneous returned fields, including false, zero, null, custom IDs and nested values.
+
+For an actual Meilisearch document failure, `mix scrypath.demo.seed --scenario indexing_failure` is opt-in and belongs only in a disposable demo stack. It submits an invalid document and waits for the real failed task; its history persists until that owned backend is reset. Run normal green/recovery/promotion checks first. Never reseed the retained feedback preview or raise history limits to clear accumulated test failures.
+
+`ui_followup.spec.ts` checks stationary copy-feedback geometry, select spacing, native Help, source-specific health snapshots, readable/raw data fidelity, submitted-versus-draft save behavior, combined limits and compact themed rendering. The legacy time/copy suites retain actual browser-outcome and race checks. These mechanical proofs complement, rather than replace, a distinct rendered critique of the complete inventory.

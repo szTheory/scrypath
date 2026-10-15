@@ -11,8 +11,7 @@
  *      not draw).
  *   2. Hover code-shimmer: `.ops-code-block--shimmer` glint is opt-in. Evidence code
  *      blocks (search payloads) carry NO `.ops-code-block--shimmer` class (D-04a/c).
- *   3. Active-path trace/node glow: the merge-trace `.ops-path-trace` line-draw fires on
- *      hover only, and the active Playbook item carries `.ops-object-item-active`.
+ *   3. Active-path trace/node glow: combined result order remains static across patches, and the active Playbook item carries `.ops-object-item-active`.
  *   4. NO LiveView patch-refire flicker (the Phase 123 A3 risk): toggling Search
  *      single↔multi mode and selecting Playbook A→B does NOT restart a running *keyframe*
  *      animation on the anchor. Because the shipped motion is pure CSS `transition` (never
@@ -280,82 +279,36 @@ test.describe("admin path motion — DARKMOTION-01", () => {
     });
   }
 
-  // 2 + 3: Merge-trace .ops-path-trace line-draw (hover), evidence code blocks shimmer-OFF,
-  // and the patch-refire probe across a single↔multi mode switch — dark AND light.
+  // Combined order replaced the raw merge trace. Keep the patch-safety and
+  // shimmer-free evidence checks without requiring a removed decorative underline.
   for (const theme of INTERACTIVE_THEMES) {
-    test(`search merge-trace: hover line-draw + shimmer-off evidence + no patch-refire (${theme})`, async ({
-      browser,
-      request
-    }) => {
+    test(`search combined order: readable evidence with no patch-refire (${theme})`, async ({browser, request}) => {
       const seed = await seedScenario(request, "all_green");
-      // all_green leaves the live contract intact, so confirm the catalog is searchable
-      // before driving the UI (mirrors the matrix spec's gate).
       if (seed.tenant_id) {
         await drainSearchQueue(request);
         await waitForSearchVisible(request, {
-          tenantId: seed.tenant_id,
-          query: "quantum",
-          expectedName: "Quantum CyberPhone X"
+          tenantId: seed.tenant_id, query: "quantum", expectedName: "Quantum CyberPhone X"
         });
       }
-
-      const { page, close } = await newThemedPage(browser, theme);
+      const {page, close} = await newThemedPage(browser, theme);
       try {
         await gotoSearch(page);
-
-        // Switch to multi mode (push_patch) — the merge-trace .ops-path-trace only renders
-        // in multi mode, once the multi result carries a merge projection.
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
-
-        // The merge trace is the <details> disclosure carrying .ops-path-trace. Its
-        // line-draw lives on ::after and fires on :hover only — never on (re)insertion.
-        const trace = page.locator(".ops-path-trace").first();
-        await expect(trace).toBeVisible();
-
-        // Baseline: the path-motion anchor has NO running animation at rest (pure
-        // transition, never @keyframes-on-mount). This is the pre-patch reference.
-        expect(
-          await runningKeyframeAnimationCount(page, ".ops-path-trace"),
-          "running animations on .ops-path-trace at rest"
-        ).toBe(0);
-
-        // Evidence code blocks (search hit payloads) MUST be shimmer-off (D-04a/c): no
-        // .ops-code-block--shimmer anywhere on the results page.
+        const order = page.locator("details.ops-combined-order");
+        await expect(order).toBeVisible();
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
-
-        // Hover the merge-trace affordance and assert the line-draw end state is reached
-        // (::after transform settles from scaleX(0) to scaleX(1)).
-        await expect
-          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
-            timeout: 5_000,
-            message: `merge-trace ::after must rest collapsed before hover (${theme})`
-          })
-          .toBeLessThanOrEqual(0.01);
-        await trace.hover();
-        await expect
-          .poll(() => pseudoScaleX(page, ".ops-path-trace", "::after"), {
-            timeout: 5_000,
-            message: `merge-trace ::after must draw to full scale on hover (${theme})`
-          })
-          .toBeGreaterThanOrEqual(0.99);
-
-        // Patch-refire probe: toggle multi→single→multi. Each toggle is a push_patch that
-        // re-renders the results/merge region. The trace anchor must not start a running
-        // animation across the patch (pure transition ⇒ 0 before and after).
+        await order.locator("summary").click();
+        await expect(order.locator("li").first()).toBeVisible();
+        await expect(order).not.toContainText("%{");
+        expect(await runningKeyframeAnimationCount(page, ".ops-combined-order")).toBe(0);
         await switchSearchMode(page, "single");
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
-        await expect(page.locator(".ops-path-trace").first()).toBeVisible();
-        const afterPatch = await runningKeyframeAnimationCount(page, ".ops-path-trace");
-        expect(afterPatch, "running animations on .ops-path-trace after patch round-trip").toBe(0);
-
-        await snap(page, `merge-trace-hover--${theme}`);
-      } finally {
-        await close();
-      }
+        await expect(order).toBeVisible();
+        expect(await runningKeyframeAnimationCount(page, ".ops-combined-order")).toBe(0);
+        await snap(page, `combined-order--${theme}`);
+      } finally { await close(); }
     });
   }
 

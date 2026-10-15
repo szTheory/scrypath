@@ -8645,11 +8645,66 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
   };
   var LiveSocket2 = LiveSocket;
 
-  // ../_build/dev/phoenix-colocated/scrypath_ops/index.js
+  // ../_build/test/phoenix-colocated/scrypath_ops/index.js
   var hooks = {};
 
   // js/app.js
   var import_topbar = __toESM(require_topbar());
+
+  // js/ops_search.js
+  var OpsSearchDraft = {
+    mounted() {
+      this.syncDraft = () => {
+        const context = document.getElementById("search-run-attribution");
+        if (!context) return;
+        const data = new FormData(this.el);
+        const mode = this.el.dataset.searchMode;
+        const schemas = mode === "multi" ? data.getAll("schemas[]").map(String).sort() : [String(data.get("schema") || "")];
+        const submitted = JSON.parse(context.dataset.schemas);
+        const changed = mode !== context.dataset.mode || String(data.get("q") || "").trim() !== context.dataset.query || Number(data.get("page_size")) !== Number(context.dataset.limit) || JSON.stringify(schemas) !== JSON.stringify(submitted.sort());
+        context.hidden = !changed;
+      };
+      this.el.addEventListener("input", this.syncDraft);
+      this.el.addEventListener("change", this.syncDraft);
+      this.syncDraft();
+    },
+    updated() {
+      this.syncDraft();
+    },
+    destroyed() {
+      this.el.removeEventListener("input", this.syncDraft);
+      this.el.removeEventListener("change", this.syncDraft);
+    }
+  };
+
+  // js/ops_notifications.js
+  var dismissTimer;
+  var returnFocus;
+  function notify(message, kind = "info", source = null) {
+    const toast = document.querySelector("[data-ops-client-toast]");
+    if (!toast) return;
+    window.clearTimeout(dismissTimer);
+    const text = toast.querySelector("[data-ops-notification-message]");
+    const fallback = toast.querySelector("[data-ops-notification-source]");
+    text.textContent = message;
+    text.setAttribute("role", kind === "error" ? "alert" : "status");
+    fallback.textContent = source ?? "";
+    fallback.hidden = source == null;
+    toast.classList.toggle("ops-flash--error", kind === "error");
+    toast.classList.toggle("ops-flash--info", kind !== "error");
+    returnFocus = document.activeElement;
+    toast.hidden = false;
+    if (kind !== "error") dismissTimer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 4e3);
+  }
+  document.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("[data-ops-notification-close]")) {
+      window.clearTimeout(dismissTimer);
+      document.querySelector("[data-ops-client-toast]")?.setAttribute("hidden", "");
+      if (returnFocus instanceof HTMLElement && returnFocus.isConnected) returnFocus.focus();
+    }
+  });
 
   // js/ops_clipboard.js
   var attempts = /* @__PURE__ */ new WeakMap();
@@ -8659,24 +8714,19 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     const group = button.closest("[data-ops-copy-group]");
     const feedback = group?.querySelector("[data-ops-copy-feedback]");
     const fallback = group?.querySelector("[data-ops-copy-fallback]");
-    if (!feedback || !fallback) return;
     const attempt = (attempts.get(button) || 0) + 1;
     attempts.set(button, attempt);
     const source = button.dataset.opsCopyText;
-    feedback.textContent = "";
-    fallback.hidden = true;
+    if (feedback) feedback.textContent = "";
+    if (fallback) fallback.hidden = true;
     try {
       if (typeof navigator.clipboard?.writeText !== "function") throw new Error("Clipboard unavailable");
       await navigator.clipboard.writeText(source);
       if (!button.isConnected || attempts.get(button) !== attempt || source !== button.dataset.opsCopyText) return;
-      feedback.textContent = "Diagnostics copied";
-      setTimeout(() => {
-        if (attempts.get(button) === attempt) feedback.textContent = "";
-      }, 4e3);
+      notify(button.dataset.opsCopySuccess || "Diagnostics copied");
     } catch (_) {
       if (!button.isConnected || attempts.get(button) !== attempt || source !== button.dataset.opsCopyText) return;
-      feedback.textContent = "Could not copy. Select and copy the details below.";
-      fallback.hidden = false;
+      notify("Could not copy. Select and copy the value below.", "error", source);
     }
   });
 
@@ -8779,73 +8829,31 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         if (!trigger || !this.el.contains(trigger)) return;
         event.preventDefault();
         const attempt = ++this.latestAttempt;
-        this.clearFeedback();
         try {
           const exact = trigger.dataset.opsTimestampCopy;
           const clipboard = navigator.clipboard;
           if (!exact || typeof clipboard?.writeText !== "function") throw new Error("Clipboard unavailable");
           await clipboard.writeText(exact);
           if (attempt !== this.latestAttempt || !trigger.isConnected) return;
-          this.showFeedback("Timestamp copied", "success", false);
-          scheduleInfoDismiss(this, () => {
-            if (attempt === this.latestAttempt) this.clearFeedback();
-          });
+          notify("Timestamp copied");
         } catch (_error) {
           if (attempt !== this.latestAttempt || !trigger.isConnected) return;
-          const fallback = this.el.querySelector("[data-ops-time-fallback]");
-          if (fallback) fallback.hidden = false;
-          this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true);
+          notify("Could not copy timestamp. Select and copy the exact value below.", "error", trigger.dataset.opsTimestampCopy);
         }
       };
-      this.onDismissClick = (event) => {
-        const dismiss = event.target instanceof Element ? event.target.closest("[data-ops-timestamp-dismiss]") : null;
-        if (!dismiss || !this.el.contains(dismiss)) return;
-        event.preventDefault();
-        this.latestAttempt += 1;
-        this.clearFeedback();
-        this.el.querySelector("[data-ops-timestamp-copy]")?.focus();
-      };
       this.el.addEventListener("click", this.onCopyClick);
-      this.el.addEventListener("click", this.onDismissClick);
     },
     updated() {
       const current = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy;
       if (current !== this.sourceValue) {
         this.latestAttempt += 1;
-        this.clearFeedback();
         this.sourceValue = current;
       }
       formatTimes(this.el);
     },
     destroyed() {
       this.latestAttempt += 1;
-      window.clearTimeout(this.dismissTimer);
       this.el.removeEventListener("click", this.onCopyClick);
-      this.el.removeEventListener("click", this.onDismissClick);
-    },
-    clearFeedback() {
-      window.clearTimeout(this.dismissTimer);
-      const fallback = this.el.querySelector("[data-ops-time-fallback]");
-      if (fallback) fallback.hidden = true;
-      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
-      const message = this.el.querySelector("[data-ops-timestamp-message]");
-      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
-      if (feedback) {
-        feedback.hidden = true;
-        feedback.dataset.state = "neutral";
-      }
-      if (message) message.textContent = "";
-      if (dismiss) dismiss.hidden = true;
-    },
-    showFeedback(text, state, dismissible) {
-      const feedback = this.el.querySelector("[data-ops-timestamp-feedback]");
-      const message = this.el.querySelector("[data-ops-timestamp-message]");
-      const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]");
-      if (!feedback || !message || !dismiss) return;
-      feedback.dataset.state = state;
-      message.textContent = text;
-      dismiss.hidden = !dismissible;
-      feedback.hidden = false;
     }
   };
   document.addEventListener("click", (e) => {
@@ -9482,7 +9490,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     longPollFallbackMs: 2500,
     params: { _csrf_token: csrfToken },
     localStorage: safeLocalStorage,
-    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }
+    hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft }
   });
   import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
   window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));

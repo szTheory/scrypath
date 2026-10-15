@@ -1408,7 +1408,7 @@ defmodule ScrypathOpsWeb.PlaybookLive do
               </dl>
             </.ops_data_card>
             <.ops_disclosure :if={@preview_json} summary="Saved search JSON" variant={:compact}>
-              <.ops_code_block variant={:compact}>{@preview_json}</.ops_code_block>
+              <.ops_code_block variant={:compact} text={@preview_json} />
             </.ops_disclosure>
 
             <div class="flex flex-wrap gap-2 items-end">

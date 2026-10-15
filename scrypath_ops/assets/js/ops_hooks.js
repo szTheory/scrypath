@@ -1,4 +1,5 @@
 import "./ops_clipboard"
+import {notify} from "./ops_notifications"
 import {formatTimes, syncTimePreference} from "./ops_time"
 // Shared hooks for standalone and mounted ScrypathOps LiveSockets.
 let opsModalPendingTrigger = null
@@ -68,7 +69,6 @@ const OpsTimestampCopy = {
 
       event.preventDefault()
       const attempt = ++this.latestAttempt
-      this.clearFeedback()
 
       try {
         const exact = trigger.dataset.opsTimestampCopy
@@ -78,72 +78,26 @@ const OpsTimestampCopy = {
         await clipboard.writeText(exact)
         if (attempt !== this.latestAttempt || !trigger.isConnected) return
 
-        this.showFeedback("Timestamp copied", "success", false)
-        scheduleInfoDismiss(this, () => {
-          if (attempt === this.latestAttempt) this.clearFeedback()
-        })
+        notify("Timestamp copied")
       } catch (_error) {
         if (attempt !== this.latestAttempt || !trigger.isConnected) return
 
-        const fallback = this.el.querySelector("[data-ops-time-fallback]")
-        if (fallback) fallback.hidden = false
-        this.showFeedback("Could not copy timestamp. Select and copy the exact value.", "error", true)
+        notify("Could not copy timestamp. Select and copy the exact value below.", "error", trigger.dataset.opsTimestampCopy)
       }
     }
-    this.onDismissClick = event => {
-      const dismiss = event.target instanceof Element
-        ? event.target.closest("[data-ops-timestamp-dismiss]")
-        : null
-      if (!dismiss || !this.el.contains(dismiss)) return
-
-      event.preventDefault()
-      this.latestAttempt += 1
-      this.clearFeedback()
-      this.el.querySelector("[data-ops-timestamp-copy]")?.focus()
-    }
-
     this.el.addEventListener("click", this.onCopyClick)
-    this.el.addEventListener("click", this.onDismissClick)
   },
   updated() {
     const current = this.el.querySelector("[data-ops-timestamp-copy]")?.dataset.opsTimestampCopy
     if (current !== this.sourceValue) {
       this.latestAttempt += 1
-      this.clearFeedback()
       this.sourceValue = current
     }
     formatTimes(this.el)
   },
   destroyed() {
     this.latestAttempt += 1
-    window.clearTimeout(this.dismissTimer)
     this.el.removeEventListener("click", this.onCopyClick)
-    this.el.removeEventListener("click", this.onDismissClick)
-  },
-  clearFeedback() {
-    window.clearTimeout(this.dismissTimer)
-    const fallback = this.el.querySelector("[data-ops-time-fallback]")
-    if (fallback) fallback.hidden = true
-    const feedback = this.el.querySelector("[data-ops-timestamp-feedback]")
-    const message = this.el.querySelector("[data-ops-timestamp-message]")
-    const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]")
-    if (feedback) {
-      feedback.hidden = true
-      feedback.dataset.state = "neutral"
-    }
-    if (message) message.textContent = ""
-    if (dismiss) dismiss.hidden = true
-  },
-  showFeedback(text, state, dismissible) {
-    const feedback = this.el.querySelector("[data-ops-timestamp-feedback]")
-    const message = this.el.querySelector("[data-ops-timestamp-message]")
-    const dismiss = this.el.querySelector("[data-ops-timestamp-dismiss]")
-    if (!feedback || !message || !dismiss) return
-
-    feedback.dataset.state = state
-    message.textContent = text
-    dismiss.hidden = !dismissible
-    feedback.hidden = false
   }
 }
 

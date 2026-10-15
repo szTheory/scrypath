@@ -110,3 +110,12 @@ The executable pilot and required agent review loop are documented in [`examples
 Use PR-first delivery and the existing required checks. Keep planning records and source evidence distinct without freezing completion bookkeeping. Leave task-owned files committed, generated artifacts outside tracked source, and temporary verification services removed. A preview intentionally retained for maintainer feedback has a documented URL, owner, and stop command. Preserve unrelated worktrees and stashes. Decide whether a release is warranted from the delivered package changes; never bump a version merely to close a planning milestone.
 
 Current evidence/inventory: `research/v1.42/UI-SYSTEM.md`, `UI-STRUCTURE.md`, and `UI-AUTOMATION.md`.
+
+
+## Maintainer follow-up — 2026-10-15
+
+The second review round confirms the same roles and jobs; it does not establish new researched personas. Apply the maintained vocabulary to actual task outcomes: query → readable returned document → optional raw inspection; save last-run inputs → server-side Saved searches → reuse. Explain storage destination at the save action, not through an internal readiness marker. Preserve submitted-versus-draft truth with a quiet mismatch notice rather than repeating unchanged inputs.
+
+Keep help native to the installed UI and task-focused. In health, distinguish exact schema/module and index identities, Meilisearch document tasks, background jobs and the host-configured mode. Observation counts do not describe configured sync methods or prove freshness. Pending work can be normal; failure/retry counts merit restrained semantic emphasis. Source-specific demonstration scenes are labeled fixtures; real failed-task seeding is opt-in and disposable-only.
+
+Every visible element needs a task purpose. An internal state branch alone does not justify another badge, paragraph or disclosure. Clipboard confirmations belong to the shared toast overlay; copying raw data must preserve full exact content without making ordinary code selection impossible. Keep this section evidence-bounded and revise it when user behavior or shipped task semantics change.

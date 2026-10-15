@@ -178,9 +178,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(data-cmdk-close)
     assert html =~ ~s(data-cmdk-input)
     assert html =~ ~s(data-cmdk-empty)
-    assert Regex.scan(~r/data-cmdk-item/, html) |> length() == 6
-    assert Regex.scan(~r/aria-selected=\"false\"/, html) |> length() == 6
-    assert Regex.scan(~r/id=\"ops-cmdk-item-\d+\"/, html) |> length() == 6
+    assert Regex.scan(~r/data-cmdk-item/, html) |> length() == 7
+    assert Regex.scan(~r/aria-selected=\"false\"/, html) |> length() == 7
+    assert Regex.scan(~r/id=\"ops-cmdk-item-\d+\"/, html) |> length() == 7
     assert html =~ ~s(aria-controls="ops-cmdk-list")
   end
 
@@ -260,7 +260,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
            )
 
     assert File.read!(@host_js) =~
-             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }"
+             "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft }"
 
     refute File.read!(@host_js) =~ "const CommandPalette ="
   end
@@ -270,10 +270,12 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
     assert source =~ "const OPS_INFO_DISMISS_MS = 4000"
     assert source =~ "await clipboard.writeText(exact)"
-    assert source =~ "Could not copy timestamp. Select and copy the exact value."
+    assert source =~ "Could not copy timestamp. Select and copy the exact value below."
 
-    assert source =~
-             "this.el.querySelector(\"[data-ops-time-fallback]\")"
+    assert source =~ ~s|notify("Timestamp copied")|
+
+    assert File.read!(Path.expand("../../assets/js/ops_notifications.js", __DIR__)) =~
+             "data-ops-notification-source"
 
     assert source =~ "data-ops-timestamp-copy"
   end

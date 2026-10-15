@@ -6,6 +6,8 @@ const csrfToken = document
   .querySelector("meta[name='csrf-token']")
   ?.getAttribute("content");
 
+import { OpsSearchDraft } from "../../../../scrypath_ops/assets/js/ops_search";
+
 // Use the same operator hooks as the standalone app.
 import {
   CommandPalette,
@@ -83,7 +85,7 @@ const safeLocalStorage = {
 const liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
   localStorage: safeLocalStorage,
-  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy }
+  hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft }
 });
 
 const themeKey = "phx:theme";

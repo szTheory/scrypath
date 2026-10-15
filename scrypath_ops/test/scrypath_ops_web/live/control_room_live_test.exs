@@ -72,7 +72,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     refute html =~ "Recover search"
     refute html =~ "Start recovery"
     refute has_element?(lv, "[data-testid='control-room-health-link']")
-    assert has_element?(lv, "a", "Read the operator guide")
+    assert has_element?(lv, "nav a[href='/ops/help']", "Help")
   end
 
   test "unconfigured schemas show their exact setup guidance without recovery", %{conn: conn} do

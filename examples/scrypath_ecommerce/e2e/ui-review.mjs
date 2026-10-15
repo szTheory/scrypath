@@ -16,7 +16,8 @@ export const surfaces = [
   { id: "failed-sync", route: "/admin/search/failed-sync", role: "ROLE-OPS", jobs: ["JOB-03"], purpose: "Inspect exact failed work and determine whether recovery is eligible." },
   { id: "sync-drift", route: "/admin/search/sync-drift", role: "ROLE-OWNER", jobs: ["JOB-04"], purpose: "Separate index settings, document visibility, recovery, and promotion evidence." },
   { id: "search", route: "/admin/search/search", role: "ROLE-OWNER", jobs: ["JOB-05"], purpose: "Choose explicit targets, run a bounded query, and interpret attributed results." },
-  { id: "playbooks", route: "/admin/search/playbooks", role: "ROLE-OWNER", jobs: ["JOB-05"], purpose: "Understand a saved check and distinguish its definition, draft, and run outcome." }
+  { id: "playbooks", route: "/admin/search/playbooks", role: "ROLE-OWNER", jobs: ["JOB-05"], purpose: "Understand a saved check and distinguish its definition, draft, and run outcome." },
+  { id: "help", route: "/admin/search/help", role: "ROLE-INT", jobs: ["JOB-03", "JOB-05"], purpose: "Understand search, sync and saved inputs without leaving the installed interface." }
 ];
 export const dimensions = [
   "task-flow", "information-hierarchy", "language-and-domain-truth", "visual-composition",

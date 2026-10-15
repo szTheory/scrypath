@@ -43,7 +43,7 @@ const COPPER_RGB = "193, 122, 62";
 const ELEVATION_DELTA_FLOOR = 0.0045;
 const FLAT_SURFACE_DELTA_FLOOR = 0.011;
 const DK13_ROW_BORDER_TRIGGER = 1.2;
-const PLAYBOOK_WORKSPACE_DIR = join(process.cwd(), "priv/playbooks");
+const PLAYBOOK_WORKSPACE_DIR = process.env.PLAYBOOK_WORKSPACE_DIR || join(process.cwd(), "priv/playbooks");
 
 const DARK_THEME_MODES = THEME_MODES.filter(
   (mode) => (mode.kind === "explicit" && mode.theme === "dark") || mode.kind === "system"
@@ -402,17 +402,17 @@ async function preparePopulatedPlaybooks(page: Page): Promise<void> {
   await query.press("Enter");
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
   const submitted = page.locator("#search-run-attribution");
-  await expect(submitted).toContainText("Single index");
-  await expect(submitted).toContainText("ScrypathEcommerce.Catalog.Product");
+  await expect(submitted).toHaveAttribute("data-mode", "single");
+  await expect(submitted).toHaveAttribute("data-schemas", JSON.stringify(["ScrypathEcommerce.Catalog.Product"]));
   await expect(submitted).toContainText("quantum");
-  await expect(submitted).toContainText("Page size");
+  await expect(submitted).toHaveAttribute("data-limit", "15");
   await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
   await expect(page.locator(".ops-result-row").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Run current search" })).toHaveCount(0);
 
   await query.fill("a later query edit");
   await expect(submitted).toContainText("quantum");
-  await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
+  await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
 
   const basename = `surface-depth-${Date.now()}.json`;
   await page.getByRole("button", { name: "Save search" }).click();
@@ -528,8 +528,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
             switch (target.id) {
               case "search-results":
-                await expectFlatSurface2(page, ".ops-result-row", "search result row");
-                await expectPrimaryHover55(page, ".ops-result-row", "search result row");
+                await expect(page.locator(".ops-search-hit").first()).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+                await expect(page.locator(".ops-search-hit").first()).toHaveCSS("box-shadow", "none");
                 break;
               case "search-zero-results":
                 await expectRaisedAboveFloor(page, ".ops-muted-panel", "search zero-results muted panel");
@@ -619,12 +619,12 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
           await expect(page.locator(".ops-result-row").first()).toBeVisible();
           const submitted = page.locator("#search-run-attribution");
-          await expect(submitted).toContainText("Single index");
-          await expect(submitted).toContainText("ScrypathEcommerce.Catalog.Product");
-          await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
+          await expect(submitted).toHaveAttribute("data-mode", "single");
+          await expect(submitted).toHaveAttribute("data-schemas", JSON.stringify(["ScrypathEcommerce.Catalog.Product"]));
+          await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
 
           await query.fill("a later query edit");
-          await expect(page.getByTestId("search-submitted-query")).toHaveText("quantum");
+          await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
           await expectSearchDocumentToFit(page);
           await query.blur();
           await page.evaluate(() => window.scrollTo(0, 0));
@@ -670,7 +670,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await gotoSearch(page);
           const query = `phase176-no-hit-${Date.now()}-${viewport.width}`;
           const queryInput = page.getByLabel("Search text");
-          await page.getByLabel("Results per schema").fill("10");
+          await page.getByLabel("Result limit", { exact: true }).fill("10");
           await queryInput.fill(query);
           await queryInput.press("Enter");
           await expect(page.getByTestId("search-outcome")).toContainText("Search completed");
@@ -682,7 +682,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await expect(captureForm).toBeVisible();
           await expect(page.locator("#search-capture-json")).not.toHaveAttribute("open", "");
           await expect(
-            page.getByText("Choose a new filename ending in .json. Existing files are kept.")
+            page.getByText("Choose a new .json filename. Existing files are kept.")
           ).toBeVisible();
           await expectSearchDocumentToFit(page);
 

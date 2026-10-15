@@ -19,13 +19,11 @@ progress:
 
 # Project State
 
-## UI baseline follow-up — verified 2026-10-14
+## UI follow-up — locally verified 2026-10-15
 
-**Resume here:** [reference/continue.md](reference/continue.md). The three baseline batches are implemented and verified on `fix/ui-task-baseline`, PR [#105](https://github.com/szTheory/scrypath/pull/105). Browser inventory: 167/168 full-run passes plus the corrected transition assertion in a 6/6 scoped recheck; Ops: 309 tests + 2 doctests; demo: 12 tests; review safeguards: 7 tests. All 63 entry captures were reviewed, source binding checked and feedback reconciled. Check PR #105 for final required CI/merge state; if merged, the baseline has no remaining implementation work. Port 4002 serves the canonical checkout in `UI-PREVIEW.json` with seeding disabled; mutating checks use an isolated stack. Preserve current brand and preview data.
+**Resume here:** [reference/continue.md](reference/continue.md). The maintainer authorized and the agent implemented the second 24-item review round on `fix/ui-feedback-baseline`, after merged PR #105. Outcomes and exact test/run caveats: [UI-FOLLOWUP-RESULTS.md](reference/UI-FOLLOWUP-RESULTS.md). Current next action is PR delivery on green current-head required CI and Ops. Standing squash-merge approval applies; do not ask again or replay completed phases.
 
-The maintainer authorized a systematic whole-UI pass including unreported problems and squash merge after required CI is green. The maintained role/job/language authority is `reference/OPERATOR-UI-QUALITY.md`; all reported feedback remains in `UI-FEEDBACK.md`. Read `reference/UI-BASELINE-PLAN.md` for the three concrete task outcomes; do not restart discovery or implement another aesthetic direction.
-
-PRs #102–104 delivered the preceding source recovery, artifact preservation and preflight safeguards. This follow-up does not reopen completed Phases 173–177. The numbered-phase frontmatter and project-reference chronology below are historical, not active routing instructions.
+All feedback is reconciled in `UI-FEEDBACK.md`. Ops: 313 tests + 2 doctests; demo: 38 tests; review tooling: 7 tests. The 175 browser cases are covered through full and corrected scoped runs; the final rendered matrix has 72 captures, zero mechanical findings and a distinct in-thread critique. Preserve the established brand, retained port-4002 preview data and untracked `my-search.json`. Canonical checkout: `UI-PREVIEW.json`. The numbered-phase frontmatter and chronology below are historical routing context, not a request to resume those phases.
 
 ## Historical project reference
 

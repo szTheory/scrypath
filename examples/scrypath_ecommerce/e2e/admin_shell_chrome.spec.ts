@@ -48,7 +48,7 @@ import {
 
 import { assertDialogCycle, assertOperatorGeometry, assertReadableControl, scanNonContrastA11y } from "./helpers/operator-ui";
 
-const PLAYBOOK_WORKSPACE_DIR = join(process.cwd(), "priv/playbooks");
+const PLAYBOOK_WORKSPACE_DIR = process.env.PLAYBOOK_WORKSPACE_DIR || join(process.cwd(), "priv/playbooks");
 const SHELL_PLAYBOOK_PREFIX = "shell-chrome-";
 
 type ShellSurface = {
