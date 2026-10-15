@@ -1,6 +1,6 @@
 # Scrypath UI iteration 3
 
-All three implementation batches and their verification are complete. This report supersedes the iteration-3 handoff's unimplemented status, not the historical PR #106 receipts. The mounted checkout remains `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, on `fix/ui-iteration-3`.
+All three implementation batches and their verification are complete. Draft [PR #107](https://github.com/szTheory/scrypath/pull/107), implementation commit `ec8430f2c211f34d51c42e4f0a31b7890044cb4f`. This report supersedes the iteration-3 handoff's unimplemented status, not the historical PR #106 receipts. The mounted checkout remains `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, on `fix/ui-iteration-3`.
 
 ## Delivered behavior and feedback disposition
 
@@ -51,3 +51,11 @@ Retained preview: `http://127.0.0.1:4002/admin/search`, container `scrypath_ecom
 Mutation tests use project `scrypath_ui3` at 4013/4014, a separate Postgres/Meilisearch pair and `/tmp/scrypath-ui3-playbooks`. The initial broad harness was stopped when its default fixture-folder mismatch was found; fixture storage was corrected before final runs. No retained file was overwritten or deleted. Owned backend history was recreated between broad runs rather than relaxing the 1000-task observation guard.
 
 Pagination does not promise a stable snapshot across changing data. Titles/descriptions remain heuristics, with original full fields/raw values available. Federated source data remains reconstructed, not an exact original HTTP packet. Host infrastructure, authorization and end-user search controls remain app-owned. The separate dependency advisory remains outside this UI pass.
+
+## Delivery and cleanup
+
+Draft PR #107 is open; no merge was performed. The canonical checkout retains the local feedback checkpoints in its ancestry rather than discarding them. The PR diff carries this implementation and its delivery/feedback records; it does not republish the already-merged PR #106 product changes.
+
+All containers, network and seven named volumes for the explicitly owned `scrypath_ui3` project were removed after verification. Temporary fixture files and local ignored screenshots/logs remain available; ports 4013/4014 are no longer live proof targets. The retained 4002 preview is running, healthy and seed-disabled, with the saved-file hash unchanged.
+
+Hosted CI on the implementation commit is running at https://github.com/szTheory/scrypath/actions/runs/38782135398. Website passed. The deep-quality advisory reports the same unchanged locked Bandit 1.12.5, Cloak Ecto 1.3.0, Decimal 3.1.1 and Cloak 1.1.4 findings already tracked in the separate dependency task; no dependency locks were changed or findings suppressed. Remaining hosted check status should be read from the PR, not inferred from this local receipt.
