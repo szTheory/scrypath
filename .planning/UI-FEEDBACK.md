@@ -119,7 +119,7 @@ Follow-up disposition: all 24 entries above were synthesized as one shared-contr
 
 ## Next review round — 2026-10-15, after PR #106
 
-The maintainer requests another coherent pass rather than isolated fixes for each message. Preserve the full feedback signal, review the related controls across the app, and synthesize these together with subsequent feedback. These entries are recorded and source-triaged; product code has not changed in this round. Earlier delivered dispositions remain historical, not blanket acceptance of the present UI.
+The maintainer concluded this feedback round on 2026-10-15 and wants to compact, then request another systematic implementation pass. Preserve the full signal and review beyond these examples. All 25 entries below are recorded and source-triaged; product code has not changed in this round. The next start request should execute [UI iteration 3](reference/UI-ITERATION-3.md), not restart discussion or reopen delivered phases. Earlier delivered dispositions remain historical, not blanket acceptance of the present UI. Twelve original screenshots are retained locally under `examples/scrypath_ecommerce/ui-review-artifacts/maintainer-feedback-2026-10-15/`, with an index/manifest and hashes; they are pre-change feedback evidence, not approved baselines.
 
 | ID | Feedback | Source evidence and intended acceptance | Status |
 | --- | --- | --- | --- |
