@@ -6,7 +6,7 @@
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Iteration 3 implemented and verified; seed-disabled retained data",
+  "status": "Paused 2026-10-22; implementation delivered; retained services stopped; PR 107 required mounted-app gate failed",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -23,5 +23,10 @@
   "iteration3_pr": "https://github.com/szTheory/scrypath/pull/107",
   "iteration3_implementation": "ec8430f2c211f34d51c42e4f0a31b7890044cb4f",
   "iteration3_verification_stack_removed": true,
-  "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md"
+  "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md",
+  "pause_handoff": ".planning/.continue-here.md",
+  "structured_handoff": ".planning/HANDOFF.json",
+  "runtime_checked_at": "2026-10-22T23:51:25.108Z",
+  "runtime_status": "exited",
+  "implementation_head": "c6522ea814437345ac4720a68010e8b066adeccb"
 }
