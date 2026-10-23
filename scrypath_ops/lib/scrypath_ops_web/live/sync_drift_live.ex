@@ -2280,16 +2280,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                   {difference.setting}
                 </span>
               </th>
-              <td class="align-top">
+              <td class="align-top" data-label="Declared in schema">
                 <pre class="whitespace-pre-wrap break-words text-ops-sm">{difference.declared}</pre>
               </td>
-              <td class="align-top">
+              <td class="align-top" data-label="Live in Meilisearch">
                 <pre
                   class="ops-setting-live whitespace-pre-wrap break-words text-ops-sm"
                   data-missing={to_string(difference.missing?)}
                 >{difference.live}</pre>
               </td>
-              <td class="align-top text-ops-sm">{difference.effect}</td>
+              <td class="align-top text-ops-sm" data-label="Effect">{difference.effect}</td>
             </tr>
           </tbody>
         </.ops_table>

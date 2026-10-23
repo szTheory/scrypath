@@ -291,7 +291,7 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       |> render_change(%{"q" => "weekly", "page_size" => "10", "schema" => inspect(OpsPostA)})
 
       view |> element("#search-save-as") |> render_click()
-      assert has_element?(view, "#saved-search-name-modal-title", "Save as")
+      assert has_element?(view, "#saved-search-name-modal-title", "Save as new search")
 
       view |> form("#saved-search-name-form", %{"name" => "Weekly"}) |> render_submit()
 
@@ -533,7 +533,7 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       |> render_upload("huge.json")
 
       render_change(view, "validate_import", %{})
-      assert has_element?(view, "#saved-search-import-error", "larger than 256000 bytes")
+      assert has_element?(view, "#saved-search-import-error", "larger than 256 KB")
     end
 
     test "paste import names and validates pasted JSON", %{conn: conn} do

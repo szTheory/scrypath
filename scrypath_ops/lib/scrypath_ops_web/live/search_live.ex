@@ -387,7 +387,7 @@ defmodule ScrypathOpsWeb.SearchLive do
          assign(
            socket,
            :import_error,
-           "Couldn't import the pasted JSON. It's larger than #{@max_import_bytes} bytes."
+           "Couldn't import the pasted JSON. It's larger than #{import_limit_label()}."
          )}
 
       true ->
@@ -1015,7 +1015,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp upload_error_text(:too_large), do: "It's larger than #{@max_import_bytes} bytes."
+  defp upload_error_text(:too_large), do: "It's larger than #{import_limit_label()}."
   defp upload_error_text(:not_accepted), do: "Choose a .json file."
   defp upload_error_text(:too_many_files), do: "Choose one file at a time."
   defp upload_error_text(_other), do: "The file couldn't be uploaded."
@@ -1348,7 +1348,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   style="display: none;"
                 >
                   <p :if={@saved_searches == []} class="ops-saved-search-menu__empty">
-                    No saved searches yet.
+                    No saved searches yet. Run a search, then save it.
                   </p>
                   <ul :if={@saved_searches != []} aria-label="Saved searches">
                     <li :for={row <- @saved_searches}>
@@ -1729,7 +1729,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       <.ops_modal
         :if={@name_modal}
         id="saved-search-name-modal"
-        title={if @name_modal.kind == :save_as, do: "Save as", else: "Save search"}
+        title={if @name_modal.kind == :save_as, do: "Save as new search", else: "Save search"}
         description="Saves the search inputs shown in the form, not the results."
         action_label="save"
         initial_focus="#saved-search-name-input"
@@ -1921,7 +1921,7 @@ defmodule ScrypathOpsWeb.SearchLive do
         <section class="ops-saved-search-import" aria-labelledby="saved-search-import-heading">
           <h3 id="saved-search-import-heading" class="text-ops-body font-semibold">Import</h3>
           <p id="saved-search-import-hint" class="ops-search-query-hint">
-            A saved-search JSON file, up to {@max_import_bytes} bytes. It's named after the file.
+            Add a saved search from a JSON file up to {import_limit_label()}. It takes the file's name.
           </p>
           <p
             :if={@import_error}
@@ -1971,7 +1971,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                   required
                 />
               </.ops_field>
-              <.ops_field id="saved-search-paste-json" label="Saved-search JSON">
+              <.ops_field id="saved-search-paste-json" label="Saved search JSON">
                 <.ops_textarea
                   id="saved-search-paste-json"
                   name="json"
@@ -1998,6 +1998,8 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp loaded_status(_assigns), do: ""
 
+  defp import_limit_label, do: "#{div(@max_import_bytes, 1000)} KB"
+
   defp close_picker(js \\ %JS{}) do
     js
     |> JS.hide(to: "#saved-search-menu")
@@ -2009,7 +2011,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp format_run_error({:too_many_schemas, count, max}) do
-    "too many schemas selected (#{count}); maximum is #{max} (too_many_schemas)."
+    "Too many schemas selected (#{count}). Choose up to #{max}."
   end
 
   defp format_run_error({:config, :missing_backend}) do
@@ -2025,7 +2027,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp format_run_error({:config, :no_schemas_selected}) do
-    "Select at least one schema for multi-search."
+    "Select at least one schema."
   end
 
   defp format_run_error({:scrypath, reason}) do

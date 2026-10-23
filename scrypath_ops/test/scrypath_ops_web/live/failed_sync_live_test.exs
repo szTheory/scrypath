@@ -259,6 +259,14 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute has_element?(view, "input[name='schema[]'][value='ScrypathOps.Test.OpsPostA']:checked")
     assert has_element?(view, "[data-testid='failed-sync-row']", "#509")
     refute has_element?(view, "[data-testid='failed-sync-row']", "#501")
+
+    assert has_element?(
+             view,
+             "[data-testid='failed-sync-filter-note']",
+             ~r/\d+ more hidden by filters\./
+           )
+
+    assert has_element?(view, "[data-testid='failed-sync-filter-note'] a", "Clear filters")
     assert has_element?(view, "a[href='/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB']")
   end
 
@@ -608,7 +616,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
 
-    assert html =~ "The job didn&#39;t keep its record ids, so it can&#39;t be retried here."
+    assert html =~ "The job didn&#39;t keep its record IDs, so it can&#39;t be retried here."
     refute has_element?(view, "[data-testid='failed-sync-retry']")
     refute html =~ "then retry"
     assert html =~ "Review the error and fix its cause."

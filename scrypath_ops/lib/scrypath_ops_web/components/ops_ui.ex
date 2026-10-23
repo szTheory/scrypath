@@ -1545,8 +1545,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           phx-click={@cancel_event}
           aria-label={"Close #{@title} dialog"}
         >
-          <span class="sr-only">Close</span>
-          <span aria-hidden="true">×</span>
+          <.icon name="hero-x-mark" class="size-5" />
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>
         <p

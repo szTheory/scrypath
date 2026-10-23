@@ -75,15 +75,18 @@ defmodule ScrypathOpsWeb.ResultUi do
           </div>
         </dl>
         <div class="ops-hit-inspection">
-          <details :if={@fields != []} class="ops-value-details">
-            <summary>Fields ({length(@fields)})</summary>
+          <.ops_disclosure
+            :if={@fields != []}
+            summary={"Fields (#{length(@fields)})"}
+            variant={:compact}
+          >
             <dl class="ops-hit-fields">
               <div :for={{key, value} <- @fields}>
                 <dt title={to_string(key)}>{field_label(key)}</dt>
                 <dd><.result_value value={value} /></dd>
               </div>
             </dl>
-          </details>
+          </.ops_disclosure>
           <.ops_disclosure summary="Raw hit payload" variant={:compact}>
             <.ops_code_block variant={:compact} text={@raw} copy copy_label="Copy hit payload" />
           </.ops_disclosure>

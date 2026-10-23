@@ -3840,6 +3840,12 @@
     font-weight: 600;
     color: var(--color-base-content);
   }
+  @media (max-width: 639px) {
+    .ops-schema-picker__choice-copy {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
   .ops-schema-picker__module-name {
     min-width: 0;
     font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
@@ -5308,7 +5314,7 @@
       display: none;
     }
     .ops-search-form {
-      padding: 1rem;
+      padding: 0 0 1.25rem;
     }
   }
 }
@@ -5558,6 +5564,39 @@
   .ops-settings-diff thead th {
     color: var(--color-base-content);
   }
+  @media (max-width: 639px) {
+    .ops-settings-diff table, .ops-settings-diff tbody {
+      display: block;
+      min-width: 0;
+    }
+    .ops-settings-diff thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .ops-settings-diff tr {
+      display: grid;
+      gap: .5rem;
+      padding-block: .75rem;
+      border-bottom: 1px solid var(--color-base-300);
+    }
+    .ops-settings-diff th, .ops-settings-diff td {
+      display: block;
+      width: auto;
+      border: 0;
+    }
+    .ops-settings-diff td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: .125rem;
+      font-size: var(--text-ops-sm);
+      font-weight: 600;
+      color: var(--ops-text-muted);
+    }
+  }
   .ops-setting-description {
     display: block;
     margin-top: .25rem;
@@ -5582,6 +5621,17 @@
     flex-wrap: wrap;
     gap: .5rem 1.5rem;
     font-size: var(--text-ops-sm);
+  }
+  .ops-sync-related .ops-sync-activity-link {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    text-decoration-color: currentColor;
+    @supports (color: color-mix(in lab, red, red)) {
+      text-decoration-color: color-mix(in oklch, currentColor 45%, transparent);
+    }
+  }
+  .ops-sync-related .ops-sync-activity-link:hover {
+    text-decoration-color: currentColor;
   }
   .ops-search-outcome {
     font-size: var(--text-ops-h2);
@@ -5800,8 +5850,17 @@
     color: var(--ops-text-muted);
   }
   .ops-sync-identity code {
-    font-size: var(--text-ops-sm);
     color: var(--color-base-content);
+  }
+  @media (max-width: 639px) {
+    .ops-sync-identity {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .125rem;
+    }
+    .ops-sync-identity > [aria-hidden="true"] {
+      display: none;
+    }
   }
   .ops-sync-work {
     display: grid;
@@ -6041,9 +6100,10 @@
     border-bottom: 1px solid var(--color-base-300);
     min-width: 0;
   }
-  .ops-saved-search-row--loaded {
-    box-shadow: inset 3px 0 0 var(--color-primary);
-    padding-left: .75rem;
+  .ops-saved-search-row--loaded .ops-saved-search-row__name::after {
+    content: " · loaded";
+    font-weight: 400;
+    color: var(--ops-text-muted);
   }
   .ops-saved-search-row__name {
     font-size: var(--text-ops-body);
@@ -6112,10 +6172,17 @@
   }
   .ops-failed-filters__legend {
     float: left;
-    margin-right: .25rem;
+    width: 100%;
+    margin-bottom: .125rem;
     font-size: var(--text-ops-sm);
     font-weight: 600;
     color: var(--ops-text-muted);
+  }
+  @media (min-width: 640px) {
+    .ops-failed-filters__legend {
+      width: 3.5rem;
+      margin-bottom: 0;
+    }
   }
   .ops-filter-chip {
     display: inline-flex;
@@ -6204,6 +6271,17 @@
     min-height: 1.5rem;
     padding: 0;
   }
+  @media (max-width: 767px) {
+    .ops-failed-row__facts {
+      column-gap: .875rem;
+    }
+    .ops-failed-row__sep {
+      display: none;
+    }
+    .ops-failed-row__title {
+      flex-basis: auto;
+    }
+  }
   .ops-failed-row__actions {
     display: flex;
     flex-wrap: wrap;
@@ -6288,6 +6366,14 @@
   }
   .ops-code-block--expanded .ops-code-expand__less {
     display: inline;
+  }
+}
+.ops-sync-identity code {
+  font-size: var(--text-ops-sm);
+}
+@media (max-width: 639px) {
+  .ops-settings-diff th, .ops-settings-diff td {
+    padding: 0;
   }
 }
 .ops-code-block--inline-copy.ops-code-block--copyable pre {

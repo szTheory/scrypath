@@ -1095,6 +1095,10 @@
     color: var(--color-base-content);
   }
 
+  @media (max-width: 639px) {
+    .ops-schema-picker__choice-copy { flex-direction: column; align-items: flex-start; }
+  }
+
   .ops-schema-picker__module-name {
     min-width: 0;
     font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
@@ -2472,7 +2476,7 @@
   @media (max-width: 639px) {
     .ops-header__inner { gap: .5rem; }
     .ops-time-preference > span { display: none; }
-    .ops-search-form { padding: 1rem; }
+    .ops-search-form { padding: 0 0 1.25rem; }
   }
 }
 
@@ -2537,10 +2541,20 @@
   .ops-settings-diff table { min-width: 44rem; }
   .ops-settings-diff th, .ops-settings-diff td { width: 25%; }
   .ops-settings-diff thead th { color: var(--color-base-content); }
+  /* Phones: each difference stacks with its own column labels instead of hiding columns off-screen. */
+  @media (max-width: 639px) {
+    .ops-settings-diff table, .ops-settings-diff tbody { display: block; min-width: 0; }
+    .ops-settings-diff thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .ops-settings-diff tr { display: grid; gap: .5rem; padding-block: .75rem; border-bottom: 1px solid var(--color-base-300); }
+    .ops-settings-diff th, .ops-settings-diff td { display: block; width: auto; border: 0; }
+    .ops-settings-diff td[data-label]::before { content: attr(data-label); display: block; margin-bottom: .125rem; font-size: var(--text-ops-sm); font-weight: 600; color: var(--ops-text-muted); }
+  }
   .ops-setting-description { display: block; margin-top: .25rem; font-size: var(--text-ops-sm); font-weight: 400; color: var(--ops-text-muted); }
   .ops-sync-activity-link { display: inline-flex; align-items: center; gap: .375rem; color: inherit; text-decoration: none; min-height: var(--control-h-sm); }
   .ops-sync-activity-link:hover { text-decoration: underline; text-underline-offset: .2em; }
   .ops-sync-related { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; font-size: var(--text-ops-sm); }
+  .ops-sync-related .ops-sync-activity-link { text-decoration: underline; text-underline-offset: .2em; text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); }
+  .ops-sync-related .ops-sync-activity-link:hover { text-decoration-color: currentColor; }
   .ops-search-outcome { font-size: var(--text-ops-h2); font-weight: 600; }
   .ops-search-hits { min-width: 0; }
   .ops-readable-hit { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; padding-block: .75rem; border-bottom: 1px solid var(--color-base-300); font-size: var(--text-ops-body); background: transparent; }
@@ -2586,7 +2600,11 @@
   .ops-signal-success dt { font-size: var(--text-ops-sm); color: var(--ops-text-muted); margin-bottom: .25rem; }
   .ops-signal-success dd { font-size: var(--text-ops-body); color: var(--ops-text-muted); }
   .ops-sync-identity { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .375rem; font-size: var(--text-ops-sm); color: var(--ops-text-muted); }
-  .ops-sync-identity code { font-size: var(--text-ops-sm); color: var(--color-base-content); }
+  .ops-sync-identity code { color: var(--color-base-content); }
+  @media (max-width: 639px) {
+    .ops-sync-identity { flex-direction: column; align-items: flex-start; gap: .125rem; }
+    .ops-sync-identity > [aria-hidden="true"] { display: none; }
+  }
   .ops-sync-work { display: grid; gap: .5rem; margin-block: .25rem .5rem; }
   .ops-sync-work li { display: flex; align-items: center; gap: .5rem; }
   .ops-sync-work li > svg { flex-shrink: 0; }
@@ -2671,7 +2689,7 @@
 
   .ops-saved-search-list { display: grid; border-top: 1px solid var(--color-base-300); }
   .ops-saved-search-row { display: grid; gap: .5rem; padding-block: .875rem; border-bottom: 1px solid var(--color-base-300); min-width: 0; }
-  .ops-saved-search-row--loaded { box-shadow: inset 3px 0 0 var(--color-primary); padding-left: .75rem; }
+  .ops-saved-search-row--loaded .ops-saved-search-row__name::after { content: " · loaded"; font-weight: 400; color: var(--ops-text-muted); }
   .ops-saved-search-row__name { font-size: var(--text-ops-body); font-weight: 600; overflow-wrap: anywhere; }
   .ops-saved-search-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; }
   .ops-saved-search-row__actions .ops-btn { min-height: max(24px, var(--control-h-sm)); }
@@ -2695,7 +2713,10 @@
 @layer components {
   .ops-failed-filters { display: grid; gap: .5rem; }
   .ops-failed-filters__group { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem .5rem; min-width: 0; border: 0; padding: 0; margin: 0; }
-  .ops-failed-filters__legend { float: left; margin-right: .25rem; font-size: var(--text-ops-sm); font-weight: 600; color: var(--ops-text-muted); }
+  .ops-failed-filters__legend { float: left; width: 100%; margin-bottom: .125rem; font-size: var(--text-ops-sm); font-weight: 600; color: var(--ops-text-muted); }
+  @media (min-width: 640px) {
+    .ops-failed-filters__legend { width: 3.5rem; margin-bottom: 0; }
+  }
   .ops-filter-chip { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-xs); padding-inline: .5rem .625rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-ops-control); background: var(--ops-surface-1); color: var(--color-base-content); font-size: var(--text-ops-sm); cursor: pointer; transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard); }
   .ops-filter-chip:hover { background: var(--ops-surface-2); }
   .ops-filter-chip input { width: .875rem; height: .875rem; margin: 0; accent-color: var(--color-primary); cursor: pointer; }
@@ -2711,6 +2732,12 @@
   .ops-failed-row__title { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; margin: 0; font-size: var(--text-ops-body); font-weight: 600; color: var(--color-base-content); }
   .ops-failed-row__ids { font-family: var(--font-mono); overflow-wrap: anywhere; color: var(--color-base-content); }
   .ops-failed-row__time .ops-time__stamp { min-height: 1.5rem; padding: 0; }
+  /* Narrow rows wrap their facts, so dot separators would dangle at line ends; use spacing instead. */
+  @media (max-width: 767px) {
+    .ops-failed-row__facts { column-gap: .875rem; }
+    .ops-failed-row__sep { display: none; }
+    .ops-failed-row__title { flex-basis: auto; }
+  }
   .ops-failed-row__actions { display: flex; flex-wrap: wrap; gap: var(--spacing-ops-control-gap); }
   .ops-failed-row__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .25rem 1rem; min-width: 0; }
   .ops-failed-row__guidance { flex: 1 1 20rem; min-width: 0; margin: 0; color: var(--color-base-content); }
@@ -2730,6 +2757,12 @@
   .ops-code-expand { display: inline-flex; align-items: center; min-height: var(--control-h-xs); margin-top: .25rem; padding: 0; border: 0; background: transparent; color: var(--color-base-content); font-size: var(--text-ops-sm); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: .2em; }
   .ops-code-expand__less, .ops-code-block--expanded .ops-code-expand__more { display: none; }
   .ops-code-block--expanded .ops-code-expand__less { display: inline; }
+}
+
+/* Unlayered so they beat the inline-code and daisyUI table utilities. */
+.ops-sync-identity code { font-size: var(--text-ops-sm); }
+@media (max-width: 639px) {
+  .ops-settings-diff th, .ops-settings-diff td { padding: 0; }
 }
 
 /* Unlayered so they beat the code block's variant utilities. */

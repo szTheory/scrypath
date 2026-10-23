@@ -366,8 +366,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     |> render_submit(%{"q" => "probe", "page_size" => "5", "schemas" => []})
 
     multi_html = render(multi_view)
-    assert multi_html =~ "Select at least one schema for multi-search."
-    assert multi_html =~ "Select at least one schema for multi-search."
+    assert multi_html =~ "Select at least one schema."
+    assert multi_html =~ "Select at least one schema."
     refute multi_html =~ "Search completed:"
   end
 

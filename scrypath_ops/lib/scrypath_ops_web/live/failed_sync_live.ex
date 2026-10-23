@@ -669,7 +669,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     do: "The operation is unknown, so this can't be retried here."
 
   defp retry_eligibility(_),
-    do: "The job didn't keep its record ids, so it can't be retried here."
+    do: "The job didn't keep its record IDs, so it can't be retried here."
 
   defp operation_label(:upsert), do: "Add or update"
   defp operation_label(:delete), do: "Delete"
@@ -731,7 +731,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     known =
       [
         {"Worker", Map.get(metadata, :worker)},
-        {"Index", Map.get(metadata, :index) || (row.recovery && row.recovery.index)},
+        {"Meilisearch index", Map.get(metadata, :index) || (row.recovery && row.recovery.index)},
         {"Attempts", attempts_label(row)},
         {"Meilisearch task type", Map.get(metadata, :type)},
         {"Meilisearch task",
@@ -828,6 +828,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       |> assign(:all_failed?, all_scoped_failed?(assigns))
       |> assign(:filtered?, filtered?)
       |> assign(:filtered_out?, rows == [] and filtered? and any_rows?)
+      |> assign(
+        :hidden_count,
+        if(filtered?, do: length(all_rows(assigns)) - length(rows), else: 0)
+      )
       |> assign(:show_filters?, any_rows? or filtered?)
       |> assign(:summary_kind, summary_kind(rows, assigns))
       |> assign(:summary_headline, summary_headline(rows, assigns))
@@ -922,6 +926,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             data-testid="failed-sync-summary"
           >
             <span :if={@rows != []}>{summary_guidance(@rows)}</span>
+            <span :if={@rows != [] and @hidden_count > 0} data-testid="failed-sync-filter-note">
+              {@hidden_count} more hidden by filters.
+              <.link
+                patch={filter_path(@mount_path, [], [])}
+                class="link underline underline-offset-2"
+              >
+                Clear filters
+              </.link>
+            </span>
             <span :if={@filtered_out?}>
               <.link
                 patch={filter_path(@mount_path, [], [])}
@@ -1022,14 +1035,16 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 <span aria-hidden="true">·</span>
                 {operation_label(row.operation)}
               </h3>
-              <span aria-hidden="true">·</span>
+              <span class="ops-failed-row__sep" aria-hidden="true">·</span>
               <span>{source_label(row)}</span>
-              <span :if={record_count_label(row)} aria-hidden="true">·</span>
+              <span :if={record_count_label(row)} class="ops-failed-row__sep" aria-hidden="true">
+                ·
+              </span>
               <span :if={record_count_label(row)} data-testid="failed-sync-records">
                 {record_count_label(row)}<span :if={preview = record_id_preview(row)}>:
                   <code class="ops-failed-row__ids">{elem(preview, 0)}</code>{elem(preview, 1)}</span>
               </span>
-              <span aria-hidden="true">·</span>
+              <span class="ops-failed-row__sep" aria-hidden="true">·</span>
               <span class="ops-failed-row__time">
                 <span class="sr-only">Last attempt</span>
                 <.ops_time
@@ -1120,6 +1135,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                   label="Job args"
                   text={job_args(row)}
                   copy
+                  inline_copy
                   copy_label="Copy job args"
                   copy_success="Job args copied"
                 />
