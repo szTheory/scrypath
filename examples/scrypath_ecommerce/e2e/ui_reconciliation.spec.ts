@@ -3,18 +3,29 @@ import { openManageSavedSearches, waitForLiveConnected } from "./helpers/e2e";
 
 // Observation-only regression proof. Never seed or submit recovery/file actions here.
 const routes = ["/admin/search/failed-sync", "/admin/search/sync-and-index", "/admin/search/search"];
+// Failed sync filters schemas with checkboxes; the single-schema radio pickers live on these.
+const radioRoutes = routes.slice(1);
 
-for (const route of routes.slice(0, 2)) {
-  test(`unresolved scope never silently selects the first schema — ${route}`, async ({ page }) => {
-    await page.goto(`${route}?schema=UnknownSchema`);
-    await waitForLiveConnected(page);
-    await expect(page.getByRole("radio", { name: /Product/ })).not.toBeChecked();
-    await expect(page.getByRole("radio", { name: /Variant/ })).not.toBeChecked();
-    await page.getByRole("radio", { name: /Product/ }).check();
-    await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-    await expect(page.getByRole("radio", { name: /Product/ })).toBeChecked();
-  });
-}
+test("unresolved scope never silently selects the first schema — /admin/search/failed-sync", async ({ page }) => {
+  await page.goto("/admin/search/failed-sync?schema=UnknownSchema");
+  await waitForLiveConnected(page);
+  await expect(page.getByText("That schema is unavailable.")).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveCount(0);
+  await page.getByRole("link", { name: "Show all schemas" }).click();
+  await expect(page).not.toHaveURL(/schema=/);
+  await expect(page.getByTestId("failed-sync-summary")).toBeVisible();
+});
+
+test("unresolved scope never silently selects the first schema — /admin/search/sync-and-index", async ({ page }) => {
+  await page.goto("/admin/search/sync-and-index?schema=UnknownSchema");
+  await waitForLiveConnected(page);
+  await expect(page.getByRole("radio", { name: /Product/ })).not.toBeChecked();
+  await expect(page.getByRole("radio", { name: /Variant/ })).not.toBeChecked();
+  await page.getByRole("radio", { name: /Product/ }).check();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
+  await expect(page.getByRole("radio", { name: /Product/ })).toBeChecked();
+});
 for (const theme of ["light", "dark", "system"] as const) {
   for (const width of [1440, 390]) {
     test(`native schema radios stay visible and select correctly — ${theme} ${width}`, async ({ page }) => {
@@ -24,7 +35,7 @@ for (const theme of ["light", "dark", "system"] as const) {
         if (value === "system") localStorage.removeItem("phx:theme");
         else localStorage.setItem("phx:theme", value);
       }, theme);
-      for (const route of routes) {
+      for (const route of radioRoutes) {
         await page.goto(route);
         await waitForLiveConnected(page);
         const product = page.getByRole("radio", { name: /Product/ });

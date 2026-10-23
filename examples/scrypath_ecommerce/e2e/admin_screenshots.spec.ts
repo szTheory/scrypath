@@ -54,7 +54,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
   await expect(failedRow.getByText(/unknown_module.*NotARealBackend/)).toBeVisible();
-  await failedRow.getByText("Job details", { exact: true }).click();
+  await failedRow.getByText("More details", { exact: true }).click();
   await expect(failedRow.locator("details")).toHaveAttribute("open", "");
   await expect(failedRow.locator("details dl")).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");

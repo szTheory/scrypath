@@ -508,11 +508,14 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         await assertReadableControl(primary, `${surface.name} common action`, 14, 40);
         await page.evaluate(() => window.scrollTo(0, 0));
         if (width === 390 && surface.name === "Failed Sync") {
-          const summary = page.locator("#failed-sync-rollups-heading").locator("..");
-          await expect(summary.locator("#failed-sync-rollups-heading span")).toHaveCount(5);
-          await expect(summary).toContainText("unknown 1");
-          expect((await summary.boundingBox())!.height, "total plus five reason counts remain compact").toBeLessThanOrEqual(160);
-          await expect(page.getByRole("radio")).toHaveCount(2);
+          const filters = page.locator("#failed-sync-filters");
+          const causes = filters.getByTestId("failed-sync-cause-filter");
+          await expect(causes).toHaveCount(5);
+          await expect(causes.filter({ hasText: "Unknown cause" })).toContainText("1");
+          for (const chip of await causes.all()) await assertReadableControl(chip, "cause filter chip", 12, 24);
+          expect((await filters.boundingBox())!.height, "schema and cause filters remain compact").toBeLessThanOrEqual(240);
+          await expect(page.getByRole("radio")).toHaveCount(0);
+          await expect(filters.getByRole("checkbox", { name: /^(Product|Variant)/ })).toHaveCount(2);
         }
         if (width === 390) {
           await scanNonContrastA11y(page, testInfo, `${surface.name}-incident-light-390`);

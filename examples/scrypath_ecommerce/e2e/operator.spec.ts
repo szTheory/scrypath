@@ -49,6 +49,8 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const runMarker = marker();
   recordEvidence(testInfo, { fixture_marker: runMarker, schema: "Elixir.ScrypathEcommerce.Catalog.Variant", checked_outcome: "fixture setup started" });
   const fixture = await prepareRecoveryFixture(request, { tenantId: seed.tenant_id!, marker: runMarker });
+  // Rows name their source as "Oban <queue> #<id>"; match the id exactly.
+  const originalJobLabel = new RegExp(`Oban \\S+ #${fixture.original_job_id}\\b`);
   recordEvidence(testInfo, {
     fixture_marker: fixture.marker, schema: fixture.schema, index: fixture.index,
     original_job_id: fixture.original_job_id, original_attempt: fixture.original_attempt,
@@ -91,19 +93,25 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
 
-  // A real selection change advances this page's generation independently of the destination.
-  await page.getByRole("radio", { name: /Product/ }).check();
+  // The deep link preselects the Variant schema filter; adding Product widens it in the URL.
+  const variantFilter = page.getByRole("checkbox", { name: /^Variant/ });
+  const productFilter = page.getByRole("checkbox", { name: /^Product/ });
+  await expect(variantFilter).toBeChecked();
+  await expect(productFilter).not.toBeChecked();
+  await productFilter.check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-  await page.getByRole("radio", { name: /Variant/ }).check();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await productFilter.uncheck();
+  await expect(page).not.toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
-  const failedRow = page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` });
+  const failedRow = page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel });
   await expect(failedRow).toBeVisible();
   await expect(failedRow.getByTestId("failed-sync-retry")).toBeEnabled();
   const rowText = await failedRow.innerText();
-  expect(rowText).toContain(`Oban job #${fixture.original_job_id}`);
-  expect(rowText).toContain("Last attempt");
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  expect(rowText).toMatch(originalJobLabel);
+  expect(rowText).toContain("Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
 
   const lightPreference = page.locator("#theme-toggle button").filter({ hasText: "Light" });
@@ -121,7 +129,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
       scrollWidth: document.documentElement.scrollWidth
     }));
     expect(geometry.scrollWidth, `failed-work page must not overflow at ${width}px`).toBeLessThanOrEqual(geometry.width + 1);
-    await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+    await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
     await expect(failedRow.getByTestId("failed-sync-reason")).toBeVisible();
     await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
   }
@@ -208,27 +216,27 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.goForward();
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable.")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
-  await expect(page.locator("input[name='schema']:checked")).toHaveCount(0);
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveCount(0);
   await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel })).toBeVisible();
 });
 
 test("operator promotes only this returned task pair and unique target document", async ({ page, request }, testInfo) => {

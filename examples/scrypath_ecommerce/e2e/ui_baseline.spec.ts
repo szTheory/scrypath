@@ -63,7 +63,7 @@ test("empty failed work gives one confirmation without zero rollups or a second 
   await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
   await expect(page.getByText("dominant reason", { exact: false })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Refresh/ })).toHaveCount(1);
-  await expect(page.getByRole("link", { name: /Check sync and drift/ })).toHaveAttribute("href", /schema=ScrypathEcommerce.Catalog.Variant/);
+  await expect(page.getByRole("link", { name: /Check sync and index/ })).toHaveAttribute("href", /schema=ScrypathEcommerce.Catalog.Variant/);
 });
 
 test("shared time preference persists, converts local time and copies exact source precision", async ({ browser }) => {
