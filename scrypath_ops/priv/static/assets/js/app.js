@@ -9432,6 +9432,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
       e.stopImmediatePropagation();
     },
     trapFocus(e) {
+      this.queueFocusReturn(e.shiftKey);
       const focusables = this.focusableElements();
       if (!focusables.length) {
         e.preventDefault();
@@ -9450,6 +9451,18 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         e.preventDefault();
         first.focus({ preventScroll: true });
       }
+    },
+    // Safety net: if the browser's tab order still carries focus out of the dialog
+    // (onto the inert page, i.e. <body>), wrap it back to the matching end.
+    queueFocusReturn(backwards) {
+      window.setTimeout(() => {
+        if (activeOpsModal !== this || !this.el.isConnected) return;
+        if (this.el.contains(document.activeElement)) return;
+        const focusables = this.focusableElements();
+        const target = backwards ? focusables[focusables.length - 1] : focusables[0];
+        if (target) target.focus({ preventScroll: true });
+        else this.focusInitial();
+      }, 0);
     },
     close() {
       const event = this.el.dataset.opsModalCancelEvent;
