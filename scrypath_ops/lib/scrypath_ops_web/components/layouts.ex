@@ -336,7 +336,7 @@ defmodule ScrypathOpsWeb.Layouts do
 
   defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
   defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
-  defp nav_item_icon(%{label: "Sync and drift"}), do: "hero-arrows-right-left"
+  defp nav_item_icon(%{label: "Sync and index"}), do: "hero-arrows-right-left"
   defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
   defp nav_item_icon(_item), do: "hero-square-2-stack"
 

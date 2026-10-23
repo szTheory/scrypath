@@ -195,9 +195,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       assert_ops_shell!(html, "Failed sync work")
     end
 
-    test "/ops/sync-drift", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift")
-      assert_ops_shell!(html, "Sync and drift")
+    test "/ops/sync-and-index", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/ops/sync-and-index")
+      assert_ops_shell!(html, "Sync and index")
     end
 
     test "/ops/search", %{conn: conn} do

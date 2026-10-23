@@ -135,8 +135,8 @@ defmodule ScrypathOps.Posture do
         navigate: "#{mount_path}/failed-sync"
       },
       %{
-        text: "Review read-only sync and drift signals before changing indexes.",
-        navigate: "#{mount_path}/sync-drift"
+        text: "Check sync progress and index settings before changing indexes.",
+        navigate: "#{mount_path}/sync-and-index"
       },
       %{
         text: "Walk Meilisearch operations expectations for the search backend.",
@@ -153,8 +153,8 @@ defmodule ScrypathOps.Posture do
         navigate: "#{mount_path}/failed-sync"
       },
       %{
-        text: "Confirm drift and queue visibility when changing sync modes.",
-        navigate: "#{mount_path}/sync-drift"
+        text: "Check sync progress and index settings when changing sync modes.",
+        navigate: "#{mount_path}/sync-and-index"
       },
       %{
         text: "Use search playground only after triage surfaces are quiet.",

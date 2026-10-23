@@ -81,12 +81,13 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @router =~ ~s(live("/health")
     assert @router =~ "live(\"/posture\", ScrypathOpsWeb.PostureLive, :legacy)"
     assert @router =~ ~s(live("/failed-sync")
-    assert @router =~ ~s(live("/sync-drift")
+    assert @router =~ ~s(live("/sync-and-index")
+    assert @router =~ "live(\"/sync-drift\", ScrypathOpsWeb.SyncDriftLive, :legacy)"
     assert @router =~ ~s(live("/search")
     assert @router =~ "live(\"/playbooks\", ScrypathOpsWeb.SearchLive, :legacy_saved_searches)"
 
     for path <-
-          ~w(/ops/health /ops/failed-sync /ops/sync-drift /ops/search /ops/playbooks /ops/search?saved=manage) do
+          ~w(/ops/health /ops/failed-sync /ops/sync-and-index /ops/sync-drift /ops/search /ops/playbooks /ops/search?saved=manage) do
       assert String.contains?(@operator_ia, path),
              "expected operator-ia.md to mention #{path} for router parity (phase 47 D-07 / D-17)"
     end
@@ -100,7 +101,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       "/ops/search",
       "/ops/health",
       "/ops/failed-sync",
-      "/ops/sync-drift",
+      "/ops/sync-and-index",
       "/ops/help"
     ]
 
@@ -108,7 +109,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       "Search",
       "Search health",
       "Failed sync work",
-      "Sync and drift",
+      "Sync and index",
       "Help"
     ]
 
@@ -125,7 +126,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       |> MapSet.new()
 
     for ops_path <- ops_live_paths(@router),
-        ops_path not in ["/ops/", "/ops/posture", "/ops/playbooks"] do
+        ops_path not in ["/ops/", "/ops/posture", "/ops/playbooks", "/ops/sync-drift"] do
       assert MapSet.member?(nav_path_strings, ops_path),
              "expected Nav.primary/0 to include #{inspect(ops_path)} for router :ops parity"
     end
@@ -136,7 +137,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @failed_sync_live =~ "def handle_params(params, _uri, socket)"
 
     assert @failed_sync_live =~
-             "OperatorSelection.path(@mount_path, \"sync-drift\", @selected_schema)"
+             "OperatorSelection.path(@mount_path, \"sync-and-index\", @selected_schema)"
 
     assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
 

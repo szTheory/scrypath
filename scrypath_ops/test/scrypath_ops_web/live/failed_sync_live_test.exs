@@ -185,7 +185,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Add or update documents"
     refute html =~ "Retry currently available."
     assert html =~ "the Variant source remains visible"
-    assert has_element?(view, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(view, "a[href='/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
 
     put_live_assigns(view,
@@ -279,7 +279,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
-    assert has_element?(lv, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
+    assert has_element?(lv, "a[href='/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 

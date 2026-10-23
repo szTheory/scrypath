@@ -483,7 +483,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Search health summary and Sync and drift promotion
+  the Control Room landing; also used for the Search health summary and Sync and index promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -552,7 +552,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:current, :atom,
     required: true,
-    values: [:control_room, :posture, :failed_sync, :sync_drift, :search]
+    values: [:control_room, :posture, :failed_sync, :sync_and_index, :search]
   )
 
   attr(:class, :any, default: nil)
@@ -1395,6 +1395,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:text, :string, default: nil)
   attr(:copy, :boolean, default: false)
   attr(:copy_label, :string, default: "Copy payload")
+  attr(:copy_success, :string, default: "Payload copied")
   slot(:inner_block)
 
   def ops_code_block(assigns) do
@@ -1405,7 +1406,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           type="button"
           class="ops-quiet-action"
           data-ops-copy-text={@text}
-          data-ops-copy-success="Payload copied"
+          data-ops-copy-success={@copy_success}
           aria-label={@copy_label}
         >
           <.icon name="hero-clipboard-document" class="size-4" /> Copy
@@ -1851,7 +1852,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp nav_hint("Search"), do: "Query your schemas"
   defp nav_hint("Search health"), do: "Failures and pending work"
   defp nav_hint("Failed sync work"), do: "Review errors and retry"
-  defp nav_hint("Sync and drift"), do: "Sync work and index settings"
+  defp nav_hint("Sync and index"), do: "Sync progress and index settings"
   defp nav_hint(_), do: ""
 
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.

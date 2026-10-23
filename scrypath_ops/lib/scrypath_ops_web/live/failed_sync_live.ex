@@ -389,7 +389,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         "recovery_generation" => receipt.generation
       })
 
-    "#{base}/sync-drift?#{query}"
+    "#{base}/sync-and-index?#{query}"
   end
 
   defp delete_confirmation_row(%FailedSyncWorkInspection{entries: entries}, id)
@@ -707,10 +707,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
       <.ops_handoff :if={@inspection && @selected_schema}>
         <:step
-          navigate={OperatorSelection.path(@mount_path, "sync-drift", @selected_schema)}
+          navigate={OperatorSelection.path(@mount_path, "sync-and-index", @selected_schema)}
           hint="Check pending work and index settings —"
         >
-          Check sync and drift
+          Check sync and index
         </:step>
       </.ops_handoff>
 

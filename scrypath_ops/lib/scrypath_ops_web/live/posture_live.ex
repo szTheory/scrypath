@@ -102,7 +102,7 @@ defmodule ScrypathOpsWeb.PostureLive do
       {:ok, mod} ->
         {:noreply,
          push_navigate(socket,
-           to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod)
+           to: OperatorSelection.path(socket.assigns.mount_path, "sync-and-index", mod)
          )}
 
       :error ->

@@ -2348,9 +2348,6 @@
   .py-20 {
     padding-block: calc(var(--spacing) * 20);
   }
-  .pt-3 {
-    padding-top: calc(var(--spacing) * 3);
-  }
   .pt-ops-4 {
     padding-top: var(--spacing-ops-4);
   }
@@ -3755,21 +3752,6 @@
   }
   .ops-time__value {
     font-variant-numeric: tabular-nums;
-  }
-  .ops-settings-check {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .ops-settings-check > .ops-time__value {
-    display: inline-flex;
-    align-items: center;
-    min-height: 1.75rem;
-  }
-  @media (max-width: 480px) {
-    .ops-settings-check {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 0;
-    }
   }
   .ops-time__retained {
     min-width: 0;
@@ -5577,10 +5559,10 @@
     background: none;
   }
   .ops-settings-diff table {
-    min-width: 38rem;
+    min-width: 44rem;
   }
   .ops-settings-diff th, .ops-settings-diff td {
-    width: 33.333%;
+    width: 25%;
   }
   .ops-settings-diff thead th {
     color: var(--color-base-content);
@@ -5603,10 +5585,6 @@
   .ops-sync-activity-link:hover {
     text-decoration: underline;
     text-underline-offset: .2em;
-  }
-  .ops-sync-advanced {
-    padding-block: 1rem;
-    border-top: 1px solid var(--color-base-300);
   }
   .ops-sync-related {
     display: flex;
@@ -5822,28 +5800,22 @@
     font-size: var(--text-ops-body);
     color: var(--ops-text-muted);
   }
-  .ops-sync-facts {
-    display: grid;
-    gap: .75rem;
-    max-width: 75ch;
-    font-size: var(--text-ops-body);
-  }
-  .ops-sync-facts > div {
-    display: grid;
-    grid-template-columns: 9rem minmax(0, 1fr);
-    gap: .75rem;
+  .ops-sync-identity {
+    display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-  }
-  .ops-sync-facts dt {
+    gap: .25rem .375rem;
+    font-size: var(--text-ops-sm);
     color: var(--ops-text-muted);
   }
-  .ops-sync-facts dd {
-    min-width: 0;
-    overflow-wrap: anywhere;
+  .ops-sync-identity code {
+    font-size: var(--text-ops-sm);
+    color: var(--color-base-content);
   }
   .ops-sync-work {
     display: grid;
     gap: .5rem;
+    margin-block: .25rem .5rem;
   }
   .ops-sync-work li {
     display: flex;
@@ -5863,14 +5835,6 @@
   }
   .ops-sync-work [data-tone="error"] > svg {
     color: var(--ops-error-text);
-  }
-  .ops-setting-context {
-    font-size: var(--text-ops-sm);
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--ops-text-muted);
-    max-width: 34ch;
-    margin-top: .375rem;
   }
   .ops-setting-live[data-missing="true"] {
     font-family: var(--font-sans);
@@ -5893,10 +5857,6 @@
     }
   }
   @media (max-width: 480px) {
-    .ops-sync-facts > div {
-      grid-template-columns: minmax(0, 1fr);
-      gap: .25rem;
-    }
     .ops-hit-fields > div {
       grid-template-columns: 7rem minmax(0, 1fr);
     }

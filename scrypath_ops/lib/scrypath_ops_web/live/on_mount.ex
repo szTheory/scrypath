@@ -10,7 +10,7 @@ defmodule ScrypathOpsWeb.Live.OnMount do
   @ops_child_route_suffixes %{
     ScrypathOpsWeb.PostureLive => "/health",
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
-    ScrypathOpsWeb.SyncDriftLive => "/sync-drift",
+    ScrypathOpsWeb.SyncDriftLive => "/sync-and-index",
     ScrypathOpsWeb.SearchLive => "/search",
     ScrypathOpsWeb.HelpLive => "/help"
   }
