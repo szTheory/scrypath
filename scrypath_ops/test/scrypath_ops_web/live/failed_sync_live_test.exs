@@ -171,6 +171,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
       worker: "Scrypath.Oban.UpsertWorker",
       queue: "search_sync",
       attempted_at: Keyword.get(opts, :attempted_at, "2026-10-10T14:15:00Z"),
+      scheduled_at: Keyword.get(opts, :scheduled_at),
       attempt: Keyword.get(opts, :attempt),
       max_attempts: Keyword.get(opts, :max_attempts),
       errors: List.wrap(Keyword.get(opts, :error)) |> Enum.map(&%{"error" => &1}),
@@ -500,6 +501,27 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "It will retry automatically."
     assert html =~ "Retrying"
     assert html =~ "Unknown cause. This will retry automatically."
+  end
+
+  test "retrying rows show when Oban will try again; failed rows do not", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(601, ScrypathOps.Test.OpsPostA, scheduled_at: "2026-10-10T14:20:00Z"),
+      upsert_job(602, ScrypathOps.Test.OpsPostA,
+        state: "discarded",
+        scheduled_at: "2026-10-10T14:00:00Z"
+      )
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    next_try = view |> element(~s([data-testid="failed-sync-next-try"])) |> render()
+
+    assert next_try =~ "Next try"
+    assert next_try =~ "14:20"
+    assert has_element?(view, ~s([data-state="retrying"] [data-testid="failed-sync-next-try"]))
+    refute has_element?(view, ~s([data-state="failed"] [data-testid="failed-sync-next-try"]))
   end
 
   test "empty allowlist shows setup rather than healthy zero work", %{conn: conn} do

@@ -1331,9 +1331,7 @@
 
   .ops-handoff__eyebrow {
     font-size: var(--text-ops-sm);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ops-text-muted);
   }
 
@@ -2558,6 +2556,8 @@
   .ops-search-outcome { font-size: var(--text-ops-h2); font-weight: 600; }
   .ops-search-hits { min-width: 0; }
   .ops-readable-hit { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; padding-block: .75rem; border-bottom: 1px solid var(--color-base-300); font-size: var(--text-ops-body); background: transparent; }
+  /* The Response data disclosure draws the closing divider; a last-hit border would double it. */
+  .ops-readable-hit:last-child { border-bottom: 0; }
   .ops-hit-rank { padding-top: .125rem; color: var(--ops-text-muted); font-size: var(--text-ops-sm); font-variant-numeric: tabular-nums; }
   .ops-hit-content { min-width: 0; }
   .ops-hit-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
@@ -2693,10 +2693,18 @@
   .ops-saved-search-row__name { font-size: var(--text-ops-body); font-weight: 600; overflow-wrap: anywhere; }
   .ops-saved-search-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; }
   .ops-saved-search-row__actions .ops-btn { min-height: max(24px, var(--control-h-sm)); }
-  .ops-saved-search-row__delete { color: var(--ops-error-text, var(--color-error)); }
   .ops-saved-search-row__form { display: grid; gap: .75rem; padding-top: .25rem; }
   .ops-saved-search-import { display: grid; gap: .5rem; }
   .ops-saved-search-import .ops-disclosure { margin-top: .25rem; }
+}
+
+/* daisyUI's .btn and .btn-ghost colors live in the utilities layer, so a components-layer
+   color never reaches the button. The destructive row action needs to win there. */
+@layer utilities {
+  .ops-btn.ops-saved-search-row__delete {
+    --btn-fg: var(--ops-error-text);
+    color: var(--ops-error-text);
+  }
 }
 
 @keyframes ops-sheet-in {
@@ -2729,7 +2737,7 @@
   .ops-failed-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: .5rem; padding-block: .875rem; border-bottom: 1px solid var(--color-base-300); font-size: var(--text-ops-body); }
   .ops-failed-row__facts { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; min-width: 0; color: var(--ops-text-muted); font-size: var(--text-ops-sm); }
   .ops-failed-row__facts > * { min-width: 0; }
-  .ops-failed-row__title { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; margin: 0; font-size: var(--text-ops-body); font-weight: 600; color: var(--color-base-content); }
+  .ops-failed-row__title { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; margin: 0; font-size: var(--text-ops-h3); font-weight: 600; color: var(--color-base-content); }
   .ops-failed-row__ids { font-family: var(--font-mono); overflow-wrap: anywhere; color: var(--color-base-content); }
   .ops-failed-row__time .ops-time__stamp { min-height: 1.5rem; padding: 0; }
   /* Narrow rows wrap their facts, so dot separators would dangle at line ends; use spacing instead. */

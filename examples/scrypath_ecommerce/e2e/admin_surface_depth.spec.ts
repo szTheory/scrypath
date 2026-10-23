@@ -476,10 +476,10 @@ const DEPTH_TARGETS: DepthTarget[] = [
     prepare: gotoFailedSync
   },
   {
-    id: "sync-drift",
+    id: "sync-and-index",
     scenario: "incident",
     captureIndex: "03",
-    selectors: [".ops-panel", "#sync-pipeline-status"]
+    selectors: ["#sync-pipeline-status"]
   },
   {
     id: "saved-searches-manage-sheet",
@@ -550,8 +550,8 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
               case "failed-sync-notice":
                 await expectRaisedAboveFloor(page, ".ops-verdict", "failed-sync verdict surface");
                 break;
-              case "sync-drift": {
-                await expectRaisedAboveFloor(page, ".ops-panel", "sync-drift section panel");
+              case "sync-and-index": {
+                // Sections are flat question groups; the status notice is the raised surface.
                 // Without a prepared index, Reindexing is one quiet line and no promotion controls.
                 await expect(page.locator("#index-promotion")).toHaveCount(0);
                 await expect(page.locator("#reindex-idle")).toContainText("No reindex in progress.");
@@ -790,7 +790,9 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           const loaded = sheet.locator(".ops-saved-search-row--loaded");
           await expect(loaded).toHaveCount(1);
           await expect(loaded).toContainText(savedName);
-          const panel = (await sheet.locator(".ops-sheet__panel").boundingBox())!;
+          const panelLocator = sheet.locator(".ops-sheet__panel");
+          await panelLocator.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+          const panel = (await panelLocator.boundingBox())!;
           expect(panel.x + panel.width, "the sheet stays inside the viewport").toBeLessThanOrEqual(viewport.width + 1);
           if (viewport.width < 640) {
             expect(panel.width, "the sheet spans narrow screens").toBeGreaterThanOrEqual(viewport.width - 1);
@@ -928,6 +930,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
       await preparePopulatedSavedSearches(page);
       await page.keyboard.press("Escape");
       await page.locator("#saved-search-manage-open").click();
+      await expect(page.locator(".ops-saved-search-row--loaded")).toBeVisible();
       const glow = await readComputedStyle(page, ".ops-saved-search-row--loaded", "boxShadow");
       expect(glow, "light loaded saved search row must not carry the dark violet glow").not.toContain(GLOW_RGB);
     } finally {

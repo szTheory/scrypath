@@ -397,9 +397,14 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(page.locator(".ops-header")).toHaveAttribute("inert", "");
 
     const focusInSheet = () => sheet.evaluate((el) => el.contains(document.activeElement));
+    const focusedLabel = () =>
+      page.evaluate(() => {
+        const el = document.activeElement;
+        return el ? `${el.tagName} ${el.getAttribute("aria-label") || el.textContent?.trim().slice(0, 40) || ""}` : "none";
+      });
     for (let step = 0; step < 30; step += 1) {
       await page.keyboard.press(step % 7 === 6 ? "Shift+Tab" : "Tab");
-      expect(await focusInSheet(), `Tab ${step + 1} stays in the sheet`).toBe(true);
+      expect(await focusInSheet(), `Tab ${step + 1} stays in the sheet (focus: ${await focusedLabel()})`).toBe(true);
     }
 
     const row = sheet.locator(".ops-saved-search-row").filter({ hasText: name });

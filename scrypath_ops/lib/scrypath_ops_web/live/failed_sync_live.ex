@@ -748,6 +748,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
     Enum.map(known ++ other, fn {label, value} -> {label, display_value(value)} end)
   end
 
+  defp next_attempt_at(%{state: :retrying} = row), do: Map.get(row, :next_attempt_at)
+  defp next_attempt_at(_row), do: nil
+
   defp attempts_label(%{attempt: attempt, max_attempts: max})
        when is_integer(attempt) and is_integer(max),
        do: "#{attempt} of #{max}"
@@ -1051,6 +1054,21 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                   id={"failed-attempt-#{row_dom_id(row)}"}
                   dt={row.last_attempt_at || row.failed_at}
                   state_text="No attempt time recorded"
+                  operational
+                />
+              </span>
+              <span :if={next_attempt_at(row)} class="ops-failed-row__sep" aria-hidden="true">
+                ·
+              </span>
+              <span
+                :if={next_attempt_at(row)}
+                class="ops-failed-row__time"
+                data-testid="failed-sync-next-try"
+              >
+                <.ops_time
+                  id={"failed-next-try-#{row_dom_id(row)}"}
+                  dt={next_attempt_at(row)}
+                  label="Next try"
                   operational
                 />
               </span>

@@ -17,6 +17,8 @@ defmodule Scrypath.Operator.FailedWork do
     (default when signals are missing or ambiguous).
   - `last_attempt_at` — mirrors `failed_at` for every constructor path (soft
     alias for “when this failure was last observed”).
+  - `next_attempt_at` — for a retrying Oban job, when Oban will run it again
+    (the job's `scheduled_at`); `nil` for failed rows and Meilisearch task rows.
 
   ## Telemetry
 
@@ -68,6 +70,7 @@ defmodule Scrypath.Operator.FailedWork do
     max_attempts: nil,
     reason_class: nil,
     last_attempt_at: nil,
+    next_attempt_at: nil,
     recovery: nil,
     metadata: %{}
   ]
@@ -96,6 +99,7 @@ defmodule Scrypath.Operator.FailedWork do
           max_attempts: non_neg_integer() | nil,
           reason_class: reason_class() | nil,
           last_attempt_at: DateTime.t() | nil,
+          next_attempt_at: DateTime.t() | nil,
           recovery: RecoveryAction.t() | nil,
           metadata: map()
         }

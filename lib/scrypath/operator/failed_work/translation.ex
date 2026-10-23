@@ -51,6 +51,7 @@ defmodule Scrypath.Operator.FailedWork.Translation do
       max_attempts: job_attempt_field(job, :max_attempts),
       reason_class: classify_queue_job(job),
       last_attempt_at: failed_at,
+      next_attempt_at: next_attempt_at(job),
       recovery: maybe_queue_recovery(schema_module, config, job, operation, retryable?),
       metadata: %{worker: value(job, :worker), queue: value(job, :queue)}
     }
@@ -142,6 +143,13 @@ defmodule Scrypath.Operator.FailedWork.Translation do
   defp task_timestamp(raw) when is_map(raw), do: raw |> Map.get("finishedAt") |> parse_datetime()
   defp task_timestamp(_), do: nil
   defp queue_timestamp(job), do: job |> value(:attempted_at) |> parse_datetime()
+
+  # Oban reschedules a retryable job by moving `scheduled_at` to its next attempt.
+  defp next_attempt_at(job) do
+    if value(job, :state) in ["retryable", :retryable],
+      do: job |> value(:scheduled_at) |> parse_datetime()
+  end
+
   defp parse_datetime(%DateTime{} = datetime), do: datetime
   defp parse_datetime(nil), do: nil
 

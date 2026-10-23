@@ -545,10 +545,15 @@ const OpsModal = {
       "input:not([disabled]):not([type='hidden']):not([tabindex='-1'])",
       "select:not([disabled]):not([tabindex='-1'])",
       "textarea:not([disabled]):not([tabindex='-1'])",
+      "details > summary:not([tabindex='-1'])",
       "[tabindex]:not([tabindex='-1'])"
     ].join(",")
 
     return Array.from(this.el.querySelectorAll(selector)).filter(el => {
+      // Content of a closed <details> still reports client rects but isn't tabbable;
+      // only its own <summary> is.
+      const closed = el.closest("details:not([open])")
+      if (closed && !(el.tagName === "SUMMARY" && el.parentElement === closed)) return false
       return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" &&
         !el.matches(":disabled") && el.getClientRects().length > 0
     })
@@ -600,6 +605,7 @@ const OpsModal = {
     e.stopImmediatePropagation()
   },
   trapFocus(e) {
+    this.queueFocusReturn(e.shiftKey)
     const focusables = this.focusableElements()
     if (!focusables.length) {
       e.preventDefault()
@@ -619,6 +625,18 @@ const OpsModal = {
       e.preventDefault()
       first.focus({preventScroll: true})
     }
+  },
+  // Safety net: if the browser's tab order still carries focus out of the dialog
+  // (onto the inert page, i.e. <body>), wrap it back to the matching end.
+  queueFocusReturn(backwards) {
+    window.setTimeout(() => {
+      if (activeOpsModal !== this || !this.el.isConnected) return
+      if (this.el.contains(document.activeElement)) return
+      const focusables = this.focusableElements()
+      const target = backwards ? focusables[focusables.length - 1] : focusables[0]
+      if (target) target.focus({preventScroll: true})
+      else this.focusInitial()
+    }, 0)
   },
   close() {
     const event = this.el.dataset.opsModalCancelEvent
@@ -655,8 +673,21 @@ const OpsModal = {
       if (parent === document.body) break
       branch = parent
     }
+
+    // `inert` is set here, not rendered by the server, so a LiveView patch to a
+    // background element (the header after a rename, say) drops it. Put it back.
+    this.inertObserver = new MutationObserver(() => {
+      this.inerted.forEach(({element}) => {
+        if (element.isConnected && !element.inert) element.inert = true
+      })
+    })
+    this.inerted.forEach(({element}) => {
+      this.inertObserver.observe(element, {attributes: true, attributeFilter: ["inert"]})
+    })
   },
   restoreBackground() {
+    this.inertObserver?.disconnect()
+    this.inertObserver = null
     this.inerted.forEach(({element, inert}) => {
       if (element.isConnected) element.inert = inert
     })

@@ -4,83 +4,123 @@
   "description": "Accepted light-theme admin screenshot inventory. Full PNG hashes and full-page heights are intentionally not gated because operational data includes dynamic timestamps, IDs, and repeated seed rows; filenames and viewport widths are stable.",
   "files": [
     {
-      "file": "00-control-room--light--desktop--incident.png",
+      "file": "00-control-room--light--desktop-1440--incident.png",
       "width": 1440
     },
     {
-      "file": "00-control-room--light--mobile--incident.png",
+      "file": "00-control-room--light--intermediate-768--incident.png",
+      "width": 768
+    },
+    {
+      "file": "00-control-room--light--mobile-390--incident.png",
       "width": 390
     },
     {
-      "file": "01-search-health--light--desktop--incident.png",
+      "file": "01-search-health--light--desktop-1440--incident.png",
       "width": 1440
     },
     {
-      "file": "01-search-health--light--mobile--incident.png",
+      "file": "01-search-health--light--intermediate-768--incident.png",
+      "width": 768
+    },
+    {
+      "file": "01-search-health--light--mobile-390--incident.png",
       "width": 390
     },
     {
-      "file": "02-failed-sync--light--desktop--populated.png",
+      "file": "02-failed-sync--light--desktop-1440--populated.png",
       "width": 1440
     },
     {
-      "file": "02-failed-sync--light--mobile--populated.png",
+      "file": "02-failed-sync--light--intermediate-768--populated.png",
+      "width": 768
+    },
+    {
+      "file": "02-failed-sync--light--mobile-390--populated.png",
       "width": 390
     },
     {
-      "file": "03-sync-drift--light--desktop--drift.png",
+      "file": "03-sync-and-index--light--desktop-1440--drift.png",
       "width": 1440
     },
     {
-      "file": "03-sync-drift--light--mobile--drift.png",
+      "file": "03-sync-and-index--light--intermediate-768--drift.png",
+      "width": 768
+    },
+    {
+      "file": "03-sync-and-index--light--mobile-390--drift.png",
       "width": 390
     },
     {
-      "file": "04-control-room--light--desktop--all-green.png",
+      "file": "04-control-room--light--desktop-1440--all-green.png",
       "width": 1440
     },
     {
-      "file": "04-control-room--light--mobile--all-green.png",
+      "file": "04-control-room--light--intermediate-768--all-green.png",
+      "width": 768
+    },
+    {
+      "file": "04-control-room--light--mobile-390--all-green.png",
       "width": 390
     },
     {
-      "file": "05-search-health--light--desktop--all-green.png",
+      "file": "05-search-health--light--desktop-1440--all-green.png",
       "width": 1440
     },
     {
-      "file": "05-search-health--light--mobile--all-green.png",
+      "file": "05-search-health--light--intermediate-768--all-green.png",
+      "width": 768
+    },
+    {
+      "file": "05-search-health--light--mobile-390--all-green.png",
       "width": 390
     },
     {
-      "file": "06-search--light--desktop--results.png",
+      "file": "06-search--light--desktop-1440--results.png",
       "width": 1440
     },
     {
-      "file": "06-search--light--mobile--results.png",
+      "file": "06-search--light--intermediate-768--results.png",
+      "width": 768
+    },
+    {
+      "file": "06-search--light--mobile-390--results.png",
       "width": 390
     },
     {
-      "file": "07-failed-sync--light--desktop--empty.png",
+      "file": "07-failed-sync--light--desktop-1440--empty.png",
       "width": 1440
     },
     {
-      "file": "07-failed-sync--light--mobile--empty.png",
+      "file": "07-failed-sync--light--intermediate-768--empty.png",
+      "width": 768
+    },
+    {
+      "file": "07-failed-sync--light--mobile-390--empty.png",
       "width": 390
     },
     {
-      "file": "08-search--light--desktop--zero-results.png",
+      "file": "08-search--light--desktop-1440--zero-results.png",
       "width": 1440
     },
     {
-      "file": "08-search--light--mobile--zero-results.png",
+      "file": "08-search--light--intermediate-768--zero-results.png",
+      "width": 768
+    },
+    {
+      "file": "08-search--light--mobile-390--zero-results.png",
       "width": 390
     },
     {
-      "file": "09-saved-searches--light--desktop--empty-workspace.png",
+      "file": "09-saved-searches--light--desktop-1440--empty-workspace.png",
       "width": 1440
     },
     {
-      "file": "09-saved-searches--light--mobile--empty-workspace.png",
+      "file": "09-saved-searches--light--intermediate-768--empty-workspace.png",
+      "width": 768
+    },
+    {
+      "file": "09-saved-searches--light--mobile-390--empty-workspace.png",
       "width": 390
     }
   ]
