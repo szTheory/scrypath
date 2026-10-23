@@ -935,8 +935,10 @@ defmodule ScrypathOpsWeb.SearchLive do
     index = Enum.find_index(rows, &(&1.name == name))
     remaining = Enum.reject(rows, &(&1.name == name))
 
+    # Load is disabled for a row that can't be read; Rename is always available.
     case index && (Enum.at(remaining, index) || List.last(remaining)) do
-      %{name: next} -> "##{row_action_id(:load, next)}"
+      %{name: next, readable?: true} -> "##{row_action_id(:load, next)}"
+      %{name: next} -> "##{row_action_id(:rename, next)}"
       _none -> "#saved-search-manage-title"
     end
   end
@@ -948,7 +950,11 @@ defmodule ScrypathOpsWeb.SearchLive do
           {:ok, {File.read(path), entry.client_name}}
         end)
 
-      name = filename |> Path.basename() |> String.replace_suffix(".json", "")
+      name =
+        filename
+        |> Path.basename()
+        |> String.replace_suffix(".json", "")
+        |> String.slice(0, SavedSearch.max_name_length())
 
       socket =
         with {:ok, json} <- bin,
@@ -1971,6 +1977,8 @@ defmodule ScrypathOpsWeb.SearchLive do
                   name="json"
                   value={@paste_json}
                   class="font-mono"
+                  data-ops-json
+                  data-ops-max-bytes={@max_import_bytes}
                   required
                 />
               </.ops_field>
