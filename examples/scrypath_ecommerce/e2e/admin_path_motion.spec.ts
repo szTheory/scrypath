@@ -277,7 +277,7 @@ test.describe("admin path motion — DARKMOTION-01", () => {
   // Combined order replaced the raw merge trace. Keep the patch-safety and
   // shimmer-free evidence checks without requiring a removed decorative underline.
   for (const theme of INTERACTIVE_THEMES) {
-    test(`search combined order: readable evidence with no patch-refire (${theme})`, async ({browser, request}) => {
+    test(`search combined results: readable evidence with no patch-refire (${theme})`, async ({browser, request}) => {
       const seed = await seedScenario(request, "all_green");
       if (seed.tenant_id) {
         await drainSearchQueue(request);
@@ -290,19 +290,19 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         await gotoSearch(page);
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        const order = page.locator("details.ops-combined-order");
-        await expect(order).toBeVisible();
+        const results = page.locator("#search-combined-results");
+        await expect(results).toBeVisible();
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
-        await order.locator("summary").click();
-        await expect(order.locator("li").first()).toBeVisible();
-        await expect(order).not.toContainText("%{");
-        expect(await runningKeyframeAnimationCount(page, ".ops-combined-order")).toBe(0);
+        await expect(results.locator(".ops-readable-hit").first()).toBeVisible();
+        // Raw hit payloads are Elixir-formatted on purpose; the readable heading must not be.
+        await expect(results.locator(".ops-hit-heading").first()).not.toContainText("%{");
+        expect(await runningKeyframeAnimationCount(page, "#search-combined-results")).toBe(0);
         await switchSearchMode(page, "single");
         await switchSearchMode(page, "multi");
         await runBoundedSearch(page, "quantum");
-        await expect(order).toBeVisible();
-        expect(await runningKeyframeAnimationCount(page, ".ops-combined-order")).toBe(0);
-        await snap(page, `combined-order--${theme}`);
+        await expect(results).toBeVisible();
+        expect(await runningKeyframeAnimationCount(page, "#search-combined-results")).toBe(0);
+        await snap(page, `combined-results--${theme}`);
       } finally { await close(); }
     });
   }

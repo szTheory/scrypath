@@ -545,6 +545,7 @@ const OpsModal = {
       "input:not([disabled]):not([type='hidden']):not([tabindex='-1'])",
       "select:not([disabled]):not([tabindex='-1'])",
       "textarea:not([disabled]):not([tabindex='-1'])",
+      "details > summary:not([tabindex='-1'])",
       "[tabindex]:not([tabindex='-1'])"
     ].join(",")
 
@@ -655,8 +656,21 @@ const OpsModal = {
       if (parent === document.body) break
       branch = parent
     }
+
+    // `inert` is set here, not rendered by the server, so a LiveView patch to a
+    // background element (the header after a rename, say) drops it. Put it back.
+    this.inertObserver = new MutationObserver(() => {
+      this.inerted.forEach(({element}) => {
+        if (element.isConnected && !element.inert) element.inert = true
+      })
+    })
+    this.inerted.forEach(({element}) => {
+      this.inertObserver.observe(element, {attributes: true, attributeFilter: ["inert"]})
+    })
   },
   restoreBackground() {
+    this.inertObserver?.disconnect()
+    this.inertObserver = null
     this.inerted.forEach(({element, inert}) => {
       if (element.isConnected) element.inert = inert
     })

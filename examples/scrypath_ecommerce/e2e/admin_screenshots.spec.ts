@@ -80,7 +80,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
     await firstSchema.check();
   }
   await page.getByRole("button", { name: "Run search" }).click();
-  await expect(page.locator("details.ops-combined-order")).toBeVisible();
+  await expect(page.locator("#search-combined-results")).toBeVisible();
   await capture(page, testInfo, "05-search-multi-results");
 
   const savedName = `screenshot-quantum-${Date.now()}`;

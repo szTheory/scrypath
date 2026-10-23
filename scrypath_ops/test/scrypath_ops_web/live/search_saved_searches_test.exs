@@ -172,6 +172,18 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       assert has_element?(view, "#search-save-as")
     end
 
+    test "reports options Scrypath rejects as a run error instead of crashing", %{conn: conn} do
+      put!("Bad filter", single("quantum", %{"opts" => %{"filter" => %{"missing_field" => "x"}}}))
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+      view |> element("#saved-search-menu button", "Bad filter") |> render_click()
+
+      assert has_element?(view, "#search-stored-inputs", "Inputs used for these results")
+      assert has_element?(view, "[role=alert]", "Search could not run")
+      assert has_element?(view, "#search-run-error", "filter")
+      assert render(view) =~ "Manage saved searches"
+    end
+
     test "refuses a saved search that targets a schema that isn't allowlisted", %{conn: conn} do
       put!("Elsewhere", single("x", %{"schema" => "Some.Other.Schema"}))
       {:ok, view, _html} = live(conn, ~p"/ops/search")

@@ -10,6 +10,7 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   @impl true
   def search(_schema, text, opts) do
     wait_if_configured()
+    raise_on_invalid_filter!(opts)
     q = Query.new(text, opts)
 
     raw =
@@ -60,6 +61,14 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
   def search_facet_values(_schema, _facet_name, facet_query, _opts) do
     raw = %{"facetQuery" => facet_query, "facetHits" => []}
     {:ok, FacetSearchResult.new(raw)}
+  end
+
+  # `Scrypath.search/3` raises `ArgumentError` for options it rejects; mirror that for filters.
+  defp raise_on_invalid_filter!(opts) do
+    with {:ok, filter} <- Keyword.fetch(opts, :filter),
+         {:error, message} <- Scrypath.Options.validate_search_filter(filter) do
+      raise ArgumentError, message
+    end
   end
 
   defp wait_if_configured do

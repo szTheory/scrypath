@@ -146,14 +146,14 @@ async function gotoFailedSync(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
 }
 
-async function gotoSyncDrift(page: Page): Promise<void> {
+async function gotoSyncAndIndex(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
   // Header Refresh starts the bounded asynchronous settings read (S3 loading
   // state), so the dimensions panel appears a render after the click — toBeVisible polls.
-  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/).first()).toBeVisible();
 }
 
 async function gotoSearch(page: Page): Promise<void> {
@@ -188,7 +188,7 @@ describeScenario("incident", [
       await expect(row).toBeVisible();
     }
   },
-  { index: "03", screen: "sync-drift", state: "drift", prepare: gotoSyncDrift }
+  { index: "03", screen: "sync-and-index", state: "drift", prepare: gotoSyncAndIndex }
 ]);
 
 // all_green: healthy search, trusted verdict, search returns results.

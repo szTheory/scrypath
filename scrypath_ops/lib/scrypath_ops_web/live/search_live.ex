@@ -532,12 +532,18 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
 
+    # A saved definition can carry options Scrypath rejects by raising (for example a
+    # string-keyed filter); report that as a run error instead of crashing the page.
     result =
-      Runner.run_validated(
-        definition,
-        socket.assigns.schema_allowlist,
-        socket.assigns.scrypath_opts
-      )
+      try do
+        Runner.run_validated(
+          definition,
+          socket.assigns.schema_allowlist,
+          socket.assigns.scrypath_opts
+        )
+      rescue
+        e in ArgumentError -> {:error, {:invalid_saved_options, Exception.message(e)}}
+      end
 
     duration_ms = System.monotonic_time(:millisecond) - start_ms
 
@@ -588,6 +594,7 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp stored_run_error({:config, _} = reason), do: reason
   defp stored_run_error({:page_size_out_of_range, _, _} = reason), do: reason
+  defp stored_run_error({:invalid_saved_options, _} = reason), do: reason
   defp stored_run_error(reason), do: {:scrypath, reason}
 
   defp run_single(socket, submission, opts, allowlist, start_ms) do
@@ -2042,7 +2049,10 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp backend_run_error?({:scrypath, _reason}), do: true
+  defp backend_run_error?({:invalid_saved_options, _message}), do: true
   defp backend_run_error?(_reason), do: false
+
+  defp format_run_error({:invalid_saved_options, message}), do: message
 
   defp format_run_error({:scrypath, reason}) do
     inspect(reason, pretty: true, limit: 200)

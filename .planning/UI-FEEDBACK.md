@@ -250,3 +250,20 @@ Implemented on `ui/next-feedback`, rebased on PR #108 (Oban jobs load current re
 - Design and copy pass (impeccable, ux-writing) applied; captures in the session scratchpad.
 
 Verification: scrypath_ops `mix test` 309/0, nav contract, Docker `verify-mounted` 4/4. Known follow-ups: Manage-sheet Delete isn't styled as destructive; "Next try" time for retrying rows needs a core-library field; the shared all-caps "NEXT STEP" label; doubled divider above "Response data"; visual baselines (`admin-light-baseline.json`, judge PNGs) need a reviewed refresh; the failed-run copy-diagnostics panel was dropped in favor of Search's standard error.
+
+### Follow-ups closed — 2026-10-23 (`ui/feedback-followups`)
+
+- **Delete reads as destructive:** the Manage-sheet row Delete now uses the error text color. The old rule sat in the components layer, and daisyUI's button colors in the utilities layer overrode it.
+- **Next try:** `Scrypath.Operator.FailedWork` gains `next_attempt_at` (a retrying Oban job's `scheduled_at`; nil otherwise). Failed sync shows "Next try" on retrying rows.
+- **Next step label:** the page-footer label is now sentence case at 600 weight. It still uses normal-text contrast (4.5:1) in the contrast manifest.
+- **Response data divider:** the last search hit no longer draws its own bottom rule, so one divider sits above Response data.
+- **Visual baselines:** `admin-light-baseline.json` is regenerated from the matrix capture list: 30 light captures (mobile 390, intermediate 768, desktop 1440) under the current `NN-screen--light--viewport-width--state` names. The old 20-entry file predated the width-in-name scheme and the 768 viewport. The matrix screen `sync-drift` is renamed `sync-and-index` (also in the visual judge's file list). A wait that ORed two regexes with `|` is fixed. There are no committed judge reference PNGs; the judge reads fresh matrix captures.
+- **Run diagnostics:** backend search errors on Search now appear in the same copyable error block Failed sync uses. Config and validation errors keep their plain sentences. The old saved-search troubleshooting link isn't restored, because that doc covers saved-search JSON, not backend failures.
+- **Full advisory browser lane (`make verify-e2e`) repaired.** It isn't a CI gate, and it had drifted since #105–#109. Real fixes:
+  - Running a saved search with options Scrypath rejects (such as a string-keyed `filter`) crashed the LiveView; it now shows "Search could not run" with the error.
+  - The Manage sheet's focus trap now counts `<summary>` stops.
+  - The sheet keeps the background `inert` through LiveView patches (a MutationObserver puts it back after, for example, a rename re-renders the header).
+  - Failed sync row titles use the 16px `h3` heading token, meeting the record-heading floor.
+  - The contrast manifest is back in lockstep with the CSS: 30 muted-label selectors registered, one stale entry removed. AA failures remain 0.
+
+  Stale specs updated: multi-schema results are `#search-combined-results` (the `ops-combined-order` disclosure went in #107); the flat Sync and index sections have no `.ops-panel`; the sheet-bounds check waits for the entrance animation; the loaded-row probe waits for the sheet. The standalone `phase173_*` specs still fail in this lane because it doesn't start `standalone_ops:4003`; their own `E2E_SCOPE=phase173_*` lanes cover them.

@@ -16,7 +16,7 @@ const REVIEW_SHOTS = [
   "00-control-room--dark--desktop-1440--incident.png",
   "01-search-health--light--desktop-1440--incident.png",
   "02-failed-sync--dark--mobile-390--populated.png",
-  "03-sync-drift--dark--desktop-1440--drift.png",
+  "03-sync-and-index--dark--desktop-1440--drift.png",
   "06-search--dark--desktop-1440--results.png",
   "08-search--dark--mobile-390--zero-results.png",
   "09-saved-searches--dark--desktop-1440--empty-workspace.png",
