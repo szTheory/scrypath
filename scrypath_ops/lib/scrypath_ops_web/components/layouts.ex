@@ -90,8 +90,12 @@ defmodule ScrypathOpsWeb.Layouts do
 
             <div class="flex shrink-0 items-center gap-3">
               <label class="ops-time-preference">
-                <span>Time</span>
-                <select class="ops-form-control" aria-label="Time zone" data-ops-time-zone>
+                <span id="ops-time-preference-label">Show times in</span>
+                <select
+                  class="ops-form-control"
+                  aria-labelledby="ops-time-preference-label"
+                  data-ops-time-zone
+                >
                   <option value="utc">UTC</option>
                   <option value="local">Local</option>
                 </select>

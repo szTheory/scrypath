@@ -48,7 +48,7 @@ for (const theme of ["light", "dark"]) {
       await refreshRow.getByRole("button", {name: /Copy timestamp/}).click();
       await expect(page.locator("[data-ops-notification-message]")).toHaveText("Timestamp copied");
       expect(await page.evaluate(() => (window as any).copiedTimestamp)).toBe(source);
-      await page.getByRole("combobox", {name: "Time zone"}).selectOption("local");
+      await page.getByRole("combobox", {name: "Show times in"}).selectOption("local");
       await expect(stamp).toContainText(/EDT|EST/);
       if (!(await section.locator(".ops-settings-diff").count())) {
         // A matching result replaces the checking line with one verdict line of similar height.

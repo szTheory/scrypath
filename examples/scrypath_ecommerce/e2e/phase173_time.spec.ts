@@ -37,7 +37,7 @@ for (const entry of entries) {
         const bounds = await stamp.boundingBox();
         expect(bounds?.height).toBeGreaterThanOrEqual(24);
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-        await expect(page.getByRole("combobox", { name: "Time zone" })).toBeVisible();
+        await expect(page.getByRole("combobox", { name: "Show times in" })).toBeVisible();
       }
     }
   });
@@ -46,18 +46,18 @@ for (const entry of entries) {
     const context = await browser.newContext({ timezoneId: "America/New_York", baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://web:4002" });
     const page = await context.newPage();
     await visit(page, entry);
-    await page.getByRole("combobox", { name: "Time zone" }).selectOption("local");
+    await page.getByRole("combobox", { name: "Show times in" }).selectOption("local");
     const stamp = page.locator(`[data-ops-timestamp-copy='${sourceIso}']`);
     await expect(stamp).toContainText("EDT");
     await expect(stamp).toContainText(/1:02:05|13:02:05/);
     await page.reload();
     await waitForLiveConnected(page);
-    await expect(page.getByRole("combobox", { name: "Time zone" })).toHaveValue("local");
+    await expect(page.getByRole("combobox", { name: "Show times in" })).toHaveValue("local");
     await expect(stamp).toContainText("EDT");
     // Browser Intl handles historical seasonal offsets, not a fixed UTC offset.
     await stamp.locator("time").evaluate(node => node.setAttribute("datetime", "2026-01-04T17:02:05Z"));
-    await page.getByRole("combobox", { name: "Time zone" }).selectOption("utc");
-    await page.getByRole("combobox", { name: "Time zone" }).selectOption("local");
+    await page.getByRole("combobox", { name: "Show times in" }).selectOption("utc");
+    await page.getByRole("combobox", { name: "Show times in" }).selectOption("local");
     await expect(stamp).toContainText("EST");
     await expect(stamp).toContainText(/12:02:05/);
     await context.close();

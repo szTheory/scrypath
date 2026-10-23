@@ -32,7 +32,7 @@ for (const [name, url] of [["mounted", "/admin/search/phase173/health"], ["stand
       expect([await stamp.boundingBox(), await refresh.boundingBox()]).toEqual(before);
       await page.locator("#ops-client-toast").getByRole("button", {name: "Close notification"}).click();
       await expect(stamp).toBeFocused();
-      const select = page.getByRole("combobox", {name: "Time zone"});
+      const select = page.getByRole("combobox", {name: "Show times in"});
       expect(await select.evaluate(el => parseFloat(getComputedStyle(el).paddingRight))).toBeGreaterThanOrEqual(32);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     }

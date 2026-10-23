@@ -75,12 +75,12 @@ test("shared time preference persists, converts local time and copies exact sour
   const time = page.locator(`[data-ops-timestamp-copy='${source}']`);
   await expect(time).toContainText(/17:02:05|5:02:05/);
   await expect(time).toContainText("UTC");
-  await page.getByRole("combobox", { name: "Time zone" }).selectOption("local");
+  await page.getByRole("combobox", { name: "Show times in" }).selectOption("local");
   await expect(time).toContainText(/13:02:05|1:02:05/);
   await expect(time).toContainText("EDT");
   await page.reload();
   await waitForLiveConnected(page);
-  await expect(page.getByRole("combobox", { name: "Time zone" })).toHaveValue("local");
+  await expect(page.getByRole("combobox", { name: "Show times in" })).toHaveValue("local");
   await expect(time).toContainText("EDT");
   await page.evaluate(() => Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (value: string) => { (window as any).copiedTime = value; } } }));
   await time.focus();
