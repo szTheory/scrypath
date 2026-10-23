@@ -65,9 +65,9 @@ test("search", async ({ page }, testInfo) => {
   await capture(page, testInfo, "06-search");
 });
 
-test("playbooks", async ({ page }, testInfo) => {
+test("saved-searches", async ({ page }, testInfo) => {
   await page.goto("/admin/search/playbooks");
   await page.getByRole("heading", { name: "Saved searches", exact: true }).waitFor();
   await page.waitForTimeout(300);
-  await capture(page, testInfo, "07-playbooks");
+  await capture(page, testInfo, "07-saved-searches");
 });

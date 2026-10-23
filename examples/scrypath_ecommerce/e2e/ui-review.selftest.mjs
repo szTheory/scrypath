@@ -55,10 +55,10 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
 test("reviewing reported screens alone cannot omit the rest of the inventory", () => {
   const { source, manifest, review } = fixture();
   assert.deepEqual(reviewErrors(review, manifest, "capture-digest", source), []);
-  review.surfaces = review.surfaces.filter(({ id }) => id !== "playbooks");
+  review.surfaces = review.surfaces.filter(({ id }) => id !== "saved-searches");
   review.dimensions = review.dimensions.filter(({ id }) => id !== dimensions.at(-1));
   const errors = reviewErrors(review, manifest, "capture-digest", source);
-  assert.ok(errors.some((error) => error.startsWith("playbooks:")));
+  assert.ok(errors.some((error) => error.startsWith("saved-searches:")));
   assert.ok(errors.some((error) => error.startsWith("unreported-problems:")));
 });
 

@@ -94,10 +94,10 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
     })
   );
   await page.getByRole("button", { name: "Import from paste" }).click();
-  await expect(page.getByTestId("playbook-preview-marker")).toBeVisible();
-  await capture(page, testInfo, "06-playbook-preview");
+  await expect(page.getByTestId("saved-search-preview-marker")).toBeVisible();
+  await capture(page, testInfo, "06-saved-search-preview");
 
   await page.getByRole("button", { name: "Run search" }).click();
   await expect(page.getByText("Search completed", { exact: true })).toBeVisible();
-  await capture(page, testInfo, "07-playbook-run-result");
+  await capture(page, testInfo, "07-saved-search-run-result");
 });

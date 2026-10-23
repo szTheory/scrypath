@@ -73,7 +73,7 @@ for (const theme of ["light", "dark", "system"] as const) {
       const row = page.locator(".ops-object-item").first();
       await expect(row).toBeVisible();
       expect(await row.evaluate((node) => Boolean(node.closest(".ops-panel")))).toBe(false);
-      const disclosure = row.getByTestId("playbook-manage-actions");
+      const disclosure = row.getByTestId("saved-search-manage-actions");
       const framing = await disclosure.evaluate((node) => {
         const style = getComputedStyle(node);
         return { border: style.borderTopWidth, background: style.backgroundColor };

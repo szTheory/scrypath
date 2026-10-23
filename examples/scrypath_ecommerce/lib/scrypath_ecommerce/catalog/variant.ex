@@ -58,7 +58,7 @@ defmodule ScrypathEcommerce.Catalog.Variant do
 
   The product name is denormalized so a federated query (e.g. "Quantum") matches both
   the Product index and this Variant/SKU index — the merge that the federation demo and
-  the bundled `federated-catalog-probe` playbook show. Requires `:product` preloaded.
+  the bundled `federated-catalog-probe` saved search show. Requires `:product` preloaded.
   """
   def search_document(variant) do
     %{

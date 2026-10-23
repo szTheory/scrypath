@@ -37,7 +37,7 @@ Scrypath e-commerce demo is ready.
   Failed sync       ${base_url}/admin/search/failed-sync
   Sync / drift      ${base_url}/admin/search/sync-drift
   Search playground ${base_url}/admin/search/search
-  Playbooks         ${base_url}/admin/search/playbooks
+  Saved searches    ${base_url}/admin/search/playbooks
 
 URLS
 

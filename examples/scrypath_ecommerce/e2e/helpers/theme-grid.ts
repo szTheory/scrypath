@@ -75,7 +75,7 @@ export async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
-export async function gotoPlaybooks(page: Page): Promise<void> {
+export async function gotoSavedSearches(page: Page): Promise<void> {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
@@ -157,15 +157,15 @@ export const SCENARIO_CAPTURES: Record<SeedScenario, ScreenCapture[]> = {
     },
     {
       index: "09",
-      screen: "playbooks",
+      screen: "saved-searches",
       state: "empty-workspace",
-      prepare: gotoPlaybooks
+      prepare: gotoSavedSearches
     },
     {
       index: "12",
-      screen: "playbooks",
+      screen: "saved-searches",
       state: "populated",
-      prepare: gotoPlaybooks
+      prepare: gotoSavedSearches
     }
   ],
   degraded: [],

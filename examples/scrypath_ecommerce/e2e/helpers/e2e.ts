@@ -473,3 +473,53 @@ export async function probeSwapEvidence(
     }
   });
 }
+
+export type SavedSearchRow = {
+  name: string;
+  definition: Record<string, unknown>;
+};
+
+/**
+ * Saved searches live in the ScrypathOps database table, so specs seed, read and clean
+ * them up through /dev/e2e/saved-searches instead of the filesystem. `putSavedSearch`
+ * writes the row directly (replacing one with the same name), so it can also seed a
+ * definition the v1 validator would reject.
+ */
+export async function putSavedSearch(
+  request: APIRequestContext,
+  name: string,
+  definition: Record<string, unknown>
+): Promise<SavedSearchRow> {
+  return requestJson<SavedSearchRow>(request, "/dev/e2e/saved-searches", {
+    method: "POST",
+    data: { name, definition }
+  });
+}
+
+export async function listSavedSearches(request: APIRequestContext): Promise<SavedSearchRow[]> {
+  const result = await requestJson<{ saved_searches: SavedSearchRow[] }>(
+    request,
+    "/dev/e2e/saved-searches"
+  );
+
+  return result.saved_searches;
+}
+
+export async function getSavedSearch(
+  request: APIRequestContext,
+  name: string
+): Promise<SavedSearchRow | undefined> {
+  return (await listSavedSearches(request)).find((row) => row.name === name);
+}
+
+export async function deleteSavedSearches(
+  request: APIRequestContext,
+  selector: { prefix: string } | { names: string[] }
+): Promise<number> {
+  const result = await requestJson<{ deleted: number }>(request, "/dev/e2e/saved-searches/delete", {
+    method: "POST",
+    data: selector
+  });
+
+  return result.deleted;
+}

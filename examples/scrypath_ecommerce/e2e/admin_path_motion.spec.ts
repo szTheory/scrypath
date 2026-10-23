@@ -11,9 +11,9 @@
  *      not draw).
  *   2. Hover code-shimmer: `.ops-code-block--shimmer` glint is opt-in. Evidence code
  *      blocks (search payloads) carry NO `.ops-code-block--shimmer` class (D-04a/c).
- *   3. Active-path trace/node glow: combined result order remains static across patches, and the active Playbook item carries `.ops-object-item-active`.
+ *   3. Active-path trace/node glow: combined result order remains static across patches, and the active Saved search item carries `.ops-object-item-active`.
  *   4. NO LiveView patch-refire flicker (the Phase 123 A3 risk): toggling Search
- *      single↔multi mode and selecting Playbook A→B does NOT restart a running *keyframe*
+ *      single↔multi mode and selecting Saved search A→B does NOT restart a running *keyframe*
  *      animation on the anchor. Because the shipped motion is pure CSS `transition` (never
  *      `@keyframes`-on-mount), the anchor's running CSSAnimation count is 0 before AND after
  *      the patch — that zero IS the proof. (Running CSSTransitions are the intended,
@@ -104,7 +104,7 @@ async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
-async function gotoPlaybooks(page: Page): Promise<void> {
+async function gotoSavedSearches(page: Page): Promise<void> {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
@@ -312,10 +312,10 @@ test.describe("admin path motion — DARKMOTION-01", () => {
     });
   }
 
-  // 3 + 4: Active Playbook item .ops-object-item-active moves on A→B selection with no
+  // 3 + 4: Active Saved search item .ops-object-item-active moves on A→B selection with no
   // replayed reveal (patch-refire probe), dark AND light.
   for (const theme of INTERACTIVE_THEMES) {
-    test(`playbooks: active-item glow moves A->B with no patch-refire (${theme})`, async ({
+    test(`saved searches: active-item glow moves A->B with no patch-refire (${theme})`, async ({
       browser,
       request
     }) => {
@@ -323,25 +323,25 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
       const { page, close } = await newThemedPage(browser, theme);
       try {
-        await gotoPlaybooks(page);
+        await gotoSavedSearches(page);
 
-        // The catalog list renders selectable playbook rows; each row's "Preview"
-        // button selects that playbook (phx-click="load"), which re-renders the list with
+        // The catalog list renders selectable saved search rows; each row's "Preview"
+        // button selects that saved search (phx-click="load"), which re-renders the list with
         // the chosen row carrying .ops-object-item-active. (Use the exact "Preview"
-        // name — a substring "Load" also matches the unrelated "Reload playbooks" button.)
+        // name — a substring "Load" also matches the unrelated "Reload saved searches" button.)
         // Need at least two catalog entries to move A->B.
         const loadButtons = page.getByRole("button", { name: "Preview" });
         const count = await loadButtons.count();
-        test.skip(count < 2, "needs >= 2 catalog playbooks to exercise A->B selection");
+        test.skip(count < 2, "needs >= 2 catalog saved searches to exercise A->B selection");
 
-        // Select playbook A — exactly one row becomes active.
+        // Select saved search A — exactly one row becomes active.
         await loadButtons.nth(0).click();
         await expect(page.locator(".ops-object-item-active")).toHaveCount(1);
         // Functional integrity: the active glow anchor is patch-safe (data-driven server
         // state class), so it carries no running animation.
         expect(
           await runningKeyframeAnimationCount(page, ".ops-object-item-active"),
-          "running animations on active playbook item A"
+          "running animations on active saved search item A"
         ).toBe(0);
 
         // Dark expression present / light unchanged on the active-path anchor (D-02): the
@@ -351,18 +351,18 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         // computed end-state instead of sampling a single transition frame.
         await expectGlowSettled(page, ".ops-object-item-active", theme);
 
-        await snap(page, `playbook-active-A--${theme}`);
+        await snap(page, `saved-search-active-A--${theme}`);
 
-        // Select playbook B — the active marker moves (push_patch re-render). Assert no
+        // Select saved search B — the active marker moves (push_patch re-render). Assert no
         // replayed reveal: still exactly one active item, and zero running animations on it.
         await loadButtons.nth(1).click();
         await expect(page.locator(".ops-object-item-active")).toHaveCount(1);
         expect(
           await runningKeyframeAnimationCount(page, ".ops-object-item-active"),
-          "running animations on active playbook item after A->B patch"
+          "running animations on active saved search item after A->B patch"
         ).toBe(0);
 
-        await snap(page, `playbook-active-B--${theme}`);
+        await snap(page, `saved-search-active-B--${theme}`);
       } finally {
         await close();
       }

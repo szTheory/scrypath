@@ -101,7 +101,7 @@ urls: ## Print the important demo URLs and lane settings
 	@echo "  Failed sync       $(ADMIN_URL)/failed-sync"
 	@echo "  Sync / drift      $(ADMIN_URL)/sync-drift"
 	@echo "  Search playground $(ADMIN_URL)/search"
-	@echo "  Playbooks         $(ADMIN_URL)/playbooks"
+	@echo "  Saved searches    $(ADMIN_URL)/playbooks"
 	@echo ""
 	@echo "Current lane"
 	@echo "  WEB_PORT=$(WEB_PORT)"

@@ -103,7 +103,7 @@ Search health     http://127.0.0.1:${WEB_PORT}/admin/search/health
 Failed sync       http://127.0.0.1:${WEB_PORT}/admin/search/failed-sync
 Sync / drift      http://127.0.0.1:${WEB_PORT}/admin/search/sync-drift
 Search playground http://127.0.0.1:${WEB_PORT}/admin/search/search
-Playbooks         http://127.0.0.1:${WEB_PORT}/admin/search/playbooks
+Saved searches    http://127.0.0.1:${WEB_PORT}/admin/search/playbooks
 ```
 
 ## Future Proxy Layer

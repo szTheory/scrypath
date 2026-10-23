@@ -4,13 +4,6 @@ set -euo pipefail
 
 scope="${E2E_SCOPE:-focused}"
 base_url="${PLAYWRIGHT_BASE_URL:-http://web:4002}"
-playbook_dir="/app/examples/scrypath_ecommerce/priv/playbooks"
-
-# Both containers share this disposable volume. Seed it here so browser-side
-# cleanup and server-side playbook writes observe the same files.
-if ! find "$playbook_dir" -maxdepth 1 -name '*.json' -print -quit | grep --quiet .; then
-  cp /opt/scrypath-e2e-playbooks/*.json "$playbook_dir/"
-fi
 
 echo "Confirming the mounted web service is stable at $base_url..."
 ready_count=0

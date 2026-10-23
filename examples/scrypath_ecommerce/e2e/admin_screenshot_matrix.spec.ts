@@ -161,7 +161,7 @@ async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
-async function gotoPlaybooks(page: Page): Promise<void> {
+async function gotoSavedSearches(page: Page): Promise<void> {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
@@ -228,8 +228,8 @@ describeScenario("empty", [
   },
   {
     index: "09",
-    screen: "playbooks",
+    screen: "saved-searches",
     state: "empty-workspace",
-    prepare: gotoPlaybooks
+    prepare: gotoSavedSearches
   }
 ]);

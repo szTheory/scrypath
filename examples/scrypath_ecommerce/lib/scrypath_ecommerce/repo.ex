@@ -14,7 +14,7 @@ defmodule ScrypathEcommerce.Repo do
       tenant_id = opts[:tenant_id] ->
         {Ecto.Query.where(query, tenant_id: ^tenant_id), opts}
 
-      is_oban_query?(query) ->
+      library_query?(query) ->
         {query, opts}
 
       true ->
@@ -22,9 +22,10 @@ defmodule ScrypathEcommerce.Repo do
     end
   end
 
-  defp is_oban_query?(%{from: %{source: {source, _}}}) when is_binary(source) do
-    String.starts_with?(source, "oban_")
+  # Oban jobs and ScrypathOps saved searches are not tenant data.
+  defp library_query?(%{from: %{source: {source, _}}}) when is_binary(source) do
+    String.starts_with?(source, ["oban_", "scrypath_ops_"])
   end
 
-  defp is_oban_query?(_), do: false
+  defp library_query?(_), do: false
 end

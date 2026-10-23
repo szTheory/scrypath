@@ -26,11 +26,11 @@ test("query → saved inputs → replay keeps results and edited drafts distinct
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Saved searches");
   const row = page.locator(".ops-object-item").filter({ hasText: filename });
   await row.getByRole("button", { name: "Preview", exact: true }).click();
-  await expect(page.locator("#playbook-draft-origin")).toContainText(filename);
-  await expect(page.locator("#playbook-summary")).toContainText("quantum");
+  await expect(page.locator("#saved-search-draft-origin")).toContainText(filename);
+  await expect(page.locator("#saved-search-summary")).toContainText("quantum");
   await page.getByRole("button", { name: "Run search", exact: true }).click();
-  await expect(page.locator("#playbook-run-outcome")).toContainText(/completed|returned|result/i);
-  await expect(page.locator("#playbook-run-source")).toContainText(filename);
+  await expect(page.locator("#saved-search-run-outcome")).toContainText(/completed|returned|result/i);
+  await expect(page.locator("#saved-search-run-source")).toContainText(filename);
   await page.getByRole("link", { name: /Explore this query in Search/ }).click();
   await expect(page.locator("#search_q")).toHaveValue("quantum");
   await page.getByRole("button", { name: "Run search", exact: true }).click();
@@ -102,11 +102,11 @@ test("shared time preference persists, converts local time and copies exact sour
 test("saved-search errors copy diagnostics only after the browser succeeds", async ({ page }) => {
   await page.goto("/admin/search/playbooks");
   await waitForLiveConnected(page);
-  await page.locator("#playbook-import details > summary").click();
-  await page.locator("#playbook-paste-json").fill(JSON.stringify({
+  await page.locator("#saved-search-import details > summary").click();
+  await page.locator("#saved-search-paste-json").fill(JSON.stringify({
     playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "quantum", opts: { filter: { missing_filterable_field: "example" } }
   }));
-  await page.locator("#playbook-import details button[type=submit]").click();
+  await page.locator("#saved-search-import details button[type=submit]").click();
   await page.getByRole("button", { name: "Run search", exact: true }).click();
   const failure = page.getByTestId("run-failure-panel");
   await expect(failure).toBeVisible();

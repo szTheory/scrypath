@@ -68,7 +68,7 @@ test("one purposeful zero-match state and no duplicate per-schema empty cards", 
   await page.screenshot({path:`${artifacts}/empty.png`,fullPage:true});
 });
 
-test("Save sits by Run, gates draft edits and validates filename and optional metadata", async ({page, request}) => {
+test("Save sits by Run, gates draft edits and validates name and optional metadata", async ({page, request}) => {
   await seedScenario(request,"all_green");
   await page.goto("/admin/search/search"); await waitForLiveConnected(page);
   await page.getByLabel("Search text").fill("quantum");
@@ -81,11 +81,11 @@ test("Save sits by Run, gates draft edits and validates filename and optional me
   await expect(page.locator("#search-run-attribution")).toContainText("Run search to update these results.");
   await page.getByLabel("Search text").fill("quantum"); await expect(save).toBeEnabled();
   await save.click();
-  await page.getByLabel("Filename",{exact:true}).fill("../bad.json");
-  await page.getByLabel("Filename",{exact:true}).press("Tab");
-  await expect(page.locator("#capture_basename-error")).toContainText("Avoid folder paths");
+  await page.getByLabel("Name",{exact:true}).fill("n".repeat(121));
+  await page.getByLabel("Name",{exact:true}).press("Tab");
+  await expect(page.locator("#capture_basename-error")).toContainText("Enter a name of up to 120 characters.");
   const filename = `ui3-${Date.now()}.json`;
-  await page.getByLabel("Filename",{exact:true}).fill(filename);
+  await page.getByLabel("Name",{exact:true}).fill(filename);
   await page.getByLabel("Search title",{exact:true}).fill("猫".repeat(70));
   await page.getByLabel("Search title",{exact:true}).press("Tab");
   await expect(page.locator("#capture_title-error")).toContainText("200 bytes");
