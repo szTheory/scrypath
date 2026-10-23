@@ -47,8 +47,8 @@ test("failed sync (collapsed + expanded evidence)", async ({ page }, testInfo) =
 });
 
 test("sync drift (loaded)", async ({ page }, testInfo) => {
-  await page.goto("/admin/search/sync-drift");
-  await page.getByRole("heading", { name: "Sync and drift", exact: true }).waitFor();
+  await page.goto("/admin/search/sync-and-index");
+  await page.getByRole("heading", { name: "Sync and index", exact: true }).waitFor();
   await page.waitForTimeout(300);
   const loadBtn = page.getByRole("button", { name: /contract drift/i }).first();
   if (await loadBtn.count()) {

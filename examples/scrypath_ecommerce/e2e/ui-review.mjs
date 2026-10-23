@@ -14,7 +14,7 @@ export const surfaces = [
   { id: "control-room", route: "/admin/search/", role: "ROLE-OPS", jobs: ["JOB-03"], purpose: "Understand the current observation and choose the next safe task." },
   { id: "search-health", route: "/admin/search/health", role: "ROLE-OPS", jobs: ["JOB-03"], purpose: "Identify the affected schema and distinguish backend from queue evidence." },
   { id: "failed-sync", route: "/admin/search/failed-sync", role: "ROLE-OPS", jobs: ["JOB-03"], purpose: "Inspect exact failed work and determine whether recovery is eligible." },
-  { id: "sync-drift", route: "/admin/search/sync-drift", role: "ROLE-OWNER", jobs: ["JOB-04"], purpose: "Separate index settings, document visibility, recovery, and promotion evidence." },
+  { id: "sync-drift", route: "/admin/search/sync-and-index", role: "ROLE-OWNER", jobs: ["JOB-04"], purpose: "Separate index settings, document visibility, recovery, and promotion evidence." },
   { id: "search", route: "/admin/search/search", role: "ROLE-OWNER", jobs: ["JOB-05"], purpose: "Choose explicit targets, run a bounded query, and interpret attributed results." },
   { id: "saved-searches", route: "/admin/search/search?saved=manage", role: "ROLE-OWNER", jobs: ["JOB-05"], purpose: "Find, load, rename, delete, import and export saved searches from Search, and tell a loaded saved search from edited inputs." },
   { id: "help", route: "/admin/search/help", role: "ROLE-INT", jobs: ["JOB-03", "JOB-05"], purpose: "Understand search, sync and saved inputs without leaving the installed interface." }

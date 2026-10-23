@@ -159,7 +159,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const originGeneration = Number(handoffUrl.searchParams.get("recovery_generation"));
   expect(originGeneration).toBeGreaterThan(1);
   await handoff.click();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
   const recoveryStatus = page.locator("#recovery-observation");
@@ -210,7 +210,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.goForward();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
@@ -245,17 +245,18 @@ test("operator promotes only this returned task pair and unique target document"
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await page.getByTestId("control-room-verify-change").click();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
-  const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
-  await advanced.locator("summary").click();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  // Promotion controls appear only because the fixture prepared a target index.
+  const advanced = page.locator("#index-promotion");
+  await expect(advanced).toContainText(fixture.target_index);
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
   const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
   await expect(confirmation).toBeVisible();
-  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#index-promotion-summary");
+  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#promote-target-index");
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
   await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
@@ -309,18 +310,15 @@ test("operator promotes only this returned task pair and unique target document"
   await page.locator("html").evaluate((html) => html.removeAttribute("data-theme"));
   await page.setViewportSize({ width: 1440, height: 900 });
   const promotionTrigger = advanced.getByRole("button", { name: "Promote target index" });
-  const promotionSummary = page.locator("#index-promotion-summary");
   await cancel.click();
   await expect(confirmation).toHaveCount(0);
-  await expect(promotionSummary).toBeFocused();
-  await promotionSummary.press("Enter");
-  await expect(promotionTrigger).toBeVisible();
+  await expect(promotionTrigger).toBeFocused();
   await promotionTrigger.click();
   await expect(confirmation).toBeVisible();
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await confirm.click();
 
-  const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
+  const promotionStatus = page.locator("#index-promotion");
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
   const taskText = await promotionStatus.innerText();
   const taskMatch = taskText.match(/Task\s+(\d+)/);

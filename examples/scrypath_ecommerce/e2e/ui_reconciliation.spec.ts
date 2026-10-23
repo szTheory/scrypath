@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { openManageSavedSearches, waitForLiveConnected } from "./helpers/e2e";
 
 // Observation-only regression proof. Never seed or submit recovery/file actions here.
-const routes = ["/admin/search/failed-sync", "/admin/search/sync-drift", "/admin/search/search"];
+const routes = ["/admin/search/failed-sync", "/admin/search/sync-and-index", "/admin/search/search"];
 
 for (const route of routes.slice(0, 2)) {
   test(`unresolved scope never silently selects the first schema — ${route}`, async ({ page }) => {

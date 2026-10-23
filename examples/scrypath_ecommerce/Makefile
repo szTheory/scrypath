@@ -99,7 +99,7 @@ urls: ## Print the important demo URLs and lane settings
 	@echo "  Control room      $(ADMIN_URL)"
 	@echo "  Search health     $(ADMIN_URL)/health"
 	@echo "  Failed sync       $(ADMIN_URL)/failed-sync"
-	@echo "  Sync / drift      $(ADMIN_URL)/sync-drift"
+	@echo "  Sync and index    $(ADMIN_URL)/sync-and-index"
 	@echo "  Search playground $(ADMIN_URL)/search"
 	@echo "  Saved searches    $(ADMIN_URL)/playbooks"
 	@echo ""

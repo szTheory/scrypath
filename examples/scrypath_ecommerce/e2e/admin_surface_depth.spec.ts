@@ -479,7 +479,7 @@ const DEPTH_TARGETS: DepthTarget[] = [
     id: "sync-drift",
     scenario: "incident",
     captureIndex: "03",
-    selectors: [".ops-panel", "#index-promotion"]
+    selectors: [".ops-panel", "#sync-pipeline-status"]
   },
   {
     id: "saved-searches-manage-sheet",
@@ -552,12 +552,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 break;
               case "sync-drift": {
                 await expectRaisedAboveFloor(page, ".ops-panel", "sync-drift section panel");
-                const promotion = page.locator("#index-promotion");
-                await expect(promotion).not.toHaveAttribute("open", "");
-                await promotion.getByText("Advanced: index promotion", { exact: true }).click();
-                await expect(promotion).toHaveAttribute("open", "");
-                await expect(promotion.getByRole("button", { name: "Promote target index", exact: true })).toBeDisabled();
-                await expectRaisedAboveFloor(page, "#index-promotion .ops-notice-surface", "promotion eligibility notice");
+                // Without a prepared index, Reindexing is one quiet line and no promotion controls.
+                await expect(page.locator("#index-promotion")).toHaveCount(0);
+                await expect(page.locator("#reindex-idle")).toContainText("No reindex in progress.");
+                await expectRaisedAboveFloor(page, "#sync-pipeline-status", "sync status notice");
                 break;
               }
               case "saved-searches-manage-sheet":

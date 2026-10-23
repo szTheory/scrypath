@@ -59,11 +59,11 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(failedRow.locator("details dl")).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");
 
-  await page.goto("/admin/search/sync-drift");
+  await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");

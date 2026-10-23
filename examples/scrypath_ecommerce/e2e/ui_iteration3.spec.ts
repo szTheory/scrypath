@@ -138,8 +138,8 @@ test("health stages align, icons are consistent, refresh is singular and setting
     }
   }
   await seedScenario(request,"incident");
-  await page.goto("/admin/search/sync-drift"); await waitForLiveConnected(page);
-  await expect(page.locator("#settings-checked-at")).toBeVisible();
+  await page.goto("/admin/search/sync-and-index"); await waitForLiveConnected(page);
+  await expect(page.locator("#index-settings-status")).toBeVisible();
   await expect(page.getByRole("button",{name:"Refresh settings",exact:true})).toHaveCount(0);
   await expect(page.getByText("Not enabled for filtering",{exact:true})).toBeVisible();
   await expect(page.getByText(/\d+ failed sync operations?/)).toBeVisible();

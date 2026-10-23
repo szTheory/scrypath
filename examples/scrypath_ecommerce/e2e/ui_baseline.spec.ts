@@ -37,9 +37,9 @@ test("query → saved inputs → replay keeps results and edited drafts distinct
 
 test("settings load automatically, show declared/live values and follow a real selection change", async ({ page, request }) => {
   await seedScenario(request, "incident");
-  await page.goto("/admin/search/sync-drift");
+  await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
-  await expect(page.getByText("Index settings differ", { exact: true })).toBeVisible();
+  await expect(page.getByText("Meilisearch settings differ from the schema", { exact: true })).toBeVisible();
   const table = page.getByRole("table");
   await expect(table.getByRole("columnheader", { name: "Declared in schema" })).toBeVisible();
   await expect(table.getByRole("columnheader", { name: "Live in Meilisearch" })).toBeVisible();
@@ -47,11 +47,11 @@ test("settings load automatically, show declared/live values and follow a real s
   await expect(page.locator("#document-freshness-result")).toHaveCount(0);
   await page.getByRole("radio", { name: /Variant/ }).check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce.Catalog.Variant/);
-  await expect(page.getByText("Index settings match", { exact: true })).toBeVisible();
+  await expect(page.getByText("Meilisearch settings match the schema.", { exact: true })).toBeVisible();
   await expect(page.getByRole("table")).toHaveCount(0);
   await expect(page.getByText("ecommerce__variant", { exact: true }).first()).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText("Index settings match", { exact: true })).toBeVisible();
+  await expect(page.getByText("Meilisearch settings match the schema.", { exact: true })).toBeVisible();
 });
 
 test("empty failed work gives one confirmation without zero rollups or a second refresh", async ({ page, request }) => {

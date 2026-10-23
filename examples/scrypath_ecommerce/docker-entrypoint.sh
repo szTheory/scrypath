@@ -35,7 +35,7 @@ Scrypath e-commerce demo is ready.
   Control room      ${base_url}/admin/search
   Search health     ${base_url}/admin/search/health
   Failed sync       ${base_url}/admin/search/failed-sync
-  Sync / drift      ${base_url}/admin/search/sync-drift
+  Sync and index    ${base_url}/admin/search/sync-and-index
   Search playground ${base_url}/admin/search/search
   Saved searches    ${base_url}/admin/search/playbooks
 
