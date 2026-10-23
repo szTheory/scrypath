@@ -342,7 +342,6 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   def inject_failed_sync(conn, %{"tenant_id" => tenant_id} = params) do
     with {:ok, tenant} <- parse_integer(tenant_id) do
-      category_id = find_category_id(tenant)
       scenario_key = Map.get(params, "scenario_key", "default")
 
       existing_job =
@@ -376,19 +375,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
                   "index" => "scrypath_ecommerce_products_#{tenant}",
                   "scenario_key" => scenario_key,
                   "document_count" => 1,
-                  "document_ids" => [-1],
-                  "documents" => [
-                    %{
-                      "id" => -1,
-                      "source" => "fields",
-                      "data" => %{
-                        "name" => "Injected Broken Sync",
-                        "description" => "Intentional failure injection",
-                        "category_id" => category_id,
-                        "tenant_id" => tenant
-                      }
-                    }
-                  ]
+                  "document_ids" => [-1]
                 },
                 queue: :scrypath_sync,
                 max_attempts: 1
@@ -762,22 +749,9 @@ defmodule ScrypathEcommerceWeb.E2EController do
     %{"document_ids" => [product_id]}
   end
 
-  defp replay_args(%{operation: "upsert"}, tenant_id, category_id, product_id) do
-    %{
-      "document_ids" => [product_id],
-      "documents" => [
-        %{
-          "id" => product_id,
-          "source" => "fields",
-          "data" => %{
-            "name" => "Ops Incident Lab item",
-            "description" => "Deterministic demo failure injection",
-            "category_id" => category_id,
-            "tenant_id" => tenant_id
-          }
-        }
-      ]
-    }
+  # Upsert jobs carry ids only; a retry loads the product as it is now.
+  defp replay_args(%{operation: "upsert"}, _tenant_id, _category_id, product_id) do
+    %{"document_ids" => [product_id], "repo" => Atom.to_string(Repo)}
   end
 
   # Diverge the live index from the declared contract: drop tenant_id from filterable.
@@ -795,13 +769,5 @@ defmodule ScrypathEcommerceWeb.E2EController do
     :ok
   rescue
     _ -> :ok
-  end
-
-  defp find_category_id(tenant_id) do
-    Category
-    |> where([c], c.tenant_id == ^tenant_id)
-    |> limit(1)
-    |> Repo.one!(skip_tenant_id: true)
-    |> Map.fetch!(:id)
   end
 end

@@ -1,7 +1,7 @@
 defmodule Scrypath.Oban.EnqueueTest do
   use ExUnit.Case, async: true
 
-  alias Scrypath.Document
+  alias Scrypath.TestSupport.FakeRepo
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
 
@@ -52,15 +52,11 @@ defmodule Scrypath.Oban.EnqueueTest do
   end
 
   test "enqueue_upsert/3 inserts one job with the caller batch intact" do
-    documents = [
-      %Document{id: 11, data: %{title: "One"}, source: :fields},
-      %Document{id: 12, data: %{title: "Two"}, source: :fields}
-    ]
-
     assert {:ok, %Result{} = result} =
-             Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, documents,
+             Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [11, 12],
                backend: RecordingBackend,
                sync_mode: :oban,
+               repo: FakeRepo,
                oban: RecordingOban,
                oban_queue: :search_sync
              )
@@ -86,7 +82,20 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert job.worker == "Scrypath.Oban.UpsertWorker"
     assert job.args["document_count"] == 2
     assert job.args["document_ids"] == [11, 12]
-    assert Enum.map(job.args["documents"], & &1["id"]) == [11, 12]
+    assert job.args["repo"] == "Elixir.Scrypath.TestSupport.FakeRepo"
+    refute Map.has_key?(job.args, "documents")
+    assert job.unique[:states] == [:available, :scheduled, :retryable]
+  end
+
+  test "enqueue_upsert/3 fails at the call site when records cannot be loaded later" do
+    assert_raise ArgumentError, ~r/needs :repo to load current records/, fn ->
+      Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [11],
+        backend: RecordingBackend,
+        sync_mode: :oban,
+        oban: RecordingOban,
+        oban_queue: :search_sync
+      )
+    end
   end
 
   test "enqueue_delete/3 inserts one delete job with resolved ids only" do
@@ -124,12 +133,11 @@ defmodule Scrypath.Oban.EnqueueTest do
   end
 
   test "enqueue helpers keep retryable queue state distinct from backend lifecycle" do
-    documents = [%Document{id: 21, data: %{title: "Three"}, source: :fields}]
-
     assert {:ok, %Result{} = result} =
-             Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, documents,
+             Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [21],
                backend: RecordingBackend,
                sync_mode: :oban,
+               repo: FakeRepo,
                oban: RetryableOban,
                oban_queue: :search_sync
              )

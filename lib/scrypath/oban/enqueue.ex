@@ -4,15 +4,16 @@ defmodule Scrypath.Oban.Enqueue do
 
   alias Ecto.Changeset
   alias Scrypath.Config
+  alias Scrypath.Loader
   alias Scrypath.Oban.Payload
   alias Scrypath.Operations
 
   @upsert_worker "Scrypath.Oban.UpsertWorker"
   @delete_worker "Scrypath.Oban.DeleteWorker"
 
-  @spec enqueue_upsert(module(), [Scrypath.Document.t()], keyword()) ::
+  @spec enqueue_upsert(module(), [term()], keyword()) ::
           {:ok, map()} | {:error, term()}
-  def enqueue_upsert(schema_module, documents, config) when is_list(documents) do
+  def enqueue_upsert(schema_module, document_ids, config) when is_list(document_ids) do
     config =
       config
       |> Config.resolve!()
@@ -20,7 +21,7 @@ defmodule Scrypath.Oban.Enqueue do
 
     ensure_durable_api_key!(config)
 
-    changeset = upsert_job_changeset(schema_module, documents, config)
+    changeset = upsert_job_changeset(schema_module, document_ids, config)
 
     enqueue_job(changeset, config)
   end
@@ -39,16 +40,17 @@ defmodule Scrypath.Oban.Enqueue do
     enqueue_job(changeset, config)
   end
 
-  @spec upsert_job_changeset(module(), [Scrypath.Document.t()], keyword()) :: Changeset.t()
-  def upsert_job_changeset(schema_module, documents, config) when is_list(documents) do
+  @spec upsert_job_changeset(module(), [term()], keyword()) :: Changeset.t()
+  def upsert_job_changeset(schema_module, document_ids, config) when is_list(document_ids) do
     config =
       config
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
 
     ensure_durable_api_key!(config)
+    Loader.ensure_loadable!(schema_module, config)
 
-    payload = Payload.build_upsert(schema_module, documents, config)
+    payload = Payload.build_upsert(schema_module, document_ids, config)
 
     job_changeset(payload, @upsert_worker, config)
   end
@@ -113,7 +115,9 @@ defmodule Scrypath.Oban.Enqueue do
     oban_job_module!().new(payload,
       worker: worker,
       queue: to_string(Config.oban_queue(config)),
-      max_attempts: Config.oban_max_attempts(config)
+      max_attempts: Config.oban_max_attempts(config),
+      # Jobs load current records when they run, so an identical pending batch adds nothing.
+      unique: [period: :infinity, states: [:available, :scheduled, :retryable]]
     )
   end
 

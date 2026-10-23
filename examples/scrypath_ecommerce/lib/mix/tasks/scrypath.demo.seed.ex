@@ -236,8 +236,6 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
   # error text so each row classifies into the intended reason class.
 
   defp inject_failed_sync_work!(ops) do
-    tenant_id = ops.tenant.id
-    category_id = ops.categories |> List.first() |> Map.fetch!(:id)
     product_id = ops.products |> List.first() |> Map.fetch!(:id)
     index = product_index_name()
 
@@ -258,31 +256,14 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     |> Enum.each(fn {spec, idx} ->
       attempted_at = DateTime.add(now, -idx * 137, :second)
 
-      insert_failed_job!(
-        spec,
-        tenant_id,
-        category_id,
-        product_id,
-        index,
-        attempted_at,
-        far_future
-      )
+      insert_failed_job!(spec, product_id, index, attempted_at, far_future)
     end)
 
     length(@failed_sync_specs)
   end
 
-  defp insert_failed_job!(
-         spec,
-         tenant_id,
-         category_id,
-         product_id,
-         index,
-         attempted_at,
-         far_future
-       ) do
-    args =
-      Map.merge(base_args(spec, index), replay_args(spec, tenant_id, category_id, product_id))
+  defp insert_failed_job!(spec, product_id, index, attempted_at, far_future) do
+    args = Map.merge(base_args(spec, index), replay_args(spec, product_id))
 
     errors = [
       %{
@@ -337,28 +318,15 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
 
   # Only retryable rows carry a replay payload; its presence is exactly what
   # FailedWork uses to decide `retryable?` (and thus whether Retry is offered).
-  defp replay_args(%{replay_payload?: false}, _tenant_id, _category_id, _product_id), do: %{}
+  defp replay_args(%{replay_payload?: false}, _product_id), do: %{}
 
-  defp replay_args(%{operation: "delete"}, _tenant_id, _category_id, product_id) do
+  defp replay_args(%{operation: "delete"}, product_id) do
     %{"document_ids" => [product_id]}
   end
 
-  defp replay_args(%{operation: "upsert"}, tenant_id, category_id, product_id) do
-    %{
-      "document_ids" => [product_id],
-      "documents" => [
-        %{
-          "id" => product_id,
-          "source" => "fields",
-          "data" => %{
-            "name" => "Ops Incident Lab item",
-            "description" => "Deterministic demo failure injection",
-            "category_id" => category_id,
-            "tenant_id" => tenant_id
-          }
-        }
-      ]
-    }
+  # Upsert jobs carry ids only; a retry loads the product as it is now.
+  defp replay_args(%{operation: "upsert"}, product_id) do
+    %{"document_ids" => [product_id], "repo" => Atom.to_string(Repo)}
   end
 
   defp inject_indexing_failure! do

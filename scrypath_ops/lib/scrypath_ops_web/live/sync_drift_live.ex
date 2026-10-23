@@ -1072,24 +1072,57 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          row when not is_nil(row) <- Enum.find(rows, &(to_string(&1.id) == to_string(source_id))),
          recovery when not is_nil(recovery) <- Scrypath.Operator.FailedWork.recovery_action(row),
          payload when is_map(payload) <- get_in(recovery.reference, [:payload]) do
-      if receipt.operation == :delete do
-        ids = Map.get(payload, "document_ids") || Map.get(payload, :document_ids)
+      ids = Map.get(payload, "document_ids") || Map.get(payload, :document_ids)
 
-        if is_list(ids),
-          do: {:ok, %{operation: :delete, expected: ids}},
-          else: {:error, :missing_ids}
-      else
-        docs = Map.get(payload, "documents") || Map.get(payload, :documents)
+      cond do
+        not is_list(ids) ->
+          {:error, :missing_ids}
 
-        if is_list(docs),
-          do: {:ok, %{operation: :upsert, expected: docs}},
-          else: {:error, :missing_documents}
+        receipt.operation == :delete ->
+          {:ok, %{operation: :delete, expected: ids}}
+
+        true ->
+          expected_current_documents(schema, ids, payload, opts)
       end
     else
       _ -> {:error, :source_unavailable}
     end
   rescue
     _ -> {:error, :source_unavailable}
+  end
+
+  # Retried upserts load current records when they run, so the expected effect is
+  # the current projection of those records, not the copy the failed job held.
+  defp expected_current_documents(schema, ids, payload, opts) do
+    config =
+      opts
+      |> ScrypathOps.Schemas.runtime_opts()
+      |> Scrypath.Config.resolve!()
+      |> put_payload_repo(payload)
+
+    case Scrypath.Loader.load(schema, ids, config) do
+      {:ok, records, _missing_ids} ->
+        documents =
+          Enum.map(records, fn record ->
+            document = Scrypath.Projection.document(schema, record)
+            %{"id" => document.id, "data" => document.data}
+          end)
+
+        {:ok, %{operation: :upsert, expected: documents}}
+
+      {:error, _reason} ->
+        {:error, :source_unavailable}
+    end
+  end
+
+  defp put_payload_repo(config, payload) do
+    case {Keyword.get(config, :repo), Map.get(payload, "repo")} do
+      {nil, repo} when is_binary(repo) ->
+        Keyword.put(config, :repo, String.to_existing_atom(repo))
+
+      _ ->
+        config
+    end
   end
 
   defp field(map, key) when is_map(map), do: Map.get(map, key)

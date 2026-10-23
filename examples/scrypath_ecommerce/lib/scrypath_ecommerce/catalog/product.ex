@@ -8,6 +8,7 @@ defmodule ScrypathEcommerce.Catalog.Product do
     faceting: [attributes: [:category_id]]
 
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
 
   schema "products" do
     field(:name, :string)
@@ -26,6 +27,18 @@ defmodule ScrypathEcommerce.Catalog.Product do
       category_id: product.category_id,
       category_name: product.category.name
     }
+  end
+
+  @doc """
+  Loads current products for Oban sync jobs, which carry only document ids.
+
+  The demo Repo rejects queries without a tenant, so this loader states its
+  scope explicitly: the ids come from Scrypath's own jobs, and each document
+  carries its row's `tenant_id` through `tenant_field`.
+  """
+  def search_records(ids, %{repo: repo}) do
+    from(product in __MODULE__, where: product.id in ^ids, preload: :category)
+    |> repo.all(skip_tenant_id: true)
   end
 
   @doc false

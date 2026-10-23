@@ -7,6 +7,7 @@ defmodule ScrypathEcommerce.Catalog.Variant do
     tenant_field: :tenant_id
 
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
 
   schema "variants" do
     field(:sku, :string)
@@ -17,6 +18,16 @@ defmodule ScrypathEcommerce.Catalog.Variant do
     belongs_to(:tenant, ScrypathEcommerce.Catalog.Tenant)
     belongs_to(:product, ScrypathEcommerce.Catalog.Product)
     timestamps(type: :utc_datetime)
+  end
+
+  @doc """
+  Loads current variants for Oban sync jobs, which carry only document ids.
+
+  See `ScrypathEcommerce.Catalog.Product.search_records/2` for the tenant scope.
+  """
+  def search_records(ids, %{repo: repo}) do
+    from(variant in __MODULE__, where: variant.id in ^ids, preload: :product)
+    |> repo.all(skip_tenant_id: true)
   end
 
   @doc false

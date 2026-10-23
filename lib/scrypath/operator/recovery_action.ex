@@ -7,7 +7,6 @@ defmodule Scrypath.Operator.RecoveryAction do
   than backend-native admin commands.
   """
 
-  alias Scrypath.Document
   alias Scrypath.Backfill
   alias Scrypath.Oban.Enqueue
   alias Scrypath.Sync
@@ -45,11 +44,12 @@ defmodule Scrypath.Operator.RecoveryAction do
     config = oban_retry_config(action, opts)
     payload = Map.get(action.reference, :payload, %{})
 
-    with :ok <- validate_oban_retry(action, config, payload) do
+    with :ok <- validate_oban_retry(action, config, payload),
+         :ok <- check_loadable(action, config) do
       case action.operation do
+        # The new job loads current records by id, so a retry never resends old data.
         :upsert ->
-          documents = decode_documents(Map.get(payload, "documents", []))
-          Enqueue.enqueue_upsert(action.schema, documents, config)
+          Enqueue.enqueue_upsert(action.schema, Map.get(payload, "document_ids", []), config)
 
         :delete ->
           Enqueue.enqueue_delete(action.schema, Map.get(payload, "document_ids", []), config)
@@ -86,6 +86,11 @@ defmodule Scrypath.Operator.RecoveryAction do
 
   def retry(%__MODULE__{}, _opts), do: {:error, :unsupported_recovery_mode}
 
+  defp check_loadable(%__MODULE__{operation: :upsert, schema: schema}, config),
+    do: Scrypath.Loader.check_loadable(schema, config)
+
+  defp check_loadable(_action, _config), do: :ok
+
   defp validate_oban_retry(action, config, payload) do
     current_index = action.backend.index_name(action.schema, config)
 
@@ -96,10 +101,7 @@ defmodule Scrypath.Operator.RecoveryAction do
       action.index && current_index != action.index ->
         {:error, :index_mismatch}
 
-      action.operation == :upsert and not is_list(Map.get(payload, "documents")) ->
-        {:error, {:missing_retry_input, :documents}}
-
-      action.operation == :delete and not is_list(Map.get(payload, "document_ids")) ->
+      action.operation in [:upsert, :delete] and not is_list(Map.get(payload, "document_ids")) ->
         {:error, {:missing_retry_input, :document_ids}}
 
       true ->
@@ -108,7 +110,10 @@ defmodule Scrypath.Operator.RecoveryAction do
   end
 
   defp oban_retry_config(action, opts) do
-    opts = base_retry_config(opts, action, :oban)
+    opts =
+      opts
+      |> base_retry_config(action, :oban)
+      |> put_payload_repo(Map.get(action.reference, :payload, %{}))
 
     case normalize_queue(Map.get(action.reference, :queue)) do
       nil -> opts
@@ -132,14 +137,16 @@ defmodule Scrypath.Operator.RecoveryAction do
 
   defp normalize_queue(_queue), do: nil
 
-  defp decode_documents(documents) when is_list(documents) do
-    Enum.map(documents, fn
-      %{"id" => id, "data" => data, "source" => source} ->
-        %Document{id: id, data: data, source: normalize_source(source)}
-    end)
+  # Resolved runtime options carry `repo: nil` when no repo was configured, so
+  # fall back to the repo recorded on the failed job in that case too.
+  defp put_payload_repo(opts, %{"repo" => repo}) when is_binary(repo) do
+    case Keyword.get(opts, :repo) do
+      nil -> Keyword.put(opts, :repo, String.to_existing_atom(repo))
+      _repo -> opts
+    end
+  rescue
+    ArgumentError -> opts
   end
 
-  defp normalize_source("fields"), do: :fields
-  defp normalize_source("custom"), do: :custom
-  defp normalize_source(source) when is_atom(source), do: source
+  defp put_payload_repo(opts, _payload), do: opts
 end

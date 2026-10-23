@@ -2,6 +2,7 @@ defmodule Scrypath.Oban.WorkerTest do
   use ExUnit.Case, async: true
 
   alias Scrypath.Document
+  alias Scrypath.TestSupport.FakeRepo
 
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
@@ -69,32 +70,89 @@ defmodule Scrypath.Oban.WorkerTest do
     end
   end
 
-  test "upsert worker writes serialized documents without reloading source rows" do
-    args = %{
-      "schema" => "Elixir.SearchablePost",
-      "backend" => "Elixir.Scrypath.Oban.WorkerTest.RecordingBackend",
-      "index" => "tenant_searchable_post",
-      "sync_mode" => "oban",
-      "document_count" => 2,
-      "document_ids" => [1, 2],
-      "documents" => [
-        %{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"},
-        %{"id" => 2, "data" => %{"title" => "Two"}, "source" => "custom"}
-      ]
+  defmodule LoaderPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    schema "loader_posts" do
+      field(:title, :string)
+    end
+
+    def search_records(ids, context) do
+      send(self(), {:search_records, ids, context})
+      Enum.map(ids -- [404], &%__MODULE__{id: &1, title: "Loaded #{&1}"})
+    end
+  end
+
+  setup do
+    FakeRepo.reset()
+    :ok
+  end
+
+  defp upsert_args(schema, backend, ids, extra \\ %{}) do
+    Map.merge(
+      %{
+        "schema" => to_string(schema),
+        "backend" => to_string(backend),
+        "index" => "tenant_queryable_post",
+        "sync_mode" => "oban",
+        "document_count" => length(ids),
+        "document_ids" => ids,
+        "repo" => to_string(FakeRepo)
+      },
+      extra
+    )
+  end
+
+  test "upsert worker loads current records instead of trusting data in the job" do
+    FakeRepo.put_records([%QueryablePost{id: 1, title: "Current title"}])
+
+    # Jobs queued before ids-only payloads still carry an old copy; it must be ignored.
+    legacy_snapshot = %{
+      "documents" => [%{"id" => 1, "data" => %{"title" => "Old title"}, "source" => "fields"}]
     }
+
+    args = upsert_args(QueryablePost, RecordingBackend, [1], legacy_snapshot)
 
     assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
 
-    assert_received {:upsert_documents, SearchablePost, documents, config}
-
-    assert documents == [
-             %Document{id: 1, data: %{"title" => "One"}, source: :fields},
-             %Document{id: 2, data: %{"title" => "Two"}, source: :custom}
-           ]
-
+    assert_received {:fake_repo_all, %Ecto.Query{}}
+    assert_received {:upsert_documents, QueryablePost, [%Document{id: 1} = document], config}
+    assert document.data.title == "Current title"
     assert config[:backend] == RecordingBackend
-    assert config[:index_name] == "tenant_searchable_post"
+    assert config[:index_name] == "tenant_queryable_post"
+    refute_received {:delete_documents, _, _, _}
+  end
+
+  test "upsert worker deletes documents whose records no longer exist" do
+    FakeRepo.put_records([%QueryablePost{id: 1, title: "Still here"}])
+
+    args = upsert_args(QueryablePost, RecordingBackend, [1, 2])
+
+    assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+
+    assert_received {:upsert_documents, QueryablePost, [%Document{id: 1}], _config}
+    assert_received {:delete_documents, QueryablePost, [2], _config}
+  end
+
+  test "upsert worker uses a schema's search_records/2 loader" do
+    args = upsert_args(LoaderPost, RecordingBackend, [7, 404])
+
+    assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+
+    assert_received {:search_records, [7, 404], %{repo: FakeRepo}}
+    assert_received {:upsert_documents, LoaderPost, [%Document{id: 7} = document], _config}
+    assert document.data.title == "Loaded 7"
+    assert_received {:delete_documents, LoaderPost, [404], _config}
     refute_received {:fake_repo_all, _}
+  end
+
+  test "upsert worker cancels jobs that cannot load records" do
+    args = upsert_args(QueryablePost, RecordingBackend, [1]) |> Map.delete("repo")
+
+    assert {:cancel, {:invalid_job, :repo_required}} =
+             Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
   end
 
   test "delete worker deletes resolved ids and does not expect documents in args" do
@@ -130,19 +188,10 @@ defmodule Scrypath.Oban.WorkerTest do
   end
 
   test "workers return retryable errors for transient backend failures" do
-    args = %{
-      "schema" => "Elixir.SearchablePost",
-      "backend" => "Elixir.Scrypath.Oban.WorkerTest.TransientBackend",
-      "index" => "tenant_searchable_post",
-      "sync_mode" => "oban",
-      "document_count" => 1,
-      "document_ids" => [1],
-      "documents" => [%{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}]
-    }
+    FakeRepo.put_records([%QueryablePost{id: 1, title: "One"}])
+    args = upsert_args(QueryablePost, TransientBackend, [1])
 
     assert {:error, :timeout} = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
-
-    assert {:error, :timeout} =
-             Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: Map.delete(args, "documents")})
+    assert {:error, :timeout} = Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: args})
   end
 end

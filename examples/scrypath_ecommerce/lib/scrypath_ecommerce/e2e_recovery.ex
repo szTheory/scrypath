@@ -56,13 +56,7 @@ defmodule ScrypathEcommerce.E2ERecovery do
       "task_baseline" => task_baseline,
       "document_count" => 1,
       "document_ids" => [document.id],
-      "documents" => [
-        %{
-          "id" => document.id,
-          "source" => to_string(document.source),
-          "data" => stringify_keys(document.data)
-        }
-      ]
+      "repo" => Atom.to_string(Repo)
     }
 
     original =
@@ -137,7 +131,8 @@ defmodule ScrypathEcommerce.E2ERecovery do
     true = get_arg(job.args, "schema") == @variant_schema
     true = get_arg(job.args, "backend") == @backend
     true = get_arg(job.args, "index") == index
-    [accepted_document] = get_arg(job.args, "documents")
+    # Retried jobs carry ids only and load the current row when they run.
+    true = is_nil(get_arg(job.args, "documents"))
 
     context = %{
       host: host,
@@ -164,7 +159,6 @@ defmodule ScrypathEcommerce.E2ERecovery do
     true = task_type(task) == "documentAdditionOrUpdate"
 
     expected = recovery_expected!(source)
-    true = accepted_document == expected
     [expected_id] = get_arg(job.args, "document_ids")
     true = expected["id"] == expected_id
     true = expected_id == expected_document_id
@@ -311,19 +305,22 @@ defmodule ScrypathEcommerce.E2ERecovery do
       |> Repo.one!(skip_tenant_id: true)
 
     args = job.args
-    [document] = get_arg(args, "documents")
 
     %{
       id: job.id,
       attempt: job.attempt,
       args: args,
       task_baseline: get_arg(args, "task_baseline"),
-      document: document
+      document_ids: get_arg(args, "document_ids")
     }
   end
 
+  # The expected effect is the current projection of the source row, because the
+  # retried job loads current records instead of replaying stored data.
   defp recovery_expected!(source) do
-    source.document
+    [variant] = Variant.search_records(source.document_ids, %{repo: Repo})
+    document = Scrypath.Projection.document(Variant, variant)
+    %{"id" => document.id, "data" => stringify_keys(document.data)}
   end
 
   defp max_task_uid!(config) do
