@@ -89,7 +89,7 @@ Sync is explicit orchestration code that should run after successful repo persis
 | `:manual` | returns accepted backend work immediately |
 | `:oban` | returns durable enqueue acceptance only |
 
-`sync_mode: :oban` keeps the public verbs on `Scrypath.*`, inserts durable jobs through Oban, and stops there. It does not imply backend completion or search visibility.
+`sync_mode: :oban` keeps the public verbs on `Scrypath.*`, inserts durable jobs through Oban, and stops there. It does not imply backend completion or search visibility. Upsert jobs carry document ids and load current records through `Scrypath.Loader` when they run (default query plus the schema's `preload:`, or the schema's `search_records/2`), so retries never replay stale data; delete jobs carry ids only.
 
 All three modes share one operator-facing lifecycle:
 

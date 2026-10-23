@@ -4,7 +4,9 @@ defmodule Scrypath.Operator.FailedWork do
 
   Each entry reports a stable Scrypath-owned identifier, operation kind,
   retryability, and summarized reason. Recovery details are exposed through an
-  explicit `Scrypath.Operator.RecoveryAction` when durable replay is possible.
+  explicit `Scrypath.Operator.RecoveryAction` when a retry is possible. Retrying
+  Oban upsert work queues the same document ids again; the new job loads current
+  records, so a retry never resends the data the failed job held.
 
   ## Enriched fields (additive, v1.3)
 

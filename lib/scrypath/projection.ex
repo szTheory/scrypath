@@ -8,7 +8,8 @@ defmodule Scrypath.Projection do
 
   Association-derived data requires explicit preload work before projection. Scrypath
   does not reach through unloaded associations or infer extra queries on behalf of the
-  caller.
+  caller. Oban sync jobs load records themselves, so declare those associations with
+  `preload:` on `use Scrypath`, or define `search_records/2` (see `Scrypath.Loader`).
   """
 
   alias Scrypath.Document
