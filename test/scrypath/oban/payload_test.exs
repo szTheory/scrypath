@@ -1,7 +1,6 @@
 defmodule Scrypath.Oban.PayloadTest do
   use ExUnit.Case, async: true
 
-  alias Scrypath.Document
   alias Scrypath.Oban.Payload
 
   defmodule RecordingBackend do
@@ -55,24 +54,12 @@ defmodule Scrypath.Oban.PayloadTest do
     end
   end
 
-  test "build_upsert/3 serializes projected batches into JSON-safe worker args" do
-    documents = [
-      %Document{
-        id: 1,
-        data: %{title: "One", metadata: %{state: :published, counts: %{"comments" => 3}}},
-        source: :fields
-      },
-      %Document{
-        id: 2,
-        data: %{title: "Two", metadata: %{state: :draft, counts: %{"comments" => 1}}},
-        source: :custom
-      }
-    ]
-
+  test "build_upsert/3 stores document ids and the repo, never document data" do
     payload =
-      Payload.build_upsert(SearchablePost, documents,
+      Payload.build_upsert(SearchablePost, [1, "post:2"],
         backend: RecordingBackend,
         index_prefix: "tenant",
+        repo: Scrypath.TestSupport.FakeRepo,
         sync_mode: :oban
       )
 
@@ -82,27 +69,10 @@ defmodule Scrypath.Oban.PayloadTest do
              "backend" => "Elixir.Scrypath.Oban.PayloadTest.RecordingBackend",
              "index" => "tenant_searchable_post",
              "index_prefix" => "tenant",
+             "repo" => "Elixir.Scrypath.TestSupport.FakeRepo",
              "sync_mode" => "oban",
              "document_count" => 2,
-             "document_ids" => [1, 2],
-             "documents" => [
-               %{
-                 "id" => 1,
-                 "data" => %{
-                   "title" => "One",
-                   "metadata" => %{"state" => "published", "counts" => %{"comments" => 3}}
-                 },
-                 "source" => "fields"
-               },
-               %{
-                 "id" => 2,
-                 "data" => %{
-                   "title" => "Two",
-                   "metadata" => %{"state" => "draft", "counts" => %{"comments" => 1}}
-                 },
-                 "source" => "custom"
-               }
-             ]
+             "document_ids" => [1, "post:2"]
            }
   end
 
@@ -142,22 +112,12 @@ defmodule Scrypath.Oban.PayloadTest do
     refute inspect(payload) =~ "secret-key"
   end
 
-  test "build_upsert/3 rejects structs and unsupported nested values" do
-    bad_documents = [
-      %Document{
-        id: "post-1",
-        data: %{title: "Bad", author: %CustomProjectedPost{external_id: "post-1", title: "Bad"}},
-        source: :custom
-      }
-    ]
-
-    assert_raise ArgumentError,
-                 "oban payloads only support JSON-safe values, got struct Scrypath.Oban.PayloadTest.CustomProjectedPost",
-                 fn ->
-                   Payload.build_upsert(CustomProjectedPost, bad_documents,
-                     backend: RecordingBackend,
-                     sync_mode: :oban
-                   )
-                 end
+  test "build_upsert/3 rejects document ids that are not JSON-safe scalars" do
+    assert_raise ArgumentError, ~r/JSON-safe scalar values/, fn ->
+      Payload.build_upsert(SearchablePost, [{:composite, 1}],
+        backend: RecordingBackend,
+        sync_mode: :oban
+      )
+    end
   end
 end

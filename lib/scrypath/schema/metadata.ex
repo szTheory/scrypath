@@ -13,6 +13,7 @@ defmodule Scrypath.Schema.Metadata do
           | :backend
           | :tenant_field
           | :fan_outs
+          | :preload
 
   @spec fetch!(module(), key()) :: term()
   def fetch!(schema_module, key) when is_atom(schema_module) and is_atom(key) do
@@ -45,4 +46,7 @@ defmodule Scrypath.Schema.Metadata do
 
   @spec fan_outs(module()) :: list()
   def fan_outs(schema_module), do: fetch!(schema_module, :fan_outs)
+
+  @spec preload(module()) :: term()
+  def preload(schema_module), do: fetch!(schema_module, :preload)
 end

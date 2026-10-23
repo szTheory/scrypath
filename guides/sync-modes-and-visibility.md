@@ -84,6 +84,35 @@ Recovery posture:
 - use `mix scrypath.retry` only with one explicit failed-work id
 - move to backfill or reindex when the issue is larger than one queue replay
 
+### What an Oban job carries
+
+An Oban upsert job carries document ids, not document data. When the job runs, it loads the records as they are now, projects them, upserts the ones that exist, and deletes the documents whose rows are gone. This is the same approach Searchkick and Laravel Scout take, and it means a delayed job, an automatic Oban retry or an operator retry can never write an older copy over newer index data.
+
+Tell Scrypath how to load records, from least to most effort:
+
+```elixir
+# Nothing extra when the search document only uses the row's own fields.
+# Pass the repo when you sync (or configure it): it is stored on the job.
+Scrypath.sync_record(MyApp.Catalog.Product, product, sync_mode: :oban, repo: MyApp.Repo)
+
+# Declare the associations search_document/1 reads.
+use Scrypath,
+  fields: [:name, :category_name],
+  preload: [:category]
+
+# Full control: scoped repos, soft deletes, or ids that are not a column.
+def search_records(ids, %{repo: repo}) do
+  from(p in __MODULE__, where: p.id in ^ids and is_nil(p.deleted_at), preload: :category)
+  |> repo.all()
+end
+```
+
+Return only the records that should be searchable; Scrypath removes the rest from the index. Schemas that define `search_document_id/1` must define `search_records/2`, because a custom document id cannot be mapped back to a row. Scrypath raises at enqueue time when a job could not load its records later.
+
+Delete jobs still carry only ids and never reload the deleted row.
+
+Identical pending jobs are deduplicated. One narrow race remains: if two jobs for the same record load it at nearly the same moment, the one that finishes last wins, even if it loaded a moment earlier. Meilisearch has no conditional write to reject it, so the next change to that record corrects the document. Use a backfill when you need to settle a burst of concurrent writes immediately.
+
 ## `:manual`
 
 Use `:manual` when operators or migration workflows should hold the next step explicitly.

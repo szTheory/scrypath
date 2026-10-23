@@ -43,9 +43,9 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 
 **Symptom** — `mix scrypath.failed` shows a growing list, or `Scrypath.failed_sync_work/2` returns many rows; alerts on Meilisearch failed tasks fire.
 
-**Diagnosis** — Classify transport vs validation vs exhausted queue work using each row’s `reason`, `reason_class`, and `retryable?` before replaying anything. Validation-shaped failures need data or schema fixes first; transport blips may respond to a single retry.
+**Diagnosis** — Classify transport vs validation vs exhausted queue work using each row’s `reason`, `reason_class`, and `retryable?` before retrying anything. Validation-shaped failures need data or schema fixes first; transport blips may respond to a single retry. A retried Oban upsert loads the records as they are now, so fix the data and then retry: the retry sends the corrected rows, never the copy that failed.
 
-**Action** — Start with `mix scrypath.status`, then `mix scrypath.failed` for IDs (optional **`--json`** for machine-readable rollups, or read **`failed_work_counts`** on **`mix scrypath.reconcile`** / `%Scrypath.Operator.Reconcile{}`). Retry one id at a time with `mix scrypath.retry` (or `Scrypath.retry_sync_work/2` from application code) only when the row is retryable and the underlying contract still holds. Use `mix scrypath.reconcile` for a structured report; apply `Scrypath.reconcile_sync/2` only with explicit options after reading the report.
+**Action** — Start with `mix scrypath.status`, then `mix scrypath.failed` for IDs (optional **`--json`** for machine-readable rollups, or read **`failed_work_counts`** on **`mix scrypath.reconcile`** / `%Scrypath.Operator.Reconcile{}`). Retry one id at a time with `mix scrypath.retry` (or `Scrypath.retry_sync_work/2` from application code) only when the row is retryable and the cause is fixed. Use `mix scrypath.reconcile` for a structured report; apply `Scrypath.reconcile_sync/2` only with explicit options after reading the report.
 
 **Verify** — Re-run `Scrypath.failed_sync_work/2` until the list is empty or only contains expected non-retryable rows. Confirm Meilisearch’s task list stops growing failed tasks for the same root cause.
 

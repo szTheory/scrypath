@@ -46,6 +46,7 @@ defmodule ScrypathDemo.Smoke.MeilisearchObanStackTest do
             }} =
              Scrypath.sync_record(Post, post,
                backend: Scrypath.Meilisearch,
+               repo: Repo,
                sync_mode: :oban,
                oban: ScrypathDemo.Oban,
                oban_queue: :scrypath,

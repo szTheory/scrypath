@@ -33,6 +33,12 @@ defmodule Scrypath.Options do
       default: :id,
       doc: "Field used as the canonical search document identifier."
     ],
+    preload: [
+      type: :any,
+      default: [],
+      doc:
+        "Associations to preload when Oban sync jobs load current records by document id (any `Ecto.Repo.preload/3` spec)."
+    ],
     index_prefix: [
       type: {:custom, __MODULE__, :validate_optional_string, []},
       default: nil,

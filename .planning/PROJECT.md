@@ -380,6 +380,7 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
+| Oban upsert jobs carry document ids and load current records when they run (`Scrypath.Loader`: default query plus `preload:`, or the schema's `search_records/2`); missing rows become deletes. Supersedes Phase 4 D-07/D-09 (jobs carried projected snapshots). | 2026-10-22 — snapshots let operator and automatic retries overwrite newer index data. Matches Searchkick, Laravel Scout and Hibernate Search; reasoning in `.planning/research/SYNC-RELOAD-PROPOSAL.md`. Delete jobs still carry ids only (D-08 kept). |
 | Scope v1.43 around the saved UI refinement brief and reuse existing UI inventories; keep research defaults and adaptive model routing intact. | Scope, inventory reuse, all 20 requirements, and Phases 173–177 approved 2026-10-06. |
 | Settle shared light/dark visual direction in Impeccable comps and GSD UI contracts before broad implementation. | ✓ Phase 173 — the neutral foundation, single theme preference, and operational time/copy contract are implemented and verified locally; later phases extend the demonstrated patterns. |
 | Preserve complete observations through partial refreshes, and derive recovery actions from existing eligibility, allowlist, and host authorization rules. | ✓ Phase 174 — current-source tests verify truthful success states, retained evidence, and fail-closed selected-schema recovery. |

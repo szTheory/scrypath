@@ -18,6 +18,7 @@ defmodule Scrypath.Schema do
   - `:backend`
   - `:tenant_field`
   - `:fan_outs`
+  - `:preload`
 
   The macro does not generate runtime APIs such as `search/2` or `reindex/1`.
   """
@@ -43,6 +44,7 @@ defmodule Scrypath.Schema do
       def __scrypath__(:backend), do: @scrypath_config.backend
       def __scrypath__(:tenant_field), do: @scrypath_config.tenant_field
       def __scrypath__(:fan_outs), do: @scrypath_config.fan_outs
+      def __scrypath__(:preload), do: @scrypath_config.preload
 
       def __scrypath__(key) do
         raise ArgumentError, "unknown Scrypath metadata key: #{inspect(key)}"

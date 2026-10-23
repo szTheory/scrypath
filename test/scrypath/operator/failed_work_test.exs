@@ -453,6 +453,7 @@ defmodule Scrypath.Operator.FailedWorkTest do
                backend: Scrypath.Meilisearch,
                sync_mode: :oban,
                index_prefix: "tenant",
+               repo: Scrypath.TestSupport.FakeRepo,
                oban: RecordingOban,
                oban_queue: :search_sync
              )
@@ -460,10 +461,44 @@ defmodule Scrypath.Operator.FailedWorkTest do
     assert result.mode == :oban
     assert result.status == :accepted
 
+    # The retry queues the same ids without the stored copy; the job loads
+    # current records when it runs, so it cannot roll back newer data.
     assert_received {:oban_insert, job}
     assert job.worker == "Scrypath.Oban.UpsertWorker"
     assert job.args["document_ids"] == [9]
-    assert Enum.map(job.args["documents"], & &1["id"]) == [9]
+    refute Map.has_key?(job.args, "documents")
+  end
+
+  test "retry_sync_work/2 uses the repo recorded on the failed job" do
+    action =
+      RecoveryAction.new(
+        schema: SearchablePost,
+        backend: Scrypath.Meilisearch,
+        mode: :oban,
+        operation: :upsert,
+        index: "tenant_searchable_post",
+        reference: %{
+          queue: "search_sync",
+          payload: %{
+            "operation" => "upsert",
+            "document_count" => 1,
+            "document_ids" => [9],
+            "repo" => "Elixir.Scrypath.TestSupport.FakeRepo"
+          }
+        }
+      )
+
+    assert {:ok, _result} =
+             Scrypath.retry_sync_work(action,
+               backend: Scrypath.Meilisearch,
+               sync_mode: :oban,
+               index_prefix: "tenant",
+               oban: RecordingOban,
+               oban_queue: :search_sync
+             )
+
+    assert_received {:oban_insert, job}
+    assert job.args["repo"] == "Elixir.Scrypath.TestSupport.FakeRepo"
   end
 
   test "retry_sync_work/2 rejects non-retryable failed work" do

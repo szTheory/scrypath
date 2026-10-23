@@ -70,6 +70,7 @@ defmodule Scrypath.ObanTest do
         [%SearchablePost{id: 7, title: "Queued", body: "Body"}],
         backend: RecordingBackend,
         sync_mode: :oban,
+        repo: Scrypath.TestSupport.FakeRepo,
         oban: RecordingOban,
         oban_queue: :search_sync
       )
@@ -104,6 +105,7 @@ defmodule Scrypath.ObanTest do
         [%SearchablePost{id: 7, title: "Queued", body: "Body"}],
         backend: RecordingBackend,
         sync_mode: :oban,
+        repo: Scrypath.TestSupport.FakeRepo,
         oban: NamedOban,
         oban_queue: :search_sync
       )
@@ -111,6 +113,8 @@ defmodule Scrypath.ObanTest do
     assert %Multi{} = multi
     assert_received {:named_oban_insert, :search_sync, changeset, []}
     assert changeset.changes.worker == "Scrypath.Oban.UpsertWorker"
+    assert changeset.changes.args["document_ids"] == [7]
+    refute Map.has_key?(changeset.changes.args, "documents")
   end
 
   test "Oban integration sources compile without Oban on the code path" do

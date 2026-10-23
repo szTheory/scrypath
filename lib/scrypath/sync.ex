@@ -21,16 +21,15 @@ defmodule Scrypath.Sync do
   @spec sync_records(module(), [struct() | map()], keyword()) :: {:ok, term()} | {:error, term()}
   def sync_records(schema_module, records, opts \\ []) when is_list(records) do
     config = Config.resolve!(opts)
-    documents = Enum.map(records, &Projection.document(schema_module, &1))
 
     metadata =
-      Telemetry.common_metadata(schema_module, config, document_count: length(documents))
+      Telemetry.common_metadata(schema_module, config, document_count: length(records))
 
     Telemetry.span([:scrypath, :sync, :upsert], metadata, fn ->
       result =
-        case documents do
+        case records do
           [] -> noop_result(config)
-          _documents -> dispatch_upsert(schema_module, documents, config)
+          _records -> dispatch_upsert(schema_module, records, config)
         end
 
       {result, Telemetry.stop_metadata(result)}
@@ -131,15 +130,21 @@ defmodule Scrypath.Sync do
     end)
   end
 
-  defp dispatch_upsert(schema_module, documents, config) do
+  # Oban jobs carry document ids and load current records when they run, so only
+  # inline and manual sync project documents here.
+  defp dispatch_upsert(schema_module, records, config) do
     case Keyword.fetch!(config, :sync_mode) do
       :oban ->
+        document_ids = Identity.document_ids(schema_module, records)
+
         config
         |> Config.ensure_oban_ready!()
-        |> then(&Enqueue.enqueue_upsert(schema_module, documents, &1))
+        |> then(&Enqueue.enqueue_upsert(schema_module, document_ids, &1))
         |> decorate_result(config)
 
       _other ->
+        documents = Enum.map(records, &Projection.document(schema_module, &1))
+
         backend_upsert_documents(schema_module, documents, config)
         |> normalize_write_result(documents, config)
         |> maybe_wait_for_task(config)

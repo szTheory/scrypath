@@ -99,6 +99,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
         args: %{
           "operation" => "upsert",
           "index" => "tenant_searchable_post",
+          "repo" => "Elixir.Scrypath.TestSupport.FakeRepo",
           "documents" => [%{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}],
           "document_ids" => [1]
         }
@@ -215,6 +216,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
         args: %{
           "operation" => "upsert",
           "index" => "tenant_searchable_post",
+          "repo" => "Elixir.Scrypath.TestSupport.FakeRepo",
           "documents" => [%{"id" => 9, "data" => %{"title" => "Replay"}, "source" => "fields"}],
           "document_ids" => [9]
         }
@@ -293,6 +295,7 @@ defmodule Scrypath.MixTasks.OperatorTasksTest do
         args: %{
           "operation" => "upsert",
           "index" => "tenant_searchable_post",
+          "repo" => "Elixir.Scrypath.TestSupport.FakeRepo",
           "documents" => [%{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}],
           "document_ids" => [1]
         }

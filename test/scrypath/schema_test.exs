@@ -16,7 +16,8 @@ defmodule Scrypath.SchemaTest do
                document_source: :fields,
                index_prefix: nil,
                backend: nil,
-               tenant_field: nil
+               tenant_field: nil,
+               preload: []
              }
 
       assert SearchablePost.__scrypath__(:fields) == [:title, :body]

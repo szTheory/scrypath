@@ -103,8 +103,7 @@ defmodule Scrypath.Operator.FailedWork.Translation do
 
   defp replay_payload_available?(job) do
     case arg(job, "operation") do
-      "upsert" -> is_list(Map.get(args(job), "documents"))
-      "delete" -> is_list(Map.get(args(job), "document_ids"))
+      op when op in ["upsert", "delete"] -> is_list(Map.get(args(job), "document_ids"))
       _ -> false
     end
   end

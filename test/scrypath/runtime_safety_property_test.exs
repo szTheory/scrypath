@@ -40,7 +40,7 @@ defmodule Scrypath.RuntimeSafetyPropertyTest do
       payload =
         Payload.build_upsert(
           SearchablePost,
-          [%Scrypath.Document{id: 1, data: %{title: "safe"}, source: :fields}],
+          [1],
           backend: Scrypath.Meilisearch,
           sync_mode: :oban,
           meilisearch_api_key: api_key

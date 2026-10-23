@@ -573,13 +573,14 @@ defmodule Scrypath.SyncTest do
              Scrypath.sync_records(SearchablePost, records,
                backend: RecordingBackend,
                sync_mode: :oban,
+               repo: Scrypath.TestSupport.FakeRepo,
                oban: EnqueueOban,
                oban_queue: :search_sync
              )
 
     assert_received {:oban_insert, upsert_job}
     assert upsert_job.args["document_ids"] == [1, 2]
-    assert Enum.map(upsert_job.args["documents"], & &1["id"]) == [1, 2]
+    refute Map.has_key?(upsert_job.args, "documents")
     refute_received {:upsert_documents, _, _, _}
 
     assert {:ok,

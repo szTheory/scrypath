@@ -106,6 +106,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         queue: "search_sync",
         args: %{
           "operation" => "upsert",
+          "repo" => "Elixir.ScrypathOps.Repo",
           "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
           "backend" => "Elixir.Scrypath.Meilisearch",
           "index" => "fsv_ops_post_a",
@@ -164,6 +165,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         errors: [%{"error" => "the Variant source remains visible"}],
         args: %{
           "operation" => "upsert",
+          "repo" => "Elixir.ScrypathOps.Repo",
           "schema" => "Elixir.ScrypathOps.Test.OpsPostB",
           "backend" => "Elixir.Scrypath.Meilisearch",
           "index" => "fsv_ops_post_b",
@@ -379,6 +381,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         queue: "search_sync",
         args: %{
           "operation" => "upsert",
+          "repo" => "Elixir.ScrypathOps.Repo",
           "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
           "backend" => "Elixir.Scrypath.Meilisearch",
           "index" => "fsv_ops_post_a"

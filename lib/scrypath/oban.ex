@@ -7,7 +7,7 @@ defmodule Scrypath.Oban do
   alias Ecto.Multi
   alias Scrypath.Config
   alias Scrypath.Oban.Enqueue
-  alias Scrypath.Projection
+  alias Scrypath.Identity
 
   @spec enqueue_upsert(Multi.t(), Multi.name(), module(), [struct() | map()], keyword()) ::
           Multi.t()
@@ -18,8 +18,8 @@ defmodule Scrypath.Oban do
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
 
-    documents = Enum.map(records, &Projection.document(schema_module, &1))
-    changeset = Enqueue.upsert_job_changeset(schema_module, documents, config)
+    document_ids = Identity.document_ids(schema_module, records)
+    changeset = Enqueue.upsert_job_changeset(schema_module, document_ids, config)
 
     insert_multi_job(Config.oban_module(config), multi, name, changeset)
   end
