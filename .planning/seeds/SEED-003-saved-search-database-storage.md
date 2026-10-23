@@ -1,7 +1,7 @@
 ---
 slug: saved-search-database-storage
 title: Store ScrypathOps saved searches in a database table
-status: planted
+status: promoted
 created: 2026-10-22
 updated: 2026-10-22
 ---
@@ -30,3 +30,7 @@ Saved searches are currently JSON files in the folder named by `config :scrypath
 - `scrypath_ops/lib/scrypath_ops_web/live/playbook_live.ex` (`mount/3` reads `playbook_workspace_dir`)
 - `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex` (`ops_workspace_mode_indicator/1`)
 - `examples/scrypath_ecommerce/config/dev.exs`, `config/runtime.exs`
+
+## Promoted — 2026-10-22
+
+The same day it was planted, the maintainer decided to move saved searches to a database table in this batch instead of deferring: “users shouldn't have to worry about it.” See `.planning/UI-FEEDBACK.md` round 2 decisions. ScrypathOps already requires `:repo` in `scrypath_ops_routes/2` and depends on `ecto_sql`; it owns no tables or migrations yet, so this is its first.

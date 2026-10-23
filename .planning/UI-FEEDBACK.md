@@ -217,3 +217,13 @@ Recorded for one batched pass after PR #107 (`427dd1ab`); nothing below is imple
 - **ARCH-01 → A, deferred.** Keep file storage for this batch. Database storage is planted as `.planning/seeds/SEED-003-saved-search-database-storage.md`. Maintainer: users shouldn't care where saved searches are stored, so **CONTENT-39 now removes the storage folder from the UI entirely** (no path in routine view, errors or the read-only state; configuration lives in the operator guide only).
 - **CONTENT-35 → “Show times in”**, with the accessible name matching.
 - **CONTENT-42 / retry staleness → A, as a separate library bug-fix PR before the UI batch.** Verified 2026-10-22: `Payload.build_upsert` (`lib/scrypath/oban/payload.ex:8-25`) stores full document snapshots at enqueue time; `UpsertWorker` sends them without a Repo read; `RecoveryAction.retry/2` (`recovery_action.ex:51`) re-enqueues the same snapshot; `validate_oban_retry` (`:89-108`) checks only backend, index and payload shape. No `updated_at`/version guard, and no warning in the UI, HelpLive or `guides/drift-recovery.md`. Retrying an old failed upsert can overwrite newer indexed data. Fix: retry reloads current records by ID (deleted since → delete); fall back to an explicit snapshot warning when records can't be reloaded. Needs a regression test, changelog entry and guide note.
+
+### Decisions — 2026-10-22 grilling round 2
+
+- **Q7 delivery → least ceremony.** Nobody depends on the library yet. One branch and one PR for the whole batch, with the retry fix as its own commit and called out in the PR body and changelog. No per-screen PR split.
+- **Q8 → rename to “Sync and index”**, URL `/sync-and-index`, `/sync-drift` kept as a redirect.
+- **Q9 → one “Checked” time beside Refresh**; each section shows its own “Checking…”/error state instead of a second timestamp (resolves CONTENT-36).
+- **Q10 → picking a saved search fills the form and runs it**; Save / Save as… appear after edits.
+- **Q11 → superseded: ARCH-01 reversed.** Saved searches move to a database table now; there is no “saving isn't set up” state. SEED-003 promoted.
+- **Q12 → compact list rows** on Failed sync (facts on one line, copyable error block, outline Retry on the right, secondary details behind a toggle).
+- **Q13 → Retry stays available for data errors**, with cause-specific guidance; after the retry fix it sends the current record.
