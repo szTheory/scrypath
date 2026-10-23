@@ -1605,7 +1605,18 @@ defmodule ScrypathOpsWeb.SearchLive do
                 title="Search could not run"
                 role="alert"
               >
-                <p>{format_run_error(@run_error)}</p>
+                <p :if={!backend_run_error?(@run_error)}>{format_run_error(@run_error)}</p>
+                <.ops_code_block
+                  :if={backend_run_error?(@run_error)}
+                  id="search-run-error"
+                  variant={:compact}
+                  label="Error"
+                  text={format_run_error(@run_error)}
+                  copy
+                  inline_copy
+                  copy_label="Copy error"
+                  copy_success="Error copied"
+                />
                 <p class="mt-2 text-ops-body">
                   Fix the query options or operator config, then run search again.
                 </p>
@@ -2030,8 +2041,11 @@ defmodule ScrypathOpsWeb.SearchLive do
     "Select at least one schema."
   end
 
+  defp backend_run_error?({:scrypath, _reason}), do: true
+  defp backend_run_error?(_reason), do: false
+
   defp format_run_error({:scrypath, reason}) do
-    inspect(reason)
+    inspect(reason, pretty: true, limit: 200)
   end
 
   defp format_run_error(other), do: inspect(other)

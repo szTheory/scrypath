@@ -180,7 +180,7 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "breadcrumb text"
   },
-  // app.css line 1082 — uppercase eyebrow label
+  // app.css — "Next step" footer label
   {
     selector: ".ops-handoff__eyebrow",
     css_var: "ops-text-muted",
@@ -188,7 +188,7 @@ export const MUTED_PAIRS = [
     fg_token: "base-content",
     bg_token: "base-100",
     role: "text",
-    note: "uppercase eyebrow label"
+    note: "Next step footer label"
   },
   // app.css line 746 — hint copy
   {

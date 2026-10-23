@@ -66,6 +66,7 @@ defmodule Scrypath.Operator.FailedWorkTest do
                  %{
                    id: 501,
                    state: "retryable",
+                   scheduled_at: ~U[2026-01-02 03:04:05Z],
                    worker: "Scrypath.Oban.UpsertWorker",
                    queue: "search_sync",
                    args: %{
@@ -83,6 +84,7 @@ defmodule Scrypath.Operator.FailedWorkTest do
                  %{
                    id: 502,
                    state: "discarded",
+                   scheduled_at: ~U[2026-01-01 00:00:00Z],
                    worker: "Scrypath.Oban.DeleteWorker",
                    queue: "search_sync",
                    args: %{
@@ -115,9 +117,12 @@ defmodule Scrypath.Operator.FailedWorkTest do
     assert retryable_job.state == :retrying
     assert retryable_job.retryable? == true
     assert %RecoveryAction{} = retryable_job.recovery
+    assert retryable_job.next_attempt_at == ~U[2026-01-02 03:04:05Z]
 
     assert discarded_job.source == :oban
     assert discarded_job.state == :failed
+    assert discarded_job.next_attempt_at == nil
+    assert backend_failure.next_attempt_at == nil
     assert discarded_job.retryable? == true
     assert %RecoveryAction{} = discarded_job.recovery
 

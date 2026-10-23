@@ -387,6 +387,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     html = render(view)
     assert html =~ "Search could not run"
     assert html =~ "stub_hard_failure"
+    assert has_element?(view, "#search-run-error", "stub_hard_failure")
+    assert has_element?(view, ~s([data-ops-copy-success="Error copied"][aria-label="Copy error"]))
     assert html =~ "Fix the query options or operator config, then run search again."
     assert html =~ "ops-badge-error"
     refute html =~ ~s(data-testid="search-outcome")
