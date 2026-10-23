@@ -289,9 +289,13 @@ test.describe("admin path motion — DARKMOTION-01", () => {
       try {
         await gotoSearch(page);
         await switchSearchMode(page, "multi");
-        await runBoundedSearch(page, "quantum");
         const results = page.locator("#search-combined-results");
-        await expect(results).toBeVisible();
+        // The seed only waits for the Product index; a federated search fails until the
+        // Variant index has settled too, so rerun until the combined results appear.
+        await expect(async () => {
+          await runBoundedSearch(page, "quantum");
+          await expect(results).toBeVisible({ timeout: 2_000 });
+        }).toPass({ timeout: 20_000 });
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
         await expect(results.locator(".ops-readable-hit").first()).toBeVisible();
         // Raw hit payloads are Elixir-formatted on purpose; the readable heading must not be.
