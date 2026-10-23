@@ -2642,7 +2642,8 @@
   .ops-sync-work { display: grid; gap: .5rem; }
   .ops-sync-work li { display: flex; align-items: center; gap: .5rem; }
   .ops-sync-work li > svg { flex-shrink: 0; }
-  .ops-sync-work .ops-text-action { font-weight: 500; min-height: 0; }
+  .ops-sync-work .ops-text-action { font-weight: 500; min-height: var(--control-h-sm); }
+  .ops-sync-work + .ops-help-link { min-height: var(--control-h-xs); align-items: center; }
   .ops-sync-work [data-tone="error"] > svg { color: var(--ops-error-text); }
   .ops-setting-context { font-size: var(--text-ops-sm); font-weight: 400; line-height: 1.5; color: var(--ops-text-muted); max-width: 34ch; margin-top: .375rem; }
   .ops-setting-live[data-missing="true"] { font-family: var(--font-sans); color: var(--ops-error-text); }

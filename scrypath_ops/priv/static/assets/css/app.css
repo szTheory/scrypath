@@ -6078,7 +6078,11 @@
   }
   .ops-sync-work .ops-text-action {
     font-weight: 500;
-    min-height: 0;
+    min-height: var(--control-h-sm);
+  }
+  .ops-sync-work + .ops-help-link {
+    min-height: var(--control-h-xs);
+    align-items: center;
   }
   .ops-sync-work [data-tone="error"] > svg {
     color: var(--ops-error-text);
