@@ -68,6 +68,9 @@ defmodule ScrypathEcommerceWeb.Router do
       post("/product-delete", E2EController, :product_delete)
       post("/inject-failed-sync", E2EController, :inject_failed_sync)
       get("/operator-state", E2EController, :operator_state)
+      get("/saved-searches", E2EController, :list_saved_searches)
+      post("/saved-searches", E2EController, :put_saved_search)
+      post("/saved-searches/delete", E2EController, :delete_saved_searches)
     end
   end
 

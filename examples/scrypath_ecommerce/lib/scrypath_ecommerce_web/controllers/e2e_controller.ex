@@ -47,6 +47,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
   alias ScrypathEcommerce.Catalog.Tenant
   alias ScrypathEcommerce.Catalog.Variant
   alias ScrypathEcommerce.Repo
+  alias ScrypathOps.SavedSearches
+  alias ScrypathOps.SavedSearches.SavedSearch
   alias Scrypath.Meilisearch.Client
   alias Scrypath.Meilisearch.IndexManagement
   alias Scrypath.Meilisearch.TaskPayload
@@ -450,6 +452,46 @@ defmodule ScrypathEcommerceWeb.E2EController do
       {:error, :invalid_integer} -> invalid_integer(conn)
     end
   end
+
+  # Saved-search fixtures for the browser suite. Saved searches live in the database, so
+  # specs seed, read and clean them up here instead of touching files. Rows are written
+  # directly so a spec can also seed a definition the v1 validator would reject.
+  def put_saved_search(conn, %{"name" => name, "definition" => definition})
+      when is_binary(name) and is_map(definition) do
+    Repo.delete_all(from(s in SavedSearch, where: s.name == ^name))
+
+    saved_search =
+      Repo.insert!(%SavedSearch{
+        name: name,
+        schema: SavedSearch.schema_for(definition) || "unknown",
+        definition: definition
+      })
+
+    json(conn, saved_search_json(saved_search))
+  end
+
+  def list_saved_searches(conn, _params) do
+    json(conn, %{saved_searches: Enum.map(SavedSearches.list(Repo), &saved_search_json/1)})
+  end
+
+  def delete_saved_searches(conn, %{"prefix" => prefix})
+      when is_binary(prefix) and prefix != "" do
+    {count, _} =
+      Repo.delete_all(from(s in SavedSearch, where: like(s.name, ^"#{escape_like(prefix)}%")))
+
+    json(conn, %{deleted: count})
+  end
+
+  def delete_saved_searches(conn, %{"names" => names}) when is_list(names) do
+    {count, _} = Repo.delete_all(from(s in SavedSearch, where: s.name in ^names))
+    json(conn, %{deleted: count})
+  end
+
+  defp saved_search_json(saved_search) do
+    %{name: saved_search.name, definition: saved_search.definition}
+  end
+
+  defp escape_like(value), do: String.replace(value, ["\\", "%", "_"], &("\\" <> &1))
 
   defp maybe_put_category_filter(opts, %{"category_id" => category_id}) do
     with {:ok, category_id} <- parse_integer(category_id) do

@@ -136,8 +136,8 @@ defmodule ScrypathOpsWeb.OpsA11yContractTest do
       assert_ops_a11y_shell!(html, search: false)
     end
 
-    test "/ops/sync-drift", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/ops/sync-drift")
+    test "/ops/sync-and-index", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/ops/sync-and-index")
       assert_ops_a11y_shell!(html, search: false)
     end
 

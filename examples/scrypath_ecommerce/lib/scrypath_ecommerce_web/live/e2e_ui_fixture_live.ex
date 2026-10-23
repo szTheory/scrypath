@@ -54,7 +54,7 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
           <.ops_schema_select id="many-schema" label="Schema" schemas={@schemas} selected={@selected} />
         </.form>
         <p id="selected-schema" class="mt-3 text-ops-body break-all">{inspect(@selected)}</p>
-        <.ops_field id="long-filename" label="Playbook filename">
+        <.ops_field id="long-filename" label="Saved search filename">
           <.ops_text_input
             id="long-filename"
             name="filename"

@@ -191,7 +191,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-source phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -483,7 +483,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Search health summary and Sync and drift promotion
+  the Control Room landing; also used for the Search health summary and Sync and index promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -492,6 +492,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   )
 
   attr(:headline, :string, required: true)
+  attr(:headline_id, :string, default: nil, doc: "id for labelling the surrounding section")
   attr(:label, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -516,7 +517,10 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             {@label}
           </p>
-          <p class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content">
+          <p
+            id={@headline_id}
+            class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content"
+          >
             <span
               class={["ops-verdict__icon", verdict_icon_class(@kind)]}
               data-testid="ops-verdict-icon"
@@ -552,7 +556,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:current, :atom,
     required: true,
-    values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :playbooks]
+    values: [:control_room, :posture, :failed_sync, :sync_and_index, :search]
   )
 
   attr(:class, :any, default: nil)
@@ -1228,7 +1232,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact row for search/playbook result summaries with optional right-side actions."
+  @doc "Compact row for search and saved search result summaries with optional right-side actions."
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:class, :any, default: nil)
@@ -1304,7 +1308,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "List wrapper for repeated operator objects such as saved playbooks."
+  @doc "List wrapper for repeated operator objects such as saved searches."
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1395,23 +1399,42 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:text, :string, default: nil)
   attr(:copy, :boolean, default: false)
   attr(:copy_label, :string, default: "Copy payload")
+  attr(:copy_success, :string, default: "Payload copied")
+
+  attr(:inline_copy, :boolean,
+    default: false,
+    doc: "Place Copy beside a short value instead of reserving a row above it."
+  )
+
+  attr(:clamp, :boolean,
+    default: false,
+    doc: "Show the first few lines with a Show all toggle; pass `id` with it."
+  )
+
+  attr(:id, :string, default: nil)
   slot(:inner_block)
 
   def ops_code_block(assigns) do
     ~H"""
-    <div class={["ops-code-block", @copy && @text && "ops-code-block--copyable"]}>
+    <div class={[
+      "ops-code-block",
+      @copy && @text && "ops-code-block--copyable",
+      @inline_copy && "ops-code-block--inline-copy",
+      @clamp && "ops-code-block--clamp"
+    ]}>
       <div :if={@copy && @text} class="ops-code-toolbar">
         <button
           type="button"
           class="ops-quiet-action"
           data-ops-copy-text={@text}
-          data-ops-copy-success="Payload copied"
+          data-ops-copy-success={@copy_success}
           aria-label={@copy_label}
         >
           <.icon name="hero-clipboard-document" class="size-4" /> Copy
         </button>
       </div>
       <pre
+        id={@id}
         tabindex="0"
         role="region"
         aria-label={@label}
@@ -1425,6 +1448,20 @@ defmodule ScrypathOpsWeb.OpsUi do
         ]}
         {@rest}
       >{if is_nil(@text), do: render_slot(@inner_block), else: @text}</pre>
+      <button
+        :if={@clamp}
+        type="button"
+        class="ops-code-expand"
+        aria-expanded="false"
+        aria-controls={@id}
+        phx-click={
+          JS.toggle_class("ops-code-block--expanded", to: {:closest, ".ops-code-block"})
+          |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+        }
+      >
+        <span class="ops-code-expand__more">Show all</span>
+        <span class="ops-code-expand__less">Show less</span>
+      </button>
     </div>
     """
   end
@@ -1508,8 +1545,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           phx-click={@cancel_event}
           aria-label={"Close #{@title} dialog"}
         >
-          <span class="sr-only">Close</span>
-          <span aria-hidden="true">×</span>
+          <.icon name="hero-x-mark" class="size-5" />
         </button>
         <h3 id={"#{@id}-title"} class="text-ops-h2 font-semibold leading-ops-tight">{@title}</h3>
         <p
@@ -1520,6 +1556,84 @@ defmodule ScrypathOpsWeb.OpsUi do
           {@description}
         </p>
         <div class="mt-3">{render_slot(@inner_block)}</div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
+  Side panel (sheet) for secondary management tasks.
+
+  Shares the `OpsModal` hook with `ops_modal/1`: it traps focus, closes on Escape through
+  `cancel_event`, makes the page behind it inert and returns focus to the control that opened
+  it (mark that control with `data-ops-modal-trigger`). It docks to the right on wide screens
+  and rises from the bottom on narrow ones.
+
+  `focus_target` and `focus_request` move focus inside the open sheet after the server changes
+  its content: bump `focus_request` to focus the element matching `focus_target`.
+  """
+  attr(:id, :string, required: true)
+  attr(:title, :string, required: true)
+  attr(:cancel_event, :string, required: true)
+  attr(:description, :string, default: nil)
+  attr(:initial_focus, :string, default: "[data-ops-sheet-close]")
+  attr(:fallback_successor, :string, default: nil)
+  attr(:focus_target, :string, default: nil)
+  attr(:focus_request, :integer, default: 0)
+  attr(:class, :any, default: nil)
+  slot(:inner_block, required: true)
+
+  def ops_sheet(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={"#{@id}-title"}
+      aria-describedby={@description && "#{@id}-description"}
+      phx-hook="OpsModal"
+      data-ops-modal-action="manage"
+      data-ops-modal-cancel-event={@cancel_event}
+      data-ops-modal-initial-focus={@initial_focus}
+      data-ops-modal-fallback-successor={@fallback_successor}
+      data-ops-modal-focus-error={@focus_target}
+      data-ops-modal-focus-request={@focus_request}
+      class="ops-sheet z-ops-modal"
+      phx-remove={
+        JS.transition(
+          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
+          time: 120
+        )
+      }
+    >
+      <div class="ops-sheet__backdrop" phx-click={@cancel_event} aria-hidden="true"></div>
+      <div class={["ops-sheet__panel", @class]} tabindex="-1">
+        <div class="ops-sheet__header">
+          <h2
+            id={"#{@id}-title"}
+            tabindex="-1"
+            class="text-ops-h2 font-semibold leading-ops-tight"
+          >
+            {@title}
+          </h2>
+          <button
+            type="button"
+            class="btn ops-icon-btn btn-circle btn-ghost btn-sm"
+            phx-click={@cancel_event}
+            aria-label="Close"
+            data-ops-sheet-close
+          >
+            <.icon name="hero-x-mark" class="size-5" />
+          </button>
+        </div>
+        <p
+          :if={@description}
+          id={"#{@id}-description"}
+          class="mt-ops-1 text-ops-body text-base-content/75"
+        >
+          {@description}
+        </p>
+        <div class="ops-sheet__body">{render_slot(@inner_block)}</div>
       </div>
     </div>
     """
@@ -1537,13 +1651,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_command_palette(assigns) do
     items =
-      [
-        %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
-        | Enum.map(
-            ScrypathOpsWeb.Nav.primary(assigns.mount_path),
-            &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}
-          )
-      ]
+      ([
+         %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
+         | Enum.map(
+             ScrypathOpsWeb.Nav.primary(assigns.mount_path),
+             &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}
+           )
+       ] ++
+         [
+           %{
+             path: "#{assigns.mount_path}/search?saved=manage",
+             label: "Manage saved searches",
+             hint: "Load, rename, import or export"
+           }
+         ])
       |> Enum.with_index()
       |> Enum.map(fn {item, index} -> Map.put(item, :id, "ops-cmdk-item-#{index}") end)
 
@@ -1658,23 +1779,6 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Inline indicator for playbook workspace mode (examples read-only vs writable workspace)."
-  attr(:mode, :atom, values: [:examples, :workspace], required: true)
-  attr(:path, :string, default: nil)
-  attr(:class, :any, default: nil)
-
-  def ops_workspace_mode_indicator(assigns) do
-    ~H"""
-    <span :if={@mode == :examples} class={["text-ops-sm text-base-content/70", @class]}>
-      Read-only examples
-    </span>
-    <details :if={@mode == :workspace && @path} class={["text-ops-sm text-base-content/70", @class]}>
-      <summary class="cursor-pointer">Storage folder</summary>
-      <code class="block max-w-full break-all py-2">{@path}</code>
-    </details>
-    """
-  end
-
   # Single source of truth for the button visual contract, shared by
   # `ops_button/1` and `ops_link_button/1`. Height + press feel live in `.ops-btn`;
   # radius is the `rounded-ops-control` utility so it wins over daisyUI's layer.
@@ -1783,8 +1887,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp nav_hint("Search"), do: "Query your schemas"
   defp nav_hint("Search health"), do: "Failures and pending work"
   defp nav_hint("Failed sync work"), do: "Review errors and retry"
-  defp nav_hint("Sync and drift"), do: "Sync work and index settings"
-  defp nav_hint("Saved searches"), do: "Reuse queries and options"
+  defp nav_hint("Sync and index"), do: "Sync progress and index settings"
   defp nav_hint(_), do: ""
 
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.

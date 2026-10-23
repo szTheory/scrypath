@@ -101,9 +101,9 @@ Storefront        http://127.0.0.1:${WEB_PORT}
 Control room      http://127.0.0.1:${WEB_PORT}/admin/search
 Search health     http://127.0.0.1:${WEB_PORT}/admin/search/health
 Failed sync       http://127.0.0.1:${WEB_PORT}/admin/search/failed-sync
-Sync / drift      http://127.0.0.1:${WEB_PORT}/admin/search/sync-drift
+Sync and index    http://127.0.0.1:${WEB_PORT}/admin/search/sync-and-index
 Search playground http://127.0.0.1:${WEB_PORT}/admin/search/search
-Playbooks         http://127.0.0.1:${WEB_PORT}/admin/search/playbooks
+Saved searches    http://127.0.0.1:${WEB_PORT}/admin/search/playbooks
 ```
 
 ## Future Proxy Layer

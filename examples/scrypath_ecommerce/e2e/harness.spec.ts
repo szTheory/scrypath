@@ -17,12 +17,14 @@ test("showcase navigation exposes storefront and operator surfaces", async ({ pa
   await page.goto("/admin/search/failed-sync");
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
 
-  await page.goto("/admin/search/sync-drift");
-  await expect(page.getByRole("heading", { name: "Sync and drift", exact: true })).toBeVisible();
+  await page.goto("/admin/search/sync-and-index");
+  await expect(page.getByRole("heading", { name: "Sync and index", exact: true })).toBeVisible();
 
   await page.goto("/admin/search/search");
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 
+  // Old Saved searches links redirect to Search with the Manage sheet open.
   await page.goto("/admin/search/playbooks");
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/search\/search\?saved=manage$/);
+  await expect(page.getByRole("dialog", { name: "Manage saved searches" })).toBeVisible();
 });

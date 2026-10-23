@@ -142,43 +142,129 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "rendered schema form changes the selected target", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
 
     lv
-    |> form("#sync-drift-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
+    |> form("#sync-and-index-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
     |> render_change()
 
-    assert_patch(lv, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    assert_patch(lv, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end
 
-  test "automatically reads settings and keeps their errors separate from sync", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
-    html = render_async(lv)
-    assert html =~ "Sync status"
-    assert html =~ "Index settings could not be checked"
-    assert html =~ "sdv_ops_post_a"
-    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
-    assert has_element?(lv, "#sync-drift-refresh[aria-label='Refresh sync and index settings']")
-    refute has_element?(lv, "#sync-reconcile-heading.text-ops-h1")
-    assert has_element?(lv, "#settings-checked-at", "Not available")
-    refute has_element?(lv, "#settings-checked-at button")
+  test "old /sync-drift links redirect to Sync and index and keep the schema", %{conn: conn} do
+    assert {:error, {:live_redirect, %{to: to}}} =
+             live(conn, "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+
+    assert to == "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB"
+
+    assert {:error, {:live_redirect, %{to: "/ops/sync-and-index"}}} =
+             live(conn, "/ops/sync-drift")
   end
 
-  test "settings reserve their metadata row before hydration and identify their own check", %{
+  test "automatically reads settings and keeps their errors separate from sync", %{conn: conn} do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    html = render_async(lv)
+    assert has_element?(lv, "h1", "Sync and index")
+    assert has_element?(lv, "h2#sync-pipeline-heading", "Is sync keeping up?")
+    assert has_element?(lv, "h2#index-settings-heading", "Does the live index match your schema?")
+
+    assert has_element?(
+             lv,
+             "#index-settings-error[role='alert']",
+             "Couldn't read the Meilisearch settings"
+           )
+
+    assert has_element?(lv, "#index-settings-error pre", ":settings")
+    assert has_element?(lv, "#index-settings-error [data-ops-copy-text=':settings']")
+    assert has_element?(lv, "#sync-pipeline-status")
+    assert html =~ "sdv_ops_post_a"
+    assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 1
+
+    assert has_element?(
+             lv,
+             "#sync-and-index-refresh[aria-label='Refresh sync and index settings']"
+           )
+
+    refute html =~ "Settings checked"
+    refute html =~ "snapshot"
+  end
+
+  test "one page-level Checked time; settings show their own checking state until they load", %{
     conn: conn
   } do
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
-    html = conn |> get(~p"/ops/sync-drift") |> html_response(200)
-    assert html =~ ~s(id="settings-checked-at")
-    assert html =~ "Settings checked"
-    assert html =~ "Checking…"
+    html = conn |> get(~p"/ops/sync-and-index") |> html_response(200)
+    assert html =~ "Checked"
+    refute html =~ "Settings checked"
+    refute html =~ "Sync checked"
+    refute html =~ "Meilisearch settings match the schema."
+    assert html =~ ~s(id="index-settings-checking")
+    assert html =~ "Checking Meilisearch settings…"
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
-    assert has_element?(lv, "#settings-checked-at time[datetime]")
-    assert has_element?(lv, "#settings-checked-at .ops-time__label", "Settings checked")
-    assert has_element?(lv, ".ops-time__label", "Sync checked")
+    refute has_element?(lv, "#index-settings-checking")
+    assert has_element?(lv, ".ops-time__label", "Checked")
+    assert Enum.count(LazyHTML.query(LazyHTML.from_fragment(render(lv)), ".ops-time__label")) == 1
+
+    assert has_element?(
+             lv,
+             "#index-settings-status",
+             "Meilisearch settings match the schema."
+           )
+
+    assert has_element?(
+             lv,
+             "#index-settings-status",
+             "Filters, sorting and facets work as declared."
+           )
+
+    refute render(lv) =~ "Full comparison details"
+    refute has_element?(lv, ".ops-settings-diff")
+  end
+
+  test "inline and manual sync say there is no queue instead of claiming caught up", %{
+    conn: conn
+  } do
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(lv)
+
+    assert has_element?(lv, "#sync-pipeline-status", "No Meilisearch tasks waiting or failed.")
+    assert has_element?(lv, "#sync-pipeline-status", "Manual sync: ")
+    assert has_element?(lv, "#sync-pipeline-status", "there's no queue to check")
+    refute has_element?(lv, "#sync-pipeline-status", "Caught up")
+    assert has_element?(lv, "[data-testid='sync-identity']", "Manual sync")
+    assert has_element?(lv, "[data-testid='sync-identity'] code", "sdv_ops_post_a")
+
+    Application.put_env(:scrypath_ops, :sync_mode, :inline)
+    {:ok, inline_lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(inline_lv)
+
+    assert has_element?(
+             inline_lv,
+             "#sync-pipeline-status",
+             "Inline sync: writes go straight to Meilisearch, so there's no queue to check."
+           )
+
+    refute has_element?(inline_lv, "#sync-pipeline-status", "Caught up")
+  end
+
+  test "an observed empty Oban queue reads as caught up", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban, Oban)
+    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(lv)
+
+    assert has_element?(
+             lv,
+             "#sync-pipeline-status[data-status-kind='success']",
+             "Caught up. Nothing queued, retrying or failed."
+           )
+
+    assert has_element?(lv, "[data-testid='sync-identity']", "Oban background sync")
+    refute has_element?(lv, "#sync-pipeline-status", "no queue to check")
   end
 
   test "sync activity counts separate pending work, scheduled retries and terminal failures", %{
@@ -189,10 +275,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
     job = %{id: 1, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
     Application.put_env(:scrypath_ops, :oban_jobs, [job, %{job | id: 2, state: "retryable"}])
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
-    assert has_element?(lv, ".ops-sync-work", "1 background job pending · 1 scheduled retry")
+    assert has_element?(lv, "#sync-pipeline-status", "Sync work is pending")
+    assert has_element?(lv, ".ops-sync-work", "1 job queued, 1 scheduled retry")
     refute has_element?(lv, ".ops-sync-work [data-tone='error']")
+    refute has_element?(lv, "#sync-pipeline-status", "Caught up")
 
     assert has_element?(
              lv,
@@ -205,8 +293,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       %{job | id: 3, state: "discarded"}
     ])
 
-    {:ok, updated_lv, _html} = live(conn, ~p"/ops/sync-drift")
+    {:ok, updated_lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(updated_lv)
+
+    assert has_element?(
+             updated_lv,
+             "#sync-pipeline-status[data-status-kind='error']",
+             "Some sync work failed"
+           )
 
     assert has_element?(
              updated_lv,
@@ -221,14 +315,33 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "ordinary browsing omits recovery placeholders and keeps a scoped handoff", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB")
     render_async(lv)
     refute has_element?(lv, "#document-freshness-result")
     refute has_element?(lv, "#ordinary-recovery")
-    assert has_element?(lv, "h2#sync-reconcile-heading.text-ops-h2")
-    assert has_element?(lv, "h2#sync-drift-heading.text-ops-h2")
-    assert has_element?(lv, "#index-promotion")
+    assert has_element?(lv, "h2#sync-pipeline-heading.text-ops-h2")
+    assert has_element?(lv, "h2#index-settings-heading.text-ops-h2")
+    assert has_element?(lv, "h2#reindexing-heading.text-ops-h2", "Reindexing")
+    assert has_element?(lv, "#reindex-idle", "No reindex in progress.")
+    assert has_element?(lv, "#reindex-idle a[href='/ops/help#reindexing']")
+    refute has_element?(lv, "#index-promotion")
+    refute has_element?(lv, "button", "Promote target index")
     assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
+  end
+
+  test "promotion controls appear once a prepared target index is observed", %{conn: conn} do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+    render_async(lv)
+
+    refute has_element?(lv, "#reindex-idle")
+    assert has_element?(lv, "#index-promotion", "sdv_ops_post_a__reindex")
+
+    assert has_element?(
+             lv,
+             "#index-promotion button#promote-target-index",
+             "Promote target index"
+           )
   end
 
   test "a settings response from a previous selection or superseded read is ignored" do
@@ -259,7 +372,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       })
     )
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     html = render_async(lv)
 
     assert has_element?(
@@ -268,31 +381,66 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
            )
 
     assert has_element?(lv, "th", "Declared in schema")
+    assert has_element?(lv, "th", "Effect")
     assert html =~ "unexpected"
     assert html =~ "Not declared"
     refute html =~ "Dimension mismatches"
     refute html =~ "version 1"
+    refute html =~ "Full comparison details"
+    refute html =~ "snapshot"
+
+    assert has_element?(
+             lv,
+             "#index-settings-status[data-status-kind='warning']",
+             "Meilisearch settings differ from the schema"
+           )
+
+    assert has_element?(lv, "#index-settings-status a[href='/ops/help#settings']")
+
+    assert has_element?(
+             lv,
+             ".ops-settings-diff tbody tr",
+             "Works now, but applying the schema's settings would remove it."
+           )
+
+    Agent.update(
+      :sync_drift_live_test_state,
+      &Map.put(&1, :applied_settings, %{
+        "searchableAttributes" => ["other"],
+        "filterableAttributes" => [],
+        "sortableAttributes" => []
+      })
+    )
+
+    {:ok, missing_lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(missing_lv)
+
+    assert has_element?(missing_lv, ".ops-settings-diff tbody th code", "title")
+    assert has_element?(missing_lv, ".ops-setting-live[data-missing='true']", "Not searchable")
+    assert has_element?(missing_lv, ".ops-settings-diff tbody tr", "Not searched yet.")
   end
 
   test "failed settings refresh retains the previous comparison and its original check time", %{
     conn: conn
   } do
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
     before = :sys.get_state(lv.pid).socket.assigns
     Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, false))
-    lv |> element("#sync-drift-refresh") |> render_click()
+    lv |> element("#sync-and-index-refresh") |> render_click()
     html = render_async(lv)
     after_check = :sys.get_state(lv.pid).socket.assigns
     assert after_check.drift_result == before.drift_result
     assert after_check.drift_loaded_at == before.drift_loaded_at
     assert after_check.drift_error == :settings
-    assert html =~ "Previous comparisons keep their original checked time"
+    assert html =~ "Showing the comparison from"
+    assert has_element?(lv, "#index-settings-error time[datetime]")
+    assert has_element?(lv, "#index-settings-error pre", ":settings")
   end
 
   test "verified document freshness renders the exact expected effect and index", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB")
 
     assigns =
       :sys.get_state(lv.pid).socket.assigns
@@ -406,7 +554,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert {:noreply, entered} =
              SyncDriftLive.handle_params(
                params,
-               "https://scrypath.example/ops/sync-drift",
+               "https://scrypath.example/ops/sync-and-index",
                socket
              )
 
@@ -417,7 +565,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert {:noreply, invalid} =
              SyncDriftLive.handle_params(
                %{params | "recovery_generation" => "oops"},
-               "https://scrypath.example/ops/sync-drift",
+               "https://scrypath.example/ops/sync-and-index",
                entered
              )
 
@@ -472,7 +620,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:noreply, switched_socket} =
       SyncDriftLive.handle_params(
         %{"schema" => "ScrypathOps.Test.OpsPostB"},
-        "https://scrypath.example/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB",
+        "https://scrypath.example/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB",
         loading_socket
       )
 
@@ -756,7 +904,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "promotion result announces its outcome and distinguishes cancellation", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     base = :sys.get_state(lv.pid).socket.assigns
 
     accepted_html =
@@ -845,7 +993,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       |> Plug.Conn.send_resp(200, Jason.encode!(%{"id" => 7301, "title" => "Stale"}))
     end)
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     handle = prepare_promotion_observation(lv, stub, [promotion_failed_job()])
 
     lv
@@ -882,7 +1030,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     stub = Module.concat(__MODULE__, "UnavailablePromotionEffectSource")
     Req.Test.stub(stub, fn conn -> Plug.Conn.send_resp(conn, 503, "unavailable") end)
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     handle = prepare_promotion_observation(lv, stub, [])
 
     lv
@@ -923,7 +1071,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
       Plug.Conn.send_resp(conn, 503, "unavailable")
     end)
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     handle = prepare_promotion_observation(lv, stub, [promotion_failed_job()])
 
     lv
@@ -978,7 +1126,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     stub = Module.concat(__MODULE__, "NoApplicablePromotionEffect")
     Req.Test.stub(stub, fn conn -> Plug.Conn.send_resp(conn, 503, "unused") end)
 
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     prepare_promotion_observation(lv, stub, [], false)
 
     lv
@@ -1046,7 +1194,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "promotion task refresh failure clears the previous document observation", %{
     conn: conn
   } do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
     mounted_socket = :sys.get_state(lv.pid).socket
     generation = mounted_socket.assigns.context_generation
 
@@ -1114,7 +1262,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "mounted promotion refresh reads the retained UID once without swapping again", %{
     conn: conn
   } do
-    {:ok, lv, _html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA")
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
 
     :sys.replace_state(lv.pid, fn state ->
       socket = %{
@@ -1159,7 +1307,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "rendered sync drift links preserve the selected schema", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB")
+    {:ok, lv, html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
     assert has_element?(lv, "a[href='/ops']", "Return to Control Room")
@@ -1197,7 +1345,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert {:noreply, updated_socket} = SyncDriftLive.handle_event("swap_live", %{}, socket)
 
     assert inspect(updated_socket.redirected) =~ "/sudo/confirm"
-    assert inspect(updated_socket.redirected) =~ "return_to=%2Fops%2Fsync-drift"
+    assert inspect(updated_socket.redirected) =~ "return_to=%2Fops%2Fsync-and-index"
     assert Agent.get(:sync_drift_live_test_state, & &1.swap_called) != true
     assert Agent.get(:sync_drift_live_test_state, & &1.tasks_calls) == 0
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 0
@@ -1300,7 +1448,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     base_assigns = %{
       __changed__: %{},
       flash: %{},
-      page_title: "Sync and drift",
+      page_title: "Sync and index",
       schema_allowlist: [OpsPostA, OpsPostB],
       scrypath_opts: sync_drift_scrypath_opts(),
       selected_schema: OpsPostA,
@@ -1334,7 +1482,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     %Phoenix.LiveView.Socket{
       assigns: Map.merge(base_assigns, overrides),
-      host_uri: URI.parse("https://scrypath.example/ops/sync-drift")
+      host_uri: URI.parse("https://scrypath.example/ops/sync-and-index")
     }
   end
 

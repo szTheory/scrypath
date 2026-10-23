@@ -95,13 +95,13 @@ mix scrypath.index.contract_drift MyApp.Blog.Post --json
 
 **`--json`** prints one JSON document (the `%Scrypath.Operator.IndexContractDrift.Report{}` encoding). Exit codes mirror **`mix scrypath.settings.diff`**: `0` when every dimension matches, `2` when the comparison completes with mismatches, `1` when the comparison cannot be completed. This task does not apply settings, enqueue work, or mutate documents.
 
-## `mix scrypath_ops.playbooks.validate` (from `scrypath_ops/`)
+## `mix scrypath_ops.saved_searches.validate` (from `scrypath_ops/`)
 
-Validates each eligible **`*.json`** file in a single directory using **`ScrypathOps.Playbook.V1.validate/1`**. Run it from the **`scrypath_ops`** application directory (not the monorepo root **`mix`** project).
+Validates each eligible **`*.json`** file in a single directory using **`ScrypathOps.SavedSearches.V1.validate/1`**. Run it from the **`scrypath_ops`** application directory (not the monorepo root **`mix`** project).
 
 ```bash
 cd scrypath_ops
-mix scrypath_ops.playbooks.validate examples/playbooks
+mix scrypath_ops.saved_searches.validate examples/saved_searches
 ```
 
-Use it when you touch team playbook JSON fixtures or workspace-shaped catalogs that live under **`scrypath_ops`**. It does not start Meilisearch.
+Use it when you touch exported saved-search JSON, examples or fixtures that live under **`scrypath_ops`**, or before importing files into the operator UI. It does not start Meilisearch.

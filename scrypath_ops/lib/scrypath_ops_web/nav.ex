@@ -32,16 +32,10 @@ defmodule ScrypathOpsWeb.Nav do
         group: :recover
       },
       %{
-        path: "#{mount_path}/sync-drift",
-        label: "Sync and drift",
-        title: "Sync and drift",
+        path: "#{mount_path}/sync-and-index",
+        label: "Sync and index",
+        title: "Sync and index",
         group: :recover
-      },
-      %{
-        path: "#{mount_path}/playbooks",
-        label: "Saved searches",
-        title: "Saved searches",
-        group: :explore
       },
       %{
         path: "#{mount_path}/help",

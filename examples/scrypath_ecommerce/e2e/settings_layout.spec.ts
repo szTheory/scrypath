@@ -9,7 +9,7 @@ test.use({timezoneId: "America/New_York"});
 
 for (const theme of ["light", "dark"]) {
   for (const width of [1440, 768, 390, 320]) {
-    test(`settings metadata stays in place and status text aligns: ${theme}, ${width}px`, async ({page}) => {
+    test(`settings check in place beside one Checked time: ${theme}, ${width}px`, async ({page}) => {
       await mkdir(artifacts, {recursive: true});
       await page.setViewportSize({width, height: 1000});
       await page.addInitScript(theme => localStorage.setItem("phx:theme", theme), theme);
@@ -21,33 +21,39 @@ for (const theme of ["light", "dark"]) {
         await ready;
         socket.connectToServer();
       });
-      await page.goto("/admin/search/sync-drift?schema=ScrypathEcommerce.Catalog.Product");
-      const section = page.locator("section").filter({has: page.locator("#sync-drift-heading")});
-      const metadata = page.locator("#settings-checked-at");
-      await expect(metadata).toContainText("Checking…");
-      await expect(metadata.getByRole("button")).toHaveCount(0);
-      const headerHeight = () => section.locator(":scope > div").first().evaluate(el => el.getBoundingClientRect().height);
-      const pendingHeight = await headerHeight();
+      await page.goto("/admin/search/sync-and-index?schema=ScrypathEcommerce.Catalog.Product");
+      const section = page.locator("section").filter({has: page.locator("#index-settings-heading")});
+      // Before hydration the settings section says it is still checking, and claims no result.
+      await expect(section.locator("#index-settings-checking")).toContainText("Checking Meilisearch settings…");
+      await expect(section.locator("#index-settings-status")).toHaveCount(0);
+      await expect(page.getByText("Settings checked")).toHaveCount(0);
+      const sectionHeight = () => section.evaluate(el => el.getBoundingClientRect().height);
+      const pendingHeight = await sectionHeight();
       await section.screenshot({path: `${artifacts}/pending-${theme}-${width}.png`});
 
       release();
       await waitForLiveConnected(page);
-      await expect(metadata.locator("time")).toBeVisible();
-      await expect(metadata.locator(".ops-time__label")).toHaveText("Settings checked");
-      expect(await headerHeight()).toBe(pendingHeight);
-      await expect(page.locator("#sync-drift-refresh").locator("..")).toContainText("Sync checked");
-      const source = await metadata.locator("time").getAttribute("datetime");
+      await expect(section.locator("#index-settings-status")).toBeVisible();
+      await expect(section.locator("#index-settings-checking")).toHaveCount(0);
+      // One page-level Checked time beside Refresh; no second settings timestamp.
+      const refreshRow = page.locator("#sync-and-index-refresh").locator("..");
+      await expect(refreshRow.locator(".ops-time__label")).toHaveText("Checked");
+      await expect(page.locator(".ops-time__label")).toHaveCount(1);
+      const stamp = refreshRow.locator("time");
+      const source = await stamp.getAttribute("datetime");
       await page.evaluate(() => Object.defineProperty(navigator, "clipboard", {
         configurable: true,
         value: {writeText: async (text: string) => {(window as any).copiedTimestamp = text;}}
       }));
-      await metadata.getByRole("button").click();
+      await refreshRow.getByRole("button", {name: /Copy timestamp/}).click();
       await expect(page.locator("[data-ops-notification-message]")).toHaveText("Timestamp copied");
       expect(await page.evaluate(() => (window as any).copiedTimestamp)).toBe(source);
-      expect(await headerHeight()).toBe(pendingHeight);
-      await page.getByRole("combobox", {name: "Time zone"}).selectOption("local");
-      await expect(metadata.locator("time")).toContainText(/EDT|EST/);
-      expect(await headerHeight()).toBe(pendingHeight);
+      await page.getByRole("combobox", {name: "Show times in"}).selectOption("local");
+      await expect(stamp).toContainText(/EDT|EST/);
+      if (!(await section.locator(".ops-settings-diff").count())) {
+        // A matching result replaces the checking line with one verdict line of similar height.
+        expect(Math.abs((await sectionHeight()) - pendingHeight)).toBeLessThan(48);
+      }
 
       const statuses = section.locator(".ops-notice-surface--neutral");
       await expect(statuses).not.toHaveCount(0);

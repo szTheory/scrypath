@@ -24,10 +24,9 @@ defmodule Scrypath.Phase147E2EContractTest do
     assert @compose =~ "ports: !reset []"
     assert @compose =~ "PLAYWRIGHT_BASE_URL: http://web:4002"
 
-    assert @compose =~
-             "SCRYPATH_OPS_PLAYBOOK_DIR: /app/examples/scrypath_ecommerce/priv/playbooks"
-
-    assert @compose =~ "e2e_playbooks:/app/examples/scrypath_ecommerce/priv/playbooks"
+    # Saved searches live in the database, so the browser and server share no file volume.
+    refute @compose =~ "SCRYPATH_OPS_PLAYBOOK_DIR"
+    refute @compose =~ "priv/playbooks"
     assert @compose =~ "condition: service_healthy"
 
     assert @compose_base =~ "start_period: 5m"
@@ -45,8 +44,8 @@ defmodule Scrypath.Phase147E2EContractTest do
     assert @browser_runner =~ "npm run test:e2e:admin-light-parity"
     assert @browser_runner =~ "node contrast-checker.mjs"
 
-    assert @runtime_config =~ "SCRYPATH_OPS_PLAYBOOK_DIR"
-    assert @runtime_config =~ "config :scrypath_ops, playbook_workspace_dir: Path.expand(path)"
+    refute @runtime_config =~ "SCRYPATH_OPS_PLAYBOOK_DIR"
+    refute @runtime_config =~ "playbook_workspace_dir"
 
     assert @entrypoint =~ "PHX_SERVER=false mix e2e.prepare"
     assert @entrypoint =~ "PHX_SERVER=false mix scrypath.demo.seed"

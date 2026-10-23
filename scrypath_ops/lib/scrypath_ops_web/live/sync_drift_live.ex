@@ -1,10 +1,12 @@
 defmodule ScrypathOpsWeb.SyncDriftLive do
   @moduledoc """
-  Read-only sync and index contract drift using `Scrypath.reconcile_sync/2` and
-  `Scrypath.index_contract_drift/2`.
+  Sync and index: whether sync is keeping up (`Scrypath.reconcile_sync/2`), whether the
+  live Meilisearch index settings match the schema (`Scrypath.index_contract_drift/2`),
+  and, only once a prepared target index exists, zero-downtime promotion.
 
   On mount, **reconcile** loads automatically (without `include_index_contract_drift`).
   Index settings load automatically in a bounded, generation-scoped asynchronous read.
+  The legacy `/sync-drift` route redirects here, preserving its query string.
   """
 
   use ScrypathOpsWeb, :live_view
@@ -62,7 +64,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
     socket =
       socket
-      |> assign(:page_title, "Sync and drift")
+      |> assign(:page_title, "Sync and index")
       |> assign(:schema_allowlist, allowlist)
       |> assign(:scrypath_opts, scrypath_opts)
       |> assign(:selected_schema, nil)
@@ -100,6 +102,20 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   @impl true
+  def handle_params(_params, uri, %{assigns: %{live_action: :legacy}} = socket) do
+    %URI{path: path, query: query} = URI.parse(uri)
+
+    mount_path =
+      path
+      |> String.replace_suffix("/sync-drift", "")
+      |> String.trim_trailing("/")
+
+    query_suffix = if query in [nil, ""], do: "", else: "?" <> query
+
+    {:noreply,
+     push_navigate(socket, to: "#{mount_path}/sync-and-index#{query_suffix}", replace: true)}
+  end
+
   def handle_params(params, _uri, socket) do
     allowlist = ScrypathOps.Schemas.allowlist()
     resolution = OperatorSelection.resolve(params, allowlist)
@@ -185,7 +201,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       socket =
         if is_nil(socket.assigns.reconcile_error),
-          do: put_flash(socket, :info, "Sync refreshed; index settings are being checked."),
+          do: put_flash(socket, :info, "Sync status refreshed. Checking Meilisearch settings…"),
           else: socket
 
       {:noreply, socket}
@@ -243,7 +259,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       {:ok, mod} ->
         {:noreply,
          push_patch(socket,
-           to: OperatorSelection.path(socket.assigns.mount_path, "sync-drift", mod)
+           to: OperatorSelection.path(socket.assigns.mount_path, "sync-and-index", mod)
          )}
 
       _ ->
@@ -1615,23 +1631,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     |> assign(:recovery_loading, false)
   end
 
+  ## Sync section
+
   defp reconcile_signal_label(:pending_backend_work, report),
     do:
       counted_work(length(report.status.backend.pending), "Meilisearch task", "Meilisearch tasks") <>
-        " pending"
+        " waiting"
 
   defp reconcile_signal_label(:pending_queue_work, report) do
     pending = length(report.status.queue.pending)
     retrying = length(report.status.queue.retrying)
 
     [
-      if(pending > 0,
-        do: counted_work(pending, "background job", "background jobs") <> " pending"
-      ),
+      if(pending > 0, do: counted_work(pending, "job", "jobs") <> " queued"),
       if(retrying > 0, do: counted_work(retrying, "scheduled retry", "scheduled retries"))
     ]
     |> Enum.reject(&is_nil/1)
-    |> Enum.join(" · ")
+    |> Enum.join(", ")
   end
 
   defp reconcile_signal_label(:failed_sync_work, report),
@@ -1642,12 +1658,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         "failed sync operations"
       )
 
-  defp reconcile_signal_label(:reindex_in_progress, _report), do: "Reindex is in progress"
-
-  defp reconcile_signal_label(:reindex_cutover_pending, _report),
-    do: "Prepared index is awaiting cutover"
-
-  defp reconcile_signal_label(_, _report), do: "Additional sync state needs inspection"
+  defp reconcile_signal_label(_, _report), do: "Other sync activity needs a look"
 
   defp counted_work(1, singular, _plural), do: "1 " <> singular
   defp counted_work(count, _singular, plural), do: "#{count} " <> plural
@@ -1655,62 +1666,96 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp terminal_failure_count(report),
     do: Enum.count(report.failed_work, &(Map.get(&1, :state) == :failed))
 
-  defp reconcile_activity(report) do
+  @reindex_signals [
+    :reindex_visibility_available,
+    :reindex_in_progress,
+    :reindex_cutover_pending
+  ]
+
+  # Reindex progress belongs to the Reindexing section, not to write-pipeline health.
+  defp sync_activity(report) do
     Enum.reject(report.drift_signals, fn
-      :reindex_visibility_available -> true
+      signal when signal in @reindex_signals -> true
       :failed_sync_work -> terminal_failure_count(report) == 0
       _ -> false
     end)
   end
 
-  defp reconcile_signal_icon(:failed_sync_work), do: "hero-exclamation-circle"
-  defp reconcile_signal_icon(:reindex_cutover_pending), do: "hero-arrow-path"
-  defp reconcile_signal_icon(_), do: "hero-clock"
+  defp queue_observed?(%{status: %{queue: %{observed?: true}}}), do: true
+  defp queue_observed?(_report), do: false
+  defp sync_failed?(activity), do: :failed_sync_work in activity
 
-  defp setting_effect("Filterable attributes"),
-    do: "Fields allowed in query filters."
+  defp sync_verdict_kind([], report),
+    do: if(queue_observed?(report), do: :success, else: :info)
 
-  defp setting_effect("Sortable attributes"), do: "Fields enabled for sorting search results."
-  defp setting_effect("Fields"), do: "Searchable fields and their declared order."
-  defp setting_effect(_), do: nil
+  defp sync_verdict_kind(activity, _report),
+    do: if(sync_failed?(activity), do: :error, else: :info)
 
-  defp drift_dimension_label(key) do
-    key
-    |> to_string()
-    |> String.replace("_", " ")
-    |> String.capitalize()
+  defp sync_verdict_title([], report) do
+    if queue_observed?(report),
+      do: "Caught up. Nothing queued, retrying or failed.",
+      else: "No Meilisearch tasks waiting or failed."
   end
 
+  defp sync_verdict_title(activity, _report) do
+    if sync_failed?(activity), do: "Some sync work failed", else: "Sync work is pending"
+  end
+
+  defp unobserved_queue_copy(:inline),
+    do: "Inline sync: writes go straight to Meilisearch, so there's no queue to check."
+
+  defp unobserved_queue_copy(:manual),
+    do:
+      "Manual sync: your app sends changes when it calls Scrypath, so there's no queue to check."
+
+  defp unobserved_queue_copy(_mode), do: "This sync mode has no queue to check."
+
+  defp reconcile_signal_icon(:failed_sync_work), do: "hero-exclamation-circle"
+  defp reconcile_signal_icon(_), do: "hero-clock"
+
+  defp sync_mode_label(:oban), do: "Oban background sync"
+  defp sync_mode_label(:inline), do: "Inline sync"
+  defp sync_mode_label(:manual), do: "Manual sync"
+  defp sync_mode_label(_mode), do: "Sync"
+
+  ## Settings section
+
+  @set_dimensions [
+    fields: {"Searchable fields", "Searchable", "Not searchable", "Not searched yet."},
+    filterable_attributes:
+      {"Filterable attributes", "Filterable", "Not enabled for filtering",
+       "Can't filter by it yet."},
+    sortable_attributes:
+      {"Sortable attributes", "Sortable", "Not enabled for sorting", "Can't sort by it yet."}
+  ]
+
+  @set_dimension_map Map.new(@set_dimensions)
+
+  @wire_keys [
+    fields: "searchableAttributes",
+    filterable_attributes: "filterableAttributes",
+    sortable_attributes: "sortableAttributes",
+    faceting: "faceting"
+  ]
+
   defp setting_differences(%{dimensions: dimensions}) do
-    categories = [
-      fields: "searchableAttributes",
-      filterable_attributes: "filterableAttributes",
-      sortable_attributes: "sortableAttributes",
-      faceting: "faceting"
-    ]
-
     specific =
-      Enum.flat_map(categories, fn {key, _wire} ->
+      Enum.flat_map(Keyword.keys(@wire_keys), fn key ->
         case Map.get(dimensions, key) do
-          %{match: false, details: details} ->
-            Enum.flat_map(details, &difference_rows(drift_dimension_label(key), &1))
-
-          _ ->
-            []
+          %{match: false, details: details} -> Enum.flat_map(details, &difference_rows(key, &1))
+          _ -> []
         end
       end)
 
     covered =
-      for {key, wire} <- categories, match?(%{match: false}, Map.get(dimensions, key)), do: wire
+      for {key, wire} <- @wire_keys, match?(%{match: false}, Map.get(dimensions, key)), do: wire
 
     other =
       case Map.get(dimensions, :settings) do
         %{match: false, details: details} ->
           details
           |> Enum.reject(&(Map.get(&1, :key) in covered))
-          |> Enum.flat_map(fn detail ->
-            difference_rows(to_string(Map.get(detail, :key, "Setting")), detail)
-          end)
+          |> Enum.flat_map(&difference_rows({:setting, Map.get(&1, :key, "setting")}, &1))
 
         _ ->
           []
@@ -1719,68 +1764,163 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     specific ++ other
   end
 
-  defp difference_rows(label, {:only_declared, value}),
+  defp difference_rows(key, {:only_declared, value}) when is_map_key(@set_dimension_map, key) do
+    {setting, capability, missing, effect} = Map.fetch!(@set_dimension_map, key)
+
+    [
+      %{
+        field: to_string(value),
+        setting: setting,
+        declared: capability,
+        live: missing,
+        missing?: true,
+        effect: effect
+      }
+    ]
+  end
+
+  defp difference_rows(key, {:only_applied, value}) when is_map_key(@set_dimension_map, key) do
+    {setting, capability, _missing, _effect} = Map.fetch!(@set_dimension_map, key)
+
+    [
+      %{
+        field: to_string(value),
+        setting: setting,
+        declared: "Not declared",
+        live: capability,
+        missing?: false,
+        effect: "Works now, but applying the schema's settings would remove it."
+      }
+    ]
+  end
+
+  defp difference_rows(key, {:truncated, true}),
     do: [
       %{
-        label: label,
-        declared: display_setting(value),
-        live:
-          if(label == "Filterable attributes",
-            do: "Not enabled for filtering",
-            else: "Not applied in the live index"
-          )
+        field: nil,
+        setting: difference_setting_label(key),
+        declared: "More differences not shown",
+        live: "More differences not shown",
+        missing?: false,
+        effect: "Only the first differences are listed."
       }
     ]
 
-  defp difference_rows(label, {:only_applied, value}),
-    do: [%{label: label, declared: "Not declared", live: display_setting(value)}]
-
-  defp difference_rows(label, %{declared: declared, applied: applied})
+  defp difference_rows(key, %{declared: declared, applied: applied})
        when is_map(declared) and is_map(applied) do
     (Map.keys(declared) ++ Map.keys(applied))
     |> Enum.uniq()
     |> Enum.sort()
     |> Enum.filter(&(Map.get(declared, &1) != Map.get(applied, &1)))
-    |> Enum.map(fn key ->
-      %{
-        label: "#{label} · #{key}",
-        declared: display_setting(Map.get(declared, key)),
-        live: display_setting(Map.get(applied, key))
-      }
+    |> Enum.map(fn sub_key ->
+      changed_row(
+        to_string(sub_key),
+        difference_setting_label(key),
+        Map.get(declared, sub_key),
+        Map.get(applied, sub_key)
+      )
     end)
   end
 
-  defp difference_rows(label, %{declared: declared, applied: applied}),
-    do: [%{label: label, declared: display_setting(declared), live: display_setting(applied)}]
+  defp difference_rows({:setting, name}, %{declared: declared, applied: applied}),
+    do: [changed_row(to_string(name), "Index setting", declared, applied)]
 
-  defp difference_rows(label, {:truncated, true}),
+  defp difference_rows(key, %{declared: declared, applied: applied}),
+    do: [changed_row(nil, difference_setting_label(key), declared, applied)]
+
+  defp difference_rows(key, detail),
     do: [
       %{
-        label: label,
-        declared: "Additional differences omitted by the report limit",
-        live: "Use the library report for full inspection"
+        field: nil,
+        setting: difference_setting_label(key),
+        declared: inspect(detail),
+        live: "Comparison details unavailable",
+        missing?: false,
+        effect: "Check this setting in Meilisearch directly."
       }
     ]
 
-  defp difference_rows(label, detail),
-    do: [%{label: label, declared: inspect(detail), live: "Comparison details unavailable"}]
+  defp changed_row(field, setting, declared, applied) do
+    %{
+      field: field,
+      setting: setting,
+      declared: display_setting(declared),
+      live: display_setting(applied),
+      missing?: false,
+      effect: "The live value differs from the schema."
+    }
+  end
 
+  defp difference_setting_label({:setting, _name}), do: "Index setting"
+  defp difference_setting_label(:faceting), do: "Faceting"
+
+  defp difference_setting_label(key) do
+    case Map.fetch(@set_dimension_map, key) do
+      {:ok, {setting, _, _, _}} -> setting
+      :error -> "Index setting"
+    end
+  end
+
+  defp display_setting(nil), do: "Not set"
   defp display_setting(value) when is_binary(value), do: value
   defp display_setting(value), do: Jason.encode!(value, pretty: true)
 
-  defp matching_settings(%{dimensions: dimensions}) do
-    dimensions
-    |> Enum.filter(fn {_key, dim} -> dim.match end)
-    |> Enum.map_join(", ", fn {key, _dim} -> drift_dimension_label(key) end)
+  defp settings_match?(result), do: drift_mismatch_count(result) == 0
+
+  defp settings_difference_count(result) do
+    case length(setting_differences(result)) do
+      0 -> drift_mismatch_count(result)
+      count -> count
+    end
   end
 
-  defp sync_mode_label(:oban), do: "Background sync with Oban"
-  defp sync_mode_label(:inline), do: "Inline sync"
-  defp sync_mode_label(:manual), do: "Manual sync"
-  defp sync_mode_label(mode), do: to_string(mode)
+  defp drift_mismatch_count(%{dimensions: dimensions}) when is_map(dimensions) do
+    Enum.count(dimensions, fn {_key, dimension} -> not Map.get(dimension, :match, false) end)
+  end
+
+  # The first paint precedes the automatic read, so it already shows the checking state.
+  defp settings_checking?(assigns) do
+    assigns.drift_loading or
+      (is_nil(assigns.drift_result) and is_nil(assigns.drift_error) and
+         not is_nil(assigns.selected_schema) and
+         Keyword.has_key?(assigns.scrypath_opts, :backend))
+  end
+
+  ## Reindexing section
+
+  defp promotion_visible?(assigns) do
+    reindex_observed?(assigns.reconcile_result) or not is_nil(assigns.promotion_status) or
+      not is_nil(assigns.promotion_task_id) or assigns.confirm_swap?
+  end
+
+  defp reindex_observed?(%{reindex: %{observed?: true}}), do: true
+  defp reindex_observed?(_report), do: false
+
+  defp reindex_index(%{reindex: %{} = reindex}, key), do: Map.get(reindex, key) || "unknown"
+  defp reindex_index(_report, _key), do: "unknown"
+
+  defp reindex_progress_copy(%{reindex: %{task_state: :pending}}),
+    do: "The reindex is still building the prepared index."
+
+  defp reindex_progress_copy(%{reindex: %{cutover: :pending}}),
+    do: "A swap of these indexes is in progress."
+
+  defp reindex_progress_copy(%{reindex: %{task_state: :failed}}),
+    do: "The last reindex task for the prepared index failed."
+
+  defp reindex_progress_copy(_report), do: nil
 
   @impl true
   def render(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        :activity,
+        if(assigns.reconcile_result, do: sync_activity(assigns.reconcile_result))
+      )
+      |> assign(:show_promotion?, promotion_visible?(assigns))
+      |> assign(:settings_checking?, settings_checking?(assigns))
+
     ~H"""
     <Layouts.app
       mount_path={@mount_path}
@@ -1791,23 +1931,23 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     >
       <.ops_toolbar class="items-end gap-4">
         <.ops_page_header
-          title="Sync and drift"
-          subtitle="Check sync work and compare declared settings with Meilisearch."
+          title="Sync and index"
+          subtitle="Check that sync is keeping up and that the live Meilisearch index matches your schema."
         />
         <.ops_refresh_control
-          id="sync-drift-refresh"
+          id="sync-and-index-refresh"
           checked_at={@reconcile_loaded_at}
-          checked_label="Sync checked"
+          checked_label="Checked"
           phx-click="refresh_reconcile"
           aria_label="Refresh sync and index settings"
           disabled={!@selected_schema}
         />
       </.ops_toolbar>
 
-      <.ops_trail current={:sync_drift} class="mt-4" />
+      <.ops_trail current={:sync_and_index} class="mt-4" />
 
       <div>
-        <.form for={%{}} id="sync-drift-schema-form" phx-change="select_schema">
+        <.form for={%{}} id="sync-and-index-schema-form" phx-change="select_schema">
           <.ops_schema_select
             id="sync-schema-select"
             schemas={@schema_allowlist}
@@ -1817,7 +1957,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </div>
 
       <.ops_empty_state :if={@selection_error == :no_schemas} title="No schemas configured">
-        Add allowlisted schemas before loading sync or drift observations.
+        Add allowlisted schemas to check their sync and index settings.
       </.ops_empty_state>
 
       <.ops_status
@@ -1830,191 +1970,92 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         Select an allowlisted schema to continue.
       </.ops_status>
 
-      <.ops_section
-        id="sync-reconcile-heading"
-        title="Sync status"
-      >
-        <dl :if={@reconcile_result} class="ops-sync-facts">
-          <div>
-            <dt>Meilisearch index</dt>
-            <dd>
-              <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
-            </dd>
-          </div>
-          <div>
-            <dt>Synchronization</dt>
-            <dd>{sync_mode_label(@reconcile_result.mode)}</dd>
-          </div>
-          <div>
-            <dt>Sync activity</dt>
-            <dd>
-              <span :if={reconcile_activity(@reconcile_result) == []}>
-                No pending or failed work reported.
-              </span>
-              <ul :if={reconcile_activity(@reconcile_result) != []} class="ops-sync-work">
-                <li
-                  :for={signal <- reconcile_activity(@reconcile_result)}
-                  data-tone={if signal == :failed_sync_work, do: "error"}
-                >
-                  <.icon name={reconcile_signal_icon(signal)} class="size-4" />
-                  <.link
-                    :if={signal == :failed_sync_work}
-                    navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
-                    class="ops-text-action"
-                  >
-                    {reconcile_signal_label(signal, @reconcile_result)}
-                    <.icon name="hero-arrow-right" class="size-4" />
-                  </.link>
-                  <.link
-                    :if={signal in [:pending_queue_work, :pending_backend_work]}
-                    navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-                    class="ops-sync-activity-link"
-                  >
-                    {reconcile_signal_label(signal, @reconcile_result)}
-                    <.icon name="hero-arrow-right" class="size-4" />
-                  </.link>
-                  <span :if={
-                    signal not in [:failed_sync_work, :pending_queue_work, :pending_backend_work]
-                  }>
-                    {reconcile_signal_label(signal, @reconcile_result)}
-                  </span>
-                </li>
-              </ul>
-              <.ops_help_link
-                :if={reconcile_activity(@reconcile_result) != []}
-                href={"#{@mount_path}/help#sync"}
-              >
-                About sync activity
-              </.ops_help_link>
-            </dd>
-          </div>
-        </dl>
-
-        <p
-          :if={@reconcile_result == nil && @selected_schema}
-          class="text-ops-body text-base-content/70"
-        >
-          Sync status is not available yet. Refresh sync status to check again.
-        </p>
+      <.ops_section id="sync-pipeline-heading" title="Is sync keeping up?">
         <.ops_status
           :if={@reconcile_error}
+          id="sync-pipeline-error"
           kind={:error}
-          title="Sync and queue status could not be checked"
+          title="Couldn't check sync"
           role="alert"
           neutral
         >
-          Reason: {inspect(@reconcile_error)}. Any displayed values retain their last checked time; refresh to check again.
-        </.ops_status>
-      </.ops_section>
-
-      <.ops_section
-        id="sync-drift-heading"
-        title="Index settings"
-        class="mt-6"
-      >
-        <:metadata>
-          <.ops_time
-            :if={@selected_schema && Keyword.has_key?(@scrypath_opts, :backend)}
-            id="settings-checked-at"
-            label="Settings checked"
-            dt={@drift_loaded_at}
-            state_text={if @drift_error, do: "Not available", else: "Checking…"}
-            class="ops-settings-check"
-          />
-        </:metadata>
-
-        <div
-          :if={@drift_loading}
-          class="space-y-3"
-          role="status"
-          aria-label="Loading index settings"
-        >
-          <p class="text-ops-body text-base-content/70">
-            Comparing declared settings with Meilisearch…
+          <p>
+            Check that Meilisearch and the job queue are reachable, then Refresh.
+            <span :if={@reconcile_result}>Showing the last successful check below.</span>
           </p>
-          <.ops_loading lines={4} label="Loading index settings" />
-        </div>
-
-        <.ops_status
-          :if={@drift_loading && @drift_result}
-          kind={:info}
-          title="Checking index settings"
-          role="status"
-          neutral
-        >
-          The previous settings comparison remains below until this check finishes.
-        </.ops_status>
-
-        <.ops_status
-          :if={!@drift_loading || is_nil(@drift_result)}
-          kind={drift_status_kind(@drift_result, @drift_error)}
-          title={drift_status_title(@drift_result, @drift_error)}
-          role={if @drift_error, do: "alert"}
-          neutral
-        >
-          {drift_status_copy(@drift_result, @drift_error)}
-        </.ops_status>
-
-        <div :if={@drift_result} class="space-y-3">
-          <.ops_table
-            :if={setting_differences(@drift_result) != []}
-            class="ops-settings-diff"
-            tabindex="0"
-            role="region"
-            aria-label="Index settings differences"
-          >
-            <thead>
-              <tr>
-                <th scope="col">Setting</th>
-                <th scope="col">Declared in schema</th>
-                <th scope="col">Live in Meilisearch</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr :for={difference <- setting_differences(@drift_result)}>
-                <th scope="row" class="align-top">
-                  <span>{difference.label}</span>
-                  <span :if={setting_effect(difference.label)} class="ops-setting-description">
-                    {setting_effect(difference.label)}
-                  </span>
-                </th>
-                <td class="align-top">
-                  <pre class="whitespace-pre-wrap break-words text-ops-sm">{difference.declared}</pre>
-                </td>
-                <td class="align-top">
-                  <pre
-                    class="ops-setting-live whitespace-pre-wrap break-words text-ops-sm"
-                    data-missing={
-                      difference.live in [
-                        "Not enabled for filtering",
-                        "Not applied in the live index"
-                      ]
-                    }
-                  >{difference.live}</pre>
-                </td>
-              </tr>
-            </tbody>
-          </.ops_table>
-          <p :if={setting_differences(@drift_result) != []} class="ops-search-query-hint">
-            Apply the intended settings through your app's setup or reindex workflow, then Refresh.
-            <.ops_help_link href={"#{@mount_path}/help#settings"}>
-              Understanding settings differences
-            </.ops_help_link>
-          </p>
-          <.ops_disclosure
-            summary="Full comparison details"
+          <.ops_code_block
+            class="mt-2"
             variant={:compact}
-          >
-            <p :if={matching_settings(@drift_result) != ""} class="text-ops-sm text-base-content/70">
-              Matching: {matching_settings(@drift_result)}.
+            label="Sync error"
+            text={inspect(@reconcile_error)}
+            copy
+            copy_label="Copy sync error"
+            copy_success="Error copied"
+          />
+        </.ops_status>
+
+        <.ops_status
+          :if={@reconcile_result}
+          id="sync-pipeline-status"
+          kind={sync_verdict_kind(@activity, @reconcile_result)}
+          title={sync_verdict_title(@activity, @reconcile_result)}
+          role="status"
+          neutral
+        >
+          <p :if={@activity == [] && !queue_observed?(@reconcile_result)}>
+            {unobserved_queue_copy(@reconcile_result.mode)}
+          </p>
+          <ul :if={@activity != []} class="ops-sync-work">
+            <li
+              :for={signal <- @activity}
+              data-tone={if signal == :failed_sync_work, do: "error"}
+            >
+              <.icon name={reconcile_signal_icon(signal)} class="size-4" />
+              <.link
+                :if={signal == :failed_sync_work}
+                navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
+                class="ops-text-action"
+              >
+                {reconcile_signal_label(signal, @reconcile_result)}
+                <.icon name="hero-arrow-right" class="size-4" />
+              </.link>
+              <.link
+                :if={signal in [:pending_queue_work, :pending_backend_work]}
+                navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
+                class="ops-sync-activity-link"
+              >
+                {reconcile_signal_label(signal, @reconcile_result)}
+                <.icon name="hero-arrow-right" class="size-4" />
+              </.link>
+              <span :if={
+                signal not in [:failed_sync_work, :pending_queue_work, :pending_backend_work]
+              }>
+                {reconcile_signal_label(signal, @reconcile_result)}
+              </span>
+            </li>
+          </ul>
+          <.ops_help_link :if={@activity != []} href={"#{@mount_path}/help#sync"}>
+            About sync activity
+          </.ops_help_link>
+          <:actions>
+            <p class="ops-sync-identity" data-testid="sync-identity">
+              <span>{sync_mode_label(@reconcile_result.mode)}</span>
+              <span aria-hidden="true">→</span>
+              <span class="sr-only">to</span>
+              <span>
+                Meilisearch index
+                <.ops_inline_code>{@reconcile_result.index}</.ops_inline_code>
+              </span>
             </p>
-            <.ops_code_block
-              :if={match?(%{match: false}, Map.get(@drift_result.dimensions, :settings))}
-              variant={:embedded}
-              text={Jason.encode!(Map.get(@drift_result.dimensions, :settings).details, pretty: true)}
-            />
-          </.ops_disclosure>
-        </div>
+          </:actions>
+        </.ops_status>
+
+        <p
+          :if={@reconcile_result == nil && is_nil(@reconcile_error) && @selected_schema}
+          class="text-ops-body text-base-content/70"
+        >
+          Sync status isn't available yet. Configure the Scrypath runtime, then Refresh.
+        </p>
       </.ops_section>
 
       <.ops_section
@@ -2137,21 +2178,143 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </div>
       </.ops_section>
 
-      <details
-        :if={@selected_schema}
-        id="index-promotion"
-        class="ops-disclosure ops-sync-advanced"
-        open={@promotion_status != nil}
+      <.ops_section
+        id="index-settings-heading"
+        title="Does the live index match your schema?"
+        class="mt-6"
       >
-        <summary
-          id="index-promotion-summary"
-          class="cursor-pointer font-medium"
+        <.ops_status
+          :if={@settings_checking?}
+          id="index-settings-checking"
+          kind={:info}
+          title="Checking Meilisearch settings…"
+          role="status"
+          neutral
         >
-          Advanced: index promotion
-        </summary>
-        <div class="space-y-3 pt-3">
+          <span :if={@drift_result}>
+            The previous comparison stays below until this check finishes.
+          </span>
+          <span :if={!@drift_result}>Comparing the live index settings with your schema.</span>
+        </.ops_status>
+
+        <.ops_status
+          :if={@drift_error && !@drift_loading}
+          id="index-settings-error"
+          kind={:error}
+          title="Couldn't read the Meilisearch settings"
+          role="alert"
+          neutral
+        >
+          <p>
+            Sync status is checked separately. Check that Meilisearch is reachable, then Refresh.
+            <span :if={@drift_result && @drift_loaded_at}>
+              Showing the comparison from <.ops_time dt={@drift_loaded_at} />.
+            </span>
+          </p>
+          <.ops_code_block
+            :if={@drift_error not in [:unavailable, :no_schemas]}
+            class="mt-2"
+            variant={:compact}
+            label="Settings error"
+            text={inspect(@drift_error)}
+            copy
+            copy_label="Copy settings error"
+            copy_success="Error copied"
+          />
+        </.ops_status>
+
+        <p
+          :if={
+            !@settings_checking? && is_nil(@drift_error) && is_nil(@drift_result) &&
+              @selected_schema
+          }
+          class="text-ops-body text-base-content/70"
+        >
+          Meilisearch settings can be compared once the Scrypath runtime is configured.
+        </p>
+
+        <.ops_status
+          :if={@drift_result && is_nil(@drift_error)}
+          id="index-settings-status"
+          kind={if settings_match?(@drift_result), do: :success, else: :warning}
+          title={
+            if settings_match?(@drift_result),
+              do: "Meilisearch settings match the schema.",
+              else: "Meilisearch settings differ from the schema"
+          }
+          role="status"
+          neutral
+        >
+          <span :if={settings_match?(@drift_result)}>
+            Filters, sorting and facets work as declared.
+          </span>
+          <span :if={!settings_match?(@drift_result)}>
+            {counted_work(settings_difference_count(@drift_result), "difference", "differences")} below. Nothing was changed. Apply the schema's settings through your app's setup or reindex workflow, then Refresh.
+            <.ops_help_link href={"#{@mount_path}/help#settings"}>
+              Understanding settings differences
+            </.ops_help_link>
+          </span>
+        </.ops_status>
+
+        <.ops_table
+          :if={@drift_result && setting_differences(@drift_result) != []}
+          class="ops-settings-diff"
+          tabindex="0"
+          role="region"
+          aria-label="Index settings differences"
+        >
+          <thead>
+            <tr>
+              <th scope="col">Field</th>
+              <th scope="col">Declared in schema</th>
+              <th scope="col">Live in Meilisearch</th>
+              <th scope="col">Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr :for={difference <- setting_differences(@drift_result)}>
+              <th scope="row" class="align-top">
+                <.ops_inline_code :if={difference.field}>{difference.field}</.ops_inline_code>
+                <span :if={!difference.field}>{difference.setting}</span>
+                <span :if={difference.field} class="ops-setting-description">
+                  {difference.setting}
+                </span>
+              </th>
+              <td class="align-top" data-label="Declared in schema">
+                <pre class="whitespace-pre-wrap break-words text-ops-sm">{difference.declared}</pre>
+              </td>
+              <td class="align-top" data-label="Live in Meilisearch">
+                <pre
+                  class="ops-setting-live whitespace-pre-wrap break-words text-ops-sm"
+                  data-missing={to_string(difference.missing?)}
+                >{difference.live}</pre>
+              </td>
+              <td class="align-top text-ops-sm" data-label="Effect">{difference.effect}</td>
+            </tr>
+          </tbody>
+        </.ops_table>
+      </.ops_section>
+
+      <.ops_section :if={@selected_schema} id="reindexing-heading" title="Reindexing" class="mt-6">
+        <p :if={!@show_promotion?} id="reindex-idle" class="text-ops-body text-base-content/75">
+          <span :if={@reconcile_result}>No reindex in progress.</span>
+          <span :if={!@reconcile_result}>Reindex status shows once sync can be checked.</span>
+          <.ops_help_link href={"#{@mount_path}/help#reindexing"}>
+            About zero-downtime reindexing
+          </.ops_help_link>
+        </p>
+
+        <div :if={@show_promotion?} id="index-promotion" class="space-y-3">
           <p class="text-ops-body text-base-content/75">
-            Promotion swaps the live and prepared indexes for <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>.
+            Prepared index
+            <.ops_inline_code>{reindex_index(@reconcile_result, :target_index)}</.ops_inline_code>
+            found. Promotion swaps it with the live index <.ops_inline_code>{reindex_index(@reconcile_result, :live_index)}</.ops_inline_code>, so searches move to the prepared index in one step.
+            <span :if={@reconcile_result && reindex_progress_copy(@reconcile_result)}>
+              {reindex_progress_copy(@reconcile_result)}
+            </span>
+            <.ops_help_link href={"#{@mount_path}/help#reindexing"}>
+              About zero-downtime reindexing
+            </.ops_help_link>
           </p>
           <.ops_status
             kind={if @promotion_eligibility == :eligible, do: :success, else: :warning}
@@ -2161,6 +2324,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             {promotion_eligibility_copy(@promotion_eligibility)}
           </.ops_status>
           <.ops_button
+            id="promote-target-index"
             phx-click="confirm_swap_live"
             disabled={@promotion_eligibility != :eligible || @promotion_loading}
           >
@@ -2249,7 +2413,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Refresh checks
           </.ops_button>
         </div>
-      </details>
+      </.ops_section>
 
       <nav class="ops-sync-related" aria-label="Related search views">
         <.link navigate={@mount_path} class="ops-sync-activity-link">
@@ -2271,7 +2435,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         description="Meilisearch will exchange the live and prepared indexes when its swap task completes."
         action_label="promote index"
         cancel_event="cancel_swap_live"
-        successor="#index-promotion-summary"
+        successor="#promote-target-index"
       >
         <.form for={%{}} phx-submit="swap_live" class="space-y-3">
           <p>
@@ -2302,44 +2466,5 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_modal>
     </Layouts.app>
     """
-  end
-
-  defp drift_status_kind(_result, error) when not is_nil(error), do: :error
-  defp drift_status_kind(nil, nil), do: :info
-
-  defp drift_status_kind(result, nil),
-    do: if(drift_mismatch_count(result) == 0, do: :success, else: :warning)
-
-  defp drift_status_title(_result, error) when not is_nil(error),
-    do: "Index settings could not be checked"
-
-  defp drift_status_title(nil, nil), do: "Index settings not checked"
-
-  defp drift_status_title(result, nil) do
-    if drift_mismatch_count(result) == 0,
-      do: "Index settings match",
-      else: "Index settings differ"
-  end
-
-  defp drift_status_copy(_result, error) when not is_nil(error) do
-    "Sync status is checked separately. Previous comparisons keep their original checked time. Check the Meilisearch connection, then use Refresh. Reason: #{inspect(error)}"
-  end
-
-  defp drift_status_copy(nil, nil) do
-    "This check compares declared fields and settings. It does not verify document freshness."
-  end
-
-  defp drift_status_copy(result, nil) do
-    mismatches = drift_mismatch_count(result)
-
-    if mismatches == 0 do
-      "Declared fields, filterable attributes, sortable attributes, faceting, and settings match this snapshot."
-    else
-      "Review the differences below. No settings have been changed."
-    end
-  end
-
-  defp drift_mismatch_count(%{dimensions: dimensions}) when is_map(dimensions) do
-    Enum.count(dimensions, fn {_key, dimension} -> not Map.get(dimension, :match, false) end)
   end
 end

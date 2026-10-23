@@ -69,16 +69,16 @@ defmodule ScrypathOpsWeb.HelpLive do
             </span>
           </.ops_heading>
           <p>
-            After running a query, choose Save search beside Run search. This saves the query and options that produced those results. If you edit the inputs, run the updated search before saving it.
+            Choose Save search beside Run search to keep the inputs in the form under a name. A saved search contains the query and options, not the results.
           </p>
           <p>
-            Saved searches are JSON files in a folder on this server. They contain inputs, not result snapshots. Your host application controls the folder and its persistence; the list is not a personal browser bookmark collection.
+            Pick one from Saved searches in Search to fill the form and run it. After you change the inputs, Save updates it and Save as keeps a copy under a new name. A saved search with options the form can't show runs exactly as saved and lists the inputs it used.
           </p>
           <p>
-            Open Saved searches to preview a file, run it again or manage it. Previewing a file does not run its query.
+            Manage saved searches loads, renames and deletes them, and imports or exports them as JSON files to share between environments.
           </p>
-          <.link navigate={"#{@mount_path}/playbooks"} class="ops-text-action">
-            Open Saved searches <span aria-hidden="true">→</span>
+          <.link navigate={"#{@mount_path}/search?saved=manage"} class="ops-text-action">
+            Manage saved searches <span aria-hidden="true">→</span>
           </.link>
         </section>
         <section id="sync">
@@ -129,7 +129,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           >
             <h3 id="recovery-title">Recover from a sync failure</h3>
             <p>
-              Choose the affected schema in Failed sync work. Read the error and fix its cause before using an eligible Retry action. Retrying jobs can already have an automatic retry scheduled.
+              Failed sync work lists sync work that didn't reach Meilisearch for every schema; filter by schema or cause to narrow it. Retry queues the same records again and sends their current data, so fix invalid data first. Retrying items will run again automatically.
             </p>
             <p>
               After Retry is queued, follow Check sync status to track that operation and its expected document effect. Acceptance alone does not confirm recovery.
@@ -146,7 +146,9 @@ defmodule ScrypathOpsWeb.HelpLive do
             </span>
           </.ops_heading>
           <p>
-            Sync and drift compares your schema's declared settings with the live Meilisearch index. The comparison loads automatically and makes no changes.
+            Sync and index compares the settings of the live Meilisearch index with what your schema's
+            <code>use Scrypath</code>
+            declaration says. The comparison loads automatically and makes no changes.
           </p>
           <p>
             Filterable attributes are the fields Meilisearch allows in query filters. An index can enable several. “Not enabled for filtering” means a declared field is absent from that index's live filterable settings; it does not mean the field or index is missing.
@@ -158,11 +160,32 @@ defmodule ScrypathOpsWeb.HelpLive do
             If the declaration is correct, apply it through your application's index setup or reindex workflow, then use Refresh to compare again. Review the deployment procedure in the developer documentation before changing a live index.
           </p>
           <p>
+            Settings drift when the code changes but the live index doesn't. For example, adding a field to
+            <code>filterable</code>
+            has no effect until the settings are applied or the index is rebuilt, so filters on that field fail even though every document synced.
+          </p>
+          <p>
             Matching settings and successfully completed tasks are useful checks. To confirm an expected document is searchable, run a query for it.
           </p>
-          <.link navigate={"#{@mount_path}/sync-drift"} class="ops-text-action">
-            Open Sync and drift <span aria-hidden="true">→</span>
+          <.link navigate={"#{@mount_path}/sync-and-index"} class="ops-text-action">
+            Open Sync and index <span aria-hidden="true">→</span>
           </.link>
+        </section>
+        <section id="reindexing">
+          <.ops_heading>
+            <span class="ops-help-heading">
+              <.icon name="hero-arrow-path" class="size-5" />Zero-downtime reindexing
+            </span>
+          </.ops_heading>
+          <p>
+            A zero-downtime reindex builds a complete copy of the index, called the prepared index, while searches keep using the live one. When the prepared index is ready, promotion asks Meilisearch to swap the two, so searches move to the new index in one step.
+          </p>
+          <p>
+            Sync and index shows promotion only after it finds a prepared index for the selected schema. Promotion stays blocked while sync work is pending or failed, while the reindex is still running, or while the settings differ from the schema. It always asks for confirmation.
+          </p>
+          <p>
+            Reindexing starts from your application, not from this screen. See the developer documentation for the full procedure.
+          </p>
         </section>
         <section id="timestamps">
           <.ops_heading>Read and copy timestamps</.ops_heading>
@@ -185,7 +208,7 @@ defmodule ScrypathOpsWeb.HelpLive do
               </a>
             </li>
             <li>
-              <a href="https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md">
+              <a href="https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-saved-search-persistence.md">
                 Saved-search storage and deployment
               </a>
             </li>

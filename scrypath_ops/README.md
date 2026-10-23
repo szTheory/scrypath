@@ -20,6 +20,35 @@ mix phx.server
 
 Then open [http://localhost:4000](http://localhost:4000).
 
+## Mounting in a host app
+
+Mount the operator routes in the host router and pass the Repo ScrypathOps should use:
+
+```elixir
+import ScrypathOpsWeb.Router
+
+scope "/admin" do
+  pipe_through :browser
+  scrypath_ops_routes "/search", repo: MyApp.Repo
+end
+```
+
+Saved searches are stored in a `scrypath_ops_saved_searches` table in that Repo. Create it with
+a one-line migration (`mix ecto.gen.migration add_scrypath_ops`):
+
+```elixir
+defmodule MyApp.Repo.Migrations.AddScrypathOps do
+  use Ecto.Migration
+
+  def up, do: ScrypathOps.Migration.up(version: 1)
+  def down, do: ScrypathOps.Migration.down(version: 1)
+end
+```
+
+To keep the table in another Postgres schema, pass the same `prefix:` to both the migration and
+`scrypath_ops_routes/2`. See `ScrypathOps.Migration` for versions and upgrades, and
+[Saved search storage](docs/team-saved-search-persistence.md) for import, export and review.
+
 ## Mounted host app assets
 
 When a Phoenix host mounts ScrypathOps under a path such as `/admin/search/*`, the host
@@ -41,7 +70,7 @@ The host JavaScript should also handle the operator shell events:
 
 - `phx:set-theme` — set or clear `data-theme` on `document.documentElement` and persist the
   explicit light/dark preference when present.
-- `phx:copy_run_diagnostics` — copy the playbook run diagnostics payload to the clipboard.
+- `phx:copy_run_diagnostics` — copy the saved search run diagnostics payload to the clipboard.
 
 The e-commerce demo wires both pieces in its root layout and app JavaScript so `/admin/search/*`
 looks and behaves like the standalone `/ops` shell without loading a second LiveSocket.
@@ -88,5 +117,5 @@ When you run a **release** in **`MIX_ENV=prod`**, **`OPSUI_AUTH_MODE`** is **man
 
 ## Learn more
 
-* [Team playbook persistence](docs/team-playbook-persistence.md) — workspace directory, **`SCRYPATH_OPS_PLAYBOOK_DIR`**, GitOps, and **`mix scrypath_ops.playbooks.validate`**
+* [Saved search storage](docs/team-saved-search-persistence.md) — database table and migration, JSON import/export, review in git, and **`mix scrypath_ops.saved_searches.validate`**
 * [Phoenix guides](https://hexdocs.pm/phoenix/overview.html)

@@ -68,32 +68,33 @@ test("one purposeful zero-match state and no duplicate per-schema empty cards", 
   await page.screenshot({path:`${artifacts}/empty.png`,fullPage:true});
 });
 
-test("Save sits by Run, gates draft edits and validates filename and optional metadata", async ({page, request}) => {
+test("Save sits by Run, validates the name and offers Save and Save as after edits", async ({page, request}) => {
   await seedScenario(request,"all_green");
   await page.goto("/admin/search/search"); await waitForLiveConnected(page);
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button",{name:"Run search",exact:true}).click();
-  const save = page.locator("#search-save-toggle");
+  const save = page.locator("#search-save-new");
   await expect(save).toBeEnabled();
   expect((await save.boundingBox())!.y).toBe((await page.locator("#ops-search-playground-form button[type=submit]").boundingBox())!.y);
-  await page.getByLabel("Search text").fill("changed");
-  await expect(save).toBeDisabled();
-  await expect(page.locator("#search-run-attribution")).toContainText("Run search to update these results.");
-  await page.getByLabel("Search text").fill("quantum"); await expect(save).toBeEnabled();
   await save.click();
-  await page.getByLabel("Filename",{exact:true}).fill("../bad.json");
-  await page.getByLabel("Filename",{exact:true}).press("Tab");
-  await expect(page.locator("#capture_basename-error")).toContainText("Avoid folder paths");
-  const filename = `ui3-${Date.now()}.json`;
-  await page.getByLabel("Filename",{exact:true}).fill(filename);
-  await page.getByLabel("Search title",{exact:true}).fill("猫".repeat(70));
-  await page.getByLabel("Search title",{exact:true}).press("Tab");
-  await expect(page.locator("#capture_title-error")).toContainText("200 bytes");
-  await page.getByLabel("Search title",{exact:true}).fill("Reusable query");
-  await page.locator("#search-capture-form button[type=submit]").click();
-  await expect(page.getByTestId("search-saved-handoff")).toBeVisible();
-  await page.getByTestId("search-saved-handoff").click();
-  await expect(page.locator(".ops-object-item").filter({hasText:filename})).toBeVisible();
+  const dialog = page.getByRole("dialog",{name:"Save search"});
+  await expect(dialog.getByLabel("Name",{exact:true})).toBeFocused();
+  await dialog.getByLabel("Name",{exact:true}).fill("n".repeat(121));
+  await dialog.getByRole("button",{name:"Save",exact:true}).click();
+  await expect(page.locator("#saved-search-name-input-error")).toContainText("Enter a name of up to 120 characters.");
+  await expect(dialog.getByLabel("Name",{exact:true})).toBeFocused();
+  const name = `ui3-${Date.now()}`;
+  await dialog.getByLabel("Name",{exact:true}).fill(name);
+  await dialog.getByRole("button",{name:"Save",exact:true}).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${name}”`);
+  await expect(save).toHaveCount(0);
+  await page.getByLabel("Search text").fill("changed");
+  await expect(page.locator("#search-run-attribution")).toContainText("Run search to update these results.");
+  await expect(page.locator("#search-save-loaded")).toBeVisible();
+  await expect(page.locator("#search-save-as")).toBeVisible();
+  await page.locator("#saved-search-picker-button").click();
+  await expect(page.locator("#saved-search-menu").getByRole("button",{name:new RegExp(name)})).toBeVisible();
 });
 
 test("contextual help opens at a visible heading in a new tab and preserves the task", async ({page, context, request}) => {
@@ -137,8 +138,8 @@ test("health stages align, icons are consistent, refresh is singular and setting
     }
   }
   await seedScenario(request,"incident");
-  await page.goto("/admin/search/sync-drift"); await waitForLiveConnected(page);
-  await expect(page.locator("#settings-checked-at")).toBeVisible();
+  await page.goto("/admin/search/sync-and-index"); await waitForLiveConnected(page);
+  await expect(page.locator("#index-settings-status")).toBeVisible();
   await expect(page.getByRole("button",{name:"Refresh settings",exact:true})).toHaveCount(0);
   await expect(page.getByText("Not enabled for filtering",{exact:true})).toBeVisible();
   await expect(page.getByText(/\d+ failed sync operations?/)).toBeVisible();

@@ -9,7 +9,6 @@ RUN npm ci
 
 WORKDIR /app
 COPY . .
-RUN cp -R examples/scrypath_ecommerce/priv/playbooks /opt/scrypath-e2e-playbooks
 
 WORKDIR /app/examples/scrypath_ecommerce
 CMD ["bash", "./docker-playwright.sh"]

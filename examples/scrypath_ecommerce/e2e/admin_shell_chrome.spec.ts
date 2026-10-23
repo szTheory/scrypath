@@ -20,11 +20,11 @@ import {
   type Locator,
   type Page
 } from "@playwright/test";
-import { existsSync, mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-
 import {
+  deleteSavedSearches,
   drainSearchQueue,
+  putSavedSearch,
+  saveCurrentSearch,
   seedScenario,
   waitForLiveConnected,
   waitForSearchVisible
@@ -33,7 +33,7 @@ import {
   assertSystemDarkInvariants,
   gotoControlRoom,
   gotoFailedSync,
-  gotoPlaybooks,
+  gotoSavedSearches,
   gotoSearchHealth,
   gotoSearch,
   gotoSyncDrift,
@@ -48,8 +48,7 @@ import {
 
 import { assertDialogCycle, assertOperatorGeometry, assertReadableControl, scanNonContrastA11y } from "./helpers/operator-ui";
 
-const PLAYBOOK_WORKSPACE_DIR = process.env.PLAYBOOK_WORKSPACE_DIR || join(process.cwd(), "priv/playbooks");
-const SHELL_PLAYBOOK_PREFIX = "shell-chrome-";
+const SHELL_SAVED_SEARCH_PREFIX = "shell-chrome-";
 
 type ShellSurface = {
   name: string;
@@ -62,18 +61,11 @@ const SHELL_SURFACES: ShellSurface[] = [
   { name: "Search health", prepare: gotoSearchHealth, hasPrimaryNavItem: true },
   { name: "Failed Sync", prepare: gotoFailedSync, hasPrimaryNavItem: true },
   { name: "Sync/Drift", prepare: gotoSyncDrift, hasPrimaryNavItem: true },
-  { name: "Search", prepare: gotoSearch, hasPrimaryNavItem: true },
-  { name: "Playbooks", prepare: gotoPlaybooks, hasPrimaryNavItem: true }
+  { name: "Search", prepare: gotoSearch, hasPrimaryNavItem: true }
 ];
 
-function cleanupShellChromePlaybooks(): void {
-  if (!existsSync(PLAYBOOK_WORKSPACE_DIR)) return;
-
-  for (const name of readdirSync(PLAYBOOK_WORKSPACE_DIR)) {
-    if (name.startsWith(SHELL_PLAYBOOK_PREFIX) && name.endsWith(".json")) {
-      unlinkSync(join(PLAYBOOK_WORKSPACE_DIR, name));
-    }
-  }
+async function cleanupShellChromeSavedSearches(request: APIRequestContext): Promise<void> {
+  await deleteSavedSearches(request, { prefix: SHELL_SAVED_SEARCH_PREFIX });
 }
 
 async function newThemedPage(
@@ -354,12 +346,10 @@ async function triggerSearchSaveFlash(page: Page): Promise<void> {
   await runSearch(page, "quantum");
   await expect(page.getByRole("heading", { name: "Results", exact: true })).toBeVisible();
 
-  const basename = `${SHELL_PLAYBOOK_PREFIX}${Date.now()}.json`;
-  await page.getByRole("button", { name: "Save search" }).click();
-  await page.getByLabel("Filename").fill(basename);
-  await page.locator("#search-capture-form button[type=submit]").click();
+  const name = `${SHELL_SAVED_SEARCH_PREFIX}${Date.now()}`;
+  await saveCurrentSearch(page, name);
   await expect(page.locator("#flash-group [role='status']:not([hidden])")).toContainText(
-    `Saved search ${basename}.`
+    `Saved “${name}”.`
   );
 }
 
@@ -367,9 +357,9 @@ test.use({ actionTimeout: 10_000 });
 
 test.describe("admin shell chrome -- SHELL-DARK-01", () => {
   test.describe.configure({ timeout: 120_000 });
-  test.beforeEach(() => cleanupShellChromePlaybooks());
-  test.afterEach(async ({ page }, testInfo) => {
-    cleanupShellChromePlaybooks();
+  test.beforeEach(async ({ request }) => cleanupShellChromeSavedSearches(request));
+  test.afterEach(async ({ page, request }, testInfo) => {
+    await cleanupShellChromeSavedSearches(request);
     if (testInfo.status !== testInfo.expectedStatus) {
       await testInfo.attach("shell-first-failure.png", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
     }
@@ -386,132 +376,91 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     await expect(page.locator("#ops-cmdk")).toBeVisible();
   });
 
-  test("[shell-chrome] playbook modal focus lifecycle and overlay isolation", async ({ page }) => {
-    const basename = `${SHELL_PLAYBOOK_PREFIX}modal-${Date.now()}.json`;
+  test("[shell-chrome] Manage saved searches sheet focus lifecycle and overlay isolation", async ({ page, request }) => {
+    const name = `${SHELL_SAVED_SEARCH_PREFIX}sheet-${Date.now()}`;
     await page.setViewportSize({ width: 390, height: 844 });
-    mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
-    writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
-    await gotoPlaybooks(page);
-
-    const row = page.locator(".ops-object-item").filter({ hasText: basename });
-    await expect(row).toHaveCount(1);
-    const summary = row.getByTestId("playbook-manage-actions").locator("summary");
-    await summary.click();
-    const renameTrigger = row.getByRole("button", { name: /^Rename / });
+    await putSavedSearch(request, name, {});
+    await gotoSearch(page);
+    const trigger = page.locator("#saved-search-manage-open");
 
     await pressCommandPaletteShortcut(page);
     await expect(page.locator("#ops-cmdk")).toBeVisible();
-    // Model a modal-opening event arriving while the palette has made the page inert.
-    await renameTrigger.evaluate((element: HTMLButtonElement) => element.click());
+    // Model a sheet-opening event arriving while the palette has made the page inert.
+    await trigger.evaluate((element: HTMLButtonElement) => element.click());
 
-    const modal = page.locator("#rename-playbook-modal");
-    const cancel = modal.locator("[data-ops-modal-cancel]");
-    const input = page.locator("#rename-new-name-input");
-    const submit = modal.getByRole("button", { name: "Rename", exact: true });
-
-    await expect(modal).toBeVisible();
+    const sheet = page.getByRole("dialog", { name: "Manage saved searches" });
+    await expect(sheet).toBeVisible();
     await expect(page.locator("#ops-cmdk")).toBeHidden();
-    await expect(input).toBeFocused();
+    await expect(sheet.locator("[data-ops-sheet-close]")).toBeFocused();
     await page.keyboard.press("Control+K");
     await expect(page.locator("#ops-cmdk")).toBeHidden();
-
-    const close = modal.getByRole("button", { name: "Close Rename saved search dialog" });
-    await assertDialogCycle(page, [close, input, cancel, submit], "rename");
     await expect(page.locator(".ops-header")).toHaveAttribute("inert", "");
-    await input.focus();
-    await input.fill("invalid/name.json");
-    await expect(input).toHaveValue("invalid/name.json");
-    await expect(input).toHaveAttribute("value", "invalid/name.json");
-    // phx-change sends a real server patch; focus must remain on the edited input.
+
+    const focusInSheet = () => sheet.evaluate((el) => el.contains(document.activeElement));
+    for (let step = 0; step < 30; step += 1) {
+      await page.keyboard.press(step % 7 === 6 ? "Shift+Tab" : "Tab");
+      expect(await focusInSheet(), `Tab ${step + 1} stays in the sheet`).toBe(true);
+    }
+
+    const row = sheet.locator(".ops-saved-search-row").filter({ hasText: name });
+    await expect(row).toHaveCount(1);
+    const renameTrigger = row.getByRole("button", { name: `Rename ${name}` });
+    await renameTrigger.click();
+    const input = sheet.locator("#saved-search-rename-input");
     await expect(input).toBeFocused();
-    await expect(modal).toBeVisible();
+    await input.fill("invalid-but-unsent");
+    // phx-change sends a real server patch; focus must remain on the edited input.
+    await expect(input).toHaveAttribute("value", "invalid-but-unsent");
+    await expect(input).toBeFocused();
+    // Escape leaves the row action first and returns to its trigger, keeping the sheet open.
     await page.keyboard.press("Escape");
-    await expect(modal).toBeHidden();
-    await expect(summary).toBeFocused();
+    await expect(input).toHaveCount(0);
+    await expect(sheet).toBeVisible();
+    await expect(renameTrigger).toBeFocused();
 
-    await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
-    await page.getByRole("button", { name: "Open navigation" }).click();
-    await expect(page.locator("#ops-mobile-nav")).toBeVisible();
-    await row.locator("button[phx-click=dup_open]").evaluate((element: HTMLButtonElement) => element.click());
-    const duplicate = page.locator("#duplicate-playbook-modal");
-    const duplicateInput = page.locator("#dup-to-name-input");
-    await expect(duplicateInput).toBeFocused();
-    await expect(page.locator("#ops-mobile-nav")).toBeHidden();
-    await page.keyboard.press("Shift+/");
-    await expect(page.locator("#ops-cheatsheet")).toBeHidden();
-    await assertDialogCycle(page, [
-      duplicate.getByRole("button", { name: "Close Duplicate saved search dialog" }),
-      duplicateInput, duplicate.getByRole("button", { name: "Cancel duplicate" }),
-      duplicate.getByRole("button", { name: "Duplicate", exact: true })
-    ], "duplicate");
-    await duplicateInput.fill(`${SHELL_PLAYBOOK_PREFIX}duplicate.json`);
-    await expect(duplicateInput).toHaveAttribute("value", `${SHELL_PLAYBOOK_PREFIX}duplicate.json`);
-    await expect(duplicateInput).toBeFocused();
-    await duplicate.getByRole("button", { name: "Cancel duplicate" }).click();
-    await expect(duplicate).toBeHidden();
-    await expect(summary).toBeFocused();
-
-    const deleteTrigger = row.locator("button[phx-click=request_delete]");
-    await openShortcutSheet(page);
-    await deleteTrigger.evaluate((element: HTMLButtonElement) => element.click());
-    await expect(page.locator("#ops-cheatsheet")).toBeHidden();
-    const deleteModal = page.locator("#delete-playbook-modal");
-    await expect(deleteModal).toBeVisible();
-    await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
-    await assertDialogCycle(page, [
-      deleteModal.getByRole("button", { name: "Close Delete saved search dialog" }),
-      page.locator("#delete-confirm-input"),
-      deleteModal.getByRole("button", { name: "Cancel delete" }),
-      deleteModal.getByRole("button", { name: "Confirm delete" })
-    ], "delete");
-    const successorSelector = await deleteModal.getAttribute("data-ops-modal-successor");
-    expect(successorSelector).toBeTruthy();
-
-    await summary.evaluate((el) => el.remove());
-    await deleteModal.getByRole("button", { name: "Cancel delete" }).click();
-    await expect(deleteModal).toBeHidden();
-    const successor = page.locator(successorSelector as string);
-    await expect(successor).toBeFocused();
-    await page.reload();
-    await expect(row).toBeVisible();
-    await row.getByTestId("playbook-manage-actions").locator("summary").click();
-    await row.getByRole("button", { name: "Delete" }).click();
-    await expect(deleteModal.getByRole("button", { name: "Cancel delete" })).toBeFocused();
-    const afterDelete = await deleteModal.getAttribute("data-ops-modal-successor");
-    await page.locator("#delete-confirm-input").fill(basename);
-    await deleteModal.getByRole("button", { name: "Confirm delete" }).click();
-    await expect(deleteModal).toBeHidden();
+    await row.getByRole("button", { name: `Delete ${name}` }).click();
+    const confirm = sheet.locator("#saved-search-delete-input");
+    await expect(confirm).toBeFocused();
+    await confirm.fill("wrong name");
+    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+    await expect(confirm).toHaveAttribute("aria-invalid", "true");
+    await expect(confirm).toBeFocused();
+    await confirm.fill(name);
+    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
     await expect(row).toHaveCount(0);
-    await expect(page.locator(afterDelete!)).toBeFocused();
+    await expect.poll(focusInSheet, { message: "focus stays in the sheet after delete" }).toBe(true);
+
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+    await expect(trigger).toBeFocused();
     await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
   });
 
-  test("[shell-chrome] successful rename returns focus to the catalog", async ({ page }) => {
-    const basename = `${SHELL_PLAYBOOK_PREFIX}rename-${Date.now()}.json`;
-    const renamed = basename.replace("rename-", "renamed-");
-    mkdirSync(PLAYBOOK_WORKSPACE_DIR, { recursive: true });
-    writeFileSync(join(PLAYBOOK_WORKSPACE_DIR, basename), "{}\n");
-    await gotoPlaybooks(page);
-    const row = page.locator(".ops-object-item").filter({ hasText: basename });
-    await row.getByTestId("playbook-manage-actions").locator("summary").click();
-    await row.getByRole("button", { name: /^Rename / }).click();
-    const modal = page.locator("#rename-playbook-modal");
-    const input = page.locator("#rename-new-name-input");
-    await input.fill("invalid/name.json");
-    await modal.getByRole("button", { name: "Rename", exact: true }).click();
-    const error = modal.getByRole("alert");
-    await expect(error).toContainText("Filename");
+  test("[shell-chrome] successful rename returns focus to the renamed row", async ({ page, request }) => {
+    const name = `${SHELL_SAVED_SEARCH_PREFIX}rename-${Date.now()}`;
+    const renamed = name.replace("rename-", "renamed-");
+    await putSavedSearch(request, name, {});
+    const sheet = await gotoSavedSearches(page).then(() =>
+      page.getByRole("dialog", { name: "Manage saved searches" })
+    );
+    const row = sheet.locator(".ops-saved-search-row").filter({ hasText: name });
+    await row.getByRole("button", { name: `Rename ${name}` }).click();
+    const input = sheet.locator("#saved-search-rename-input");
+    await input.fill("n".repeat(121));
+    await sheet.getByRole("button", { name: "Rename", exact: true }).click();
+    const error = sheet.locator("#saved-search-rename-input-error");
+    await expect(error).toContainText("Enter a name");
     await expect(input).toHaveAttribute("aria-invalid", "true");
     await expect(error).not.toHaveAttribute("inert", "");
-    expect(await error.evaluate(el => el.closest("[inert]") === null)).toBe(true);
-    expect(await modal.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    expect(await error.evaluate((el) => el.closest("[inert]") === null)).toBe(true);
+    expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
     await input.fill(renamed);
-    await modal.getByRole("button", { name: "Rename", exact: true }).click();
-    await expect(modal).toBeHidden();
+    await sheet.getByRole("button", { name: "Rename", exact: true }).click();
     await expect(row).toHaveCount(0);
-    await expect(page.locator(".ops-object-item").filter({ hasText: renamed })).toHaveCount(1);
-    await expect(page.locator(".ops-object-item").filter({ hasText: renamed }).getByTestId("playbook-manage-actions").locator("summary")).toBeFocused();
-    await expect(page.locator(".ops-header")).not.toHaveAttribute("inert", "");
+    const renamedRow = sheet.locator(".ops-saved-search-row").filter({ hasText: renamed });
+    await expect(renamedRow).toHaveCount(1);
+    await expect(renamedRow.getByRole("button", { name: `Rename ${renamed}` })).toBeFocused();
+    await expect(page.locator(".ops-header")).toHaveAttribute("inert", "");
   });
 
   test("[layout] representative operator boundaries and non-contrast accessibility", async ({ page, request }, testInfo) => {
@@ -553,18 +502,20 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
           "Sync/Drift": page.getByRole("button", { name: "Refresh sync and index settings", exact: true }),
-          "Search": page.getByRole("button", { name: "Run search", exact: true }),
-          "Playbooks": page.getByRole("button", { name: "Preview", exact: true }).first()
+          "Search": page.getByRole("button", { name: "Run search", exact: true })
         }[surface.name]!;
         await primary.click({ trial: true });
         await assertReadableControl(primary, `${surface.name} common action`, 14, 40);
         await page.evaluate(() => window.scrollTo(0, 0));
         if (width === 390 && surface.name === "Failed Sync") {
-          const summary = page.locator("#failed-sync-rollups-heading").locator("..");
-          await expect(summary.locator("#failed-sync-rollups-heading span")).toHaveCount(5);
-          await expect(summary).toContainText("unknown 1");
-          expect((await summary.boundingBox())!.height, "total plus five reason counts remain compact").toBeLessThanOrEqual(160);
-          await expect(page.getByRole("radio")).toHaveCount(2);
+          const filters = page.locator("#failed-sync-filters");
+          const causes = filters.getByTestId("failed-sync-cause-filter");
+          await expect(causes).toHaveCount(5);
+          await expect(causes.filter({ hasText: "Unknown cause" })).toContainText("1");
+          for (const chip of await causes.all()) await assertReadableControl(chip, "cause filter chip", 12, 24);
+          expect((await filters.boundingBox())!.height, "schema and cause filters remain compact").toBeLessThanOrEqual(240);
+          await expect(page.getByRole("radio")).toHaveCount(0);
+          await expect(filters.getByRole("checkbox", { name: /^(Product|Variant)/ })).toHaveCount(2);
         }
         if (width === 390) {
           await scanNonContrastA11y(page, testInfo, `${surface.name}-incident-light-390`);

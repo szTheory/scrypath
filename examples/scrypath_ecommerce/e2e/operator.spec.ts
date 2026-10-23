@@ -49,6 +49,8 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const runMarker = marker();
   recordEvidence(testInfo, { fixture_marker: runMarker, schema: "Elixir.ScrypathEcommerce.Catalog.Variant", checked_outcome: "fixture setup started" });
   const fixture = await prepareRecoveryFixture(request, { tenantId: seed.tenant_id!, marker: runMarker });
+  // Rows name their source as "Oban <queue> #<id>"; match the id exactly.
+  const originalJobLabel = new RegExp(`Oban \\S+ #${fixture.original_job_id}\\b`);
   recordEvidence(testInfo, {
     fixture_marker: fixture.marker, schema: fixture.schema, index: fixture.index,
     original_job_id: fixture.original_job_id, original_attempt: fixture.original_attempt,
@@ -91,19 +93,25 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
 
-  // A real selection change advances this page's generation independently of the destination.
-  await page.getByRole("radio", { name: /Product/ }).check();
+  // The deep link preselects the Variant schema filter; adding Product widens it in the URL.
+  const variantFilter = page.getByRole("checkbox", { name: /^Variant/ });
+  const productFilter = page.getByRole("checkbox", { name: /^Product/ });
+  await expect(variantFilter).toBeChecked();
+  await expect(productFilter).not.toBeChecked();
+  await productFilter.check();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
-  await page.getByRole("radio", { name: /Variant/ }).check();
+  await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
+  await productFilter.uncheck();
+  await expect(page).not.toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Product/);
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
 
-  const failedRow = page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` });
+  const failedRow = page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel });
   await expect(failedRow).toBeVisible();
   await expect(failedRow.getByTestId("failed-sync-retry")).toBeEnabled();
   const rowText = await failedRow.innerText();
-  expect(rowText).toContain(`Oban job #${fixture.original_job_id}`);
-  expect(rowText).toContain("Last attempt");
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  expect(rowText).toMatch(originalJobLabel);
+  expect(rowText).toContain("Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
 
   const lightPreference = page.locator("#theme-toggle button").filter({ hasText: "Light" });
@@ -121,7 +129,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
       scrollWidth: document.documentElement.scrollWidth
     }));
     expect(geometry.scrollWidth, `failed-work page must not overflow at ${width}px`).toBeLessThanOrEqual(geometry.width + 1);
-    await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+    await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
     await expect(failedRow.getByTestId("failed-sync-reason")).toBeVisible();
     await expect(failedRow.getByTestId("failed-sync-reason")).not.toBeEmpty();
   }
@@ -156,10 +164,12 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   const handoffUrl = new URL(handoffHref!, page.url());
   const handle = handoffUrl.searchParams.get("recovery");
   expect(handle).toBeTruthy();
-  const originGeneration = Number(handoffUrl.searchParams.get("recovery_generation"));
-  expect(originGeneration).toBeGreaterThan(1);
+  // Failed sync loads every schema at once, so the generation only has to identify this receipt.
+  const generationParam = handoffUrl.searchParams.get("recovery_generation");
+  expect(generationParam).toMatch(/^\d+$/);
+  const originGeneration = Number(generationParam);
   await handoff.click();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await waitForLiveConnected(page);
   const recoveryStatus = page.locator("#recovery-observation");
@@ -208,27 +218,27 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.goForward();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
-  await expect(page.locator("input[name='schema']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveValue("ScrypathEcommerce.Catalog.Variant");
   await page.reload();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel })).toBeVisible();
 
   await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
   await expect(page.getByText("That schema is unavailable.")).toBeVisible();
   await expect(page.getByTestId("failed-sync-retry")).toHaveCount(0);
-  await expect(page.locator("input[name='schema']:checked")).toHaveCount(0);
+  await expect(page.locator("input[name='schema[]']:checked")).toHaveCount(0);
   await expect(page.getByTestId("failed-sync-row")).toHaveCount(0);
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Failed sync work" })).toBeVisible();
   await expect(page).toHaveURL(/schema=ScrypathEcommerce\.Catalog\.Variant/);
-  await expect(page.getByTestId("failed-sync-row").filter({ hasText: `Oban job #${fixture.original_job_id}` })).toBeVisible();
+  await expect(page.getByTestId("failed-sync-row").filter({ hasText: originalJobLabel })).toBeVisible();
 });
 
 test("operator promotes only this returned task pair and unique target document", async ({ page, request }, testInfo) => {
@@ -245,17 +255,18 @@ test("operator promotes only this returned task pair and unique target document"
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
   await page.getByTestId("control-room-verify-change").click();
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
-  const advanced = page.locator("details").filter({ has: page.locator("summary", { hasText: "Advanced: index promotion" }) });
-  await advanced.locator("summary").click();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  // Promotion controls appear only because the fixture prepared a target index.
+  const advanced = page.locator("#index-promotion");
+  await expect(advanced).toContainText(fixture.target_index);
   await expect(advanced.getByRole("button", { name: "Promote target index" })).toBeEnabled();
   await advanced.getByRole("button", { name: "Promote target index" }).click();
   const confirmation = page.getByRole("dialog", { name: "Confirm index promotion" });
   await expect(confirmation).toBeVisible();
-  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#index-promotion-summary");
+  await expect(confirmation).toHaveAttribute("data-ops-modal-successor", "#promote-target-index");
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await expect(confirmation.locator("p").filter({ hasText: "Live index:" })).toContainText(fixture.live_index);
   await expect(confirmation.locator("p").filter({ hasText: "Target index:" })).toContainText(fixture.target_index);
@@ -309,18 +320,15 @@ test("operator promotes only this returned task pair and unique target document"
   await page.locator("html").evaluate((html) => html.removeAttribute("data-theme"));
   await page.setViewportSize({ width: 1440, height: 900 });
   const promotionTrigger = advanced.getByRole("button", { name: "Promote target index" });
-  const promotionSummary = page.locator("#index-promotion-summary");
   await cancel.click();
   await expect(confirmation).toHaveCount(0);
-  await expect(promotionSummary).toBeFocused();
-  await promotionSummary.press("Enter");
-  await expect(promotionTrigger).toBeVisible();
+  await expect(promotionTrigger).toBeFocused();
   await promotionTrigger.click();
   await expect(confirmation).toBeVisible();
   await expect(confirmation).toContainText(`Schema: ${fixture.schema.replace(/^Elixir\./, "")}`);
   await confirm.click();
 
-  const promotionStatus = page.locator("details").filter({ hasText: "Advanced: index promotion" });
+  const promotionStatus = page.locator("#index-promotion");
   await expect(promotionStatus.getByText("Index swap completed", { exact: true })).toBeVisible({ timeout: 30_000 });
   const taskText = await promotionStatus.innerText();
   const taskMatch = taskText.match(/Task\s+(\d+)/);

@@ -18,7 +18,7 @@ defmodule ScrypathOpsWeb.AssetPlugTest do
   end
 
   test "operator layout uses content-sensitive root asset URLs", %{conn: conn} do
-    {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
+    {:ok, _view, html} = live(conn, ~p"/ops/search")
 
     assert html =~ ~r|href="/assets/css/app\.css\?v=[a-f0-9]{64}"|
     assert html =~ ~r|src="/assets/js/app\.js\?v=[a-f0-9]{64}"|

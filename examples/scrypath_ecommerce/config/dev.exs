@@ -13,13 +13,6 @@ config :scrypath_ecommerce, ScrypathEcommerce.Repo,
 
 config :scrypath_ecommerce, sandbox: true
 
-# Point the operator Playbooks page at this example's own runnable playbooks (Product +
-# Variant against the seeded "Quantum" catalog). This is the demo's writable workspace,
-# so the page also exercises save/rename/delete/duplicate — the library's bundled
-# `priv/playbooks` stay generic adopter templates and are not coupled to this app.
-config :scrypath_ops,
-  playbook_workspace_dir: Path.expand("../priv/playbooks", __DIR__)
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

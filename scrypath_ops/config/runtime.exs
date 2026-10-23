@@ -1,19 +1,5 @@
 import Config
 
-# Optional: absolute workspace directory for operator playbook JSON (save/list/load).
-# When unset, `:playbook_workspace_dir` is not set — releases must not silently write under `priv/`.
-case System.get_env("SCRYPATH_OPS_PLAYBOOK_DIR") do
-  nil ->
-    :ok
-
-  "" ->
-    :ok
-
-  raw ->
-    path = raw |> String.trim() |> Path.expand()
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, path)
-end
-
 # Optional comma-separated schema modules for OPSUI (overrides compile-time allowlist).
 case System.get_env("SCRYPATH_OPS_SCHEMAS") do
   nil ->

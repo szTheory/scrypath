@@ -1,22 +1,25 @@
-defmodule Mix.Tasks.ScrypathOps.Playbooks.Validate do
+defmodule Mix.Tasks.ScrypathOps.SavedSearches.Validate do
   @shortdoc "Validate playbook_format 1 JSON files in a directory (no Meilisearch)"
 
   @moduledoc """
-  Decodes and runs `ScrypathOps.Playbook.V1.validate/1` on each eligible `*.json`
+  Decodes and runs `ScrypathOps.SavedSearches.V1.validate/1` on each eligible `*.json`
   file in a single directory (non-recursive).
 
-  Only basenames passing `ScrypathOps.Playbook.Store.safe_basename?/1` are considered.
+  Only plain `*.json` basenames (letters, digits, `_`, `.` and `-`) are considered. Use it to check
+  exported saved searches, examples and fixtures before importing or committing them.
 
   Run from the `scrypath_ops` app directory:
 
-      mix scrypath_ops.playbooks.validate examples/playbooks
+      mix scrypath_ops.saved_searches.validate examples/saved_searches
 
   Exits with status **1** on the first invalid file after printing `basename: reason` to stderr.
   """
 
   use Mix.Task
 
-  alias ScrypathOps.Playbook.{Store, V1}
+  alias ScrypathOps.SavedSearches.V1
+
+  @json_basename ~r/\A[\w.\-]+\.json\z/
 
   @impl Mix.Task
   def run(args) do
@@ -51,7 +54,7 @@ defmodule Mix.Tasks.ScrypathOps.Playbooks.Validate do
       case File.ls(abs) do
         {:ok, names} ->
           names
-          |> Enum.filter(&Store.safe_basename?/1)
+          |> Enum.filter(&Regex.match?(@json_basename, &1))
           |> Enum.sort()
 
         {:error, reason} ->
@@ -59,10 +62,10 @@ defmodule Mix.Tasks.ScrypathOps.Playbooks.Validate do
       end
 
     if names == [] do
-      Mix.shell().info("No eligible *.json playbooks found under #{abs}")
+      Mix.shell().info("No eligible *.json saved searches found under #{abs}")
     else
       Enum.each(names, fn name -> validate_one_file(abs, name) end)
-      Mix.shell().info("Validated #{length(names)} playbook(s) under #{abs}")
+      Mix.shell().info("Validated #{length(names)} saved search(s) under #{abs}")
     end
   end
 
@@ -77,8 +80,8 @@ defmodule Mix.Tasks.ScrypathOps.Playbooks.Validate do
       {:error, {:invalid_json, reason}} ->
         fail(name, {:invalid_json, reason})
 
-      {:error, {:invalid_playbook, reason}} ->
-        fail(name, {:invalid_playbook, reason})
+      {:error, {:invalid_saved_search, reason}} ->
+        fail(name, {:invalid_saved_search, reason})
 
       {:error, reason} ->
         fail(name, reason)

@@ -3,16 +3,30 @@ defmodule ScrypathOpsWeb.SearchLive do
   Bounded `/ops/search` playground: single- and multi-index queries with
   federation-honest disclosure. All `Scrypath` calls go through
   `ScrypathOps.SearchPlayground.dispatch_*`.
+
+  Saved searches live here too. The toolbar picker loads one into the form and runs it;
+  Save and Save as keep the current inputs. The Manage saved searches sheet loads, renames,
+  deletes, imports and exports them. `/playbooks` and `?saved=manage` open that sheet.
+
+  Deleting a saved search requires typing its exact name and is gated by Sigra as
+  `scrypath.ops.saved_search_delete` when Sigra is configured.
   """
 
   use ScrypathOpsWeb, :live_view
   import ScrypathOpsWeb.ResultUi
 
   alias Scrypath.MultiSearchResult
-  alias ScrypathOps.Playbook.Store
-  alias ScrypathOps.Playbook.V1
+  alias Scrypath.SearchResult
+  alias ScrypathOps.Integrations.Sigra.Gating
+  alias ScrypathOps.SavedSearches
+  alias ScrypathOps.SavedSearches.Runner
+  alias ScrypathOps.SavedSearches.SavedSearch
+  alias ScrypathOps.SavedSearches.V1
   alias ScrypathOps.Schemas
   alias ScrypathOps.SearchPlayground
+  alias ScrypathOpsWeb.SearchLive.SavedSearchForm
+
+  @max_import_bytes 256_000
 
   @impl true
   def mount(_params, _session, socket) do
@@ -34,12 +48,43 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:result_multi, nil)
       |> assign(:run_error, nil)
       |> assign(:submitted_search, nil)
-      |> assign(:saved_basename, nil)
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
-      |> assign_capture_defaults()
+      |> assign(:loaded, nil)
+      |> assign(:stored_run, nil)
+      |> assign(:name_modal, nil)
+      |> assign(:modal_focus_request, 0)
+      |> assign(:manage_open, false)
+      |> assign(:manage_from_url, false)
+      |> assign(:manage_row, nil)
+      |> assign(:sheet_focus, nil)
+      |> assign(:sheet_focus_request, 0)
+      |> assign(:import_error, nil)
+      |> assign(:paste_name, "")
+      |> assign(:paste_json, "")
+      |> assign(:max_import_bytes, @max_import_bytes)
+      |> reload_saved_searches()
+      |> allow_upload(:saved_search_file,
+        accept: ~w(.json),
+        max_entries: 1,
+        max_file_size: @max_import_bytes,
+        auto_upload: true,
+        progress: &handle_import_progress/3
+      )
 
     {:ok, socket}
+  end
+
+  @impl true
+  def handle_params(_params, uri, %{assigns: %{live_action: :legacy_saved_searches}} = socket) do
+    mount_path =
+      uri
+      |> URI.parse()
+      |> Map.fetch!(:path)
+      |> String.replace_suffix("/playbooks", "")
+      |> String.trim_trailing("/")
+
+    {:noreply, push_navigate(socket, to: "#{mount_path}/search?saved=manage", replace: true)}
   end
 
   @impl true
@@ -72,10 +117,21 @@ defmodule ScrypathOpsWeb.SearchLive do
             :selected_multi_schemas,
             selected_multi_from_params(params, allowlist, socket)
           )
+          |> maybe_open_manage_from_url(params)
+          # Sigra's sudo check returns here, with the Manage sheet open, before a delete.
+          |> assign(:return_to, "#{socket.assigns.mount_path}/search?saved=manage")
       end
 
     {:noreply, socket}
   end
+
+  defp maybe_open_manage_from_url(socket, %{"saved" => "manage"}) do
+    if socket.assigns.manage_open,
+      do: socket,
+      else: socket |> open_manage() |> assign(:manage_from_url, true)
+  end
+
+  defp maybe_open_manage_from_url(socket, _params), do: socket
 
   @impl true
   def handle_event("edit_search", params, socket) do
@@ -86,7 +142,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:q, text_input(params["q"] || ""))
       |> assign(:page_size, draft.page_size)
 
-    # Editing controls does not execute a query or replace its result/capture source.
+    # Editing controls does not execute a query or replace its result source.
     socket =
       if socket.assigns.mode == :single,
         do: assign(socket, :selected_schema, draft.schema),
@@ -113,118 +169,237 @@ defmodule ScrypathOpsWeb.SearchLive do
     {:noreply, socket}
   end
 
-  def handle_event("capture_change", %{"capture" => fields}, socket) when is_map(fields) do
-    title = fields |> Map.get("title", "") |> text_input()
-    description = fields |> Map.get("description", "") |> text_input()
-    basename = fields |> Map.get("basename", "") |> text_input()
+  # --- Saved searches: pick, save, save as ---------------------------------------------
 
-    socket =
-      socket
-      |> assign(:capture_title, title)
-      |> assign(:capture_description, description)
-      |> assign(:capture_basename, basename)
-      |> assign(:capture_error, nil)
-      |> recompute_capture_preview()
+  def handle_event("reload_saved_searches", _params, socket),
+    do: {:noreply, reload_saved_searches(socket)}
 
-    {:noreply, socket}
+  def handle_event("load_saved_search", %{"name" => name}, socket) when is_binary(name) do
+    {:noreply, load_saved_search(socket, name)}
   end
 
-  def handle_event("capture_change", _, socket), do: {:noreply, socket}
+  def handle_event("save_loaded", _params, socket) do
+    case socket.assigns.loaded do
+      %{exact?: true, name: name, definition: stored} ->
+        with {:ok, definition} <- SavedSearchForm.to_definition(current_form(socket.assigns)),
+             definition = SavedSearchForm.keep_metadata(definition, stored),
+             {:ok, saved} <-
+               SavedSearches.save(repo(socket), name, definition, store_opts(socket)) do
+          {:noreply,
+           socket
+           |> assign_loaded(saved.name, saved.definition)
+           |> reload_saved_searches()
+           |> put_flash(:info, "Saved “#{saved.name}”.")}
+        else
+          {:error, reason} ->
+            {:noreply, put_flash(socket, :error, save_error_text(reason))}
+        end
 
-  def handle_event("save_search_capture", %{"capture" => cap}, socket) when is_map(cap) do
-    root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    basename = cap |> Map.get("basename", "") |> text_input() |> String.trim()
-    title = cap |> Map.get("title", "") |> text_input()
-    description = cap |> Map.get("description", "") |> text_input()
+      _other ->
+        {:noreply, socket}
+    end
+  end
 
-    socket =
-      socket
-      |> assign(:capture_title, title)
-      |> assign(:capture_description, description)
-      |> assign(:capture_basename, basename)
-      |> assign(:capture_error, nil)
-      |> recompute_capture_preview()
+  def handle_event("open_save_modal", params, socket) do
+    kind = if params["kind"] == "save_as", do: :save_as, else: :new
+    {:noreply, assign(socket, :name_modal, %{kind: kind, name: "", error: nil})}
+  end
 
-    cond do
-      root in [nil, ""] ->
-        {:noreply,
-         put_capture_error(
-           socket,
-           "Could not save this search.",
-           recovery: "Configure a storage folder, then retry saving."
-         )}
+  def handle_event("name_change", %{"name" => name}, socket) do
+    case socket.assigns.name_modal do
+      %{} = modal -> {:noreply, assign(socket, :name_modal, %{modal | name: text_input(name)})}
+      nil -> {:noreply, socket}
+    end
+  end
 
-      socket.assigns.capture_base == nil ->
-        {:noreply, put_capture_error(socket, "Run a search first — nothing to save yet.")}
+  def handle_event("name_change", _params, socket), do: {:noreply, socket}
 
-      not Store.safe_basename?(basename) ->
-        {:noreply,
-         put_capture_error(
-           socket,
-           "Filename must be a .json basename using letters, digits, periods, hyphens or underscores."
-         )}
+  def handle_event("cancel_save", _params, socket),
+    do: {:noreply, assign(socket, :name_modal, nil)}
 
-      true ->
-        draft =
-          socket.assigns.capture_base
-          |> merge_capture_metadata(title, description)
+  def handle_event("save_named", params, socket) do
+    name = params |> Map.get("name") |> text_input() |> String.trim()
 
-        case V1.validate(draft) do
-          {:ok, validated} ->
-            case V1.encode(validated) do
-              {:ok, json} ->
-                case Store.create_workspace_file(root, basename, json <> "\n") do
-                  :ok ->
-                    {:noreply,
-                     socket
-                     |> assign(:capture_basename, "")
-                     |> assign(:saved_basename, basename)
-                     |> assign(:capture_error, nil)
-                     |> put_flash(:info, "Saved search #{basename}.")}
+    case socket.assigns.name_modal do
+      nil ->
+        {:noreply, socket}
 
-                  {:error, :target_exists} ->
-                    {:noreply,
-                     put_capture_error(
-                       socket,
-                       "That filename is already in use. Choose another."
-                     )}
+      modal ->
+        modal = %{modal | name: name}
 
-                  {:error, reason} ->
-                    {:noreply,
-                     put_capture_error(
-                       socket,
-                       "Could not save this search.",
-                       detail: safe_capture_reason(reason),
-                       recovery:
-                         "Check the storage folder's permissions and available disk space, then retry saving."
-                     )}
-                end
-
-              {:error, reason} ->
-                {:noreply,
-                 put_capture_error(
-                   socket,
-                   "Could not save this search.",
-                   detail: "Saved search encoding failed: #{inspect(reason)}",
-                   recovery:
-                     "Review the search criteria and optional metadata, then retry saving."
-                 )}
-            end
-
+        with true <- SavedSearches.valid_name?(name) || {:error, :invalid_name},
+             {:ok, definition} <- SavedSearchForm.to_definition(current_form(socket.assigns)),
+             {:ok, saved} <-
+               SavedSearches.create(repo(socket), name, definition, store_opts(socket)) do
+          {:noreply,
+           socket
+           |> assign(:name_modal, nil)
+           |> assign_loaded(saved.name, saved.definition)
+           |> reload_saved_searches()
+           |> put_flash(:info, "Saved “#{saved.name}”.")}
+        else
           {:error, reason} ->
             {:noreply,
-             put_capture_error(
-               socket,
-               "Could not save this search.",
-               detail: "Saved search validation failed: #{inspect(reason)}",
-               recovery: "Review the search criteria and optional metadata, then retry saving."
-             )}
+             socket
+             |> assign(:name_modal, %{modal | error: save_error_text(reason, name)})
+             |> update(:modal_focus_request, &(&1 + 1))}
         end
     end
   end
 
-  def handle_event("save_search_capture", _, socket) do
-    {:noreply, put_capture_error(socket, "Enter a filename ending in .json, then retry saving.")}
+  # --- Saved searches: Manage sheet ---------------------------------------------------
+
+  def handle_event("open_manage", _params, socket), do: {:noreply, open_manage(socket)}
+
+  def handle_event("close_manage", _params, socket) do
+    case socket.assigns.manage_row do
+      %{name: name, action: action} ->
+        {:noreply,
+         socket
+         |> assign(:manage_row, nil)
+         |> focus_in_sheet("##{row_action_id(action, name)}")}
+
+      nil ->
+        {:noreply, close_manage(socket)}
+    end
+  end
+
+  def handle_event("manage_rename", %{"name" => name}, socket) when is_binary(name) do
+    {:noreply,
+     socket
+     |> assign(:manage_row, %{action: :rename, name: name, value: name, error: nil})
+     |> focus_in_sheet("#saved-search-rename-input")}
+  end
+
+  def handle_event("manage_delete", %{"name" => name}, socket) when is_binary(name) do
+    {:noreply,
+     socket
+     |> assign(:manage_row, %{action: :delete, name: name, value: "", error: nil})
+     |> focus_in_sheet("#saved-search-delete-input")}
+  end
+
+  def handle_event("cancel_row", _params, socket), do: handle_event("close_manage", %{}, socket)
+
+  def handle_event("rename_change", %{"new_name" => value}, socket) do
+    case socket.assigns.manage_row do
+      %{action: :rename} = row ->
+        {:noreply, assign(socket, :manage_row, %{row | value: text_input(value)})}
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("rename_change", _params, socket), do: {:noreply, socket}
+
+  def handle_event("rename_submit", params, socket) do
+    case socket.assigns.manage_row do
+      %{action: :rename, name: from} = row ->
+        to = params |> Map.get("new_name") |> text_input() |> String.trim()
+        row = %{row | value: to}
+
+        result =
+          cond do
+            not SavedSearches.valid_name?(to) -> {:error, :invalid_name}
+            to == from -> {:ok, :unchanged}
+            true -> SavedSearches.rename(repo(socket), from, to, store_opts(socket))
+          end
+
+        case result do
+          {:ok, :unchanged} ->
+            {:noreply,
+             socket
+             |> assign(:manage_row, nil)
+             |> focus_in_sheet("##{row_action_id(:rename, from)}")}
+
+          {:ok, saved} ->
+            {:noreply,
+             socket
+             |> assign(:manage_row, nil)
+             |> rename_loaded(from, saved.name)
+             |> reload_saved_searches()
+             |> focus_in_sheet("##{row_action_id(:rename, saved.name)}")
+             |> put_flash(:info, "Renamed to “#{saved.name}”.")}
+
+          {:error, :not_found} ->
+            {:noreply,
+             socket
+             |> assign(:manage_row, nil)
+             |> reload_saved_searches()
+             |> focus_in_sheet("#saved-search-manage-title")
+             |> put_flash(:error, "“#{from}” no longer exists.")}
+
+          {:error, reason} ->
+            {:noreply,
+             socket
+             |> assign(:manage_row, %{row | error: save_error_text(reason, to)})
+             |> focus_in_sheet("#saved-search-rename-input")}
+        end
+
+      _other ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("confirm_delete", params, socket) do
+    typed = params |> Map.get("confirm") |> text_input()
+
+    socket =
+      Gating.gate_sensitive_action(socket, :saved_search_delete, fn ->
+        confirm_delete(socket, typed)
+      end)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("validate_import", _params, socket) do
+    upload = socket.assigns.uploads.saved_search_file
+
+    case Enum.find(upload.entries, &(not &1.valid?)) do
+      nil ->
+        {:noreply, socket}
+
+      entry ->
+        message =
+          upload
+          |> upload_errors(entry)
+          |> List.first()
+          |> upload_error_text()
+
+        {:noreply,
+         socket
+         |> cancel_upload(:saved_search_file, entry.ref)
+         |> assign(:import_error, "Couldn't import #{entry.client_name}. #{message}")}
+    end
+  end
+
+  def handle_event("import_upload", _params, socket), do: {:noreply, socket}
+
+  def handle_event("import_paste", params, socket) do
+    name = params |> Map.get("name") |> text_input() |> String.trim()
+    json = params |> Map.get("json") |> text_input()
+
+    socket = socket |> assign(:paste_name, name) |> assign(:paste_json, json)
+
+    cond do
+      byte_size(json) > @max_import_bytes ->
+        {:noreply,
+         assign(
+           socket,
+           :import_error,
+           "Couldn't import the pasted JSON. It's larger than #{import_limit_label()}."
+         )}
+
+      true ->
+        case import_saved_search(socket, name, json) do
+          {:ok, socket} ->
+            {:noreply, socket |> assign(:paste_name, "") |> assign(:paste_json, "")}
+
+          {:error, message} ->
+            {:noreply,
+             assign(socket, :import_error, "Couldn't import the pasted JSON. #{message}")}
+        end
+    end
   end
 
   def handle_event("search", params, socket) when is_map(params) do
@@ -270,27 +445,34 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp start_search(socket, submission) do
     send(self(), {:run_search, submission})
+    {:noreply, socket |> assign(:stored_run, nil) |> assign_running(submission)}
+  end
 
-    socket =
-      socket
-      |> assign(:submitted_search, submission)
-      |> assign(:mode, submission.mode)
-      |> assign(:q, submission.query)
-      |> assign(:page_size, submission.page_size)
-      |> assign(:selected_schema, submission.schema)
-      |> assign(:selected_multi_schemas, submission.schemas)
-      |> assign(:result_single, nil)
-      |> assign(:result_multi, nil)
-      |> assign(:run_error, nil)
-      |> assign(:searching, true)
-      |> assign(:page_size_error, nil)
-      |> assign_capture_defaults()
-
-    {:noreply, socket}
+  defp assign_running(socket, submission) do
+    socket
+    |> assign(:submitted_search, submission)
+    |> assign(:mode, submission.mode)
+    |> assign(:q, submission.query)
+    |> assign(:page_size, submission.page_size)
+    |> assign(:selected_schema, submission.schema)
+    |> assign(:selected_multi_schemas, submission.schemas)
+    |> assign(:result_single, nil)
+    |> assign(:result_multi, nil)
+    |> assign(:run_error, nil)
+    |> assign(:searching, true)
+    |> assign(:page_size_error, nil)
   end
 
   @impl true
   def handle_info({:run_search, submission}, socket) do
+    with_saved_run_telemetry(submission, fn -> run_search(submission, socket) end)
+  end
+
+  def handle_info({:run_stored, submission, definition}, socket) do
+    with_saved_run_telemetry(submission, fn -> run_stored(submission, definition, socket) end)
+  end
+
+  defp run_search(submission, socket) do
     start_ms = System.monotonic_time(:millisecond)
 
     q = submission.query
@@ -309,7 +491,6 @@ defmodule ScrypathOpsWeb.SearchLive do
       |> assign(:run_error, nil)
       |> assign(:searching, false)
       |> assign(:show_all_footnote, false)
-      |> assign_capture_defaults()
 
     with :ok <- SearchPlayground.validate_page_size(page_size),
          {:ok, opts} <- build_opts(scrypath_opts, page_size, mode, submission.page) do
@@ -338,6 +519,76 @@ defmodule ScrypathOpsWeb.SearchLive do
          |> assign(:run_error, {:config, :missing_backend})}
     end
   end
+
+  defp run_stored(submission, definition, socket) do
+    start_ms = System.monotonic_time(:millisecond)
+    mode = submission.mode
+
+    socket =
+      socket
+      |> assign(:result_single, nil)
+      |> assign(:result_multi, nil)
+      |> assign(:run_error, nil)
+      |> assign(:searching, false)
+      |> assign(:show_all_footnote, false)
+
+    result =
+      Runner.run_validated(
+        definition,
+        socket.assigns.schema_allowlist,
+        socket.assigns.scrypath_opts
+      )
+
+    duration_ms = System.monotonic_time(:millisecond) - start_ms
+
+    case result do
+      {:ok, %SearchResult{} = res} ->
+        emit_run(mode, :ok, duration_ms)
+        {:noreply, assign(socket, :result_single, res)}
+
+      {:ok, %MultiSearchResult{failures: failures} = res} ->
+        emit_run(mode, if(failures == [], do: :ok, else: :partial), duration_ms)
+
+        footnote? =
+          Enum.any?(failures, fn %{reason: r} -> match?({:all_expansion, _}, r) end)
+
+        {:noreply,
+         socket
+         |> assign(:result_multi, res)
+         |> assign(:show_all_footnote, footnote?)}
+
+      {:error, reason} ->
+        emit_run(mode, :error, duration_ms)
+        {:noreply, assign(socket, :run_error, stored_run_error(reason))}
+    end
+  end
+
+  # Runs started from a saved search also report `[:scrypath_ops, :saved_search_run, ...]`.
+  defp with_saved_run_telemetry(%{saved: name} = submission, fun) when is_binary(name) do
+    started = System.monotonic_time(:millisecond)
+
+    :telemetry.execute(
+      [:scrypath_ops, :saved_search_run, :start],
+      %{system_time: System.system_time()},
+      %{run_id: submission.id}
+    )
+
+    {:noreply, socket} = fun.()
+
+    :telemetry.execute(
+      [:scrypath_ops, :saved_search_run, :stop],
+      %{duration: max(System.monotonic_time(:millisecond) - started, 0)},
+      %{run_id: submission.id, result: if(socket.assigns.run_error, do: :error, else: :ok)}
+    )
+
+    {:noreply, socket}
+  end
+
+  defp with_saved_run_telemetry(_submission, fun), do: fun.()
+
+  defp stored_run_error({:config, _} = reason), do: reason
+  defp stored_run_error({:page_size_out_of_range, _, _} = reason), do: reason
+  defp stored_run_error(reason), do: {:scrypath, reason}
 
   defp run_single(socket, submission, opts, allowlist, start_ms) do
     mod = submission.schema
@@ -371,7 +622,6 @@ defmodule ScrypathOpsWeb.SearchLive do
             socket =
               socket
               |> assign(:result_single, res)
-              |> assign_search_capture_single(mod, q, opts)
               |> push_patch(
                 to:
                   search_path(socket,
@@ -439,7 +689,6 @@ defmodule ScrypathOpsWeb.SearchLive do
               socket
               |> assign(:result_multi, res)
               |> assign(:show_all_footnote, footnote?)
-              |> assign_search_capture_multi(selected, q, opts)
               |> push_patch(
                 to:
                   search_path(socket,
@@ -459,6 +708,332 @@ defmodule ScrypathOpsWeb.SearchLive do
         end
     end
   end
+
+  # --- Saved search helpers -------------------------------------------------------------
+
+  defp repo(socket), do: socket.assigns.scrypath_repo
+
+  defp store_opts(socket), do: [prefix: socket.assigns[:scrypath_ops_prefix]]
+
+  defp search_configured?(assigns),
+    do: assigns.schema_allowlist != [] and Keyword.has_key?(assigns.scrypath_opts, :backend)
+
+  defp reload_saved_searches(socket) do
+    rows =
+      case repo(socket) do
+        nil -> []
+        repo -> repo |> SavedSearches.list(store_opts(socket)) |> Enum.map(&saved_search_row/1)
+      end
+
+    assign(socket, :saved_searches, rows)
+  end
+
+  defp saved_search_row(saved_search) do
+    export = SavedSearches.export_json(saved_search)
+    description = Map.get(saved_search.definition || %{}, "description")
+
+    %{
+      name: saved_search.name,
+      dom_id: saved_search_dom_id(saved_search.name),
+      description: if(is_binary(description), do: String.trim(description), else: ""),
+      readable?: match?({:ok, _}, export),
+      export_href: export_href(export),
+      export_filename: export_filename(saved_search.name)
+    }
+  end
+
+  defp export_href({:ok, json}),
+    do: "data:application/json;charset=utf-8," <> URI.encode(json, &URI.char_unreserved?/1)
+
+  defp export_href(_error), do: nil
+
+  defp export_filename(name) do
+    stem =
+      name
+      |> String.replace_suffix(".json", "")
+      |> String.replace(~r/[^A-Za-z0-9._-]+/u, "-")
+      |> String.trim("-")
+
+    if stem == "", do: "saved-search.json", else: stem <> ".json"
+  end
+
+  defp saved_search_dom_id(name), do: Base.url_encode64(name, padding: false)
+
+  defp row_action_id(:rename, name), do: "saved-search-rename-#{saved_search_dom_id(name)}"
+  defp row_action_id(:delete, name), do: "saved-search-delete-#{saved_search_dom_id(name)}"
+  defp row_action_id(:load, name), do: "saved-search-load-#{saved_search_dom_id(name)}"
+
+  defp current_form(assigns) do
+    %{
+      mode: assigns.mode,
+      schema: assigns.selected_schema,
+      schemas: assigns.selected_multi_schemas,
+      q: assigns.q |> text_input() |> String.trim(),
+      page_size: assigns.page_size
+    }
+  end
+
+  defp assign_loaded(socket, name, definition) do
+    projection =
+      SavedSearchForm.from_definition(
+        definition,
+        socket.assigns.schema_allowlist,
+        socket.assigns.page_size
+      )
+
+    loaded =
+      case projection do
+        {:exact, form} -> %{name: name, definition: definition, form: form, exact?: true}
+        {:stored, form} -> %{name: name, definition: definition, form: form, exact?: false}
+        {:error, _} -> %{name: name, definition: definition, form: nil, exact?: false}
+      end
+
+    assign(socket, :loaded, loaded)
+  end
+
+  defp rename_loaded(socket, from, to) do
+    case socket.assigns.loaded do
+      %{name: ^from} = loaded -> assign(socket, :loaded, %{loaded | name: to})
+      _other -> socket
+    end
+  end
+
+  # :new (nothing loaded), :clean, :dirty (Save and Save as) or :dirty_stored (Save as only:
+  # overwriting would drop options the form can't show).
+  defp save_state(%{loaded: nil}), do: :new
+
+  defp save_state(%{loaded: %{form: nil}}), do: :dirty_stored
+
+  defp save_state(%{loaded: loaded} = assigns) do
+    cond do
+      SavedSearchForm.same?(current_form(assigns), loaded.form) -> :clean
+      loaded.exact? -> :dirty
+      true -> :dirty_stored
+    end
+  end
+
+  defp load_saved_search(socket, name) do
+    socket = socket |> assign(:manage_open, false) |> assign(:manage_row, nil)
+
+    with {:ok, saved_search} <- SavedSearches.get(repo(socket), name, store_opts(socket)),
+         {:ok, definition} <- V1.validate(saved_search.definition),
+         {kind, form} when kind in [:exact, :stored] <-
+           SavedSearchForm.from_definition(
+             definition,
+             socket.assigns.schema_allowlist,
+             socket.assigns.page_size
+           ) do
+      submission = %{
+        id: System.unique_integer([:positive, :monotonic]),
+        mode: form.mode,
+        schema: form.schema,
+        schemas: form.schemas,
+        query: form.q,
+        page: 1,
+        page_size: form.page_size,
+        stored: if(kind == :stored, do: saved_search.name),
+        saved: saved_search.name
+      }
+
+      socket =
+        socket
+        |> assign(:loaded, %{
+          name: saved_search.name,
+          definition: definition,
+          form: form,
+          exact?: kind == :exact
+        })
+        |> maybe_close_manage_url()
+
+      if kind == :exact do
+        {:noreply, socket} = start_search(socket, submission)
+        socket
+      else
+        send(self(), {:run_stored, submission, definition})
+
+        socket
+        |> assign(:stored_run, %{name: saved_search.name, definition: definition})
+        |> assign_running(submission)
+      end
+    else
+      {:error, :not_found} ->
+        socket
+        |> reload_saved_searches()
+        |> put_flash(:error, "“#{name}” no longer exists.")
+
+      {:error, reason} ->
+        put_flash(
+          socket,
+          :error,
+          "Couldn't load “#{name}”. #{SavedSearchForm.reason_text(reason)}"
+        )
+    end
+  end
+
+  defp open_manage(socket) do
+    socket
+    |> reload_saved_searches()
+    |> assign(:manage_open, true)
+    |> assign(:manage_row, nil)
+    |> assign(:import_error, nil)
+  end
+
+  defp close_manage(socket) do
+    socket
+    |> assign(:manage_open, false)
+    |> assign(:manage_row, nil)
+    |> maybe_close_manage_url()
+  end
+
+  defp maybe_close_manage_url(%{assigns: %{manage_from_url: true}} = socket) do
+    socket
+    |> assign(:manage_from_url, false)
+    |> push_patch(to: search_path(socket, []), replace: true)
+  end
+
+  defp maybe_close_manage_url(socket), do: socket
+
+  defp focus_in_sheet(socket, selector) do
+    socket
+    |> assign(:sheet_focus, selector)
+    |> update(:sheet_focus_request, &(&1 + 1))
+  end
+
+  defp confirm_delete(socket, typed) do
+    case socket.assigns.manage_row do
+      %{action: :delete, name: name} when typed == name ->
+        successor = delete_successor(socket.assigns.saved_searches, name)
+        _ = SavedSearches.delete(repo(socket), name, store_opts(socket))
+
+        socket =
+          case socket.assigns.loaded do
+            %{name: ^name} -> assign(socket, :loaded, nil)
+            _other -> socket
+          end
+
+        socket
+        |> assign(:manage_row, nil)
+        |> reload_saved_searches()
+        |> focus_in_sheet(successor)
+        |> put_flash(:info, "Deleted “#{name}”.")
+
+      %{action: :delete} = row ->
+        socket
+        |> assign(:manage_row, %{
+          row
+          | value: typed,
+            error: "Type the name exactly as shown to confirm."
+        })
+        |> focus_in_sheet("#saved-search-delete-input")
+
+      _other ->
+        socket
+    end
+  end
+
+  defp delete_successor(rows, name) do
+    index = Enum.find_index(rows, &(&1.name == name))
+    remaining = Enum.reject(rows, &(&1.name == name))
+
+    # Load is disabled for a row that can't be read; Rename is always available.
+    case index && (Enum.at(remaining, index) || List.last(remaining)) do
+      %{name: next, readable?: true} -> "##{row_action_id(:load, next)}"
+      %{name: next} -> "##{row_action_id(:rename, next)}"
+      _none -> "#saved-search-manage-title"
+    end
+  end
+
+  defp handle_import_progress(:saved_search_file, entry, socket) do
+    if entry.done? do
+      {bin, filename} =
+        consume_uploaded_entry(socket, entry, fn %{path: path} ->
+          {:ok, {File.read(path), entry.client_name}}
+        end)
+
+      name =
+        filename
+        |> Path.basename()
+        |> String.replace_suffix(".json", "")
+        |> String.slice(0, SavedSearch.max_name_length())
+
+      socket =
+        with {:ok, json} <- bin,
+             {:ok, socket} <- import_saved_search(socket, name, json) do
+          socket
+        else
+          {:error, message} when is_binary(message) ->
+            assign(socket, :import_error, "Couldn't import #{filename}. #{message}")
+
+          {:error, _reason} ->
+            assign(
+              socket,
+              :import_error,
+              "Couldn't import #{filename}. The file couldn't be read."
+            )
+        end
+
+      {:noreply, socket}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  defp import_saved_search(socket, name, json) do
+    allowlist = socket.assigns.schema_allowlist
+
+    with true <- SavedSearches.valid_name?(name) || {:error, :invalid_name},
+         {:ok, definition} <- SavedSearches.decode_json(json),
+         :ok <- known_schemas(definition, allowlist),
+         {:ok, saved} <- SavedSearches.create(repo(socket), name, definition, store_opts(socket)) do
+      {:ok,
+       socket
+       |> assign(:import_error, nil)
+       |> reload_saved_searches()
+       |> focus_in_sheet("##{row_action_id(:load, saved.name)}")
+       |> put_flash(:info, "Imported “#{saved.name}”.")}
+    else
+      {:error, :name_taken} ->
+        {:error,
+         "A saved search named “#{name}” already exists. Rename or delete it, then import again."}
+
+      {:error, :invalid_name} ->
+        {:error, "Give it a name of up to #{SavedSearch.max_name_length()} characters."}
+
+      {:error, reason} ->
+        {:error, SavedSearchForm.reason_text(reason)}
+    end
+  end
+
+  defp known_schemas(definition, allowlist) do
+    known = MapSet.new(allowlist, &inspect/1)
+
+    case definition
+         |> SavedSearchForm.target_names()
+         |> Enum.reject(&MapSet.member?(known, &1)) do
+      [] -> :ok
+      unknown -> {:error, {:unknown_schemas, Enum.uniq(unknown)}}
+    end
+  end
+
+  defp upload_error_text(:too_large), do: "It's larger than #{import_limit_label()}."
+  defp upload_error_text(:not_accepted), do: "Choose a .json file."
+  defp upload_error_text(:too_many_files), do: "Choose one file at a time."
+  defp upload_error_text(_other), do: "The file couldn't be uploaded."
+
+  defp save_error_text(reason, name \\ nil)
+
+  defp save_error_text(:name_taken, name),
+    do: "A saved search named “#{name}” already exists. Choose another name."
+
+  defp save_error_text(:invalid_name, _name),
+    do: "Enter a name of up to #{SavedSearch.max_name_length()} characters."
+
+  defp save_error_text({:invalid_saved_search, reason}, _name),
+    do: "Couldn't save this search. #{SavedSearchForm.reason_text(reason)}"
+
+  defp save_error_text(%Ecto.Changeset{}, _name), do: "Couldn't save this search. Try again."
+
+  defp save_error_text(reason, _name), do: SavedSearchForm.form_error_text(reason)
 
   defp build_opts(scrypath_opts, page_size, mode, page) do
     if Keyword.has_key?(scrypath_opts, :backend) do
@@ -487,7 +1062,9 @@ defmodule ScrypathOpsWeb.SearchLive do
       schemas: schemas,
       query: params |> Map.get("q", "") |> text_input() |> String.trim(),
       page: 1,
-      page_size: parse_page_size_param(params["page_size"], socket.assigns.page_size)
+      page_size: parse_page_size_param(params["page_size"], socket.assigns.page_size),
+      stored: nil,
+      saved: nil
     }
   end
 
@@ -698,200 +1275,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     )
   end
 
-  defp assign_capture_defaults(socket) do
-    socket
-    |> assign(:capture_base, nil)
-    |> assign(:capture_title, "")
-    |> assign(:capture_description, "")
-    |> assign(:capture_basename, "")
-    |> assign(:capture_error, nil)
-    |> assign(:capture_preview_json, nil)
-    |> assign(:capture_preview_ok?, false)
-  end
-
-  defp put_capture_error(socket, message, opts \\ []) do
-    error = %{
-      message: message,
-      detail: Keyword.get(opts, :detail),
-      recovery: Keyword.get(opts, :recovery)
-    }
-
-    assign(socket, :capture_error, error)
-  end
-
-  defp safe_capture_reason(reason) when is_atom(reason), do: inspect(reason)
-
-  defp safe_capture_reason({category, reason}) when is_atom(category) and is_atom(reason),
-    do: inspect({category, reason})
-
-  defp safe_capture_reason(_), do: "unknown filesystem error"
-
-  defp assign_search_capture_single(socket, mod, q, opts_kw) do
-    base = %{
-      "playbook_format" => 1,
-      "mode" => "search",
-      "schema" => inspect(mod),
-      "q" => q,
-      "opts" => keyword_to_playbook_opts_map(opts_kw, :search)
-    }
-
-    socket
-    |> assign(:capture_base, base)
-    |> recompute_capture_preview()
-  end
-
-  defp assign_search_capture_multi(socket, selected_mods, q, opts_kw) do
-    entries = Enum.map(selected_mods, fn mod -> [inspect(mod), q, %{}] end)
-
-    base = %{
-      "playbook_format" => 1,
-      "mode" => "search_many",
-      "entries" => entries,
-      "opts" => keyword_to_playbook_opts_map(opts_kw, :search_many_shared)
-    }
-
-    socket
-    |> assign(:capture_base, base)
-    |> recompute_capture_preview()
-  end
-
-  defp merge_capture_metadata(base, title, description) do
-    base
-    |> maybe_put_trimmed_string("title", title)
-    |> maybe_put_trimmed_string("description", description)
-  end
-
-  defp maybe_put_trimmed_string(map, key, raw) do
-    v = raw |> to_string() |> String.trim()
-    if v == "", do: map, else: Map.put(map, key, v)
-  end
-
-  defp recompute_capture_preview(socket) do
-    case socket.assigns.capture_base do
-      nil ->
-        assign(socket, capture_preview_json: nil, capture_preview_ok?: false)
-
-      base ->
-        draft =
-          merge_capture_metadata(
-            base,
-            socket.assigns.capture_title,
-            socket.assigns.capture_description
-          )
-
-        case V1.validate(draft) do
-          {:ok, validated} ->
-            preview = Jason.encode!(validated, pretty: true)
-
-            assign(socket,
-              capture_preview_json: preview,
-              capture_preview_ok?: true
-            )
-
-          {:error, _} ->
-            assign(socket, capture_preview_json: nil, capture_preview_ok?: false)
-        end
-    end
-  end
-
-  defp keyword_to_playbook_opts_map(kw, ctx) do
-    strings =
-      case ctx do
-        :search ->
-          ~w(facets facet_filter filter sort page per_query)
-
-        :search_many_shared ->
-          ~w(facets facet_filter filter sort page per_query federation_limit federation_offset federation_timeout hydration_timeout max_schemas global_schemas otp_app)
-      end
-
-    Enum.reduce(strings, %{}, fn str, acc ->
-      case opt_field_atom(str) do
-        nil ->
-          acc
-
-        atom ->
-          case Keyword.get(kw, atom) do
-            nil ->
-              acc
-
-            v ->
-              case dispatch_opt_to_json(str, v) do
-                :drop -> acc
-                encoded -> Map.put(acc, str, encoded)
-              end
-          end
-      end
-    end)
-  end
-
-  defp opt_field_atom("facets"), do: :facets
-  defp opt_field_atom("facet_filter"), do: :facet_filter
-  defp opt_field_atom("filter"), do: :filter
-  defp opt_field_atom("sort"), do: :sort
-  defp opt_field_atom("page"), do: :page
-  defp opt_field_atom("per_query"), do: :per_query
-  defp opt_field_atom("federation_limit"), do: :federation_limit
-  defp opt_field_atom("federation_offset"), do: :federation_offset
-  defp opt_field_atom("federation_timeout"), do: :federation_timeout
-  defp opt_field_atom("hydration_timeout"), do: :hydration_timeout
-  defp opt_field_atom("max_schemas"), do: :max_schemas
-  defp opt_field_atom("global_schemas"), do: :global_schemas
-  defp opt_field_atom("otp_app"), do: :otp_app
-  defp opt_field_atom(_), do: nil
-
-  defp dispatch_opt_to_json("page", v) when is_list(v) do
-    m =
-      %{}
-      |> maybe_put_json_int("size", Keyword.get(v, :size))
-      |> maybe_put_json_int("number", Keyword.get(v, :number))
-
-    if m == %{}, do: :drop, else: m
-  end
-
-  defp dispatch_opt_to_json("page", _), do: :drop
-
-  defp dispatch_opt_to_json("per_query", v) when is_list(v) do
-    m =
-      %{}
-      |> maybe_put_json_number(
-        "ranking_score_threshold",
-        Keyword.get(v, :ranking_score_threshold)
-      )
-      |> maybe_put_json_bool("show_ranking_score", Keyword.get(v, :show_ranking_score))
-      |> maybe_put_json_bool(
-        "show_ranking_score_details",
-        Keyword.get(v, :show_ranking_score_details)
-      )
-
-    if m == %{}, do: :drop, else: m
-  end
-
-  defp dispatch_opt_to_json("per_query", _), do: :drop
-
-  defp dispatch_opt_to_json("global_schemas", list) when is_list(list), do: list
-  defp dispatch_opt_to_json("global_schemas", _), do: :drop
-
-  defp dispatch_opt_to_json(j, n)
-       when j in ~w(federation_limit federation_offset federation_timeout hydration_timeout max_schemas) and
-              is_integer(n),
-       do: n
-
-  defp dispatch_opt_to_json("otp_app", s) when is_binary(s) and s != "", do: s
-
-  defp dispatch_opt_to_json(_, v), do: v
-
-  defp maybe_put_json_int(m, _k, nil), do: m
-  defp maybe_put_json_int(m, k, n) when is_integer(n), do: Map.put(m, k, n)
-  defp maybe_put_json_int(m, _, _), do: m
-
-  defp maybe_put_json_number(m, _k, nil), do: m
-  defp maybe_put_json_number(m, k, n) when is_number(n) and n >= 0, do: Map.put(m, k, n)
-  defp maybe_put_json_number(m, _, _), do: m
-
-  defp maybe_put_json_bool(m, _k, nil), do: m
-  defp maybe_put_json_bool(m, k, b) when is_boolean(b), do: Map.put(m, k, b)
-  defp maybe_put_json_bool(m, _, _), do: m
-
   @impl true
   def render(assigns) do
     assigns = assign(assigns, :guide_href, "#{assigns.mount_path}/help#ranking")
@@ -933,6 +1316,83 @@ defmodule ScrypathOpsWeb.SearchLive do
           </.ops_empty_state>
 
           <div class="space-y-6">
+            <div class="ops-saved-search-bar" id="saved-search-bar">
+              <div
+                id="saved-search-picker"
+                class="ops-saved-search-picker"
+                phx-click-away={close_picker()}
+                phx-window-keydown={close_picker()}
+                phx-key="Escape"
+              >
+                <.ops_button
+                  id="saved-search-picker-button"
+                  variant={:default}
+                  size={:sm}
+                  class="gap-1.5"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  aria-controls="saved-search-menu"
+                  phx-click={
+                    JS.push("reload_saved_searches")
+                    |> JS.toggle(to: "#saved-search-menu")
+                    |> JS.toggle_attribute({"aria-expanded", "true", "false"},
+                      to: "#saved-search-picker-button"
+                    )
+                  }
+                >
+                  Saved searches <.icon name="hero-chevron-down" class="size-4" />
+                </.ops_button>
+                <div
+                  id="saved-search-menu"
+                  class="ops-saved-search-menu"
+                  style="display: none;"
+                >
+                  <p :if={@saved_searches == []} class="ops-saved-search-menu__empty">
+                    No saved searches yet. Run a search, then save it.
+                  </p>
+                  <ul :if={@saved_searches != []} aria-label="Saved searches">
+                    <li :for={row <- @saved_searches}>
+                      <button
+                        type="button"
+                        id={"saved-search-pick-#{row.dom_id}"}
+                        class="ops-saved-search-menu__item"
+                        aria-current={if @loaded && @loaded.name == row.name, do: "true"}
+                        disabled={!search_configured?(assigns)}
+                        phx-click={
+                          JS.push("load_saved_search", value: %{name: row.name})
+                          |> close_picker()
+                        }
+                      >
+                        <span class="ops-saved-search-menu__name">{row.name}</span>
+                        <span
+                          :if={row.description != ""}
+                          class="ops-saved-search-menu__description"
+                        >
+                          {row.description}
+                        </span>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <p
+                id="saved-search-status"
+                class={["ops-saved-search-status", !@loaded && "sr-only"]}
+                role="status"
+              >
+                {loaded_status(assigns)}
+              </p>
+              <button
+                type="button"
+                id="saved-search-manage-open"
+                class="ops-text-action ops-saved-search-manage"
+                phx-click="open_manage"
+                data-ops-modal-trigger="manage"
+              >
+                Manage saved searches
+              </button>
+            </div>
+
             <.form
               for={%{}}
               as={:search}
@@ -1032,21 +1492,35 @@ defmodule ScrypathOpsWeb.SearchLive do
                   Run search
                 </.ops_button>
                 <.ops_button
-                  :if={@capture_base != nil}
-                  id="search-save-toggle"
+                  :if={save_state(assigns) == :new && @schema_allowlist != []}
+                  id="search-save-new"
                   variant={:default}
                   size={:md}
-                  phx-click={
-                    JS.toggle(to: "#search-capture-form-panel")
-                    |> JS.toggle_attribute({"aria-expanded", "true", "false"},
-                      to: "#search-save-toggle"
-                    )
-                    |> JS.focus(to: "#capture_title")
-                  }
-                  aria-controls="search-capture-form-panel"
-                  aria-expanded="false"
+                  phx-click="open_save_modal"
+                  phx-value-kind="new"
+                  data-ops-modal-trigger="save"
                 >
                   Save search
+                </.ops_button>
+                <.ops_button
+                  :if={save_state(assigns) == :dirty}
+                  id="search-save-loaded"
+                  variant={:default}
+                  size={:md}
+                  phx-click="save_loaded"
+                >
+                  Save
+                </.ops_button>
+                <.ops_button
+                  :if={save_state(assigns) in [:dirty, :dirty_stored]}
+                  id="search-save-as"
+                  variant={:ghost}
+                  size={:md}
+                  phx-click="open_save_modal"
+                  phx-value-kind="save_as"
+                  data-ops-modal-trigger="save"
+                >
+                  Save as…
                 </.ops_button>
               </div>
             </.form>
@@ -1082,117 +1556,25 @@ defmodule ScrypathOpsWeb.SearchLive do
                   >
                     {search_status_badge_label(assigns)}
                   </.ops_badge>
-                  <.link
-                    :if={@saved_basename}
-                    navigate={"#{@mount_path}/playbooks"}
-                    class="ops-text-action"
-                    data-testid="search-saved-handoff"
-                  >
-                    Open Saved searches <span aria-hidden="true">→</span>
-                  </.link>
                 </div>
               </div>
-              <section
-                :if={@capture_base != nil}
-                aria-labelledby="search-capture-heading"
-                class="space-y-3"
-              >
-                <h2 id="search-capture-heading" class="sr-only">
-                  Save search
-                </h2>
-                <div class="ops-save-playbook ops-search-save">
-                  <div id="search-capture-form-panel" style="display: none;">
-                    <p class="mt-3 max-w-2xl text-ops-body text-base-content/70">
-                      Save the last-run query and options to Saved searches on this server. Results are not stored.
-                    </p>
 
-                    <.form
-                      for={%{}}
-                      as={:capture}
-                      phx-change="capture_change"
-                      phx-submit="save_search_capture"
-                      class="ops-save-playbook__form mt-4 max-w-2xl space-y-4"
-                      id="search-capture-form"
-                    >
-                      <div class="grid gap-3 md:grid-cols-2">
-                        <.ops_field id="capture_title" label="Search title">
-                          <.ops_text_input
-                            id="capture_title"
-                            name="capture[title]"
-                            data-ops-max-bytes="200"
-                            value={@capture_title}
-                            placeholder="Optional"
-                          />
-                        </.ops_field>
-                        <.ops_field
-                          id="capture_basename"
-                          label="Filename"
-                          error={@capture_error && @capture_error.message}
-                          hint="Choose a new .json filename. Existing files are kept."
-                        >
-                          <.ops_text_input
-                            id="capture_basename"
-                            name="capture[basename]"
-                            hint="Choose a new .json filename. Existing files are kept."
-                            value={@capture_basename}
-                            error={@capture_error && @capture_error.message}
-                            class="min-w-0 font-mono text-ops-body"
-                            placeholder="my-search.json"
-                            required
-                          />
-                        </.ops_field>
-                      </div>
-                      <.ops_field id="capture_description" label="Description">
-                        <.ops_textarea
-                          id="capture_description"
-                          name="capture[description]"
-                          data-ops-max-bytes="2000"
-                          value={@capture_description}
-                          placeholder="Optional"
-                        />
-                      </.ops_field>
-
-                      <div
-                        :if={@capture_error && (@capture_error.detail || @capture_error.recovery)}
-                        class="min-w-0 space-y-1 text-ops-body leading-6 text-error"
-                        data-testid="search-capture-error"
-                        role="alert"
-                      >
-                        <p :if={@capture_error.detail} class="break-words text-base-content/75">
-                          Reason: {@capture_error.detail}
-                        </p>
-                        <p
-                          :if={@capture_error.recovery}
-                          class="break-words text-base-content/75"
-                        >
-                          {@capture_error.recovery}
-                        </p>
-                      </div>
-
-                      <.ops_disclosure
-                        :if={@capture_preview_json}
-                        id="search-capture-json"
-                        summary="Saved search JSON"
-                        variant={:compact}
-                      >
-                        <.ops_code_block
-                          data-testid="search-capture-preview-pre"
-                          text={@capture_preview_json}
-                          copy
-                          copy_label="Copy saved search JSON"
-                        />
-                      </.ops_disclosure>
-
-                      <.ops_button type="submit" variant={:primary}>
-                        Save search
-                      </.ops_button>
-                    </.form>
-                  </div>
-                </div>
-              </section>
+              <div :if={@stored_run} id="search-stored-inputs">
+                <.ops_data_card title="Inputs used for these results">
+                  <p class="ops-search-query-hint">
+                    “{@stored_run.name}” has options the form doesn't show, so it ran exactly as saved. Run search to use the form instead.
+                  </p>
+                  <dl class="ops-facts mt-ops-3">
+                    <div :for={{label, value} <- SavedSearchForm.summary(@stored_run.definition)}>
+                      <dt>{label}</dt>
+                      <dd class="whitespace-pre-wrap">{value}</dd>
+                    </div>
+                  </dl>
+                </.ops_data_card>
+              </div>
 
               <p
-                :if={@submitted_search}
+                :if={@submitted_search && !@stored_run}
                 id="search-run-attribution"
                 data-run-id={@submitted_search.id}
                 data-mode={@submitted_search.mode}
@@ -1283,7 +1665,7 @@ defmodule ScrypathOpsWeb.SearchLive do
 
               <nav
                 :if={
-                  @submitted_search && !@searching && !@run_error &&
+                  @submitted_search && !@stored_run && !@searching && !@run_error &&
                     (@submitted_search.page > 1 ||
                        result_count(assigns) == @submitted_search.page_size)
                 }
@@ -1343,8 +1725,285 @@ defmodule ScrypathOpsWeb.SearchLive do
           </div>
         </div>
       </div>
+
+      <.ops_modal
+        :if={@name_modal}
+        id="saved-search-name-modal"
+        title={if @name_modal.kind == :save_as, do: "Save as new search", else: "Save search"}
+        description="Saves the search inputs shown in the form, not the results."
+        action_label="save"
+        initial_focus="#saved-search-name-input"
+        focus_error="#saved-search-name-input"
+        focus_request={@modal_focus_request}
+        cancel_event="cancel_save"
+      >
+        <.form
+          for={%{}}
+          id="saved-search-name-form"
+          phx-change="name_change"
+          phx-submit="save_named"
+          class="space-y-3"
+        >
+          <.ops_field
+            id="saved-search-name-input"
+            label="Name"
+            hint={"Names are unique. Up to #{SavedSearch.max_name_length()} characters."}
+            error={@name_modal.error}
+          >
+            <.ops_text_input
+              id="saved-search-name-input"
+              name="name"
+              value={@name_modal.name}
+              hint={"Names are unique. Up to #{SavedSearch.max_name_length()} characters."}
+              error={@name_modal.error}
+              placeholder="Daily catalog check"
+              autocomplete="off"
+              required
+            />
+          </.ops_field>
+          <div class="flex justify-between gap-2">
+            <.ops_button phx-click="cancel_save" variant={:ghost} data-ops-modal-cancel>
+              Cancel
+            </.ops_button>
+            <.ops_button type="submit" variant={:primary}>Save</.ops_button>
+          </div>
+        </.form>
+      </.ops_modal>
+
+      <.ops_sheet
+        :if={@manage_open}
+        id="saved-search-manage"
+        title="Manage saved searches"
+        cancel_event="close_manage"
+        fallback_successor="#saved-search-manage-open"
+        focus_target={@sheet_focus}
+        focus_request={@sheet_focus_request}
+      >
+        <p :if={@saved_searches == []} class="ops-search-query-hint">
+          No saved searches yet. Save one from Search, or import a JSON file.
+        </p>
+        <ul
+          :if={@saved_searches != []}
+          id="saved-search-list"
+          class="ops-saved-search-list"
+          aria-labelledby="saved-search-manage-title"
+        >
+          <li
+            :for={row <- @saved_searches}
+            id={"saved-search-row-#{row.dom_id}"}
+            class={[
+              "ops-saved-search-row",
+              @loaded && @loaded.name == row.name && "ops-saved-search-row--loaded"
+            ]}
+          >
+            <div class="min-w-0">
+              <p class="ops-saved-search-row__name">{row.name}</p>
+              <p :if={row.description != ""} class="ops-saved-search-row__description">
+                {row.description}
+              </p>
+              <p :if={!row.readable?} class="ops-saved-search-row__description text-error">
+                This saved search can't be read. Delete it, or import a corrected file.
+              </p>
+            </div>
+
+            <div
+              :if={is_nil(@manage_row) || @manage_row.name != row.name}
+              class="ops-saved-search-row__actions"
+            >
+              <.ops_button
+                id={"saved-search-load-#{row.dom_id}"}
+                variant={:default}
+                size={:sm}
+                phx-click="load_saved_search"
+                phx-value-name={row.name}
+                aria-label={"Load #{row.name}"}
+                disabled={!row.readable? || !search_configured?(assigns)}
+              >
+                Load
+              </.ops_button>
+              <.ops_button
+                id={"saved-search-rename-#{row.dom_id}"}
+                variant={:ghost}
+                size={:sm}
+                phx-click="manage_rename"
+                phx-value-name={row.name}
+                aria-label={"Rename #{row.name}"}
+              >
+                Rename
+              </.ops_button>
+              <a
+                :if={row.export_href}
+                id={"saved-search-export-#{row.dom_id}"}
+                href={row.export_href}
+                download={row.export_filename}
+                class="btn ops-btn btn-ghost btn-sm rounded-ops-control text-ops-body font-semibold"
+                aria-label={"Export #{row.name}"}
+              >
+                Export
+              </a>
+              <.ops_button
+                id={"saved-search-delete-#{row.dom_id}"}
+                variant={:ghost}
+                size={:sm}
+                class="ops-saved-search-row__delete"
+                phx-click="manage_delete"
+                phx-value-name={row.name}
+                aria-label={"Delete #{row.name}"}
+              >
+                Delete
+              </.ops_button>
+            </div>
+
+            <.form
+              :if={@manage_row && @manage_row.name == row.name && @manage_row.action == :rename}
+              for={%{}}
+              id="saved-search-rename-form"
+              phx-change="rename_change"
+              phx-submit="rename_submit"
+              class="ops-saved-search-row__form"
+            >
+              <.ops_field
+                id="saved-search-rename-input"
+                label={"Rename #{row.name}"}
+                error={@manage_row.error}
+              >
+                <.ops_text_input
+                  id="saved-search-rename-input"
+                  name="new_name"
+                  value={@manage_row.value}
+                  error={@manage_row.error}
+                  autocomplete="off"
+                  required
+                />
+              </.ops_field>
+              <div class="flex flex-wrap gap-2">
+                <.ops_button type="submit" variant={:primary} size={:sm}>Rename</.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                  Cancel
+                </.ops_button>
+              </div>
+            </.form>
+
+            <.form
+              :if={@manage_row && @manage_row.name == row.name && @manage_row.action == :delete}
+              for={%{}}
+              id="saved-search-delete-form"
+              phx-submit="confirm_delete"
+              class="ops-saved-search-row__form"
+            >
+              <p class="text-ops-body">
+                This permanently deletes “{row.name}”. It can't be undone.
+              </p>
+              <.ops_field
+                id="saved-search-delete-input"
+                label="Type the name to confirm"
+                error={@manage_row.error}
+              >
+                <.ops_text_input
+                  id="saved-search-delete-input"
+                  name="confirm"
+                  value={@manage_row.value}
+                  error={@manage_row.error}
+                  class="font-mono"
+                  autocomplete="off"
+                />
+              </.ops_field>
+              <div class="flex flex-wrap gap-2">
+                <.ops_button type="submit" variant={:danger} size={:sm}>Delete</.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                  Cancel
+                </.ops_button>
+              </div>
+            </.form>
+          </li>
+        </ul>
+
+        <section class="ops-saved-search-import" aria-labelledby="saved-search-import-heading">
+          <h3 id="saved-search-import-heading" class="text-ops-body font-semibold">Import</h3>
+          <p id="saved-search-import-hint" class="ops-search-query-hint">
+            Add a saved search from a JSON file up to {import_limit_label()}. It takes the file's name.
+          </p>
+          <p
+            :if={@import_error}
+            id="saved-search-import-error"
+            role="alert"
+            class="text-ops-body text-error"
+          >
+            {@import_error}
+          </p>
+          <.form
+            for={%{}}
+            id="saved-search-import-form"
+            phx-change="validate_import"
+            phx-submit="import_upload"
+          >
+            <.live_file_input upload={@uploads.saved_search_file} class="hidden" tabindex="-1" />
+            <.ops_button
+              id="saved-search-import-file"
+              variant={:default}
+              size={:sm}
+              class="gap-1.5"
+              phx-click={JS.dispatch("click", to: "##{@uploads.saved_search_file.ref}")}
+              aria-describedby="saved-search-import-hint"
+            >
+              <.icon name="hero-arrow-up-tray" class="size-4" /> Import JSON file
+            </.ops_button>
+          </.form>
+
+          <.ops_disclosure
+            id="saved-search-paste"
+            summary="Paste JSON instead"
+            variant={:compact}
+            open={@paste_json != ""}
+          >
+            <.form
+              for={%{}}
+              id="saved-search-paste-form"
+              phx-submit="import_paste"
+              class="space-y-3"
+            >
+              <.ops_field id="saved-search-paste-name" label="Name">
+                <.ops_text_input
+                  id="saved-search-paste-name"
+                  name="name"
+                  value={@paste_name}
+                  autocomplete="off"
+                  required
+                />
+              </.ops_field>
+              <.ops_field id="saved-search-paste-json" label="Saved search JSON">
+                <.ops_textarea
+                  id="saved-search-paste-json"
+                  name="json"
+                  value={@paste_json}
+                  class="font-mono"
+                  data-ops-json
+                  data-ops-max-bytes={@max_import_bytes}
+                  required
+                />
+              </.ops_field>
+              <.ops_button type="submit" variant={:default} size={:sm}>Import</.ops_button>
+            </.form>
+          </.ops_disclosure>
+        </section>
+      </.ops_sheet>
     </Layouts.app>
     """
+  end
+
+  defp loaded_status(%{loaded: %{name: name}} = assigns) do
+    edited = if save_state(assigns) in [:dirty, :dirty_stored], do: " · edited", else: ""
+    "Loaded “#{name}”#{edited}"
+  end
+
+  defp loaded_status(_assigns), do: ""
+
+  defp import_limit_label, do: "#{div(@max_import_bytes, 1000)} KB"
+
+  defp close_picker(js \\ %JS{}) do
+    js
+    |> JS.hide(to: "#saved-search-menu")
+    |> JS.set_attribute({"aria-expanded", "false"}, to: "#saved-search-picker-button")
   end
 
   defp format_run_error({:page_size_out_of_range, n, max}) do
@@ -1352,7 +2011,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp format_run_error({:too_many_schemas, count, max}) do
-    "too many schemas selected (#{count}); maximum is #{max} (too_many_schemas)."
+    "Too many schemas selected (#{count}). Choose up to #{max}."
   end
 
   defp format_run_error({:config, :missing_backend}) do
@@ -1368,7 +2027,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp format_run_error({:config, :no_schemas_selected}) do
-    "Select at least one schema for multi-search."
+    "Select at least one schema."
   end
 
   defp format_run_error({:scrypath, reason}) do

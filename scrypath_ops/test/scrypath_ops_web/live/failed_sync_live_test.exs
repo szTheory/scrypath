@@ -10,17 +10,40 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   alias ScrypathOps.Test.OpsPostB
 
   defmodule FailedSyncFakeClient do
-    def tasks(_filters, config) do
-      case Keyword.get(config, :meilisearch_tasks, []) do
-        {:error, reason} -> {:error, reason}
-        results -> {:ok, %{results: results}}
+    # Scoped like Meilisearch: only tasks for the requested index come back.
+    def tasks(filters, config) do
+      uids = Keyword.get(filters, :index_uids, [])
+      failing = Application.get_env(:scrypath_ops, :failing_index_uids, [])
+
+      cond do
+        Enum.any?(uids, &(&1 in failing)) ->
+          {:error, :backend_unavailable}
+
+        true ->
+          case Keyword.get(config, :meilisearch_tasks, []) do
+            {:error, reason} ->
+              {:error, reason}
+
+            results ->
+              {:ok, %{results: Enum.filter(results, &(Map.get(&1, "indexUid") in uids))}}
+          end
       end
     end
   end
 
   defmodule FailedSyncObanInspector do
-    def list_jobs(_schema_module, config) do
-      {:ok, Keyword.get(config, :oban_jobs, [])}
+    # Scoped like the real inspector: only jobs whose args name this schema.
+    def list_jobs(schema_module, config) do
+      schema = Atom.to_string(schema_module)
+
+      jobs =
+        config
+        |> Keyword.get(:oban_jobs, [])
+        |> Enum.filter(fn job ->
+          Map.get(job.args, "schema", "Elixir.ScrypathOps.Test.OpsPostA") == schema
+        end)
+
+      {:ok, jobs}
     end
   end
 
@@ -63,7 +86,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     keys = ~w(
       schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
-      meilisearch_tasks oban oban_queue oban_inspector oban_jobs
+      meilisearch_tasks oban oban_queue oban_inspector oban_jobs failing_index_uids
     )a
 
     previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
@@ -139,55 +162,31 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     :ok
   end
 
-  test "rendered schema form changes the selected target", %{conn: conn} do
-    {:ok, lv, _html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
+  defp upsert_job(id, schema, opts \\ []) do
+    short = schema |> Module.split() |> List.last() |> Macro.underscore()
 
-    lv
-    |> form("#failed-sync-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
-    |> render_change()
-
-    assert_patch(lv, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
-    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
+    %{
+      id: id,
+      state: Keyword.get(opts, :state, "retryable"),
+      worker: "Scrypath.Oban.UpsertWorker",
+      queue: "search_sync",
+      attempted_at: Keyword.get(opts, :attempted_at, "2026-10-10T14:15:00Z"),
+      attempt: Keyword.get(opts, :attempt),
+      max_attempts: Keyword.get(opts, :max_attempts),
+      errors: List.wrap(Keyword.get(opts, :error)) |> Enum.map(&%{"error" => &1}),
+      args: %{
+        "operation" => "upsert",
+        "repo" => "Elixir.ScrypathOps.Repo",
+        "schema" => Atom.to_string(schema),
+        "backend" => "Elixir.Scrypath.Meilisearch",
+        "index" => "fsv_#{short}",
+        "document_count" => length(Keyword.get(opts, :ids, [1])),
+        "document_ids" => Keyword.get(opts, :ids, [1])
+      }
+    }
   end
 
-  test "explicit non-first schema keeps its diagnosed failure beside the accepted retry", %{
-    conn: conn
-  } do
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
-
-    Application.put_env(:scrypath_ops, :oban_jobs, [
-      %{
-        id: 509,
-        state: "retryable",
-        worker: "Scrypath.Oban.UpsertWorker",
-        queue: "search_sync",
-        attempted_at: "2026-10-10T14:15:00Z",
-        errors: [%{"error" => "the Variant source remains visible"}],
-        args: %{
-          "operation" => "upsert",
-          "repo" => "Elixir.ScrypathOps.Repo",
-          "schema" => "Elixir.ScrypathOps.Test.OpsPostB",
-          "backend" => "Elixir.Scrypath.Meilisearch",
-          "index" => "fsv_ops_post_b",
-          "document_count" => 1,
-          "document_ids" => ["variant-509"],
-          "documents" => [
-            %{"id" => "variant-509", "data" => %{"title" => "Variant"}, "source" => "fields"}
-          ]
-        }
-      }
-    ])
-
-    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
-
-    assert html =~ "Oban job #509"
-    assert html =~ ~s(datetime="2026-10-10T14:15:00Z")
-    assert html =~ "Add or update documents"
-    refute html =~ "Retry currently available."
-    assert html =~ "the Variant source remains visible"
-    assert has_element?(view, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
-    assert :sys.get_state(view.pid).socket.assigns.selected_schema == OpsPostB
-
+  defp sudo!(view) do
     put_live_assigns(view,
       current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
       operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
@@ -197,62 +196,310 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
       }
     )
+  end
 
-    accepted = render_click(view, "retry", %{"id" => "509"})
+  test "all schemas load by default with a schema label on every row", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(501, OpsPostA, error: "** (Ecto.CastError) cannot cast"),
+      upsert_job(509, OpsPostB, state: "discarded", error: "the Variant source remains visible")
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert html =~ "2 failed, 1 retrying"
+    assert has_element?(view, "[data-testid='failed-sync-row']", "OpsPostA")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "OpsPostB")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "Oban search_sync #509")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "Meilisearch task #401")
+    assert html =~ "Retry queues the same records again and sends their current data."
+    assert html =~ ~s(aria-labelledby="failed-sync-summary-heading")
+    assert html =~ ~s(id="failed-sync-summary-heading")
+    refute html =~ "Error categories"
+    refute has_element?(view, "input[type='radio'][name='schema']")
+
+    # Schema facets carry per-schema counts; nothing is preselected.
+    assert has_element?(view, "[data-testid='failed-sync-schema-filter']", "OpsPostA")
+
+    assert has_element?(
+             view,
+             "[data-testid='failed-sync-schema-filter'] .sr-only",
+             "1 failed, 1 retrying"
+           )
+
+    refute has_element?(view, "input[name='schema[]']:checked")
+    assert has_element?(view, "a[href='/ops/sync-and-index']")
+  end
+
+  test "zero-count schemas stay visible but quiet", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    assert has_element?(
+             view,
+             "label.ops-filter-chip--quiet[data-testid='failed-sync-schema-filter']",
+             "OpsPostB"
+           )
+
+    refute has_element?(view, "label.ops-filter-chip--quiet", "OpsPostA")
+  end
+
+  test "schema deep link preselects the filter and scopes rows, counts and handoff", %{
+    conn: conn
+  } do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(501, OpsPostA),
+      upsert_job(509, OpsPostB, error: "the Variant source remains visible")
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "1 retrying"
+    assert summary(view) =~ "1 retrying"
+    refute summary(view) =~ " failed"
+    assert has_element?(view, "input[name='schema[]'][value='ScrypathOps.Test.OpsPostB']:checked")
+    refute has_element?(view, "input[name='schema[]'][value='ScrypathOps.Test.OpsPostA']:checked")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "#509")
+    refute has_element?(view, "[data-testid='failed-sync-row']", "#501")
+
+    assert has_element?(
+             view,
+             "[data-testid='failed-sync-filter-note']",
+             ~r/\d+ more hidden by filters\./
+           )
+
+    assert has_element?(view, "[data-testid='failed-sync-filter-note'] a", "Clear filters")
+    assert has_element?(view, "a[href='/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB']")
+  end
+
+  test "repeated and comma-separated schema params select several schemas", %{conn: conn} do
+    for path <- [
+          "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA&schema=ScrypathOps.Test.OpsPostB",
+          "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA,ScrypathOps.Test.OpsPostB"
+        ] do
+      {:ok, view, _html} = live(conn, path)
+
+      assert has_element?(
+               view,
+               "input[name='schema[]'][value='ScrypathOps.Test.OpsPostA']:checked"
+             )
+
+      assert has_element?(
+               view,
+               "input[name='schema[]'][value='ScrypathOps.Test.OpsPostB']:checked"
+             )
+
+      assert :sys.get_state(view.pid).socket.assigns.schema_filter == [OpsPostA, OpsPostB]
+    end
+  end
+
+  test "changing the filters patches the URL without reloading every schema", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    loaded_at = :sys.get_state(view.pid).socket.assigns.last_refresh_at
+
+    view
+    |> form("#failed-sync-filters", %{"schema" => ["ScrypathOps.Test.OpsPostB"]})
+    |> render_change()
+
+    assert_patch(view, "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+    assigns = :sys.get_state(view.pid).socket.assigns
+    assert assigns.schema_filter == [OpsPostB]
+    assert assigns.last_refresh_at == loaded_at
+
+    html = render_change(view, "filter", %{"cause" => ["unknown"]})
+    assert_patch(view, "/ops/failed-sync?cause=unknown")
+    assert html =~ "1 failed, 1 retrying"
+
+    render_change(view, "filter", %{"schema" => ["ScrypathOps.Test.Nope"], "cause" => ["bogus"]})
+    assert_patch(view, "/ops/failed-sync")
+  end
+
+  test "cause filters use readable labels ordered by count and narrow the summary", %{
+    conn: conn
+  } do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(601, OpsPostA, state: "discarded", error: "** (Ecto.CastError) bad"),
+      upsert_job(602, OpsPostA, state: "discarded", error: "** (ArgumentError) bad"),
+      upsert_job(603, OpsPostB, error: "** (Req.TransportError) connection refused"),
+      upsert_job(604, OpsPostB, state: "discarded")
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert html =~ "3 failed, 1 retrying"
+
+    labels =
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("[data-testid='failed-sync-cause-filter']")
+      |> Enum.map(&LazyHTML.text/1)
+      |> Enum.map(&String.replace(&1, ~r/\s+/, " "))
+      |> Enum.map(&String.trim/1)
+
+    assert labels == ["Invalid data 2", "Couldn't reach Meilisearch 1", "Retries used up 1"]
+    refute html =~ "queue exhausted"
+    refute html =~ "backend rejected"
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?cause=transport")
+    assert html =~ "1 retrying"
+    assert has_element?(view, "input[name='cause[]'][value='transport']:checked")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "#603")
+    refute has_element?(view, "[data-testid='failed-sync-row']", "#601")
+    assert html =~ "Couldn&#39;t reach Meilisearch. This will retry automatically."
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?cause=validation")
+    assert summary(view) =~ "2 failed"
+    refute summary(view) =~ " retrying"
+    assert html =~ "Invalid data: fix the record, then retry."
+    assert html =~ "Review the errors and fix their causes, then retry."
+  end
+
+  test "filters that match nothing say so and offer to clear them", %{conn: conn} do
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
+
+    assert html =~ "No sync work matches these filters"
+    assert has_element?(view, "a[href='/ops/failed-sync']", "Clear filters")
+    refute has_element?(view, "[data-testid='failed-sync-row']")
+  end
+
+  test "one schema's load error is attributed to it without hiding the others", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :failing_index_uids, ["fsv_ops_post_b"])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert has_element?(view, "[data-testid='failed-sync-load-error']", "OpsPostB")
+    refute has_element?(view, "[data-testid='failed-sync-load-error']", "OpsPostA couldn")
+    assert html =~ ":backend_unavailable"
+    assert html =~ ~s(aria-label="Copy error")
+    assert html =~ ~s(data-ops-copy-success="Error copied")
+    assert html =~ "1 failed, 1 retrying"
+    assert has_element?(view, "[data-testid='failed-sync-row']", "#501")
+    assert has_element?(view, "[data-testid='failed-sync-schema-filter']", "couldn't load")
+  end
+
+  test "rows show the error in a copyable code block and secondary data behind More details",
+       %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(20, OpsPostA,
+        state: "discarded",
+        attempt: 3,
+        max_attempts: 3,
+        ids: [11, 12, 13, 14, 15],
+        error: ~s|** (Ecto.CastError) cannot cast "n/a" to :integer for field :category_id|
+      )
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert summary(view) =~ "1 failed"
+    refute summary(view) =~ " retrying"
+    assert html =~ "Review the error and fix its cause, then retry."
+    assert has_element?(view, "[data-testid='failed-sync-row']", "Add or update")
+    assert has_element?(view, "[data-testid='failed-sync-row']", "Oban search_sync #20")
+    assert has_element?(view, "[data-testid='failed-sync-records']", "5 records")
+    assert has_element?(view, "[data-testid='failed-sync-records'] code", "11, 12, 13")
+    assert has_element?(view, "[data-testid='failed-sync-records']", "and 2 more")
+    assert has_element?(view, "pre[data-testid='failed-sync-reason']", "Ecto.CastError")
+    assert has_element?(view, ".ops-code-block button[aria-label='Copy error']")
+    refute html =~ "Copy payload"
+    assert html =~ "Invalid data: fix the record, then retry."
+
+    retry = element(view, "[data-testid='failed-sync-retry']")
+    assert render(retry) =~ "btn-outline"
+    refute render(retry) =~ "btn-primary"
+
+    details = view |> element("details[id^='failed-detail-']") |> render()
+    assert details =~ "More details"
+    assert details =~ "Scrypath.Oban.UpsertWorker"
+    assert details =~ "3 of 3"
+    assert details =~ "Copy job args"
+    refute details =~ "Error category"
+    refute details =~ ">upsert<"
+    refute details =~ "validation"
+  end
+
+  test "long errors clamp with a Show all toggle", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    long = "** (RuntimeError) " <> String.duplicate("very long failure text ", 30)
+    Application.put_env(:scrypath_ops, :oban_jobs, [upsert_job(30, OpsPostA, error: long)])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    assert has_element?(view, ".ops-code-block--clamp button[aria-expanded='false']", "Show all")
+  end
+
+  test "retry stays bound to the row's own schema", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(509, OpsPostB, ids: ["variant-509"], error: "the Variant source remains visible")
+    ])
+
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+    assert html =~ ~s(datetime="2026-10-10T14:15:00Z")
+    assert html =~ "the Variant source remains visible"
+
+    assert has_element?(
+             view,
+             "[data-testid='failed-sync-retry'][phx-value-schema='ScrypathOps.Test.OpsPostB'][phx-value-id='509']"
+           )
+
+    sudo!(view)
+
+    # A retry naming another schema never matches this row.
+    missing =
+      render_click(view, "retry", %{"id" => "509", "schema" => "ScrypathOps.Test.OpsPostA"})
+
+    assert missing =~ "Could not find that failed job."
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+
+    accepted =
+      view
+      |> element("[data-testid='failed-sync-retry']")
+      |> render_click()
 
     assert accepted =~ "Retry queued"
     assert accepted =~ "Oban job #991"
     assert accepted =~ "Original job #509 is retained"
-    assert accepted =~ "Oban job #509"
+    assert accepted =~ "schema=ScrypathOps.Test.OpsPostB"
     refute accepted =~ "Recovery verified"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+
+    receipt = :sys.get_state(view.pid).socket.assigns.recovery_receipts
+
+    assert %{
+             "ScrypathOps.Test.OpsPostB|oban|509" => %{schema: "Elixir.ScrypathOps.Test.OpsPostB"}
+           } = receipt
   end
 
-  test "renders triage summary, rollups, and human reason-class columns", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
-
-    assert html =~ "1 failed · 1 retrying"
-    refute html =~ "dominant reason"
-    assert html =~ "Retry scheduled"
-    assert html =~ "Operations needing attention"
-    assert html =~ "data-testid=\"failed-sync-row\""
-    assert html =~ "data-testid=\"failed-sync-retry\""
-    assert html =~ "Operations needing attention"
-    assert html =~ "Refresh failed sync work"
-    assert html =~ "Retry"
-    assert html =~ "index missing"
-    assert html =~ "Oban job"
-    assert html =~ "Job details"
-    row_html = lv |> element("article[data-testid='failed-sync-row']:nth-of-type(2)") |> render()
-    retry_pos = row_html |> :binary.match("Retry") |> elem(0)
-    diagnostics_pos = row_html |> :binary.match("Job details") |> elem(0)
-    assert retry_pos < diagnostics_pos
-    # Reason-class rollup tiles (the single, branded representation of by-class counts).
-    refute html =~ "transport 0"
-    refute html =~ "validation 0"
-    assert html =~ "unknown 2"
-  end
-
-  test "zero failed sync work shows the empty hero", %{conn: conn} do
+  test "zero failed sync work stays truthful", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
     Application.put_env(:scrypath_ops, :oban_jobs, [])
 
-    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
 
-    refute html =~ ~s(data-testid="failed-sync-empty-hero")
     assert html =~ "No failed or retrying sync work"
-    refute html =~ "Refresh this view"
-    refute html =~ "data-testid=\"failed-sync-row\""
+    assert html =~ "Pending work and document freshness are checked on Sync and index."
+    refute html =~ "0 failed"
+    refute html =~ "0 retrying"
+    refute has_element?(view, "[data-testid='failed-sync-row']")
+    refute has_element?(view, "#failed-sync-filters")
   end
 
-  test "one failed job uses singular copy", %{conn: conn} do
+  test "retrying-only work uses retry guidance and leaves out the failed cohort", %{conn: conn} do
     Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
 
-    {:ok, _lv, html} = live(conn, ~p"/ops/failed-sync")
+    {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
 
-    assert html =~ "0 failed · 1 retrying"
-    assert html =~ "Retry scheduled"
-    refute html =~ "1 failed sync jobs need triage"
+    assert summary(view) =~ "1 retrying"
+    refute summary(view) =~ " failed"
+    assert html =~ "It will retry automatically."
+    assert html =~ "Retrying"
+    assert html =~ "Unknown cause. This will retry automatically."
   end
 
   test "empty allowlist shows setup rather than healthy zero work", %{conn: conn} do
@@ -261,8 +508,8 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/failed-sync")
 
     assert html =~ "No schemas configured."
-    refute html =~ "No failed sync work visible"
-    refute has_element?(lv, "[data-testid='failed-sync-empty-hero']")
+    refute html =~ "No failed or retrying sync work"
+    refute has_element?(lv, "[data-testid='failed-sync-summary']")
   end
 
   test "failed observation is not presented as zero work", %{conn: conn} do
@@ -272,30 +519,25 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     assert html =~ "Failed sync work could not load"
     assert html =~ ":backend_unavailable"
-    refute has_element?(lv, "[data-testid='failed-sync-empty-hero']")
+    refute html =~ "No failed or retrying sync work"
+    refute has_element?(lv, "[data-testid='failed-sync-summary']")
   end
 
-  test "rendered handoff keeps a non-first schema in the query string", %{conn: conn} do
-    {:ok, lv, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostB")
-
-    assert html =~ "OpsPostB"
-    assert has_element?(lv, "a[href='/ops/sync-drift?schema=ScrypathOps.Test.OpsPostB']")
-    assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
-  end
-
-  test "explicit invalid or removed selections show unavailable and refuse retry", %{conn: conn} do
+  test "explicit invalid or removed schemas show unavailable and refuse retry", %{conn: conn} do
     {:ok, invalid_view, invalid_html} =
       live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.Gone")
 
     assert invalid_html =~ "That schema is unavailable."
+    assert has_element?(invalid_view, "a[href='/ops/failed-sync']", "Show all schemas")
     refute has_element?(invalid_view, "[data-testid='failed-sync-row']")
 
     {:ok, removed_view, _html} = live(conn, ~p"/ops/failed-sync")
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostB])
     retry_html = render_click(removed_view, "retry", %{"id" => "501"})
     assert retry_html =~ "That schema is unavailable."
-    refute retry_html =~ "Retried 501"
-    assert :sys.get_state(removed_view.pid).socket.assigns.selected_schema == nil
+    refute retry_html =~ "Retry queued"
+    assert :sys.get_state(removed_view.pid).socket.assigns.scope_error == :unavailable
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
   test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
@@ -310,10 +552,10 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
           sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
         },
         schema_allowlist: [OpsPostA, OpsPostB],
-        selected_schema: OpsPostA,
+        loads: nil,
+        recovery_receipts: %{},
         mount_path: "/ops",
-        context_generation: 0,
-        selection_error: nil
+        context_generation: 0
       },
       host_uri: URI.parse("https://scrypath.example/ops/failed-sync")
     }
@@ -326,20 +568,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
-  test "sigra retry refreshes the inspection in place without losing local state", %{conn: conn} do
+  test "sigra retry refreshes in place and keeps receipts across filter changes", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    sudo!(view)
 
-    put_live_assigns(view,
-      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
-      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
-        user_id: "user_123",
-        active_org_id: "org_456",
-        impersonator_user_id: nil,
-        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
-      }
-    )
-
-    html = render_click(view, "retry", %{"id" => "501"})
+    html = render_click(view, "retry", %{"id" => "501", "schema" => "ScrypathOps.Test.OpsPostA"})
 
     assert html =~ "Retry queued"
     assert html =~ "Oban job #991"
@@ -347,27 +580,19 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute html =~ "Recovery verified"
 
     assigns = :sys.get_state(view.pid).socket.assigns
-    assert assigns.selected_schema == OpsPostA
     assert assigns.last_refresh_at != nil
-    assert assigns.load_error == nil
-    assert assigns.inspection != nil
-    assert assigns.recovery_receipts["501"].replacement_job == 991
+    assert assigns.recovery_receipts["ScrypathOps.Test.OpsPostA|oban|501"].replacement_job == 991
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
     repeated = render_click(view, "retry", %{"id" => "501"})
     assert repeated =~ "A retry for job 501 is already accepted"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
-    generation = assigns.context_generation
+    render_change(view, "filter", %{"cause" => ["unknown"]})
+    assert render(view) =~ "Original job #501 is retained"
 
-    view
-    |> form("#failed-sync-schema-form", %{"schema" => "ScrypathOps.Test.OpsPostB"})
-    |> render_change()
-
-    changed_assigns = :sys.get_state(view.pid).socket.assigns
-    assert changed_assigns.context_generation == generation + 1
-    assert changed_assigns.recovery_receipts == %{}
-    refute render(view) =~ "Original job #501 is retained"
+    assert :sys.get_state(view.pid).socket.assigns.context_generation ==
+             assigns.context_generation
   end
 
   test "ineligible failed work explains the unavailable retry and never inserts", %{conn: conn} do
@@ -391,13 +616,27 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     {:ok, view, html} = live(conn, ~p"/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA")
 
-    assert html =~ "The original documents or document IDs are unavailable for retry."
+    assert html =~ "The job didn&#39;t keep its record IDs, so it can&#39;t be retried here."
     refute has_element?(view, "[data-testid='failed-sync-retry']")
+    refute html =~ "then retry"
+    assert html =~ "Review the error and fix its cause."
 
     rejected = render_click(view, "retry", %{"id" => "515"})
     assert rejected =~ "That job does not expose a retry action"
-    assert rejected =~ "Oban job #515"
+    assert rejected =~ "Oban search_sync #515"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+  end
+
+  test "Meilisearch task rows keep their shortened eligibility copy", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :oban_jobs, [])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+    assert has_element?(
+             view,
+             "[data-testid='failed-sync-eligibility']",
+             "Meilisearch tasks can't be retried here."
+           )
   end
 
   test "hostile failure values remain escaped text", %{conn: conn} do
@@ -410,7 +649,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
         "uid" => 401,
         "status" => "failed",
         "type" => "documentAdditionOrUpdate",
-        "indexUid" => hostile,
+        "indexUid" => "fsv_ops_post_a",
         "error" => %{"message" => hostile}
       }
     ])
@@ -455,6 +694,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     html = render_click(view, "retry", %{"id" => "502"})
 
     assert html =~ "Confirm delete sync work"
+    assert html =~ "ScrypathOps.Test.OpsPostA"
     assert html =~ "fsv_ops_post_a"
     assert html =~ "doc-1"
     assert html =~ "doc-2"
@@ -463,21 +703,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     html = render_click(view, "cancel_retry_delete", %{})
     refute html =~ "Confirm delete sync work"
-    assert html =~ "Oban job #502"
+    assert html =~ "Oban search_sync #502"
     refute html =~ "Retry queued"
   end
 
-  test "schema selector rejects non-allowlisted module strings without crashing", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
-
-    mod_str = "ScrypathOps.Test.NotAllowlisted#{System.unique_integer([:positive])}"
-    html = render_change(view, "select_schema", %{"schema" => mod_str})
-
-    assert html =~ "That schema is unavailable."
-
-    assigns = :sys.get_state(view.pid).socket.assigns
-    assert assigns.selected_schema == nil
-  end
+  defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()
 
   defp put_live_assigns(view, assigns) do
     :sys.replace_state(view.pid, fn state ->

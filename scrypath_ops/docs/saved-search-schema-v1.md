@@ -1,8 +1,8 @@
-# Playbook interchange — `playbook_format` 1
+# Saved search interchange — `playbook_format` 1
 
-Normative reference for **version 1** saved-search playbooks consumed by **ScrypathOps** (bounded `/ops/search` and future tooling). Executable validation lives in **`ScrypathOps.Playbook.V1`**.
+Normative reference for **version 1** saved-search documents consumed by **ScrypathOps** (bounded `/ops/search` and future tooling). Executable validation lives in **`ScrypathOps.SavedSearches.V1`**.
 
-Execution results are documented in **`ScrypathOps.Playbook.Runner`** under **`## Runner-library contract`**. This guide stays authoritative for JSON wire format, allowed keys, caps, and troubleshooting anchors only.
+Execution results are documented in **`ScrypathOps.SavedSearches.Runner`** under **`## Runner-library contract`**. This guide stays authoritative for JSON wire format, allowed keys, caps, and troubleshooting anchors only.
 
 ## Versioning
 
@@ -28,7 +28,7 @@ Execution results are documented in **`ScrypathOps.Playbook.Runner`** under **`#
 | ----- | ---- | ----- |
 | `playbook_format` | integer | Must be **`1`**. |
 | `mode` | string | **`"search_many"`**. |
-| `entries` | array | Each element is a **3**-element JSON array: **`[schema_string, q_string, opts_object]`** where `schema_string` is a concrete allowlisted module name such as **`"MyApp.Post"`**. `Runner.run_validated/3` does not accept **`":all"`** entries in playbook JSON today, even though direct **`Scrypath.search_many/2`** supports `:all` expansion in library code. |
+| `entries` | array | Each element is a **3**-element JSON array: **`[schema_string, q_string, opts_object]`** where `schema_string` is a concrete allowlisted module name such as **`"MyApp.Post"`**. `Runner.run_validated/3` does not accept **`":all"`** entries in saved search JSON today, even though direct **`Scrypath.search_many/2`** supports `:all` expansion in library code. |
 | `opts` | object | **Shared** runtime + search options merged per library rules before each entry’s third-element `opts` is applied (right-biased per key). |
 
 Unknown keys at any fixed level (top-level, inside `opts`, inside `page`, etc.) are **rejected** by the validator — there is **no** silent clamping of `page.size` or entry counts.
@@ -53,7 +53,7 @@ Also allowed on the **outer** `opts` for **`search_many`** (not inside each entr
 
 ## Operator metadata (optional)
 
-Optional top-level fields (both **`search`** and **`search_many`**) for catalog display and handoff. Omitted keys are valid; listings treat a missing **`title`** as **Untitled playbook** (UI default, not encoded into JSON).
+Optional top-level fields (both **`search`** and **`search_many`**) for catalog display and handoff. Omitted keys are valid; listings treat a missing **`title`** as **Untitled saved search** (UI default, not encoded into JSON).
 
 | Field | Type | Rules |
 | ----- | ---- | ----- |
@@ -72,19 +72,19 @@ Sources of truth in code (defaults align with **`Scrypath.MultiSearch.Entries`**
 
 ## Federation notes
 
-- **Dispatch-only:** v1 playbooks carry **inputs** to **`dispatch_search`** / **`dispatch_search_many`** after validation — not response bodies, merge traces, or “last run” snapshots.
+- **Dispatch-only:** v1 saved searches carry **inputs** to **`dispatch_search`** / **`dispatch_search_many`** after validation — not response bodies, merge traces, or “last run” snapshots.
 - **Native vs stub:** entries that set **`federation_weight`** assume **native** `search_many` behaviour; stub adapter paths may raise **`federation_merge_requires_native_search_many`**. Prefer **non-weighted** fixtures in stub-only CI unless you assert that error on purpose. See phase context **D-15** honesty rule.
 
 ## Banned / secret keys (D-04)
 
-Do **not** place transport secrets or raw HTTP client bags in playbook JSON. The codec rejects these keys **anywhere** under `opts` (including nested objects), including:
+Do **not** place transport secrets or raw HTTP client bags in saved search JSON. The codec rejects these keys **anywhere** under `opts` (including nested objects), including:
 
 - `meilisearch_api_key`
 - `req_options`
 - `meilisearch_url`
 - `meilisearch_client`
 
-Also reject other **`Scrypath.Options`** runtime keys not explicitly allowlisted above (e.g. `backend`, `repo`, `sync_mode`, `oban*`, …). Playbooks should reference **schema module strings** and **Scrypath-accepted search options** only.
+Also reject other **`Scrypath.Options`** runtime keys not explicitly allowlisted above (e.g. `backend`, `repo`, `sync_mode`, `oban*`, …). Saved searches should reference **schema module strings** and **Scrypath-accepted search options** only.
 
 ## Security posture (threat model)
 
@@ -99,38 +99,33 @@ Use these anchors from OPSUI failure panels. Each section is symptom first, then
 
 ### no_schema
 
-- **Symptom:** Playbook run fails with "schema is not on the configured allowlist."
+- **Symptom:** Saved search run fails with "schema is not on the configured allowlist."
 - **Cause:** The `schema` string does not resolve to a module in the current `:schema_allowlist`.
 - **Fix:** Confirm the module name matches the app exactly and add it to the operator allowlist before re-running.
 
 ### invalid_query
 
-- **Symptom:** Playbook run fails with "query field is invalid."
-- **Cause:** The playbook `q` value is missing or is not a string for the selected mode.
-- **Fix:** Update the JSON so every search entry carries a string query, then re-import or reload the playbook.
+- **Symptom:** Saved search run fails with "query field is invalid."
+- **Cause:** The saved search `q` value is missing or is not a string for the selected mode.
+- **Fix:** Update the JSON so every search entry carries a string query, then re-import or reload the saved search.
 
 ### page_size_out_of_range
 
-- **Symptom:** Playbook run fails with `page.size` outside the allowed range.
+- **Symptom:** Saved search run fails with `page.size` outside the allowed range.
 - **Cause:** The JSON requested a page size above `ScrypathOps.SearchPlayground.max_page_size_allowed/0` or below `1`.
 - **Fix:** Lower `opts.page.size` to the configured cap for this OPSUI instance and run again.
 
 ## Persistence
 
-**v1.15** defines **one** authoritative persistence path for operator playbooks: **UTF-8 JSON
-files** under a **single configured workspace directory** (see **`SCRYPATH_OPS_PLAYBOOK_DIR`**
-in **`config/runtime.exs`** and **`docs/team-playbook-persistence.md`**). **`ScrypathOps`**
-mutates that directory only via **`Playbook.Store`** basename APIs — there is **no**
-second live writer (no union of “files + DB”, no read-through cache of another catalog).
+ScrypathOps stores each saved search's v1 document in the **`definition`** column of the
+**`scrypath_ops_saved_searches`** table in the host Repo (see
+**`team-saved-search-persistence.md`**). The JSON documents described here remain the import and
+export format, so files written for earlier releases import unchanged.
 
-- **Team workflow:** git + PR review for flat **`*.json`** files; mount or copy that directory
-  in prod as documented in **`team-playbook-persistence.md`**.
-- **Ecto / app DB catalog:** **explicitly out of scope for Phase 63** (and not part of the
-  v1.15 slice this document tracks). If it is introduced later, it must be an **exclusive**
-  mode with explicit import/export semantics — not an ambiguous dual authority.
-- **Security:** treat playbooks as **non-secret** operator artifacts — **no API keys,
+- **Team workflow:** keep reviewed JSON in git and import it into each environment.
+- **Security:** treat saved searches as **non-secret** operator artifacts — **no API keys,
   bearer tokens, or `req` bags** in committed JSON (see *Banned / secret keys* above and
-  git hygiene in **`team-playbook-persistence.md`**).
+  git hygiene in **`team-saved-search-persistence.md`**).
 
 ## Minimal examples
 

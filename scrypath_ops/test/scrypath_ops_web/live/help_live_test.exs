@@ -6,7 +6,8 @@ defmodule ScrypathOpsWeb.HelpLiveTest do
     {:ok, view, _html} = live(conn, "/ops/help")
     assert has_element?(view, "h1#ops-page-title", "Help")
     assert has_element?(view, "a[href='/ops/search']", "Open Search")
-    assert has_element?(view, "a[href='/ops/playbooks']", "Open Saved searches")
+    assert has_element?(view, "a[href='/ops/search?saved=manage']", "Manage saved searches")
+    refute render(view) =~ "folder"
     assert has_element?(view, "nav a[href='/ops/help'][aria-current=page]")
     assert has_element?(view, "section#saved-searches")
     assert has_element?(view, "section#sync")

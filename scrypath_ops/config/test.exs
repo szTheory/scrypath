@@ -50,15 +50,4 @@ config :phoenix,
 config :scrypath_ops, :validate_opsui_auth_on_start, false
 config :scrypath_ops, standalone: true
 config :scrypath_ops, :phase173_fixture_source, ScrypathOps.Phase173FixtureSource
-
-# Default playbook workspace for tests (partitioned for MIX_TEST_PARTITION).
-playbook_test_root =
-  Path.expand(
-    "tmp/playbooks_test#{System.get_env("MIX_TEST_PARTITION", "")}",
-    Path.join(__DIR__, "..")
-  )
-
-File.mkdir_p!(playbook_test_root)
-
-config :scrypath_ops, :playbook_workspace_dir, playbook_test_root
-config :scrypath_ops, :playbook_doc_base, "https://github.com/szTheory/scrypath/blob/main/"
+config :scrypath_ops, :saved_search_doc_base, "https://github.com/szTheory/scrypath/blob/main/"

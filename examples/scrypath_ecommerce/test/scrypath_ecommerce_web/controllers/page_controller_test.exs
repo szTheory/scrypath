@@ -32,9 +32,9 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     assert html =~ ~r|href="/admin/search/assets/css/app\.css\?v=[a-f0-9]{64}"|
     assert html =~ ~r/src="\/assets\/js\/app(?:-[^"]+)?\.js(?:\?[^"]*)?"/
     assert html =~ ~s(href="/admin/search/failed-sync")
-    assert html =~ ~s(href="/admin/search/sync-drift")
+    assert html =~ ~s(href="/admin/search/sync-and-index")
     refute html =~ ~s(href="/search/failed-sync")
-    refute html =~ ~s(href="/search/sync-drift")
+    refute html =~ ~s(href="/search/sync-and-index")
   end
 
   test "mounted ScrypathOps favicon routes serve the package brand assets", %{conn: conn} do
@@ -63,17 +63,20 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     for path <- ~w(
            /admin/search/health
            /admin/search/failed-sync
-           /admin/search/sync-drift
+           /admin/search/sync-and-index
            /admin/search/search
-           /admin/search/playbooks
+           /admin/search/search?saved=manage
          ) do
       assert html =~ ~s(href="#{path}")
     end
 
+    # Saved searches live inside Search now; old /playbooks links only redirect.
+    refute html =~ ~s(href="/admin/search/playbooks")
+
     refute html =~ ~s(href="/admin")
     refute html =~ ~s(href="/admin/posture")
     refute html =~ ~s(href="/admin/failed-sync")
-    refute html =~ ~s(href="/admin/sync-drift")
+    refute html =~ ~s(href="/admin/sync-and-index")
     refute html =~ ~s(href="/admin/playbooks")
   end
 

@@ -25,8 +25,8 @@ defmodule ScrypathOps.SearchPlaygroundTest do
     assert SearchPlayground.max_page_size_allowed() == 200
     assert SearchPlayground.validate_page_size(150) == :ok
 
-    assert {:error, {:invalid_playbook, {:page_size_out_of_range, 51, 50}}} =
-             ScrypathOps.Playbook.V1.validate(%{
+    assert {:error, {:invalid_saved_search, {:page_size_out_of_range, 51, 50}}} =
+             ScrypathOps.SavedSearches.V1.validate(%{
                "playbook_format" => 1,
                "mode" => "search_many",
                "entries" => [["MyApp.Product", "", %{"page" => %{"size" => 51}}]],

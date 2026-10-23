@@ -102,9 +102,3 @@ config :scrypath_ops,
 # OPSUI schema allowlist: set `SCRYPATH_OPS_SCHEMAS=MyApp.Blog.Post` at runtime,
 # or assign `config :scrypath_ops, :schema_allowlist, [MyApp.Blog.Post]` here.
 # Do not use reflection to populate the list.
-
-# Writable playbook workspace for local dev (repo-local `tmp/playbooks`).
-playbook_dev_root = Path.expand("tmp/playbooks", Path.join(__DIR__, ".."))
-File.mkdir_p!(playbook_dev_root)
-
-config :scrypath_ops, :playbook_workspace_dir, playbook_dev_root

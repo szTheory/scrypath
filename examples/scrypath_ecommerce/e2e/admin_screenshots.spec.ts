@@ -3,8 +3,11 @@ import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import {
+  deleteSavedSearches,
   drainSearchQueue,
   injectFailedSync,
+  openManageSavedSearches,
+  putSavedSearch,
   seedScenario,
   waitForLiveConnected,
   waitForSearchVisible
@@ -51,16 +54,16 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
   await expect(failedRow.getByText(/unknown_module.*NotARealBackend/)).toBeVisible();
-  await failedRow.getByText("Job details", { exact: true }).click();
+  await failedRow.getByText("More details", { exact: true }).click();
   await expect(failedRow.locator("details")).toHaveAttribute("open", "");
   await expect(failedRow.locator("details dl")).toBeVisible();
   await capture(page, testInfo, "02-failed-sync-expanded");
 
-  await page.goto("/admin/search/sync-drift");
+  await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");
@@ -80,24 +83,24 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.locator("details.ops-combined-order")).toBeVisible();
   await capture(page, testInfo, "05-search-multi-results");
 
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
-  await page.getByText("Or paste JSON").click();
-  await page.locator("textarea[name='json']").fill(
-    JSON.stringify({
-      playbook_format: 1,
-      mode: "search",
-      schema: "ScrypathEcommerce.Catalog.Product",
-      q: "quantum",
-      opts: { page: { size: 10 } }
-    })
-  );
-  await page.getByRole("button", { name: "Import from paste" }).click();
-  await expect(page.getByTestId("playbook-preview-marker")).toBeVisible();
-  await capture(page, testInfo, "06-playbook-preview");
+  const savedName = `screenshot-quantum-${Date.now()}`;
+  await putSavedSearch(request, savedName, {
+    playbook_format: 1,
+    mode: "search",
+    schema: "ScrypathEcommerce.Catalog.Product",
+    q: "quantum",
+    opts: { page: { size: 10 } }
+  });
+  try {
+    const sheet = await openManageSavedSearches(page);
+    await expect(sheet.getByText(savedName, { exact: true })).toBeVisible();
+    await capture(page, testInfo, "06-saved-search-manage");
 
-  await page.getByRole("button", { name: "Run search" }).click();
-  await expect(page.getByText("Search completed", { exact: true })).toBeVisible();
-  await capture(page, testInfo, "07-playbook-run-result");
+    await sheet.getByRole("button", { name: `Load ${savedName}` }).click();
+    await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${savedName}”`);
+    await expect(page.locator("#search-results-heading")).toBeVisible();
+    await capture(page, testInfo, "07-saved-search-run-result");
+  } finally {
+    await deleteSavedSearches(request, { names: [savedName] });
+  }
 });

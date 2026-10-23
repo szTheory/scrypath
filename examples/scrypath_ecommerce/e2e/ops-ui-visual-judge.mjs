@@ -19,7 +19,7 @@ const REVIEW_SHOTS = [
   "03-sync-drift--dark--desktop-1440--drift.png",
   "06-search--dark--desktop-1440--results.png",
   "08-search--dark--mobile-390--zero-results.png",
-  "09-playbooks--dark--desktop-1440--empty-workspace.png",
+  "09-saved-searches--dark--desktop-1440--empty-workspace.png",
   "04-control-room--light--desktop-1440--all-green.png"
 ];
 

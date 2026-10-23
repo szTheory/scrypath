@@ -8,7 +8,10 @@ defmodule ScrypathOpsWeb.Router do
 
   ## Options
 
-    * `:repo` - (Required) The Ecto Repo to use for search health checks and telemetry.
+    * `:repo` - (Required) The Ecto Repo to use for search health checks, telemetry and saved
+      searches. Run `ScrypathOps.Migration` in this Repo to create the saved searches table.
+    * `:prefix` - (Optional) The Postgres schema that holds the ScrypathOps tables. Use the same
+      value you passed to `ScrypathOps.Migration`. Defaults to the Repo's default schema.
   """
   defmacro scrypath_ops_routes(path, opts \\ []) do
     quote bind_quoted: [path: path, opts: opts] do
@@ -33,9 +36,10 @@ defmodule ScrypathOpsWeb.Router do
           live("/health", ScrypathOpsWeb.PostureLive)
           live("/posture", ScrypathOpsWeb.PostureLive, :legacy)
           live("/failed-sync", ScrypathOpsWeb.FailedSyncLive)
-          live("/sync-drift", ScrypathOpsWeb.SyncDriftLive)
+          live("/sync-and-index", ScrypathOpsWeb.SyncDriftLive)
+          live("/sync-drift", ScrypathOpsWeb.SyncDriftLive, :legacy)
           live("/search", ScrypathOpsWeb.SearchLive)
-          live("/playbooks", ScrypathOpsWeb.PlaybookLive)
+          live("/playbooks", ScrypathOpsWeb.SearchLive, :legacy_saved_searches)
           live("/help", ScrypathOpsWeb.HelpLive)
         end
       end
@@ -49,6 +53,11 @@ defmodule ScrypathOpsWeb.Router do
         type: :atom,
         required: true,
         doc: "The Ecto.Repo module"
+      ],
+      prefix: [
+        type: {:or, [:string, nil]},
+        default: nil,
+        doc: "The Postgres schema that holds the ScrypathOps tables"
       ]
     ]
 

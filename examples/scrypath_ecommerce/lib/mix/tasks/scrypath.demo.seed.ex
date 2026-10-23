@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     * `empty` — catalog tables truncated and the live index cleared after
       preparation; NO products synced, NO failed work, NO drift. Every screen
       renders its empty state (no synced schemas / no failed work / no results /
-      empty playbook workspace).
+      no saved searches).
 
   All injections are idempotent and reset-safe across re-runs (the task drops
   `demo_seed_*` Oban jobs and resets catalog tables before reseeding).
@@ -110,6 +110,50 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     }
   ]
 
+  # Example saved searches for the seeded "Quantum" catalog (Product + Variant). They are
+  # written to the ScrypathOps saved searches table on every non-empty seed, replacing any
+  # saved search with the same name and leaving other saved searches untouched.
+  @example_saved_searches [
+    {"Single-index product probe",
+     %{
+       "playbook_format" => 1,
+       "mode" => "search",
+       "schema" => "ScrypathEcommerce.Catalog.Product",
+       "q" => "Quantum",
+       "opts" => %{},
+       "title" => "Single-index product probe",
+       "description" =>
+         "A bounded read-only search over the Product index for the seeded demo catalog. \"Quantum\" matches the CyberPhone family — preview the payload, then run.",
+       "tags" => ["example", "single-index"]
+     }},
+    {"Federated catalog probe",
+     %{
+       "playbook_format" => 1,
+       "mode" => "search_many",
+       "entries" => [
+         ["ScrypathEcommerce.Catalog.Product", "Quantum", %{}],
+         ["ScrypathEcommerce.Catalog.Variant", "Quantum", %{}]
+       ],
+       "opts" => %{},
+       "title" => "Federated catalog probe",
+       "description" =>
+         "Runs \"Quantum\" across the Product and Variant (SKU) indices and shows the merged federation view. Per-schema relevance stays local — the merge order is a federation view, not a single ranking.",
+       "tags" => ["example", "multi-index", "federation"]
+     }},
+    {"Empty-result probe",
+     %{
+       "playbook_format" => 1,
+       "mode" => "search",
+       "schema" => "ScrypathEcommerce.Catalog.Product",
+       "q" => "zzzz-no-such-product",
+       "opts" => %{},
+       "title" => "Empty-result probe",
+       "description" =>
+         "A deliberately unmatched query so you can see the honest no-hits state and confirm the probe path runs even when nothing matches.",
+       "tags" => ["example", "empty-state"]
+     }}
+  ]
+
   @scenarios ~w(all_green degraded incident empty indexing_failure)
   @default_scenario "incident"
 
@@ -128,6 +172,8 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     {variant_count, failed_count, drift_status} =
       apply_scenario!(scenario, [showcase, ops, sparse], ops)
 
+    saved_search_count = seed_saved_searches!(scenario)
+
     Mix.shell().info("""
     Scrypath e-commerce demo seeded (scenario: #{scenario}).
 
@@ -143,6 +189,8 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     Operator signals (Ops Incident Lab):
       - Failed sync work: #{failed_count} jobs across transport/validation/backend/queue/unknown
       - Contract drift: #{drift_status}
+
+    Saved searches: #{saved_search_count} examples
 
     Open the storefront at / and OPSUI at /admin/search/ (Control Room).
     """)
@@ -193,6 +241,26 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     {variant_count, failed_count, drift_status}
   end
 
+  # empty: remove the bundled examples so Manage saved searches renders its empty state.
+  defp seed_saved_searches!("empty") do
+    Enum.each(@example_saved_searches, fn {name, _definition} ->
+      ScrypathOps.SavedSearches.delete(Repo, name)
+    end)
+
+    0
+  end
+
+  defp seed_saved_searches!(_scenario) do
+    Enum.each(@example_saved_searches, fn {name, definition} ->
+      case ScrypathOps.SavedSearches.save(Repo, name, definition) do
+        {:ok, _saved_search} -> :ok
+        {:error, reason} -> Mix.raise("demo saved search #{name} failed: #{inspect(reason)}")
+      end
+    end)
+
+    length(@example_saved_searches)
+  end
+
   defp preload_categories(products) do
     Repo.preload(products, :category, skip_tenant_id: true)
   end
@@ -212,7 +280,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
   end
 
   # Sync the SKU/Variant index so the allowlist holds >1 schema: Search health shows a second
-  # row, Search multi-index/federation lights up, and the federated playbook can run.
+  # row, Search multi-index/federation lights up, and the federated saved search can run.
   # e2e.prepare_search already prepared both Product and Variant indexes before seeding.
   # Variants are read back from the DB (the fixtures already persisted them) and synced
   # with `:product` preloaded so the denormalized product_name is searchable.

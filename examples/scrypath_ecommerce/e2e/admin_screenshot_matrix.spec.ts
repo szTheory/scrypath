@@ -29,6 +29,7 @@ import {
 } from "./helpers/theme-grid";
 import {
   drainSearchQueue,
+  openManageSavedSearches,
   seedScenario,
   waitForLiveConnected,
   waitForSearchVisible,
@@ -146,13 +147,13 @@ async function gotoFailedSync(page: Page): Promise<void> {
 }
 
 async function gotoSyncDrift(page: Page): Promise<void> {
-  await page.goto("/admin/search/sync-drift");
+  await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
   // Header Refresh starts the bounded asynchronous settings read (S3 loading
   // state), so the dimensions panel appears a render after the click — toBeVisible polls.
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
 }
 
 async function gotoSearch(page: Page): Promise<void> {
@@ -161,10 +162,9 @@ async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
-async function gotoPlaybooks(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
+// Saved searches live in Search; this opens its "Manage saved searches" sheet.
+async function gotoSavedSearches(page: Page): Promise<void> {
+  await openManageSavedSearches(page);
 }
 
 async function runSearch(page: Page, query: string): Promise<void> {
@@ -228,8 +228,8 @@ describeScenario("empty", [
   },
   {
     index: "09",
-    screen: "playbooks",
+    screen: "saved-searches",
     state: "empty-workspace",
-    prepare: gotoPlaybooks
+    prepare: gotoSavedSearches
   }
 ]);

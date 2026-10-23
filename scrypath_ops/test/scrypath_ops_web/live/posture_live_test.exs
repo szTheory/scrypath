@@ -443,7 +443,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              )
 
     assert inspect(updated_socket.redirected) =~
-             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+             "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA"
 
     refute Agent.get(:posture_live_test_state, & &1.swap_called)
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
@@ -466,7 +466,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              )
 
     assert inspect(updated_socket.redirected) =~
-             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+             "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA"
 
     assert Agent.get(:posture_live_test_state, & &1.swap_called) != true
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0
@@ -490,7 +490,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              )
 
     assert inspect(updated_socket.redirected) =~
-             "/ops/sync-drift?schema=ScrypathOps.Test.OpsPostA"
+             "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA"
 
     assert Agent.get(:posture_live_test_state, & &1.swap_called) != true
     assert Agent.get(:posture_live_test_state, & &1.tasks_calls) == 0

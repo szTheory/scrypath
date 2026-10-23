@@ -63,10 +63,11 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @operator_ia =~ "not a completed update"
   end
 
-  test "guide documents the current flat navigation and legacy route" do
+  test "guide documents the current flat navigation and legacy routes" do
     assert @operator_ia =~ "| Destination | Default route | Purpose |"
     assert @operator_ia =~ "/ops/posture"
-    assert @operator_ia =~ "Saved searches"
+    assert @operator_ia =~ "Manage saved searches"
+    refute @operator_ia =~ "| Saved searches |"
   end
 
   test "machine-readable nav JSON stays hidden from the rendered guide" do
@@ -80,26 +81,27 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
     assert @router =~ ~s(live("/health")
     assert @router =~ "live(\"/posture\", ScrypathOpsWeb.PostureLive, :legacy)"
     assert @router =~ ~s(live("/failed-sync")
-    assert @router =~ ~s(live("/sync-drift")
+    assert @router =~ ~s(live("/sync-and-index")
+    assert @router =~ "live(\"/sync-drift\", ScrypathOpsWeb.SyncDriftLive, :legacy)"
     assert @router =~ ~s(live("/search")
-    assert @router =~ ~s(live("/playbooks")
+    assert @router =~ "live(\"/playbooks\", ScrypathOpsWeb.SearchLive, :legacy_saved_searches)"
 
-    for path <- ~w(/ops/health /ops/failed-sync /ops/sync-drift /ops/search /ops/playbooks) do
+    for path <-
+          ~w(/ops/health /ops/failed-sync /ops/sync-and-index /ops/sync-drift /ops/search /ops/playbooks /ops/search?saved=manage) do
       assert String.contains?(@operator_ia, path),
              "expected operator-ia.md to mention #{path} for router parity (phase 47 D-07 / D-17)"
     end
   end
 
-  test "Nav.primary/0 exposes six ordered ops routes with canonical labels" do
+  test "Nav.primary/0 exposes five ordered ops routes with canonical labels" do
     items = Nav.primary()
-    assert length(items) == 6
+    assert length(items) == 5
 
     expected_path_strings = [
       "/ops/search",
       "/ops/health",
       "/ops/failed-sync",
-      "/ops/sync-drift",
-      "/ops/playbooks",
+      "/ops/sync-and-index",
       "/ops/help"
     ]
 
@@ -107,8 +109,7 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       "Search",
       "Search health",
       "Failed sync work",
-      "Sync and drift",
-      "Saved searches",
+      "Sync and index",
       "Help"
     ]
 
@@ -124,7 +125,8 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
       |> Enum.map(fn %{path: p} -> p |> to_string() end)
       |> MapSet.new()
 
-    for ops_path <- ops_live_paths(@router), ops_path not in ["/ops/", "/ops/posture"] do
+    for ops_path <- ops_live_paths(@router),
+        ops_path not in ["/ops/", "/ops/posture", "/ops/playbooks", "/ops/sync-drift"] do
       assert MapSet.member?(nav_path_strings, ops_path),
              "expected Nav.primary/0 to include #{inspect(ops_path)} for router :ops parity"
     end
@@ -132,10 +134,10 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
 
   test "incident handoffs use exact allowlisted schema identity and expose triage first" do
     assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", mod)"
-    assert @failed_sync_live =~ "def handle_params(params, _uri, socket)"
+    assert @failed_sync_live =~ "def handle_params(params, uri, socket)"
 
     assert @failed_sync_live =~
-             "OperatorSelection.path(@mount_path, \"sync-drift\", @selected_schema)"
+             "OperatorSelection.path(mount_path, \"sync-and-index\", mod)"
 
     assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
 
@@ -143,6 +145,6 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
              "OperatorSelection.path(@mount_path, \"health\", @selected_schema)"
 
     assert @failed_sync_live =~ "phx-click=\"retry\""
-    assert @failed_sync_live =~ "summary=\"Job details\""
+    assert @failed_sync_live =~ "summary=\"More details\""
   end
 end

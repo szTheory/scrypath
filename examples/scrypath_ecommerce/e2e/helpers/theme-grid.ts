@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-import { waitForLiveConnected, type SeedScenario } from "./e2e";
+import { openManageSavedSearches, waitForLiveConnected, type SeedScenario } from "./e2e";
 
 export type ThemeMode =
   | { kind: "explicit"; theme: "light" | "dark" }
@@ -62,11 +62,11 @@ export async function gotoFailedSync(page: Page): Promise<void> {
 }
 
 export async function gotoSyncDrift(page: Page): Promise<void> {
-  await page.goto("/admin/search/sync-drift");
+  await page.goto("/admin/search/sync-and-index");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
 }
 
 export async function gotoSearch(page: Page): Promise<void> {
@@ -75,10 +75,9 @@ export async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
-export async function gotoPlaybooks(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
+// Saved searches live in Search; this opens its "Manage saved searches" sheet.
+export async function gotoSavedSearches(page: Page): Promise<void> {
+  await openManageSavedSearches(page);
 }
 
 export async function runSearch(page: Page, query: string): Promise<void> {
@@ -157,15 +156,15 @@ export const SCENARIO_CAPTURES: Record<SeedScenario, ScreenCapture[]> = {
     },
     {
       index: "09",
-      screen: "playbooks",
+      screen: "saved-searches",
       state: "empty-workspace",
-      prepare: gotoPlaybooks
+      prepare: gotoSavedSearches
     },
     {
       index: "12",
-      screen: "playbooks",
+      screen: "saved-searches",
       state: "populated",
-      prepare: gotoPlaybooks
+      prepare: gotoSavedSearches
     }
   ],
   degraded: [],

@@ -201,7 +201,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               title="Check sync and settings"
               summary="See pending work and compare your declared settings with Meilisearch."
               route_label="Check sync and settings"
-              navigate={"#{@mount_path}/sync-drift"}
+              navigate={"#{@mount_path}/sync-and-index"}
               data-testid="control-room-verify-change"
             />
           </div>

@@ -10,9 +10,8 @@ defmodule ScrypathOpsWeb.Live.OnMount do
   @ops_child_route_suffixes %{
     ScrypathOpsWeb.PostureLive => "/health",
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
-    ScrypathOpsWeb.SyncDriftLive => "/sync-drift",
+    ScrypathOpsWeb.SyncDriftLive => "/sync-and-index",
     ScrypathOpsWeb.SearchLive => "/search",
-    ScrypathOpsWeb.PlaybookLive => "/playbooks",
     ScrypathOpsWeb.HelpLive => "/help"
   }
 
@@ -20,12 +19,14 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     opts = Map.get(session, "scrypath_ops_opts", [])
 
     repo = Keyword.get(opts, :repo)
+    prefix = Keyword.get(opts, :prefix)
     mount_path = Keyword.get(opts, :mount_path, "/ops")
 
     socket =
       socket
       |> assign(:shell, :ops)
       |> assign(:scrypath_repo, repo)
+      |> assign(:scrypath_ops_prefix, prefix)
       |> assign(:mount_path, mount_path)
       |> attach_hook(:scrypath_ops_mount_path, :handle_params, fn _params, uri, socket ->
         mount_path = derive_mount_path(uri, socket.view, socket.assigns.mount_path)
