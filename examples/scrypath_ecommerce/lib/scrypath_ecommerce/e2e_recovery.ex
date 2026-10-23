@@ -318,7 +318,7 @@ defmodule ScrypathEcommerce.E2ERecovery do
   # The expected effect is the current projection of the source row, because the
   # retried job loads current records instead of replaying stored data.
   defp recovery_expected!(source) do
-    [variant] = Variant.search_records(source.document_ids, %{repo: Repo})
+    [variant] = Variant.search_records(source.document_ids, %{})
     document = Scrypath.Projection.document(Variant, variant)
     %{"id" => document.id, "data" => stringify_keys(document.data)}
   end

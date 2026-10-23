@@ -36,9 +36,9 @@ defmodule ScrypathEcommerce.Catalog.Product do
   scope explicitly: the ids come from Scrypath's own jobs, and each document
   carries its row's `tenant_id` through `tenant_field`.
   """
-  def search_records(ids, %{repo: repo}) do
+  def search_records(ids, _context) do
     from(product in __MODULE__, where: product.id in ^ids, preload: :category)
-    |> repo.all(skip_tenant_id: true)
+    |> ScrypathEcommerce.Repo.all(skip_tenant_id: true)
   end
 
   @doc false

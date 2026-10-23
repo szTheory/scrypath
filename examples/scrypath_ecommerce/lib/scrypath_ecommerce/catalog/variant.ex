@@ -25,9 +25,9 @@ defmodule ScrypathEcommerce.Catalog.Variant do
 
   See `ScrypathEcommerce.Catalog.Product.search_records/2` for the tenant scope.
   """
-  def search_records(ids, %{repo: repo}) do
+  def search_records(ids, _context) do
     from(variant in __MODULE__, where: variant.id in ^ids, preload: :product)
-    |> repo.all(skip_tenant_id: true)
+    |> ScrypathEcommerce.Repo.all(skip_tenant_id: true)
   end
 
   @doc false
