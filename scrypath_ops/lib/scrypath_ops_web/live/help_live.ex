@@ -129,7 +129,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           >
             <h3 id="recovery-title">Recover from a sync failure</h3>
             <p>
-              Choose the affected schema in Failed sync work. Read the error and fix its cause before using an eligible Retry action. Retrying jobs can already have an automatic retry scheduled.
+              Failed sync work lists sync work that didn't reach Meilisearch for every schema; filter by schema or cause to narrow it. Retry queues the same records again and sends their current data, so fix invalid data first. Retrying items will run again automatically.
             </p>
             <p>
               After Retry is queued, follow Check sync status to track that operation and its expected document effect. Acceptance alone does not confirm recovery.

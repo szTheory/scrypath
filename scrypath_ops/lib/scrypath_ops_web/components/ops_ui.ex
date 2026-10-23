@@ -191,7 +191,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:rest, :global,
     include:
-      ~w(phx-click phx-hook phx-value-id phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
+      ~w(phx-click phx-hook phx-value-id phx-value-source phx-value-mode phx-value-name phx-value-schema phx-disable-with disabled form data-testid data-ops-refresh data-ops-refresh-eligible data-ops-modal-trigger aria-label aria-controls)
   )
 
   slot(:inner_block, required: true)
@@ -492,6 +492,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   )
 
   attr(:headline, :string, required: true)
+  attr(:headline_id, :string, default: nil, doc: "id for labelling the surrounding section")
   attr(:label, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -516,7 +517,10 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             {@label}
           </p>
-          <p class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content">
+          <p
+            id={@headline_id}
+            class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content"
+          >
             <span
               class={["ops-verdict__icon", verdict_icon_class(@kind)]}
               data-testid="ops-verdict-icon"
@@ -1396,11 +1400,28 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:copy, :boolean, default: false)
   attr(:copy_label, :string, default: "Copy payload")
   attr(:copy_success, :string, default: "Payload copied")
+
+  attr(:inline_copy, :boolean,
+    default: false,
+    doc: "Place Copy beside a short value instead of reserving a row above it."
+  )
+
+  attr(:clamp, :boolean,
+    default: false,
+    doc: "Show the first few lines with a Show all toggle; pass `id` with it."
+  )
+
+  attr(:id, :string, default: nil)
   slot(:inner_block)
 
   def ops_code_block(assigns) do
     ~H"""
-    <div class={["ops-code-block", @copy && @text && "ops-code-block--copyable"]}>
+    <div class={[
+      "ops-code-block",
+      @copy && @text && "ops-code-block--copyable",
+      @inline_copy && "ops-code-block--inline-copy",
+      @clamp && "ops-code-block--clamp"
+    ]}>
       <div :if={@copy && @text} class="ops-code-toolbar">
         <button
           type="button"
@@ -1413,6 +1434,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         </button>
       </div>
       <pre
+        id={@id}
         tabindex="0"
         role="region"
         aria-label={@label}
@@ -1426,6 +1448,20 @@ defmodule ScrypathOpsWeb.OpsUi do
         ]}
         {@rest}
       >{if is_nil(@text), do: render_slot(@inner_block), else: @text}</pre>
+      <button
+        :if={@clamp}
+        type="button"
+        class="ops-code-expand"
+        aria-expanded="false"
+        aria-controls={@id}
+        phx-click={
+          JS.toggle_class("ops-code-block--expanded", to: {:closest, ".ops-code-block"})
+          |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+        }
+      >
+        <span class="ops-code-expand__more">Show all</span>
+        <span class="ops-code-expand__less">Show less</span>
+      </button>
     </div>
     """
   end

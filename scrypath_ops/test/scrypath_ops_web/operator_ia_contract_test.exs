@@ -134,10 +134,10 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
 
   test "incident handoffs use exact allowlisted schema identity and expose triage first" do
     assert @posture_live =~ "OperatorSelection.path(@mount_path, \"failed-sync\", mod)"
-    assert @failed_sync_live =~ "def handle_params(params, _uri, socket)"
+    assert @failed_sync_live =~ "def handle_params(params, uri, socket)"
 
     assert @failed_sync_live =~
-             "OperatorSelection.path(@mount_path, \"sync-and-index\", @selected_schema)"
+             "OperatorSelection.path(mount_path, \"sync-and-index\", mod)"
 
     assert @sync_drift_live =~ "def handle_params(params, _uri, socket)"
 
@@ -145,6 +145,6 @@ defmodule ScrypathOpsWeb.OperatorIaContractTest do
              "OperatorSelection.path(@mount_path, \"health\", @selected_schema)"
 
     assert @failed_sync_live =~ "phx-click=\"retry\""
-    assert @failed_sync_live =~ "summary=\"Job details\""
+    assert @failed_sync_live =~ "summary=\"More details\""
   end
 end
