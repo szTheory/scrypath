@@ -227,3 +227,10 @@ Recorded for one batched pass after PR #107 (`427dd1ab`); nothing below is imple
 - **Q11 → superseded: ARCH-01 reversed.** Saved searches move to a database table now; there is no “saving isn't set up” state. SEED-003 promoted.
 - **Q12 → compact list rows** on Failed sync (facts on one line, copyable error block, outline Retry on the right, secondary details behind a toggle).
 - **Q13 → Retry stays available for data errors**, with cause-specific guidance; after the retry fix it sends the current record.
+
+### Decisions — 2026-10-22 grilling round 3 (saved-search storage)
+
+- **Q14 → Oban-style versioned migration.** `ScrypathOps.Migration.up/down(version: 1)` called from a one-line host migration; documented snippet, no generator for now.
+- **Q15 → table `scrypath_ops_saved_searches`** (id, unique `name`, `schema`, `definition` jsonb holding the v1 saved-search map, timestamps) in the host Repo's default schema, with an optional `prefix:`. No per-user ownership.
+- **Q16 → file storage removed.** No `playbook_workspace_dir`, read-only examples mode or folder display. JSON import/export stays. The maintainer's `my-search.json` stays untouched on disk and is imported once through Import after the new UI ships.
+- **Q17 → retire “playbook” everywhere**: modules, mix task (`scrypath_ops.saved_searches.validate`), guides and example fixtures. Import still accepts existing v1 JSON.
