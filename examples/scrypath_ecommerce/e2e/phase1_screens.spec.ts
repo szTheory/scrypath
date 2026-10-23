@@ -66,8 +66,8 @@ test("search", async ({ page }, testInfo) => {
 });
 
 test("saved-searches", async ({ page }, testInfo) => {
-  await page.goto("/admin/search/playbooks");
-  await page.getByRole("heading", { name: "Saved searches", exact: true }).waitFor();
+  await page.goto("/admin/search/search?saved=manage");
+  await page.getByRole("dialog", { name: "Manage saved searches" }).waitFor();
   await page.waitForTimeout(300);
   await capture(page, testInfo, "07-saved-searches");
 });

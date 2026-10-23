@@ -19,7 +19,6 @@ import {
   assertSystemDarkInvariants,
   gotoControlRoom,
   gotoFailedSync,
-  gotoSavedSearches,
   gotoSearchHealth,
   gotoSearch,
   gotoSyncDrift,
@@ -53,8 +52,7 @@ const SHELL_SURFACES: ShellSurface[] = [
   { name: "Search health", prepare: gotoSearchHealth },
   { name: "Failed Sync", prepare: gotoFailedSync },
   { name: "Sync/Drift", prepare: gotoSyncDrift },
-  { name: "Search", prepare: gotoSearch },
-  { name: "Saved searches", prepare: gotoSavedSearches }
+  { name: "Search", prepare: gotoSearch }
 ];
 
 const PROBE_STYLE = `

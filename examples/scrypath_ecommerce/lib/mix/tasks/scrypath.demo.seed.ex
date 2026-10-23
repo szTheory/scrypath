@@ -241,7 +241,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
     {variant_count, failed_count, drift_status}
   end
 
-  # empty: remove the bundled examples so Saved searches renders its empty state.
+  # empty: remove the bundled examples so Manage saved searches renders its empty state.
   defp seed_saved_searches!("empty") do
     Enum.each(@example_saved_searches, fn {name, _definition} ->
       ScrypathOps.SavedSearches.delete(Repo, name)

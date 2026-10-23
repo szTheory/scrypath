@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Locator, type Page } from "@playwright/test";
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
@@ -522,4 +522,42 @@ export async function deleteSavedSearches(
   });
 
   return result.deleted;
+}
+
+/**
+ * Saved searches live inside Search. `/search?saved=manage` (and the old `/playbooks`
+ * URL, which redirects there) opens the "Manage saved searches" sheet.
+ */
+export const MANAGE_SAVED_SEARCHES_PATH = "/admin/search/search?saved=manage";
+
+export async function openManageSavedSearches(page: Page): Promise<Locator> {
+  await page.goto(MANAGE_SAVED_SEARCHES_PATH);
+  await waitForLiveConnected(page);
+  const sheet = page.getByRole("dialog", { name: "Manage saved searches" });
+  await expect(sheet).toBeVisible();
+  return sheet;
+}
+
+/** Opens the Search toolbar's "Saved searches" menu and picks `name`, which runs it. */
+export async function pickSavedSearch(page: Page, name: string): Promise<void> {
+  await page.locator("#saved-search-picker-button").click();
+  const menu = page.locator("#saved-search-menu");
+  await expect(menu).toBeVisible();
+  await menu.locator(".ops-saved-search-menu__item", { hasText: name }).first().click();
+  await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${name}”`);
+}
+
+/** Saves the current Search form inputs under `name` through the Save search dialog. */
+export async function saveCurrentSearch(page: Page, name: string): Promise<void> {
+  await page.locator("#search-save-new, #search-save-as").first().click();
+  const dialog = page.getByRole("dialog", { name: /^Save (search|as)$/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Name").fill(name);
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${name}”`);
+}
+
+/** DOM id suffix used for a saved search's rows and actions (Base64url, no padding). */
+export function savedSearchDomId(name: string): string {
+  return Buffer.from(name, "utf8").toString("base64url");
 }

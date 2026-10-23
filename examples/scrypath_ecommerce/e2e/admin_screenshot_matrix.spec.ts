@@ -29,6 +29,7 @@ import {
 } from "./helpers/theme-grid";
 import {
   drainSearchQueue,
+  openManageSavedSearches,
   seedScenario,
   waitForLiveConnected,
   waitForSearchVisible,
@@ -161,10 +162,9 @@ async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
+// Saved searches live in Search; this opens its "Manage saved searches" sheet.
 async function gotoSavedSearches(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
+  await openManageSavedSearches(page);
 }
 
 async function runSearch(page: Page, query: string): Promise<void> {

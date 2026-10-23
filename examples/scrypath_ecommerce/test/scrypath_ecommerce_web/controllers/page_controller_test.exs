@@ -65,10 +65,13 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
            /admin/search/failed-sync
            /admin/search/sync-drift
            /admin/search/search
-           /admin/search/playbooks
+           /admin/search/search?saved=manage
          ) do
       assert html =~ ~s(href="#{path}")
     end
+
+    # Saved searches live inside Search now; old /playbooks links only redirect.
+    refute html =~ ~s(href="/admin/search/playbooks")
 
     refute html =~ ~s(href="/admin")
     refute html =~ ~s(href="/admin/posture")

@@ -40,6 +40,7 @@ import path from "node:path";
 
 import {
   drainSearchQueue,
+  pickSavedSearch,
   seedScenario,
   waitForLiveConnected,
   waitForSearchVisible
@@ -102,12 +103,6 @@ async function gotoSearch(page: Page): Promise<void> {
   await page.goto("/admin/search/search");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
-}
-
-async function gotoSavedSearches(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
 }
 
 // Switch the Search playground into multi-index mode. This is a `push_patch`
@@ -312,10 +307,10 @@ test.describe("admin path motion — DARKMOTION-01", () => {
     });
   }
 
-  // 3 + 4: Active Saved search item .ops-object-item-active moves on A→B selection with no
-  // replayed reveal (patch-refire probe), dark AND light.
+  // 3 + 4: The loaded saved search marker (.ops-saved-search-row--loaded in the Manage
+  // sheet) moves on A→B selection with no replayed reveal (patch-refire probe), dark AND light.
   for (const theme of INTERACTIVE_THEMES) {
-    test(`saved searches: active-item glow moves A->B with no patch-refire (${theme})`, async ({
+    test(`saved searches: loaded marker moves A->B with no patch-refire (${theme})`, async ({
       browser,
       request
     }) => {
@@ -323,46 +318,35 @@ test.describe("admin path motion — DARKMOTION-01", () => {
 
       const { page, close } = await newThemedPage(browser, theme);
       try {
-        await gotoSavedSearches(page);
+        await gotoSearch(page);
+        await waitForLiveConnected(page);
 
-        // The catalog list renders selectable saved search rows; each row's "Preview"
-        // button selects that saved search (phx-click="load"), which re-renders the list with
-        // the chosen row carrying .ops-object-item-active. (Use the exact "Preview"
-        // name — a substring "Load" also matches the unrelated "Reload saved searches" button.)
-        // Need at least two catalog entries to move A->B.
-        const loadButtons = page.getByRole("button", { name: "Preview" });
-        const count = await loadButtons.count();
+        // Picking a saved search from the toolbar menu fills the form and runs it; the
+        // Manage sheet then marks that row as loaded. Need two saved searches to move A->B.
+        await page.locator("#saved-search-picker-button").click();
+        const items = page.locator("#saved-search-menu .ops-saved-search-menu__item");
+        const count = await items.count();
         test.skip(count < 2, "needs >= 2 catalog saved searches to exercise A->B selection");
+        const names = [
+          (await items.nth(0).locator(".ops-saved-search-menu__name").textContent())!.trim(),
+          (await items.nth(1).locator(".ops-saved-search-menu__name").textContent())!.trim()
+        ];
+        await page.keyboard.press("Escape");
 
-        // Select saved search A — exactly one row becomes active.
-        await loadButtons.nth(0).click();
-        await expect(page.locator(".ops-object-item-active")).toHaveCount(1);
-        // Functional integrity: the active glow anchor is patch-safe (data-driven server
-        // state class), so it carries no running animation.
-        expect(
-          await runningKeyframeAnimationCount(page, ".ops-object-item-active"),
-          "running animations on active saved search item A"
-        ).toBe(0);
-
-        // Dark expression present / light unchanged on the active-path anchor (D-02): the
-        // active-item glow carries --shadow-ops-glow only in dark/system-dark. Deterministic
-        // proof of the same "no spurious glow in light" claim that was a human read. The
-        // active class is present before its box-shadow transition settles, so poll the
-        // computed end-state instead of sampling a single transition frame.
-        await expectGlowSettled(page, ".ops-object-item-active", theme);
-
-        await snap(page, `saved-search-active-A--${theme}`);
-
-        // Select saved search B — the active marker moves (push_patch re-render). Assert no
-        // replayed reveal: still exactly one active item, and zero running animations on it.
-        await loadButtons.nth(1).click();
-        await expect(page.locator(".ops-object-item-active")).toHaveCount(1);
-        expect(
-          await runningKeyframeAnimationCount(page, ".ops-object-item-active"),
-          "running animations on active saved search item after A->B patch"
-        ).toBe(0);
-
-        await snap(page, `saved-search-active-B--${theme}`);
+        for (const [index, name] of names.entries()) {
+          await pickSavedSearch(page, name);
+          await page.locator("#saved-search-manage-open").click();
+          const loaded = page.locator(".ops-saved-search-row--loaded");
+          await expect(loaded).toHaveCount(1);
+          await expect(loaded).toContainText(name);
+          expect(
+            await runningKeyframeAnimationCount(page, ".ops-saved-search-row--loaded"),
+            `running animations on loaded saved search ${index === 0 ? "A" : "B"}`
+          ).toBe(0);
+          await snap(page, `saved-search-loaded-${index === 0 ? "A" : "B"}--${theme}`);
+          await page.keyboard.press("Escape");
+          await expect(page.locator("#saved-search-manage")).toHaveCount(0);
+        }
       } finally {
         await close();
       }

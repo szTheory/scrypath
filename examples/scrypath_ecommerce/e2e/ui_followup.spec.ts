@@ -44,8 +44,9 @@ test("task help stays within the installed mount and explains saved inputs", asy
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", {level: 1})).toHaveText("Help");
   await expect(page.locator(".ops-nav-help a").first()).toHaveAttribute("aria-current", "page");
-  await expect(page.locator("#saved-searches")).toContainText("JSON files in a folder on this server");
-  await expect(page.getByRole("link", {name: "Open Saved searches", exact: true})).toHaveAttribute("href", "/admin/search/playbooks");
+  await expect(page.locator("#saved-searches")).toContainText("not the results");
+  await expect(page.locator("#saved-searches")).not.toContainText("folder");
+  await expect(page.getByRole("link", {name: "Manage saved searches", exact: true})).toHaveAttribute("href", "/admin/search/search?saved=manage");
   await expect(page.locator("#ranking")).toContainText("not directly comparable");
   await page.getByRole("link", {name: "Open Search", exact: true}).click();
   await expect(page.getByLabel("Search text")).toBeVisible();
@@ -91,7 +92,7 @@ test("readable results retain submitted criteria, copy exact data and lead to th
   const run = await attribution.getAttribute("data-run-id");
   const firstHit = page.locator(".ops-readable-hit").first();
   await expect(firstHit.locator(".ops-hit-description")).toBeVisible();
-  const save = page.locator("#search-save-toggle");
+  const save = page.locator("#search-save-new");
   expect((await save.boundingBox())!.y).toBeLessThan((await firstHit.boundingBox())!.y);
   await firstHit.getByText("Raw hit payload", {exact: true}).click();
   const raw = await firstHit.locator("pre").textContent();
@@ -107,26 +108,23 @@ test("readable results retain submitted criteria, copy exact data and lead to th
   await expect(attribution).toBeVisible();
   await expect(attribution).toContainText("quantum");
   await expect(attribution).toHaveAttribute("data-run-id", run!);
-  await expect(save).toBeDisabled();
+  // Save search keeps the inputs in the form (the edited draft), not the last run.
   await page.getByLabel("Search text").fill("quantum");
-  await expect(save).toBeEnabled();
   await save.click();
-  await expect(page.locator("#capture_title")).toBeFocused();
-  await expect(page.locator("#search-capture-form-panel")).toContainText("Saved searches on this server");
-  await page.getByText("Saved search JSON", {exact: true}).click();
-  const json = await page.getByTestId("search-capture-preview-pre").textContent();
-  expect(json?.startsWith("{")).toBeTruthy();
-  expect(JSON.parse(json!).q).toBe("quantum");
-  await page.getByRole("button", {name: "Copy saved search JSON"}).click();
-  expect(await page.evaluate(() => (window as any).copied)).toEqual([raw, json]);
-  await page.locator("#ops-client-toast").getByRole("button", {name: "Close notification"}).click();
-  const filename = `ui-followup-${Date.now()}.json`;
-  await page.locator("#capture_title").fill("A reusable query");
-  await page.locator("#capture_basename").fill(filename);
-  await page.locator("#search-capture-form button[type=submit]").click();
-  await expect(page.getByTestId("search-saved-handoff")).toBeVisible();
-  await page.getByTestId("search-saved-handoff").click();
-  await expect(page.locator(".ops-object-item").filter({hasText: filename})).toBeVisible();
+  const dialog = page.getByRole("dialog", {name: "Save search"});
+  await expect(dialog.getByLabel("Name", {exact: true})).toBeFocused();
+  await expect(dialog).toContainText("not the results");
+  const name = `ui-followup-${Date.now()}`;
+  await dialog.getByLabel("Name", {exact: true}).fill(name);
+  await dialog.getByRole("button", {name: "Save", exact: true}).click();
+  await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${name}”`);
+  await page.locator("#saved-search-manage-open").click();
+  const sheet = page.getByRole("dialog", {name: "Manage saved searches"});
+  const row = sheet.locator(".ops-saved-search-row").filter({hasText: name});
+  await expect(row).toBeVisible();
+  const href = await row.getByRole("link", {name: `Export ${name}`}).getAttribute("href");
+  const exported = JSON.parse(decodeURIComponent(href!.replace("data:application/json;charset=utf-8,", "")));
+  expect(exported.q).toBe("quantum");
 });
 
 test("multi-schema result limit applies to the combined response and help is local", async ({page, request}) => {

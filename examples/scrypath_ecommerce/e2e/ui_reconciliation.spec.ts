@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { waitForLiveConnected } from "./helpers/e2e";
+import { openManageSavedSearches, waitForLiveConnected } from "./helpers/e2e";
 
 // Observation-only regression proof. Never seed or submit recovery/file actions here.
 const routes = ["/admin/search/failed-sync", "/admin/search/sync-drift", "/admin/search/search"];
@@ -64,30 +64,26 @@ for (const theme of ["light", "dark", "system"] as const) {
         if (value === "system") localStorage.removeItem("phx:theme");
         else localStorage.setItem("phx:theme", value);
       }, theme);
-      for (const route of ["/admin/search/", "/admin/search/health", ...routes, "/admin/search/playbooks"]) {
+      for (const route of ["/admin/search/", "/admin/search/health", ...routes]) {
         await page.goto(route);
         await waitForLiveConnected(page);
         await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
         await expect(page.getByText("Operator workspace", { exact: true })).toHaveCount(0);
       }
-      const row = page.locator(".ops-object-item").first();
+      // Saved-search actions live in Search's Manage sheet as plain, unframed rows.
+      const sheet = await openManageSavedSearches(page);
+      const row = sheet.locator(".ops-saved-search-row").first();
       await expect(row).toBeVisible();
       expect(await row.evaluate((node) => Boolean(node.closest(".ops-panel")))).toBe(false);
-      const disclosure = row.getByTestId("saved-search-manage-actions");
-      const framing = await disclosure.evaluate((node) => {
+      const actions = row.locator(".ops-saved-search-row__actions");
+      const framing = await actions.evaluate((node) => {
         const style = getComputedStyle(node);
         return { border: style.borderTopWidth, background: style.backgroundColor };
       });
       expect(framing).toEqual({ border: "0px", background: "rgba(0, 0, 0, 0)" });
-      for (const action of await row.locator(".ops-action-group").all()) {
-        expect(await action.evaluate((node) => getComputedStyle(node).borderTopWidth)).toBe("0px");
-        expect(await action.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
+      for (const name of [/^Load /, /^Rename /, /^Export /, /^Delete /]) {
+        await expect(actions.getByRole(name.source.startsWith("^Export") ? "link" : "button", { name })).toBeVisible();
       }
-      await disclosure.locator("summary").click();
-      await expect(disclosure).toHaveAttribute("open", "");
-      await expect(disclosure.getByRole("button", { name: /Duplicate/ })).toBeVisible();
-      await expect(disclosure.getByRole("button", { name: /Rename/ })).toBeVisible();
-      await expect(disclosure.getByRole("button", { name: /Delete/ })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     });
   }

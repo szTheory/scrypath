@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-import { waitForLiveConnected, type SeedScenario } from "./e2e";
+import { openManageSavedSearches, waitForLiveConnected, type SeedScenario } from "./e2e";
 
 export type ThemeMode =
   | { kind: "explicit"; theme: "light" | "dark" }
@@ -75,10 +75,9 @@ export async function gotoSearch(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: "Search", exact: true })).toBeVisible();
 }
 
+// Saved searches live in Search; this opens its "Manage saved searches" sheet.
 export async function gotoSavedSearches(page: Page): Promise<void> {
-  await page.goto("/admin/search/playbooks");
-  await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Saved searches", exact: true })).toBeVisible();
+  await openManageSavedSearches(page);
 }
 
 export async function runSearch(page: Page, query: string): Promise<void> {

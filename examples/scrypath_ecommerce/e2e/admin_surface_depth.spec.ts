@@ -20,7 +20,11 @@ import {
   drainSearchQueue,
   getSavedSearch,
   listSavedSearches,
+  openManageSavedSearches,
+  pickSavedSearch,
   putSavedSearch,
+  saveCurrentSearch,
+  savedSearchDomId,
   seedScenario,
   waitForSearchVisible,
   type SeedScenario
@@ -29,7 +33,6 @@ import {
   assertSystemDarkInvariants,
   gotoControlRoom,
   gotoFailedSync,
-  gotoSavedSearches,
   gotoSearchHealth,
   gotoSearch,
   SCENARIO_CAPTURES,
@@ -49,6 +52,16 @@ const FLAT_SURFACE_DELTA_FLOOR = 0.011;
 const DK13_ROW_BORDER_TRIGGER = 1.2;
 // Saved search names are limited to 120 characters; this one is rejected on rename.
 const TOO_LONG_NAME = "n".repeat(121);
+
+const SAVED_SEARCH_VIEWPORTS = [
+  { width: 1440, height: 900 },
+  { width: 768, height: 900 },
+  { width: 390, height: 844 }
+];
+const SAVED_SEARCH_THEMES: ThemeMode[] = [
+  { kind: "explicit", theme: "light" },
+  { kind: "explicit", theme: "dark" }
+];
 
 const DARK_THEME_MODES = THEME_MODES.filter(
   (mode) => (mode.kind === "explicit" && mode.theme === "dark") || mode.kind === "system"
@@ -391,10 +404,7 @@ async function expectSavedSearchDocumentToFit(page: Page): Promise<void> {
   ).toBeLessThanOrEqual(widths.viewport);
 }
 
-function savedSearchDomId(name: string): string {
-  return Buffer.from(name).toString("base64url");
-}
-
+// Saves the current Search inputs, then opens the toolbar's Saved searches menu.
 async function preparePopulatedSavedSearches(page: Page): Promise<void> {
   await gotoSearch(page);
   const query = page.getByLabel("Search text");
@@ -405,27 +415,12 @@ async function preparePopulatedSavedSearches(page: Page): Promise<void> {
   const submitted = page.locator("#search-run-attribution");
   await expect(submitted).toHaveAttribute("data-mode", "single");
   await expect(submitted).toHaveAttribute("data-schemas", JSON.stringify(["ScrypathEcommerce.Catalog.Product"]));
-  await expect(submitted).toContainText("quantum");
   await expect(submitted).toHaveAttribute("data-limit", "15");
-  await expect(page.locator("#search-results-heading")).toBeVisible();
   await expect(page.locator(".ops-readable-hit").first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "Run current search" })).toHaveCount(0);
 
-  await query.fill("a later query edit");
-  await expect(submitted).toContainText("quantum");
-  await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
-
-  await expect(page.locator("#search-save-toggle")).toBeDisabled();
-  await query.fill("quantum");
-  await expect(page.locator("#search-save-toggle")).toBeEnabled();
-  const basename = `surface-depth-${Date.now()}.json`;
-  await page.getByRole("button", { name: "Save search" }).click();
-  await page.getByLabel("Name", { exact: true }).fill(basename);
-  await page.locator("#search-capture-form button[type=submit]").click();
-  await expect(page.getByText(new RegExp(`Saved search ${basename.replace(".", "\\.")}`))).toBeVisible();
-
-  await gotoSavedSearches(page);
-  await expect(page.locator(".ops-object-item").first()).toBeVisible();
+  await saveCurrentSearch(page, `surface-depth-${Date.now()}`);
+  await page.locator("#saved-search-picker-button").click();
+  await expect(page.locator("#saved-search-menu .ops-saved-search-menu__item").first()).toBeVisible();
 }
 
 async function seedAndMaybeConfirmSearch(request: APIRequestContext, scenario: SeedScenario) {
@@ -487,16 +482,16 @@ const DEPTH_TARGETS: DepthTarget[] = [
     selectors: [".ops-panel", "#index-promotion"]
   },
   {
-    id: "saved-searches-workspace",
+    id: "saved-searches-manage-sheet",
     scenario: "empty",
     captureIndex: "09",
-    selectors: [".ops-object-item"]
+    selectors: [".ops-sheet__panel"]
   },
   {
-    id: "saved-searches-populated",
+    id: "saved-searches-menu",
     scenario: "all_green",
     captureIndex: "12",
-    selectors: [".ops-object-item"],
+    selectors: [".ops-saved-search-menu"],
     prepare: preparePopulatedSavedSearches
   }
 ];
@@ -565,13 +560,12 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 await expectRaisedAboveFloor(page, "#index-promotion .ops-notice-surface", "promotion eligibility notice");
                 break;
               }
-              case "saved-searches-workspace":
-                await expectPrimaryHover55(page, ".ops-object-item", "saved searches object item");
+              case "saved-searches-manage-sheet":
+                await expectRaisedAboveFloor(page, ".ops-sheet__panel", "manage saved searches sheet");
                 break;
-              case "saved-searches-populated": {
-                await expectPrimaryHover55(page, ".ops-object-item", "saved search object item");
+              case "saved-searches-menu":
+                await expectRaisedAboveFloor(page, ".ops-saved-search-menu", "saved searches menu");
                 break;
-              }
             }
           } finally {
             await close();
@@ -646,7 +640,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
     }
   });
 
-  test("zero-hit Search capture rejects collisions, saves criteria and reflows across themes and widths", async ({
+  test("zero-hit Search save rejects collisions, saves criteria and reflows across themes and widths", async ({
     browser,
     request
   }) => {
@@ -655,20 +649,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
     const evidenceDir = process.env.PHASE176_VISUAL_EVIDENCE_DIR;
     if (evidenceDir) mkdirSync(evidenceDir, { recursive: true });
 
-    const viewports = [
-      { width: 1440, height: 900 },
-      { width: 390, height: 844 },
-      { width: 768, height: 900 }
-    ];
-    const themes: ThemeMode[] = [
-      { kind: "explicit", theme: "light" },
-      { kind: "explicit", theme: "dark" }
-    ];
-
-    for (const mode of themes) {
-      for (const viewport of viewports) {
+    for (const mode of SAVED_SEARCH_THEMES) {
+      for (const viewport of SAVED_SEARCH_VIEWPORTS) {
         const { page, close } = await newThemedPage(browser, mode, viewport);
-        const captureName = `search-capture-${themeSlug(mode)}-${viewport.width}`;
+        const captureName = `search-save-${themeSlug(mode)}-${viewport.width}`;
 
         try {
           await gotoSearch(page);
@@ -679,24 +663,17 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           await queryInput.press("Enter");
           await expect(page.locator("#search-results-heading")).toBeVisible();
           await expect(page.getByText("No matching documents", { exact: true })).toBeVisible();
-          await expect(page.getByRole("button", { name: "Save search" })).toBeVisible();
-          await page.getByRole("button", { name: "Save search" }).click();
+          await page.locator("#search-save-new").click();
 
-          const captureForm = page.locator("#search-capture-form");
-          await expect(captureForm).toBeVisible();
-          await expect(page.locator("#search-capture-json")).not.toHaveAttribute("open", "");
-          await expect(
-            page.getByText("Choose a new name. Existing saved searches are kept.")
-          ).toBeVisible();
+          const dialog = page.getByRole("dialog", { name: "Save search" });
+          const name = dialog.getByLabel("Name", { exact: true });
+          await expect(dialog).toBeVisible();
+          await expect(name).toBeFocused();
+          await expect(dialog.getByText("Names are unique.", { exact: false })).toBeVisible();
           await expectSearchDocumentToFit(page);
 
           if (evidenceDir) {
-            await queryInput.blur();
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({
-              path: join(evidenceDir, `${captureName}-form.png`),
-              fullPage: true
-            });
+            await page.screenshot({ path: join(evidenceDir, `${captureName}-dialog.png`), fullPage: true });
           }
 
           const occupied = (await listSavedSearches(request)).find(
@@ -705,52 +682,43 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
           expect(occupied, "the seeded E2E demo should include an example saved search").toBeTruthy();
           const occupiedName = occupied!.name;
 
-          await page.getByLabel("Name", { exact: true }).fill(occupiedName!);
-          await page.getByLabel("Search title").fill("A long but optional zero-hit search title for responsive coverage");
-          await page.getByLabel("Description").fill("Criteria-only capture from an eligible zero-hit Search response; this description remains available after a rejected collision.");
-          await page.locator("#search-capture-form button[type=submit]").click();
+          await name.fill(occupiedName);
+          await dialog.getByRole("button", { name: "Save", exact: true }).click();
 
-          const captureError = page.locator("#capture_basename-error");
-          await expect(captureError).toContainText("That name is already in use. Choose another.");
-          await expect(page.getByLabel("Name", { exact: true })).toHaveValue(occupiedName!);
-          await expect(page.getByLabel("Search title")).toHaveValue("A long but optional zero-hit search title for responsive coverage");
-          await expect(page.getByLabel("Description")).toHaveValue("Criteria-only capture from an eligible zero-hit Search response; this description remains available after a rejected collision.");
-          await expect(page.getByLabel("Name", { exact: true })).toHaveAttribute("aria-invalid", "true");
-          await expect(page.getByLabel("Name", { exact: true })).toHaveAttribute(
+          const error = page.locator("#saved-search-name-input-error");
+          await expect(error).toContainText("already exists. Choose another name.");
+          await expect(name).toHaveValue(occupiedName);
+          await expect(name).toHaveAttribute("aria-invalid", "true");
+          await expect(name).toHaveAttribute(
             "aria-describedby",
-            /capture_basename-hint.*capture_basename-error/
+            /saved-search-name-input-hint.*saved-search-name-input-error/
           );
-          await expect(captureError).toHaveCSS("font-size", "14px");
+          await expect(name).toBeFocused();
+          await expect(error).toHaveCSS("font-size", "14px");
           await expectSearchDocumentToFit(page);
-
-          if (evidenceDir) {
-            await page.getByLabel("Name", { exact: true }).blur();
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({
-              path: join(evidenceDir, `${captureName}-collision.png`),
-              fullPage: true
-            });
-          }
-
           expect((await getSavedSearch(request, occupiedName))?.definition).toEqual(occupied!.definition);
 
-          const basename = `surface-depth-search-capture-${themeSlug(mode)}-${viewport.width}-${Date.now()}.json`;
-          await page.getByLabel("Name", { exact: true }).fill(basename);
-          await page.locator("#search-capture-form button[type=submit]").click();
-          await expect(page.getByText(`Saved search ${basename}.`, { exact: true })).toBeVisible();
+          if (evidenceDir) {
+            await page.screenshot({ path: join(evidenceDir, `${captureName}-collision.png`), fullPage: true });
+          }
 
-          const saved = (await getSavedSearch(request, basename))!.definition as any;
+          const savedName = `surface-depth-save-${themeSlug(mode)}-${viewport.width}-${Date.now()}`;
+          await name.fill(savedName);
+          await dialog.getByRole("button", { name: "Save", exact: true }).click();
+          await expect(dialog).toBeHidden();
+          await expect(page.getByText(`Saved “${savedName}”.`, { exact: true })).toBeVisible();
+          await expect(page.locator("#saved-search-status")).toContainText(`Loaded “${savedName}”`);
+
+          const saved = (await getSavedSearch(request, savedName))!.definition as any;
           expect(saved.mode).toBe("search");
           expect(saved.schema).toBe("ScrypathEcommerce.Catalog.Product");
           expect(saved.q).toBe(query);
-          expect(saved.title).toBe("A long but optional zero-hit search title for responsive coverage");
-          expect(saved.description).toContain("Criteria-only capture from an eligible zero-hit Search response");
           expect(saved.opts.page.size).toBe(10);
           expect(JSON.stringify(saved)).not.toContain("hits");
           expect(JSON.stringify(saved)).not.toContain("result");
 
-          await gotoSavedSearches(page);
-          await expect(page.locator(".ops-object-item").filter({ hasText: basename })).toBeVisible();
+          const sheet = await openManageSavedSearches(page);
+          await expect(sheet.locator(".ops-saved-search-row").filter({ hasText: savedName })).toBeVisible();
           await expectSearchDocumentToFit(page);
         } finally {
           await close();
@@ -759,7 +727,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
     }
   });
 
-  test("Saved searches keeps draft and run provenance clear across themes and widths", async ({
+  test("Saved searches load from the toolbar and keep loaded and edited states clear across themes and widths", async ({
     browser,
     request
   }) => {
@@ -769,469 +737,201 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
     const evidenceDir = process.env.PHASE176_VISUAL_EVIDENCE_DIR;
     if (evidenceDir) mkdirSync(evidenceDir, { recursive: true });
 
-    const viewports = [
-      { width: 1440, height: 900 },
-      { width: 768, height: 900 },
-      { width: 390, height: 844 }
-    ];
-    const themes: ThemeMode[] = [
-      { kind: "explicit", theme: "light" },
-      { kind: "explicit", theme: "dark" }
-    ];
-
-    for (const mode of themes) {
-      for (const viewport of viewports) {
-        const { page, close } = await newThemedPage(browser, mode, viewport);
-        const captureName = `saved-searches-${themeSlug(mode)}-${viewport.width}`;
-        const basename = `surface-depth-saved-searches-${themeSlug(mode)}-${viewport.width}-${Date.now()}.json`;
-        const source = {
+    for (const mode of SAVED_SEARCH_THEMES) {
+      for (const viewport of SAVED_SEARCH_VIEWPORTS) {
+        const savedName = `surface-depth-load-${"long saved search name ".repeat(3)}${themeSlug(mode)}-${viewport.width}`;
+        await putSavedSearch(request, savedName, {
           playbook_format: 1,
           mode: "search",
           schema: "ScrypathEcommerce.Catalog.Product",
           q: "quantum",
-          opts: { page: { size: 10 } },
-          title: "Phase 176 provenance check",
-          description: "A saved draft keeps its title and description after preview and run."
-        };
-        const catalogName = `surface-depth-saved-searches-shortcut-${themeSlug(mode)}-${viewport.width}.json`;
-        await putSavedSearch(request, catalogName, source);
+          opts: { page: { size: 12 } },
+          description: `A wrapped description ${"for responsive coverage ".repeat(6)}`
+        });
+
+        const { page, close } = await newThemedPage(browser, mode, viewport);
+        const captureName = `saved-searches-load-${themeSlug(mode)}-${viewport.width}`;
 
         try {
-          await gotoSavedSearches(page);
-          await expect(page.getByRole("link", { name: "Import JSON" })).toBeVisible();
-          const initialRow = page.locator(".ops-object-item").filter({ hasText: catalogName });
-          await expect(initialRow.getByRole("button", { name: `Run ${catalogName} without preview` })).toBeVisible();
-          await expect(page.getByRole("button", { name: "Preview", exact: true }).first()).toBeVisible();
+          await gotoSearch(page);
+          await page.locator("#saved-search-picker-button").click();
+          await expect(page.locator("#saved-search-picker-button")).toHaveAttribute("aria-expanded", "true");
+          const menu = page.locator("#saved-search-menu");
+          await expect(menu).toBeVisible();
+          const menuBox = (await menu.boundingBox())!;
+          expect(menuBox.x + menuBox.width, "the menu stays inside the viewport").toBeLessThanOrEqual(viewport.width);
           await expectSavedSearchDocumentToFit(page);
-
           if (evidenceDir) {
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(evidenceDir, `${captureName}-before.png`), fullPage: true });
+            await page.screenshot({ path: join(evidenceDir, `${captureName}-menu.png`), fullPage: true });
           }
+          await page.keyboard.press("Escape");
+          await expect(menu).toBeHidden();
+          await expect(page.locator("#saved-search-picker-button")).toHaveAttribute("aria-expanded", "false");
 
-          await page.getByRole("link", { name: "Import JSON" }).click();
-          const pasteSummary = page.locator("#saved-search-import details > summary");
-          if (!(await page.locator("#saved-search-import details").evaluate((el) => (el as HTMLDetailsElement).open))) {
-            await pasteSummary.click();
-          }
-          await page.locator("#saved-search-paste-json").fill(JSON.stringify(source));
-          await page.getByRole("button", { name: "Import from paste" }).click();
-
-          await expect(page.locator("#saved-search-draft-origin")).toContainText("Imported draft · not saved");
-          await expect(page.locator("#saved-search-draft-origin")).toContainText("pasted JSON");
-          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
-          await expect(page.locator("#saved-search-save-form button[type=submit]")).toBeEnabled();
-          await expect(page.getByText("Saving replaces the saved search with the same name. Use a new name to keep both.")).toBeVisible();
-          await expect(page.locator("#saved-search-run-outcome")).toHaveCount(0);
+          await pickSavedSearch(page, savedName);
+          await expect(page.locator("#search_q")).toHaveValue("quantum");
+          await expect(page.locator("#search_page_size")).toHaveValue("12");
+          const submitted = page.locator("#search-run-attribution");
+          await expect(submitted).toHaveAttribute("data-query", "quantum");
+          await expect(submitted).toHaveAttribute("data-limit", "12");
+          await expect(page.locator(".ops-readable-hit").first()).toBeVisible();
+          await expect(page.locator("#search-save-loaded")).toHaveCount(0);
           await expectSavedSearchDocumentToFit(page);
 
-          await page.getByLabel("Name", { exact: true }).fill(basename);
-          await page.getByRole("button", { name: "Save search" }).click();
-          await expect(page.getByText(`Saved ${basename}`, { exact: true })).toBeVisible();
-          await expect(page.locator("#saved-search-draft-origin")).toContainText(`Saved search · ${basename}`);
-
-          const saved = (await getSavedSearch(request, basename))!.definition as any;
-          expect(saved.title).toBe(source.title);
-          expect(saved.description).toBe(source.description);
-          expect(saved.q).toBe("quantum");
-          expect(saved.opts.page.size).toBe(10);
-
-          const row = page.locator(".ops-object-item").filter({ hasText: basename });
-          await row.getByRole("button", { name: "Preview", exact: true }).click();
-          await expect(page.locator("#saved-search-draft-origin")).toContainText(`Saved search · ${basename}`);
-          await page.getByRole("button", { name: "Run search" }).click();
-          await expect(page.locator("#saved-search-run-outcome")).toContainText("Search completed");
-          await expect(page.locator("#saved-search-run-source")).toContainText(basename);
-          await expect(page.locator("#saved-search-run-outcome")).toContainText("ScrypathEcommerce.Catalog.Product");
+          await page.getByLabel("Search text").fill("an edited draft");
+          await expect(page.locator("#saved-search-status")).toContainText("edited");
+          await expect(submitted).toBeVisible();
+          await expect(submitted).toContainText("quantum");
+          await expect(page.locator("#search-save-loaded")).toBeVisible();
+          await expect(page.locator("#search-save-as")).toBeVisible();
           await expectSavedSearchDocumentToFit(page);
 
-          const changedDraft = { ...source, q: "changed after the run", title: "Current draft" };
-          if (!(await page.locator("#saved-search-import details").evaluate((el) => (el as HTMLDetailsElement).open))) {
-            await pasteSummary.click();
+          await page.locator("#saved-search-manage-open").click();
+          const sheet = page.getByRole("dialog", { name: "Manage saved searches" });
+          await expect(sheet).toBeVisible();
+          const loaded = sheet.locator(".ops-saved-search-row--loaded");
+          await expect(loaded).toHaveCount(1);
+          await expect(loaded).toContainText(savedName);
+          const panel = (await sheet.locator(".ops-sheet__panel").boundingBox())!;
+          expect(panel.x + panel.width, "the sheet stays inside the viewport").toBeLessThanOrEqual(viewport.width + 1);
+          if (viewport.width < 640) {
+            expect(panel.width, "the sheet spans narrow screens").toBeGreaterThanOrEqual(viewport.width - 1);
           }
-          await page.locator("#saved-search-paste-json").fill(JSON.stringify(changedDraft));
-          await page.getByRole("button", { name: "Import from paste" }).click();
-
-          await expect(page.locator("#saved-search-preview")).toContainText("changed after the run");
-          await expect(page.locator("#saved-search-run-outcome")).toContainText("Last completed run");
-          await expect(page.locator("#saved-search-run-outcome")).toContainText("quantum");
-          await expect(page.locator("#saved-search-run-outcome")).toContainText(basename);
-          await expect(page.locator("#saved-search-run-outcome")).not.toContainText("changed after the run");
-          const handoffHref = await page.locator("#saved-search-run-outcome a").getAttribute("href");
-          expect(new URL(handoffHref!, "http://localhost").searchParams.get("q")).toBe("quantum");
-
-          const stages = await page.locator(
-            "#saved-search-catalog-heading, #saved-search-preview-heading, #saved-search-run-outcome-heading, #saved-search-import-heading"
-          ).evaluateAll((elements) => elements.map((element) => element.id));
-          expect(stages).toEqual([
-            "saved-search-catalog-heading",
-            "saved-search-preview-heading",
-            "saved-search-run-outcome-heading",
-            "saved-search-import-heading"
-          ]);
           await expectSavedSearchDocumentToFit(page);
-
           if (evidenceDir) {
-            await page.locator("#saved-search-paste-json").blur();
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(evidenceDir, `${captureName}-after.png`), fullPage: true });
+            await page.screenshot({ path: join(evidenceDir, `${captureName}-sheet.png`), fullPage: true });
           }
-
-          const shortcutRow = page.locator(".ops-object-item").filter({ hasText: catalogName });
-          await shortcutRow.getByRole("button", { name: `Run ${catalogName} without preview` }).click();
-          await expect(page.locator("#saved-search-run-outcome")).toContainText("Search completed");
-          await expect(page.locator("#saved-search-run-source")).toContainText(catalogName);
-          await expectSavedSearchDocumentToFit(page);
+          await page.keyboard.press("Escape");
+          await expect(sheet).toBeHidden();
+          await expect(page.locator("#saved-search-manage-open")).toBeFocused();
         } finally {
           await close();
+          await deleteSavedSearches(request, { names: [savedName] });
         }
       }
     }
   });
 
-  test("Saved searches imports files explicitly and retains a valid preview after paste errors", async ({
+  test("Manage saved searches imports files directly and keeps paste errors in place", async ({
     browser,
     request
   }) => {
     await seedAndMaybeConfirmSearch(request, "all_green");
 
-    const evidenceDir = process.env.PHASE176_VISUAL_EVIDENCE_DIR;
-    if (evidenceDir) mkdirSync(evidenceDir, { recursive: true });
-
-    const viewports = [
-      { width: 1440, height: 900 },
-      { width: 768, height: 900 },
-      { width: 390, height: 844 }
-    ];
-    const themes: ThemeMode[] = [
-      { kind: "explicit", theme: "light" },
-      { kind: "explicit", theme: "dark" }
-    ];
-
-    for (const mode of themes) {
-      for (const viewport of viewports) {
+    for (const mode of SAVED_SEARCH_THEMES) {
+      for (const viewport of SAVED_SEARCH_VIEWPORTS) {
         const { page, close } = await newThemedPage(browser, mode, viewport);
-        const captureName = `saved-searches-import-${themeSlug(mode)}-${viewport.width}`;
-        const uploadedName = `uploaded-${"long-saved-search-name-".repeat(5)}${themeSlug(mode)}-${viewport.width}.json`;
+        const uploadedName = `surface-depth-uploaded-${"long-saved-search-name-".repeat(3)}${themeSlug(mode)}-${viewport.width}`;
         const uploadedQuery = `uploaded query ${"wrapped criteria ".repeat(8)}${viewport.width}`;
-        const uploadedJson = JSON.stringify({
-          playbook_format: 1,
-          mode: "search",
-          schema: "ScrypathEcommerce.Catalog.Product",
-          q: uploadedQuery,
-          opts: { page: { size: 10 } },
-          title: "Uploaded preview"
-        });
 
         try {
-          await gotoSavedSearches(page);
-          await expect(page.locator("#saved-search-preview")).toHaveCount(0);
-          await expectSavedSearchDocumentToFit(page);
-
-          if (evidenceDir) {
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(evidenceDir, `${captureName}-before.png`), fullPage: true });
-          }
-
-          const uploadInput = page.locator("input[type='file']").first();
-          await uploadInput.setInputFiles({
-            name: uploadedName,
-            mimeType: "application/json",
-            buffer: Buffer.from(uploadedJson)
-          });
+          const sheet = await openManageSavedSearches(page);
+          const uploadInput = sheet.locator("input[type='file']");
           const uploadBindings = await uploadInput.evaluate((input: HTMLInputElement) => ({
             uploadRef: input.getAttribute("data-phx-upload-ref"),
-            changeEvent: input.form?.getAttribute("phx-change"),
-            submitEvent: input.form?.getAttribute("phx-submit")
+            changeEvent: input.form?.getAttribute("phx-change")
           }));
           expect(uploadBindings.uploadRef).toBeTruthy();
-          expect(uploadBindings.changeEvent).toBe("validate_upload");
-          expect(uploadBindings.submitEvent).toBe("import_upload");
+          expect(uploadBindings.changeEvent).toBe("validate_import");
+          await expect(sheet.getByRole("button", { name: "Import JSON file" })).toBeVisible();
 
-          // File selection is only preparation. The preview and run state stay empty until submit.
-          await expect(page.locator("#saved-search-preview")).toHaveCount(0);
-          await expect(page.locator("#saved-search-run-outcome")).toHaveCount(0);
-          await page.getByRole("button", { name: "Import saved search" }).click();
-          await expect(page.locator("#saved-search-draft-origin")).toContainText(uploadedName);
-          await expect(page.locator("#saved-search-preview")).toContainText(uploadedQuery);
-          await expect(page.getByRole("button", { name: "Run search" })).toBeEnabled();
-          await expect(page.locator("#saved-search-run-outcome")).toHaveCount(0);
+          // Choosing a file imports it; there is no separate submit step.
+          await uploadInput.setInputFiles({
+            name: `${uploadedName}.json`,
+            mimeType: "application/json",
+            buffer: Buffer.from(
+              JSON.stringify({
+                playbook_format: 1,
+                mode: "search",
+                schema: "ScrypathEcommerce.Catalog.Product",
+                q: uploadedQuery,
+                opts: { page: { size: 10 } }
+              })
+            )
+          });
+          const row = sheet.locator(".ops-saved-search-row").filter({ hasText: uploadedName });
+          await expect(row).toBeVisible();
+          await expect(row.getByRole("button", { name: `Load ${uploadedName}` })).toBeFocused();
+          expect(((await getSavedSearch(request, uploadedName))!.definition as any).q).toBe(uploadedQuery);
           await expectSavedSearchDocumentToFit(page);
 
-          const importNotice = page.locator("#flash-info");
-          await expect(importNotice).toContainText("Imported saved search from file.");
-          await importNotice.getByRole("button", { name: "Close notification" }).click();
-          await expect(importNotice).toHaveCount(0);
+          await uploadInput.setInputFiles({
+            name: "surface-depth-broken.json",
+            mimeType: "application/json",
+            buffer: Buffer.from("{not json")
+          });
+          await expect(sheet.locator("#saved-search-import-error")).toContainText("isn't valid JSON");
 
-          const pasteSummary = page.locator("#saved-search-import details > summary");
-          if (!(await page.locator("#saved-search-import details").evaluate((el) => (el as HTMLDetailsElement).open))) {
-            await pasteSummary.click();
-          }
+          await sheet.getByText("Paste JSON instead", { exact: true }).click();
           const longInvalidJson = `{"q":"${"long input ".repeat(500)}"`;
-          await page.locator("#saved-search-paste-json").fill(longInvalidJson);
-          await page.getByRole("button", { name: "Import from paste" }).click();
-
-          await expect(page.locator("#saved-search-paste-json-error")).toContainText("Check the JSON syntax");
-          await expect(page.locator("#saved-search-paste-json")).toHaveAttribute("aria-invalid", "true");
-          await expect(page.locator("#saved-search-paste-json")).toHaveValue(longInvalidJson);
-          await expect(page.locator("#saved-search-import details")).toHaveJSProperty("open", true);
-          await expect(page.locator("#saved-search-draft-origin")).toContainText(uploadedName);
-          await expect(page.locator("#saved-search-preview")).toContainText(uploadedQuery);
-          await expect(page.locator("#saved-search-run-outcome")).toHaveCount(0);
+          const paste = sheet.locator("#saved-search-paste-json");
+          await paste.fill(longInvalidJson);
+          await paste.blur();
+          await expect(sheet.locator("#saved-search-paste-json-error")).toContainText("Check the JSON syntax");
+          await expect(paste).toHaveAttribute("aria-invalid", "true");
+          await expect(paste).toHaveValue(longInvalidJson);
           await expectSavedSearchDocumentToFit(page);
-
-          await expect(page.locator("#flash-info")).toHaveCount(0);
-
-          if (evidenceDir) {
-            await page.locator("#saved-search-paste-json").blur();
-            await page.evaluate(() => window.scrollTo(0, 0));
-            await page.screenshot({ path: join(evidenceDir, `${captureName}-after.png`), fullPage: true });
-          }
         } finally {
           await close();
+          await deleteSavedSearches(request, { names: [uploadedName] });
         }
       }
     }
   });
 
-  test("Saved search management keeps modal focus on visible file identities through LiveView patches", async ({
+  test("Saved search management keeps focus on visible names through LiveView patches", async ({
     browser,
     request
   }) => {
-    const stamp = Date.now().toString();
-    const prefix = `000-phase176-focus-${stamp}`;
-    const sourceName = `${prefix}-a-${"long-filename-".repeat(4)}.json`;
-    const copyName = `${prefix}-b-copy.json`;
-    const renamedName = `${prefix}-c-${"renamed-saved-search-".repeat(3)}.json`;
-    const createdNames = [sourceName, copyName, renamedName];
-    const evidenceDir = process.env.PHASE176_VISUAL_EVIDENCE_DIR;
-    if (evidenceDir) mkdirSync(evidenceDir, { recursive: true });
+    await seedAndMaybeConfirmSearch(request, "all_green");
+    const first = `surface-depth-focus-a-${"wrapping-name-".repeat(4)}${Date.now()}`;
+    const second = `surface-depth-focus-b-${Date.now()}`;
+    await putSavedSearch(request, first, { playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "a", opts: {} });
+    await putSavedSearch(request, second, { playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "b", opts: {} });
 
+    const { page, close } = await newThemedPage(browser, { kind: "explicit", theme: "dark" }, "mobile");
     try {
-      const { page, close } = await newThemedPage(
-        browser,
-        { kind: "explicit", theme: "light" },
-        { width: 390, height: 844 }
-      );
+      const sheet = await openManageSavedSearches(page);
+      const firstRow = sheet.locator(`#saved-search-row-${savedSearchDomId(first)}`);
+      await expect(firstRow.locator(".ops-saved-search-row__name")).toHaveText(first);
+      await expectSavedSearchDocumentToFit(page);
 
-      try {
-        await gotoSavedSearches(page);
-        const importDisclosure = page.locator("#saved-search-import details");
-        if (!(await importDisclosure.evaluate((el) => (el as HTMLDetailsElement).open))) {
-          await importDisclosure.locator("summary").click();
-        }
+      await firstRow.getByRole("button", { name: `Rename ${first}` }).click();
+      const input = sheet.locator("#saved-search-rename-input");
+      await expect(input).toBeFocused();
+      await input.fill(TOO_LONG_NAME);
+      await sheet.getByRole("button", { name: "Rename", exact: true }).click();
+      await expect(sheet.locator("#saved-search-rename-input-error")).toContainText("Enter a name of up to 120 characters.");
+      await expect(input).toBeFocused();
+      await input.fill(second);
+      await sheet.getByRole("button", { name: "Rename", exact: true }).click();
+      await expect(sheet.locator("#saved-search-rename-input-error")).toContainText("already exists");
+      await expect(input).toBeFocused();
+      await page.keyboard.press("Escape");
+      await expect(firstRow.getByRole("button", { name: `Rename ${first}` })).toBeFocused();
 
-        const json = JSON.stringify({
-          playbook_format: 1,
-          mode: "search",
-          schema: "ScrypathEcommerce.Catalog.Product",
-          q: "modal focus contract",
-          opts: {}
-        });
-        await page.locator("#saved-search-paste-json").fill(json);
-        await page.getByRole("button", { name: "Import from paste" }).click();
-        await expect(page.locator("#saved-search-preview")).toContainText("modal focus contract");
-        await page.locator("#save_basename").fill(sourceName);
-        await page.getByRole("button", { name: "Save search" }).click();
-
-        const sourceId = savedSearchDomId(sourceName);
-        const sourceManage = page.locator(`#saved-search-manage-${sourceId}`);
-        const sourceSummary = page.locator(`#saved-search-manage-summary-${sourceId}`);
-        await expect(sourceManage).toBeVisible();
-        await expect(sourceManage).toHaveJSProperty("open", false);
-        await expect(page.locator(`#saved-search-row-${sourceId} .ops-saved-search-filename`)).toHaveText(sourceName);
-        await expectSavedSearchDocumentToFit(page);
-
-        await sourceSummary.click();
-        await expect(sourceManage).toHaveJSProperty("open", true);
-        await page.getByRole("button", { name: `Duplicate ${sourceName}` }).click();
-        const duplicateDialog = page.locator("#duplicate-saved-search-modal");
-        await expect(duplicateDialog).toBeVisible();
-        await expect(sourceManage).toHaveJSProperty("open", false);
-        await expect(page.locator("#dup-to-name-input")).toBeFocused();
-        expect(
-          await page.locator("#saved-search-import").evaluate((el) => (el as HTMLElement).inert),
-          "the background import section is inert while a file dialog is open"
-        ).toBe(true);
-
-        await page.getByRole("button", { name: "Close Duplicate saved search dialog" }).click();
-        await expect(duplicateDialog).toHaveCount(0);
-        await expect(sourceSummary).toBeFocused();
-
-        await sourceSummary.click();
-        await page.getByRole("button", { name: `Duplicate ${sourceName}` }).click();
-        const duplicateInput = page.locator("#dup-to-name-input");
-        await duplicateInput.fill(sourceName);
-        await expect(duplicateInput).toBeFocused();
-        await page.getByRole("button", { name: "Duplicate", exact: true }).click();
-        await expect(page.locator("#dup-to-name-input-error")).toContainText("already in use");
-        await expect(duplicateInput).toHaveValue(sourceName);
-        await expect(duplicateInput).toBeFocused();
-        await expect(duplicateInput).toHaveCSS("font-size", "14px");
-        await page.getByRole("button", { name: "Cancel duplicate" }).click();
-        await expect(duplicateDialog).toHaveCount(0);
-        await expect(sourceSummary).toBeFocused();
-
-        await sourceSummary.click();
-        await page.getByRole("button", { name: `Duplicate ${sourceName}` }).click();
-        await page.locator("#dup-to-name-input").fill(copyName);
-        await page.getByRole("button", { name: "Duplicate", exact: true }).click();
-        await expect(duplicateDialog).toHaveCount(0);
-        await expect(sourceSummary).toBeFocused();
-        const copyId = savedSearchDomId(copyName);
-        await expect(page.locator(`#saved-search-row-${copyId}`)).toBeVisible();
-
-        await sourceSummary.click();
-        await page.getByRole("button", { name: `Rename ${sourceName}` }).click();
-        const renameDialog = page.locator("#rename-saved-search-modal");
-        const renameInput = page.locator("#rename-new-name-input");
-        await expect(renameDialog).toBeVisible();
-        await expect(sourceManage).toHaveJSProperty("open", false);
-        await expect(renameInput).toBeFocused();
-        await renameInput.fill(TOO_LONG_NAME);
-        await expect(renameInput).toBeFocused();
-        await page.getByRole("button", { name: "Rename", exact: true }).click();
-        await expect(page.locator("#rename-new-name-input-error")).toContainText("Enter a name");
-        await expect(renameInput).toHaveValue(TOO_LONG_NAME);
-        await expect(renameInput).toBeFocused();
-
-        await renameInput.fill(copyName);
-        await page.getByRole("button", { name: "Rename", exact: true }).click();
-        await expect(page.locator("#rename-new-name-input-error")).toContainText("already in use");
-        await expect(renameInput).toHaveValue(copyName);
-        await expect(renameInput).toBeFocused();
-
-        await renameInput.fill(renamedName);
-        await page.getByRole("button", { name: "Rename", exact: true }).click();
-        await expect(renameDialog).toHaveCount(0);
-        const renamedId = savedSearchDomId(renamedName);
-        const renamedSummary = page.locator(`#saved-search-manage-summary-${renamedId}`);
-        await expect(page.locator(`#saved-search-row-${renamedId}`)).toBeVisible();
-        await expect(renamedSummary).toBeFocused();
-        await expectSavedSearchDocumentToFit(page);
-
-        const copySummary = page.locator(`#saved-search-manage-summary-${copyId}`);
-        await copySummary.click();
-        await page.getByRole("button", { name: `Delete ${copyName}` }).click();
-        const deleteDialog = page.locator("#delete-saved-search-modal");
-        const deleteInput = page.locator("#delete-confirm-input");
-        const deleteCancel = page.getByRole("button", { name: "Cancel delete" });
-        const closeDelete = page.getByRole("button", { name: "Close Delete saved search dialog" });
-        await expect(deleteDialog).toBeVisible();
-        await expect(deleteCancel).toBeFocused();
-        await expect(page.locator(`#saved-search-manage-${copyId}`)).toHaveJSProperty("open", false);
-
-        await closeDelete.focus();
-        await page.keyboard.press("Shift+Tab");
-        await expect(page.getByRole("button", { name: "Confirm delete", exact: true })).toBeFocused();
-        await page.keyboard.press("Tab");
-        await expect(closeDelete).toBeFocused();
-        await page.keyboard.press("Escape");
-        await expect(deleteDialog).toHaveCount(0);
-        await expect(copySummary).toBeFocused();
-
-        await copySummary.click();
-        await page.getByRole("button", { name: `Delete ${copyName}` }).click();
-        await expect(deleteCancel).toBeFocused();
-        await deleteInput.fill(`wrong-${copyName}`);
-        await page.getByRole("button", { name: "Confirm delete", exact: true }).click();
-        await expect(page.locator("#delete-confirm-input-error")).toContainText("match the name exactly");
-        await expect(deleteInput).toHaveValue(`wrong-${copyName}`);
-        await expect(deleteInput).toBeFocused();
-        await expect(page.locator(`#saved-search-row-${copyId}`)).toBeVisible();
-
-        const deleteSuccessor = await deleteDialog.getAttribute("data-ops-modal-successor");
-        expect(deleteSuccessor).toMatch(/^#saved-search-primary-/);
-        await deleteInput.fill(copyName);
-        await page.getByRole("button", { name: "Confirm delete", exact: true }).click();
-        await expect(deleteDialog).toHaveCount(0);
-        await expect(page.locator(deleteSuccessor!)).toBeFocused();
-        await expect(page.locator(`#saved-search-row-${copyId}`)).toHaveCount(0);
-        await expectSavedSearchDocumentToFit(page);
-
-        if (evidenceDir) {
-          await page.evaluate(() => window.scrollTo(0, 0));
-          await page.screenshot({ path: join(evidenceDir, "saved-search-management-light-390-after.png"), fullPage: true });
-        }
-      } finally {
-        await close();
-      }
-
-      const themes: ThemeMode[] = [
-        { kind: "explicit", theme: "light" },
-        { kind: "explicit", theme: "dark" }
-      ];
-      const viewports = [
-        { width: 1440, height: 900 },
-        { width: 768, height: 900 },
-        { width: 390, height: 844 }
-      ];
-
-      for (const mode of themes) {
-        for (const viewport of viewports) {
-          const { page, close } = await newThemedPage(browser, mode, viewport);
-          const captureName = `saved-search-management-${themeSlug(mode)}-${viewport.width}`;
-          try {
-            await gotoSavedSearches(page);
-            const renamedId = savedSearchDomId(renamedName);
-            const manage = page.locator(`#saved-search-manage-${renamedId}`);
-            const summary = page.locator(`#saved-search-manage-summary-${renamedId}`);
-            await expect(manage).toBeVisible();
-            await expect(manage).toHaveJSProperty("open", false);
-            await expectSavedSearchDocumentToFit(page);
-            if (evidenceDir) {
-              await page.evaluate(() => window.scrollTo(0, 0));
-              await page.screenshot({ path: join(evidenceDir, `${captureName}-before.png`), fullPage: true });
-            }
-
-            await summary.click();
-            await page.getByRole("button", { name: `Rename ${renamedName}` }).click();
-            const dialog = page.locator("#rename-saved-search-modal");
-            const input = page.locator("#rename-new-name-input");
-            await expect(dialog).toBeVisible();
-            await expect(manage).toHaveJSProperty("open", false);
-            await expect(input).toBeFocused();
-            await expectSavedSearchDocumentToFit(page);
-
-            const bounds = await page.locator("#rename-saved-search-modal .modal-box").boundingBox();
-            expect(bounds).not.toBeNull();
-            expect(bounds!.x).toBeGreaterThanOrEqual(0);
-            expect(bounds!.y).toBeGreaterThanOrEqual(0);
-            expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width);
-            expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height);
-
-            await input.fill(TOO_LONG_NAME);
-            await page.getByRole("button", { name: "Rename", exact: true }).click();
-            await expect(page.locator("#rename-new-name-input-error")).toContainText("Enter a name");
-            await expect(input).toHaveValue(TOO_LONG_NAME);
-            await expect(input).toBeFocused();
-            await expect(page.locator("#rename-new-name-input-error")).toHaveCSS("font-size", "14px");
-            await expectSavedSearchDocumentToFit(page);
-            if (evidenceDir) {
-              await page.evaluate(() => window.scrollTo(0, 0));
-              await page.screenshot({ path: join(evidenceDir, `${captureName}-after.png`), fullPage: true });
-            }
-
-            await page.keyboard.press("Escape");
-            await expect(dialog).toHaveCount(0);
-            await expect(summary).toBeFocused();
-          } finally {
-            await close();
-          }
-        }
-      }
+      await firstRow.getByRole("button", { name: `Delete ${first}` }).click();
+      await sheet.locator("#saved-search-delete-input").fill(first);
+      await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(firstRow).toHaveCount(0);
+      await expect.poll(() => sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+      expect(await getSavedSearch(request, first)).toBeUndefined();
+      expect(await getSavedSearch(request, second)).toBeTruthy();
     } finally {
-      await deleteSavedSearches(request, { names: createdNames });
+      await close();
+      await deleteSavedSearches(request, { names: [first, second] });
     }
   });
 
-  test("Saved search item has no violet glow in light", async ({ browser, request }) => {
+  test("Loaded saved search marker has no violet glow in light", async ({ browser, request }) => {
     await seedAndMaybeConfirmSearch(request, "all_green");
     const { page, close } = await newThemedPage(browser, { kind: "explicit", theme: "light" }, "desktop");
     try {
       await preparePopulatedSavedSearches(page);
-      const glow = await readComputedStyle(page, ".ops-object-item", "boxShadow");
-      expect(glow, "light saved search item must not carry the dark violet glow").not.toContain(GLOW_RGB);
+      await page.keyboard.press("Escape");
+      await page.locator("#saved-search-manage-open").click();
+      const glow = await readComputedStyle(page, ".ops-saved-search-row--loaded", "boxShadow");
+      expect(glow, "light loaded saved search row must not carry the dark violet glow").not.toContain(GLOW_RGB);
     } finally {
       await close();
     }
