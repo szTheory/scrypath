@@ -182,3 +182,11 @@ All five items below are implemented and verified. Evidence, preserved behavior 
 | CONTENT-33 | Two Checked timestamps seem duplicated. | Explicit Sync checked / Settings checked labels; independent read times remain truthful. |
 | UI-56 | Sync/drift is busy and hierarchy unclear; the comparison table gradient conflicts with the rest of the UI (15:15 screenshot). | Shorter copy, row-local explanation, secondary full details/promotion/related links, flat table with AA-readable headings. |
 | CONTENT-34 | Background sync jobs are pending or retrying does not explain normality, magnitude, action or useful cross-reference. | Observed counts distinguish pending work, scheduled retries and terminal failures; links retain schema scope and Help explains the stages. No inference of backlog from a snapshot. |
+
+## Feedback batch — opened 2026-10-22
+
+Recorded for one batched pass after PR #107 (`427dd1ab`); nothing below is implemented yet. Append new items here until the maintainer closes the batch.
+
+| ID | Maintainer feedback | Source notes and acceptance | Status |
+| --- | --- | --- | --- |
+| CONTENT-35 | The header's time preference is labeled just “Time”; “Time display” or “Timestamps” would be clearer microcopy. | Source: `scrypath_ops/lib/scrypath_ops_web/components/layouts.ex:92` renders the visible `<span>Time</span>` with a UTC/Local `<select aria-label="Time zone">`. Choose a label that says this control changes how timestamps are shown, not the data's time zone. The visible label and accessible name must agree (WCAG 2.5.3 Label in Name): today “Time zone” contains “Time”, but “Timestamps” would not, so update the aria-label (or label the select by its visible text) and the e2e `combobox` name lookups in `ui_baseline`, `phase173_time`, `ui_followup` and `settings_layout` specs together. Keep the compact header fit at mobile width and preserve the stored preference and selection behavior. | Open |
