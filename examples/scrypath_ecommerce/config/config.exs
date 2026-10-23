@@ -13,7 +13,6 @@ config :scrypath_ecommerce,
 
 config :scrypath, :defaults,
   backend: Scrypath.Meilisearch,
-  repo: ScrypathEcommerce.Repo,
   meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://localhost:7700",
   index_prefix: "ecommerce_",
   sync_mode: :oban,
