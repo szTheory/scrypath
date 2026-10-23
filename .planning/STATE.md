@@ -2,13 +2,13 @@
 gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
-current_phase: 174
-status: completed
-stopped_at: Phase 174 complete — PR #98 current-head required checks passed; Phase 177 terminal source gate remains blocking
-last_updated: "2026-10-13T02:49:38.000Z"
-last_activity: 2026-10-13
-last_activity_desc: Phase 174 closeout recorded; exact-head PR checks passed; terminal source attestation remains open
-state_head: bebeb863493d1667ffa5f8c9fa3e890b484c5c1a
+current_phase: null
+status: paused
+stopped_at: UI iteration 3 and sync-layout implementation delivered; paused with PR 107 required mounted-app target-size failure unresolved
+last_updated: "2026-10-22T23:51:25.108Z"
+last_activity: 2026-10-22
+last_activity_desc: Pause handoff saved in the canonical checkout; preview stopped; required CI failure recorded without product changes
+state_head: c6522ea814437345ac4720a68010e8b066adeccb
 progress:
   total_phases: 5
   completed_phases: 5
@@ -19,11 +19,13 @@ progress:
 
 # Project State
 
-## UI follow-up — locally verified 2026-10-15
+## Session paused — 2026-10-22
 
-**Resume here:** [reference/continue.md](reference/continue.md). The maintainer authorized and the agent implemented the second 24-item review round on `fix/ui-feedback-baseline`, after merged PR #105. Outcomes and exact test/run caveats: [UI-FOLLOWUP-RESULTS.md](reference/UI-FOLLOWUP-RESULTS.md). Current next action is PR delivery on green current-head required CI and Ops. Standing squash-merge approval applies; do not ask again or replay completed phases.
+Resume from [the handoff](.continue-here.md) and [structured state](HANDOFF.json) in `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, branch `fix/ui-iteration-3`. No numbered phase is active. Product implementation is committed through `c6522ea8`; [PR #107](https://github.com/szTheory/scrypath/pull/107) remains draft and unmerged. Its required `ecommerce-mounted` gate failed a `target-size` accessibility assertion in the Variant recovery journey; reproduce that exact gate before claiming PR readiness. The retained web/database/search services are stopped. Pause work changed handoff documents only; existing data and the maintainer's saved file remain intact. Later phase positions and closeout statements below are historical.
 
-All feedback is reconciled in `UI-FEEDBACK.md`. Ops: 313 tests + 2 doctests; demo: 38 tests; review tooling: 7 tests. The 175 browser cases are covered through full and corrected scoped runs; the final rendered matrix has 72 captures, zero mechanical findings and a distinct in-thread critique. Preserve the established brand, retained port-4002 preview data and untracked `my-search.json`. Canonical checkout: `UI-PREVIEW.json`. The numbered-phase frontmatter and chronology below are historical routing context, not a request to resume those phases.
+## UI iteration 3 — implemented and verified (2026-10-15)
+
+All three requested batches are delivered in canonical branch `fix/ui-iteration-3`. See [results](reference/UI-ITERATION-3-RESULTS.md): 317 Ops tests + 2 doctests, 38 demo tests, 98 affected browser cases plus 16 final shared/contrast checks, and a source-bound 72-view rendered review. All 25 new feedback items have dispositions. The preview and maintainer saved file remain preserved. No numbered phase is reopened; historical frontmatter and chronology below are retained.
 
 ## Historical project reference
 

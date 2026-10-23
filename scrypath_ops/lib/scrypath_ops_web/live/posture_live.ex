@@ -370,23 +370,38 @@ defmodule ScrypathOpsWeb.PostureLive do
                     aria-label={"Backend task signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">Meilisearch document tasks</p>
-                    <p
-                      :if={status.backend.pending == [] && status.backend.failed == []}
-                      class="text-ops-sm text-base-content/70"
-                    >
-                      No pending or failed tasks.
-                    </p>
-                    <dl class="ops-signal-metrics">
-                      <div :if={status.backend.pending != []}>
-                        <dt>Pending</dt>
-                        <dd>{length(status.backend.pending)}</dd>
-                      </div>
-                      <div :if={status.backend.failed != []} data-tone="error">
-                        <dt><.icon name="hero-exclamation-circle" class="size-3.5" /> Failed</dt>
-                        <dd>{length(status.backend.failed)}</dd>
-                      </div>
-                      <div class="ops-signal-metrics__wide">
+                    <header>
+                      <p class="ops-signal-group__title">Meilisearch document tasks</p>
+                      <p class="ops-search-query-hint">
+                        Applying document additions, updates and deletions.
+                        <.ops_help_link href={"#{@mount_path}/help#sync"}>
+                          About sync stages
+                        </.ops_help_link>
+                      </p>
+                    </header>
+                    <div class="ops-signal-activity">
+                      <p
+                        :if={status.backend.pending == [] && status.backend.failed == []}
+                        class="text-ops-body text-base-content/70"
+                      >
+                        No pending or failed tasks.
+                      </p>
+                      <dl
+                        :if={status.backend.pending != [] || status.backend.failed != []}
+                        class="ops-signal-counts"
+                      >
+                        <div :if={status.backend.pending != []}>
+                          <dt><.icon name="hero-clock" class="size-4" />Pending</dt>
+                          <dd>{length(status.backend.pending)}</dd>
+                        </div>
+                        <div :if={status.backend.failed != []} data-tone="error">
+                          <dt><.icon name="hero-exclamation-circle" class="size-4" />Failed</dt>
+                          <dd>{length(status.backend.failed)}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                    <dl class="ops-signal-success">
+                      <div>
                         <dt>Last success</dt>
                         <dd>
                           <.ops_time
@@ -401,35 +416,48 @@ defmodule ScrypathOpsWeb.PostureLive do
                       </div>
                     </dl>
                   </section>
-
                   <section
                     aria-label={"Queue job signals for #{inspect(mod)}"}
                     class="ops-signal-group"
                   >
-                    <p class="ops-signal-group__title">{sync_mode_label(status.mode)}</p>
-                    <p
-                      :if={
-                        status.queue.observed? && status.queue.pending == [] &&
-                          status.queue.retrying == [] && status.queue.failed == []
-                      }
-                      class="text-ops-sm text-base-content/70"
-                    >
-                      No pending, retrying or failed jobs.
-                    </p>
-                    <dl :if={status.queue.observed?} class="ops-signal-metrics">
-                      <div :if={status.queue.pending != []}>
-                        <dt>Pending</dt>
-                        <dd>{length(status.queue.pending)}</dd>
-                      </div>
-                      <div :if={status.queue.retrying != []} data-tone="warning">
-                        <dt><.icon name="hero-arrow-path" class="size-3.5" /> Retrying</dt>
-                        <dd>{length(status.queue.retrying)}</dd>
-                      </div>
-                      <div :if={status.queue.failed != []} data-tone="error">
-                        <dt><.icon name="hero-exclamation-circle" class="size-3.5" /> Failed</dt>
-                        <dd>{length(status.queue.failed)}</dd>
-                      </div>
-                      <div class="ops-signal-metrics__wide">
+                    <header>
+                      <p class="ops-signal-group__title">{sync_mode_label(status.mode)}</p>
+                      <p class="ops-search-query-hint">
+                        {if status.mode == :oban,
+                          do: "Application jobs delivering changes to Meilisearch.",
+                          else: "Host-configured sync mode; no background job history."}
+                      </p>
+                    </header>
+                    <div class="ops-signal-activity">
+                      <p
+                        :if={
+                          status.queue.observed? && status.queue.pending == [] &&
+                            status.queue.retrying == [] && status.queue.failed == []
+                        }
+                        class="text-ops-body text-base-content/70"
+                      >
+                        No pending, retrying or failed jobs.
+                      </p>
+                      <dl :if={status.queue.observed?} class="ops-signal-counts">
+                        <div :if={status.queue.pending != []}>
+                          <dt><.icon name="hero-clock" class="size-4" />Pending</dt>
+                          <dd>{length(status.queue.pending)}</dd>
+                        </div>
+                        <div :if={status.queue.retrying != []} data-tone="retrying">
+                          <dt><.icon name="hero-arrow-path" class="size-4" />Retrying</dt>
+                          <dd>{length(status.queue.retrying)}</dd>
+                        </div>
+                        <div :if={status.queue.failed != []} data-tone="error">
+                          <dt><.icon name="hero-exclamation-circle" class="size-4" />Failed</dt>
+                          <dd>{length(status.queue.failed)}</dd>
+                        </div>
+                      </dl>
+                      <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
+                        {queue_unobserved_copy(status)}
+                      </p>
+                    </div>
+                    <dl class="ops-signal-success">
+                      <div>
                         <dt>Last success</dt>
                         <dd>
                           <.ops_time
@@ -443,9 +471,6 @@ defmodule ScrypathOpsWeb.PostureLive do
                         </dd>
                       </div>
                     </dl>
-                    <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
-                      {queue_unobserved_copy(status)}
-                    </p>
                   </section>
                 </div>
               <% {:error, reason} -> %>
@@ -652,7 +677,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp sync_mode_label(:oban), do: "Background sync · Oban"
+  defp sync_mode_label(:oban), do: "Background sync with Oban"
   defp sync_mode_label(:inline), do: "Inline sync"
   defp sync_mode_label(:manual), do: "Manual sync"
   defp sync_mode_label(mode), do: "Sync: #{mode}"

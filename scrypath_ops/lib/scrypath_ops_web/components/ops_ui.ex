@@ -250,6 +250,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Refresh action paired with the time of the latest check."
   attr(:id, :string, required: true)
   attr(:checked_at, :any, default: nil)
+  attr(:checked_label, :string, default: "Checked")
   attr(:label, :string, default: "Refresh")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
@@ -270,7 +271,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_refresh_control(assigns) do
     ~H"""
     <div class={["flex flex-wrap items-center gap-x-3 gap-y-1", @class]}>
-      <.ops_time :if={@checked_at} label="Checked" dt={@checked_at} />
+      <.ops_time :if={@checked_at} label={@checked_label} dt={@checked_at} />
       <.ops_refresh_button
         id={@id}
         label={@label}
@@ -360,17 +361,22 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class="min-w-0">
+        <div class={[
+          "ops-notice-surface__copy min-w-0",
+          @neutral && "ops-notice-surface__copy--cued"
+        ]}>
+          <span
+            :if={@neutral}
+            class="ops-notice-surface__cue"
+            aria-hidden="true"
+          >
+          </span>
           <p class="ops-notice-surface__title font-semibold">
-            <span
-              :if={@neutral}
-              class="ops-notice-surface__cue"
-              aria-hidden="true"
-            >
-            </span>
             {@title}
           </p>
-          <div class="mt-1 text-base-content/80">{render_slot(@inner_block)}</div>
+          <div class="ops-notice-surface__body mt-1 text-base-content/80">
+            {render_slot(@inner_block)}
+          </div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap gap-2">
           {render_slot(@actions)}
@@ -859,13 +865,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_field(assigns) do
     ~H"""
-    <div class={["space-y-ops-field", @class]}>
+    <div id={"#{@id}-field"} phx-hook="OpsFieldValidation" class={["space-y-ops-field", @class]}>
       <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
       <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
         {@hint}
       </p>
-      <p :if={@error} id={"#{@id}-error"} class="text-ops-body leading-5 text-error" role="alert">
+      <p
+        id={"#{@id}-error"}
+        class="ops-field-error text-ops-body leading-5 text-error"
+        role={if @error, do: "alert"}
+        hidden={!@error}
+        data-ops-field-error
+        data-server-error={@error}
+      >
         {@error}
       </p>
     </div>
@@ -890,6 +903,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       name={@name}
       type="text"
+      data-ops-validate
       value={@value}
       placeholder={@placeholder}
       aria-describedby={@describedby}
@@ -919,6 +933,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       name={@name}
       type="number"
+      data-ops-validate
       value={@value}
       min={@min}
       max={@max}
@@ -947,6 +962,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <textarea
       id={@id}
       name={@name}
+      data-ops-validate
       placeholder={@placeholder}
       aria-describedby={@describedby}
       aria-invalid={@error && "true"}
@@ -1001,14 +1017,23 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:disabled, :boolean, default: false)
   attr(:schemas, :list, required: true)
   attr(:selected, :any, default: nil)
+  attr(:multiple, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global, include: ~w(phx-change))
 
   def ops_schema_select(assigns) do
-    schema_items = schema_picker_items(assigns.schemas, assigns.selected)
+    schema_items =
+      if assigns.multiple do
+        Enum.map(assigns.schemas, fn schema ->
+          hd(schema_picker_items([schema], if(schema in List.wrap(assigns.selected), do: schema)))
+        end)
+      else
+        schema_picker_items(assigns.schemas, assigns.selected)
+      end
 
     single_schema_item =
-      if length(schema_items) == 1 && hd(schema_items).selected, do: hd(schema_items)
+      if !assigns.multiple && length(schema_items) == 1 && hd(schema_items).selected,
+        do: hd(schema_items)
 
     assigns =
       assigns
@@ -1049,7 +1074,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             <input
               id={"#{@id}-#{item.dom_id}"}
-              type="radio"
+              type={if @multiple, do: "checkbox", else: "radio"}
               name={@name}
               value={item.name}
               checked={item.selected}
@@ -1255,7 +1280,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       |> assign(:time_id, assigns.id || "ops-time-#{System.unique_integer([:positive])}")
 
     ~H"""
-    <span id={@time_id} class={["ops-time", @class]} phx-hook={if @exact, do: "OpsTimestampCopy"}>
+    <span id={@time_id} class={["ops-time", @class]} phx-hook="OpsTimestampCopy">
       <span :if={@label && @label != ""} class="ops-time__label">{@label}</span>
       <%= if @exact do %>
         <button
@@ -1374,7 +1399,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_code_block(assigns) do
     ~H"""
-    <div class="ops-code-block">
+    <div class={["ops-code-block", @copy && @text && "ops-code-block--copyable"]}>
       <div :if={@copy && @text} class="ops-code-toolbar">
         <button
           type="button"
@@ -1401,6 +1426,22 @@ defmodule ScrypathOpsWeb.OpsUi do
         {@rest}
       >{if is_nil(@text), do: render_slot(@inner_block), else: @text}</pre>
     </div>
+    """
+  end
+
+  @doc "Task-adjacent help in a new tab, preserving the current task."
+  attr(:href, :string, required: true)
+  slot(:inner_block, required: true)
+
+  def ops_help_link(assigns) do
+    ~H"""
+    <a href={@href} class="ops-help-link" target="_blank" rel="noopener">
+      <span>{render_slot(@inner_block)}</span>
+      <.icon name="hero-arrow-top-right-on-square" class="size-3.5" />
+      <span class="sr-only">
+        (opens in a new tab)
+      </span>
+    </a>
     """
   end
 

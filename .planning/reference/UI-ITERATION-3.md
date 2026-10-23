@@ -1,0 +1,66 @@
+# Scrypath UI iteration 3 — execution brief
+
+**Delivery update, 2026-10-15:** all three batches implemented and verified. See [UI-ITERATION-3-RESULTS.md](UI-ITERATION-3-RESULTS.md). The original execution brief is retained below as the scope record.
+
+Status: feedback collection concluded by the maintainer on 2026-10-15. All 25 entries remain unimplemented. The maintainer wants to compact, then request implementation of one systematic pass comparable to the previous two. This brief removes the need to rediscover scope or run another planning-only cycle; it is not a numbered GSD phase or a product completion claim.
+
+## Starting point
+
+Use the checkout named by `.planning/UI-PREVIEW.json`: `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, branch `fix/ui-feedback-baseline`. Port 4002 is the retained maintainer preview, container `scrypath_ecommerce-web-1`, `/app` bound to this checkout, startup seeding disabled. The final handoff preflight passed with current remote main included at `29c287c8e732cddd13e435ccf601e06a39a65837`; product fingerprint `b46d12d5fa55d822eb59b2c023b1cc5fcb73a26bb570c40ba462bdb331803bee`. Reverify before editing: provenance can change after the handoff.
+
+PRs #105 and #106 delivered the first two passes. `UI-FOLLOWUP-RESULTS.md` records the most recent delivery and verification boundaries. Subsequent commits are local maintainer feedback checkpoints; no product implementation for this round is hidden there. Do not replay Phases 173–177 or republish the prior implementation as a new fix.
+
+Read the **Next review round — 2026-10-15, after PR #106** section of `.planning/UI-FEEDBACK.md`, including the clarification paragraphs after its table. It preserves the 25 items, source evidence, competing considerations, hypotheses and proposed acceptance. Earlier resolved entries explain history, not current acceptance. Twelve original screenshots are preserved byte-for-byte in ignored `examples/scrypath_ecommerce/ui-review-artifacts/maintainer-feedback-2026-10-15/`, with a manifest and SHA256 values. These are local pre-change observations, not approved visual baselines or agent verification; do not move them into Playwright output cleanup.
+
+## Working approach
+
+On the next start request, run `npm --prefix examples/scrypath_ecommerce run ui:preflight`, inventory pending work, and establish a new PR branch in this same mounted checkout with explicit disposition of the local feedback checkpoints. Update preview branch metadata deliberately if the branch changes; preserve the mount and data. The unrelated root checkout is dirty and historical. Never reset/stash/copy its product files into this checkout.
+
+Use `AGENTS.md`, `DESIGN.md`, `PRODUCT.md`, `.planning/reference/OPERATOR-UI-QUALITY.md` and `examples/scrypath_ecommerce/e2e/UI-REVIEW.md` as the existing authority. Preserve brand, purpose and behaviors that help the tasks. The maintainer prioritizes hierarchy, concise human domain language, intentional controls, dense useful data, consistency and operational truth over a brand refresh. Personas/JTBD remain maintained hypotheses, not invented research. Prefer small existing primitives and a flat dependency tree.
+
+Inspect the whole current inventory and representative journeys before narrowing to the examples. Perform a distinct adversarial pass for unreported problems, grouping findings by shared cause. Then implement the three coherent batches below, resolve ordinary design choices using evidence and judgment, and verify rendered outcomes. Do not stop at a new design document or ask the maintainer to repeat feedback. This handoff does not request implementation before their next start instruction.
+
+## Batch 1 — search, forms and result inspection
+
+Coverage: CONTENT-27/28, UI-38/39/41–47, UX-08/09, DOC-07.
+
+- Audit actual form constraints across Search, saved-search metadata/filenames/JSON and relevant operational controls. Deliver consistent friendly inline errors on blur/submit for touched fields, correction behavior, accessible associations and server guards. Preserve blank-query browsing; do not run searches to validate. Avoid a new form framework.
+- Align single/multiple-schema option anatomy, short/full names, selected states and layout rhythm while retaining native radio versus checkbox semantics. Avoid unnecessary mode-specific explanatory clutter or large empty spacers.
+- Reconsider the result-limit policy as part of search evaluation and traversal, not by decorating an arbitrary ceiling. Admin max 50 differs from the core's per-query page guard of 50 and combined federation default of 200. General single search has no universal 50 ceiling. Keep requests bounded, units accurate and compatibility with pinned Meilisearch 1.15. Use existing supported pagination/offset capabilities if needed; do not silently weaken library guards, change index settings or fetch unbounded data. Record the chosen minimal policy and useful help.
+- Make one compact primary multi-schema result view follow the actual combined backend order. Avoid a separate duplicate order trace plus tall per-schema lists. Clearly differentiate rank, likely title/summary, source and document ID; use aligned rows/columns where meaningful without forcing heterogeneous data into a huge sparse table. Preserve schema plus configured document-ID identity, missing/custom IDs, duplicate names, mixed types, full raw data and responsive use.
+- Keep title and likely description adjacent. Current title/summary roles are heuristics (`name/title/sku`, `description/summary/body/content`), not mandatory fields. Replace the intrusive “Product · Result 16” line with a restrained rank/source treatment. Use stable, explainable field previews instead of arbitrary alphabetical six-field prominence; retain original keys and full values.
+- Give returned counts deliberate hierarchy, omit zero-exception narration, and distinguish results shown from total matches. A successful wholly empty search gets one purposeful empty state. Loading, unavailable and partial failures remain distinct. A source contributing no hits to a bounded merged result can still have matches: never infer per-schema zero matches from that absence.
+- Make hit-level and source/run-level technical details visibly distinct. Federated per-schema raw maps are reconstructed projections, not exact original HTTP responses; label them honestly. Copy complete data with shared toast/error handling, and integrate Copy into the code surface without obscuring text, breaking selection or shifting layout. Repair shared callers, including saved JSON.
+- Put Run and Save in a coherent action group. Preserve submitted-run save semantics and server-file/no-overwrite rules; edited fields must not silently save an unexpected earlier query. Resolve draft mismatch through clear state/gating rather than inventing an unrun-draft saving flow by accident. Guidance must name Run search, not imply a separate Apply action.
+
+Current Meilisearch dispatch is one HTTP `/multi-search` request containing one logical query per selected schema. Do not add per-schema network calls merely to populate decorative totals or alternate views.
+
+## Batch 2 — health, recovery and settings
+
+Coverage: CONTENT-29/31/32, UI-48/51–53.
+
+- Reconcile health source sections with deliberate shared layout, icon policy, restrained semantic emphasis and aligned last-success placement. Do not reserve tall blank areas or reintroduce zero-metric noise. Normal pending/retrying activity need not be brown; actual failures should be identifiable without relying on color alone. Cover observed-empty, active, failed, unavailable, inline/manual and history-missing states.
+- Explain that application Oban jobs deliver sync work while Meilisearch applies document changes asynchronously. This health section inspects document additions/updates/deletions, not every Meilisearch task type or search queries. Counts are different units and do not establish end-to-end freshness. Prefer natural “Background sync with Oban” wording consistently where appropriate.
+- Unify Failed sync's tan `ops_status` notice with the restrained home/health warning grammar while allowing purposeful compact/overview variants. Preserve terminal-failure versus scheduled-retry counts, meaningful actions and unknown/partial states. Mention schema scope concisely in its introduction without reintroducing repetitive selected-module paragraphs.
+- Consolidate routine refresh: the header already refreshes sync and starts the settings read; Refresh settings repeats a subset. Preserve asynchronous completion, per-observation checked times, error recovery, schema/request-generation guards and concurrency protection. Audit copy referring to removed actions.
+- Replace stretched full-width Sync status facts and underscore-humanized signal names with compact identity/status/action hierarchy. Reuse shared status semantics without turning every pending flag into a warning pill. Do not fabricate counts or infer backlog from mere pending work.
+- Make settings differences useful inline: specific discrepancy, affected capability and the established safe next step. Missing tenant_id means absent from the live filterable-field set, not missing document data or index. The table lists differences only. Multiple filterable attributes are normal; in this demo Product declares category_id/tenant_id and Variant product_id/tenant_id, with separate schema indexes containing multiple tenants. Explain the model generically from metadata, not by hardcoding demo entities. Preserve full evidence and deduplication; distinguish settings mismatch, sync failure and proven document freshness. Keep this comparison read-only and do not invent a live-settings mutation UI.
+
+## Batch 3 — contextual Help and shared finishing
+
+Coverage: CONTENT-30, UI-40/49/50; reconcile content affected by batches 1/2.
+
+- Use one restrained contextual-help pattern following surrounding typography. Task-adjacent help opens a new tab with a quiet visible/accessibility indication, preserving the original results/draft/schema/scroll state. Primary Help navigation remains normal navigation.
+- Reproduce and fix `/help#ranking` visibility, not just link generation. The current target is an unheaded paragraph while scroll offsets apply only to sections; this is a clue, not a proven root cause. Verify direct links, contextual/new-tab entry, in-page topics, hydration, sticky shell and narrow layouts, including ranking/limits targets.
+- Give Help a purpose-specific introduction or omit unnecessary subtitle copy. Reuse matching navigation icons where useful; make destination labels/arrows read as one link. Inspect shared text-action consumers, avoiding a global style change that harms other task actions.
+- Evaluate the Failed sync recovery footer by task value, including zero-failure states. If retained, link to concise in-app recovery help at a clear functioning target. Keep deeper developer/CLI material linked from Help; do not copy the entire GitHub guide or maintain competing recovery instructions.
+
+## Verification and completion
+
+Follow the existing review runbook, including a whole-inventory critique and a bounded batched repair/confirmation cycle. Build fully, inspect desktop/tablet/mobile with light/dark/system-dark plus actual populated/empty/loading/error/partial states, fix findings together, then confirm. No beauty score, invented independent reviewer, automatic golden acceptance or endless cosmetic loop. Record genuinely remaining issues explicitly.
+
+Use the existing Docker/Elixir/browser tooling; the host lacks Elixir. Meaningful regression checks cover validation/correction, submitted-versus-draft save semantics, backend result order and arbitrary IDs, bounded counts/empty/partial truth, full selectable/copyable data, stationary toasts, visible fragment targets and source-specific health/settings semantics. Run `mix verify.ops_ui`, appropriate demo tests and affected existing browser suites in an owned disposable stack, then the current rendered review/checker and applicable lean CI gates. Prior passing results do not verify new code. Keep exact-source evidence and publish a new outcome report with feedback dispositions and test/run limitations.
+
+Preserve the retained port-4002 data and volumes. Never reseed it or run mutation tests against it. Prior disposable `scrypath_ui_followup` ports 4013/4014, containers and seven volumes were removed; recreate only explicitly owned test resources after checking conflicts. Use fresh owned backend history rather than weakening the 1000-task bound. Do not reuse terminated service URLs as live evidence.
+
+Never stage/delete/reset the untracked maintainer file `examples/scrypath_ecommerce/priv/playbooks/my-search.json`; SHA256 `3c8de6b45b9b3bc6f5daff18ce71da1ee817b5270ddc57a8c064f59a1a42c0f7`. No brand refresh, public API/Playbook format change, new dependency, speculative infrastructure or dependency-audit remediation belongs to this pass. The unrelated advisory has its own pending task. Keep serious implementation PR-first; report actual verification and the next concrete step when finished.

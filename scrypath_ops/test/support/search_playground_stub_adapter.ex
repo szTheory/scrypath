@@ -41,6 +41,10 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
       :partial ->
         partial_result(entries, opts)
 
+      :reverse_merge ->
+        {:ok, result} = merge_result(entries, opts)
+        {:ok, %{result | merge_hit_order: Enum.reverse(result.merge_hit_order)}}
+
       :merge ->
         merge_result(entries, opts)
 

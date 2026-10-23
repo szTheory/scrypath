@@ -18,7 +18,7 @@ defmodule ScrypathOpsWeb.ResultUiTest do
     document =
       render_component(&ResultUi.result_hit/1, hit: hit, position: 2) |> LazyHTML.from_fragment()
 
-    assert document |> LazyHTML.query("h3") |> LazyHTML.text() == "Result 2"
+    assert document |> LazyHTML.query("h3") |> LazyHTML.text() == "Document"
     assert LazyHTML.text(document) =~ hit["description"]
     assert LazyHTML.text(document) =~ "false"
     assert LazyHTML.text(document) =~ "null"
@@ -53,5 +53,38 @@ defmodule ScrypathOpsWeb.ResultUiTest do
     source = "{\n  \"value\": \"  keep these spaces  \"\n}"
     document = render_component(&OpsUi.ops_code_block/1, text: source) |> LazyHTML.from_fragment()
     assert document |> LazyHTML.query("pre") |> LazyHTML.text() == source
+  end
+
+  test "configured document identity takes precedence over an unrelated id field" do
+    hit = %{
+      "uuid" => "item-0001",
+      "id" => 9,
+      "title" => "Same title",
+      "description" => "Adjacent summary"
+    }
+
+    document =
+      render_component(&ResultUi.result_hit/1,
+        hit: hit,
+        position: 8,
+        schema: ScrypathOps.Test.CustomDocument
+      )
+      |> LazyHTML.from_fragment()
+
+    assert document |> LazyHTML.query(".ops-hit-id") |> LazyHTML.text() =~ "item-0001"
+    assert document |> LazyHTML.query(".ops-hit-id") |> LazyHTML.text() =~ "uuid"
+    assert document |> LazyHTML.query(".ops-hit-rank") |> LazyHTML.text() == "8"
+
+    assert document |> LazyHTML.query(".ops-hit-description") |> LazyHTML.text() ==
+             "Adjacent summary"
+
+    missing =
+      render_component(&ResultUi.result_hit/1,
+        hit: %{"title" => "No id returned"},
+        position: 9,
+        schema: ScrypathOps.Test.CustomDocument
+      )
+
+    assert missing =~ "not returned"
   end
 end

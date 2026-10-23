@@ -11,7 +11,7 @@ defmodule ScrypathOpsWeb.HelpLive do
     <Layouts.app mount_path={@mount_path} flash={@flash} shell={@shell} page_title={@page_title}>
       <.ops_page_header
         title="Help"
-        subtitle="Try a query, understand a sync problem, or reuse a search."
+        subtitle="Explanations of search results, synchronization and recovery."
       />
       <nav class="ops-help-topics" aria-label="Help topics">
         <a href="#search">Try search</a>
@@ -19,19 +19,42 @@ defmodule ScrypathOpsWeb.HelpLive do
         <a href="#sync">Understand sync</a>
         <a href="#settings">Check settings</a>
       </nav>
-      <div class="ops-help-content">
+      <div class="ops-help-content" id="ops-help-content" phx-hook="OpsHelpAnchor">
         <section id="search">
-          <.ops_heading>Try a search</.ops_heading>
+          <.ops_heading>
+            <span class="ops-help-heading">
+              <.icon name="hero-magnifying-glass" class="size-5" />Try a search
+            </span>
+          </.ops_heading>
           <p>Select a schema, enter search text and run the query. Leave the text blank to browse.</p>
           <p>
             A schema is the Elixir module that defines your searchable data. Its Meilisearch index holds the search documents.
           </p>
-          <p id="ranking">
-            With multiple schemas, results are grouped by source. Combined result order shows how Meilisearch returned the hits across those sources; raw relevance scores from different indexes are not directly comparable.
-          </p>
-          <p id="limits">
-            The result limit controls how many hits to return. In multi-schema mode it applies to the combined response. This screen shows the first set of results; it has no next-page control.
-          </p>
+          <section
+            id="ranking"
+            class="ops-help-subtopic"
+            aria-labelledby="ranking-title"
+          >
+            <h3 id="ranking-title">How ordering works</h3>
+            <p>
+              Searching multiple schemas sends one query per schema in a single Meilisearch request. Meilisearch combines the hits; the result list keeps that returned order. Raw relevance scores from different indexes are not directly comparable.
+            </p>
+            <p>
+              A schema with no hits on the current page may still have matches further down the combined order. Partial results identify schemas that could not be searched.
+            </p>
+          </section>
+          <section id="limits" class="ops-help-subtopic" aria-labelledby="limits-title">
+            <h3 id="limits-title">Results per page</h3>
+            <p>
+              Use a small page to inspect matches quickly. Previous and Next browse further results without fetching everything at once. In multi-schema search, the page size applies across all selected schemas together.
+            </p>
+            <p>
+              The host sets the maximum per page (50 by default) with <code>:search_playground_max_page_size</code>. It can raise this budget for larger comparisons. This is an operator UI request budget, not a limit on the number of matching documents or your application's search UI.
+            </p>
+            <p>
+              A full page offers Next; the following page can be empty. Meilisearch's own search limits still apply, and changing data can move results between pages.
+            </p>
+          </section>
           <p>
             Readable fields show the returned document. Open Raw hit payload to inspect or copy its Elixir representation. Database records and search documents can differ.
           </p>
@@ -40,9 +63,13 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="saved-searches">
-          <.ops_heading>Save and reuse a search</.ops_heading>
+          <.ops_heading>
+            <span class="ops-help-heading">
+              <.icon name="hero-book-open" class="size-5" />Save and reuse a search
+            </span>
+          </.ops_heading>
           <p>
-            After running a query, choose Save search beside the results. This saves the query and options that produced those results.
+            After running a query, choose Save search beside Run search. This saves the query and options that produced those results. If you edit the inputs, run the updated search before saving it.
           </p>
           <p>
             Saved searches are JSON files in a folder on this server. They contain inputs, not result snapshots. Your host application controls the folder and its persistence; the list is not a personal browser bookmark collection.
@@ -55,13 +82,17 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="sync">
-          <.ops_heading>Understand a sync problem</.ops_heading>
+          <.ops_heading>
+            <span class="ops-help-heading">
+              <.icon name="hero-shield-check" class="size-5" />Understand a sync problem
+            </span>
+          </.ops_heading>
           <p>
             Changes travel from your application to Meilisearch, then Meilisearch applies them to the index. A request being accepted does not mean its documents are searchable yet.
           </p>
           <dl class="ops-help-definitions">
             <div>
-              <dt>Background sync · Oban</dt>
+              <dt>Background sync with Oban</dt>
               <dd>
                 Your application queues durable jobs. Pending work can be normal; scheduled retries have encountered a failure, and failed jobs may need your attention.
               </dd>
@@ -91,14 +122,40 @@ defmodule ScrypathOpsWeb.HelpLive do
           <p>
             Search health shows failures and pending work by schema. Inspect the error before retrying. A queued retry is a new operation; follow its status to check completion. No failures in the available history does not prove the index is current.
           </p>
+          <section
+            id="recovery"
+            class="ops-help-subtopic"
+            aria-labelledby="recovery-title"
+          >
+            <h3 id="recovery-title">Recover from a sync failure</h3>
+            <p>
+              Choose the affected schema in Failed sync work. Read the error and fix its cause before using an eligible Retry action. Retrying jobs can already have an automatic retry scheduled.
+            </p>
+            <p>
+              After Retry is queued, follow Check sync status to track that operation and its expected document effect. Acceptance alone does not confirm recovery.
+            </p>
+          </section>
           <.link navigate={"#{@mount_path}/health"} class="ops-text-action">
             Open Search health <span aria-hidden="true">→</span>
           </.link>
         </section>
         <section id="settings">
-          <.ops_heading>Check index settings</.ops_heading>
+          <.ops_heading>
+            <span class="ops-help-heading">
+              <.icon name="hero-arrows-right-left" class="size-5" />Check index settings
+            </span>
+          </.ops_heading>
           <p>
             Sync and drift compares your schema's declared settings with the live Meilisearch index. The comparison loads automatically and makes no changes.
+          </p>
+          <p>
+            Filterable attributes are the fields Meilisearch allows in query filters. An index can enable several. “Not enabled for filtering” means a declared field is absent from that index's live filterable settings; it does not mean the field or index is missing.
+          </p>
+          <p>
+            A schema normally maps to its own index. Multiple tenants can share that index. Enabling a tenant field for filtering does not apply a tenant filter automatically or enforce access control; application queries and authorization must do that.
+          </p>
+          <p>
+            If the declaration is correct, apply it through your application's index setup or reindex workflow, then use Refresh to compare again. Review the deployment procedure in the developer documentation before changing a live index.
           </p>
           <p>
             Matching settings and successfully completed tasks are useful checks. To confirm an expected document is searchable, run a query for it.

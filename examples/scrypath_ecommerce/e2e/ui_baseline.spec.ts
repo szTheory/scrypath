@@ -14,7 +14,7 @@ test("query → saved inputs → replay keeps results and edited drafts distinct
   await page.getByLabel("Search text").fill("quantum");
   await page.getByRole("button", { name: "Run search", exact: true }).click();
   await expect(page.locator("#search-run-attribution")).toHaveAttribute("data-query", "quantum");
-  await expect(page.getByTestId("search-outcome")).toContainText(/completed.*hits/i);
+  await expect(page.getByTestId("search-outcome")).toContainText(/results? shown/i);
   await page.getByRole("button", { name: "Save search", exact: true }).first().click();
   const filename = `ui-baseline-${Date.now()}.json`;
   await page.locator("#capture_basename").fill(filename);

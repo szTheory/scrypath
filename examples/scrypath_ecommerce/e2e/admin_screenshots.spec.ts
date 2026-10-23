@@ -59,7 +59,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Refresh settings" }).click();
+  await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
   await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 

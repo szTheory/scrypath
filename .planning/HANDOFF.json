@@ -1,0 +1,312 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-10-22T23:51:25.108Z",
+  "context": "default",
+  "context_name": "Scrypath UI iteration 3 and sync-layout follow-up",
+  "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
+  "branch": "fix/ui-iteration-3",
+  "phase": null,
+  "phase_name": null,
+  "phase_dir": null,
+  "plan": null,
+  "task": 3,
+  "total_tasks": 3,
+  "status": "paused",
+  "implementation_head": "c6522ea814437345ac4720a68010e8b066adeccb",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Implement all three UI iteration 3 batches and original rendered journey verification",
+      "status": "done",
+      "commit": "ec8430f2"
+    },
+    {
+      "id": 2,
+      "name": "Stable settings metadata, scoped timestamps, shared notice alignment, quieter comparison and meaningful activity counts",
+      "status": "done",
+      "commit": "c6522ea8"
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": 3,
+      "name": "Resolve the required ecommerce-mounted target-size failure and verify the resulting exact PR head",
+      "status": "not_started",
+      "verification_command": "mix verify.ecommerce_mounted",
+      "evidence": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769778",
+      "scope": "Variant recovery, recovery-verified-dark-desktop, .ops-text-action and .ops-help-link"
+    }
+  ],
+  "blockers": [
+    {
+      "description": "PR #107 ecommerce-mounted (required) failed at implementation head c6522ea8: target-size on .ops-text-action and .ops-help-link in rendered Variant recovery. Root cause and repair remain unverified.",
+      "type": "technical",
+      "workaround": "Reproduce in the owned disposable verifier; preserve the accessibility assertion and recovery safeguards."
+    }
+  ],
+  "async_jobs": [],
+  "human_actions_pending": [],
+  "decisions": [
+    {
+      "decision": "Use the reconciliation checkout and its current handoff rather than the dirty root checkout or old numbered phases.",
+      "rationale": "The retained preview mount and source were previously confused between checkouts.",
+      "phase": null
+    },
+    {
+      "decision": "Preserve the existing brand, preview database/index data and untracked maintainer saved search.",
+      "rationale": "Maintainer-authorized UI refinement; data replacement and brand refresh are outside this scope.",
+      "phase": null
+    },
+    {
+      "decision": "Keep separate Sync checked and Settings checked observations; mount timestamp hooks from the initial placeholder.",
+      "rationale": "Reads complete independently; adding the hook only after data arrives lost copying/local formatting.",
+      "phase": null
+    },
+    {
+      "decision": "Treat pending jobs, scheduled retries and terminal failures separately.",
+      "rationale": "Pending work alone is not a proven backlog; the core failed-work collection also contains scheduled retries.",
+      "phase": null
+    }
+  ],
+  "blocking_constraints": [
+    {
+      "id": "CHECKOUT-OWNERSHIP",
+      "severity": "blocking",
+      "description": "Work only in the named canonical checkout; preserve the unrelated dirty root checkout and the maintainer untracked saved search.",
+      "mitigation": "Read UI-PREVIEW, verify branch/mount and inventory git status before edits or any worktree switch."
+    },
+    {
+      "id": "PREVIEW-DATA-OWNERSHIP",
+      "severity": "blocking",
+      "description": "The normal entrypoint can reseed retained data; mutation suites and accumulated search history previously invalidated observations.",
+      "mitigation": "Keep DEMO_SEED_ON_START=0 for retained services; use a disposable stack for seed/retry/promotion/CI reproduction; keep artifacts outside test-results."
+    },
+    {
+      "id": "EXACT-RENDERED-GATE",
+      "severity": "blocking",
+      "description": "The targeted local suite passed, but the hosted required recovery journey failed its stronger touch-target assertion.",
+      "mitigation": "Reproduce and rerun mix verify.ecommerce_mounted; preserve the target-size rule, exact source evidence and recovery behavior."
+    }
+  ],
+  "uncommitted_files": [
+    "?? examples/scrypath_ecommerce/priv/playbooks/my-search.json"
+  ],
+  "runtime": {
+    "preview_url": "http://127.0.0.1:4002/admin/search",
+    "container": "scrypath_ecommerce-web-1",
+    "status": "exited",
+    "exit_code": 255,
+    "finished_at": "2026-10-19T20:18:17.496076668Z",
+    "mount": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
+    "seed_on_start": false,
+    "other_retained_services": "Postgres and Meilisearch are also stopped; do not start or reset during pause.",
+    "published_ports_now": {},
+    "preflight": "Fails because the stopped container has no published loopback endpoint; remote-main freshness was not established."
+  },
+  "pull_request_snapshot": {
+    "headRefName": "fix/ui-iteration-3",
+    "headRefOid": "c6522ea814437345ac4720a68010e8b066adeccb",
+    "isDraft": true,
+    "mergeStateStatus": "BLOCKED",
+    "mergedAt": null,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769323",
+        "name": "core (required)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661892/job/116627767355",
+        "name": "build-and-check",
+        "startedAt": "2026-10-15T19:31:56Z",
+        "status": "COMPLETED",
+        "workflowName": "Website"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:39Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661892/job/116628123805",
+        "name": "deploy",
+        "startedAt": "2026-10-15T19:32:40Z",
+        "status": "COMPLETED",
+        "workflowName": "Website"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627768879",
+        "name": "package (required)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769186",
+        "name": "repository-contracts (required)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:19Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627768652",
+        "name": "backend (required)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769117",
+        "name": "compatibility (advisory) (1.17.3, 26.2.5)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769219",
+        "name": "compatibility (advisory) (1.18.4, 27.3)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769521",
+        "name": "compatibility (advisory) (1.19.0, 26.2.5)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769476",
+        "name": "compatibility (advisory) (1.19.0, 28.1)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:30Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769373",
+        "name": "deep-quality (advisory)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:33:41Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769147",
+        "name": "phoenix-example (advisory)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:32:01Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769318",
+        "name": "ops-ui-path",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:36:10Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627769778",
+        "name": "ecommerce-mounted (required)",
+        "startedAt": "2026-10-15T19:31:57Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:31:55Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627770361",
+        "name": "coverage (advisory)",
+        "startedAt": "2026-10-15T19:31:55Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:31:55Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627770876",
+        "name": "ecommerce-e2e (advisory)",
+        "startedAt": "2026-10-15T19:31:55Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:33:58Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116627822524",
+        "name": "ops-ui (path-scoped)",
+        "startedAt": "2026-10-15T19:32:04Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-15T19:36:10Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/szTheory/scrypath/actions/runs/38794661886/job/116629780136",
+        "name": "closeout-attestation",
+        "startedAt": "2026-10-15T19:36:11Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "url": "https://github.com/szTheory/scrypath/pull/107"
+  },
+  "verification": {
+    "product_source_sha256": "9786a6894cf36dd0795f6b40b19fbe445c0244c050c1a48700701d0c5edcace1",
+    "historical_local": "2026-10-15: precommit and verify.ops_ui each 319 tests + 2 doctests; 8 focused browser cases plus read-only copy/navigation receipts. Not rerun during pause.",
+    "current_hosted": "Core, backend, package, repository contracts, website and path-scoped Ops checks passed; required mounted check failed; advisory deep-quality failed; no jobs remain running.",
+    "source_receipt": "examples/scrypath_ecommerce/ui-review-artifacts/settings-layout-followup/confirmation.json",
+    "volatile_logs": "Original Oct 15 /tmp logs have expired; durable reports, capture files and hosted CI are the evidence sources.",
+    "placeholder_summary_files": []
+  },
+  "preserved_file": {
+    "path": "examples/scrypath_ecommerce/priv/playbooks/my-search.json",
+    "sha256": "3c8de6b45b9b3bc6f5daff18ce71da1ee817b5270ddc57a8c064f59a1a42c0f7",
+    "ownership": "Maintainer; leave untracked and untouched."
+  },
+  "next_action": "From the canonical checkout, read .planning/.continue-here.md and the failed hosted job; on explicit resume reproduce the Variant recovery target-size failure with mix verify.ecommerce_mounted in its owned disposable stack. No phase replay or new polish cycle.",
+  "context_notes": "User explicitly requested pause on 2026-10-22. UI implementation is committed and pushed; draft PR #107 remains open, unmerged and blocked by the required mounted check. This pause changes handoff documents only and leaves services/data untouched. Use $gsd-resume-work from the canonical checkout. The older root checkout has separate dirty historical work; it was inspected but not modified."
+}

@@ -27,7 +27,7 @@ import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
-import {OpsSearchDraft} from "./ops_search"
+import {OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation} from "./ops_search"
 
 import {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy} from "./ops_hooks"
 
@@ -99,7 +99,7 @@ const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
   localStorage: safeLocalStorage,
-  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft},
+  hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation},
 })
 
 // Show progress bar on live navigation and form submits

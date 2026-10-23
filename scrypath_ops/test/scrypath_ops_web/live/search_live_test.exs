@@ -74,7 +74,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert submit_buttons == 1
 
     ordered_markers =
-      ["Search mode", "search_schema", "Search text", "Result limit", "Run search"]
+      ["Search mode", "search_schema", "Search text", "Results per page", "Run search"]
       |> Enum.map(fn marker -> :binary.match(html, marker) |> elem(0) end)
 
     assert ordered_markers == Enum.sort(ordered_markers)
@@ -193,19 +193,15 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Some schemas could not be searched."
+    assert html =~ "Some schemas could not be searched"
 
-    assert html =~
-             "Partial search: 1 hit from 2 indexes; 1 index returned no matches and 1 index failed."
-
+    assert html =~ "1 result shown"
     assert html =~ "Partial result"
-    assert html =~ "No matching documents returned for this index."
-    assert html =~ "Index failed: #{inspect(OpsPostA)}"
-    assert html =~ ~s(<code>:stub</code>)
-    assert html =~ "Check this index and its backend configuration, then run search again."
-    assert html =~ ~s(data-index-outcome="returned")
-    assert html =~ ~s(data-index-outcome="no-hits")
+    refute html =~ "No matching documents returned for this index."
+    assert html =~ inspect(OpsPostA)
+    assert html =~ ":stub"
     assert html =~ ~s(data-index-outcome="failed")
+    refute html =~ ~s(data-index-outcome="no-hits")
     refute html =~ ~r/<details[^>]*open/
   end
 
@@ -223,8 +219,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert render(view) =~ "50"
   end
 
-  test "merge stub exposes merge trace block", %{conn: conn} do
-    Application.put_env(:scrypath_ops, :search_stub_variant, :merge)
+  test "the primary list follows backend order even for duplicate titles", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :search_stub_variant, :reverse_merge)
 
     {:ok, view, _html} = live(conn, ~p"/ops/search?mode=multi")
 
@@ -236,7 +232,16 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
     })
 
-    assert render(view) =~ "Combined result order"
+    assert has_element?(view, "#search-combined-results .ops-readable-hit")
+
+    sources =
+      render(view)
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#search-combined-results .ops-hit-source")
+      |> Enum.map(&LazyHTML.text/1)
+      |> Enum.map(&String.trim/1)
+
+    assert sources == ["OpsPostB", "OpsPostA"]
   end
 
   test "nested JSON hit fields render as safe structured values", %{conn: conn} do
@@ -363,7 +368,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Some schemas could not be searched."
+    assert html =~ "Some schemas could not be searched"
     assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save search")
 
     view
@@ -552,7 +557,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ inspect(OpsPostA)
     assert html =~ "original probe"
     assert has_element?(view, "#search-run-attribution[data-limit='7']")
-    assert html =~ "Search completed: no matching documents"
+    assert html =~ "No matching documents"
     refute html =~ "Run current search"
 
     render_patch(
@@ -578,7 +583,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ ~s(data-testid="search-mode-multi")
     assert html =~ "original probe"
     assert has_element?(view, "#search-run-attribution[data-limit='7']")
-    refute html =~ ~s(id="search-capture-json")
+    assert html =~ ~s(id="search-capture-json")
   end
 
   test "an empty query remains a valid submitted search", %{conn: conn} do
@@ -595,7 +600,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "Search completed: no matching documents"
+    assert html =~ "No matching documents"
     assert html =~ "all documents"
     refute html =~ "Select a query"
   end
@@ -644,7 +649,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "Fix the query options or operator config, then run search again."
     assert html =~ "ops-badge-error"
     refute html =~ ~s(data-testid="search-outcome")
-    refute html =~ "Some schemas could not be searched."
+    refute html =~ "Some schemas could not be searched"
   end
 
   defp temporary_playbook_workspace do
@@ -667,5 +672,34 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     end)
 
     dir
+  end
+
+  test "invalid numeric input is retained and never submits a substitute limit", %{conn: conn} do
+    {:ok, view, _} = live(conn, ~p"/ops/search")
+
+    for limit <- ["", "3.5", "15oops", "51"] do
+      view
+      |> element("#ops-search-playground-form")
+      |> render_submit(%{"q" => "keep", "page_size" => limit, "schema" => inspect(OpsPostA)})
+
+      assert has_element?(view, "#search_page_size-error", "Enter a whole number from 1 to 50.")
+      refute has_element?(view, "#search-results-heading")
+    end
+  end
+
+  test "one empty multi search has one empty state and no source zero-match claims", %{conn: conn} do
+    {:ok, view, _} = live(conn, ~p"/ops/search?mode=multi")
+
+    view
+    |> element("#ops-search-playground-form")
+    |> render_submit(%{
+      "q" => "",
+      "page_size" => "10",
+      "schemas" => [inspect(OpsPostA), inspect(OpsPostB)]
+    })
+
+    assert has_element?(view, ".ops-empty-hero", "No matching documents")
+    refute has_element?(view, "[data-index-outcome=no-hits]")
+    assert has_element?(view, "details", "Response data")
   end
 end

@@ -65,7 +65,7 @@ export async function gotoSyncDrift(page: Page): Promise<void> {
   await page.goto("/admin/search/sync-drift");
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and drift" })).toBeVisible();
-  await page.getByRole("button", { name: "Refresh settings" }).click();
+  await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
   await expect(page.getByText(/Index settings (match|differ)/).first()).toBeVisible();
 }
 

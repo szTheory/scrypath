@@ -149,7 +149,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | Search health | Fleet verdict and metrics → worst-first schema evidence | `ops_verdict`, `ops_metric_grid`, schema articles with distinct Backend and Queue groups |
 | Failed sync work | Selected schema and inspection → failed rows → eligible retry and recovery | `ops_schema_select`, `ops_result_row`, `ops_action_group`, `ops_modal`, `ops_handoff` |
 | Sync and drift | Reconciliation → contract → freshness/recovery → gated promotion | `ops_section`, `ops_signal_table`, `ops_data_card`, native advanced `<details>` |
-| Search | Target/query form → attributed per-index Results → capture | `ops_fieldset`, `ops_segmented_control`, `ops_schema_select`, `ops_result_row`, `ops_disclosure` |
+| Search | Target/query form → compact backend-ordered Results → page / save | `ops_segmented_control`, `ops_schema_select`, `ResultUi.result_hit`, `ops_disclosure`, `ops_help_link` |
 | Playbooks | Workspace catalog → preview → run outcome → import | `ops_object_list`, `ops_object_item`, labelled preview/outcome sections, native import controls |
 
 ### Superseded rules
@@ -477,3 +477,5 @@ Retained source evidence wraps into one column on mobile and two columns on wide
 Index settings use a real declared/live comparison with a focusable scroll region when
 needed. Specific differences replace overlapping mismatch counts and raw report-version
 metadata. Settings agreement is separate from operation completion and document visibility.
+
+- `ops_help_link`: contextual Help in a new tab, surrounding text size, external-window icon and accessible notice.
