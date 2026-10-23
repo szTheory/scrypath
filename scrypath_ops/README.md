@@ -113,7 +113,7 @@ Optional environment variables (read in `config/runtime.exs`, same spirit as `SC
 
 ## Production
 
-When you run a **release** in **`MIX_ENV=prod`**, **`OPSUI_AUTH_MODE`** is **mandatory** and must be one of the values enforced at boot (see **`scrypath_ops/docs/SECURITY.md`**). Read that file before exposing `/ops` on a network.
+Before exposing `/ops` on a network, configure a real host or trusted-edge authentication boundary for HTTP, LiveView WebSocket, and long-poll traffic. **`OPSUI_AUTH_MODE`** is validated as a configuration value, but it does not provide authentication or protect the routes; see **`scrypath_ops/docs/SECURITY.md`** for the exact boundary and integration limits.
 
 ## Learn more
 
