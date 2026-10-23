@@ -261,7 +261,7 @@ Verification: scrypath_ops `mix test` 309/0, nav contract, Docker `verify-mounte
 - **Run diagnostics:** backend search errors on Search now appear in the same copyable error block Failed sync uses. Config and validation errors keep their plain sentences. The old saved-search troubleshooting link isn't restored, because that doc covers saved-search JSON, not backend failures.
 - **Full advisory browser lane (`make verify-e2e`) repaired.** It isn't a CI gate, and it had drifted since #105–#109. Real fixes:
   - Running a saved search with options Scrypath rejects (such as a string-keyed `filter`) crashed the LiveView; it now shows "Search could not run" with the error.
-  - The Manage sheet's focus trap now counts `<summary>` stops.
+  - The Manage sheet's focus trap now counts `<summary>` stops and skips the contents of a closed `<details>` (Chrome reports rects for them, though they aren't tabbable). If Tab still leaves an open dialog, focus wraps back.
   - The sheet keeps the background `inert` through LiveView patches (a MutationObserver puts it back after, for example, a rename re-renders the header).
   - Failed sync row titles use the 16px `h3` heading token, meeting the record-heading floor.
   - The contrast manifest is back in lockstep with the CSS: 30 muted-label selectors registered, one stale entry removed. AA failures remain 0.
