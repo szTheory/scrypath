@@ -550,6 +550,10 @@ const OpsModal = {
     ].join(",")
 
     return Array.from(this.el.querySelectorAll(selector)).filter(el => {
+      // Content of a closed <details> still reports client rects but isn't tabbable;
+      // only its own <summary> is.
+      const closed = el.closest("details:not([open])")
+      if (closed && !(el.tagName === "SUMMARY" && el.parentElement === closed)) return false
       return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" &&
         !el.matches(":disabled") && el.getClientRects().length > 0
     })

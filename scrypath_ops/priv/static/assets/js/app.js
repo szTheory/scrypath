@@ -9390,6 +9390,8 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
         "[tabindex]:not([tabindex='-1'])"
       ].join(",");
       return Array.from(this.el.querySelectorAll(selector)).filter((el) => {
+        const closed = el.closest("details:not([open])");
+        if (closed && !(el.tagName === "SUMMARY" && el.parentElement === closed)) return false;
         return !el.closest("[hidden]") && el.getAttribute("aria-hidden") !== "true" && !el.matches(":disabled") && el.getClientRects().length > 0;
       });
     },
