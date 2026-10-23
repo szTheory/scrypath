@@ -111,6 +111,14 @@ async function gotoSearch(page: Page): Promise<void> {
 async function switchSearchMode(page: Page, mode: "single" | "multi"): Promise<void> {
   const label = mode === "multi" ? "Multiple schemas" : "One schema";
   await page.getByRole("button", { name: label }).click();
+  if (mode === "multi") {
+    // A restored form draft can leave every schema unchecked; search both explicitly.
+    const schemas = page.locator("input[name='schemas[]']");
+    await expect(schemas.first()).toBeVisible();
+    for (const schema of await schemas.all()) {
+      if (!(await schema.isChecked())) await schema.check();
+    }
+  }
 }
 
 async function runBoundedSearch(page: Page, query: string): Promise<void> {
@@ -289,13 +297,9 @@ test.describe("admin path motion — DARKMOTION-01", () => {
       try {
         await gotoSearch(page);
         await switchSearchMode(page, "multi");
+        await runBoundedSearch(page, "quantum");
         const results = page.locator("#search-combined-results");
-        // The seed only waits for the Product index; a federated search fails until the
-        // Variant index has settled too, so rerun until the combined results appear.
-        await expect(async () => {
-          await runBoundedSearch(page, "quantum");
-          await expect(results).toBeVisible({ timeout: 2_000 });
-        }).toPass({ timeout: 20_000 });
+        await expect(results).toBeVisible();
         await expect(page.locator(".ops-code-block--shimmer")).toHaveCount(0);
         await expect(results.locator(".ops-readable-hit").first()).toBeVisible();
         // Raw hit payloads are Elixir-formatted on purpose; the readable heading must not be.
