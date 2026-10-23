@@ -234,3 +234,7 @@ Recorded for one batched pass after PR #107 (`427dd1ab`); nothing below is imple
 - **Q15 → table `scrypath_ops_saved_searches`** (id, unique `name`, `schema`, `definition` jsonb holding the v1 saved-search map, timestamps) in the host Repo's default schema, with an optional `prefix:`. No per-user ownership.
 - **Q16 → file storage removed.** No `playbook_workspace_dir`, read-only examples mode or folder display. JSON import/export stays. The maintainer's `my-search.json` stays untouched on disk and is imported once through Import after the new UI ships.
 - **Q17 → retire “playbook” everywhere**: modules, mix task (`scrypath_ops.saved_searches.validate`), guides and example fixtures. Import still accepts existing v1 JSON.
+
+### Decision — 2026-10-22, retry semantics (supersedes round-2 “Q18” callback-on-retry idea)
+
+After a research fan-out (`.planning/research/SYNC-RELOAD-PROPOSAL.md`), the maintainer delegated the call. Oban upsert jobs now carry document ids and load current records when they run, so operator and automatic retries never replay stale data. Shipped separately as PR #108 (`fix/oban-sync-loads-current-records`); this UI branch is rebased on it. Consequences for this batch: CONTENT-42 needs only one plain sentence about Retry (“Retry queues the same records again and sends their current data”), with no snapshot-warning state; UI-62's data-error guidance stays (“fix the record, then retry”).
