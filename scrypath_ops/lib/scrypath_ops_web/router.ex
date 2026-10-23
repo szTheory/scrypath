@@ -38,7 +38,7 @@ defmodule ScrypathOpsWeb.Router do
           live("/failed-sync", ScrypathOpsWeb.FailedSyncLive)
           live("/sync-drift", ScrypathOpsWeb.SyncDriftLive)
           live("/search", ScrypathOpsWeb.SearchLive)
-          live("/playbooks", ScrypathOpsWeb.SavedSearchLive)
+          live("/playbooks", ScrypathOpsWeb.SearchLive, :legacy_saved_searches)
           live("/help", ScrypathOpsWeb.HelpLive)
         end
       end

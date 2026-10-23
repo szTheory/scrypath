@@ -11,13 +11,6 @@ export const OpsSearchDraft = {
       const submitted = JSON.parse(context.dataset.schemas)
       const changed = mode !== context.dataset.mode || String(data.get("q") || "").trim() !== context.dataset.query || Number(data.get("page_size")) !== Number(context.dataset.limit) || JSON.stringify(schemas) !== JSON.stringify(submitted.sort())
       context.hidden = !changed
-      const save = document.getElementById("search-save-toggle")
-      if (save) {
-        save.disabled = changed
-        save.title = changed ? "Run search to save the updated inputs" : "Save the inputs for these results"
-      }
-      const panel = document.getElementById("search-capture-form-panel")
-      if (changed && panel) panel.style.display = "none"
     }
     this.el.addEventListener("input", this.syncDraft)
     this.el.addEventListener("change", this.syncDraft)

@@ -6,12 +6,12 @@ ScrypathOps is an optional Phoenix and LiveView interface for inspecting search 
 
 - **Try search:** select a schema, enter a query and inspect the returned records. Search shows which query and schemas produced the results, even if you edit the controls afterward.
 - **Investigate a sync problem:** open Search health, select the affected schema in Failed sync work and review the error. Retry only supported operations. A queued retry is not a completed update; follow its status to check Meilisearch and document visibility.
-- **Reuse a query:** save its inputs from Search, then preview or run it in Saved searches. A saved search contains queries and options, not results or pass/fail expectations. It can include multiple schemas.
+- **Reuse a query:** choose Save search beside Run search, then pick it from the Saved searches menu in Search to fill the form and run it again. A saved search contains queries and options, not results or pass/fail expectations. It can include multiple schemas. Manage saved searches (in Search) loads, renames, deletes, imports and exports them.
 - **Check an index change:** Sync and drift compares your declared settings with Meilisearch automatically. It makes no settings changes. Index promotion remains an advanced action with explicit checks and confirmation.
 
 ## Navigation
 
-The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Help lives at the bottom of the sidebar and explains the installed UI. This repository guide provides developer and integration context. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health.
+The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Help lives at the bottom of the sidebar and explains the installed UI. This repository guide provides developer and integration context. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health, and old `/ops/playbooks` links open Manage saved searches in Search (`/ops/search?saved=manage`).
 
 | Destination | Default route | Purpose |
 | --- | --- | --- |
@@ -20,7 +20,6 @@ The default mount is `/ops`; host apps can choose another prefix. The demo uses 
 | Search health | `/ops/health` | Inspect Meilisearch tasks and background sync by schema. |
 | Failed sync work | `/ops/failed-sync` | Review failures and scheduled retries; retry eligible operations. |
 | Sync and drift | `/ops/sync-drift` | Inspect current work, compare index settings and follow a correlated retry. |
-| Saved searches | `/ops/playbooks` | Preview, run, save or import search inputs. |
 | Help | `/ops/help` | Task-focused help within the installed interface. |
 
 ## Reading operational evidence
@@ -31,7 +30,7 @@ A successful observation reports what was checked. Unavailable, partial or retai
 
 Timestamps display UTC by default. The Time control switches to your browser's local zone and remembers your choice. Click a timestamp, or focus it and press Enter, to copy its original source value; copy failures expose that exact value for manual copying.
 
-Saved searches are stored in the host Repo (run `ScrypathOps.Migration` once) and are imported and exported as **v1 saved-search JSON**. The page is served at `/playbooks` for now. See the [file format](saved-search-schema-v1.md) and [storage setup](team-saved-search-persistence.md).
+Saved searches are stored in the host Repo (run `ScrypathOps.Migration` once) and are imported and exported as **v1 saved-search JSON** from Manage saved searches. A saved search the form can show (one query and a page size) fills the form and runs like any search. One with more options (different queries per schema, filters, sort or facets) runs exactly as saved and lists the inputs it used. See the [file format](saved-search-schema-v1.md) and [storage setup](team-saved-search-persistence.md).
 
 ## Further help
 
@@ -45,7 +44,7 @@ The hidden navigation contract is checked against `ScrypathOpsWeb.Nav.primary/0`
 
 <!-- scrypath:nav-contract-begin -->
 <!--
-[{"route":"/ops/search","label":"Search"},{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/playbooks","label":"Saved searches"},{"route":"/ops/help","label":"Help"}]
+[{"route":"/ops/search","label":"Search"},{"route":"/ops/health","label":"Search health"},{"route":"/ops/failed-sync","label":"Failed sync work"},{"route":"/ops/sync-drift","label":"Sync and drift"},{"route":"/ops/help","label":"Help"}]
 -->
 <!-- scrypath:nav-contract-end -->
 

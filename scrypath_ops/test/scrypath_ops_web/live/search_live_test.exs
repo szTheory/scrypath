@@ -262,82 +262,8 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "value"
   end
 
-  test "successful single search shows validated capture preview", %{conn: conn} do
-    {:ok, view, html} = live(conn, ~p"/ops/search")
-    refute html =~ "Save search"
-    refute has_element?(view, "#search-capture-form")
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "hello",
-      "page_size" => "10",
-      "schema" => inspect(OpsPostA)
-    })
-
-    html = render(view)
-    assert html =~ "Save search"
-    refute html =~ "Query inputs ready to save"
-    assert has_element?(view, "#search-capture-json")
-    assert html =~ ~s(id="search-capture-json")
-    assert has_element?(view, "details#search-capture-json")
-    refute has_element?(view, "details#search-capture-json[open]")
-
-    assert has_element?(view, "#search-capture-form")
-    assert has_element?(view, "label[for='capture_basename']", "Name")
-    assert has_element?(view, "label[for='capture_title']", "Search title")
-    assert has_element?(view, "#capture_basename-hint")
-
-    view
-    |> element("#search-capture-form")
-    |> render_submit(%{
-      "capture" => %{
-        "basename" => "zero-hit-check.json",
-        "title" => "Zero hit check",
-        "description" => "Saved from the returned empty search."
-      }
-    })
-
-    saved = saved_definition("zero-hit-check.json")
-    assert saved["mode"] == "search"
-    assert saved["schema"] == inspect(OpsPostA)
-    assert saved["q"] == "hello"
-    assert saved["title"] == "Zero hit check"
-    assert saved["description"] == "Saved from the returned empty search."
-    refute Map.has_key?(saved, "hits")
-    refute Map.has_key?(saved, "result")
-    refute Jason.encode!(saved) =~ "partial-hit"
-    assert render(view) =~ "Saved search zero-hit-check.json."
-  end
-
-  test "malformed capture fields return a field error without crashing the LiveView", %{
-    conn: conn
-  } do
+  test "malformed search fields do not crash the LiveView", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/search")
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "hello",
-      "page_size" => "10",
-      "schema" => inspect(OpsPostA)
-    })
-
-    html =
-      render_submit(view, "capture_change", %{
-        "capture" => %{"basename" => %{"unexpected" => "object"}}
-      })
-
-    assert Process.alive?(view.pid)
-    assert html =~ "search-capture-form"
-
-    html =
-      render_submit(view, "save_search_capture", %{
-        "capture" => %{"basename" => %{"unexpected" => "object"}}
-      })
-
-    assert Process.alive?(view.pid)
-    assert html =~ "Enter a name of up to 120 characters."
 
     render_submit(view, "search", %{
       "q" => %{"unexpected" => "object"},
@@ -346,101 +272,12 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       "schemas" => [%{"unexpected" => "object"}]
     })
 
+    render_submit(view, "save_named", %{"name" => %{"unexpected" => "object"}})
+
     assert Process.alive?(view.pid)
   end
 
-  test "eligible partial multi response saves criteria without response documents", %{conn: conn} do
-    Application.put_env(:scrypath_ops, :search_stub_variant, :partial)
-
-    {:ok, view, html} = live(conn, ~p"/ops/search?mode=multi")
-    refute html =~ "Save search"
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "partial criteria",
-      "page_size" => "9",
-      "schemas" => [inspect(OpsPostA), inspect(OpsPostB), inspect(OpsPostC)]
-    })
-
-    html = render(view)
-    assert html =~ "Some schemas could not be searched"
-    assert has_element?(view, "[aria-controls='search-capture-form-panel']", "Save search")
-
-    view
-    |> element("#search-capture-form")
-    |> render_submit(%{
-      "capture" => %{
-        "basename" => "partial-check.json",
-        "title" => "Partial check",
-        "description" => "The criteria were saved, not returned documents."
-      }
-    })
-
-    saved = saved_definition("partial-check.json")
-    assert saved["mode"] == "search_many"
-
-    assert Enum.map(saved["entries"], &hd/1) == [
-             inspect(OpsPostA),
-             inspect(OpsPostB),
-             inspect(OpsPostC)
-           ]
-
-    assert Enum.all?(saved["entries"], fn [_schema, query, _opts] ->
-             query == "partial criteria"
-           end)
-
-    assert saved["title"] == "Partial check"
-    refute Map.has_key?(saved, "hits")
-    refute Jason.encode!(saved) =~ "partial-hit"
-    refute Jason.encode!(saved) =~ "Partial result"
-  end
-
-  test "collision retains capture fields and leaves the occupied saved search untouched", %{
-    conn: conn
-  } do
-    original = %{
-      "playbook_format" => 1,
-      "mode" => "search",
-      "schema" => inspect(OpsPostA),
-      "q" => "original",
-      "opts" => %{}
-    }
-
-    {:ok, _} = ScrypathOps.SavedSearches.create(ScrypathOps.Repo, "occupied.json", original)
-
-    {:ok, view, _html} = live(conn, ~p"/ops/search")
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "collision criteria",
-      "page_size" => "10",
-      "schema" => inspect(OpsPostA)
-    })
-
-    view
-    |> element("#search-capture-form")
-    |> render_submit(%{
-      "capture" => %{
-        "basename" => "occupied.json",
-        "title" => "Keep this title",
-        "description" => "Keep this description"
-      }
-    })
-
-    html = render(view)
-    assert html =~ "That name is already in use. Choose another."
-    assert has_element?(view, "#capture_basename[value='occupied.json'][aria-invalid='true']")
-    assert has_element?(view, "#capture_title[value='Keep this title']")
-    assert has_element?(view, "#capture_description")
-    assert html =~ "Keep this description"
-    assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
-    assert saved_definition("occupied.json") == original
-    refute html =~ "Saved search occupied.json."
-  end
-
-  test "search result and capture attribution stay bound to the submitted criteria", %{conn: conn} do
+  test "search result attribution stays bound to the submitted criteria", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/search")
 
     view
@@ -477,7 +314,6 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ inspect(OpsPostA)
     assert html =~ "original probe"
     assert has_element?(view, "#search-run-attribution[data-limit='7']")
-    assert html =~ ~s(id="search-capture-json")
 
     view
     |> element(~s([data-testid="search-mode-multi"]))
@@ -489,7 +325,6 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ ~s(data-testid="search-mode-multi")
     assert html =~ "original probe"
     assert has_element?(view, "#search-run-attribution[data-limit='7']")
-    assert html =~ ~s(id="search-capture-json")
   end
 
   test "an empty query remains a valid submitted search", %{conn: conn} do
@@ -556,11 +391,6 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert html =~ "ops-badge-error"
     refute html =~ ~s(data-testid="search-outcome")
     refute html =~ "Some schemas could not be searched"
-  end
-
-  defp saved_definition(name) do
-    {:ok, saved_search} = ScrypathOps.SavedSearches.get(ScrypathOps.Repo, name)
-    saved_search.definition
   end
 
   test "invalid numeric input is retained and never submits a substitute limit", %{conn: conn} do

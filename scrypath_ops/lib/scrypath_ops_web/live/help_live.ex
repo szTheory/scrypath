@@ -69,16 +69,16 @@ defmodule ScrypathOpsWeb.HelpLive do
             </span>
           </.ops_heading>
           <p>
-            After running a query, choose Save search beside Run search. This saves the query and options that produced those results. If you edit the inputs, run the updated search before saving it.
+            Choose Save search beside Run search to keep the inputs in the form under a name. A saved search contains the query and options, not the results.
           </p>
           <p>
-            Saved searches are JSON files in a folder on this server. They contain inputs, not result snapshots. Your host application controls the folder and its persistence; the list is not a personal browser bookmark collection.
+            Pick one from Saved searches in Search to fill the form and run it. After you change the inputs, Save updates it and Save as keeps a copy under a new name. A saved search with options the form can't show runs exactly as saved and lists the inputs it used.
           </p>
           <p>
-            Open Saved searches to preview a file, run it again or manage it. Previewing a file does not run its query.
+            Manage saved searches loads, renames and deletes them, and imports or exports them as JSON files to share between environments.
           </p>
-          <.link navigate={"#{@mount_path}/playbooks"} class="ops-text-action">
-            Open Saved searches <span aria-hidden="true">→</span>
+          <.link navigate={"#{@mount_path}/search?saved=manage"} class="ops-text-action">
+            Manage saved searches <span aria-hidden="true">→</span>
           </.link>
         </section>
         <section id="sync">

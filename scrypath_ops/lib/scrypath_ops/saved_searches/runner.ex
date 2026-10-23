@@ -21,7 +21,7 @@ defmodule ScrypathOps.SavedSearches.Runner do
 
   This mirrors the root-library "Errors vs raises" split: the non-bang path returns raw
   `{:error, reason}` tuples for callers that want to branch, while bang helpers raise later with
-  that same reason. `ScrypathOps.SavedSearches.RunFailure`, `ScrypathOpsWeb.SavedSearchLive`,
+  that same reason. `ScrypathOps.SavedSearches.RunFailure`, `ScrypathOpsWeb.SearchLive`,
   `Scrypath.Errors`, and Mix or operator tasks own presentation formatting after the raw reason
   already exists; they do not redefine this runner contract.
 

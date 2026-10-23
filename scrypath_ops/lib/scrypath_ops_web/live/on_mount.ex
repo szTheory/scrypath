@@ -12,7 +12,6 @@ defmodule ScrypathOpsWeb.Live.OnMount do
     ScrypathOpsWeb.FailedSyncLive => "/failed-sync",
     ScrypathOpsWeb.SyncDriftLive => "/sync-drift",
     ScrypathOpsWeb.SearchLive => "/search",
-    ScrypathOpsWeb.SavedSearchLive => "/playbooks",
     ScrypathOpsWeb.HelpLive => "/help"
   }
 

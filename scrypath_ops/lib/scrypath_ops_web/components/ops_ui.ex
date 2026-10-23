@@ -552,7 +552,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:current, :atom,
     required: true,
-    values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :saved_searches]
+    values: [:control_room, :posture, :failed_sync, :sync_drift, :search]
   )
 
   attr(:class, :any, default: nil)
@@ -1526,6 +1526,84 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
+  Side panel (sheet) for secondary management tasks.
+
+  Shares the `OpsModal` hook with `ops_modal/1`: it traps focus, closes on Escape through
+  `cancel_event`, makes the page behind it inert and returns focus to the control that opened
+  it (mark that control with `data-ops-modal-trigger`). It docks to the right on wide screens
+  and rises from the bottom on narrow ones.
+
+  `focus_target` and `focus_request` move focus inside the open sheet after the server changes
+  its content: bump `focus_request` to focus the element matching `focus_target`.
+  """
+  attr(:id, :string, required: true)
+  attr(:title, :string, required: true)
+  attr(:cancel_event, :string, required: true)
+  attr(:description, :string, default: nil)
+  attr(:initial_focus, :string, default: "[data-ops-sheet-close]")
+  attr(:fallback_successor, :string, default: nil)
+  attr(:focus_target, :string, default: nil)
+  attr(:focus_request, :integer, default: 0)
+  attr(:class, :any, default: nil)
+  slot(:inner_block, required: true)
+
+  def ops_sheet(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={"#{@id}-title"}
+      aria-describedby={@description && "#{@id}-description"}
+      phx-hook="OpsModal"
+      data-ops-modal-action="manage"
+      data-ops-modal-cancel-event={@cancel_event}
+      data-ops-modal-initial-focus={@initial_focus}
+      data-ops-modal-fallback-successor={@fallback_successor}
+      data-ops-modal-focus-error={@focus_target}
+      data-ops-modal-focus-request={@focus_request}
+      class="ops-sheet z-ops-modal"
+      phx-remove={
+        JS.transition(
+          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
+          time: 120
+        )
+      }
+    >
+      <div class="ops-sheet__backdrop" phx-click={@cancel_event} aria-hidden="true"></div>
+      <div class={["ops-sheet__panel", @class]} tabindex="-1">
+        <div class="ops-sheet__header">
+          <h2
+            id={"#{@id}-title"}
+            tabindex="-1"
+            class="text-ops-h2 font-semibold leading-ops-tight"
+          >
+            {@title}
+          </h2>
+          <button
+            type="button"
+            class="btn ops-icon-btn btn-circle btn-ghost btn-sm"
+            phx-click={@cancel_event}
+            aria-label="Close"
+            data-ops-sheet-close
+          >
+            <.icon name="hero-x-mark" class="size-5" />
+          </button>
+        </div>
+        <p
+          :if={@description}
+          id={"#{@id}-description"}
+          class="mt-ops-1 text-ops-body text-base-content/75"
+        >
+          {@description}
+        </p>
+        <div class="ops-sheet__body">{render_slot(@inner_block)}</div>
+      </div>
+    </div>
+    """
+  end
+
+  @doc """
   Operator command palette (⌘K / Ctrl-K) + keyboard cheat-sheet (`?`).
 
   Pure client-side: every item is a live-navigation link, so the palette needs no
@@ -1537,13 +1615,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_command_palette(assigns) do
     items =
-      [
-        %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
-        | Enum.map(
-            ScrypathOpsWeb.Nav.primary(assigns.mount_path),
-            &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}
-          )
-      ]
+      ([
+         %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
+         | Enum.map(
+             ScrypathOpsWeb.Nav.primary(assigns.mount_path),
+             &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}
+           )
+       ] ++
+         [
+           %{
+             path: "#{assigns.mount_path}/search?saved=manage",
+             label: "Manage saved searches",
+             hint: "Load, rename, import or export"
+           }
+         ])
       |> Enum.with_index()
       |> Enum.map(fn {item, index} -> Map.put(item, :id, "ops-cmdk-item-#{index}") end)
 
@@ -1767,7 +1852,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp nav_hint("Search health"), do: "Failures and pending work"
   defp nav_hint("Failed sync work"), do: "Review errors and retry"
   defp nav_hint("Sync and drift"), do: "Sync work and index settings"
-  defp nav_hint("Saved searches"), do: "Reuse queries and options"
   defp nav_hint(_), do: ""
 
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.

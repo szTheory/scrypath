@@ -38,12 +38,6 @@ defmodule ScrypathOpsWeb.Nav do
         group: :recover
       },
       %{
-        path: "#{mount_path}/playbooks",
-        label: "Saved searches",
-        title: "Saved searches",
-        group: :explore
-      },
-      %{
         path: "#{mount_path}/help",
         label: "Help",
         title: "Help",

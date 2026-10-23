@@ -338,7 +338,6 @@ defmodule ScrypathOpsWeb.Layouts do
   defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
   defp nav_item_icon(%{label: "Sync and drift"}), do: "hero-arrows-right-left"
   defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
-  defp nav_item_icon(%{label: "Saved searches"}), do: "hero-book-open"
   defp nav_item_icon(_item), do: "hero-square-2-stack"
 
   @doc """
