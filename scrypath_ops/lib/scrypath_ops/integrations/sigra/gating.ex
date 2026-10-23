@@ -3,7 +3,7 @@ if Code.ensure_loaded?(Sigra.Audit) do
     @moduledoc false
 
     @action_config %{
-      playbook_delete: "scrypath.ops.playbook_delete",
+      saved_search_delete: "scrypath.ops.saved_search_delete",
       failed_work_retry: "scrypath.ops.failed_work_retry",
       swap_live: "scrypath.ops.swap_live",
       reindex: "scrypath.ops.reindex",
@@ -88,7 +88,7 @@ else
     @moduledoc false
 
     @action_config %{
-      playbook_delete: "scrypath.ops.playbook_delete",
+      saved_search_delete: "scrypath.ops.saved_search_delete",
       failed_work_retry: "scrypath.ops.failed_work_retry",
       swap_live: "scrypath.ops.swap_live",
       reindex: "scrypath.ops.reindex",

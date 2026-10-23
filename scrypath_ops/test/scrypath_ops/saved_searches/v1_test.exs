@@ -1,11 +1,11 @@
-defmodule ScrypathOps.Playbook.V1Test do
+defmodule ScrypathOps.SavedSearches.V1Test do
   use ExUnit.Case, async: true
 
   import ExUnit.DocTest
 
-  alias ScrypathOps.Playbook.V1
+  alias ScrypathOps.SavedSearches.V1
 
-  doctest ScrypathOps.Playbook.V1
+  doctest ScrypathOps.SavedSearches.V1
 
   @minimal_search ~s"""
   {"playbook_format":1,"mode":"search","schema":"MyApp.Post","q":"hello","opts":{}}
@@ -32,7 +32,7 @@ defmodule ScrypathOps.Playbook.V1Test do
     for value <- [-0.1, "0.5"] do
       invalid = put_in(fractional, ["opts", "per_query", "ranking_score_threshold"], value)
 
-      assert {:error, {:invalid_playbook, {:invalid_per_query_threshold, ^value}}} =
+      assert {:error, {:invalid_saved_search, {:invalid_per_query_threshold, ^value}}} =
                V1.validate(invalid)
     end
   end
@@ -41,7 +41,7 @@ defmodule ScrypathOps.Playbook.V1Test do
     map = Jason.decode!(@minimal_search)
     bad = Map.put(map, "extra_field", true)
 
-    assert {:error, {:invalid_playbook, {:unknown_top_level_keys, ["extra_field"]}}} =
+    assert {:error, {:invalid_saved_search, {:unknown_top_level_keys, ["extra_field"]}}} =
              V1.validate(bad)
   end
 
@@ -65,7 +65,7 @@ defmodule ScrypathOps.Playbook.V1Test do
         "opts" => %{"page" => %{"size" => size}}
       }
 
-      assert {:error, {:invalid_playbook, {:page_size_out_of_range, ^size, 50}}} =
+      assert {:error, {:invalid_saved_search, {:page_size_out_of_range, ^size, 50}}} =
                V1.validate(map)
     end
   end
@@ -93,7 +93,7 @@ defmodule ScrypathOps.Playbook.V1Test do
       "opts" => %{}
     }
 
-    assert {:error, {:invalid_playbook, {:too_many_entries, 11, 10}}} = V1.validate(map)
+    assert {:error, {:invalid_saved_search, {:too_many_entries, 11, 10}}} = V1.validate(map)
   end
 
   test "nested meilisearch_api_key under opts is rejected" do
@@ -105,7 +105,7 @@ defmodule ScrypathOps.Playbook.V1Test do
       "opts" => %{"filter" => %{"meilisearch_api_key" => "secret"}}
     }
 
-    assert {:error, {:invalid_playbook, {:banned_key, "meilisearch_api_key", _}}} =
+    assert {:error, {:invalid_saved_search, {:banned_key, "meilisearch_api_key", _}}} =
              V1.validate(map)
   end
 
@@ -123,7 +123,7 @@ defmodule ScrypathOps.Playbook.V1Test do
       }
     }
 
-    assert {:error, {:invalid_playbook, {:banned_key, "meilisearch_api_key", path}}} =
+    assert {:error, {:invalid_saved_search, {:banned_key, "meilisearch_api_key", path}}} =
              V1.validate(map)
 
     assert is_list(path)
@@ -147,7 +147,7 @@ defmodule ScrypathOps.Playbook.V1Test do
     assert {:ok, _} = V1.validate(m)
   end
 
-  test "search playbook accepts optional title, description, and tags" do
+  test "search saved search accepts optional title, description, and tags" do
     map = %{
       "playbook_format" => 1,
       "mode" => "search",
@@ -174,7 +174,7 @@ defmodule ScrypathOps.Playbook.V1Test do
       "title" => title
     }
 
-    assert {:error, {:invalid_playbook, {:invalid_metadata, {:title_too_large, 201}}}} =
+    assert {:error, {:invalid_saved_search, {:invalid_metadata, {:title_too_large, 201}}}} =
              V1.validate(map)
   end
 
@@ -190,11 +190,11 @@ defmodule ScrypathOps.Playbook.V1Test do
       "tags" => tags
     }
 
-    assert {:error, {:invalid_playbook, {:invalid_metadata, {:too_many_tags, 21, 20}}}} =
+    assert {:error, {:invalid_saved_search, {:invalid_metadata, {:too_many_tags, 21, 20}}}} =
              V1.validate(map)
   end
 
-  test "minimal search playbook unchanged after metadata support" do
+  test "minimal search saved search unchanged after metadata support" do
     assert {:ok, map} = V1.decode(@minimal_search)
     assert {:ok, validated} = V1.validate(map)
     assert map == validated

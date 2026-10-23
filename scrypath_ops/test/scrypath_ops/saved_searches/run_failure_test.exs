@@ -1,7 +1,7 @@
-defmodule ScrypathOps.Playbook.RunFailureTest do
+defmodule ScrypathOps.SavedSearches.RunFailureTest do
   use ExUnit.Case, async: true
 
-  alias ScrypathOps.Playbook.RunFailure
+  alias ScrypathOps.SavedSearches.RunFailure
 
   test "{:config, :no_schema} yields a stable failure payload" do
     failure =
@@ -24,7 +24,7 @@ defmodule ScrypathOps.Playbook.RunFailureTest do
            }
 
     assert String.starts_with?(failure.doc.primary, "https://")
-    assert String.contains?(failure.doc.primary, "playbook-schema")
+    assert String.contains?(failure.doc.primary, "saved-search-schema")
     assert String.contains?(failure.doc.primary, "github.com")
     assert length(failure.doc.related) <= 2
   end

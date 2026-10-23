@@ -1,32 +1,32 @@
-defmodule ScrypathOps.Playbook.RunFailure do
+defmodule ScrypathOps.SavedSearches.RunFailure do
   @moduledoc """
-  Normalizes playbook run failures into a stable, JSON-serializable map.
+  Normalizes saved search run failures into a stable, JSON-serializable map.
   """
 
-  alias ScrypathOps.Playbook.DocResolver
+  alias ScrypathOps.SavedSearches.DocResolver
 
   @type context :: keyword()
 
   @registry [
-    {:playbook_not_validated, "validation", "Validate the saved search before running it.",
-     :playbook_schema, :none},
+    {:saved_search_not_validated, "validation", "Validate the saved search before running it.",
+     :saved_search_schema, :none},
     {:stub_hard_failure, "backend", "Search adapter returned a forced hard failure.",
-     :playbook_troubleshooting, :schema_mode},
-    {:invalid_playbook_shape, "validation",
-     "The saved search does not match the supported JSON format.", :playbook_schema,
+     :saved_search_troubleshooting, :schema_mode},
+    {:invalid_saved_search_shape, "validation",
+     "The saved search does not match the supported JSON format.", :saved_search_schema,
      :schema_mode},
     {{:config, :missing_backend}, "config", "Scrypath backend is not configured.",
-     :playbook_operator_config, :mode},
+     :saved_search_operator_config, :mode},
     {{:config, :empty_allowlist}, "config", "Schema allowlist is empty.",
-     :playbook_operator_config, :none},
+     :saved_search_operator_config, :none},
     {{:config, :no_schema}, "config", "Schema is not on the configured allowlist.",
-     :playbook_schema_no_schema, :schema_mode},
+     :saved_search_schema_no_schema, :schema_mode},
     {{:config, :invalid_query}, "validation", "Query field is invalid.",
-     :playbook_schema_invalid_query, :schema_mode},
+     :saved_search_schema_invalid_query, :schema_mode},
     {{:config, :invalid_entries}, "validation", "Entries list is invalid.",
-     :playbook_schema_invalid_entries, :mode},
+     :saved_search_schema_invalid_entries, :mode},
     {{:config, :invalid_entry_shape}, "validation", "An entry has an invalid shape.",
-     :playbook_schema_invalid_entry_shape, :mode}
+     :saved_search_schema_invalid_entry_shape, :mode}
   ]
 
   @spec enrich(term(), context()) :: map()
@@ -47,7 +47,7 @@ defmodule ScrypathOps.Playbook.RunFailure do
   def doc_ref(reason), do: reason |> lookup() |> elem(2)
 
   defp lookup({:page_size_out_of_range, _size, _max} = reason) do
-    {"validation", page_size_message(reason), :playbook_schema_page_size, :page_size}
+    {"validation", page_size_message(reason), :saved_search_schema_page_size, :page_size}
   end
 
   defp lookup(reason) do
@@ -57,7 +57,7 @@ defmodule ScrypathOps.Playbook.RunFailure do
 
       _ ->
         nil
-    end) || {"unknown", unknown_message(reason), :playbook_troubleshooting, :none}
+    end) || {"unknown", unknown_message(reason), :saved_search_troubleshooting, :none}
   end
 
   defp normalize_reason(reason) when is_atom(reason), do: Atom.to_string(reason)

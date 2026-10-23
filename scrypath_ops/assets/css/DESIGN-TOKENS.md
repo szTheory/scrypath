@@ -136,7 +136,6 @@ inventory names every current export; add new exports here with their role consu
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
 | `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
 | `ops_modal`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles |
-| `ops_workspace_mode_indicator` | State remains accompanied by text; workspace path is optional technical metadata |
 
 ### Six-surface examples
 
@@ -150,7 +149,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | Failed sync work | Selected schema and inspection → failed rows → eligible retry and recovery | `ops_schema_select`, `ops_result_row`, `ops_action_group`, `ops_modal`, `ops_handoff` |
 | Sync and drift | Reconciliation → contract → freshness/recovery → gated promotion | `ops_section`, `ops_signal_table`, `ops_data_card`, native advanced `<details>` |
 | Search | Target/query form → compact backend-ordered Results → page / save | `ops_segmented_control`, `ops_schema_select`, `ResultUi.result_hit`, `ops_disclosure`, `ops_help_link` |
-| Playbooks | Workspace catalog → preview → run outcome → import | `ops_object_list`, `ops_object_item`, labelled preview/outcome sections, native import controls |
+| Saved searches | Workspace catalog → preview → run outcome → import | `ops_object_list`, `ops_object_item`, labelled preview/outcome sections, native import controls |
 
 ### Superseded rules
 
@@ -225,7 +224,7 @@ warning / error / partial / running / neutral). Do not route copper through stat
 | Class | Allowed sites | Screen(s) |
 | --- | --- | --- |
 | `.ops-copper-eyebrow` | Page eyebrow label ("Operator workspace") | All 6 screens |
-| `.ops-copper-badge` (compose with `.ops-badge`) | Intent-card federation badge, playbook file-type badge, key-callout badge | Control Room, Search, Playbooks |
+| `.ops-copper-badge` (compose with `.ops-badge`) | Intent-card federation badge, saved search file-type badge, key-callout badge | Control Room, Search, Saved searches |
 | `.ops-copper-node` | Key-node / diagram icon emphasis (color only) | Future Phase 133/134 |
 | `.ops-copper-node--fill` | Filled copper icon container | Future Phase 133/134 |
 
@@ -394,12 +393,12 @@ Transform/opacity/box-shadow end states only.
 | `.ops-path-trace` + `::after` | Path line-draw underline (`transform: scaleX(0→1)` + opacity) — a pseudo-element copying the `.ops-disclosure summary::before` precedent | `--duration-ops-fast` + `--ease-ops-standard` | `:hover`, `.ops-path-trace--active`, or `[aria-current="page"]` — **never** mount/insert, **never** an `nth-child` stagger |
 | `.ops-path-node` | Active-path node glow (violet route/path emphasis) via `--shadow-ops-glow` (none in light, faint in dark — dual-dark-path is free through the token) | `--shadow-ops-glow`, `--duration-ops-fast` | active path/key-node state only |
 | `.ops-path-node--copper` | Key-node copper glow — first consumer of the declared `.ops-copper-node` vocabulary | `--shadow-ops-glow-copper`, `--duration-ops-fast` | active key node only |
-| `.ops-object-item-active` (dark override) | Active Playbook item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
+| `.ops-object-item-active` (dark override) | Active Saved search item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
 | `.ops-code-block--shimmer` | Opt-in code-block hover glint — an opacity-only `::after` ring inside `@media (hover: hover)`; surfaced via `shimmer={true}` on `ops_code_block/1` | `--duration-ops-fast` + `--ease-ops-standard` | `:hover` on hover-capable pointers only |
 
 **Anchors (the allowed surface):** the route mark, the recommended Control Room intent card
 (`.ops-intent-card--recommended`), Search federation/merge-trace disclosures (`.ops-path-trace`),
-the active Playbook item (`.ops-object-item-active`), and optionally the breadcrumb current path
+the active Saved search item (`.ops-object-item-active`), and optionally the breadcrumb current path
 (`[aria-current="page"]`). Every path/node signal is paired with the existing visible
 text/ARIA state so motion never carries status meaning alone (D-07).
 
@@ -459,7 +458,7 @@ only and never affects the exit code.
 - The header uses one named layout authority. At 640px and below, the brand occupies the first row and Jump/theme controls share the second; the keyboard badge is omitted on this touch-sized layout. Desktop retains the shortcut beside the Jump control. Theme icon targets are 44px.
 - Schema cards and workspace paths wrap long identifiers without expanding the page. Record headings use the 16px h3 role.
 - Code regions expose a name and keyboard focus for contained scrolling. The native schema select has an explicit accessible name. Phoenix upload labels use the generated upload reference.
-- Playbook rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
+- Saved search rows and successor controls have filename-derived identities. Modal return focus waits for the LiveView patch and rejects a connected trigger that has been reused for a different file.
 
 ## Task baseline controls
 

@@ -13,7 +13,9 @@ document.addEventListener("pointerdown", event => {
 }, true)
 document.addEventListener("pointerup", () => { pointerButton = null }, true)
 document.addEventListener("keydown", () => { pendingFocus = null }, true)
-const filename = /^[A-Za-z0-9_.-]+\.json$/
+// Saved search names: up to 120 characters after trimming, no control characters.
+const maxNameLength = 120
+const invalidName = value => [...value.trim()].length > maxNameLength || /\p{Cc}/u.test(value)
 function errorFor(field) {
   const value = field.value
   const label = field.labels?.[0]?.textContent.trim() || "this field"
@@ -21,7 +23,7 @@ function errorFor(field) {
   if (field.required && !value.trim()) return `Enter ${label.toLowerCase()}.`
   if (field.type === "number" && value === "" && !field.required) return ""
   if (field.type === "number" && (value === "" || !Number.isInteger(Number(value)) || Number(value) < Number(field.min) || (field.max && Number(value) > Number(field.max)))) return `Enter a whole number from ${field.min} to ${field.max}.`
-  if (/basename|new-name|to-name/.test(field.id) && value && !filename.test(value)) return "Use a .json filename with letters, numbers, hyphens or underscores. Avoid folder paths."
+  if (/basename|new-name|to-name/.test(field.id) && value && invalidName(value)) return `Enter a name of up to ${maxNameLength} characters.`
   if (field.dataset.opsMaxBytes && new TextEncoder().encode(value).length > Number(field.dataset.opsMaxBytes)) return `Shorten ${label.toLowerCase()} to ${field.dataset.opsMaxBytes} bytes or fewer. Non-English characters may use several bytes.`
   if (field.dataset.opsJson !== undefined && value.trim()) {
     try { const data = JSON.parse(value); if (!data || Array.isArray(data) || typeof data !== "object") return "Paste a JSON object for a saved search." }

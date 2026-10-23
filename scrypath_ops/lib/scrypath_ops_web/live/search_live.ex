@@ -9,8 +9,9 @@ defmodule ScrypathOpsWeb.SearchLive do
   import ScrypathOpsWeb.ResultUi
 
   alias Scrypath.MultiSearchResult
-  alias ScrypathOps.Playbook.Store
-  alias ScrypathOps.Playbook.V1
+  alias ScrypathOps.SavedSearches
+  alias ScrypathOps.SavedSearches.SavedSearch
+  alias ScrypathOps.SavedSearches.V1
   alias ScrypathOps.Schemas
   alias ScrypathOps.SearchPlayground
 
@@ -132,8 +133,7 @@ defmodule ScrypathOpsWeb.SearchLive do
   def handle_event("capture_change", _, socket), do: {:noreply, socket}
 
   def handle_event("save_search_capture", %{"capture" => cap}, socket) when is_map(cap) do
-    root = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    basename = cap |> Map.get("basename", "") |> text_input() |> String.trim()
+    name = cap |> Map.get("basename", "") |> text_input() |> String.trim()
     title = cap |> Map.get("title", "") |> text_input()
     description = cap |> Map.get("description", "") |> text_input()
 
@@ -141,27 +141,19 @@ defmodule ScrypathOpsWeb.SearchLive do
       socket
       |> assign(:capture_title, title)
       |> assign(:capture_description, description)
-      |> assign(:capture_basename, basename)
+      |> assign(:capture_basename, name)
       |> assign(:capture_error, nil)
       |> recompute_capture_preview()
 
     cond do
-      root in [nil, ""] ->
-        {:noreply,
-         put_capture_error(
-           socket,
-           "Could not save this search.",
-           recovery: "Configure a storage folder, then retry saving."
-         )}
-
       socket.assigns.capture_base == nil ->
         {:noreply, put_capture_error(socket, "Run a search first — nothing to save yet.")}
 
-      not Store.safe_basename?(basename) ->
+      not SavedSearches.valid_name?(name) ->
         {:noreply,
          put_capture_error(
            socket,
-           "Filename must be a .json basename using letters, digits, periods, hyphens or underscores."
+           "Enter a name of up to #{SavedSearch.max_name_length()} characters."
          )}
 
       true ->
@@ -169,49 +161,28 @@ defmodule ScrypathOpsWeb.SearchLive do
           socket.assigns.capture_base
           |> merge_capture_metadata(title, description)
 
-        case V1.validate(draft) do
-          {:ok, validated} ->
-            case V1.encode(validated) do
-              {:ok, json} ->
-                case Store.create_workspace_file(root, basename, json <> "\n") do
-                  :ok ->
-                    {:noreply,
-                     socket
-                     |> assign(:capture_basename, "")
-                     |> assign(:saved_basename, basename)
-                     |> assign(:capture_error, nil)
-                     |> put_flash(:info, "Saved search #{basename}.")}
+        case SavedSearches.create(socket.assigns.scrypath_repo, name, draft,
+               prefix: socket.assigns[:scrypath_ops_prefix]
+             ) do
+          {:ok, saved_search} ->
+            {:noreply,
+             socket
+             |> assign(:capture_basename, "")
+             |> assign(:saved_basename, saved_search.name)
+             |> assign(:capture_error, nil)
+             |> put_flash(:info, "Saved search #{saved_search.name}.")}
 
-                  {:error, :target_exists} ->
-                    {:noreply,
-                     put_capture_error(
-                       socket,
-                       "That filename is already in use. Choose another."
-                     )}
+          {:error, :name_taken} ->
+            {:noreply, put_capture_error(socket, "That name is already in use. Choose another.")}
 
-                  {:error, reason} ->
-                    {:noreply,
-                     put_capture_error(
-                       socket,
-                       "Could not save this search.",
-                       detail: safe_capture_reason(reason),
-                       recovery:
-                         "Check the storage folder's permissions and available disk space, then retry saving."
-                     )}
-                end
+          {:error, :invalid_name} ->
+            {:noreply,
+             put_capture_error(
+               socket,
+               "Enter a name of up to #{SavedSearch.max_name_length()} characters."
+             )}
 
-              {:error, reason} ->
-                {:noreply,
-                 put_capture_error(
-                   socket,
-                   "Could not save this search.",
-                   detail: "Saved search encoding failed: #{inspect(reason)}",
-                   recovery:
-                     "Review the search criteria and optional metadata, then retry saving."
-                 )}
-            end
-
-          {:error, reason} ->
+          {:error, {:invalid_saved_search, reason}} ->
             {:noreply,
              put_capture_error(
                socket,
@@ -219,12 +190,20 @@ defmodule ScrypathOpsWeb.SearchLive do
                detail: "Saved search validation failed: #{inspect(reason)}",
                recovery: "Review the search criteria and optional metadata, then retry saving."
              )}
+
+          {:error, _reason} ->
+            {:noreply,
+             put_capture_error(
+               socket,
+               "Could not save this search.",
+               recovery: "Retry saving. If it keeps failing, check the application logs."
+             )}
         end
     end
   end
 
   def handle_event("save_search_capture", _, socket) do
-    {:noreply, put_capture_error(socket, "Enter a filename ending in .json, then retry saving.")}
+    {:noreply, put_capture_error(socket, "Enter a name, then retry saving.")}
   end
 
   def handle_event("search", params, socket) when is_map(params) do
@@ -719,20 +698,13 @@ defmodule ScrypathOpsWeb.SearchLive do
     assign(socket, :capture_error, error)
   end
 
-  defp safe_capture_reason(reason) when is_atom(reason), do: inspect(reason)
-
-  defp safe_capture_reason({category, reason}) when is_atom(category) and is_atom(reason),
-    do: inspect({category, reason})
-
-  defp safe_capture_reason(_), do: "unknown filesystem error"
-
   defp assign_search_capture_single(socket, mod, q, opts_kw) do
     base = %{
       "playbook_format" => 1,
       "mode" => "search",
       "schema" => inspect(mod),
       "q" => q,
-      "opts" => keyword_to_playbook_opts_map(opts_kw, :search)
+      "opts" => keyword_to_saved_search_opts_map(opts_kw, :search)
     }
 
     socket
@@ -747,7 +719,7 @@ defmodule ScrypathOpsWeb.SearchLive do
       "playbook_format" => 1,
       "mode" => "search_many",
       "entries" => entries,
-      "opts" => keyword_to_playbook_opts_map(opts_kw, :search_many_shared)
+      "opts" => keyword_to_saved_search_opts_map(opts_kw, :search_many_shared)
     }
 
     socket
@@ -794,7 +766,7 @@ defmodule ScrypathOpsWeb.SearchLive do
     end
   end
 
-  defp keyword_to_playbook_opts_map(kw, ctx) do
+  defp keyword_to_saved_search_opts_map(kw, ctx) do
     strings =
       case ctx do
         :search ->
@@ -1100,10 +1072,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                 <h2 id="search-capture-heading" class="sr-only">
                   Save search
                 </h2>
-                <div class="ops-save-playbook ops-search-save">
+                <div class="ops-save-search ops-search-save">
                   <div id="search-capture-form-panel" style="display: none;">
                     <p class="mt-3 max-w-2xl text-ops-body text-base-content/70">
-                      Save the last-run query and options to Saved searches on this server. Results are not stored.
+                      Save the last-run query and options to Saved searches. Results are not stored.
                     </p>
 
                     <.form
@@ -1111,7 +1083,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                       as={:capture}
                       phx-change="capture_change"
                       phx-submit="save_search_capture"
-                      class="ops-save-playbook__form mt-4 max-w-2xl space-y-4"
+                      class="ops-save-search__form mt-4 max-w-2xl space-y-4"
                       id="search-capture-form"
                     >
                       <div class="grid gap-3 md:grid-cols-2">
@@ -1126,18 +1098,18 @@ defmodule ScrypathOpsWeb.SearchLive do
                         </.ops_field>
                         <.ops_field
                           id="capture_basename"
-                          label="Filename"
+                          label="Name"
                           error={@capture_error && @capture_error.message}
-                          hint="Choose a new .json filename. Existing files are kept."
+                          hint="Choose a new name. Existing saved searches are kept."
                         >
                           <.ops_text_input
                             id="capture_basename"
                             name="capture[basename]"
-                            hint="Choose a new .json filename. Existing files are kept."
+                            hint="Choose a new name. Existing saved searches are kept."
                             value={@capture_basename}
                             error={@capture_error && @capture_error.message}
-                            class="min-w-0 font-mono text-ops-body"
-                            placeholder="my-search.json"
+                            class="min-w-0 text-ops-body"
+                            placeholder="Daily catalog check"
                             required
                           />
                         </.ops_field>

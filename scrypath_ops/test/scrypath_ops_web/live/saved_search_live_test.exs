@@ -1,4 +1,4 @@
-defmodule ScrypathOpsWeb.PlaybookLiveTest do
+defmodule ScrypathOpsWeb.SavedSearchLiveTest do
   use ScrypathOpsWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
@@ -78,49 +78,29 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
   test "mount shows honesty panel", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
     html = render(view)
-    assert html =~ "Saved files contain query inputs, not results"
+    assert html =~ "Saved searches contain query inputs, not results"
 
     assert html =~
              "Save queries and options to run again. A saved search can include multiple schemas."
   end
 
-  test "empty workspace shows the empty hero and import anchor", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_playbooks_empty_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_workspace = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_workspace == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_workspace)
-    end)
-
+  test "empty catalog shows the empty hero and import anchor", %{conn: conn} do
     {:ok, view, html} = live(conn, ~p"/ops/playbooks")
 
-    assert html =~ ~s(data-testid="playbooks-empty-hero")
+    assert html =~ ~s(data-testid="saved-searches-empty-hero")
     assert html =~ "No saved searches yet"
-    assert html =~ ~s(href="#playbook-import")
-    refute has_element?(view, "details[data-testid='playbook-manage-actions']")
+    assert html =~ ~s(href="#saved-search-import")
+    refute has_element?(view, "details[data-testid='saved-search-manage-actions']")
   end
 
-  test "catalog management is contextual, closed, and wraps long filenames", %{conn: conn} do
-    dir = workspace_dir("catalog-actions")
-    long_name = "playbook-" <> String.duplicate("long-segment-", 10) <> ".json"
+  test "catalog management is contextual, closed, and wraps long names", %{conn: conn} do
+    long_name = "saved-search-" <> String.duplicate("long-segment-", 10) <> ".json"
     names = ["one.json", "two.json", long_name]
 
     Enum.each(names, fn name ->
-      File.write!(Path.join(dir, name), playbook_json("query for #{name}"))
+      put_saved_search!(name, saved_search_json("query for #{name}"))
     end)
 
-    configure_workspace(dir)
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     Enum.each(names, fn name ->
@@ -128,81 +108,50 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
       assert has_element?(
                view,
-               "details#playbook-manage-#{dom_id}[data-ops-file-name='#{name}']:not([open]) > summary#playbook-manage-summary-#{dom_id}",
+               "details#saved-search-manage-#{dom_id}[data-ops-file-name='#{name}']:not([open]) > summary#saved-search-manage-summary-#{dom_id}",
                "File actions"
              )
 
-      assert has_element?(view, "#playbook-row-#{dom_id} .ops-playbook-filename", name)
+      assert has_element?(view, "#saved-search-row-#{dom_id} .ops-saved-search-filename", name)
 
       assert has_element?(
                view,
-               "details#playbook-manage-#{dom_id} button[aria-label='Duplicate #{name}']"
+               "details#saved-search-manage-#{dom_id} button[aria-label='Duplicate #{name}']"
              )
 
       assert has_element?(
                view,
-               "details#playbook-manage-#{dom_id} button[aria-label='Rename #{name}']"
+               "details#saved-search-manage-#{dom_id} button[aria-label='Rename #{name}']"
              )
 
       assert has_element?(
                view,
-               "details#playbook-manage-#{dom_id} button[aria-label='Delete #{name}']"
+               "details#saved-search-manage-#{dom_id} button[aria-label='Delete #{name}']"
              )
 
-      assert has_element?(view, "#playbook-primary-#{dom_id}", "Preview")
+      assert has_element?(view, "#saved-search-primary-#{dom_id}", "Preview")
 
       assert has_element?(
                view,
-               "#playbook-row-#{dom_id} button[aria-label='Run #{name} without preview']"
+               "#saved-search-row-#{dom_id} button[aria-label='Run #{name} without preview']"
              )
     end)
   end
 
-  test "read-only examples omit management and reject forged file mutations", %{conn: conn} do
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
-
-    on_exit(fn ->
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
-
-    examples_dir = Application.app_dir(:scrypath_ops, "priv/playbooks")
-    [example_path | _] = Path.wildcard(Path.join(examples_dir, "*.json"))
-    example_name = Path.basename(example_path)
-    original = File.read!(example_path)
+  test "the page never discloses or asks about a storage location", %{conn: conn} do
+    put_saved_search!("stored.json", saved_search_json("stored query"))
 
     {:ok, view, html} = live(conn, ~p"/ops/playbooks")
-    assert html =~ "Examples (read-only)"
-    assert has_element?(view, "#playbook-row-#{Base.url_encode64(example_name, padding: false)}")
-    refute has_element?(view, "details[data-testid='playbook-manage-actions']")
-    refute has_element?(view, "button[phx-click='dup_open']")
-    refute has_element?(view, "button[phx-click='rename_open']")
-    refute has_element?(view, "button[phx-click='request_delete']")
 
-    render_click(view, "dup_open", %{"name" => example_name})
-    refute has_element?(view, "#duplicate-playbook-modal")
+    refute html =~ "Storage folder"
+    refute html =~ "Read-only examples"
+    refute html =~ "Configure a storage folder"
+    assert has_element?(view, "details[data-testid='saved-search-manage-actions']")
 
-    render_click(view, "rename_open", %{"name" => example_name})
-
-    view
-    |> form("form[phx-submit='rename_submit']", %{"new_name" => "changed-example.json"})
-    |> render_submit()
-
-    assert has_element?(
-             view,
-             "#rename-playbook-modal [role='alert']",
-             "Configure a storage folder"
-           )
-
-    assert File.read!(example_path) == original
-    refute File.exists?(Path.join(examples_dir, "changed-example.json"))
-    render_click(view, "rename_cancel", %{})
-
-    render_click(view, "request_delete", %{"name" => example_name})
-    render_click(view, "confirm_delete", %{"confirm" => example_name})
-    assert File.read!(example_path) == original
+    view |> element("button[phx-click='load'][phx-value-name='stored.json']") |> render_click()
+    assert has_element?(view, "#saved-search-draft-origin", "Saved search · stored.json")
+    assert has_element?(view, "#saved-search-save-form")
+    refute render(view) =~ "storage folder"
   end
 
   test "upload and paste controls have persistent labels and format help", %{conn: conn} do
@@ -221,7 +170,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(aria-describedby="#{upload_id}-hint")
     assert html =~ ~s(accept=".json")
     assert html =~ ~s(max-file-size="256000") || html =~ "256000 bytes"
-    assert html =~ ~s(for="playbook-paste-json")
+    assert html =~ ~s(for="saved-search-paste-json")
     assert html =~ "Saved search JSON"
     assert html =~ "JSON only"
   end
@@ -231,18 +180,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     for size <- [255_999, 256_000] do
-      json = sized_playbook_json(size, "paste-#{size}")
+      json = sized_saved_search_json(size, "paste-#{size}")
       assert byte_size(json) == size
 
       view
       |> form("form[phx-submit='import_paste']", %{json: json})
       |> render_submit()
 
-      assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
-      assert has_element?(view, "#playbook-summary", "paste-#{size}")
+      assert has_element?(view, "#saved-search-draft-origin", "Imported draft · not saved")
+      assert has_element?(view, "#saved-search-summary", "paste-#{size}")
     end
 
-    too_large = sized_playbook_json(256_001, "paste-too-large")
+    too_large = sized_saved_search_json(256_001, "paste-too-large")
     assert byte_size(too_large) == 256_001
 
     html =
@@ -252,8 +201,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert html =~ "Maximum size is 256,000 bytes"
     assert html =~ "The previous valid preview remains selected."
-    assert has_element?(view, "#playbook-import details[open]")
-    assert has_element?(view, "#playbook-summary", "paste-256000")
+    assert has_element?(view, "#saved-search-import details[open]")
+    assert has_element?(view, "#saved-search-summary", "paste-256000")
     assert :sys.get_state(view.pid).socket.assigns.paste_json == too_large
   end
 
@@ -262,7 +211,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: playbook_json("prior preview")})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("prior preview")})
     |> render_submit()
 
     for invalid_json <- ["", "{"] do
@@ -272,8 +221,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         |> render_submit()
 
       assert html =~ "The previous valid preview remains selected."
-      assert has_element?(view, "#playbook-import details[open]")
-      assert has_element?(view, "#playbook-summary", "prior preview")
+      assert has_element?(view, "#saved-search-import details[open]")
+      assert has_element?(view, "#saved-search-summary", "prior preview")
       assert :sys.get_state(view.pid).socket.assigns.paste_json == invalid_json
     end
   end
@@ -287,10 +236,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert Process.alive?(view.pid)
     assert html =~ "Paste content must be text."
-    refute has_element?(view, "#playbook-preview")
+    refute has_element?(view, "#saved-search-preview")
   end
 
-  test "uploaded playbook is not imported until submit and malformed upload preserves the preview",
+  test "uploaded saved search is not imported until submit and malformed upload preserves the preview",
        %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -299,23 +248,25 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> form("form[phx-submit='import_upload']")
       |> render_submit()
 
-    assert has_element?(view, "#playbook-import-error", "Choose a JSON file first.")
+    assert has_element?(view, "#saved-search-import-error", "Choose a JSON file first.")
     assert empty_html =~ "No previous valid preview is available."
     refute has_element?(view, "#flash-error")
 
-    assert is_binary(upload_playbook(view, "selected.json", playbook_json("uploaded on submit")))
+    assert is_binary(
+             upload_saved_search(view, "selected.json", saved_search_json("uploaded on submit"))
+           )
 
-    refute has_element?(view, "#playbook-preview")
-    refute has_element?(view, "#playbook-draft-origin")
+    refute has_element?(view, "#saved-search-preview")
+    refute has_element?(view, "#saved-search-draft-origin")
 
     view
     |> form("form[phx-submit='import_upload']")
     |> render_submit()
 
-    assert has_element?(view, "#playbook-draft-origin", "selected.json")
-    assert has_element?(view, "#playbook-summary", "uploaded on submit")
+    assert has_element?(view, "#saved-search-draft-origin", "selected.json")
+    assert has_element?(view, "#saved-search-summary", "uploaded on submit")
 
-    assert is_binary(upload_playbook(view, "malformed.json", "{"))
+    assert is_binary(upload_saved_search(view, "malformed.json", "{"))
 
     html =
       view
@@ -327,13 +278,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert has_element?(
              view,
-             "#playbook-import-error",
+             "#saved-search-import-error",
              "The previous valid preview remains selected."
            )
 
     refute has_element?(view, "#flash-error")
-    assert has_element?(view, "#playbook-draft-origin", "selected.json")
-    assert has_element?(view, "#playbook-summary", "uploaded on submit")
+    assert has_element?(view, "#saved-search-draft-origin", "selected.json")
+    assert has_element?(view, "#saved-search-summary", "uploaded on submit")
   end
 
   test "file uploads require explicit submit, enforce the byte ceiling, and preserve the selected preview on failure",
@@ -341,33 +292,33 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: playbook_json("prior upload preview")})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("prior upload preview")})
     |> render_submit()
 
     _ =
       Enum.reduce_while([255_999, 256_000], "prior upload preview", fn size, prior_query ->
         filename = "upload-#{size}.json"
-        json = sized_playbook_json(size, "upload-#{size}")
+        json = sized_saved_search_json(size, "upload-#{size}")
         assert byte_size(json) == size
 
-        assert is_binary(upload_playbook(view, filename, json))
-        assert :sys.get_state(view.pid).socket.assigns.draft_playbook["q"] == prior_query
-        assert has_element?(view, "#playbook-preview", prior_query)
+        assert is_binary(upload_saved_search(view, filename, json))
+        assert :sys.get_state(view.pid).socket.assigns.draft_saved_search["q"] == prior_query
+        assert has_element?(view, "#saved-search-preview", prior_query)
 
         view
         |> form("form[phx-submit='import_upload']")
         |> render_submit()
 
-        assert has_element?(view, "#playbook-draft-origin", filename)
-        assert has_element?(view, "#playbook-preview", "upload-#{size}")
+        assert has_element?(view, "#saved-search-draft-origin", filename)
+        assert has_element?(view, "#saved-search-preview", "upload-#{size}")
         {:cont, "upload-#{size}"}
       end)
 
-    too_large = sized_playbook_json(256_001, "upload-too-large")
+    too_large = sized_saved_search_json(256_001, "upload-too-large")
     assert byte_size(too_large) == 256_001
-    assert {:error, _reasons} = upload_playbook(view, "too-large.json", too_large)
+    assert {:error, _reasons} = upload_saved_search(view, "too-large.json", too_large)
 
-    upload_config = :sys.get_state(view.pid).socket.assigns.uploads.playbook_file
+    upload_config = :sys.get_state(view.pid).socket.assigns.uploads.saved_search_file
 
     assert Enum.any?(upload_config.errors, fn {_ref, reason} -> reason == :too_large end),
            inspect(upload_config)
@@ -378,12 +329,12 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "256,000-byte"
-    assert has_element?(view, "#playbook-upload-error", "256,000-byte")
+    assert has_element?(view, "#saved-search-upload-error", "256,000-byte")
     assert html =~ "The previous valid preview remains selected."
-    assert has_element?(view, "#playbook-draft-origin", "upload-256000.json")
-    assert has_element?(view, "#playbook-preview", "upload-256000")
+    assert has_element?(view, "#saved-search-draft-origin", "upload-256000.json")
+    assert has_element?(view, "#saved-search-preview", "upload-256000")
 
-    assert is_binary(upload_playbook(view, "malformed.json", "{"))
+    assert is_binary(upload_saved_search(view, "malformed.json", "{"))
 
     malformed_html =
       view
@@ -392,32 +343,16 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert malformed_html =~ "This file is not valid saved search JSON."
     assert malformed_html =~ "The previous valid preview remains selected."
-    assert has_element?(view, "#playbook-draft-origin", "upload-256000.json")
-    assert has_element?(view, "#playbook-preview", "upload-256000")
+    assert has_element?(view, "#saved-search-draft-origin", "upload-256000.json")
+    assert has_element?(view, "#saved-search-preview", "upload-256000")
   end
 
   test "file dialogs expose unique names, contextual Cancel, and a successor target", %{
     conn: conn
   } do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_playbooks_dialog_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    :ok = File.write!(Path.join(dir, "one.json"), "{}\n")
-    :ok = File.write!(Path.join(dir, "two.json"), "{}\n")
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
+    put_saved_search!("one.json", "{}\n")
+    put_saved_search!("two.json", "{}\n")
+    too_long = String.duplicate("n", 121)
 
     {:ok, view, html} = live(conn, ~p"/ops/playbooks")
     assert html =~ "one.json"
@@ -429,26 +364,26 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     html = render(view)
     assert html =~ ~s(role="dialog")
-    assert html =~ ~s(aria-labelledby="rename-playbook-modal-title")
-    assert html =~ ~s(aria-describedby="rename-playbook-modal-description")
+    assert html =~ ~s(aria-labelledby="rename-saved-search-modal-title")
+    assert html =~ ~s(aria-describedby="rename-saved-search-modal-description")
     assert html =~ ~s(aria-label="Cancel rename")
     assert html =~ ~s(for="rename-new-name-input")
     assert html =~ ~s(data-ops-modal-initial-focus="#rename-new-name-input")
     assert html =~ ~s(data-ops-modal-successor-name="")
-    assert html =~ ~s(data-ops-modal-fallback-successor="#playbook-catalog-heading")
+    assert html =~ ~s(data-ops-modal-fallback-successor="#saved-search-catalog-heading")
     assert html =~ ~s(data-ops-modal-focus-error="#rename-new-name-input")
 
     view
-    |> form("form[phx-change='rename_change']", %{"new_name" => "invalid/name.json"})
+    |> form("form[phx-change='rename_change']", %{"new_name" => too_long})
     |> render_change()
 
-    assert render(view) =~ ~s(value="invalid/name.json")
+    assert render(view) =~ ~s(value="#{too_long}")
 
     view
-    |> form("form[phx-submit='rename_submit']", %{"new_name" => "invalid/name.json"})
+    |> form("form[phx-submit='rename_submit']", %{"new_name" => too_long})
     |> render_submit()
 
-    assert has_element?(view, "#rename-playbook-modal [role='alert']", "Filename")
+    assert has_element?(view, "#rename-saved-search-modal [role='alert']", "Enter a name")
     assert has_element?(view, "#rename-new-name-input[aria-invalid='true']")
 
     assert has_element?(
@@ -456,7 +391,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
              "#rename-new-name-input[aria-describedby*='rename-new-name-input-error']"
            )
 
-    assert has_element?(view, "#rename-playbook-modal[data-ops-modal-focus-request='1']")
+    assert has_element?(view, "#rename-saved-search-modal[data-ops-modal-focus-request='1']")
 
     view
     |> form("form[phx-change='rename_change']", %{"new_name" => "two.json"})
@@ -466,16 +401,16 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='rename_submit']", %{"new_name" => "two.json"})
     |> render_submit()
 
-    assert has_element?(view, "#rename-playbook-modal [role='alert']", "already in use")
+    assert has_element?(view, "#rename-saved-search-modal [role='alert']", "already in use")
     assert has_element?(view, "#rename-new-name-input[value='two.json']")
-    assert File.read!(Path.join(dir, "one.json")) == "{}\n"
-    assert File.read!(Path.join(dir, "two.json")) == "{}\n"
+    assert saved_definition("one.json") == %{}
+    assert saved_definition("two.json") == %{}
 
     render_click(view, "rename_cancel", %{})
     render_click(view, "dup_open", %{"name" => "one.json"})
-    refute has_element?(view, "#duplicate-playbook-modal [role='alert']")
+    refute has_element?(view, "#duplicate-saved-search-modal [role='alert']")
     view |> form("form[phx-submit='dup_submit']", %{"to_name" => "two.json"}) |> render_submit()
-    assert has_element?(view, "#duplicate-playbook-modal [role='alert']", "already in use")
+    assert has_element?(view, "#duplicate-saved-search-modal [role='alert']", "already in use")
     assert has_element?(view, "#dup-to-name-input[aria-invalid='true']")
     render_click(view, "dup_cancel", %{})
 
@@ -488,7 +423,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert html =~ ~s(data-ops-modal-initial-focus="[data-ops-modal-cancel]")
 
     assert html =~
-             ~s(data-ops-modal-successor="#playbook-primary-#{Base.url_encode64("two.json", padding: false)}")
+             ~s(data-ops-modal-successor="#saved-search-primary-#{Base.url_encode64("two.json", padding: false)}")
 
     assert html =~ ~s(aria-label="Cancel delete")
 
@@ -501,23 +436,23 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert has_element?(
              view,
-             "#delete-playbook-modal [role='alert']",
-             "match the filename exactly"
+             "#delete-saved-search-modal [role='alert']",
+             "match the name exactly"
            )
 
-    assert File.exists?(Path.join(dir, "one.json"))
+    assert saved_search?("one.json")
 
     view
     |> form("form[phx-submit='confirm_delete']", %{"confirm" => "one.json"})
     |> render_submit()
 
-    refute File.exists?(Path.join(dir, "one.json"))
-    assert File.exists?(Path.join(dir, "two.json"))
-    refute has_element?(view, "#delete-playbook-modal")
+    refute saved_search?("one.json")
+    assert saved_search?("two.json")
+    refute has_element?(view, "#delete-saved-search-modal")
 
     assert has_element?(
              view,
-             "#playbook-primary-#{Base.url_encode64("two.json", padding: false)}"
+             "#saved-search-primary-#{Base.url_encode64("two.json", padding: false)}"
            )
   end
 
@@ -538,29 +473,27 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> form("form[phx-submit='import_paste']", %{json: json})
       |> render_submit()
 
-    assert html =~ "data-testid=\"playbook-preview-marker\""
+    assert html =~ "data-testid=\"saved-search-preview-marker\""
   end
 
   test "imported draft replaces loaded provenance and can be saved before a run", %{conn: conn} do
-    dir = workspace_dir("provenance")
-    configure_workspace(dir)
-    :ok = File.write!(Path.join(dir, "previous.json"), playbook_json("old query"))
+    put_saved_search!("previous.json", saved_search_json("old query"))
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
     render_click(view, "load", %{"name" => "previous.json"})
 
     imported =
-      playbook_json("new query", %{"title" => "New title", "description" => "New details"})
+      saved_search_json("new query", %{"title" => "New title", "description" => "New details"})
 
     html =
       view
       |> form("form[phx-submit='import_paste']", %{json: imported})
       |> render_submit()
 
-    assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
-    assert has_element?(view, "#playbook-draft-origin", "pasted JSON")
-    refute has_element?(view, "#playbook-draft-origin", "previous.json")
-    assert html =~ "Saving replaces the file with the same name."
+    assert has_element?(view, "#saved-search-draft-origin", "Imported draft · not saved")
+    assert has_element?(view, "#saved-search-draft-origin", "pasted JSON")
+    refute has_element?(view, "#saved-search-draft-origin", "previous.json")
+    assert html =~ "Saving replaces the saved search with the same name."
     assert html =~ "Run search"
 
     html =
@@ -569,60 +502,61 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "Saved captured.json"
-    assert has_element?(view, "#playbook-draft-origin", "Saved file")
-    assert has_element?(view, "#playbook-draft-origin", "captured.json")
-    refute has_element?(view, "#playbook-run-outcome")
+    assert has_element?(view, "#saved-search-draft-origin", "Saved search · captured.json")
+    refute has_element?(view, "#saved-search-run-outcome")
 
-    saved = Jason.decode!(File.read!(Path.join(dir, "captured.json")))
+    saved = saved_definition("captured.json")
     assert saved["q"] == "new query"
     assert saved["title"] == "New title"
     assert saved["description"] == "New details"
   end
 
-  test "failed workspace write keeps the filename and draft with concrete recovery guidance", %{
-    conn: conn
-  } do
-    dir = workspace_dir("failed-save")
-    blocker = Path.join(dir, "not-a-directory")
-    :ok = File.write!(blocker, "file")
-    configure_workspace(blocker)
+  test "saving under an existing name replaces that saved search's definition", %{conn: conn} do
+    put_saved_search!("shared.json", saved_search_json("old query"))
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
-    json = playbook_json("retain this draft")
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: json})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("replacement query")})
     |> render_submit()
 
     html =
       view
-      |> form("form[phx-submit='save']", %{basename: "retained.json"})
+      |> form("form[phx-submit='save']", %{basename: " shared.json "})
       |> render_submit()
 
-    assert has_element?(view, "#save_basename[value='retained.json']")
-    assert has_element?(view, "#save-basename-error", "Could not save this search.")
-    assert html =~ ":enotdir"
-
-    assert has_element?(
-             view,
-             "#save-basename-error",
-             "Check the storage folder's permissions"
-           )
-
-    assert has_element?(view, "#save-basename-error", "available disk space, then retry saving.")
-
-    assert has_element?(view, "#playbook-draft-origin", "Imported draft · not saved")
-    assert has_element?(view, "#playbook-summary", "retain this draft")
-    refute html =~ "Saved retained.json"
+    assert html =~ "Saved shared.json"
+    assert saved_definition("shared.json")["q"] == "replacement query"
+    assert [_one] = ScrypathOps.SavedSearches.list(ScrypathOps.Repo)
   end
 
-  test "a completed run stays attributed to its submitted playbook after importing another draft",
+  test "an invalid name keeps the draft and explains the naming rule", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
+
+    view
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("retain this draft")})
+    |> render_submit()
+
+    too_long = String.duplicate("n", 121)
+
+    html =
+      view
+      |> form("form[phx-submit='save']", %{basename: too_long})
+      |> render_submit()
+
+    assert has_element?(view, "#save_basename[value='#{too_long}']")
+    assert has_element?(view, "#save-basename-error", "Enter a name of up to 120 characters.")
+    assert has_element?(view, "#saved-search-draft-origin", "Imported draft · not saved")
+    assert has_element?(view, "#saved-search-summary", "retain this draft")
+    refute html =~ "Saved #{too_long}"
+    assert ScrypathOps.SavedSearches.list(ScrypathOps.Repo) == []
+  end
+
+  test "a completed run stays attributed to its submitted saved search after importing another draft",
        %{
          conn: conn
        } do
-    dir = workspace_dir("run-snapshot")
-    configure_workspace(dir)
-    :ok = File.write!(Path.join(dir, "submitted.json"), playbook_json("submitted query"))
+    put_saved_search!("submitted.json", saved_search_json("submitted query"))
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
     render_click(view, "load", %{"name" => "submitted.json"})
@@ -630,23 +564,21 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     render_async(view)
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: playbook_json("current draft query")})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("current draft query")})
     |> render_submit()
 
-    assert has_element?(view, "#playbook-preview", "current draft query")
-    assert has_element?(view, "#playbook-run-outcome", "Last completed run")
-    assert has_element?(view, "#playbook-run-outcome", "submitted.json")
-    assert has_element?(view, "#playbook-run-outcome", "submitted query")
-    refute has_element?(view, "#playbook-run-outcome", "current draft query")
-    assert has_element?(view, "#playbook-run-outcome a[href*='q=submitted+query']")
+    assert has_element?(view, "#saved-search-preview", "current draft query")
+    assert has_element?(view, "#saved-search-run-outcome", "Last completed run")
+    assert has_element?(view, "#saved-search-run-outcome", "submitted.json")
+    assert has_element?(view, "#saved-search-run-outcome", "submitted query")
+    refute has_element?(view, "#saved-search-run-outcome", "current draft query")
+    assert has_element?(view, "#saved-search-run-outcome a[href*='q=submitted+query']")
   end
 
   test "saving a changed draft does not relabel the earlier run or its Search handoff", %{
     conn: conn
   } do
-    dir = workspace_dir("run-snapshot-save")
-    configure_workspace(dir)
-    :ok = File.write!(Path.join(dir, "submitted.json"), playbook_json("submitted query"))
+    put_saved_search!("submitted.json", saved_search_json("submitted query"))
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
     render_click(view, "load", %{"name" => "submitted.json"})
@@ -655,7 +587,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     view
     |> form("form[phx-submit='import_paste']", %{
-      json: playbook_json("saved current query", %{"title" => "Saved current draft"})
+      json: saved_search_json("saved current query", %{"title" => "Saved current draft"})
     })
     |> render_submit()
 
@@ -663,46 +595,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> form("form[phx-submit='save']", %{basename: "current.json"})
     |> render_submit()
 
-    assert has_element?(view, "#playbook-preview", "saved current query")
-    assert has_element?(view, "#playbook-draft-origin", "Saved file · current.json")
-    assert has_element?(view, "#playbook-run-outcome", "Last completed run")
-    assert has_element?(view, "#playbook-run-outcome", "submitted.json")
-    assert has_element?(view, "#playbook-run-outcome", "submitted query")
-    refute has_element?(view, "#playbook-run-outcome", "saved current query")
-    assert has_element?(view, "#playbook-run-outcome a[href*='q=submitted+query']")
-  end
-
-  test "read-only example preview names its source and explains workspace setup", %{conn: conn} do
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
-
-    on_exit(fn ->
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
-
-    {:ok, view, html} = live(conn, ~p"/ops/playbooks")
-    render_click(view, "load", %{"name" => "single-index-probe.json"})
-
-    assert html =~ "Examples (read-only)"
-    assert has_element?(view, "#playbook-draft-origin", "Read-only example")
-    assert has_element?(view, "#playbook-draft-origin", "single-index-probe.json")
-    assert has_element?(view, "#playbook-preview", "Run search")
-
-    assert has_element?(
-             view,
-             "#playbook-save-guidance",
-             "Configure a storage folder"
-           )
-
-    assert has_element?(
-             view,
-             "#playbook-save-guidance button[disabled]",
-             "Save search"
-           )
-
-    refute has_element?(view, "form[phx-submit='save']")
+    assert has_element?(view, "#saved-search-preview", "saved current query")
+    assert has_element?(view, "#saved-search-draft-origin", "Saved search · current.json")
+    assert has_element?(view, "#saved-search-run-outcome", "Last completed run")
+    assert has_element?(view, "#saved-search-run-outcome", "submitted.json")
+    assert has_element?(view, "#saved-search-run-outcome", "submitted query")
+    refute has_element?(view, "#saved-search-run-outcome", "saved current query")
+    assert has_element?(view, "#saved-search-run-outcome a[href*='q=submitted+query']")
   end
 
   test "run with stub adapter shows explicit lifecycle transition to success", %{conn: conn} do
@@ -840,7 +739,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     render_click(view, "run", %{})
     html = render_async(view)
-    doc_links = playbook_doc_links(html)
+    doc_links = saved_search_doc_links(html)
 
     assert html =~ "data-testid=\"run-failure-panel\""
     assert html =~ "backend"
@@ -849,14 +748,14 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     assert doc_links in [
              [
-               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
-               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/saved-search-schema-v1.md#troubleshooting",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-saved-search-persistence.md",
                "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
              ],
              [
-               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md",
-               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/playbook-schema-v1.md#troubleshooting",
-               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/saved-search-schema-v1.md",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/saved-search-schema-v1.md#troubleshooting",
+               "https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-saved-search-persistence.md",
                "https://github.com/szTheory/scrypath/blob/main/guides/multi-index-search.md"
              ]
            ]
@@ -902,15 +801,15 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert assigns.run_failure_enriched.message =~ "forced hard failure"
   end
 
-  test "playbook run emits telemetry start and stop for a completed run", %{conn: conn} do
+  test "saved search run emits telemetry start and stop for a completed run", %{conn: conn} do
     unique = System.unique_integer([:positive])
-    start_handler_id = "playbook-live-start-#{unique}"
-    stop_handler_id = "playbook-live-stop-#{unique}"
+    start_handler_id = "saved-search-live-start-#{unique}"
+    stop_handler_id = "saved-search-live-stop-#{unique}"
     parent = self()
 
     :telemetry.attach(
       start_handler_id,
-      [:scrypath_ops, :playbook_run, :start],
+      [:scrypath_ops, :saved_search_run, :start],
       fn _event, measurements, metadata, _config ->
         send(parent, {:telemetry_start, measurements, metadata})
       end,
@@ -919,7 +818,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
 
     :telemetry.attach(
       stop_handler_id,
-      [:scrypath_ops, :playbook_run, :stop],
+      [:scrypath_ops, :saved_search_run, :stop],
       fn _event, measurements, metadata, _config ->
         send(parent, {:telemetry_stop, measurements, metadata})
       end,
@@ -961,24 +860,6 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
   end
 
   test "catalog run_now shows explicit lifecycle and success state", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_run_now_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     basename = "catalog-run-#{System.unique_integer([:positive])}.json"
@@ -1029,18 +910,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: playbook_json("cancelled query")})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("cancelled query")})
     |> render_submit()
 
     assert render_click(view, "run", %{}) =~ "Running search"
-    assert_receive {:playbook_run_adapter_started, _runner_pid}
+    assert_receive {:saved_search_run_adapter_started, _runner_pid}
 
     render_click(view, "cancel_run", %{})
     html = render_async(view)
 
     assert html =~ "Search canceled before results were returned."
-    assert has_element?(view, "#playbook-run-outcome", "pasted JSON")
-    assert has_element?(view, "#playbook-run-outcome", "cancelled query")
+    assert has_element?(view, "#saved-search-run-outcome", "pasted JSON")
+    assert has_element?(view, "#saved-search-run-outcome", "cancelled query")
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.run_ui.phase == :error
@@ -1069,18 +950,18 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     view
-    |> form("form[phx-submit='import_paste']", %{json: playbook_json("timed-out query")})
+    |> form("form[phx-submit='import_paste']", %{json: saved_search_json("timed-out query")})
     |> render_submit()
 
     assert render_click(view, "run", %{}) =~ "Running search"
-    assert_receive {:playbook_run_adapter_started, _runner_pid}
+    assert_receive {:saved_search_run_adapter_started, _runner_pid}
     run_id = :sys.get_state(view.pid).socket.assigns.run_ui.run_id
-    send(view.pid, {:playbook_run_timeout, run_id})
+    send(view.pid, {:saved_search_run_timeout, run_id})
     html = render(view)
 
     assert html =~ "Search timed out before results were returned."
-    assert has_element?(view, "#playbook-run-outcome", "pasted JSON")
-    assert has_element?(view, "#playbook-run-outcome", "timed-out query")
+    assert has_element?(view, "#saved-search-run-outcome", "pasted JSON")
+    assert has_element?(view, "#saved-search-run-outcome", "timed-out query")
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.run_ui.phase == :error
@@ -1088,28 +969,13 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     assert assigns.run_snapshot.draft["q"] == "timed-out query"
   end
 
-  test "loading a new playbook while running cancels and resets the active run", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_supersede_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
+  test "loading a new saved search while running cancels and resets the active run", %{conn: conn} do
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
     prev_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
     Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
     Application.put_env(:scrypath_ops, :search_stub_waiter, self())
 
     on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-
       if prev_variant == nil,
         do: Application.delete_env(:scrypath_ops, :search_stub_variant),
         else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
@@ -1137,15 +1003,15 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "one.json"), one_json)
-    File.write!(Path.join(dir, "two.json"), two_json)
+    put_saved_search!("one.json", one_json)
+    put_saved_search!("two.json", two_json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     render_click(view, "load", %{"name" => "one.json"})
     running_html = render_click(view, "run", %{})
     assert running_html =~ "Running search"
-    assert_receive {:playbook_run_adapter_started, _runner_pid}
+    assert_receive {:saved_search_run_adapter_started, _runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
     assert load_html =~ "Loaded saved search."
@@ -1154,27 +1020,12 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
   end
 
   test "superseded run exit does not override the newer run result", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_supersede_result_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
     prev_variant = Application.get_env(:scrypath_ops, :search_stub_variant)
     prev_waiter = Application.get_env(:scrypath_ops, :search_stub_waiter)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
     Application.put_env(:scrypath_ops, :search_stub_variant, :paused)
     Application.put_env(:scrypath_ops, :search_stub_waiter, self())
 
     on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-
       if prev_variant == nil,
         do: Application.delete_env(:scrypath_ops, :search_stub_variant),
         else: Application.put_env(:scrypath_ops, :search_stub_variant, prev_variant)
@@ -1202,21 +1053,21 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "one.json"), one_json)
-    File.write!(Path.join(dir, "two.json"), two_json)
+    put_saved_search!("one.json", one_json)
+    put_saved_search!("two.json", two_json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     render_click(view, "load", %{"name" => "one.json"})
     assert render_click(view, "run", %{}) =~ "Running search"
-    assert_receive {:playbook_run_adapter_started, _first_runner_pid}
+    assert_receive {:saved_search_run_adapter_started, _first_runner_pid}
 
     load_html = render_click(view, "load", %{"name" => "two.json"})
     assert load_html =~ "Loaded saved search."
 
     assert render_click(view, "run", %{}) =~ "Running search"
-    assert_receive {:playbook_run_adapter_started, current_runner_pid}
-    send(current_runner_pid, :continue_playbook_run)
+    assert_receive {:saved_search_run_adapter_started, current_runner_pid}
+    send(current_runner_pid, :continue_saved_search_run)
 
     html = render_async(view)
     assert html =~ "Run finished"
@@ -1224,25 +1075,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     refute html =~ "data-testid=\"run-failure-panel\""
   end
 
-  test "legacy workspace JSON without title shows Untitled saved search", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_untitled_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
+  test "legacy saved search JSON without title shows Untitled saved search", %{conn: conn} do
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1252,32 +1085,14 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "legacy.json"), json)
+    put_saved_search!("legacy.json", json)
 
     {:ok, _view, html} = live(conn, ~p"/ops/playbooks")
     assert html =~ "Untitled saved search"
     assert html =~ "legacy.json"
   end
 
-  test "duplicate flow writes suggested copy basename", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_dup_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
+  test "duplicate flow saves the suggested copy name", %{conn: conn} do
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1287,38 +1102,22 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "one.json"), json)
+    put_saved_search!("one.json", json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
     render_click(view, "dup_open", %{"name" => "one.json"})
+    assert has_element?(view, "#dup-to-name-input[value='one.json copy']")
 
     view
-    |> form("form[phx-submit='dup_submit']", %{"to_name" => "one-1.json"})
+    |> form("form[phx-submit='dup_submit']", %{"to_name" => "one.json copy"})
     |> render_submit()
 
-    assert File.exists?(Path.join(dir, "one-1.json"))
+    assert saved_search?("one.json copy")
+    assert saved_definition("one.json copy") == saved_definition("one.json")
   end
 
-  test "delete confirmation mismatch shows flash and keeps file", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_delcfm_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
+  test "delete confirmation mismatch shows flash and keeps the saved search", %{conn: conn} do
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1328,8 +1127,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    path = Path.join(dir, "todelete.json")
-    File.write!(path, json)
+    put_saved_search!("todelete.json", json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -1340,32 +1138,20 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> form("form[phx-submit='confirm_delete']", %{"confirm" => "wrong-name.json"})
       |> render_submit()
 
-    assert html =~ "Confirmation must match the filename exactly."
-    assert has_element?(view, "#delete-playbook-modal [role='alert']", "Confirmation must match")
+    assert html =~ "Confirmation must match the name exactly."
+
+    assert has_element?(
+             view,
+             "#delete-saved-search-modal [role='alert']",
+             "Confirmation must match"
+           )
+
     assert has_element?(view, "#delete-confirm-input[aria-invalid='true']")
     assert has_element?(view, "#delete-confirm-input[value='wrong-name.json']")
-    assert File.exists?(path)
+    assert saved_search?("todelete.json")
   end
 
-  test "sigra confirm delete redirects stale sudo and keeps the workspace file", %{} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_sigra_del_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
+  test "sigra confirm delete redirects stale sudo and keeps the saved search", %{} do
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1375,16 +1161,14 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    path = Path.join(dir, "sigra-delete.json")
-    File.write!(path, json)
+    put_saved_search!("sigra-delete.json", json)
 
     socket = %Phoenix.LiveView.Socket{
       assigns: %{
         __changed__: %{},
         flash: %{},
         delete_pending: "sigra-delete.json",
-        workspace_root: dir,
-        workspace_writable?: true,
+        scrypath_repo: ScrypathOps.Repo,
         selected_basename: "sigra-delete.json",
         operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
           user_id: "user_123",
@@ -1397,7 +1181,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     }
 
     {:noreply, result_socket} =
-      ScrypathOpsWeb.PlaybookLive.handle_event(
+      ScrypathOpsWeb.SavedSearchLive.handle_event(
         "confirm_delete",
         %{"confirm" => "sigra-delete.json"},
         socket
@@ -1406,28 +1190,10 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     socket = result_socket
     assert inspect(socket.redirected) =~ "/sudo/confirm"
     assert inspect(socket.redirected) =~ "return_to=%2Fops%2Fplaybooks"
-    assert File.exists?(path)
+    assert saved_search?("sigra-delete.json")
   end
 
-  test "sigra confirm delete clears only the selected playbook state", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_sigra_delete_ok_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
+  test "sigra confirm delete clears only the selected saved search state", %{conn: conn} do
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1437,8 +1203,7 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    path = Path.join(dir, "sigra-delete-ok.json")
-    File.write!(path, json)
+    put_saved_search!("sigra-delete-ok.json", json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -1461,12 +1226,12 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> render_submit()
 
     assert html =~ "Deleted sigra-delete-ok.json"
-    refute File.exists?(path)
+    refute saved_search?("sigra-delete-ok.json")
 
     assigns = :sys.get_state(view.pid).socket.assigns
     assert assigns.delete_pending == nil
     assert assigns.selected_basename == nil
-    assert assigns.draft_playbook == nil
+    assert assigns.draft_saved_search == nil
     assert assigns.preview_json == nil
     assert assigns.preview_marker == false
     assert assigns.run_result == nil
@@ -1474,24 +1239,6 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
   end
 
   test "rename collision shows in-use flash", %{conn: conn} do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_pb_ren_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    prev_ws = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if prev_ws == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, prev_ws)
-    end)
-
     json =
       Jason.encode!(%{
         "playbook_format" => 1,
@@ -1501,8 +1248,8 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
         "opts" => %{}
       })
 
-    File.write!(Path.join(dir, "a.json"), json)
-    File.write!(Path.join(dir, "b.json"), json)
+    put_saved_search!("a.json", json)
+    put_saved_search!("b.json", json)
 
     {:ok, view, _html} = live(conn, ~p"/ops/playbooks")
 
@@ -1513,39 +1260,36 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
       |> form("form[phx-submit='rename_submit']", %{"new_name" => "b.json"})
       |> render_submit()
 
-    assert html =~ "That filename is already in use"
+    assert html =~ "That name is already in use"
   end
 
-  defp playbook_doc_links(html) do
+  defp saved_search_doc_links(html) do
     Regex.scan(~r/href="(https:\/\/github\.com\/szTheory\/scrypath\/blob\/main\/[^"]+)"/, html)
     |> Enum.map(fn [_, href] -> href end)
     |> Enum.uniq()
   end
 
-  defp workspace_dir(label) do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_#{label}_#{:erlang.unique_integer([:positive])}"
-      )
+  # Inserts a row directly so tests can also seed definitions the v1 validator rejects.
+  defp put_saved_search!(name, json) do
+    definition = Jason.decode!(json)
 
-    :ok = File.mkdir_p!(dir)
-    on_exit(fn -> File.rm_rf(dir) end)
-    dir
+    ScrypathOps.Repo.insert!(%ScrypathOps.SavedSearches.SavedSearch{
+      name: name,
+      schema: ScrypathOps.SavedSearches.SavedSearch.schema_for(definition) || "unknown",
+      definition: definition
+    })
   end
 
-  defp configure_workspace(dir) do
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
+  defp saved_search?(name) do
+    match?({:ok, _}, ScrypathOps.SavedSearches.get(ScrypathOps.Repo, name))
   end
 
-  defp playbook_json(query, metadata \\ %{}) do
+  defp saved_definition(name) do
+    {:ok, saved_search} = ScrypathOps.SavedSearches.get(ScrypathOps.Repo, name)
+    saved_search.definition
+  end
+
+  defp saved_search_json(query, metadata \\ %{}) do
     %{
       "playbook_format" => 1,
       "mode" => "search",
@@ -1557,16 +1301,16 @@ defmodule ScrypathOpsWeb.PlaybookLiveTest do
     |> Jason.encode!()
   end
 
-  defp sized_playbook_json(size, query) do
-    json = playbook_json(query)
+  defp sized_saved_search_json(size, query) do
+    json = saved_search_json(query)
     padding = size - byte_size(json)
     true = padding >= 0
     json <> String.duplicate(" ", padding)
   end
 
-  defp upload_playbook(view, filename, content) do
+  defp upload_saved_search(view, filename, content) do
     upload =
-      file_input(view, "form[phx-submit='import_upload']", :playbook_file, [
+      file_input(view, "form[phx-submit='import_upload']", :saved_search_file, [
         %{
           name: filename,
           content: content,

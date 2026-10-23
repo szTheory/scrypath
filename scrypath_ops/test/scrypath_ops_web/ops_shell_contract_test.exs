@@ -284,7 +284,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     info =
       render_component(&CoreComponents.flash/1,
         kind: :info,
-        flash: %{"info" => "Saved playbook."}
+        flash: %{"info" => "Saved search."}
       )
 
     error =
@@ -296,7 +296,7 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert info =~ ~s(role="status")
     assert info =~ "ops-flash"
     assert info =~ "ops-flash--info"
-    assert info =~ "Saved playbook."
+    assert info =~ "Saved search."
     assert info =~ ~s(aria-label="Close notification")
     assert info =~ "lv:clear-flash"
     assert info =~ "hero-information-circle" or Regex.scan(~r/<svg\b/, info) |> length() == 2

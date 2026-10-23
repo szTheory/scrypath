@@ -1,15 +1,15 @@
-defmodule ScrypathOps.Playbook.Runner do
+defmodule ScrypathOps.SavedSearches.Runner do
   @moduledoc """
-  Runs a **validated** playbook map through `ScrypathOps.SearchPlayground` dispatch only.
+  Runs a **validated** saved search map through `ScrypathOps.SearchPlayground` dispatch only.
 
-  Callers must pass maps already accepted by `ScrypathOps.Playbook.V1.validate/1` (`{:ok, map}`).
+  Callers must pass maps already accepted by `ScrypathOps.SavedSearches.V1.validate/1` (`{:ok, map}`).
   Invalid shapes or configuration issues return tagged `{:error, reason}` tuples without logging
-  raw playbook bodies.
+  raw saved search bodies.
 
   ## Runner-library contract
 
-  `run_validated/3` is the canonical execution contract for playbook runs. Call this function
-  only after `ScrypathOps.Playbook.V1.validate/1` has accepted the JSON payload and produced
+  `run_validated/3` is the canonical execution contract for saved search runs. Call this function
+  only after `ScrypathOps.SavedSearches.V1.validate/1` has accepted the JSON payload and produced
   the validated string-keyed map, or pass the equivalent `{:ok, map}` wrapper from validation.
 
   The contract stays on the same raw tuple seam as the root `Scrypath` search APIs:
@@ -21,7 +21,7 @@ defmodule ScrypathOps.Playbook.Runner do
 
   This mirrors the root-library "Errors vs raises" split: the non-bang path returns raw
   `{:error, reason}` tuples for callers that want to branch, while bang helpers raise later with
-  that same reason. `ScrypathOps.Playbook.RunFailure`, `ScrypathOpsWeb.PlaybookLive`,
+  that same reason. `ScrypathOps.SavedSearches.RunFailure`, `ScrypathOpsWeb.SavedSearchLive`,
   `Scrypath.Errors`, and Mix or operator tasks own presentation formatting after the raw reason
   already exists; they do not redefine this runner contract.
 
@@ -35,9 +35,9 @@ defmodule ScrypathOps.Playbook.Runner do
   alias ScrypathOps.SearchPlayground
 
   @doc """
-  Executes a validated playbook against the configured search playground adapter.
+  Executes a validated saved search against the configured search playground adapter.
 
-  The first argument must be the string-keyed map from `Playbook.V1.validate/1`, or `{:ok, map}`.
+  The first argument must be the string-keyed map from `SavedSearches.V1.validate/1`, or `{:ok, map}`.
   """
   @spec run_validated(map() | {:ok, map()}, [module()], keyword()) ::
           {:ok, term()} | {:error, term()}
@@ -46,7 +46,7 @@ defmodule ScrypathOps.Playbook.Runner do
   end
 
   def run_validated({:error, _}, _, _) do
-    {:error, :playbook_not_validated}
+    {:error, :saved_search_not_validated}
   end
 
   def run_validated(%{"mode" => "search"} = map, allowlist, scrypath_opts) do
@@ -98,7 +98,7 @@ defmodule ScrypathOps.Playbook.Runner do
   end
 
   def run_validated(_, _, _) do
-    {:error, :invalid_playbook_shape}
+    {:error, :invalid_saved_search_shape}
   end
 
   defp map_search_many_entries(entries, allowlist) do
@@ -125,10 +125,10 @@ defmodule ScrypathOps.Playbook.Runner do
   end
 
   defp build_dispatch_opts(scrypath_opts, opts_map, ctx) do
-    playbook_kw = opts_string_map_to_keyword(opts_map, ctx)
+    saved_search_kw = opts_string_map_to_keyword(opts_map, ctx)
 
     page_kw =
-      case Keyword.get(playbook_kw, :page) do
+      case Keyword.get(saved_search_kw, :page) do
         list when is_list(list) -> list
         _ -> []
       end
@@ -138,7 +138,7 @@ defmodule ScrypathOps.Playbook.Runner do
       merged =
         scrypath_opts
         |> ScrypathOps.Schemas.runtime_opts()
-        |> Keyword.merge(Keyword.delete(playbook_kw, :page))
+        |> Keyword.merge(Keyword.delete(saved_search_kw, :page))
         |> maybe_put_page(page_kw)
 
       {:ok, merged}

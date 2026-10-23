@@ -28,7 +28,7 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
   test "nil operator_context executes the closure" do
     socket = socket(%{})
 
-    assert :ran = Gating.gate_sensitive_action(socket, :playbook_delete, fn -> :ran end)
+    assert :ran = Gating.gate_sensitive_action(socket, :saved_search_delete, fn -> :ran end)
   end
 
   test "impersonation blocks the action and adds an error flash" do
@@ -36,7 +36,7 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     socket = socket(%{operator_context: context})
 
     result =
-      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+      Gating.gate_sensitive_action(socket, :saved_search_delete, fn ->
         flunk("action should not run")
       end)
 
@@ -48,7 +48,7 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     socket = socket(%{operator_context: context, return_to: "/ops/playbooks/42"})
 
     result =
-      Gating.gate_sensitive_action(socket, :playbook_delete, fn ->
+      Gating.gate_sensitive_action(socket, :saved_search_delete, fn ->
         flunk("action should not run")
       end)
 
@@ -60,7 +60,7 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -60, :second))
     socket = socket(%{operator_context: context})
 
-    assert :ran = Gating.gate_sensitive_action(socket, :playbook_delete, fn -> :ran end)
+    assert :ran = Gating.gate_sensitive_action(socket, :saved_search_delete, fn -> :ran end)
   end
 
   defp operator_context(opts) do

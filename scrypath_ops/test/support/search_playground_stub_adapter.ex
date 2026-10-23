@@ -69,10 +69,10 @@ defmodule ScrypathOps.Test.SearchPlaygroundStubAdapter do
 
       :paused ->
         waiter = Application.fetch_env!(:scrypath_ops, :search_stub_waiter)
-        send(waiter, {:playbook_run_adapter_started, self()})
+        send(waiter, {:saved_search_run_adapter_started, self()})
 
         receive do
-          :continue_playbook_run -> :ok
+          :continue_saved_search_run -> :ok
         end
 
       _ ->

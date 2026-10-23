@@ -3833,7 +3833,7 @@
       animation: spin 1s linear infinite;
     }
   }
-  .ops-save-playbook {
+  .ops-save-search {
     min-width: 0;
     border-top: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
@@ -3841,10 +3841,10 @@
     }
     padding-top: var(--spacing-ops-4);
   }
-  .ops-save-playbook__form {
+  .ops-save-search__form {
     min-width: 0;
   }
-  .ops-save-playbook p {
+  .ops-save-search p {
     overflow-wrap: anywhere;
   }
   .ops-form-stack {
@@ -5073,11 +5073,11 @@
   z-index: var(--z-index-ops-modal);
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
 }
-.ops-playbook-filename {
+.ops-saved-search-filename {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.ops-playbook-file-actions {
+.ops-saved-search-file-actions {
   min-width: 0;
   max-width: 100%;
 }
@@ -5705,7 +5705,7 @@
   .ops-draft-notice[hidden] {
     display: none;
   }
-  .ops-save-playbook__form {
+  .ops-save-search__form {
     padding-block: .5rem 1.25rem;
   }
   .ops-hit-description {

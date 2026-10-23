@@ -891,17 +891,17 @@
     }
   }
 
-  .ops-save-playbook {
+  .ops-save-search {
     min-width: 0;
     border-top: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     padding-top: var(--spacing-ops-4);
   }
 
-  .ops-save-playbook__form {
+  .ops-save-search__form {
     min-width: 0;
   }
 
-  .ops-save-playbook p {
+  .ops-save-search p {
     overflow-wrap: anywhere;
   }
 
@@ -2129,12 +2129,12 @@
   transition: opacity var(--duration-ops-fast) var(--ease-ops-exit);
 }
 
-.ops-playbook-filename {
+.ops-saved-search-filename {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
-.ops-playbook-file-actions {
+.ops-saved-search-file-actions {
   min-width: 0;
   max-width: 100%;
 }
@@ -2335,7 +2335,7 @@
   }
 }
 
-/* D-15/D-16: dark-only hover border boost on the paired Search row + Playbook item selector.
+/* D-15/D-16: dark-only hover border boost on the paired Search row + Saved search item selector.
    Base hover remains primary 32% for light and fallback; hover stays border-only, not glow. */
 [data-theme="dark"] .ops-result-row:not(.ops-search-hit):hover,
 [data-theme="dark"] .ops-object-item:hover {
@@ -2404,7 +2404,7 @@
   }
 }
 
-/* Phase 133 (DARKMOTION-01): active Playbook item carries the active-path node mark.
+/* Phase 133 (DARKMOTION-01): active Saved search item carries the active-path node mark.
    Compose the violet glow onto the existing inset ring (Precedent D) so the
    active path node lifts in dark while keeping its light ring byte-unchanged.
    Keyed off the persistent .ops-object-item-active server-state class — patch-safe,
@@ -2557,7 +2557,7 @@
   .ops-search-query-hint { color: var(--ops-text-muted); font-size: var(--text-ops-sm); line-height: 1.5; margin-top: .375rem; max-width: 75ch; }
   .ops-draft-notice { padding-block: .5rem; color: var(--ops-warning-text); font-size: var(--text-ops-sm); line-height: 1.5; }
   .ops-draft-notice[hidden] { display: none; }
-  .ops-save-playbook__form { padding-block: .5rem 1.25rem; }
+  .ops-save-search__form { padding-block: .5rem 1.25rem; }
   .ops-hit-description { max-width: 72ch; white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--leading-ops-body); color: var(--ops-text-muted); margin-block: .5rem 1rem; }
   .ops-hit-source { color: var(--ops-text-muted); font-size: var(--text-ops-sm); }
   .ops-hit-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: .75rem 1.5rem; margin-block: .75rem; }

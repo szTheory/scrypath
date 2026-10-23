@@ -1,8 +1,8 @@
-defmodule ScrypathOps.Playbook.RunnerTest do
+defmodule ScrypathOps.SavedSearches.RunnerTest do
   use ExUnit.Case, async: false
 
-  alias ScrypathOps.Playbook.Runner
-  alias ScrypathOps.Playbook.V1
+  alias ScrypathOps.SavedSearches.Runner
+  alias ScrypathOps.SavedSearches.V1
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.SearchPlayground.Adapter.Scrypath, as: ScrypathAdapter
@@ -209,7 +209,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
   end
 
   test "rejects {:error, _} tuple" do
-    assert {:error, :playbook_not_validated} =
+    assert {:error, :saved_search_not_validated} =
              Runner.run_validated({:error, :x}, [OpsPostA], backend: Scrypath.Meilisearch)
   end
 
@@ -239,7 +239,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
       assert via_runner == direct
     end
 
-    test "search preserves fractional ranking score thresholds from a playbook" do
+    test "search preserves fractional ranking score thresholds from a saved search" do
       raw = %{
         "playbook_format" => 1,
         "mode" => "search",
@@ -323,7 +323,11 @@ defmodule ScrypathOps.Playbook.RunnerTest do
         "playbook_format" => 1,
         "mode" => "search_many",
         "entries" => [
-          ["Elixir.ScrypathOps.Playbook.RunnerTest.FacetedOpsPost", "a", %{"facets" => ["nope"]}]
+          [
+            "Elixir.ScrypathOps.SavedSearches.RunnerTest.FacetedOpsPost",
+            "a",
+            %{"facets" => ["nope"]}
+          ]
         ],
         "opts" => %{}
       }
@@ -346,7 +350,7 @@ defmodule ScrypathOps.Playbook.RunnerTest do
         "mode" => "search_many",
         "entries" => [
           ["Elixir.ScrypathOps.Test.OpsPostA", "a", %{"federation_weight" => 1.0}],
-          ["Elixir.ScrypathOps.Playbook.RunnerTest.FacetedOpsPost", "b", %{}]
+          ["Elixir.ScrypathOps.SavedSearches.RunnerTest.FacetedOpsPost", "b", %{}]
         ],
         "opts" => %{}
       }

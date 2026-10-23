@@ -552,7 +552,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   """
   attr(:current, :atom,
     required: true,
-    values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :playbooks]
+    values: [:control_room, :posture, :failed_sync, :sync_drift, :search, :saved_searches]
   )
 
   attr(:class, :any, default: nil)
@@ -1228,7 +1228,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Compact row for search/playbook result summaries with optional right-side actions."
+  @doc "Compact row for search and saved search result summaries with optional right-side actions."
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
   attr(:class, :any, default: nil)
@@ -1304,7 +1304,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "List wrapper for repeated operator objects such as saved playbooks."
+  @doc "List wrapper for repeated operator objects such as saved searches."
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1655,23 +1655,6 @@ defmodule ScrypathOpsWeb.OpsUi do
         {render_slot(@inner_block)}
       </.ops_panel>
     </div>
-    """
-  end
-
-  @doc "Inline indicator for playbook workspace mode (examples read-only vs writable workspace)."
-  attr(:mode, :atom, values: [:examples, :workspace], required: true)
-  attr(:path, :string, default: nil)
-  attr(:class, :any, default: nil)
-
-  def ops_workspace_mode_indicator(assigns) do
-    ~H"""
-    <span :if={@mode == :examples} class={["text-ops-sm text-base-content/70", @class]}>
-      Read-only examples
-    </span>
-    <details :if={@mode == :workspace && @path} class={["text-ops-sm text-base-content/70", @class]}>
-      <summary class="cursor-pointer">Storage folder</summary>
-      <code class="block max-w-full break-all py-2">{@path}</code>
-    </details>
     """
   end
 

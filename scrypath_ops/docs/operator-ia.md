@@ -6,7 +6,7 @@ ScrypathOps is an optional Phoenix and LiveView interface for inspecting search 
 
 - **Try search:** select a schema, enter a query and inspect the returned records. Search shows which query and schemas produced the results, even if you edit the controls afterward.
 - **Investigate a sync problem:** open Search health, select the affected schema in Failed sync work and review the error. Retry only supported operations. A queued retry is not a completed update; follow its status to check Meilisearch and document visibility.
-- **Reuse a query:** save its inputs from Search, then preview or run it in Saved searches. A saved file contains queries and options, not results or pass/fail expectations. It can include multiple schemas.
+- **Reuse a query:** save its inputs from Search, then preview or run it in Saved searches. A saved search contains queries and options, not results or pass/fail expectations. It can include multiple schemas.
 - **Check an index change:** Sync and drift compares your declared settings with Meilisearch automatically. It makes no settings changes. Index promotion remains an advanced action with explicit checks and confirmation.
 
 ## Navigation
@@ -31,7 +31,7 @@ A successful observation reports what was checked. Unavailable, partial or retai
 
 Timestamps display UTC by default. The Time control switches to your browser's local zone and remembers your choice. Click a timestamp, or focus it and press Enter, to copy its original source value; copy failures expose that exact value for manual copying.
 
-Saved searches use the existing **Playbook v1 JSON format** and `/playbooks` route. The Storage folder is a server-side directory, not a team or account. See the [file format](playbook-schema-v1.md) and [persistence setup](team-playbook-persistence.md).
+Saved searches are stored in the host Repo (run `ScrypathOps.Migration` once) and are imported and exported as **v1 saved-search JSON**. The page is served at `/playbooks` for now. See the [file format](saved-search-schema-v1.md) and [storage setup](team-saved-search-persistence.md).
 
 ## Further help
 

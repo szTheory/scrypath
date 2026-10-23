@@ -20,7 +20,7 @@ Use the system sans-serif stack for interface copy and the technical monospace s
 
 The shared shell owns the top-level page rhythm with `space-y-4`; the 24px `space-y-ops-page-gap` role is used for deliberate group spacing inside selected surfaces. Keep the shell's direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
 
-Navigation is a flat list with Search directly after Control Room. The six task routes have distinct purposes: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. A quiet Help destination at the bottom of navigation explains these tasks inside the installed app. Existing task routes and Playbook APIs/JSON remain unchanged; Help adds `/help` under the configured mount.
+Navigation is a flat list with Search directly after Control Room. The six task routes have distinct purposes: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. A quiet Help destination at the bottom of navigation explains these tasks inside the installed app. Existing task routes and Saved search APIs/JSON remain unchanged; Help adds `/help` under the configured mount.
 
 ## Elevation & Depth
 
@@ -34,7 +34,7 @@ Use the existing `ops` radius roles: control, surface, and overlay. Keep buttons
 
 Use visible native radio rows for schema choices and plain context for a single schema. Page headings stand on their own without a repeated “Operator workspace” kicker. Action groups, diagnostic subgroups, and disclosures do not add another card around a button, row, or existing task surface. Prefer headings, spacing, and separators; preserve real danger feedback and protected confirmation behavior.
 
-`ScrypathOpsWeb.OpsUi` is the shared component authority. Use the component whose semantics fit: `ops_verdict` for a neutral decision summary, `ops_status` or `ops_notice` for explicit operational feedback, `ops_result_row` for evidence, `ops_object_item` for a managed playbook, and `ops_disclosure` / `ops_code_block` for secondary technical detail. Shared components should align shared function while each LiveView retains its own route, evidence order, and recovery language.
+`ScrypathOpsWeb.OpsUi` is the shared component authority. Use the component whose semantics fit: `ops_verdict` for a neutral decision summary, `ops_status` or `ops_notice` for explicit operational feedback, `ops_result_row` for evidence, `ops_object_item` for a managed saved search, and `ops_disclosure` / `ops_code_block` for secondary technical detail. Shared components should align shared function while each LiveView retains its own route, evidence order, and recovery language.
 
 | Surface | Demonstrated grouping |
 | --- | --- |
@@ -43,7 +43,7 @@ Use visible native radio rows for schema choices and plain context for a single 
 | Failed sync work | Native schema selection, compact cohort summary, source-qualified IDs, error and eligible Retry. Retry queued is distinct from completion; delete confirmation remains protected. |
 | Sync and drift | Header Refresh checks sync and settings. Settings load automatically with bounded generation-scoped reads; real differences use declared/live columns. Correlated document/retry sections appear only with applicable evidence; promotion remains advanced and confirmed. |
 | Search | A compact form contains schemas, query and result limit. Results stay attributed to submitted criteria. Saving preserves inputs, never returned documents. |
-| Saved searches | A flat catalog offers Preview and Run, with secondary file actions. Storage folder is secondary context. Draft, saved file and run provenance remain separate. |
+| Saved searches | A flat catalog offers Preview and Run, with secondary rename, duplicate and delete actions. Storage location is never shown. Draft, saved search and run provenance remain separate. |
 
 Timestamps are single, keyboard-accessible copy buttons with restrained text styling and a small clipboard affordance. UTC is the default; one Time control beside theme preferences switches display to the browser's local zone and persists that choice. Each absolute time names its zone; the original source precision is copied unchanged. Copy feedback waits for the browser outcome and uses the shared overlay toast without changing page geometry or moving focus. Failure feedback persists with selectable exact source content. Unknown times have no copy control. Retained observations keep their source identity and original check time.
 
@@ -54,7 +54,7 @@ The dynamic design-token contract requires every current `OpsUi` export to appea
 - Do state what was observed, what is unavailable, and what an action will do; distinguish an empty result from missing configuration, a partial observation, or a failed request.
 - Do keep full schema, index, task, file, and failure identities available in text, and keep controls reachable at narrow widths.
 - Do pair status color with a visible label and keep action feedback attached to the action that produced it.
-- Do keep Search results attributable to submitted targets and criteria, and Playbook outcomes attributable to their saved file or imported draft.
+- Do keep Search results attributable to submitted targets and criteria, and Saved search outcomes attributable to their saved search or imported draft.
 - Don't infer health or completion from zero counts, accepted dispatch, a toast alone, or a color.
 - Don't merge distinct scan paths into a generic card template, add decoration that competes with operational evidence, or add a dependency for a pattern that the existing LiveView and component seams already cover.
 - Don't restore the earlier shell wash or sliding selection pill. The current shell is flat and the three native theme buttons expose the selected preference with `aria-pressed`.

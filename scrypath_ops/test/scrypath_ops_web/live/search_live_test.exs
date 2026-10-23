@@ -263,8 +263,6 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
   end
 
   test "successful single search shows validated capture preview", %{conn: conn} do
-    dir = temporary_playbook_workspace()
-
     {:ok, view, html} = live(conn, ~p"/ops/search")
     refute html =~ "Save search"
     refute has_element?(view, "#search-capture-form")
@@ -286,7 +284,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     refute has_element?(view, "details#search-capture-json[open]")
 
     assert has_element?(view, "#search-capture-form")
-    assert has_element?(view, "label[for='capture_basename']", "Filename")
+    assert has_element?(view, "label[for='capture_basename']", "Name")
     assert has_element?(view, "label[for='capture_title']", "Search title")
     assert has_element?(view, "#capture_basename-hint")
 
@@ -300,7 +298,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       }
     })
 
-    saved = Path.join(dir, "zero-hit-check.json") |> File.read!() |> Jason.decode!()
+    saved = saved_definition("zero-hit-check.json")
     assert saved["mode"] == "search"
     assert saved["schema"] == inspect(OpsPostA)
     assert saved["q"] == "hello"
@@ -308,14 +306,13 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert saved["description"] == "Saved from the returned empty search."
     refute Map.has_key?(saved, "hits")
     refute Map.has_key?(saved, "result")
-    refute File.read!(Path.join(dir, "zero-hit-check.json")) =~ "partial-hit"
+    refute Jason.encode!(saved) =~ "partial-hit"
     assert render(view) =~ "Saved search zero-hit-check.json."
   end
 
   test "malformed capture fields return a field error without crashing the LiveView", %{
     conn: conn
   } do
-    temporary_playbook_workspace()
     {:ok, view, _html} = live(conn, ~p"/ops/search")
 
     view
@@ -340,7 +337,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       })
 
     assert Process.alive?(view.pid)
-    assert html =~ "Filename must be a .json basename"
+    assert html =~ "Enter a name of up to 120 characters."
 
     render_submit(view, "search", %{
       "q" => %{"unexpected" => "object"},
@@ -354,7 +351,6 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
   test "eligible partial multi response saves criteria without response documents", %{conn: conn} do
     Application.put_env(:scrypath_ops, :search_stub_variant, :partial)
-    dir = temporary_playbook_workspace()
 
     {:ok, view, html} = live(conn, ~p"/ops/search?mode=multi")
     refute html =~ "Save search"
@@ -381,7 +377,7 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
       }
     })
 
-    saved = Path.join(dir, "partial-check.json") |> File.read!() |> Jason.decode!()
+    saved = saved_definition("partial-check.json")
     assert saved["mode"] == "search_many"
 
     assert Enum.map(saved["entries"], &hd/1) == [
@@ -396,15 +392,22 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
 
     assert saved["title"] == "Partial check"
     refute Map.has_key?(saved, "hits")
-    refute File.read!(Path.join(dir, "partial-check.json")) =~ "partial-hit"
-    refute File.read!(Path.join(dir, "partial-check.json")) =~ "Partial result"
+    refute Jason.encode!(saved) =~ "partial-hit"
+    refute Jason.encode!(saved) =~ "Partial result"
   end
 
-  test "collision retains capture fields and leaves the occupied file untouched", %{conn: conn} do
-    dir = temporary_playbook_workspace()
-    occupied = Path.join(dir, "occupied.json")
-    original = ~s({"original":true})
-    File.write!(occupied, original)
+  test "collision retains capture fields and leaves the occupied saved search untouched", %{
+    conn: conn
+  } do
+    original = %{
+      "playbook_format" => 1,
+      "mode" => "search",
+      "schema" => inspect(OpsPostA),
+      "q" => "original",
+      "opts" => %{}
+    }
+
+    {:ok, _} = ScrypathOps.SavedSearches.create(ScrypathOps.Repo, "occupied.json", original)
 
     {:ok, view, _html} = live(conn, ~p"/ops/search")
 
@@ -427,111 +430,14 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     html = render(view)
-    assert html =~ "That filename is already in use. Choose another."
+    assert html =~ "That name is already in use. Choose another."
     assert has_element?(view, "#capture_basename[value='occupied.json'][aria-invalid='true']")
     assert has_element?(view, "#capture_title[value='Keep this title']")
     assert has_element?(view, "#capture_description")
     assert html =~ "Keep this description"
     assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
-    assert File.read!(occupied) == original
+    assert saved_definition("occupied.json") == original
     refute html =~ "Saved search occupied.json."
-  end
-
-  test "missing workspace setup retains fields and gives the approved recovery guidance", %{
-    conn: conn
-  } do
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-
-    on_exit(fn ->
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
-
-    Application.delete_env(:scrypath_ops, :playbook_workspace_dir)
-    {:ok, view, _html} = live(conn, ~p"/ops/search")
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "setup criteria",
-      "page_size" => "10",
-      "schema" => inspect(OpsPostA)
-    })
-
-    view
-    |> element("#search-capture-form")
-    |> render_submit(%{
-      "capture" => %{
-        "basename" => "keep-me.json",
-        "title" => "Setup title",
-        "description" => "Setup description"
-      }
-    })
-
-    html = render(view)
-    assert html =~ "Could not save this search."
-    assert html =~ "Configure a storage folder, then retry saving."
-    assert has_element?(view, "#capture_basename[value='keep-me.json']")
-    assert has_element?(view, "#capture_title[value='Setup title']")
-    assert html =~ "Setup description"
-    assert has_element?(view, "#capture_basename[aria-describedby~='capture_basename-error']")
-    refute html =~ "Saved search keep-me.json."
-  end
-
-  test "workspace write failure retains fields and exposes the actual reason", %{conn: conn} do
-    root_file =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_workspace_file_#{:erlang.unique_integer([:positive])}"
-      )
-
-    File.write!(root_file, "not a directory")
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, root_file)
-
-    on_exit(fn ->
-      File.rm(root_file)
-
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/ops/search")
-
-    view
-    |> element("#ops-search-playground-form")
-    |> render_submit(%{
-      "q" => "write failure criteria",
-      "page_size" => "10",
-      "schema" => inspect(OpsPostA)
-    })
-
-    view
-    |> element("#search-capture-form")
-    |> render_submit(%{
-      "capture" => %{
-        "basename" => "write-error.json",
-        "title" => "Write title",
-        "description" => "Write description"
-      }
-    })
-
-    html = render(view)
-    assert html =~ "Could not save this search."
-    assert html =~ "Reason: :enotdir"
-
-    assert has_element?(
-             view,
-             "[data-testid='search-capture-error']",
-             "Check the storage folder's permissions and available disk space, then retry saving."
-           )
-
-    assert has_element?(view, "#capture_basename[value='write-error.json']")
-    assert has_element?(view, "#capture_title[value='Write title']")
-    assert html =~ "Write description"
-    refute html =~ "Saved search write-error.json."
   end
 
   test "search result and capture attribution stay bound to the submitted criteria", %{conn: conn} do
@@ -652,26 +558,9 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     refute html =~ "Some schemas could not be searched"
   end
 
-  defp temporary_playbook_workspace do
-    dir =
-      Path.join(
-        System.tmp_dir!(),
-        "scrypath_ops_search_capture_#{:erlang.unique_integer([:positive])}"
-      )
-
-    :ok = File.mkdir_p!(dir)
-    previous = Application.get_env(:scrypath_ops, :playbook_workspace_dir)
-    Application.put_env(:scrypath_ops, :playbook_workspace_dir, dir)
-
-    on_exit(fn ->
-      File.rm_rf(dir)
-
-      if previous == nil,
-        do: Application.delete_env(:scrypath_ops, :playbook_workspace_dir),
-        else: Application.put_env(:scrypath_ops, :playbook_workspace_dir, previous)
-    end)
-
-    dir
+  defp saved_definition(name) do
+    {:ok, saved_search} = ScrypathOps.SavedSearches.get(ScrypathOps.Repo, name)
+    saved_search.definition
   end
 
   test "invalid numeric input is retained and never submits a substitute limit", %{conn: conn} do

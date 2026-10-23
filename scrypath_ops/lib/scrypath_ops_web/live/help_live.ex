@@ -185,7 +185,7 @@ defmodule ScrypathOpsWeb.HelpLive do
               </a>
             </li>
             <li>
-              <a href="https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-playbook-persistence.md">
+              <a href="https://github.com/szTheory/scrypath/blob/main/scrypath_ops/docs/team-saved-search-persistence.md">
                 Saved-search storage and deployment
               </a>
             </li>
