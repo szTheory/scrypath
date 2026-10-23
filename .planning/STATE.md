@@ -3,11 +3,11 @@ gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: null
-status: paused
-stopped_at: UI iteration 3 and sync-layout implementation delivered; paused with PR 107 required mounted-app target-size failure unresolved
+status: idle
+stopped_at: "PR 107 merged as 427dd1ab after touch-target fix; preview on main; awaiting next UI feedback"
 last_updated: "2026-10-22T23:51:25.108Z"
 last_activity: 2026-10-22
-last_activity_desc: Pause handoff saved in the canonical checkout; preview stopped; required CI failure recorded without product changes
+last_activity_desc: Resumed, fixed mounted target-size gate, merged PR 107, restarted retained preview on main
 state_head: c6522ea814437345ac4720a68010e8b066adeccb
 progress:
   total_phases: 5
@@ -19,7 +19,11 @@ progress:
 
 # Project State
 
-## Session paused — 2026-10-22
+## Resumed — 2026-10-23
+
+The pause blocker is resolved. `b069c97e` restored touch-target size for the Sync activity failed-work link and its standalone help link; local `make verify-mounted` passed 4/4, Ops precommit 319 tests + 2 doctests, and every required hosted check passed at that head. [PR #107](https://github.com/szTheory/scrypath/pull/107) merged as `427dd1ab`. The retained preview now runs branch `ui/next-feedback` at that main commit, seed-disabled, with data and the maintainer saved search preserved; `npm run ui:preflight` passed. Next: a bounded UI feedback pass from the maintainer. Open cleanup outside this path: advisory `deep-quality` (decimal 3.1.1 advisory, also failing on main), release PR #100 without CI, stale draft PRs #94/#95/#97 and older worktrees.
+
+## Session paused — 2026-10-22 (historical)
 
 Resume from [the handoff](.continue-here.md) and [structured state](HANDOFF.json) in `/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation`, branch `fix/ui-iteration-3`. No numbered phase is active. Product implementation is committed through `c6522ea8`; [PR #107](https://github.com/szTheory/scrypath/pull/107) remains draft and unmerged. Its required `ecommerce-mounted` gate failed a `target-size` accessibility assertion in the Variant recovery journey; reproduce that exact gate before claiming PR readiness. The retained web/database/search services are stopped. Pause work changed handoff documents only; existing data and the maintainer's saved file remain intact. Later phase positions and closeout statements below are historical.
 

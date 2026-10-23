@@ -1,12 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
-  "branch": "fix/ui-iteration-3",
-  "base_main": "29c287c8e732cddd13e435ccf601e06a39a65837",
+  "branch": "ui/next-feedback",
+  "base_main": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Paused 2026-10-22; implementation delivered; retained services stopped; PR 107 required mounted-app gate failed",
+  "status": "PR #107 merged (427dd1ab); preview restarted on main with seed disabled and retained data; ready for next feedback pass",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -28,5 +28,6 @@
   "structured_handoff": ".planning/HANDOFF.json",
   "runtime_checked_at": "2026-10-22T23:51:25.108Z",
   "runtime_status": "exited",
-  "implementation_head": "c6522ea814437345ac4720a68010e8b066adeccb"
+  "implementation_head": "c6522ea814437345ac4720a68010e8b066adeccb",
+  "iteration3_merge": "427dd1ab95c791cd51630fbdc83fc16af90e1926"
 }
