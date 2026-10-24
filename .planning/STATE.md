@@ -4,11 +4,11 @@ milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: null
 status: idle
-stopped_at: "PR 107 merged as 427dd1ab after touch-target fix; preview on main; awaiting next UI feedback"
-last_updated: "2026-10-22T23:51:25.108Z"
-last_activity: 2026-10-22
-last_activity_desc: Resumed, fixed mounted target-size gate, merged PR 107, restarted retained preview on main
-state_head: c6522ea814437345ac4720a68010e8b066adeccb
+stopped_at: "2026-10-22 feedback batch shipped (#108-#112) and released as scrypath 0.3.16; preview on main; awaiting next UI feedback"
+last_updated: "2026-10-24T00:30:00.000Z"
+last_activity: 2026-10-24
+last_activity_desc: Shipped the feedback batch and follow-ups, patched dependency advisories, cleaned stale PRs/worktrees, released 0.3.16
+state_head: abc328c32e63e68eeecde69f8ea099d508764137
 progress:
   total_phases: 5
   completed_phases: 5
@@ -19,7 +19,27 @@ progress:
 
 # Project State
 
-## Resumed — 2026-10-23
+## Idle — 2026-10-24
+
+No phase or approved work item is active. The 2026-10-22 feedback batch is merged and released:
+
+- [#108](https://github.com/szTheory/scrypath/pull/108): Oban upsert jobs carry document ids and load current records, so Retry never resends stale data.
+- [#109](https://github.com/szTheory/scrypath/pull/109): saved searches move into Search and a database table; Sync and index and the cross-schema Failed sync are reworked.
+- [#110](https://github.com/szTheory/scrypath/pull/110): the follow-ups (Next try, destructive Delete, dividers, baselines, copyable search errors), plus fixes the full browser lane found (a saved-search crash, the sheet focus trap and `inert`, contrast-manifest drift).
+- [#111](https://github.com/szTheory/scrypath/pull/111): `decimal`, `plug_crypto` and `bandit` advisories patched in all four dependency graphs.
+- [#112](https://github.com/szTheory/scrypath/pull/112): the ScrypathOps security docs state the real `/ops` boundary.
+- Released as **scrypath 0.3.16** ([#100](https://github.com/szTheory/scrypath/pull/100)).
+
+Stale PRs #94, #95 and #97 are closed as superseded. Old worktrees are removed, with their unsaved work kept on local branches. The retained preview runs `ui/next` (tracking `origin/main`) in the canonical checkout, with seeding off and data preserved; see `UI-PREVIEW.json`.
+
+Open, non-blocking:
+- `deep-quality (advisory)` is red only on the `scrypath_ops` graph: `cloak`/`cloak_ecto` arrive through the optional `sigra` dependency and have no fixed release. The fix is queued in sigra (make `cloak_ecto` optional); bump sigra here when it ships.
+- `make verify-e2e` shows 19 failures, all standalone `phase173_*` specs, because that lane doesn't start `standalone_ops:4003`. Their own `E2E_SCOPE=phase173_*` lanes cover them.
+- The maintainer's `examples/scrypath_ecommerce/priv/playbooks/my-search.json` hasn't been imported into the database yet.
+
+Next: the maintainer's next UI feedback round, or a new milestone.
+
+## Resumed — 2026-10-23 (historical)
 
 The pause blocker is resolved. `b069c97e` restored touch-target size for the Sync activity failed-work link and its standalone help link; local `make verify-mounted` passed 4/4, Ops precommit 319 tests + 2 doctests, and every required hosted check passed at that head. [PR #107](https://github.com/szTheory/scrypath/pull/107) merged as `427dd1ab`. The retained preview now runs branch `ui/next-feedback` at that main commit, seed-disabled, with data and the maintainer saved search preserved; `npm run ui:preflight` passed. Next: a bounded UI feedback pass from the maintainer. Open cleanup outside this path: advisory `deep-quality` (decimal 3.1.1 advisory, also failing on main), release PR #100 without CI, stale draft PRs #94/#95/#97 and older worktrees.
 
