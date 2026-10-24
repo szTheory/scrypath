@@ -7,6 +7,11 @@ Release Please manages versioned entries after this baseline.
 ## [0.3.16](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.15...scrypath-v0.3.16) (2026-10-23)
 
 
+### Upgrade notes
+
+* **Oban mode needs a repo.** Upsert jobs now carry document ids and load current records when they run ([#108](https://github.com/szTheory/scrypath/issues/108)). Pass `repo:` when you sync, or configure it under `:scrypath`; without one, enqueueing raises. Upsert jobs queued by 0.3.15 or earlier were cancelled under 0.3.16 when no repo was available; 0.3.17 writes their snapshot instead. Draining the `:scrypath` queue before upgrading avoids both. See [Upgrading from 0.3.15 or earlier](guides/sync-modes-and-visibility.md#upgrading-from-0315-or-earlier).
+
+
 ### Features
 
 * **scrypath_ops:** saved searches in Search, Sync and index, cross-schema Failed sync ([#109](https://github.com/szTheory/scrypath/issues/109)) ([66051a0](https://github.com/szTheory/scrypath/commit/66051a0abfcee9f7b538712308ec5175752977e3))

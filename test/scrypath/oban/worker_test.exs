@@ -155,6 +155,39 @@ defmodule Scrypath.Oban.WorkerTest do
              Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
   end
 
+  test "a job queued before 0.3.16 still syncs its snapshot when the app can't load records" do
+    legacy_snapshot = %{
+      "documents" => [%{"id" => 1, "data" => %{"title" => "Queued title"}, "source" => "fields"}]
+    }
+
+    args =
+      QueryablePost
+      |> upsert_args(RecordingBackend, [1], legacy_snapshot)
+      |> Map.delete("repo")
+
+    assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+    assert_received {:upsert_documents, QueryablePost, [%Document{id: 1} = document], _config}
+    assert document.data["title"] == "Queued title"
+    assert document.source == :fields
+    refute_received {:fake_repo_all, _}
+  end
+
+  test "a malformed legacy snapshot is cancelled rather than written" do
+    mismatched = %{
+      "documents" => [%{"id" => 2, "data" => %{"title" => "Other"}, "source" => "fields"}]
+    }
+
+    args =
+      QueryablePost
+      |> upsert_args(RecordingBackend, [1], mismatched)
+      |> Map.delete("repo")
+
+    assert {:cancel, {:invalid_job, :repo_required}} =
+             Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+
+    refute_received {:upsert_documents, _, _, _}
+  end
+
   test "delete worker deletes resolved ids and does not expect documents in args" do
     args = %{
       "schema" => "Elixir.SearchablePost",

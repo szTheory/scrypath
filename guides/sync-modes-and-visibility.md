@@ -111,6 +111,10 @@ Return only the records that should be searchable; Scrypath removes the rest fro
 
 Delete jobs still carry only ids and never reload the deleted row.
 
+#### Upgrading from 0.3.15 or earlier
+
+Oban mode now needs a repo, either passed as `repo:` when you sync or configured under `:scrypath`. Without one, `Scrypath.sync_record/3` and friends raise and explain the fix. Upsert jobs queued by 0.3.15 or earlier still carry their document snapshot. From 0.3.17 they reload current records when a repo is available, and otherwise write the snapshot they carry, as before. Under 0.3.16 those jobs were cancelled when no repo was available. To avoid relying on either path, drain the `:scrypath` queue before upgrading.
+
 Identical pending jobs are deduplicated. One narrow race remains: if two jobs for the same record load it at nearly the same moment, the one that finishes last wins, even if it loaded a moment earlier. Meilisearch has no conditional write to reject it, so the next change to that record corrects the document. Use a backfill when you need to settle a burst of concurrent writes immediately.
 
 ## `:manual`
