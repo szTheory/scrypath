@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.16](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.15...scrypath-v0.3.16) (2026-10-23)
+
+
+### Features
+
+* **scrypath_ops:** saved searches in Search, Sync and index, cross-schema Failed sync ([#109](https://github.com/szTheory/scrypath/issues/109)) ([66051a0](https://github.com/szTheory/scrypath/commit/66051a0abfcee9f7b538712308ec5175752977e3))
+
+
+### Bug Fixes
+
+* bound the mounted Ops shell path ([#101](https://github.com/szTheory/scrypath/issues/101)) ([f0e05bc](https://github.com/szTheory/scrypath/commit/f0e05bc8857f56f2a030faa45d4da09a510ef625))
+* **deps:** patch decimal, plug_crypto and bandit advisories ([#111](https://github.com/szTheory/scrypath/issues/111)) ([b4b49b7](https://github.com/szTheory/scrypath/commit/b4b49b74b9fdd39bf1f6895b973dc2eea1c3b0e7))
+* **ops-ui:** clarify search results, saving, and health details ([#106](https://github.com/szTheory/scrypath/issues/106)) ([29c287c](https://github.com/szTheory/scrypath/commit/29c287c8e732cddd13e435ccf601e06a39a65837))
+* **ops-ui:** clarify search, saved searches, and recovery ([#105](https://github.com/szTheory/scrypath/issues/105)) ([b98933c](https://github.com/szTheory/scrypath/commit/b98933cecefdbed97264d3560ea13cc0fb131187))
+* **ops-ui:** close [#109](https://github.com/szTheory/scrypath/issues/109) follow-ups and repair the full browser lane ([#110](https://github.com/szTheory/scrypath/issues/110)) ([58fbc78](https://github.com/szTheory/scrypath/commit/58fbc78a2f0b19a0fd644fb2a835851aae7b8662))
+* **ops-ui:** improve mobile retained evidence ([017c738](https://github.com/szTheory/scrypath/commit/017c7389544291b30146d25b73239ed33296d7b7))
+* **ops-ui:** restore plain controls and verify preview source ([#102](https://github.com/szTheory/scrypath/issues/102)) ([5d464b4](https://github.com/szTheory/scrypath/commit/5d464b453ae5243e85dadef913d9e9852dcc84be))
+* **ops-ui:** streamline search results, validation and sync guidance ([#107](https://github.com/szTheory/scrypath/issues/107)) ([427dd1a](https://github.com/szTheory/scrypath/commit/427dd1ab95c791cd51630fbdc83fc16af90e1926))
+* **sync:** load current records in Oban upsert jobs instead of replaying snapshots ([#108](https://github.com/szTheory/scrypath/issues/108)) ([bd0d961](https://github.com/szTheory/scrypath/commit/bd0d961bcb4484fd5a9e178ff07bf5ed5c2f0919))
+* **tooling:** preserve UI review evidence across test runs ([#103](https://github.com/szTheory/scrypath/issues/103)) ([d3b9222](https://github.com/szTheory/scrypath/commit/d3b922224f8a0c4930956abcdc950c5796666650))
+* **tooling:** preserve worktree lessons and check preview before edits ([#104](https://github.com/szTheory/scrypath/issues/104)) ([bd4c7b9](https://github.com/szTheory/scrypath/commit/bd4c7b91e7df637c4e1c72763440dab055c25f9a))
+
 ## [0.3.15](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.14...scrypath-v0.3.15) (2026-10-04)
 
 
