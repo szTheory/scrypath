@@ -1,12 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
-  "branch": "ui/next-feedback",
-  "base_main": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
+  "branch": "ui/next",
+  "base_main": "abc328c32e63e68eeecde69f8ea099d508764137",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "2026-10-22 feedback batch implemented on ui/next-feedback (rebased on PR #108). Preview serves this branch; saved-search table migrated in place (no reseed, 19 products preserved). Old /playbooks and /sync-drift URLs redirect.",
+  "status": "Idle on main after the 2026-10-22 feedback batch: #108 (Oban jobs load current records), #109 (UI batch), #110 (follow-ups and full browser lane), #111 (dependency advisories), #112 (ops security docs), released as scrypath 0.3.16. Preview serves ui/next tracking origin/main with deps current, seeding off and data preserved; the maintainer's my-search.json is still unimported. Awaiting the next UI feedback round.",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -26,15 +26,20 @@
   "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md",
   "pause_handoff": ".planning/.continue-here.md",
   "structured_handoff": ".planning/HANDOFF.json",
-  "runtime_checked_at": "2026-10-22T23:51:25.108Z",
-  "runtime_status": "exited",
-  "implementation_head": "c6522ea814437345ac4720a68010e8b066adeccb",
+  "runtime_checked_at": "2026-10-24T00:30:00Z",
+  "runtime_status": "running",
+  "implementation_head": "abc328c32e63e68eeecde69f8ea099d508764137",
   "iteration3_merge": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
   "batch_2026_10_22": {
     "library_pr": 108,
-    "library_branch": "fix/oban-sync-loads-current-records",
-    "ui_branch": "ui/next-feedback",
+    "library_branch": "fix/oban-sync-loads-current-records (merged, deleted)",
+    "ui_branch": "ui/next-feedback (merged, deleted)",
     "results": ".planning/UI-FEEDBACK.md#batch-results--2026-10-22",
-    "preview_migration": "20261022000000_add_scrypath_ops (scrypath_ops_saved_searches)"
+    "preview_migration": "20261022000000_add_scrypath_ops (scrypath_ops_saved_searches)",
+    "ui_pr": 109,
+    "followups_pr": 110,
+    "deps_pr": 111,
+    "security_docs_pr": 112,
+    "release": "scrypath 0.3.16 (PR #100)"
   }
 }
