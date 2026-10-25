@@ -1,6 +1,11 @@
 defmodule Scrypath.Oban do
   @moduledoc """
   Narrow Oban helpers for composing Scrypath sync jobs into `Ecto.Multi`.
+
+  `enqueue_upsert/5` and `enqueue_delete/5` add one job per `Ecto.Multi` step, whatever the
+  number of records or ids. Unlike `Scrypath.sync_records/3` under `sync_mode: :oban`, they do
+  not split the ids into several jobs; the worker bounds each backend write to at most 1000
+  documents or ids.
   """
   @compile {:no_warn_undefined, Oban}
 

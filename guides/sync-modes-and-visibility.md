@@ -26,6 +26,15 @@ Read every sync result through that lens:
 - terminal backend success means the tracked task finished
 - visible search means a later query observes the updated projection
 
+### Large id lists
+
+Scrypath dedupes the ids and documents you pass and sends them in chunks of at most 1000, so one call never builds an unbounded backend request, database query or job. The chunk size is fixed.
+
+- Chunks run in order. The call stops at the first failed chunk and returns that chunk's `{:error, reason}`; later chunks are not sent.
+- Chunks already sent stay applied. Writes are idempotent by id (and an Oban retry reloads the current records), so retrying the whole call is safe.
+- The result's `tasks:` lists one entry per chunk, in order, and `task:` is the last one. A call with 1000 ids or fewer has a one-element `tasks:` list.
+- There is no ordering contract. Resolvers, loaders and `search_records/2` get deduped input (set semantics) in no promised order.
+
 ## Operator lifecycle
 
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
@@ -49,6 +58,7 @@ Use `:inline` when the write path should wait for terminal backend task success 
 What you can see:
 
 - backend success or failure before the caller continues
+- for more than 1000 ids, Scrypath waits on each chunk's task before it sends the next chunk, and `inline_timeout` applies to each chunk's wait, not to the whole call
 - `mix scrypath.status` for current backend visibility
 - `mix scrypath.reconcile` when you suspect drift after a deployment or contract change
 
@@ -56,6 +66,7 @@ What can still fail:
 
 - database and search writes are still not atomic
 - later reads can still surface stale search hits if the contract changed
+- inline sync of more than 1000 ids inside a request holds the request for several backend waits; that is a smell, so move bulk work to `:oban`
 
 Recovery posture:
 
@@ -115,6 +126,8 @@ A backfill is not a whole-index prune. The default path, without `search_records
 
 Delete jobs still carry only ids and never reload the deleted row.
 
+Each job carries at most 1000 ids. A larger call enqueues one job per chunk, inserted together in one transaction, so either every chunk job is queued or none is; the result's `tasks:` lists one queued job per chunk. Each worker also writes to the backend in chunks of at most 1000. An identical job that is still pending (available, scheduled or retryable) is not inserted twice: the existing job is returned and reported with `conflict?: true`. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` still add one job per `Ecto.Multi` step, whatever its size; the worker bounds each backend write.
+
 #### Upgrading from 0.3.15 or earlier
 
 Oban mode now needs a repo, either passed as `repo:` when you sync or configured under `:scrypath`. Without one, `Scrypath.sync_record/3` and friends raise and explain the fix. Upsert jobs queued by 0.3.15 or earlier still carry their document snapshot. From 0.3.17 they reload current records when a repo is available, and otherwise write the snapshot they carry, as before. Under 0.3.16 those jobs were cancelled when no repo was available. To avoid relying on either path, drain the `:scrypath` queue before upgrading.
@@ -134,6 +147,7 @@ What you can see:
 What can still fail:
 
 - accepted work does not mean the document is searchable yet
+- for more than 1000 ids, Scrypath sends every chunk without waiting on any task, so a successful `task:` does not prove that earlier chunks succeeded; check every entry in `tasks:`
 - manual follow-up can drift from the source of truth if nobody closes the loop
 
 Recovery posture:
