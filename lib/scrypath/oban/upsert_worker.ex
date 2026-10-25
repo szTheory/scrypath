@@ -5,6 +5,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
     alias Scrypath.Config
+    alias Scrypath.Document
     alias Scrypath.Loader
     alias Scrypath.Oban.IndexingAck
     alias Scrypath.Oban.JobConfig
@@ -28,7 +29,15 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
             end
 
           {:error, reason} when reason in [:repo_required, :search_records_required] ->
-            {:cancel, {:invalid_job, reason}}
+            # Jobs enqueued before 0.3.16 carry a document snapshot. When this app can't
+            # load records, write that snapshot as those versions did rather than drop it.
+            case legacy_snapshot(args, document_ids) do
+              {:ok, documents} ->
+                write(backend, :upsert_documents, schema_module, documents, config)
+
+              :error ->
+                {:cancel, {:invalid_job, reason}}
+            end
 
           {:error, reason} ->
             {:error, reason}
@@ -70,6 +79,35 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
       do: {:ok, document_ids}
 
     defp load_document_ids(_args), do: {:error, :invalid_document_ids}
+
+    defp legacy_snapshot(%{"documents" => documents} = args, document_ids)
+         when is_list(documents) do
+      with {:ok, normalized} <- normalize_documents(documents),
+           true <- args["document_count"] == length(normalized),
+           true <- Enum.map(normalized, & &1.id) == document_ids do
+        {:ok, normalized}
+      else
+        _ -> :error
+      end
+    end
+
+    defp legacy_snapshot(_args, _document_ids), do: :error
+
+    defp normalize_documents(documents) do
+      Enum.reduce_while(documents, {:ok, []}, fn
+        %{"id" => id, "data" => data, "source" => source}, {:ok, acc}
+        when is_map(data) and source in ["fields", "custom"] ->
+          document = %Document{id: id, data: data, source: String.to_existing_atom(source)}
+          {:cont, {:ok, [document | acc]}}
+
+        _document, _acc ->
+          {:halt, :error}
+      end)
+      |> case do
+        {:ok, documents} -> {:ok, Enum.reverse(documents)}
+        :error -> :error
+      end
+    end
 
     defp build_config(backend, index_name, args) do
       config =
