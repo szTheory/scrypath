@@ -73,11 +73,11 @@ Plans:
   3. A test shows that enqueueing the same related sync twice yields one job, because related enqueue uses the same `unique:` policy as the main enqueue path.
   4. Tests show related, upsert and delete jobs whose args name an unknown schema, fan-out, backend, repo or app finish with a clear, non-retrying error instead of raising from `String.to_existing_atom`.
 
-**Plans**: 7 plans
+**Plans**: 1/7 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 179-01-PLAN.md — `Scrypath.Chunks` (1000-id cap), `Result.tasks`, chunked inline/manual sync with halt and per-chunk wait, chunked `Loader.load/3` with owner-only `:preload` tolerance (wave 1)
+- [x] 179-01-PLAN.md — `Scrypath.Chunks` (1000-id cap), `Result.tasks`, chunked inline/manual sync with halt and per-chunk wait, chunked `Loader.load/3` with owner-only `:preload` tolerance (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 179-02-PLAN.md — Chunked backfill writes, batch `tasks:`, reindex waits on every chunk task, backfill docs (wave 2)
@@ -119,6 +119,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
-| 179. Bounded id lists and related-sync parity | 0/TBD | Not started | - |
+| 179. Bounded id lists and related-sync parity | 1/7 | In Progress | - |
 | 180. Oban worker telemetry | 0/TBD | Not started | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |
