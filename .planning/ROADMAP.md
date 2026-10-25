@@ -29,7 +29,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
 ### Phases
 
 - [x] **Phase 178: Loader-routed backfill and full-key paging** - Backfill and reindex build documents through `Scrypath.Loader` and visit every row, including composite keys, proven against real Postgres (completed 2026-10-25)
-- [ ] **Phase 179: Bounded id lists and related-sync parity** - Loads and backend calls are chunked, and `sync_related` behaves the same under inline and Oban with safe job-arg decoding
+- [x] **Phase 179: Bounded id lists and related-sync parity** - Loads and backend calls are chunked, and `sync_related` behaves the same under inline and Oban with safe job-arg decoding (completed 2026-10-25)
 - [ ] **Phase 180: Oban worker telemetry** - Upsert and delete workers emit stable telemetry spans and a missing-record delete event, documented and contract-tested
 - [ ] **Phase 181: Schema hook contract and no-Oban build** - Schema hooks are declared optional callbacks and a no-Oban build stays warnings-clean in CI
 
@@ -73,7 +73,7 @@ Plans:
   3. A test shows that enqueueing the same related sync twice yields one job, because related enqueue uses the same `unique:` policy as the main enqueue path.
   4. Tests show related, upsert and delete jobs whose args name an unknown schema, fan-out, backend, repo or app finish with a clear, non-retrying error instead of raising from `String.to_existing_atom`.
 
-**Plans**: 5/7 plans executed
+**Plans**: 7/7 plans complete
 
 Plans:
 **Wave 1**
@@ -88,8 +88,8 @@ Plans:
 - [x] 179-05-PLAN.md — Related worker loads trigger structs via the loader, related enqueue chunked/unique/`ensure_loadable!`, FAN-03 matrix, 0.3.17 legacy fixture (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 179-06-PLAN.md — Guides (§(c) "What your resolver receives", chunking/`tasks:`), public docs, PROJECT.md, release note (wave 4)
-- [ ] 179-07-PLAN.md — Minimal example fixes: ecommerce `Category.search_records/2`, phoenix Oban smoke `repo:` (wave 4, droppable)
+- [x] 179-06-PLAN.md — Guides (§(c) "What your resolver receives", chunking/`tasks:`), public docs, PROJECT.md, release note (wave 4)
+- [x] 179-07-PLAN.md — Minimal example fixes: ecommerce `Category.search_records/2`, phoenix Oban smoke `repo:` (wave 4, droppable)
 
 ### Phase 180: Oban worker telemetry
 
@@ -119,6 +119,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
-| 179. Bounded id lists and related-sync parity | 5/7 | In Progress | - |
+| 179. Bounded id lists and related-sync parity | 7/7 | Complete    | 2026-10-25 |
 | 180. Oban worker telemetry | 0/TBD | Not started | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |

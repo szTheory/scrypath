@@ -11,7 +11,7 @@
     {
       "number": "179",
       "name": "Bounded id lists and related-sync parity",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "180",
@@ -26,8 +26,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 2 of 4 · 25% · executing"
+    "label": "Advance to the next step (plan phase 180)",
+    "reason": "Phase 3 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-25T21:25:30.206Z"
+  "updated_at": "2026-10-25T22:14:43.537Z"
 }

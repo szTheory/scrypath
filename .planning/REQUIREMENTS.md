@@ -16,13 +16,13 @@
 
 - [x] **PAGE-01**: A backfill or reindex over a schema with a composite primary key visits every row exactly once, using a lexicographic keyset on all key columns (maintainer decision 2026-10-25: page on the full key, don't reject composite keys). A property test covers repeated leading-column values across batch boundaries.
 - [x] **PAGE-02**: Backfill batch results report the full cursor for composite keys, not just the first column.
-- [ ] **PAGE-03**: Id lists are chunked to at most about 1000 per record load and per backend upsert or delete call. For example, 2,500 ids make three calls and return one combined result.
+- [x] **PAGE-03**: Id lists are chunked to at most about 1000 per record load and per backend upsert or delete call. For example, 2,500 ids make three calls and return one combined result.
 
 ### Related sync (FAN)
 
-- [ ] **FAN-01**: `sync_related` resolvers get loaded records in every sync mode. Under Oban, the worker loads current records through the loader before it calls the resolver.
-- [ ] **FAN-02**: Related enqueue uses the same `unique:` policy as the main enqueue path, so duplicate related jobs collapse.
-- [ ] **FAN-03**: Sync jobs (related, upsert and delete) whose arguments name an unknown schema, fan-out, backend, repo or app end with a clear, non-retrying error instead of crashing on `String.to_existing_atom`.
+- [x] **FAN-01**: `sync_related` resolvers get loaded records in every sync mode. Under Oban, the worker loads current records through the loader before it calls the resolver.
+- [x] **FAN-02**: Related enqueue uses the same `unique:` policy as the main enqueue path, so duplicate related jobs collapse.
+- [x] **FAN-03**: Sync jobs (related, upsert and delete) whose arguments name an unknown schema, fan-out, backend, repo or app end with a clear, non-retrying error instead of crashing on `String.to_existing_atom`.
 
 ### Observability (OBS)
 
@@ -67,10 +67,10 @@
 | LOAD-03 | Phase 178 | Complete |
 | PAGE-01 | Phase 178 | Complete |
 | PAGE-02 | Phase 178 | Complete |
-| PAGE-03 | Phase 179 | Pending |
-| FAN-01 | Phase 179 | Pending |
-| FAN-02 | Phase 179 | Pending |
-| FAN-03 | Phase 179 | Pending |
+| PAGE-03 | Phase 179 | Complete |
+| FAN-01 | Phase 179 | Complete |
+| FAN-02 | Phase 179 | Complete |
+| FAN-03 | Phase 179 | Complete |
 | OBS-01 | Phase 180 | Pending |
 | OBS-02 | Phase 180 | Pending |
 | OBS-03 | Phase 180 | Pending |

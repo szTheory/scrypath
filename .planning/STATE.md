@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.44
 milestone_name: Sync correctness
-current_phase: 179
-current_phase_name: Bounded id lists and related-sync parity
-status: executing
-stopped_at: Phase 179 context gathered
-last_updated: "2026-10-25T21:25:30.192Z"
+current_phase: 180
+current_phase_name: Oban worker telemetry
+status: planning
+stopped_at: Phase 179 complete, ready to plan Phase 180
+last_updated: "2026-10-25T22:14:43.528Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 179 execution started
-state_head: e1692a290712a03a74a908cd431b7ab5746bd1b9
+last_activity_desc: Phase 179 complete, transitioned to Phase 180
+state_head: ac5100464ff49ad979bd836a17c7a526f5bbbdfa
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 12
-  completed_plans: 5
-  percent: 25
+  completed_plans: 12
+  percent: 50
 ---
 
 # Project State
@@ -86,12 +86,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 179 (Bounded id lists and related-sync parity) — EXECUTING
-Plan: 1 of 7
-Status: Executing Phase 179
-Last activity: 2026-10-25 — Phase 179 execution started
+Phase: 180 — Oban worker telemetry
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-25 — Phase 179 complete, transitioned to Phase 180
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Delivered Evidence
 
@@ -148,7 +148,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-25T20:32:17.062Z
-Stopped at: Phase 179 context gathered
+Stopped at: Phase 179 complete, ready to plan Phase 180
 Resume file: .planning/phases/179-bounded-id-lists-and-related-sync-parity/179-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
