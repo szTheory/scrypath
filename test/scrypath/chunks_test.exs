@@ -110,4 +110,11 @@ defmodule Scrypath.ChunksTest do
       refute_received {:called, 3}
     end
   end
+
+  test "uniq_by_id/2 dedupes by id_key/1, keeps the last copy and the caller's order" do
+    items = [{1, :old}, {:a, :atom}, {2, :two}, {1, :latest}, {"a", :string}]
+
+    assert Scrypath.Chunks.uniq_by_id(items, &elem(&1, 0)) ==
+             [{2, :two}, {1, :latest}, {"a", :string}]
+  end
 end

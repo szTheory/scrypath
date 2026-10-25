@@ -218,6 +218,45 @@ defmodule Scrypath.Sync.RelatedTest do
     end
   end
 
+  def handle_resolve_start(_event, _measurements, metadata, test_pid) do
+    if self() == test_pid, do: send(test_pid, {:resolve_start, metadata})
+  end
+
+  test "inline sync_related/3 dedupes triggers by document id before resolving (IN-06)" do
+    handler_id = {__MODULE__, make_ref()}
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:scrypath, :sync, :related, :resolve, :start],
+        &__MODULE__.handle_resolve_start/4,
+        self()
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    records = [
+      %DummySource{id: 1, name: "Old"},
+      %DummySource{id: 2, name: "Two"},
+      %DummySource{id: 1, name: "Latest"}
+    ]
+
+    assert {:ok, result} =
+             Scrypath.sync_related(DummySource, records,
+               fan_out: :comments,
+               sync_mode: :inline,
+               backend: RecordingBackend
+             )
+
+    assert_received {:resolve_start, %{document_count: 2}}
+    assert_received {:upsert_documents, DummyTarget, documents, _config}
+    # The resolver saw each trigger once; the last caller copy of id 1 wins.
+    assert documents |> Enum.map(& &1.data.title) |> Enum.sort() ==
+             ["Resolved for Latest", "Resolved for Two"]
+
+    assert result.document_count == 2
+  end
+
   test "sync_mode: :inline executes resolver and forwards to sync_records" do
     records = [
       %DummySource{id: 1, name: "Source 1"},

@@ -26,11 +26,20 @@ defmodule Scrypath.Chunks do
   @spec by_id([item], (item -> term())) :: [[item]] when item: term()
   def by_id(items, id_fun) when is_list(items) and is_function(id_fun, 1) do
     items
+    |> uniq_by_id(id_fun)
+    |> Enum.sort_by(&sort_key(id_fun.(&1)))
+    |> Enum.chunk_every(@max_ids)
+  end
+
+  @doc false
+  # Dedupes by id_key/1 without sorting or chunking: the last occurrence of a duplicate id
+  # wins, at the position of that last occurrence; other items keep their order.
+  @spec uniq_by_id([item], (item -> term())) :: [item] when item: term()
+  def uniq_by_id(items, id_fun) when is_list(items) and is_function(id_fun, 1) do
+    items
     |> Enum.reverse()
     |> Enum.uniq_by(&id_key(id_fun.(&1)))
     |> Enum.reverse()
-    |> Enum.sort_by(&sort_key(id_fun.(&1)))
-    |> Enum.chunk_every(@max_ids)
   end
 
   @doc false

@@ -93,7 +93,7 @@ defmodule Scrypath.Sync do
          config,
          opts
        ) do
-    records_list = List.wrap(records)
+    records_list = dedupe_triggers(schema_module, List.wrap(records))
 
     metadata =
       Telemetry.common_metadata(schema_module, config,
@@ -111,6 +111,17 @@ defmodule Scrypath.Sync do
 
       {result, Telemetry.stop_metadata(result)}
     end)
+  end
+
+  # Resolvers get deduped triggers in every mode (the Oban worker's are deduped by the
+  # loader). The same id key as the Oban path decides duplicates; the latest caller copy
+  # wins, and the span counts the deduped set. Inline never needed a trigger's document id
+  # before, so an owner whose id cannot be read (a hand-written owner-only __scrypath__/1
+  # that answers only :fan_outs) keeps the caller's list as given, as it did before.
+  defp dedupe_triggers(schema_module, triggers) do
+    Chunks.uniq_by_id(triggers, &Identity.document_id(schema_module, &1))
+  rescue
+    _error -> triggers
   end
 
   @spec delete_record(module(), struct() | map(), keyword()) :: {:ok, term()} | {:error, term()}
