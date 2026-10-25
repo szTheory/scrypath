@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
   test "canonical capabilities select the test environment before dispatch" do
     preferred_envs = Scrypath.MixProject.cli()[:preferred_envs]
 
-    for task <- ["verify.core", "verify.backend" | @strict_tasks] do
+    for task <- ["verify.core", "verify.backend", "verify.postgres" | @strict_tasks] do
       assert preferred_envs[String.to_existing_atom(task)] == :test
     end
   end
