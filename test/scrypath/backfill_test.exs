@@ -416,6 +416,36 @@ defmodule Scrypath.BackfillTest do
            ] = batch_results
   end
 
+  test "a fresh-target backfill counts omitted ids instead of deleting them" do
+    put_omitting_posts(1..4, [2, 3, 4])
+
+    assert {:ok, result} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2,
+               _scrypath_fresh_target: true
+             )
+
+    assert %{batches: 2, documents: 1, removed: 0, omitted: 3} = result
+    assert Enum.map(result.batch_results, & &1.removed) == [0, 0]
+    refute Enum.any?(result.batch_results, &Map.has_key?(&1, :delete_task))
+    assert Enum.map(result.batch_results, & &1.last_primary_key) == [2, 4]
+    refute_received {:delete_documents, _, _, _}
+
+    put_omitting_posts(1..4, [2, 3, 4])
+
+    assert {:ok, live} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    refute Map.has_key?(live, :omitted)
+    assert live.removed == 3
+  end
+
   test "an all-omitted batch skips the upsert, deletes every id, and paging continues after it" do
     put_omitting_posts(1..6, [3, 4])
 

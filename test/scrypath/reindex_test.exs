@@ -349,6 +349,13 @@ defmodule Scrypath.ReindexTest do
     end
   end
 
+  defmodule OmittingBackfill do
+    def run(schema_module, config) do
+      {:ok, result} = RecordingBackfill.run(schema_module, config)
+      {:ok, Map.put(result, :omitted, 3)}
+    end
+  end
+
   defmodule PassiveBackend do
     def index_name(schema_module, config) do
       RecordingMeilisearch.index_name(schema_module, config)
@@ -429,6 +436,27 @@ defmodule Scrypath.ReindexTest do
     assert_received {:task_wait, 21}
     assert_received {:task_wait, 22}
     assert_received {:task_wait, 23}
+  end
+
+  test "reindex marks the backfill as a fresh target and reports omitted records" do
+    opts = [
+      backend: RecordingMeilisearch,
+      repo: Scrypath.BackfillTest.BackfillRepo,
+      batch_size: 100,
+      cutover?: false,
+      meilisearch_client: RecordingTaskClient,
+      meilisearch: RecordingMeilisearch
+    ]
+
+    assert {:ok, result} = Scrypath.reindex(QueryablePost, opts ++ [backfill: RecordingBackfill])
+    assert result.omitted == 0
+    refute Map.has_key?(result, :removed)
+
+    assert_receive {:backfill, QueryablePost, backfill_config}
+    assert backfill_config[:_scrypath_fresh_target] == true
+
+    assert {:ok, %{omitted: 3}} =
+             Scrypath.reindex(QueryablePost, opts ++ [backfill: OmittingBackfill])
   end
 
   test "reindex keys a composite-primary-key target index by the document id field" do
