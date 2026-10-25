@@ -14,8 +14,8 @@ updated: 2026-10-25
 | WR-03 | warning | fixed (docs) | 81930d86 — no behaviour change; upgrade note in guide + 179-06 release note (configure default `:repo`, define `search_records/2`, or drain related jobs first); legacy 0.3.17 fixture test pins the cancel outcome. |
 | WR-04 | warning | fixed | 70c8f326 — batch results gain `delete_tasks:` (every delete chunk, `[]` when none); reindex waits on them before cutover. |
 | WR-05 | warning | fixed | a28bc4e7 — start-event count deduped to match stop/result; deduped string-sorted `document_ids` documented at every size (narrows D-08 deliberately; carry into release upgrade notes). |
-| IN-01 | info | open | Dedupe before JSON encoding (`:a` vs `"a"`). |
-| IN-02 | info | open | Example calls `sync_related` inside transaction vs guide advice. |
-| IN-03 | info | open | Ecommerce resolver id clause dead code, skips tenant filter. |
-| IN-04 | info | open | Loader programming errors retried instead of cancelled. |
-| IN-05 | info | open | Unique `:states` omits `:executing`. |
+| IN-01 | info | fixed | b9d67b09 — ids normalized to stored form (`Payload.serialize_ids!/1`) before dedupe/chunk; `Chunks.id_key/1` + `distinct_count/1` keep inline/manual and span counts coherent. `1` vs `"1"` stay distinct by design (JSON + Chunks contract). |
+| IN-02 | info | fixed (docs) | d8053655 — guide rule per case: `:oban` same repo → inside the transaction is atomic; `:oban` other repo → after commit; `:inline` → after commit. Example already correct. |
+| IN-03 | info | fixed | c250ce5c — tenant-unscoped id clause removed (overrides 179-07 keep); catalog test passes records; 10/10 on native Postgres. |
+| IN-04 | info | fixed | 44a44b84 — non-list `search_records/2` → `{:cancel, {:invalid_job, :invalid_search_records}}` in upsert + related workers. |
+| IN-05 | info | skipped by design | 64b8dc8c — `:executing` excluded per D-20 (a sync during a running job must enqueue, else the update is lost); Oban 2.23 warns only for compile-time worker unique opts; comment flags unverified Oban Pro Smart-engine interaction. |
