@@ -105,6 +105,9 @@ The maintainer delegated these calls. Each was researched by a dedicated subagen
   - `guides/sync-modes-and-visibility.md` and `guides/related-data-and-reindexing.md`: backfill now honors `preload:` and `search_records/2`; omitted ids are removed in scope only; composite keys are supported; declare PK fields in constraint order; `:query` must not fan out.
   - Commits use conventional `fix:` messages, so release-please records a CHANGELOG entry that calls out the behavior change in D-04.
 
+### Reindex index primary key (added at plan time, 2026-10-25)
+- **D-17:** `Reindex.primary_key/1` (`lib/scrypath/reindex.ex`) copies the first-column-only bug and passes that column to `create_index` as the Meilisearch `primaryKey`. Documents carry their id under `Metadata.document_id(schema)`, so a composite-key reindex would collapse or reject rows even after the paging fix. Fix it in this phase: the target index's primaryKey is `Metadata.document_id(schema)`, with a test asserting the composite-key case. Existing `QueryablePost` reindex asserts (`:id`) stay green. Found by phase research (RESEARCH.md Open Question 1); decided under the maintainer's delegation because the phase goal says "whatever its primary-key shape". Commit as `fix:`.
+
 ### Claude's Discretion
 - Exact names of the new Loader function, the internal reindex flag and the private keyset builder.
 - Whether the delete for omitted ids reuses the Oban worker's backend-delete helper or a small shared one, as long as backfill and Oban share the semantics.
