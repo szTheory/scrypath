@@ -237,10 +237,14 @@ defmodule Scrypath.Oban.JobArgs do
     end
   end
 
-  defp safe_module(name) do
-    parts = name |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
-    {:ok, Module.safe_concat(parts)}
+  # Resolves the full module atom, which exists once the module is loaded. Splitting the
+  # name and resolving each alias segment does not work in a release: a loaded BEAM adds
+  # only `:"Elixir.MyApp.Post"` to the atom table, never the bare `:MyApp` or `:Post`.
+  defp safe_module("Elixir." <> _ = name) do
+    {:ok, String.to_existing_atom(name)}
   rescue
     ArgumentError -> :error
   end
+
+  defp safe_module(_name), do: :error
 end

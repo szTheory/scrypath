@@ -303,6 +303,81 @@ defmodule Scrypath.Oban.JobArgsTest do
     end
   end
 
+  # In a release a loaded BEAM adds only its full module atom to the atom table; the
+  # bare alias segments exist only when some parsed source names them. This module is
+  # built at runtime from strings, so neither segment ever appears as an atom in this
+  # VM, matching what a release sees for an app's own schema, backend and repo.
+  @segments ["Zq" <> "rel" <> "Seg", "Sch" <> "ema" <> "Vq"]
+
+  setup_all do
+    module = Module.concat(@segments)
+
+    unless Code.ensure_loaded?(module) do
+      contents =
+        quote do
+          def __scrypath__(:fan_outs), do: [comments: [target: SearchablePost]]
+          def __scrypath__(:document_id), do: :id
+          def upsert_documents(_schema, _documents, _config), do: {:ok, %{}}
+          def delete_documents(_schema, _ids, _config), do: {:ok, %{}}
+          def index_name(_schema, _config), do: "idx"
+          def __adapter__, do: Ecto.Adapters.SQL
+        end
+
+      Module.create(module, contents, Macro.Env.location(__ENV__))
+    end
+
+    %{runtime_module: module, runtime_name: Atom.to_string(module)}
+  end
+
+  describe "module names whose alias segments are not atoms" do
+    test "the alias segments really are not atoms" do
+      for segment <- @segments do
+        assert_raise ArgumentError, fn -> String.to_existing_atom(segment) end
+      end
+    end
+
+    test "decode_upsert resolves schema, backend and repo", %{
+      runtime_module: module,
+      runtime_name: name
+    } do
+      args = upsert_args(%{"schema" => name, "backend" => name, "repo" => name})
+
+      assert {:ok, decoded} = JobArgs.decode_upsert(args)
+      assert decoded.schema == module
+      assert decoded.backend == module
+      assert decoded.opts[:repo] == module
+    end
+
+    test "decode_delete resolves schema and backend", %{
+      runtime_module: module,
+      runtime_name: name
+    } do
+      assert {:ok, decoded} =
+               JobArgs.decode_delete(delete_args(%{"schema" => name, "backend" => name}))
+
+      assert decoded.schema == module
+      assert decoded.backend == module
+    end
+
+    test "decode_related resolves the schema and the backend and repo opts",
+         %{runtime_module: module, runtime_name: name} do
+      args = related_args(%{"schema" => name, "opts" => %{"backend" => name, "repo" => name}})
+
+      assert {:ok, decoded} = JobArgs.decode_related(args)
+      assert decoded.schema == module
+      assert decoded.opts[:backend] == module
+      assert decoded.opts[:repo] == module
+    end
+
+    test "decoding leaves the alias segments uncreated", %{runtime_name: name} do
+      assert {:ok, _} = JobArgs.decode_upsert(upsert_args(%{"schema" => name}))
+
+      for segment <- @segments do
+        assert_raise ArgumentError, fn -> String.to_existing_atom(segment) end
+      end
+    end
+  end
+
   describe "resolve_config/1" do
     test "resolves a valid config" do
       assert {:ok, config} = JobArgs.resolve_config(backend: FullBackend, sync_mode: :manual)
