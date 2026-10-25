@@ -151,6 +151,158 @@ defmodule Scrypath.Oban.JobArgsTest do
     end
   end
 
+  defmodule RelatedSchema do
+    def __scrypath__(:fan_outs) do
+      [comments: [target: SearchablePost, resolver: {__MODULE__, :resolve, []}]]
+    end
+
+    def __scrypath__(:document_id), do: :id
+  end
+
+  # Answers __scrypath__/1 but has no :fan_outs clause, so the lookup raises.
+  defmodule NoFanOutSchema do
+    def __scrypath__(:document_id), do: :id
+  end
+
+  @related_schema to_string(RelatedSchema)
+  @fake_repo "Elixir.Scrypath.TestSupport.FakeRepo"
+
+  defp related_args(overrides \\ %{}) do
+    Map.merge(
+      %{
+        "schema" => @related_schema,
+        "fan_out" => "comments",
+        "document_ids" => [1, 2],
+        "opts" => %{}
+      },
+      overrides
+    )
+  end
+
+  defp related_opts(opts), do: related_args(%{"opts" => opts})
+
+  describe "decode_related/1" do
+    test "decodes a valid related job with every allowlisted opt" do
+      args =
+        related_opts(%{
+          "index_prefix" => "tenant",
+          "meilisearch_url" => "http://localhost:7700",
+          "backend" => @full_backend,
+          "otp_app" => "logger",
+          "repo" => @fake_repo
+        })
+
+      assert {:ok, decoded} = JobArgs.decode_related(args)
+      assert decoded.schema == RelatedSchema
+      assert decoded.fan_out == :comments
+      assert decoded.fan_out_config[:target] == SearchablePost
+      assert decoded.document_ids == [1, 2]
+
+      assert Enum.sort(decoded.opts) == [
+               backend: FullBackend,
+               index_prefix: "tenant",
+               meilisearch_url: "http://localhost:7700",
+               otp_app: :logger,
+               repo: Scrypath.TestSupport.FakeRepo
+             ]
+    end
+
+    test "nil and empty-string opts count as absent" do
+      args =
+        related_opts(%{
+          "repo" => nil,
+          "otp_app" => nil,
+          "index_prefix" => nil,
+          "backend" => "",
+          "meilisearch_url" => ""
+        })
+
+      assert {:ok, %{opts: []}} = JobArgs.decode_related(args)
+    end
+
+    test "unknown opts keys are ignored, not cancelled" do
+      assert {:ok, %{opts: opts}} =
+               JobArgs.decode_related(related_opts(%{"future_key" => "x", "index_prefix" => "t"}))
+
+      assert opts == [index_prefix: "t"]
+    end
+
+    for {label, args_fun, tag} <- [
+          {"unknown schema", {:args, %{"schema" => "Elixir.Nope.Schema"}},
+           {:unknown_schema, "Elixir.Nope.Schema"}},
+          {"loaded module without __scrypath__/1", {:args, %{"schema" => "Elixir.String"}},
+           {:unknown_schema, "Elixir.String"}},
+          {"missing schema", {:drop, "schema"}, {:invalid_arg, "schema"}},
+          {"fan_out that is not an existing atom", {:args, %{"fan_out" => "zz_never_an_atom_xq"}},
+           {:unknown_fan_out, "zz_never_an_atom_xq"}},
+          {"existing atom not configured as a fan_out", {:args, %{"fan_out" => "title"}},
+           {:unknown_fan_out, "title"}},
+          {"schema whose fan_outs lookup raises",
+           {:args, %{"schema" => to_string(NoFanOutSchema)}}, {:unknown_fan_out, "comments"}},
+          {"missing fan_out", {:drop, "fan_out"}, {:invalid_arg, "fan_out"}},
+          {"missing document_ids", {:drop, "document_ids"}, {:invalid_arg, "document_ids"}},
+          {"missing opts", {:drop, "opts"}, {:invalid_arg, "opts"}},
+          {"non-map opts", {:args, %{"opts" => []}}, {:invalid_arg, "opts"}},
+          {"unknown backend", {:opts, %{"backend" => "Elixir.Nope.Backend"}},
+           {:unknown_backend, "Elixir.Nope.Backend"}},
+          {"delete-only backend", {:opts, %{"backend" => @delete_backend}},
+           {:unknown_backend, @delete_backend}},
+          {"unknown repo", {:opts, %{"repo" => "Elixir.Nope.Repo"}},
+           {:unknown_repo, "Elixir.Nope.Repo"}},
+          {"repo without the Elixir. prefix",
+           {:opts, %{"repo" => "Scrypath.TestSupport.FakeRepo"}},
+           {:unknown_repo, "Scrypath.TestSupport.FakeRepo"}},
+          {"otp_app that is not an atom", {:opts, %{"otp_app" => "zz_not_an_app_xq"}},
+           {:unknown_otp_app, "zz_not_an_app_xq"}},
+          {"otp_app that is an atom but not an app", {:opts, %{"otp_app" => "ok"}},
+           {:unknown_otp_app, "ok"}}
+        ] do
+      test "returns #{inspect(tag)} for #{label}" do
+        args =
+          case unquote(Macro.escape(args_fun)) do
+            {:args, overrides} -> related_args(overrides)
+            {:opts, opts} -> related_opts(opts)
+            {:drop, key} -> Map.delete(related_args(), key)
+          end
+
+        assert JobArgs.decode_related(args) == {:error, unquote(Macro.escape(tag))}
+      end
+    end
+  end
+
+  describe "atom safety" do
+    test "decoding unknown names twice gives the same tag and creates no atoms" do
+      fresh = fn -> "Elixir.Zz#{System.unique_integer([:positive])}" end
+
+      jobs = [
+        fn name -> JobArgs.decode_upsert(upsert_args(%{"schema" => name})) end,
+        fn name -> JobArgs.decode_upsert(upsert_args(%{"backend" => name})) end,
+        fn name -> JobArgs.decode_upsert(upsert_args(%{"repo" => name})) end,
+        fn name -> JobArgs.decode_delete(delete_args(%{"schema" => name})) end,
+        fn name -> JobArgs.decode_related(related_args(%{"schema" => name})) end,
+        fn name -> JobArgs.decode_related(related_args(%{"fan_out" => name})) end,
+        fn name -> JobArgs.decode_related(related_opts(%{"backend" => name})) end,
+        fn name -> JobArgs.decode_related(related_opts(%{"repo" => name})) end,
+        fn name -> JobArgs.decode_related(related_opts(%{"otp_app" => name})) end,
+        fn name -> JobArgs.decode_related(related_opts(%{name => "value"})) end
+      ]
+
+      # Warm up once so module loading cannot add atoms during the measured decodes.
+      Enum.each(jobs, & &1.(fresh.()))
+
+      for decode <- jobs do
+        name = fresh.()
+        before = :erlang.system_info(:atom_count)
+        first = decode.(name)
+        second = decode.(name)
+        after_count = :erlang.system_info(:atom_count)
+
+        assert first == second
+        assert after_count == before
+      end
+    end
+  end
+
   describe "resolve_config/1" do
     test "resolves a valid config" do
       assert {:ok, config} = JobArgs.resolve_config(backend: FullBackend, sync_mode: :manual)
