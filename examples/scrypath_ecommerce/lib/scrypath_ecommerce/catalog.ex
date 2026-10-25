@@ -100,6 +100,7 @@ defmodule ScrypathEcommerce.Catalog do
     |> Repo.all(skip_tenant_id: true)
   end
 
+  # Scrypath passes %Category{} records in every sync mode; kept for direct callers.
   def resolve_products_for_categories([_id | _] = category_ids) do
     Product
     |> where([product], product.category_id in ^category_ids)
