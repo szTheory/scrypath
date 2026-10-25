@@ -4,10 +4,10 @@ milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: null
 status: idle
-stopped_at: "2026-10-22 feedback batch shipped (#108-#112) and released as scrypath 0.3.16; preview on main; awaiting next UI feedback"
-last_updated: "2026-10-24T00:30:00.000Z"
-last_activity: 2026-10-24
-last_activity_desc: Shipped the feedback batch and follow-ups, patched dependency advisories, cleaned stale PRs/worktrees, released 0.3.16
+stopped_at: "0.3.17 released; next is the v1.43 automated closeout from reference/ROLLING-ROADMAP.md"
+last_updated: "2026-10-25T00:00:00.000Z"
+last_activity: 2026-10-25
+last_activity_desc: Fixed legacy Oban upsert jobs (#114), released 0.3.17, approved the rolling roadmap
 state_head: abc328c32e63e68eeecde69f8ea099d508764137
 progress:
   total_phases: 5
@@ -19,7 +19,16 @@ progress:
 
 # Project State
 
-## Idle — 2026-10-24
+## Next approved work — 2026-10-25
+
+The maintainer approved a rolling roadmap: **[reference/ROLLING-ROADMAP.md](reference/ROLLING-ROADMAP.md)**. It holds the order, the working rules (one PR per slice, merge when required checks pass, releases and visible UI changes wait for the maintainer's yes), and the research findings for each item.
+
+- Done: the 0.3.17 hotfix. [#114](https://github.com/szTheory/scrypath/pull/114) keeps pre-0.3.16 Oban upsert jobs syncing; released as **scrypath 0.3.17** ([#115](https://github.com/szTheory/scrypath/pull/115)).
+- **Next: the v1.43 automated closeout** (roadmap section 1), then v1.44 sync correctness, v1.45 foundation and CI, and v1.46 adopter features.
+
+Correction to the idle note below: the 19 standalone `phase173_*` specs are **not** covered anywhere. Nothing runs `verify-phase173.sh`, so standalone PostureLive has no automated browser coverage. v1.45 fixes this.
+
+## Idle — 2026-10-24 (historical)
 
 No phase or approved work item is active. The 2026-10-22 feedback batch is merged and released:
 
@@ -34,7 +43,7 @@ Stale PRs #94, #95 and #97 are closed as superseded. Old worktrees are removed, 
 
 Open, non-blocking:
 - `deep-quality (advisory)` is red only on the `scrypath_ops` graph: `cloak`/`cloak_ecto` arrive through the optional `sigra` dependency and have no fixed release. The fix is queued in sigra (make `cloak_ecto` optional); bump sigra here when it ships.
-- `make verify-e2e` shows 19 failures, all standalone `phase173_*` specs, because that lane doesn't start `standalone_ops:4003`. Their own `E2E_SCOPE=phase173_*` lanes cover them.
+- `make verify-e2e` shows 19 failures, all standalone `phase173_*` specs, because that lane doesn't start `standalone_ops:4003`. (Not covered elsewhere; see the correction above.)
 - The maintainer's `examples/scrypath_ecommerce/priv/playbooks/my-search.json` hasn't been imported into the database yet.
 
 Next: the maintainer's next UI feedback round, or a new milestone.
