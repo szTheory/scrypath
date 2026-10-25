@@ -34,6 +34,7 @@ Scrypath dedupes the ids and documents you pass and sends them in chunks of at m
 - Chunks already sent stay applied. Writes are idempotent by id (and an Oban retry reloads the current records), so retrying the whole call is safe.
 - The result's `tasks:` lists one entry per chunk, in order, and `task:` is the last one. A call with 1000 ids or fewer has a one-element `tasks:` list.
 - There is no ordering contract. Resolvers, loaders and `search_records/2` get deduped input (set semantics) in no promised order.
+- The result's `document_ids` lists each id once, sorted by its string form (`[2, 10]` becomes `[10, 2]`), whatever the call size, and `document_count` counts distinct ids. Do not zip `document_ids` with the records or ids you passed.
 
 ## Operator lifecycle
 

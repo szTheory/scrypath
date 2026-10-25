@@ -24,7 +24,9 @@ defmodule Scrypath.Sync do
     config = Config.resolve!(opts)
 
     metadata =
-      Telemetry.common_metadata(schema_module, config, document_count: length(records))
+      Telemetry.common_metadata(schema_module, config,
+        document_count: distinct_record_count(schema_module, records)
+      )
 
     Telemetry.span([:scrypath, :sync, :upsert], metadata, fn ->
       result =
@@ -129,7 +131,9 @@ defmodule Scrypath.Sync do
     config = Config.resolve!(opts)
 
     metadata =
-      Telemetry.common_metadata(schema_module, config, document_count: length(document_ids))
+      Telemetry.common_metadata(schema_module, config,
+        document_count: document_ids |> Enum.uniq() |> length()
+      )
 
     Telemetry.span([:scrypath, :sync, :delete], metadata, fn ->
       result =
@@ -140,6 +144,18 @@ defmodule Scrypath.Sync do
 
       {result, Telemetry.stop_metadata(result)}
     end)
+  end
+
+  # The span start reports the same deduped count as the stop metadata and the result:
+  # dispatch dedupes records by document id before chunking. A record whose id cannot be
+  # read falls back to the raw length here; dispatch then raises inside the span, so the
+  # failure is still reported as the span's exception.
+  defp distinct_record_count(schema_module, records) do
+    records
+    |> Enum.uniq_by(&Identity.document_id(schema_module, &1))
+    |> length()
+  rescue
+    _error -> length(records)
   end
 
   # Oban jobs carry document ids and load current records when they run, so only

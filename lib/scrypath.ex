@@ -171,6 +171,11 @@ defmodule Scrypath do
   order and the call stops at the first failed chunk, returning its `{:error, reason}`; chunks already
   sent stay applied. See [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
 
+  **`:document_ids`** lists each id once, sorted by its string form (`[2, 10]` is reported as
+  `[10, 2]`), for any number of ids. It does not follow the order of your input, so do not zip it
+  with the records or ids you passed. **`:document_count`** is the number of distinct ids, and the
+  sync telemetry span reports the same count on start and stop.
+
   Pitfalls when the database write “succeeded” but search lags: [guides/common-mistakes.md](guides/common-mistakes.md).
 
   Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`,
