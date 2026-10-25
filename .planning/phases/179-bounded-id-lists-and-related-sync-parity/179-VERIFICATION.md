@@ -1,118 +1,155 @@
 ---
 phase: 179-bounded-id-lists-and-related-sync-parity
-verified: 2026-10-25T23:30:00Z
+verified: 2026-10-25T23:47:42Z
 status: passed
-score: 4/4 roadmap success criteria verified (plan must-have truths 63/63 verified)
-covered_files: [".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-SUMMARY.md","examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex","examples/phoenix_meilisearch/lib/scrypath_demo/blog/author.ex","examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/category.ex","guides/related-data-and-reindexing.md","guides/sync-modes-and-visibility.md","lib/scrypath.ex","lib/scrypath/backfill.ex","lib/scrypath/chunks.ex","lib/scrypath/loader.ex","lib/scrypath/oban.ex","lib/scrypath/oban/delete_worker.ex","lib/scrypath/oban/enqueue.ex","lib/scrypath/oban/job_args.ex","lib/scrypath/oban/upsert_worker.ex","lib/scrypath/operations.ex","lib/scrypath/operations/result.ex","lib/scrypath/reindex.ex","lib/scrypath/sync.ex","lib/scrypath/sync/related_enqueue.ex","lib/scrypath/sync/related_worker.ex","test/scrypath/backfill_test.exs","test/scrypath/chunks_test.exs","test/scrypath/loader_test.exs","test/scrypath/oban/enqueue_test.exs","test/scrypath/oban/enqueue_unique_test.exs","test/scrypath/oban/job_args_test.exs","test/scrypath/oban/worker_test.exs","test/scrypath/reindex_test.exs","test/scrypath/sync/related_test.exs","test/scrypath/sync/related_worker_test.exs","test/scrypath/sync_test.exs","test/support/fake_repo.ex","test/support/loader_backfill_cases.ex","test/support/oban_sqlite_migration.ex","test/support/oban_sqlite_repo.ex"]
-covered_digest: "v3:sha256:f826e7f1c14e79371ea26287eb4dc72c8573b13284602c0b637cd3727b486108"
+score: 4/4 roadmap success criteria verified (plan must-have truths 63/63 verified; 8 deliberately narrowed by review fixes, recorded below)
+covered_files: [".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-SUMMARY.md","examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex","examples/phoenix_meilisearch/lib/scrypath_demo/blog/author.ex","examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/category.ex","examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex","examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs","examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs","guides/related-data-and-reindexing.md","guides/sync-modes-and-visibility.md","lib/scrypath.ex","lib/scrypath/backfill.ex","lib/scrypath/chunks.ex","lib/scrypath/loader.ex","lib/scrypath/oban.ex","lib/scrypath/oban/delete_worker.ex","lib/scrypath/oban/enqueue.ex","lib/scrypath/oban/job_args.ex","lib/scrypath/oban/payload.ex","lib/scrypath/oban/upsert_worker.ex","lib/scrypath/operations.ex","lib/scrypath/operations/result.ex","lib/scrypath/operator/recovery_action.ex","lib/scrypath/reindex.ex","lib/scrypath/sync.ex","lib/scrypath/sync/related_enqueue.ex","lib/scrypath/sync/related_worker.ex","test/scrypath/backfill_test.exs","test/scrypath/chunks_test.exs","test/scrypath/loader_test.exs","test/scrypath/oban/enqueue_test.exs","test/scrypath/oban/enqueue_unique_test.exs","test/scrypath/oban/job_args_test.exs","test/scrypath/oban/worker_test.exs","test/scrypath/oban_test.exs","test/scrypath/operator/failed_work_test.exs","test/scrypath/reindex_test.exs","test/scrypath/sync/related_test.exs","test/scrypath/sync/related_worker_test.exs","test/scrypath/sync_test.exs","test/scrypath/telemetry_test.exs","test/support/fake_repo.ex","test/support/loader_backfill_cases.ex","test/support/oban_sqlite_migration.ex","test/support/oban_sqlite_repo.ex"]
+covered_digest: "v3:sha256:33228d223b442db6b2dfa31ba09efbdba62c95345f331b503c03ba0caf2053b1"
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: passed
+  previous_score: 4/4 (63/63 plan truths)
+  reason: "previous report went stale after 24 review-fix commits (858e83dc..6ece8de0)"
+  gaps_closed:
+    - "WR-01 nested-transaction enqueue (was an open warning) — fixed 24a35c9a, real-Oban SQLite tests"
+    - "WR-03 upgrade note for 0.3.17 related jobs (was an open warning) — documented 81930d86 + 179-06 release note"
+    - "WR-04 backfill reported only the last delete chunk task (was an open warning) — delete_tasks: 70c8f326, reindex waits on them"
+    - "WR-05 span start count pre-dedupe (was an open warning) — a28bc4e7"
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 179: Bounded id lists and related-sync parity — Verification Report
 
 **Phase Goal:** Large id sets never produce unbounded loads or backend calls, and related-record sync gives resolvers the same input and the same queue behaviour in every sync mode, failing cleanly on bad job arguments.
-**Verified:** 2026-10-25T23:30:00Z
-**Status:** passed (with open non-blocking warnings; see Warnings)
-**Re-verification:** No — initial verification
+**Verified:** 2026-10-25T23:47:42Z (HEAD 6ece8de0)
+**Status:** passed
+**Re-verification:** Yes. The previous report (status passed) went stale after the review-fix commits. Every truth was re-checked against the current code, and the phase tests were re-run.
 
 ## Goal Achievement
 
 ### Roadmap Success Criteria
 
-| # | Success criterion | Status | Evidence |
+| # | Success criterion | Status | Evidence (current code at 6ece8de0) |
 |---|---|---|---|
-| 1 | 2,500 ids → three record loads and three backend upsert (and delete) calls of ≤1000 ids, one combined result | ✓ VERIFIED | `Scrypath.Chunks` (`@max_ids 1000`) used by `Sync.dispatch_upsert/dispatch_delete` (`Chunks.by_id`/`Chunks.ids` + `Chunks.reduce_ok` + `combine_chunks`), `Loader.fetch_chunks`, `Backfill.write`, `UpsertWorker.write`, `DeleteWorker.write`, `Enqueue.enqueue_upsert/delete`, `RelatedEnqueue`. Tests (run, green): `sync_test.exs` "inline sync of 2,500 records sends three bounded upserts and one combined result", "delete_documents of 2,500 ids sends three bounded deletes…"; `worker_test.exs` "upsert worker loads and upserts 2,500 ids in chunks" (3 `search_records` loads ≤1000, 3 upserts ≤1000), "delete worker sends 2,500 ids as three chunks"; `loader_test.exs` 2,500-id load; `enqueue_unique_test.exs` "2,500 records enqueue three chunk jobs" (real Oban Lite); `backfill_test.exs` / `loader_backfill_cases.ex` batch_size 5000 → 3 upserts. |
-| 2 | `sync_related` resolver gets loaded records under inline and Oban; Oban worker loads via the loader before resolving | ✓ VERIFIED | `RelatedWorker.run/3` calls `Loader.load(schema, document_ids, config)` then `resolve` with structs; empty → noop without resolver (`sync_resolved(_, [], _)`). Inline path passes caller structs (`inline_resolve_and_sync`), empty inline → `noop_result`. Tests: `related_worker_test.exs` "perform/1 loads trigger structs, runs the resolver with them…" (asserts `search_records` called and resolver got `%DummySchema{}`), partial-missing / soft-deleted / all-missing cases with `missing_count`; `related_test.exs` inline case. Resolver fixtures only match `[%__MODULE__{} | _]`, so an id list would FunctionClauseError. |
-| 3 | Enqueueing the same related sync twice yields one job (same `unique:` policy) | ✓ VERIFIED | `RelatedEnqueue` builds changesets with `unique: Enqueue.unique_opts()` and inserts via `Enqueue.enqueue_chunks/3` (shared path). Test against real Oban (Lite engine, `testing: :manual`): `enqueue_unique_test.exs` "a repeated related sync in a different trigger order collapses into one job (FAN-02)" — one `RelatedWorker` job, second result `conflict?: true`, same job id. |
-| 4 | Related, upsert and delete jobs naming an unknown schema, fan-out, backend, repo or app finish with a clear non-retrying error, not a `String.to_existing_atom` raise | ✓ VERIFIED | `Scrypath.Oban.JobArgs` decodes all three job kinds; every failure is `{:error, tag}` → workers return `{:cancel, {:invalid_job, tag}}`. `String.to_existing_atom` only inside `rescue` (`existing_atom/1`, `safe_module/1`). Tests: `related_worker_test.exs` FAN-03 matrix (schema, fan_out, backend, repo, otp_app, missing document_ids/opts; asserts no raise); `worker_test.exs` upsert bad-args matrix (schema, backend, repo, document_ids, index); `job_args_test.exs` delete/upsert/related tables, atom-count safety, and the CR-01 release regression (runtime-built module whose alias segments are not atoms resolves for all three decoders). |
+| 1 | 2,500 ids → three record loads and three backend upsert (and delete) calls of ≤1000 ids, one combined result | ✓ VERIFIED | `Chunks` (`@max_ids 1000`) bounds `Sync.dispatch_upsert/dispatch_delete` (`Chunks.by_id`/`Chunks.ids` + `reduce_ok` + `combine_chunks`), `Loader.fetch_chunks`, `Backfill.write` (`Enum.chunk_every(Chunks.max_ids())`), `UpsertWorker.write`, `DeleteWorker.write`, `Enqueue.enqueue_upsert/delete` and `RelatedEnqueue`. Tests (re-run green): sync_test "inline sync of 2,500 records sends three bounded upserts…", "delete_documents of 2,500 ids…"; worker_test "upsert worker loads and upserts 2,500 ids in chunks…", "delete worker sends 2,500 ids as three chunks…", "upsert worker deletes 2,500 missing ids in chunks…"; enqueue_unique_test "2,500 records enqueue three chunk jobs" (also inside a caller transaction); loader_backfill_cases "a 2,500-row page with batch_size: 5000 is one batch and three bounded upserts". No `insert_all` anywhere in `lib/`. |
+| 2 | `sync_related` resolver gets loaded records under inline and Oban; the Oban worker loads via the loader before resolving | ✓ VERIFIED | `RelatedWorker.run/3` calls `Loader.load(schema, document_ids, config)` and then `sync_resolved(fan_out_config, records, opts)`. Empty → `:ok` noop, and the resolver is never called with `[]`. Inline `inline_resolve_and_sync` passes the caller's structs, now deduped by id (IN-06), and an empty inline call → `noop_result`. Tests: related_worker_test "perform/1 loads trigger structs, runs the resolver with them…", partial-missing (`missing_count`), soft-deleted, all-missing → `:ok`; related_test inline cases. |
+| 3 | Enqueueing the same related sync twice yields one job (same `unique:` policy) | ✓ VERIFIED | `RelatedEnqueue` builds `Oban.Job.new(..., unique: Enqueue.unique_opts())` and inserts through `Enqueue.enqueue_chunks/3`, the same path as direct upsert/delete enqueue. Real Oban (Lite engine): enqueue_unique_test "a repeated related sync in a different trigger order collapses into one job (FAN-02)" gives one job, `conflict?: true` and the same job id. related_test "every related job carries the shared unique policy". |
+| 4 | Related, upsert and delete jobs naming an unknown schema, fan-out, backend, repo or app finish with a clear non-retrying error, not a `String.to_existing_atom` raise | ✓ VERIFIED | `JobArgs` decodes all three kinds and returns `{:error, tag}`, which the workers map to `{:cancel, {:invalid_job, tag}}`. `String.to_existing_atom` appears only inside `rescue` (`existing_atom/1`, `safe_module/1`), plus one guarded literal in `UpsertWorker` (`source in ["fields","custom"]`). Since the last verification the following also cancel: loader-level bad input (uncastable or undumpable ids → `{:invalid_arg, "document_ids"}`, WR-07/08) and non-list `search_records/2` (`:invalid_search_records`, IN-04). Tests: related_worker_test FAN-03 matrix, worker_test bad-args matrix, job_args_test (atom-count, runtime-module CR-01 regression), loader_test "load/3 id casting (WR-08)". |
 
 **Score:** 4/4 success criteria verified; 0 present-but-behavior-unverified.
 
-### Plan must-have truths (179-01 … 179-07)
+### Plan must-have truths: deliberate deviations after review fixes
 
-All plan truths were checked against code and the tests above. Highlights beyond the SC rows:
+All 63 plan truths still hold in intent. The truths below were narrowed or changed on purpose by review fixes. Each one was judged against the phase goal, and none of them defeats it.
 
-| Truth | Status | Evidence |
-|---|---|---|
-| Chunks dedupe + `{to_string(id), id}` sort, 1000/1001 boundaries, shuffle-stable | ✓ VERIFIED | `chunks.ex` `ids/1`, `sort_key/1`; `chunks_test.exs` green |
-| Failed chunk halts later chunks, bare `{:error, reason}` | ✓ VERIFIED | `Chunks.reduce_ok`; `sync_test.exs` "a failed chunk halts later chunks…" (inline + manual) |
-| Inline waits per chunk; manual never waits | ✓ VERIFIED | `maybe_wait_for_task/2` inside the per-chunk reducer; sync_test Req.Test task-GET tests green |
-| One telemetry span over the whole chunked call | ✓ VERIFIED | single `Telemetry.span([:scrypath, :sync, :upsert/:delete])`; sync_test `{:upsert_stop, 2500}` |
-| `conflict?:` on every public job map, default false | ✓ VERIFIED | `Sync.public_job/1`, `Operations.task_from_job/1` |
-| Reindex waits on every chunk task before cutover | ✓ VERIFIED | `Reindex.maybe_wait_for_batch_tasks/2` iterates `tasks`; reindex_test green |
-| Multi-chunk enqueue uses `Oban.insert` (never `insert_all`) in one transaction, rolled back on failure | ✓ VERIFIED | `Enqueue.insert_chunks/2`; no `insert_all` in `lib/`; enqueue_unique_test rollback test |
-| `unique_opts/0` = `[period: :infinity, states: [:available, :scheduled, :retryable]]`, no keys | ✓ VERIFIED | `enqueue.ex`; related_test "every related job carries the shared unique policy" |
-| `ensure_loadable!` before related enqueue | ✓ VERIFIED | `RelatedEnqueue.enqueue/4`; related_test "raises at the call site…" |
-| Related job args shape unchanged; 0.3.17 args with nil opts run to `:ok` | ✓ VERIFIED | `job_args/4` keys `schema/document_ids/fan_out/opts`; related_worker_test legacy fixture |
-| Owner-only schemas without `:preload` load without FunctionClauseError | ✓ VERIFIED | `Loader.preload_for/1` rescue scoped to `__scrypath__`; loader_test green |
-| Docs: §(c) "What your resolver receives", chunking/tasks/halt/inline_timeout/conflict?, no-ordering contract, fixed chunk size | ✓ VERIFIED | `guides/related-data-and-reindexing.md:175,221,230,236`; `guides/sync-modes-and-visibility.md:31,35,61,69,129,150`; `lib/scrypath.ex:395-397`; docs_contract suite 74/0 (orchestrator run) |
-| CHANGELOG not hand-edited | ✓ VERIFIED | `git diff 1d3399c1..HEAD -- CHANGELOG.md` empty |
-| PROJECT.md marks the three v1.44 items done for Phase 179 | ✓ VERIFIED | `.planning/PROJECT.md:523-526` |
-| Ecommerce `Category.search_records/2` with explicit `skip_tenant_id: true`, exact ids | ✓ VERIFIED (code) | `category.ex:25-28`; catalog_test.exs unmodified. Test run is executor-reported (native PG); not re-run here (example deps lock out of date in this checkout). Hosted `ecommerce-mounted`/`phoenix-example` lanes must be green on the PR SHA. |
-| Phoenix Oban related smoke passes `repo:` | ✓ VERIFIED (code) | smoke test line 75 `repo: ScrypathDemo.Repo`; live run executor-reported; hosted `phoenix-example` lane pending on PR |
+| # | Plan truth (as written) | What the code does now | Judgment |
+|---|---|---|---|
+| D1 | 179-01 D-03: `Chunks.ids/1` dedupes "by raw value" | Dedupes by `Chunks.id_key/1`, the JSON-stored form (atom `:a` == `"a"`). `1` and `"1"` stay distinct (IN-01, b9d67b09). | Stronger set semantics that match what Oban stores. Order-independence and 1000/1001 boundaries hold (chunks_test green). ✓ |
+| D2 | 179-01 D-08: a ≤1000-id call returns "exactly today's public map" plus a one-element `tasks` | Keys and shape are unchanged, but `document_ids` is now deduped and string-sorted at every size. The span start count is deduped (WR-05, a28bc4e7). | Deliberate narrowing, documented in the guides and the 179-06 release note. Existing merged-key assertions stay green. ✓ (adopter-visible; carry into release upgrade notes) |
+| D3 | 179-01 D-11: inline `sync_related` "still pass[es] the caller's structs unchanged" | The same structs are passed, deduped by document id with the last copy winning. The fallback is the raw list when ids cannot be read (IN-06, ce86499e). | This brings inline and Oban to the same input, which serves the goal. No reload and no `:repo` requirement (D-11 prohibition holds). ✓ |
+| D4 | 179-03: "every upsert/delete job changeset uses [unique_opts]" | Direct `sync_records`/`delete_documents` enqueue still uses `unique_opts/0` (oban_test "the direct enqueue changesets keep the shared unique policy"). The `Scrypath.Oban` Multi helpers now insert **without** `unique:` (189cef0f; oban_test "Multi helper jobs are inserted without the unique policy"). | Deliberate. An in-transaction unique insert could collapse into a pending job that runs before the commit. SC-3 and FAN-02 concern related enqueue vs the main enqueue path, and both still share the policy. ✓ |
+| D5 | 179-03: 2+ chunk jobs are "inserted inside one Oban.Repo.transaction/2" | This holds outside a transaction. Inside a caller's transaction there is no nested transaction: it returns a bare `{:error, reason}` and the caller's transaction gives the all-or-nothing behaviour (WR-01, 24a35c9a). | Orphan-free rollback is preserved in both cases (enqueue_unique_test "rolls back every chunk job", "Multi.run step that returns the error aborts the caller's transaction"). ✓ |
+| D6 | 179-03: Multi helpers "keep their one-changeset contract unchanged" | Still one changeset per Multi step. `upsert_job_changeset/4` and `delete_job_changeset/4` gained an optional `job_opts` (default arity-3 behaviour unchanged). | ✓ |
+| D7 | 179-04 D-15: decode tags are exactly the listed set | `JobArgs` tags are unchanged. The workers additionally cancel on loader reasons `{:invalid_arg, "document_ids"}` (cast/dump) and `:invalid_search_records`. | Additive non-retrying cancels that serve FAN-03. Not JobArgs decode tags. ✓ |
+| D8 | 179-07 D-11: catalog_test "update_category/3 enqueues related product sync" passes unchanged | That test is unchanged and passes. The file gained after-commit and failed-sync tests. The resolver test now passes structs only, because the id clause was removed (IN-03). `update_category/3` syncs after `Repo.update` commits (CR-02, IN-07). | ✓ (example only) |
 
-Backstop truths (non-inferable; verified by directly observed behaviour, not presence):
+Other review-fix additions that hold, beyond what the plans asked for:
+- **WR-04:** batch results gain `delete_tasks:`, and reindex waits on them before cutover (`reindex.ex:223-236`).
+- **WR-06:** enqueue raises `ArgumentError` for nil, float or boolean ids through the shared `JobArgs.document_id?/1`.
+- **WR-09:** operator retry returns `{:error, {:invalid_retry_input, :document_ids}}` (failed_work_test:530).
+- **CR-02:** the guides say to call sync after the write commits, in every mode (`related-data-and-reindexing.md:230`, `sync-modes-and-visibility.md:134-144`).
+
+### Backstop truths (verified by directly observed behaviour at HEAD)
 
 | Truth | Status | Evidence |
 |---|---|---|
-| PAGE-03 idempotency: re-running a halted chunked sync re-sends every chunk | ✓ VERIFIED | Throwaway probe (scratchpad, `MIX_ENV=test mix run`): 2,500 records, backend fails chunk 2 → 2 upsert calls, `{:error, :boom}`; re-run → 3 calls, chunk 1 identical, all 2,500 ids, `document_count: 2500`. |
-| FAN-03 concurrency: JobArgs pure, concurrent bad jobs cancel independently | ✓ VERIFIED | Same probe: 200 concurrent `RelatedWorker.perform/1` calls with distinct unknown schemas → each returned `{:cancel, {:invalid_job, {:unknown_schema, own_name}}}`. `job_args.ex` holds no process/ETS state. |
-| FAN-01 ordering: set semantics, no order promised | ✓ VERIFIED | `Chunks.ids` dedupes; guide line 236 "No ordering contract."; resolver tests compare sorted ids. |
+| PAGE-03 idempotency: re-running a halted chunked sync re-sends every chunk | ✓ VERIFIED | Probe `MIX_ENV=test mix run` (scratchpad): 2,500 shuffled records with chunk 2 failing → `{:error, :boom}` after 2 calls `[1000, 1000]`. The re-run made 3 calls `[1000, 1000, 500]` with `document_count: 2500`, chunk 1 identical to the first run, and all 2,500 ids sent. |
+| FAN-03 concurrency: JobArgs pure, concurrent bad jobs cancel independently | ✓ VERIFIED | Same probe: 200 concurrent `RelatedWorker.perform/1` calls, each with a distinct unknown schema, all returned `{:cancel, {:invalid_job, {:unknown_schema, own_name}}}`. |
+| FAN-01 ordering: set semantics, no order promised | ✓ VERIFIED | `Chunks.ids/uniq_by_id` dedupe; `related-data-and-reindexing.md:251` says "No ordering contract."; resolver tests compare ids as sets. |
 
 ### Prohibitions (judgment tier — non-authoritative LLM-judge verdicts)
 
-All 21 prohibitions across plans 01–07 were judged against code; none violated. Notable checks: no `:batch_size`/chunk-size option (`Chunks` has no option; `batch_size` stays backfill paging); no per-chunk telemetry span; no `Oban.insert_all`; unique policy omits `:executing` and has no `keys:`; no `String.to_atom` in `lib/scrypath/oban` or `lib/scrypath/sync`; resolver never called with ids or `[]`; all-missing related job returns `:ok`; reindex waits on every chunk task; CHANGELOG untouched; examples change only 5 files, no ops/UI/CI changes.
-One partial tension, flagged: plan 05's D-22 prohibition rationale ("0.3.17 jobs already queued … keep running") holds only when the trigger schema is loadable — see WR-03 below.
+All 21 prohibitions were re-judged at HEAD, and none is violated:
+- There is no chunk-size option, and `:batch_size` is still the backfill page size.
+- There is no per-chunk span and no new telemetry event (WR-05 changed only the count on the existing span).
+- There is no `insert_all`.
+- The unique policy omits `:executing` and has no `keys:`.
+- There is no `String.to_atom` in `lib/scrypath/oban` or `lib/scrypath/sync`.
+- The resolver is never called with ids or `[]`.
+- An all-missing related job returns `:ok`.
+- Reindex waits on every upsert and delete chunk task.
+- `CHANGELOG.md` is untouched (`git diff 1d3399c1..HEAD -- CHANGELOG.md` is empty).
+- The related job args shape is unchanged. A 0.3.17 job that cannot reload its triggers cancels `:repo_required`, which is clean and non-retrying, and is documented as an upgrade step (WR-03).
+- The 179-07 "minimal example fixes" prohibition is stretched by IN-03/IN-07: `update_category_and_sync/3` and the E2E endpoint now report the related-sync outcome. This is a correctness repair to existing example code, with no ops, UI or CI changes. Judged acceptable.
 
-### Behavioral spot-checks
+### Required Artifacts / Key Links
+
+All plan artifacts exist, are substantive and are wired:
+- `chunks.ex` (`@max_ids 1000`)
+- `operations/result.ex` (`tasks: []`)
+- `sync.ex` (`Chunks.reduce_ok`)
+- `loader.ex` (`Chunks.ids`)
+- `backfill.ex`
+- `reindex.ex` (`:tasks`, `:delete_tasks`)
+- `oban/enqueue.ex` (`def unique_opts`, `enqueue_chunks`, `task_from_job`)
+- `operations.ex` (`conflict?`)
+- the SQLite Oban repo and migration
+- `job_args.ex`
+- the workers (`JobArgs.decode_*`)
+- `fake_repo.ex` (`__adapter__`)
+- `related_worker.ex` (`Loader.load`, `JobArgs.decode_related`)
+- `related_enqueue.ex` (`Enqueue.unique_opts`, `Enqueue.enqueue_chunks`)
+- the guides ("What your resolver receives", `conflict?`)
+- `category.ex` (`def search_records`, `skip_tenant_id: true`)
+- the phoenix smoke test (`repo: ScrypathDemo.Repo`)
+
+### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |---|---|---|---|
-| Phase test files | `mix test` on chunks, sync, worker, related_worker, related, enqueue_unique, job_args, loader, backfill, reindex, enqueue tests (`--exclude integration`) | 214 tests, 0 failures | ✓ PASS |
-| Halt + re-run convergence; concurrent bad-job cancel | scratchpad probe via `MIX_ENV=test mix run` | as above | ✓ PASS |
-| Full suite / docs contract / warnings-as-errors / format | orchestrator run | 837/0, 74/0, clean | ✓ PASS (orchestrator) |
-| Ecommerce catalog_test | `PGHOST=127.0.0.1 mix test test/scrypath_ecommerce/catalog_test.exs` | could not run: example deps lock mismatch in this checkout (did not run `deps.get`) | ? SKIP → hosted lane |
+| Phase test files | `mix test test/scrypath/{chunks,sync,loader,backfill,reindex,oban}_test.exs test/scrypath/oban/ test/scrypath/sync/ --exclude integration` | 252 tests, 0 failures | ✓ PASS |
+| Docs contract | `mix test --only docs_contract` | 74 tests, 0 failures | ✓ PASS |
+| Ecommerce catalog (native Postgres) | `PGHOST=127.0.0.1 mix test test/scrypath_ecommerce/catalog_test.exs` (examples/scrypath_ecommerce) | 13 tests, 0 failures (connection-pool noise only) | ✓ PASS |
+| Halt + re-run convergence; concurrent bad-job cancel | scratchpad probe | as above | ✓ PASS |
+| Full suite / compile warnings-as-errors / format / credo / docs | orchestrator run at HEAD | 871/0, clean | ✓ PASS (orchestrator) |
+| Phoenix Oban related smoke; ecommerce seed-based e2e_controller tests | needs host-reachable Meilisearch | not run (environment limit) | ? → hosted `phoenix-example` / `ecommerce-mounted` lanes on the PR SHA |
 
 ### Probe Execution
 
-No `scripts/*/tests/probe-*.sh` declared by this phase. Not applicable.
+The phase declares no `scripts/*/tests/probe-*.sh`. Not applicable.
 
 ### Requirements Coverage
 
 | Requirement | Source plans | Status | Evidence |
 |---|---|---|---|
-| PAGE-03 | 01, 02, 03, 04, 05, 06 | ✓ SATISFIED | SC-1 row |
-| FAN-01 | 01, 05, 06, 07 | ✓ SATISFIED | SC-2 row |
-| FAN-02 | 03, 05, 06 | ✓ SATISFIED | SC-3 row |
-| FAN-03 | 04, 05, 06 | ✓ SATISFIED | SC-4 row |
+| PAGE-03 | 01–06 | ✓ SATISFIED | SC-1 |
+| FAN-01 | 01, 05, 06, 07 | ✓ SATISFIED | SC-2 |
+| FAN-02 | 03, 05, 06 | ✓ SATISFIED | SC-3. Related and direct enqueue share `unique_opts/0`. The Multi helpers deliberately do not (D4). |
+| FAN-03 | 04, 05, 06 | ✓ SATISFIED | SC-4 |
 
-No orphaned requirements: REQUIREMENTS.md maps exactly PAGE-03, FAN-01, FAN-02, FAN-03 to Phase 179, all claimed by plans. (REQUIREMENTS.md checkboxes/traceability still read "Pending"; update at phase close.)
+REQUIREMENTS.md maps exactly these four IDs to Phase 179 (traceability rows 70–73, marked Complete). There are no orphaned requirements.
 
 ### Anti-Patterns Found
 
-No TBD/FIXME/XXX/TODO/HACK/PLACEHOLDER markers in any of the 37 changed non-planning files. No stubs.
+None. The scan of all 45 changed non-planning files for TBD/FIXME/XXX/TODO/HACK/PLACEHOLDER found one false positive, "JTBD" in a guide link title.
 
-### Warnings (open review findings — none defeats a must-have)
+### Notes (non-blocking)
 
-| Finding | Severity | Assessment |
-|---|---|---|
-| WR-01 multi-chunk enqueue opens/rolls back its own transaction inside a caller's transaction | ⚠️ WARNING | Plan intentionally specified the transaction (D-04); SCs and truths hold. Behaviour inside an outer `Ecto.Multi` with >1000 ids differs from ≤1000 (outer txn poisoned). Owner decision needed; fix in the review (check `Oban.Repo.in_transaction?/1`) is small. |
-| WR-03 in-flight 0.3.17 related jobs from repo-less apps cancel `:repo_required` on upgrade | ⚠️ WARNING | Fails cleanly (non-retrying), consistent with D-12 and SC-4, but the 179-06 release note does not tell adopters to configure `:repo`/drain the queue before upgrading. Add an upgrade-note line before release. |
-| WR-04 backfill reports only the last delete chunk task | ⚠️ WARNING | Outside the SC wording (SC-1 covers calls, not delete task reporting); reindex cutover waits on upsert chunk tasks. Docs tell callers to follow `delete_task`, which is insufficient for >1000 removals/page. |
-| WR-05 span start count pre-dedupe; ≤1000 results now deduped + string-sorted | ⚠️ WARNING | D-08's "exactly today's map" holds for keys/shape; `document_ids` order/dedupe changed per D-03 set semantics. Telemetry start/stop count mismatch for duplicate input matters for Phase 180. |
-| IN-01..IN-05 | ℹ️ INFO | No must-have impact. |
-| CR-01, WR-02 | fixed | 858e83dc (verified by `job_args_test.exs` runtime-module tests), 4d74ed9d (`document_ids elements` tests). |
+- **Pre-merge gate, not a human item:** the hosted `phoenix-example` and `ecommerce-mounted` lanes must be green on the phase PR SHA. Nothing has been pushed yet. The code paths those lanes exercise are covered locally by loader_test "owner-only schemas without a :preload clause load without raising" and by catalog_test (13/0).
+- Release-note carry-forward: D2 (deduped and sorted `document_ids` at every size), D4 (Multi helpers no longer collapse duplicate jobs) and WR-03 (0.3.17 related jobs on repo-less apps cancel) are adopter-visible. The 179-06 SUMMARY release note covers them (IN-08, 81ba55a0).
+- scrypath_ops compile is blocked by a pre-existing mix.lock mismatch. scrypath_ops is unchanged by this phase. WR-09's caller already matches `{:error, _}`.
 
 ### Human Verification Required
 
-None. Remaining example-lane evidence is exact-SHA hosted CI (`phoenix-example`, `ecommerce-mounted`) on the phase PR, per project policy.
+None.
 
 ### Gaps Summary
 
-No gaps. All four roadmap success criteria and all plan must-have truths are backed by passing tests or directly observed behaviour. The open review warnings (WR-01, WR-03, WR-04, WR-05) are quality and upgrade-communication issues that do not defeat the phase goal; WR-03 (upgrade note) and WR-01 (nested transaction) should be resolved or explicitly accepted before the release that ships this phase.
+There are no gaps. All four roadmap success criteria and all 63 plan truths are backed by passing tests or directly observed behaviour at HEAD 6ece8de0. The review fixes closed the four warnings left open by the previous verification. Eight plan truths were deliberately narrowed by those fixes, and each is recorded above with its rationale. None weakens the phase goal.
 
 ---
 
-_Verified: 2026-10-25T23:30:00Z_
+_Verified: 2026-10-25T23:47:42Z_
 _Verifier: Claude (gsd-verifier)_
