@@ -22,6 +22,27 @@ defmodule Scrypath.Oban.JobArgs do
           | {:invalid_config, String.t()}
 
   @doc false
+  @spec decode_upsert(map()) :: {:ok, map()} | {:error, tag()}
+  def decode_upsert(args) when is_map(args) do
+    with {:ok, schema} <- fetch_schema(args),
+         {:ok, backend} <- fetch_module(args, "backend", :unknown_backend, &full_backend?/1),
+         {:ok, index} <- fetch_index(args),
+         {:ok, document_ids} <- fetch_document_ids(args),
+         {:ok, repo_opts} <- fetch_repo(args) do
+      {:ok,
+       %{
+         schema: schema,
+         backend: backend,
+         index: index,
+         document_ids: document_ids,
+         opts: JobConfig.merge_job_runtime_opts(repo_opts, args)
+       }}
+    end
+  end
+
+  def decode_upsert(_args), do: {:error, {:invalid_arg, "args"}}
+
+  @doc false
   @spec decode_delete(map()) :: {:ok, map()} | {:error, tag()}
   def decode_delete(args) when is_map(args) do
     # A delete job never loads records, so a "repo" key is ignored here.
@@ -74,7 +95,34 @@ defmodule Scrypath.Oban.JobArgs do
 
   defp check_document_count(_args, _ids), do: {:error, {:invalid_arg, "document_count"}}
 
+  # A named repo that does not resolve is cancelled rather than dropped: loading through
+  # a default repo would silently read the wrong data. No repo at all is the path jobs
+  # enqueued before 0.3.16 take.
+  defp fetch_repo(args) do
+    case Map.get(args, "repo") do
+      name when is_binary(name) and name != "" ->
+        with {:ok, repo} <- resolve_existing_module(name, :unknown_repo, &repo?/1) do
+          {:ok, [repo: repo]}
+        end
+
+      nil ->
+        {:ok, []}
+
+      "" ->
+        {:ok, []}
+
+      _other ->
+        {:error, {:invalid_arg, "repo"}}
+    end
+  end
+
   defp schema?(module), do: function_exported?(module, :__scrypath__, 1)
+
+  defp repo?(module), do: function_exported?(module, :__adapter__, 0)
+
+  defp full_backend?(module) do
+    function_exported?(module, :upsert_documents, 3) and delete_backend?(module)
+  end
 
   defp delete_backend?(module) do
     function_exported?(module, :delete_documents, 3) and
