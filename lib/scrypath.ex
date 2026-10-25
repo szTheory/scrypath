@@ -381,6 +381,12 @@ defmodule Scrypath do
   are loaded and a schema's **`search_records/2`** decides which rows in the
   batch are searchable.
 
+  **`:batch_size`** sets the page size only. Each page is written to the backend
+  in chunks of at most 1000 documents (and its removals in chunks of at most
+  1000 ids), so `batch_size: 5000` makes five upsert calls per page. If a chunk
+  fails, backfill stops and returns `{:error, reason}`. Later chunks and later
+  pages are not sent.
+
   ## Result
 
   On success, backfill returns **`{:ok, result}`** where `result` is a map with:
@@ -400,8 +406,11 @@ defmodule Scrypath do
     * **`removed`** - the number of ids from the batch submitted for deletion
     * **`last_primary_key`** - the primary key of the last row in the batch
       (see "Cursor shape")
-    * **`task`** - the backend task for the batch's upsert; absent when the
-      batch had no documents to upsert, for example when every row was omitted
+    * **`tasks`** - every upsert chunk task for the batch, in order; `task` is
+      the last of them. Always a list, and `[]` when the batch upserted nothing
+    * **`task`** - the backend task for the batch's last upsert chunk; absent
+      when the batch had no documents to upsert, for example when every row was
+      omitted
     * **`delete_task`** - the backend task for the ids counted in `removed`;
       present only when the batch submitted a delete
 
@@ -412,6 +421,11 @@ defmodule Scrypath do
   `removed` count what was submitted, not what the backend has applied. A
   caller that needs the removals applied before continuing must follow
   **`delete_task`** as well as **`task`**.
+
+  A batch written in several chunks has one task per chunk. A caller following a
+  batch must follow every entry in **`tasks`**, not only **`task`**.
+  `Scrypath.reindex/2` waits on every `tasks` entry of every batch before
+  cutover, and stops without swapping indexes if any of them fails.
 
   ## Cursor shape
 
