@@ -133,6 +133,71 @@ defmodule Scrypath.SyncTest do
       do: {:error, :not_implemented}
   end
 
+  defmodule ChunkBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :chunk_backend
+
+    @impl true
+    def index_name(schema_module, config), do: SeamBackend.index_name(schema_module, config)
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      send(self(), {:upsert_chunk, length(documents)})
+
+      write_result(
+        schema_module,
+        Enum.map(documents, & &1.id),
+        "documentAdditionOrUpdate",
+        config
+      )
+    end
+
+    @impl true
+    def delete_documents(schema_module, document_ids, config) do
+      send(self(), {:delete_chunk, length(document_ids)})
+      write_result(schema_module, document_ids, "documentDeletion", config)
+    end
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
+
+    def next_uid do
+      uid = Process.get(:chunk_backend_uid, 900) + 1
+      Process.put(:chunk_backend_uid, uid)
+      uid
+    end
+
+    defp write_result(schema_module, ids, type, config) do
+      uid = next_uid()
+      index = index_name(schema_module, config)
+
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: ids,
+         document_count: length(ids),
+         task:
+           Task.new(
+             source: :chunk_backend,
+             kind: :backend_task,
+             id: uid,
+             state: :enqueued,
+             reference: %{task_uid: uid, index_uid: index},
+             metadata: %{type: type},
+             raw: %{"uid" => uid, "status" => "enqueued"}
+           ),
+         metadata: %{index: index, backend_result: %{chunk_only: true}}
+       )}
+    end
+  end
+
   defmodule FutureBackend do
     @behaviour Scrypath.Backend
 
@@ -686,6 +751,47 @@ defmodule Scrypath.SyncTest do
              )
 
     assert raw["canceledBy"]["uid"] == 9
+  end
+
+  defp posts(count) do
+    Enum.map(1..count, &%SearchablePost{id: &1, title: "Post #{&1}", body: "Body"})
+  end
+
+  describe "bounded chunks" do
+    test "inline sync of 2,500 records sends three bounded upserts and one combined result" do
+      assert {:ok, result} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: ChunkBackend,
+                 sync_mode: :inline
+               )
+
+      for _ <- 1..3 do
+        assert_received {:upsert_chunk, n}
+        assert n <= 1000
+      end
+
+      refute_received {:upsert_chunk, _}
+
+      assert %{mode: :inline, status: :completed, document_count: 2500, tasks: tasks, task: task} =
+               result
+
+      assert length(tasks) == 3
+      assert task == List.last(tasks)
+      assert length(result.document_ids) == 2500
+      assert Enum.sort(result.document_ids) == Enum.to_list(1..2500)
+      refute Map.has_key?(result, :chunk_only)
+    end
+
+    test "a single-chunk call keeps today's map plus a one-element tasks list" do
+      assert {:ok, %{chunk_only: true, document_count: 2, tasks: [task], task: task}} =
+               Scrypath.sync_records(SearchablePost, posts(2),
+                 backend: ChunkBackend,
+                 sync_mode: :manual
+               )
+
+      assert {:ok, %{tasks: []}} =
+               Scrypath.sync_records(SearchablePost, posts(1), backend: RecordingBackend)
+    end
   end
 
   defp maybe_put_oban(opts, :oban) do

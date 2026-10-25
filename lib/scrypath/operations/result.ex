@@ -4,7 +4,15 @@ defmodule Scrypath.Operations.Result do
   alias Scrypath.Operations.Task
 
   @enforce_keys [:mode, :status]
-  defstruct [:mode, :status, document_ids: [], document_count: 0, task: nil, metadata: %{}]
+  defstruct [
+    :mode,
+    :status,
+    document_ids: [],
+    document_count: 0,
+    task: nil,
+    tasks: [],
+    metadata: %{}
+  ]
 
   @type t :: %__MODULE__{
           mode: :inline | :manual | :oban | atom(),
@@ -12,6 +20,7 @@ defmodule Scrypath.Operations.Result do
           document_ids: [term()],
           document_count: non_neg_integer(),
           task: Task.t() | nil,
+          tasks: [Task.t()],
           metadata: map()
         }
 
@@ -26,7 +35,8 @@ defmodule Scrypath.Operations.Result do
       mode: result.mode,
       status: result.status,
       document_ids: result.document_ids,
-      document_count: result.document_count
+      document_count: result.document_count,
+      tasks: Enum.map(result.tasks, &Task.to_public_sync/1)
     }
 
     case result.task do
