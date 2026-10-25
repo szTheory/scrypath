@@ -84,9 +84,22 @@ defmodule Scrypath.Oban.Enqueue do
   @doc false
   # The unique policy shared by every Scrypath sync job (upsert, delete, related).
   # Jobs load current records when they run, so an identical pending batch adds nothing.
-  # :executing is left out on purpose: a running job may already have read stale rows,
-  # so a new enqueue must never collapse into it. There is no keys:/fields: override, so
-  # the whole args map (with its sorted ids) is compared.
+  # :executing is left out on purpose (D-20): a running job may already have read its rows
+  # before the caller's write committed, so a sync that arrives while an identical job runs
+  # must enqueue a fresh job. Collapsing it into the running job would lose that update.
+  # There is no keys:/fields: override, so the whole args map (with its sorted ids) is
+  # compared.
+  #
+  # Oban 2.23 flags :states lists that omit incomplete states (:executing, :suspended) as
+  # "may break uniqueness" (Oban.Job.warn_unique/1). That check runs only for worker-level
+  # `use Oban.Worker, unique: ...` at compile time; this list is passed to Oban.Job.new/2 at
+  # runtime, so nothing warns. None of Oban's unique groups (:all, :incomplete, :scheduled,
+  # :successful) excludes :executing while keeping :available and :retryable, so an explicit
+  # list is required. The gap is safe for the open-source engines (Basic, Lite, Dolphin), which
+  # check uniqueness with a query at insert time only. An engine that enforces uniqueness with a
+  # database index (Oban Pro's Smart engine) may report a conflict when a retried job
+  # re-enters :retryable while a newer identical job is pending; this is not verified
+  # against Pro. :suspended is not added either: Scrypath never inserts jobs as suspended.
   @spec unique_opts() :: keyword()
   def unique_opts, do: [period: :infinity, states: [:available, :scheduled, :retryable]]
 
