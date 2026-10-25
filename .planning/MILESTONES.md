@@ -1,5 +1,21 @@
 # Milestones
 
+## v1.43 ScrypathOps UI refinement (Shipped: 2026-10-25)
+
+**Delivered:** A calmer, consistent six-surface operator workspace across inspect → recover → verify: neutral light/dark/System foundation, local status cues, truthful operational time and copy, a clear failed-work action hierarchy, separated repair and promotion evidence, and clearer Search and Playbooks.
+
+**Phases completed:** 173–177; 5 phases, 21 plans, 20 requirements (OPUX-09–OPUX-28). Phase verifications passed 41/41, 19/19, 43/43, 75/75 and 69/69 must-haves.
+
+**Release:** first shipped in `scrypath` 0.3.16 (#100). 0.3.17 (#115) followed as a sync hotfix outside this milestone.
+
+**Closeout:** [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) on merged main `ebed49b5199d369306527caa7bb69aa0b1db5a36` passed all five required jobs, coverage and `closeout-attestation`; see `reference/v1.43-final-receipt.json`. It closed T-177-05. T-177-06 (medium, below threshold) stays open and is not accepted. The maintainer waived only the formal-review gate; no formal review is claimed.
+
+**Archives:** `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`, `milestones/v1.43-phases/`.
+
+**What's next:** the approved rolling roadmap in `reference/ROLLING-ROADMAP.md`, starting with v1.44 sync correctness.
+
+---
+
 ## v1.42 ScrypathOps operator/admin UI (Shipped:2026-10-04)
 
 **Delivered:** Consistent, accessible six-surface operator UI and schema-preserving incident recovery verified against newly accepted work, exact backend task and active-index document.

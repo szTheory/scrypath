@@ -13,7 +13,10 @@ The maintainer approved this order and these working rules after a research fan-
 
 PR #114 lets pre-0.3.16 Oban upsert jobs write their stored snapshot when the app can't reload records, instead of cancelling them. It also adds an upgrade note saying Oban mode needs `:repo`. Released as 0.3.17 (#115).
 
-## 1. v1.43 closeout — automated only
+## 1. v1.43 closeout — done
+
+Done 2026-10-25. Closeout run 40204029522 on `ebed49b5`; receipt in `v1.43-final-receipt.json`; T-177-05 closed; phases 173–177 archived. The steps below are kept for the record.
+
 
 1. Dispatch CI on `main` (`workflow_dispatch`) so the `closeout-attestation` job runs; its artifact is kept 7 days.
 2. Write `reference/v1.43-final-receipt.json` from that run, shaped like `v1.42-final-receipt.json`.
