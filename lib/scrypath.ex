@@ -165,6 +165,12 @@ defmodule Scrypath do
   * **`:status` `:completed`** — the `:inline` path finished, including waiting for a terminal Meilisearch
     task when `sync_mode: :inline` and the backend returned a task handle.
 
+  The map also carries **`:tasks`**: one task (or, under `:oban`, one queued job) per chunk of at
+  most 1000 ids, in order; `:task` (or `:job`) is the last entry. Under `:manual`, check every entry in
+  `:tasks`, because a successful last task does not prove earlier chunks succeeded. Chunks run in
+  order and the call stops at the first failed chunk, returning its `{:error, reason}`; chunks already
+  sent stay applied. See [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+
   Pitfalls when the database write “succeeded” but search lags: [guides/common-mistakes.md](guides/common-mistakes.md).
 
   Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`,

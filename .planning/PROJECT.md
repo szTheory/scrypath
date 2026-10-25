@@ -520,10 +520,10 @@ v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
 
 - [x] Backfill and reindex load records through the shared loader — Phase 178 (verified locally; unreleased). Live backfill now deletes ids `search_records/2` omits from visited rows; reindex reports `omitted:` and deletes nothing.
 - [x] Composite primary keys page without skipping or duplicating rows — Phase 178 (verified locally; unreleased). Open review warning WR-01: `distinct`/`group_by`/`union` in a caller `:query` can still defeat paging.
-- [ ] `sync_related` resolvers receive records in every sync mode.
+- [x] `sync_related` resolvers receive records in every sync mode — Phase 179 (verified locally; unreleased). Oban resolvers get loaded trigger structs; triggers that no longer load are skipped, and a job whose triggers are all missing succeeds without calling the resolver.
 - [ ] Oban workers emit telemetry, including missing-record deletes.
-- [ ] Loads and backend calls are chunked.
-- [ ] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path.
+- [x] Loads and backend calls are chunked — Phase 179 (verified locally; unreleased). Sync, loader, backfill, workers and Oban enqueue use fixed 1000-id chunks; results carry `tasks:` (one per chunk) and stop at the first failed chunk.
+- [x] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path — Phase 179 (verified locally; unreleased). Related jobs share the main `unique:` policy and report `conflict?: true` on collapse; job args decode without creating atoms, and bad args cancel.
 - [ ] Schema hooks are declared optional callbacks.
 - [x] Loader behavior is proven against a real database — Phase 178: shared cases run on SQLite (core lane) and Postgres (`mix verify.postgres` in `backend (required)`); exact-SHA hosted CI evidence is still due at the PR.
 - [ ] Builds without Oban compile with no warnings.
@@ -556,4 +556,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-25 after Phase 178 (v1.44 Sync correctness). Earlier source receipts remain historical.*
+*Last updated: 2026-10-25 after Phase 179 (v1.44 Sync correctness). Earlier source receipts remain historical.*
