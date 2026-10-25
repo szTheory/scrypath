@@ -1,0 +1,201 @@
+UI QUALITY ENGINE: fractal storybook, realistic persona fixtures, layered design review
+=====================================================================================
+
+Paste this into a coding-agent session at the root of an Elixir OSS repo. Read it all before acting.
+
+THIS SESSION ENDS AT A REVIEWED PLAN (read this first)
+-----------------------------------------------------
+- Your output is deliverables 1–4 at the bottom, and nothing else.
+- Do NOT, in this session:
+  - change product code;
+  - add dependencies;
+  - open or modify a milestone;
+  - edit REQUIREMENTS or ROADMAP files.
+- If a milestone or phase is active, plant a seed or backlog note only, and say how it should be sequenced after the current work.
+- Follow this repo's own conventions:
+  - read EVERY agent file present (CLAUDE.md, AGENTS.md, GEMINI.md, CONVENTIONS.md) and its planning system (e.g. GSD .planning/);
+  - recorded owner decisions (PROJECT.md decisions, UI preflight or handoff docs, memories) OUTRANK this prompt. Where they conflict, quote both and recommend. Never override silently.
+- Applicability exit: if the published package has no UI (UI only in a demo, docs, or nothing), write a one-page note saying which parts apply, if any, and stop.
+
+GOAL
+----
+Make UI quality something machines check continuously, so the owner's review time goes on taste and judgement rather than hunting for overflow bugs. Six ideas, in priority order:
+
+1. FRACTAL STORIES
+   - The storybook (phoenix_storybook, never a runtime dependency of the published package) becomes the single review surface. It covers every level of the UI:
+     primitives → small groups of components → areas within a section → whole sections → whole pages and JTBD screens.
+   - Fold the tree along product IA and JTBD lines, using the UI's own nouns as folder names.
+   - Cover every state that REALLY occurs, as equivalence classes rather than prop permutations:
+     - happy, empty, one, many, page boundary;
+     - loading (only if async), error, permission-denied, stale or disconnected;
+     - realistic worst-case length, non-ASCII (CJK/RTL/emoji/IDN), huge counts.
+   - Every variation's description names the real situation it shows, as persona + JTBD.
+   - Aggressively PRUNE any story the real app can never render: no caller passes that combination, the domain forbids it, it looks identical to another variation, or it maps to no situation.
+   - Any second inventory (a gallery page, a component catalogue) gets ported, then retired.
+
+2. DATA-DRIVEN, COMPOSABLE LIVEVIEWS
+   - Pages render from plain data. Move each LiveView's render body into a presentational function component that takes assigns. The LiveView keeps mount, params, events and data loading.
+   - Screen stories render those components from fixtures, with no DB, session or router.
+   - If a screen needs heavy mocks to be storied, split it rather than mock it.
+   - Rank the LiveViews by JTBD importance. The plan extracts the top few first; the rest become later phases.
+
+3. REALISTIC PERSONA FIXTURES ("digital twins" of adopters; if "twin" already means something in this repo, pick another word)
+   - Build one DB-free fixture source shared by stories, tests and demo seeds.
+   - It must compile only in dev/test, be reachable from every story host (including an examples/demo app), and stay out of the Hex package's files.
+   - Derive about 4–7 personas from this repo's PRODUCT.md, personas and JTBD docs. They are realistic products of the kinds that would adopt THIS library, across industries:
+     - B2B and B2C;
+     - hosted multi-tenant and self-hosted single-tenant;
+     - always one brand-new, empty account;
+     - always one power user.
+   - For each persona, record: product, why it uses this library, volume, locale and script mix, failure profile, and who opens the UI for which job.
+   - Each persona must exercise a distinct equivalence class; otherwise it is sprawl.
+   - A test enforces domain invariants (closed enums, valid state transitions, timestamp ordering, tenant/owner ids present), so no fixture can show an impossible record.
+   - No lorem ipsum. No real PII or secrets.
+
+4. ONE CONSISTENT DESIGN LANGUAGE
+   - Visual tokens: color (light AND dark), type scale and font roles, spacing, border radius, elevation/shadow, z-index layers, motion duration and easing, focus ring, breakpoints.
+   - Verbal tokens: brand voice; microcopy patterns for buttons, empty states, errors and confirmations; and a USER-FACING domain glossary. Internal module or table vocabulary never reaches the UI.
+   - If the HOST app owns branding and layout, tokens become a themable seam with good defaults, and the voice rules cover library-authored copy only.
+   - Keep one source of truth for tokens, e.g. the brandbook. The DTCG JSON format is a good target. Generate or check the CSS @theme against it, with a drift test.
+
+5. LAYERED, SHIFT-LEFT AUTOMATION, cheapest first
+   - Every finding is reproducible as: URL + viewport + theme + motion setting.
+   - Existing violations go into a baseline file that may only shrink (a ratchet).
+   - Write the small helpers yourself (contrast math, overflow and target-size checks, the manifest generator) instead of adding packages.
+
+   L1 Static checks (blocking)
+     - Where feasible, reset the Tailwind default namespaces (e.g. `--color-*: initial`) so off-token utilities never exist. Check compatibility with daisyUI or any other plugin before recommending it.
+     - Ban these outside the token files:
+       - arbitrary values (`-[…]`, `-(--…)`);
+       - inline `style=`;
+       - raw hex or rgb;
+       - `z-<n>` and `z-[…]`. z-index comes only from named layer utilities.
+     - Run a static contrast matrix over every token fg/bg pair, in both themes: 4.5:1 for text, 3:1 for non-text and focus (WCAG 1.4.3, 1.4.11).
+     - Lint the glossary and voice rules over gettext msgids, if present.
+     - The story manifest is up to date, and every variation has a situation description.
+
+   L2 Generic sweep (blocking, no per-story code)
+     - Find out where the storybook is declared (`only:`), which app mounts it and at what path, and how many story roots exist.
+     - Generate a JSON manifest of every story path and variation id, in whichever env the storybook API exists, and commit it with a drift check.
+     - Run one Playwright spec over: manifest × widths {320, 375, 768, 1280, 1440} × {light, dark}, plus reduced-motion, plus a short list of real composed routes, on the bare iframe route. It asserts:
+       - no console errors;
+       - no page-level horizontal overflow (WCAG 1.4.10);
+       - axe with tags wcag2a, wcag2aa, wcag21aa and wcag22aa, where "incomplete" counts as a finding;
+       - targets of at least 24px (2.5.8);
+       - no clipped text at 200% root font size (1.4.4);
+       - computed font-size, radius, shadow, z-index and duration all belong to the token set;
+       - a tab-walk shows a visible focus change at 3:1 contrast, never obscured (2.4.11), in a sensible order;
+       - the navigation's ARIA snapshot is identical on every page;
+       - the glossary and voice lint passes on rendered text and accessible names (aria-label, title, placeholder, alt).
+     - Reuse the existing Playwright and axe setup. Shard the spec, and state a PR time budget.
+
+   L3 Screenshots (opt-in per story, diffs accepted by a human)
+     - Take about one key state per section per width, plus one worst case.
+     - Make them stable: wait for document.fonts.ready, disable animations, fix the DPR, mask timestamps, pin the container image, and keep per-platform baselines.
+
+   L4 LLM design judge (advisory, never gating)
+     - An agent-run skill or command invoked on demand in a session. No paid service and no API keys in CI. A fixed number of passes. Its output is a findings file.
+     - If this repo forbids open-ended critic loops, make it a bounded one-shot rubric review.
+     - Inputs: screenshots (375 and 1440, light and dark), the ARIA snapshot, rendered text, DESIGN.md, the glossary, the persona + JTBD, the L1–L3 results, and the decisions log.
+     - It never reports anything L1–L3 already own.
+     - It gives a binary pass/fail/n.a. verdict per rubric item, with evidence. No 1–10 scores.
+     - For a PR, compare head against main pairwise, in both orders, and keep only verdicts that agree. Run a pointwise full audit once per milestone.
+     - Output: JSON findings with fingerprint, url, viewport, theme, rubric item, verdict, severity, evidence and owner tier (token | primitive | pattern | section | page | copy), deduped across viewports and themes.
+     - Pin the model and the prompt version.
+     - Calibrate on owner-labelled examples: past owner-directed fix commits, UI-review files, memories. Report precision and false-positive rate per item, and demote items that keep failing calibration.
+     - Reuse any judge, scorecard or critic cache the repo already has rather than building a second one.
+
+   L5 Owner
+     - The owner looks only at triaged findings and key screenshots.
+     - Each decision goes into a machine-readable decisions log (fingerprint, verdict, reason). A rejection suppresses future reports.
+     - A decision made twice becomes an L1/L2 rule or a judge calibration example.
+     - Example of a recorded decision, from a sibling repo: "a sidebar label long enough to truncate is a naming smell; shorten it". The long-label story state was deleted, not supported.
+
+6. CURATION LOOP
+   - Refresh the personas and JTBD before building the tree.
+   - Fix each finding at the lowest tier that owns it: fix the pattern, not the page.
+   - Run a pruning pass every milestone, and track stories per component as a sprawl signal.
+
+REVIEW RUBRIC (tag each item machine / LLM / owner in the plan)
+--------------------------------------------------------------
+1. Light and dark both look good; colors are never tacky.
+2. Typography looks professionally designed: intentional, not accidental.
+3. Information hierarchy and content structure are easy to follow and elegant, not ham-fisted.
+4. Nothing is redundant; no element repeats what another already says.
+5. Each JTBD's happy path is great, and power users are well served. Aim for an "iPhone-designed", award-winning bar, never AI slop.
+6. Microcopy is consistent and in brand voice:
+   - user-facing domain language, never internal jargon;
+   - sentence case;
+   - buttons start with a verb;
+   - no "Oops" or "!" in errors.
+7. Personas and JTBD stay curated; if a story contradicts a persona, one of them is wrong.
+8. The journey is coherent across the whole UI and within each section, and navigation feels natural and a joy to use.
+9. Mobile-first: it works at 320 CSS px with no page-level horizontal scroll, and touch targets are comfortable.
+10. Principle of least surprise: affordances look like what they do, and the design system pays off, with one pattern per job.
+
+HOW TO WORK
+-----------
+Phase A: Discover (read-only; measure, don't guess)
+  0. Reconcile before you build. Inventory any UI-quality machinery that already exists:
+     - storybooks, galleries;
+     - judges, scorecards, critic caches;
+     - ratchet ledgers, visual baselines;
+     - a11y specs, DESIGN.md / DESIGN-SYSTEM.md, brandbook tokens, `.impeccable/`;
+     - UI preflight or handoff docs.
+     Mark each methodology layer ADOPT-EXISTING, EXTEND or NEW, with paths.
+  1. Inventory the UI itself:
+     - every LiveView, page and section, and the components each one composes;
+     - which of them have story coverage and which have none;
+     - the fixtures and seeds, and how realistic they are;
+     - counts of raw values that bypass the tokens (hex, arbitrary values, z-index literals);
+     - samples of internal jargon in the UI;
+     - the viewports each existing spec uses;
+     - the relevant locked decisions.
+
+Phase B: Research the gaps only
+  - First read the repo's own research (prompts/, .planning/research/).
+  - Then spawn at most 5 parallel research agents, choosing among these lenses:
+    - product/JTBD;
+    - visual design and typography;
+    - UX writing;
+    - accessibility;
+    - LiveView composition;
+    - test and CI cost;
+    - security (no PII in fixtures, dev-only routes never compiled into prod).
+  - Prefer primary sources: official docs, the phoenix_storybook source in deps/, WCAG 2.2, Apple HIG, GOV.UK, Primer and Polaris.
+  - Finish with an adversarial pass that argues against each recommendation.
+
+Phase C: Synthesize one coherent recommendation set
+  - Recommend; ask the owner only about genuinely strategic forks: anything irreversible, anything that changes brand identity, or anything that removes an adopter-visible surface.
+
+Suggested build order for the plan (adapt it to the repo):
+  1. personas/JTBD refresh;
+  2. fixtures with an invariant test;
+  3. token source of truth and L1 with a baseline;
+  4. manifest and L2;
+  5. primitive and pattern stories (port, then prune);
+  6. extract the top-ranked presentational pages, then area and screen stories;
+  7. L3, then L4 with calibration;
+  8. a rubric review per section;
+  9. retire duplicate inventories.
+
+SKILLS TO USE IF AVAILABLE
+--------------------------
+- `impeccable`: critique, audit and polish passes, and writing or refreshing DESIGN.md and tokens from what actually ships. The L4 judge can be built on it.
+- `ux-writing`: the microcopy audit, the voice and tone guide, the glossary, and the error and empty-state patterns.
+- `break-ui`: worst-case data per component. Its findings become story variations.
+- Your planning system's research and planning agents (e.g. GSD), within the agent cap above.
+
+CONSTRAINTS
+-----------
+- Dependencies: "another copy and paste is better than another dep." Keep dependency trees small and flat. Storybook stays dev/test-only. Reuse the existing Playwright and axe setup. Every proposed new dependency needs a written justification. Vale (a single binary) is optional, and only for docs.
+- Adopters never need a Node toolchain. Dev-only Node tooling is fine.
+- Be honest: report only what a tool or a human actually verified. Never claim a visual or UX pass that did not happen.
+- Stories serve the real app. A story the app can never render gets deleted, not maintained.
+
+DELIVERABLES (and nothing else)
+-------------------------------
+1. A Phase A inventory: one page or less. Every claim cites a path or a count. The ADOPT-EXISTING / EXTEND / NEW table is included.
+2. RECOMMENDATIONS.md in the planning area (e.g. .planning/research/ui-quality-engine/): decisions, rationale, rejected alternatives, antipatterns to refuse, the rubric tagged machine/LLM/owner, and every conflict with a recorded owner decision, quoted.
+3. A seed or milestone proposal in this repo's planning system with an ordered phase list. It is a seed only if a milestone is active.
+4. A short report to the owner: what you found, what you recommend, and the decisions (if any) that genuinely need them.
