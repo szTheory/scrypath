@@ -103,10 +103,19 @@ defmodule Scrypath.Oban.Enqueue do
 
   @doc false
   # One changeset inserts exactly as before. Two or more are inserted one by one (never
-  # in bulk: open-source Oban ignores unique: on bulk inserts) inside one transaction on
-  # the Oban instance's repo, rolled back on the first failed insert so no orphan chunk
-  # jobs persist. A module with no running Oban instance (a test fake) inserts
-  # sequentially and halts on the first error.
+  # in bulk: open-source Oban ignores unique: on bulk inserts) and halt on the first
+  # failed insert, returning its bare {:error, reason}:
+  #
+  #   * Outside a transaction, the inserts run inside one transaction on the Oban
+  #     instance's repo, rolled back on the first failure so no orphan chunk jobs persist.
+  #   * Inside the caller's transaction (for example a sync call from Ecto.Multi.run/3),
+  #     no nested transaction is opened and nothing is rolled back here: a nested rollback
+  #     would mark the caller's whole transaction as failed. The caller's transaction
+  #     already makes the chunk jobs all-or-nothing, so the caller must fail it on
+  #     {:error, _}; returning {:error, _} from Multi.run/3 does exactly that. This also
+  #     follows Oban.Repo.transaction/3's nested-transaction guidance (no retry loop runs
+  #     inside a caller's transaction).
+  #   * A module with no running Oban instance (a test fake) inserts sequentially.
   @spec insert_chunks(module(), [Changeset.t()]) :: {:ok, [struct()]} | {:error, term()}
   def insert_chunks(oban, [changeset]) do
     case insert_job(oban, changeset) do
@@ -118,16 +127,24 @@ defmodule Scrypath.Oban.Enqueue do
   def insert_chunks(oban, changesets) when is_list(changesets) do
     case oban_conf(oban) do
       {:ok, conf} ->
-        Oban.Repo.transaction(conf, fn ->
-          case Chunks.reduce_ok(changesets, &insert_job(oban, &1)) do
-            {:ok, jobs} -> jobs
-            {:error, reason} -> Oban.Repo.rollback(conf, reason)
-          end
-        end)
+        if Oban.Repo.in_transaction?(conf) do
+          Chunks.reduce_ok(changesets, &insert_job(oban, &1))
+        else
+          insert_chunks_in_transaction(conf, oban, changesets)
+        end
 
       :none ->
         Chunks.reduce_ok(changesets, &insert_job(oban, &1))
     end
+  end
+
+  defp insert_chunks_in_transaction(conf, oban, changesets) do
+    Oban.Repo.transaction(conf, fn ->
+      case Chunks.reduce_ok(changesets, &insert_job(oban, &1)) do
+        {:ok, jobs} -> jobs
+        {:error, reason} -> Oban.Repo.rollback(conf, reason)
+      end
+    end)
   end
 
   defp oban_conf(oban) do

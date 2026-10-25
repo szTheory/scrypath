@@ -169,6 +169,61 @@ defmodule Scrypath.Oban.EnqueueUniqueTest do
     assert all_enqueued() == []
   end
 
+  describe "inside a caller's transaction (WR-01)" do
+    defp chunk_changesets do
+      valid = fn ids ->
+        Oban.Job.new(%{"document_ids" => ids}, worker: @upsert_worker, queue: "search_sync")
+      end
+
+      invalid =
+        Oban.Job.new(%{"document_ids" => [3]},
+          worker: @upsert_worker,
+          queue: "search_sync",
+          max_attempts: 0
+        )
+
+      [valid.([1]), invalid, valid.([2])]
+    end
+
+    test "a failed multi-chunk insert returns the bare error and leaves the transaction usable" do
+      assert {:error, :caller_aborts} =
+               ObanSQLiteRepo.transaction(fn ->
+                 assert ObanSQLiteRepo.in_transaction?()
+
+                 assert {:error, %Ecto.Changeset{}} =
+                          Enqueue.insert_chunks(@oban, chunk_changesets())
+
+                 # No nested rollback ran, so the caller's transaction still accepts queries.
+                 assert %{rows: [[1]]} = ObanSQLiteRepo.query!("SELECT 1")
+
+                 ObanSQLiteRepo.rollback(:caller_aborts)
+               end)
+
+      assert all_enqueued() == []
+    end
+
+    test "a Multi.run step that returns the error aborts the caller's transaction" do
+      multi =
+        Ecto.Multi.new()
+        |> Ecto.Multi.run(:enqueue, fn _repo, _changes ->
+          Enqueue.insert_chunks(@oban, chunk_changesets())
+        end)
+
+      assert {:error, :enqueue, %Ecto.Changeset{}, %{}} = ObanSQLiteRepo.transaction(multi)
+      assert all_enqueued() == []
+    end
+
+    test "2,500 records enqueue three chunk jobs that commit with the caller" do
+      assert {:ok, {:ok, result}} =
+               ObanSQLiteRepo.transaction(fn ->
+                 Scrypath.sync_records(SearchablePost, posts(1..2500), sync_opts())
+               end)
+
+      assert length(result.tasks) == 3
+      assert length(all_enqueued(worker: @upsert_worker)) == 3
+    end
+  end
+
   test "2,500 records enqueue three chunk jobs" do
     assert {:ok, result} = Scrypath.sync_records(SearchablePost, posts(1..2500), sync_opts())
 
