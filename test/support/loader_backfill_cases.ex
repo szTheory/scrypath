@@ -158,6 +158,26 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
         end
       end
 
+      test "reindex pages a composite key on every key column and creates the index on the document id",
+           %{repo: repo} do
+        insert_memberships!(repo, [{1, 1}, {1, 2}, {1, 3}, {2, 1}])
+
+        assert {:ok, %{documents: 4} = result} =
+                 reindex!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert_received {:create_index, LoaderBackfill.Membership, :id, create_config}
+        assert create_config[:target_index] == result.target_index
+
+        ids =
+          recorded_upserts()
+          |> Enum.filter(fn {_schema, _docs, config} ->
+            config[:index_name] == result.target_index
+          end)
+          |> Enum.flat_map(fn {_schema, docs, _config} -> Enum.map(docs, & &1.id) end)
+
+        assert ids == ["1:1", "1:2", "1:3", "2:1"]
+      end
+
       test "backfill pages a binary_id second key column", %{repo: repo} do
         rows =
           for org_id <- [1, 1, 1, 2, 2] do
