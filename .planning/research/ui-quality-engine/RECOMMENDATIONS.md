@@ -138,7 +138,7 @@ Machine checks set floors; they never certify taste. Taste items go to the maint
 
 ## Grilling decisions (maintainer, 2026-10-25)
 
-All of these were settled in a `/grill-with-docs` session. The terms are in the root [`GLOSSARY.md`](../../../GLOSSARY.md); the hard-to-reverse choices are [ADR 0001](../../../docs/adr/0001-phoenix-storybook-for-scrypath-ops.md) (phoenix_storybook) and [ADR 0002](../../../docs/adr/0002-shared-fixtures-mix-project.md) (the shared fixtures project).
+All of these were settled in a `/grill-with-docs` session. The terms are in the root [`GLOSSARY.md`](../../../GLOSSARY.md); the hard-to-reverse choices are [ADR 0001](../../adr/0001-phoenix-storybook-for-scrypath-ops.md) (phoenix_storybook) and [ADR 0002](../../adr/0002-shared-fixtures-mix-project.md) (the shared fixtures project).
 
 **Order:** v1.44 sync → v1.45 foundation and CI (plus the engine's prerequisites) → v1.46 engine and pilot → v1.47 surfaces and polish → v1.48 adopter features.
 
