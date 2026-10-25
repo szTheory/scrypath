@@ -222,6 +222,69 @@ defmodule Scrypath.Oban.WorkerTest do
              Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: bad_args})
   end
 
+  defp delete_args(overrides) do
+    Map.merge(
+      %{
+        "schema" => "Elixir.SearchablePost",
+        "backend" => to_string(RecordingBackend),
+        "index" => "tenant_searchable_post",
+        "sync_mode" => "oban",
+        "document_count" => 1,
+        "document_ids" => ["post:1"]
+      },
+      overrides
+    )
+  end
+
+  describe "delete worker bad args" do
+    for {label, overrides, drop, tag} <- [
+          {"schema", %{"schema" => "Elixir.Nope.Schema"}, nil,
+           {:unknown_schema, "Elixir.Nope.Schema"}},
+          {"backend", %{"backend" => "Elixir.Nope.Backend"}, nil,
+           {:unknown_backend, "Elixir.Nope.Backend"}},
+          {"document_ids", %{}, "document_ids", {:invalid_arg, "document_ids"}},
+          {"document_count", %{"document_count" => 2}, nil, {:invalid_arg, "document_count"}},
+          {"index", %{"index" => ""}, nil, {:invalid_arg, "index"}}
+        ] do
+      test "cancels a job with a bad #{label}" do
+        args = delete_args(unquote(Macro.escape(overrides)))
+        args = if unquote(drop), do: Map.delete(args, unquote(drop)), else: args
+
+        assert Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: args}) ==
+                 {:cancel, {:invalid_job, unquote(Macro.escape(tag))}}
+
+        refute_received {:delete_documents, _, _, _}
+      end
+    end
+
+    test "does not cancel on an unknown repo, which a delete job never uses" do
+      args = delete_args(%{"repo" => "Elixir.Nope.Repo"})
+
+      assert :ok = Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: args})
+      assert_received {:delete_documents, SearchablePost, ["post:1"], _config}
+    end
+  end
+
+  test "delete worker sends 2,500 ids as three chunks of at most 1000" do
+    ids = Enum.to_list(1..2500)
+    args = delete_args(%{"document_ids" => ids, "document_count" => 2500})
+
+    assert :ok = Scrypath.Oban.DeleteWorker.perform(%Oban.Job{args: args})
+
+    chunks = collect_messages(:delete_documents)
+    assert length(chunks) == 3
+    assert Enum.all?(chunks, &(length(&1) <= 1000))
+    assert chunks |> Enum.concat() |> Enum.sort() == ids
+  end
+
+  defp collect_messages(kind, acc \\ []) do
+    receive do
+      {^kind, _schema, entries, _config} -> collect_messages(kind, [entries | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
   test "workers return retryable errors for transient backend failures" do
     FakeRepo.put_records([%QueryablePost{id: 1, title: "One"}])
     args = upsert_args(QueryablePost, TransientBackend, [1])
