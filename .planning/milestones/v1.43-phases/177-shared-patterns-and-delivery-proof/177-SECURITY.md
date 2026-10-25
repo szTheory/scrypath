@@ -1,7 +1,7 @@
 ---
 phase: "177"
 slug: "shared-patterns-and-delivery-proof"
-status: blocked
+status: open_below_threshold
 threats_open: 1
 asvs_level: 1
 created: "2026-10-12"
@@ -29,7 +29,7 @@ created: "2026-10-12"
 | T-177-02 | Tampering | Shared status/action components and token CSS | high | mitigate | Limit edits to audited findings; run Ops behavior tests and inspect changed consumers. | closed |
 | T-177-03 | Tampering | Four surface-specific LiveViews and action links | high | mitigate | Preserve exact identity/action gates; run named LiveView tests and mounted proof for changed recovery handoffs. | closed |
 | T-177-04 | Tampering | Search/Playbooks rendering, tests, and image evidence | high | mitigate | Preserve submitted/file identity; record matched image paths and full source SHAs. | closed |
-| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted check and closeout evidence against the exact source; disclose any separate formal-review waiver without representing it as a review. | open — blocking |
+| T-177-05 | Tampering | Requirement trace, review links, check-run SHA fields | high | mitigate | Verify actual hosted check and closeout evidence against the exact source; disclose any separate formal-review waiver without representing it as a review. | closed |
 | T-177-06 | Denial of service | Compose cleanup and retained preview | medium | mitigate | Record task-owned project/container identities; stop only those projects and preserve the 4012 preview and volumes. | open — below high threshold (non-blocking) |
 | T-177-SC | Tampering | Package installation | high | mitigate | Preserve the no-dependency boundary; require package-legitimacy review and a human gate if install scope changes. | closed |
 
@@ -37,7 +37,9 @@ created: "2026-10-12"
 
 **T-177-01 resolution:** Corrected `DESIGN.md` to identify the shell's top-level gap as `space-y-4`, matching `layouts.ex:278–279`; the 24px token is described only for the deliberate inner grouping where it is used. The auditor confirmed the System-dark capture assertion and source/route/state/theme/viewport image metadata. This mismatch is closed.
 
-**T-177-05 current status:** PR #98 is draft at head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`. Exact-head [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required jobs and both Ops UI checks; the Website build also passed. The `deep-quality (advisory)` job failed and `ecommerce-e2e (advisory)` was skipped. Its full-source closeout and terminal merged-main attestation are still pending, so this threat remains open. The run tests only this exact candidate SHA. Earlier candidate closeout evidence at `715179afa9530ae370701d7b6c388e13da350841` remains historical and does not extend to current source. The worktree includes the user-directed mounted favicon change at `69c35cd8b4e8452fea7e7e33729a7643205f40d5`, which adds fixed routes to the existing traversal-safe static asset plug and uses the already-bundled Scrypath SVG/ICO. Its focused host-render/asset test passed 5/5. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
+**T-177-05 resolution (2026-10-25):** Closed by the terminal merged-main closeout. [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) (`workflow_dispatch` on `main`) passed all five required jobs, coverage and the `closeout-attestation` job at `ebed49b5199d369306527caa7bb69aa0b1db5a36`. That commit contains PR #98 (`32193307`) and every later v1.43 follow-up. The run, job, artifact and attestation facts are joined in [the v1.43 final receipt](../../../reference/v1.43-final-receipt.json). Advisory jobs outside the required gate are disclosed there; `deep-quality` is red only on the known optional `sigra`→`cloak` advisory. The archive commit that adds this record changes only `.planning/` files and is covered by its own pull-request checks, not by this attestation. The formal-review waiver below remains a process waiver; no formal review is claimed.
+
+**T-177-05 history (superseded):** PR #98 is draft at head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`. Exact-head [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required jobs and both Ops UI checks; the Website build also passed. The `deep-quality (advisory)` job failed and `ecommerce-e2e (advisory)` was skipped. Its full-source closeout and terminal merged-main attestation are still pending, so this threat remains open. The run tests only this exact candidate SHA. Earlier candidate closeout evidence at `715179afa9530ae370701d7b6c388e13da350841` remains historical and does not extend to current source. The worktree includes the user-directed mounted favicon change at `69c35cd8b4e8452fea7e7e33729a7643205f40d5`, which adds fixed routes to the existing traversal-safe static asset plug and uses the already-bundled Scrypath SVG/ICO. Its focused host-render/asset test passed 5/5. The PR has no formal review; the owner's separate formal-review waiver remains a process waiver and is not represented as a review.
 
 **T-177-06 current status:** The Plan 177-02 cleanup record identifies project `phase177-shared-after`, its retained volume, and the cleanup command, but does not retain the stack's full container IDs. The baseline project IDs are recorded, while the after-stack IDs are absent from the contemporaneous cleanup record; current Docker inventory shows no Phase 177 resources and preserves the retained preview. The missing historical identity record remains an open medium-severity gap below the configured blocking threshold; it is not accepted as a risk.
 
@@ -54,6 +56,7 @@ No accepted risks. The formal-review waiver is a narrow process waiver and is no
 | 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (first current-source pass at `1174a53`) |
 | 2026-10-13 | 7 | 6 | 1 (0 blocking, 1 non-blocking) | gsd-security-auditor (candidate exact-source pass at `715179a`) |
 | 2026-10-13 | 7 | 5 | 2 (1 blocking, 1 non-blocking) | gsd-security-auditor (source snapshot `4c0f91c`; superseded by later local commits) |
+| 2026-10-25 | 7 | 6 | 1 (0 blocking, 1 non-blocking) | v1.43 closeout against merged main `ebed49b` (run 40204029522) |
 
 ## Unregistered Flags
 
@@ -63,10 +66,10 @@ None in the five Phase 177 summaries' `## Threat Flags` sections.
 
 - [x] All threats have a disposition (mitigate / accept / transfer)
 - [x] Accepted risks documented in Accepted Risks Log
-- [ ] `threats_open: 0` confirmed — one high-severity threat remains open
-- [ ] `status: verified` set in frontmatter — phase is blocked pending exact-source evidence
+- [ ] `threats_open: 0` confirmed — T-177-06 (medium, below the `block_on: high` threshold) remains open
+- [ ] `status: verified` set in frontmatter — not claimed while T-177-06 is open; no blocking threat remains
 
-**Approval:** blocked — T-177-05 remains open because current branch source and later planning records are not covered by hosted exact-source checks, and terminal merged-source attestation is unavailable. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
+**Approval:** unblocked (2026-10-25) — T-177-05 is closed by the merged-main closeout attestation in run 40204029522. Earlier blocked approvals below are historical. T-177-06 remains an open medium-severity recordkeeping gap below the configured high-severity threshold; it is not accepted as a risk. The formal-review waiver is procedural only and is not an accepted technical risk.
 
 ## Security Audit 2026-10-12
 

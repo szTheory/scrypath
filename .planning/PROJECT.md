@@ -28,7 +28,9 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current State
 
-**Current as of 2026-10-13:** Phase 174, Recovery Entry and Diagnosis, is complete locally: 3/3 plans, all 19/19 must-haves verified, and current-source Ops/UI and mounted checks passed. All five v1.43 phase plan sets and verification reports are complete. PR [#98](https://github.com/szTheory/scrypath/pull/98) is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required checks and both Ops UI checks on that exact source. The Website build passed. `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` was skipped; the dependency-audit follow-up remains disclosed in the Phase 177 trace. Candidate closeout on the final tracking source and terminal merged-main attestation remain outstanding, so T-177-05 still blocks the milestone audit. The maintainer waived only the formal-review gate; no formal review is claimed. Do not audit or archive v1.43 until terminal closeout evidence is recorded. The retained feedback preview remains at `http://127.0.0.1:4012/admin/search`.
+**Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
+
+**Historical, 2026-10-13:** Phase 174, Recovery Entry and Diagnosis, is complete locally: 3/3 plans, all 19/19 must-haves verified, and current-source Ops/UI and mounted checks passed. All five v1.43 phase plan sets and verification reports are complete. PR [#98](https://github.com/szTheory/scrypath/pull/98) is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required checks and both Ops UI checks on that exact source. The Website build passed. `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` was skipped; the dependency-audit follow-up remains disclosed in the Phase 177 trace. Candidate closeout on the final tracking source and terminal merged-main attestation remain outstanding, so T-177-05 still blocks the milestone audit. The maintainer waived only the formal-review gate; no formal review is claimed. Do not audit or archive v1.43 until terminal closeout evidence is recorded. The retained feedback preview remains at `http://127.0.0.1:4012/admin/search`.
 
 This branch also adds the bundled Scrypath favicon to the mounted e-commerce operator UI under its mount path. SVG/ICO routes and rendered links are covered by focused tests; the exact PR source above passed the required mounted and Ops UI CI checks.
 
@@ -48,7 +50,7 @@ Scrypath 0.3.13 remains the published package; v1.40 was a planning milestone an
 
 The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it added no runtime, public API, dependency, backend, or operator UI changes. Its dated readiness decision remains **NOT READY** because conditions 3 and 6 were unknown at assessment. Its accepted audit debt records three Phase 164 cross-references and Nyquist metadata follow-up for Phases 163–164. Final exact-SHA run [36257182675](https://github.com/szTheory/scrypath/actions/runs/36257182675) passed for `dc400b2b57aec0ca6b0ef16c9477d266fd41a433`; the annotated `v1.39` tag resolves to that commit. This receipt can support a newly dated condition 6 assessment but does not change the historical result.
 
-## Current Milestone: v1.43 ScrypathOps UI refinement
+## Archived Milestone: v1.43 ScrypathOps UI refinement (2026-10-25)
 
 **Goal:** Make the existing six-surface operator workspace calmer and easier to scan and act on across inspect → recover → verify, while preserving operational truth and supported behavior.
 
@@ -79,7 +81,7 @@ The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it ad
 
 ## Future Work
 
-Keep `main` green and release only when a package change warrants it. v1.42 is complete; v1.43 has an approved roadmap for the maintainer-selected UI refinement scope above. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
+Keep `main` green and release only when a package change warrants it. v1.42 and v1.43 are complete; the approved rolling roadmap in `reference/ROLLING-ROADMAP.md` sets the next order (v1.44 sync correctness, v1.45 foundation and CI, v1.46 adopter features). Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Archived Milestone: v1.41 Readiness Gate Follow-Through (2026-10-02)
 
@@ -326,7 +328,7 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** v1.43 ScrypathOps UI refinement, requirements and roadmap approved; all five phases and 21 plans are complete locally. Phase 177 terminal exact-source closeout remains blocked by T-177-05 until the current PR source is checked and merged-source attestation passes. The maintainer waived only the formal-review gate; no formal review is claimed. v1.42 ScrypathOps operator/admin UI (Phase172) and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
+- **Active milestone:** none — awaiting the next milestone. v1.43 ScrypathOps UI refinement is complete and archived (closeout run 40204029522); the approved rolling roadmap names v1.44 sync correctness next. The maintainer waived only the v1.43 formal-review gate; no formal review is claimed. v1.42 and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Current goals:** Refine the existing six operator surfaces from the concrete 2026-10-06 visual feedback while maintaining green main and the completed recovery contract. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
@@ -406,7 +408,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Planning window
 
-v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. In v1.43, Phases 173–177 and all 21 plans are locally complete; Phase174 verification passes 19/19 must-haves. Terminal Phase177 current-source attestation remains a separate blocking delivery gate. v1.40 and v1.39 assessments remain immutable historical results.
+v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. In v1.43, Phases 173–177 and all 21 plans are locally complete; Phase174 verification passes 19/19 must-haves. The terminal merged-main closeout passed on 2026-10-25 (run 40204029522) and v1.43 is archived. v1.40 and v1.39 assessments remain immutable historical results.
 
 ## Requirements
 
@@ -516,7 +518,7 @@ The project exists to fill a gap in the Elixir ecosystem: there are low-level AP
 
 Scrypath is intended primarily for Phoenix applications using Ecto, with Ecto-first APIs and Phoenix-friendly features layered on top. The library emphasizes least surprise, operational honesty, and high-quality developer experience. Search synchronization acknowledges eventual consistency where it exists, supports Oban naturally, and documents tradeoffs clearly in README and guides so users understand who the library is for and who it is not for.
 
-The repository has shipped planning milestones through **`v1.42`** (**`v1.0`**-**`v1.42`**); the approved **`v1.43`** 20-requirement roadmap has all five phase plan sets complete, with its terminal current-source delivery attestation still pending. Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
+The repository has shipped planning milestones through **`v1.43`** (**`v1.0`**-**`v1.43`**). Current planning truth lives in **`.planning/ROADMAP.md`**, **`.planning/PROJECT.md`**, **`.planning/MILESTONES.md`**, **`.planning/STATE.md`**, and `milestones/v*-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` for shipped arcs.
 
 ## Evolution
 
@@ -529,4 +531,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-12 after Phase 174 verification, the mounted favicon follow-up, and v1.43 closeout-state reconciliation. v1.42 completion and source receipts remain historical.*
+*Last updated: 2026-10-25 after the v1.43 terminal closeout and archive. Earlier source receipts remain historical.*

@@ -3,12 +3,12 @@ gsd_state_version: "1.0"
 milestone: v1.43
 milestone_name: ScrypathOps UI refinement
 current_phase: null
-status: idle
-stopped_at: "0.3.17 released; next is the v1.43 automated closeout from reference/ROLLING-ROADMAP.md"
+status: Awaiting next milestone
+stopped_at: "v1.43 closed out and archived; next is v1.44 sync correctness from reference/ROLLING-ROADMAP.md"
 last_updated: "2026-10-25T00:00:00.000Z"
 last_activity: 2026-10-25
-last_activity_desc: Fixed legacy Oban upsert jobs (#114), released 0.3.17, approved the rolling roadmap
-state_head: abc328c32e63e68eeecde69f8ea099d508764137
+last_activity_desc: v1.43 terminal closeout (run 40204029522), T-177-05 closed, phases 173–177 archived
+state_head: ebed49b5199d369306527caa7bb69aa0b1db5a36
 progress:
   total_phases: 5
   completed_phases: 5
@@ -19,14 +19,20 @@ progress:
 
 # Project State
 
-## Next approved work — 2026-10-25
+## Awaiting next milestone — 2026-10-25
 
-The maintainer approved a rolling roadmap: **[reference/ROLLING-ROADMAP.md](reference/ROLLING-ROADMAP.md)**. It holds the order, the working rules (one PR per slice, merge when required checks pass, releases and visible UI changes wait for the maintainer's yes), and the research findings for each item.
+v1.43 is closed out and archived. The root `ROADMAP.md` is now an index of shipped milestones; no phase is active.
 
-- Done: the 0.3.17 hotfix. [#114](https://github.com/szTheory/scrypath/pull/114) keeps pre-0.3.16 Oban upsert jobs syncing; released as **scrypath 0.3.17** ([#115](https://github.com/szTheory/scrypath/pull/115)).
-- **Next: the v1.43 automated closeout** (roadmap section 1), then v1.44 sync correctness, v1.45 foundation and CI, and v1.46 adopter features.
+- Terminal closeout: [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) on merged main `ebed49b5` passed the five required jobs, coverage and `closeout-attestation`. Receipt: [reference/v1.43-final-receipt.json](reference/v1.43-final-receipt.json).
+- T-177-05 is closed. T-177-06 (medium, below threshold) stays open; the missing container IDs can't be recovered.
+- Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`. Stray phase 89/95 files, root audits and `tmp_get_data.sh` are tidied; the stale dependency todo is removed.
+- **Next: v1.44 sync correctness** (section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md)), then v1.45 foundation and CI, then v1.46 adopter features.
 
-Correction to the idle note below: the 19 standalone `phase173_*` specs are **not** covered anywhere. Nothing runs `verify-phase173.sh`, so standalone PostureLive has no automated browser coverage. v1.45 fixes this.
+The 19 standalone `phase173_*` specs still have no automated coverage; this run's `ecommerce-e2e` failed exactly those 19. v1.45 fixes it.
+
+## Rolling roadmap approved — 2026-10-25 (historical)
+
+The 0.3.17 hotfix shipped ([#114](https://github.com/szTheory/scrypath/pull/114), [#115](https://github.com/szTheory/scrypath/pull/115)) and the maintainer approved the rolling roadmap.
 
 ## Idle — 2026-10-24 (historical)
 
@@ -62,7 +68,7 @@ All three requested batches are delivered in canonical branch `fix/ui-iteration-
 
 ## Historical project reference
 
-See PROJECT.md (updated 2026-10-13). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Current focus: finish PR #98's exact-source closeout and merged-main attestation; all five phase plan sets are complete, but T-177-05 still blocks the milestone audit.
+See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding operational reality. Historical focus at this point: PR #98's exact-source closeout, since completed by the 2026-10-25 terminal closeout.
 
 ## Current Position
 
