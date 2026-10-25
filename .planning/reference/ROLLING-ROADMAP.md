@@ -6,7 +6,14 @@ The maintainer approved this order and these working rules after a research fan-
 
 - One PR per coherent slice. Squash-merge it once the required checks (`core`, `package`, `repository-contracts`, `backend`, `ecommerce-mounted`) pass. `deep-quality (advisory)` is expected to be red until sigra makes `cloak_ecto` optional; see below.
 - Hex releases and visible UI changes wait for the maintainer's explicit yes. A release-please PR needs a close and reopen before its CI runs.
-- One lean plan per milestone (a section in this file is enough). Tests and CI are the proof. No per-phase GSD document sets, no manual UAT.
+- **Full GSD lifecycle per milestone** (maintainer, 2026-10-25, replacing the earlier "one lean plan" rule):
+  - `/gsd-new-milestone` turns this file's section into requirements and a phase roadmap;
+  - then each phase goes through discuss → (UI-spec for frontend phases) → plan → execute → verify, plus code review and security where they apply;
+  - the milestone ends with audit → complete → archive.
+
+  The maintainer values the discussion and decision points.
+- This file stays the cross-milestone order and its research findings. GSD's `ROADMAP.md`/`REQUIREMENTS.md` hold the active milestone.
+- Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
 
 ## 0. 0.3.17 hotfix — done
