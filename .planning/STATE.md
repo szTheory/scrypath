@@ -2,9 +2,14 @@
 gsd_state_version: "1.0"
 milestone: v1.44
 milestone_name: Sync correctness
+current_phase: 178
+current_phase_name: Loader-routed backfill and full-key paging
 status: planning
-last_updated: "2026-10-25T18:00:00.000Z"
+stopped_at: Phase 178 context gathered
+last_updated: "2026-10-25T17:56:17.667Z"
 last_activity: 2026-10-25
+last_activity_desc: v1.44 roadmap created (4 phases, 15/15 requirements mapped)
+state_head: a126f7d000f7a2b8cb3850ba8459abc8e4b02374
 progress:
   total_phases: 4
   completed_phases: 0
@@ -142,9 +147,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-13T02:49:38Z
-Stopped at: Phase 174 complete; PR #98 exact-head checks passed; Phase 177 terminal source gate remains blocking
-Resume file: .planning/phases/177-shared-patterns-and-delivery-proof/177-SECURITY.md
+Last session: 2026-10-25T17:56:17.655Z
+Stopped at: Phase 178 context gathered
+Resume file: .planning/phases/178-loader-routed-backfill-and-full-key-paging/178-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
