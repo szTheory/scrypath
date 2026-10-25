@@ -4,12 +4,12 @@ milestone: v1.44
 milestone_name: Sync correctness
 current_phase: 178
 current_phase_name: Loader-routed backfill and full-key paging
-status: ready_to_execute
+status: executing
 stopped_at: Phase 178 planned (5 plans, 4 waves)
-last_updated: "2026-10-25T18:40:06.985Z"
+last_updated: "2026-10-25T18:47:53.156Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 178 planned — 5 plans in 4 waves, plan-checker passed
-state_head: 72a19a68a65bb4723e13e2646c796d466d83ba32
+last_activity_desc: Phase 178 execution started
+state_head: 0aa016b9d503dc5fa5ce5f9ee0b1a082cc0ca8e3
 progress:
   total_phases: 4
   completed_phases: 0
@@ -86,10 +86,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 178 of 178–181 (Loader-routed backfill and full-key paging) — READY TO EXECUTE
-Plan: 0 of 5 complete
-Status: Ready to execute Phase 178
-Last activity: 2026-10-25 — Phase 178 planned (5 plans, 4 waves; D-17 reindex primaryKey fix added)
+Phase: 178 (Loader-routed backfill and full-key paging) — EXECUTING
+Plan: 1 of 5
+Status: Executing Phase 178
+Last activity: 2026-10-25 — Phase 178 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
