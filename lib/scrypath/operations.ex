@@ -55,22 +55,31 @@ defmodule Scrypath.Operations do
       status: Keyword.get(opts, :status, :accepted),
       document_ids: Map.get(payload, :document_ids, []),
       document_count: Map.get(payload, :document_count, 0),
-      task:
-        Task.new(
-          source: :oban,
-          kind: :queue_job,
-          id: Map.get(job, :id),
-          state: normalize_queue_state(Map.get(job, :state)),
-          reference: %{
-            job_id: Map.get(job, :id),
-            worker: Map.get(job, :worker),
-            queue: Map.get(job, :queue)
-          },
-          metadata: %{
-            oban_state: Map.get(job, :state)
-          },
-          raw: job
-        )
+      task: task_from_job(job)
+    )
+  end
+
+  @doc false
+  # Builds the queue-job task for one enqueued Oban job (a raw public job map).
+  # conflict? is true when Oban collapsed the insert into an existing unique job; the
+  # task still reports the accepted, queued job (no separate status).
+  @spec task_from_job(map()) :: Task.t()
+  def task_from_job(job) when is_map(job) do
+    Task.new(
+      source: :oban,
+      kind: :queue_job,
+      id: Map.get(job, :id),
+      state: normalize_queue_state(Map.get(job, :state)),
+      reference: %{
+        job_id: Map.get(job, :id),
+        worker: Map.get(job, :worker),
+        queue: Map.get(job, :queue)
+      },
+      metadata: %{
+        oban_state: Map.get(job, :state),
+        conflict?: Map.get(job, :conflict?, false)
+      },
+      raw: job
     )
   end
 
