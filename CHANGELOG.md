@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.17](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.16...scrypath-v0.3.17) (2026-10-25)
+
+
+### Bug Fixes
+
+* **sync:** keep pre-0.3.16 Oban upsert jobs syncing after upgrade ([#114](https://github.com/szTheory/scrypath/issues/114)) ([7bcffe3](https://github.com/szTheory/scrypath/commit/7bcffe3a09441929dbc0b00c309a7c3ea36531f5))
+
 ## [0.3.16](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.15...scrypath-v0.3.16) (2026-10-23)
 
 
