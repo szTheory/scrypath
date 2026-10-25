@@ -28,6 +28,8 @@ v1.43 is closed out and archived. The root `ROADMAP.md` is now an index of shipp
 - Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`. Stray phase 89/95 files, root audits and `tmp_get_data.sh` are tidied; the stale dependency todo is removed.
 - **Next: v1.44 sync correctness** (section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md)), then v1.45 foundation and CI, then v1.46 adopter features.
 
+Proposed on 2026-10-25, waiting on the maintainer's yes: a UI quality engine (fractal stories, adopter-profile fixtures, composable LiveViews, layered checks) as v1.46–v1.47, with adopter features moving to v1.48. See [the recommendations](research/ui-quality-engine/RECOMMENDATIONS.md) and the rolling roadmap.
+
 The 19 standalone `phase173_*` specs still have no automated coverage; this run's `ecommerce-e2e` failed exactly those 19. v1.45 fixes it.
 
 ## Rolling roadmap approved — 2026-10-25 (historical)
