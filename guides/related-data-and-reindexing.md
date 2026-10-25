@@ -227,9 +227,18 @@ What to expect at the edges:
   resolver receives. If none of a job's triggers load, the resolver is not called and the
   job succeeds. To hide the targets of a soft-deleted owner, sync them directly, for
   example `Scrypath.sync_records(Post, posts)`.
-- **Call `sync_related/3` after the write commits.** If you enqueue inside an open
-  transaction, the job can run on another connection before the commit and load stale or
-  missing triggers.
+- **Where to call `sync_related/3` relative to your transaction depends on the sync mode.**
+  - Under `:oban`, when Oban uses the same repo as your writes, calling it inside the
+    transaction (for example from `Ecto.Multi.run/3`) is supported and atomic. The jobs are
+    inserted on your transaction's connection, so no worker sees them before the commit, and
+    a rollback discards them along with the write. Return the `{:error, _}` from the step so a
+    failed enqueue aborts the transaction (see the `:oban` section of the sync modes guide).
+  - Under `:oban` with Oban on a different repo or database, the job insert commits on its
+    own. Call `sync_related/3` after your write commits, or a worker can run the job first
+    and load stale or missing triggers.
+  - Under `:inline`, call it after the write commits. The resolver and the backend write run
+    immediately, so inside the transaction the backend would index rows that are not
+    committed yet and may still roll back.
 - **Inline does not reload.** Under `:inline`, a struct for a row you just deleted is still
   passed to the resolver, which usually returns `[]` because nothing references it any more.
   An empty trigger list is a noop in every mode: the resolver is not called.
