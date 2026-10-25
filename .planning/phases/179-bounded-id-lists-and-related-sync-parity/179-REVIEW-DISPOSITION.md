@@ -26,5 +26,16 @@ updated: 2026-10-25
 |---------|----------|-------------|----------|
 | CR-02 | critical | fixed | 7e33db41 — guides restored to "call sync functions after the write commits" in every mode, with correct reasons + honest crash-gap trade-off (links drift-recovery.md); WR-01 nested handling documented as safety net only; `Scrypath.Oban` Multi-helper caveat added; ecommerce `update_category/3` syncs after commit (logs post-commit sync errors, returns `{:ok, category}`). Multi-helper follow-up resolved in 189cef0f (owner delegated: helpers insert without `unique:`, so in-transaction jobs read committed rows). |
 | WR-06 | warning | fixed | f021a559 — shared `JobArgs.document_id?/1` used by worker decode and `Payload.serialize_ids!/1`; enqueue raises `ArgumentError` for nil/float/boolean ids. |
-| WR-07 | warning | fixed | 9c63f4a2 — loader casts ids to the queried field's Ecto type; cast failure → `{:invalid_arg, "document_ids"}` → cancel. Skipped for `search_records/2` schemas. SQLite test fails on old code. |
+| WR-07 | warning | partly fixed | 9c63f4a2 — loader casts ids to the queried field's Ecto type; cast failure → `{:invalid_arg, "document_ids"}` → cancel. Skipped for `search_records/2` schemas. SQLite test fails on old code. | Remainder (Postgres `:binary_id`) tracked as WR-08. |
 | IN-06 | info | fixed | ce86499e — inline `sync_related` dedupes triggers via `Chunks.uniq_by_id/2` (falls back to caller list when ids are unreadable); span counts deduped set. |
+
+## Re-review 2 (fix diff 27814bc8..6375b554)
+
+CR-02, WR-06, IN-06 confirmed resolved; Multi-helper `unique:` removal (189cef0f) confirmed safe against `deps/oban` engine/basic.ex.
+
+| Finding | Severity | Disposition | Evidence |
+|---------|----------|-------------|----------|
+| WR-08 | warning | open | Postgres `:binary_id` key: `Ecto.Type.cast(:binary_id, "abc")` succeeds but adapter dump fails, so the planner raises `Ecto.Query.CastError` and the job retries 8×; guide and `Loader.load/3` doc promise a cancel. |
+| WR-09 | warning | open | `RecoveryAction.retry/2` on a stored job with nil/float/boolean ids now raises `ArgumentError` (spec says error tuple); ScrypathOps retry LiveView crashes. |
+| IN-07 | info | open | Ecommerce E2E endpoint always reports `queued_related_sync: true` though `update_category/3` now logs a failed post-commit sync. |
+| IN-08 | info | open | 179-06 release note omits: enqueue raises for nil/float/boolean ids; Multi helpers dropped `unique:`; `document_ids` deduped + sorted at every size. |

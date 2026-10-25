@@ -1,192 +1,164 @@
 ---
 phase: 179-bounded-id-lists-and-related-sync-parity
-reviewed: 2026-10-25T22:49:55Z
+reviewed: 2026-10-25T23:59:00Z
 depth: standard
 review_kind: re-review
-diff_range: e69b2601..79c3dc7f (excluding .planning)
-files_reviewed: 15
+diff_range: 79c3dc7f..6375b554 (excluding .planning); commits 7e33db41, f021a559, 9c63f4a2, ce86499e, 189cef0f
+files_reviewed: 16
 files_reviewed_list:
-  - lib/scrypath.ex
-  - lib/scrypath/backfill.ex
   - lib/scrypath/chunks.ex
+  - lib/scrypath/loader.ex
+  - lib/scrypath/oban.ex
   - lib/scrypath/oban/enqueue.ex
   - lib/scrypath/oban/job_args.ex
   - lib/scrypath/oban/payload.ex
   - lib/scrypath/oban/upsert_worker.ex
-  - lib/scrypath/reindex.ex
   - lib/scrypath/sync.ex
-  - lib/scrypath/sync/related_enqueue.ex
   - lib/scrypath/sync/related_worker.ex
+  - lib/scrypath/sync/related_enqueue.ex
+  - lib/scrypath/operator/recovery_action.ex
   - examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex
+  - examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex
   - examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs
   - guides/related-data-and-reindexing.md
   - guides/sync-modes-and-visibility.md
 findings:
-  critical: 1
+  critical: 0
   warning: 2
-  info: 1
+  info: 2
   total: 4
 status: issues_found
 ---
 
-# Phase 179: Code Review Report (re-review of fix commits)
+# Phase 179: Code Review Report (re-review of iteration-3 fix commits)
 
-**Reviewed:** 2026-10-25T22:49:55Z
+**Reviewed:** 2026-10-25T23:59:00Z
 **Depth:** standard
-**Files Reviewed:** 15
+**Files Reviewed:** 16
 **Status:** issues_found
 
 ## Summary
 
-This review covers the 11 fix commits after `e69b2601` (858e83dc through 64b8dc8c). I also read the code each fix touches: `Scrypath.Loader`, `Scrypath.Identity`, `Scrypath.Oban.DeleteWorker`, `Scrypath.Config`, and Oban 2.23's `Oban.Repo` and `Oban.Engines.Basic`.
+This review covers the five commits after the last review: 7e33db41 (CR-02), f021a559 (WR-06), 9c63f4a2 (WR-07), ce86499e (IN-06) and 189cef0f (Multi helpers without `unique:`). I also read the code these commits touch or that calls them:
 
-The targeted test files pass: oban, sync, chunks, backfill, reindex and telemetry give 202 tests, 0 failures.
+- `Scrypath.Identity`, `Scrypath.Schema.Metadata`, `Scrypath.Sync.RelatedEnqueue`
+- `Scrypath.Operator.RecoveryAction` and `FailedWork.Translation`, plus the ScrypathOps `failed_sync_live.ex` retry handler
+- the ecommerce `E2EController`
+- Oban 2.23: `Oban.Engine.insert_job/5` (Multi), `Oban.Engines.Basic` (`insert_unique/3`, `acquire_lock/2`)
+- Ecto 3: `Ecto.Type.cast/2` for `:binary_id`, `Ecto.Query.Planner.cast_param/6`, and the `ecto_sql` Postgres dumpers
 
-Most fixes hold:
+The targeted suites pass: `test/scrypath/oban_test.exs`, `test/scrypath/oban/`, `test/scrypath/sync/`, `chunks_test.exs` and `sync_test.exs` give 205 tests, 0 failures.
 
-- **CR-01:** module names resolve by the full atom, and atom safety is kept.
-- **WR-01:** the nested-transaction branch is mechanically correct.
-- **WR-04:** delete chunk tasks are reported and waited on before cutover.
-- **IN-01:** id normalization is consistent across enqueue, `Chunks.id_key/1`, worker decoding and the span counts.
+**CR-02 is resolved.** The after-commit guidance is now correct and the same in both guides, the `Scrypath.Oban` moduledoc, the `insert_chunks/2` comment and the example. The Multi-helper exception holds:
 
-Two fixes regressed or left gaps:
+- `Oban.Engine.insert_job/5` runs the insert inside `Multi.run` with `%{conf | repo: repo}`, which is the Multi's own repo and connection. The job is therefore visible only at commit, whatever repo the Oban instance is configured with.
+- With no `unique` change, `Basic.insert_unique/3` takes the `nil -> Repo.insert` branch. No advisory lock is taken, so the phantom-conflict hazard is gone.
+- A later direct unique enqueue may collapse into a pending Multi-helper job. That is safe: the Multi job only exists after its commit, and it has not started yet.
 
-- **IN-02 (d8053655)** replaced correct advice with incorrect advice, so it is now a blocker. The related guide used to say to call `sync_related/3` after the commit. It now says that calling it inside the transaction under same-repo `:oban` is "supported and atomic", and the sync-modes text added by WR-01 implies the same for `sync_records/3`. With Scrypath's `unique:` policy this is not safe. The collapse decision is made before the caller commits, which brings back the lost update that D-20 exists to prevent. The flagship ecommerce example follows this pattern.
-- **WR-02 (4d74ed9d)** narrowed what the worker accepts, but the enqueue side still accepts the old types. A `nil`, float or boolean id is enqueued and then silently cancels its whole chunk of up to 1000 ids. Separately, a string for an integer primary key still raises and is retried 8 times.
+**IN-06 and WR-06 are resolved** as scoped. **WR-07 is only partly resolved.** The new cast reproduces the planner's cast step but not its adapter-dump step. So the most common Phoenix key type, `:binary_id` on Postgres, still raises and is retried 8 times (WR-08). WR-06's new raise has one caller that expects `{:error, _}`: operator recovery retry. A legacy job holding a nil id now crashes the ScrypathOps retry handler (WR-09).
 
 ## Prior findings
 
 | ID | Verdict | Evidence |
 |----|---------|----------|
-| CR-01 | **Resolved** | `job_args.ex:250-256`: `safe_module/1` accepts only `"Elixir." <> _` and calls `String.to_existing_atom/1` on the full name. No atom is created. `resolve_existing_module/3` (236-245) still checks the exact spelling, `Code.ensure_loaded?` and the role validator. The new test builds the module at runtime with `Module.concat/1` and checks that the alias segments never become atoms. |
-| WR-01 | **Resolved (mechanics)**, but see CR-02 | `enqueue.ex:142-163`: `Oban.Repo.in_transaction?(conf)` exists (generated from `deps/oban/lib/oban/repo.ex:66`) and checks `conf.repo.in_transaction?()`. Nested: there is no Scrypath-opened transaction and no rollback, and the bare `{:error, _}` is returned. A caller transaction on a different repo reports `false`, so Oban's own all-or-nothing transaction runs on its repo, which is correct. Partial inserts on error are not reachable in practice, because every chunk changeset is built the same way and the first one fails first. Oban's engine still nests `Repo.transaction` per insert (`basic.ex:71-75`), but that is pre-existing and the same as the single-chunk path. |
-| WR-02 | **Partially resolved** | `job_args.ex:113-117` rejects non-integer, non-binary elements, so the shapes listed in the prior finding now cancel. Two gaps remain: a residual value-cast failure (WR-07), and a new asymmetry with what enqueue accepts (WR-06). |
-| WR-03 | **Resolved (docs + test)** | The guide note at `related-data-and-reindexing.md:253-267` is accurate. `config :scrypath, :defaults` is the key `Config` reads (`config.ex:14`). The cancelled-job recovery path works, because the worker merges defaults through `Config.resolve!`. A legacy fixture test pins `{:cancel, {:invalid_job, :repo_required}}`. |
-| WR-04 | **Resolved** | `backfill.ex:73-81` adds `delete_tasks: tasks_of(delete)`, always a list. `reindex.ex:221-264` waits on `tasks` and then `delete_tasks`, `put_waited/4` leaves empty lists alone, and a `%Result{}` batch falls through to the single-task path. The shapes agree: `task` is present exactly when `tasks != []`, and likewise for the delete keys. |
-| WR-05 | **Resolved** for the upsert and delete spans | `sync.ex:26-29, 133-136, 153-159` dedupe the start count with the same `Chunks.id_key/1` key that dispatch uses, so start, stop and result counts agree. The inline related-resolve span still reports the raw trigger count (IN-06). |
-| IN-01 | **Resolved** | Enqueue paths (`enqueue.ex:26-31, 45-50`, `related_enqueue.ex:40-42`) serialize before `Chunks.ids/1`. `id_key/1` (`chunks.ex:49-52`) maps the same values `serialize_scalar!/1` does (only non-boolean, non-nil atoms change), so the enqueue dedupe, the span count and the inline `by_id` dedupe agree. Workers only receive integers and strings, for which `id_key` is the identity. `Payload.build_*` re-serializing is idempotent, and `"document_count" == length(chunk)` still satisfies `check_document_count/2`. |
-| IN-02 | **Not resolved: the fix regressed the guidance** | See CR-02. The old advice ("call after the write commits") was correct and only its stated reason was wrong. The new per-mode rule calls in-transaction enqueue "supported and atomic", and that is false under Scrypath's `unique:` policy. |
-| IN-03 | **Resolved** | `catalog.ex:93-105`: only the tenant-scoped struct clause and `[]` remain. `Category.search_records/2` loads with `skip_tenant_id: true`, so Oban-loaded triggers carry `tenant_id`, which the resolver uses. The test passes `[category]` and checks `[]`. |
-| IN-04 | **Resolved** | `upsert_worker.ex:52-55` and `related_worker.ex:34-37` map `{:invalid_search_records, _}` to `{:cancel, {:invalid_job, :invalid_search_records}}` without including the returned value. Clause order is correct: they come before the generic `{:error, reason}`. |
-| IN-05 | **Skip rationale holds** | `Oban.Job.warn_unique/1` is called only from `deps/oban/lib/oban/worker.ex:514` at compile time. The Basic engine checks uniqueness with a query at insert time (`basic.ex:428-445`). The `enqueue.ex:85-102` comment is accurate. |
+| CR-02 | **Resolved** | `sync-modes-and-visibility.md:134-144` and `related-data-and-reindexing.md:230-247` both say to call sync functions after the commit, in every mode. Both give the right reasons: collapse is decided at enqueue (`basic.ex:428-445`); the transaction-scoped `pg_try_advisory_xact_lock` (`basic.ex:533-541`) yields `conflict?: true` with nothing inserted; and inline writes would index uncommitted rows. The WR-01 nested path is described as a safety net (`enqueue.ex:131-140`). The Multi-helper exception (`oban.ex:10-14`, guide line 144) matches the code: `oban.ex:33,46` pass `unique: false`, and `enqueue.ex:232-233` drops `unique:`. It also matches Oban: `engine.ex:231-235` inserts on the Multi's repo. The example's `update_category/3` (`catalog.ex:68-74`) syncs only after `Repo.update` succeeds, and a test checks that a failed update enqueues no `RelatedWorker` job. Removing `unique:` from the Multi helpers creates no correctness hazard. The only cost is that repeated Multi writes are no longer collapsed (see IN-08 for the release-note gap). |
+| WR-06 | **Resolved** (one caller regression: WR-09) | `job_args.ex:116` `document_id?/1` is the single predicate. `payload.ex:29-42` `serialize_ids!/1` applies it after atom→string serialization, and `build_upsert/3` and `build_delete/3` use it. Every enqueue path reaches it: `enqueue.ex:28,47` (direct), `related_enqueue.ex:41` (related), and `oban.ex:33,46` through `*_job_changeset` → `Payload.build_*` (Multi helpers). Identity-derived ids are still accepted: string and composite `search_document_id/1` values (`"tenant:1"`), UUID strings and atoms all serialize to integers or strings. Tuples and maps already raised in `serialize_scalar!/1`. `delete_record/3` on a nil-id struct stays a `:noop` (`sync.ex:128-133`, `List.wrap(nil) == []`). The new raise does reach `RecoveryAction.retry/2`, which is specced to return `{:ok, _} | {:error, _}` (WR-09). |
+| WR-07 | **Partially resolved** (residual: WR-08) | `loader.ex:176-193` casts each id with `Ecto.Type.cast/2` against `__schema__(:type, Metadata.document_id(schema))`. That is the field the query binds, so a custom `document_id:` field is handled correctly. Schemas with no `__schema__/2`, or a field with no Ecto type, pass the ids through. `search_records/2` schemas never reach the cast. Both workers map `{:error, {:invalid_arg, _}}` to `{:cancel, {:invalid_job, tag}}`. The cast is exactly the planner's own cast step (`planner.ex:2592-2603`), so it cannot reject an id the query would have accepted. Castable ids such as `"12"` behave as before, because the planner cast them too. The planner's second step, `dump_param` (`planner.ex:1149`), is not mirrored. `Ecto.Type.cast(:binary_id, "abc")` returns `{:ok, "abc"}` (checked in IEx), but `Ecto.Type.adapter_dump(Ecto.Adapters.Postgres, :binary_id, "abc")` returns `:error`. The query therefore still raises `Ecto.Query.CastError`. |
+| IN-06 | **Resolved** | `sync.ex:96,121-125` dedupes triggers with `Chunks.uniq_by_id/2`, keyed on `id_key/1` and keeping the last copy, before the span starts and before the resolver runs. The span `document_count` is the deduped length. `Chunks.by_id/2` now delegates to `uniq_by_id/2`, so there is one dedupe rule. When an id cannot be read (an owner-only `__scrypath__/1`), the fallback keeps the caller's list. That is the pre-fix behaviour, and the `sync_test.exs` fixtures still pass. The `rescue _error` is broad, but its only effect is to fall back to the old, non-deduped behaviour, so it cannot introduce a failure. |
 
 ## Narrative Findings (AI reviewer)
 
-## Critical Issues
-
-### CR-02: The guides now recommend enqueueing inside the caller's transaction, which reintroduces the D-20 lost update under `unique:`
-
-**File:** `guides/related-data-and-reindexing.md:230-241` (from IN-02 fix d8053655); `guides/sync-modes-and-visibility.md:133` (from WR-01 fix 24a35c9a); applied in `examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex:63-77`
-
-**Issue:** The guide now says that under `:oban` with Oban on the same repo, calling `sync_related/3` inside the transaction "is supported and atomic", and the sync-modes `:oban` section describes in-transaction calls as the intended pattern. That is atomic for the job rows. It is not correct for search freshness, because every Scrypath job is inserted with `unique: [states: [:available, :scheduled, :retryable]]` (`enqueue.ex:104`), and Oban decides uniqueness when the job is inserted (`deps/oban/lib/oban/engines/basic.ex:428-445`).
-
-1. **Collapse decided before commit.** Transaction T1 updates category C, then enqueues. An identical job J from an earlier write is still `:available`, so the insert collapses into J (`conflict?: true`) and no new job is written. Before T1 commits, a producer fetches J. J loads the triggers on its own connection and sees the pre-T1 rows. T1 then commits, and no job is left to index T1's change.
-
-   This is exactly the hazard that D-20, and the comment at `enqueue.ex:87-89`, exist to prevent ("collapsing it into the running job would lose that update"). The window now spans the rest of the caller's transaction, not a single insert. When the call is made after the commit, the race cannot happen. Any job the check finds still `:available` reads committed data when it runs, and a job that already started is `:executing`, so it is not matched and a fresh job is inserted.
-
-2. **Phantom conflicts while the caller's transaction is open.** With testing disabled, the Basic engine takes `pg_try_advisory_xact_lock` on the unique key (`basic.ex:533-541`). If the lock is held, it returns an unsaved job marked `conflict?: true`. Nested inside a caller's transaction, that lock is held until the caller commits or rolls back.
-
-   Suppose a concurrent identical sync made after its own write committed arrives during that time. It gets `{:ok, %{conflict?: true}}` and inserts nothing. If the first transaction then rolls back, for example because a later `Multi` step fails, neither job exists and the second writer's update is never indexed.
-
-The old guide text ("call after the write commits") gave the right instruction for the wrong reason. The fix kept the wrong analysis and changed the instruction.
-
-**Fix:** go back to "call after the commit" in every mode, and give the correct reason. Update the example to match:
-
-```elixir
-def update_category(tenant, %Category{} = category, attrs) do
-  opts = tenant_opts(tenant)
-
-  with {:ok, category} <- category |> Category.changeset(attrs) |> Repo.update(opts),
-       {:ok, _} <- Scrypath.sync_related(Category, category, fan_out: :products) do
-    {:ok, category}
-  end
-end
-```
-
-Guide wording, for both guides:
-
-> Call sync functions after your write commits. Scrypath collapses an identical pending job (`conflict?: true`). If you enqueue inside a transaction, the job you collapse into can run before your commit and read the old rows, and an open transaction holds Oban's unique lock so concurrent identical syncs can be dropped if you roll back.
-
-Keep the WR-01 mechanics paragraph, which says nested calls insert in your transaction and return the bare error. Present it as what happens when you do nest, not as a recommended pattern. If transactional outbox semantics are wanted later, they need a non-unique insert path when `in_transaction?` is true. That is a design decision, not a docs fix.
-
 ## Warnings
 
-### WR-06: Enqueue still accepts `nil`, float and boolean ids that the worker now cancels, so one bad id silently drops its whole chunk
+### WR-08: Uncastable ids for a `:binary_id` key still raise `Ecto.Query.CastError` on Postgres and use up all 8 retries (residual of WR-07)
 
-**File:** `lib/scrypath/oban/payload.ex:67-72` (`serialize_scalar!/1`, used by `serialize_ids!/1` at 24-26); `lib/scrypath/oban/job_args.ex:113-117`
+**File:** `lib/scrypath/loader.ex:176-199`; `guides/related-data-and-reindexing.md:371`; `lib/scrypath/loader.ex:93-95` (doc)
 
-**Issue:** WR-02 narrowed `fetch_document_ids/1` to integers and binaries. The enqueue side still serializes and stores floats, booleans and `nil` without complaint.
+**Issue:** The new `cast_ids/3` reproduces only the first half of what the Ecto planner does with a query parameter. `Ecto.Query.Planner.cast_param/6` (`deps/ecto/lib/ecto/query/planner.ex:1144-1162`) runs `cast_param` (= `Ecto.Type.cast/2`) and then `dump_param(adapter, type, cast_v)`. It raises `Ecto.Query.CastError` if either step fails.
 
-`Identity.document_id/2` (`identity.ex:23-37`) returns `nil` for an unsaved struct, and a custom `search_document_id/1` can return anything scalar. For example, `Scrypath.sync_records(Post, posts)` where one struct has `id: nil` or `delete_record/3` on such a struct returns `{:ok, %{status: :accepted}}`. The chunk job holding that id then cancels with `{:invalid_job, {:invalid_arg, "document_ids"}}`, and the other up to 999 valid ids in that chunk are never synced. The caller was told the work was accepted.
+For `:binary_id`, `Ecto.Type.cast/2` is `cast_binary/1` (`deps/ecto/lib/ecto/type.ex:845`) and accepts any binary. The Postgres adapter's dumper is `[type, Ecto.UUID]` (`deps/ecto_sql/lib/ecto/adapters/postgres.ex:185`). Verified:
 
-The disposition says float and boolean ids are "now rejected", but they are rejected at the wrong end: silently, after acceptance. Meilisearch document ids must be integers or strings anyway, so nothing legitimate is lost by failing fast.
+```
+Ecto.Type.cast(:binary_id, "abc")                                   #=> {:ok, "abc"}
+Ecto.Type.adapter_dump(Ecto.Adapters.Postgres, :binary_id, "abc")   #=> :error
+```
 
-**Fix:** validate at enqueue with the same predicate as decode, so the caller gets the error inside its own call:
+So for any schema with `@primary_key {:id, :binary_id, autogenerate: true}` (the `mix phx.gen --binary-id` default), a job holding a non-UUID string passes `cast_ids/3`. `repo.all/1` then raises. The upsert and related workers crash, and Oban retries all 8 attempts.
+
+The prior review named exactly this case ("a non-UUID string against a `:binary_id` key"). Despite that, the guide row now says that "a document id the primary key's type cannot cast" is cancelled, and the `Loader.load/3` doc makes the same promise. The new SQLite test cannot catch this: `ecto_sqlite3` stores `:binary_id` as a string by default, so its dump succeeds.
+
+**Fix:** mirror the dump step too, using the repo's adapter. Alternatively, rescue the cast error around the default query only:
 
 ```elixir
-# payload.ex
-def serialize_ids!(document_ids) when is_list(document_ids) do
-  Enum.map(document_ids, fn id ->
-    case serialize_scalar!(id) do
-      v when is_integer(v) or is_binary(v) -> v
-      other ->
-        raise ArgumentError,
-              "Oban sync document ids must be integers or strings, got #{inspect(other)}"
+type ->
+  adapter = repo.__adapter__()
+
+  Enum.reduce_while(document_ids, {:ok, []}, fn id, {:ok, acc} ->
+    with {:ok, cast} <- Ecto.Type.cast(type, id),
+         {:ok, _dumped} <- Ecto.Type.adapter_dump(adapter, type, cast) do
+      {:cont, {:ok, [cast | acc]}}
+    else
+      _ -> {:halt, {:error, {:invalid_arg, "document_ids"}}}
     end
   end)
-end
 ```
 
-Better still, share one `valid_document_id?/1` between `Payload` and `JobArgs` so the two cannot drift again. Add an enqueue test with `[1, nil]`.
-
-### WR-07: A string id that can't be cast to the schema's key type still raises in the loader and burns 8 retries (residual of WR-02)
-
-**File:** `lib/scrypath/loader.ex:157-159`; `lib/scrypath/oban/job_args.ex:111-117`
-
-**Issue:** The prior WR-02 named `"abc"` for an integer primary key as one of the inputs that crash. The fix checks only the element type. `"abc"` is a binary, so it passes decode. It then reaches `from(... in ^document_ids) |> repo.all()`, where Ecto raises `Ecto.Query.CastError`. The upsert and related workers crash and Oban retries all 8 attempts.
-
-The same happens for a non-UUID string against a `:binary_id` key. The comment at `job_args.ex:111-112` ("Anything else would make the loader's query raise ... so reject it here") overstates what the check guarantees. FAN-03 says undecodable args end with a clear, non-retrying error.
-
-**Fix:** in `Loader.fetch/3`, cast ids against the schema's `document_id` field type before querying:
+This needs `repo` threaded into `cast_ids/3`; `fetch/3` already has it. The simpler alternative:
 
 ```elixir
-type = schema_module.__schema__(:type, id_field)
-case Enum.reduce_while(document_ids, {:ok, []}, fn id, {:ok, acc} ->
-       case Ecto.Type.cast(type, id) do
-         {:ok, v} -> {:cont, {:ok, [v | acc]}}
-         :error -> {:halt, :error}
-       end
-     end) do
-  {:ok, cast} -> ...query with Enum.reverse(cast)...
-  :error -> {:error, {:invalid_arg, "document_ids"}}
+try do
+  {:ok, from(...) |> repo.all()}
+rescue
+  Ecto.Query.CastError -> {:error, {:invalid_arg, "document_ids"}}
 end
 ```
 
-Map `{:error, {:invalid_arg, _}}` to `{:cancel, {:invalid_job, ...}}` in both workers. Alternatively, rescue `Ecto.Query.CastError` around the default query only. Adjust the `job_args.ex` comment either way.
+Add a unit test that does not need Postgres: a fake repo whose `__adapter__/0` returns `Ecto.Adapters.Postgres`, with a `:binary_id` schema and the id `"abc"`. Also say "the document id field's type" instead of "the primary key's type" in the guide row.
+
+### WR-09: Operator retry of a legacy job with a nil, float or boolean id now raises `ArgumentError` instead of returning `{:error, _}`, which crashes the ScrypathOps retry handler
+
+**File:** `lib/scrypath/operator/recovery_action.ex:43-60` (calls `Enqueue.enqueue_upsert/3` and `enqueue_delete/3` with `payload["document_ids"]`); the raise comes from `lib/scrypath/oban/payload.ex:33-42` (f021a559)
+
+**Issue:** `RecoveryAction.retry/2` is specced `{:ok, map()} | {:error, term()}`. Its Oban branch re-enqueues the stored job's `document_ids` verbatim, and `validate_oban_retry/3` checks only `is_list/1`.
+
+`FailedWork.Translation.queue_attrs/3` marks any failed, cancelled or discarded upsert or delete job as `retryable?` whenever `document_ids` is a list (`translation.ex:36,105-110`). That includes the jobs this phase now cancels with `{:invalid_job, {:invalid_arg, "document_ids"}}` because they hold a `nil`, float or boolean id: jobs written by 0.3.17, by pre-f021a559 builds, or by hand.
+
+Before f021a559, retrying such a job enqueued a replacement and returned `{:ok, _}`. Now `Payload.serialize_ids!/1` raises `ArgumentError` out of `retry/2`. `ScrypathOps.FailedSyncLive.retry_failed_work/2` (`scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex:342-352`) matches only `{:ok, _}` and `{:error, _}`, so the LiveView process crashes and the operator gets no "Retry failed" flash. These bad-id jobs are exactly the rows an operator is most likely to retry.
+
+**Fix:** validate the stored ids in `validate_oban_retry/3` with the shared predicate, and return an error tuple:
+
+```elixir
+action.operation in [:upsert, :delete] and
+    not Enum.all?(Map.get(payload, "document_ids"), &Scrypath.Oban.JobArgs.document_id?/1) ->
+  {:error, {:invalid_retry_input, :document_ids}}
+```
+
+This clause goes after the existing `is_list` clause. Optionally, have `Translation.replay_payload_available?/1` use the same check, so these rows are not offered as retryable at all. Add a `RecoveryAction` test with a payload of `[1, nil]`.
 
 ## Info
 
-### IN-06: Inline `sync_related/3` passes duplicate triggers to the resolver and counts them in the span, contrary to the guide
+### IN-07: The ecommerce E2E endpoint reports `queued_related_sync: true` even when the post-commit sync failed
 
-**File:** `lib/scrypath/sync.ex:96-108`; `guides/sync-modes-and-visibility.md:36`
+**File:** `examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex:316-318`; `examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex:76-87`
 
-**Issue:** The guide says "Resolvers, loaders and `search_records/2` get deduped input (set semantics)". Under `:oban` that holds: the related worker's resolver gets `Loader.load/3` output, which is deduped. The inline path calls the resolver with `List.wrap(records)` unchanged, and its `[:scrypath, :sync, :related, :resolve]` span start reports `length(records_list)`, duplicates included. The worker's span for the same input reports the deduped count.
+**Issue:** Before 7e33db41, `{:ok, category}` from `update_category/3` meant the related sync had been enqueued, because a sync error rolled back the `Multi` and returned `{:error, reason}`. Now `update_category/3` logs a sync failure and still returns `{:ok, category}`. That is a reasonable post-commit policy and matches the product functions. However, `E2EController.category_name/2` still answers `queued_related_sync: true` unconditionally, so an E2E run can report a fan-out that never happened. Also, a raising `sync_related/3` (for example a config error) escapes after the commit. That is acceptable, but it is not mentioned in the new comment.
 
-This is outside the scope of the WR-05 fix, but it is the same inconsistency. It is harmless for typical `in`-query resolvers.
+**Fix:** have `sync_related_products/1` return `:ok | {:error, reason}`, have `update_category/3` return a value the controller can use, and set `queued_related_sync` from it. Alternatively, drop the field or rename it to `related_sync_attempted`.
 
-**Fix:** dedupe in `inline_resolve_and_sync/6` with the shared key:
+### IN-08: The phase release note omits three adopter-visible behaviour changes from this fix cycle
 
-```elixir
-records_list =
-  records
-  |> List.wrap()
-  |> Enum.uniq_by(&Chunks.id_key(Identity.document_id(schema_module, &1)))
-```
+**File:** `.planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md:106-111` ("Release note", the declared source for the release PR's upgrade notes, since CHANGELOG is not edited per OQ6)
 
-Alternatively, narrow the guide sentence to say that inline passes the caller's structs as given (D-11).
+**Issue:** None of these changes from 0.3.17 is in the Release note:
+
+1. **WR-06 (f021a559):** under `:oban`, `sync_records/3`, `delete_documents/3`, `sync_related/3` and the `Scrypath.Oban` Multi helpers now raise `ArgumentError` for nil, float or boolean ids. Before, they returned `{:ok, %{status: :accepted}}`.
+2. **189cef0f:** in 0.3.17, `Scrypath.Oban.enqueue_upsert/5` and `enqueue_delete/5` used the shared `unique:` policy (`scrypath-0.3.17/lib/scrypath/oban/enqueue.ex:120`). Now every Multi commit inserts its own job, so job volume grows for hot rows. This is harmless for correctness but visible in queue metrics and Oban Web.
+3. **WR-05:** `document_ids` is now deduped and sorted by its string form at every call size. The fix report explicitly says the release-PR author "should carry this sentence".
+
+**Fix:** add three bullets to the 179-06 Release note so the release-PR author has one source.
 
 ---
 
-_Reviewed: 2026-10-25T22:49:55Z_
+_Reviewed: 2026-10-25T23:59:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
