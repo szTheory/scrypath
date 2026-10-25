@@ -73,8 +73,9 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
 
 ## 4. v1.46 UI quality engine and pilot (proposed)
 
-- **Fixtures:** a `fixtures/scrypath_fixtures` path dependency (dev/test only) with five adopter profiles and 12 invariant tests. It replaces both `Phase173FixtureSource` copies.
-- **Story harness:** hand-rolled in `scrypath_ops`, with no new dependencies. It has a manifest and ExUnit gates: every variation renders, every variation is described, every component is covered, and no two variations render identically. Primitive and group stories cover `OpsUi`.
+- **Personas:** operators and adopters both get personas. Operator personas map onto `ROLE-*`/`JOB-*`; five adopter digital twins are proposed. The set is settled in the discuss phase.
+- **Fixtures:** a `fixtures/scrypath_fixtures` path dependency (dev/test only) with 12 invariant tests. It replaces both `Phase173FixtureSource` copies.
+- **Storybook:** phoenix_storybook in `scrypath_ops`, dev/test only. Themes use `data_attribute: "theme"`, page and section stories run in iframes, and `storybook.css` imports `app.css`. Our ExUnit gates sit on top: every variation renders, every variation is described, every component is covered, and no two variations render identically. A manifest feeds the sweep. Primitive and group stories cover `OpsUi`.
 - **Pilot:** extract Search health and Control room into area components over pure view-models, keeping pixels the same.
 - **Checks:**
   - the L2 browser sweep over the manifest, advisory until 14 clean nights;
