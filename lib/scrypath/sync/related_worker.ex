@@ -31,6 +31,11 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
         {:error, reason} when reason in [:repo_required, :search_records_required] ->
           {:cancel, {:invalid_job, reason}}
 
+        # search_records/2 returned something other than a list: an app bug that no retry
+        # fixes. The tag names the problem without the returned value.
+        {:error, {:invalid_search_records, _returned}} ->
+          {:cancel, {:invalid_job, :invalid_search_records}}
+
         {:error, reason} ->
           {:error, reason}
       end

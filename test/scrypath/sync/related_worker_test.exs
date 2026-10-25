@@ -331,6 +331,34 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       refute_received {:upsert_documents, _, _, _}
     end
 
+    defmodule BrokenLoaderOwner do
+      defstruct [:id]
+
+      def __scrypath__(:fan_outs) do
+        [comments: [target: DummyTarget, resolver: {__MODULE__, :resolve_comments, []}]]
+      end
+
+      def __scrypath__(:document_id), do: :id
+
+      # Breaks the search_records/2 contract (it must return a list).
+      def search_records(ids, _context), do: {:ok, Enum.map(ids, &%__MODULE__{id: &1})}
+
+      def resolve_comments(triggers) do
+        send(self(), {:resolved, __MODULE__, triggers})
+        []
+      end
+    end
+
+    test "a search_records/2 that returns a non-list cancels instead of retrying (IN-04)" do
+      args = %{dummy_args([1]) | "schema" => to_string(BrokenLoaderOwner)}
+
+      assert RelatedWorker.perform(%Oban.Job{args: args}) ==
+               {:cancel, {:invalid_job, :invalid_search_records}}
+
+      refute_received {:resolved, BrokenLoaderOwner, _}
+      refute_received {:upsert_documents, _, _, _}
+    end
+
     test "an opts key added by a newer release is ignored (rolling deploy)" do
       args = dummy_args([1], %{"future_option_zq179" => "x"})
 

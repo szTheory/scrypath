@@ -363,6 +363,7 @@ which failures are permanent and which Oban will retry for you:
 | Backend HTTP 4xx (e.g. bad request) | `{:cancel, ...}` | **Permanent** — Oban cancels the job, no retry. A 4xx is a client-side problem retrying will not fix. |
 | Backend HTTP 5xx or generic error | `{:error, reason}` | **Transient** — Oban retries with backoff up to `max_attempts: 8` (the worker default). |
 | Invalid schema, unknown fan-out, or job args that do not decode | `{:cancel, {:invalid_job, reason}}` | **Permanent** — the job can never succeed, so it is cancelled rather than retried. |
+| The owner's `search_records/2` returns something other than a list | `{:cancel, {:invalid_job, :invalid_search_records}}` | **Permanent** — an app bug no retry fixes. Fix `search_records/2`, then retry the cancelled job (for example from Oban Web). |
 | None of the job's triggers load (deleted or excluded by `search_records/2`) | `:ok` | Job completes without calling the resolver. |
 
 You do not write or configure this mapping; the library owns it. Your resolver and context

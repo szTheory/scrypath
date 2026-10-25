@@ -97,6 +97,18 @@ defmodule Scrypath.Oban.WorkerTest do
     def search_records(_ids, _context), do: []
   end
 
+  defmodule BrokenLoaderPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    schema "broken_loader_posts" do
+      field(:title, :string)
+    end
+
+    def search_records(ids, _context), do: {:ok, Enum.map(ids, &%__MODULE__{id: &1})}
+  end
+
   setup do
     FakeRepo.reset()
     :ok
@@ -167,6 +179,16 @@ defmodule Scrypath.Oban.WorkerTest do
 
     assert {:cancel, {:invalid_job, :repo_required}} =
              Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+  end
+
+  test "upsert worker cancels when search_records/2 returns a non-list (IN-04)" do
+    args = upsert_args(BrokenLoaderPost, RecordingBackend, [1])
+
+    assert Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args}) ==
+             {:cancel, {:invalid_job, :invalid_search_records}}
+
+    refute_received {:upsert_documents, _, _, _}
+    refute_received {:delete_documents, _, _, _}
   end
 
   test "a job queued before 0.3.16 still syncs its snapshot when the app can't load records" do
