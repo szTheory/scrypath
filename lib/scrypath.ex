@@ -190,6 +190,11 @@ defmodule Scrypath do
   change fans out to target search documents.
 
   Returns `{:ok, Scrypath.Operations.Result.t()}` describing the applied synchronization work.
+
+  The fan-out resolver receives a list of loaded owning-schema records in every sync mode.
+  Under `sync_mode: :oban` the job carries document ids and the worker reloads the current
+  records when it runs, skipping owners that no longer exist; see
+  [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
   """
   @spec sync_related(module(), struct() | [struct()], keyword()) ::
           {:ok, term()} | {:error, term()}
