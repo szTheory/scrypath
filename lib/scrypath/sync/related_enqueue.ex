@@ -7,6 +7,7 @@ if Code.ensure_loaded?(Oban.Job) do
     alias Scrypath.Identity
     alias Scrypath.Loader
     alias Scrypath.Oban.Enqueue
+    alias Scrypath.Oban.Payload
     alias Scrypath.Operations.Result
 
     @worker "Scrypath.Sync.RelatedWorker"
@@ -34,9 +35,10 @@ if Code.ensure_loaded?(Oban.Job) do
           queue = to_string(Config.oban_queue(config))
           max_attempts = Config.oban_max_attempts(config)
 
-          # One job per bounded, sorted chunk, under the same unique policy and
-          # transactional insert as the main sync jobs.
+          # One job per bounded, sorted chunk of the ids as the job stores them, under the
+          # same unique policy and transactional insert as the main sync jobs.
           document_ids
+          |> Payload.serialize_ids!()
           |> Chunks.ids()
           |> Enum.map(fn chunk ->
             Oban.Job.new(job_args(schema_module, chunk, fan_out_key, config),

@@ -273,6 +273,22 @@ defmodule Scrypath.Oban.EnqueueTest do
     refute Map.has_key?(job.args, "documents")
   end
 
+  test "enqueue dedupes ids in the form the job stores them (IN-01)" do
+    assert {:ok, %Result{} = result} =
+             Scrypath.Oban.Enqueue.enqueue_delete(SearchablePost, [:a, "a", 1, "1", :b],
+               backend: RecordingBackend,
+               sync_mode: :oban,
+               oban: RecordingOban,
+               oban_queue: :search_sync
+             )
+
+    assert_received {:oban_insert, job}
+    assert job.args["document_ids"] == [1, "1", "a", "b"]
+    assert job.args["document_count"] == 4
+    assert result.document_ids == [1, "1", "a", "b"]
+    assert result.document_count == 4
+  end
+
   test "enqueue helpers keep retryable queue state distinct from backend lifecycle" do
     assert {:ok, %Result{} = result} =
              Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [21],

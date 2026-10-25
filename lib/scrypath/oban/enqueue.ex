@@ -25,6 +25,7 @@ defmodule Scrypath.Oban.Enqueue do
 
     changesets =
       document_ids
+      |> Payload.serialize_ids!()
       |> Chunks.ids()
       |> at_least_one_chunk()
       |> Enum.map(&upsert_job_changeset(schema_module, &1, config))
@@ -43,6 +44,7 @@ defmodule Scrypath.Oban.Enqueue do
 
     changesets =
       document_ids
+      |> Payload.serialize_ids!()
       |> Chunks.ids()
       |> at_least_one_chunk()
       |> Enum.map(&delete_job_changeset(schema_module, &1, config))

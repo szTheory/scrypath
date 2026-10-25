@@ -17,6 +17,14 @@ defmodule Scrypath.Oban.Payload do
     |> Map.put("document_count", length(document_ids))
   end
 
+  @doc false
+  # Ids in the form an Oban job stores them (atoms become their names). Enqueue dedupes and
+  # chunks this form, so ids that serialize identically collapse into one job entry.
+  @spec serialize_ids!([term()]) :: [term()]
+  def serialize_ids!(document_ids) when is_list(document_ids) do
+    Enum.map(document_ids, &serialize_scalar!/1)
+  end
+
   defp base_payload(operation, schema_module, config) do
     backend = Config.fetch_backend!(config)
 

@@ -177,6 +177,19 @@ defmodule Scrypath.Sync.RelatedTest do
       assert Ecto.Changeset.get_field(changeset, :args)["document_ids"] == [1, 2]
     end
 
+    test "related job ids are deduped in the form the job stores them (IN-01)" do
+      assert {:ok, result} =
+               Scrypath.sync_related(
+                 DummySource,
+                 [%DummySource{id: :a, name: "A"}, %DummySource{id: "a", name: "A2"}],
+                 oban_opts(repo: FakeRepo)
+               )
+
+      assert [changeset] = inserted_changesets()
+      assert Ecto.Changeset.get_field(changeset, :args)["document_ids"] == ["a"]
+      assert result.document_count == 1
+    end
+
     test "related job args keep the 0.3.17 shape" do
       assert {:ok, _result} =
                Scrypath.sync_related(

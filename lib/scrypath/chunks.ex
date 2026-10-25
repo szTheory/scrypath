@@ -10,13 +10,13 @@ defmodule Scrypath.Chunks do
   def max_ids, do: @max_ids
 
   @doc false
-  # Dedupes by raw value, then sorts so the same id set in any order yields the same
-  # chunks. Sorting compares the string form first, with the raw value as a tiebreak,
-  # so 1 and "1" stay distinct.
+  # Dedupes by id_key/1 (keeping the first occurrence), then sorts so the same id set in
+  # any order yields the same chunks. Sorting compares the string form first, with the
+  # raw value as a tiebreak, so 1 and "1" stay distinct.
   @spec ids([term()]) :: [[term()]]
   def ids(ids) when is_list(ids) do
     ids
-    |> Enum.uniq()
+    |> Enum.uniq_by(&id_key/1)
     |> Enum.sort_by(&sort_key/1)
     |> Enum.chunk_every(@max_ids)
   end
@@ -27,11 +27,29 @@ defmodule Scrypath.Chunks do
   def by_id(items, id_fun) when is_list(items) and is_function(id_fun, 1) do
     items
     |> Enum.reverse()
-    |> Enum.uniq_by(id_fun)
+    |> Enum.uniq_by(&id_key(id_fun.(&1)))
     |> Enum.reverse()
     |> Enum.sort_by(&sort_key(id_fun.(&1)))
     |> Enum.chunk_every(@max_ids)
   end
+
+  @doc false
+  # How many ids remain once ids/1 dedupes them.
+  @spec distinct_count([term()]) :: non_neg_integer()
+  def distinct_count(ids) when is_list(ids) do
+    ids |> Enum.uniq_by(&id_key/1) |> length()
+  end
+
+  @doc false
+  # The dedupe key for an id: the value an Oban job stores once its args are JSON-encoded.
+  # A plain atom id is stored as its name, so :a and "a" are the same id everywhere (Oban
+  # jobs, inline and manual writes, span counts). 1 and "1" stay distinct: JSON keeps them
+  # apart, and booleans and nil are JSON values in their own right.
+  @spec id_key(term()) :: term()
+  def id_key(id) when is_atom(id) and not is_boolean(id) and not is_nil(id),
+    do: Atom.to_string(id)
+
+  def id_key(id), do: id
 
   @doc false
   # Runs `fun` on each chunk in order and stops at the first `{:error, _}`.

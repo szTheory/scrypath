@@ -132,7 +132,7 @@ defmodule Scrypath.Sync do
 
     metadata =
       Telemetry.common_metadata(schema_module, config,
-        document_count: document_ids |> Enum.uniq() |> length()
+        document_count: Chunks.distinct_count(document_ids)
       )
 
     Telemetry.span([:scrypath, :sync, :delete], metadata, fn ->
@@ -152,7 +152,7 @@ defmodule Scrypath.Sync do
   # failure is still reported as the span's exception.
   defp distinct_record_count(schema_module, records) do
     records
-    |> Enum.uniq_by(&Identity.document_id(schema_module, &1))
+    |> Enum.uniq_by(&Chunks.id_key(Identity.document_id(schema_module, &1)))
     |> length()
   rescue
     _error -> length(records)

@@ -25,6 +25,13 @@ defmodule Scrypath.ChunksTest do
       assert Chunks.ids([7, 7, 7]) == [[7]]
     end
 
+    test "an atom id and its string name are one id; booleans and nil stay distinct (IN-01)" do
+      assert Chunks.ids([:a, "a", :b]) == [[:a, :b]]
+      assert Chunks.ids(["a", :a]) == [["a"]]
+      assert Chunks.ids([true, "true", nil, "nil"]) == [[nil, "nil", true, "true"]]
+      assert Chunks.distinct_count([:a, "a", 1, "1", 1]) == 3
+    end
+
     test "the same id set in any order yields identical chunks" do
       ids = Enum.to_list(1..2500)
 
@@ -48,6 +55,12 @@ defmodule Scrypath.ChunksTest do
       items = [%{id: 1, v: :first}, %{id: 2, v: :only}, %{id: 1, v: :last}]
 
       assert Chunks.by_id(items, & &1.id) == [[%{id: 1, v: :last}, %{id: 2, v: :only}]]
+    end
+
+    test "collapses items whose ids differ only as atom and string (IN-01)" do
+      items = [%{id: :a, v: :first}, %{id: "a", v: :last}]
+
+      assert Chunks.by_id(items, & &1.id) == [[%{id: "a", v: :last}]]
     end
 
     test "chunks by at most 1000 items in a stable order" do
