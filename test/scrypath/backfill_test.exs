@@ -46,8 +46,26 @@ defmodule Scrypath.BackfillTest do
     end
 
     @impl true
-    def delete_documents(_schema_module, _document_ids, _config) do
-      {:ok, %{}}
+    def delete_documents(schema_module, document_ids, config) do
+      send(self(), {:delete_documents, schema_module, document_ids, config})
+
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: document_ids,
+         document_count: length(document_ids),
+         task:
+           Operations.task_from_backend(%{
+             uid: hd(document_ids) + 900,
+             status: "enqueued",
+             indexUid: Keyword.get(config, :index_name) || index_name(schema_module, config),
+             type: "documentDeletion"
+           }),
+         metadata: %{
+           index: Keyword.get(config, :index_name) || index_name(schema_module, config)
+         }
+       )}
     end
 
     @impl true
@@ -58,6 +76,27 @@ defmodule Scrypath.BackfillTest do
     @impl true
     def search_facet_values(_schema, _facet, _query, _opts, _config) do
       {:error, :not_implemented}
+    end
+  end
+
+  defmodule OmittingPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    schema "omitting_posts" do
+      field(:title, :string)
+    end
+
+    # Ids listed under :omit_ids in the calling process are treated as no
+    # longer searchable; everything else is loaded fresh.
+    def search_records(ids, context) do
+      send(self(), {:search_records, ids, context})
+      omit = Process.get(:omit_ids, [])
+
+      ids
+      |> Enum.reject(&(&1 in omit))
+      |> Enum.map(&%__MODULE__{id: &1, title: "Loaded #{&1}"})
     end
   end
 
@@ -124,6 +163,24 @@ defmodule Scrypath.BackfillTest do
   setup do
     BackfillRepo.reset()
     :ok
+  end
+
+  defp put_omitting_posts(ids, omit) do
+    Process.put(:omit_ids, omit)
+    BackfillRepo.put_records(Enum.map(ids, &%OmittingPost{id: &1, title: "Row #{&1}"}))
+  end
+
+  # Index writes in the order the backfill issued them.
+  defp drain_writes(acc \\ []) do
+    receive do
+      {:upsert_documents, _schema, documents, config} ->
+        drain_writes([{:upsert, Enum.map(documents, & &1.id), config[:index_name]} | acc])
+
+      {:delete_documents, _schema, ids, config} ->
+        drain_writes([{:delete, ids, config[:index_name]} | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
   end
 
   test "backfill validates options and returns an explicit manual result contract" do
@@ -294,16 +351,94 @@ defmodule Scrypath.BackfillTest do
               batches: 2,
               documents: 3,
               mode: :manual,
+              removed: 0,
               batch_results: [
-                %{index: "posts_rebuild", documents: 2, task: %{uid: 102, status: :enqueued}},
-                %{index: "posts_rebuild", documents: 1, task: %{uid: 103, status: :enqueued}}
+                %{
+                  index: "posts_rebuild",
+                  documents: 2,
+                  removed: 0,
+                  task: %{uid: 102, status: :enqueued}
+                },
+                %{
+                  index: "posts_rebuild",
+                  documents: 1,
+                  removed: 0,
+                  task: %{uid: 103, status: :enqueued}
+                }
               ]
-            }} =
+            } = result} =
              Scrypath.backfill(QueryablePost,
                backend: RecordingBackend,
                repo: BackfillRepo,
                batch_size: 2,
                index_name: "posts_rebuild"
              )
+
+    refute Enum.any?(result.batch_results, &Map.has_key?(&1, :delete_task))
+    refute_received {:delete_documents, _, _, _}
+  end
+
+  test "backfill loads batches through search_records/2 and deletes omitted ids after each upsert" do
+    put_omitting_posts(1..4, [2, 4])
+
+    assert {:ok, %{batches: 2, documents: 2, removed: 2, batch_results: batch_results}} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    assert_received {:search_records, [1, 2], %{repo: BackfillRepo}}
+    assert_received {:search_records, [3, 4], %{repo: BackfillRepo}}
+
+    index = "scrypath_omitting_post"
+
+    assert drain_writes() == [
+             {:upsert, [1], index},
+             {:delete, [2], index},
+             {:upsert, [3], index},
+             {:delete, [4], index}
+           ]
+
+    assert Enum.map(batch_results, & &1.removed) == [1, 1]
+    assert Enum.map(batch_results, & &1.documents) == [1, 1]
+    assert Enum.map(batch_results, & &1.last_primary_key) == [2, 4]
+
+    assert [
+             %{
+               task: %{uid: 101, type: "documentAdditionOrUpdate"},
+               delete_task: %{uid: 902, type: "documentDeletion", index_uid: ^index}
+             },
+             %{
+               task: %{uid: 103, type: "documentAdditionOrUpdate"},
+               delete_task: %{uid: 904, type: "documentDeletion", index_uid: ^index}
+             }
+           ] = batch_results
+  end
+
+  test "an all-omitted batch skips the upsert, deletes every id, and paging continues after it" do
+    put_omitting_posts(1..6, [3, 4])
+
+    assert {:ok, %{batches: 3, documents: 4, removed: 2, batch_results: batch_results}} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    index = "scrypath_omitting_post"
+
+    assert drain_writes() == [
+             {:upsert, [1, 2], index},
+             {:delete, [3, 4], index},
+             {:upsert, [5, 6], index}
+           ]
+
+    assert [first, omitted_batch, last] = batch_results
+    assert Enum.map(batch_results, & &1.last_primary_key) == [2, 4, 6]
+    assert %{documents: 0, removed: 2, delete_task: %{uid: 903}} = omitted_batch
+    refute Map.has_key?(omitted_batch, :task)
+    refute Map.has_key?(first, :delete_task)
+    refute Map.has_key?(last, :delete_task)
   end
 end
