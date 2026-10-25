@@ -109,6 +109,10 @@ end
 
 Return only the records that should be searchable; Scrypath removes the rest from the index. Schemas that define `search_document_id/1` must define `search_records/2`, because a custom document id cannot be mapped back to a row. Scrypath raises at enqueue time when a job could not load its records later.
 
+Backfill and managed reindex load each batch through the same `preload:` and `search_records/2` path as Oban sync, so they build the same documents. A live-index backfill also removes the ids `search_records/2` leaves out, but only ids from the rows it visits. Those deletes are accepted asynchronously, like the upserts: each batch result reports the delete under `delete_task` next to the upsert `task`, and `removed` counts the ids submitted for deletion. Backfill does not wait on either task, so follow `delete_task` as well as `task` when you need the removals applied. A managed reindex writes into a fresh index that never held those ids, so it reports them as `omitted` instead of deleting anything.
+
+A backfill is not a whole-index prune. The default path, without `search_records/2`, never omits rows. Documents for rows deleted outside Scrypath, or for rows outside the visited `:query` scope, stay in the index until drift recovery (`Scrypath.reconcile_sync/2`) or a managed reindex handles them.
+
 Delete jobs still carry only ids and never reload the deleted row.
 
 #### Upgrading from 0.3.15 or earlier

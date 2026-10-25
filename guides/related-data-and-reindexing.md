@@ -396,6 +396,19 @@ Examples where reindex is usually right:
 - settings changed in a way that implies a rebuild
 - you cannot confidently identify all affected source records
 
+Both workflows build documents the same way Oban sync does: each batch is loaded with the schema's `preload:` associations, and a schema's `search_records/2` decides which rows are searchable. They differ in what happens to the rows `search_records/2` leaves out:
+
+- a **backfill** writes to the live index, so it deletes those ids and counts them in `removed`
+- a **managed reindex** writes to a fresh index, so it counts them in `omitted` and deletes nothing
+
+A backfill only touches the rows it visits. It is not a whole-index prune: documents for rows deleted outside Scrypath, or for rows outside the `:query` scope, stay in the index. Use `Scrypath.reconcile_sync/2` to find that drift, and a managed reindex when you need the index rebuilt from scratch.
+
+### Primary keys and `:query`
+
+Composite primary keys are supported. Backfill pages on the full key, visits each row once, and reports each batch's `last_primary_key` as a keyword list such as `[org_id: 1, id: 7]`. Declare composite primary-key fields in the same order as the columns of the database constraint, so the constraint's index serves the backfill ordering.
+
+`:query` decides which rows are visited. Its `where` and `join` clauses apply; its `order_by`, `limit`, `offset`, `select` and `preload` are ignored, because backfill owns paging, projection and preloading. A `:query` must not fan out rows. When a join repeats a source row, the duplicates take up batch slots: backfill drops repeats within a batch, so batches come back smaller than `batch_size` and the database does extra work. Scope with `where` or an `exists` subquery instead of a join that can match several rows.
+
 ## A practical decision tree
 
 Ask these questions in order:
