@@ -127,7 +127,19 @@ A backfill is not a whole-index prune. The default path, without `search_records
 
 Delete jobs still carry only ids and never reload the deleted row.
 
-Each job carries at most 1000 ids. A larger call enqueues one job per chunk, inserted together in one transaction, so either every chunk job is queued or none is; the result's `tasks:` lists one queued job per chunk. When you call it inside your own transaction on the Oban repo (for example from `Ecto.Multi.run/3`), Scrypath inserts the chunk jobs in your transaction instead of opening a nested one, and returns the first failed insert's `{:error, reason}` without rolling anything back. Your transaction makes the jobs all-or-nothing, so fail it on `{:error, _}`: returning the error from `Ecto.Multi.run/3` does that. Each worker also writes to the backend in chunks of at most 1000. An identical job that is still pending (available, scheduled or retryable) is not inserted twice: the existing job is returned and reported with `conflict?: true`. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` still add one job per `Ecto.Multi` step, whatever its size; the worker bounds each backend write.
+Each job carries at most 1000 ids. A larger call enqueues one job per chunk, inserted together in one transaction, so either every chunk job is queued or none is; the result's `tasks:` lists one queued job per chunk. Each worker also writes to the backend in chunks of at most 1000. An identical job that is still pending (available, scheduled or retryable) is not inserted twice: the existing job is returned and reported with `conflict?: true`. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` still add one job per `Ecto.Multi` step, whatever its size; the worker bounds each backend write.
+
+#### Call sync functions after your write commits
+
+Call `Scrypath.sync_records/3`, `Scrypath.delete_documents/3` and `Scrypath.sync_related/3` after your transaction commits, in every sync mode, not from inside it:
+
+- Under `:oban`, Scrypath collapses a sync into an identical pending job instead of inserting a second one (`conflict?: true`). That decision is made when you enqueue. Inside a transaction, the job you collapse into can start before your commit, load the old rows and finish, and no job is left to index your change.
+- Under `:oban`, Oban also holds a lock on that unique job until your transaction ends. An identical sync from another process during that time reports `conflict?: true` and inserts nothing. If your transaction then rolls back, neither job exists and the other process's update is never indexed.
+- Under `:inline`, the backend write runs immediately, so inside a transaction the backend would index rows that are not committed yet and may still roll back.
+
+The trade-off: if your process crashes between the commit and the sync call, that sync is missed. The data is committed, so a retry of the call, a backfill or a managed reindex brings the index back in line; see [Drift recovery](drift-recovery.md) and the recovery posture for each mode above.
+
+If you do call a sync function inside a transaction on the Oban repo, Scrypath won't break your transaction. It inserts the chunk jobs in your transaction instead of opening a nested one, and returns the first failed insert's `{:error, reason}` without rolling anything back, so fail your transaction on `{:error, _}` (returning the error from `Ecto.Multi.run/3` does that). The freshness hazards above still apply. They also apply to `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5`, which insert their job inside your `Ecto.Multi` by design.
 
 #### Upgrading from 0.3.15 or earlier
 

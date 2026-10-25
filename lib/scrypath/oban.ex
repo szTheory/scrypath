@@ -6,6 +6,11 @@ defmodule Scrypath.Oban do
   number of records or ids. Unlike `Scrypath.sync_records/3` under `sync_mode: :oban`, they do
   not split the ids into several jobs; the worker bounds each backend write to at most 1000
   documents or ids.
+
+  These helpers insert the job inside your transaction, so the hazards described in the
+  sync modes guide under "Call sync functions after your write commits" apply: the job can
+  collapse into an identical pending job that runs before your commit. Prefer calling
+  `Scrypath.sync_records/3` or `Scrypath.delete_documents/3` after the commit.
   """
   @compile {:no_warn_undefined, Oban}
 

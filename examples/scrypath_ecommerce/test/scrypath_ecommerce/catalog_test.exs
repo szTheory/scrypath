@@ -98,6 +98,16 @@ defmodule ScrypathEcommerce.CatalogTest do
       )
     end
 
+    test "update_category/3 enqueues no related sync when the update fails", %{
+      tenant: tenant,
+      category: category
+    } do
+      assert {:error, %Ecto.Changeset{}} = Catalog.update_category(tenant, category, %{name: nil})
+
+      refute_enqueued(worker: Scrypath.Sync.RelatedWorker)
+      assert Catalog.get_category!(tenant, category.id).name == "Electronics"
+    end
+
     test "resolve_products_for_categories/1 reloads category products with category names", %{
       tenant: tenant,
       category: category

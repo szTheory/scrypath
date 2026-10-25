@@ -4,8 +4,8 @@ defmodule ScrypathEcommerce.Catalog do
   Enforces multi-tenancy. All operations require a tenant except those on Tenant itself.
   """
 
-  alias Ecto.Multi
   import Ecto.Query, warn: false
+  require Logger
   alias ScrypathEcommerce.Repo
   alias ScrypathEcommerce.Catalog.{Tenant, Category, Product, Variant}
 
@@ -60,19 +60,29 @@ defmodule ScrypathEcommerce.Catalog do
     |> Repo.insert(opts)
   end
 
+  # The related product sync runs after the category update commits, never inside the
+  # transaction: an in-transaction enqueue can collapse into a pending job that reads the
+  # old category name (see the related-data guide). Like the product functions below, a
+  # sync error does not turn the committed update into a failure; it is logged, and a
+  # backfill of Product repairs the index.
   def update_category(tenant, %Category{} = category, attrs) do
-    opts = tenant_opts(tenant)
+    with {:ok, category} <-
+           category |> Category.changeset(attrs) |> Repo.update(tenant_opts(tenant)) do
+      sync_related_products(category)
+      {:ok, category}
+    end
+  end
 
-    Multi.new()
-    |> Multi.update(:category, Category.changeset(category, attrs), opts)
-    |> Multi.run(:sync_related_products, fn _repo, %{category: category} ->
-      Scrypath.sync_related(Category, category, fan_out: :products)
-    end)
-    |> Repo.transaction(opts)
-    |> case do
-      {:ok, %{category: category}} -> {:ok, category}
-      {:error, :category, changeset, _changes} -> {:error, changeset}
-      {:error, :sync_related_products, reason, _changes} -> {:error, reason}
+  defp sync_related_products(category) do
+    case Scrypath.sync_related(Category, category, fan_out: :products) do
+      {:ok, _result} ->
+        :ok
+
+      {:error, reason} ->
+        Logger.warning(
+          "category #{category.id} was updated but its product search sync failed: " <>
+            inspect(reason)
+        )
     end
   end
 

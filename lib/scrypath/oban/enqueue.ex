@@ -124,8 +124,11 @@ defmodule Scrypath.Oban.Enqueue do
   #   * Outside a transaction, the inserts run inside one transaction on the Oban
   #     instance's repo, rolled back on the first failure so no orphan chunk jobs persist.
   #   * Inside the caller's transaction (for example a sync call from Ecto.Multi.run/3),
-  #     no nested transaction is opened and nothing is rolled back here: a nested rollback
-  #     would mark the caller's whole transaction as failed. The caller's transaction
+  #     which the guides advise against (an in-transaction enqueue can collapse into a
+  #     pending job that runs before the commit), this is a safety net that keeps the
+  #     caller's transaction usable. No nested transaction is opened and nothing is
+  #     rolled back here: a nested rollback would mark the caller's whole transaction as
+  #     failed. The caller's transaction
   #     already makes the chunk jobs all-or-nothing, so the caller must fail it on
   #     {:error, _}; returning {:error, _} from Multi.run/3 does exactly that. This also
   #     follows Oban.Repo.transaction/3's nested-transaction guidance (no retry loop runs

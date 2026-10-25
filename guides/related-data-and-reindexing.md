@@ -227,18 +227,24 @@ What to expect at the edges:
   resolver receives. If none of a job's triggers load, the resolver is not called and the
   job succeeds. To hide the targets of a soft-deleted owner, sync them directly, for
   example `Scrypath.sync_records(Post, posts)`.
-- **Where to call `sync_related/3` relative to your transaction depends on the sync mode.**
-  - Under `:oban`, when Oban uses the same repo as your writes, calling it inside the
-    transaction (for example from `Ecto.Multi.run/3`) is supported and atomic. The jobs are
-    inserted on your transaction's connection, so no worker sees them before the commit, and
-    a rollback discards them along with the write. Return the `{:error, _}` from the step so a
-    failed enqueue aborts the transaction (see the `:oban` section of the sync modes guide).
-  - Under `:oban` with Oban on a different repo or database, the job insert commits on its
-    own. Call `sync_related/3` after your write commits, or a worker can run the job first
-    and load stale or missing triggers.
-  - Under `:inline`, call it after the write commits. The resolver and the backend write run
-    immediately, so inside the transaction the backend would index rows that are not
-    committed yet and may still roll back.
+- **Call `sync_related/3` after the write commits, in every sync mode.**
+  - Under `:oban`, Scrypath collapses a sync into an identical pending job (`conflict?: true`)
+    when you enqueue. Inside a transaction, the job you collapse into can start before your
+    commit, load the old triggers and finish, and no job is left to fan out your change.
+  - Under `:oban`, Oban also holds a lock on that unique job until your transaction ends. An
+    identical `sync_related/3` from another process during that time reports
+    `conflict?: true` and inserts nothing, so if your transaction rolls back, neither fan-out
+    runs.
+  - Under `:inline`, the resolver and the backend write run immediately, so inside a
+    transaction the backend would index rows that are not committed yet and may still roll
+    back.
+
+  The trade-off: a crash between the commit and the call misses that fan-out. Your data is
+  committed, so re-running `sync_related/3`, a backfill of the target schema or a managed
+  reindex brings the index back in line (see [Drift recovery](drift-recovery.md)). If you do
+  call it inside a transaction on the Oban repo, Scrypath won't break your transaction: see
+  "Call sync functions after your write commits" in the
+  [sync modes guide](sync-modes-and-visibility.md).
 - **Inline does not reload.** Under `:inline`, a struct for a row you just deleted is still
   passed to the resolver, which usually returns `[]` because nothing references it any more.
   An empty trigger list is a noop in every mode: the resolver is not called.
