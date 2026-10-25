@@ -173,6 +173,32 @@ defmodule Scrypath.TestSupport.LoaderBackfill.KeylessEvent do
   end
 end
 
+defmodule Scrypath.TestSupport.LoaderBackfill.StubMeilisearch do
+  @moduledoc false
+
+  # The index-management callbacks Scrypath.reindex invokes. Results carry no
+  # `:task`, so reindex never polls a real Meilisearch server.
+
+  def index_name(schema_module, config) do
+    Scrypath.TestSupport.LoaderBackfill.RecordingBackend.index_name(schema_module, config)
+  end
+
+  def create_index(schema_module, primary_key, config) do
+    send(self(), {:create_index, schema_module, primary_key, config})
+    {:ok, %{target_index: Keyword.fetch!(config, :target_index)}}
+  end
+
+  def apply_settings(schema_module, index_name, config) do
+    send(self(), {:apply_settings, schema_module, index_name, config})
+    {:ok, %{index: index_name}}
+  end
+
+  def swap_indexes(schema_module, config) do
+    send(self(), {:swap_indexes, schema_module, config})
+    {:ok, %{target_index: Keyword.fetch!(config, :target_index)}}
+  end
+end
+
 defmodule Scrypath.TestSupport.LoaderBackfill.RecordingBackend do
   @moduledoc false
 
