@@ -20,92 +20,120 @@ defmodule Scrypath.Backfill do
     config = Options.validate_backfill_options!(opts)
     backend = Keyword.fetch!(config, :backend)
     index = Keyword.get(config, :index_name) || backend.index_name(schema_module, config)
-    primary_key = primary_key(schema_module)
-    batch_size = Keyword.fetch!(config, :batch_size)
+    cols = pk_columns(schema_module)
 
-    config
-    |> base_query(schema_module, primary_key)
-    |> run_batches(schema_module, primary_key, batch_size, config, index, 0, [])
+    run_batches(%{
+      base_query: base_query(config, schema_module, cols),
+      schema: schema_module,
+      cols: cols,
+      batch_size: Keyword.fetch!(config, :batch_size),
+      config: config,
+      index: index,
+      repo: Keyword.fetch!(config, :repo),
+      keyset: nil,
+      total: 0,
+      acc: []
+    })
   end
 
-  defp run_batches(base_query, schema_module, primary_key, batch_size, config, index, total, acc) do
-    repo = Keyword.fetch!(config, :repo)
-    cursor = last_primary_key(acc)
+  defp run_batches(state) do
+    rows =
+      state.base_query
+      |> keyset_after(state.keyset)
+      |> limit(^state.batch_size)
+      |> state.repo.all()
 
-    records =
-      base_query
-      |> batch_query(primary_key, cursor, batch_size)
-      |> repo.all()
-
-    case records do
-      [] ->
-        {:ok,
-         %{
-           index: index,
-           batches: length(acc),
-           documents: total,
-           mode: Keyword.fetch!(config, :sync_mode),
-           batch_results: Enum.reverse(acc)
-         }}
-
-      _records ->
-        documents = Enum.map(records, &Projection.document(schema_module, &1))
-        last_primary_key = Map.fetch!(List.last(records), primary_key)
-
-        with {:ok, backend_result} <-
-               upsert_documents(
-                 schema_module,
-                 documents,
-                 Keyword.fetch!(config, :backend),
-                 config,
-                 index
-               ),
-             result <-
-               Operations.normalize_write_result(backend_result,
-                 mode: Keyword.fetch!(config, :sync_mode),
-                 document_ids: Enum.map(documents, & &1.id),
-                 document_count: length(documents),
-                 index: index
-               ) do
-          batch_result =
-            batch_result(
-              result,
-              index,
-              length(documents),
-              last_primary_key
-            )
-
-          run_batches(
-            base_query,
-            schema_module,
-            primary_key,
-            batch_size,
-            config,
-            index,
-            total + length(documents),
-            [batch_result | acc]
-          )
-        end
+    case rows do
+      [] -> {:ok, final_result(state)}
+      rows -> run_batch(state, rows)
     end
   end
 
-  defp base_query(config, schema_module, primary_key) do
+  defp run_batch(state, rows) do
+    %{schema: schema_module, config: config, index: index, cols: cols} = state
+    values = cursor_values(cols, List.last(rows))
+    documents = Enum.map(rows, &Projection.document(schema_module, &1))
+
+    with {:ok, backend_result} <-
+           upsert_documents(
+             schema_module,
+             documents,
+             Keyword.fetch!(config, :backend),
+             config,
+             index
+           ) do
+      result =
+        Operations.normalize_write_result(backend_result,
+          mode: Keyword.fetch!(config, :sync_mode),
+          document_ids: Enum.map(documents, & &1.id),
+          document_count: length(documents),
+          index: index
+        )
+
+      batch_result =
+        batch_result(result, index, length(documents), public_cursor(cols, values))
+
+      run_batches(%{
+        state
+        | keyset: Enum.zip(cols, values),
+          total: state.total + length(documents),
+          acc: [batch_result | state.acc]
+      })
+    end
+  end
+
+  defp final_result(state) do
+    %{
+      index: state.index,
+      batches: length(state.acc),
+      documents: state.total,
+      mode: Keyword.fetch!(state.config, :sync_mode),
+      batch_results: Enum.reverse(state.acc)
+    }
+  end
+
+  defp base_query(config, schema_module, cols) do
     (config[:query] || schema_module)
     |> exclude(:order_by)
     |> exclude(:limit)
-    |> order_by([record], asc: field(record, ^primary_key))
+    |> order_by(^Enum.map(cols, &{:asc, &1}))
   end
 
-  defp batch_query(query, _primary_key, nil, batch_size) do
-    query
-    |> limit(^batch_size)
+  # The paging cursor is the key of the last row the database returned, in
+  # primary-key column order. Keys are never sorted in Elixir; ORDER BY decides.
+  defp cursor_values(cols, last_row) do
+    Enum.map(cols, fn col ->
+      case Map.fetch!(last_row, col) do
+        nil ->
+          raise ArgumentError,
+                "backfill cursor column #{inspect(col)} is nil on the last row of a batch; " <>
+                  "columns used for backfill paging must not be nil"
+
+        value ->
+          value
+      end
+    end)
   end
 
-  defp batch_query(query, primary_key, cursor, batch_size) do
-    query
-    |> where([record], field(record, ^primary_key) > ^cursor)
-    |> limit(^batch_size)
-  end
+  # Single-column keys keep a scalar cursor; composite keys report a keyword
+  # list in primary-key order (the `Ecto.primary_key/1` shape).
+  defp public_cursor([_single], [value]), do: value
+  defp public_cursor(cols, values), do: Enum.zip(cols, values)
+
+  # The single seam for "rows after this key". Values are always pinned params
+  # against schema-typed fields, so Ecto casts them by the field type.
+  defp keyset_after(query, nil), do: query
+  defp keyset_after(query, pairs), do: where(query, ^keyset_predicate(pairs))
+
+  defp keyset_predicate([{col, value}]), do: dynamic([r], field(r, ^col) > ^value)
+
+  defp keyset_predicate([{col, value} | _rest] = pairs),
+    do: dynamic([r], field(r, ^col) >= ^value and ^expand(pairs))
+
+  defp expand([{col, value}]), do: dynamic([r], field(r, ^col) > ^value)
+
+  defp expand([{col, value} | rest]),
+    do: dynamic([r], field(r, ^col) > ^value or (field(r, ^col) == ^value and ^expand(rest)))
 
   defp upsert_documents(schema_module, documents, backend, config, index) do
     config = Keyword.put(config, :index_name, index)
@@ -148,16 +176,10 @@ defmodule Scrypath.Backfill do
     end
   end
 
-  defp last_primary_key([]), do: nil
-
-  defp last_primary_key([%{last_primary_key: last_primary_key} | _rest]) do
-    last_primary_key
-  end
-
-  defp primary_key(schema_module) do
+  defp pk_columns(schema_module) do
     case schema_module.__schema__(:primary_key) do
-      [field | _rest] -> field
-      [] -> Scrypath.Schema.Metadata.document_id(schema_module)
+      [] -> [Scrypath.Schema.Metadata.document_id(schema_module)]
+      cols -> cols
     end
   end
 end
