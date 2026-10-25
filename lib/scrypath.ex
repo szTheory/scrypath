@@ -372,6 +372,63 @@ defmodule Scrypath do
     Scrypath.Search.search_many!(entries, opts)
   end
 
+  @doc """
+  Rebuilds documents in the live index from the database, one batch at a time.
+
+  Backfill pages the schema's table, or the rows selected by the caller's
+  **`:query`**, in primary-key order. It builds each batch's documents through
+  the same loader that Oban sync uses, so declared **`preload:`** associations
+  are loaded and a schema's **`search_records/2`** decides which rows in the
+  batch are searchable.
+
+  ## Result
+
+  On success, backfill returns **`{:ok, result}`** where `result` is a map with:
+
+    * **`index`** - the index the documents were written to
+    * **`batches`** - the number of batches visited
+    * **`documents`** - the number of documents upserted across all batches
+    * **`removed`** - the number of document ids submitted for deletion across
+      all batches (see "Removed documents")
+    * **`mode`** - the `sync_mode` the backfill ran with
+    * **`batch_results`** - one map per batch, in paging order
+
+  Each **`batch_results`** entry has:
+
+    * **`index`** - the index the batch was written to
+    * **`documents`** - the number of documents upserted for the batch
+    * **`removed`** - the number of ids from the batch submitted for deletion
+    * **`last_primary_key`** - the primary key of the last row in the batch
+      (see "Cursor shape")
+    * **`task`** - the backend task for the batch's upsert; absent when the
+      batch had no documents to upsert, for example when every row was omitted
+    * **`delete_task`** - the backend task for the ids counted in `removed`;
+      present only when the batch submitted a delete
+
+  ## Batch tasks
+
+  Both writes are accepted asynchronously by the backend. Backfill does not wait
+  on **`task`** or **`delete_task`** in any `sync_mode`, so `documents` and
+  `removed` count what was submitted, not what the backend has applied. A
+  caller that needs the removals applied before continuing must follow
+  **`delete_task`** as well as **`task`**.
+
+  ## Cursor shape
+
+  **`last_primary_key`** is the scalar key value for a single-column primary
+  key, for example `7`. For a composite primary key it is a keyword list in
+  primary-key order, for example `[org_id: 1, id: 7]`. Backfill pages on the
+  full key, so every row in scope is visited exactly once.
+
+  ## Removed documents
+
+  For a schema that defines **`search_records/2`**, ids from a visited batch
+  that the function does not return are deleted from the index and counted in
+  **`removed`**. Only ids from rows the backfill visited are deleted. Documents
+  for rows outside the visited scope, including rows deleted outside Scrypath,
+  are never touched; use `reconcile_sync/2` for drift recovery. Schemas without
+  `search_records/2` index every visited row, so `removed` stays `0`.
+  """
   @spec backfill(module(), keyword()) :: {:ok, map()} | {:error, term()}
   def backfill(schema_module, opts \\ []) do
     Scrypath.Backfill.run(schema_module, opts)
