@@ -1,6 +1,7 @@
 defmodule Scrypath.Sync do
   @moduledoc false
 
+  alias Scrypath.Chunks
   alias Scrypath.Config
   alias Scrypath.Identity
   alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
@@ -52,6 +53,17 @@ defmodule Scrypath.Sync do
 
     config = Config.resolve!(opts)
 
+    # No triggers means nothing to resolve: never call the resolver with an empty list.
+    case List.wrap(records) do
+      [] ->
+        noop_result(config)
+
+      _triggers ->
+        do_sync_related(schema_module, records, fan_out_key, fan_out_config, config, opts)
+    end
+  end
+
+  defp do_sync_related(schema_module, records, fan_out_key, fan_out_config, config, opts) do
     case Keyword.fetch!(config, :sync_mode) do
       :oban ->
         config
@@ -143,14 +155,65 @@ defmodule Scrypath.Sync do
         |> decorate_result(config)
 
       _other ->
-        documents = Enum.map(records, &Projection.document(schema_module, &1))
-
-        backend_upsert_documents(schema_module, documents, config)
-        |> normalize_write_result(documents, config)
-        |> maybe_wait_for_task(config)
-        |> decorate_result(config)
+        records
+        |> Enum.map(&Projection.document(schema_module, &1))
+        |> Chunks.by_id(& &1.id)
+        |> Chunks.reduce_ok(fn documents ->
+          backend_upsert_documents(schema_module, documents, config)
+          |> normalize_write_result(documents, config)
+          |> maybe_wait_for_task(config)
+          |> tag_chunk(documents)
+        end)
+        |> combine_chunks(config)
     end
   end
+
+  # Each chunk waits on its own backend task inside the per-chunk pipeline, so a failed
+  # chunk task halts the reducer before the next chunk is sent.
+  defp tag_chunk({:ok, result}, items), do: {:ok, {item_ids(items), result}}
+  defp tag_chunk(other, _items), do: other
+
+  # One chunk keeps today's exact result (including any backend map keys) plus a
+  # one-element `tasks`. Two or more chunks build the result fresh so no single chunk's
+  # backend_result claims to cover the whole call.
+  defp combine_chunks({:ok, [{_ids, %Result{} = result}]}, config) do
+    decorate_result({:ok, %Result{result | tasks: List.wrap(result.task)}}, config)
+  end
+
+  defp combine_chunks({:ok, [{_ids, result}]}, config), do: decorate_result({:ok, result}, config)
+
+  defp combine_chunks({:ok, [_first, _second | _rest] = chunks}, config) do
+    {_ids, last} = List.last(chunks)
+    last_result = chunk_result(last)
+    tasks = Enum.flat_map(chunks, fn {_ids, result} -> List.wrap(chunk_result(result).task) end)
+
+    result =
+      Result.new(
+        mode: Keyword.fetch!(config, :sync_mode),
+        status: result_status(config),
+        document_ids: Enum.flat_map(chunks, fn {ids, result} -> chunk_ids(ids, result) end),
+        document_count:
+          Enum.reduce(chunks, 0, fn {ids, result}, sum -> sum + chunk_count(ids, result) end),
+        task: last_result.task,
+        tasks: tasks,
+        metadata: maybe_put(%{}, :index, Map.get(last_result.metadata, :index))
+      )
+
+    decorate_result({:ok, result}, config)
+  end
+
+  defp combine_chunks({:error, _reason} = error, _config), do: error
+
+  # A backend may answer `{:ok, non_map}` (the test fake returns an id list); that chunk
+  # counts as a chunk with no task.
+  defp chunk_result(%Result{} = result), do: result
+  defp chunk_result(_other), do: %Result{mode: nil, status: nil}
+
+  defp chunk_ids(_ids, %Result{document_ids: [_ | _] = document_ids}), do: document_ids
+  defp chunk_ids(ids, _result), do: ids
+
+  defp chunk_count(_ids, %Result{document_count: count}) when count > 0, do: count
+  defp chunk_count(ids, _result), do: length(ids)
 
   defp dispatch_delete(schema_module, document_ids, config) do
     case Keyword.fetch!(config, :sync_mode) do
@@ -161,10 +224,15 @@ defmodule Scrypath.Sync do
         |> decorate_result(config)
 
       _other ->
-        backend_delete_documents(schema_module, document_ids, config)
-        |> normalize_write_result(document_ids, config)
-        |> maybe_wait_for_task(config)
-        |> decorate_result(config)
+        document_ids
+        |> Chunks.ids()
+        |> Chunks.reduce_ok(fn ids ->
+          backend_delete_documents(schema_module, ids, config)
+          |> normalize_write_result(ids, config)
+          |> maybe_wait_for_task(config)
+          |> tag_chunk(ids)
+        end)
+        |> combine_chunks(config)
     end
   end
 
@@ -252,7 +320,12 @@ defmodule Scrypath.Sync do
     |> maybe_put(:index, Map.get(result.metadata, :index))
     |> maybe_put(:oban, Map.get(result.metadata, :oban))
     |> maybe_put_operation_reference(result.task)
+    |> Map.put(:tasks, Enum.map(result.tasks, &public_task/1))
   end
+
+  defp public_task(%OperationTask{kind: :backend_task} = task), do: public_backend_task(task)
+  defp public_task(%OperationTask{kind: :queue_job} = task), do: public_job(task)
+  defp public_task(%OperationTask{} = task), do: OperationTask.to_public_sync(task)
 
   defp maybe_put_operation_reference(result, %OperationTask{kind: :backend_task} = task) do
     Map.put(result, :task, public_backend_task(task))
@@ -285,7 +358,8 @@ defmodule Scrypath.Sync do
       id: task.id,
       worker: Map.get(task.reference, :worker),
       queue: Map.get(task.reference, :queue),
-      state: Map.get(task.metadata, :oban_state)
+      state: Map.get(task.metadata, :oban_state),
+      conflict?: Map.get(task.metadata, :conflict?, false)
     }
     |> maybe_put(:attempt, job_raw_value(task, :attempt))
     |> maybe_put(:max_attempts, job_raw_value(task, :max_attempts))

@@ -61,9 +61,104 @@ defmodule Scrypath.LoaderTest do
     end
   end
 
+  defmodule SpyLoaderPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    schema "loader_spy_posts" do
+      field(:title, :string)
+    end
+
+    # Loads every requested id except multiples of 7.
+    def search_records(ids, _context) do
+      send(self(), {:search_records, ids})
+
+      ids
+      |> Enum.reject(&(rem(&1, 7) == 0))
+      |> Enum.map(&%__MODULE__{id: &1, title: "Loaded #{&1}"})
+    end
+  end
+
+  defmodule BadSecondChunkPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    schema "loader_bad_chunk_posts" do
+      field(:title, :string)
+    end
+
+    def search_records(ids, _context) do
+      call = Process.get(:bad_chunk_calls, 0) + 1
+      Process.put(:bad_chunk_calls, call)
+      send(self(), {:search_records, ids})
+
+      if call == 2, do: :not_a_list, else: Enum.map(ids, &%__MODULE__{id: &1})
+    end
+  end
+
+  # Hand-written owner-only fan-out schema: no :preload clause in __scrypath__/1.
+  defmodule OwnerOnlySchema do
+    use Ecto.Schema
+
+    schema "loader_owner_only" do
+      field(:name, :string)
+    end
+
+    def __scrypath__(:fan_outs), do: []
+    def __scrypath__(:document_id), do: :id
+  end
+
   setup do
     FakeRepo.reset()
     :ok
+  end
+
+  describe "load/3 chunking" do
+    test "a custom loader sees at most 1000 ids per call and missing ids span the full input" do
+      ids = Enum.to_list(1..2500)
+
+      assert {:ok, records, missing} = Loader.load(SpyLoaderPost, Enum.shuffle(ids), [])
+
+      for _ <- 1..3 do
+        assert_received {:search_records, chunk}
+        assert length(chunk) <= 1000
+      end
+
+      refute_received {:search_records, _}
+
+      assert length(records) == 2500 - length(Enum.filter(ids, &(rem(&1, 7) == 0)))
+      assert Enum.sort(missing) == Enum.filter(ids, &(rem(&1, 7) == 0))
+    end
+
+    test "the default repo path runs one bounded query per chunk" do
+      FakeRepo.put_records([])
+
+      assert {:ok, [], missing} =
+               Loader.load(QueryablePost, Enum.to_list(1..2500), repo: FakeRepo)
+
+      assert length(missing) == 2500
+
+      for _ <- 1..3, do: assert_received({:fake_repo_all, _query})
+      refute_received {:fake_repo_all, _}
+    end
+
+    test "an invalid search_records/2 return on chunk 2 halts later chunks" do
+      assert {:error, {:invalid_search_records, :not_a_list}} =
+               Loader.load(BadSecondChunkPost, Enum.to_list(1..2500), [])
+
+      assert_received {:search_records, _}
+      assert_received {:search_records, _}
+      refute_received {:search_records, _}
+    end
+
+    test "owner-only schemas without a :preload clause load without raising" do
+      FakeRepo.put_records([%OwnerOnlySchema{id: 1, name: "One"}])
+
+      assert {:ok, [%OwnerOnlySchema{id: 1}], [2]} =
+               Loader.load(OwnerOnlySchema, [1, 2], repo: FakeRepo)
+    end
   end
 
   test "prepare_records/3 returns rows unchanged without touching the repo when no preload is declared" do
