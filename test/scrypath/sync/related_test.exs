@@ -190,6 +190,18 @@ defmodule Scrypath.Sync.RelatedTest do
       assert result.document_count == 1
     end
 
+    test "a trigger with id: nil raises at the call site instead of enqueueing (WR-06)" do
+      assert_raise ArgumentError, ~r/document ids must be integers or strings, got nil/, fn ->
+        Scrypath.sync_related(
+          DummySource,
+          [%DummySource{id: 1, name: "Saved"}, %DummySource{id: nil, name: "New"}],
+          oban_opts(repo: FakeRepo)
+        )
+      end
+
+      assert inserted_changesets() == []
+    end
+
     test "related job args keep the 0.3.17 shape" do
       assert {:ok, _result} =
                Scrypath.sync_related(

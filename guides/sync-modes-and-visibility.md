@@ -127,6 +127,8 @@ A backfill is not a whole-index prune. The default path, without `search_records
 
 Delete jobs still carry only ids and never reload the deleted row.
 
+A job stores each document id as an integer or a string, the id types Meilisearch accepts (an atom id is stored as its name). Any other id, such as `nil` from a struct that was never saved, raises `ArgumentError` when you sync instead of being queued and cancelled later.
+
 Each job carries at most 1000 ids. A larger call enqueues one job per chunk, inserted together in one transaction, so either every chunk job is queued or none is; the result's `tasks:` lists one queued job per chunk. Each worker also writes to the backend in chunks of at most 1000. An identical job that is still pending (available, scheduled or retryable) is not inserted twice: the existing job is returned and reported with `conflict?: true`. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` still add one job per `Ecto.Multi` step, whatever its size; the worker bounds each backend write.
 
 #### Call sync functions after your write commits

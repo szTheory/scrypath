@@ -108,10 +108,17 @@ defmodule Scrypath.Oban.JobArgs do
 
   defp fetch_index(_args), do: {:error, {:invalid_arg, "index"}}
 
-  # Ids round-trip through JSON as integers or strings. Anything else would make the
-  # loader's query raise (and Oban retry) instead of cancelling, so reject it here.
+  @doc false
+  # The one rule for a stored document id, shared with enqueue (Payload.serialize_ids!/1)
+  # so the two ends cannot drift: an id round-trips through JSON as an integer or a string.
+  # Meilisearch document ids are integers or strings too.
+  @spec document_id?(term()) :: boolean()
+  def document_id?(id), do: is_integer(id) or is_binary(id)
+
+  # Enqueue rejects other ids, so anything else here was written by hand or by another
+  # version; cancel it rather than let the loader's query raise and Oban retry.
   defp fetch_document_ids(%{"document_ids" => ids}) when is_list(ids) do
-    if Enum.all?(ids, &(is_integer(&1) or is_binary(&1))),
+    if Enum.all?(ids, &document_id?/1),
       do: {:ok, ids},
       else: {:error, {:invalid_arg, "document_ids"}}
   end

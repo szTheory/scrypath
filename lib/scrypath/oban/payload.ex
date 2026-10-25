@@ -2,27 +2,43 @@ defmodule Scrypath.Oban.Payload do
   @moduledoc false
 
   alias Scrypath.Config
+  alias Scrypath.Oban.JobArgs
 
   @spec build_upsert(module(), [term()], keyword()) :: map()
   def build_upsert(schema_module, document_ids, config) when is_list(document_ids) do
     base_payload("upsert", schema_module, config)
-    |> Map.put("document_ids", Enum.map(document_ids, &serialize_scalar!/1))
+    |> Map.put("document_ids", serialize_ids!(document_ids))
     |> Map.put("document_count", length(document_ids))
   end
 
   @spec build_delete(module(), [term()], keyword()) :: map()
   def build_delete(schema_module, document_ids, config) when is_list(document_ids) do
     base_payload("delete", schema_module, config)
-    |> Map.put("document_ids", Enum.map(document_ids, &serialize_scalar!/1))
+    |> Map.put("document_ids", serialize_ids!(document_ids))
     |> Map.put("document_count", length(document_ids))
   end
 
   @doc false
   # Ids in the form an Oban job stores them (atoms become their names). Enqueue dedupes and
   # chunks this form, so ids that serialize identically collapse into one job entry.
-  @spec serialize_ids!([term()]) :: [term()]
+  #
+  # Raises for any id the worker would reject (JobArgs.document_id?/1): nil (an unsaved
+  # struct), floats and booleans. Failing here reports the bad id at the call site instead
+  # of accepting the call and cancelling the whole chunk job when it runs.
+  @spec serialize_ids!([term()]) :: [integer() | String.t()]
   def serialize_ids!(document_ids) when is_list(document_ids) do
-    Enum.map(document_ids, &serialize_scalar!/1)
+    Enum.map(document_ids, &serialize_id!/1)
+  end
+
+  defp serialize_id!(document_id) do
+    serialized = serialize_scalar!(document_id)
+
+    if JobArgs.document_id?(serialized) do
+      serialized
+    else
+      raise ArgumentError,
+            "Oban sync document ids must be integers or strings, got #{inspect(document_id)}"
+    end
   end
 
   defp base_payload(operation, schema_module, config) do

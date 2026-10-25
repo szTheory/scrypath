@@ -289,6 +289,58 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert result.document_count == 4
   end
 
+  describe "ids the worker would cancel are rejected at enqueue (WR-06)" do
+    test "sync_records/3 raises for a struct with id: nil and inserts nothing" do
+      posts = [%SearchablePost{id: 1, title: "Saved"}, %SearchablePost{id: nil, title: "New"}]
+
+      assert_raise ArgumentError, ~r/document ids must be integers or strings, got nil/, fn ->
+        Scrypath.sync_records(SearchablePost, posts, oban_opts(RecordingOban))
+      end
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "delete_record/3 on a struct with id: nil is a noop, never an accepted job" do
+      # List.wrap(nil) leaves no id, so there is nothing to delete and nothing to enqueue.
+      assert {:ok, %{status: :noop, document_count: 0}} =
+               Scrypath.delete_record(
+                 SearchablePost,
+                 %SearchablePost{id: nil},
+                 oban_opts(RecordingOban)
+               )
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "delete_documents/3 raises for nil, float and boolean ids" do
+      for bad <- [nil, 1.5, true] do
+        assert_raise ArgumentError, ~r/must be integers or strings/, fn ->
+          Scrypath.delete_documents(SearchablePost, [1, bad], oban_opts(RecordingOban))
+        end
+      end
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "the Ecto.Multi helper rejects the same ids" do
+      assert_raise ArgumentError, ~r/got nil/, fn ->
+        Scrypath.Oban.enqueue_delete(
+          Ecto.Multi.new(),
+          :delete,
+          SearchablePost,
+          [nil],
+          oban_opts(RecordingOban)
+        )
+      end
+    end
+
+    test "every id enqueue accepts decodes in the worker" do
+      ids = Scrypath.Oban.Payload.serialize_ids!([1, "a", :b])
+      assert ids == [1, "a", "b"]
+      assert Enum.all?(ids, &Scrypath.Oban.JobArgs.document_id?/1)
+    end
+  end
+
   test "enqueue helpers keep retryable queue state distinct from backend lifecycle" do
     assert {:ok, %Result{} = result} =
              Scrypath.Oban.Enqueue.enqueue_upsert(SearchablePost, [21],
