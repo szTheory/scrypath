@@ -108,7 +108,14 @@ defmodule Scrypath.Oban.JobArgs do
 
   defp fetch_index(_args), do: {:error, {:invalid_arg, "index"}}
 
-  defp fetch_document_ids(%{"document_ids" => ids}) when is_list(ids), do: {:ok, ids}
+  # Ids round-trip through JSON as integers or strings. Anything else would make the
+  # loader's query raise (and Oban retry) instead of cancelling, so reject it here.
+  defp fetch_document_ids(%{"document_ids" => ids}) when is_list(ids) do
+    if Enum.all?(ids, &(is_integer(&1) or is_binary(&1))),
+      do: {:ok, ids},
+      else: {:error, {:invalid_arg, "document_ids"}}
+  end
+
   defp fetch_document_ids(_args), do: {:error, {:invalid_arg, "document_ids"}}
 
   defp check_document_count(%{"document_count" => count}, ids)

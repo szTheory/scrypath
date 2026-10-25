@@ -270,6 +270,48 @@ defmodule Scrypath.Oban.JobArgsTest do
     end
   end
 
+  describe "document_ids elements" do
+    @bad_ids [
+      [%{"a" => 1}],
+      [[1]],
+      [nil],
+      [1, nil],
+      [1.5],
+      [true],
+      ["ok", %{}]
+    ]
+
+    defp decode_with_ids(:upsert, ids),
+      do: JobArgs.decode_upsert(upsert_args(%{"document_ids" => ids}))
+
+    defp decode_with_ids(:delete, ids),
+      do:
+        JobArgs.decode_delete(
+          delete_args(%{"document_ids" => ids, "document_count" => length(ids)})
+        )
+
+    defp decode_with_ids(:related, ids),
+      do: JobArgs.decode_related(related_args(%{"document_ids" => ids}))
+
+    for kind <- [:upsert, :delete, :related] do
+      test "#{kind} accepts integer and string ids" do
+        ids = [1, "2", "0b9f2c1e-7f0a-4b8e-9d6e-1c2b3a4d5e6f"]
+        assert {:ok, %{document_ids: ^ids}} = decode_with_ids(unquote(kind), ids)
+      end
+
+      test "#{kind} accepts an empty id list" do
+        assert {:ok, %{document_ids: []}} = decode_with_ids(unquote(kind), [])
+      end
+
+      test "#{kind} rejects ids that are not integers or strings" do
+        for ids <- @bad_ids do
+          assert decode_with_ids(unquote(kind), ids) == {:error, {:invalid_arg, "document_ids"}},
+                 "expected #{inspect(ids)} to be rejected"
+        end
+      end
+    end
+  end
+
   describe "atom safety" do
     test "decoding unknown names twice gives the same tag and creates no atoms" do
       fresh = fn -> "Elixir.Zz#{System.unique_integer([:positive])}" end
