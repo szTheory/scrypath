@@ -313,9 +313,18 @@ defmodule ScrypathEcommerceWeb.E2EController do
       tenant = Repo.get!(Tenant, tenant_id, skip_tenant_id: true)
       category = Catalog.get_category!(tenant.id, category_id)
 
-      case Catalog.update_category(tenant.id, category, %{name: name}) do
-        {:ok, category} ->
+      case Catalog.update_category_and_sync(tenant.id, category, %{name: name}) do
+        {:ok, category, :ok} ->
           json(conn, %{category_id: category.id, name: category.name, queued_related_sync: true})
+
+        # The rename committed; only the related product sync failed.
+        {:ok, category, {:error, reason}} ->
+          json(conn, %{
+            category_id: category.id,
+            name: category.name,
+            queued_related_sync: false,
+            related_sync_error: inspect(reason)
+          })
 
         {:error, reason} ->
           conn |> put_status(:bad_request) |> json(%{error: inspect(reason)})

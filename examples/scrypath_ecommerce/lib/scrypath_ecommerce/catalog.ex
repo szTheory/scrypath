@@ -64,12 +64,20 @@ defmodule ScrypathEcommerce.Catalog do
   # transaction: an in-transaction enqueue can collapse into a pending job that reads the
   # old category name (see the related-data guide). Like the product functions below, a
   # sync error does not turn the committed update into a failure; it is logged, and a
-  # backfill of Product repairs the index.
+  # backfill of Product repairs the index. A sync that raises (a configuration error, for
+  # example) still raises, after the update has committed.
   def update_category(tenant, %Category{} = category, attrs) do
+    with {:ok, category, _related_sync} <- update_category_and_sync(tenant, category, attrs) do
+      {:ok, category}
+    end
+  end
+
+  # Same as update_category/3, but also returns the related sync outcome (`:ok` or
+  # `{:error, reason}`) for callers that report it, such as the E2E endpoint.
+  def update_category_and_sync(tenant, %Category{} = category, attrs) do
     with {:ok, category} <-
            category |> Category.changeset(attrs) |> Repo.update(tenant_opts(tenant)) do
-      sync_related_products(category)
-      {:ok, category}
+      {:ok, category, sync_related_products(category)}
     end
   end
 
@@ -78,11 +86,13 @@ defmodule ScrypathEcommerce.Catalog do
       {:ok, _result} ->
         :ok
 
-      {:error, reason} ->
+      {:error, reason} = error ->
         Logger.warning(
           "category #{category.id} was updated but its product search sync failed: " <>
             inspect(reason)
         )
+
+        error
     end
   end
 

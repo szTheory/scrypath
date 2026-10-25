@@ -4,6 +4,11 @@ defmodule ScrypathEcommerce.CatalogTest do
 
   alias ScrypathEcommerce.Catalog
 
+  # An Oban stand-in whose inserts fail, to drive the post-commit sync error path.
+  defmodule FailingOban do
+    def insert(_changeset), do: {:error, :queue_down}
+  end
+
   describe "tenancy" do
     test "Repo tenancy enforcement via prepare_query/3" do
       # Query without tenant_id or skip_tenant_id raises ArgumentError
@@ -106,6 +111,36 @@ defmodule ScrypathEcommerce.CatalogTest do
 
       refute_enqueued(worker: Scrypath.Sync.RelatedWorker)
       assert Catalog.get_category!(tenant, category.id).name == "Electronics"
+    end
+
+    test "update_category_and_sync/3 commits the rename and reports a failed related sync", %{
+      tenant: tenant,
+      category: category
+    } do
+      defaults = Application.get_env(:scrypath, :defaults)
+      on_exit(fn -> Application.put_env(:scrypath, :defaults, defaults) end)
+      Application.put_env(:scrypath, :defaults, Keyword.put(defaults, :oban, FailingOban))
+
+      {result, log} =
+        ExUnit.CaptureLog.with_log(fn ->
+          Catalog.update_category_and_sync(tenant, category, %{name: "Computers"})
+        end)
+
+      assert {:ok, category, {:error, :queue_down}} = result
+      assert log =~ "product search sync failed"
+
+      assert Catalog.get_category!(tenant, category.id).name == "Computers"
+      refute_enqueued(worker: Scrypath.Sync.RelatedWorker)
+    end
+
+    test "update_category_and_sync/3 reports :ok once the related sync is enqueued", %{
+      tenant: tenant,
+      category: category
+    } do
+      assert {:ok, %{name: "Computers"}, :ok} =
+               Catalog.update_category_and_sync(tenant, category, %{name: "Computers"})
+
+      assert_enqueued(worker: Scrypath.Sync.RelatedWorker)
     end
 
     test "resolve_products_for_categories/1 reloads category products with category names", %{
