@@ -44,6 +44,21 @@ defmodule Scrypath.Oban.EnqueueUniqueTest do
       do: {:error, :not_implemented}
   end
 
+  # A hand-written fan-out owner: related enqueue only needs the fan-out and id metadata.
+  defmodule RelatedOwner do
+    defstruct [:id]
+
+    def __scrypath__(:fan_outs) do
+      [posts: [target: SearchablePost, resolver: {__MODULE__, :resolve_posts, []}]]
+    end
+
+    def __scrypath__(:document_id), do: :id
+
+    def resolve_posts(owners), do: Enum.map(owners, &%SearchablePost{id: &1.id})
+  end
+
+  @related_worker Scrypath.Sync.RelatedWorker
+
   setup_all do
     repo = ObanSQLiteRepo
     adapter = repo.__adapter__()
@@ -112,6 +127,21 @@ defmodule Scrypath.Oban.EnqueueUniqueTest do
     assert [%{conflict?: true}] = second.tasks
 
     assert [_job] = all_enqueued(worker: @upsert_worker)
+  end
+
+  test "a repeated related sync in a different trigger order collapses into one job (FAN-02)" do
+    owners = fn ids -> Enum.map(ids, &%RelatedOwner{id: &1}) end
+    opts = [fan_out: :posts] ++ sync_opts()
+
+    assert {:ok, first} = Scrypath.sync_related(RelatedOwner, owners.([2, 1]), opts)
+    assert {:ok, second} = Scrypath.sync_related(RelatedOwner, owners.([1, 2]), opts)
+
+    assert [%{conflict?: false}] = first.tasks
+    assert [%{conflict?: true}] = second.tasks
+    assert second.job.id == first.job.id
+
+    assert [job] = all_enqueued(worker: @related_worker)
+    assert job.args["document_ids"] == [1, 2]
   end
 
   test "a different id set is a new job" do
