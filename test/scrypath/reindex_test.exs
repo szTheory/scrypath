@@ -431,6 +431,21 @@ defmodule Scrypath.ReindexTest do
     assert_received {:task_wait, 23}
   end
 
+  test "reindex keys a composite-primary-key target index by the document id field" do
+    assert {:ok, %{cutover: false}} =
+             Scrypath.reindex(Scrypath.TestSupport.LoaderBackfill.Membership,
+               backend: RecordingMeilisearch,
+               repo: Scrypath.BackfillTest.BackfillRepo,
+               batch_size: 100,
+               cutover?: false,
+               meilisearch_client: RecordingTaskClient,
+               meilisearch: RecordingMeilisearch,
+               backfill: RecordingBackfill
+             )
+
+    assert_receive {:create_index, Scrypath.TestSupport.LoaderBackfill.Membership, :id, _}
+  end
+
   test "reindex exposes the workflow result fields operators need to inspect what happened" do
     assert {:ok, result} =
              Scrypath.reindex(QueryablePost,
