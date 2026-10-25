@@ -6,15 +6,15 @@ current_phase: 178
 current_phase_name: Loader-routed backfill and full-key paging
 status: executing
 stopped_at: Phase 178 planned (5 plans, 4 waves)
-last_updated: "2026-10-25T18:57:12.937Z"
+last_updated: "2026-10-25T19:08:00.206Z"
 last_activity: 2026-10-25
 last_activity_desc: Phase 178 execution started
-state_head: 6d8c56de2a4e6ab500a2705d9a9a87cf380aefc4
+state_head: ba68cb0b13fbb7414a0a3cb217cd47867c8dce89
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 3
   percent: 0
 ---
 
@@ -87,7 +87,7 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 178 (Loader-routed backfill and full-key paging) — EXECUTING
-Plan: 2 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-10-25 — Phase 178 execution started
 
