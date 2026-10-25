@@ -1,13 +1,16 @@
 ---
 phase: 179-bounded-id-lists-and-related-sync-parity
-fixed_at: 2026-10-25T00:00:00Z
+fixed_at: 2026-10-25T23:30:00Z
 review_path: .planning/phases/179-bounded-id-lists-and-related-sync-parity/179-REVIEW.md
-iteration: 2
-findings_in_scope: 11
-fixed: 10
-skipped: 1
+iteration: 3
+findings_in_scope: 4
+fixed: 4
+skipped: 0
 status: all_fixed
 ---
+
+<!-- Iteration 3 counts cover the re-review findings (CR-02, WR-06, WR-07, IN-06). Iterations 1-2 covered 11 findings: 10 fixed, 1 skipped by design (IN-05); IN-02 was later reopened as CR-02. -->
+
 
 # Phase 179: Code Review Fix Report
 
@@ -217,7 +220,126 @@ All gates ran in the **main checkout** (`/Users/jon/projects/scrypath`, branch `
 - `test/scrypath/phase108_contract_test.exs` and `test/scrypath/backfill_contract_docs_test.exs`, run with docs_contract after IN-02: pass
 - Ecommerce example (IN-03): see the IN-03 section. Compile with warnings as errors gave exit 0, and `catalog_test.exs` gave 10 tests, 0 failures on native Postgres.
 
+## Iteration 3: re-review findings
+
+**Source review:** `179-REVIEW.md` (re-review of e69b2601..79c3dc7f). Scope: all four open findings.
+
+| Finding | Status | Commit | Notes |
+|---------|--------|--------|-------|
+| CR-02 | fixed | 7e33db41 | Both guides say to call sync functions after the commit, with the correct reasons. The ecommerce `update_category/3` syncs after `Repo.update`. Needs a human check of the guide wording. |
+| WR-06 | fixed | f021a559 | One shared predicate, `JobArgs.document_id?/1`. Enqueue raises `ArgumentError` for nil, float and boolean ids. |
+| WR-07 | fixed | 9c63f4a2 | The default loader casts ids to the key's Ecto type. An id that fails the cast cancels as `{:invalid_job, {:invalid_arg, "document_ids"}}`. Needs a human check of the logic. |
+| IN-06 | fixed | ce86499e | Inline `sync_related` dedupes triggers by `Chunks.id_key/1`, and the span counts the deduped set. |
+
+### CR-02: The guides recommend enqueueing inside the caller's transaction
+
+**Files modified:** `guides/sync-modes-and-visibility.md`, `guides/related-data-and-reindexing.md`, `lib/scrypath/oban/enqueue.ex` (comment), `lib/scrypath/oban.ex` (moduledoc), `examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex`, `examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs`
+**Commit:** 7e33db41
+
+I checked the claim against `deps/oban/lib/oban/engines/basic.ex` before changing anything:
+- `insert_unique/3` decides `conflict?` at insert time.
+- `acquire_lock/2` takes `pg_try_advisory_xact_lock` when testing is disabled, and returns an unsaved `conflict?: true` job when the lock is held.
+
+**Applied fix:**
+- **Sync-modes guide:** a new subsection, "Call sync functions after your write commits", under the `:oban` job section. It covers `sync_records/3`, `delete_documents/3` and `sync_related/3` in every mode, and gives three reasons:
+  - An in-transaction enqueue can collapse into a pending job that runs before the commit and reads the old rows (D-20).
+  - The transaction-scoped unique lock makes a concurrent identical sync report `conflict?: true` without inserting, so that sync is lost if the caller rolls back.
+  - Under `:inline`, the backend would index rows that are not committed yet.
+- **The trade-off is stated.** A crash between the commit and the call misses that sync. The data is committed, so a retry, a backfill or a reindex recovers it. The text links to `drift-recovery.md` and the recovery posture for each mode.
+- **The WR-01 paragraph is kept but reframed.** It now reads "If you do call a sync function inside a transaction on the Oban repo, Scrypath won't break your transaction", followed by the nested-insert mechanics and "the freshness hazards above still apply". It no longer reads as a recommended pattern.
+- **Related guide:** the bullet is back to "Call `sync_related/3` after the write commits, in every sync mode", with the same reasons, the trade-off, and a pointer to the sync-modes subsection for the nested-call safety net.
+- **Coherence additions:**
+  - `Scrypath.Oban.enqueue_upsert/5` and `enqueue_delete/5` insert into the caller's `Ecto.Multi` by design, so the same hazard applies to them. Their moduledoc and the guide now say so and point callers to the after-commit sync functions. Their behaviour is unchanged; see the follow-up below.
+  - The `insert_chunks/2` comment now calls the nested path a safety net.
+- **Example:** `update_category/3` no longer uses a `Multi`.
+  - It runs `Repo.update` and calls `Scrypath.sync_related/3` only on success.
+  - A sync error is logged with `Logger.warning`, and the function still returns `{:ok, category}`. That matches how the example's `create_product`, `update_product` and `delete_product` treat post-commit sync results: the write is not reported as failed.
+  - Return contract: `{:ok, category}` or `{:error, changeset}`. The old `{:error, reason}` for a sync failure inside the `Multi` is gone. The only caller, `E2EController.category_name/2`, matches `{:error, reason}` generically, so it still works.
+
+**Tests:**
+- The existing `update_category/3 enqueues related product sync` test still passes.
+- New: a failed update returns `{:error, changeset}`, enqueues no `RelatedWorker` job, and leaves the category unchanged.
+- I did not add a test for the logged sync-error path. Under `Oban.Testing` in manual mode, `sync_related` cannot be made to return `{:error, _}` deterministically, and configuration errors raise instead.
+
+**Follow-up (design decision, not done):** If transactional-outbox semantics are wanted for the `Scrypath.Oban` Multi helpers, they need a non-unique insert path when `in_transaction?` is true, as the review notes.
+
+### WR-06: Enqueue accepts ids the worker cancels
+
+**Files modified:** `lib/scrypath/oban/payload.ex`, `lib/scrypath/oban/job_args.ex`, `guides/sync-modes-and-visibility.md`, `test/scrypath/oban/enqueue_test.exs`, `test/scrypath/sync/related_test.exs`
+**Commit:** f021a559
+
+**Applied fix:**
+- **One predicate:** `JobArgs.document_id?/1` (`is_integer or is_binary`), now public and `@doc false`. The worker's `fetch_document_ids/1` and `Payload.serialize_ids!/1` both use it, so the two sides cannot drift.
+- **`serialize_ids!/1`** serializes each id as before (an atom becomes its name), then raises `ArgumentError` ("Oban sync document ids must be integers or strings, got nil") for anything else. This follows the existing `serialize_scalar!/1` raise convention.
+- **`Payload.build_upsert/3` and `build_delete/3`** now use `serialize_ids!/1` as well. That covers every enqueue path: `sync_records`, `delete_documents`, `sync_related`, and the `Scrypath.Oban` Multi helpers.
+- **Guide:** one sentence in the sync-modes job section about allowed id types and the raise.
+
+**Correction to the review:** `delete_record/3` on a struct with `id: nil` never returned `:accepted`. `List.wrap(nil)` is `[]`, so the call was, and still is, a `:noop` that enqueues nothing. The test now pins that noop. The rest of the claim holds: `sync_records/3` with one nil-id struct returned `:accepted` and then cancelled the whole chunk job.
+
+**Tests:**
+- `sync_records` with `[id: 1, id: nil]` raises and inserts nothing.
+- `delete_record` on a nil-id struct is a noop.
+- `delete_documents` raises for each of `nil`, `1.5` and `true`.
+- The Multi helper `enqueue_delete/5` raises for `[nil]`.
+- `serialize_ids!([1, "a", :b])` gives `[1, "a", "b"]`, and every value satisfies `document_id?/1`.
+- Related enqueue with a nil-id trigger raises and inserts nothing.
+
+### WR-07: Uncastable string ids raise in the loader and retry 8 times
+
+**Files modified:** `lib/scrypath/loader.ex`, `lib/scrypath/oban/upsert_worker.ex`, `lib/scrypath/sync/related_worker.ex`, `lib/scrypath/oban/job_args.ex` (comment), `guides/related-data-and-reindexing.md`, `test/scrypath/oban/worker_test.exs`, `test/scrypath/sync/related_worker_test.exs`, `test/support/loader_backfill_cases.ex`
+**Commit:** 9c63f4a2
+
+**Applied fix:**
+- **Loader:** the default query in `Loader.fetch/3` now casts each id with `Ecto.Type.cast/2` before querying.
+  - The type is that of the field the query filters on, `__schema__(:type, document_id_field)`. That is the primary key unless the schema declares another `document_id:`.
+  - If any cast fails, it returns `{:error, {:invalid_arg, "document_ids"}}`.
+  - A castable string is cast before querying, so `"12"` becomes `12`.
+- **Workers:** the upsert and related workers map `{:error, {:invalid_arg, _} = tag}` to `{:cancel, {:invalid_job, tag}}`. The delete worker never loads records, so it is unaffected.
+- **Comment:** the `job_args.ex` comment that overstated what the shape check guarantees is corrected.
+- **Guide:** the related guide's outcome table mentions the cancel.
+- **Deviation from the brief:** I cast against the queried `document_id` field's type rather than requiring "a single primary key". This is the field the query actually binds, so it is also correct for a schema whose document id is not its primary key. For a single-primary-key schema with the default document id, the two are the same thing.
+- **Casting is skipped when:**
+  - the schema loads through `search_records/2`, because that path never reaches the default query and the app's loader owns its ids
+  - the module has no `__schema__/2`, or the field has no Ecto type; ids are then passed through as before
+
+**Tests:**
+- A real SQLite loader case, run in the core lane through `LoaderBackfillCases`: `Loader.load(Product, [to_string(id)])` loads the row, and `[id, "abc"]` returns the tagged error. I checked that this case fails on the old loader by temporarily restoring `loader.ex` from git: it raised `Ecto.Query.CastError ... cannot be cast to type {:in, :id}`. I then re-applied the change.
+- The upsert worker with `[1, "abc"]` cancels with `{:invalid_job, {:invalid_arg, "document_ids"}}` and never calls the repo or the backend.
+- The upsert worker binds `"12"` as the integer `12`.
+- The related worker with an integer-key Ecto owner and `[1, "abc"]` cancels the same way and never calls the resolver.
+
+### IN-06: Inline `sync_related/3` passes duplicate triggers
+
+**Files modified:** `lib/scrypath/chunks.ex`, `lib/scrypath/sync.ex`, `test/scrypath/chunks_test.exs`, `test/scrypath/sync/related_test.exs`
+**Commit:** ce86499e
+
+**Applied fix:**
+- New `Chunks.uniq_by_id/2`. It dedupes by `id_key/1` and keeps the last copy, without sorting or chunking. `Chunks.by_id/2` now uses it, so there is one dedupe rule.
+- `inline_resolve_and_sync/6` dedupes triggers with `Identity.document_id/2` before the span starts and before the resolver is called, so the span's `document_count` is the deduped count. This matches the guide's "Resolvers … get deduped input".
+- Hand-written owner-only `__scrypath__/1` schemas answer only `:fan_outs`, and inline mode never needed their document id. The guide promises these "keep working", and two existing `sync_test.exs` fixtures are like this. For such a schema, an id read that raises keeps the caller's list unchanged, as before. Without this fallback those two tests failed with `FunctionClauseError`.
+
+**Tests:**
+- Inline `sync_related` with triggers `[1 "Old", 2, 1 "Latest"]` reports a resolve span start count of 2, resolves `"Latest"` and `"Two"` only, and returns a result count of 2.
+- `uniq_by_id/2` collapses `:a` and `"a"`, keeps the last copy, and otherwise keeps the caller's order.
+
+### Iteration 3 verification
+
+All gates ran in the **main checkout** (`/Users/jon/projects/scrypath`, branch `planning/v1.44-new-milestone`) with no worktree, as the maintainer instructed. They ran after the last commit (ce86499e), with toolchain `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5`.
+
+- `mix compile --warnings-as-errors --force`: exit 0
+- `mix format --check-formatted`: exit 0
+- `mix credo --strict`: no issues
+- `mix docs --warnings-as-errors`: exit 0
+- `mix test --exclude integration --exclude docs_contract`: 5 properties, 863 tests, 0 failures. The baseline was 851. The 12 new tests are 6 for WR-06 (5 enqueue, 1 related), 4 for WR-07 (2 upsert worker, 1 related worker, 1 SQLite loader case) and 2 for IN-06. The CR-02 test is in the example's suite.
+- `mix test --include docs_contract test/scrypath/docs_contract_test.exs`: 74 tests, 0 failures
+- Backfill contract docs, phase108 and phase112 contract tests, and package metadata, run with docs_contract: 18 tests, 0 failures
+- **Ecommerce example**, on native Postgres at 127.0.0.1:5432; no Docker container was started, stopped or recreated:
+  - `MIX_ENV=test mix compile --warnings-as-errors --force`: exit 0
+  - `mix format --check-formatted` on both changed files: exit 0
+  - `PGHOST=127.0.0.1 mix test test/scrypath_ecommerce/catalog_test.exs`: 11 tests, 0 failures. That is 10 existing tests plus 1 new.
+  - The run logged `too_many_connections` from a few pool connections against the shared local Postgres. The tests were not affected.
+
 ---
 
 _Fixer: Claude (gsd-code-fixer)_
-_Iteration: 2_
+_Iteration: 3_
