@@ -518,14 +518,14 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
 
-- [ ] Backfill and reindex load records through the shared loader.
-- [ ] Composite primary keys page without skipping or duplicating rows.
+- [x] Backfill and reindex load records through the shared loader — Phase 178 (verified locally; unreleased). Live backfill now deletes ids `search_records/2` omits from visited rows; reindex reports `omitted:` and deletes nothing.
+- [x] Composite primary keys page without skipping or duplicating rows — Phase 178 (verified locally; unreleased). Open review warning WR-01: `distinct`/`group_by`/`union` in a caller `:query` can still defeat paging.
 - [ ] `sync_related` resolvers receive records in every sync mode.
 - [ ] Oban workers emit telemetry, including missing-record deletes.
 - [ ] Loads and backend calls are chunked.
 - [ ] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path.
 - [ ] Schema hooks are declared optional callbacks.
-- [ ] Loader behavior is proven against a real database.
+- [x] Loader behavior is proven against a real database — Phase 178: shared cases run on SQLite (core lane) and Postgres (`mix verify.postgres` in `backend (required)`); exact-SHA hosted CI evidence is still due at the PR.
 - [ ] Builds without Oban compile with no warnings.
 
 ### Out of Scope
@@ -556,4 +556,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-25 at the start of milestone v1.44 Sync correctness. Earlier source receipts remain historical.*
+*Last updated: 2026-10-25 after Phase 178 (v1.44 Sync correctness). Earlier source receipts remain historical.*
