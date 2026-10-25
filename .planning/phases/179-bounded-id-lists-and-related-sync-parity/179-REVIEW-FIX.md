@@ -1,15 +1,15 @@
 ---
 phase: 179-bounded-id-lists-and-related-sync-parity
-fixed_at: 2026-10-25T23:30:00Z
+fixed_at: 2026-10-26T00:45:00Z
 review_path: .planning/phases/179-bounded-id-lists-and-related-sync-parity/179-REVIEW.md
-iteration: 3
+iteration: 4
 findings_in_scope: 4
 fixed: 4
 skipped: 0
 status: all_fixed
 ---
 
-<!-- Iteration 3 counts cover the re-review findings (CR-02, WR-06, WR-07, IN-06). Iterations 1-2 covered 11 findings: 10 fixed, 1 skipped by design (IN-05); IN-02 was later reopened as CR-02. -->
+<!-- Iteration 4 counts cover the second re-review findings (WR-08, WR-09, IN-07, IN-08). Iteration 3 covered CR-02, WR-06, WR-07, IN-06 (all fixed; WR-07 partly, remainder is WR-08). Iterations 1-2 covered 11 findings: 10 fixed, 1 skipped by design (IN-05); IN-02 was later reopened as CR-02. -->
 
 
 # Phase 179: Code Review Fix Report
@@ -339,7 +339,108 @@ All gates ran in the **main checkout** (`/Users/jon/projects/scrypath`, branch `
   - `PGHOST=127.0.0.1 mix test test/scrypath_ecommerce/catalog_test.exs`: 11 tests, 0 failures. That is 10 existing tests plus 1 new.
   - The run logged `too_many_connections` from a few pool connections against the shared local Postgres. The tests were not affected.
 
+## Iteration 4: second re-review findings
+
+**Source review:** `179-REVIEW.md` (re-review of 79c3dc7f..6375b554). Scope: all four open findings.
+
+| Finding | Status | Commit | Notes |
+|---------|--------|--------|-------|
+| WR-08 | fixed | dc50f0c9 | The loader now runs both planner steps: cast, then dump through the repo's adapter. A non-UUID id for a Postgres `:binary_id` key cancels instead of raising. Needs a human check of the logic. |
+| WR-09 | fixed | 88b0458f | Oban retry validation checks each stored id with `JobArgs.document_id?/1` and returns `{:error, {:invalid_retry_input, :document_ids}}`. |
+| IN-07 | fixed | 419c8656 | New `Catalog.update_category_and_sync/3` returns the sync outcome. The E2E endpoint reports `queued_related_sync` from it. |
+| IN-08 | fixed (docs) | 81ba55a0 | The 179-06 Release note now lists every adopter-visible change from the fix cycle. |
+
+### WR-08: Uncastable `:binary_id` ids still raise on Postgres
+
+**Files modified:** `lib/scrypath/loader.ex`, `guides/related-data-and-reindexing.md`, `test/scrypath/loader_test.exs`
+**Commit:** dc50f0c9
+
+I confirmed the claim in IEx before changing anything:
+- `Ecto.Type.adapter_dump(Ecto.Adapters.Postgres, :binary_id, "abc")` returns `:error`.
+- A generated UUID returns `{:ok, <<16 bytes>>}`.
+
+**Applied fix:**
+- `cast_ids/4` now takes the repo. Each id must pass `Ecto.Type.cast/2` and then `Ecto.Type.adapter_dump(repo.__adapter__(), type, cast)`. If either step fails, it returns `{:error, {:invalid_arg, "document_ids"}}`, which both workers already cancel.
+- The query still binds the cast value, not the dumped one, so the planner does its own dump as before.
+- The dump step is skipped when the repo does not export `__adapter__/0` or the adapter has no `dumpers/2`. Hand-written test repos and fakes therefore behave as before.
+- **No `rescue Ecto.Query.CastError` was added.** The adapter dump is the exact step the planner adds after the cast (`planner.ex` `cast_param` then `dump_param`), so it covers this case without hiding other cast errors.
+- The `Loader.load/3` doc and the guide's outcome row now say "the document id field's type", and name the `:binary_id` on Postgres case.
+
+**Tests** (`test/scrypath/loader_test.exs`) use a repo whose `__adapter__/0` returns `Ecto.Adapters.Postgres` and a `:binary_id` schema. No connection is needed.
+- `[uuid, "abc"]` returns the tagged error and never queries. This test failed on the pre-fix loader: I temporarily restored `loader.ex` from HEAD and the stub repo received the query.
+- A valid UUID still loads and is bound as the UUID string.
+- A repo with no `__adapter__/0` skips the dump step and still queries.
+
+**Postgres lane:** I ran the existing real-Postgres loader/backfill suite against the already-running `scrypath-postgres-1` on 127.0.0.1:5434, with `MIX_TEST_PARTITION=_rf179i4`. No container was started, stopped or recreated. Result: 15 tests, 0 failures. That suite has no single-key `:binary_id` table, so the `"abc"` case is proven through the Postgres adapter's real dumpers, not through a live query.
+
+### WR-09: Operator retry of a bad-id job raises
+
+**Files modified:** `lib/scrypath/operator/recovery_action.ex`, `test/scrypath/operator/failed_work_test.exs`
+**Commit:** 88b0458f
+
+**Applied fix:**
+- `validate_oban_retry/3` has a new clause after the existing `is_list` check. For `:upsert` and `:delete`, it returns `{:error, {:invalid_retry_input, :document_ids}}` unless every stored id passes `JobArgs.document_id?/1`.
+- The existing error for a missing list is `{:missing_retry_input, :document_ids}`. I added a sibling `:invalid_retry_input` tag for this case rather than reuse that one, because the list is present but its contents are bad.
+- I did not change `Translation.replay_payload_available?/1`, which the review listed as optional. These rows are still offered as retryable, and retrying one now returns the error.
+
+**ScrypathOps:** `FailedSyncLive.retry_failed_work/2` (`scrypath_ops/lib/scrypath_ops_web/live/failed_sync_live.ex:342-352`) already matches `{:error, reason}` and shows a "Retry failed: …" flash. I did not change scrypath_ops.
+
+**Tests:** three cases: upsert `[1, nil]`, delete `[1.5]` and upsert `[true]`. Each returns the error tuple and inserts no job. All three raised `ArgumentError` on the pre-fix module, which I checked by temporarily restoring the file from HEAD.
+
+### IN-07: The E2E endpoint always reports `queued_related_sync: true`
+
+**Files modified:** `examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex`, `examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex`, `examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs`, `examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs`
+**Commit:** 419c8656
+
+**Applied fix:**
+- New `Catalog.update_category_and_sync/3`. It returns `{:ok, category, :ok | {:error, reason}}`, or `{:error, changeset}` if the update fails.
+- `update_category/3` delegates to it and keeps its conventional `{:ok, category}` shape, so code copied from the example stays idiomatic.
+- `sync_related_products/1` still logs the failure, and now also returns the error.
+- The comment now notes that a raising sync still raises after the commit.
+- The E2E `category_name/2` action uses the new function:
+  - `:ok` keeps the existing response.
+  - `{:error, reason}` returns 200, because the rename committed, with `queued_related_sync: false` and `related_sync_error: inspect(reason)`.
+- `e2e/helpers/e2e.ts` reads `queued_related_sync` as a boolean and the spec does not assert its value, so the contract is unchanged.
+
+**Tests:**
+- Catalog, failing sync: an Oban stand-in whose `insert/1` fails, set through `:scrypath, :defaults` and restored in `on_exit`. The rename commits, the result is `{:error, :queue_down}`, the warning is logged, and no job is enqueued.
+- Catalog, success: the result is `:ok` and a related job is enqueued.
+- Controller: the endpoint reports `false` with the error. This test builds its tenant and category through `Catalog`, not `/dev/e2e/seed`, because seeding needs a live Meilisearch.
+
+### IN-08: The release note is missing behaviour changes
+
+**Files modified:** `.planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md`
+**Commit:** 81ba55a0
+
+The Release note gained six bullets, each checked against the code:
+- **WR-06:** `ArgumentError` for nil, float or boolean ids under `:oban`, including the Multi helpers.
+- **189cef0f:** the Multi helpers no longer use `unique:`, so job volume grows for hot rows.
+- **WR-05:** `document_ids` is deduped and string-sorted at every call size.
+- **WR-02/WR-07/WR-08/WR-09:** bad or unbindable ids cancel, and operator retry returns `{:invalid_retry_input, :document_ids}`.
+- **WR-04:** `delete_tasks:`.
+- **WR-01:** in-transaction behaviour: no nested transaction, a bare `{:error, reason}`, and the caller must fail its transaction.
+
+WR-03's 0.3.17 upgrade path was already there and is unchanged.
+
+### Iteration 4 verification
+
+All gates ran in the **main checkout** (`/Users/jon/projects/scrypath`, branch `planning/v1.44-new-milestone`) with no worktree. They ran after the last commit (81ba55a0), with toolchain `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5`.
+
+- `mix compile --warnings-as-errors --force`: exit 0
+- `mix format --check-formatted`: exit 0
+- `mix credo --strict`: no issues
+- `mix docs --warnings-as-errors`: exit 0
+- `mix test --exclude integration --exclude docs_contract`: 5 properties, 871 tests, 0 failures. The baseline was 865; the 6 new tests are 3 for WR-08 and 3 for WR-09.
+- `mix test --include docs_contract test/scrypath/docs_contract_test.exs`: 74 tests, 0 failures
+- Real-Postgres loader lane (`--only postgres`, 127.0.0.1:5434, `MIX_TEST_PARTITION=_rf179i4`): 15 tests, 0 failures
+- scrypath_ops: not modified. `mix compile` there stops on a pre-existing `mix.lock` mismatch ("dependency is out of date"). I did not run `mix deps.get`.
+- **Ecommerce example**, on native Postgres at 127.0.0.1:5432; no Docker container was started, stopped or recreated:
+  - `MIX_ENV=test mix compile --warnings-as-errors --force`: exit 0
+  - `mix format --check-formatted` on the four changed files: exit 0
+  - `PGHOST=127.0.0.1 mix test test/scrypath_ecommerce/catalog_test.exs`: 13 tests, 0 failures. That is 11 existing tests plus 2 new.
+  - `e2e_controller_test.exs` together with the catalog tests: 25 tests, 5 failures. All 5 are existing tests that call `/dev/e2e/seed`, which raises `econnrefused` against Meilisearch at localhost:7700. The `scrypath_ecommerce-meilisearch-1` container does not publish its port to the host. These failures are environmental and not caused by this change. The new controller test passes.
+
 ---
 
 _Fixer: Claude (gsd-code-fixer)_
-_Iteration: 3_
+_Iteration: 4_
