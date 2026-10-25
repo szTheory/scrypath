@@ -108,6 +108,7 @@ Tracer gate (Task 1): `mix verify.phase108` (6 tests) and `mix test test/scrypat
 Upgrade notes (for the phase PR body, the squash commit body and the release PR's CHANGELOG `### Upgrade notes` block, as 0.3.16 did; do not use a `BREAKING CHANGE:` footer):
 
 - Oban `sync_related` resolvers now receive loaded trigger records instead of document ids. Existing id-taking resolver clauses are dead code and safe to remove; triggers that no longer load are skipped. Sync results gain `tasks:` (one per chunk of up to 1000 ids). See [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
+- Upgrading from 0.3.17 with `:oban` related jobs still queued: the related worker now reloads triggers before calling the resolver. A queued 0.3.17 related job whose owning schema has no `search_records/2`, in an app with no configured `:repo`, is cancelled with `{:invalid_job, :repo_required}`. Before deploying, configure a default repo (`config :scrypath, :defaults, repo: MyApp.Repo`), define `search_records/2`, or let the related jobs (`worker: "Scrypath.Sync.RelatedWorker"`) drain on the old version. Cancelled jobs can be retried after the config fix. See the upgrade note in [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
 
 ## Deviations from Plan
 

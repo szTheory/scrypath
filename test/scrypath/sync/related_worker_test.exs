@@ -291,6 +291,46 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       assert_received {:upsert_documents, DummyTarget, [%Scrypath.Document{id: 1}], _config}
     end
 
+    # An owner that 0.3.17 could fan out from under :oban: it has no search_records/2,
+    # and its app configured no repo.
+    defmodule RepolessOwner do
+      defstruct [:id]
+
+      def __scrypath__(:fan_outs) do
+        [comments: [target: DummyTarget, resolver: {__MODULE__, :resolve_comments, []}]]
+      end
+
+      def __scrypath__(:document_id), do: :id
+
+      def resolve_comments(triggers) do
+        send(self(), {:resolved, __MODULE__, triggers})
+        []
+      end
+    end
+
+    test "a 0.3.17 related job that cannot reload its triggers cancels as :repo_required (WR-03)" do
+      # The documented upgrade outcome (guides/related-data-and-reindexing.md): configure a
+      # repo, define search_records/2, or drain these jobs before upgrading.
+      args = %{
+        "schema" => to_string(RepolessOwner),
+        "document_ids" => [1],
+        "fan_out" => "comments",
+        "opts" => %{
+          "backend" => to_string(RecordingBackend),
+          "index_prefix" => nil,
+          "meilisearch_url" => "http://localhost:7700",
+          "otp_app" => nil,
+          "repo" => nil
+        }
+      }
+
+      assert RelatedWorker.perform(%Oban.Job{args: args}) ==
+               {:cancel, {:invalid_job, :repo_required}}
+
+      refute_received {:resolved, RepolessOwner, _}
+      refute_received {:upsert_documents, _, _, _}
+    end
+
     test "an opts key added by a newer release is ignored (rolling deploy)" do
       args = dummy_args([1], %{"future_option_zq179" => "x"})
 

@@ -241,6 +241,22 @@ What to expect at the edges:
   `search_records/2` so the reload applies the tenant scope. A schema with a hand-written
   owner-only `__scrypath__/1` keeps working.
 
+**Upgrading from 0.3.17 with `:oban` related jobs still queued.** Scrypath 0.3.17 enqueued
+related jobs without a repo, and its worker passed the ids straight to the resolver. After
+the upgrade, the worker reloads the triggers first. A queued 0.3.17 job whose owning schema
+has no `search_records/2`, in an app that configures no `:repo`, cannot reload them: Oban
+cancels it with `{:invalid_job, :repo_required}` and that fan-out does not run. Before you
+deploy, do one of these:
+
+- configure a default repo (`config :scrypath, :defaults, repo: MyApp.Repo`), which queued
+  jobs pick up when they run
+- define `search_records/2` on the owning schema
+- let the related jobs (`worker: "Scrypath.Sync.RelatedWorker"`) drain from the queue on the
+  old version first
+
+If some jobs were already cancelled, fix the configuration and retry them (for example from
+Oban Web), or run the fan-out again with `Scrypath.sync_related/3`.
+
 ## 3. The document contract changed
 
 Sometimes the question is not "which records changed?"
