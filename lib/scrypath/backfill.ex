@@ -3,6 +3,7 @@ defmodule Scrypath.Backfill do
 
   import Ecto.Query
 
+  alias Scrypath.Chunks
   alias Scrypath.Loader
   alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Options
@@ -67,12 +68,13 @@ defmodule Scrypath.Backfill do
          {:ok, delete} <- write(:delete, schema_module, removals, config, index) do
       batch_result =
         %{
-          index: result_index(upsert, index),
+          index: result_index(List.last(upsert), index),
           documents: length(documents),
           removed: length(removals),
           last_primary_key: public_cursor(cols, values),
-          task: task_of(upsert),
-          delete_task: task_of(delete)
+          task: task_of(List.last(upsert)),
+          tasks: upsert |> Enum.map(&task_of/1) |> Enum.reject(&is_nil/1),
+          delete_task: task_of(List.last(delete))
         }
         |> maybe_drop_nil(:task)
         |> maybe_drop_nil(:delete_task)
@@ -103,21 +105,33 @@ defmodule Scrypath.Backfill do
     if state.fresh_target?, do: Map.put(result, :omitted, state.omitted), else: result
   end
 
-  # Empty lists are never sent to the backend; a skipped write has no result.
-  defp write(_kind, _schema_module, [], _config, _index), do: {:ok, nil}
+  # Empty lists are never sent to the backend; a skipped write has no chunk results.
+  # `:batch_size` only sets the page size: each page is written in chunks of at most
+  # `Chunks.max_ids/0` documents (or ids), and the first failed chunk halts the backfill.
+  # Chunks keep the page's primary-key order (rows are already deduped by key), so no
+  # Chunks.by_id/ids re-sort is applied here.
+  defp write(_kind, _schema_module, [], _config, _index), do: {:ok, []}
 
   defp write(:upsert, schema_module, documents, config, index) do
-    with {:ok, backend_result} <-
-           upsert_documents(schema_module, documents, backend(config), config, index) do
-      {:ok, normalize(backend_result, Enum.map(documents, & &1.id), config, index)}
-    end
+    documents
+    |> Enum.chunk_every(Chunks.max_ids())
+    |> Chunks.reduce_ok(fn chunk ->
+      with {:ok, backend_result} <-
+             upsert_documents(schema_module, chunk, backend(config), config, index) do
+        {:ok, normalize(backend_result, Enum.map(chunk, & &1.id), config, index)}
+      end
+    end)
   end
 
   defp write(:delete, schema_module, ids, config, index) do
-    with {:ok, backend_result} <-
-           delete_documents(schema_module, ids, backend(config), config, index) do
-      {:ok, normalize(backend_result, ids, config, index)}
-    end
+    ids
+    |> Enum.chunk_every(Chunks.max_ids())
+    |> Chunks.reduce_ok(fn chunk ->
+      with {:ok, backend_result} <-
+             delete_documents(schema_module, chunk, backend(config), config, index) do
+        {:ok, normalize(backend_result, chunk, config, index)}
+      end
+    end)
   end
 
   defp normalize(backend_result, ids, config, index) do

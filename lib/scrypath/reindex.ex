@@ -199,7 +199,7 @@ defmodule Scrypath.Reindex do
        when is_list(batch_results) do
     batch_results
     |> Enum.reduce_while({:ok, []}, fn batch_result, {:ok, acc} ->
-      case maybe_wait_for_result_task(batch_result, config) do
+      case maybe_wait_for_batch_tasks(batch_result, config) do
         {:ok, waited_batch_result} -> {:cont, {:ok, [waited_batch_result | acc]}}
         {:error, reason} -> {:halt, {:error, reason}}
       end
@@ -214,6 +214,34 @@ defmodule Scrypath.Reindex do
   end
 
   defp maybe_wait_for_backfill_tasks(result, _config), do: {:ok, result}
+
+  # A backfill page is written in several chunks (D-02), each with its own task.
+  # Every chunk task must succeed before cutover, so waiting only on the last one
+  # could swap in an index missing an earlier chunk's documents.
+  defp maybe_wait_for_batch_tasks(%{tasks: [_ | _] = tasks} = batch_result, config) do
+    tasks
+    |> Enum.reduce_while({:ok, []}, fn task, {:ok, acc} ->
+      case maybe_wait_for_result_task(%{task: task}, config) do
+        {:ok, %{task: waited_task}} -> {:cont, {:ok, [waited_task | acc]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+    |> case do
+      {:ok, waited_tasks} ->
+        waited_tasks = Enum.reverse(waited_tasks)
+
+        {:ok,
+         batch_result
+         |> Map.put(:task, List.last(waited_tasks))
+         |> Map.put(:tasks, waited_tasks)}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp maybe_wait_for_batch_tasks(batch_result, config),
+    do: maybe_wait_for_result_task(batch_result, config)
 
   defp followable_task(%Result{task: %OperationTask{} = task}), do: task
   defp followable_task(%{task: %OperationTask{} = task}), do: task

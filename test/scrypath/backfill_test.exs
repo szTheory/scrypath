@@ -79,6 +79,42 @@ defmodule Scrypath.BackfillTest do
     end
   end
 
+  # Delegates to RecordingBackend but fails the upsert call numbered
+  # :fail_upsert_call in the calling process (1-based).
+  defmodule FailingChunkBackend do
+    @behaviour Scrypath.Backend
+
+    alias Scrypath.BackfillTest.RecordingBackend
+
+    @impl true
+    def name, do: :failing_chunk
+
+    @impl true
+    defdelegate index_name(schema_module, config), to: RecordingBackend
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      call = Process.get(:upsert_call, 0) + 1
+      Process.put(:upsert_call, call)
+
+      if call == Process.get(:fail_upsert_call) do
+        send(self(), {:upsert_documents, schema_module, documents, config})
+        {:error, {:chunk_failed, call}}
+      else
+        RecordingBackend.upsert_documents(schema_module, documents, config)
+      end
+    end
+
+    @impl true
+    defdelegate delete_documents(schema_module, ids, config), to: RecordingBackend
+
+    @impl true
+    defdelegate search(schema_module, query, config), to: RecordingBackend
+
+    @impl true
+    defdelegate search_facet_values(schema, facet, query, opts, config), to: RecordingBackend
+  end
+
   defmodule OmittingPost do
     use Ecto.Schema
 
@@ -470,5 +506,72 @@ defmodule Scrypath.BackfillTest do
     refute Map.has_key?(omitted_batch, :task)
     refute Map.has_key?(first, :delete_task)
     refute Map.has_key?(last, :delete_task)
+  end
+
+  defp put_queryable_posts(ids) do
+    BackfillRepo.put_records(Enum.map(ids, &%QueryablePost{id: &1, title: "Row #{&1}"}))
+  end
+
+  defp drain_upsert_ids(acc \\ []) do
+    receive do
+      {:upsert_documents, _schema, documents, _config} ->
+        drain_upsert_ids([Enum.map(documents, & &1.id) | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
+  test "batch_size only pages: one 2,500-row page is written as three chunks with three tasks" do
+    put_queryable_posts(1..2500)
+
+    assert {:ok, %{batches: 1, documents: 2500, batch_results: [batch]}} =
+             Scrypath.backfill(QueryablePost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 5000
+             )
+
+    assert [first, second, third] = drain_upsert_ids()
+    assert first == Enum.to_list(1..1000)
+    assert second == Enum.to_list(1001..2000)
+    assert third == Enum.to_list(2001..2500)
+
+    assert Enum.map(batch.tasks, & &1.uid) == [1100, 2100, 2600]
+    assert batch.task == List.last(batch.tasks)
+    assert batch.last_primary_key == 2500
+  end
+
+  test "a failed write chunk halts the backfill before later chunks and later batches" do
+    put_queryable_posts(1..2500)
+    Process.put(:fail_upsert_call, 2)
+
+    assert {:error, {:chunk_failed, 2}} =
+             Scrypath.backfill(QueryablePost,
+               backend: FailingChunkBackend,
+               repo: BackfillRepo,
+               batch_size: 2000
+             )
+
+    assert [first, second] = drain_upsert_ids()
+    assert first == Enum.to_list(1..1000)
+    assert second == Enum.to_list(1001..2000)
+
+    assert_received {:backfill_repo_all, _first_page}
+    refute_received {:backfill_repo_all, _second_page}
+  end
+
+  test "a batch with no upserts reports tasks: [] and no task key" do
+    put_omitting_posts(1..2, [1, 2])
+
+    assert {:ok, %{batch_results: [batch]}} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    assert batch.tasks == []
+    refute Map.has_key?(batch, :task)
+    assert %{delete_task: %{uid: 901}} = batch
   end
 end

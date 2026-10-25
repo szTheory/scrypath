@@ -22,6 +22,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
       unquote(query_scope_cases())
       unquote(preload_parity_cases())
       unquote(search_records_cases())
+      unquote(bounded_write_cases())
     end
   end
 
@@ -389,19 +390,22 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
         batches = eu |> Enum.map(& &1.id) |> Enum.chunk_every(2)
 
+        # The loader has no ordering contract (D-03): it dedupes and sorts ids by
+        # their string form, so a Postgres batch [9, 11] arrives as [11, 9].
         for batch_ids <- batches do
-          assert_received {:search_records, ^batch_ids}
+          assert_received {:search_records, loaded_ids}
+          assert Enum.sort(loaded_ids) == batch_ids
         end
 
         refute_received {:search_records, _}
 
         upserted = upserted_ids()
-        assert upserted == for(a <- eu, a.published, do: a.id)
+        assert Enum.sort(upserted) == for(a <- eu, a.published, do: a.id)
         refute pinned_id in upserted
         assert Enum.all?(upserted, &(&1 not in us_ids))
 
         unpublished = for a <- eu, not a.published, do: a.id
-        assert deleted_ids() == unpublished
+        assert Enum.sort(deleted_ids()) == unpublished
         assert result.removed == length(unpublished)
         assert result.batches == length(batches)
       end
@@ -451,6 +455,44 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
         cursors
         |> Enum.chunk_every(2, 1, :discard)
         |> Enum.each(fn [previous, next] -> assert previous < next end)
+      end
+    end
+  end
+
+  # PAGE-03 / D-02: :batch_size sets the page size only; every page is written
+  # in chunks of at most Scrypath.Chunks.max_ids/0 documents.
+  defp bounded_write_cases do
+    quote location: :keep do
+      test "a 2,500-row page with batch_size: 5000 is one batch and three bounded upserts",
+           %{repo: repo} do
+        1..2500
+        |> Enum.map(&%{title: "post #{&1}"})
+        |> Enum.chunk_every(500)
+        |> Enum.each(fn rows -> {500, _} = repo.insert_all(LoaderBackfill.Post, rows) end)
+
+        ids =
+          repo.all(Ecto.Query.from(p in LoaderBackfill.Post, select: p.id, order_by: p.id))
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Post, repo, batch_size: 5000)
+
+        assert result.batches == 1
+        assert result.documents == 2500
+        assert [%{documents: 2500, tasks: tasks}] = result.batch_results
+        assert is_list(tasks)
+
+        upserts = recorded_upserts()
+        assert length(upserts) == 3
+
+        sizes = Enum.map(upserts, fn {_schema, documents, _config} -> length(documents) end)
+        assert Enum.all?(sizes, &(&1 <= 1000))
+        assert Enum.sum(sizes) == 2500
+
+        upserted_ids =
+          Enum.flat_map(upserts, fn {_schema, documents, _config} ->
+            Enum.map(documents, & &1.id)
+          end)
+
+        assert upserted_ids == ids
       end
     end
   end
