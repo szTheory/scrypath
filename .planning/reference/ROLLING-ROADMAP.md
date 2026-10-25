@@ -44,9 +44,9 @@ Done 2026-10-25. Closeout run 40204029522 on `ebed49b5`; receipt in `v1.43-final
 - Add a loader test against a real database; the current ones only use `FakeRepo`.
 - The `lib/scrypath/sync.ex` (around line 60) compile warning is a false positive in builds without Oban. Silence it properly.
 
-## Proposed re-order (2026-10-25, waiting on the maintainer's yes)
+## Re-order (approved 2026-10-25)
 
-The maintainer named a UI quality engine as the next major UI opportunity: [owner intent](../research/ui-quality-engine/OWNER-INTENT.md) and [recommendations](../research/ui-quality-engine/RECOMMENDATIONS.md). Proposed order: **v1.44 sync → v1.45 foundation and CI (plus the engine's prerequisites) → v1.46 UI engine and pilot → v1.47 UI surfaces and polish → v1.48 adopter features.**
+The maintainer named a UI quality engine as the next major UI opportunity: [owner intent](../research/ui-quality-engine/OWNER-INTENT.md) and [recommendations](../research/ui-quality-engine/RECOMMENDATIONS.md). Approved order: **v1.44 sync → v1.45 foundation and CI (plus the engine's prerequisites) → v1.46 UI engine and pilot → v1.47 UI surfaces and polish → v1.48 adopter features.**
 
 - **Sync stays first.** Composite-key paging that skips rows and backfills that ignore the loader are correctness bugs. That work is all in `lib/` and doesn't touch `scrypath_ops`.
 - **The UI engine waits for v1.45.** Its browser sweep needs the nightly lane green, which v1.45 delivers.
@@ -71,9 +71,9 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
 
   See RECOMMENDATIONS D4 and D6.
 
-## 4. v1.46 UI quality engine and pilot (proposed)
+## 4. v1.46 UI quality engine and pilot
 
-- **Personas:** operators and adopters both get personas. Operator personas map onto `ROLE-*`/`JOB-*`; five adopter digital twins are proposed. The set is settled in the discuss phase.
+- **Personas:** operators and adopters both get personas. Operator personas map onto `ROLE-*`/`JOB-*`; the adopter twins are Wikily, Chatly, Langalern, Budgetly and Shoply. See the grilling decisions in RECOMMENDATIONS.
 - **Fixtures:** a `fixtures/scrypath_fixtures` path dependency (dev/test only) with 12 invariant tests. It replaces both `Phase173FixtureSource` copies.
 - **Storybook:** phoenix_storybook in `scrypath_ops`, dev/test only. Themes use `data_attribute: "theme"`, page and section stories run in iframes, and `storybook.css` imports `app.css`. Our ExUnit gates sit on top: every variation renders, every variation is described, every component is covered, and no two variations render identically. A manifest feeds the sweep. Primitive and group stories cover `OpsUi`.
 - **Pilot:** extract Search health and Control room into area components over pure view-models, keeping pixels the same.
@@ -83,7 +83,7 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
   - the `ui-decisions.jsonl` decisions log.
 - **Cleanup:** port the `phase173_*` specs onto stories and delete the `phase173` fixture mode.
 
-## 5. v1.47 UI surfaces and polish (proposed)
+## 5. v1.47 UI surfaces and polish
 
 - Extract Search, then Failed sync work, then Sync and index, with area, section and page stories for each.
 - L3 element screenshots get one pinned Linux baseline.
