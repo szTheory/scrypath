@@ -34,6 +34,8 @@ defmodule Scrypath.Backfill do
       keyset: nil,
       total: 0,
       removed: 0,
+      omitted: 0,
+      fresh_target?: Keyword.fetch!(config, :_scrypath_fresh_target),
       acc: []
     })
   end
@@ -60,13 +62,14 @@ defmodule Scrypath.Backfill do
 
     with {:ok, records, omitted} <- Loader.prepare_records(schema_module, rows, config),
          documents = Enum.map(records, &Projection.document(schema_module, &1)),
+         removals = if(state.fresh_target?, do: [], else: omitted),
          {:ok, upsert} <- write(:upsert, schema_module, documents, config, index),
-         {:ok, delete} <- write(:delete, schema_module, omitted, config, index) do
+         {:ok, delete} <- write(:delete, schema_module, removals, config, index) do
       batch_result =
         %{
           index: result_index(upsert, index),
           documents: length(documents),
-          removed: length(omitted),
+          removed: length(removals),
           last_primary_key: public_cursor(cols, values),
           task: task_of(upsert),
           delete_task: task_of(delete)
@@ -78,14 +81,15 @@ defmodule Scrypath.Backfill do
         state
         | keyset: Enum.zip(cols, values),
           total: state.total + length(documents),
-          removed: state.removed + length(omitted),
+          removed: state.removed + length(removals),
+          omitted: state.omitted + length(omitted),
           acc: [batch_result | state.acc]
       })
     end
   end
 
   defp final_result(state) do
-    %{
+    result = %{
       index: state.index,
       batches: length(state.acc),
       documents: state.total,
@@ -93,6 +97,10 @@ defmodule Scrypath.Backfill do
       mode: Keyword.fetch!(state.config, :sync_mode),
       batch_results: Enum.reverse(state.acc)
     }
+
+    # A fresh reindex target holds none of the omitted ids, so they are only
+    # counted; a live index has them removed and reports them as removed.
+    if state.fresh_target?, do: Map.put(result, :omitted, state.omitted), else: result
   end
 
   # Empty lists are never sent to the backend; a skipped write has no result.

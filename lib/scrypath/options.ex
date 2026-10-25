@@ -293,6 +293,13 @@ defmodule Scrypath.Options do
       type: {:in, [:inline, :manual, :oban]},
       default: :manual,
       doc: "Execution mode for the bulk workflow."
+    ],
+    # Internal: set by managed reindex when the target index is freshly
+    # created, so omitted records are counted instead of deleted.
+    _scrypath_fresh_target: [
+      type: :boolean,
+      default: false,
+      doc: false
     ]
   ]
 

@@ -50,6 +50,8 @@ defmodule Scrypath.Reindex do
              workflow_config
              |> backfill_config()
              |> Keyword.put(:index_name, target_index)
+             # The target was just created, so nothing omitted is in it to delete.
+             |> Keyword.put(:_scrypath_fresh_target, true)
            ),
          {:ok, _backfill_result} <-
            maybe_wait_for_backfill_tasks(backfill_result, workflow_config),
@@ -61,6 +63,7 @@ defmodule Scrypath.Reindex do
          settings_applied: true,
          batches: Map.fetch!(backfill_result, :batches),
          documents: Map.fetch!(backfill_result, :documents),
+         omitted: Map.get(backfill_result, :omitted, 0),
          cutover: cutover
        }}
     end
