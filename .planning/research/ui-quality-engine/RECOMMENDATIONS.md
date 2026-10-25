@@ -6,24 +6,26 @@ Synthesis of [OWNER-INTENT](OWNER-INTENT.md) and four research passes: [INVENTOR
 
 ## Decisions
 
-### D1. A hand-rolled story harness, not phoenix_storybook
+### D1. Adopt phoenix_storybook in `scrypath_ops`, dev/test only, with our own thin gates on top
 
-The harness lives in `scrypath_ops`, dev/test only, and adds no dependencies:
-- A `Story` behaviour.
-- A story LiveView with one bare route per variation (`/ops/__stories/...`) that renders under the **real** root layout and `app.css`.
-- A committed JSON manifest with a staleness check.
-- ExUnit gates: every variation renders; every variation has a situation description (profile + `JOB-*`); every exported `OpsUi` component has a story; no two variations render identically (automatic pruning).
-- Estimated at 450–650 lines.
+*Maintainer decision, 2026-10-25. It reverses the research pass's hand-rolled recommendation; see [the storybook research](RESEARCH-STORYBOOK-COMPOSITION.md) for the original argument.*
 
-The tree is fractal and uses the UI's own nouns: primitives → groups → areas → sections → pages per job.
-
-**Why:**
-- **Fidelity.** Ops dark mode is keyed on `<html data-theme>`. phoenix_storybook renders into a wrapper div with a mirrored stylesheet, so stories would drift from the real app by design.
-- **Dependencies.** It adds 8 packages, including a Rust NIF fetched at compile time, and it had three 2026 CVEs, one critical.
-- **Topology.** `scrypath_ops` isn't a Hex package; it's a path dependency, and `mix.exs:268` keeps it out of the tarball. A dependency's dev setup doesn't carry over to the demo host, so phoenix_storybook would have to be installed twice.
-- **Precedent.** `E2EUIFixtureLive` in the demo already proves the approach on one screen.
-
-**Revisit if:** non-maintainers need a free-form playground, or the story count passes about 500.
+- **Install:** `{:phoenix_storybook, "~> 1.5", only: [:dev, :test]}` in `scrypath_ops` only. The storybook is served from the ops dev router, so the demo host doesn't need a second install.
+  - `scrypath_ops` isn't a Hex package (`mix.exs:268`), so adopters never see these dependencies.
+  - They are `makeup_eex`, `makeup_html` and `mdex`, a precompiled Rust NIF. They're accepted because the browsable tree, docs, playground and search are the review surface the maintainer wants. That's a dependency we truly need, not a convenience.
+- **Theme fidelity:**
+  - Use `themes_strategies: [data_attribute: "theme"]` with light and dark themes. Ops dark CSS is keyed on `[data-theme="dark"] …` descendant selectors and `@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *))`. That works on any ancestor, and so do daisyUI themes, so the sandbox container drives the real theme.
+  - The one exception is System mode, which is keyed on `html:not([data-theme="light"])` with `prefers-color-scheme`. Page and section stories therefore use `container: :iframe`, which is also needed for real viewport widths. The browser sweep pins the colour scheme for explicit-theme runs.
+- **One stylesheet source:** `css_path` serves a `storybook.css` that only `@import`s `app.css` and adds `@source` for the story files. `js_path` registers the same hooks as `app.js`, which the host-hook registration lesson in memory requires.
+- **Our own gates:**
+  - an ExUnit test renders every story variation;
+  - every variation has a situation description (persona + `JOB-*`);
+  - every exported `OpsUi` component has a story;
+  - no two variations render identically (automatic pruning);
+  - a committed manifest of iframe URLs, with a staleness check, feeds the L2 sweep.
+- **Tree:** fractal, named with the UI's own nouns: primitives → groups → areas → sections → pages per job.
+- **Supply-chain care:** pin the version in `mix.lock`. Dependabot and the existing `deep-quality` dependency audit cover it. Its 2026 CVEs are fixed in 1.5.0, and it only ever runs on a developer machine or in CI.
+- **Fallback:** if a fidelity gap that the iframe can't solve shows up, fall back to the hand-rolled harness in the research doc. `E2EUIFixtureLive` is the precedent.
 
 ### D2. Composable LiveViews: area components over pure view-models
 
@@ -43,7 +45,12 @@ The tree is fractal and uses the UI's own nouns: primitives → groups → areas
 
 **Pixel parity:** an extraction must not change rendered pixels. Screenshots before and after, at fixed states, prove it. That keeps extraction work out of the "visible UI change" approval gate.
 
-### D3. Five adopter *profiles* as fixture data, in one shared fixture project
+### D3. Personas on both sides, plus one shared fixture project
+
+*Maintainer decision, 2026-10-25: real personas are wanted. This supersedes the 2026-10-14 "don't invent personas" line in `OPERATOR-UI-QUALITY.md`.*
+
+- **Operator personas:** the people who open the UI, for example the paged on-call engineer, the solo self-hoster, the platform/SRE owner and the support-triggered checker. Each one maps onto the existing `ROLE-*`/`JOB-*` ids, which stay as the stable references. The persona set is settled in the v1.46 discuss phase.
+- **Adopter personas** (digital twins of the products whose data is indexed) are the five below.
 
 The five profiles are:
 - **Quillmark Wiki:** a brand-new, empty install with inline sync.
@@ -131,12 +138,11 @@ Machine checks set floors; they never certify taste. Taste items go to the maint
 
 ## Conflicts with recorded owner decisions
 
-1. **Personas.** `OPERATOR-UI-QUALITY.md:9` says: *"Treat roles as task contexts that may overlap, not fictional demographic personas."* Line 19 adds: *"Do not invent new personas or duplicate the job table."* The 2026-10-25 intent asks for digital twins of adopters across industries.
+1. **Personas.** `OPERATOR-UI-QUALITY.md:9` says: *"Treat roles as task contexts that may overlap, not fictional demographic personas."* Line 19 adds: *"Do not invent new personas or duplicate the job table."* **Superseded by the maintainer on 2026-10-25:** personas are wanted on both sides (D3). That file now carries a dated note.
    - **Resolution:** the two don't actually collide. Operator humans stay `ROLE-*`/`JOB-*`, and on-call, solo self-hoster and SRE become situations within those roles, not new ids. The adopter side becomes fixture data profiles, which is what the indexed data is about. Update line 19 with a dated note pointing here.
 2. **Paid judge.** `OPERATOR-UI-QUALITY.md:99` says: *"No paid visual-judge API calls, new AI service, or recurring model gate by default."* `ops-ui-visual-judge.mjs:191` calls `api.openai.com`.
    - **Resolution:** delete that path (D6).
-3. **Methodology prompt vs. dependency rule.** The methodology names phoenix_storybook, while the owner's standing rule is "copy-paste over a dep".
-   - **Resolution:** the hand-rolled harness (D1). It's still the storybook the maintainer described; it just isn't that package.
+3. **Storybook vs. dependency rule.** The owner's standing rule is "copy-paste over a dep", but it allows a dependency when one is truly needed. **The maintainer decided on 2026-10-25** that phoenix_storybook qualifies (D1). Its dependencies are dev/test only, in a package that isn't published.
 4. **Approved rolling roadmap.** v1.45 plans to run the standalone `phase173_*` specs. D3 retires the `phase173` fixture mode.
    - **Resolution:** keep v1.45's cheap fix, one compose `-f` flag, so the nightly lane goes green; L2 depends on that. The UI-engine milestone then ports those specs onto stories and deletes the mode.
 
@@ -146,7 +152,7 @@ Machine checks set floors; they never certify taste. Taste items go to the maint
 - Stories of states the builder can't produce.
 - Mocking Repo or `Scrypath` in stories.
 - A second inventory (gallery page, component catalogue) living alongside the stories.
-- Profiles kept for flavour. A profile with no owned state gets deleted.
+- Personas kept for flavour. An adopter persona that owns no live story state gets deleted at the pruning pass.
 - Lorem ipsum, real PII, Faker.
 - Resetting Tailwind spacing or text defaults wholesale.
 - Counting a passing retry as green.
@@ -160,7 +166,7 @@ Machine checks set floors; they never certify taste. Taste items go to the maint
 1. **Prerequisites** (fit inside the approved v1.45): nightly lane green; the L1 ratchet and colour reset; contrast promoted to required; `home.html.heex` deleted; the OpenAI judge path deleted; the token DTCG group plus drift test. None of this changes visible UI.
 2. **Engine and pilot** (new milestone A):
    - the fixtures project with its invariants;
-   - the story harness, manifest and gates;
+   - phoenix_storybook (dev/test) with the data-attribute theme strategy, iframe page stories, and our gates and manifest;
    - primitive and group stories for `OpsUi`;
    - the Search health pilot extraction plus Control room;
    - the L2 sweep (advisory), the copy lint baseline and the decisions log;
