@@ -141,7 +141,9 @@ defmodule Scrypath.Oban.WorkerTest do
 
     assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
 
-    assert_received {:search_records, [7, 404], %{repo: FakeRepo}}
+    # The loader dedupes and sorts ids into chunks; there is no ordering contract.
+    assert_received {:search_records, loaded_ids, %{repo: FakeRepo}}
+    assert Enum.sort(loaded_ids) == [7, 404]
     assert_received {:upsert_documents, LoaderPost, [%Document{id: 7} = document], _config}
     assert document.data.title == "Loaded 7"
     assert_received {:delete_documents, LoaderPost, [404], _config}

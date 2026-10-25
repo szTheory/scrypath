@@ -24,10 +24,15 @@ defmodule Scrypath.Loader do
       end
 
   Ids with no returned record are removed from the index.
+
+  Ids are deduped and loaded in batches of at most 1000, so `search_records/2`
+  and the default query never see more than 1000 ids per call. There is no
+  ordering contract for the ids a batch receives.
   """
 
   import Ecto.Query, only: [from: 2]
 
+  alias Scrypath.Chunks
   alias Scrypath.Identity
   alias Scrypath.Schema.Metadata
 
@@ -82,11 +87,12 @@ defmodule Scrypath.Loader do
   Returns `{:ok, records, missing_ids}` for the given document ids.
 
   `missing_ids` keeps the caller's id values for documents whose records no
-  longer exist.
+  longer exist. Ids are deduped and loaded in batches of at most 1000; the
+  first failing batch stops the load and its error is returned.
   """
   @spec load(module(), [term()], keyword()) :: {:ok, [struct()], [term()]} | {:error, term()}
   def load(schema_module, document_ids, config) when is_list(document_ids) do
-    with {:ok, records} <- fetch(schema_module, document_ids, config) do
+    with {:ok, records} <- fetch_chunks(schema_module, document_ids, config) do
       found = MapSet.new(Identity.document_ids(schema_module, records), &to_string/1)
       missing = Enum.reject(document_ids, &MapSet.member?(found, to_string(&1)))
       {:ok, records, missing}
@@ -120,7 +126,17 @@ defmodule Scrypath.Loader do
       end
     else
       repo = Keyword.fetch!(config, :repo)
-      {:ok, preload_records(repo, rows, Metadata.preload(schema_module)), []}
+      {:ok, preload_records(repo, rows, preload_for(schema_module)), []}
+    end
+  end
+
+  defp fetch_chunks(schema_module, document_ids, config) do
+    document_ids
+    |> Chunks.ids()
+    |> Chunks.reduce_ok(&fetch(schema_module, &1, config))
+    |> case do
+      {:ok, chunk_records} -> {:ok, Enum.concat(chunk_records)}
+      {:error, _reason} = error -> error
     end
   end
 
@@ -142,9 +158,20 @@ defmodule Scrypath.Loader do
           from(record in schema_module, where: field(record, ^id_field) in ^document_ids)
           |> repo.all()
 
-        {:ok, preload_records(repo, records, Metadata.preload(schema_module))}
+        {:ok, preload_records(repo, records, preload_for(schema_module))}
       end
     end
+  end
+
+  # Hand-written owner-only fan-out schemas define only :fan_outs and :document_id,
+  # so a schema that does not answer :preload has nothing to preload.
+  defp preload_for(schema_module) do
+    Metadata.preload(schema_module)
+  rescue
+    error in FunctionClauseError ->
+      if error.module == schema_module and error.function == :__scrypath__,
+        do: [],
+        else: reraise(error, __STACKTRACE__)
   end
 
   defp preload_records(_repo, records, preload) when preload in [nil, []], do: records
