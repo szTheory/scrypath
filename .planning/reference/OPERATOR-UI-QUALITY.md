@@ -46,21 +46,9 @@ These jobs describe product intent, not proof of demand. Direct maintainer feedb
 
 Translate from the implementation model into the user's task while preserving distinctions that affect a decision. Do not rename public APIs, internal types, or domain concepts merely to make every screen sound nontechnical. Scrypath's audience includes working Elixir/Phoenix engineers; precise technical terms are appropriate when they identify the object the user must act on.
 
-| Internal concept | User-facing starting term | Keep this distinction explicit |
-| --- | --- | --- |
-| Oban `Job` / queued sync work | **Queue job** or **sync work** | It is work in the host application's queue. Do not call it a Meilisearch task. |
-| Meilisearch task UID | **Meilisearch task** in the supported v1 UI; **backend task** in implementation-neutral context | Acceptance is not completion; retain the task ID until an exact terminal result is observed. |
-| Ecto schema / module | **Schema**, with its readable module name available in diagnostic context | Do not erase schema scope behind a vague “collection” label; the selected schema controls evidence and recovery. |
-| Declared/live index settings comparison | **Index settings** in the primary path; **contract** may remain in advanced detail | Matching settings do not prove documents are fresh or visible. |
-| Active-index document check | **Documents visible in the active index** / **Check document visibility** | State the selected schema/index and observation time; do not infer visibility from queue or settings status. |
-| Saved Playbook JSON | **Saved search** is the adopted 2026-10-14 UI term; **Playbook** remains the API/file-format name | A saved definition can contain multiple schema/query entries. It is not a stored result, pass/fail test, scheduled job or completed run. Preserve draft, saved, and run provenance; navigation and headings use the same term. |
-| `playbook_workspace_dir` | **Storage folder** in details or configuration/error guidance | This is a server-side directory for saved JSON files, not a separate team/account concept. Preserve scope and exact path where actionable. |
-| Schema allowlist | **Configured schemas** in ordinary task guidance | Keep authorization/allowlist policy explicit in setup or access errors when it changes what the user can do; enforcement is unchanged. |
-| `sync_mode: :oban` | **Background sync · Oban**, with inline/manual context when relevant | This describes the write path, not completion or freshness. Keep exact configured mode available in technical detail. |
-| Multi-schema/federated search | **Search across selected schemas** when orienting a new user; keep per-schema detail | Per-target results remain separate; do not promise a merged index or combined relevance score. |
-| Search result hydration from the app Repo | **Load matching Ecto records from the app** in explanatory docs | It is an app-side lookup after search, not a Meilisearch operation; preserve failure/consistency semantics. |
+The canonical terms now live in the root [`GLOSSARY.md`](../../GLOSSARY.md) (moved there 2026-10-25). It is the single source for UI copy, docs, stories and the copy lint. The distinctions this table used to hold are recorded there as definitions and _Avoid_ lists.
 
-This is a decision aid, not a blind find/replace glossary. For each new or changed screen, ask whether the person needs the internal term to choose an action. If yes, keep it and define it briefly; otherwise lead with the task or observed outcome and retain exact technical evidence in context. Add a mapping only when real copy or a repeated misunderstanding demonstrates a need.
+The glossary is a decision aid, not a blind find/replace list. For each new or changed screen, ask whether the person needs the internal term to choose an action. If yes, keep it and define it briefly; otherwise lead with the task or observed outcome and retain exact technical evidence in context. Add a mapping only when real copy or a repeated misunderstanding demonstrates a need.
 
 ### Keeping the model current
 

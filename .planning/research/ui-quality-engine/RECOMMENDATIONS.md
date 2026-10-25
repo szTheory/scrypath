@@ -53,11 +53,11 @@ Synthesis of [OWNER-INTENT](OWNER-INTENT.md) and four research passes: [INVENTOR
 - **Adopter personas** (digital twins of the products whose data is indexed) are the five below.
 
 The five profiles are:
-- **Quillmark Wiki:** a brand-new, empty install with inline sync.
-- **Hearth:** a multi-tenant chat product with Oban sync, retries, failed deletes and emoji.
-- **Kotoba Ladder:** language learning with Japanese, Chinese, Korean and right-to-left text, settings drift and index promotion.
-- **Tallyhouse:** self-hosted personal finance with manual sync and Meilisearch task failures.
-- **Partsbin:** the existing e-commerce demo, scaled to a power-user, 41M-document, 6-schema install.
+- **Wikily:** a brand-new, empty install with inline sync.
+- **Chatly:** a multi-tenant chat product with Oban sync, retries, failed deletes and emoji.
+- **Langalern:** language learning with Japanese, Chinese, Korean and right-to-left text, settings drift and index promotion.
+- **Budgetly:** self-hosted personal finance with manual sync and Meilisearch task failures.
+- **Shoply:** the existing e-commerce demo, scaled to a power-user, 41M-document, 6-schema install.
 
 Each profile owns at least one state no other profile covers. A profile that owns no live story at a pruning pass is deleted.
 
@@ -135,6 +135,48 @@ Each profile owns at least one state no other profile covers. A profile that own
 | 10 | Least surprise, one pattern per job | judge | census of raw button and table markup outside the primitives (advisory) |
 
 Machine checks set floors; they never certify taste. Taste items go to the maintainer as triaged findings plus key screenshots, never as an open-ended UAT round.
+
+## Grilling decisions (maintainer, 2026-10-25)
+
+All of these were settled in a `/grill-with-docs` session. The terms are in the root [`GLOSSARY.md`](../../../GLOSSARY.md); the hard-to-reverse choices are [ADR 0001](../../adr/0001-phoenix-storybook-for-scrypath-ops.md) (phoenix_storybook) and [ADR 0002](../../adr/0002-shared-fixtures-mix-project.md) (the shared fixtures project).
+
+**Order:** v1.44 sync → v1.45 foundation and CI (plus the engine's prerequisites) → v1.46 engine and pilot → v1.47 surfaces and polish → v1.48 adopter features.
+
+**Language:**
+- One root `GLOSSARY.md` is the canonical domain language. The copy lint is built from it.
+- **Operator persona** and **adopter twin** are the only persona terms. A bare "persona" must say which kind it means.
+- Docs use the rendered surface names: Control room, Search health, Failed sync work, Sync and index, Search (with Saved searches), Help.
+- The story levels are **Primitive → Pattern → Area → Surface → Job**.
+
+**Operator personas:** four role handles, each mapped to the `ROLE-*` ids:
+
+| Handle | Role | Device |
+|---|---|---|
+| Solo Dev | `ROLE-INT` | laptop |
+| On-call | `ROLE-OPS` | phone, paged |
+| Platform SRE | `ROLE-OPS` + `ROLE-OWNER` | desktop, keyboard-first |
+| Search Owner | `ROLE-OWNER` | desktop |
+
+A fifth persona is added only if it brings a distinct device, skill or trigger that the stories need.
+
+**Adopter twins:** obvious domain names; trademark collisions don't matter for demos.
+- **Wikily:** a brand-new, empty wiki install with inline sync.
+- **Chatly:** multi-tenant team chat with Oban retries, failed deletes and emoji.
+- **Langalern:** language learning with Japanese, Chinese, Korean and right-to-left text, settings drift and promotion.
+- **Budgetly:** self-hosted personal finance with manual sync, Meilisearch task failures and privacy-sensitive data.
+- **Shoply:** the e-commerce demo at power-user scale. This is a fixture label only; the `scrypath_ecommerce` app keeps its name.
+
+Each twin names its one or two paired operator personas. Every story variation cites a twin, a persona and a `JOB-*`, for example "Chatly · On-call · JOB-03 · retry burst". A twin that owns no live state is deleted at the per-milestone pruning pass.
+
+**Scope:**
+- **Locale:** the ScrypathOps interface stays English and left-to-right. Only adopter data is multi-script, rendered with `dir="auto"`.
+- **Realism:** only what changes the rendered UI or breaks layout. That's about 80 hand-written lines per twin, and volumes are labels, not generated rows.
+
+**Mechanics:**
+- **Fixtures:** in `fixtures/scrypath_fixtures`, per ADR 0002. Personas and twins are defined once in code, and a generated `PERSONAS.md` index is drift-checked against it.
+- **Serving:** the storybook runs from the standalone `scrypath_ops` dev server at `/storybook`, with its own Compose service and port lane next to the retained preview.
+- **Gates:** the story ExUnit gates block merges from the first story PR. The Playwright sweep stays advisory until 14 clean nights.
+- **Approvals:** extraction work stays pixel-identical. Copy and design fixes are batched for one maintainer yes per milestone, shown as before/after storybook links.
 
 ## Conflicts with recorded owner decisions
 

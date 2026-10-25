@@ -1,3 +1,5 @@
+> **2026-10-25:** the twins were renamed to obvious domain names (Wikily, Chatly, Langalern, Budgetly, Shoply) by maintainer direction. The settled decisions are in [RECOMMENDATIONS.md](RECOMMENDATIONS.md) under "Grilling decisions".
+
 # Research: adopter profiles, operator jobs, shared fixtures, verbal tokens
 
 **Date:** 2026-10-25. **Lens:** product/JTBD, UX writing, fixture design (methodology §3, §4 verbal tokens, §6; review rubric items 6–7).
@@ -40,10 +42,10 @@ A profile earns its place only if it holds a value on some axis that no other pr
 
 All products are fictional. Names were checked against the obvious collision with real companies; replace any that a later search shows to be real. No profile imitates a real brand's UI or ID format.
 
-#### P1 · Quillmark Wiki: brand-new install (empty)
+#### P1 · Wikily: brand-new install (empty)
 - **Product:** a self-hosted, single-tenant team docs wiki (Phoenix), installed by one developer for a 12-person team.
 - **Why Scrypath:** the wiki already has `Page` Ecto schemas, and the developer wants search without a second indexing model (`JOB-01`).
-- **Schemas → index:** `Quillmark.Docs.Page` → `quillmark_page`. Prefix-plus-snake naming follows `lib/scrypath/meilisearch/naming.ex:13`.
+- **Schemas → index:** `Wikily.Docs.Page` → `quillmark_page`. Prefix-plus-snake naming follows `lib/scrypath/meilisearch/naming.ex:13`.
 - **Volume:** 0 documents. The progression is 0 schemas configured → 1 schema with the backend missing → 1 schema with 0 docs → 3 docs after the first sync.
 - **Locale:** `en`.
 - **Sync:** `:inline`.
@@ -51,10 +53,10 @@ All products are fictional. Names were checked against the obvious collision wit
 - **Who opens the UI:** the solo developer, right after `mix deps.get` → `ROLE-INT`, `JOB-01`.
 - **Distinct class:** the only profile in the setup-missing/empty state, and the only `:inline` one.
 
-#### P2 · Hearth: B2B hosted multi-tenant team chat (Slack-clone class)
+#### P2 · Chatly: B2B hosted multi-tenant team chat (Slack-clone class)
 - **Product:** hosted team messaging SaaS with ~3,400 workspaces.
 - **Why Scrypath:** message search scoped per workspace; deletes must propagate (users delete messages; workspace offboarding).
-- **Schemas → indexes:** `Hearth.Chat.Message` → `hearth_message` (tenant field `workspace_id`), `Hearth.Chat.Channel` → `hearth_channel`.
+- **Schemas → indexes:** `Chatly.Chat.Message` → `hearth_message` (tenant field `workspace_id`), `Chatly.Chat.Channel` → `hearth_channel`.
 - **Volume:** 2.1M messages across workspaces and ~600 writes/min at peak; Meilisearch task uids in the 10⁶ range.
 - **Locale:** mostly `en`, with emoji-heavy content (👍🏽, ZWJ sequences such as 👩🏽‍💻), @mentions, code snippets and long unbroken URLs in message bodies.
 - **Sync:** `:oban`.
@@ -65,7 +67,7 @@ All products are fictional. Names were checked against the obvious collision wit
 - **Who opens the UI:** an on-call engineer paged at 02:40 → `ROLE-OPS`, `JOB-03` (Control Room → Search health → Failed sync work → recovery check).
 - **Distinct class:** shared-index multi-tenancy at high write rate; delete semantics; transient retry bursts; emoji in returned documents.
 
-#### P3 · Kotoba Ladder: B2C language learning (CJK/RTL)
+#### P3 · Langalern: B2C language learning (CJK/RTL)
 - **Product:** a consumer language-learning app for Japanese, Korean, Mandarin, Arabic and Hebrew learners.
 - **Why Scrypath:** learners search lessons, cards and example sentences in both the target and the native language; the search owner tunes settings per language.
 - **Schemas → indexes:** `KotobaLadder.Courses.Lesson` → `kotoba_ladder_lesson`, `KotobaLadder.Cards.Card` → `kotoba_ladder_card`, `KotobaLadder.Cards.ExampleSentence` → `kotoba_ladder_example_sentence` (a long index name).
@@ -79,10 +81,10 @@ All products are fictional. Names were checked against the obvious collision wit
 - **Who opens the UI:** the search owner after a settings PR → `ROLE-OWNER`, `JOB-04`, then `JOB-05` (query 「食べる」 across selected schemas and compare per-target results; save that check).
 - **Distinct class:** the only profile whose failure is *configuration* rather than *work*; CJK/RTL in queries, results and saved-search names; multi-schema search.
 
-#### P4 · Tallyhouse: self-hosted single-tenant personal finance
+#### P4 · Budgetly: self-hosted single-tenant personal finance
 - **Product:** a self-hosted personal and household finance tracker (one household per install).
 - **Why Scrypath:** search over transactions by payee, memo, category and amount. Bank CSV imports arrive in batches, so sync is manual.
-- **Schemas → indexes:** `Tallyhouse.Ledger.Transaction` → `tallyhouse_transaction`, `Tallyhouse.Ledger.Payee` → `tallyhouse_payee`.
+- **Schemas → indexes:** `Budgetly.Ledger.Transaction` → `tallyhouse_transaction`, `Budgetly.Ledger.Payee` → `tallyhouse_payee`.
 - **Volume:** 48k transactions over 9 years; 0–3 imports per week, each 200–2,000 rows.
 - **Locale:** `en-GB` and `de-DE` amounts and dates, currency codes (GBP/EUR/CHF), payee names with diacritics (Bäckerei Müller-Lüdenscheid, a long name), negative amounts.
 - **Sync:** `:manual` (backfill after import).
@@ -90,10 +92,10 @@ All products are fictional. Names were checked against the obvious collision wit
 - **Who opens the UI:** the household's self-hoster on a weekend after an import → `ROLE-OPS` (`JOB-03`) with `JOB-02` context (manual mode means "accepted ≠ visible").
 - **Distinct class:** manual mode; backend task failure with error codes; privacy-sensitive data (the fixtures must show the Search query privacy guidance and never real names or IBANs); non-English number and date formats inside documents.
 
-#### P5 · Partsbin Exchange: B2B multi-schema marketplace at scale (power user)
+#### P5 · Shoply: B2B multi-schema marketplace at scale (power user)
 - **Product:** an industrial-parts B2B marketplace. It is the **scaled-up form of the existing e-commerce example** (tenants, categories, products, variants, with `examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/*.ex`), so the click-around demo stays coherent and is not forked.
 - **Why Scrypath:** catalog search with facets and filters across products, variants, suppliers, documents (datasheets), quotes and orders.
-- **Schemas → indexes:** six of them, including deliberately long module names such as `PartsbinExchange.Catalog.SupplierCertificationDocument` → `partsbin_exchange_supplier_certification_document`.
+- **Schemas → indexes:** six of them, including deliberately long module names such as `ShoplyExchange.Catalog.SupplierCertificationDocument` → `partsbin_exchange_supplier_certification_document`.
 - **Volume:**
   - 41M variants, 6 schemas, 180 supplier tenants;
   - task uids are 10-digit (the `phase173` "long" scenario already uses `9_876_543_210`);
@@ -107,7 +109,7 @@ All products are fictional. Names were checked against the obvious collision wit
 
 ### 1.3 Coverage matrix
 
-| Axis \ profile | P1 Quillmark | P2 Hearth | P3 Kotoba | P4 Tallyhouse | P5 Partsbin |
+| Axis \ profile | P1 Wikily | P2 Chatly | P3 Kotoba | P4 Budgetly | P5 Shoply |
 | --- | --- | --- | --- | --- | --- |
 | B2B / B2C | B2B internal | B2B | B2C | B2C (self) | B2B |
 | Hosted MT / self-hosted ST | self ST | hosted MT | hosted ST | self ST | hosted MT |
@@ -122,7 +124,7 @@ Each bold cell is owned by exactly one profile. Removing any column loses at lea
 
 ### 1.4 Candidates rejected as sprawl
 
-- **Multi-tenant SaaS helpdesk:** the same class as Hearth (hosted MT, B2B, oban, high write rate). It adds no state that P2 lacks. A "support lead" trigger is folded into `JOB-05` instead (see §2).
+- **Multi-tenant SaaS helpdesk:** the same class as Chatly (hosted MT, B2B, oban, high write rate). It adds no state that P2 lacks. A "support lead" trigger is folded into `JOB-05` instead (see §2).
 - **Separate self-hosted docs wiki (populated):** P1 already owns the self-hosted wiki shape. A populated wiki adds nothing over P4's single-tenant data.
 - **Separate "huge e-commerce" plus the existing demo catalog:** merged into P5, so there is one retail/marketplace lineage, not two.
 - **A dedicated "error everything" persona:** this is an anti-pattern. Failure scenarios are **orthogonal states applied to profiles** (§3.3), not a sixth company.
@@ -159,7 +161,7 @@ The existing roles and jobs are kept verbatim. The four humans the brief names b
 1. Under "Task contexts", add one line: *Situations: solo self-hoster, paged on-call, platform/SRE owner, support-triggered check. These are triggers within `ROLE-*`, not new roles (2026-10-25, maintainer intent: OWNER-INTENT.md).*
 2. Add a short "Adopter profiles (fixture data)" pointer to the fixture package README (§3.6). The profile table lives with the data that implements it, so it can't drift from it.
 
-Every story variation's description then reads as `P<n> · ROLE · JOB · state`, for example "P2 Hearth · ROLE-OPS · JOB-03 · delete sync work discarded after 20 attempts".
+Every story variation's description then reads as `P<n> · ROLE · JOB · state`, for example "P2 Chatly · ROLE-OPS · JOB-03 · delete sync work discarded after 20 attempts".
 
 ---
 
@@ -224,8 +226,8 @@ fixtures/scrypath_fixtures/lib/
 
 - **No wall clock:** one anchor (`~U[2026-10-06 17:18:42.318Z]`, matching the existing `@snapshot`) plus explicit offsets. `DateTime.utc_now/0` is banned inside the package (an invariant test greps for it).
 - **IDs:** each id derives from `:crypto.hash(:sha256, "#{profile}:#{kind}:#{n}")`.
-  - Document ids: UUIDv4-format strings (Hearth), integers (Partsbin variants, Tallyhouse transactions), slugs (Quillmark pages).
-  - Meilisearch task `uid`: monotonically increasing integers per profile instance, starting at a profile-specific base (Quillmark 1, Tallyhouse 4_812, Hearth 1_904_221, Partsbin 9_876_543_210).
+  - Document ids: UUIDv4-format strings (Chatly), integers (Shoply variants, Budgetly transactions), slugs (Wikily pages).
+  - Meilisearch task `uid`: monotonically increasing integers per profile instance, starting at a profile-specific base (Wikily 1, Budgetly 4_812, Chatly 1_904_221, Shoply 9_876_543_210).
   - Oban `id`: a monotonically increasing bigint.
 - **Text:** hand-written, domain-true corpora of about 30–80 lines per profile, stored as module attributes (real-sounding lesson sentences, payee names, part numbers, chat messages). A deterministic rotation `Enum.at(corpus, rem(n, length))` scales them to the declared volume for counts. Rendered stories show only the first few.
 - **No real PII or secrets:**
@@ -281,7 +283,7 @@ Primary-source basis is in §6.
    - **one action** that leads to the fix or the feature (Primer empty-states, verified).
    - Keep three shapes distinct: *nothing configured* (setup), *nothing found* (healthy-empty), and *couldn't check* (observation failed). They must never share copy (DESIGN.md Do's).
 6. **Confirmations** for destructive or irreversible operations (delete a saved search, promote an index):
-   - the title is a question naming the object ("Delete saved search “Hearth: missing DMs”?");
+   - the title is a question naming the object ("Delete saved search “Chatly: missing DMs”?");
    - the body is the consequence, including what is *not* affected;
    - the confirm button repeats the verb and object ("Delete saved search"), and the cancel button is "Cancel".
    - No "Are you sure?". Protected confirm behaviour stays as is.
@@ -325,7 +327,7 @@ Glossary growth rule (unchanged from the authority): add a row only when real co
 ### 4.4 Confirmation pattern
 
 ```
-Title:   Promote target index for Kotoba Ladder cards?
+Title:   Promote target index for Langalern cards?
 Body:    Searches will use kotoba_ladder_card_2026_10_25 instead of kotoba_ladder_card.
          The current index is kept until you remove it.
 Buttons: [Promote target index]  [Cancel]
@@ -369,7 +371,7 @@ Buttons: [Promote target index]  [Cancel]
 | Risk | Argument against | Mitigation kept in the recommendation |
 | --- | --- | --- |
 | **Persona sprawl** | Five fictional companies are five maintenance burdens; the authority already said "don't invent personas". | They are fixture data profiles tied to rendered equivalence classes (§1.3), not personas for design debate. Admission needs a new bold cell. Profiles that own no live story at the milestone pruning pass are deleted. |
-| **Realism theatre** | Hand-written Japanese sentences and Tallyhouse payees look impressive but don't change the UI. | Realism is limited to what **renders or breaks layout**: script, length, counts, id formats, state combinations. Volumes are labels, not generated data (§3.5 #10). Each profile corpus is capped at ~80 lines. |
+| **Realism theatre** | Hand-written Japanese sentences and Budgetly payees look impressive but don't change the UI. | Realism is limited to what **renders or breaks layout**: script, length, counts, id formats, state combinations. Volumes are labels, not generated data (§3.5 #10). Each profile corpus is capped at ~80 lines. |
 | **Fixture ≠ reality** | Hand-shaped task JSON can drift from what Meilisearch and Oban actually return. | The fixtures emit external shapes into the **real** normalisation code. The closed enums are copied from the parsing code (§3.5). The opt-in real-backend `indexing_failure` seed stays as ground truth. Shape changes surface when `mix verify.ecommerce_e2e` runs against real Meilisearch. |
 | **New Mix project overhead** | A third mix project means more `deps.get`, lockfile churn and CI time. | It has no deps beyond core, compiles in seconds, and deletes ~600 lines of duplicated fixture source. Fallback if rejected: keep the source in `scrypath_ops/lib/scrypath_ops/dev_fixtures/` behind `elixirc_paths(:dev/:test)`, with the example app adding that dir to its own `elixirc_paths`. It works, but compiling another app's files is brittle. |
 | **Glossary bikeshedding** | Every row invites a naming debate. | Rows are added only on demonstrated leaks or confusion (the authority's rule). The table records *distinctions that change a decision*, not synonyms. The lint enforces *consistency*, not taste. |
