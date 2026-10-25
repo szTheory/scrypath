@@ -141,7 +141,7 @@ Call `Scrypath.sync_records/3`, `Scrypath.delete_documents/3` and `Scrypath.sync
 
 The trade-off: if your process crashes between the commit and the sync call, that sync is missed. The data is committed, so a retry of the call, a backfill or a managed reindex brings the index back in line; see [Drift recovery](drift-recovery.md) and the recovery posture for each mode above.
 
-If you do call a sync function inside a transaction on the Oban repo, Scrypath won't break your transaction. It inserts the chunk jobs in your transaction instead of opening a nested one, and returns the first failed insert's `{:error, reason}` without rolling anything back, so fail your transaction on `{:error, _}` (returning the error from `Ecto.Multi.run/3` does that). The freshness hazards above still apply. They also apply to `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5`, which insert their job inside your `Ecto.Multi` by design.
+If you do call a sync function inside a transaction on the Oban repo, Scrypath won't break your transaction. It inserts the chunk jobs in your transaction instead of opening a nested one, and returns the first failed insert's `{:error, reason}` without rolling anything back, so fail your transaction on `{:error, _}` (returning the error from `Ecto.Multi.run/3` does that). The freshness hazards above still apply. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` are the exception: they insert their job inside your `Ecto.Multi` by design and without the `unique:` policy, so the job becomes visible only at commit and always reads committed rows (an identical pending job may then run twice, which is harmless).
 
 #### Upgrading from 0.3.15 or earlier
 

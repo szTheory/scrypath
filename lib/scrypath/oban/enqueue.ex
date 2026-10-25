@@ -52,8 +52,12 @@ defmodule Scrypath.Oban.Enqueue do
     enqueue_chunks(changesets, config, index_metadata(changesets))
   end
 
-  @spec upsert_job_changeset(module(), [term()], keyword()) :: Changeset.t()
-  def upsert_job_changeset(schema_module, document_ids, config) when is_list(document_ids) do
+  # `unique: false` is for jobs inserted inside a caller's transaction (the Scrypath.Oban Multi
+  # helpers): such a job only becomes visible at commit, so it always reads committed rows,
+  # whereas a unique insert could collapse into a pending job that runs before the commit.
+  @spec upsert_job_changeset(module(), [term()], keyword(), keyword()) :: Changeset.t()
+  def upsert_job_changeset(schema_module, document_ids, config, job_opts \\ [])
+      when is_list(document_ids) do
     config =
       config
       |> Config.resolve!()
@@ -64,11 +68,12 @@ defmodule Scrypath.Oban.Enqueue do
 
     payload = Payload.build_upsert(schema_module, document_ids, config)
 
-    job_changeset(payload, @upsert_worker, config)
+    job_changeset(payload, @upsert_worker, config, job_opts)
   end
 
-  @spec delete_job_changeset(module(), [term()], keyword()) :: Changeset.t()
-  def delete_job_changeset(schema_module, document_ids, config) when is_list(document_ids) do
+  @spec delete_job_changeset(module(), [term()], keyword(), keyword()) :: Changeset.t()
+  def delete_job_changeset(schema_module, document_ids, config, job_opts \\ [])
+      when is_list(document_ids) do
     config =
       config
       |> Config.resolve!()
@@ -78,7 +83,7 @@ defmodule Scrypath.Oban.Enqueue do
 
     payload = Payload.build_delete(schema_module, document_ids, config)
 
-    job_changeset(payload, @delete_worker, config)
+    job_changeset(payload, @delete_worker, config, job_opts)
   end
 
   @doc false
@@ -216,14 +221,18 @@ defmodule Scrypath.Oban.Enqueue do
   defp job_document_ids(%{args: %{"document_ids" => ids}}) when is_list(ids), do: ids
   defp job_document_ids(_job), do: []
 
-  defp job_changeset(payload, worker, config) do
-    oban_job_module!().new(payload,
+  defp job_changeset(payload, worker, config, job_opts) do
+    base = [
       worker: worker,
       queue: to_string(Config.oban_queue(config)),
-      max_attempts: Config.oban_max_attempts(config),
-      # Jobs load current records when they run, so an identical pending batch adds nothing.
-      unique: unique_opts()
-    )
+      max_attempts: Config.oban_max_attempts(config)
+    ]
+
+    # Jobs load current records when they run, so an identical pending batch adds nothing.
+    opts =
+      if Keyword.get(job_opts, :unique, true), do: base ++ [unique: unique_opts()], else: base
+
+    oban_job_module!().new(payload, opts)
   end
 
   defp insert_job(oban, changeset) do
