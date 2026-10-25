@@ -19,7 +19,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
       use ExUnitProperties
 
       import Scrypath.TestSupport.LoaderBackfillCases,
-        only: [backfill!: 3, recorded_upserts: 0]
+        only: [backfill!: 3, recorded_upserts: 0, insert_memberships!: 2]
 
       alias Scrypath.TestSupport.LoaderBackfill
 
@@ -64,7 +64,40 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
           assert batch.last_primary_key == documents |> Enum.map(& &1.id) |> Enum.max()
         end)
       end
+
+      test "backfill pages a composite key on every key column (pinned {1, 3} regression)",
+           %{repo: repo} do
+        keys = [{1, 1}, {1, 2}, {1, 3}, {2, 1}]
+        insert_memberships!(repo, keys)
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert result |> Map.keys() |> Enum.sort() ==
+                 [:batch_results, :batches, :documents, :index, :mode]
+
+        assert result.batches == 2
+        assert result.documents == 4
+
+        upserted_ids =
+          Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
+            Enum.map(documents, & &1.id)
+          end)
+
+        assert upserted_ids == ["1:1", "1:2", "1:3", "2:1"]
+
+        assert [
+                 %{documents: 2, last_primary_key: [org_id: 1, seq: 2]},
+                 %{documents: 2, last_primary_key: [org_id: 2, seq: 1]}
+               ] = result.batch_results
+      end
     end
+  end
+
+  @doc "Inserts `lb_memberships` rows for `{org_id, seq}` key tuples."
+  def insert_memberships!(repo, keys) do
+    rows = Enum.map(keys, fn {org_id, seq} -> %{org_id: org_id, seq: seq, label: "m"} end)
+    {count, _} = repo.insert_all(LoaderBackfill.Membership, rows)
+    count
   end
 
   @doc """
