@@ -11,6 +11,7 @@ defmodule Scrypath.Oban.JobArgs do
 
   alias Scrypath.Config
   alias Scrypath.Oban.JobConfig
+  alias Scrypath.Schema.Metadata
 
   @type tag ::
           {:unknown_schema, String.t()}
@@ -65,6 +66,27 @@ defmodule Scrypath.Oban.JobArgs do
   def decode_delete(_args), do: {:error, {:invalid_arg, "args"}}
 
   @doc false
+  @spec decode_related(map()) :: {:ok, map()} | {:error, tag()}
+  def decode_related(args) when is_map(args) do
+    with {:ok, schema} <- fetch_schema(args),
+         {:ok, fan_out, fan_out_config} <- fetch_fan_out(schema, args),
+         {:ok, document_ids} <- fetch_document_ids(args),
+         {:ok, opts_map} <- fetch_opts(args),
+         {:ok, opts} <- decode_related_opts(opts_map) do
+      {:ok,
+       %{
+         schema: schema,
+         fan_out: fan_out,
+         fan_out_config: fan_out_config,
+         document_ids: document_ids,
+         opts: opts
+       }}
+    end
+  end
+
+  def decode_related(_args), do: {:error, {:invalid_arg, "args"}}
+
+  @doc false
   @spec resolve_config(keyword()) :: {:ok, keyword()} | {:error, tag()}
   def resolve_config(opts) when is_list(opts) do
     {:ok, Config.resolve!(opts)}
@@ -114,6 +136,79 @@ defmodule Scrypath.Oban.JobArgs do
       _other ->
         {:error, {:invalid_arg, "repo"}}
     end
+  end
+
+  defp fetch_fan_out(schema, args) do
+    case Map.get(args, "fan_out") do
+      name when is_binary(name) and name != "" ->
+        with {:ok, key} <- existing_atom(name),
+             {:ok, config} <- configured_fan_out(schema, key) do
+          {:ok, key, config}
+        else
+          _ -> {:error, {:unknown_fan_out, name}}
+        end
+
+      _ ->
+        {:error, {:invalid_arg, "fan_out"}}
+    end
+  end
+
+  defp configured_fan_out(schema, key) do
+    Keyword.fetch(Metadata.fan_outs(schema), key)
+  rescue
+    _error in [UndefinedFunctionError, FunctionClauseError, ArgumentError] -> :error
+  end
+
+  defp fetch_opts(%{"opts" => opts}) when is_map(opts), do: {:ok, opts}
+  defp fetch_opts(_args), do: {:error, {:invalid_arg, "opts"}}
+
+  # Reads a fixed allowlist of string keys and never walks the map, so no key becomes an
+  # atom and a key added by a newer Scrypath during a rolling deploy is ignored rather
+  # than stranding the job. nil and "" mean the option is absent.
+  @related_opts [
+    {"index_prefix", :index_prefix, :string},
+    {"meilisearch_url", :meilisearch_url, :string},
+    {"backend", :backend, :backend},
+    {"otp_app", :otp_app, :otp_app},
+    {"repo", :repo, :repo}
+  ]
+
+  defp decode_related_opts(opts_map) do
+    Enum.reduce_while(@related_opts, {:ok, []}, fn {key, opt, kind}, {:ok, acc} ->
+      case decode_opt(kind, key, Map.get(opts_map, key)) do
+        :absent -> {:cont, {:ok, acc}}
+        {:ok, value} -> {:cont, {:ok, [{opt, value} | acc]}}
+        {:error, _tag} = error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, opts} -> {:ok, Enum.reverse(opts)}
+      error -> error
+    end
+  end
+
+  defp decode_opt(_kind, _key, value) when value in [nil, ""], do: :absent
+  defp decode_opt(_kind, key, value) when not is_binary(value), do: {:error, {:invalid_arg, key}}
+  defp decode_opt(:string, _key, value), do: {:ok, value}
+
+  defp decode_opt(:backend, _key, name),
+    do: resolve_existing_module(name, :unknown_backend, &full_backend?/1)
+
+  defp decode_opt(:repo, _key, name), do: resolve_existing_module(name, :unknown_repo, &repo?/1)
+
+  defp decode_opt(:otp_app, _key, name) do
+    with {:ok, app} <- existing_atom(name),
+         spec when spec != nil <- Application.spec(app) do
+      {:ok, app}
+    else
+      _ -> {:error, {:unknown_otp_app, name}}
+    end
+  end
+
+  defp existing_atom(name) do
+    {:ok, String.to_existing_atom(name)}
+  rescue
+    ArgumentError -> :error
   end
 
   defp schema?(module), do: function_exported?(module, :__scrypath__, 1)
