@@ -1,25 +1,25 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.43
-milestone_name: ScrypathOps UI refinement
-current_phase: null
-status: Awaiting next milestone
-stopped_at: "v1.43 closed out and archived; next is v1.44 sync correctness from reference/ROLLING-ROADMAP.md"
-last_updated: "2026-10-25T00:00:00.000Z"
+milestone: v1.44
+milestone_name: Sync correctness
+status: planning
+last_updated: "2026-10-25T17:35:22.351Z"
 last_activity: 2026-10-25
-last_activity_desc: v1.43 terminal closeout (run 40204029522), T-177-05 closed, phases 173–177 archived
-state_head: ebed49b5199d369306527caa7bb69aa0b1db5a36
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 21
-  completed_plans: 21
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
-## Awaiting next milestone — 2026-10-25
+## v1.44 Sync correctness — started 2026-10-25
+
+The milestone is defining requirements; no phase is active yet. Scope comes from section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md) and is recorded in PROJECT.md under Current Milestone. Phases start at 178. Maintainer decisions: composite primary keys page on the full key (not a guard), and ecosystem research is skipped for this library-internal scope.
+
+## v1.43 closed — 2026-10-25 (historical)
 
 v1.43 is closed out and archived. The root `ROADMAP.md` is now an index of shipped milestones; no phase is active.
 
@@ -74,11 +74,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 174
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-10-12 — Phase 174 verified; Phase 177 closeout remains blocked
-Progress: [██████████] 100% by phase (5/5 phases; 21/21 plans complete)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-10-25 — Milestone v1.44 started
 
 ## Delivered Evidence
 

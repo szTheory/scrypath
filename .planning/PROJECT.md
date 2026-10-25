@@ -26,6 +26,23 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
+## Current Milestone: v1.44 Sync correctness
+
+**Goal:** Every sync path (inline, Oban, backfill and reindex) builds the same documents through one loader, pages through every row, and reports what it did, so no path silently skips or drops work.
+
+**Target features:**
+- Backfill and reindex load records through `Scrypath.Loader` (`preload:`, `search_records/2`), matching inline and Oban sync.
+- Keyset paging covers the full primary key, so composite keys no longer skip rows (maintainer decision, 2026-10-25: page on the full key rather than reject composite keys).
+- `sync_related` resolvers always receive records, under both inline and Oban sync.
+- The Oban workers emit telemetry with stable metadata, including deletes for ids that no longer exist.
+- Id lists are chunked (about 1000 per call) for loads and backend calls.
+- `RelatedEnqueue` matches the main enqueue path (`unique:`), and job-arg atom decoding fails safely.
+- Schema hooks are declared as `@optional_callbacks`.
+- A loader test runs against a real database.
+- The false-positive compile warning in `lib/scrypath/sync.ex` for builds without Oban is silenced properly.
+
+Scope source: section 2 of `reference/ROLLING-ROADMAP.md`. All changes are in `lib/`; there are no `scrypath_ops` or visible UI changes. Phases start at 178.
+
 ## Current State
 
 **Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
@@ -499,9 +516,17 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-- [ ] **OPUX-28 terminal delivery gate:** rerun required checks for the current PR #98 source and retain successful terminal merged-source attestation before milestone audit/archive. The candidate result is source-bounded to `715179a`; the active worktree has later commits, so T-177-05 remains blocking.
+v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
 
-The approved 20-requirement map remains in `REQUIREMENTS.md`. Phase plans and verification reports are complete, but the current-source delivery gate for OPUX-28 remains open until the branch is checked and merged-source attestation passes.
+- [ ] Backfill and reindex load records through the shared loader.
+- [ ] Composite primary keys page without skipping or duplicating rows.
+- [ ] `sync_related` resolvers receive records in every sync mode.
+- [ ] Oban workers emit telemetry, including missing-record deletes.
+- [ ] Loads and backend calls are chunked.
+- [ ] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path.
+- [ ] Schema hooks are declared optional callbacks.
+- [ ] Loader behavior is proven against a real database.
+- [ ] Builds without Oban compile with no warnings.
 
 ### Out of Scope
 
@@ -531,4 +556,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-25 after the v1.43 terminal closeout and archive. Earlier source receipts remain historical.*
+*Last updated: 2026-10-25 at the start of milestone v1.44 Sync correctness. Earlier source receipts remain historical.*

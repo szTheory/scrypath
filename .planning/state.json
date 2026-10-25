@@ -1,38 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.43 — ScrypathOps UI refinement",
-  "phases": [
-    {
-      "number": "173",
-      "name": "Shared Visual Foundation and Operational Time",
-      "status": "complete"
-    },
-    {
-      "number": "174",
-      "name": "Recovery Entry and Diagnosis",
-      "status": "complete"
-    },
-    {
-      "number": "175",
-      "name": "Repair and Verification",
-      "status": "complete"
-    },
-    {
-      "number": "176",
-      "name": "Search and Playbooks",
-      "status": "complete"
-    },
-    {
-      "number": "177",
-      "name": "Shared Patterns and Delivery Proof",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v1.44",
+  "phases": [],
   "next": {
-    "command": "/gsd:secure-phase 177",
-    "label": "Re-audit Phase 177 security",
-    "reason": "All plans are complete, but T-177-05 remains blocking until exact-source and merged-main closeout evidence is recorded."
+    "command": "/gsd-discuss-phase",
+    "label": "Discuss the first phase",
+    "reason": "Project initialized — plan your first phase"
   },
-  "updated_at": "2026-10-13T02:51:09.000Z"
+  "updated_at": "2026-10-25T17:35:22.354Z"
 }
