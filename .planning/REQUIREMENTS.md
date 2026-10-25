@@ -62,26 +62,27 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOAD-01 | TBD | Pending |
-| LOAD-02 | TBD | Pending |
-| LOAD-03 | TBD | Pending |
-| PAGE-01 | TBD | Pending |
-| PAGE-02 | TBD | Pending |
-| PAGE-03 | TBD | Pending |
-| FAN-01 | TBD | Pending |
-| FAN-02 | TBD | Pending |
-| FAN-03 | TBD | Pending |
-| OBS-01 | TBD | Pending |
-| OBS-02 | TBD | Pending |
-| OBS-03 | TBD | Pending |
-| HYG-01 | TBD | Pending |
-| HYG-02 | TBD | Pending |
-| TEST-06 | TBD | Pending |
+| LOAD-01 | Phase 178 | Pending |
+| LOAD-02 | Phase 178 | Pending |
+| LOAD-03 | Phase 178 | Pending |
+| PAGE-01 | Phase 178 | Pending |
+| PAGE-02 | Phase 178 | Pending |
+| PAGE-03 | Phase 179 | Pending |
+| FAN-01 | Phase 179 | Pending |
+| FAN-02 | Phase 179 | Pending |
+| FAN-03 | Phase 179 | Pending |
+| OBS-01 | Phase 180 | Pending |
+| OBS-02 | Phase 180 | Pending |
+| OBS-03 | Phase 180 | Pending |
+| HYG-01 | Phase 181 | Pending |
+| HYG-02 | Phase 181 | Pending |
+| TEST-06 | Phase 178 | Pending |
 
 **Coverage:**
 - v1.44 requirements: 15 total
-- Mapped to phases: 0 (filled by the roadmap)
+- Mapped to phases: 15
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-10-25*
-*Last updated: 2026-10-25 at milestone start*
+*Last updated: 2026-10-25 after roadmap creation (Phases 178–181)*

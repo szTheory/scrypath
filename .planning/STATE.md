@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v1.44
 milestone_name: Sync correctness
 status: planning
-last_updated: "2026-10-25T17:35:22.351Z"
+last_updated: "2026-10-25T18:00:00.000Z"
 last_activity: 2026-10-25
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,7 +17,14 @@ progress:
 
 ## v1.44 Sync correctness — started 2026-10-25
 
-The milestone is defining requirements; no phase is active yet. Scope comes from section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md) and is recorded in PROJECT.md under Current Milestone. Phases start at 178. Maintainer decisions: composite primary keys page on the full key (not a guard), and ecosystem research is skipped for this library-internal scope.
+Requirements (15) and the roadmap are defined: Phases 178–181 in [ROADMAP.md](ROADMAP.md), 15/15 requirements mapped. Phase 178 (Loader-routed backfill and full-key paging) is next and not started. Scope comes from section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md) and is recorded in PROJECT.md under Current Milestone.
+
+- 178 Loader-routed backfill and full-key paging: LOAD-01–03, PAGE-01–02, TEST-06
+- 179 Bounded id lists and related-sync parity: PAGE-03, FAN-01–03
+- 180 Oban worker telemetry: OBS-01–03
+- 181 Schema hook contract and no-Oban build: HYG-01–02
+
+Open for discuss-phase: chunk-size configurability (Phase 179), what a related resolver receives under Oban when trigger records were deleted (Phase 179), and which existing CI lane hosts the real-Postgres loader tests (Phase 178; the root `backend` lane has Meilisearch but no Postgres service today). Maintainer decisions: composite primary keys page on the full key (not a guard), and ecosystem research is skipped for this library-internal scope.
 
 ## v1.43 closed — 2026-10-25 (historical)
 
@@ -74,10 +81,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 178 of 178–181 (Loader-routed backfill and full-key paging) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-25 — Milestone v1.44 started
+Status: Ready to discuss Phase 178
+Last activity: 2026-10-25 — v1.44 roadmap created (4 phases, 15/15 requirements mapped)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Delivered Evidence
 
