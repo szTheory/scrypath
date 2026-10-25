@@ -10,10 +10,10 @@ updated: 2026-10-25
 |---------|----------|-------------|----------|
 | CR-01 | critical | fixed | 858e83dc — full-name `String.to_existing_atom`; runtime-built module regression test (failed on old code). Independently reproduced in a fresh VM before fixing. Also affected upsert/delete workers since 0.3.0 (shipped releases). |
 | WR-02 | warning | fixed | 4d74ed9d — `document_ids` elements must be integer or binary; else `{:invalid_arg, "document_ids"}` → cancel. Float/boolean ids now rejected (owner may widen). |
-| WR-01 | warning | open | Multi-chunk enqueue's own transaction/rollback inside a caller transaction (ecommerce example `Multi.run`). Needs owner decision. |
-| WR-03 | warning | open | 0.3.17 related jobs in apps without repo/`search_records/2` cancel with `:repo_required` on upgrade; no upgrade note yet. |
-| WR-04 | warning | open | Backfill reports only last delete chunk's task for >1000 removals per page. |
-| WR-05 | warning | open | Telemetry start count includes duplicates; ≤1000-id results now deduped + string-sorted (vs D-08 "unchanged"). |
+| WR-01 | warning | fixed | 24a35c9a — nested in a caller transaction: no own transaction/rollback, returns bare `{:error, reason}` for the caller to abort; standalone stays all-or-nothing. Real-Oban SQLite tests (fail on old code). |
+| WR-03 | warning | fixed (docs) | 81930d86 — no behaviour change; upgrade note in guide + 179-06 release note (configure default `:repo`, define `search_records/2`, or drain related jobs first); legacy 0.3.17 fixture test pins the cancel outcome. |
+| WR-04 | warning | fixed | 70c8f326 — batch results gain `delete_tasks:` (every delete chunk, `[]` when none); reindex waits on them before cutover. |
+| WR-05 | warning | fixed | a28bc4e7 — start-event count deduped to match stop/result; deduped string-sorted `document_ids` documented at every size (narrows D-08 deliberately; carry into release upgrade notes). |
 | IN-01 | info | open | Dedupe before JSON encoding (`:a` vs `"a"`). |
 | IN-02 | info | open | Example calls `sync_related` inside transaction vs guide advice. |
 | IN-03 | info | open | Ecommerce resolver id clause dead code, skips tenant filter. |
