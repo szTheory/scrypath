@@ -22,7 +22,7 @@ created: "2026-10-25"
 | **Framework** | ExUnit (Elixir 1.19 CI, 1.17 compat lane) + StreamData 1.3 |
 | **Config file** | `test/test_helper.exs`, `mix.exs` (`preferred_envs`, `test_ignore_filters`) |
 | **Quick run command** | `mix test test/scrypath/backfill_test.exs test/scrypath/loader_backfill_sqlite_test.exs test/scrypath/reindex_test.exs test/scrypath/oban/worker_test.exs` |
-| **Postgres run command** | `docker compose up -d postgres && SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix verify.postgres` |
+| **Postgres run command** | `docker compose up -d --wait postgres && SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix verify.postgres` |
 | **Full suite command** | `mix verify.core --exclude integration --exclude docs_contract` + `mix verify.backend` (with Meilisearch + Postgres env) + `mix verify.repository_contracts` + `mix verify.package` |
 | **Estimated runtime** | ~30 seconds (quick), several minutes (full) |
 
@@ -40,6 +40,25 @@ created: "2026-10-25"
 ## Per-Task Verification Map
 
 Filled by the planner per task; requirement → test map lives in `178-RESEARCH.md` § Validation Architecture.
+
+Per-task map (planner, 2026-10-25):
+
+| Task | Req | Automated Command | File Exists |
+|------|-----|-------------------|-------------|
+| 178-01-T1 | TEST-06 | `mix test test/scrypath/loader_backfill_sqlite_test.exs` | ❌ W0 (created by task) |
+| 178-01-T2 | TEST-06 | `SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix test --include postgres test/scrypath/loader_backfill_postgres_test.exs` | ❌ W0 (created by task) |
+| 178-02-T1 | TEST-06 | `mix test test/mix/tasks/verify_capability_test.exs test/mix/tasks/verify_postgres_test.exs` ; `mix verify.postgres` | ❌ (created by task) |
+| 178-02-T2 | TEST-06 | `mix test test/mix/tasks/workflow_wiring_test.exs` | ✅ (new assertion) |
+| 178-03-T1 | PAGE-01, PAGE-02 | `mix test test/scrypath/loader_backfill_sqlite_test.exs test/scrypath/backfill_test.exs` + postgres run | ✅ after 178-01 |
+| 178-03-T2 | PAGE-01, PAGE-02, LOAD-03 | same + postgres run (property) | ✅ after 178-01 |
+| 178-03-T3 | PAGE-01 (D-17) | `mix test test/scrypath/reindex_test.exs` | ✅ |
+| 178-04-T1 | LOAD-01, LOAD-02 | `mix test test/scrypath/loader_test.exs test/scrypath/backfill_test.exs test/scrypath/oban/worker_test.exs` | ❌ loader_test (created by task) |
+| 178-04-T2 | LOAD-02 | `mix test test/scrypath/reindex_test.exs test/scrypath/backfill_test.exs test/scrypath/options_test.exs` | ✅ |
+| 178-04-T3 | LOAD-01, LOAD-02, LOAD-03 | sqlite shared cases + postgres run | ✅ after 178-01 |
+| 178-05-T1 | LOAD-02, PAGE-02 | `mix test test/scrypath/backfill_contract_docs_test.exs` ; `mix docs --warnings-as-errors` | ❌ (created by task) |
+| 178-05-T2 | LOAD-02, TEST-06 | `mix test test/scrypath/backfill_contract_docs_test.exs` ; `mix test --include docs_contract test/scrypath/docs_contract_test.exs` | ✅ after T1 |
+
+Requirement map:
 
 | Req | Test Type | Automated Command | File Exists |
 |-----|-----------|-------------------|-------------|

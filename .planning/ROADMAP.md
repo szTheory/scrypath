@@ -36,6 +36,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
 ### Phase Details
 
 ### Phase 178: Loader-routed backfill and full-key paging
+
 **Goal**: A backfill or reindex produces exactly the documents inline and Oban sync would produce, for every row of the schema, whatever its primary-key shape.
 **Depends on**: Nothing (first phase of v1.44)
 **Requirements**: LOAD-01, LOAD-02, LOAD-03, PAGE-01, PAGE-02, TEST-06
@@ -44,9 +45,25 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   2. A test shows that for a schema defining `search_records/2`, every backfill batch is loaded through it and records it omits are absent from the index, while a caller's `:query` scope still decides which rows are visited.
   3. A property test over a composite-primary-key schema with repeated leading-column values across batch boundaries shows every row visited exactly once, and each batch result reports the full composite cursor.
   4. The loader and backfill tests, including the composite-key and `preload:` cases, run against a real Postgres database inside an existing CI lane (not only `FakeRepo`) and pass on the phase PR.
-**Plans**: TBD
+
+**Plans**: 5 plans
+
+Plans:
+**Wave 1**
+- [ ] 178-01-PLAN.md — Real-DB harness: shared case template on SQLite + Postgres, postgrex test dep, compose postgres (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 178-02-PLAN.md — `mix verify.postgres` wired into `backend (required)` CI with contract pins (wave 2)
+- [ ] 178-03-PLAN.md — Full-key composite keyset paging, keyword cursor, `:query` stripping, reindex primaryKey fix (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 178-04-PLAN.md — Backfill/reindex through `Scrypath.Loader`: preload parity, `search_records/2`, removed/omitted (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 178-05-PLAN.md — `Scrypath.backfill/2` result @doc, guides, README, CONTRIBUTING, docs contract test (wave 4)
 
 ### Phase 179: Bounded id lists and related-sync parity
+
 **Goal**: Large id sets never produce unbounded loads or backend calls, and related-record sync gives resolvers the same input and the same queue behaviour in every sync mode, failing cleanly on bad job arguments.
 **Depends on**: Phase 178 (chunking and the Oban related worker build on the shared loader path)
 **Requirements**: PAGE-03, FAN-01, FAN-02, FAN-03
@@ -55,9 +72,11 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   2. A test shows a `sync_related` resolver receives loaded records, not bare ids, under both inline and Oban sync; under Oban the related worker loads current records through the loader before calling the resolver.
   3. A test shows that enqueueing the same related sync twice yields one job, because related enqueue uses the same `unique:` policy as the main enqueue path.
   4. Tests show related, upsert and delete jobs whose args name an unknown schema, fan-out, backend, repo or app finish with a clear, non-retrying error instead of raising from `String.to_existing_atom`.
+
 **Plans**: TBD
 
 ### Phase 180: Oban worker telemetry
+
 **Goal**: Operators can observe every Oban upsert and delete job, including deletes for records that no longer exist, through stable, documented telemetry.
 **Depends on**: Phase 179 (span metadata reports document counts over the chunked calls and covers the new non-retrying error outcomes)
 **Requirements**: OBS-01, OBS-02, OBS-03
@@ -65,15 +84,18 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   1. A test attaching telemetry handlers sees start, stop and exception events from the Oban upsert and delete workers, each carrying schema, index, backend, document count and attempt.
   2. A test shows that when a job finds ids with no current record and deletes them from the index, an event fires with the count of those ids.
   3. The telemetry guide lists the new events and metadata keys, and its docs contract test fails if a documented event or key drifts from the emitted ones.
+
 **Plans**: TBD
 
 ### Phase 181: Schema hook contract and no-Oban build
+
 **Goal**: Adopters see and get compiler checks for the schema hooks they can implement, and apps without Oban compile Scrypath with zero warnings.
 **Depends on**: Phase 180 (the no-Oban warnings gate runs after the milestone's Oban-touching changes have landed)
 **Requirements**: HYG-01, HYG-02
 **Success Criteria** (what must be TRUE):
   1. `search_records/2`, `search_document_id/1` and the other duck-typed schema hooks are declared as `@optional_callbacks` on a behaviour that appears in the generated HexDocs, and a test or compile check flags a hook implemented with the wrong arity.
   2. A build without Oban compiles with `--warnings-as-errors`, with no blanket warning suppression, and this check runs inside an existing CI lane on the phase PR.
+
 **Plans**: TBD
 
 ### Progress
