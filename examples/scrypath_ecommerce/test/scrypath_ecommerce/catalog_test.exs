@@ -109,7 +109,7 @@ defmodule ScrypathEcommerce.CatalogTest do
           category_id: category.id
         })
 
-      [resolved] = Catalog.resolve_products_for_categories([category.id])
+      [resolved] = Catalog.resolve_products_for_categories([category])
 
       assert resolved.id == product.id
       assert resolved.category.name == "Electronics"
@@ -117,9 +117,7 @@ defmodule ScrypathEcommerce.CatalogTest do
       assert Scrypath.Projection.document(Catalog.Product, resolved).data.category_name ==
                "Electronics"
 
-      [resolved_from_struct] = Catalog.resolve_products_for_categories([category])
-
-      assert resolved_from_struct.id == product.id
+      assert Catalog.resolve_products_for_categories([]) == []
     end
 
     test "delete_product/2 enqueues a sync job", %{tenant: tenant, category: category} do

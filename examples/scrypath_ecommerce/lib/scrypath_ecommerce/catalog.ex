@@ -90,20 +90,14 @@ defmodule ScrypathEcommerce.Catalog do
     Repo.all(Product, tenant_opts(tenant))
   end
 
+  # Scrypath passes loaded %Category{} records in every sync mode, so the resolver scopes
+  # products by each category's own tenant.
   def resolve_products_for_categories([%Category{} | _] = categories) do
     category_ids = Enum.map(categories, & &1.id)
     tenant_ids = Enum.map(categories, & &1.tenant_id)
 
     Product
     |> where([product], product.category_id in ^category_ids and product.tenant_id in ^tenant_ids)
-    |> preload(:category)
-    |> Repo.all(skip_tenant_id: true)
-  end
-
-  # Scrypath passes %Category{} records in every sync mode; kept for direct callers.
-  def resolve_products_for_categories([_id | _] = category_ids) do
-    Product
-    |> where([product], product.category_id in ^category_ids)
     |> preload(:category)
     |> Repo.all(skip_tenant_id: true)
   end
