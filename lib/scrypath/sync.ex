@@ -53,6 +53,17 @@ defmodule Scrypath.Sync do
 
     config = Config.resolve!(opts)
 
+    # No triggers means nothing to resolve: never call the resolver with an empty list.
+    case List.wrap(records) do
+      [] ->
+        noop_result(config)
+
+      _triggers ->
+        do_sync_related(schema_module, records, fan_out_key, fan_out_config, config, opts)
+    end
+  end
+
+  defp do_sync_related(schema_module, records, fan_out_key, fan_out_config, config, opts) do
     case Keyword.fetch!(config, :sync_mode) do
       :oban ->
         config
@@ -213,10 +224,15 @@ defmodule Scrypath.Sync do
         |> decorate_result(config)
 
       _other ->
-        backend_delete_documents(schema_module, document_ids, config)
-        |> normalize_write_result(document_ids, config)
-        |> maybe_wait_for_task(config)
-        |> decorate_result(config)
+        document_ids
+        |> Chunks.ids()
+        |> Chunks.reduce_ok(fn ids ->
+          backend_delete_documents(schema_module, ids, config)
+          |> normalize_write_result(ids, config)
+          |> maybe_wait_for_task(config)
+          |> tag_chunk(ids)
+        end)
+        |> combine_chunks(config)
     end
   end
 
@@ -342,7 +358,8 @@ defmodule Scrypath.Sync do
       id: task.id,
       worker: Map.get(task.reference, :worker),
       queue: Map.get(task.reference, :queue),
-      state: Map.get(task.metadata, :oban_state)
+      state: Map.get(task.metadata, :oban_state),
+      conflict?: Map.get(task.metadata, :conflict?, false)
     }
     |> maybe_put(:attempt, job_raw_value(task, :attempt))
     |> maybe_put(:max_attempts, job_raw_value(task, :max_attempts))
