@@ -77,6 +77,7 @@ defmodule Scrypath.MixProject do
         "verify.phase112": :test,
         "verify.adopter": :test,
         "verify.meilisearch_smoke": :test,
+        "verify.postgres": :test,
         "verify.all": :test,
         verify: :test,
         "verify.release_publish": :test,

@@ -77,9 +77,19 @@ jobs:
         image: getmeili/meilisearch:v1.15
         ports: [7700:7700]
         env: {MEILI_NO_ANALYTICS: "true"}
+      postgres:
+        image: postgres:16-alpine
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres}
+        ports: [5434:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       SCRYPATH_INTEGRATION: "1"
       SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700
+      SCRYPATH_POSTGRES_URL: postgres://postgres:postgres@127.0.0.1:5434
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
@@ -103,6 +113,8 @@ jobs:
           docker ps -a
           container_ids="$(docker ps -aq --filter ancestor=getmeili/meilisearch:v1.15)"
           if [ -n "$container_ids" ]; then docker logs "$container_ids" || true; fi
+          postgres_ids="$(docker ps -aq --filter ancestor=postgres:16-alpine)"
+          if [ -n "$postgres_ids" ]; then docker logs "$postgres_ids" || true; fi
 
   compatibility:
     name: compatibility (advisory)

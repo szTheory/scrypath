@@ -391,6 +391,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert ops_ui =~ ~s(env: {PGPORT: "5433"})
     end
 
+    test "required backend job provides the real-Postgres loader lane" do
+      backend = @ci_yml |> File.read!() |> workflow_job_block("backend")
+
+      assert backend =~ "name: backend (required)"
+      assert backend =~ "image: postgres:16-alpine"
+      assert backend =~ "ports: [5434:5432]"
+      assert backend =~ "pg_isready -U postgres"
+      assert backend =~ "SCRYPATH_POSTGRES_URL: postgres://postgres:postgres@127.0.0.1:5434"
+      assert backend =~ "mix verify.backend"
+    end
+
     test "the mounted proof remains distinct and required without promoting full E2E" do
       ci = File.read!(@ci_yml)
       contributing = File.read!("CONTRIBUTING.md")

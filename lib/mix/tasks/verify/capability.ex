@@ -53,10 +53,10 @@ defmodule Mix.Tasks.Verify.Capability do
       Mix.raise("verify.backend accepts only --skip-integration")
     end
 
-    run_task!(
-      "verify.meilisearch_smoke",
-      if(opts[:skip_integration], do: ["--skip-integration"], else: [])
-    )
+    task_args = if(opts[:skip_integration], do: ["--skip-integration"], else: [])
+
+    run_task!("verify.meilisearch_smoke", task_args)
+    run_task!("verify.postgres", task_args)
   end
 
   defp phoenix_example!([]), do: run_task!("verify.adopter", ["--live"])
