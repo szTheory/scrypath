@@ -28,7 +28,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
 
 ### Phases
 
-- [ ] **Phase 178: Loader-routed backfill and full-key paging** - Backfill and reindex build documents through `Scrypath.Loader` and visit every row, including composite keys, proven against real Postgres
+- [x] **Phase 178: Loader-routed backfill and full-key paging** - Backfill and reindex build documents through `Scrypath.Loader` and visit every row, including composite keys, proven against real Postgres (completed 2026-10-25)
 - [ ] **Phase 179: Bounded id lists and related-sync parity** - Loads and backend calls are chunked, and `sync_related` behaves the same under inline and Oban with safe job-arg decoding
 - [ ] **Phase 180: Oban worker telemetry** - Upsert and delete workers emit stable telemetry spans and a missing-record delete event, documented and contract-tested
 - [ ] **Phase 181: Schema hook contract and no-Oban build** - Schema hooks are declared optional callbacks and a no-Oban build stays warnings-clean in CI
@@ -46,7 +46,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   3. A property test over a composite-primary-key schema with repeated leading-column values across batch boundaries shows every row visited exactly once, and each batch result reports the full composite cursor.
   4. The loader and backfill tests, including the composite-key and `preload:` cases, run against a real Postgres database inside an existing CI lane (not only `FakeRepo`) and pass on the phase PR.
 
-**Plans**: 5/5 plans executed
+**Plans**: 5/5 plans complete
 
 Plans:
 **Wave 1**
@@ -102,7 +102,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 178. Loader-routed backfill and full-key paging | 5/5 | In Progress | - |
+| 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
 | 179. Bounded id lists and related-sync parity | 0/TBD | Not started | - |
 | 180. Oban worker telemetry | 0/TBD | Not started | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |

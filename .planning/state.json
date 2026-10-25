@@ -6,7 +6,7 @@
     {
       "number": "178",
       "name": "Loader-routed backfill and full-key paging",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "179",
@@ -26,8 +26,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step (verify)",
-    "reason": "Phase 1 of 4 · 0% · ready to verify"
+    "label": "Advance to the next step (plan phase 179)",
+    "reason": "Phase 2 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-25T19:28:30.881Z"
+  "updated_at": "2026-10-25T19:42:08.244Z"
 }

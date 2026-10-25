@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.44
 milestone_name: Sync correctness
-current_phase: 178
-current_phase_name: Loader-routed backfill and full-key paging
-status: verifying
-stopped_at: Phase 178 planned (5 plans, 4 waves)
-last_updated: "2026-10-25T19:28:30.863Z"
+current_phase: 179
+current_phase_name: Bounded id lists and related-sync parity
+status: planning
+stopped_at: Phase 178 complete, ready to plan Phase 179
+last_updated: "2026-10-25T19:42:08.216Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 178 execution started
-state_head: 6e4e530a60d5992ce138b0f41f2892651bde9521
+last_activity_desc: Phase 178 complete, transitioned to Phase 179
+state_head: a82cc259173717032640758337abd3865160fc19
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
   completed_plans: 5
-  percent: 0
+  percent: 25
 ---
 
 # Project State
@@ -86,12 +86,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 178 (Loader-routed backfill and full-key paging) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-10-25 — Phase 178 execution started
+Phase: 179 — Bounded id lists and related-sync parity
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-25 — Phase 178 complete, transitioned to Phase 179
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## Delivered Evidence
 
@@ -148,7 +148,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-25T17:56:17.655Z
-Stopped at: Phase 178 context gathered
+Stopped at: Phase 178 complete, ready to plan Phase 179
 Resume file: .planning/phases/178-loader-routed-backfill-and-full-key-paging/178-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.

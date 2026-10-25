@@ -8,14 +8,14 @@
 
 ### Loader parity (LOAD)
 
-- [ ] **LOAD-01**: A backfill or reindex of a schema that declares `preload:` builds documents identical to the ones inline and Oban sync build for the same records.
-- [ ] **LOAD-02**: A backfill or reindex of a schema that defines `search_records/2` loads every batch through it, and records it leaves out are not indexed.
-- [ ] **LOAD-03**: A caller's `:query` scope still selects which rows a backfill visits, while the shared loader builds the documents.
+- [x] **LOAD-01**: A backfill or reindex of a schema that declares `preload:` builds documents identical to the ones inline and Oban sync build for the same records.
+- [x] **LOAD-02**: A backfill or reindex of a schema that defines `search_records/2` loads every batch through it, and records it leaves out are not indexed.
+- [x] **LOAD-03**: A caller's `:query` scope still selects which rows a backfill visits, while the shared loader builds the documents.
 
 ### Paging and batching (PAGE)
 
-- [ ] **PAGE-01**: A backfill or reindex over a schema with a composite primary key visits every row exactly once, using a lexicographic keyset on all key columns (maintainer decision 2026-10-25: page on the full key, don't reject composite keys). A property test covers repeated leading-column values across batch boundaries.
-- [ ] **PAGE-02**: Backfill batch results report the full cursor for composite keys, not just the first column.
+- [x] **PAGE-01**: A backfill or reindex over a schema with a composite primary key visits every row exactly once, using a lexicographic keyset on all key columns (maintainer decision 2026-10-25: page on the full key, don't reject composite keys). A property test covers repeated leading-column values across batch boundaries.
+- [x] **PAGE-02**: Backfill batch results report the full cursor for composite keys, not just the first column.
 - [ ] **PAGE-03**: Id lists are chunked to at most about 1000 per record load and per backend upsert or delete call. For example, 2,500 ids make three calls and return one combined result.
 
 ### Related sync (FAN)
@@ -37,7 +37,7 @@
 
 ### Testing (TEST)
 
-- [ ] **TEST-06**: The loader and backfill, including the composite-key and `preload:` cases, are tested against a real Postgres database in an existing CI lane, not only against `FakeRepo`.
+- [x] **TEST-06**: The loader and backfill, including the composite-key and `preload:` cases, are tested against a real Postgres database in an existing CI lane, not only against `FakeRepo`.
 
 ## Open questions for discuss-phase
 
@@ -62,11 +62,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOAD-01 | Phase 178 | Pending |
-| LOAD-02 | Phase 178 | Pending |
-| LOAD-03 | Phase 178 | Pending |
-| PAGE-01 | Phase 178 | Pending |
-| PAGE-02 | Phase 178 | Pending |
+| LOAD-01 | Phase 178 | Complete |
+| LOAD-02 | Phase 178 | Complete |
+| LOAD-03 | Phase 178 | Complete |
+| PAGE-01 | Phase 178 | Complete |
+| PAGE-02 | Phase 178 | Complete |
 | PAGE-03 | Phase 179 | Pending |
 | FAN-01 | Phase 179 | Pending |
 | FAN-02 | Phase 179 | Pending |
@@ -76,7 +76,7 @@
 | OBS-03 | Phase 180 | Pending |
 | HYG-01 | Phase 181 | Pending |
 | HYG-02 | Phase 181 | Pending |
-| TEST-06 | Phase 178 | Pending |
+| TEST-06 | Phase 178 | Complete |
 
 **Coverage:**
 - v1.44 requirements: 15 total
