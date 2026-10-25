@@ -6,7 +6,7 @@
     {
       "number": "178",
       "name": "Loader-routed backfill and full-key paging",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "179",
@@ -29,5 +29,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 1 of 4 · 0% · executing"
   },
-  "updated_at": "2026-10-25T18:47:53.167Z"
+  "updated_at": "2026-10-25T18:57:12.961Z"
 }

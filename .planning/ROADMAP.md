@@ -46,11 +46,11 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   3. A property test over a composite-primary-key schema with repeated leading-column values across batch boundaries shows every row visited exactly once, and each batch result reports the full composite cursor.
   4. The loader and backfill tests, including the composite-key and `preload:` cases, run against a real Postgres database inside an existing CI lane (not only `FakeRepo`) and pass on the phase PR.
 
-**Plans**: 5 plans
+**Plans**: 1/5 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 178-01-PLAN.md — Real-DB harness: shared case template on SQLite + Postgres, postgrex test dep, compose postgres (wave 1)
+- [x] 178-01-PLAN.md — Real-DB harness: shared case template on SQLite + Postgres, postgrex test dep, compose postgres (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 178-02-PLAN.md — `mix verify.postgres` wired into `backend (required)` CI with contract pins (wave 2)
@@ -102,7 +102,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 178. Loader-routed backfill and full-key paging | 0/TBD | Not started | - |
+| 178. Loader-routed backfill and full-key paging | 1/5 | In Progress | - |
 | 179. Bounded id lists and related-sync parity | 0/TBD | Not started | - |
 | 180. Oban worker telemetry | 0/TBD | Not started | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |
