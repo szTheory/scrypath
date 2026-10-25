@@ -560,6 +560,36 @@ defmodule Scrypath.BackfillTest do
     refute_received {:backfill_repo_all, _second_page}
   end
 
+  test "a page removing more than 1000 ids reports every delete chunk task (WR-04)" do
+    put_omitting_posts(1..2500, Enum.to_list(1..2500))
+
+    assert {:ok, %{batches: 1, removed: 2500, batch_results: [batch]}} =
+             Scrypath.backfill(OmittingPost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 5000
+             )
+
+    assert Enum.map(batch.delete_tasks, & &1.uid) == [901, 1901, 2901]
+    assert Enum.all?(batch.delete_tasks, &(&1.type == "documentDeletion"))
+    assert batch.delete_task == List.last(batch.delete_tasks)
+    assert batch.tasks == []
+  end
+
+  test "a batch with no deletes reports delete_tasks: [] and no delete_task key" do
+    put_queryable_posts(1..2)
+
+    assert {:ok, %{batch_results: [batch]}} =
+             Scrypath.backfill(QueryablePost,
+               backend: RecordingBackend,
+               repo: BackfillRepo,
+               batch_size: 2
+             )
+
+    assert batch.delete_tasks == []
+    refute Map.has_key?(batch, :delete_task)
+  end
+
   test "a batch with no upserts reports tasks: [] and no task key" do
     put_omitting_posts(1..2, [1, 2])
 

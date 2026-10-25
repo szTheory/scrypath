@@ -73,8 +73,9 @@ defmodule Scrypath.Backfill do
           removed: length(removals),
           last_primary_key: public_cursor(cols, values),
           task: task_of(List.last(upsert)),
-          tasks: upsert |> Enum.map(&task_of/1) |> Enum.reject(&is_nil/1),
-          delete_task: task_of(List.last(delete))
+          tasks: tasks_of(upsert),
+          delete_task: task_of(List.last(delete)),
+          delete_tasks: tasks_of(delete)
         }
         |> maybe_drop_nil(:task)
         |> maybe_drop_nil(:delete_task)
@@ -150,6 +151,10 @@ defmodule Scrypath.Backfill do
 
   defp task_of(%Result{task: task}), do: public_task(task)
   defp task_of(nil), do: nil
+
+  # Every chunk's task, in order: a page written in several chunks has one task per chunk.
+  defp tasks_of(chunk_results),
+    do: chunk_results |> Enum.map(&task_of/1) |> Enum.reject(&is_nil/1)
 
   # The caller's :query decides which rows are in scope (where/join); paging,
   # projection and preloading stay owned by backfill.

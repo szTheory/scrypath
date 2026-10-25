@@ -360,6 +360,29 @@ defmodule Scrypath.ReindexTest do
   # in three chunks reports every chunk task under tasks: and the last as task:.
   # Statuses come from :chunk_statuses in the calling process.
   defmodule ChunkedBackfill do
+    # The real reindex backfill writes into a fresh target and submits no deletes; a
+    # test can still put delete chunk tasks on the batch through :chunk_delete_uids.
+    defp put_delete_tasks(batch, index) do
+      case Process.get(:chunk_delete_uids, []) do
+        [] ->
+          batch
+
+        uids ->
+          delete_tasks =
+            Enum.map(uids, fn uid ->
+              %{
+                uid: uid,
+                status: :enqueued,
+                index_uid: index,
+                type: "documentDeletion",
+                raw: %{}
+              }
+            end)
+
+          Map.merge(batch, %{delete_task: List.last(delete_tasks), delete_tasks: delete_tasks})
+      end
+    end
+
     def run(schema_module, config) do
       send(self(), {:backfill, schema_module, config})
       index = Keyword.fetch!(config, :index_name)
@@ -394,6 +417,7 @@ defmodule Scrypath.ReindexTest do
              task: List.last(tasks),
              tasks: tasks
            }
+           |> put_delete_tasks(index)
          ]
        }}
     end
@@ -812,6 +836,17 @@ defmodule Scrypath.ReindexTest do
       assert_received {:task_wait, 31}
       assert_received {:task_wait, 32}
       assert_received {:task_wait, 33}
+      assert_received {:swap_indexes, QueryablePost, _swap_config}
+    end
+
+    test "reindex waits on every delete chunk task of a batch before cutover (WR-04)" do
+      Process.put(:chunk_delete_uids, [41, 42])
+
+      assert {:ok, %{cutover: true}} = Scrypath.reindex(QueryablePost, @chunked_opts)
+
+      assert_received {:task_wait, 33}
+      assert_received {:task_wait, 41}
+      assert_received {:task_wait, 42}
       assert_received {:swap_indexes, QueryablePost, _swap_config}
     end
 

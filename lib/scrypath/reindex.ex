@@ -217,8 +217,31 @@ defmodule Scrypath.Reindex do
 
   # A backfill page is written in several chunks (D-02), each with its own task.
   # Every chunk task must succeed before cutover, so waiting only on the last one
-  # could swap in an index missing an earlier chunk's documents.
-  defp maybe_wait_for_batch_tasks(%{tasks: [_ | _] = tasks} = batch_result, config) do
+  # could swap in an index missing an earlier chunk's documents. Delete chunk tasks
+  # are waited on too. A reindex target is fresh, so backfill submits no deletes
+  # today, but cutover must never depend on that.
+  defp maybe_wait_for_batch_tasks(batch_result, config)
+       when is_map(batch_result) and not is_struct(batch_result) do
+    tasks = Map.get(batch_result, :tasks, [])
+    delete_tasks = Map.get(batch_result, :delete_tasks, [])
+
+    if tasks == [] and delete_tasks == [] do
+      maybe_wait_for_result_task(batch_result, config)
+    else
+      with {:ok, waited_tasks} <- wait_for_each_task(tasks, config),
+           {:ok, waited_delete_tasks} <- wait_for_each_task(delete_tasks, config) do
+        {:ok,
+         batch_result
+         |> put_waited(:task, :tasks, waited_tasks)
+         |> put_waited(:delete_task, :delete_tasks, waited_delete_tasks)}
+      end
+    end
+  end
+
+  defp maybe_wait_for_batch_tasks(batch_result, config),
+    do: maybe_wait_for_result_task(batch_result, config)
+
+  defp wait_for_each_task(tasks, config) do
     tasks
     |> Enum.reduce_while({:ok, []}, fn task, {:ok, acc} ->
       case maybe_wait_for_result_task(%{task: task}, config) do
@@ -227,21 +250,18 @@ defmodule Scrypath.Reindex do
       end
     end)
     |> case do
-      {:ok, waited_tasks} ->
-        waited_tasks = Enum.reverse(waited_tasks)
-
-        {:ok,
-         batch_result
-         |> Map.put(:task, List.last(waited_tasks))
-         |> Map.put(:tasks, waited_tasks)}
-
-      {:error, reason} ->
-        {:error, reason}
+      {:ok, waited_tasks} -> {:ok, Enum.reverse(waited_tasks)}
+      {:error, reason} -> {:error, reason}
     end
   end
 
-  defp maybe_wait_for_batch_tasks(batch_result, config),
-    do: maybe_wait_for_result_task(batch_result, config)
+  defp put_waited(batch_result, _last_key, _list_key, []), do: batch_result
+
+  defp put_waited(batch_result, last_key, list_key, waited_tasks) do
+    batch_result
+    |> Map.put(last_key, List.last(waited_tasks))
+    |> Map.put(list_key, waited_tasks)
+  end
 
   defp followable_task(%Result{task: %OperationTask{} = task}), do: task
   defp followable_task(%{task: %OperationTask{} = task}), do: task

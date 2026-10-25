@@ -422,7 +422,10 @@ defmodule Scrypath do
     * **`task`** - the backend task for the batch's last upsert chunk; absent
       when the batch had no documents to upsert, for example when every row was
       omitted
-    * **`delete_task`** - the backend task for the ids counted in `removed`;
+    * **`delete_tasks`** - every delete chunk task for the ids counted in
+      `removed`, in order; `delete_task` is the last of them. Always a list, and
+      `[]` when the batch submitted no delete
+    * **`delete_task`** - the backend task for the batch's last delete chunk;
       present only when the batch submitted a delete
 
   ## Batch tasks
@@ -433,10 +436,12 @@ defmodule Scrypath do
   caller that needs the removals applied before continuing must follow
   **`delete_task`** as well as **`task`**.
 
-  A batch written in several chunks has one task per chunk. A caller following a
-  batch must follow every entry in **`tasks`**, not only **`task`**.
-  `Scrypath.reindex/2` waits on every `tasks` entry of every batch before
-  cutover, and stops without swapping indexes if any of them fails.
+  A batch written in several chunks has one task per chunk: more than 1000
+  upserted documents or more than 1000 removed ids per page. A caller following
+  a batch must follow every entry in **`tasks`** and **`delete_tasks`**, not
+  only **`task`** and **`delete_task`**. `Scrypath.reindex/2` waits on every
+  `tasks` and `delete_tasks` entry of every batch before cutover, and stops
+  without swapping indexes if any of them fails.
 
   ## Cursor shape
 
