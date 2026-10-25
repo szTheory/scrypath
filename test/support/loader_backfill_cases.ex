@@ -361,6 +361,22 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
                  "Books"
                ]
       end
+
+      # WR-07: Oban job ids arrive as JSON integers or strings. Without a cast, "abc" for an
+      # integer key raises Ecto.Query.CastError on every retry.
+      test "the default loader casts ids to the key type and rejects ids it cannot cast",
+           %{repo: repo} do
+        books = repo.insert!(%LoaderBackfill.Category{name: "Books"})
+        row = repo.insert!(%LoaderBackfill.Product{title: "a", category_id: books.id})
+
+        assert {:ok, [%LoaderBackfill.Product{id: id}], []} =
+                 Loader.load(LoaderBackfill.Product, [to_string(row.id)], repo: repo)
+
+        assert id == row.id
+
+        assert {:error, {:invalid_arg, "document_ids"}} =
+                 Loader.load(LoaderBackfill.Product, [row.id, "abc"], repo: repo)
+      end
     end
   end
 

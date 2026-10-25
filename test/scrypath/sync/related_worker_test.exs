@@ -359,6 +359,40 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       refute_received {:upsert_documents, _, _, _}
     end
 
+    # An integer-keyed Ecto owner with no search_records/2: the worker loads it with the
+    # default query through the job's repo.
+    defmodule IntegerKeyOwner do
+      use Ecto.Schema
+
+      schema "integer_key_owners" do
+        field(:name, :string)
+      end
+
+      def __scrypath__(:fan_outs) do
+        [comments: [target: DummyTarget, resolver: {__MODULE__, :resolve_comments, []}]]
+      end
+
+      def __scrypath__(:document_id), do: :id
+      def __scrypath__(:preload), do: []
+
+      def resolve_comments(triggers) do
+        send(self(), {:resolved, __MODULE__, triggers})
+        []
+      end
+    end
+
+    test "an id the owner's integer primary key cannot cast cancels instead of raising (WR-07)" do
+      args =
+        dummy_args([1, "abc"], %{"repo" => to_string(Scrypath.TestSupport.FakeRepo)})
+        |> Map.put("schema", to_string(IntegerKeyOwner))
+
+      assert RelatedWorker.perform(%Oban.Job{args: args}) ==
+               {:cancel, {:invalid_job, {:invalid_arg, "document_ids"}}}
+
+      refute_received {:fake_repo_all, _}
+      refute_received {:resolved, IntegerKeyOwner, _}
+    end
+
     test "an opts key added by a newer release is ignored (rolling deploy)" do
       args = dummy_args([1], %{"future_option_zq179" => "x"})
 

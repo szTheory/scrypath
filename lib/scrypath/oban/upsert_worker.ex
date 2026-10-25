@@ -54,6 +54,10 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
         {:error, {:invalid_search_records, _returned}} ->
           {:cancel, {:invalid_job, :invalid_search_records}}
 
+        # An id the key's Ecto type cannot cast ("abc" for an integer key): no retry fixes it.
+        {:error, {:invalid_arg, _key} = tag} ->
+          {:cancel, {:invalid_job, tag}}
+
         {:error, reason} ->
           {:error, reason}
       end

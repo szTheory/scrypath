@@ -89,6 +89,10 @@ defmodule Scrypath.Loader do
   `missing_ids` keeps the caller's id values for documents whose records no
   longer exist. Ids are deduped and loaded in batches of at most 1000; the
   first failing batch stops the load and its error is returned.
+
+  The default query casts ids to the Ecto type of the schema's `document_id`
+  field first and returns `{:error, {:invalid_arg, "document_ids"}}` when one
+  cannot be cast, for example `"abc"` for an integer primary key.
   """
   @spec load(module(), [term()], keyword()) :: {:ok, [struct()], [term()]} | {:error, term()}
   def load(schema_module, document_ids, config) when is_list(document_ids) do
@@ -151,16 +155,47 @@ defmodule Scrypath.Loader do
         other -> {:error, {:invalid_search_records, other}}
       end
     else
-      with :ok <- check_loadable(schema_module, config) do
-        id_field = Metadata.document_id(schema_module)
+      id_field = Metadata.document_id(schema_module)
 
+      with :ok <- check_loadable(schema_module, config),
+           {:ok, query_ids} <- cast_ids(schema_module, id_field, document_ids) do
         records =
-          from(record in schema_module, where: field(record, ^id_field) in ^document_ids)
+          from(record in schema_module, where: field(record, ^id_field) in ^query_ids)
           |> repo.all()
 
         {:ok, preload_records(repo, records, preload_for(schema_module))}
       end
     end
+  end
+
+  # Casts ids to the Ecto type of the field the default query filters on (the schema's
+  # primary key unless it declares another document id). An id that cannot be cast, such
+  # as "abc" for an integer key, would make the query raise Ecto.Query.CastError on every
+  # retry, so it is reported as invalid input instead. Schemas whose records load through
+  # search_records/2 never reach this, and a field with no Ecto type is left as is.
+  defp cast_ids(schema_module, id_field, document_ids) do
+    case ecto_type(schema_module, id_field) do
+      nil ->
+        {:ok, document_ids}
+
+      type ->
+        Enum.reduce_while(document_ids, {:ok, []}, fn id, {:ok, acc} ->
+          case Ecto.Type.cast(type, id) do
+            {:ok, cast} -> {:cont, {:ok, [cast | acc]}}
+            _error -> {:halt, {:error, {:invalid_arg, "document_ids"}}}
+          end
+        end)
+        |> case do
+          {:ok, cast} -> {:ok, Enum.reverse(cast)}
+          {:error, _tag} = error -> error
+        end
+    end
+  end
+
+  defp ecto_type(schema_module, id_field) do
+    if function_exported?(schema_module, :__schema__, 2),
+      do: schema_module.__schema__(:type, id_field),
+      else: nil
   end
 
   # Hand-written owner-only fan-out schemas define only :fan_outs and :document_id,

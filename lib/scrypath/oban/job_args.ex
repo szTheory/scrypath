@@ -116,7 +116,9 @@ defmodule Scrypath.Oban.JobArgs do
   def document_id?(id), do: is_integer(id) or is_binary(id)
 
   # Enqueue rejects other ids, so anything else here was written by hand or by another
-  # version; cancel it rather than let the loader's query raise and Oban retry.
+  # version; cancel it rather than let Oban retry input that can never succeed. This checks
+  # the shape only: an integer or string that the key's Ecto type cannot cast ("abc" for an
+  # integer key) is caught by Loader before it queries, and cancelled the same way.
   defp fetch_document_ids(%{"document_ids" => ids}) when is_list(ids) do
     if Enum.all?(ids, &document_id?/1),
       do: {:ok, ids},

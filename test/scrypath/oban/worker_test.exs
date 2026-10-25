@@ -181,6 +181,26 @@ defmodule Scrypath.Oban.WorkerTest do
              Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
   end
 
+  test "upsert worker cancels an id the integer primary key cannot cast (WR-07)" do
+    args = upsert_args(QueryablePost, RecordingBackend, [1, "abc"])
+
+    assert Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args}) ==
+             {:cancel, {:invalid_job, {:invalid_arg, "document_ids"}}}
+
+    refute_received {:fake_repo_all, _}
+    refute_received {:upsert_documents, _, _, _}
+  end
+
+  test "upsert worker casts string ids to the integer primary key before querying (WR-07)" do
+    FakeRepo.put_records([%QueryablePost{id: 12, title: "Twelve"}])
+    args = upsert_args(QueryablePost, RecordingBackend, ["12"])
+
+    assert :ok = Scrypath.Oban.UpsertWorker.perform(%Oban.Job{args: args})
+
+    assert_received {:fake_repo_all, %Ecto.Query{wheres: [%{params: [{[12], _type}]}]}}
+    assert_received {:upsert_documents, QueryablePost, [%Document{id: 12}], _config}
+  end
+
   test "upsert worker cancels when search_records/2 returns a non-list (IN-04)" do
     args = upsert_args(BrokenLoaderPost, RecordingBackend, [1])
 
