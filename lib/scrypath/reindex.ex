@@ -9,6 +9,7 @@ defmodule Scrypath.Reindex do
   alias Scrypath.Options
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task, as: OperationTask
+  alias Scrypath.Schema.Metadata
 
   @meilisearch_default_ranking_rules [:words, :typo, :proximity, :attribute, :sort, :exactness]
 
@@ -32,8 +33,12 @@ defmodule Scrypath.Reindex do
       |> Keyword.put(:target_index, target_index)
       |> Keyword.put(:_scrypath_schema, schema_module)
 
+    # The target index is keyed by the document id field the documents carry,
+    # not the first Ecto key column (composite keys would collapse rows).
+    document_id = Metadata.document_id(schema_module)
+
     with {:ok, create_result} <-
-           meilisearch.create_index(schema_module, primary_key(schema_module), workflow_config),
+           meilisearch.create_index(schema_module, document_id, workflow_config),
          {:ok, _create_result} <- maybe_wait_for_result_task(create_result, workflow_config),
          {:ok, settings_result} <-
            meilisearch.apply_settings(schema_module, target_index, workflow_config),
@@ -239,12 +244,5 @@ defmodule Scrypath.Reindex do
 
   defp backfill_config(config) do
     Keyword.take(config, @backfill_pass_through_keys)
-  end
-
-  defp primary_key(schema_module) do
-    case schema_module.__schema__(:primary_key) do
-      [field | _rest] -> field
-      [] -> Scrypath.Schema.Metadata.document_id(schema_module)
-    end
   end
 end
