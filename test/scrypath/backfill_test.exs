@@ -59,7 +59,7 @@ defmodule Scrypath.BackfillTest do
            Operations.task_from_backend(%{
              uid: hd(document_ids) + 900,
              status: "enqueued",
-             indexUid: Keyword.get(config, :index_name) || index_name(schema_module, config),
+             index_uid: Keyword.get(config, :index_name) || index_name(schema_module, config),
              type: "documentDeletion"
            }),
          metadata: %{

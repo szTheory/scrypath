@@ -88,7 +88,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
         assert {:ok, result} = backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
 
         assert result |> Map.keys() |> Enum.sort() ==
-                 [:batch_results, :batches, :documents, :index, :mode]
+                 [:batch_results, :batches, :documents, :index, :mode, :removed]
 
         assert result.batches == 2
         assert result.documents == 4

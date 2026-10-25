@@ -3,6 +3,7 @@ defmodule Scrypath.Backfill do
 
   import Ecto.Query
 
+  alias Scrypath.Loader
   alias Scrypath.Meilisearch.Operations, as: MeilisearchOperations
   alias Scrypath.Options
   alias Scrypath.Operations
@@ -32,6 +33,7 @@ defmodule Scrypath.Backfill do
       repo: Keyword.fetch!(config, :repo),
       keyset: nil,
       total: 0,
+      removed: 0,
       acc: []
     })
   end
@@ -50,34 +52,33 @@ defmodule Scrypath.Backfill do
     end
   end
 
+  # The cursor always comes from the scoped rows, never from the loader output,
+  # so a batch whose records were all omitted still advances paging.
   defp run_batch(state, rows) do
     %{schema: schema_module, config: config, index: index, cols: cols} = state
     values = cursor_values(cols, List.last(rows))
-    documents = Enum.map(rows, &Projection.document(schema_module, &1))
 
-    with {:ok, backend_result} <-
-           upsert_documents(
-             schema_module,
-             documents,
-             Keyword.fetch!(config, :backend),
-             config,
-             index
-           ) do
-      result =
-        Operations.normalize_write_result(backend_result,
-          mode: Keyword.fetch!(config, :sync_mode),
-          document_ids: Enum.map(documents, & &1.id),
-          document_count: length(documents),
-          index: index
-        )
-
+    with {:ok, records, omitted} <- Loader.prepare_records(schema_module, rows, config),
+         documents = Enum.map(records, &Projection.document(schema_module, &1)),
+         {:ok, upsert} <- write(:upsert, schema_module, documents, config, index),
+         {:ok, delete} <- write(:delete, schema_module, omitted, config, index) do
       batch_result =
-        batch_result(result, index, length(documents), public_cursor(cols, values))
+        %{
+          index: result_index(upsert, index),
+          documents: length(documents),
+          removed: length(omitted),
+          last_primary_key: public_cursor(cols, values),
+          task: task_of(upsert),
+          delete_task: task_of(delete)
+        }
+        |> maybe_drop_nil(:task)
+        |> maybe_drop_nil(:delete_task)
 
       run_batches(%{
         state
         | keyset: Enum.zip(cols, values),
           total: state.total + length(documents),
+          removed: state.removed + length(omitted),
           acc: [batch_result | state.acc]
       })
     end
@@ -88,10 +89,45 @@ defmodule Scrypath.Backfill do
       index: state.index,
       batches: length(state.acc),
       documents: state.total,
+      removed: state.removed,
       mode: Keyword.fetch!(state.config, :sync_mode),
       batch_results: Enum.reverse(state.acc)
     }
   end
+
+  # Empty lists are never sent to the backend; a skipped write has no result.
+  defp write(_kind, _schema_module, [], _config, _index), do: {:ok, nil}
+
+  defp write(:upsert, schema_module, documents, config, index) do
+    with {:ok, backend_result} <-
+           upsert_documents(schema_module, documents, backend(config), config, index) do
+      {:ok, normalize(backend_result, Enum.map(documents, & &1.id), config, index)}
+    end
+  end
+
+  defp write(:delete, schema_module, ids, config, index) do
+    with {:ok, backend_result} <-
+           delete_documents(schema_module, ids, backend(config), config, index) do
+      {:ok, normalize(backend_result, ids, config, index)}
+    end
+  end
+
+  defp normalize(backend_result, ids, config, index) do
+    Operations.normalize_write_result(backend_result,
+      mode: Keyword.fetch!(config, :sync_mode),
+      document_ids: ids,
+      document_count: length(ids),
+      index: index
+    )
+  end
+
+  defp backend(config), do: Keyword.fetch!(config, :backend)
+
+  defp result_index(%Result{} = result, index), do: Map.get(result.metadata, :index) || index
+  defp result_index(nil, index), do: index
+
+  defp task_of(%Result{task: task}), do: public_task(task)
+  defp task_of(nil), do: nil
 
   # The caller's :query decides which rows are in scope (where/join); paging,
   # projection and preloading stay owned by backfill.
@@ -171,14 +207,16 @@ defmodule Scrypath.Backfill do
     end
   end
 
-  defp batch_result(%Result{} = result, index, documents, last_primary_key) do
-    %{
-      index: Map.get(result.metadata, :index, index),
-      documents: documents,
-      last_primary_key: last_primary_key,
-      task: public_task(result.task)
-    }
-    |> maybe_drop_nil(:task)
+  defp delete_documents(schema_module, ids, backend, config, index) do
+    config = Keyword.put(config, :index_name, index)
+
+    case backend do
+      Scrypath.Meilisearch ->
+        MeilisearchOperations.delete_documents(schema_module, ids, config)
+
+      _other ->
+        backend.delete_documents(schema_module, ids, config)
+    end
   end
 
   defp public_task(%Task{} = task) do
