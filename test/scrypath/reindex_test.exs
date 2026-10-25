@@ -356,6 +356,49 @@ defmodule Scrypath.ReindexTest do
     end
   end
 
+  # Mirrors Scrypath.Backfill's public batch shape after D-02: one page written
+  # in three chunks reports every chunk task under tasks: and the last as task:.
+  # Statuses come from :chunk_statuses in the calling process.
+  defmodule ChunkedBackfill do
+    def run(schema_module, config) do
+      send(self(), {:backfill, schema_module, config})
+      index = Keyword.fetch!(config, :index_name)
+      statuses = Process.get(:chunk_statuses, [:enqueued, :enqueued, :enqueued])
+
+      tasks =
+        statuses
+        |> Enum.with_index(31)
+        |> Enum.map(fn {status, uid} ->
+          %{
+            uid: uid,
+            status: status,
+            index_uid: index,
+            type: "documentAdditionOrUpdate",
+            raw: %{}
+          }
+        end)
+
+      {:ok,
+       %{
+         index: index,
+         batches: 1,
+         documents: 2500,
+         removed: 0,
+         mode: :manual,
+         batch_results: [
+           %{
+             index: index,
+             documents: 2500,
+             removed: 0,
+             last_primary_key: 2500,
+             task: List.last(tasks),
+             tasks: tasks
+           }
+         ]
+       }}
+    end
+  end
+
   defmodule PassiveBackend do
     def index_name(schema_module, config) do
       RecordingMeilisearch.index_name(schema_module, config)
@@ -747,6 +790,40 @@ defmodule Scrypath.ReindexTest do
     test "extra ranking rules beyond defaults are allowed" do
       assert {:ok, _} =
                Scrypath.reindex(ReindexRankingExtraSchema, @base ++ [target_index: "rf5"])
+    end
+  end
+
+  describe "chunked backfill batches" do
+    @chunked_opts [
+      backend: RecordingMeilisearch,
+      repo: Scrypath.BackfillTest.BackfillRepo,
+      batch_size: 5000,
+      target_index: "posts_rebuild_chunked",
+      meilisearch_client: RecordingTaskClient,
+      meilisearch: RecordingMeilisearch,
+      backfill: ChunkedBackfill,
+      inline_poll_interval: 1
+    ]
+
+    test "reindex waits on every chunk task of a batch before cutover" do
+      assert {:ok, %{cutover: true, documents: 2500}} =
+               Scrypath.reindex(QueryablePost, @chunked_opts)
+
+      assert_received {:task_wait, 31}
+      assert_received {:task_wait, 32}
+      assert_received {:task_wait, 33}
+      assert_received {:swap_indexes, QueryablePost, _swap_config}
+    end
+
+    test "a failed earlier chunk task stops the reindex before cutover" do
+      Process.put(:chunk_statuses, [:failed, :enqueued, :enqueued])
+
+      assert {:error, {:task_failed, %{id: 31}}} =
+               Scrypath.reindex(QueryablePost, @chunked_opts)
+
+      refute_received {:task_wait, 32}
+      refute_received {:task_wait, 33}
+      refute_received {:swap_indexes, _, _}
     end
   end
 end
