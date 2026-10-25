@@ -73,7 +73,23 @@ Plans:
   3. A test shows that enqueueing the same related sync twice yields one job, because related enqueue uses the same `unique:` policy as the main enqueue path.
   4. Tests show related, upsert and delete jobs whose args name an unknown schema, fan-out, backend, repo or app finish with a clear, non-retrying error instead of raising from `String.to_existing_atom`.
 
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+**Wave 1**
+- [ ] 179-01-PLAN.md — `Scrypath.Chunks` (1000-id cap), `Result.tasks`, chunked inline/manual sync with halt and per-chunk wait, chunked `Loader.load/3` with owner-only `:preload` tolerance (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 179-02-PLAN.md — Chunked backfill writes, batch `tasks:`, reindex waits on every chunk task, backfill docs (wave 2)
+- [ ] 179-03-PLAN.md — One Oban job per chunk inside one transaction, shared `unique_opts/0`, `conflict?`, Oban SQLite test harness (wave 2)
+- [ ] 179-04-PLAN.md — `Scrypath.Oban.JobArgs` decoder, cancelling upsert/delete workers (D-18 repo), chunked worker writes (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 179-05-PLAN.md — Related worker loads trigger structs via the loader, related enqueue chunked/unique/`ensure_loadable!`, FAN-03 matrix, 0.3.17 legacy fixture (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 179-06-PLAN.md — Guides (§(c) "What your resolver receives", chunking/`tasks:`), public docs, PROJECT.md, release note (wave 4)
+- [ ] 179-07-PLAN.md — Minimal example fixes: ecommerce `Category.search_records/2`, phoenix Oban smoke `repo:` (wave 4, droppable)
 
 ### Phase 180: Oban worker telemetry
 
