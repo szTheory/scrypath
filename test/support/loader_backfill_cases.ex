@@ -8,20 +8,29 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
   #
   # The same tests run against the SQLite sandbox repo in the core lane and
   # against Postgres when SCRYPATH_POSTGRES_URL is set. Elixir 1.17 has no
-  # ExUnit `parameterize:`, hence the macro.
+  # ExUnit `parameterize:`, hence the macro. Cases are grouped into several
+  # quote blocks so each group stays readable.
 
   alias Scrypath.TestSupport.LoaderBackfill
 
   defmacro __using__(opts) do
     repo = Keyword.fetch!(opts, :repo)
 
+    quote do
+      unquote(harness(repo))
+      unquote(composite_paging_cases())
+      unquote(query_scope_cases())
+    end
+  end
+
+  defp harness(repo) do
     quote location: :keep do
       use ExUnitProperties
 
       require Ecto.Query
 
       import Scrypath.TestSupport.LoaderBackfillCases,
-        only: [backfill!: 3, recorded_upserts: 0, insert_memberships!: 2]
+        only: [backfill!: 3, recorded_upserts: 0, upserted_ids: 0, insert_memberships!: 2]
 
       alias Scrypath.TestSupport.LoaderBackfill
 
@@ -66,7 +75,11 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
           assert batch.last_primary_key == documents |> Enum.map(& &1.id) |> Enum.max()
         end)
       end
+    end
+  end
 
+  defp composite_paging_cases do
+    quote location: :keep do
       test "backfill pages a composite key on every key column (pinned {1, 3} regression)",
            %{repo: repo} do
         keys = [{1, 1}, {1, 2}, {1, 3}, {2, 1}]
@@ -79,13 +92,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
         assert result.batches == 2
         assert result.documents == 4
-
-        upserted_ids =
-          Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
-            Enum.map(documents, & &1.id)
-          end)
-
-        assert upserted_ids == ["1:1", "1:2", "1:3", "2:1"]
+        assert upserted_ids() == ["1:1", "1:2", "1:3", "2:1"]
 
         assert [
                  %{documents: 2, last_primary_key: [org_id: 1, seq: 2]},
@@ -106,14 +113,8 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
             assert {:ok, result} =
                      backfill!(LoaderBackfill.Membership, repo, batch_size: batch_size)
 
-            upserts = recorded_upserts()
-
-            upserted_ids =
-              Enum.flat_map(upserts, fn {_schema, documents, _config} ->
-                Enum.map(documents, & &1.id)
-              end)
-
-            expected_ids = keys |> Enum.sort() |> Enum.map(fn {o, s} -> "#{o}:#{s}" end)
+            upserted_ids = upserted_ids()
+            expected_ids = Enum.map(keys, fn {o, s} -> "#{o}:#{s}" end)
 
             assert Enum.sort(upserted_ids) == Enum.sort(expected_ids)
             assert length(upserted_ids) == length(Enum.uniq(upserted_ids))
@@ -156,11 +157,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
           assert {:ok, result} = backfill!(LoaderBackfill.Device, repo, batch_size: batch_size)
           assert result.documents == 5
 
-          upserted_ids =
-            Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
-              Enum.map(documents, & &1.id)
-            end)
-
+          upserted_ids = upserted_ids()
           assert Enum.sort(upserted_ids) == expected
           assert length(upserted_ids) == 5
 
@@ -170,6 +167,22 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
         end
       end
 
+      test "an empty table backfills zero batches; a single row is one batch", %{repo: repo} do
+        assert {:ok, %{batches: 0, documents: 0, batch_results: []}} =
+                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        insert_memberships!(repo, [{3, 9}])
+
+        assert {:ok, %{batches: 1, documents: 1, batch_results: [batch]}} =
+                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert batch.last_primary_key == [org_id: 3, seq: 9]
+      end
+    end
+  end
+
+  defp query_scope_cases do
+    quote location: :keep do
       test "a caller query keeps its where scope while its offset is ignored", %{repo: repo} do
         posts =
           for title <- ["a", "skip", "b", "skip", "c", "d"] do
@@ -187,14 +200,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
         assert {:ok, result} =
                  backfill!(LoaderBackfill.Post, repo, batch_size: 2, query: query)
 
-        expected = for %{title: title, id: id} <- posts, title != "skip", do: id
-
-        upserted_ids =
-          Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
-            Enum.map(documents, & &1.id)
-          end)
-
-        assert upserted_ids == expected
+        assert upserted_ids() == for(%{title: t, id: id} <- posts, t != "skip", do: id)
         assert result.documents == 4
       end
 
@@ -206,12 +212,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
         assert {:ok, result} = backfill!(LoaderBackfill.Post, repo, batch_size: 2, query: query)
 
-        upserted_ids =
-          Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
-            Enum.map(documents, & &1.id)
-          end)
-
-        assert upserted_ids == ids
+        assert upserted_ids() == ids
         assert result.documents == 3
       end
 
@@ -225,12 +226,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
         assert {:ok, result} = backfill!(LoaderBackfill.KeylessEvent, repo, batch_size: 3)
 
-        upserted_ids =
-          Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
-            Enum.map(documents, & &1.id)
-          end)
-
-        assert upserted_ids == ["a", "b", "c", "d"]
+        assert upserted_ids() == ["a", "b", "c", "d"]
         assert result.documents == 4
         assert Enum.map(result.batch_results, & &1.last_primary_key) == ["c", "d"]
       end
@@ -266,18 +262,6 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
           refute sql =~ ">="
           refute sql =~ ~r/\bOR\b/i
         end
-      end
-
-      test "an empty table backfills zero batches; a single row is one batch", %{repo: repo} do
-        assert {:ok, %{batches: 0, documents: 0, batch_results: []}} =
-                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
-
-        insert_memberships!(repo, [{3, 9}])
-
-        assert {:ok, %{batches: 1, documents: 1, batch_results: [batch]}} =
-                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
-
-        assert batch.last_primary_key == [org_id: 3, seq: 9]
       end
     end
   end
@@ -354,6 +338,13 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
   @doc "Drains recorded `{schema, documents, config}` upserts in arrival order."
   def recorded_upserts, do: drain_upserts([])
+
+  @doc "Drains recorded upserts and returns their document ids in arrival order."
+  def upserted_ids do
+    Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
+      Enum.map(documents, & &1.id)
+    end)
+  end
 
   defp drain_upserts(acc) do
     receive do

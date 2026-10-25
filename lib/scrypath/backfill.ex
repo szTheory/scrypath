@@ -42,6 +42,7 @@ defmodule Scrypath.Backfill do
       |> keyset_after(state.keyset)
       |> limit(^state.batch_size)
       |> state.repo.all()
+      |> dedupe_rows(state.cols)
 
     case rows do
       [] -> {:ok, final_result(state)}
@@ -92,11 +93,34 @@ defmodule Scrypath.Backfill do
     }
   end
 
+  # The caller's :query decides which rows are in scope (where/join); paging,
+  # projection and preloading stay owned by backfill.
   defp base_query(config, schema_module, cols) do
     (config[:query] || schema_module)
     |> exclude(:order_by)
     |> exclude(:limit)
+    |> exclude(:offset)
+    |> exclude(:select)
+    |> exclude(:preload)
+    |> exclude_nil_document_ids(schema_module, cols)
     |> order_by(^Enum.map(cols, &{:asc, &1}))
+  end
+
+  # Without an Ecto primary key, paging falls back to the document id column,
+  # which the database does not guarantee to be non-nil.
+  defp exclude_nil_document_ids(query, schema_module, [col]) do
+    case schema_module.__schema__(:primary_key) do
+      [] -> where(query, [r], not is_nil(field(r, ^col)))
+      _cols -> query
+    end
+  end
+
+  defp exclude_nil_document_ids(query, _schema_module, _cols), do: query
+
+  # A fanned-out caller join can repeat a row; keep the first occurrence so
+  # database order (and therefore the last row) is unchanged.
+  defp dedupe_rows(rows, cols) do
+    Enum.uniq_by(rows, fn row -> Enum.map(cols, &Map.fetch!(row, &1)) end)
   end
 
   # The paging cursor is the key of the last row the database returned, in
