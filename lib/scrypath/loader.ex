@@ -93,6 +93,37 @@ defmodule Scrypath.Loader do
     end
   end
 
+  # Prepares rows backfill already selected for projection, through the same
+  # loader rules Oban sync uses. Returns `{:ok, records, omitted_ids}`.
+  #
+  # With `search_records/2`, the loader decides which batch rows are still
+  # searchable; records it returns for ids outside the batch are dropped so a
+  # caller's scope can never leak into the index. Without it, rows are kept and
+  # the schema's `preload:` is applied.
+  @doc false
+  @spec prepare_records(module(), [struct()], keyword()) ::
+          {:ok, [struct()], [term()]} | {:error, term()}
+  def prepare_records(_schema_module, [], _config), do: {:ok, [], []}
+
+  def prepare_records(schema_module, rows, config) when is_list(rows) do
+    if custom_loader?(schema_module) do
+      ids = Identity.document_ids(schema_module, rows)
+      batch = MapSet.new(ids, &to_string/1)
+
+      with {:ok, records, omitted} <- load(schema_module, ids, config) do
+        in_batch =
+          Enum.filter(records, fn record ->
+            MapSet.member?(batch, to_string(Identity.document_id(schema_module, record)))
+          end)
+
+        {:ok, in_batch, omitted}
+      end
+    else
+      repo = Keyword.fetch!(config, :repo)
+      {:ok, preload_records(repo, rows, Metadata.preload(schema_module)), []}
+    end
+  end
+
   defp fetch(_schema_module, [], _config), do: {:ok, []}
 
   defp fetch(schema_module, document_ids, config) do
@@ -118,5 +149,8 @@ defmodule Scrypath.Loader do
 
   defp preload_records(_repo, records, preload) when preload in [nil, []], do: records
   defp preload_records(_repo, [], _preload), do: []
-  defp preload_records(repo, records, preload), do: repo.preload(records, preload)
+  # force: true so rows that arrive with an association already loaded (for
+  # example from a caller query) are reloaded the same way on every path.
+  defp preload_records(repo, records, preload),
+    do: repo.preload(records, preload, force: true)
 end
