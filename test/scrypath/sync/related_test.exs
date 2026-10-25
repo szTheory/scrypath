@@ -188,7 +188,8 @@ defmodule Scrypath.Sync.RelatedTest do
       assert [changeset] = inserted_changesets()
       args = Ecto.Changeset.get_field(changeset, :args)
       assert args |> Map.keys() |> Enum.sort() == ["document_ids", "fan_out", "opts", "schema"]
-      assert args["opts"]["repo"] == to_string(FakeRepo)
+      # Atom-keyed until Oban's JSON round trip turns the keys into strings.
+      assert args["opts"][:repo] == to_string(FakeRepo)
     end
   end
 

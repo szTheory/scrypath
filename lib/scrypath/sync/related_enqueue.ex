@@ -2,10 +2,12 @@ if Code.ensure_loaded?(Oban.Job) do
   defmodule Scrypath.Sync.RelatedEnqueue do
     @moduledoc false
 
+    alias Scrypath.Chunks
     alias Scrypath.Config
     alias Scrypath.Identity
+    alias Scrypath.Loader
     alias Scrypath.Oban.Enqueue
-    alias Scrypath.Operations
+    alias Scrypath.Operations.Result
 
     @worker "Scrypath.Sync.RelatedWorker"
 
@@ -13,40 +15,38 @@ if Code.ensure_loaded?(Oban.Job) do
             {:ok, Scrypath.Operations.Result.t()} | {:error, term()}
     def enqueue(schema_module, records, fan_out_key, config) do
       Enqueue.ensure_durable_api_key!(config)
-      document_ids = Identity.document_ids(schema_module, List.wrap(records))
-      args = job_args(schema_module, document_ids, fan_out_key, config)
-      queue = Config.oban_queue(config)
-      max_attempts = Config.oban_max_attempts(config)
-      oban = Config.oban_module(config)
+      # The worker loads current trigger records before resolving, so a missing repo or
+      # an unmappable custom document id must fail here, not inside the job.
+      Loader.ensure_loadable!(schema_module, config)
 
-      changeset =
-        Oban.Job.new(args,
-          worker: @worker,
-          queue: to_string(queue),
-          max_attempts: max_attempts
-        )
+      case Identity.document_ids(schema_module, List.wrap(records)) do
+        [] ->
+          # Sync.sync_related/3 already short-circuits empty input; kept as a guard.
+          {:ok,
+           Result.new(
+             mode: Keyword.fetch!(config, :sync_mode),
+             status: :noop,
+             document_ids: [],
+             document_count: 0
+           )}
 
-      with {:ok, job} <- insert_job(oban, changeset) do
-        result =
-          Operations.result_from_enqueue(
-            %{
-              job: %{
-                id: job.id,
-                worker: job.worker,
-                queue: job.queue,
-                state: job.state,
-                attempt: job.attempt,
-                max_attempts: job.max_attempts
-              },
-              document_ids: document_ids,
-              document_count: length(document_ids)
-            },
-            mode: :oban,
-            status: :accepted
-          )
+        document_ids ->
+          queue = to_string(Config.oban_queue(config))
+          max_attempts = Config.oban_max_attempts(config)
 
-        {:ok,
-         %{result | metadata: %{oban: %{queue: queue, max_attempts: max_attempts, name: oban}}}}
+          # One job per bounded, sorted chunk, under the same unique policy and
+          # transactional insert as the main sync jobs.
+          document_ids
+          |> Chunks.ids()
+          |> Enum.map(fn chunk ->
+            Oban.Job.new(job_args(schema_module, chunk, fan_out_key, config),
+              worker: @worker,
+              queue: queue,
+              max_attempts: max_attempts,
+              unique: Enqueue.unique_opts()
+            )
+          end)
+          |> Enqueue.enqueue_chunks(config, %{})
       end
     end
 
@@ -70,14 +70,6 @@ if Code.ensure_loaded?(Oban.Job) do
         "fan_out" => to_string(fan_out_key),
         "opts" => opts
       }
-    end
-
-    defp insert_job(oban, changeset) do
-      cond do
-        function_exported?(oban, :insert, 1) -> oban.insert(changeset)
-        function_exported?(oban, :insert, 2) -> oban.insert(changeset, [])
-        true -> Oban.insert(oban, changeset)
-      end
     end
   end
 else
