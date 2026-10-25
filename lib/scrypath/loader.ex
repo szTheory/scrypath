@@ -90,9 +90,10 @@ defmodule Scrypath.Loader do
   longer exist. Ids are deduped and loaded in batches of at most 1000; the
   first failing batch stops the load and its error is returned.
 
-  The default query casts ids to the Ecto type of the schema's `document_id`
-  field first and returns `{:error, {:invalid_arg, "document_ids"}}` when one
-  cannot be cast, for example `"abc"` for an integer primary key.
+  The default query first casts ids to the Ecto type of the schema's
+  `document_id` field and checks that the repo's adapter can dump them, and
+  returns `{:error, {:invalid_arg, "document_ids"}}` when one fails, for example
+  `"abc"` for an integer key or for a `:binary_id` key on Postgres.
   """
   @spec load(module(), [term()], keyword()) :: {:ok, [struct()], [term()]} | {:error, term()}
   def load(schema_module, document_ids, config) when is_list(document_ids) do
@@ -158,7 +159,7 @@ defmodule Scrypath.Loader do
       id_field = Metadata.document_id(schema_module)
 
       with :ok <- check_loadable(schema_module, config),
-           {:ok, query_ids} <- cast_ids(schema_module, id_field, document_ids) do
+           {:ok, query_ids} <- cast_ids(schema_module, id_field, document_ids, repo) do
         records =
           from(record in schema_module, where: field(record, ^id_field) in ^query_ids)
           |> repo.all()
@@ -168,27 +169,61 @@ defmodule Scrypath.Loader do
     end
   end
 
-  # Casts ids to the Ecto type of the field the default query filters on (the schema's
-  # primary key unless it declares another document id). An id that cannot be cast, such
-  # as "abc" for an integer key, would make the query raise Ecto.Query.CastError on every
-  # retry, so it is reported as invalid input instead. Schemas whose records load through
-  # search_records/2 never reach this, and a field with no Ecto type is left as is.
-  defp cast_ids(schema_module, id_field, document_ids) do
+  # Casts ids the way the Ecto planner binds them: Ecto.Type.cast/2 to the type of the
+  # field the default query filters on (the schema's primary key unless it declares
+  # another document id), then a dump through the repo's adapter. Both steps matter:
+  # "abc" casts to :binary_id but the Postgres adapter cannot dump it as a UUID. An id
+  # that fails either step would make the query raise Ecto.Query.CastError on every
+  # retry, so it is reported as invalid input instead. Schemas whose records load
+  # through search_records/2 never reach this, a field with no Ecto type is left as is,
+  # and a repo without an adapter skips the dump step.
+  defp cast_ids(schema_module, id_field, document_ids, repo) do
     case ecto_type(schema_module, id_field) do
       nil ->
         {:ok, document_ids}
 
       type ->
+        adapter = repo_adapter(repo)
+
         Enum.reduce_while(document_ids, {:ok, []}, fn id, {:ok, acc} ->
-          case Ecto.Type.cast(type, id) do
+          case cast_id(type, adapter, id) do
             {:ok, cast} -> {:cont, {:ok, [cast | acc]}}
-            _error -> {:halt, {:error, {:invalid_arg, "document_ids"}}}
+            :error -> {:halt, {:error, {:invalid_arg, "document_ids"}}}
           end
         end)
         |> case do
           {:ok, cast} -> {:ok, Enum.reverse(cast)}
           {:error, _tag} = error -> error
         end
+    end
+  end
+
+  defp cast_id(type, adapter, id) do
+    with {:ok, cast} <- Ecto.Type.cast(type, id),
+         :ok <- dump_id(type, adapter, cast) do
+      {:ok, cast}
+    else
+      _error -> :error
+    end
+  end
+
+  defp dump_id(_type, nil, _cast), do: :ok
+
+  defp dump_id(type, adapter, cast) do
+    case Ecto.Type.adapter_dump(adapter, type, cast) do
+      {:ok, _dumped} -> :ok
+      :error -> :error
+    end
+  end
+
+  defp repo_adapter(repo) do
+    with true <- is_atom(repo) and Code.ensure_loaded?(repo),
+         true <- function_exported?(repo, :__adapter__, 0),
+         adapter when is_atom(adapter) <- repo.__adapter__(),
+         true <- Code.ensure_loaded?(adapter) and function_exported?(adapter, :dumpers, 2) do
+      adapter
+    else
+      _other -> nil
     end
   end
 

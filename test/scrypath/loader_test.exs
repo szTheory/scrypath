@@ -110,6 +110,36 @@ defmodule Scrypath.LoaderTest do
     def __scrypath__(:document_id), do: :id
   end
 
+  # A :binary_id key, the `mix phx.gen --binary-id` default.
+  defmodule UuidPost do
+    use Ecto.Schema
+
+    use Scrypath, fields: [:title]
+
+    @primary_key {:id, :binary_id, autogenerate: true}
+    schema "loader_uuid_posts" do
+      field(:title, :string)
+    end
+  end
+
+  # Reports the Postgres adapter, whose :binary_id dumper only accepts UUIDs. Dumping
+  # needs no connection, so this exercises Postgres semantics without a database.
+  defmodule PostgresRepo do
+    def __adapter__, do: Ecto.Adapters.Postgres
+
+    def all(%Ecto.Query{} = query) do
+      send(self(), {:postgres_repo_all, query})
+      Process.get({__MODULE__, :records}, [])
+    end
+  end
+
+  defmodule AdapterlessRepo do
+    def all(%Ecto.Query{} = query) do
+      send(self(), {:adapterless_repo_all, query})
+      []
+    end
+  end
+
   setup do
     FakeRepo.reset()
     :ok
@@ -158,6 +188,32 @@ defmodule Scrypath.LoaderTest do
 
       assert {:ok, [%OwnerOnlySchema{id: 1}], [2]} =
                Loader.load(OwnerOnlySchema, [1, 2], repo: FakeRepo)
+    end
+  end
+
+  describe "load/3 id casting (WR-08)" do
+    test "a non-UUID id for a :binary_id key on Postgres is invalid input, not a query crash" do
+      uuid = Ecto.UUID.generate()
+
+      assert Loader.load(UuidPost, [uuid, "abc"], repo: PostgresRepo) ==
+               {:error, {:invalid_arg, "document_ids"}}
+
+      refute_received {:postgres_repo_all, _}
+    end
+
+    test "a UUID id for a :binary_id key on Postgres still loads" do
+      uuid = Ecto.UUID.generate()
+      Process.put({PostgresRepo, :records}, [%UuidPost{id: uuid, title: "One"}])
+
+      assert {:ok, [%UuidPost{id: ^uuid}], []} =
+               Loader.load(UuidPost, [uuid], repo: PostgresRepo)
+
+      assert_received {:postgres_repo_all, %Ecto.Query{wheres: [%{params: [{[^uuid], _}]}]}}
+    end
+
+    test "a repo without an adapter skips the dump step" do
+      assert {:ok, [], ["abc"]} = Loader.load(UuidPost, ["abc"], repo: AdapterlessRepo)
+      assert_received {:adapterless_repo_all, _query}
     end
   end
 
