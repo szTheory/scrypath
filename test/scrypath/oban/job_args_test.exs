@@ -89,6 +89,68 @@ defmodule Scrypath.Oban.JobArgsTest do
     end
   end
 
+  defp upsert_args(overrides \\ %{}) do
+    Map.merge(
+      %{
+        "schema" => @schema,
+        "backend" => @full_backend,
+        "index" => "idx",
+        "document_ids" => [1, 2],
+        "document_count" => 2
+      },
+      overrides
+    )
+  end
+
+  describe "decode_upsert/1" do
+    test "decodes a valid upsert job with a repo" do
+      args = upsert_args(%{"repo" => to_string(Scrypath.TestSupport.FakeRepo)})
+
+      assert {:ok, decoded} = JobArgs.decode_upsert(args)
+      assert decoded.schema == SearchablePost
+      assert decoded.backend == FullBackend
+      assert decoded.index == "idx"
+      assert decoded.document_ids == [1, 2]
+      assert decoded.opts[:repo] == Scrypath.TestSupport.FakeRepo
+    end
+
+    test "an absent, nil or empty repo is the legacy path with no :repo" do
+      for args <- [
+            upsert_args(),
+            upsert_args(%{"repo" => nil}),
+            upsert_args(%{"repo" => ""})
+          ] do
+        assert {:ok, decoded} = JobArgs.decode_upsert(args)
+        refute Keyword.has_key?(decoded.opts, :repo)
+      end
+    end
+
+    for {label, overrides, drop, tag} <- [
+          {"unknown schema", %{"schema" => "Elixir.Nope.Schema"}, nil,
+           {:unknown_schema, "Elixir.Nope.Schema"}},
+          {"missing schema", %{}, "schema", {:invalid_arg, "schema"}},
+          {"unknown backend", %{"backend" => "Elixir.Nope.Backend"}, nil,
+           {:unknown_backend, "Elixir.Nope.Backend"}},
+          {"delete-only backend", %{"backend" => @delete_backend}, nil,
+           {:unknown_backend, @delete_backend}},
+          {"unknown repo", %{"repo" => "Elixir.Nope.Repo"}, nil,
+           {:unknown_repo, "Elixir.Nope.Repo"}},
+          {"loaded repo without __adapter__/0", %{"repo" => "Elixir.String"}, nil,
+           {:unknown_repo, "Elixir.String"}},
+          {"repo without the Elixir. prefix", %{"repo" => "Scrypath.TestSupport.FakeRepo"}, nil,
+           {:unknown_repo, "Scrypath.TestSupport.FakeRepo"}},
+          {"missing document_ids", %{}, "document_ids", {:invalid_arg, "document_ids"}},
+          {"empty index", %{"index" => ""}, nil, {:invalid_arg, "index"}}
+        ] do
+      test "returns #{inspect(tag)} for #{label}" do
+        args = upsert_args(unquote(Macro.escape(overrides)))
+        args = if unquote(drop), do: Map.delete(args, unquote(drop)), else: args
+
+        assert JobArgs.decode_upsert(args) == {:error, unquote(Macro.escape(tag))}
+      end
+    end
+  end
+
   describe "resolve_config/1" do
     test "resolves a valid config" do
       assert {:ok, config} = JobArgs.resolve_config(backend: FullBackend, sync_mode: :manual)
