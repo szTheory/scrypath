@@ -5,11 +5,11 @@ milestone_name: Sync correctness
 current_phase: 179
 current_phase_name: Bounded id lists and related-sync parity
 status: planning
-stopped_at: Phase 178 complete, ready to plan Phase 179
-last_updated: "2026-10-25T19:42:08.216Z"
+stopped_at: Phase 179 context gathered
+last_updated: "2026-10-25T20:32:17.093Z"
 last_activity: 2026-10-25
 last_activity_desc: Phase 178 complete, transitioned to Phase 179
-state_head: a82cc259173717032640758337abd3865160fc19
+state_head: 89d5d6d4449d5c7456f101e262ea257379191d44
 progress:
   total_phases: 4
   completed_phases: 1
@@ -147,9 +147,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-25T17:56:17.655Z
-Stopped at: Phase 178 complete, ready to plan Phase 179
-Resume file: .planning/phases/178-loader-routed-backfill-and-full-key-paging/178-CONTEXT.md
+Last session: 2026-10-25T20:32:17.062Z
+Stopped at: Phase 179 context gathered
+Resume file: .planning/phases/179-bounded-id-lists-and-related-sync-parity/179-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
