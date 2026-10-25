@@ -236,6 +236,68 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
                RelatedWorker.perform(%Oban.Job{args: args})
     end
 
+    describe "FAN-03: undecodable related args cancel and never raise" do
+      @missing "Elixir.Scrypath.NoSuchModuleZq179"
+
+      for {label, change, tag} <- [
+            {"unknown schema", {:args, %{"schema" => @missing}}, {:unknown_schema, @missing}},
+            {"unknown fan_out", {:args, %{"fan_out" => "no_such_fan_out_zq179"}},
+             {:unknown_fan_out, "no_such_fan_out_zq179"}},
+            {"unknown backend", {:opts, %{"backend" => @missing}}, {:unknown_backend, @missing}},
+            {"unknown repo", {:opts, %{"repo" => @missing}}, {:unknown_repo, @missing}},
+            {"unknown otp_app", {:opts, %{"otp_app" => "zz_not_an_app_zq179"}},
+             {:unknown_otp_app, "zz_not_an_app_zq179"}},
+            {"missing document_ids", {:drop, "document_ids"}, {:invalid_arg, "document_ids"}},
+            {"missing opts", {:drop, "opts"}, {:invalid_arg, "opts"}}
+          ] do
+        test "#{label} cancels with its tag" do
+          args =
+            case unquote(Macro.escape(change)) do
+              {:args, overrides} -> Map.merge(dummy_args([1]), overrides)
+              {:opts, opts} -> dummy_args([1], opts)
+              {:drop, key} -> Map.delete(dummy_args([1]), key)
+            end
+
+          result =
+            try do
+              RelatedWorker.perform(%Oban.Job{args: args})
+            rescue
+              error -> flunk("#{unquote(label)} raised #{inspect(error)}")
+            end
+
+          assert result == {:cancel, {:invalid_job, unquote(Macro.escape(tag))}}
+          refute_received {:resolved, _, _}
+        end
+      end
+    end
+
+    test "a related job queued by 0.3.17, with nil-valued opts keys, still runs" do
+      # Written exactly as 0.3.17's RelatedEnqueue.job_args/4 stored it (after JSON).
+      args = %{
+        "schema" => "Elixir.Scrypath.Sync.RelatedWorkerTest.DummySchema",
+        "document_ids" => [1],
+        "fan_out" => "comments",
+        "opts" => %{
+          "backend" => "Elixir.Scrypath.Sync.RelatedWorkerTest.RecordingBackend",
+          "index_prefix" => nil,
+          "meilisearch_url" => "http://localhost:7700",
+          "otp_app" => nil,
+          "repo" => nil
+        }
+      }
+
+      assert :ok = RelatedWorker.perform(%Oban.Job{args: args})
+      assert_received {:resolved, DummySchema, [%DummySchema{id: 1}]}
+      assert_received {:upsert_documents, DummyTarget, [%Scrypath.Document{id: 1}], _config}
+    end
+
+    test "an opts key added by a newer release is ignored (rolling deploy)" do
+      args = dummy_args([1], %{"future_option_zq179" => "x"})
+
+      assert :ok = RelatedWorker.perform(%Oban.Job{args: args})
+      assert_received {:resolved, DummySchema, [%DummySchema{id: 1}]}
+    end
+
     defmodule ErrorTarget do
       use Ecto.Schema
 
