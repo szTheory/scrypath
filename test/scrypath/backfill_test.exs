@@ -159,7 +159,13 @@ defmodule Scrypath.BackfillTest do
       %QueryablePost{id: 3, title: "Published Again", body: "Body 3", status: "published"}
     ])
 
-    scoped_query = from(post in QueryablePost, where: post.status == ^"published")
+    scoped_query =
+      from(post in QueryablePost,
+        where: post.status == ^"published",
+        offset: 1,
+        select: post,
+        preload: [:author]
+      )
 
     assert {:ok, %{documents: 2, batches: 1, index: "scrypath_queryable_post", mode: :manual}} =
              Scrypath.backfill(QueryablePost,
@@ -173,6 +179,9 @@ defmodule Scrypath.BackfillTest do
     assert Enum.map(documents, & &1.id) == [2, 3]
     assert_received {:backfill_repo_all, %Ecto.Query{} = query}
     assert length(query.wheres) == 1
+    assert query.offset == nil
+    assert query.select == nil
+    assert query.preloads == []
   end
 
   test "backfill result keeps batch counts and target index visible" do
