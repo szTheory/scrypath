@@ -46,7 +46,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
   3. A property test over a composite-primary-key schema with repeated leading-column values across batch boundaries shows every row visited exactly once, and each batch result reports the full composite cursor.
   4. The loader and backfill tests, including the composite-key and `preload:` cases, run against a real Postgres database inside an existing CI lane (not only `FakeRepo`) and pass on the phase PR.
 
-**Plans**: 4/5 plans executed
+**Plans**: 5/5 plans executed
 
 Plans:
 **Wave 1**
@@ -60,7 +60,7 @@ Plans:
 - [x] 178-04-PLAN.md — Backfill/reindex through `Scrypath.Loader`: preload parity, `search_records/2`, removed/omitted (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 178-05-PLAN.md — `Scrypath.backfill/2` result @doc, guides, README, CONTRIBUTING, docs contract test (wave 4)
+- [x] 178-05-PLAN.md — `Scrypath.backfill/2` result @doc, guides, README, CONTRIBUTING, docs contract test (wave 4)
 
 ### Phase 179: Bounded id lists and related-sync parity
 
@@ -102,7 +102,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 178. Loader-routed backfill and full-key paging | 4/5 | In Progress | - |
+| 178. Loader-routed backfill and full-key paging | 5/5 | In Progress | - |
 | 179. Bounded id lists and related-sync parity | 0/TBD | Not started | - |
 | 180. Oban worker telemetry | 0/TBD | Not started | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |
