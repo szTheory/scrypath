@@ -30,7 +30,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
 
 - [x] **Phase 178: Loader-routed backfill and full-key paging** - Backfill and reindex build documents through `Scrypath.Loader` and visit every row, including composite keys, proven against real Postgres (completed 2026-10-25)
 - [x] **Phase 179: Bounded id lists and related-sync parity** - Loads and backend calls are chunked, and `sync_related` behaves the same under inline and Oban with safe job-arg decoding (completed 2026-10-25)
-- [ ] **Phase 180: Oban worker telemetry** - Upsert and delete workers emit stable telemetry spans and a missing-record delete event, documented and contract-tested
+- [x] **Phase 180: Oban worker telemetry** - Upsert and delete workers emit stable telemetry spans and a missing-record delete event, documented and contract-tested (completed 2026-10-25)
 - [ ] **Phase 181: Schema hook contract and no-Oban build** - Schema hooks are declared optional callbacks and a no-Oban build stays warnings-clean in CI
 
 ### Phase Details
@@ -101,7 +101,7 @@ Plans:
   2. A test shows that when a job finds ids with no current record and deletes them from the index, an event fires with the count of those ids.
   3. The telemetry guide lists the new events and metadata keys, and its docs contract test fails if a documented event or key drifts from the emitted ones.
 
-**Plans**: 3/3 plans executed
+**Plans**: 3/3 plans complete
 
 Plans:
 **Wave 1**
@@ -128,5 +128,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
 | 179. Bounded id lists and related-sync parity | 7/7 | Complete    | 2026-10-25 |
-| 180. Oban worker telemetry | 3/3 | In Progress | - |
+| 180. Oban worker telemetry | 3/3 | Complete    | 2026-10-25 |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |

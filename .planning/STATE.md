@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.44
 milestone_name: Sync correctness
-current_phase: 180
-current_phase_name: Oban worker telemetry
-status: executing
-stopped_at: Phase 180 planned (3 plans, 2 waves)
-last_updated: "2026-10-26T01:48:59.938Z"
+current_phase: 181
+current_phase_name: Schema hook contract and no-Oban build
+status: planning
+stopped_at: Phase 180 complete, ready to plan Phase 181
+last_updated: "2026-10-26T02:32:15.487Z"
 last_activity: 2026-10-25
-last_activity_desc: Phase 180 execution started
-state_head: 1e47fb0ff8d196e3c58f376c09bffe6ececd842a
+last_activity_desc: Phase 180 complete, transitioned to Phase 181
+state_head: 84214c493d0e56cbeee1bb1496d2af7887a04728
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 15
-  completed_plans: 12
-  percent: 50
+  completed_plans: 15
+  percent: 75
 ---
 
 # Project State
@@ -86,12 +86,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 180 (Oban worker telemetry) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 180
-Last activity: 2026-10-25 — Phase 180 execution started
+Phase: 181 — Schema hook contract and no-Oban build
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-25 — Phase 180 complete, transitioned to Phase 181
 
-Progress: [█████░░░░░] 50%
+Progress: [████████░░] 75%
 
 ## Delivered Evidence
 
@@ -148,7 +148,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-26T00:13:24.375Z
-Stopped at: Phase 180 context gathered
+Stopped at: Phase 180 complete, ready to plan Phase 181
 Resume file: .planning/phases/180-oban-worker-telemetry/180-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.

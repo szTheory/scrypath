@@ -16,7 +16,7 @@
     {
       "number": "180",
       "name": "Oban worker telemetry",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "number": "181",
@@ -26,8 +26,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 3 of 4 · 50% · executing"
+    "label": "Advance to the next step (plan phase 181)",
+    "reason": "Phase 4 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-26T01:48:59.947Z"
+  "updated_at": "2026-10-26T02:32:15.542Z"
 }

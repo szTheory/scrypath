@@ -26,9 +26,9 @@
 
 ### Observability (OBS)
 
-- [ ] **OBS-01**: The Oban upsert and delete workers emit telemetry spans (start, stop, exception) with stable metadata: schema, index, backend, document count and attempt.
-- [ ] **OBS-02**: When a job finds ids with no current record and deletes them from the index, it emits an event with the count of those ids. This case is no longer silent.
-- [ ] **OBS-03**: The telemetry guide and its contract test list the new events and metadata keys.
+- [x] **OBS-01**: The Oban upsert and delete workers emit telemetry spans (start, stop, exception) with stable metadata: schema, index, backend, document count and attempt.
+- [x] **OBS-02**: When a job finds ids with no current record and deletes them from the index, it emits an event with the count of those ids. This case is no longer silent.
+- [x] **OBS-03**: The telemetry guide and its contract test list the new events and metadata keys.
 
 ### Hygiene (HYG)
 
@@ -71,9 +71,9 @@
 | FAN-01 | Phase 179 | Complete |
 | FAN-02 | Phase 179 | Complete |
 | FAN-03 | Phase 179 | Complete |
-| OBS-01 | Phase 180 | Pending |
-| OBS-02 | Phase 180 | Pending |
-| OBS-03 | Phase 180 | Pending |
+| OBS-01 | Phase 180 | Complete |
+| OBS-02 | Phase 180 | Complete |
+| OBS-03 | Phase 180 | Complete |
 | HYG-01 | Phase 181 | Pending |
 | HYG-02 | Phase 181 | Pending |
 | TEST-06 | Phase 178 | Complete |
