@@ -39,7 +39,7 @@ Event names and documented metadata keys are a **public observability contract**
 
 The `[:scrypath, :oban, :upsert]` and `[:scrypath, :oban, :delete]` spans wrap the work of one Oban job, so `sync_mode` is `:oban` on them. They are a different moment from the `[:scrypath, :sync, :upsert]` and `[:scrypath, :sync, :delete]` spans: in `:oban` mode those fire when the job is enqueued and report `status` `:accepted`. The worker spans fire when the job runs and the backend write happens.
 
-`document_count` on the worker spans is the number of ids in the job args: the ids requested for an upsert job, the ids to delete for a delete job. `attempt` and `max_attempts` come from the Oban job.
+`document_count` on the worker spans is the number of distinct ids in the job args: the ids requested for an upsert job, the ids to delete for a delete job. An id repeated in the args counts once. On `[:scrypath, :sync, :related, :resolve]` the start `document_count` is likewise the number of distinct trigger records, inline or in the related Oban job. `attempt` and `max_attempts` come from the Oban job.
 
 Queue lifecycle stays on Oban's own events. To see the queue, job id, and job state, join with `[:oban, :job, :start]`, `[:oban, :job, :stop]`, and `[:oban, :job, :exception]`, which run in the same process as the Scrypath span:
 

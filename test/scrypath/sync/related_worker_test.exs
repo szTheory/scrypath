@@ -140,6 +140,10 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       if self() == test_pid, do: send(test_pid, {:related_stop, metadata})
     end
 
+    def handle_start(_event, _measurements, metadata, test_pid) do
+      if self() == test_pid, do: send(test_pid, {:related_start, metadata})
+    end
+
     defp dummy_args(ids, opts \\ %{}) do
       %{
         "schema" => to_string(DummySchema),
@@ -187,6 +191,26 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
                "Ordinary worker comment 4",
                "Ordinary worker comment 5"
              ]
+    end
+
+    test "the resolve span's start document_count counts a repeated trigger id once" do
+      test_pid = self()
+      handler_id = {__MODULE__, :start, make_ref()}
+      start_event = [:scrypath, :sync, :related, :resolve, :start]
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          start_event,
+          &__MODULE__.handle_start/4,
+          test_pid
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      assert :ok = RelatedWorker.perform(%Oban.Job{args: dummy_args([1, 1, 2])})
+
+      assert_received {:related_start, %{document_count: 2}}
     end
 
     test "perform/1 passes only loaded triggers and reports missing_count for the rest" do

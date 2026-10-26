@@ -4,6 +4,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
+    alias Scrypath.Chunks
     alias Scrypath.Loader
     alias Scrypath.Oban.JobArgs
     alias Scrypath.Telemetry
@@ -49,7 +50,8 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
       metadata =
         Telemetry.common_metadata(job.schema, config,
           fan_out: job.fan_out,
-          document_count: length(job.document_ids)
+          # Distinct, like the inline path (which dedupes triggers) and the worker spans.
+          document_count: Chunks.distinct_count(job.document_ids)
         )
 
       Telemetry.span([:scrypath, :sync, :related, :resolve], metadata, fn ->
