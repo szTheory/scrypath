@@ -133,7 +133,10 @@ status: complete
 
 ## Deviations from Plan
 
-None - plan executed as written.
+Post-merge integration exposed the historical Phase 147 source contract's exact
+cleanup-flag ordering. Reordered equivalent `docker compose down` flags to retain
+that contract while keeping the new timeout and disposal behavior. The focused
+ExUnit contract passed 4/4 and the lifecycle suite passed 12/12 after this repair.
 
 ## Issues Encountered
 

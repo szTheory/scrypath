@@ -172,7 +172,7 @@ cleanup() {
     cleanup_status=1
     echo "KEEP_E2E_STACK=1: preserving Compose project '$project'; verifier status is not clean."
   else
-    run_bounded "$finalize_timeout" "${compose[@]}" down --timeout 10 --volumes --remove-orphans
+    run_bounded "$finalize_timeout" "${compose[@]}" down --volumes --remove-orphans --timeout 10
     cleanup_status=$?
     cleanup_state="clean"
   fi
