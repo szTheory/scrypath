@@ -29,7 +29,7 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 
 | Capability | Canonical command | Preserved proof |
 | --- | --- | --- |
-| Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) |
+| Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) followed by the isolated no-optional-deps compile (`mix verify.no_optional_deps`) |
 | Package/release contract | `mix verify.package` | Package, consumer, docs, and release agreement (`mix verify.phase11`) |
 | Repository contracts | `mix verify.repository_contracts` | Trust/repository contract gate (<code>mix verify.phase99</code>) |
 | Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) plus the real-Postgres loader suite (`mix verify.postgres`) |
@@ -49,7 +49,9 @@ mix test --exclude integration --exclude docs_contract
 Quality-baseline commands are capability-named and safe to run locally:
 
 ```sh
-# Ensure the root library does not accidentally require optional dependencies.
+# Compile the root library into an isolated build (MIX_BUILD_PATH,
+# MIX_ENV=prod) without optional dependencies, with warnings as errors. Fails
+# if Oban ends up on the code path. Also runs as part of mix verify.core.
 mix verify.no_optional_deps
 
 # Produce a built-in line-coverage report for the fast suite. This is
@@ -217,7 +219,7 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 | Job | Purpose |
 |-----|---------|
-| **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, and the single CI docs build. |
+| **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, the single CI docs build, and the no-Oban compile. |
 | **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
 | **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
 | **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. A Postgres 16 service with `SCRYPATH_POSTGRES_URL` in the same job runs the real-Postgres loader suite (`mix verify.postgres`). |
