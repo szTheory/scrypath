@@ -6,28 +6,28 @@
     {
       "number": "182",
       "name": "Reliable full browser verification and CI caches",
-      "status": "not_started"
+      "status": "planned"
     },
     {
       "number": "183",
       "name": "Maintainer tooling outside the Hex package",
-      "status": "not_started"
+      "status": "pending"
     },
     {
       "number": "184",
       "name": "Explicit and lean dependency graphs",
-      "status": "not_started"
+      "status": "pending"
     },
     {
       "number": "185",
       "name": "Executable UI quality foundations",
-      "status": "not_started"
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-discuss-phase 182",
-    "label": "Discuss Phase 182: Reliable full browser verification and CI caches",
-    "reason": "v1.45 scope, 21 requirements and four-phase roadmap explicitly approved; clarify the first phase before planning"
+    "command": "$gsd-execute-phase 182",
+    "label": "Execute Phase 182: Reliable full browser verification and CI caches",
+    "reason": "Eight plans across seven waves passed plan verification; implementation has not started"
   },
-  "updated_at": "2026-10-26T20:41:31.214Z"
+  "updated_at": "2026-10-26T23:22:47.397Z"
 }

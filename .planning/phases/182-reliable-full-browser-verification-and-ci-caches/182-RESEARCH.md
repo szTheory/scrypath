@@ -183,9 +183,13 @@ The stale browser expectation is “unknown_module.*NotARealBackend” [VERIFIED
 
 ## Open Questions
 
-1. Test Buildx/BuildKit candidate pair with warm restore/export and fresh-builder import-disabled run.
-2. Measure build, both readiness routes, browser, copy/cleanup to set inner deadline within the locked 30-minute cap; existing job is 20 minutes.
-3. Inspect historical receipt consumers before choosing schema/filenames; keep one authority.
+All three questions are explicitly dispositioned as planned validation below. None is resolved by measurement or compatibility testing during planning; the named evidence gates remain mandatory before the corresponding path can be accepted.
+
+| Question | Disposition and responsible task | Required evidence / enablement gate |
+|---|---|---|
+| Q1: Does the selected Buildx/BuildKit pair support this Compose/GHA graph? | PLANNED VALIDATION — 182-05-02 rechecks official ownership, full SHA pins and supported GHA v2 versions; 182-08-01 executes actual warm and cold acceptance. Candidate versions remain A1, not a proven compatibility result. | Before wiring hosted prebuild, 182-05-01 must pass model/tag/source/runtime handoff and no-second-build behavior checks, and 182-05-02 must record selected version provenance. CACHE-01 remains unaccepted until 182-08-01 records actual app/browser remote import/export logs and a genuinely fresh imports-disabled builder with successful canonical verification at the candidate SHA. |
+| Q2: What inner deadline leaves a measured margin inside 30 minutes? | PLANNED VALIDATION — 182-04-01/02 wire bounded stages and an explicitly provisional 300-second reserve; 182-08-02 measures and confirms or replaces it. A3 remains unmeasured. | 182-08-02 must retain actual setup/build, both route-readiness, browser, copy/cleanup/upload and total hosted timestamps, account for startup overhead, and establish observed maximum finalization/upload plus at least 60 seconds inside 1800 seconds. A changed reserve/workflow requires a new exact-source full run; no measured-budget acceptance is enabled from the provisional value alone. |
+| Q3: Which historical receipt readers constrain schema and filenames? | PLANNED VALIDATION — 182-03-02 inventories actual consumers before changing the writer; 182-04-02 reconciles their workflow/contract wiring. | Before switching the writer, record consumer paths and used filenames/fields in the 182-03 summary; inspect phase105_evidence.sh, workflow_wiring_test.exs, phase108_contract_test.exs, phase111_contract_test.exs and repository search results. Preserve phase105 filenames, one versioned JSON authority and a thin delegate; required Node behavior and warning-as-error consumer contracts in 182-03-02/182-04-02 must pass before accepting the transition. Historical receipt bytes remain unchanged. |
 
 ## Environment Availability
 

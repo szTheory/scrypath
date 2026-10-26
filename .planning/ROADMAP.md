@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; ready for Phase 182 discussion)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phase 182 planned and ready to execute)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -28,7 +28,10 @@ Its local completion is distinct from PR #122 merge or Hex publication, which
 remain separate pending work as recorded at this planning boundary. New v1.45
 checks do not extend old source-bound receipts or accept inherited risk.
 
-Next, run `$gsd-discuss-phase 182`. Each phase retains the
+Phase 182 has eight checked plans across seven waves, covering all five phase
+requirements and 18 decisions. Research and plan checks establish no source
+test, browser/cache acceptance, maintainer approval or delivery claim.
+Next, run `$gsd-execute-phase 182`. Each phase retains the
 full discuss → plan → execute → verify lifecycle, plus applicable UI-spec,
 code-review and security work. No phase replay or implementation is authorized
 merely to refresh historical evidence.
@@ -65,7 +68,39 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 3. An exact-source scheduled/manual full browser run succeeds within the 30-minute job budget with complete artifacts, no unexplained skips and no retry counted as clean; reconciled assertions reflect current behavior without replacing an unreviewed baseline. (BROW-03)
 4. Repeated Docker verification builds restore/export a buildx GHA cache, and the same build succeeds without a cache. (CACHE-01)
 5. BEAM jobs safely restore fallback caches across appropriate version/environment keys, invalidate changed-lock inputs and succeed from a cold cache. (CACHE-02)
-**Plans**: TBD during phase planning.
+
+**Plans**: 8 plans across 7 waves (planning artifacts; execution not started).
+
+Plans:
+
+**Wave 1**
+
+- [ ] 182-01-PLAN.md — Full-stack readiness tracer and owned lifecycle (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 182-02-PLAN.md — Safe Docker browser targets and current assertions (wave 2)
+- [ ] 182-03-PLAN.md — Strict inventory, attempts and one evidence authority (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 182-04-PLAN.md — Run-owned evidence and bounded hosted orchestration (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 182-05-PLAN.md — Checked Compose/Bake image handoff and GHA cache reuse (wave 4)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 182-06-PLAN.md — Compatible download fallback and strict BEAM cache namespaces (wave 5)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 182-07-PLAN.md — Executable hosted acceptance collector and cache probes (wave 6)
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [ ] 182-08-PLAN.md — Real warm/cold and exact-source full-browser acceptance (wave 7)
 
 ### Phase 183: Maintainer tooling outside the Hex package
 
@@ -76,6 +111,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 1. An audited task/support-module inventory lives under the unpackaged `dev/mix/tasks` tree; neither the archive nor a compiled consumer contains repository-only verifier modules. (PKGH-01)
 2. Documented canonical/historical source-checkout commands remain callable in their intended environments, and an unpacked package compiles with no development tree. (PKGH-02)
 3. The package/parity gate inspects actual archive/consumer behavior, fails if maintainer tooling leaks back into the package, and proves supported public operator tasks remain usable. (PKGH-03)
+
 **Plans**: TBD during phase planning.
 
 ### Phase 184: Explicit and lean dependency graphs
@@ -89,6 +125,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 3. A mounted adopter does not load standalone/development dashboard or polling/metrics dependencies, while supported standalone/development diagnostics and core telemetry still work. (DEP-04)
 4. The relaxed compatible Sigra range passes optional-integration/auth checks, and audit failures are reported rather than suppressed. (DEP-06)
 5. Affected manifests/lockfiles form one verified update set with supported-stack checks, recorded dispositions for the roadmap's referenced Dependabot updates and explicit remaining advisory results. (DEP-07)
+
 **Plans**: TBD during phase planning.
 
 ### Phase 185: Executable UI quality foundations
@@ -102,6 +139,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 3. The canonical required repository-contract command executes light/dark AA contrast checks, including focus/adjacent-background pairs at 3:1, and executable negative cases prove failures block it. (UIF-04)
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
+
 **Plans**: TBD during phase planning.
 
 ## Verification and delivery boundaries
@@ -122,11 +160,11 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Roadmap approved; all phases remain not started.
+**Execution Order:** 182 → 183 → 184 → 185. Phase 182 is planned; execution has not started.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 182. Reliable full browser verification and CI caches | 0/TBD | Not started | — |
+| 182. Reliable full browser verification and CI caches | 0/8 | Planned | — |
 | 183. Maintainer tooling outside the Hex package | 0/TBD | Not started | — |
 | 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
