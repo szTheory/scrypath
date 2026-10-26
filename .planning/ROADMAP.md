@@ -120,14 +120,14 @@ Plans:
   1. `search_records/2`, `search_document_id/1` and the other duck-typed schema hooks are declared as `@optional_callbacks` on a behaviour that appears in the generated HexDocs, and a test or compile check flags a hook implemented with the wrong arity.
   2. A build without Oban compiles with `--warnings-as-errors`, with no blanket warning suppression, and this check runs inside an existing CI lane on the phase PR.
 
-**Plans**: 1/2 plans executed
+**Plans**: 2/2 plans executed
 
 Plans:
 **Wave 1**
 - [x] 181-01-PLAN.md — Isolated, self-proving no-Oban build (fixes the false green), RelatedEnqueue on the shared job builder, check composed into `verify.core` (HYG-02, wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 181-02-PLAN.md — Hooks as documented `@optional_callbacks` on `Scrypath.Schema`, injected `@behaviour`, wrong-arity compile warning (HYG-01, wave 2)
+- [x] 181-02-PLAN.md — Hooks as documented `@optional_callbacks` on `Scrypath.Schema`, injected `@behaviour`, wrong-arity compile warning (HYG-01, wave 2)
 
 ### Progress
 
@@ -136,4 +136,4 @@ Plans:
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
 | 179. Bounded id lists and related-sync parity | 7/7 | Complete    | 2026-10-25 |
 | 180. Oban worker telemetry | 3/3 | Complete    | 2026-10-25 |
-| 181. Schema hook contract and no-Oban build | 1/2 | In Progress | - |
+| 181. Schema hook contract and no-Oban build | 2/2 | In Progress | - |
