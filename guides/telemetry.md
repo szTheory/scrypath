@@ -2,6 +2,8 @@
 
 Scrypath emits [`:telemetry`](https://hexdocs.pm/telemetry/readme.html) events for search, hydration, sync, Oban jobs, backend requests, settings work, and operator failure reporting. This page is the catalog of every event Scrypath emits and the metadata keys each one documents.
 
+A contract test keeps this page honest. It checks that every event name Scrypath emits is in the table and every name in the table is emitted. For the three Oban worker rows it also runs the workers and checks the emitted metadata keys against the row. For the other rows, the metadata keys are documented but not yet checked by a test.
+
 Event names and documented metadata keys are a **public observability contract**. **Additive** metadata keys in minor releases are acceptable; **renaming or removing** an event or a documented key is **breaking**.
 
 ## Reading the table
