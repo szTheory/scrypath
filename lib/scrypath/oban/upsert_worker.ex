@@ -62,7 +62,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
           facts = %{
             source: :loaded,
-            upserted_count: length(documents),
+            upserted_count: upserted_count(documents),
             missing_count: Chunks.distinct_count(missing_ids)
           }
 
@@ -84,7 +84,11 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
               result = write(backend, :upsert_documents, schema_module, documents, config)
 
               {result,
-               %{source: :legacy_snapshot, upserted_count: length(documents), missing_count: 0}}
+               %{
+                 source: :legacy_snapshot,
+                 upserted_count: upserted_count(documents),
+                 missing_count: 0
+               }}
 
             :error ->
               {{:cancel, {:invalid_job, reason}}, %{}}
@@ -103,6 +107,10 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
           {{:error, reason}, %{}}
       end
     end
+
+    # Counts what write/5 sends: Chunks.by_id/2 keeps one document per id, so duplicate
+    # rows from a custom search_records/2 are counted once, like document_count.
+    defp upserted_count(documents), do: documents |> Enum.map(& &1.id) |> Chunks.distinct_count()
 
     defp emit_missing_removed(missing_ids, metadata) do
       case Chunks.distinct_count(missing_ids) do

@@ -179,6 +179,21 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
       end
     end
 
+    # A join without distinct: search_records/2 returns every record twice.
+    defmodule DuplicateLoaderPost do
+      @moduledoc false
+      use Ecto.Schema
+      use Scrypath, fields: [:title]
+
+      schema "duplicate_loader_posts" do
+        field(:title, :string)
+      end
+
+      def search_records(ids, _context) do
+        Enum.flat_map(ids, &List.duplicate(%__MODULE__{id: &1, title: "Row #{&1}"}, 2))
+      end
+    end
+
     # Every record is gone.
     defmodule GoneLoaderPost do
       @moduledoc false

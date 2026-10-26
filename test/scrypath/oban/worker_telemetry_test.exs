@@ -6,6 +6,7 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
   alias Scrypath.Oban.UpsertWorker
   alias Scrypath.TestSupport.FakeRepo
   alias Scrypath.TestSupport.ObanTelemetryScenarios, as: Scenarios
+  alias Scrypath.TestSupport.ObanTelemetryScenarios.DuplicateLoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.GoneLoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.LoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.RaisingBackend
@@ -189,6 +190,22 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
                })
 
       refute Map.has_key?(stop.metadata, :result_kind)
+    end
+
+    # The write sends one document per id, so upserted_count must not count the duplicate
+    # rows; otherwise upserted_count + missing_count exceeds document_count.
+    test "duplicate rows from search_records/2 are counted once in upserted_count" do
+      args = Scenarios.upsert_args(DuplicateLoaderPost, RecordingBackend, [1, 2])
+
+      {:ok, events} = capture(fn -> UpsertWorker.perform(Scenarios.job(args)) end)
+
+      assert_received {:upsert_documents, DuplicateLoaderPost, sent, _config}
+      assert length(sent) == 2
+
+      stop = TelemetryCapture.find_event(events, @upsert_stop)
+      assert stop.metadata.document_count == 2
+      assert stop.metadata.upserted_count == 2
+      assert stop.metadata.missing_count == 0
     end
 
     test "a legacy snapshot job reports source :legacy_snapshot" do
