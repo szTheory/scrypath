@@ -101,12 +101,12 @@ Plans:
   2. A test shows that when a job finds ids with no current record and deletes them from the index, an event fires with the count of those ids.
   3. The telemetry guide lists the new events and metadata keys, and its docs contract test fails if a documented event or key drifts from the emitted ones.
 
-**Plans**: 3 plans
+**Plans**: 2/3 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 180-01-PLAN.md — Upsert/delete worker spans, `job_stop_metadata/1`, `missing_removed` event, capture helper and scenario support (wave 1)
-- [ ] 180-02-PLAN.md — `guides/telemetry.md` catalog wired into HexDocs, duplicate tables to pointers, ARCHITECTURE wording, related-worker 4xx cancel shape (wave 1)
+- [x] 180-01-PLAN.md — Upsert/delete worker spans, `job_stop_metadata/1`, `missing_removed` event, capture helper and scenario support (wave 1)
+- [x] 180-02-PLAN.md — `guides/telemetry.md` catalog wired into HexDocs, duplicate tables to pointers, ARCHITECTURE wording, related-worker 4xx cancel shape (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 180-03-PLAN.md — Untagged telemetry drift contract test: name scan, literal-name guard, key contract (wave 2)
@@ -128,5 +128,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
 | 179. Bounded id lists and related-sync parity | 7/7 | Complete    | 2026-10-25 |
-| 180. Oban worker telemetry | 0/TBD | Not started | - |
+| 180. Oban worker telemetry | 2/3 | In Progress | - |
 | 181. Schema hook contract and no-Oban build | 0/TBD | Not started | - |
