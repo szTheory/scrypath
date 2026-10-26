@@ -78,9 +78,20 @@ The event and the stop `missing_count` answer different questions. The event cou
 
 ## Cardinality
 
-Metadata values are atoms, integers, modules, or the bounded index string. Tag metrics on `schema`, `backend`, `index`, `sync_mode`, `outcome`, `error_kind`, `cancel_reason`, and `source`.
+Not every metadata value is bounded. On the Oban worker spans and the `missing_removed` event, values are atoms, integers, modules, or the index name, and none of them is a list, a tuple, or an id. Other events carry keys that grow without limit.
 
-Never tag on document ids, document bodies, error bodies, raw query text, or Oban job ids. The worker spans leave job ids out on purpose; join with Oban's events when a trace needs them.
+Tag metrics on `backend`, `index`, `sync_mode`, `outcome`, `error_kind`, `cancel_reason`, and `source`. The `index` name already separates schemas. `schema` is a module atom; as `Scrypath.Operator.FailedWork` notes, treat it as unsafe for strict low-cardinality label rules unless you aggregate, and keep it for logs, traces, and handlers that filter on it.
+
+Never tag on these keys:
+
+- `path` on `[:scrypath, :meilisearch, :request]`: it embeds index names and task uids, for example `/tasks/12345`.
+- `task_uid` on `[:scrypath, :meilisearch, :request]` and `[:scrypath, :meilisearch, :task_wait]`: a new integer for every Meilisearch task.
+- `filters` on `[:scrypath, :meilisearch, :request]`: a keyword list of task filters.
+- `families` on `[:scrypath, :settings, :hot_apply]`: a list of settings keys.
+- `source_index` and `target_index`: a reindex creates a new index name each run.
+- `reason` and `stacktrace` on any `:exception` event (see below).
+
+Also never tag on document ids, document bodies, error bodies, raw query text, or Oban job ids. The worker spans leave job ids out on purpose; join with Oban's events when a trace needs them.
 
 The `reason` and `stacktrace` on `:exception` events are diagnostic only. Log them or attach them to traces, but never use `reason` as a metric tag: it can hold an exception message or other unbounded data.
 
@@ -88,5 +99,5 @@ The `reason` and `stacktrace` on `:exception` events are diagnostic only. Log th
 
 - Alert on the rate of `outcome` `:cancel` on the worker spans: a cancelled job will not be retried, so its index change is lost until the next sync or backfill.
 - Alert on final-attempt failures: `attempt == max_attempts` with `outcome != :ok` on `:stop`, plus `attempt == max_attempts` on `:exception`. Back that with Oban's `[:oban, :job, :exception]` at `state` `:discard` for jobs that time out or are killed (see [Oban jobs](#oban-jobs)).
-- Chart `[:scrypath, :oban, :upsert, :missing_removed]` `count` per schema. A rise usually tracks deletes or soft deletes in the app; do not page on it.
+- Chart `[:scrypath, :oban, :upsert, :missing_removed]` `count` per index. A rise usually tracks deletes or soft deletes in the app; do not page on it.
 - For search health, backend requests, and alert-fatigue guidance, see [Search backend operations](../docs/search-backend-sre.md).

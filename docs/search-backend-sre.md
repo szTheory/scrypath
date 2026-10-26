@@ -18,7 +18,7 @@ Instrument **both**. Do not page only on Meilisearch CPU; pair with **Scrypath s
 
 ## Scrypath telemetry (application signals)
 
-Scrypath emits **`:telemetry.span/3`**-style events (see [Telemetry](https://hexdocs.pm/telemetry/readme.html) for `start` / `stop` / `exception` and duration measurements on `stop`). Keep dashboards **low cardinality**: use `schema`, `backend`, `index`, `sync_mode` — avoid high-cardinality tags such as raw query text or primary keys on alert rules.
+Scrypath emits **`:telemetry.span/3`**-style events (see [Telemetry](https://hexdocs.pm/telemetry/readme.html) for `start` / `stop` / `exception` and duration measurements on `stop`). Keep dashboards **low cardinality**: use `backend`, `index`, `sync_mode` — avoid high-cardinality tags such as raw query text, primary keys, request `path`, or `task_uid` on alert rules. The telemetry guide's Cardinality section lists every key that is unsafe as a tag.
 
 The full catalog of events and metadata keys lives in [Telemetry](../guides/telemetry.md). Aggregate these first:
 
@@ -27,7 +27,7 @@ The full catalog of events and metadata keys lives in [Telemetry](../guides/tele
 - `[:scrypath, :meilisearch, :request]` — `status_code`; alert on sustained 5xx and connection errors.
 - `[:scrypath, :meilisearch, :task_wait]` — large `poll_count` or a trend of `final_status` other than `:succeeded`.
 - `[:scrypath, :oban, :upsert]` / `[:scrypath, :oban, :delete]` — alert on the rate of `outcome` `:cancel` and on final-attempt failures: a `:stop` where `attempt` equals `max_attempts` and `outcome` is not `:ok`, or an `:exception` where `attempt` equals `max_attempts`. Jobs that time out or are killed emit neither; catch them with Oban's `[:oban, :job, :exception]` at `state` `:discard` (the state Oban reports on the last attempt).
-- `[:scrypath, :oban, :upsert, :missing_removed]` — chart `count` per schema; do not page on it.
+- `[:scrypath, :oban, :upsert, :missing_removed]` — chart `count` per index; do not page on it.
 - `[:scrypath, :operator, :failed_work, :observed]` — **high volume** on noisy data. Do **not** page on every event; that is a fast route to alert fatigue. Treat it as a diagnostic signal and aggregate.
 
 **Dashboard-first:** sync upsert volume, search QPS, hydration `missing_count` distribution, Meilisearch request latency.
