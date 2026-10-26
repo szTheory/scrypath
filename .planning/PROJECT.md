@@ -401,6 +401,7 @@ measured pure hot paths did not justify speculative optimization.
 
 | Decision | Outcome |
 |----------|---------|
+| Oban worker telemetry is search semantics on `[:scrypath, :oban, ...]`; queue lifecycle stays on Oban's `[:oban, :job, ...]`. Decode/config failures emit no Scrypath event. One canonical event table in `guides/telemetry.md`, guarded by a guide-vs-AST contract test in the core lane. | ✓ Phase 180 (2026-10-25) — 13 review findings closed before verification (12 fixed, IN-06 accepted per D-18); exact-SHA hosted CI due at the PR. |
 | Oban upsert jobs carry document ids and load current records when they run (`Scrypath.Loader`: default query plus `preload:`, or the schema's `search_records/2`); missing rows become deletes. Supersedes Phase 4 D-07/D-09 (jobs carried projected snapshots). | 2026-10-22 — snapshots let operator and automatic retries overwrite newer index data. Matches Searchkick, Laravel Scout and Hibernate Search; reasoning in `.planning/research/SYNC-RELOAD-PROPOSAL.md`. Delete jobs still carry ids only (D-08 kept). |
 | Scope v1.43 around the saved UI refinement brief and reuse existing UI inventories; keep research defaults and adaptive model routing intact. | Scope, inventory reuse, all 20 requirements, and Phases 173–177 approved 2026-10-06. |
 | Settle shared light/dark visual direction in Impeccable comps and GSD UI contracts before broad implementation. | ✓ Phase 173 — the neutral foundation, single theme preference, and operational time/copy contract are implemented and verified locally; later phases extend the demonstrated patterns. |
@@ -521,7 +522,7 @@ v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
 - [x] Backfill and reindex load records through the shared loader — Phase 178 (verified locally; unreleased). Live backfill now deletes ids `search_records/2` omits from visited rows; reindex reports `omitted:` and deletes nothing.
 - [x] Composite primary keys page without skipping or duplicating rows — Phase 178 (verified locally; unreleased). Open review warning WR-01: `distinct`/`group_by`/`union` in a caller `:query` can still defeat paging.
 - [x] `sync_related` resolvers receive records in every sync mode — Phase 179 (verified locally; unreleased). Oban resolvers get loaded trigger structs; triggers that no longer load are skipped, and a job whose triggers are all missing succeeds without calling the resolver.
-- [ ] Oban workers emit telemetry, including missing-record deletes.
+- [x] Oban workers emit telemetry, including missing-record deletes — Phase 180 (verified locally; unreleased). `[:scrypath, :oban, :upsert | :delete]` spans (start/stop/exception, flat bounded metadata, `outcome` + `error_kind`/`cancel_reason`) and `[:scrypath, :oban, :upsert, :missing_removed]` after confirmed deletes; `guides/telemetry.md` is the single 17-event catalog, enforced by an untagged drift contract test. Related-worker backend 4xx now cancels with `{:http_error, status}` (no body).
 - [x] Loads and backend calls are chunked — Phase 179 (verified locally; unreleased). Sync, loader, backfill, workers and Oban enqueue use fixed 1000-id chunks; results carry `tasks:` (one per chunk) and stop at the first failed chunk.
 - [x] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path — Phase 179 (verified locally; unreleased). Related jobs share the main `unique:` policy and report `conflict?: true` on collapse; job args decode without creating atoms, and bad args cancel.
 - [ ] Schema hooks are declared optional callbacks.
@@ -556,4 +557,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-25 after Phase 179 (v1.44 Sync correctness). Earlier source receipts remain historical.*
+*Last updated: 2026-10-25 after Phase 180 (v1.44 Sync correctness). Earlier source receipts remain historical.*
