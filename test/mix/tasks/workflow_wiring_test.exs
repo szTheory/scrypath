@@ -24,23 +24,43 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
 
     test "no_warn_undefined is limited to Oban modules" do
-      sites =
-        for path <- Path.wildcard("lib/**/*.ex"),
-            [_, arg] <-
-              Regex.scan(
-                ~r/@compile\s*\{\s*:no_warn_undefined\s*,\s*(.+?)\s*\}\s*$/m,
-                File.read!(path)
-              ),
-            do: {path, arg}
+      site_count =
+        "lib/**/*.ex"
+        |> Path.wildcard()
+        |> Enum.map(&assert_oban_suppressions!(File.read!(&1), &1))
+        |> Enum.sum()
 
-      assert length(sites) >= 3,
-             "expected at least 3 targeted Oban no_warn_undefined sites, found #{length(sites)}"
+      assert site_count >= 3,
+             "expected at least 3 targeted Oban no_warn_undefined sites, found #{site_count}"
+    end
 
-      for {path, arg} <- sites,
-          module <- arg |> Code.string_to_quoted!() |> List.wrap() do
-        assert match?({:__aliases__, _, [:Oban | _]}, module),
-               "#{path} suppresses undefined warnings for #{Macro.to_string(module)}, " <>
-                 "which is outside the Oban namespace"
+    test "the guard accepts targeted module and MFA forms independent of layout" do
+      for source <- [
+            "@compile {:no_warn_undefined, Oban}",
+            "@compile {:no_warn_undefined,\n  [Oban, Oban.Job]}",
+            "@compile no_warn_undefined: [Oban.Job]",
+            "@compile [no_warn_undefined: Oban.Job]",
+            "@compile {:no_warn_undefined, [{Oban, :insert, 2}]}",
+            "Module.put_attribute(__MODULE__, :compile, {:no_warn_undefined, [Oban]})"
+          ] do
+        assert assert_oban_suppressions!(source, "fixture") == 1
+      end
+    end
+
+    test "the guard rejects other modules, blanket and dynamic suppression forms" do
+      for source <- [
+            "@compile {:no_warn_undefined, [Oban, Foo]}",
+            "@compile {:no_warn_undefined,\n  [Foo]}",
+            "@compile no_warn_undefined: [Foo]",
+            "@compile [no_warn_undefined: Foo]",
+            "@compile {:no_warn_undefined, [{Foo, :insert, 2}]}",
+            "@compile {:no_warn_undefined, ObanLike}",
+            "@compile {:no_warn_undefined, :all}",
+            "@compile {:no_warn_undefined, targets}",
+            "Module.put_attribute(__MODULE__, :compile, {:no_warn_undefined, [Foo]})",
+            "@key :no_warn_undefined\n@compile {@key, targets}"
+          ] do
+        assert_raise ExUnit.AssertionError, fn -> assert_oban_suppressions!(source, "fixture") end
       end
     end
   end
@@ -590,6 +610,43 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute closeout_job =~ "id-token"
     end
   end
+
+  defp assert_oban_suppressions!(source, path) do
+    {_ast, {sites, tokens}} =
+      source
+      |> Code.string_to_quoted!()
+      |> Macro.prewalk({[], 0}, fn
+        {:no_warn_undefined, target} = node, {sites, tokens} ->
+          {node, {[target | sites], tokens}}
+
+        :no_warn_undefined = node, {sites, tokens} ->
+          {node, {sites, tokens + 1}}
+
+        node, acc ->
+          {node, acc}
+      end)
+
+    assert length(sites) == tokens, "#{path} contains an unparsed no_warn_undefined option"
+
+    for targets <- sites, target <- List.wrap(targets) do
+      assert oban_suppression_target?(target),
+             "#{path} suppresses undefined warnings for #{Macro.to_string(target)}, " <>
+               "which must be a literal Oban module or MFA"
+    end
+
+    length(sites)
+  end
+
+  defp oban_suppression_target?({:__aliases__, _, [:Oban | _]}), do: true
+
+  defp oban_suppression_target?({:{}, _, [module, function, arity]})
+       when is_atom(function) and is_integer(arity) and arity >= 0,
+       do: oban_suppression_target?(module)
+
+  defp oban_suppression_target?(module) when is_atom(module),
+    do: module == Oban or String.starts_with?(Atom.to_string(module), "Elixir.Oban.")
+
+  defp oban_suppression_target?(_target), do: false
 
   defp assert_ordered_steps(content, [first | rest]) do
     {start_idx, _} = :binary.match(content, first)
