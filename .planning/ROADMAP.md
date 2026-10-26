@@ -31,7 +31,7 @@ After v1.44 the [rolling roadmap](reference/ROLLING-ROADMAP.md) continues with v
 - [x] **Phase 178: Loader-routed backfill and full-key paging** - Backfill and reindex build documents through `Scrypath.Loader` and visit every row, including composite keys, proven against real Postgres (completed 2026-10-25)
 - [x] **Phase 179: Bounded id lists and related-sync parity** - Loads and backend calls are chunked, and `sync_related` behaves the same under inline and Oban with safe job-arg decoding (completed 2026-10-25)
 - [x] **Phase 180: Oban worker telemetry** - Upsert and delete workers emit stable telemetry spans and a missing-record delete event, documented and contract-tested (completed 2026-10-25)
-- [ ] **Phase 181: Schema hook contract and no-Oban build** - Schema hooks are declared optional callbacks and a no-Oban build stays warnings-clean in CI
+- [x] **Phase 181: Schema hook contract and no-Oban build** - Schema hooks are declared optional callbacks and a no-Oban build stays warnings-clean in CI (completed 2026-10-26)
 
 ### Phase Details
 
@@ -120,7 +120,7 @@ Plans:
   1. `search_records/2`, `search_document_id/1` and the other duck-typed schema hooks are declared as `@optional_callbacks` on a behaviour that appears in the generated HexDocs, and a test or compile check flags a hook implemented with the wrong arity.
   2. A build without Oban compiles with `--warnings-as-errors`, with no blanket warning suppression, and this check runs inside an existing CI lane on the phase PR.
 
-**Plans**: 2/2 plans executed
+**Plans**: 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -136,4 +136,4 @@ Plans:
 | 178. Loader-routed backfill and full-key paging | 5/5 | Complete    | 2026-10-25 |
 | 179. Bounded id lists and related-sync parity | 7/7 | Complete    | 2026-10-25 |
 | 180. Oban worker telemetry | 3/3 | Complete    | 2026-10-25 |
-| 181. Schema hook contract and no-Oban build | 2/2 | In Progress | - |
+| 181. Schema hook contract and no-Oban build | 2/2 | Complete    | 2026-10-26 |

@@ -32,8 +32,8 @@
 
 ### Hygiene (HYG)
 
-- [ ] **HYG-01**: The schema hooks (`search_records/2`, `search_document_id/1` and the other duck-typed hooks) are declared as `@optional_callbacks` on a behaviour, so they show up in HexDocs and the compiler checks them.
-- [ ] **HYG-02**: A build without Oban compiles with `--warnings-as-errors` and has a CI check, with no blanket warning suppression.
+- [x] **HYG-01**: The schema hooks (`search_records/2`, `search_document_id/1` and the other duck-typed hooks) are declared as `@optional_callbacks` on a behaviour, so they show up in HexDocs and the compiler checks them.
+- [x] **HYG-02**: A build without Oban compiles with `--warnings-as-errors` and has a CI check, with no blanket warning suppression.
 
 ### Testing (TEST)
 
@@ -74,8 +74,8 @@
 | OBS-01 | Phase 180 | Complete |
 | OBS-02 | Phase 180 | Complete |
 | OBS-03 | Phase 180 | Complete |
-| HYG-01 | Phase 181 | Pending |
-| HYG-02 | Phase 181 | Pending |
+| HYG-01 | Phase 181 | Complete |
+| HYG-02 | Phase 181 | Complete |
 | TEST-06 | Phase 178 | Complete |
 
 **Coverage:**

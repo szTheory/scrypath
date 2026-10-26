@@ -4,18 +4,18 @@ milestone: v1.44
 milestone_name: Sync correctness
 current_phase: 181
 current_phase_name: Schema hook contract and no-Oban build
-status: executing
-stopped_at: Phase 181 planned (2 plans), ready to execute
-last_updated: "2026-10-26T15:55:48.674Z"
+status: completed
+stopped_at: Phase 181 complete — all phases complete
+last_updated: "2026-10-26T16:18:59.440Z"
 last_activity: 2026-10-26
-last_activity_desc: Phase 181 execution started
-state_head: f21cd4b196184d96306e6b411a850f1e187737d6
+last_activity_desc: Phase 181 complete
+state_head: b9b11d530f68d886aaf08fc3aa58f23973ff7b85
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 17
-  completed_plans: 15
-  percent: 75
+  completed_plans: 17
+  percent: 100
 ---
 
 # Project State
@@ -86,12 +86,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 181 (Schema hook contract and no-Oban build) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 181
-Last activity: 2026-10-26 — Phase 181 execution started
+Phase: 181
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-10-26 — Phase 181 complete
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Delivered Evidence
 
@@ -148,7 +148,7 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-26T00:13:24.375Z
-Stopped at: Phase 180 complete, ready to plan Phase 181
+Stopped at: Phase 181 complete — all phases complete
 Resume file: .planning/phases/180-oban-worker-telemetry/180-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
