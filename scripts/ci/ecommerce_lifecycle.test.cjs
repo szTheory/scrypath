@@ -47,7 +47,7 @@ if (args[0] === "compose" && args.includes("up") && process.env.FAKE_DOCKER_UP_F
 if (args[0] === "compose" && args.includes("run") && process.env.FAKE_DOCKER_RUN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_RUN_FAIL));
 if (args[0] === "compose" && args.includes("down") && process.env.FAKE_DOCKER_DOWN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_DOWN_FAIL));
 if (args[0] === "compose" && args.includes("logs")) process.stdout.write("fake compose diagnostics\\n");
-if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1") process.stdout.write("browser-container\\n");
+if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1" && process.env.FAKE_DOCKER_CONFIG_FAIL !== "1") process.stdout.write("browser-container\\n");
 if (args[0] === "cp" && process.env.FAKE_DOCKER_CP_FAIL === "1") process.exit(42);
 if (args[0] === "ps" && process.env.FAKE_LEAK_CONTAINER === "1") process.stdout.write("owned-container\\n");
 if (args[0] === "volume" && process.env.FAKE_LEAK_VOLUME === "1") process.stdout.write("owned-volume\\n");
@@ -93,6 +93,7 @@ function runVerifier(t, args, extraEnv = {}) {
       ...process.env,
       PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
       FAKE_DOCKER_LOG: logPath,
+      FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
       ...extraEnv,
     },
   });
