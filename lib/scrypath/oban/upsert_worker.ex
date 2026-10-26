@@ -10,23 +10,45 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     alias Scrypath.Oban.IndexingAck
     alias Scrypath.Oban.JobArgs
     alias Scrypath.Projection
+    alias Scrypath.Telemetry
 
     @impl Oban.Worker
-    def perform(%Oban.Job{args: args}) do
+    def perform(%Oban.Job{args: args} = oban_job) do
       with {:ok, job} <- JobArgs.decode_upsert(args),
            {:ok, config} <-
              JobArgs.resolve_config([backend: job.backend, sync_mode: :manual] ++ job.opts) do
         config = Keyword.put(config, :index_name, job.index)
-        sync(job, args, config)
+        metadata = start_metadata(job, config, oban_job)
+
+        # The span starts only once decode and config succeeded, so every tag is known.
+        # The stop map never carries document_count, so the start count stands.
+        Telemetry.span([:scrypath, :oban, :upsert], metadata, fn ->
+          {result, facts} = sync(job, args, config, metadata)
+          {result, Map.merge(Telemetry.job_stop_metadata(result), facts)}
+        end)
       else
         {:error, tag} -> {:cancel, {:invalid_job, tag}}
       end
     end
 
+    # sync_mode: :oban overrides the :manual the config resolves with: extra merges last.
+    defp start_metadata(job, config, %Oban.Job{} = oban_job) do
+      Telemetry.common_metadata(job.schema, config,
+        sync_mode: :oban,
+        attempt: oban_job.attempt,
+        max_attempts: oban_job.max_attempts,
+        document_count: Chunks.distinct_count(job.document_ids)
+      )
+    end
+
+    # Returns {result, facts}: facts are the upsert-only stop keys, present only when a
+    # load or legacy snapshot produced a plan. Counts describe the plan; the outcome in
+    # the stop metadata says whether it was carried out.
     defp sync(
            %{backend: backend, schema: schema_module, document_ids: document_ids},
            args,
-           config
+           config,
+           _metadata
          ) do
       # Load the records as they are now; a retried or delayed job must never
       # send an older copy over newer index data.
@@ -34,32 +56,44 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
         {:ok, records, missing_ids} ->
           documents = Enum.map(records, &Projection.document(schema_module, &1))
 
-          with :ok <- write(backend, :upsert_documents, schema_module, documents, config) do
-            write(backend, :delete_documents, schema_module, missing_ids, config)
-          end
+          facts = %{
+            source: :loaded,
+            upserted_count: length(documents),
+            missing_count: Chunks.distinct_count(missing_ids)
+          }
+
+          result =
+            with :ok <- write(backend, :upsert_documents, schema_module, documents, config) do
+              write(backend, :delete_documents, schema_module, missing_ids, config)
+            end
+
+          {result, facts}
 
         {:error, reason} when reason in [:repo_required, :search_records_required] ->
           # Jobs enqueued before 0.3.16 carry a document snapshot. When this app can't
           # load records, write that snapshot as those versions did rather than drop it.
           case legacy_snapshot(args, document_ids) do
             {:ok, documents} ->
-              write(backend, :upsert_documents, schema_module, documents, config)
+              result = write(backend, :upsert_documents, schema_module, documents, config)
+
+              {result,
+               %{source: :legacy_snapshot, upserted_count: length(documents), missing_count: 0}}
 
             :error ->
-              {:cancel, {:invalid_job, reason}}
+              {{:cancel, {:invalid_job, reason}}, %{}}
           end
 
         # search_records/2 returned something other than a list: an app bug that no retry
         # fixes. The tag names the problem without the returned value.
         {:error, {:invalid_search_records, _returned}} ->
-          {:cancel, {:invalid_job, :invalid_search_records}}
+          {{:cancel, {:invalid_job, :invalid_search_records}}, %{}}
 
         # An id the key's Ecto type cannot cast ("abc" for an integer key): no retry fixes it.
         {:error, {:invalid_arg, _key} = tag} ->
-          {:cancel, {:invalid_job, tag}}
+          {{:cancel, {:invalid_job, tag}}, %{}}
 
         {:error, reason} ->
-          {:error, reason}
+          {{:error, reason}, %{}}
       end
     end
 
