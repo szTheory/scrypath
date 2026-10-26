@@ -4,16 +4,16 @@ milestone: v1.44
 milestone_name: Sync correctness
 current_phase: 181
 current_phase_name: Schema hook contract and no-Oban build
-status: planning
-stopped_at: Phase 180 complete, ready to plan Phase 181
-last_updated: "2026-10-26T02:32:15.487Z"
-last_activity: 2026-10-25
-last_activity_desc: Phase 180 complete, transitioned to Phase 181
-state_head: 84214c493d0e56cbeee1bb1496d2af7887a04728
+status: executing
+stopped_at: Phase 181 planned (2 plans), ready to execute
+last_updated: "2026-10-26T13:32:41.283Z"
+last_activity: 2026-10-26
+last_activity_desc: Phase 181 planned — 2 plans in 2 waves
+state_head: 6a8c4ff8b6ddfb827a73135baba356fd7e27f0bb
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 15
+  total_plans: 17
   completed_plans: 15
   percent: 75
 ---
@@ -86,10 +86,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 181 — Schema hook contract and no-Oban build
+Phase: 181 (Schema hook contract and no-Oban build) — READY TO EXECUTE
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-25 — Phase 180 complete, transitioned to Phase 181
+Status: Ready to execute
+Last activity: 2026-10-26 — Phase 181 planned (2 plans, 2 waves)
 
 Progress: [████████░░] 75%
 

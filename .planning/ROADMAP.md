@@ -123,7 +123,10 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
+**Wave 1**
 - [ ] 181-01-PLAN.md — Isolated, self-proving no-Oban build (fixes the false green), RelatedEnqueue on the shared job builder, check composed into `verify.core` (HYG-02, wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 181-02-PLAN.md — Hooks as documented `@optional_callbacks` on `Scrypath.Schema`, injected `@behaviour`, wrong-arity compile warning (HYG-01, wave 2)
 
 ### Progress
