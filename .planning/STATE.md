@@ -5,11 +5,11 @@ milestone_name: Sync correctness
 current_phase: 181
 current_phase_name: Schema hook contract and no-Oban build
 status: completed
-stopped_at: Phase 181 complete — all phases complete
-last_updated: "2026-10-26T16:18:59.440Z"
+stopped_at: Phase 181 warnings fixed; security verified; hosted validation and v1.44 shipping pending
+last_updated: "2026-10-26T17:13:02Z"
 last_activity: 2026-10-26
-last_activity_desc: Phase 181 complete
-state_head: b9b11d530f68d886aaf08fc3aa58f23973ff7b85
+last_activity_desc: Phase 181 review warnings fixed and local gates passed; security verified
+state_head: c47c1216d0ae2e5c491751551f9aa019c619b3c6
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,14 +22,24 @@ progress:
 
 ## v1.44 Sync correctness — started 2026-10-25
 
-Requirements (15) and the roadmap are defined: Phases 178–181 in [ROADMAP.md](ROADMAP.md), 15/15 requirements mapped. Phase 178 (Loader-routed backfill and full-key paging) is next and not started. Scope comes from section 2 of [the rolling roadmap](reference/ROLLING-ROADMAP.md) and is recorded in PROJECT.md under Current Milestone.
+All four phases (178–181) and 17 plans are complete locally. Phase 181's three
+review warnings are fixed in `ee543836`, `1e2193bc`, `66598ccd` and `c47c1216`;
+its five informational findings remain open. The authored security register is
+verified at L1 (8/8 threats closed, no new risk acceptance). Validation is audited:
+all local coverage passes, but exact-SHA hosted core evidence remains pending,
+so `181-VALIDATION.md` retains `nyquist_compliant: false`.
 
-- 178 Loader-routed backfill and full-key paging: LOAD-01–03, PAGE-01–02, TEST-06
-- 179 Bounded id lists and related-sync parity: PAGE-03, FAN-01–03
-- 180 Oban worker telemetry: OBS-01–03
-- 181 Schema hook contract and no-Oban build: HYG-01–02
+Fresh checks at `c47c1216`: core 953 tests + 5 properties, 0 failures (including
+strict docs and isolated no-Oban build); package 81 tests, 0 failures; explicit
+docs-contract/package-metadata suite 79 tests, 0 failures. These are local results,
+not hosted receipts. See Phase 181's REVIEW-FIX, SECURITY and VALIDATION records.
 
-Open for discuss-phase: chunk-size configurability (Phase 179), what a related resolver receives under Oban when trigger records were deleted (Phase 179), and which existing CI lane hosts the real-Postgres loader tests (Phase 178; the root `backend` lane has Meilisearch but no Postgres service today). Maintainer decisions: composite primary keys page on the full key (not a guard), and ecosystem research is skipped for this library-internal scope.
+Continue from `/Users/jon/projects/scrypath`, branch
+`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit is
+preserved and excluded from fix commits. Next: `$gsd-ship` to reconcile the PR,
+push the candidate and collect exact-SHA required gates. Then finish the hosted
+validation row and audit/close v1.44. Merges/releases still need maintainer
+confirmation. Do not replay completed phases or start v1.45 yet.
 
 ## v1.43 closed — 2026-10-25 (historical)
 
@@ -87,9 +97,9 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 181
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-10-26 — Phase 181 complete
+Plan: 2/2 complete
+Status: Review warnings fixed; local gates and security pass; hosted validation/shipping pending
+Last activity: 2026-10-26 — Phase 181 post-review follow-up
 
 Progress: [██████████] 100%
 
@@ -147,9 +157,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-26T00:13:24.375Z
-Stopped at: Phase 181 complete — all phases complete
-Resume file: .planning/phases/180-oban-worker-telemetry/180-CONTEXT.md
+Last session: 2026-10-26T17:13:02Z
+Stopped at: Review warnings fixed; security verified; validation awaits hosted core; next $gsd-ship
+Resume file: .planning/phases/181-schema-hook-contract-and-no-oban-build/.continue-here.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
