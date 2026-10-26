@@ -44,8 +44,9 @@ The `[:scrypath, :oban, :upsert]` and `[:scrypath, :oban, :delete]` spans wrap t
 Queue lifecycle stays on Oban's own events. To see the queue, job id, and job state, join with `[:oban, :job, :start]`, `[:oban, :job, :stop]`, and `[:oban, :job, :exception]`, which run in the same process as the Scrypath span:
 
 - A job whose args fail to decode, or whose config cannot be resolved, emits **no** Scrypath event. It shows up only as `[:oban, :job, :stop]` with `state` `:cancelled`, and as a row in `[:scrypath, :operator, :failed_work, :observed]`.
-- When the worker returns `{:error, _}`, Oban reports an `[:oban, :job, :exception]` event with `state` `:failure`. Scrypath reports the same job as `:stop` with `outcome` `:error`. The Scrypath `:exception` event means the job raised.
-- To alert on a job that has used its last attempt, match `attempt == max_attempts` and `outcome != :ok` on the worker span's `:stop` event.
+- When the worker returns `{:error, _}` or raises, Oban reports an `[:oban, :job, :exception]` event. Its `state` is `:failure` while attempts remain and `:discard` on the last attempt, when Oban stops retrying. Scrypath reports a returned `{:error, _}` as `:stop` with `outcome` `:error`. The Scrypath `:exception` event means the job raised; it carries no `outcome`.
+- A job that hits its Oban timeout or is killed mid-run emits no Scrypath `:stop` or `:exception`. Oban still reports it as `[:oban, :job, :exception]` with the same `state` rule. A job whose node dies outright emits nothing until Oban rescues it.
+- To alert on a job that has used its last attempt, combine three matches. On the worker span's `:stop`, match `attempt == max_attempts` and `outcome != :ok`. On the worker span's `:exception`, match `attempt == max_attempts`. To also catch timeouts and killed jobs, match Oban's `[:oban, :job, :exception]` with `state` `:discard` and `worker` `"Scrypath.Oban.UpsertWorker"` or `"Scrypath.Oban.DeleteWorker"`. The Oban match alone covers all three cases but carries none of the Scrypath tags.
 
 ## Outcome, error_kind and cancel_reason
 
@@ -86,6 +87,6 @@ The `reason` and `stacktrace` on `:exception` events are diagnostic only. Log th
 ## Dashboards
 
 - Alert on the rate of `outcome` `:cancel` on the worker spans: a cancelled job will not be retried, so its index change is lost until the next sync or backfill.
-- Alert on final-attempt failures: `attempt == max_attempts` with `outcome != :ok`.
+- Alert on final-attempt failures: `attempt == max_attempts` with `outcome != :ok` on `:stop`, plus `attempt == max_attempts` on `:exception`. Back that with Oban's `[:oban, :job, :exception]` at `state` `:discard` for jobs that time out or are killed (see [Oban jobs](#oban-jobs)).
 - Chart `[:scrypath, :oban, :upsert, :missing_removed]` `count` per schema. A rise usually tracks deletes or soft deletes in the app; do not page on it.
 - For search health, backend requests, and alert-fatigue guidance, see [Search backend operations](../docs/search-backend-sre.md).
