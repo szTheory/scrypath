@@ -347,6 +347,30 @@ defmodule Scrypath.TelemetryTest do
              "backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`"
   end
 
+  describe "job_stop_metadata/1" do
+    alias Scrypath.Telemetry
+
+    for {label, result, expected} <- [
+          {":ok", :ok, %{outcome: :ok}},
+          {"an atom error", {:error, :timeout}, %{outcome: :error, error_kind: :timeout}},
+          {"an HTTP error with a body", {:error, {:http_error, 503, "body"}},
+           %{outcome: :error, error_kind: :http}},
+          {"a bare cancel tag", {:cancel, {:invalid_job, :invalid_search_records}},
+           %{outcome: :cancel, cancel_reason: :invalid_search_records}},
+          {"a tuple cancel tag", {:cancel, {:invalid_job, {:invalid_arg, "document_ids"}}},
+           %{outcome: :cancel, cancel_reason: :invalid_arg}},
+          {"free-text cancel", {:cancel, "free text"}, %{outcome: :cancel, cancel_reason: :other}}
+        ] do
+      test "maps #{label}" do
+        metadata = Telemetry.job_stop_metadata(unquote(Macro.escape(result)))
+
+        assert metadata == unquote(Macro.escape(expected))
+        refute Map.has_key?(metadata, :document_count)
+        refute Map.has_key?(metadata, :result_kind)
+      end
+    end
+  end
+
   defp capture_events(prefixes, fun) do
     parent = self()
     ref = make_ref()
