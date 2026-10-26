@@ -221,7 +221,10 @@ defmodule Scrypath.Oban.Enqueue do
   defp job_document_ids(%{args: %{"document_ids" => ids}}) when is_list(ids), do: ids
   defp job_document_ids(_job), do: []
 
-  defp job_changeset(payload, worker, config, job_opts) do
+  @doc false
+  # Shared runtime-guarded job builder used by the main and related enqueue paths.
+  @spec job_changeset(map(), String.t() | module(), keyword(), keyword()) :: Changeset.t()
+  def job_changeset(payload, worker, config, job_opts) do
     base = [
       worker: worker,
       queue: to_string(Config.oban_queue(config)),
