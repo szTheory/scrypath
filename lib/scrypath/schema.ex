@@ -21,6 +21,27 @@ defmodule Scrypath.Schema do
   - `:preload`
 
   The macro does not generate runtime APIs such as `search/2` or `reindex/1`.
+
+  ## Hooks
+
+  `use Scrypath` makes the schema module implement the `Scrypath.Schema` behaviour.
+  Define these callbacks on the schema module to change how Scrypath builds and loads
+  documents:
+
+  - `c:search_document/1`: build the document yourself, for computed or nested values
+    that `fields:` cannot express.
+  - `c:search_document_id/1`: use a document id other than the `document_id:` field.
+  - `c:search_records/2`: load records by document id yourself, for custom ids,
+    soft deletes or preloads that a plain Ecto query cannot express.
+
+  All three are optional. When a hook is absent, Scrypath projects the declared
+  `fields:`, reads the `document_id:` field and loads records with an Ecto query.
+
+  A hook defined at the wrong arity, such as `search_records/1`, triggers a compile
+  warning, because Scrypath would otherwise ignore it at runtime.
+
+  If the schema module uses `@impl` for any other behaviour, Elixir expects `@impl`
+  on every callback, so mark the hooks with `@impl Scrypath.Schema`.
   """
 
   alias Scrypath.Options
