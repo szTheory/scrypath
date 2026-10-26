@@ -1,6 +1,7 @@
 defmodule Scrypath.Telemetry do
   @moduledoc false
 
+  alias Scrypath.Chunks
   alias Scrypath.Config
 
   @type event_name :: [atom()]
@@ -54,6 +55,23 @@ defmodule Scrypath.Telemetry do
 
   def stop_metadata(result, extra) do
     Map.merge(%{result_kind: result_kind(result)}, Map.new(extra))
+  end
+
+  @doc false
+  # Start metadata for an Oban upsert or delete worker span, shared so both stay in step.
+  # sync_mode: :oban overrides the :manual the worker config resolves with (extra merges
+  # last). index is the one the job writes to: a backend's index_name/2 may rebuild the
+  # name from the current prefix config, which differs from the queued name after a
+  # deploy that changes the prefix.
+  @spec job_start_metadata(module(), keyword(), map(), [term()], String.t()) :: metadata()
+  def job_start_metadata(schema_module, config, oban_job, document_ids, index) do
+    common_metadata(schema_module, config,
+      sync_mode: :oban,
+      attempt: oban_job.attempt,
+      max_attempts: oban_job.max_attempts,
+      document_count: Chunks.distinct_count(document_ids),
+      index: index
+    )
   end
 
   @doc false
