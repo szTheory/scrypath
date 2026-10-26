@@ -1,13 +1,16 @@
 defmodule Scrypath.TestSupport.TelemetryCapture do
   @moduledoc false
 
-  # Captures telemetry events by FULL event name for the current test process.
+  # Captures telemetry events by FULL event name and sends them to the test process that
+  # attached the capture.
   #
   #     capture = TelemetryCapture.attach([[:scrypath, :oban, :delete, :start]])
   #     ... run the code under test ...
   #     events = TelemetryCapture.collect(capture)
   #
-  # Handlers run in the emitting process, so events from Tasks still arrive here. The
+  # The handler is global: it forwards matching events from EVERY process, including
+  # other tests running at the same time. Use it only in `async: false` test modules.
+  # Because it is not process-scoped, events from Tasks the test starts arrive too. The
   # handler is detached on test exit; call detach/1 earlier to stop capturing.
 
   import ExUnit.Assertions, only: [flunk: 1]
