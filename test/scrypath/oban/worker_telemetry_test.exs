@@ -9,6 +9,7 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
   alias Scrypath.TestSupport.ObanTelemetryScenarios.GoneLoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.LoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.RaisingBackend
+  alias Scrypath.TestSupport.ObanTelemetryScenarios.RebuiltNameBackend
   alias Scrypath.TestSupport.ObanTelemetryScenarios.RecordingBackend
   alias Scrypath.TestSupport.TelemetryCapture
 
@@ -287,6 +288,28 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
 
       assert {{:raised, %RuntimeError{}}, events} = Scenarios.run(:delete_raise)
       assert names(events) == [@delete_start, @delete_exception]
+    end
+  end
+
+  describe "index tag" do
+    # The real backend rebuilds the name from the current prefix and ignores :index_name,
+    # so after a prefix change it would name an index the job never wrote to.
+    test "the delete span names the index the job writes to, not a rebuilt name" do
+      args = Scenarios.delete_args(QueryablePost, RebuiltNameBackend, [1])
+
+      {:ok, events} = capture(fn -> DeleteWorker.perform(Scenarios.job(args)) end)
+
+      assert names(events) == [@delete_start, @delete_stop]
+      for event <- events, do: assert(event.metadata.index == "tenant_queryable_post")
+    end
+
+    test "the upsert span and missing_removed name the index the job writes to" do
+      args = Scenarios.upsert_args(LoaderPost, RebuiltNameBackend, [1, 404])
+
+      {:ok, events} = capture(fn -> UpsertWorker.perform(Scenarios.job(args)) end)
+
+      assert names(events) == [@upsert_start, @missing_removed, @upsert_stop]
+      for event <- events, do: assert(event.metadata.index == "tenant_queryable_post")
     end
   end
 

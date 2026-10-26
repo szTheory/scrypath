@@ -32,12 +32,16 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     end
 
     # sync_mode: :oban overrides the :manual the config resolves with: extra merges last.
+    # index is the one the job writes to (job.index, set as :index_name above). A backend's
+    # index_name/2 may rebuild the name from the current prefix config instead, which
+    # differs from the queued name after a deploy that changes the prefix.
     defp start_metadata(job, config, %Oban.Job{} = oban_job) do
       Telemetry.common_metadata(job.schema, config,
         sync_mode: :oban,
         attempt: oban_job.attempt,
         max_attempts: oban_job.max_attempts,
-        document_count: Chunks.distinct_count(job.document_ids)
+        document_count: Chunks.distinct_count(job.document_ids),
+        index: job.index
       )
     end
 

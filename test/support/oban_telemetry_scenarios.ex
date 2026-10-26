@@ -96,6 +96,35 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
         do: {:error, :not_implemented}
     end
 
+    # Names its index the way Scrypath.Meilisearch.Naming does: rebuilt from the schema,
+    # ignoring the :index_name the worker sets from the job. Stands for a prefix that
+    # changed between enqueue and run.
+    defmodule RebuiltNameBackend do
+      @moduledoc false
+      @behaviour Scrypath.Backend
+
+      @impl true
+      def name, do: :rebuilt_name
+
+      @impl true
+      def index_name(_schema_module, _config), do: "renamed_prefix_post"
+
+      @impl true
+      def upsert_documents(_schema_module, documents, _config),
+        do: {:ok, %{document_ids: Enum.map(documents, & &1.id)}}
+
+      @impl true
+      def delete_documents(_schema_module, document_ids, _config),
+        do: {:ok, %{document_ids: document_ids}}
+
+      @impl true
+      def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+      @impl true
+      def search_facet_values(_schema, _facet, _query, _opts, _config),
+        do: {:error, :not_implemented}
+    end
+
     # Fails the second delete_documents call in this process, so a two-chunk delete halts
     # after the first chunk. Call reset/0 before each use.
     defmodule SecondDeleteFailsBackend do
