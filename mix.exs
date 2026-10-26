@@ -214,6 +214,7 @@ defmodule Scrypath.MixProject do
         "guides/operator-mix-tasks.md",
         "guides/relevance-tuning.md",
         "guides/per-query-tuning-pipeline.md",
+        "guides/telemetry.md",
         "docs/releasing.md",
         "docs/operator-support.md",
         "docs/search-backend-sre.md",
@@ -251,6 +252,7 @@ defmodule Scrypath.MixProject do
           "guides/operator-mix-tasks.md",
           "guides/relevance-tuning.md",
           "guides/per-query-tuning-pipeline.md",
+          "guides/telemetry.md",
           "guides/sync-modes-and-visibility.md"
         ],
         Maintainers: [
