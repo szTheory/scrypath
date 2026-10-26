@@ -5,11 +5,11 @@ milestone_name: Sync correctness
 current_phase: 180
 current_phase_name: Oban worker telemetry
 status: planning
-stopped_at: Phase 179 complete, ready to plan Phase 180
-last_updated: "2026-10-25T22:14:43.528Z"
+stopped_at: Phase 180 context gathered
+last_updated: "2026-10-26T00:13:24.506Z"
 last_activity: 2026-10-25
 last_activity_desc: Phase 179 complete, transitioned to Phase 180
-state_head: ac5100464ff49ad979bd836a17c7a526f5bbbdfa
+state_head: ea43c31d9ec32d764f6cb8195ccbf522d7658ac5
 progress:
   total_phases: 4
   completed_phases: 2
@@ -147,9 +147,9 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-25T20:32:17.062Z
-Stopped at: Phase 179 complete, ready to plan Phase 180
-Resume file: .planning/phases/179-bounded-id-lists-and-related-sync-parity/179-CONTEXT.md
+Last session: 2026-10-26T00:13:24.375Z
+Stopped at: Phase 180 context gathered
+Resume file: .planning/phases/180-oban-worker-telemetry/180-CONTEXT.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
