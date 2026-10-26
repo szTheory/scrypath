@@ -3,6 +3,10 @@ defmodule Scrypath.SchemaTest do
 
   def resolve_fan_out(_records), do: []
 
+  defmodule OtherBehaviour do
+    @callback label() :: String.t()
+  end
+
   describe "__scrypath__/1" do
     test "returns normalized schema metadata" do
       assert SearchablePost.__scrypath__(:config) == %{
@@ -231,6 +235,55 @@ defmodule Scrypath.SchemaTest do
 
                @impl Scrypath.Schema
                def search_document(record), do: %{id: record.id}
+             end
+             """) == []
+    end
+
+    test "mixed behaviours warn about every unannotated schema hook" do
+      diagnostics =
+        compile_diagnostics("""
+        defmodule Scrypath.SchemaHookMixedMissingImplFixture do
+          use Scrypath, fields: [:title]
+          @behaviour Scrypath.SchemaTest.OtherBehaviour
+
+          @impl Scrypath.SchemaTest.OtherBehaviour
+          def label, do: "Post"
+
+          def search_document(record), do: %{id: record.id}
+          def search_document_id(record), do: record.id
+          def search_records(ids, _context), do: ids
+        end
+        """)
+
+      assert length(diagnostics) == 3
+
+      for {name, arity} <- @hooks do
+        assert Enum.any?(diagnostics, fn diagnostic ->
+                 diagnostic.severity == :warning and
+                   diagnostic.message =~ "@impl" and
+                   diagnostic.message =~ "#{name}/#{arity}" and
+                   diagnostic.message =~ "Scrypath.Schema"
+               end)
+      end
+    end
+
+    test "mixed behaviours compile without warnings when schema hooks are annotated" do
+      assert compile_diagnostics("""
+             defmodule Scrypath.SchemaHookMixedImplFixture do
+               use Scrypath, fields: [:title]
+               @behaviour Scrypath.SchemaTest.OtherBehaviour
+
+               @impl Scrypath.SchemaTest.OtherBehaviour
+               def label, do: "Post"
+
+               @impl Scrypath.Schema
+               def search_document(record), do: %{id: record.id}
+
+               @impl Scrypath.Schema
+               def search_document_id(record), do: record.id
+
+               @impl Scrypath.Schema
+               def search_records(ids, _context), do: ids
              end
              """) == []
     end

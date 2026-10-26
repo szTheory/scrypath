@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## Unreleased
+
+### Upgrade notes
+
+* **Schema hooks now implement `Scrypath.Schema`.** `use Scrypath` adds this
+  behaviour automatically. If your schema uses `@impl` for another behaviour,
+  add `@impl Scrypath.Schema` before each implemented `search_document/1`,
+  `search_document_id/1` and `search_records/2` hook. Otherwise Elixir emits
+  missing-`@impl` warnings, which fail builds using `--warnings-as-errors`.
+  Hooks must be public `def` functions; a private `defp` at a callback's arity
+  also produces a compiler warning. The hooks remain optional.
+
 ## [0.3.17](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.16...scrypath-v0.3.17) (2026-10-25)
 
 
