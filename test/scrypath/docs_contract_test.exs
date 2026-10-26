@@ -668,8 +668,9 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "search backend SRE doc keeps telemetry table and anti-alert-fatigue posture" do
+  test "search backend SRE doc links the telemetry guide and keeps anti-alert-fatigue posture" do
     assert_contains_all(@search_backend_sre_docs, [
+      "../guides/telemetry.md",
       "[:scrypath, :search]",
       "[:scrypath, :meilisearch, :request]",
       "[:scrypath, :operator, :failed_work, :observed]",
