@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 03
 subsystem: oban
 status: complete
+requirements-completed: [PAGE-03, FAN-02]
 tags: [chunking, oban, uniqueness, page-03, fan-02]
 requires: [179-01]
 provides:

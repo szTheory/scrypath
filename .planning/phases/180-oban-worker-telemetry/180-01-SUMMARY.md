@@ -3,6 +3,7 @@ phase: 180-oban-worker-telemetry
 plan: 01
 subsystem: telemetry
 status: complete
+requirements-completed: [OBS-01, OBS-02]
 tags: [telemetry, oban, observability, workers]
 requires: []
 provides:

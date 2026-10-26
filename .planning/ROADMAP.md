@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- 🚧 **v1.44 Sync correctness** — Phases 178–181 (4 phases complete locally; shipping/closeout pending) — [active section below](#v144--sync-correctness)
+- 🚧 **v1.44 Sync correctness** — Phases 178–181 (4 phases verified; audit tech_debt; closeout pending) — [active section below](#v144--sync-correctness)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
@@ -16,7 +16,24 @@
 
 ## Current Posture
 
-**v1.44 Sync correctness is active pending merge and milestone closeout.** Phases 178–181 and all 17 plans are complete. [PR #122](https://github.com/szTheory/scrypath/pull/122) contains all four phases; its candidate `cd3eb07f` passed the five required gates in [run 40368375825](https://github.com/szTheory/scrypath/actions/runs/40368375825), including hosted no-Oban, real-Postgres and mounted proof. Phase 181 review warnings are fixed, security controls are verified, and its hosted validation gap is closed. The shipping-record commit still needs final-head checks; milestone audit and closeout remain pending. Next after final-head CI: `$gsd-audit-milestone v1.44`; do not replay Phase 178. Scope comes from section 2 of the [rolling roadmap](reference/ROLLING-ROADMAP.md) and the 15 requirements in [REQUIREMENTS.md](REQUIREMENTS.md). This milestone changes the core library, its examples, tests, guides and existing CI lanes; there is no `scrypath_ops` or visible UI work, and no new required CI job. The maintainer declined additional review; no merge is claimed.
+**v1.44 Sync correctness is implemented and audited; merge and milestone closeout remain pending.**
+Phases 178–181 and all 17 plans are complete. The
+[milestone audit](v1.44-MILESTONE-AUDIT.md) is `tech_debt`: 15/15 requirements,
+4/4 phases, 8/8 integration paths and 7/7 required flows. The final branch source
+`433c8343` passed five required gates, coverage and closeout-attestation in
+[run 40369591304](https://github.com/szTheory/scrypath/actions/runs/40369591304);
+[the final-head receipt](reference/v1.44-final-head-receipt.json) is source-bound,
+not merged-main or release proof. PR #122 remains open. Audit metadata repairs
+are a later planning-only successor and do not extend that attestation.
+Next: `$gsd-validate-phase 180` for its contradictory Nyquist flag, then
+`$gsd-complete-milestone v1.44` with explicit disposition of the recorded debt.
+Phase 178 warnings and Phase 181 info remain open. Advisory deep-quality fails
+the dependency audit; full E2E has 19 known standalone DNS failures plus one
+stale job-error assertion (156 pass, 20 fail, 13 skip). The maintainer waived
+another review; no new risk acceptance is implied. Scope remains the 15
+requirements in REQUIREMENTS and section 2 of the rolling roadmap: core library,
+examples, tests, docs and existing CI lanes; no visible UI work or new required
+job. Do not replay Phase 178 or activate v1.45 during closeout.
 
 v1.43 completed all 20 OPUX requirements (OPUX-09–OPUX-28) across Phases 173–177, with 21/21 plans and five passing phase verifications. The terminal exact-source closeout is recorded in [the v1.43 final receipt](reference/v1.43-final-receipt.json), which closes the last blocking threat, T-177-05. See [the v1.43 audit](milestones/v1.43-MILESTONE-AUDIT.md).
 

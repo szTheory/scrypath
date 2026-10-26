@@ -3,6 +3,7 @@ phase: 178-loader-routed-backfill-and-full-key-paging
 plan: 03
 subsystem: backfill
 status: complete
+requirements-completed: [PAGE-01, PAGE-02, LOAD-03]
 tags: [backfill, reindex, keyset-paging, composite-primary-key, ecto, property-test]
 requires:
   - 178-01 (real-DB harness: LoaderBackfillCases, SQLite sandbox repo, Postgres repo)

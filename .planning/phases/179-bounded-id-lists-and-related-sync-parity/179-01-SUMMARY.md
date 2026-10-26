@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 01
 subsystem: sync
 status: complete
+requirements-completed: [PAGE-03, FAN-01]
 tags: [chunking, sync, loader, page-03, fan-01]
 requires: []
 provides:

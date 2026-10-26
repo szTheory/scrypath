@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 02
 subsystem: sync
 status: complete
+requirements-completed: [PAGE-03]
 tags: [chunking, backfill, reindex, page-03]
 requires: [179-01]
 provides:

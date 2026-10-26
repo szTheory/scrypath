@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 06
 subsystem: docs
 status: complete
+requirements-completed: [FAN-01, PAGE-03, FAN-02, FAN-03]
 tags: [docs, fan-out, chunking, oban, fan-01, fan-02, fan-03, page-03]
 requires:
   - 179-02 (chunked backfill writes, tasks on batch results)

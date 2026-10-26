@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 07
 subsystem: examples
 status: complete
+requirements-completed: [FAN-01]
 tags: [examples, oban, fan-out, related-sync, fan-01, ecommerce, phoenix-example]
 requires:
   - 179-01 (Loader tolerance for owner-only schemas without :preload)

@@ -3,6 +3,7 @@ phase: 180-oban-worker-telemetry
 plan: 03
 subsystem: telemetry
 status: complete
+requirements-completed: [OBS-03]
 tags: [telemetry, contract-test, docs-drift, oban, observability]
 requires:
   - "180-01: worker spans, missing_removed event, ObanTelemetryScenarios.run/1"

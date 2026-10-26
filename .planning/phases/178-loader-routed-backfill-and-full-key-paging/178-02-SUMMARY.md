@@ -3,6 +3,7 @@ phase: 178-loader-routed-backfill-and-full-key-paging
 plan: 02
 subsystem: verification / CI
 status: complete
+requirements-completed: [TEST-06]
 tags: [ci, postgres, mix-task, verify, TEST-06]
 requires:
   - 178-01 (LoaderBackfillCases, PostgresRepo, compose postgres service on 5434)

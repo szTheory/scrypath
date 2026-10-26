@@ -5,11 +5,11 @@ milestone_name: Sync correctness
 current_phase: 181
 current_phase_name: Schema hook contract and no-Oban build
 status: completed
-stopped_at: PR 122 updated; candidate required gates passed; final shipping-record checks pending
-last_updated: "2026-10-26T17:32:11Z"
+stopped_at: v1.44 audit complete (tech_debt); reconcile Phase 180 validation before closeout
+last_updated: "2026-10-26T18:06:34Z"
 last_activity: 2026-10-26
-last_activity_desc: v1.44 candidate pushed to PR 122; five required hosted gates passed; additional review waived
-state_head: cd3eb07f037b73e8c1f4e0d579513f18ec17f50e
+last_activity_desc: v1.44 audit reconciled 15 requirements, 17 summaries and final-head hosted evidence; debt retained
+state_head: 433c8343f92df761398eac07c4c92298e4b9b160
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,33 +22,47 @@ progress:
 
 ## v1.44 Sync correctness — started 2026-10-25
 
-All four phases (178–181) and 17 plans are complete. [PR #122](https://github.com/szTheory/scrypath/pull/122)
-now contains the implementation and a release-facing description. Candidate
-`cd3eb07f037b73e8c1f4e0d579513f18ec17f50e` passed all five required hosted gates in
-[run 40368375825](https://github.com/szTheory/scrypath/actions/runs/40368375825).
-Core passed 953 tests + 5 properties and the isolated Oban-absence proof;
-package passed 81 tests; real Postgres passed 1 property + 15 tests; mounted
-ecommerce passed 4 browser cases. Compatibility, Phoenix example and Ops UI also
-passed. Receipt: `reference/v1.44-ship-candidate.json`.
+All four phases (178–181) and 17 plans are complete. The milestone audit is
+**tech_debt**: 15/15 requirements, 4/4 phase verifications, 8/8 integration
+connections and 7/7 required library/contract flows. Report:
+[v1.44-MILESTONE-AUDIT.md](v1.44-MILESTONE-AUDIT.md). The typed integration
+checker ran 288 tests + 1 property with zero failures. No independent maintainer
+approval is claimed.
 
-Phase 181's three review warnings are fixed and its hosted validation row is now
-complete (`nyquist_compliant: true`). Five informational findings remain open.
-All four security registers assert zero open threats. The advisory deep-quality
-dependency audit still fails with Bandit, Cloak and Cloak Ecto findings. This
-does not make all advisory checks green or constitute new risk acceptance.
+Final branch source `433c8343f92df761398eac07c4c92298e4b9b160` passed all five
+required hosted gates, coverage and closeout-attestation in
+[run 40369591304](https://github.com/szTheory/scrypath/actions/runs/40369591304).
+Core: 953 tests + 5 properties and actual no-Oban absence proof; real Postgres:
+15 tests + 1 property, zero failures. The audit freshly verified attestation
+archive bytes and retained job/artifact/member identities in
+[reference/v1.44-final-head-receipt.json](reference/v1.44-final-head-receipt.json).
+PR #122 remains open. This is branch-source evidence, not merged-main or Hex
+release evidence. Merge/release still need the previously recorded maintainer
+confirmation.
 
-The maintainer explicitly declined another review for this solo OSS work and
-selected CI as the acceptance gate. No independent review is claimed. This
-shipping-record commit must get its own exact-SHA required checks and closeout
-receipt; keep that receipt outside the source checkout so collecting it does
-not mutate the tested source. Candidate PR evidence is not merged-main evidence.
+Evidence reconciliation restored completion lists in 15 summaries, repaired
+178-04 YAML, and verified 17/17 summaries parse with all 15 requirement IDs.
+[reference/v1.44-evidence-reconciliation.json](reference/v1.44-evidence-reconciliation.json)
+records before/after hashes. Original phase verification fingerprints remain
+historical snapshots. These audit edits are a planning-only successor to the
+attested source and need their own final-source checks after closeout tracking.
+
+Remaining debt is explicit: Phase 178's 3 warnings + 6 info; Phase 181's 5 info;
+Phase 180's accepted IN-06 and contradictory validated/nyquist=false record.
+The advisory dependency audit fails for Bandit/Cloak/Cloak Ecto. Full browser
+advisory completed with 156 passed, 20 failed, 13 skipped: 19 known standalone
+DNS failures plus a stale `unknown_module` screenshot assertion after FAN-03
+introduced `unknown_backend`. No new risk/debt acceptance is recorded.
+All four security registers remain verified with zero open registered threats.
 
 Continue from `/Users/jon/projects/scrypath`, branch
-`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit was
-temporarily stashed by maintainer choice and is restored after shipping; it is
-excluded from the PR. After final-head CI, next: `$gsd-audit-milestone v1.44` to
-reconcile all phase evidence before archive. Merge/release still need maintainer
-confirmation. Do not replay completed phases or start v1.45 yet.
+`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit is
+restored and unrelated; exclude it from audit commits and PR updates. Next:
+**`$gsd-validate-phase 180`** to reconcile validation evidence without replaying
+implementation, then **`$gsd-complete-milestone v1.44`** with explicit debt
+disposition and final exact-source closeout. Do not replay completed phases or
+start v1.45. Scope, evidence, decisions, unresolved items and next action are
+saved; context can be cleared after checkpointing this audit.
 
 ## v1.43 closed — 2026-10-25 (historical)
 
@@ -107,8 +121,8 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 Phase: 181
 Plan: 2/2 complete
-Status: PR #122 updated; candidate hosted gates pass; final-head shipping checks pending
-Last activity: 2026-10-26 — v1.44 shipping and hosted validation
+Status: v1.44 audit complete (tech_debt); Phase 180 validation reconciliation next
+Last activity: 2026-10-26 — v1.44 milestone audit and source-bound evidence reconciliation
 
 Progress: [██████████] 100%
 

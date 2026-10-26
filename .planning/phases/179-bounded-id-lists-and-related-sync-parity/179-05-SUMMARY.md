@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 05
 subsystem: sync-related
 status: complete
+requirements-completed: [FAN-01, FAN-02, FAN-03, PAGE-03]
 tags: [oban, fan-out, related-sync, fan-01, fan-02, fan-03, page-03, telemetry]
 requires:
   - 179-01 (Scrypath.Chunks.ids/1, chunked Loader.load/3)

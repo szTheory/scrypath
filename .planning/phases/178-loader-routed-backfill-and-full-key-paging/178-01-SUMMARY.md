@@ -3,6 +3,7 @@ phase: 178-loader-routed-backfill-and-full-key-paging
 plan: 01
 subsystem: test-harness
 status: complete
+requirements-completed: [TEST-06]
 tags: [testing, ecto, sqlite, postgres, backfill, loader]
 requires: []
 provides:

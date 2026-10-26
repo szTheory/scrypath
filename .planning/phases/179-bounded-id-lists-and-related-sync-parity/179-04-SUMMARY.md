@@ -3,6 +3,7 @@ phase: 179-bounded-id-lists-and-related-sync-parity
 plan: 04
 subsystem: oban
 status: complete
+requirements-completed: [FAN-03, PAGE-03]
 tags: [oban, job-args, chunking, fan-03, page-03, atom-safety]
 requires:
   - 179-01 (Scrypath.Chunks, chunked Loader.load/3)

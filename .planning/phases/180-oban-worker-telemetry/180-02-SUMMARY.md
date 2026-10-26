@@ -3,6 +3,7 @@ phase: 180-oban-worker-telemetry
 plan: 02
 subsystem: observability-docs
 status: complete
+requirements-completed: [OBS-03]
 tags: [telemetry, docs, hexdocs, oban, related-worker]
 requires: []
 provides:

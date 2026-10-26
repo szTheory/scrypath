@@ -3,13 +3,14 @@ phase: 178-loader-routed-backfill-and-full-key-paging
 plan: 04
 subsystem: backfill
 status: complete
+requirements-completed: [LOAD-01, LOAD-02, LOAD-03]
 tags: [backfill, reindex, loader, search_records, preload, delete-semantics]
 requires:
   - 178-03 (state-map backfill loop, full-key keyset paging, split LoaderBackfillCases)
 provides:
   - Scrypath.Loader.prepare_records/3 (@doc false, records-in loader routing)
-  - Loader-routed backfill with omitted-id deletes, removed:/delete_task: reporting
-  - Internal :_scrypath_fresh_target backfill option and reindex omitted:
+  - "Loader-routed backfill with omitted-id deletes, removed:/delete_task: reporting"
+  - "Internal :_scrypath_fresh_target backfill option and reindex omitted:"
   - Real-DB parity and search_records/2 proofs on SQLite and Postgres
 affects:
   - 178-05 (guides must document the live-index delete behavior change, removed:/delete_task:/omitted:, and that backfill does not wait on either task)
@@ -17,7 +18,7 @@ tech-stack:
   added: []
   patterns:
     - Upsert-then-delete per batch with empty-list skips (mirrors UpsertWorker without its ack wait)
-    - Separate delete_task: key so task: keeps meaning the upsert task
+    - "Separate delete_task: key so task: keeps meaning the upsert task"
     - to_string id matching against the batch id set to drop out-of-batch loader records
 key-files:
   created:

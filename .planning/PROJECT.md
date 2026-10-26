@@ -45,6 +45,21 @@ Scope source: section 2 of `reference/ROLLING-ROADMAP.md`. All changes are in `l
 
 ## Current State
 
+**Current as of 2026-10-26 — v1.44 audit:** Phases 178–181 and all 17 plans are
+implemented; the [milestone audit](v1.44-MILESTONE-AUDIT.md) records 15/15
+requirements, 8/8 integration paths and 7/7 required flows, with `tech_debt`.
+Final branch SHA `433c8343` passed five required gates, coverage and attestation
+in run 40369591304; [the receipt](reference/v1.44-final-head-receipt.json) verifies
+artifact bytes and source identity. PR #122 is still open; no merged-main or
+release claim follows. Phase 178's three warnings, Phase 181's five info items,
+Phase 180's accepted classification note and partial validation metadata, and
+failed advisory dependency/full-browser lanes remain visible. The full-browser
+result is 156 passed / 20 failed / 13 skipped (19 standalone DNS errors plus a
+stale `unknown_module` assertion). Summary metadata repairs and this audit are
+planning-only successors to the attested source. Next: `$gsd-validate-phase 180`,
+then `$gsd-complete-milestone v1.44` with explicit debt disposition; preserve the
+unrelated config edit and do not replay completed phases.
+
 **Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
 
 **Historical, 2026-10-13:** Phase 174, Recovery Entry and Diagnosis, is complete locally: 3/3 plans, all 19/19 must-haves verified, and current-source Ops/UI and mounted checks passed. All five v1.43 phase plan sets and verification reports are complete. PR [#98](https://github.com/szTheory/scrypath/pull/98) is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; [CI run 38338089123](https://github.com/szTheory/scrypath/actions/runs/38338089123) passed all five required checks and both Ops UI checks on that exact source. The Website build passed. `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` was skipped; the dependency-audit follow-up remains disclosed in the Phase 177 trace. Candidate closeout on the final tracking source and terminal merged-main attestation remain outstanding, so T-177-05 still blocks the milestone audit. The maintainer waived only the formal-review gate; no formal review is claimed. Do not audit or archive v1.43 until terminal closeout evidence is recorded. The retained feedback preview remains at `http://127.0.0.1:4012/admin/search`.

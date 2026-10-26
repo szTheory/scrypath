@@ -3,6 +3,7 @@ phase: 178-loader-routed-backfill-and-full-key-paging
 plan: 05
 subsystem: docs
 status: complete
+requirements-completed: [LOAD-01, LOAD-02, PAGE-02, TEST-06]
 tags: [backfill, reindex, docs, contract-test, postgres]
 requires:
   - 178-02 (mix verify.postgres, backend lane Postgres service)
