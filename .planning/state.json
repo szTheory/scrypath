@@ -6,7 +6,7 @@
     {
       "number": "182",
       "name": "Reliable full browser verification and CI caches",
-      "status": "planned"
+      "status": "in_progress"
     },
     {
       "number": "183",
@@ -25,9 +25,9 @@
     }
   ],
   "next": {
-    "command": "$gsd-execute-phase 182",
-    "label": "Execute Phase 182: Reliable full browser verification and CI caches",
-    "reason": "Eight plans across seven waves passed plan verification; implementation has not started"
+    "command": "$gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 1 of 4 · 0% · executing"
   },
-  "updated_at": "2026-10-26T23:22:47.397Z"
+  "updated_at": "2026-10-26T23:25:03.480Z"
 }
