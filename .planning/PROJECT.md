@@ -38,6 +38,8 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Scope and provenance:** The maintainer confirmed section 3 of `reference/ROLLING-ROADMAP.md` on 2026-10-26 through `$gsd-new-milestone`. Phase numbering continues at 182 after completed Phases 178–181. The UI engine and pilot remain v1.46, surfaces/polish v1.47, and adopter features v1.48. Preserve current visible UI, retained-preview data, the five lean required gates and existing advisory lane posture. No manual UAT or paid visual judge is introduced.
 
+**Definition decisions (2026-10-26):** The maintainer selected reuse of existing research and explicitly confirmed all 21 requirements in `REQUIREMENTS.md`. The maintainer separately approved the four-phase roadmap (182–185). Milestone initialization is complete; `$gsd-discuss-phase 182` is next and no implementation is started.
+
 **Delivery context:** Planning starts on `planning/v1.45-foundation-ci` from the local v1.44 archive commit `5ac5045f`. PR #122 merge and Hex publication remain separate pending work as recorded at this planning boundary; prior source-bound evidence is unchanged. The unrelated `.planning/config.json` edit is preserved and excluded from milestone commits.
 
 ## Most Recent Milestone: v1.44 Sync correctness (archived locally)
@@ -81,7 +83,7 @@ config edit remains preserved.
 
 ## Next Milestone Goals
 
-v1.45 Foundation and CI is now in milestone definition after explicit maintainer scope confirmation. Define and approve its requirements and roadmap before planning Phase 182. v1.46–v1.47 cover the UI quality engine, followed by v1.48 adopter features. Merge/release handling of PR #122 remains separate.
+v1.45 Foundation and CI has 21 confirmed requirements and an approved four-phase roadmap. Run `$gsd-discuss-phase 182` to clarify the first phase before planning. v1.46–v1.47 cover the UI quality engine, followed by v1.48 adopter features. Merge/release handling of PR #122 remains separate.
 
 **Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
 
@@ -617,7 +619,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-v1.45 scope is confirmed; detailed requirements are being defined:
+v1.45 scope and all 21 detailed requirements are confirmed in `REQUIREMENTS.md`; the four-phase roadmap is approved:
 
 - [ ] Complete, correctly wired browser verification for standalone and follow-up scenarios.
 - [ ] Repository-only verification tooling excluded from Hex with contributor-command parity.
@@ -654,4 +656,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-26 after maintainer-confirmed v1.45 Foundation and CI scope; defining requirements.*
+*Last updated: 2026-10-26 after explicit v1.45 roadmap approval and milestone initialization; Phase 182 discussion is next.*

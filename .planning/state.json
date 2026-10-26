@@ -1,12 +1,33 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.45",
-  "phases": [],
+  "milestone": "v1.45 — Foundation and CI",
+  "phases": [
+    {
+      "number": "182",
+      "name": "Reliable full browser verification and CI caches",
+      "status": "not_started"
+    },
+    {
+      "number": "183",
+      "name": "Maintainer tooling outside the Hex package",
+      "status": "not_started"
+    },
+    {
+      "number": "184",
+      "name": "Explicit and lean dependency graphs",
+      "status": "not_started"
+    },
+    {
+      "number": "185",
+      "name": "Executable UI quality foundations",
+      "status": "not_started"
+    }
+  ],
   "next": {
-    "command": "$gsd-discuss-phase",
-    "label": "Discuss the first phase",
-    "reason": "Project initialized — plan your first phase"
+    "command": "$gsd-discuss-phase 182",
+    "label": "Discuss Phase 182: Reliable full browser verification and CI caches",
+    "reason": "v1.45 scope, 21 requirements and four-phase roadmap explicitly approved; clarify the first phase before planning"
   },
-  "updated_at": "2026-10-26T20:25:31.464Z"
+  "updated_at": "2026-10-26T20:41:31.214Z"
 }

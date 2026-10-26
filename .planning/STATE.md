@@ -3,10 +3,13 @@ gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
 status: planning
-last_updated: "2026-10-26T20:25:31.462Z"
+current_phase: 182
+current_phase_name: Reliable full browser verification and CI caches
+stopped_at: v1.45 initialized; roadmap approved; Phase 182 discussion next
+last_updated: "2026-10-26T20:41:31.214Z"
 last_activity: 2026-10-26
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -14,6 +17,29 @@ progress:
 ---
 
 # Project State
+
+## v1.45 Foundation and CI — initialized; Phase 182 discussion next
+
+Scope, research reuse and all 21 requirements were explicitly confirmed by the
+maintainer on 2026-10-26. The maintainer then explicitly approved the roadmap
+covering Phases 182–185 with 21/21 requirements mapped once. No implementation or phase plan has started;
+no review identity, test pass or delivery is inferred from roadmap creation.
+
+Working directory: `/Users/jon/projects/scrypath`.
+Branch: `planning/v1.45-foundation-ci`, based on the local v1.44 archive
+`5ac5045f`. Requirement confirmation is committed separately. Preserve the
+unrelated `.planning/config.json` edit, retained-preview data and all prior
+source-bound evidence. The config input and scoped patch are checkpointed in
+`/private/tmp/scrypath-v145-milestone-start/`.
+
+Milestone initialization is complete. Next, run
+**`$gsd-discuss-phase 182`** to clarify the full browser verifier and cache
+work before phase planning. v1.46/v1.47 UI engine/polish and v1.48 adopter
+features remain deferred. PR #122 merge/publication and inherited audit debt
+remain separate; the historical paragraphs below preserve their old cutoffs.
+The durable scope, decisions, working branch, verification limits and next
+action are saved here and in PROJECT/REQUIREMENTS/ROADMAP; context can be
+cleared before Phase 182 discussion. No phase has been completed by setup.
 
 ## v1.44 Sync correctness — archived locally 2026-10-26
 
@@ -130,10 +156,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 182 next — Reliable full browser verification and CI caches (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-10-26 — Milestone v1.45 started
+Status: Ready for Phase 182 discussion
+Last activity: 2026-10-26 — v1.45 initialized; 21 requirements and four-phase roadmap approved
 
 ## Delivered Evidence
 

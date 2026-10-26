@@ -1,7 +1,7 @@
 # Requirements: Scrypath v1.45 Foundation and CI
 
 **Defined:** 2026-10-26
-**Status:** All 21 requirements confirmed by the maintainer on 2026-10-26; roadmap definition in progress; implementation has not started.
+**Status:** All 21 requirements confirmed by the maintainer on 2026-10-26; four-phase roadmap approved by the maintainer on 2026-10-26; implementation has not started.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## Scope and provenance
@@ -110,13 +110,34 @@ silently included in these requirements:
 
 ## Traceability
 
-Pending requirement confirmation and roadmap creation. Every requirement will
-map to exactly one phase in the approved roadmap.
+The maintainer explicitly approved all requirements and the following roadmap
+assignments on 2026-10-26. Implementation has not started.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| BROW-01 | Phase 182 | Pending |
+| BROW-02 | Phase 182 | Pending |
+| BROW-03 | Phase 182 | Pending |
+| CACHE-01 | Phase 182 | Pending |
+| CACHE-02 | Phase 182 | Pending |
+| PKGH-01 | Phase 183 | Pending |
+| PKGH-02 | Phase 183 | Pending |
+| PKGH-03 | Phase 183 | Pending |
+| DEP-01 | Phase 184 | Pending |
+| DEP-02 | Phase 184 | Pending |
+| DEP-03 | Phase 184 | Pending |
+| DEP-04 | Phase 184 | Pending |
+| DEP-05 | Phase 184 | Pending |
+| DEP-06 | Phase 184 | Pending |
+| DEP-07 | Phase 184 | Pending |
+| UIF-01 | Phase 185 | Pending |
+| UIF-02 | Phase 185 | Pending |
+| UIF-03 | Phase 185 | Pending |
+| UIF-04 | Phase 185 | Pending |
+| UIF-05 | Phase 185 | Pending |
+| UIF-06 | Phase 185 | Pending |
 
-**Coverage:** 21 milestone requirements; mapping pending. No implementation is complete.
+**Coverage:** 21 milestone requirements; 21 mapped; 0 unmapped; 0 complete.
 
 ---
-*Last updated: 2026-10-26 after explicit maintainer confirmation of all 21 requirements; awaiting roadmap creation and approval.*
+*Last updated: 2026-10-26 after explicit maintainer confirmation of all 21 requirements; four-phase roadmap approved; 21/21 requirements mapped exactly once.*
