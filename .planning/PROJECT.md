@@ -527,7 +527,7 @@ v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
 - [x] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path — Phase 179 (verified locally; unreleased). Related jobs share the main `unique:` policy and report `conflict?: true` on collapse; job args decode without creating atoms, and bad args cancel.
 - [ ] Schema hooks are declared optional callbacks.
 - [x] Loader behavior is proven against a real database — Phase 178: shared cases run on SQLite (core lane) and Postgres (`mix verify.postgres` in `backend (required)`); exact-SHA hosted CI evidence is still due at the PR.
-- [ ] Builds without Oban compile with no warnings.
+- [x] Builds without Oban compile with no warnings — Phase 181 (verified locally; unreleased). mix verify.no_optional_deps compiles into an isolated build that must lack Oban, runs inside mix verify.core (core (required)), and RelatedEnqueue now uses the shared runtime-guarded job builder; exact-SHA hosted CI evidence is due at the PR.
 
 ### Out of Scope
 
