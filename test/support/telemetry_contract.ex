@@ -16,6 +16,9 @@ defmodule Scrypath.TestSupport.TelemetryContract do
 
   @row_pattern ~r/^\| `\[:scrypath/
   @key_pattern ~r/`([a-z_]+\??)`( \(optional\))?/
+  @span_phases [:start, :stop, :exception]
+  @span_implicit [:telemetry_span_context]
+  @exception_implicit [:kind, :reason, :stacktrace]
 
   @type key_set :: %{required: MapSet.t(atom()), optional: MapSet.t(atom())}
   @type row :: %{
@@ -241,4 +244,64 @@ defmodule Scrypath.TestSupport.TelemetryContract do
   defp telemetry_module?({:__aliases__, _, [:Telemetry]}), do: true
   defp telemetry_module?({:__aliases__, _, [:Scrypath, :Telemetry]}), do: true
   defp telemetry_module?(_mod), do: false
+
+  @doc """
+  Checks emitted metadata keys for one phase of a guide row.
+
+  `phase` is `:start`, `:stop` or `:exception` for a span row and `:event` for a point
+  event. Stop allows the start and stop-only cells; exception allows the start cell plus
+  `kind`, `reason` and `stacktrace`; every span phase also allows `telemetry_span_context`.
+  """
+  @spec key_check(row(), :start | :stop | :exception | :event, Enumerable.t()) :: %{
+          missing_required: [atom()],
+          undocumented: [atom()]
+        }
+  def key_check(row, phase, emitted_keys) do
+    emitted = MapSet.new(emitted_keys)
+    %{required: required, optional: optional} = phase_keys(row, phase)
+    allowed = required |> MapSet.union(optional) |> MapSet.union(MapSet.new(implicit(phase)))
+
+    %{
+      missing_required: required |> MapSet.difference(emitted) |> Enum.sort(),
+      undocumented: emitted |> MapSet.difference(allowed) |> Enum.sort()
+    }
+  end
+
+  defp phase_keys(%{kind: :span} = row, :stop) do
+    %{
+      required: MapSet.union(row.start.required, row.stop.required),
+      optional: MapSet.union(row.start.optional, row.stop.optional)
+    }
+  end
+
+  defp phase_keys(%{kind: :span} = row, phase) when phase in [:start, :exception], do: row.start
+  defp phase_keys(%{kind: :event} = row, :event), do: row.start
+
+  defp phase_keys(row, phase),
+    do: raise(ArgumentError, "phase #{inspect(phase)} does not apply to a #{row.kind} row")
+
+  defp implicit(:exception), do: @span_implicit ++ @exception_implicit
+  defp implicit(phase) when phase in @span_phases, do: @span_implicit
+  defp implicit(:event), do: []
+
+  @doc """
+  Resolves a captured event name to `{row_name, phase}` against the parsed guide, or
+  `:error` when no row covers it.
+  """
+  @spec resolve_event(%{[atom()] => row()}, [atom()]) ::
+          {[atom()], :start | :stop | :exception | :event} | :error
+  def resolve_event(guide, name) do
+    case Map.fetch(guide, name) do
+      {:ok, %{kind: :event}} ->
+        {name, :event}
+
+      _other ->
+        {prefix, [phase]} = Enum.split(name, -1)
+
+        case Map.fetch(guide, prefix) do
+          {:ok, %{kind: :span}} when phase in @span_phases -> {prefix, phase}
+          _other -> :error
+        end
+    end
+  end
 end

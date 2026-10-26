@@ -3,6 +3,7 @@ defmodule Scrypath.TelemetryContractTest do
   # untagged so the core CI lane runs it; do not add a module tag that a lane excludes.
   use ExUnit.Case, async: false
 
+  alias Scrypath.TestSupport.ObanTelemetryScenarios
   alias Scrypath.TestSupport.TelemetryContract
 
   @guide_path "guides/telemetry.md"
@@ -281,6 +282,138 @@ defmodule Scrypath.TelemetryContractTest do
       assert offending == [],
              "only #{@guide_path} may hold a telemetry event table; found rows in: " <>
                Enum.join(offending, ", ")
+    end
+  end
+
+  # Strict key checks cover the three Oban worker events only; the other catalog rows are
+  # name-checked above.
+  describe "worker event keys" do
+    @worker_rows [
+      [:scrypath, :oban, :upsert],
+      [:scrypath, :oban, :delete],
+      [:scrypath, :oban, :upsert, :missing_removed]
+    ]
+
+    @key_scenarios [
+      :upsert_missing,
+      :upsert_ok,
+      :upsert_legacy,
+      :upsert_error,
+      :upsert_cancel,
+      :upsert_raise,
+      :delete_ok,
+      :delete_error,
+      :delete_raise
+    ]
+
+    test "every captured worker event matches its guide row" do
+      guide = guide()
+
+      observed =
+        for scenario <- @key_scenarios,
+            event <- elem(ObanTelemetryScenarios.run(scenario), 1),
+            reduce: MapSet.new() do
+          acc ->
+            {row_name, phase} = TelemetryContract.resolve_event(guide, event.name)
+            assert row_name in @worker_rows, "unexpected event #{inspect(event.name)}"
+
+            row = Map.fetch!(guide, row_name)
+            keys = Map.keys(event.metadata)
+
+            assert TelemetryContract.key_check(row, phase, keys) ==
+                     %{missing_required: [], undocumented: []},
+                   "#{scenario}: #{inspect(event.name)} metadata keys drift from the guide: " <>
+                     inspect(TelemetryContract.key_check(row, phase, keys))
+
+            if phase == :event do
+              assert MapSet.new(Map.keys(event.measurements)) == row.measurements.required,
+                     "#{scenario}: #{inspect(event.name)} measurements drift from the guide"
+            end
+
+            MapSet.put(acc, {row_name, phase})
+        end
+
+      # A renamed or never-firing event cannot pass by producing nothing to check.
+      expected =
+        MapSet.new(
+          for(
+            row <- Enum.take(@worker_rows, 2),
+            phase <- [:start, :stop, :exception],
+            do: {row, phase}
+          ) ++
+            [{[:scrypath, :oban, :upsert, :missing_removed], :event}]
+        )
+
+      assert MapSet.difference(expected, observed) == MapSet.new(),
+             "worker events never observed: #{inspect(Enum.sort(MapSet.difference(expected, observed)))}"
+    end
+
+    test "resolve_event maps span phases and point events to guide rows" do
+      guide = guide()
+
+      assert TelemetryContract.resolve_event(guide, [:scrypath, :oban, :upsert, :stop]) ==
+               {[:scrypath, :oban, :upsert], :stop}
+
+      assert TelemetryContract.resolve_event(guide, [:scrypath, :oban, :upsert, :missing_removed]) ==
+               {[:scrypath, :oban, :upsert, :missing_removed], :event}
+
+      assert TelemetryContract.resolve_event(guide, [:scrypath, :oban, :upsert, :bogus]) == :error
+    end
+
+    test "dropping a documented key or adding a required one is reported" do
+      start = %{
+        schema: X,
+        backend: :recording,
+        index: "i",
+        sync_mode: :oban,
+        attempt: 1,
+        max_attempts: 8,
+        document_count: 1,
+        telemetry_span_context: make_ref()
+      }
+
+      upsert_row = fn guide -> Map.fetch!(guide, [:scrypath, :oban, :upsert]) end
+
+      without_attempt =
+        guide_rows()
+        |> Enum.map(fn row ->
+          if String.starts_with?(row, "| `[:scrypath, :oban, :upsert]`"),
+            do: String.replace(row, "`attempt`, ", "", global: false),
+            else: row
+        end)
+        |> fixture()
+        |> TelemetryContract.parse_guide()
+
+      assert TelemetryContract.key_check(upsert_row.(without_attempt), :start, Map.keys(start)) ==
+               %{missing_required: [], undocumented: [:attempt]}
+
+      with_bogus =
+        guide_rows()
+        |> Enum.map(fn row ->
+          if String.starts_with?(row, "| `[:scrypath, :oban, :upsert]`"),
+            do: String.replace(row, "`attempt`, ", "`attempt`, `bogus`, ", global: false),
+            else: row
+        end)
+        |> fixture()
+        |> TelemetryContract.parse_guide()
+
+      assert TelemetryContract.key_check(upsert_row.(with_bogus), :start, Map.keys(start)) ==
+               %{missing_required: [:bogus], undocumented: []}
+    end
+
+    test "exception allows kind, reason and stacktrace only on :exception" do
+      row = Map.fetch!(guide(), [:scrypath, :oban, :delete])
+
+      base = [:schema, :backend, :index, :sync_mode, :attempt, :max_attempts, :document_count]
+      exception = base ++ [:telemetry_span_context, :kind, :reason, :stacktrace]
+
+      assert TelemetryContract.key_check(row, :exception, exception) ==
+               %{missing_required: [], undocumented: []}
+
+      assert TelemetryContract.key_check(row, :start, exception).undocumented ==
+               [:kind, :reason, :stacktrace]
+
+      assert TelemetryContract.key_check(row, :stop, base).missing_required == [:outcome]
     end
   end
 
