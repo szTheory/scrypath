@@ -6,6 +6,7 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
   alias Scrypath.Oban.UpsertWorker
   alias Scrypath.TestSupport.FakeRepo
   alias Scrypath.TestSupport.ObanTelemetryScenarios, as: Scenarios
+  alias Scrypath.TestSupport.ObanTelemetryScenarios.GoneLoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.LoaderPost
   alias Scrypath.TestSupport.ObanTelemetryScenarios.RaisingBackend
   alias Scrypath.TestSupport.ObanTelemetryScenarios.RecordingBackend
@@ -17,6 +18,7 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
   @upsert_start [:scrypath, :oban, :upsert, :start]
   @upsert_stop [:scrypath, :oban, :upsert, :stop]
   @upsert_exception [:scrypath, :oban, :upsert, :exception]
+  @missing_removed [:scrypath, :oban, :upsert, :missing_removed]
 
   setup do
     FakeRepo.reset()
@@ -337,6 +339,96 @@ defmodule Scrypath.Oban.WorkerTelemetryTest do
         end
 
       assert Enum.sort(pairs) == [{2, 1}, {3, 3}]
+    end
+  end
+
+  describe "missing_removed event" do
+    test "fires once with the distinct missing count and the span's start metadata" do
+      {result, events} = Scenarios.run(:upsert_missing)
+
+      assert result == :ok
+      assert names(events) == [@upsert_start, @missing_removed, @upsert_stop]
+
+      start = TelemetryCapture.find_event(events, @upsert_start)
+      removed = TelemetryCapture.find_event(events, @missing_removed)
+      stop = TelemetryCapture.find_event(events, @upsert_stop)
+
+      assert removed.measurements == %{count: 1}
+      assert removed.metadata == without_span_context(start.metadata)
+
+      assert stop.metadata.outcome == :ok
+      assert stop.metadata.source == :loaded
+      assert stop.metadata.upserted_count == 1
+      assert stop.metadata.missing_count == 1
+      assert stop.metadata.document_count == 2
+      assert stop.metadata.attempt == 2
+    end
+
+    test "does not fire when every record still exists" do
+      {:ok, events} = Scenarios.run(:upsert_ok)
+
+      assert TelemetryCapture.events_named(events, @missing_removed) == []
+    end
+
+    test "fires once for 1,500 missing ids deleted in two chunks" do
+      {result, events} = Scenarios.run(:upsert_missing_many)
+
+      assert result == :ok
+      assert_received {:delete_documents, GoneLoaderPost, _first, _config}
+      assert_received {:delete_documents, GoneLoaderPost, _second, _config}
+      refute_received {:delete_documents, GoneLoaderPost, _third, _config}
+
+      assert [removed] = TelemetryCapture.events_named(events, @missing_removed)
+      assert removed.measurements == %{count: 1500}
+      assert is_integer(removed.measurements.count)
+    end
+
+    test "counts a missing id repeated in the job args once" do
+      args = Scenarios.upsert_args(LoaderPost, RecordingBackend, [404, 404, 1])
+
+      {:ok, events} = capture(fn -> UpsertWorker.perform(Scenarios.job(args)) end)
+
+      assert [removed] = TelemetryCapture.events_named(events, @missing_removed)
+      assert removed.measurements == %{count: 1}
+    end
+
+    test "does not fire when a delete chunk fails" do
+      {result, events} = Scenarios.run(:upsert_missing_chunk_fail)
+
+      assert result == {:error, {:timeout, :second_chunk}}
+      assert TelemetryCapture.events_named(events, @missing_removed) == []
+
+      stop = TelemetryCapture.find_event(events, @upsert_stop)
+      assert stop.metadata.outcome == :error
+      assert stop.metadata.error_kind == :timeout
+    end
+
+    test "does not fire on the legacy snapshot path" do
+      {:ok, events} = Scenarios.run(:upsert_legacy)
+
+      assert TelemetryCapture.events_named(events, @missing_removed) == []
+    end
+  end
+
+  describe "metadata cardinality" do
+    # Tags must be atoms, integers, modules or the index string: never ids or tuples.
+    test "no worker event carries a tuple or list value outside the exempt keys" do
+      events = Enum.flat_map(Scenarios.scenarios(), fn s -> elem(Scenarios.run(s), 1) end)
+
+      assert Enum.any?(events, &(&1.name == @missing_removed))
+      assert Enum.any?(events, &(List.last(&1.name) == :exception))
+
+      for event <- events, {key, value} <- event.metadata, key not in exempt_keys(event) do
+        refute is_tuple(value) or is_list(value),
+               "#{inspect(event.name)} carries #{inspect(key)} => #{inspect(value)}"
+      end
+    end
+  end
+
+  defp exempt_keys(%{name: name}) do
+    case List.last(name) do
+      :exception -> [:telemetry_span_context, :reason, :stacktrace]
+      _other -> [:telemetry_span_context]
     end
   end
 

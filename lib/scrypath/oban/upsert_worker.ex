@@ -48,7 +48,7 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
            %{backend: backend, schema: schema_module, document_ids: document_ids},
            args,
            config,
-           _metadata
+           metadata
          ) do
       # Load the records as they are now; a retried or delayed job must never
       # send an older copy over newer index data.
@@ -62,9 +62,12 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
             missing_count: Chunks.distinct_count(missing_ids)
           }
 
+          # missing_removed fires only after every delete chunk succeeded, so a retry that
+          # reloads records never counts the same removal twice.
           result =
-            with :ok <- write(backend, :upsert_documents, schema_module, documents, config) do
-              write(backend, :delete_documents, schema_module, missing_ids, config)
+            with :ok <- write(backend, :upsert_documents, schema_module, documents, config),
+                 :ok <- write(backend, :delete_documents, schema_module, missing_ids, config) do
+              emit_missing_removed(missing_ids, metadata)
             end
 
           {result, facts}
@@ -94,6 +97,20 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
         {:error, reason} ->
           {{:error, reason}, %{}}
+      end
+    end
+
+    defp emit_missing_removed(missing_ids, metadata) do
+      case Chunks.distinct_count(missing_ids) do
+        0 ->
+          :ok
+
+        count ->
+          :telemetry.execute(
+            [:scrypath, :oban, :upsert, :missing_removed],
+            %{count: count},
+            metadata
+          )
       end
     end
 

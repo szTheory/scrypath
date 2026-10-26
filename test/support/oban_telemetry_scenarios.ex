@@ -96,6 +96,45 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
         do: {:error, :not_implemented}
     end
 
+    # Fails the second delete_documents call in this process, so a two-chunk delete halts
+    # after the first chunk. Call reset/0 before each use.
+    defmodule SecondDeleteFailsBackend do
+      @moduledoc false
+      @behaviour Scrypath.Backend
+
+      @calls {__MODULE__, :delete_calls}
+
+      def reset, do: Process.delete(@calls)
+
+      @impl true
+      def name, do: :second_delete_fails
+
+      @impl true
+      def index_name(_schema_module, config), do: Keyword.get(config, :index_name, "flaky")
+
+      @impl true
+      def upsert_documents(_schema_module, documents, _config),
+        do: {:ok, %{document_ids: Enum.map(documents, & &1.id)}}
+
+      @impl true
+      def delete_documents(schema_module, document_ids, config) do
+        calls = Process.get(@calls, 0) + 1
+        Process.put(@calls, calls)
+        send(self(), {:delete_documents, schema_module, document_ids, config})
+
+        if calls == 2,
+          do: {:error, {:timeout, :second_chunk}},
+          else: {:ok, %{document_ids: document_ids}}
+      end
+
+      @impl true
+      def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+      @impl true
+      def search_facet_values(_schema, _facet, _query, _opts, _config),
+        do: {:error, :not_implemented}
+    end
+
     # Loads every id except 404, which stands for a record deleted since enqueue.
     defmodule LoaderPost do
       @moduledoc false
@@ -196,6 +235,24 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
       |> Map.delete("repo")
     end
 
+    @scenarios [
+      :upsert_ok,
+      :upsert_legacy,
+      :upsert_error,
+      :upsert_cancel,
+      :upsert_raise,
+      :upsert_missing,
+      :upsert_missing_many,
+      :upsert_missing_chunk_fail,
+      :delete_ok,
+      :delete_error,
+      :delete_raise,
+      :decode_failure
+    ]
+
+    @spec scenarios() :: [atom()]
+    def scenarios, do: @scenarios
+
     @doc """
     Performs one scenario with a capture attached to worker_event_names/0 and returns
     `{result, events}`. A raising worker yields `{{:raised, exception}, events}`.
@@ -229,6 +286,22 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     defp perform(:upsert_raise),
       do: UpsertWorker.perform(job(upsert_args(LoaderPost, RaisingBackend, [1])))
+
+    defp perform(:upsert_missing) do
+      args = upsert_args(LoaderPost, RecordingBackend, [1, 404])
+      UpsertWorker.perform(job(args, attempt: 2))
+    end
+
+    defp perform(:upsert_missing_many) do
+      args = upsert_args(GoneLoaderPost, RecordingBackend, Enum.to_list(1..1500))
+      UpsertWorker.perform(job(args))
+    end
+
+    defp perform(:upsert_missing_chunk_fail) do
+      SecondDeleteFailsBackend.reset()
+      args = upsert_args(GoneLoaderPost, SecondDeleteFailsBackend, Enum.to_list(1..1500))
+      UpsertWorker.perform(job(args))
+    end
 
     defp perform(:delete_ok),
       do: DeleteWorker.perform(job(delete_args(QueryablePost, RecordingBackend, [1, 2])))
