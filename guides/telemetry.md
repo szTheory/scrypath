@@ -32,7 +32,7 @@ Event names and documented metadata keys are a **public observability contract**
 | `[:scrypath, :reindex, :verify_skipped]` | event | — | `schema`, `target_index`, `reason` | — | when a reindex skips the settings read-back because the caller opted out |
 | `[:scrypath, :operator, :failed_work, :observed]` | event | `count` | `reason_class`, `schema`, `mode`, `operation` (optional), `retryable?` (optional) | — | once per failed-work row each time `Scrypath.failed_sync_work/2` builds the rows from backend tasks or Oban jobs |
 | `[:scrypath, :oban, :upsert]` | span | standard span measurements | `schema`, `backend`, `index`, `sync_mode`, `repo` (optional), `attempt`, `max_attempts`, `document_count` | `outcome`, `error_kind` (optional), `cancel_reason` (optional), `source` (optional), `upserted_count` (optional), `missing_count` (optional) | around one Oban upsert job after its args decode |
-| `[:scrypath, :oban, :delete]` | span | standard span measurements | `schema`, `backend`, `index`, `sync_mode`, `repo` (optional), `attempt`, `max_attempts`, `document_count` | `outcome`, `error_kind` (optional), `cancel_reason` (optional) | around one Oban delete job after its args decode |
+| `[:scrypath, :oban, :delete]` | span | standard span measurements | `schema`, `backend`, `index`, `sync_mode`, `repo` (optional), `attempt`, `max_attempts`, `document_count` | `outcome`, `error_kind` (optional) | around one Oban delete job after its args decode |
 | `[:scrypath, :oban, :upsert, :missing_removed]` | event | `count` | `schema`, `backend`, `index`, `sync_mode`, `repo` (optional), `attempt`, `max_attempts`, `document_count` | — | after an upsert job confirmed removal of ids whose records no longer exist |
 
 ## Oban jobs
@@ -54,11 +54,11 @@ Queue lifecycle stays on Oban's own events. To see the queue, job id, and job st
 
 - `:ok` — the job finished.
 - `:error` — the job returned `{:error, _}` and Oban retries it.
-- `:cancel` — the job returned `{:cancel, _}` and Oban does not retry it.
+- `:cancel` — the job returned `{:cancel, _}` and Oban does not retry it. Only upsert jobs report it: a delete job cancels only when its args fail to decode or its config cannot be resolved, both before the span starts, so the delete span's `outcome` is `:ok` or `:error`.
 
 `error_kind` is present only when `outcome` is `:error`. It is an atom: `:http`, `:transport`, `:timeout`, `:task_failed`, `:cancelled`, `:invalid_task_payload`, an atom reason passed through as is, or `:other`.
 
-`cancel_reason` is present only when `outcome` is `:cancel`. On the worker spans it is one of `:repo_required`, `:search_records_required`, `:invalid_search_records`, or `:invalid_arg`. It is always a bare atom; the detail that came with the cancel (a key name, a returned value) is never part of the metadata.
+`cancel_reason` is present only when `outcome` is `:cancel`, so only on the upsert span. It is one of `:repo_required`, `:search_records_required`, `:invalid_search_records`, or `:invalid_arg`. It is always a bare atom; the detail that came with the cancel (a key name, a returned value) is never part of the metadata.
 
 `source` is present on upsert job stops: `:loaded` when the job loaded current records, `:legacy_snapshot` when it replayed a document snapshot from a job enqueued by an older Scrypath release. Watch `:legacy_snapshot` fall to zero before you drop support for those jobs.
 
@@ -97,7 +97,7 @@ The `reason` and `stacktrace` on `:exception` events are diagnostic only. Log th
 
 ## Dashboards
 
-- Alert on the rate of `outcome` `:cancel` on the worker spans: a cancelled job will not be retried, so its index change is lost until the next sync or backfill.
+- Alert on the rate of `outcome` `:cancel` on the upsert span, plus Oban's cancelled worker jobs for decode failures: a cancelled job will not be retried, so its index change is lost until the next sync or backfill.
 - Alert on final-attempt failures: `attempt == max_attempts` with `outcome != :ok` on `:stop`, plus `attempt == max_attempts` on `:exception`. Back that with Oban's `[:oban, :job, :exception]` at `state` `:discard` for jobs that time out or are killed (see [Oban jobs](#oban-jobs)).
 - Chart `[:scrypath, :oban, :upsert, :missing_removed]` `count` per index. A rise usually tracks deletes or soft deletes in the app; do not page on it.
 - For search health, backend requests, and alert-fatigue guidance, see [Search backend operations](../docs/search-backend-sre.md).

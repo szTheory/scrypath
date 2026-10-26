@@ -26,7 +26,7 @@ The full catalog of events and metadata keys lives in [Telemetry](../guides/tele
 - `[:scrypath, :hydration]` — duration against `hit_count`; a growing `missing_count` is a drift indicator.
 - `[:scrypath, :meilisearch, :request]` — `status_code`; alert on sustained 5xx and connection errors.
 - `[:scrypath, :meilisearch, :task_wait]` — large `poll_count` or a trend of `final_status` other than `:succeeded`.
-- `[:scrypath, :oban, :upsert]` / `[:scrypath, :oban, :delete]` — alert on the rate of `outcome` `:cancel` and on final-attempt failures: a `:stop` where `attempt` equals `max_attempts` and `outcome` is not `:ok`, or an `:exception` where `attempt` equals `max_attempts`. Jobs that time out or are killed emit neither; catch them with Oban's `[:oban, :job, :exception]` at `state` `:discard` (the state Oban reports on the last attempt).
+- `[:scrypath, :oban, :upsert]` / `[:scrypath, :oban, :delete]` — alert on the rate of `outcome` `:cancel` (upsert only; delete jobs cancel before the span starts) and on final-attempt failures: a `:stop` where `attempt` equals `max_attempts` and `outcome` is not `:ok`, or an `:exception` where `attempt` equals `max_attempts`. Jobs that time out or are killed emit neither; catch them with Oban's `[:oban, :job, :exception]` at `state` `:discard` (the state Oban reports on the last attempt).
 - `[:scrypath, :oban, :upsert, :missing_removed]` — chart `count` per index; do not page on it.
 - `[:scrypath, :operator, :failed_work, :observed]` — **high volume** on noisy data. Do **not** page on every event; that is a fast route to alert fatigue. Treat it as a diagnostic signal and aggregate.
 
