@@ -56,7 +56,8 @@ defmodule Scrypath.DocsContractTest do
     "guides/relevance-tuning.md",
     "guides/per-query-tuning-pipeline.md",
     "guides/related-data-and-reindexing.md",
-    "guides/multitenancy.md"
+    "guides/multitenancy.md",
+    "guides/telemetry.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
@@ -93,6 +94,7 @@ defmodule Scrypath.DocsContractTest do
   test "published markdown avoids internal planning and task artifact strings" do
     patterns = [
       {~r/\bFACET-\d{2}\b/, "FACET-NN requirement-style IDs"},
+      {~r/\bOBS-\d{2}\b/, "OBS-NN requirement-style IDs"},
       {~r/\bTUNE-\d{2}\b/, "TUNE-NN requirement-style IDs"},
       {~r/\bMULTI-\d{2}\b/, "MULTI-NN requirement-style IDs"},
       {~r/\bADPT-\d{2}\b/, "ADPT-NN requirement-style IDs"},
@@ -666,8 +668,9 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "search backend SRE doc keeps telemetry table and anti-alert-fatigue posture" do
+  test "search backend SRE doc links the telemetry guide and keeps anti-alert-fatigue posture" do
     assert_contains_all(@search_backend_sre_docs, [
+      "../guides/telemetry.md",
       "[:scrypath, :search]",
       "[:scrypath, :meilisearch, :request]",
       "[:scrypath, :operator, :failed_work, :observed]",

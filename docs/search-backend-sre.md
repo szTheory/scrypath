@@ -20,18 +20,15 @@ Instrument **both**. Do not page only on Meilisearch CPU; pair with **Scrypath s
 
 Scrypath emits **`:telemetry.span/3`**-style events (see [Telemetry](https://hexdocs.pm/telemetry/readme.html) for `start` / `stop` / `exception` and duration measurements on `stop`). Keep dashboards **low cardinality**: use `schema`, `backend`, `index`, `sync_mode` — avoid high-cardinality tags such as raw query text or primary keys on alert rules.
 
-Stable event prefixes (each has `:start`, `:stop`, and on failure `:exception` where applicable):
+The full catalog of events and metadata keys lives in [Telemetry](../guides/telemetry.md). Aggregate these first:
 
-| Event prefix | When | Useful aggregates |
-|--------------|------|-------------------|
-| `[:scrypath, :search]` | Common-path search | p95/p99 duration, error rate, `hit_count` from stop metadata |
-| `[:scrypath, :hydration]` | Repo batch load after search | Duration vs `hit_count` / `record_count` / `missing_count` (drift indicator when `missing_count` grows) |
-| `[:scrypath, :sync, :upsert]` / `[:scrypath, :sync, :delete]` | Document sync | Error rate, `document_count`, `:noop` ratio (noisy if alerted per call) |
-| `[:scrypath, :meilisearch, :request]` | HTTP to Meilisearch | `status_code`, `method`, `path` pattern — alert on sustained 5xx / connection errors |
-| `[:scrypath, :meilisearch, :task_wait]` | Waiting for Meilisearch task completion | `poll_count`, `final_status` — large `poll_count` or non-`:succeeded` trends |
-| `[:scrypath, :reindex, :settings_verified]` | Post-apply settings read-back | Stop metadata `result` tag (`:parity`, `:drift`, etc.) |
-| `[:scrypath, :reindex, :verify_skipped]` | Execute only — settings verify skipped by opt | Rare spikes may be intentional deploys; correlate with logs |
-| `[:scrypath, :operator, :failed_work, :observed]` | Each failed-work row materialized from backend tasks or Oban jobs | Useful for dashboards and structured logs; **high volume** on noisy data — do **not** page on every event; treat as diagnostic signal and aggregate |
+- `[:scrypath, :search]` — p95/p99 duration and error rate; `hit_count` from stop metadata.
+- `[:scrypath, :hydration]` — duration against `hit_count`; a growing `missing_count` is a drift indicator.
+- `[:scrypath, :meilisearch, :request]` — `status_code`; alert on sustained 5xx and connection errors.
+- `[:scrypath, :meilisearch, :task_wait]` — large `poll_count` or a trend of `final_status` other than `:succeeded`.
+- `[:scrypath, :oban, :upsert]` / `[:scrypath, :oban, :delete]` — alert on the rate of `outcome` `:cancel` and on final-attempt failures, where `attempt` equals `max_attempts` and `outcome` is not `:ok`.
+- `[:scrypath, :oban, :upsert, :missing_removed]` — chart `count` per schema; do not page on it.
+- `[:scrypath, :operator, :failed_work, :observed]` — **high volume** on noisy data. Do **not** page on every event; that is a fast route to alert fatigue. Treat it as a diagnostic signal and aggregate.
 
 **Dashboard-first:** sync upsert volume, search QPS, hydration `missing_count` distribution, Meilisearch request latency.
 

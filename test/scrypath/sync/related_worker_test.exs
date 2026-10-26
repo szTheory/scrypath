@@ -499,9 +499,8 @@ defmodule Scrypath.Sync.RelatedWorkerTest do
       }
     end
 
-    test "perform/1 cancels job on 4xx http error" do
-      assert {:cancel, "HTTP 400: \"Bad Request\""} =
-               RelatedWorker.perform(error_job("400 Error"))
+    test "perform/1 cancels job on 4xx http error without the response body" do
+      assert {:cancel, {:http_error, 400}} = RelatedWorker.perform(error_job("400 Error"))
     end
 
     test "perform/1 returns error on 5xx http error" do

@@ -76,8 +76,10 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
     defp job_result(:ok), do: :ok
     defp job_result({:ok, _result}), do: :ok
 
-    defp job_result({:error, {:http_error, status, body}}) when status in 400..499,
-      do: {:cancel, "HTTP #{status}: #{inspect(body)}"}
+    # The body is dropped: backend text can echo document content, and Oban persists the
+    # cancel reason in its errors column. The status alone is the pattern-matchable tag.
+    defp job_result({:error, {:http_error, status, _body}}) when status in 400..499,
+      do: {:cancel, {:http_error, status}}
 
     defp job_result({:error, reason}), do: {:error, reason}
   end

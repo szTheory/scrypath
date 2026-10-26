@@ -80,6 +80,7 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert "docs/search-backend-sre.md" in docs[:extras]
     assert "guides/overview.md" in docs[:extras]
     assert "guides/per-query-tuning-pipeline.md" in docs[:extras]
+    assert "guides/telemetry.md" in docs[:extras]
     assert "guides/drift-recovery.md" in docs[:extras]
 
     assert docs[:groups_for_extras][:Operations] == [
@@ -89,6 +90,7 @@ defmodule Scrypath.Release.PackageMetadataTest do
              "guides/operator-mix-tasks.md",
              "guides/relevance-tuning.md",
              "guides/per-query-tuning-pipeline.md",
+             "guides/telemetry.md",
              "guides/sync-modes-and-visibility.md"
            ]
 
