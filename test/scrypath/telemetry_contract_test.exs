@@ -143,7 +143,9 @@ defmodule Scrypath.TelemetryContractTest do
       assert map_size(single) == 1
       assert {:error, message} = TelemetryContract.compare(Map.keys(single), emitted)
       assert message =~ "emitted but not documented"
-      assert length(TelemetryContract.diff(Map.keys(single), emitted).emitted_only) == 16
+
+      assert length(TelemetryContract.diff(Map.keys(single), emitted).emitted_only) ==
+               @event_count - 1
 
       assert TelemetryContract.scan_event_names([]) == MapSet.new()
       assert {:error, message} = TelemetryContract.compare(documented, MapSet.new())
