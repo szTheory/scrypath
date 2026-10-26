@@ -1,39 +1,41 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: '1.0'
 milestone: v1.44
 milestone_name: Sync correctness
-current_phase: 181
-current_phase_name: Schema hook contract and no-Oban build
-status: completed
-stopped_at: v1.44 audit complete (tech_debt); reconcile Phase 180 validation before closeout
-last_updated: "2026-10-26T18:06:34Z"
-last_activity: 2026-10-26
-last_activity_desc: v1.44 audit reconciled 15 requirements, 17 summaries and final-head hosted evidence; debt retained
-state_head: 433c8343f92df761398eac07c4c92298e4b9b160
+status: Awaiting next milestone
+stopped_at: v1.44 archived locally; final exact-source checks follow; no phase active
+last_updated: '2026-10-26T19:54:09Z'
+last_activity: '2026-10-26'
+last_activity_desc: v1.44 archived with current verification, visible debt and historical
+  artifact deferrals
+state_head: f718c4a92de95277d6859b134121083448335271
 progress:
   total_phases: 4
   completed_phases: 4
   total_plans: 17
   completed_plans: 17
   percent: 100
+current_phase: null
+current_phase_name: null
 ---
 
 # Project State
 
-## v1.44 Sync correctness — started 2026-10-25
+## v1.44 Sync correctness — archived locally 2026-10-26
 
 All four phases (178–181) and 17 plans are complete. The milestone audit is
 **tech_debt**: 15/15 requirements, 4/4 phase verifications, 8/8 integration
 connections and 7/7 required library/contract flows. Report:
-[v1.44-MILESTONE-AUDIT.md](v1.44-MILESTONE-AUDIT.md). The typed integration
-checker ran 288 tests + 1 property with zero failures. No independent maintainer
-approval is claimed.
+[v1.44-MILESTONE-AUDIT.md](milestones/v1.44-MILESTONE-AUDIT.md). The typed integration
+checker reran 395 tests + 1 property with zero failures, real Postgres
+15 tests + 1 property, docs/package contracts 79/0 and actual no-Oban proof.
+No independent maintainer approval is claimed.
 
 Final branch source `433c8343f92df761398eac07c4c92298e4b9b160` passed all five
 required hosted gates, coverage and closeout-attestation in
 [run 40369591304](https://github.com/szTheory/scrypath/actions/runs/40369591304).
 Core: 953 tests + 5 properties and actual no-Oban absence proof; real Postgres:
-15 tests + 1 property, zero failures. The audit freshly verified attestation
+15 tests + 1 property, zero failures. The earlier audit verified attestation
 archive bytes and retained job/artifact/member identities in
 [reference/v1.44-final-head-receipt.json](reference/v1.44-final-head-receipt.json).
 PR #122 remains open. This is branch-source evidence, not merged-main or Hex
@@ -48,7 +50,12 @@ historical snapshots. These audit edits are a planning-only successor to the
 attested source and need their own final-source checks after closeout tracking.
 
 Remaining debt is explicit: Phase 178's 3 warnings + 6 info; Phase 181's 5 info;
-Phase 180's accepted IN-06 and contradictory validated/nyquist=false record.
+Phase 180's accepted IN-06; a new conditional mixed-tenant example resolver
+warning (FAN-01). All four Nyquist records are compliant after Phase 180's
+committed revalidation. The required mounted lane covers harness/operator
+specs, not the storefront category journey. Local catalog/error-path tests pass
+14/14; broader seeded example tests have 5/25 failures because Meilisearch is
+unavailable. No new live-category-journey pass is claimed.
 The advisory dependency audit fails for Bandit/Cloak/Cloak Ecto. Full browser
 advisory completed with 156 passed, 20 failed, 13 skipped: 19 known standalone
 DNS failures plus a stale `unknown_module` screenshot assertion after FAN-03
@@ -56,13 +63,23 @@ introduced `unknown_backend`. No new risk/debt acceptance is recorded.
 All four security registers remain verified with zero open registered threats.
 
 Continue from `/Users/jon/projects/scrypath`, branch
-`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit is
-restored and unrelated; exclude it from audit commits and PR updates. Next:
-**`$gsd-validate-phase 180`** to reconcile validation evidence without replaying
-implementation, then **`$gsd-complete-milestone v1.44`** with explicit debt
-disposition and final exact-source closeout. Do not replay completed phases or
-start v1.45. Scope, evidence, decisions, unresolved items and next action are
-saved; context can be cleared after checkpointing this audit.
+`planning/v1.44-new-milestone`. No phase is active. Preserve the unrelated
+config edit. The maintainer authorized the recommendation to resolve tooling
+blockers and archive with recorded debt carried forward. Phase verification
+was regenerated (405 tests + 1 property; Postgres 15 + 1; all zero failures),
+and all four owner reads passed before archive. Global artifact scan is clear
+with two explicit historical acknowledgments, not two repaired artifacts.
+The Phase 124 owner gate remains `human_needed`; the Phase 173 shell note
+remains deferred. No blanket security acceptance or independent approval is
+claimed. The current archived reports retain all 19 milestone-debt items.
+
+All final source/tracking records precede terminal exact-SHA closeout checks.
+The receipt is saved outside this checkout under
+`/private/tmp/scrypath-v144-closeout/`. The planning tag is created only after
+the gate succeeds. PR #122 merge and Hex publication remain separate.
+Next GSD command: **`$gsd-new-milestone`** to start v1.45 scope/requirements
+from the approved rolling roadmap; do not replay completed phases. Context can
+be cleared after the closeout checkpoint and external receipt are saved.
 
 ## v1.43 closed — 2026-10-25 (historical)
 
@@ -119,12 +136,12 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: 181
-Plan: 2/2 complete
-Status: v1.44 audit complete (tech_debt); Phase 180 validation reconciliation next
-Last activity: 2026-10-26 — v1.44 milestone audit and source-bound evidence reconciliation
+Phase: none
+Plan: none
+Status: Awaiting next milestone
+Last activity: 2026-10-26 — v1.44 archive and closeout
 
-Progress: [██████████] 100%
+Progress: v1.44 complete (4 phases, 17 plans, 45 tasks); no active milestone
 
 ## Delivered Evidence
 
@@ -167,12 +184,14 @@ Always finish a phase/milestone handoff with the completed phase, the exact next
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
+| verification_gaps | Archived v1.33 Phase 124 owner gate | human_needed; CLI-acknowledged; owner gate remains unresolved | 2026-10-26 | v1.44 |
+| deferred_items | Archived v1.43 Phase 173 shell-contract note | CLI-acknowledged; local Ops test blocked by cached-dependency mismatch; not fixed | 2026-10-26 | v1.44 |
 | Product scope | New workflows, core APIs, backend abstraction, host authorization product, broader matrices | Separate concrete evidence and scope required | 2026-10-03 | v1.42 |
 | Visual scope | Shared color/surface token revision versus framework replacement/wholesale CSS rewrite | Concrete 2026-10-06 feedback reopens shared visual tokens; framework replacement and unrelated rewrites remain deferred. See the refinement brief. | 2026-10-06 | Post-v1.42 |
 | Verification topology | New required CI job or paid visual-judge service | Existing economical lanes are the default | 2026-10-03 | v1.42 |
 | Historical planning | Nyquist validation records for Phases 168–170 | Accepted nonblocking v1.41 audit debt; no phase replay | 2026-10-02 | v1.41 |
 
-## Preview and Cleanup
+## Preview and Cleanup (historical)
 
 Preview http://127.0.0.1:4012/admin/search remains healthy under Compose `scrypath-ui-v142`, without reseeding. Container `scrypath-ui-v142-web-1` bind-mounts this checkout (`/Users/jon/projects/scrypath` → `/app`), so `:4012` is the correct hot-reloading preview for current source. Stop from `examples/scrypath_ecommerce` with `COMPOSE_PROJECT_NAME=scrypath-ui-v142 WEB_PORT=4012 docker compose -f compose.yaml -f compose.dev.yaml down`; preserve volumes.
 
@@ -181,8 +200,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-26T17:32:11Z
-Stopped at: PR #122 candidate gates pass; final shipping-record checks next, then $gsd-audit-milestone v1.44
-Resume file: .planning/phases/181-schema-hook-contract-and-no-oban-build/.continue-here.md
+Stopped at: v1.44 archived locally; exact-source closeout receipt outside tracked source; next $gsd-new-milestone
+Resume file: .planning/STATE.md; phase execution handoff is archived under milestones/v1.44-phases/
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
@@ -233,3 +252,7 @@ The v1.43 execution order 173 → 174 → 175 → 176 → 177 is complete. Prese
 - [Phase 176]: Keep file bytes unconsumed until explicit Import submit; phx-change only registers upload state with LiveView.
 - [Phase 176]: Render import failures once as an associated inline alert, retain the prior valid preview, and keep submitted paste open for recovery.
 - [Phase 176]: Keep the 256,000-byte ceiling and avoid new dependencies or persistence abstractions.
+
+## Operator Next Steps
+
+- Start the next milestone with $gsd-new-milestone

@@ -1,15 +1,21 @@
 ---
 phase: 180-oban-worker-telemetry
-verified: 2026-10-25T23:00:00Z
+verified: 2026-10-26T19:49:36Z
 status: passed
-score: 3/3 roadmap success criteria verified (39/39 merged must-haves verified, 3 via documented review-fix deltas)
+score: "3/3 roadmap truths; 3/3 requirements satisfied"
+source_sha: f718c4a92de95277d6859b134121083448335271
+refresh_of: "2026-10-25 prior report; current source rechecked"
 covered_files: [".planning/phases/180-oban-worker-telemetry/180-01-PLAN.md", ".planning/phases/180-oban-worker-telemetry/180-01-SUMMARY.md", ".planning/phases/180-oban-worker-telemetry/180-02-PLAN.md", ".planning/phases/180-oban-worker-telemetry/180-02-SUMMARY.md", ".planning/phases/180-oban-worker-telemetry/180-03-PLAN.md", ".planning/phases/180-oban-worker-telemetry/180-03-SUMMARY.md", "ARCHITECTURE.md", "docs/search-backend-sre.md", "guides/per-query-tuning-pipeline.md", "guides/related-data-and-reindexing.md", "guides/telemetry.md", "lib/scrypath/oban/delete_worker.ex", "lib/scrypath/oban/upsert_worker.ex", "lib/scrypath/sync/related_worker.ex", "lib/scrypath/telemetry.ex", "mix.exs", "test/release/package_metadata_test.exs", "test/scrypath/docs_contract_test.exs", "test/scrypath/oban/worker_telemetry_test.exs", "test/scrypath/sync/related_worker_test.exs", "test/scrypath/telemetry_contract_test.exs", "test/scrypath/telemetry_test.exs", "test/support/oban_telemetry_scenarios.ex", "test/support/telemetry_capture.ex", "test/support/telemetry_contract.ex"]
-covered_digest: "v3:sha256:122872723683aa124c7634adc3018137018398c436951b50feb889c1ba7f3abf"
+covered_digest: "v3:sha256:8c2567e7b1b2c46b8a5d051cbe69b0444ef40fa47ebff33208d939d21511ae71"
 behavior_unverified: 0
 overrides_applied: 0
-pending_hosted_evidence:
+decision_coverage: {honored: 19, total: 19, not_honored: []}
+human_verification: []
+historical_pending_hosted_evidence:
   - "Hosted CI (mix verify.core --exclude integration --exclude docs_contract) has not run on this branch's exact SHA yet; local runs only. Attach exact-SHA CI evidence at PR time."
 ---
+
+## Historical Verification (prior report, retained as history)
 
 # Phase 180: Oban worker telemetry Verification Report
 
@@ -165,3 +171,70 @@ No gaps. The workers emit one span per job with stable tags. Missing-record remo
 
 _Verified: 2026-10-25T23:00:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Current Verification — refreshed 2026-10-26
+
+**Phase Goal:** Operators can observe every Oban upsert and delete job, including deletes for records that no longer exist, through stable, documented telemetry.
+
+**Current source:** `f718c4a92de95277d6859b134121083448335271`. No application, test, dependency, CI, or documentation files are dirty. Current implementation is byte-identical to hosted source `433c8343f92df761398eac07c4c92298e4b9b160`; the v1.44 exact-source core job 121736431698 passed 953 tests + 5 properties, and the integration receipt records the telemetry contract in that build. This refresh adds a fresh local run of the telemetry and docs contracts. Hosted evidence is not described as running at `f718c4a`.
+
+### Observable Truths
+
+| # | Roadmap truth | Status | Current evidence |
+|---|---|---|---|
+| 1 | Upsert and delete workers emit start/stop/exception spans with schema, index, backend, count, and attempt | VERIFIED | `worker_telemetry_test.exs` attaches handlers and asserts exact metadata, stop outcomes, exception event ordering, and error propagation for both workers; current focused suite passed. Source wraps post-decode execution in the two named spans. |
+| 2 | Missing current records removed from the index emit their distinct count | VERIFIED | `upsert_worker.ex` emits `missing_removed` only after successful delete chunks. Named test checks count and start metadata; adjacent tests cover multiple chunks, dedupe, zero missing, failed delete, and legacy path. |
+| 3 | Telemetry guide lists events/metadata and its contract test catches drift | VERIFIED | `guides/telemetry.md` is registered in HexDocs; untagged `telemetry_contract_test.exs` compares guide names to source and checks worker event keys. Explicit `docs_contract_test.exs` and package metadata test also passed. |
+
+### Required Artifacts and Key Links
+
+| Artifact/link | Status | Current evidence |
+|---|---|---|
+| `upsert_worker.ex` / `delete_worker.ex` → `telemetry.ex` | VERIFIED / WIRED | Both worker spans call shared start/stop metadata helpers; current event capture tests pass. |
+| Upsert loader output → `Chunks.distinct_count` → `missing_removed` | VERIFIED / FLOWING | Missing IDs from load result feed the count; event occurs after all deletes succeed. Named event test asserts metadata and ordering. |
+| `mix.exs` → `guides/telemetry.md` → telemetry contract test | VERIFIED / WIRED | HexDocs extras/group registration; parser reads the guide and compares to the live AST event scan. |
+| GSD artifacts/key links | VERIFIED | All 11 plan artifacts and all 8 plan key links passed current queries. |
+
+### Data-Flow Trace
+
+| Output | Source | Status |
+|---|---|---|
+| Worker span metadata | Oban job args/fields → `job_start_metadata/5` → worker span events | FLOWING; exact handler assertions pass for both workers. |
+| Missing-removal event count | Loader missing IDs → successful chunked deletes → distinct count → `missing_removed` | FLOWING; event tests assert metadata, count, and ordering. |
+| Catalog contract | Literal event names/keys in source → AST scan → `guides/telemetry.md` parser and key checks | FLOWING; current contract and docs tests pass. |
+
+### Requirements Coverage
+
+| Requirement | Status | Current evidence |
+|---|---|---|
+| OBS-01 | SATISFIED | Current handler tests verify start/stop/exception spans and stable metadata for both workers. |
+| OBS-02 | SATISFIED | Current test asserts counted missing removals and successful-delete ordering, including failure/no-event behavior. |
+| OBS-03 | SATISFIED | Telemetry guide, source-name scan, literal-name guard, worker key contract, docs contract, and package guide registration passed. |
+
+No phase-mapped requirement is orphaned. All 3 phase plans' artifact and key-link checks passed.
+
+### Behavioral Spot-Checks
+
+| Command | Result |
+|---|---|
+| Current combined targeted root run (the exact command is recorded in Phase 178; includes `worker_telemetry_test.exs`, `telemetry_test.exs`, `telemetry_contract_test.exs`, docs contract and package metadata with `--include docs_contract`) | 1 property, 405 tests, 0 failures. |
+| `test/scrypath/oban/worker_telemetry_test.exs` missing-removal case at line 386, included in the focused suite | Distinct missing count and event metadata asserted; successful deletion precedes the event. PASS. |
+| Hosted exact-implementation core job 121736431698 at source `433c8343f92df761398eac07c4c92298e4b9b160` | 953 tests + 5 properties, 0 failures; isolated no-Oban absence proof passed. The current non-planning implementation bytes match that source; this is not described as a hosted run on `f718c4a`. |
+
+### Anti-Patterns, Decision Coverage, and Human Verification
+
+No unresolved `TBD`, `FIXME`, or `XXX` debt markers, disabled requirement tests, test-side expected-value writers, stubs, or unwired artifacts were found in covered files. The scanner's `JTBD` hits are guide identifiers. This is an infrastructure/library phase; executable checks cover every phase truth, so no manual verification item remains.
+
+### Decision Coverage
+
+19/19 decisions honored. All trackable CONTEXT.md decisions are honored by shipped artifacts.
+
+### Probe Execution
+
+No probes are declared or implied by these phase plans; not applicable.
+
+### Recorded Limits and Debt
+
+Accepted informational item **IN-06** remains explicit: non-auth related-worker 4xx responses may classify as `:unknown` in `FailedWork`, and there is no pinning `FailedWork` test for that classification. It does not alter the worker telemetry contract or any OBS requirement. The historic Nyquist flag was corrected by the dated Phase 180 revalidation; no validation issue remains open. The broader advisory deep-quality dependency audit remains failed as recorded in the milestone integration evidence; it is not represented as passing here.
+
+**Current result:** PASSED — 3/3 roadmap truths and all 3 phase requirements are verified. No overrides or human approvals were invented.

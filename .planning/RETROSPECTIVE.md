@@ -2,6 +2,48 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.44 — Sync correctness
+
+**Archived locally:** 2026-10-26; merge/publication pending.
+**Phases:** 4 | **Plans:** 17 | **Tasks:** 45
+
+### What Was Built
+
+Shared-loader indexing parity, full-key keyset paging, bounded work, safe
+related-sync jobs, stable worker telemetry and optional hook/no-Oban contracts.
+
+### What Worked
+
+- Shared SQLite/Postgres cases exercise the same paging/loading contracts.
+- Real Oban Lite tests prove duplicate collapse and transaction behavior.
+- Required core verifies actual optional-dependency absence.
+- Reverification restored current fingerprints without replaying implementation.
+
+### What Was Inefficient
+
+- Missing summary completion metadata and later report edits caused stale projections.
+- The archive parser returned zero tasks despite 45 explicit task blocks.
+- A legacy status stopped the global artifact scan before current scope could be read.
+- Advisory browser coverage and required mounted coverage were initially conflated.
+- Cached Ops dependency mismatches prevented a local historical-note test run.
+
+### Patterns Established
+
+Keep source-bound receipts immutable, distinguish selectors from executed jobs,
+retain original report bodies, and use CLI acknowledgments for unresolved
+historical artifacts rather than silently calling them fixed.
+
+### Key Lessons
+
+Validate plan/summary counts before archive; resolve verification freshness
+before moving phase directories; keep all final tracking edits before terminal
+attestation; disclose deferred risk without claiming broad security readiness.
+
+### Cost Observations
+
+Model-cost and session totals were not collected. Verification report generation
+was the longest closeout step; do not infer cost percentages from role routing.
+
 ## Milestone: v1.41 — Readiness Gate Follow-Through
 
 **Archived:** 2026-10-02 (planning milestone; Scrypath 0.3.14 was published during the milestone)
@@ -632,6 +674,8 @@ Unknown observation stays unknown; original failure history remains evidence. Ca
 No paid visual judge or added CI lane. Focused local runs invalidated only affected checks; hosted full browser104/104 took5.9 minutes. Model/session spend was not measured and is not estimated here.
 
 ## Cross-Milestone Trends
+
+- v1.44: verify canonical status and archive counts before relocation; distinguish path-selector success from executed test proof; keep final tracking before exact-source attestation.
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|

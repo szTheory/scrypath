@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.44 — Sync correctness",
+  "milestone": "v1.44 \u2014 Sync correctness",
   "phases": [
     {
       "number": "178",
@@ -25,9 +25,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-audit-milestone v1.44",
-    "label": "Audit v1.44 after final-head shipping checks",
-    "reason": "Phases 178–181 complete; PR 122 candidate required gates passed; audit before archive or next milestone"
+    "command": "$gsd-new-milestone",
+    "label": "Start the next milestone",
+    "reason": "v1.44 archived locally; no phase active; fresh v1.45 scope and requirements next"
   },
-  "updated_at": "2026-10-26T17:32:11Z"
+  "updated_at": "2026-10-26T19:52:11.084Z"
 }

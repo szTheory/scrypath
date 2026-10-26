@@ -10,3 +10,4 @@ Observed while running the Task 1 contract after the retained theme-label test p
 These failures are unrelated to the theme preference and shell palette changes. The Task 1 test passes in isolation. Keep these stale assertions out of this plan's implementation scope; reconcile them in the test-owning follow-up.
 
 **Observed command:** `cd scrypath_ops && mix test test/scrypath_ops_web/ops_shell_contract_test.exs`
+  status: acknowledged

@@ -1,13 +1,17 @@
 ---
 phase: 178-loader-routed-backfill-and-full-key-paging
-verified: 2026-10-25T20:05:00Z
+verified: 2026-10-26T19:49:36Z
 status: passed
-score: 4/4 roadmap success criteria verified (plus 40/40 plan truths)
+score: "4/4 roadmap truths; 6/6 requirements satisfied"
+source_sha: f718c4a92de95277d6859b134121083448335271
+refresh_of: "2026-10-25 prior report; current source rechecked"
 covered_files: [".github/workflows/ci.yml", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-01-PLAN.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-01-SUMMARY.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-02-PLAN.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-02-SUMMARY.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-03-PLAN.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-03-SUMMARY.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-04-PLAN.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-04-SUMMARY.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-05-PLAN.md", ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-05-SUMMARY.md", "CONTRIBUTING.md", "README.md", "compose.yaml", "guides/related-data-and-reindexing.md", "guides/sync-modes-and-visibility.md", "lib/mix/tasks/verify.all.ex", "lib/mix/tasks/verify.phase5.ex", "lib/mix/tasks/verify.postgres.ex", "lib/mix/tasks/verify/capability.ex", "lib/scrypath.ex", "lib/scrypath/backfill.ex", "lib/scrypath/loader.ex", "lib/scrypath/options.ex", "lib/scrypath/reindex.ex", "mix.exs", "mix.lock", "test/mix/tasks/verify_capability_test.exs", "test/mix/tasks/verify_postgres_test.exs", "test/mix/tasks/workflow_wiring_test.exs", "test/scrypath/backfill_contract_docs_test.exs", "test/scrypath/backfill_test.exs", "test/scrypath/loader_backfill_postgres_test.exs", "test/scrypath/loader_backfill_sqlite_test.exs", "test/scrypath/loader_test.exs", "test/scrypath/options_test.exs", "test/scrypath/reindex_test.exs", "test/support/loader_backfill_cases.ex", "test/support/loader_backfill_fixtures.ex", "test/support/postgres_repo.ex", "test/support/sqlite_sandbox_repo.ex", "test/test_helper.exs"]
-covered_digest: "v3:sha256:28450b4c531ea78279864ddb74c184e8f9719b8035541c63ae393cc1495de2bc"
+covered_digest: "v3:sha256:6de4bf3d196f653f085b17a5e81017fb810b830ff769c0b0f68f195496e48e9a"
 behavior_unverified: 0
 overrides_applied: 0
-pr_gate_evidence:
+decision_coverage: {honored: 17, total: 17, not_honored: []}
+human_verification: []
+historical_pr_gate_evidence:
   - criterion: "SC4 / TEST-06: the Postgres loader/backfill suite passes on the phase PR"
     gate: "hosted `backend (required)` on the exact phase-PR head SHA"
     current: "PR #122 head is 93502339 (pre-phase base); phase commits 93502339..487a4588 are not pushed, so no hosted run of the new lane exists yet"
@@ -27,7 +31,7 @@ advisory:
     category: other
     reason: "Behavior is documented in guides and @doc (must-have satisfied); upgrade/changelog visibility is a release concern for the PR title or release notes."
     evidence_status: "code/docs read"
-prohibition_verdicts:
+historical_prohibition_verdicts:
   authority: "judgment-tier; non-authoritative verifier verdicts, each backed by deterministic grep/diff/test evidence below"
   flagged: 0
   items:
@@ -49,6 +53,8 @@ prohibition_verdicts:
     - {statement: "public docs do not mention _scrypath_fresh_target or prepare_records", verdict: held, evidence: "grep README guides lib/scrypath.ex CONTRIBUTING -> none; mix docs --warnings-as-errors clean"}
     - {statement: "CHANGELOG.md not hand-edited", verdict: held, evidence: "CHANGELOG.md absent from 93502339..HEAD diff"}
 ---
+
+## Historical Verification (prior report, retained as history)
 
 # Phase 178: Loader-routed backfill and full-key paging — Verification Report
 
@@ -177,3 +183,74 @@ There are no blocking gaps. The phase goal holds in code and in executed tests o
 
 _Verified: 2026-10-25T20:05:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Current Verification — refreshed 2026-10-26
+
+**Phase Goal:** A backfill or reindex produces exactly the documents inline and Oban sync would produce, for every row of the schema, whatever its primary-key shape.
+
+**Current source:** `f718c4a92de95277d6859b134121083448335271`. No application, test, dependency, CI, example, or documentation files are dirty. The implementation files are identical to hosted source `433c8343f92df761398eac07c4c92298e4b9b160`; the v1.44 backend job 121736431228 passed the Postgres suite there (1 property, 15 tests, 0 failures). This report also records a fresh local Postgres run below. The hosted receipt remains bound to `433c8343`, not claimed as a run on planning-only HEAD `f718c4a`.
+
+### Observable Truths
+
+| # | Roadmap truth | Status | Current evidence |
+|---|---|---|---|
+| 1 | `preload:` backfill and reindex documents equal inline sync documents | VERIFIED | Shared case `backfill, reindex, inline and Oban-loader documents are identical for preload:` in `test/support/loader_backfill_cases.ex`; `backfill.ex` routes batches through `Loader.prepare_records/3`, whose default loader force-preloads the schema declaration. The targeted suite and real-Postgres suite passed. |
+| 2 | `search_records/2` loads each batch, omitted rows are removed, and caller `:query` scope controls visited rows | VERIFIED | Shared case `search_records/2 loads every batch; the :query scope decides rows` checks loader calls, scoped IDs, omitted-row deletion, and the public index result. `backfill.ex` advances on the database page cursor and filters returned records to that page. SQLite and Postgres runs passed. |
+| 3 | Composite keyset paging visits each row once and reports a full cursor | VERIFIED | The shared composite-key property exercises repeated leading keys across page boundaries, exact visitation, and keyword cursors; current SQLite and Postgres runs each reported 1 property passing. `backfill.ex` builds the portable lexicographic Ecto predicate and shapes the cursor from all primary-key columns. |
+| 4 | Real Postgres loader/backfill cases run through the existing backend CI lane | VERIFIED | Fresh local `mix verify.postgres`: 1 property, 15 tests, 0 failures. `verify.backend` dispatches to `verify.postgres`; `.github/workflows/ci.yml` sets the dedicated URL in the existing `backend (required)` job. Hosted exact-implementation evidence is the backend job cited above. |
+
+### Required Artifacts and Key Links
+
+| Artifact/link | Status | Evidence |
+|---|---|---|
+| `lib/scrypath/backfill.ex` → `lib/scrypath/loader.ex` | VERIFIED / WIRED | Page query rows flow into `Loader.prepare_records/3`; same path is exercised by preload, custom loader, omission, and Postgres shared cases. |
+| Composite keyset and cursor | VERIFIED / WIRED | `keyset_after/2` builds all-column Ecto predicates; shared property plus pinned `{1,3}` regression and binary-ID key case pass. |
+| `lib/scrypath/reindex.ex` → `lib/scrypath/backfill.ex` | VERIFIED / WIRED | Managed reindex passes the fresh-target option, waits on write/delete task lists, and reports omissions; `reindex_test.exs` is in the passing targeted run. |
+| `verify.backend` → `verify.postgres` → real Postgres test module | VERIFIED / WIRED | `verify_capability_test.exs`, `verify_postgres_test.exs`, workflow contract, and the live local Postgres command all pass. |
+| Test/report pattern checks | VERIFIED | GSD artifact query passed all 21 plan artifacts; all 13 plan key links passed. The shared cases are called by both SQLite and Postgres test entry modules. |
+
+### Requirements Coverage
+
+| Requirement | Status | Current evidence |
+|---|---|---|
+| LOAD-01 | SATISFIED | Preload parity case compares backfill, reindex, inline and Oban-loader documents. |
+| LOAD-02 | SATISFIED | Custom-loader batch, omitted-ID removal and outside-page filtering cases pass on both adapters. |
+| LOAD-03 | SATISFIED | Scoped query case preserves where/join selection while removing paging-conflicting query clauses. |
+| PAGE-01 | SATISFIED | Composite-key property, boundary regression and binary-ID second-key case pass on SQLite and Postgres. |
+| PAGE-02 | SATISFIED | Property asserts a full ordered keyword cursor for every composite batch; single-key cases retain scalar cursors. |
+| TEST-06 | SATISFIED | Fresh Postgres lane passed locally; the existing required backend lane is wired and has hosted evidence on identical implementation bytes. |
+
+No phase-mapped requirement is orphaned. All 5 phase plans' artifact and key-link checks were run; the roadmap criteria remain the score basis.
+
+### Data-Flow Trace
+
+| Output | Source | Status |
+|---|---|---|
+| Backfill documents | Scoped Ecto page query → `Loader.prepare_records/3` (custom loader or declared preload) → projection → backend writes | FLOWING; same cases pass on SQLite and Postgres. |
+| Composite cursor | Last database-ordered row → every primary-key column in schema order → batch result | FLOWING; property asserts the complete keyword cursor and increasing pages. |
+| Omitted/removal counts | Batch IDs compared to `search_records/2` output → live delete calls or fresh-target omission count | FLOWING; shared cases assert actual IDs and removal counts. |
+
+### Behavioral Spot-Checks
+
+| Command | Result |
+|---|---|
+| `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 MIX_ENV=test MIX_TEST_PARTITION=6 mix test test/scrypath/loader_backfill_sqlite_test.exs test/scrypath/backfill_test.exs test/scrypath/reindex_test.exs test/scrypath/loader_test.exs test/scrypath/chunks_test.exs test/scrypath/sync_test.exs test/scrypath/oban/enqueue_test.exs test/scrypath/oban/enqueue_unique_test.exs test/scrypath/oban/job_args_test.exs test/scrypath/oban/worker_test.exs test/scrypath/sync/related_test.exs test/scrypath/sync/related_worker_test.exs test/scrypath/oban/worker_telemetry_test.exs test/scrypath/telemetry_test.exs test/scrypath/telemetry_contract_test.exs test/scrypath/backfill_contract_docs_test.exs test/scrypath/docs_contract_test.exs test/release/package_metadata_test.exs --include docs_contract --exclude integration` | 1 property, 405 tests, 0 failures. |
+| `ASDF_ELIXIR_VERSION=1.19.5-otp-28 ASDF_ERLANG_VERSION=28.5 MIX_ENV=test MIX_TEST_PARTITION=6 SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix verify.postgres` | 1 property, 15 tests, 0 failures. |
+
+### Anti-Patterns, Decision Coverage, and Human Verification
+
+No unresolved `TBD`, `FIXME`, or `XXX` debt markers, stubs, or unwired artifacts were found in covered files. The marker scan's `JTBD` matches are guide names, not debt markers. No disabled requirement test or test-side expected-value file writer was found. This is an infrastructure/library phase; all roadmap truths have executable evidence, so there is no manual verification item.
+
+### Decision Coverage
+
+17/17 decisions honored. All trackable CONTEXT.md decisions are honored by shipped artifacts.
+
+### Probe Execution
+
+No probes are declared or implied by these phase plans; not applicable.
+
+### Recorded Limits and Debt
+
+The earlier three warnings and six informational items remain carried forward, not erased by this refresh: unsupported query clauses such as `distinct`/`group_by` remain outside the documented where/join scope; `_scrypath_fresh_target` remains accepted by the public option schema; visited IDs omitted by `search_records/2` need release-facing upgrade notice. The historical report above retains the individual WR/IN details. These do not contradict the scoped phase truths.
+
+**Current result:** PASSED — 4/4 roadmap truths and all 6 phase requirements are verified. No overrides were applied; no human approval or independent review is implied.

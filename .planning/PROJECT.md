@@ -26,7 +26,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
-## Current Milestone: v1.44 Sync correctness
+## Most Recent Milestone: v1.44 Sync correctness (archived locally)
 
 **Goal:** Every sync path (inline, Oban, backfill and reindex) builds the same documents through one loader, pages through every row, and reports what it did, so no path silently skips or drops work.
 
@@ -39,26 +39,38 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 - `RelatedEnqueue` matches the main enqueue path (`unique:`), and job-arg atom decoding fails safely.
 - Schema hooks are declared as `@optional_callbacks`.
 - A loader test runs against a real database.
-- The false-positive compile warning in `lib/scrypath/sync.ex` for builds without Oban is silenced properly.
+- The real no-Oban type warning is fixed through the shared runtime-guarded job builder, with no blanket warning suppression.
 
-Scope source: section 2 of `reference/ROLLING-ROADMAP.md`. All changes are in `lib/`; there are no `scrypath_ops` or visible UI changes. Phases start at 178.
+Scope source: section 2 of `reference/ROLLING-ROADMAP.md`. Scope covers the core library, examples, tests, docs and existing CI lanes; no visible UI work or new required job was added. Completed phases are 178–181.
 
 ## Current State
 
-**Current as of 2026-10-26 — v1.44 audit:** Phases 178–181 and all 17 plans are
-implemented; the [milestone audit](v1.44-MILESTONE-AUDIT.md) records 15/15
-requirements, 8/8 integration paths and 7/7 required flows, with `tech_debt`.
-Final branch SHA `433c8343` passed five required gates, coverage and attestation
-in run 40369591304; [the receipt](reference/v1.44-final-head-receipt.json) verifies
-artifact bytes and source identity. PR #122 is still open; no merged-main or
-release claim follows. Phase 178's three warnings, Phase 181's five info items,
-Phase 180's accepted classification note and partial validation metadata, and
-failed advisory dependency/full-browser lanes remain visible. The full-browser
-result is 156 passed / 20 failed / 13 skipped (19 standalone DNS errors plus a
-stale `unknown_module` assertion). Summary metadata repairs and this audit are
-planning-only successors to the attested source. Next: `$gsd-validate-phase 180`,
-then `$gsd-complete-milestone v1.44` with explicit debt disposition; preserve the
-unrelated config edit and do not replay completed phases.
+**Current as of 2026-10-26 — v1.44 local archive:** 4 phases, 17 plans,
+45 tasks and all 15 requirements are implemented and verified. The
+[audit](milestones/v1.44-MILESTONE-AUDIT.md) remains `tech_debt`: 8/8
+connections, 7/7 required flows, all Nyquist records compliant. Fresh core
+953 tests + 5 properties, targeted 405 + 1 and Postgres 15 + 1 passed with zero
+failures. All four GSD verification reads pass before phase relocation.
+
+All 19 audit-debt items are carried forward for this milestone archive; this
+is not a blanket security-risk acceptance. The global artifact scan is clear
+only with two explicit historical acknowledgments: the unresolved Phase 124
+owner gate and Phase 173 shell-test note. The latter could not be tested
+locally because cached dependencies disagree with its lockfile. The earlier
+`ops-ui-path` success is a selector result, not an Ops test run.
+
+PR #122 merge and Hex publication remain pending. The existing candidate
+receipt at `433c8343` remains source-bound. Final archive/tracking edits precede
+a terminal exact-source check; its receipt stays outside the tested checkout.
+No phase is active, no independent review is claimed, and the unrelated
+config edit remains preserved.
+
+## Next Milestone Goals
+
+The approved rolling roadmap names v1.45 foundation and CI next. Start
+`$gsd-new-milestone` to establish its requirements; no successor is activated
+by v1.44 closeout. v1.46–v1.47 cover the UI quality engine, followed by v1.48
+adopter features. Merge/release handling of PR #122 remains separate.
 
 **Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
 
@@ -113,7 +125,7 @@ The prior v1.39 planning milestone shipped and was archived on 2026-09-26; it ad
 
 ## Future Work
 
-Keep `main` green and release only when a package change warrants it. v1.42 and v1.43 are complete; the approved rolling roadmap in `reference/ROLLING-ROADMAP.md` sets the next order (v1.44 sync correctness, v1.45 foundation and CI, v1.46 adopter features). Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
+Keep `main` green and release only when a package change warrants it. v1.44 is archived locally; PR #122 merge/publication remain pending. The approved rolling roadmap in `reference/ROLLING-ROADMAP.md` sets the next order (v1.45 foundation and CI, v1.46–v1.47 UI quality engine, v1.48 adopter features). Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Archived Milestone: v1.41 Readiness Gate Follow-Through (2026-10-02)
 
@@ -360,7 +372,7 @@ Current planning files: **`.planning/{PROJECT,REQUIREMENTS,ROADMAP,STATE}.md`** 
 
 ## Release Train Posture
 
-- **Active milestone:** none — awaiting the next milestone. v1.43 ScrypathOps UI refinement is complete and archived (closeout run 40204029522); the approved rolling roadmap names v1.44 sync correctness next. The maintainer waived only the v1.43 formal-review gate; no formal review is claimed. v1.42 and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
+- **Active milestone:** none — awaiting the next milestone. v1.44 Sync correctness is archived locally with debt carried forward; PR #122 remains open. The approved rolling roadmap names v1.45 foundation and CI next. v1.43 is archived with closeout run 40204029522. The maintainer waived only the v1.43 formal-review gate; no formal review is claimed. v1.42 and v1.41 are complete and archived. The original Phase 170 NOT READY decision is preserved at its historical cutoff; the fresh 2026-10-02 issue #86 decision is READY within its recorded limits.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Current goals:** Refine the existing six operator surfaces from the concrete 2026-10-06 visual feedback while maintaining green main and the completed recovery contract. Preserve the attested Phase 170 source and do not restart it. The authorized tracking replacement is separate from the frozen source identity.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
@@ -443,9 +455,71 @@ measured pure hot paths did not justify speculative optimization.
 
 v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet fixes and finite PR/path accounting, and Phase 170 docs/tooling plus published 0.3.14. Phase 171 closed the DOC-03/GATE-05/CLOSE-04 verification traceability gaps. The original issue #86 NOT READY assessment remains unchanged at its cutoff; the fresh 2026-10-02 READY assessment is separately recorded at comment 5955742805. The audit accepts visible, nonblocking Nyquist validation-record debt in Phases 168–170; all nine requirements, four phases, six integration paths, and three end-to-end flows passed. Current tracking records Phase 170 at 8/8 after its authorized post-freeze replacement; original bytes and the attested 17/18 snapshot remain preserved. v1.41 is archived locally. v1.42 completed the cross-screen ScrypathOps recovery journey and shared UI repairs in Phase172. In v1.43, Phases 173–177 and all 21 plans are locally complete; Phase174 verification passes 19/19 must-haves. The terminal merged-main closeout passed on 2026-10-25 (run 40204029522) and v1.43 is archived. v1.40 and v1.39 assessments remain immutable historical results.
 
+
+### v1.44 decision provenance
+
+These are implementation-time decisions from all plan summaries. Current
+phase verification documents later review corrections and takes precedence
+over superseded summary wording (for example, the removed id-taking resolver
+clause and the Multi uniqueness exception).
+
+| Source | Decision | Outcome |
+|---|---|---|
+| 178-01-SUMMARY.md | PostgresRepo supplies a placeholder database path when SCRYPATH_POSTGRES_URL has none, because Ecto.Repo.Supervisor.parse_url/1 rejects server-only URLs; the database is still forced to scrypath_test<partition> | Implemented or superseded by the documented phase review delta |
+| 178-01-SUMMARY.md | postgrex kept runtime: false; setup_repo!/1 calls Application.ensure_all_started(:ecto_sql) and (:postgrex) for the Postgres adapter, resolving RESEARCH Assumption A1 without widening the dep | Implemented or superseded by the documented phase review delta |
+| 178-01-SUMMARY.md | Both test repos set log: false so shared-case query logs do not flood test output | Implemented or superseded by the documented phase review delta |
+| 178-02-SUMMARY.md | The Postgres lane lives inside the existing backend (required) job; no new job or check name (required-job count stays 5) | Implemented or superseded by the documented phase review delta |
+| 178-02-SUMMARY.md | verify.postgres always passes --include postgres because the test helper exclude list is evaluated once per VM | Implemented or superseded by the documented phase review delta |
+| 178-02-SUMMARY.md | verify.postgres treats an empty SCRYPATH_POSTGRES_URL the same as unset | Implemented or superseded by the documented phase review delta |
+| 178-03-SUMMARY.md | The internal paging cursor lives under the state key `keyset` (list of {col, value} pairs); the public batch field stays `last_primary_key` and no `:cursor` key is added (D-09) | Implemented or superseded by the documented phase review delta |
+| 178-03-SUMMARY.md | Fan-out dedupe keeps the first occurrence per key tuple, so the last DB-ordered row (the cursor source) is unchanged | Implemented or superseded by the documented phase review delta |
+| 178-03-SUMMARY.md | The not-nil guard is added only when the schema has no Ecto primary key, so single-column Ecto-PK SQL is unchanged | Implemented or superseded by the documented phase review delta |
+| 178-03-SUMMARY.md | LoaderBackfillCases is split into harness/composite_paging_cases/query_scope_cases quote blocks to satisfy credo --strict | Implemented or superseded by the documented phase review delta |
+| 178-04-SUMMARY.md | Backfill writes go through one private write/5 (:upsert \| :delete) that skips empty lists and normalizes the backend result; the batch result is built once from both results | Implemented or superseded by the documented phase review delta |
+| 178-04-SUMMARY.md | Batch index now falls back to the resolved index when the backend result metadata has a nil :index (previously Map.get/3 default only applied to a missing key) | Implemented or superseded by the documented phase review delta |
+| 178-04-SUMMARY.md | Managed reindex takes no :query, so the reindex search_records/2 proof runs over the whole table and asserts omitted == all unpublished rows | Implemented or superseded by the documented phase review delta |
+| 178-05-SUMMARY.md | The backfill @doc names reconcile_sync/2 as the drift-recovery path for rows outside the visited scope and names no internal module, option or hidden function | Implemented or superseded by the documented phase review delta |
+| 178-05-SUMMARY.md | The :query fan-out guidance states the actual consequence (duplicates take batch slots and are dropped within a batch) rather than claiming incorrect paging | Implemented or superseded by the documented phase review delta |
+| 178-05-SUMMARY.md | The contract test also refutes _scrypath_fresh_target and prepare_records in the backfill @doc | Implemented or superseded by the documented phase review delta |
+| 179-01-SUMMARY.md | Empty-trigger sync_related returns noop_result for every sync mode (guard sits before the mode case, as the plan specified), so oban with [] no longer enqueues | Implemented or superseded by the documented phase review delta |
+| 179-01-SUMMARY.md | Loader.preload_for/1 only swallows FunctionClauseError raised by the schema's own __scrypath__/1; any other FunctionClauseError is re-raised | Implemented or superseded by the documented phase review delta |
+| 179-01-SUMMARY.md | Multi-chunk combined metadata keeps only :index from the last chunk; a chunk result that is not a Result (fake backend id list) counts as a chunk with no task, using the chunk's ids and length | Implemented or superseded by the documented phase review delta |
+| 179-02-SUMMARY.md | Backfill write chunks keep the page's primary-key order: Enum.chunk_every(Chunks.max_ids()) instead of Chunks.by_id/ids, whose string-form sort would reorder a keyset page (rows are already deduped by key) | Implemented or superseded by the documented phase review delta |
+| 179-02-SUMMARY.md | Reindex replaces a waited batch's task with the last waited chunk task and tasks with the waited list; batches with no or empty tasks keep the single-task wait | Implemented or superseded by the documented phase review delta |
+| 179-03-SUMMARY.md | An empty id list still enqueues one empty job (at_least_one_chunk/1), preserving pre-chunking behaviour for RecoveryAction.retry/2 payloads without ids | Implemented or superseded by the documented phase review delta |
+| 179-03-SUMMARY.md | Combined enqueue metadata :index comes from the first changeset's args["index"] (same value as before), merged with %{oban: %{queue, max_attempts, name}} | Implemented or superseded by the documented phase review delta |
+| 179-03-SUMMARY.md | Real-Oban test uses a `use Oban, otp_app: :scrypath` facade module named Scrypath.TestSupport.ObanSQLite.TestOban, because Config.validate_oban_module!/1 requires oban: to be a loaded module | Implemented or superseded by the documented phase review delta |
+| 179-04-SUMMARY.md | A module name resolves only when Atom.to_string(module) == name, so "Scrypath.TestSupport.FakeRepo" (no Elixir. prefix) decodes as unknown even though Module.safe_concat would resolve it | Implemented or superseded by the documented phase review delta |
+| 179-04-SUMMARY.md | A non-binary, non-nil "repo" on an upsert job, or a non-binary allowlisted related opt, returns {:invalid_arg, key} | Implemented or superseded by the documented phase review delta |
+| 179-04-SUMMARY.md | A non-map args value returns {:invalid_arg, "args"} so perform/1 never raises a FunctionClauseError | Implemented or superseded by the documented phase review delta |
+| 179-05-SUMMARY.md | The stop event's document_count is the resolved target count (from the sync result), as before; the trigger count is document_count in start metadata, and missing_count is the only new stop key | Implemented or superseded by the documented phase review delta |
+| 179-05-SUMMARY.md | Loader :repo_required / :search_records_required in the related worker cancel as {:cancel, {:invalid_job, reason}}; other loader errors retry as {:error, reason} | Implemented or superseded by the documented phase review delta |
+| 179-05-SUMMARY.md | RelatedEnqueue keeps the empty-trigger guard (noop Result in the configured mode) even though Sync.sync_related/3 short-circuits first | Implemented or superseded by the documented phase review delta |
+| 179-06-SUMMARY.md | The guide's :oban sync_related example now passes repo: MyApp.Repo, because 179-05 made related enqueue raise without a repo or search_records/2 | Implemented or superseded by the documented phase review delta |
+| 179-06-SUMMARY.md | The :oban failure table gains an all-triggers-missing row (:ok, resolver not called) and widens the cancel row to undecodable job args | Implemented or superseded by the documented phase review delta |
+| 179-06-SUMMARY.md | CHANGELOG.md is not edited (resolved OQ6); the upgrade sentence lives in this SUMMARY's Release note | Implemented or superseded by the documented phase review delta |
+| 179-07-SUMMARY.md | Category.search_records/2 uses ScrypathEcommerce.Repo directly (the context :repo is nil because the app configures no :scrypath repo) | Implemented or superseded by the documented phase review delta |
+| 179-07-SUMMARY.md | Ecommerce keeps the [_id \| _] clause of resolve_products_for_categories/1 (catalog_test.exs calls it with ids); phoenix example removes its [_id \| _] clause because no test or caller passes ids | Implemented or superseded by the documented phase review delta |
+| 180-01-SUMMARY.md | Upsert stop keeps source/upserted_count/missing_count when the load planned work but the backend write failed (D-06: counts describe the plan, outcome is authoritative); only cancel and load-error outcomes omit them | Implemented or superseded by the documented phase review delta |
+| 180-01-SUMMARY.md | cancel_reason/1 keeps the atom head of a cancel tag, drops the detail, and falls back to :other; no atom is ever created from job input | Implemented or superseded by the documented phase review delta |
+| 180-01-SUMMARY.md | oban_telemetry_scenarios.ex requires telemetry_capture.ex itself because test_helper loads support files alphabetically | Implemented or superseded by the documented phase review delta |
+| 180-02-SUMMARY.md | Existing-event rows list keys from current lib behavior; keys that only appear conditionally (common_metadata sync_mode/repo, result-derived stop keys, request extras) are marked (optional) | Implemented or superseded by the documented phase review delta |
+| 180-02-SUMMARY.md | Stop-only columns omit keys that already appear in start metadata (for example document_count on sync spans, schema_count on search_many); the Reading the table section says stop can repeat start keys with final values | Implemented or superseded by the documented phase review delta |
+| 180-02-SUMMARY.md | CHANGELOG.md not hand-edited (Release Please owns it); release-note lines recorded below for the squash commit | Implemented or superseded by the documented phase review delta |
+| 180-03-SUMMARY.md | Guide keys are converted with String.to_atom/1, not to_existing_atom: lazy module loading made to_existing_atom seed-dependent (search_scope was not yet loaded in one order). Keys come from the repo's own guide, not user input. | Implemented or superseded by the documented phase review delta |
+| 180-03-SUMMARY.md | Added compare/2 and resolve_event/2 beyond the planned interface: compare/2 owns the non-vacuous rule and the sorted failure message; resolve_event/2 maps captured names to {row, phase} | Implemented or superseded by the documented phase review delta |
+| 180-03-SUMMARY.md | Key contract scenarios are the plan's nine (upsert_missing/ok/legacy/error/cancel/raise, delete_ok/error/raise); a coverage assertion requires start/stop/exception for both spans plus the missing_removed event | Implemented or superseded by the documented phase review delta |
+| 181-01-SUMMARY.md | Isolated no-Oban compile runs under MIX_ENV=prod in _build/no_optional_deps (A2; reversible) | Implemented or superseded by the documented phase review delta |
+| 181-01-SUMMARY.md | verify.core composes verify then verify.no_optional_deps; deep-quality keeps its own copy; ci.yml unchanged | Implemented or superseded by the documented phase review delta |
+| 181-01-SUMMARY.md | RelatedEnqueue builds jobs via the shared runtime-guarded Enqueue.job_changeset/4 instead of a compile-time Oban branch | Implemented or superseded by the documented phase review delta |
+| 181-02-SUMMARY.md | A1: wrong-arity hooks produce a compiler warning (IO.warn), never a raise, so only --warnings-as-errors builds fail (reversible) | Implemented or superseded by the documented phase review delta |
+| 181-02-SUMMARY.md | Hooks live on Scrypath.Schema (the module use Scrypath delegates to); no separate Hooks module; no guide/README edits this phase | Implemented or superseded by the documented phase review delta |
+
 ## Requirements
 
 ### Validated
+
+- [x] **v1.44** (local archive 2026-10-26; merge/publication pending): **LOAD-01–03**, **PAGE-01–03**, **FAN-01–03**, **OBS-01–03**, **HYG-01–02**, **TEST-06** — loader parity, full-key paging/cursors, bounded loads and writes, loaded related resolvers/shared queue policy/safe args, worker telemetry and drift contract, documented optional hooks and actual no-Oban proof. Scope and debt limits remain in the milestone audit.
 
 - [x] **v1.42 / Phase172** (2026-10-04): **OPUX-01–OPUX-08** — shared readability, accessibility, domain copy, schema-preserving recovery, exact work/document outcome, economical automated acceptance and reviewed release/cleanup closure.
 - [x] **v1.43 / Phase 173** (2026-10-10): **OPUX-09–OPUX-15** — shared neutral theme foundation, truthful local status, snapshot-stable operational time and accessible timestamp copy. Verified locally at `b12a7c4`; no hosted source receipt is claimed.
@@ -532,17 +606,8 @@ v1.41 delivered Phase 168 four-graph security and proof, Phase 169 tenant/facet 
 
 ### Active
 
-v1.44 sync correctness; the requirement IDs are in `REQUIREMENTS.md`.
-
-- [x] Backfill and reindex load records through the shared loader — Phase 178 (verified locally; unreleased). Live backfill now deletes ids `search_records/2` omits from visited rows; reindex reports `omitted:` and deletes nothing.
-- [x] Composite primary keys page without skipping or duplicating rows — Phase 178 (verified locally; unreleased). Open review warning WR-01: `distinct`/`group_by`/`union` in a caller `:query` can still defeat paging.
-- [x] `sync_related` resolvers receive records in every sync mode — Phase 179 (verified locally; unreleased). Oban resolvers get loaded trigger structs; triggers that no longer load are skipped, and a job whose triggers are all missing succeeds without calling the resolver.
-- [x] Oban workers emit telemetry, including missing-record deletes — Phase 180 (verified locally; unreleased). `[:scrypath, :oban, :upsert | :delete]` spans (start/stop/exception, flat bounded metadata, `outcome` + `error_kind`/`cancel_reason`) and `[:scrypath, :oban, :upsert, :missing_removed]` after confirmed deletes; `guides/telemetry.md` is the single 17-event catalog, enforced by an untagged drift contract test. Related-worker backend 4xx now cancels with `{:http_error, status}` (no body).
-- [x] Loads and backend calls are chunked — Phase 179 (verified locally; unreleased). Sync, loader, backfill, workers and Oban enqueue use fixed 1000-id chunks; results carry `tasks:` (one per chunk) and stop at the first failed chunk.
-- [x] Related enqueue has the same uniqueness and safe arg decoding as the main enqueue path — Phase 179 (verified locally; unreleased). Related jobs share the main `unique:` policy and report `conflict?: true` on collapse; job args decode without creating atoms, and bad args cancel.
-- [x] Schema hooks are declared optional callbacks — Phase 181 (verified locally; unreleased). Scrypath.Schema declares search_document/1, search_document_id/1 and search_records/2 as documented @optional_callbacks, use Scrypath injects @behaviour Scrypath.Schema, and a hook defined at the wrong arity triggers a compile warning; runtime dispatch is unchanged. Exact-SHA hosted CI evidence is due at the PR.
-- [x] Loader behavior is proven against a real database — Phase 178: shared cases run on SQLite (core lane) and Postgres (`mix verify.postgres` in `backend (required)`); exact-SHA hosted CI evidence is still due at the PR.
-- [x] Builds without Oban compile with no warnings — Phase 181 (verified locally; unreleased). mix verify.no_optional_deps compiles into an isolated build that must lack Oban, runs inside mix verify.core (core (required)), and RelatedEnqueue now uses the shared runtime-guarded job builder; exact-SHA hosted CI evidence is due at the PR.
+None — awaiting the next milestone. Completed v1.44 requirements are archived
+in `milestones/v1.44-REQUIREMENTS.md`; no active requirements file is retained.
 
 ### Out of Scope
 
@@ -572,4 +637,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-25 after Phase 180 (v1.44 Sync correctness). Earlier source receipts remain historical.*
+*Last updated: 2026-10-26 after v1.44 local milestone archive; final checks remain source-bound.*

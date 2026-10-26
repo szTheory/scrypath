@@ -1,13 +1,22 @@
 ---
 phase: 179-bounded-id-lists-and-related-sync-parity
-verified: 2026-10-25T23:47:42Z
+verified: 2026-10-26T19:49:36Z
 status: passed
-score: 4/4 roadmap success criteria verified (plan must-have truths 63/63 verified; 8 deliberately narrowed by review fixes, recorded below)
+score: "4/4 roadmap truths; 4/4 requirements satisfied"
+source_sha: f718c4a92de95277d6859b134121083448335271
+refresh_of: "2026-10-25 prior report; current source rechecked"
 covered_files: [".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-PLAN.md",".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-SUMMARY.md","examples/phoenix_meilisearch/lib/scrypath_demo/blog.ex","examples/phoenix_meilisearch/lib/scrypath_demo/blog/author.ex","examples/phoenix_meilisearch/test/smoke/meilisearch_related_oban_stack_test.exs","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog.ex","examples/scrypath_ecommerce/lib/scrypath_ecommerce/catalog/category.ex","examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex","examples/scrypath_ecommerce/test/scrypath_ecommerce/catalog_test.exs","examples/scrypath_ecommerce/test/scrypath_ecommerce_web/controllers/e2e_controller_test.exs","guides/related-data-and-reindexing.md","guides/sync-modes-and-visibility.md","lib/scrypath.ex","lib/scrypath/backfill.ex","lib/scrypath/chunks.ex","lib/scrypath/loader.ex","lib/scrypath/oban.ex","lib/scrypath/oban/delete_worker.ex","lib/scrypath/oban/enqueue.ex","lib/scrypath/oban/job_args.ex","lib/scrypath/oban/payload.ex","lib/scrypath/oban/upsert_worker.ex","lib/scrypath/operations.ex","lib/scrypath/operations/result.ex","lib/scrypath/operator/recovery_action.ex","lib/scrypath/reindex.ex","lib/scrypath/sync.ex","lib/scrypath/sync/related_enqueue.ex","lib/scrypath/sync/related_worker.ex","test/scrypath/backfill_test.exs","test/scrypath/chunks_test.exs","test/scrypath/loader_test.exs","test/scrypath/oban/enqueue_test.exs","test/scrypath/oban/enqueue_unique_test.exs","test/scrypath/oban/job_args_test.exs","test/scrypath/oban/worker_test.exs","test/scrypath/oban_test.exs","test/scrypath/operator/failed_work_test.exs","test/scrypath/reindex_test.exs","test/scrypath/sync/related_test.exs","test/scrypath/sync/related_worker_test.exs","test/scrypath/sync_test.exs","test/scrypath/telemetry_test.exs","test/support/fake_repo.ex","test/support/loader_backfill_cases.ex","test/support/oban_sqlite_migration.ex","test/support/oban_sqlite_repo.ex"]
-covered_digest: "v3:sha256:33228d223b442db6b2dfa31ba09efbdba62c95345f331b503c03ba0caf2053b1"
+covered_digest: "v3:sha256:c2cbf63739f5af45715107a5c9df98a6b67351d003a05c07a460752dced535fe"
 behavior_unverified: 0
 overrides_applied: 0
-re_verification:
+decision_coverage: {honored: 23, total: 23, not_honored: []}
+human_verification: []
+advisory:
+  - finding: "FAN-01 example resolver uses independent category_id IN ids and tenant_id IN tenant_ids filters; mixed-tenant batches can cross-match when stored tenant data disagree"
+    category: other
+    reason: "Source-derived example limitation; exact-pair filtering and a mixed-tenant regression would resolve it. The normal single-category route is scoped, and this does not fail the core sync requirement."
+    evidence_status: "No mixed-tenant regression or live reproduction claimed"
+historical_re_verification:
   previous_status: passed
   previous_score: 4/4 (63/63 plan truths)
   reason: "previous report went stale after 24 review-fix commits (858e83dc..6ece8de0)"
@@ -19,6 +28,8 @@ re_verification:
   gaps_remaining: []
   regressions: []
 ---
+
+## Historical Verification (prior report, retained as history)
 
 # Phase 179: Bounded id lists and related-sync parity — Verification Report
 
@@ -153,3 +164,78 @@ There are no gaps. All four roadmap success criteria and all 63 plan truths are 
 
 _Verified: 2026-10-25T23:47:42Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Current Verification — refreshed 2026-10-26
+
+**Phase Goal:** Large id sets never produce unbounded loads or backend calls, and related-record sync gives resolvers the same input and the same queue behaviour in every sync mode, failing cleanly on bad job arguments.
+
+**Current source:** `f718c4a92de95277d6859b134121083448335271`. No application, test, dependency, CI, example, or documentation files are dirty. Current implementation files match hosted source `433c8343f92df761398eac07c4c92298e4b9b160`; the integration receipt shows the required core/backend jobs passed there. This refresh records additional local targeted and direct behavior evidence below. No override was applied.
+
+### Observable Truths
+
+| # | Roadmap truth | Status | Current evidence |
+|---|---|---|---|
+| 1 | 2,500 IDs cause bounded loads and bounded writes and return one combined result | VERIFIED | `Chunks.max_ids/0` is 1000 and current `Sync`, `Loader`, `Backfill`, and workers route through bounded chunks. Targeted tests cover 2,500-row sync, load, backfill, upsert and delete paths and combined task results; the fresh run passed. |
+| 2 | Inline and Oban related resolvers receive records, with Oban loading current trigger rows first | VERIFIED | `related_worker.ex` calls `Loader.load/3` before resolving; `related_test.exs` and `related_worker_test.exs` exercise the inline and Oban input paths. Current targeted run passed. |
+| 3 | Repeated related enqueue collapses under the shared unique policy | VERIFIED | Real Oban Lite duplicate-collapse case in `test/scrypath/oban/enqueue_unique_test.exs` passed. The related changeset is built through `Enqueue.job_changeset/4`; its default policy calls the shared `unique_opts/0`, then insertion goes through `Enqueue.enqueue_chunks/3`. |
+| 4 | Malformed related/upsert/delete job arguments cancel clearly without atom-creation exceptions or retry loops | VERIFIED | `JobArgs` decoders and three workers map decode failures to cancellation. Current `job_args_test.exs`, `worker_test.exs`, and `related_worker_test.exs` passed; the direct concurrent probe below also returned 200 independent unknown-schema errors with no atom-count change. |
+
+### Required Artifacts and Key Links
+
+| Artifact/link | Status | Current evidence |
+|---|---|---|
+| `sync.ex` → `chunks.ex`, `loader.ex`, and `operations/result.ex` | VERIFIED / WIRED | Inline/manual sync uses bounded reduction; loader chunks record IDs; combined results expose all tasks. 2,500-item cases passed. |
+| `upsert_worker.ex` / `delete_worker.ex` → `JobArgs` and chunk writer | VERIFIED / WIRED | Decoders run before writes; worker tests cover cancellation and three bounded chunks. |
+| `related_worker.ex` → `JobArgs` → `Loader.load/3` → resolver | VERIFIED / WIRED | Source order and loaded struct inputs are asserted by the passing current related-worker tests. |
+| `related_enqueue.ex` → `Enqueue.job_changeset/4` → shared unique policy and chunk insert | VERIFIED / WIRED (indirect) | GSD's literal `unique_opts` artifact/link pattern missed the direct source because `RelatedEnqueue` calls the shared changeset builder with default options. The builder applies `unique: unique_opts()` by default; the real Oban Lite test proves duplicate collapse. The behavior is wired; no override was applied. |
+| GSD plan artifacts and links | VERIFIED with one pattern note | 14/15 plans passed artifact queries and 14/15 passed key-link queries. The only raw-query negative was the over-specific direct `Enqueue.unique_opts` regex for the indirect shared-builder path described above; manual source trace and runtime test satisfy the goal. |
+
+### Requirements Coverage
+
+| Requirement | Status | Current evidence |
+|---|---|---|
+| PAGE-03 | SATISFIED | 2,500-ID paths issue 1000/1000/500 operations; combined output and per-chunk tasks are tested. |
+| FAN-01 | SATISFIED | Inline dedupes trigger records; Oban loads through the loader; partial/all-missing behavior is tested. Example-specific mixed-tenant warning is recorded below. |
+| FAN-02 | SATISFIED | Related and direct enqueue share the job changeset policy; live Oban Lite test observes one duplicate job. Multi helper exception is documented below. |
+| FAN-03 | SATISFIED | Related, upsert and delete malformed payload matrices cancel. Concurrent unknown-schema probe is fresh evidence. |
+
+No phase-mapped requirement is orphaned. All 7 phase plans' artifacts and links were checked; the only pattern miss is explained in the table above.
+
+### Data-Flow Trace
+
+| Output | Source | Status |
+|---|---|---|
+| Bounded record/backend batches | Caller records or stored job IDs → `Chunks` → `Loader` / backend writer → combined result tasks | FLOWING; 2,500-item cases assert three bounded operations. |
+| Related resolver inputs | Oban args → `JobArgs` → `Loader.load/3` → loaded structs → resolver; inline callers → deduped caller structs → resolver | FLOWING; related tests exercise both modes and missing records. |
+| Unique related jobs | Sorted job IDs → shared `Enqueue.job_changeset/4` uniqueness default → shared chunk insertion → Oban Lite | FLOWING; duplicate enqueue test observes one job. |
+
+### Behavioral Spot-Checks
+
+| Check | Result |
+|---|---|
+| Combined focused root suite (`MIX_ENV=test`, partition 6; loader/backfill/reindex/chunks/sync/Oban/related/telemetry/docs-contract/package files; `--include docs_contract --exclude integration`) | 1 property, 405 tests, 0 failures. |
+| Real Oban Lite related duplicate-collapse test, `test/scrypath/oban/enqueue_unique_test.exs:132` | Included in the passing focused suite; one job remained after reversed trigger order. |
+| Direct retry probe (`MIX_ENV=test mix run -e`, actual `Scrypath.sync_records/3`, 2,500 records; test backend failed once on chunk 2 then stored documents by ID) | First run stopped after `[1000, 1000]`; retry issued `[1000, 1000, 500]`; final 2,500 stored IDs all held retry data. PASS. |
+| Direct concurrent decoder probe (`MIX_ENV=test mix run -e`, 200 concurrent unknown-schema related args) | All 200 returned their own `{:unknown_schema, name}` error; atom count stayed unchanged. PASS. |
+
+### Anti-Patterns and Human Verification
+
+No unresolved `TBD`, `FIXME`, or `XXX` debt markers, disabled requirement tests, circular expected-value writers, stubs, or unwired artifacts were found. The `verify.artifacts` false negative was a literal-pattern issue, not a missing implementation. This is a library/infrastructure phase; no manual user-flow check remains.
+
+### Decision Coverage
+
+23/23 decisions honored. All trackable CONTEXT.md decisions are honored by shipped artifacts.
+
+### Probe Execution
+
+No probes are declared or implied by these phase plans; not applicable.
+
+### Recorded Limits and Debt
+
+- **ID normalization is intentional and adopter-visible:** atoms use their JSON-stored string form (`:a` and `"a"` dedupe); integers and their string forms stay distinct. IDs are normalized/deduped and sorted at every call size.
+- **Multi helper exception is intentional:** caller-transaction `Scrypath.Oban` Multi helpers omit `unique:` so a queued job cannot collapse into work that runs before the caller commits. Direct enqueue and related enqueue continue to share the unique policy. Preserve the upgrade/release note.
+- **Legacy related jobs:** a queued 0.3.17 related job without a reloadable repo cancels `:repo_required`; this is documented and avoids retries, but remains an adopter-visible upgrade concern.
+- **Conditional example warning:** `Catalog.resolve_products_for_categories/1` intersects independent category-ID and tenant-ID sets. A mixed-tenant batch plus inconsistent stored tenant data could cross-match pairs; the ordinary single-category route is scoped. No regression or live reproduction is claimed. Exact-pair filtering plus a mixed-tenant regression would resolve the warning.
+- **Example validation scope:** the required mounted lane covers harness/operator specs, not the storefront category journey. The advisory browser run remains 156 passed, 20 failed, 13 skipped: 19 standalone DNS failures and one stale assertion expecting `unknown_module` after FAN-03 now returns `unknown_backend`. The advisory deep-quality lane failed its Bandit/Cloak dependency audit. None is presented as a passing browser/deep-quality run or as evidence against the core phase criteria.
+
+**Current result:** PASSED — 4/4 roadmap truths and all 4 phase requirements are verified. No overrides or human approvals were invented.
