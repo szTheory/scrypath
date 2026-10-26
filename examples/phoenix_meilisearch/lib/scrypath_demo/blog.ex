@@ -10,10 +10,9 @@ defmodule ScrypathDemo.Blog do
      This is an explicit context call — NOT an Ecto callback (D-05).
 
   2. `resolve_posts_for_authors/1` — the resolver MFA registered in
-     `ScrypathDemo.Blog.Author.__scrypath__(:fan_outs)`. It handles BOTH arities:
-     - `:inline` path passes Author structs (`[%Author{} | _]`).
-     - `:oban` path passes Author document IDs (`[_id | _]`), round-tripped through JSON.
-     Both clauses funnel to a reload-by-`author_id` query (D-15 flat reload).
+     `ScrypathDemo.Blog.Author.__scrypath__(:fan_outs)`. It receives Author
+     records in both `:inline` and `:oban` modes (the Oban job reloads the
+     Authors by id when it runs) and reloads Posts by `author_id` (D-15 flat reload).
   """
 
   import Ecto.Query
@@ -221,15 +220,13 @@ defmodule ScrypathDemo.Blog do
   @doc """
   Resolver for the `posts` fan-out declared on `ScrypathDemo.Blog.Author`.
 
-  Handles both arities that `Scrypath.sync_related/3` may invoke depending on `sync_mode`:
-  - `:inline` passes a list of Author structs — map to IDs, then reload Posts.
-  - `:oban` passes a list of Author document IDs (integers) — reload Posts directly.
-  - Empty list — returns `[]` immediately.
+  `Scrypath.sync_related/3` passes a list of Author records in both `:inline` and
+  `:oban` modes; under `:oban` the job reloads the Authors when it runs, so
+  deleted Authors never reach the resolver. Maps them to IDs, then reloads Posts.
+  An empty list returns `[]`.
   """
   def resolve_posts_for_authors([%Author{} | _] = authors),
     do: authors |> Enum.map(& &1.id) |> reload_posts()
-
-  def resolve_posts_for_authors([_id | _] = author_ids), do: reload_posts(author_ids)
 
   def resolve_posts_for_authors([]), do: []
 

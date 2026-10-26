@@ -77,6 +77,7 @@ defmodule Scrypath.MixProject do
         "verify.phase112": :test,
         "verify.adopter": :test,
         "verify.meilisearch_smoke": :test,
+        "verify.postgres": :test,
         "verify.all": :test,
         verify: :test,
         "verify.release_publish": :test,
@@ -114,6 +115,7 @@ defmodule Scrypath.MixProject do
       {:plug, "~> 1.19.5", only: :test},
       {:stream_data, "~> 1.3", only: :test},
       {:ecto_sqlite3, "~> 0.22", only: :test, runtime: false},
+      {:postgrex, "~> 0.22", only: :test, runtime: false},
       {:benchee, "~> 1.5", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
@@ -212,6 +214,7 @@ defmodule Scrypath.MixProject do
         "guides/operator-mix-tasks.md",
         "guides/relevance-tuning.md",
         "guides/per-query-tuning-pipeline.md",
+        "guides/telemetry.md",
         "docs/releasing.md",
         "docs/operator-support.md",
         "docs/search-backend-sre.md",
@@ -249,6 +252,7 @@ defmodule Scrypath.MixProject do
           "guides/operator-mix-tasks.md",
           "guides/relevance-tuning.md",
           "guides/per-query-tuning-pipeline.md",
+          "guides/telemetry.md",
           "guides/sync-modes-and-visibility.md"
         ],
         Maintainers: [

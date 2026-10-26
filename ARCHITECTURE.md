@@ -167,7 +167,9 @@ Telemetry stays **layered** instead of flattening everything into one event fami
 
 - `[:scrypath, :sync, ...]`, `[:scrypath, :search, ...]`, and `[:scrypath, :hydration, ...]` are the stable common-path spans.
 - `[:scrypath, :meilisearch, :request, ...]` and `[:scrypath, :meilisearch, :task_wait, ...]` are explicit backend spans for request detail, task ids, poll counts, and wait outcomes.
-- Oban job lifecycle remains on Oban's own telemetry events. Scrypath emits search semantics, not a second queue lifecycle.
+- `[:scrypath, :oban, :upsert, ...]` and `[:scrypath, :oban, :delete, ...]` spans carry search semantics for each Oban job (index, document counts, outcome, missing-record removals), while queue lifecycle (queue, job id, state) stays on Oban's own `[:oban, :job, ...]` events.
+
+Every event and documented metadata key is listed in [the telemetry guide](guides/telemetry.md).
 
 ## Deferred Work
 

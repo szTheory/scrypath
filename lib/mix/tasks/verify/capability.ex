@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Capability do
   @moduledoc false
 
   @spec run(atom(), [String.t()]) :: :ok
-  def run(:core, args), do: run_task!("verify", args)
+  def run(:core, args), do: run_core(args)
 
   def run(:package, args),
     do: no_args!(:package, args, &Mix.Tasks.Verify.Phase11.run_without_docs/0)
@@ -29,6 +29,19 @@ defmodule Mix.Tasks.Verify.Capability do
       command!(:ecommerce_e2e, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
 
   @doc false
+  # The root maturity gate, then the isolated no-Oban compile, so the required core
+  # CI job proves builds without optional dependencies stay warning-free.
+  @spec run_core([String.t()]) :: :ok
+  @spec run_core([String.t()], keyword()) :: :ok
+  def run_core(args, opts \\ []) do
+    task_runner = Keyword.get(opts, :task_runner, &run_task!/2)
+
+    task_runner.("verify", args)
+    task_runner.("verify.no_optional_deps", [])
+    :ok
+  end
+
+  @doc false
   @spec run_deep_quality_without_audit() :: :ok
   @spec run_deep_quality_without_audit(keyword()) :: :ok
   def run_deep_quality_without_audit(opts \\ []),
@@ -53,10 +66,10 @@ defmodule Mix.Tasks.Verify.Capability do
       Mix.raise("verify.backend accepts only --skip-integration")
     end
 
-    run_task!(
-      "verify.meilisearch_smoke",
-      if(opts[:skip_integration], do: ["--skip-integration"], else: [])
-    )
+    task_args = if(opts[:skip_integration], do: ["--skip-integration"], else: [])
+
+    run_task!("verify.meilisearch_smoke", task_args)
+    run_task!("verify.postgres", task_args)
   end
 
   defp phoenix_example!([]), do: run_task!("verify.adopter", ["--live"])

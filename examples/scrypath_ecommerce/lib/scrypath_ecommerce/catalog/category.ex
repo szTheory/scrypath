@@ -1,6 +1,7 @@
 defmodule ScrypathEcommerce.Catalog.Category do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, only: [from: 2]
 
   schema "categories" do
     field(:name, :string)
@@ -18,6 +19,13 @@ defmodule ScrypathEcommerce.Catalog.Category do
   end
 
   def __scrypath__(:document_id), do: :id
+
+  # Lets Scrypath's Oban fan-out reload categories by id across tenants.
+  @doc false
+  def search_records(ids, _context) do
+    query = from(c in __MODULE__, where: c.id in ^ids)
+    ScrypathEcommerce.Repo.all(query, skip_tenant_id: true)
+  end
 
   @doc false
   def changeset(category, attrs) do

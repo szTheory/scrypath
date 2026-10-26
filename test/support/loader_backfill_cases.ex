@@ -1,0 +1,658 @@
+defmodule Scrypath.TestSupport.LoaderBackfillCases do
+  @moduledoc false
+
+  # Shared real-database cases for the loader and backfill paths.
+  #
+  #     use ExUnit.Case, async: false
+  #     use Scrypath.TestSupport.LoaderBackfillCases, repo: MyRepo
+  #
+  # The same tests run against the SQLite sandbox repo in the core lane and
+  # against Postgres when SCRYPATH_POSTGRES_URL is set. Elixir 1.17 has no
+  # ExUnit `parameterize:`, hence the macro. Cases are grouped into several
+  # quote blocks so each group stays readable.
+
+  alias Scrypath.TestSupport.LoaderBackfill
+
+  defmacro __using__(opts) do
+    repo = Keyword.fetch!(opts, :repo)
+
+    quote do
+      unquote(harness(repo))
+      unquote(composite_paging_cases())
+      unquote(query_scope_cases())
+      unquote(preload_parity_cases())
+      unquote(search_records_cases())
+      unquote(bounded_write_cases())
+    end
+  end
+
+  defp harness(repo) do
+    quote location: :keep do
+      use ExUnitProperties
+
+      require Ecto.Query
+
+      import Scrypath.TestSupport.LoaderBackfillCases,
+        only: [
+          backfill!: 3,
+          reindex!: 3,
+          recorded_upserts: 0,
+          upserted_ids: 0,
+          upserted_documents: 0,
+          deleted_ids: 0,
+          insert_memberships!: 2,
+          insert_articles!: 2
+        ]
+
+      alias Scrypath.Loader
+      alias Scrypath.Projection
+
+      alias Scrypath.TestSupport.LoaderBackfill
+
+      @lb_repo unquote(repo)
+
+      setup_all do
+        Scrypath.TestSupport.LoaderBackfillCases.setup_repo!(@lb_repo)
+        :ok
+      end
+
+      setup do
+        :ok = Ecto.Adapters.SQL.Sandbox.checkout(@lb_repo)
+        %{repo: @lb_repo}
+      end
+
+      test "backfill pages a single-column key end-to-end", %{repo: repo} do
+        ids =
+          for n <- 1..5 do
+            repo.insert!(%LoaderBackfill.Post{title: "post #{n}"}).id
+          end
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Post, repo, batch_size: 2)
+
+        assert result.batches == 3
+        assert result.documents == 5
+
+        upserts = recorded_upserts()
+        assert length(upserts) == 3
+
+        upserted_ids =
+          Enum.flat_map(upserts, fn {_schema, documents, _config} ->
+            Enum.map(documents, & &1.id)
+          end)
+
+        assert Enum.sort(upserted_ids) == Enum.sort(ids)
+        assert length(upserted_ids) == length(Enum.uniq(upserted_ids))
+
+        upserts
+        |> Enum.zip(result.batch_results)
+        |> Enum.each(fn {{_schema, documents, _config}, batch} ->
+          assert is_integer(batch.last_primary_key)
+          assert batch.last_primary_key == documents |> Enum.map(& &1.id) |> Enum.max()
+        end)
+      end
+    end
+  end
+
+  defp composite_paging_cases do
+    quote location: :keep do
+      test "backfill pages a composite key on every key column (pinned {1, 3} regression)",
+           %{repo: repo} do
+        keys = [{1, 1}, {1, 2}, {1, 3}, {2, 1}]
+        insert_memberships!(repo, keys)
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert result |> Map.keys() |> Enum.sort() ==
+                 [:batch_results, :batches, :documents, :index, :mode, :removed]
+
+        assert result.batches == 2
+        assert result.documents == 4
+        assert upserted_ids() == ["1:1", "1:2", "1:3", "2:1"]
+
+        assert [
+                 %{documents: 2, last_primary_key: [org_id: 1, seq: 2]},
+                 %{documents: 2, last_primary_key: [org_id: 2, seq: 1]}
+               ] = result.batch_results
+      end
+
+      property "composite keys: every row visited once, full cursor per batch", %{repo: repo} do
+        check all(
+                keys <- uniq_list_of({integer(1..3), integer(1..20)}, max_length: 30),
+                batch_size <- integer(1..12),
+                max_runs: 40
+              ) do
+          repo.transaction(fn ->
+            _ = recorded_upserts()
+            insert_memberships!(repo, keys)
+
+            assert {:ok, result} =
+                     backfill!(LoaderBackfill.Membership, repo, batch_size: batch_size)
+
+            upserted_ids = upserted_ids()
+            expected_ids = Enum.map(keys, fn {o, s} -> "#{o}:#{s}" end)
+
+            assert Enum.sort(upserted_ids) == Enum.sort(expected_ids)
+            assert length(upserted_ids) == length(Enum.uniq(upserted_ids))
+            assert result.documents == length(keys)
+            assert result.batches == div(length(keys) + batch_size - 1, batch_size)
+
+            # Integers only, so Elixir tuple order matches the database order.
+            expected_cursors =
+              keys
+              |> Enum.sort()
+              |> Enum.chunk_every(batch_size)
+              |> Enum.map(fn chunk ->
+                {org_id, seq} = List.last(chunk)
+                [org_id: org_id, seq: seq]
+              end)
+
+            cursors = Enum.map(result.batch_results, & &1.last_primary_key)
+            assert cursors == expected_cursors
+
+            cursors
+            |> Enum.map(fn [org_id: o, seq: s] -> {o, s} end)
+            |> Enum.chunk_every(2, 1, :discard)
+            |> Enum.each(fn [previous, next] -> assert previous < next end)
+
+            repo.rollback(:reset)
+          end)
+        end
+      end
+
+      test "reindex pages a composite key on every key column and creates the index on the document id",
+           %{repo: repo} do
+        insert_memberships!(repo, [{1, 1}, {1, 2}, {1, 3}, {2, 1}])
+
+        assert {:ok, %{documents: 4} = result} =
+                 reindex!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert_received {:create_index, LoaderBackfill.Membership, :id, create_config}
+        assert create_config[:target_index] == result.target_index
+
+        ids =
+          recorded_upserts()
+          |> Enum.filter(fn {_schema, _docs, config} ->
+            config[:index_name] == result.target_index
+          end)
+          |> Enum.flat_map(fn {_schema, docs, _config} -> Enum.map(docs, & &1.id) end)
+
+        assert ids == ["1:1", "1:2", "1:3", "2:1"]
+      end
+
+      test "backfill pages a binary_id second key column", %{repo: repo} do
+        rows =
+          for org_id <- [1, 1, 1, 2, 2] do
+            %{org_id: org_id, uid: Ecto.UUID.generate(), name: "d"}
+          end
+
+        {5, _} = repo.insert_all(LoaderBackfill.Device, rows)
+        expected = rows |> Enum.map(&"#{&1.org_id}:#{&1.uid}") |> Enum.sort()
+
+        for batch_size <- [1, 2] do
+          assert {:ok, result} = backfill!(LoaderBackfill.Device, repo, batch_size: batch_size)
+          assert result.documents == 5
+
+          upserted_ids = upserted_ids()
+          assert Enum.sort(upserted_ids) == expected
+          assert length(upserted_ids) == 5
+
+          assert Enum.all?(result.batch_results, fn batch ->
+                   match?([org_id: _, uid: _], batch.last_primary_key)
+                 end)
+        end
+      end
+
+      test "an empty table backfills zero batches; a single row is one batch", %{repo: repo} do
+        assert {:ok, %{batches: 0, documents: 0, batch_results: []}} =
+                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        insert_memberships!(repo, [{3, 9}])
+
+        assert {:ok, %{batches: 1, documents: 1, batch_results: [batch]}} =
+                 backfill!(LoaderBackfill.Membership, repo, batch_size: 2)
+
+        assert batch.last_primary_key == [org_id: 3, seq: 9]
+      end
+    end
+  end
+
+  defp query_scope_cases do
+    quote location: :keep do
+      test "a caller query keeps its where scope while its offset is ignored", %{repo: repo} do
+        posts =
+          for title <- ["a", "skip", "b", "skip", "c", "d"] do
+            repo.insert!(%LoaderBackfill.Post{title: title})
+          end
+
+        query =
+          Ecto.Query.from(p in LoaderBackfill.Post,
+            where: p.title != "skip",
+            offset: 2,
+            order_by: [desc: p.id],
+            limit: 1
+          )
+
+        assert {:ok, result} =
+                 backfill!(LoaderBackfill.Post, repo, batch_size: 2, query: query)
+
+        assert upserted_ids() == for(%{title: t, id: id} <- posts, t != "skip", do: id)
+        assert result.documents == 4
+      end
+
+      test "rows a fanned-out caller join duplicates are upserted once", %{repo: repo} do
+        ids = for n <- 1..3, do: repo.insert!(%LoaderBackfill.Post{title: "p#{n}"}).id
+
+        query =
+          Ecto.Query.from(p in LoaderBackfill.Post, join: o in LoaderBackfill.Post, on: true)
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Post, repo, batch_size: 2, query: query)
+
+        assert upserted_ids() == ids
+        assert result.documents == 3
+      end
+
+      test "keyless schemas page on the document id and skip nil ids", %{repo: repo} do
+        rows =
+          for ref <- ["b", nil, "a", "d", nil, "c"] do
+            %{external_ref: ref, title: "t"}
+          end
+
+        {6, _} = repo.insert_all(LoaderBackfill.KeylessEvent, rows)
+
+        assert {:ok, result} = backfill!(LoaderBackfill.KeylessEvent, repo, batch_size: 3)
+
+        assert upserted_ids() == ["a", "b", "c", "d"]
+        assert result.documents == 4
+        assert Enum.map(result.batch_results, & &1.last_primary_key) == ["c", "d"]
+      end
+
+      test "single-column keyset SQL is one plain comparison", %{repo: repo} do
+        for n <- 1..3, do: repo.insert!(%LoaderBackfill.Post{title: "p#{n}"})
+
+        handler_id = {__MODULE__, :sql_shape, make_ref()}
+
+        :ok =
+          :telemetry.attach(
+            handler_id,
+            repo.config()[:telemetry_prefix] ++ [:query],
+            &Scrypath.TestSupport.LoaderBackfillCases.forward_query/4,
+            self()
+          )
+
+        on_exit(fn -> :telemetry.detach(handler_id) end)
+
+        assert {:ok, %{batches: 2}} = backfill!(LoaderBackfill.Post, repo, batch_size: 2)
+        :telemetry.detach(handler_id)
+
+        [first | later] =
+          Scrypath.TestSupport.LoaderBackfillCases.forwarded_queries()
+          |> Enum.filter(&String.contains?(&1, "lb_posts"))
+
+        refute first =~ "WHERE"
+        assert length(later) == 2
+
+        for sql <- later do
+          assert sql =~ "WHERE"
+          assert length(String.split(sql, ">")) == 2
+          refute sql =~ ">="
+          refute sql =~ ~r/\bOR\b/i
+        end
+      end
+    end
+  end
+
+  # Success criterion 1: a preload: schema builds the same documents on every
+  # path. Inline sync projects records the caller preloaded (it is not routed
+  # through the loader); Oban loads through Loader.load/3.
+  defp preload_parity_cases do
+    quote location: :keep do
+      test "backfill, reindex, inline and Oban-loader documents are identical for preload:",
+           %{repo: repo} do
+        books = repo.insert!(%LoaderBackfill.Category{name: "Books"})
+        games = repo.insert!(%LoaderBackfill.Category{name: "Games"})
+
+        rows =
+          for {title, category} <- [{"a", books}, {"b", games}, {"c", books}] do
+            repo.insert!(%LoaderBackfill.Product{title: title, category_id: category.id})
+          end
+
+        ids = Enum.map(rows, & &1.id)
+        by_id = &Enum.sort_by(&1, fn document -> document.id end)
+
+        assert {:ok, %{documents: 3, removed: 0}} =
+                 backfill!(LoaderBackfill.Product, repo, batch_size: 2)
+
+        backfill_documents = by_id.(upserted_documents())
+
+        preloaded = repo.preload(rows, :category)
+
+        assert {:ok, _result} =
+                 Scrypath.sync_records(LoaderBackfill.Product, preloaded,
+                   backend: LoaderBackfill.RecordingBackend,
+                   sync_mode: :manual
+                 )
+
+        inline_documents = by_id.(upserted_documents())
+
+        assert {:ok, loaded, []} = Loader.load(LoaderBackfill.Product, ids, repo: repo)
+
+        oban_documents =
+          by_id.(Enum.map(loaded, &Projection.document(LoaderBackfill.Product, &1)))
+
+        assert {:ok, %{documents: 3, omitted: 0} = reindex_result} =
+                 reindex!(LoaderBackfill.Product, repo, batch_size: 2)
+
+        reindex_documents =
+          recorded_upserts()
+          |> Enum.filter(fn {_schema, _docs, config} ->
+            config[:index_name] == reindex_result.target_index
+          end)
+          |> Enum.flat_map(fn {_schema, docs, _config} -> docs end)
+          |> by_id.()
+
+        assert length(backfill_documents) == 3
+        assert backfill_documents == inline_documents
+        assert backfill_documents == oban_documents
+        assert backfill_documents == reindex_documents
+
+        assert Enum.map(backfill_documents, & &1.data.category_name) == [
+                 "Books",
+                 "Games",
+                 "Books"
+               ]
+      end
+
+      # WR-07: Oban job ids arrive as JSON integers or strings. Without a cast, "abc" for an
+      # integer key raises Ecto.Query.CastError on every retry.
+      test "the default loader casts ids to the key type and rejects ids it cannot cast",
+           %{repo: repo} do
+        books = repo.insert!(%LoaderBackfill.Category{name: "Books"})
+        row = repo.insert!(%LoaderBackfill.Product{title: "a", category_id: books.id})
+
+        assert {:ok, [%LoaderBackfill.Product{id: id}], []} =
+                 Loader.load(LoaderBackfill.Product, [to_string(row.id)], repo: repo)
+
+        assert id == row.id
+
+        assert {:error, {:invalid_arg, "document_ids"}} =
+                 Loader.load(LoaderBackfill.Product, [row.id, "abc"], repo: repo)
+      end
+    end
+  end
+
+  # Success criterion 2: search_records/2 decides document content while the
+  # caller's :query decides which rows are visited.
+  defp search_records_cases do
+    quote location: :keep do
+      test "search_records/2 loads every batch; the :query scope decides rows", %{repo: repo} do
+        articles =
+          insert_articles!(repo, [
+            {"eu", true, false},
+            {"us", true, true},
+            {"eu", false, false},
+            {"eu", true, false},
+            {"us", true, false},
+            {"eu", false, false},
+            {"eu", true, false}
+          ])
+
+        eu = Enum.filter(articles, &(&1.region == "eu"))
+        us_ids = for a <- articles, a.region == "us", do: a.id
+        pinned_id = Enum.find(articles, & &1.pinned).id
+        eu_query = Ecto.Query.from(a in LoaderBackfill.Article, where: a.region == "eu")
+
+        assert {:ok, result} =
+                 backfill!(LoaderBackfill.Article, repo, batch_size: 2, query: eu_query)
+
+        batches = eu |> Enum.map(& &1.id) |> Enum.chunk_every(2)
+
+        # The loader has no ordering contract (D-03): it dedupes and sorts ids by
+        # their string form, so a Postgres batch [9, 11] arrives as [11, 9].
+        for batch_ids <- batches do
+          assert_received {:search_records, loaded_ids}
+          assert Enum.sort(loaded_ids) == batch_ids
+        end
+
+        refute_received {:search_records, _}
+
+        upserted = upserted_ids()
+        assert Enum.sort(upserted) == for(a <- eu, a.published, do: a.id)
+        refute pinned_id in upserted
+        assert Enum.all?(upserted, &(&1 not in us_ids))
+
+        unpublished = for a <- eu, not a.published, do: a.id
+        assert Enum.sort(deleted_ids()) == unpublished
+        assert result.removed == length(unpublished)
+        assert result.batches == length(batches)
+      end
+
+      test "reindex counts what search_records/2 omits and deletes nothing", %{repo: repo} do
+        articles =
+          insert_articles!(repo, [
+            {"eu", true, false},
+            {"eu", false, false},
+            {"us", false, false},
+            {"eu", false, false}
+          ])
+
+        # Managed reindex rebuilds the whole schema, so it takes no :query.
+        assert {:ok, result} = reindex!(LoaderBackfill.Article, repo, batch_size: 2)
+
+        refute_received {:delete_documents, _, _, _}
+        assert result.omitted == Enum.count(articles, &(not &1.published))
+        assert result.documents == 1
+        assert upserted_ids() == [hd(articles).id]
+      end
+
+      test "an all-omitted backfill still visits and counts every batch", %{repo: repo} do
+        articles =
+          insert_articles!(repo, [
+            {"eu", false, false},
+            {"us", true, true},
+            {"eu", false, false},
+            {"eu", false, false}
+          ])
+
+        eu_ids = for a <- articles, a.region == "eu", do: a.id
+        eu_query = Ecto.Query.from(a in LoaderBackfill.Article, where: a.region == "eu")
+
+        assert {:ok, result} =
+                 backfill!(LoaderBackfill.Article, repo, batch_size: 1, query: eu_query)
+
+        assert result.batches == length(eu_ids)
+        assert result.documents == 0
+        assert result.removed == length(eu_ids)
+        assert recorded_upserts() == []
+        assert deleted_ids() == eu_ids
+
+        cursors = Enum.map(result.batch_results, & &1.last_primary_key)
+        assert cursors == eu_ids
+
+        cursors
+        |> Enum.chunk_every(2, 1, :discard)
+        |> Enum.each(fn [previous, next] -> assert previous < next end)
+      end
+    end
+  end
+
+  # PAGE-03 / D-02: :batch_size sets the page size only; every page is written
+  # in chunks of at most Scrypath.Chunks.max_ids/0 documents.
+  defp bounded_write_cases do
+    quote location: :keep do
+      test "a 2,500-row page with batch_size: 5000 is one batch and three bounded upserts",
+           %{repo: repo} do
+        1..2500
+        |> Enum.map(&%{title: "post #{&1}"})
+        |> Enum.chunk_every(500)
+        |> Enum.each(fn rows -> {500, _} = repo.insert_all(LoaderBackfill.Post, rows) end)
+
+        ids =
+          repo.all(Ecto.Query.from(p in LoaderBackfill.Post, select: p.id, order_by: p.id))
+
+        assert {:ok, result} = backfill!(LoaderBackfill.Post, repo, batch_size: 5000)
+
+        assert result.batches == 1
+        assert result.documents == 2500
+        assert [%{documents: 2500, tasks: tasks}] = result.batch_results
+        assert is_list(tasks)
+
+        upserts = recorded_upserts()
+        assert length(upserts) == 3
+
+        sizes = Enum.map(upserts, fn {_schema, documents, _config} -> length(documents) end)
+        assert Enum.all?(sizes, &(&1 <= 1000))
+        assert Enum.sum(sizes) == 2500
+
+        upserted_ids =
+          Enum.flat_map(upserts, fn {_schema, documents, _config} ->
+            Enum.map(documents, & &1.id)
+          end)
+
+        assert upserted_ids == ids
+      end
+    end
+  end
+
+  @doc false
+  def forward_query(_event, _measurements, metadata, pid) do
+    send(pid, {:lb_sql, metadata.query})
+  end
+
+  @doc "Drains SQL strings forwarded by `forward_query/4`."
+  def forwarded_queries, do: drain_queries([])
+
+  defp drain_queries(acc) do
+    receive do
+      {:lb_sql, sql} -> drain_queries([sql | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
+  @doc "Inserts `lb_memberships` rows for `{org_id, seq}` key tuples."
+  def insert_memberships!(repo, keys) do
+    rows = Enum.map(keys, fn {org_id, seq} -> %{org_id: org_id, seq: seq, label: "m"} end)
+    {count, _} = repo.insert_all(LoaderBackfill.Membership, rows)
+    count
+  end
+
+  @doc """
+  Drops and recreates the repo's database, starts the repo, runs the inline
+  migration once, and switches the sandbox to manual mode.
+
+  Call from `setup_all`.
+  """
+  def setup_repo!(repo) do
+    adapter = repo.__adapter__()
+    config = repo.config()
+
+    {:ok, _apps} = Application.ensure_all_started(:ecto_sql)
+    ensure_adapter_started!(adapter)
+
+    _ = adapter.storage_down(config)
+
+    case adapter.storage_up(config) do
+      :ok -> :ok
+      {:error, :already_up} -> :ok
+    end
+
+    ExUnit.Callbacks.start_supervised!(repo)
+
+    :ok = Ecto.Migrator.up(repo, 0, LoaderBackfill.Migration, log: false)
+    :ok = Ecto.Adapters.SQL.Sandbox.mode(repo, :manual)
+
+    if adapter == Ecto.Adapters.SQLite3 do
+      database = Keyword.fetch!(config, :database)
+
+      ExUnit.Callbacks.on_exit(fn ->
+        Enum.each(["", "-wal", "-shm"], &File.rm("#{database}#{&1}"))
+      end)
+    end
+
+    :ok
+  end
+
+  @doc "Runs `Scrypath.backfill/2` against the recording backend."
+  def backfill!(schema, repo, opts) do
+    Scrypath.backfill(
+      schema,
+      Keyword.merge(
+        [backend: LoaderBackfill.RecordingBackend, repo: repo, sync_mode: :manual],
+        opts
+      )
+    )
+  end
+
+  @doc """
+  Runs `Scrypath.reindex/2` with the recording backend and the stub
+  Meilisearch, so no request ever reaches a server. Settings verification is
+  skipped (it would read settings back from Meilisearch); the warning it logs
+  is captured.
+  """
+  def reindex!(schema, repo, opts) do
+    opts =
+      Keyword.merge(
+        [
+          backend: LoaderBackfill.RecordingBackend,
+          meilisearch: LoaderBackfill.StubMeilisearch,
+          repo: repo,
+          skip_settings_verification?: true
+        ],
+        opts
+      )
+
+    ExUnit.CaptureLog.with_log(fn -> Scrypath.reindex(schema, opts) end) |> elem(0)
+  end
+
+  @doc "Inserts `lb_articles` rows from `{region, published, pinned}` tuples, in id order."
+  def insert_articles!(repo, specs) do
+    for {{region, published, pinned}, n} <- Enum.with_index(specs, 1) do
+      # struct/2 at runtime: the fixture module is compiled alongside this one.
+      LoaderBackfill.Article
+      |> struct(title: "article #{n}", region: region, published: published, pinned: pinned)
+      |> repo.insert!()
+    end
+  end
+
+  @doc "Drains recorded upserts and returns their documents in arrival order."
+  def upserted_documents do
+    Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} -> documents end)
+  end
+
+  @doc "Drains recorded deletes and returns their ids in arrival order."
+  def deleted_ids, do: drain_deletes([])
+
+  defp drain_deletes(acc) do
+    receive do
+      {:delete_documents, _schema, ids, _config} -> drain_deletes(Enum.reverse(ids, acc))
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
+  @doc "Drains recorded `{schema, documents, config}` upserts in arrival order."
+  def recorded_upserts, do: drain_upserts([])
+
+  @doc "Drains recorded upserts and returns their document ids in arrival order."
+  def upserted_ids do
+    Enum.flat_map(recorded_upserts(), fn {_schema, documents, _config} ->
+      Enum.map(documents, & &1.id)
+    end)
+  end
+
+  defp drain_upserts(acc) do
+    receive do
+      {:upsert_documents, schema, documents, config} ->
+        drain_upserts([{schema, documents, config} | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
+  defp ensure_adapter_started!(Ecto.Adapters.Postgres) do
+    {:ok, _apps} = Application.ensure_all_started(:postgrex)
+    :ok
+  end
+
+  defp ensure_adapter_started!(_adapter), do: :ok
+end

@@ -506,6 +506,40 @@ defmodule Scrypath.Operator.FailedWorkTest do
     assert job.args["repo"] == "Elixir.Scrypath.TestSupport.FakeRepo"
   end
 
+  # WR-09: enqueue raises for nil, float and boolean ids, so a stored job holding one
+  # must come back as an error tuple, which the ScrypathOps retry handler shows as a flash.
+  for {operation, ids} <- [{:upsert, [1, nil]}, {:delete, [1.5]}, {:upsert, [true]}] do
+    test "retry_sync_work/2 returns an error for stored #{operation} ids #{inspect(ids)}" do
+      action =
+        RecoveryAction.new(
+          schema: SearchablePost,
+          backend: Scrypath.Meilisearch,
+          mode: :oban,
+          operation: unquote(operation),
+          index: "tenant_searchable_post",
+          reference: %{
+            queue: "search_sync",
+            payload: %{
+              "operation" => unquote(to_string(operation)),
+              "document_ids" => unquote(Macro.escape(ids)),
+              "repo" => "Elixir.Scrypath.TestSupport.FakeRepo"
+            }
+          }
+        )
+
+      assert {:error, {:invalid_retry_input, :document_ids}} =
+               Scrypath.retry_sync_work(action,
+                 backend: Scrypath.Meilisearch,
+                 sync_mode: :oban,
+                 index_prefix: "tenant",
+                 oban: RecordingOban,
+                 oban_queue: :search_sync
+               )
+
+      refute_received {:oban_insert, _job}
+    end
+  end
+
   test "retry_sync_work/2 rejects non-retryable failed work" do
     assert {:error, :not_retryable} =
              Scrypath.retry_sync_work(

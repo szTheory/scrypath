@@ -26,6 +26,16 @@ Read every sync result through that lens:
 - terminal backend success means the tracked task finished
 - visible search means a later query observes the updated projection
 
+### Large id lists
+
+Scrypath dedupes the ids and documents you pass and sends them in chunks of at most 1000, so one call never builds an unbounded backend request, database query or job. The chunk size is fixed.
+
+- Chunks run in order. The call stops at the first failed chunk and returns that chunk's `{:error, reason}`; later chunks are not sent.
+- Chunks already sent stay applied. Writes are idempotent by id (and an Oban retry reloads the current records), so retrying the whole call is safe.
+- The result's `tasks:` lists one entry per chunk, in order, and `task:` is the last one. A call with 1000 ids or fewer has a one-element `tasks:` list.
+- There is no ordering contract. Resolvers, loaders and `search_records/2` get deduped input (set semantics) in no promised order.
+- The result's `document_ids` lists each id once, sorted by its string form (`[2, 10]` becomes `[10, 2]`), whatever the call size, and `document_count` counts distinct ids. Do not zip `document_ids` with the records or ids you passed.
+
 ## Operator lifecycle
 
 `requested -> enqueued -> processing -> backend_accepted -> completed | retrying | discarded`
@@ -49,6 +59,7 @@ Use `:inline` when the write path should wait for terminal backend task success 
 What you can see:
 
 - backend success or failure before the caller continues
+- for more than 1000 ids, Scrypath waits on each chunk's task before it sends the next chunk, and `inline_timeout` applies to each chunk's wait, not to the whole call
 - `mix scrypath.status` for current backend visibility
 - `mix scrypath.reconcile` when you suspect drift after a deployment or contract change
 
@@ -56,6 +67,7 @@ What can still fail:
 
 - database and search writes are still not atomic
 - later reads can still surface stale search hits if the contract changed
+- inline sync of more than 1000 ids inside a request holds the request for several backend waits; that is a smell, so move bulk work to `:oban`
 
 Recovery posture:
 
@@ -109,7 +121,27 @@ end
 
 Return only the records that should be searchable; Scrypath removes the rest from the index. Schemas that define `search_document_id/1` must define `search_records/2`, because a custom document id cannot be mapped back to a row. Scrypath raises at enqueue time when a job could not load its records later.
 
+Backfill and managed reindex load each batch through the same `preload:` and `search_records/2` path as Oban sync, so they build the same documents. A live-index backfill also removes the ids `search_records/2` leaves out, but only ids from the rows it visits. Those deletes are accepted asynchronously, like the upserts: each batch result reports the delete under `delete_task` next to the upsert `task`, and `removed` counts the ids submitted for deletion. A page with more than 1000 documents or removed ids is written in chunks, one task per chunk: `tasks` lists every upsert chunk task and `delete_tasks` every delete chunk task, with `task` and `delete_task` as the last of each. Backfill does not wait on any of them, so follow every entry in `delete_tasks` as well as `tasks` when you need the removals applied. A managed reindex writes into a fresh index that never held those ids, so it reports them as `omitted` instead of deleting anything.
+
+A backfill is not a whole-index prune. The default path, without `search_records/2`, never omits rows. Documents for rows deleted outside Scrypath, or for rows outside the visited `:query` scope, stay in the index until drift recovery (`Scrypath.reconcile_sync/2`) or a managed reindex handles them.
+
 Delete jobs still carry only ids and never reload the deleted row.
+
+A job stores each document id as an integer or a string, the id types Meilisearch accepts (an atom id is stored as its name). Any other id, such as `nil` from a struct that was never saved, raises `ArgumentError` when you sync instead of being queued and cancelled later.
+
+Each job carries at most 1000 ids. A larger call enqueues one job per chunk, inserted together in one transaction, so either every chunk job is queued or none is; the result's `tasks:` lists one queued job per chunk. Each worker also writes to the backend in chunks of at most 1000. An identical job that is still pending (available, scheduled or retryable) is not inserted twice: the existing job is returned and reported with `conflict?: true`. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` still add one job per `Ecto.Multi` step, whatever its size; the worker bounds each backend write.
+
+#### Call sync functions after your write commits
+
+Call `Scrypath.sync_records/3`, `Scrypath.delete_documents/3` and `Scrypath.sync_related/3` after your transaction commits, in every sync mode, not from inside it:
+
+- Under `:oban`, Scrypath collapses a sync into an identical pending job instead of inserting a second one (`conflict?: true`). That decision is made when you enqueue. Inside a transaction, the job you collapse into can start before your commit, load the old rows and finish, and no job is left to index your change.
+- Under `:oban`, Oban also holds a lock on that unique job until your transaction ends. An identical sync from another process during that time reports `conflict?: true` and inserts nothing. If your transaction then rolls back, neither job exists and the other process's update is never indexed.
+- Under `:inline`, the backend write runs immediately, so inside a transaction the backend would index rows that are not committed yet and may still roll back.
+
+The trade-off: if your process crashes between the commit and the sync call, that sync is missed. The data is committed, so a retry of the call, a backfill or a managed reindex brings the index back in line; see [Drift recovery](drift-recovery.md) and the recovery posture for each mode above.
+
+If you do call a sync function inside a transaction on the Oban repo, Scrypath won't break your transaction. It inserts the chunk jobs in your transaction instead of opening a nested one, and returns the first failed insert's `{:error, reason}` without rolling anything back, so fail your transaction on `{:error, _}` (returning the error from `Ecto.Multi.run/3` does that). The freshness hazards above still apply. `Scrypath.Oban.enqueue_upsert/5` and `Scrypath.Oban.enqueue_delete/5` are the exception: they insert their job inside your `Ecto.Multi` by design and without the `unique:` policy, so the job becomes visible only at commit and always reads committed rows (an identical pending job may then run twice, which is harmless).
 
 #### Upgrading from 0.3.15 or earlier
 
@@ -130,6 +162,7 @@ What you can see:
 What can still fail:
 
 - accepted work does not mean the document is searchable yet
+- for more than 1000 ids, Scrypath sends every chunk without waiting on any task, so a successful `task:` does not prove that earlier chunks succeeded; check every entry in `tasks:`
 - manual follow-up can drift from the source of truth if nobody closes the loop
 
 Recovery posture:

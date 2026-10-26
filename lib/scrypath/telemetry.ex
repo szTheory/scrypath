@@ -1,6 +1,7 @@
 defmodule Scrypath.Telemetry do
   @moduledoc false
 
+  alias Scrypath.Chunks
   alias Scrypath.Config
 
   @type event_name :: [atom()]
@@ -56,6 +57,35 @@ defmodule Scrypath.Telemetry do
     Map.merge(%{result_kind: result_kind(result)}, Map.new(extra))
   end
 
+  @doc false
+  # Start metadata for an Oban upsert or delete worker span, shared so both stay in step.
+  # sync_mode: :oban overrides the :manual the worker config resolves with (extra merges
+  # last). index is the one the job writes to: a backend's index_name/2 may rebuild the
+  # name from the current prefix config, which differs from the queued name after a
+  # deploy that changes the prefix.
+  @spec job_start_metadata(module(), keyword(), map(), [term()], String.t()) :: metadata()
+  def job_start_metadata(schema_module, config, oban_job, document_ids, index) do
+    common_metadata(schema_module, config,
+      sync_mode: :oban,
+      attempt: oban_job.attempt,
+      max_attempts: oban_job.max_attempts,
+      document_count: Chunks.distinct_count(document_ids),
+      index: index
+    )
+  end
+
+  @doc false
+  # Stop metadata for a job worker's perform/1 result. Kept apart from stop_metadata/2:
+  # a job result never carries a document_count, so the start count is never overwritten.
+  @spec job_stop_metadata(term()) :: metadata()
+  def job_stop_metadata(:ok), do: %{outcome: :ok}
+
+  def job_stop_metadata({:error, reason}),
+    do: %{outcome: :error, error_kind: error_kind(reason)}
+
+  def job_stop_metadata({:cancel, reason}),
+    do: %{outcome: :cancel, cancel_reason: cancel_reason(reason)}
+
   defp result_metadata(result) do
     %{}
     |> maybe_put(:status, Map.get(result, :status))
@@ -80,6 +110,13 @@ defmodule Scrypath.Telemetry do
   defp error_kind({:invalid_task_payload, _}), do: :invalid_task_payload
   defp error_kind(reason) when is_atom(reason), do: reason
   defp error_kind(_), do: :other
+
+  # Keeps only the atom head of a cancel tag; the detail (an id key, a module name or
+  # free text from job args) is dropped so it never becomes a metric tag or a new atom.
+  defp cancel_reason({:invalid_job, tag}), do: cancel_reason(tag)
+  defp cancel_reason({tag, _detail}) when is_atom(tag), do: tag
+  defp cancel_reason(tag) when is_atom(tag), do: tag
+  defp cancel_reason(_), do: :other
 
   defp result_kind(result) when is_tuple(result), do: :tuple
   defp result_kind(result) when is_atom(result), do: result

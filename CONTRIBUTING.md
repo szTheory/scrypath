@@ -29,10 +29,10 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 
 | Capability | Canonical command | Preserved proof |
 | --- | --- | --- |
-| Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) |
+| Core library | `mix verify.core` | Standard root maturity gate (`mix verify`) followed by the isolated no-optional-deps compile (`mix verify.no_optional_deps`) |
 | Package/release contract | `mix verify.package` | Package, consumer, docs, and release agreement (`mix verify.phase11`) |
 | Repository contracts | `mix verify.repository_contracts` | Trust/repository contract gate (<code>mix verify.phase99</code>) |
-| Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) |
+| Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) plus the real-Postgres loader suite (`mix verify.postgres`) |
 | Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
 | Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
 | Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
@@ -49,7 +49,9 @@ mix test --exclude integration --exclude docs_contract
 Quality-baseline commands are capability-named and safe to run locally:
 
 ```sh
-# Ensure the root library does not accidentally require optional dependencies.
+# Compile the root library into an isolated build (MIX_BUILD_PATH,
+# MIX_ENV=prod) without optional dependencies, with warnings as errors. Fails
+# if Oban ends up on the code path. Also runs as part of mix verify.core.
 mix verify.no_optional_deps
 
 # Produce a built-in line-coverage report for the fast suite. This is
@@ -165,8 +167,10 @@ The live branch maps directly to the GitHub Actions **`phoenix-example`** job co
 Run the canonical backend verification (`mix verify.backend`) when you change Meilisearch integration. The historical `mix verify.phase5` remains the focused backfill/reindex/operator-docs wrapper:
 
 ```sh
+docker compose up -d postgres meilisearch
 SCRYPATH_INTEGRATION=1 \
 SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 \
+SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 \
 mix verify.backend
 ```
 
@@ -175,6 +179,16 @@ That command runs:
 - focused backfill/reindex/operator contract tests
 - `mix docs --warnings-as-errors`
 - live Meilisearch integration verification
+- real-Postgres loader/backfill tests (`mix verify.postgres`)
+
+To run only the Postgres loader suite, start the compose Postgres (host port 5434) and run `mix verify.postgres`:
+
+```sh
+docker compose up -d postgres
+SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix verify.postgres
+```
+
+The suite drops and recreates the `scrypath_test<MIX_TEST_PARTITION>` database on that server, so do not point it at a database you care about. Plain `mix test` excludes the `:postgres` tag unless `SCRYPATH_POSTGRES_URL` is set, so the core lane stays service-free.
 
 If you do not have a Meilisearch instance running locally, you can still run the non-integration portion:
 
@@ -205,10 +219,10 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 | Job | Purpose |
 |-----|---------|
-| **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, and the single CI docs build. |
+| **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, the single CI docs build, and the no-Oban compile. |
 | **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
 | **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
-| **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. |
+| **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. A Postgres 16 service with `SCRYPATH_POSTGRES_URL` in the same job runs the real-Postgres loader suite (`mix verify.postgres`). |
 | **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` for mounted routing, failed-sync triage, and zero-downtime swap behavior. |
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |

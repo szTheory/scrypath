@@ -5,6 +5,11 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
   alias Scrypath.Query
   alias ScrypathEcommerce.Catalog.Product
 
+  # An Oban stand-in whose inserts fail, to drive the post-commit sync error path.
+  defmodule FailingOban do
+    def insert(_changeset), do: {:error, :queue_down}
+  end
+
   defmodule SearchVisibleBackend do
     def name, do: :e2e_controller_test
 
@@ -160,6 +165,36 @@ defmodule ScrypathEcommerceWeb.E2EControllerTest do
           "fan_out" => "products"
         }
       )
+    end
+
+    # Built without /dev/e2e/seed, which needs a live Meilisearch.
+    test "reports a failed related sync instead of claiming it was queued", %{conn: conn} do
+      {:ok, tenant} = ScrypathEcommerce.Catalog.create_tenant(%{name: "E2E Tenant"})
+      {:ok, category} = ScrypathEcommerce.Catalog.create_category(tenant, %{name: "Smartphones"})
+      tenant_id = tenant.id
+      category_id = category.id
+
+      defaults = Application.get_env(:scrypath, :defaults)
+      on_exit(fn -> Application.put_env(:scrypath, :defaults, defaults) end)
+      Application.put_env(:scrypath, :defaults, Keyword.put(defaults, :oban, FailingOban))
+
+      {conn, _log} =
+        ExUnit.CaptureLog.with_log(fn ->
+          post(conn, ~p"/dev/e2e/category-name", %{
+            tenant_id: tenant_id,
+            category_id: category_id,
+            name: "Pocket Superphones"
+          })
+        end)
+
+      assert %{
+               "category_id" => ^category_id,
+               "name" => "Pocket Superphones",
+               "queued_related_sync" => false,
+               "related_sync_error" => ":queue_down"
+             } = json_response(conn, 200)
+
+      refute_enqueued(worker: Scrypath.Sync.RelatedWorker)
     end
 
     test "returns deterministic 400 for invalid numeric params", %{conn: conn} do

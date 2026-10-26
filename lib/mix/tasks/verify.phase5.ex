@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Verify.Phase5 do
         "test/scrypath/options_test.exs",
         "test/scrypath/schema_test.exs",
         "test/scrypath/backfill_test.exs",
+        "test/scrypath/loader_backfill_sqlite_test.exs",
         "test/scrypath/meilisearch_test.exs",
         "test/scrypath/reindex_test.exs"
       ],

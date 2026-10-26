@@ -4,84 +4,41 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
-    alias Scrypath.Config
+    alias Scrypath.Chunks
     alias Scrypath.Oban.IndexingAck
-    alias Scrypath.Oban.JobConfig
+    alias Scrypath.Oban.JobArgs
+    alias Scrypath.Telemetry
 
     @impl Oban.Worker
-    def perform(%Oban.Job{args: args}) do
-      with {:ok, schema_module} <- resolve_schema(args),
-           {:ok, backend} <- resolve_backend(args),
-           {:ok, index_name} <- fetch_index(args),
-           {:ok, document_ids} <- load_document_ids(args),
-           :ok <- validate_document_count(args, document_ids),
-           {:ok, config} <- build_config(backend, index_name, args) do
-        case backend.delete_documents(schema_module, document_ids, config) do
-          {:ok, _} = ok -> IndexingAck.await(backend, ok, config)
-          {:error, reason} -> {:error, reason}
-        end
+    def perform(%Oban.Job{args: args} = oban_job) do
+      with {:ok, job} <- JobArgs.decode_delete(args),
+           {:ok, config} <-
+             JobArgs.resolve_config([backend: job.backend, sync_mode: :manual] ++ job.opts) do
+        config = Keyword.put(config, :index_name, job.index)
+
+        metadata =
+          Telemetry.job_start_metadata(job.schema, config, oban_job, job.document_ids, job.index)
+
+        # The span starts only once decode and config succeeded, so every tag is known.
+        Telemetry.span([:scrypath, :oban, :delete], metadata, fn ->
+          result = write(job.backend, job.schema, job.document_ids, config)
+          {result, Telemetry.job_stop_metadata(result)}
+        end)
       else
-        {:error, reason} -> {:cancel, {:invalid_job, reason}}
+        {:error, tag} -> {:cancel, {:invalid_job, tag}}
       end
     end
 
-    defp resolve_schema(%{"schema" => name}) when is_binary(name) do
-      resolve_existing_module(name, fn module -> function_exported?(module, :__scrypath__, 1) end)
-    end
+    # Deletes at most Chunks.max_ids/0 ids per call and waits for each chunk's task
+    # before sending the next; the first failure stops the job so Oban retries it.
+    defp write(_backend, _schema_module, [], _config), do: :ok
 
-    defp resolve_schema(_args), do: {:error, :invalid_schema}
-
-    defp resolve_backend(%{"backend" => name}) when is_binary(name) do
-      resolve_existing_module(name, fn module ->
-        function_exported?(module, :delete_documents, 3) and
-          function_exported?(module, :index_name, 2)
+    defp write(backend, schema_module, document_ids, config) do
+      document_ids
+      |> Chunks.ids()
+      |> Chunks.each_ok(fn chunk ->
+        IndexingAck.await(backend, backend.delete_documents(schema_module, chunk, config), config)
       end)
-    end
-
-    defp resolve_backend(_args), do: {:error, :invalid_backend}
-
-    defp fetch_index(%{"index" => index_name})
-         when is_binary(index_name) and byte_size(index_name) > 0,
-         do: {:ok, index_name}
-
-    defp fetch_index(_args), do: {:error, :invalid_index}
-
-    defp load_document_ids(%{"document_ids" => document_ids}) when is_list(document_ids),
-      do: {:ok, document_ids}
-
-    defp load_document_ids(_args), do: {:error, :invalid_document_ids}
-
-    defp validate_document_count(%{"document_count" => count}, document_ids)
-         when is_integer(count) and count == length(document_ids),
-         do: :ok
-
-    defp validate_document_count(_args, _document_ids), do: {:error, :invalid_document_count}
-
-    defp build_config(backend, index_name, args) do
-      config =
-        [backend: backend, sync_mode: :manual]
-        |> JobConfig.merge_job_runtime_opts(args)
-
-      {:ok, Config.resolve!(config) |> Keyword.put(:index_name, index_name)}
-    rescue
-      error in ArgumentError -> {:error, {:invalid_config, Exception.message(error)}}
-    end
-
-    defp resolve_existing_module(name, validator) do
-      with {:ok, module} <- safe_module(name),
-           true <- Code.ensure_loaded?(module),
-           true <- validator.(module) do
-        {:ok, module}
-      else
-        _ -> {:error, {:unknown_module, name}}
-      end
-    end
-
-    defp safe_module(name) do
-      parts = name |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
-      {:ok, Module.safe_concat(parts)}
-    rescue
-      ArgumentError -> {:error, {:unknown_module, name}}
     end
   end
 end

@@ -42,7 +42,7 @@ Done 2026-10-25. Closeout run 40204029522 on `ebed49b5`; receipt in `v1.43-final
 - `RelatedEnqueue` has drifted from the main enqueue path: it has no `unique:`, and it calls `String.to_existing_atom` without a rescue.
 - Schema hooks are duck-typed. Declare them as `@optional_callbacks`.
 - Add a loader test against a real database; the current ones only use `FakeRepo`.
-- The `lib/scrypath/sync.ex` (around line 60) compile warning is a false positive in builds without Oban. Silence it properly.
+- The `lib/scrypath/sync.ex` (around line 60) compile warning is a false positive in builds without Oban. Silence it properly. Phase 181 found it was a real Elixir 1.19 type warning from an always-raising no-Oban stub (fixed), not a false positive; the earlier `verify.no_optional_deps` greens in the Phase 179/180 summaries ran with Oban on the code path.
 
 ## Re-order (approved 2026-10-25)
 
@@ -105,6 +105,7 @@ Still out of scope: vector/hybrid search, autocomplete, callback or Repo-hook au
 - Contract-test sprawl.
 - Throttling, geo search.
 - Release-please app token (deferred; keep the close+reopen nudge).
+- Elixir 1.20.4/OTP 29 adds no-Oban warnings outside the 1.19 support target (redundant clauses at `lib/scrypath/meilisearch/task_payload.ex:53`, `lib/scrypath/meilisearch/settings.ex:167`, `lib/scrypath/composition/merge.ex:163,166,169`, plus "cannot infer signatures from :oban"). Fix when CI adds a 1.20 lane.
 
 ## Known open items
 

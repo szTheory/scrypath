@@ -126,6 +126,17 @@ Release Please manages versioned entries after this baseline.
 
 ## [Unreleased]
 
+### Upgrade notes
+
+* **Schema hooks now implement `Scrypath.Schema`.** `use Scrypath` adds this
+  behaviour automatically. If your schema uses `@impl` for another behaviour,
+  add `@impl Scrypath.Schema` before each implemented `search_document/1`,
+  `search_document_id/1` and `search_records/2` hook. Otherwise Elixir emits
+  missing-`@impl` warnings, which fail builds using `--warnings-as-errors`.
+  Hooks must be public `def` functions; a private `defp` at a callback's arity
+  also produces a compiler warning. The hooks remain optional.
+
+
 ### Added
 
 - **v1.26: High-Cardinality Facet Search** — Shipped `Scrypath.search_facet_values/4` first-class function and `Scrypath.FacetSearchResult` struct for idiomatic high-cardinality facet search wrapping Meilisearch's `/facet-search` endpoint. Includes concrete LiveView type-ahead examples in ExDoc.

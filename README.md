@@ -165,10 +165,13 @@ result.target_index
 result.settings_applied
 result.batches
 result.documents
+result.omitted
 result.cutover
 ```
 
 `cutover?: false` leaves the live index untouched while you inspect the rebuilt target.
+
+`result.omitted` counts records that `search_records/2` left out of the rebuilt index. Because the target index is new, those ids are counted rather than deleted.
 
 ## Drift Detection And Recovery
 

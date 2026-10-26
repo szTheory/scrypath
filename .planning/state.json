@@ -1,38 +1,33 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.43 — ScrypathOps UI refinement",
+  "milestone": "v1.44 \u2014 Sync correctness",
   "phases": [
     {
-      "number": "173",
-      "name": "Shared Visual Foundation and Operational Time",
+      "number": "178",
+      "name": "Loader-routed backfill and full-key paging",
       "status": "complete"
     },
     {
-      "number": "174",
-      "name": "Recovery Entry and Diagnosis",
+      "number": "179",
+      "name": "Bounded id lists and related-sync parity",
       "status": "complete"
     },
     {
-      "number": "175",
-      "name": "Repair and Verification",
+      "number": "180",
+      "name": "Oban worker telemetry",
       "status": "complete"
     },
     {
-      "number": "176",
-      "name": "Search and Playbooks",
-      "status": "complete"
-    },
-    {
-      "number": "177",
-      "name": "Shared Patterns and Delivery Proof",
+      "number": "181",
+      "name": "Schema hook contract and no-Oban build",
       "status": "complete"
     }
   ],
   "next": {
-    "command": "/gsd:secure-phase 177",
-    "label": "Re-audit Phase 177 security",
-    "reason": "All plans are complete, but T-177-05 remains blocking until exact-source and merged-main closeout evidence is recorded."
+    "command": "$gsd-new-milestone",
+    "label": "Start the next milestone",
+    "reason": "v1.44 archived locally; no phase active; fresh v1.45 scope and requirements next"
   },
-  "updated_at": "2026-10-13T02:51:09.000Z"
+  "updated_at": "2026-10-26T19:52:11.084Z"
 }

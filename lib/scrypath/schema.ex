@@ -21,15 +21,109 @@ defmodule Scrypath.Schema do
   - `:preload`
 
   The macro does not generate runtime APIs such as `search/2` or `reindex/1`.
+
+  ## Hooks
+
+  `use Scrypath` makes the schema module implement the `Scrypath.Schema` behaviour.
+  Define these callbacks on the schema module to change how Scrypath builds and loads
+  documents:
+
+  - `c:search_document/1`: build the document yourself, for computed or nested values
+    that `fields:` cannot express.
+  - `c:search_document_id/1`: use a document id other than the `document_id:` field.
+  - `c:search_records/2`: load records by document id yourself, for custom ids,
+    soft deletes or preloads that a plain Ecto query cannot express.
+
+  All three are optional. When a hook is absent, Scrypath projects the declared
+  `fields:`, reads the `document_id:` field and loads records with an Ecto query.
+
+  A hook defined at the wrong arity, such as `search_records/1`, triggers a compile
+  warning, because Scrypath would otherwise ignore it at runtime.
+
+  If the schema module uses `@impl` for any other behaviour, Elixir expects `@impl`
+  on every callback, so mark the hooks with `@impl Scrypath.Schema`.
   """
 
   alias Scrypath.Options
+
+  @doc """
+  Builds the search document for `record`.
+
+  When defined, Scrypath uses the returned map instead of projecting the declared
+  `fields:`. The callback must return a map. An `:id` (or `"id"`) key in the map
+  overrides the document id. When the schema declares `tenant_field:`, Scrypath
+  still adds the tenant value to the document.
+  """
+  @callback search_document(record :: struct() | map()) :: map()
+
+  @doc """
+  Returns the search document id for `record`.
+
+  When defined, Scrypath uses the returned value instead of reading the
+  `document_id:` field. If you sync through Oban, also define
+  `c:search_records/2`, because the job cannot map a custom id back to a row:
+  without it, enqueueing an upsert raises `ArgumentError` before any job is
+  inserted.
+  """
+  @callback search_document_id(record :: struct() | map()) :: term()
+
+  @doc """
+  Loads the current records for `document_ids`.
+
+  Scrypath calls this during Oban sync and backfill with at most 1000 deduplicated
+  ids per call and a context map `%{repo: repo}`, where `repo` may be `nil`. The
+  callback must return a list. Ids whose records are not returned are treated as
+  missing, so their documents are deleted from the index.
+
+  When the callback is absent, Scrypath loads records with an Ecto query on the
+  `document_id:` field through the configured repo.
+  """
+  @callback search_records(
+              document_ids :: [term()],
+              context :: %{required(:repo) => module() | nil}
+            ) :: [struct() | map()]
+
+  @optional_callbacks [search_document: 1, search_document_id: 1, search_records: 2]
+
+  @hooks [search_document: 1, search_document_id: 1, search_records: 2]
+
+  @doc false
+  defmacro __before_compile__(env) do
+    defs = Module.definitions_in(env.module, :def)
+
+    for {name, arity} <- @hooks,
+        arities = defs |> Enum.filter(&(elem(&1, 0) == name)) |> Enum.map(&elem(&1, 1)),
+        arities != [] and arity not in arities do
+      arities = Enum.sort(arities)
+      line = hook_definition_line(env, {name, hd(arities)})
+
+      IO.warn(
+        "[scrypath] #{inspect(env.module)} defines " <>
+          Enum.map_join(arities, ", ", &"#{name}/#{&1}") <>
+          " but Scrypath calls #{name}/#{arity}; the hook is ignored at runtime",
+        file: env.file,
+        line: line
+      )
+    end
+
+    :ok
+  end
+
+  defp hook_definition_line(env, name_arity) do
+    case Module.get_definition(env.module, name_arity) do
+      {:v1, _kind, meta, _clauses} -> Keyword.get(meta, :line, env.line)
+      _ -> env.line
+    end
+  end
 
   defmacro __using__(opts) do
     opts = expand_schema_option_aliases(opts, __CALLER__)
     config = Options.validate_schema_options!(opts)
 
     quote bind_quoted: [config: Macro.escape(config)] do
+      @behaviour Scrypath.Schema
+      @before_compile Scrypath.Schema
+
       Module.register_attribute(__MODULE__, :scrypath_config, persist: true)
       @scrypath_config config
 

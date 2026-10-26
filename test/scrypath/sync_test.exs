@@ -133,6 +133,105 @@ defmodule Scrypath.SyncTest do
       do: {:error, :not_implemented}
   end
 
+  defmodule ChunkBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :chunk_backend
+
+    @impl true
+    def index_name(schema_module, config), do: SeamBackend.index_name(schema_module, config)
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      send(self(), {:upsert_chunk, length(documents)})
+
+      write_result(
+        schema_module,
+        Enum.map(documents, & &1.id),
+        "documentAdditionOrUpdate",
+        config
+      )
+    end
+
+    @impl true
+    def delete_documents(schema_module, document_ids, config) do
+      send(self(), {:delete_chunk, length(document_ids)})
+      write_result(schema_module, document_ids, "documentDeletion", config)
+    end
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
+
+    def next_uid do
+      uid = Process.get(:chunk_backend_uid, 900) + 1
+      Process.put(:chunk_backend_uid, uid)
+      uid
+    end
+
+    defp write_result(schema_module, ids, type, config) do
+      uid = next_uid()
+      index = index_name(schema_module, config)
+
+      {:ok,
+       Result.new(
+         mode: Keyword.get(config, :sync_mode, :manual),
+         status: :accepted,
+         document_ids: ids,
+         document_count: length(ids),
+         task:
+           Task.new(
+             source: :chunk_backend,
+             kind: :backend_task,
+             id: uid,
+             state: :enqueued,
+             reference: %{task_uid: uid, index_uid: index},
+             metadata: %{type: type},
+             raw: %{"uid" => uid, "status" => "enqueued"}
+           ),
+         metadata: %{index: index, backend_result: %{chunk_only: true}}
+       )}
+    end
+  end
+
+  defmodule FailingChunkBackend do
+    @behaviour Scrypath.Backend
+
+    @impl true
+    def name, do: :failing_chunk_backend
+
+    @impl true
+    def index_name(schema_module, config), do: SeamBackend.index_name(schema_module, config)
+
+    @impl true
+    def upsert_documents(schema_module, documents, config) do
+      call = Process.get(:failing_chunk_calls, 0) + 1
+      Process.put(:failing_chunk_calls, call)
+
+      if call == 2 do
+        send(self(), {:upsert_chunk, length(documents)})
+        {:error, :boom}
+      else
+        ChunkBackend.upsert_documents(schema_module, documents, config)
+      end
+    end
+
+    @impl true
+    def delete_documents(schema_module, document_ids, config),
+      do: ChunkBackend.delete_documents(schema_module, document_ids, config)
+
+    @impl true
+    def search(_schema_module, _query, _config), do: {:ok, %{hits: []}}
+
+    @impl true
+    def search_facet_values(_schema, _facet, _query, _opts, _config),
+      do: {:error, :not_implemented}
+  end
+
   defmodule FutureBackend do
     @behaviour Scrypath.Backend
 
@@ -686,6 +785,231 @@ defmodule Scrypath.SyncTest do
              )
 
     assert raw["canceledBy"]["uid"] == 9
+  end
+
+  defmodule SpySource do
+    defstruct [:id]
+
+    def __scrypath__(:fan_outs) do
+      [comments: [target: TargetSchema, resolver: {__MODULE__, :resolve, []}]]
+    end
+
+    def resolve(records) do
+      send(self(), {:resolver_called, records})
+      Enum.map(records, &%TargetSchema{id: &1.id, title: "Spy #{&1.id}"})
+    end
+  end
+
+  defp posts(count) do
+    Enum.map(1..count, &%SearchablePost{id: &1, title: "Post #{&1}", body: "Body"})
+  end
+
+  describe "bounded chunks" do
+    test "inline sync of 2,500 records sends three bounded upserts and one combined result" do
+      assert {:ok, result} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: ChunkBackend,
+                 sync_mode: :inline
+               )
+
+      for _ <- 1..3 do
+        assert_received {:upsert_chunk, n}
+        assert n <= 1000
+      end
+
+      refute_received {:upsert_chunk, _}
+
+      assert %{mode: :inline, status: :completed, document_count: 2500, tasks: tasks, task: task} =
+               result
+
+      assert length(tasks) == 3
+      assert task == List.last(tasks)
+      assert length(result.document_ids) == 2500
+      assert Enum.sort(result.document_ids) == Enum.to_list(1..2500)
+      refute Map.has_key?(result, :chunk_only)
+    end
+
+    test "a single-chunk call keeps today's map plus a one-element tasks list" do
+      assert {:ok, %{chunk_only: true, document_count: 2, tasks: [task], task: task}} =
+               Scrypath.sync_records(SearchablePost, posts(2),
+                 backend: ChunkBackend,
+                 sync_mode: :manual
+               )
+
+      assert {:ok, %{tasks: []}} =
+               Scrypath.sync_records(SearchablePost, posts(1), backend: RecordingBackend)
+    end
+
+    test "delete_documents of 2,500 ids sends three bounded deletes and one combined result" do
+      ids = Enum.map(1..2500, &"post:#{&1}")
+
+      assert {:ok, result} =
+               Scrypath.delete_documents(SearchablePost, Enum.shuffle(ids),
+                 backend: ChunkBackend,
+                 sync_mode: :manual
+               )
+
+      for _ <- 1..3 do
+        assert_received {:delete_chunk, n}
+        assert n <= 1000
+      end
+
+      refute_received {:delete_chunk, _}
+
+      assert %{mode: :manual, status: :accepted, document_count: 2500, tasks: tasks, task: task} =
+               result
+
+      assert length(tasks) == 3
+      assert task == List.last(tasks)
+      assert Enum.sort(result.document_ids) == Enum.sort(ids)
+    end
+
+    test "a failed chunk halts later chunks and returns the bare error" do
+      for mode <- [:inline, :manual] do
+        Process.delete(:failing_chunk_calls)
+
+        assert {:error, :boom} =
+                 Scrypath.sync_records(SearchablePost, posts(2500),
+                   backend: FailingChunkBackend,
+                   sync_mode: mode
+                 )
+
+        assert_received {:upsert_chunk, _}
+        assert_received {:upsert_chunk, _}
+        refute_received {:upsert_chunk, _}
+      end
+    end
+
+    test "inline waits on each chunk's Meilisearch task before sending the next", %{
+      task_responses: agent
+    } do
+      assert {:ok, %{mode: :inline, status: :completed, document_count: 2500, tasks: tasks}} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: Scrypath.Meilisearch,
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [plug: {Req.Test, req_stub(agent)}],
+                 inline_poll_interval: 1,
+                 inline_timeout: 50
+               )
+
+      assert length(tasks) == 3
+      assert Enum.all?(tasks, &(&1.status == :succeeded))
+
+      assert meili_requests() == [
+               {"POST", "/indexes/scrypath_searchable_post/documents"},
+               {"GET", "/tasks/301"},
+               {"POST", "/indexes/scrypath_searchable_post/documents"},
+               {"GET", "/tasks/301"},
+               {"POST", "/indexes/scrypath_searchable_post/documents"},
+               {"GET", "/tasks/301"}
+             ]
+    end
+
+    test "a failed inline chunk task halts later chunks", %{task_responses: agent} do
+      Agent.update(agent, fn _ ->
+        [{:ok, %{"uid" => 301, "status" => "failed", "error" => %{"code" => "bad"}}}]
+      end)
+
+      assert {:error, {:task_failed, %{uid: 301, status: :failed}}} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: Scrypath.Meilisearch,
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [plug: {Req.Test, req_stub(agent)}],
+                 inline_poll_interval: 1,
+                 inline_timeout: 50
+               )
+
+      assert meili_requests() == [
+               {"POST", "/indexes/scrypath_searchable_post/documents"},
+               {"GET", "/tasks/301"}
+             ]
+    end
+
+    test "manual mode never waits and returns every chunk task", %{task_responses: agent} do
+      assert {:ok, %{mode: :manual, status: :accepted, tasks: tasks}} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: Scrypath.Meilisearch,
+                 meilisearch_url: "http://localhost:7700",
+                 req_options: [plug: {Req.Test, req_stub(agent)}],
+                 sync_mode: :manual
+               )
+
+      assert length(tasks) == 3
+      assert Enum.all?(tasks, &(&1.status == :enqueued))
+
+      assert Enum.map(meili_requests(), &elem(&1, 0)) == ["POST", "POST", "POST"]
+    end
+
+    test "one upsert span wraps the whole chunked call" do
+      handler_id = "chunk-span-#{System.unique_integer([:positive])}"
+      prefix = "span#{System.unique_integer([:positive])}"
+      test_pid = self()
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:scrypath, :sync, :upsert, :stop],
+          fn _event, _measurements, metadata, _config ->
+            if metadata.index == "#{prefix}_searchable_post",
+              do: send(test_pid, {:upsert_stop, metadata.document_count})
+          end,
+          nil
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      assert {:ok, _result} =
+               Scrypath.sync_records(SearchablePost, posts(2500),
+                 backend: ChunkBackend,
+                 index_prefix: prefix
+               )
+
+      assert_received {:upsert_stop, 2500}
+      refute_received {:upsert_stop, _}
+    end
+
+    test "public job maps carry conflict?" do
+      assert {:ok, %{job: %{conflict?: false}, tasks: tasks}} =
+               Scrypath.sync_records(SearchablePost, posts(2),
+                 backend: RecordingBackend,
+                 sync_mode: :oban,
+                 repo: Scrypath.TestSupport.FakeRepo,
+                 oban: EnqueueOban,
+                 oban_queue: :search_sync
+               )
+
+      assert Enum.all?(tasks, &(&1.conflict? == false))
+    end
+
+    test "inline sync_related with no triggers is a noop and never calls the resolver" do
+      assert {:ok, %{mode: :inline, status: :noop, document_ids: [], document_count: 0}} =
+               Scrypath.Sync.sync_related(SpySource, [],
+                 fan_out: :comments,
+                 sync_mode: :inline,
+                 backend: RecordingBackend
+               )
+
+      refute_received {:resolver_called, _}
+      refute_received {:upsert_documents, _, _, _}
+
+      triggers = [%SpySource{id: 5}]
+
+      assert {:ok, %{document_count: 1}} =
+               Scrypath.Sync.sync_related(SpySource, triggers,
+                 fan_out: :comments,
+                 backend: RecordingBackend
+               )
+
+      assert_received {:resolver_called, ^triggers}
+    end
+  end
+
+  defp meili_requests do
+    receive do
+      {:meili_request, method, path, _body} -> [{method, path} | meili_requests()]
+    after
+      0 -> []
+    end
   end
 
   defp maybe_put_oban(opts, :oban) do
