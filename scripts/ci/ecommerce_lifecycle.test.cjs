@@ -5,6 +5,7 @@ const {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -34,6 +35,7 @@ function installDockerDouble(root) {
   mkdirSync(binDirectory, { recursive: true });
   const logPath = path.join(root, "docker.jsonl");
   const dockerPath = path.join(binDirectory, "docker");
+  const gitPath = path.join(binDirectory, "git");
   writeFileSync(
     dockerPath,
     `#!/usr/bin/env node
@@ -41,10 +43,28 @@ const fs = require("node:fs");
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.FAKE_DOCKER_LOG, JSON.stringify(args) + "\\n");
 if (process.env.FAKE_DOCKER_CONFIG_FAIL === "1" && args[0] === "compose" && args.includes("config")) process.exit(18);
+if (args[0] === "compose" && args.includes("up") && process.env.FAKE_DOCKER_UP_FAIL) process.exit(Number(process.env.FAKE_DOCKER_UP_FAIL));
+if (args[0] === "compose" && args.includes("run") && process.env.FAKE_DOCKER_RUN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_RUN_FAIL));
+if (args[0] === "compose" && args.includes("down") && process.env.FAKE_DOCKER_DOWN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_DOWN_FAIL));
 if (args[0] === "compose" && args.includes("logs")) process.stdout.write("fake compose diagnostics\\n");
+if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1") process.stdout.write("browser-container\\n");
+if (args[0] === "cp" && process.env.FAKE_DOCKER_CP_FAIL === "1") process.exit(42);
+if (args[0] === "ps" && process.env.FAKE_LEAK_CONTAINER === "1") process.stdout.write("owned-container\\n");
+if (args[0] === "volume" && process.env.FAKE_LEAK_VOLUME === "1") process.stdout.write("owned-volume\\n");
+if (args[0] === "network" && process.env.FAKE_LEAK_NETWORK === "1") process.stdout.write("owned-network\\n");
+`,
+  );
+  writeFileSync(
+    gitPath,
+    `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "rev-parse --short=8 HEAD") process.stdout.write("deadbeef\\n");
+else if (args.join(" ") === "rev-parse HEAD") process.stdout.write("deadbeef00000000000000000000000000000000\\n");
+else process.exit(2);
 `,
   );
   chmodSync(dockerPath, 0o755);
+  chmodSync(gitPath, 0o755);
   return { binDirectory, logPath };
 }
 
@@ -76,7 +96,15 @@ function runVerifier(t, args, extraEnv = {}) {
       ...extraEnv,
     },
   });
-  return { ...result, calls: dockerCalls(logPath) };
+  const artifactRoot = path.join(exampleDirectory, "test-results");
+  const artifactDirectory = existsSync(artifactRoot)
+    ? path.join(artifactRoot, readdirSync(artifactRoot)[0])
+    : null;
+  const lifecyclePath = artifactDirectory && path.join(artifactDirectory, "lifecycle.json");
+  const lifecycle = lifecyclePath && existsSync(lifecyclePath)
+    ? JSON.parse(readFileSync(lifecyclePath, "utf8"))
+    : null;
+  return { ...result, calls: dockerCalls(logPath), artifactDirectory, lifecycle };
 }
 
 function composeProjectCalls(calls) {
@@ -228,4 +256,89 @@ test("unsupported verifier arguments and Compose config failures return nonzero"
 
   const invalidConfig = runVerifier(t, ["full"], { FAKE_DOCKER_CONFIG_FAIL: "1" });
   assert.notEqual(invalidConfig.status, 0, "invalid merged Compose config must fail");
+  assert.equal(invalidConfig.status, 18, "later finalization errors cannot replace the config failure");
+  assert.ok(invalidConfig.lifecycle, "config failures must still produce lifecycle evidence");
+  assert.equal(invalidConfig.lifecycle.original_exit_status, 18);
+});
+
+test("browser failure stays primary when artifact copies and Compose down also fail", (t) => {
+  const result = runVerifier(t, ["full"], {
+    FAKE_DOCKER_UP_FAIL: "31",
+    FAKE_BROWSER_CONTAINER: "1",
+    FAKE_DOCKER_CP_FAIL: "1",
+    FAKE_DOCKER_DOWN_FAIL: "43",
+  });
+  assert.equal(result.status, 31, result.stderr);
+  assert.ok(result.lifecycle, "the verifier must write lifecycle evidence before teardown completes");
+  assert.equal(result.lifecycle.original_exit_status, 31);
+  assert.equal(result.lifecycle.artifact_copy_status, "failed");
+  assert.equal(result.lifecycle.cleanup.status, "failed");
+  const logIndex = result.calls.findIndex((call) => call.includes("logs"));
+  const downIndex = result.calls.findIndex((call) => call.includes("down"));
+  assert.ok(logIndex >= 0 && downIndex > logIndex, "diagnostics must be collected before teardown");
+  assert.equal(result.calls.filter((call) => call[0] === "cp").length, 2);
+});
+
+test("artifact copy failure makes an otherwise successful verification fail", (t) => {
+  const result = runVerifier(t, ["full"], {
+    FAKE_BROWSER_CONTAINER: "1",
+    FAKE_DOCKER_CP_FAIL: "1",
+  });
+  assert.equal(result.status, 74, result.stderr);
+  assert.equal(result.lifecycle.original_exit_status, 0);
+  assert.equal(result.lifecycle.artifact_copy_status, "failed");
+  assert.equal(result.lifecycle.cleanup.status, "clean");
+});
+
+test("Compose down failure makes an otherwise successful verification fail", (t) => {
+  const result = runVerifier(t, ["full"], { FAKE_DOCKER_DOWN_FAIL: "43" });
+  assert.equal(result.status, 75, result.stderr);
+  assert.equal(result.lifecycle.original_exit_status, 0);
+  assert.equal(result.lifecycle.cleanup.status, "failed");
+});
+
+test("owned network or volume leaks fail success while every query is project-scoped", (t) => {
+  for (const [envKey, resource] of [["FAKE_LEAK_NETWORK", "networks"], ["FAKE_LEAK_VOLUME", "volumes"]]) {
+    const result = runVerifier(t, ["full"], { [envKey]: "1" });
+    assert.equal(result.status, 75, result.stderr);
+    assert.equal(result.lifecycle.cleanup.status, "failed");
+    assert.equal(result.lifecycle.cleanup[resource], 1);
+    const resourceCalls = result.calls.filter((call) =>
+      call[0] === "ps" || (call[0] === "volume" && call[1] === "ls") || (call[0] === "network" && call[1] === "ls"),
+    );
+    assert.ok(resourceCalls.length >= 3, "containers, networks and volumes must all be inspected");
+    for (const call of resourceCalls) {
+      assert.ok(call.includes(`label=com.docker.compose.project=${result.lifecycle.cleanup.project}`));
+      assert.ok(!call.includes("unowned-sentinel"));
+    }
+  }
+});
+
+test("successful verification records readiness and confirms owned resources are gone", (t) => {
+  const result = runVerifier(t, ["full"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.lifecycle.original_exit_status, 0);
+  assert.equal(result.lifecycle.readiness.status, "passed");
+  assert.equal(result.lifecycle.readiness.routes.mounted_ops, "passed");
+  assert.equal(result.lifecycle.readiness.routes.standalone_ops, "passed");
+  assert.equal(result.lifecycle.cleanup.status, "clean");
+  assert.equal(result.lifecycle.cleanup.containers, 0);
+  assert.equal(result.lifecycle.cleanup.networks, 0);
+  assert.equal(result.lifecycle.cleanup.volumes, 0);
+});
+
+test("KEEP_E2E_STACK preserves the owned project and is reported as not clean", (t) => {
+  const result = runVerifier(t, ["full"], {
+    KEEP_E2E_STACK: "1",
+    FAKE_LEAK_CONTAINER: "1",
+    FAKE_LEAK_NETWORK: "1",
+    FAKE_LEAK_VOLUME: "1",
+  });
+  assert.equal(result.status, 75, result.stderr);
+  assert.equal(result.lifecycle.cleanup.status, "preserved_not_clean");
+  assert.match(result.stdout, /preserving.*not clean/i);
+  assert.equal(result.calls.some((call) => call.includes("down")), false);
+  assert.equal(result.lifecycle.cleanup.containers, 1);
+  assert.equal(result.lifecycle.cleanup.networks, 1);
+  assert.equal(result.lifecycle.cleanup.volumes, 1);
 });
