@@ -1,33 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.44 \u2014 Sync correctness",
-  "phases": [
-    {
-      "number": "178",
-      "name": "Loader-routed backfill and full-key paging",
-      "status": "complete"
-    },
-    {
-      "number": "179",
-      "name": "Bounded id lists and related-sync parity",
-      "status": "complete"
-    },
-    {
-      "number": "180",
-      "name": "Oban worker telemetry",
-      "status": "complete"
-    },
-    {
-      "number": "181",
-      "name": "Schema hook contract and no-Oban build",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v1.45",
+  "phases": [],
   "next": {
-    "command": "$gsd-new-milestone",
-    "label": "Start the next milestone",
-    "reason": "v1.44 archived locally; no phase active; fresh v1.45 scope and requirements next"
+    "command": "$gsd-discuss-phase",
+    "label": "Discuss the first phase",
+    "reason": "Project initialized — plan your first phase"
   },
-  "updated_at": "2026-10-26T19:52:11.084Z"
+  "updated_at": "2026-10-26T20:25:31.464Z"
 }

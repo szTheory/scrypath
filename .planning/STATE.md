@@ -1,22 +1,16 @@
 ---
-gsd_state_version: '1.0'
-milestone: v1.44
-milestone_name: Sync correctness
-status: Awaiting next milestone
-stopped_at: v1.44 archived locally; final exact-source checks follow; no phase active
-last_updated: '2026-10-26T19:54:09Z'
-last_activity: '2026-10-26'
-last_activity_desc: v1.44 archived with current verification, visible debt and historical
-  artifact deferrals
-state_head: f718c4a92de95277d6859b134121083448335271
+gsd_state_version: "1.0"
+milestone: v1.45
+milestone_name: Foundation and CI
+status: planning
+last_updated: "2026-10-26T20:25:31.462Z"
+last_activity: 2026-10-26
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 17
-  completed_plans: 17
-  percent: 100
-current_phase: null
-current_phase_name: null
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -136,12 +130,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 ## Current Position
 
-Phase: none
-Plan: none
-Status: Awaiting next milestone
-Last activity: 2026-10-26 — v1.44 archive and closeout
-
-Progress: v1.44 complete (4 phases, 17 plans, 45 tasks); no active milestone
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-10-26 — Milestone v1.45 started
 
 ## Delivered Evidence
 

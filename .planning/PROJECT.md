@@ -26,6 +26,20 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
+## Current Milestone: v1.45 Foundation and CI
+
+**Goal:** Make browser verification complete and reliable, keep maintainer tooling out of the Hex package, reduce dependency overhead, and establish executable UI quality foundations for v1.46.
+
+**Target features:**
+- Restore the full standalone browser lane and run the currently skipped follow-up scenarios using an audited inventory and correct port guards.
+- Move repository-only verification tasks and their support modules to `dev/mix/tasks`, preserving contributor commands and enforcing built-package parity.
+- Declare Telemetry directly, admit the approved Req version ranges, trim ScrypathOps dependencies, consolidate applicable Dependabot changes, and improve CI caches.
+- Establish the shrink-only L1 token ratchet, Tailwind colour-namespace reset, required contrast/focus checks, DTCG Ops tokens and drift proof; remove unused generator markup and the paid visual-judge path.
+
+**Scope and provenance:** The maintainer confirmed section 3 of `reference/ROLLING-ROADMAP.md` on 2026-10-26 through `$gsd-new-milestone`. Phase numbering continues at 182 after completed Phases 178–181. The UI engine and pilot remain v1.46, surfaces/polish v1.47, and adopter features v1.48. Preserve current visible UI, retained-preview data, the five lean required gates and existing advisory lane posture. No manual UAT or paid visual judge is introduced.
+
+**Delivery context:** Planning starts on `planning/v1.45-foundation-ci` from the local v1.44 archive commit `5ac5045f`. PR #122 merge and Hex publication remain separate pending work as recorded at this planning boundary; prior source-bound evidence is unchanged. The unrelated `.planning/config.json` edit is preserved and excluded from milestone commits.
+
 ## Most Recent Milestone: v1.44 Sync correctness (archived locally)
 
 **Goal:** Every sync path (inline, Oban, backfill and reindex) builds the same documents through one loader, pages through every row, and reports what it did, so no path silently skips or drops work.
@@ -67,10 +81,7 @@ config edit remains preserved.
 
 ## Next Milestone Goals
 
-The approved rolling roadmap names v1.45 foundation and CI next. Start
-`$gsd-new-milestone` to establish its requirements; no successor is activated
-by v1.44 closeout. v1.46–v1.47 cover the UI quality engine, followed by v1.48
-adopter features. Merge/release handling of PR #122 remains separate.
+v1.45 Foundation and CI is now in milestone definition after explicit maintainer scope confirmation. Define and approve its requirements and roadmap before planning Phase 182. v1.46–v1.47 cover the UI quality engine, followed by v1.48 adopter features. Merge/release handling of PR #122 remains separate.
 
 **Current as of 2026-10-25:** v1.43 **ScrypathOps UI refinement** is complete and archived: 20/20 requirements (OPUX-09–OPUX-28), Phases 173–177, 21/21 plans and five passing phase verifications. Its work first shipped in `scrypath` 0.3.16; 0.3.17 followed as a sync hotfix. The terminal merged-main closeout passed in [CI run 40204029522](https://github.com/szTheory/scrypath/actions/runs/40204029522) at `ebed49b5199d369306527caa7bb69aa0b1db5a36` and is recorded in `reference/v1.43-final-receipt.json`. That run closed T-177-05; T-177-06 stays open as a medium recordkeeping gap below the blocking threshold. The maintainer waived only the formal-review gate; no formal review is claimed. The next approved work is the rolling roadmap in `reference/ROLLING-ROADMAP.md` (v1.44 sync correctness next). Archive: `milestones/v1.43-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and `milestones/v1.43-phases/`.
 
@@ -606,8 +617,14 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-None — awaiting the next milestone. Completed v1.44 requirements are archived
-in `milestones/v1.44-REQUIREMENTS.md`; no active requirements file is retained.
+v1.45 scope is confirmed; detailed requirements are being defined:
+
+- [ ] Complete, correctly wired browser verification for standalone and follow-up scenarios.
+- [ ] Repository-only verification tooling excluded from Hex with contributor-command parity.
+- [ ] Explicit, lean dependencies and improved caches within existing CI lanes.
+- [ ] Executable token, contrast and drift foundations for the v1.46 UI engine.
+
+Completed v1.44 requirements remain archived in `milestones/v1.44-REQUIREMENTS.md`. These active goals are not implementation or verification claims.
 
 ### Out of Scope
 
@@ -637,4 +654,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-10-26 after v1.44 local milestone archive; final checks remain source-bound.*
+*Last updated: 2026-10-26 after maintainer-confirmed v1.45 Foundation and CI scope; defining requirements.*
