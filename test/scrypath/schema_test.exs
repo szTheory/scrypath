@@ -138,4 +138,71 @@ defmodule Scrypath.SchemaTest do
       end
     end
   end
+
+  describe "hook contract" do
+    @hooks [search_document: 1, search_document_id: 1, search_records: 2]
+
+    test "declares the three hooks as optional callbacks" do
+      assert Enum.sort(Scrypath.Schema.behaviour_info(:optional_callbacks)) == @hooks
+      assert Enum.sort(Scrypath.Schema.behaviour_info(:callbacks)) == @hooks
+    end
+
+    test "use Scrypath injects @behaviour Scrypath.Schema" do
+      behaviours =
+        SearchablePost.module_info(:attributes)
+        |> Keyword.get_values(:behaviour)
+        |> List.flatten()
+
+      assert Scrypath.Schema in behaviours
+    end
+
+    test "documents every hook callback" do
+      {:docs_v1, _, _, _, _, _, entries} = Code.fetch_docs(Scrypath.Schema)
+
+      for {name, arity} <- @hooks do
+        assert {{:callback, ^name, ^arity}, _anno, _sig, %{"en" => doc}, _meta} =
+                 List.keyfind(entries, {:callback, name, arity}, 0),
+               "missing callback docs for #{name}/#{arity}"
+
+        assert String.trim(doc) != ""
+      end
+    end
+
+    test "warns at the def line when a hook has the wrong arity" do
+      {_result, diagnostics} =
+        Code.with_diagnostics(fn ->
+          Code.compile_string("""
+          defmodule Scrypath.SchemaHookArityFixture do
+            use Scrypath, fields: [:title]
+
+            def search_records(ids), do: ids
+          end
+          """)
+        end)
+
+      assert [diagnostic] = diagnostics
+      assert diagnostic.severity == :warning
+      assert diagnostic.message =~ "search_records/1"
+      assert diagnostic.message =~ "search_records/2"
+      assert position_line(diagnostic.position) == 4
+    end
+
+    test "stays silent when a hook has the expected arity" do
+      {_result, diagnostics} =
+        Code.with_diagnostics(fn ->
+          Code.compile_string("""
+          defmodule Scrypath.SchemaHookOkFixture do
+            use Scrypath, fields: [:title]
+
+            def search_records(ids, _context), do: ids
+          end
+          """)
+        end)
+
+      assert diagnostics == []
+    end
+  end
+
+  defp position_line({line, _column}), do: line
+  defp position_line(line) when is_integer(line), do: line
 end
