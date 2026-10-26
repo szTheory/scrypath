@@ -1,6 +1,7 @@
 ---
 phase: 181-schema-hook-contract-and-no-oban-build
 verified: 2026-10-26T00:00:00Z
+reverified: 2026-10-26T17:13:02Z
 status: passed
 score: 15/15 must-haves verified
 covered_files:
@@ -8,6 +9,7 @@ covered_files:
   - ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-01-SUMMARY.md"
   - ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-02-PLAN.md"
   - ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-02-SUMMARY.md"
+  - "CHANGELOG.md"
   - "CONTRIBUTING.md"
   - "lib/mix/tasks/verify.no_optional_deps.ex"
   - "lib/mix/tasks/verify/capability.ex"
@@ -17,13 +19,45 @@ covered_files:
   - "test/mix/tasks/verify_capability_test.exs"
   - "test/mix/tasks/verify_no_optional_deps_test.exs"
   - "test/mix/tasks/workflow_wiring_test.exs"
+  - "test/scrypath/oban/enqueue_test.exs"
   - "test/scrypath/schema_test.exs"
-covered_digest: "v3:sha256:00dd65f2e59eba1dc3c2c7f31757e82719838c216733ead3b7dac5c41c3fc9e7"
+covered_digest: "v3:sha256:b403fd7b18c0de793a4ae3e40e782680c1421002f41112d05a6c97f0dda8ecea"
 behavior_unverified: 0
 overrides_applied: 0
 ---
 
 # Phase 181: Schema hook contract and no-Oban build Verification Report
+
+## Current Follow-Up Verification — 2026-10-26
+
+The report below is the original verifier's historical evidence. This inline
+follow-up rechecks the changed callback documentation and tests at
+`c47c1216d0ae2e5c491751551f9aa019c619b3c6`, from the main checkout on
+Elixir 1.19.0 / OTP 28.1; it does not claim a second independent verifier.
+The covered-input fingerprint above was recomputed through
+`gsd-tools query verification.fingerprint` over the original set plus CHANGELOG
+and the enqueue regression test.
+
+- WR-01 now documents `ArgumentError` before inserting an upsert. A public
+  `Scrypath.sync_record/3` test pins both the exception and absence of insertion.
+- WR-02 has an Unreleased upgrade note and mixed-behaviour fixtures proving
+  all three missing-`@impl` warnings and the warning-free annotation remedy.
+- WR-03 uses AST inspection, with regression cases for keyword, multiline,
+  Module.put_attribute, module/MFA, blanket and dynamic targets.
+- Focused changed tests: 90 tests, 0 failures.
+- `mix verify.core --exclude integration --exclude docs_contract`: 953 tests,
+  5 properties, 0 failures; format, workspace-clean, compile, Credo, docs and the
+  actual no-Oban build pass. The build printed its Oban-absence proof.
+- `mix verify.package`: 81 tests, 0 failures, package build passes.
+- Explicit docs-contract/package-metadata tests: 79 tests, 0 failures.
+
+The phase's 15 must-haves remain locally verified. All three warning findings
+are fixed; IN-01–IN-05 remain open. See 181-REVIEW-FIX.md and the disposition
+ledger. The original statements below that the warnings are open are historical
+and are superseded by this dated section. Exact-SHA hosted core evidence remains
+pending; 181-VALIDATION.md is validated but not yet marked Nyquist-compliant.
+
+## Original Verification
 
 **Phase Goal:** Adopters see and get compiler checks for the schema hooks they can implement, and apps without Oban compile Scrypath with zero warnings.
 **Verified:** 2026-10-26 (worktree at HEAD b9b11d53, Elixir 1.19.0 / OTP 28.1)
