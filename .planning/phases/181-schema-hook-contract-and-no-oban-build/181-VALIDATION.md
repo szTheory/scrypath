@@ -4,19 +4,21 @@ slug: "schema-hook-contract-and-no-oban-build"
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
 status: validated
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-26"
 validated: "2026-10-26"
 source_sha: c47c1216d0ae2e5c491751551f9aa019c619b3c6
-pending_hosted_evidence: true
+pending_hosted_evidence: false
+hosted_source_sha: cd3eb07f037b73e8c1f4e0d579513f18ec17f50e
+hosted_run: https://github.com/szTheory/scrypath/actions/runs/40368375825
 ---
 
 # Phase 181 — Validation Strategy
 
-> Post-execution audit: all local behavioral checks pass. The exact-SHA hosted
-> core run remains pending, so nyquist_compliant stays false until that gate has
-> evidence. This is an automated shipping dependency, not manual UAT.
+> Post-execution audit: local behavioral checks and exact-SHA hosted core pass.
+> Run 40368375825 at cd3eb07f includes the isolated no-Oban absence proof.
+> This closes the automated shipping dependency without manual UAT.
 
 ---
 
@@ -56,7 +58,7 @@ pending_hosted_evidence: true
 | HYG-02 | `verify.core` runs the no-Oban build | unit | `mix test test/mix/tasks/verify_capability_test.exs` | sequence assertion fails until composed | ✅ present | ✅ local pass |
 | HYG-02 | No blanket suppression | contract | `mix test test/mix/tasks/workflow_wiring_test.exs` (or new contract test) | adding `elixirc_options` / `put_compiler_option` fails it | ✅ present | ✅ local pass |
 | HYG-02 | Related Oban enqueue unchanged | unit | `mix test test/scrypath/sync/related_worker_test.exs test/scrypath/sync_test.exs test/scrypath/oban_test.exs` | job-shape / unique assertions | ✅ existing | ✅ local pass |
-| HYG-02 | Runs on phase PR in a required lane | hosted | `core (required)` log shows the no-optional-deps compile | exact-SHA PR run | n/a | ⬜ pending hosted |
+| HYG-02 | Runs on phase PR in a required lane | hosted | `core (required)` log shows the no-optional-deps compile | exact-SHA PR run | n/a | ✅ run 40368375825 / cd3eb07f |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -82,9 +84,9 @@ All phase behaviors have automated verification (hosted CI evidence is exact-SHA
 - [x] Wave 0 covers all MISSING references
 - [x] No watch-mode flags
 - [ ] Feedback latency < 120s (target retained; not measured in this audit)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Audit:** locally covered; hosted gate pending. No manual approval or independent audit is claimed.
+**Audit:** local coverage and hosted core evidence complete. The feedback-latency target above remains unmeasured; no timing guarantee, manual approval or independent audit is claimed.
 
 
 ## Requirement and Task Coverage Audit — 2026-10-26
@@ -97,7 +99,7 @@ validation pass was needed after the review fixes.
 |------|-------------|---------------------|--------|
 | 181-01 task 1 | HYG-02 | NoOptionalDeps seam tests, related enqueue/worker tests, real Oban Lite uniqueness tests; actual isolated compile | COVERED locally |
 | 181-01 task 2 | HYG-02 | Capability core sequence and workflow-wiring contracts, including WR-03 negative cases | COVERED locally |
-| 181-01 task 3 | HYG-02 | Core gate plus docs-contract/package-metadata suite; hosted job must still execute at the candidate SHA | PARTIAL: hosted evidence pending |
+| 181-01 task 3 | HYG-02 | Core gate plus docs-contract/package-metadata suite; hosted core job 121732151292 at cd3eb07f | COVERED: hosted absence proof recorded |
 | 181-02 task 1 | HYG-01 | Schema callback/reflection, docs chunk and located wrong-arity diagnostic tests | COVERED locally |
 | 181-02 task 2 | HYG-01 | Correct/absent/helper/private/mixed-behaviour fixtures and runtime-probe drift guard | COVERED locally |
 | 181-02 task 3 | HYG-01 | Warning-free docs build within core and package contract/build | COVERED locally |
@@ -120,20 +122,23 @@ Set `ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.1` to reproduce.
 | `mix verify.package` | 81 tests, 0 failures; unpacked package build passes |
 | `mix test --warnings-as-errors test/scrypath/docs_contract_test.exs test/release/package_metadata_test.exs --include docs_contract` | 79 tests, 0 failures |
 
-### Remaining Automated Evidence
+### Hosted Evidence — 2026-10-26
 
-Obtain `core (required)` on the final PR SHA, including the no-optional-deps
-absence-proof line. Record the immutable SHA and run URL before changing the
-hosted row or setting `nyquist_compliant: true`. Local runs do not substitute
-for the explicitly required hosted execution. Milestone shipping also needs
-its backend/mounted gates and closeout attestations; this phase audit does not
-claim them. No pending behavior is assigned to human UAT.
+[PR #122 run 40368375825](https://github.com/szTheory/scrypath/actions/runs/40368375825)
+ran at `cd3eb07f037b73e8c1f4e0d579513f18ec17f50e`. Its
+[core job 121732151292](https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732151292)
+passed with `5 properties, 953 tests, 0 failures (101 excluded)` and
+`Verified optional dependencies absent from isolated build: oban`.
+The backend job also passed the shared real-Postgres suite: 1 property,
+15 tests, 0 failures. These receipts close the hosted coverage gap for this
+source. Subsequent tracking-only commits still need their own required checks;
+milestone closeout attestations remain separate. No human UAT is required.
 
 ## Validation Audit 2026-10-26
 
 | Metric | Count |
 |---|---|
 | Gaps found | 1 |
-| Resolved | 0 |
+| Resolved | 1 |
 | Escalated | 0 |
-| Pending hosted | 1 |
+| Pending hosted | 0 |

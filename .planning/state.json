@@ -25,9 +25,9 @@
     }
   ],
   "next": {
-    "command": "/gsd-new-milestone",
-    "label": "Start a new milestone",
-    "reason": "All phases complete — start a new milestone"
+    "command": "/gsd-audit-milestone v1.44",
+    "label": "Audit v1.44 after final-head shipping checks",
+    "reason": "Phases 178–181 complete; PR 122 candidate required gates passed; audit before archive or next milestone"
   },
-  "updated_at": "2026-10-26T16:18:59.448Z"
+  "updated_at": "2026-10-26T17:32:11Z"
 }

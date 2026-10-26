@@ -52,6 +52,20 @@ prohibition_verdicts:
 
 # Phase 178: Loader-routed backfill and full-key paging — Verification Report
 
+## Shipping Evidence — 2026-10-26
+
+The original pending PR gate below is closed for candidate
+`cd3eb07f037b73e8c1f4e0d579513f18ec17f50e` by
+[backend job 121732151437](https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732151437)
+on PR #122. Its log runs `mix verify.postgres` and reports 1 property,
+15 tests, 0 failures (the shared suite grew after this phase's original report).
+All five required jobs pass on that source; see
+`../../reference/v1.44-ship-candidate.json`. Original phase-time evidence and
+findings below remain historical; this addendum does not extend the covered-file
+fingerprint to later implementation changes or claim merged-main evidence.
+
+## Original Verification
+
 **Phase Goal:** A backfill or reindex produces exactly the documents inline and Oban sync would produce, for every row of the schema, whatever its primary-key shape.
 **Verified:** 2026-10-25T20:05:00Z
 **Status:** passed (hosted exact-SHA `backend (required)` evidence for SC4 is a pending PR gate; see below)

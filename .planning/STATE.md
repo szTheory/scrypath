@@ -5,11 +5,11 @@ milestone_name: Sync correctness
 current_phase: 181
 current_phase_name: Schema hook contract and no-Oban build
 status: completed
-stopped_at: Phase 181 warnings fixed; security verified; hosted validation and v1.44 shipping pending
-last_updated: "2026-10-26T17:13:02Z"
+stopped_at: PR 122 updated; candidate required gates passed; final shipping-record checks pending
+last_updated: "2026-10-26T17:32:11Z"
 last_activity: 2026-10-26
-last_activity_desc: Phase 181 review warnings fixed and local gates passed; security verified
-state_head: c47c1216d0ae2e5c491751551f9aa019c619b3c6
+last_activity_desc: v1.44 candidate pushed to PR 122; five required hosted gates passed; additional review waived
+state_head: cd3eb07f037b73e8c1f4e0d579513f18ec17f50e
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,23 +22,32 @@ progress:
 
 ## v1.44 Sync correctness — started 2026-10-25
 
-All four phases (178–181) and 17 plans are complete locally. Phase 181's three
-review warnings are fixed in `ee543836`, `1e2193bc`, `66598ccd` and `c47c1216`;
-its five informational findings remain open. The authored security register is
-verified at L1 (8/8 threats closed, no new risk acceptance). Validation is audited:
-all local coverage passes, but exact-SHA hosted core evidence remains pending,
-so `181-VALIDATION.md` retains `nyquist_compliant: false`.
+All four phases (178–181) and 17 plans are complete. [PR #122](https://github.com/szTheory/scrypath/pull/122)
+now contains the implementation and a release-facing description. Candidate
+`cd3eb07f037b73e8c1f4e0d579513f18ec17f50e` passed all five required hosted gates in
+[run 40368375825](https://github.com/szTheory/scrypath/actions/runs/40368375825).
+Core passed 953 tests + 5 properties and the isolated Oban-absence proof;
+package passed 81 tests; real Postgres passed 1 property + 15 tests; mounted
+ecommerce passed 4 browser cases. Compatibility, Phoenix example and Ops UI also
+passed. Receipt: `reference/v1.44-ship-candidate.json`.
 
-Fresh checks at `c47c1216`: core 953 tests + 5 properties, 0 failures (including
-strict docs and isolated no-Oban build); package 81 tests, 0 failures; explicit
-docs-contract/package-metadata suite 79 tests, 0 failures. These are local results,
-not hosted receipts. See Phase 181's REVIEW-FIX, SECURITY and VALIDATION records.
+Phase 181's three review warnings are fixed and its hosted validation row is now
+complete (`nyquist_compliant: true`). Five informational findings remain open.
+All four security registers assert zero open threats. The advisory deep-quality
+dependency audit still fails with Bandit, Cloak and Cloak Ecto findings. This
+does not make all advisory checks green or constitute new risk acceptance.
+
+The maintainer explicitly declined another review for this solo OSS work and
+selected CI as the acceptance gate. No independent review is claimed. This
+shipping-record commit must get its own exact-SHA required checks and closeout
+receipt; keep that receipt outside the source checkout so collecting it does
+not mutate the tested source. Candidate PR evidence is not merged-main evidence.
 
 Continue from `/Users/jon/projects/scrypath`, branch
-`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit is
-preserved and excluded from fix commits. Next: `$gsd-ship` to reconcile the PR,
-push the candidate and collect exact-SHA required gates. Then finish the hosted
-validation row and audit/close v1.44. Merges/releases still need maintainer
+`planning/v1.44-new-milestone`. The pre-existing `.planning/config.json` edit was
+temporarily stashed by maintainer choice and is restored after shipping; it is
+excluded from the PR. After final-head CI, next: `$gsd-audit-milestone v1.44` to
+reconcile all phase evidence before archive. Merge/release still need maintainer
 confirmation. Do not replay completed phases or start v1.45 yet.
 
 ## v1.43 closed — 2026-10-25 (historical)
@@ -98,8 +107,8 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 
 Phase: 181
 Plan: 2/2 complete
-Status: Review warnings fixed; local gates and security pass; hosted validation/shipping pending
-Last activity: 2026-10-26 — Phase 181 post-review follow-up
+Status: PR #122 updated; candidate hosted gates pass; final-head shipping checks pending
+Last activity: 2026-10-26 — v1.44 shipping and hosted validation
 
 Progress: [██████████] 100%
 
@@ -157,8 +166,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 
 ## Session Continuity
 
-Last session: 2026-10-26T17:13:02Z
-Stopped at: Review warnings fixed; security verified; validation awaits hosted core; next $gsd-ship
+Last session: 2026-10-26T17:32:11Z
+Stopped at: PR #122 candidate gates pass; final shipping-record checks next, then $gsd-audit-milestone v1.44
 Resume file: .planning/phases/181-schema-hook-contract-and-no-oban-build/.continue-here.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
