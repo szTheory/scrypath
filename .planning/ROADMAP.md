@@ -101,7 +101,15 @@ Plans:
   2. A test shows that when a job finds ids with no current record and deletes them from the index, an event fires with the count of those ids.
   3. The telemetry guide lists the new events and metadata keys, and its docs contract test fails if a documented event or key drifts from the emitted ones.
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+**Wave 1**
+- [ ] 180-01-PLAN.md — Upsert/delete worker spans, `job_stop_metadata/1`, `missing_removed` event, capture helper and scenario support (wave 1)
+- [ ] 180-02-PLAN.md — `guides/telemetry.md` catalog wired into HexDocs, duplicate tables to pointers, ARCHITECTURE wording, related-worker 4xx cancel shape (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 180-03-PLAN.md — Untagged telemetry drift contract test: name scan, literal-name guard, key contract (wave 2)
 
 ### Phase 181: Schema hook contract and no-Oban build
 
