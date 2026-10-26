@@ -3,10 +3,28 @@
 set -Eeuo pipefail
 
 scope="${1:-focused}"
+mode="${2:-}"
+if [[ "$#" -gt 2 ]]; then
+  echo "Usage: $0 [focused|full [--readiness-only]]" >&2
+  exit 64
+fi
 case "$scope" in
   focused|full) ;;
   *)
-    echo "Usage: $0 [focused|full]" >&2
+    echo "Usage: $0 [focused|full [--readiness-only]]" >&2
+    exit 64
+    ;;
+esac
+case "$mode" in
+  "") ;;
+  --readiness-only)
+    if [[ "$scope" != "full" ]]; then
+      echo "--readiness-only is supported only with full scope." >&2
+      exit 64
+    fi
+    ;;
+  *)
+    echo "Usage: $0 [focused|full [--readiness-only]]" >&2
     exit 64
     ;;
 esac
@@ -23,8 +41,11 @@ cd "$example_dir"
 sha="$(git rev-parse --short=8 HEAD 2>/dev/null || printf 'workspace')"
 safe_sha="$(printf '%s' "$sha" | tr -cd '[:alnum:]_-')"
 project="scrypath_ecommerce_verify_${scope}_${safe_sha}_$$"
-artifact_dir="$example_dir/test-results/docker-${scope}"
+artifact_dir="$example_dir/test-results/docker-${scope}-${safe_sha}_$$"
 compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
+if [[ "$scope" == "full" ]]; then
+  compose+=(-f compose.phase173.yaml)
+fi
 
 export E2E_SCOPE="$scope"
 export SCRYPATH_SOURCE_SHA="$(git rev-parse HEAD)"
@@ -77,11 +98,22 @@ echo "Validating Compose model for '$scope' verification..."
 "${compose[@]}" config --quiet
 
 echo "Starting isolated Docker verifier project '$project'..."
-"${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+if [[ "$mode" == "--readiness-only" ]]; then
+  "${compose[@]}" build web standalone_ops browser || run_status=$?
+  if (( run_status == 0 )); then
+    "${compose[@]}" run --rm -T -e E2E_READINESS_ONLY=1 browser || run_status=$?
+  fi
+else
+  "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+fi
 
 if (( run_status != 0 )); then
   echo "Docker verifier failed (scope=$scope, exit=$run_status)." >&2
   exit "$run_status"
 fi
 
-echo "Docker verifier passed (scope=$scope)."
+if [[ "$mode" == "--readiness-only" ]]; then
+  echo "Readiness-only diagnostic passed; full browser acceptance was not run."
+else
+  echo "Docker verifier passed (scope=$scope)."
+fi

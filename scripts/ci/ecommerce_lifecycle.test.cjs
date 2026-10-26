@@ -139,7 +139,7 @@ function runBrowser(t, extraEnv = {}) {
       FAKE_BROWSER_LOG: browserLog,
       E2E_SCOPE: "full",
       E2E_READINESS_ONLY: "1",
-      E2E_READINESS_TIMEOUT_SECONDS: "2",
+      E2E_READINESS_TIMEOUT_SECONDS: "5",
       E2E_CURL_TIMEOUT_SECONDS: "1",
       PLAYWRIGHT_BASE_URL: "http://web:4002",
       CONTRAST_REPORT_DIR: path.join(root, "contrast-results"),
@@ -165,6 +165,15 @@ test("full readiness diagnostic uses the full overlay without claiming browser a
   );
   const projects = new Set(calls.map((call) => call[call.indexOf("-p") + 1]));
   assert.equal(projects.size, 1, "config, execution, diagnostics and teardown share one project");
+  const build = calls.find((call) => call.includes("build"));
+  assert.ok(build, "readiness diagnostics must build the actual full-stack images");
+  for (const service of ["web", "standalone_ops", "browser"]) {
+    assert.ok(build.includes(service), `readiness build must include ${service}`);
+  }
+  const browserRun = calls.find((call) => call.includes("run"));
+  assert.ok(browserRun, "readiness diagnostics must execute the browser service");
+  assert.ok(browserRun.includes("E2E_READINESS_ONLY=1"), "the browser service must receive diagnostic mode explicitly");
+  assert.equal(browserRun.at(-1), "browser");
   assert.match(result.stdout, /readiness-only diagnostic/i);
   assert.doesNotMatch(result.stdout, /Docker verifier passed|full browser.*passed/i);
 });
@@ -191,6 +200,17 @@ test("full readiness checks both Ops fixture routes before running Playwright", 
   );
   assert.match(result.stdout, /readiness-only diagnostic/i);
   assert.equal(result.browserInvocations, "", "readiness diagnostics must not execute browser suites");
+});
+
+test("full browser execution starts only after both Ops fixture routes respond", (t) => {
+  const result = runBrowser(t, { E2E_READINESS_ONLY: "0" });
+  assert.equal(result.status, 0, result.stderr);
+  const mountedIndex = result.stdout.indexOf("Mounted Ops fixture route is ready");
+  const standaloneIndex = result.stdout.indexOf("Standalone Ops fixture route is ready");
+  const browserIndex = result.stdout.indexOf("Running the full advisory ecommerce browser");
+  assert.ok(mountedIndex >= 0 && standaloneIndex >= 0, "both route checks must complete");
+  assert.ok(browserIndex > mountedIndex && browserIndex > standaloneIndex, "browser execution must follow both route checks");
+  assert.match(result.browserInvocations, /npm run test:e2e/);
 });
 
 test("full readiness fails when either Ops fixture route stays unavailable", (t) => {
