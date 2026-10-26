@@ -172,4 +172,73 @@ defmodule Scrypath.TestSupport.TelemetryContract do
          """}
     end
   end
+
+  @doc """
+  Reports every `:telemetry.span/execute`, `Telemetry.span/execute` or
+  `Scrypath.Telemetry.span/execute` call whose first argument is not a list literal,
+  with the enclosing `def`/`defp` as `{name, arity}` (nil outside any function).
+  """
+  @spec non_literal_sites([source()]) :: [
+          %{
+            path: Path.t(),
+            line: pos_integer() | nil,
+            function: {atom(), non_neg_integer()} | nil,
+            call: String.t(),
+            argument: String.t()
+          }
+        ]
+  def non_literal_sites(sources) when is_list(sources) do
+    sources
+    |> Enum.flat_map(fn {path, source} ->
+      path
+      |> quote_source!(source)
+      |> sites_in(path, nil)
+    end)
+    |> Enum.sort_by(&{&1.path, &1.line})
+  end
+
+  defp sites_in(ast, path, function) do
+    {_ast, sites} =
+      Macro.prewalk(ast, [], fn
+        {def_kind, _meta, [head | body]}, acc when def_kind in [:def, :defp] ->
+          inner = sites_in(body, path, function_id(head))
+          {:skip_function_body, acc ++ inner}
+
+        node, acc ->
+          {node, acc ++ site(node, path, function)}
+      end)
+
+    sites
+  end
+
+  defp function_id({:when, _, [head | _]}), do: function_id(head)
+
+  defp function_id({name, _, args}) when is_atom(name),
+    do: {name, if(is_list(args), do: length(args), else: 0)}
+
+  defp function_id(_head), do: nil
+
+  defp site({{:., _, [mod, fun]}, meta, [first | _]}, path, function)
+       when fun in [:span, :execute] do
+    if telemetry_module?(mod) and not is_list(first) do
+      [
+        %{
+          path: path,
+          line: meta[:line],
+          function: function,
+          call: "#{Macro.to_string(mod)}.#{fun}",
+          argument: Macro.to_string(first)
+        }
+      ]
+    else
+      []
+    end
+  end
+
+  defp site(_node, _path, _function), do: []
+
+  defp telemetry_module?(:telemetry), do: true
+  defp telemetry_module?({:__aliases__, _, [:Telemetry]}), do: true
+  defp telemetry_module?({:__aliases__, _, [:Scrypath, :Telemetry]}), do: true
+  defp telemetry_module?(_mod), do: false
 end

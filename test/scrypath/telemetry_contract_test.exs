@@ -11,6 +11,10 @@ defmodule Scrypath.TelemetryContractTest do
   # Number of events in the catalog. Change it only together with a guide row.
   @event_count 17
 
+  # The only call sites allowed to pass a computed event name: the span/3 wrapper, whose
+  # callers are themselves checked for literal names.
+  @allowlist [{"lib/scrypath/telemetry.ex", :span, 3}]
+
   @header "| Event | Kind | Measurements | Start metadata | Stop-only metadata | When |\n|---|---|---|---|---|---|\n"
 
   defp guide, do: TelemetryContract.parse_guide(File.read!(@guide_path))
@@ -195,5 +199,97 @@ defmodule Scrypath.TelemetryContractTest do
       assert event.kind == :event
       assert event.measurements.required == MapSet.new([:count])
     end
+  end
+
+  describe "literal event names" do
+    test "every telemetry call in lib uses a literal event name" do
+      sites = TelemetryContract.non_literal_sites(lib_sources())
+
+      offending = Enum.reject(sites, &allowlisted?/1)
+
+      assert offending == [],
+             "telemetry calls with a computed event name (use a [:scrypath, ...] literal):\n" <>
+               Enum.map_join(offending, "\n", &format_site/1)
+
+      stale = Enum.reject(@allowlist, fn entry -> Enum.any?(sites, &(site_key(&1) == entry)) end)
+
+      assert stale == [],
+             "allowlist entries that no longer match a call site: #{inspect(stale)}"
+    end
+
+    test "a computed name passed to :telemetry.execute is reported with its line" do
+      source = ~S'''
+      defmodule Computed do
+        @prefix [:scrypath, :thing]
+
+        def emit do
+          :telemetry.execute(@prefix ++ [:x], %{}, %{})
+        end
+      end
+      '''
+
+      assert [site] = TelemetryContract.non_literal_sites([{"computed.ex", source}])
+      assert site.path == "computed.ex"
+      assert site.line == 5
+      assert site.function == {:emit, 0}
+      assert site.call == ":telemetry.execute"
+      assert site.argument == "@prefix ++ [:x]"
+    end
+
+    test "a variable name passed to Telemetry.span or Scrypath.Telemetry.span is reported" do
+      source = ~S'''
+      defmodule Variable do
+        alias Scrypath.Telemetry
+
+        def run(name, meta, fun) when is_list(name), do: Telemetry.span(name, meta, fun)
+        defp other(name), do: Scrypath.Telemetry.span(name, %{}, fn -> {:ok, %{}} end)
+      end
+      '''
+
+      assert [
+               %{function: {:run, 3}, call: "Telemetry.span", argument: "name"},
+               %{function: {:other, 1}, call: "Scrypath.Telemetry.span", argument: "name"}
+             ] = TelemetryContract.non_literal_sites([{"variable.ex", source}])
+    end
+
+    test "literal names and unrelated Telemetry functions are not reported" do
+      source = ~S'''
+      defmodule Fine do
+        alias Scrypath.Operator.FailedWork.Telemetry
+
+        def run(row) do
+          Telemetry.emit(row)
+          :telemetry.execute([:scrypath, :fine], %{count: 1}, %{})
+          Scrypath.Telemetry.span([:scrypath, :fine_span], %{}, fn -> {:ok, %{}} end)
+        end
+      end
+      '''
+
+      assert TelemetryContract.non_literal_sites([{"fine.ex", source}]) == []
+    end
+  end
+
+  describe "single catalog" do
+    test "guides/telemetry.md is the only event table" do
+      offending =
+        (Path.wildcard("guides/**/*.md") ++
+           Path.wildcard("docs/**/*.md") ++ ["README.md", "ARCHITECTURE.md"])
+        |> Enum.reject(&(&1 == @guide_path))
+        |> Enum.filter(&Regex.match?(~r/^\| `\[:scrypath/m, File.read!(&1)))
+        |> Enum.sort()
+
+      assert offending == [],
+             "only #{@guide_path} may hold a telemetry event table; found rows in: " <>
+               Enum.join(offending, ", ")
+    end
+  end
+
+  defp allowlisted?(site), do: site_key(site) in @allowlist
+
+  defp site_key(%{path: path, function: {name, arity}}), do: {path, name, arity}
+  defp site_key(%{path: path, function: nil}), do: {path, nil, nil}
+
+  defp format_site(site) do
+    "  #{site.path}:#{site.line} #{site.call}(#{site.argument}, ...) in #{inspect(site.function)}"
   end
 end
