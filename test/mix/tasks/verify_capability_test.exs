@@ -68,6 +68,20 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
     end
   end
 
+  test "core runs the root gate then the no-optional-deps build" do
+    {task_runner, calls} = recording_task_runner()
+
+    assert :ok =
+             Mix.Tasks.Verify.Capability.run_core(["--exclude", "integration"],
+               task_runner: task_runner
+             )
+
+    assert calls.() == [
+             {:task, "verify", ["--exclude", "integration"]},
+             {:task, "verify.no_optional_deps", []}
+           ]
+  end
+
   test "standalone deep quality audits once and shares every other quality check" do
     assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_with_audit/1, [
       {:task, "verify.no_optional_deps", []},
@@ -83,6 +97,17 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
       {:task, "scrypath.namespace_fence", []},
       {:command, "dialyzer", []}
     ])
+  end
+
+  defp recording_task_runner do
+    calls_key = {__MODULE__, make_ref()}
+
+    task_runner = fn task, args ->
+      Process.put(calls_key, Process.get(calls_key, []) ++ [{:task, task, args}])
+      :ok
+    end
+
+    {task_runner, fn -> Process.get(calls_key, []) end}
   end
 
   defp assert_deep_quality_sequence(run, expected) do

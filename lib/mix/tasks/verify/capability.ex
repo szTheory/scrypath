@@ -2,7 +2,7 @@ defmodule Mix.Tasks.Verify.Capability do
   @moduledoc false
 
   @spec run(atom(), [String.t()]) :: :ok
-  def run(:core, args), do: run_task!("verify", args)
+  def run(:core, args), do: run_core(args)
 
   def run(:package, args),
     do: no_args!(:package, args, &Mix.Tasks.Verify.Phase11.run_without_docs/0)
@@ -27,6 +27,19 @@ defmodule Mix.Tasks.Verify.Capability do
   def run(:ecommerce_e2e, args),
     do:
       command!(:ecommerce_e2e, args, "make", ["-C", "examples/scrypath_ecommerce", "verify-e2e"])
+
+  @doc false
+  # The root maturity gate, then the isolated no-Oban compile, so the required core
+  # CI job proves builds without optional dependencies stay warning-free.
+  @spec run_core([String.t()]) :: :ok
+  @spec run_core([String.t()], keyword()) :: :ok
+  def run_core(args, opts \\ []) do
+    task_runner = Keyword.get(opts, :task_runner, &run_task!/2)
+
+    task_runner.("verify", args)
+    task_runner.("verify.no_optional_deps", [])
+    :ok
+  end
 
   @doc false
   @spec run_deep_quality_without_audit() :: :ok

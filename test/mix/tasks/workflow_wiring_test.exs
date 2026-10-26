@@ -7,6 +7,44 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @verify_published_yml ".github/workflows/verify-published-release.yml"
   @verify_task "lib/mix/tasks/verify.ex"
 
+  describe "HYG-02 no blanket compiler suppression" do
+    test "mix.exs sets no elixirc_options" do
+      refute File.read!("mix.exs") =~ "elixirc_options",
+             "mix.exs must not set elixirc_options; fix warnings at the source"
+    end
+
+    test "no library source changes compiler options at runtime" do
+      offenders =
+        "lib/**/*.ex"
+        |> Path.wildcard()
+        |> Enum.filter(&(File.read!(&1) =~ "Code.put_compiler_option"))
+
+      assert offenders == [],
+             "Code.put_compiler_option found in: #{Enum.join(offenders, ", ")}"
+    end
+
+    test "no_warn_undefined is limited to Oban modules" do
+      sites =
+        for path <- Path.wildcard("lib/**/*.ex"),
+            [_, arg] <-
+              Regex.scan(
+                ~r/@compile\s*\{\s*:no_warn_undefined\s*,\s*(.+?)\s*\}\s*$/m,
+                File.read!(path)
+              ),
+            do: {path, arg}
+
+      assert length(sites) >= 3,
+             "expected at least 3 targeted Oban no_warn_undefined sites, found #{length(sites)}"
+
+      for {path, arg} <- sites,
+          module <- arg |> Code.string_to_quoted!() |> List.wrap() do
+        assert match?({:__aliases__, _, [:Oban | _]}, module),
+               "#{path} suppresses undefined warnings for #{Macro.to_string(module)}, " <>
+                 "which is outside the Oban namespace"
+      end
+    end
+  end
+
   describe "INFRA-01 D-14: workspace_clean gate on all three publish paths" do
     test "ci.yml core job runs the canonical gate, which includes workspace cleanliness" do
       ci = File.read!(@ci_yml)
