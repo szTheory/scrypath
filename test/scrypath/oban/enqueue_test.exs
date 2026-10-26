@@ -5,6 +5,12 @@ defmodule Scrypath.Oban.EnqueueTest do
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
 
+  defmodule CustomIdWithoutLoader do
+    use Scrypath, fields: [:title]
+
+    def search_document_id(record), do: "post:#{record.id}"
+  end
+
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
 
@@ -94,6 +100,18 @@ defmodule Scrypath.Oban.EnqueueTest do
       end
     end)
     |> Enum.take_while(&(&1 != nil))
+  end
+
+  test "a custom document id without search_records/2 raises before inserting an upsert" do
+    assert_raise ArgumentError, ~r/defines search_document_id\/1.*Define search_records\/2/, fn ->
+      Scrypath.sync_record(
+        CustomIdWithoutLoader,
+        %{id: 7, title: "Queued"},
+        oban_opts(RecordingOban)
+      )
+    end
+
+    refute_received {:oban_insert, _job}
   end
 
   describe "chunked enqueue (D-04)" do

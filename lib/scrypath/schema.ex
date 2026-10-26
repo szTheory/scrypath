@@ -62,7 +62,8 @@ defmodule Scrypath.Schema do
   When defined, Scrypath uses the returned value instead of reading the
   `document_id:` field. If you sync through Oban, also define
   `c:search_records/2`, because the job cannot map a custom id back to a row:
-  without it, enqueueing returns `{:error, :search_records_required}`.
+  without it, enqueueing an upsert raises `ArgumentError` before any job is
+  inserted.
   """
   @callback search_document_id(record :: struct() | map()) :: term()
 
