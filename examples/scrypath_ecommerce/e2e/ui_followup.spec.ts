@@ -1,11 +1,12 @@
 import {expect, test} from "@playwright/test";
 import {seedScenario, waitForLiveConnected} from "./helpers/e2e";
+import {guardVerificationTarget} from "./helpers/verification-target.mjs";
 
 const standalone = process.env.PHASE173_STANDALONE_BASE_URL || "http://127.0.0.1:4014";
 const source = "2026-10-04T13:02:05.123456-04:00";
 
 test.beforeEach(async ({baseURL}) => {
-  test.skip(!baseURL || new URL(baseURL).port === "4002", "Run against the owned disposable verifier, never the retained preview.");
+  await guardVerificationTarget(baseURL, reason => test.skip(true, reason), async () => {});
 });
 
 for (const [name, url] of [["mounted", "/admin/search/phase173/health"], ["standalone", `${standalone}/ops/phase173/health`]]) {
