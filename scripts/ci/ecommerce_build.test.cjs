@@ -15,6 +15,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { prepareBuild, verifyHandoff, recordCacheOutcome } = require("./ecommerce_build.cjs");
+const { configureDockerBake } = require("./phase182_acceptance.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const verifierSource = path.join(
@@ -53,7 +54,7 @@ function runPrebuiltVerifier(t, extraEnv = {}) {
     path.join(ciDirectory, "ecommerce_build.cjs"),
     `"use strict";
 const fs = require("node:fs");
-fs.appendFileSync(process.env.FAKE_HELPER_LOG, JSON.stringify({args:process.argv.slice(2),hasRuntimeToken:Boolean(process.env.ACTIONS_RUNTIME_TOKEN)}) + "\\n");
+fs.appendFileSync(process.env.FAKE_HELPER_LOG, JSON.stringify({args:process.argv.slice(2),hasRuntimeToken:Boolean(process.env.ACTIONS_RUNTIME_TOKEN),mode:process.env.PHASE182_CACHE_MODE,namespace:process.env.PHASE182_PROBE_NAMESPACE}) + "\\n");
 if (process.env.FAKE_HELPER_FAIL === "1") process.exit(1);
 `,
   );
@@ -183,8 +184,102 @@ function prepareFixture(t, scope = "focused") {
   return { ...result, project, env, docker };
 }
 
+function prepareAndConfigure(t, { scope, env, mode = "normal", namespace = "" }) {
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const project = env.E2E_PROJECT_NAME;
+  const checkedEnv = { ...env, PHASE182_CACHE_MODE: mode, PHASE182_PROBE_NAMESPACE: namespace };
+  const docker = buildDriver(scope, project);
+  const prepared = prepareBuild({ scope, output, env: checkedEnv, runCommand: docker.run, project });
+  docker.state.manifest = prepared.manifest;
+  const configured = configureDockerBake({ manifestPath: prepared.manifestPath, mode, namespace, env: checkedEnv });
+  const verified = verifyHandoff({ manifestPath: prepared.manifestPath, env: checkedEnv, runCommand: docker.run });
+  return { ...prepared, configured, verified, docker };
+}
+
+test("prepared cache policy survives configure and canonical prebuilt handoff", (t) => {
+  const common = {
+    ...process.env,
+    GITHUB_ACTIONS: "true",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+    E2E_PROJECT_NAME: "scrypath-e2e-policy-test",
+  };
+  const cases = [
+    {
+      scope: "focused",
+      mode: "normal",
+      namespace: "",
+      env: { ...common, E2E_SCOPE: "focused", E2E_CACHE_JOB: "mounted", GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/main" },
+      expectedPolicy: { import: true, export: false },
+    },
+    {
+      scope: "full",
+      mode: "normal",
+      namespace: "candidate-2026",
+      env: { ...common, E2E_SCOPE: "full", E2E_CACHE_JOB: "full", GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_REF: "refs/heads/candidate/phase182" },
+      expectedPolicy: { import: true, export: true },
+    },
+    {
+      scope: "focused",
+      mode: "docker-cold",
+      namespace: "cold-2026",
+      env: { ...common, E2E_SCOPE: "focused", E2E_CACHE_JOB: "mounted", GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_REF: "refs/heads/candidate/phase182" },
+      expectedPolicy: { import: false, export: false },
+    },
+  ];
+
+  for (const scenario of cases) {
+    const result = prepareAndConfigure(t, scenario);
+    assert.deepEqual(result.manifest.cache_policy, scenario.expectedPolicy);
+    assert.equal(result.manifest.cache_probe.mode, scenario.mode);
+    assert.equal(result.manifest.cache_probe.namespace, scenario.namespace);
+    assert.equal(result.verified.handoff_status, "loaded");
+    const bake = JSON.parse(readFileSync(path.join(result.outputDirectory, "bake.json"), "utf8"));
+    for (const [service, target] of Object.entries(bake.target)) {
+      if (scenario.expectedPolicy.import) assert.match(target["cache-from"][0], new RegExp(`scope=${result.manifest.cache_scopes[service]}`));
+      else assert.equal(target["cache-from"], undefined);
+      if (scenario.expectedPolicy.export) assert.match(target["cache-to"][0], new RegExp(`scope=${result.manifest.cache_scopes[service]}`));
+      else assert.equal(target["cache-to"], undefined);
+    }
+  }
+});
+
+test("probe cache exports reject unsafe namespaces, pull requests, and untrusted repositories", (t) => {
+  const base = {
+    ...process.env,
+    GITHUB_ACTIONS: "true",
+    E2E_CACHE_JOB: "full",
+    E2E_SCOPE: "full",
+    E2E_PROJECT_NAME: "scrypath-e2e-policy-test",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_REF: "refs/heads/candidate/phase182",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+  };
+  const unsafe = { ...base, PHASE182_PROBE_NAMESPACE: "../production" };
+  const unsafeDocker = buildDriver("full", base.E2E_PROJECT_NAME);
+  assert.throws(() => prepareBuild({
+    scope: "full",
+    output: path.join(makeTempDirectory(t), "unsafe"),
+    env: unsafe,
+    runCommand: unsafeDocker.run,
+    project: base.E2E_PROJECT_NAME,
+  }), /probe namespace/);
+
+  for (const env of [
+    { ...base, GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/pull/55/merge", PHASE182_PROBE_NAMESPACE: "candidate-2026" },
+    { ...base, GITHUB_REPOSITORY: "fork-owner/scrypath", PHASE182_PROBE_NAMESPACE: "candidate-2026" },
+  ]) {
+    const output = path.join(makeTempDirectory(t), "prepared");
+    const docker = buildDriver("full", env.E2E_PROJECT_NAME);
+    const prepared = prepareBuild({ scope: "full", output, env, runCommand: docker.run, project: env.E2E_PROJECT_NAME });
+    const configured = configureDockerBake({ manifestPath: prepared.manifestPath, mode: "normal", namespace: "candidate-2026", env });
+    assert.equal(configured.manifest.cache_policy.import, true);
+    assert.equal(configured.manifest.cache_policy.export, false);
+    assert.ok(Object.values(configured.bake.target).every((target) => !target["cache-to"]));
+  }
+});
+
 test("prebuilt verification uses the checked image override without a Compose build", (t) => {
-  const result = runPrebuiltVerifier(t);
+  const result = runPrebuiltVerifier(t, { PHASE182_CACHE_MODE: "normal", PHASE182_PROBE_NAMESPACE: "candidate-2026" });
   assert.equal(result.status, 0, `prebuilt verifier failed:\n${result.stdout}\n${result.stderr}`);
   const up = result.calls.find((call) => call[0] === "compose" && call.includes("up"));
   assert.ok(up, "expected one canonical Compose up invocation");
@@ -194,6 +289,7 @@ test("prebuilt verification uses the checked image override without a Compose bu
   assert.equal(result.helperCalls.length, 2, "verify-handoff must run before Compose up and after runtime starts");
   assert.ok(result.helperCalls.every((call) => call.args[0] === "verify-handoff"));
   assert.ok(result.helperCalls.every((call) => call.hasRuntimeToken === false));
+  assert.ok(result.helperCalls.every((call) => call.mode === "normal" && call.namespace === "candidate-2026"));
 });
 
 test("prebuilt verification refuses a failed handoff before Compose starts", (t) => {

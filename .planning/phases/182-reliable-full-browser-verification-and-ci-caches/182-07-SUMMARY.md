@@ -162,3 +162,33 @@ The collector and probe controls are ready for a maintainer-owned hosted run. Ac
 ---
 *Phase: 182-reliable-full-browser-verification-and-ci-caches*
 *Completed: 2026-10-26*
+
+## Post-merge preflight repair reconciliation
+
+This follow-up repairs three concrete integration blockers found before Phase 182-08 hosted acceptance. The original plan work and evidence above are preserved. These repairs did not run or claim hosted acceptance, and `requirements-completed` remains empty.
+
+### Repair commits
+
+1. `0e60d9d2` - **Expose BEAM cache restore keys safely.** Core now uses the pinned restore-only action, whose matched-key output is available to the fallback proof. Explicit pinned save steps use each planned primary key, skip exact hits and beam-cold, and require successful core verification.
+2. `d101f07f` - **Verify per-target BuildKit cache progress.** The parser accepts the pinned BuildKit GHA export vertex name and binds imports, useful cached steps, and successful exports to every checked Bake target and scope. It rejects missing target progress, exporter warnings/errors, generic unscoped headlines, forged mappings, and status-only assertions. The collector and validator share this parser and retain hashes of the matched log bytes.
+3. `29fab44b` - **Preserve validated Docker probe policy.** Preparation, configuration checks, and pre/post handoff verification now share one mode/namespace policy. Candidate refs can export only to bounded namespaces on trusted same-repository workflow dispatch; cold mode has no cache imports or exports. The workflow carries probe inputs into preparation and both handoff checks. The contributor runbook and CLI help now show the seed-first collection sequence and the required session-root and identity arguments for both validation modes.
+
+### Repair verification
+
+- `node --test scripts/ci/ecommerce_*.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/phase182_acceptance.test.cjs` - **PASS**, 90 tests, 0 failures.
+- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_ENV=test ASDF_ELIXIR_VERSION=1.19.0-otp-28 asdf exec mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` - **PASS**, Elixir 1.19.0 / OTP 28, 59 tests, 0 failures.
+- `ASDF_ELIXIR_VERSION=1.19.0-otp-28 asdf exec mix format --check-formatted` - **PASS** under Elixir 1.19.0.
+- `actionlint .github/workflows/ci.yml` - **PASS**.
+- `git diff --check` - **PASS** before the repair commit.
+
+The checkout did not initially have Mix dependencies fetched. The locked dependencies were fetched without changing `mix.lock`, using a Hex cache under `/private/tmp` after the default user-level Hex registry cache rejected writes. The focused ExUnit run then exposed unsupported `String.index/2` assertions in the cache wiring test; these were changed to `:binary.match/2` and formatted with the CI Elixir version. A first policy test attempt also exposed incomplete dispatch environment setup in the test fixture; the fixture was aligned with the workflow inputs, and the final complete Node run passed.
+
+### Acceptance limits
+
+No GitHub Actions workflow was dispatched. Synthetic logs and Docker doubles verify parser, wiring, policy, source/model/tag identity, and runtime handoff behavior only; they do not establish real GHA cache imports/exports, browser acceptance, or hosted timing. The seed-first real run and strict `validate --mode caches` plus `validate --mode full` commands are documented for the Phase 182-08 executor. The five required jobs, advisory full job, 1800-second budget, trust boundaries, locks, source joins, and retained preview data were preserved. `STATE.md`, `ROADMAP.md`, and `REQUIREMENTS.md` were not changed.
+
+## Repair Self-Check: PASSED
+
+- The three repair commits are present on this branch; no tracked files were deleted.
+- All requested local regression, formatter, workflow lint, and diff checks passed.
+- Hosted acceptance remains unclaimed, and all original requirement IDs remain pending.

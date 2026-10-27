@@ -8,10 +8,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const beamCache = require("./beam_cache.cjs");
+const ecommerceBuild = require("./ecommerce_build.cjs");
 
 const GH = process.env.GH_BIN || "gh";
 const WORKFLOW = ".github/workflows/ci.yml";
-const DISPATCH_CACHE_MODES = ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"];
 const REQUIRED_JOBS = [
   "core (required)",
   "package (required)",
@@ -178,13 +178,15 @@ function validateMode(mode) {
 
 function validateProbeNamespace(value) {
   if (value === undefined || value === "") return "";
-  if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(value)) throw new Error("probe namespace must be a lowercase slug of at most 32 characters");
+  // Keep the command's boundary validator aligned with the policy resolver used
+  // by prepare, configure, and handoff verification.
+  ecommerceBuild.cacheProbeFor("focused", { web: "scope" }, {}, { namespace: value });
   return value;
 }
 
 function validateDispatchCacheMode(value) {
   const mode = value || "normal";
-  if (!DISPATCH_CACHE_MODES.includes(mode)) throw new Error(`phase182 cache mode must be one of ${DISPATCH_CACHE_MODES.join(", ")}`);
+  ecommerceBuild.cacheProbeFor("focused", { web: "scope" }, {}, { mode });
   return mode;
 }
 
@@ -285,42 +287,29 @@ function beamPlanForProbe(plan, { mode = "normal", namespace = "", runId, attemp
   return result;
 }
 
-function configureDockerBake({ manifestPath, mode = "normal", namespace = "" } = {}) {
+function configureDockerBake({ manifestPath, mode = "normal", namespace = "", env = process.env } = {}) {
   const validatedMode = validateDispatchCacheMode(mode);
   const safeNamespace = validateProbeNamespace(namespace);
   const manifestFile = path.resolve(requireText(manifestPath, "Docker build manifest"));
   const manifest = parseJsonText(fs.readFileSync(manifestFile, "utf8"), "Docker image handoff manifest");
   const bakeFile = path.join(path.dirname(manifestFile), "bake.json");
   const bake = parseJsonText(fs.readFileSync(bakeFile, "utf8"), "Docker Bake configuration");
-  if (!bake.target || !manifest.cache_scopes || typeof manifest.cache_scopes !== "object") throw new Error("Docker build manifest is missing target cache scopes");
-
-  const cold = validatedMode === "docker-cold";
-  const namespaced = Boolean(safeNamespace);
-  if (cold && manifest.scope !== "focused") throw new Error("docker-cold is only valid for the existing mounted focused build");
-  if (namespaced && manifest.scope !== "focused" && manifest.scope !== "full") throw new Error("probe cache namespace requires the existing mounted or full Compose build");
-  const scopes = {};
-  for (const [service, target] of Object.entries(bake.target)) {
-    const originalScope = manifest.cache_scopes[service];
-    if (typeof originalScope !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(originalScope)) throw new Error(`Docker cache scope is missing or invalid for ${service}`);
-    const scope = namespaced ? `${originalScope}-phase182-${safeNamespace}` : originalScope;
-    scopes[service] = scope;
-    if (cold) {
-      delete target["cache-from"];
-      delete target["cache-to"];
-    } else if (namespaced) {
-      target["cache-from"] = [`type=gha,scope=${scope},version=2,timeout=120s`];
-      if (manifest.scope === "full") target["cache-to"] = [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`];
-      else delete target["cache-to"];
-    }
+  if (!bake.target || !manifest.cache_base_scopes || typeof manifest.cache_base_scopes !== "object") {
+    throw new Error("Docker build manifest is missing base target cache scopes");
   }
-  if (namespaced || cold) {
-    manifest.cache_scopes = scopes;
-    manifest.cache_policy = cold ? { import: false, export: false } : { import: true, export: manifest.scope === "full" };
-    manifest.import_status = cold ? "not_configured" : "pending";
-    manifest.export_status = manifest.cache_policy.export ? "pending" : "not_configured";
-    writeAtomic(manifestFile, manifest);
-    writeAtomic(bakeFile, bake);
+  const expected = ecommerceBuild.cacheProbeFor(manifest.scope, manifest.cache_base_scopes, env, {
+    mode: validatedMode,
+    namespace: safeNamespace,
+  });
+  if (canonicalJson(manifest.cache_probe) !== canonicalJson({ mode: expected.mode, namespace: expected.namespace }) ||
+    canonicalJson(manifest.cache_scopes) !== canonicalJson(expected.scopes) ||
+    canonicalJson(manifest.cache_policy) !== canonicalJson(expected.policy)) {
+    throw new Error("prepared Docker cache probe does not match the validated dispatch policy");
   }
+  ecommerceBuild.verifyCacheProbeBake(bake, expected);
+  manifest.import_status = expected.policy.import ? "pending" : "not_configured";
+  manifest.export_status = expected.policy.export ? "pending" : "not_configured";
+  writeAtomic(manifestFile, manifest);
   return { manifest, bake, manifestFile, bakeFile, mode: validatedMode, namespace: safeNamespace };
 }
 
@@ -348,6 +337,24 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
   const artifactMode = mode === "normal" ? "docker-warm" : mode;
   const scopes = mode === "docker-cold" ? [] : settings.importScopes;
   const exportScopes = mode === "normal" ? settings.exportScopes : [];
+  const expectedTargets = Object.keys(manifest.tags || {}).sort();
+  const targetScopes = structuredClone(manifest.cache_scopes || {});
+  const targetCacheSettings = Object.fromEntries(Object.entries(bake.target || {}).map(([service, target]) => [service, {
+    import: Array.isArray(target["cache-from"]) ? target["cache-from"] : [],
+    export: Array.isArray(target["cache-to"]) ? target["cache-to"] : [],
+  }]));
+  if (canonicalJson(expectedTargets) !== canonicalJson(Object.keys(bake.target || {}).sort()) ||
+      canonicalJson(expectedTargets) !== canonicalJson(Object.keys(targetScopes).sort())) {
+    throw new Error("checked Docker Bake targets do not match the image handoff manifest");
+  }
+  validateDockerTargetBindings({
+    scope: manifest.scope,
+    expected_targets: expectedTargets,
+    target_scopes: targetScopes,
+    target_cache_settings: targetCacheSettings,
+    import_scopes: scopes,
+    export_scopes: exportScopes,
+  }, artifactMode);
   const cacheFrom = Object.values(bake.target || {}).flatMap((target) => Array.isArray(target["cache-from"]) ? target["cache-from"] : []);
   let builder;
   if (mode === "docker-cold") {
@@ -391,6 +398,10 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
       exported_digest: null,
       importer: scopes.length ? "gha" : null,
       exporter: exportScopes.length || mode === "normal" && manifest.cache_policy?.export ? "gha" : null,
+      scope: manifest.scope,
+      expected_targets: expectedTargets,
+      target_scopes: targetScopes,
+      target_cache_settings: targetCacheSettings,
       import_scopes: scopes,
       export_scopes: exportScopes,
       ...(mode === "docker-cold" ? { miss_reason: "fresh builder with BuildKit cache imports disabled" } : {}),
@@ -774,6 +785,130 @@ function validateBrowserAcceptance(proof) {
   return true;
 }
 
+function expectedDockerTargets(scope, mode) {
+  if (mode === "docker-warm" && scope === "full") return ["browser", "standalone_ops", "web"];
+  if (mode === "docker-cold" && scope === "focused") return ["browser", "web"];
+  throw new Error(`Docker cache probe mode ${mode} does not match Compose scope ${scope}`);
+}
+
+function targetGhaScopes(settings, field) {
+  return (settings[field] || []).filter((value) => typeof value === "string" && /^type=gha,/.test(value))
+    .map((value) => value.match(/(?:^|,)scope=([^,]+)/)?.[1] || "");
+}
+
+function validateDockerTargetBindings(cache, mode) {
+  const expectedTargets = expectedDockerTargets(cache.scope, mode);
+  const targetScopes = cache.target_scopes;
+  const targetSettings = cache.target_cache_settings;
+  const targets = (value) => value && typeof value === "object" && !Array.isArray(value) ? Object.keys(value).sort() : [];
+  if (canonicalJson(cache.expected_targets) !== canonicalJson(expectedTargets) ||
+      canonicalJson(targets(targetScopes)) !== canonicalJson(expectedTargets) ||
+      canonicalJson(targets(targetSettings)) !== canonicalJson(expectedTargets)) {
+    throw new Error("Docker cache proof target mapping does not match the checked Compose recipes");
+  }
+  const mappedScopes = [];
+  for (const service of expectedTargets) {
+    const scope = targetScopes[service];
+    const settings = targetSettings[service];
+    if (typeof scope !== "string" || !/^[a-z0-9][a-z0-9-]{0,127}$/.test(scope) ||
+        !settings || !Array.isArray(settings.import) || !Array.isArray(settings.export)) {
+      throw new Error(`Docker cache proof has an invalid checked target mapping for ${service}`);
+    }
+    const importScopes = targetGhaScopes(settings, "import");
+    const exportScopes = targetGhaScopes(settings, "export");
+    if (mode === "docker-warm" && (canonicalJson(importScopes) !== canonicalJson([scope]) || canonicalJson(exportScopes) !== canonicalJson([scope]))) {
+      throw new Error(`Docker cache proof Bake settings do not match the checked scope for ${service}`);
+    }
+    if (mode === "docker-cold" && (settings.import.length !== 0 || settings.export.length !== 0)) {
+      throw new Error(`docker-cold must not configure cache import or export for ${service}`);
+    }
+    mappedScopes.push(scope);
+  }
+  if (new Set(mappedScopes).size !== expectedTargets.length) throw new Error("Docker cache proof target scopes must be distinct per recipe");
+  const expectedScopes = mode === "docker-warm" ? mappedScopes.slice().sort() : [];
+  if (canonicalJson(cache.import_scopes) !== canonicalJson(expectedScopes) ||
+      canonicalJson(cache.export_scopes) !== canonicalJson(expectedScopes)) {
+    throw new Error("Docker cache proof scopes do not match the checked target mapping");
+  }
+  return expectedTargets;
+}
+
+function parseBuildKitCacheProgress(logText, targetScopes) {
+  const expectedTargets = Object.keys(targetScopes || {}).sort();
+  const targetSet = new Set(expectedTargets);
+  const lines = String(logText).split(/\r?\n/);
+  const vertices = new Map();
+  const byIdLines = new Map();
+  const terminal = new Map();
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const start = line.match(/^#(\d+)\s+(?:\[([^\]]+)\]\s+)?(.*?)\s*$/);
+    if (!start) continue;
+    const id = start[1];
+    if (!byIdLines.has(id)) byIdLines.set(id, []);
+    byIdLines.get(id).push(index);
+    const outcome = start[2] ? null : start[3].match(/^(DONE|CACHED|ERROR|CANCELED)(?:\s|$)/i)?.[1]?.toUpperCase();
+    if (outcome) terminal.set(id, outcome);
+    else if (start[2]) {
+      const service = start[2].trim().split(/\s+/)[0];
+      const title = start[3].trim();
+      if (targetSet.has(service) && !vertices.has(id)) vertices.set(id, { id, service, title, line: index });
+    }
+  }
+
+  const imports = new Map(expectedTargets.map((service) => [service, []]));
+  const exports = new Map(expectedTargets.map((service) => [service, []]));
+  const cachedSteps = new Map(expectedTargets.map((service) => [service, []]));
+  const importLineIndexes = new Set();
+  const exportLineIndexes = new Set();
+  const cachedLineIndexes = new Set();
+  for (const vertex of vertices.values()) {
+    const { service, title, id, line } = vertex;
+    const status = terminal.get(id) || "";
+    if (/^importing cache (?:manifest )?from gha\b/i.test(title)) {
+      imports.get(service).push({ id, outcome: status });
+      importLineIndexes.add(line);
+      (byIdLines.get(id) || []).forEach((lineIndex) => importLineIndexes.add(lineIndex));
+    } else if (/^exporting to GitHub Actions Cache\b/i.test(title)) {
+      exports.get(service).push({ id, outcome: status });
+      (byIdLines.get(id) || []).forEach((lineIndex) => exportLineIndexes.add(lineIndex));
+    } else if (title && !/^(?:internal\b|importing cache\b|exporting\b|load (?:build definition|metadata|build context)\b)/i.test(title) && status === "CACHED") {
+      cachedSteps.get(service).push(id);
+      cachedLineIndexes.add(line);
+      (byIdLines.get(id) || []).forEach((lineIndex) => cachedLineIndexes.add(lineIndex));
+    }
+  }
+
+  const importComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
+    const entries = imports.get(service);
+    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) && cachedSteps.get(service).length > 0;
+  });
+  const cacheFailureLines = lines.filter((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
+  const exporterWarnings = lines.filter((line) => /warning/i.test(line) && /cache|exporter/i.test(line) && /ignored|fail|error|unsupported|not supported/i.test(line));
+  const exportComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
+    const entries = exports.get(service);
+    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome);
+  }) && cacheFailureLines.length === 0 && exporterWarnings.length === 0;
+  const matchedLines = (indexes) => [...indexes].sort((left, right) => left - right).map((index) => lines[index]);
+  const importBytes = matchedLines(importLineIndexes).join("\n");
+  const exportBytes = matchedLines(exportLineIndexes).join("\n");
+  const cachedBytes = matchedLines(cachedLineIndexes).join("\n");
+  return {
+    import_complete: importComplete,
+    export_complete: exportComplete,
+    imported_digest: importBytes ? `sha256:${sha256(importBytes)}` : null,
+    exported_digest: exportBytes ? `sha256:${sha256(exportBytes)}` : null,
+    cached_steps_digest: cachedBytes ? `sha256:${sha256(cachedBytes)}` : null,
+    targets: Object.fromEntries(expectedTargets.map((service) => [service, {
+      imports: imports.get(service),
+      cached_steps: cachedSteps.get(service),
+      exports: exports.get(service),
+    }])),
+    exporter_warnings: exporterWarnings,
+    cache_errors: cacheFailureLines,
+  };
+}
+
 function validateCacheAcceptance(proof) {
   const mode = validateMode(proof?.mode);
   if (!REQUIRED_CACHE_MODES.includes(mode)) throw new Error("full mode does not declare a cache probe");
@@ -793,7 +928,6 @@ function validateCacheAcceptance(proof) {
   }
   const lines = cache.log_text.split(/\r?\n/);
   const has = (pattern) => lines.some((line) => pattern.test(line));
-  const matching = (pattern) => lines.filter((line) => pattern.test(line));
   const artifact = proof.artifact;
   if (!artifact || artifact.name !== `phase182-cache-probe-${mode}-${proof.run.id}-${proof.run.attempt}` ||
       artifact.source_sha !== identity.sha || artifact.run_id !== String(proof.run.id) || Number(artifact.attempt) !== proof.run.attempt ||
@@ -801,18 +935,14 @@ function validateCacheAcceptance(proof) {
     throw new Error("cache proof immutable artifact does not join the selected run/source/attempt");
   }
   if (mode === "docker-warm") {
-    const imports = matching(/importing cache manifest from gha|importing cache from gha/i);
-    const exports = matching(/exporting cache.*gha|exporting cache manifest.*gha/i);
-    const importDigest = imports.length ? sha256(imports.join("\n")) : "";
-    const exportDigest = exports.length ? sha256(exports.join("\n")) : "";
-    if (cache.kind !== "buildkit" || cache.imports_enabled !== true || cache.actual_import !== true || cache.actual_export !== true ||
-        !/^sha256:[a-f0-9]{64}$/.test(cache.imported_digest || "") || cache.imported_digest !== `sha256:${importDigest}` ||
-        !/^sha256:[a-f0-9]{64}$/.test(cache.exported_digest || "") || cache.exported_digest !== `sha256:${exportDigest}` ||
-        cache.importer !== "gha" || cache.exporter !== "gha" || !Array.isArray(cache.import_scopes) || cache.import_scopes.length === 0 ||
-        !Array.isArray(cache.export_scopes) || cache.export_scopes.length === 0 ||
-        proof.commands.primary_verification !== "success" || imports.length === 0 || exports.length === 0 ||
-        !cache.import_scopes.every((scope) => imports.some((line) => line.includes(`scope=${scope}`))) ||
-        !cache.export_scopes.every((scope) => exports.some((line) => line.includes(`scope=${scope}`)))) {
+    const expectedTargets = validateDockerTargetBindings(cache, mode);
+    const evidence = parseBuildKitCacheProgress(cache.log_text, cache.target_scopes);
+    if (cache.kind !== "buildkit" || cache.imports_enabled !== true || cache.actual_import !== evidence.import_complete || cache.actual_export !== evidence.export_complete ||
+        evidence.import_complete !== true || evidence.export_complete !== true ||
+        cache.imported_digest !== evidence.imported_digest || cache.exported_digest !== evidence.exported_digest ||
+        cache.cached_steps_digest !== evidence.cached_steps_digest || canonicalJson(cache.progress) !== canonicalJson(evidence.targets) ||
+        cache.importer !== "gha" || cache.exporter !== "gha" || expectedTargets.length < 2 ||
+        proof.commands.primary_verification !== "success") {
       throw new Error("docker-warm requires actual GHA import and export log evidence");
     }
   } else if (mode === "docker-cold") {
@@ -1147,14 +1277,14 @@ function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run,
     throw new Error("cache proof artifact identity does not match its selected run/ref/source/mode");
   }
   const cache = { ...probe.cache };
-  const lines = jobLog.split(/\r?\n/);
   if (mode.startsWith("docker-")) {
-    const imports = lines.filter((line) => /importing cache manifest from gha|importing cache from gha/i.test(line));
-    const exports = lines.filter((line) => /exporting cache.*gha|exporting cache manifest.*gha/i.test(line));
-    cache.actual_import = imports.length > 0;
-    cache.actual_export = exports.length > 0;
-    cache.imported_digest = imports.length ? `sha256:${sha256(imports.join("\n"))}` : null;
-    cache.exported_digest = exports.length ? `sha256:${sha256(exports.join("\n"))}` : null;
+    const evidence = parseBuildKitCacheProgress(jobLog, cache.target_scopes);
+    cache.actual_import = evidence.import_complete;
+    cache.actual_export = evidence.export_complete;
+    cache.imported_digest = evidence.imported_digest;
+    cache.exported_digest = evidence.exported_digest;
+    cache.cached_steps_digest = evidence.cached_steps_digest;
+    cache.progress = evidence.targets;
   }
   const proof = {
     ...probe,
@@ -1399,7 +1529,7 @@ function toFlags(flags) {
 function help() {
   process.stdout.write("Usage:\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs run --mode docker-warm|docker-cold|beam-fallback|beam-lock-change|beam-cold|full --branch BRANCH --sha SHA --session-id SESSION --output-dir DIR [--repo OWNER/REPO] [--probe-namespace SLUG]\n");
-  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input DIR --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate-inputs --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs prepare-lock --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root DIR --output FILE\n");
@@ -1519,6 +1649,7 @@ module.exports = {
   beamPlanForProbe,
   collectRun,
   configureDockerBake,
+  parseBuildKitCacheProgress,
   prepareLockProbe,
   validateAggregate,
   validateBrowserAcceptance,

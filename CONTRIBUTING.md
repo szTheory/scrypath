@@ -251,10 +251,12 @@ modes reuse the existing jobs:
 Leave it empty to use the production cache namespace. Use a distinct slug for
 candidate experiments: Docker scopes and BEAM Actions Cache keys then stay in
 that namespace. No mode deletes caches. The normal full job remains the trusted
-production cache writer; an unnamespaced candidate run cannot export the stable
-Docker cache. A `docker-warm` acceptance therefore needs actual GHA import and
-export log lines; use a trusted main dispatch or an explicit probe namespace
-and run again after it has seeded that namespace.
+production cache writer. A same-repository candidate-ref `workflow_dispatch`
+can export only to an explicitly named probe namespace; candidate refs never
+write production Docker scopes. Pull requests and untrusted repositories cannot export. A
+`docker-warm` acceptance therefore needs actual GHA import and export log lines;
+use a trusted main dispatch or an explicit probe namespace and run again after
+it has seeded that namespace.
 
 The exact-source collector dispatches `ci.yml` at the requested branch and full
 SHA, then reads that new run's attempt-specific jobs, raw logs, and immutable
@@ -297,8 +299,17 @@ for mode in docker-warm docker-cold beam-fallback beam-lock-change beam-cold; do
     --probe-namespace "$namespace"
 done
 
+node scripts/ci/phase182_acceptance.cjs run \
+  --mode full --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --output-dir "$root" \
+  --probe-namespace "$namespace"
+
 node scripts/ci/phase182_acceptance.cjs validate \
   --mode caches --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --input "$root"
+
+node scripts/ci/phase182_acceptance.cjs validate \
+  --mode full --repo "$repo" --branch "$branch" --sha "$sha" \
   --session-id "$session" --input "$root"
 ```
 
@@ -306,7 +317,10 @@ node scripts/ci/phase182_acceptance.cjs validate \
 successful canonical verifier steps and actual BuildKit or Actions Cache log
 evidence in addition to their JSON receipts. The executable tests protect the
 collector and wiring only; they do not stand in for a real hosted browser or
-cache acceptance run.
+cache acceptance run. Both validation commands require the session root plus
+`--repo`, `--branch`, full `--sha`, and `--session-id`; `--input` is not a receipt
+file. Run the `full` collection and validation after the cache-mode receipts for
+the exact real-acceptance sequence used by the Phase 182-08 executor.
 
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 

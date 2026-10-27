@@ -33,6 +33,29 @@ test("root Mix cache jobs use a compatible Hex fallback and strict resolved cach
   }
 });
 
+test("core probe restores expose matched keys and save primary keys only after successful verification", () => {
+  const core = jobBlock("core");
+  const restore = "actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25";
+  const save = "actions/cache/save@caa296126883cff596d87d8935842f9db880ef25";
+  assert.equal((core.match(new RegExp(restore, "g")) || []).length, 2);
+  assert.equal((core.match(new RegExp(save, "g")) || []).length, 2);
+  assert.match(core, /DOWNLOADS_MATCHED_KEY: \$\{\{ steps\.phase182_downloads_cache\.outputs\.cache-matched-key \}\}/);
+  assert.match(core, /RESOLVED_MATCHED_KEY: \$\{\{ steps\.phase182_resolved_cache\.outputs\.cache-matched-key \}\}/);
+
+  const verifyIndex = core.indexOf("mix verify.core --exclude integration --exclude docs_contract");
+  const downloadSaveIndex = core.indexOf("name: Save Hex download archive cache");
+  const resolvedSaveIndex = core.indexOf("name: Save resolved BEAM build cache");
+  assert.ok(verifyIndex >= 0 && downloadSaveIndex > verifyIndex && resolvedSaveIndex > downloadSaveIndex);
+
+  for (const name of ["Save Hex download archive cache", "Save resolved BEAM build cache"]) {
+    const start = core.indexOf(`name: ${name}`);
+    const next = core.slice(start + 1).search(/^      - /m);
+    const step = next === -1 ? core.slice(start) : core.slice(start, start + 1 + next);
+    assert.match(step, /if: success\(\).*steps\.phase182_inputs\.outputs\.mode != 'beam-cold'.*steps\.core_verify\.outcome == 'success'.*outputs\.cache-hit != 'true'/);
+    assert.match(step, /key: \$\{\{ steps\.beam_cache\.outputs\.(downloads_key|resolved_key) \}\}/);
+  }
+});
+
 test("cache paths never include Hex or Mix credentials", () => {
   assert.doesNotMatch(workflow, /~\/(?:\.hex|\.mix)(?:\n|\s)*$/m);
   assert.doesNotMatch(workflow, /~\/\.mix(?:\/|\s|$)/);
