@@ -205,6 +205,7 @@ function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } 
   const validatedMode = validateDispatchCacheMode(mode);
   const validatedNamespace = validateProbeNamespace(namespace);
   const beamProbe = validatedMode.startsWith("beam-");
+  const beamNamespace = beamProbe || validatedMode === "normal" ? validatedNamespace : "";
   const mountedDockerMode = validatedMode === "docker-cold" ? "docker-cold" : "normal";
   const dockerNamespace = validatedMode === "normal" ? validatedNamespace : "";
   appendWorkflowOutputs(outputPath, {
@@ -212,7 +213,7 @@ function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } 
     proof_mode: validatedMode === "normal" ? "docker-warm" : validatedMode,
     namespace: validatedNamespace,
     beam_mode: beamProbe ? validatedMode : "normal",
-    beam_namespace: beamProbe ? validatedNamespace : "",
+    beam_namespace: beamNamespace,
     mounted_docker_mode: mountedDockerMode,
     mounted_docker_namespace: dockerNamespace,
     full_docker_mode: "normal",
@@ -222,7 +223,7 @@ function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } 
     mode: validatedMode,
     namespace: validatedNamespace,
     beam_mode: beamProbe ? validatedMode : "normal",
-    beam_namespace: beamProbe ? validatedNamespace : "",
+    beam_namespace: beamNamespace,
     mounted_docker_mode: mountedDockerMode,
     mounted_docker_namespace: dockerNamespace,
     full_docker_mode: "normal",

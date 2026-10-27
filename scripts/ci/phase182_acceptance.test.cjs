@@ -545,6 +545,11 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
   for (const mode of ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]) {
     assert.match(workflow, new RegExp(`^\\s+- ${mode.replaceAll("-", "\\-")}\\s*$`, "m"));
   }
+  const coreStart = workflow.indexOf("  core:\n");
+  const coreEnd = workflow.indexOf("\n  package:\n", coreStart);
+  const coreJob = workflow.slice(coreStart, coreEnd < 0 ? undefined : coreEnd);
+  assert.ok(coreJob.includes("PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.beam_mode }}"));
+  assert.ok(coreJob.includes("PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.beam_namespace }}"));
   for (const jobName of ["ecommerce-mounted", "ecommerce-e2e"]) {
     const job = workflow.match(new RegExp(`  ${jobName}:[\\s\\S]*?(?=\\n  [a-zA-Z0-9_-]+:\\n|$)`))?.[0] || "";
     const beamPlanStart = job.indexOf("- id: beam_cache");
@@ -613,7 +618,7 @@ test("workflow input validation writes only bounded mode and namespace outputs",
     mode: "normal",
     namespace: "warm-7",
     beam_mode: "normal",
-    beam_namespace: "",
+    beam_namespace: "warm-7",
     mounted_docker_mode: "normal",
     mounted_docker_namespace: "warm-7",
     full_docker_mode: "normal",
@@ -647,6 +652,9 @@ test("BEAM probe keys preserve normal keys and isolate forced fallback misses", 
   const normal = beamPlanForProbe(plan, { mode: "normal", runId: "101", attempt: 1 });
   assert.equal(normal.downloads_key, plan.downloads_key);
   assert.equal(normal.resolved_key, plan.resolved_key);
+  const namespacedSeed = beamPlanForProbe(plan, { mode: "normal", namespace: "candidate-7", runId: "100", attempt: 1 });
+  assert.ok(namespacedSeed.downloads_key.startsWith(`${plan.downloads_restore_prefix}phase182-candidate-7-`));
+  assert.ok(namespacedSeed.resolved_key.startsWith(`${plan.resolved_restore_prefix}phase182-candidate-7-`));
   const fallback = beamPlanForProbe(plan, { mode: "beam-fallback", namespace: "candidate-7", runId: "101", attempt: 2 });
   assert.ok(fallback.downloads_key.startsWith(`${plan.downloads_restore_prefix}phase182-candidate-7-`));
   assert.ok(fallback.downloads_key.endsWith("-phase182-101-2"));
