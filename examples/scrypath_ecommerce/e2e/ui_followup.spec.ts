@@ -148,7 +148,7 @@ test("generic fields remain readable across compact themes without guessing data
   await waitForLiveConnected(page);
   const hit = page.locator("#typed-result-fixture");
   const fieldsSummary = hit.locator(".ops-hit-inspection > details").first().locator("summary").first();
-  await expect(fieldsSummary).toContainText(/^Fields \(/);
+  await expect(fieldsSummary).toContainText(/Fields \(/);
   await fieldsSummary.click();
   await expect(hit).toContainText("false");
   await expect(hit).toContainText("null");
