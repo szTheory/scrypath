@@ -5,7 +5,7 @@ milestone_name: Foundation and CI
 current_phase: 182
 current_phase_name: Reliable full browser verification and CI caches
 status: executing
-stopped_at: All reviewed corrections and source-bound acceptance merged; final goal verifier and transition pending
+stopped_at: All35 truths verified; add deterministic approval-claim boundary coverage and reverify
 last_updated: "2026-10-27T23:33:42.348526+00:00"
 last_activity: 2026-10-27
 last_activity_desc: Phase 182 corrected-source acceptance and repair-head closeout passed; phase hooks and verifier next
@@ -38,7 +38,7 @@ Fresh merged checks passed115 Node,961 Elixir tests plus five properties,98 repo
 
 Nyquist covers all 16 tasks with actual executable checks; authored L1 security has 20 closed threats and no accepted risks. UI audit remains six pillars N/A and unchanged by the assertion-only delta; no design approval is claimed. Finish native review evidence reconciliation and canonical disposition, then native goal verifier and CLI-owned fingerprint. Read fresh passed owner status, call `phase.complete 182` ONCE, transition PROJECT/ROADMAP/STATE/REQUIREMENTS, check freshness, and run final ROOT exact-head closeout after ALL tracked writes. No tracked edits after that terminal attestation.
 
-New control: `/private/tmp/scrypath-phase182-execution/assertion-repair-candidate-control.json`; retained cache control: `review-repair-candidate-control.json`. Both are validated and all completed invocations are preserved. Do not redispatch completed work. Phase 182 VERIFICATION does not yet exist.
+New control: `/private/tmp/scrypath-phase182-execution/assertion-repair-candidate-control.json`; retained cache control: `review-repair-candidate-control.json`. Both are validated and all completed invocations are preserved. Do not redispatch completed work. Native VERIFICATION now reports35/35 truths and all5 requirements verified, but human_needed solely for missing executable coverage of the independent-approval-claim prohibition. Its initial report is preserved; the authorized next action is test-only coverage of existing canonical receipt/summary rejection, then native re-verification. No human approval is being requested or inferred.
 
 ## Concerns and next action
 
