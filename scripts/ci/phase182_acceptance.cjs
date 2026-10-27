@@ -817,6 +817,9 @@ function validateBrowserAcceptance(proof) {
   if (browser.repository !== identity.repository || browser.source_sha !== identity.sha || browser.run_id !== String(proof.run.id) || Number(browser.attempt) !== proof.run.attempt) {
     throw new Error("browser aggregate identity does not join the selected run/source");
   }
+  if (browser.workflow?.ref !== `refs/heads/${identity.branch}`) {
+    throw new Error("browser workflow ref does not match the selected branch");
+  }
   if (!Number.isSafeInteger(browser.case_count) || browser.case_count <= 0 || !Number.isSafeInteger(browser.attempts_total) || browser.attempts_total <= 0) {
     throw new Error("browser aggregate has zero or malformed cases/attempts");
   }
@@ -1455,6 +1458,7 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
       case_count: receipt.tests_total,
       attempts_total: receipt.attempts_total,
       event: receipt.event,
+      workflow: receipt.workflow,
       source: receipt.source,
       images: receipt.images,
     },
@@ -1660,6 +1664,7 @@ function verifyManifest(flags) {
       if (String(aggregate.run_id) !== receipt.run?.id) aggregateMismatches.push("run ID");
       if (Number(aggregate.run_attempt) !== receipt.run?.attempt) aggregateMismatches.push("run attempt");
       if (aggregate.sha !== flags.sha) aggregateMismatches.push("source SHA");
+      if (aggregate.workflow?.ref !== `refs/heads/${flags.branch}`) aggregateMismatches.push("workflow ref");
       if (aggregate.event !== "workflow_dispatch") aggregateMismatches.push("event");
       if (aggregate.source?.mode !== "hosted" || aggregate.source?.dirty !== false || aggregate.source?.checkout_head !== flags.sha || aggregate.source?.built_source_sha !== flags.sha || aggregate.source?.event_sha !== flags.sha) aggregateMismatches.push("hosted source identity");
       if (aggregate.eligibility?.eligible !== true) aggregateMismatches.push("eligibility");
