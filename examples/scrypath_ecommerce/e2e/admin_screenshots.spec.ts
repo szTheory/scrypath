@@ -64,7 +64,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/).first()).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");
