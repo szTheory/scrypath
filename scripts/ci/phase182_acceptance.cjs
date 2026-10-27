@@ -959,7 +959,7 @@ function parseBuildKitCacheProgress(logText, targetScopes, recipeBindings = {}) 
   const targetSet = new Set(expectedTargets);
   const lines = String(logText).split(/\r?\n/);
   const buildKitLines = lines.map((line) => line.replace(
-    /^[^\t\r\n]+\t[^\t\r\n]+\t\uFEFF?\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s+#/,
+    /^(?:[^\t\r\n]+\t[^\t\r\n]+\t)?\uFEFF?\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s+#/,
     "#",
   ));
   const vertices = new Map();
