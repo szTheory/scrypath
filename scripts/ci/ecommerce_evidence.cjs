@@ -42,6 +42,39 @@ function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function inspectContrastReport(report, stageExitCode) {
+  const summary = isRecord(report?.summary) ? report.summary : {};
+  const findings = Array.isArray(report?.findings) ? report.findings : [];
+  const findingShapeValid = findings.every((finding) =>
+    isRecord(finding) &&
+    finding.producer === "token" &&
+    ["pass", "aa-fail", "aaa-body-advisory"].includes(finding.severity) &&
+    typeof finding.pass_aa === "boolean" &&
+    ((finding.severity === "aa-fail") === (finding.pass_aa === false))
+  );
+  const actualAaFailures = findings.filter((finding) => finding?.severity === "aa-fail").length;
+  const actualAaaAdvisories = findings.filter((finding) => finding?.severity === "aaa-body-advisory").length;
+  const summaryValid =
+    Number.isSafeInteger(summary.aa_fail) && summary.aa_fail >= 0 &&
+    Number.isSafeInteger(summary.aaa_advisory) && summary.aaa_advisory >= 0 &&
+    Number.isSafeInteger(summary.total) && summary.total >= 0 &&
+    summary.aa_fail === actualAaFailures &&
+    summary.aaa_advisory === actualAaaAdvisories &&
+    summary.total === findings.length;
+  const valid =
+    isRecord(report) &&
+    report.schema === "scrypath.contrast.v1" &&
+    report.producer === "token" &&
+    typeof report.generated === "string" && report.generated.length > 0 &&
+    Array.isArray(report.findings) && report.findings.length > 0 && findingShapeValid && summaryValid;
+  return {
+    valid,
+    passed: valid && stageExitCode === 0 && summary.aa_fail === 0,
+    aa_fail: Number.isSafeInteger(summary.aa_fail) ? summary.aa_fail : null,
+    total: Number.isSafeInteger(summary.total) ? summary.total : null
+  };
+}
+
 function cleanText(value, label) {
   if (typeof value !== "string" || value.trim() === "") {
     throw new TypeError(`${label} must be a non-empty string`);
@@ -600,17 +633,25 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   ]) {
     const inputChecker = isRecord(checkerInput[name]) ? checkerInput[name] : {};
     const declaredPath = typeof inputChecker.path === "string" ? inputChecker.path : "";
+    const contrastResult = name === "contrast" ? inspectContrastReport(checker, stages.contrast?.exit_code) : null;
+    const checkerStatus = name === "contrast"
+      ? (contrastResult.passed ? "pass" : "fail")
+      : typeof checker?.status === "string" ? checker.status : "missing";
     if (declaredPath !== file) reasons.push(errorReason("invalid_checker_path", `${name} checker must use ${file}`));
-    if (inputChecker.status !== "pass" || checker?.status !== "pass") {
+    if (name === "contrast" && !contrastResult.valid) {
+      reasons.push(errorReason("invalid_contrast_report", "contrast report must follow scrypath.contrast.v1 with consistent typed findings and summary counts"));
+    }
+    if (inputChecker.status !== "pass" || checkerStatus !== "pass") {
       reasons.push(errorReason("checker_failed", `${name} checker must report pass in both provenance and output`));
     }
     checkers[name] = {
       path: file,
-      status: typeof checker?.status === "string" ? checker.status : "missing",
+      status: checkerStatus,
       outcome: stages[name]?.exit_code === 0 ? "success" : "failure",
       missing: Array.isArray(checker?.missing) ? checker.missing.length : null,
       extra: Array.isArray(checker?.extra) ? checker.extra.length : null,
-      width_mismatches: Array.isArray(checker?.width_mismatches) ? checker.width_mismatches.length : null
+      width_mismatches: Array.isArray(checker?.width_mismatches) ? checker.width_mismatches.length : null,
+      ...(name === "contrast" ? { aa_fail: contrastResult.aa_fail, total: contrastResult.total } : {})
     };
   }
 
