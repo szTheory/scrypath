@@ -5,8 +5,8 @@ titles: json
 findings:
   - id: WR-03
     severity: warning
-    disposition: open
-    title: "Coverage and attestation artifact names are not attempt-scoped — WARNING (deferred)"
+    disposition: deferred
+    title: "Artifact uploads reuse names on workflow reruns"
   - id: WR-02
     severity: warning
     disposition: fixed
@@ -27,16 +27,16 @@ findings:
     severity: warning
     disposition: fixed
     title: "Fixture route readiness treats redirects as success — WARNING"
-open: 1
+open: 0
 total: 6
-recorded: 2026-10-27T22:42:57.076Z
+recorded: 2026-10-27T22:43:40.760Z
 ---
 
 # Phase 182: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-03 | warning | open | - |
+| WR-03 | warning | deferred | Original WR-03 identity retained after correction-review title normalization. Baseline coverage/attestation names are unchanged from ba624a74; fresh closeout dispatches use distinct runs, browser/cache artifacts bind run/attempt, and retries cannot become clean stability proof. Future same-run rerun support must update names and ci_monitor consumers together. https://github.com/actions/upload-artifact#usage; no human risk approval implied. |
 | WR-02 | warning | fixed | 30becbc4; source-derived numeric0 RED and real-status RegExp GREEN,115 Node checks; current-source full browser refresh pending (not in current review) (not in the current review) |
 | CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression (not in the current review) |
 | CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression (not in the current review) |
