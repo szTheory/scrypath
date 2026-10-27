@@ -9,7 +9,7 @@ findings:
     title: "Settings screenshot assertion targets numeric text"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: deferred
     title: "Artifact uploads reuse names on workflow reruns"
   - id: CR-01
     severity: critical
@@ -27,9 +27,9 @@ findings:
     severity: warning
     disposition: fixed
     title: "Fixture route readiness treats redirects as success — WARNING"
-open: 2
+open: 1
 total: 6
-recorded: 2026-10-27T22:38:07.326Z
+recorded: 2026-10-27T22:38:26.976Z
 ---
 
 # Phase 182: Code Review Disposition
@@ -37,7 +37,7 @@ recorded: 2026-10-27T22:38:07.326Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
+| WR-03 | warning | deferred | Baseline coverage/attestation naming is unchanged by Phase182 (ba624a74). New closeout dispatches use distinct run IDs; no rerun is admitted as clean stability proof. Browser/cache artifacts already bind run and attempt. Future rerun support must update upload names and ci_monitor consumers together; see https://github.com/actions/upload-artifact#usage. This warning is tracked, not maintainer risk approval. |
 | CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression (not in the current review) |
 | CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression (not in the current review) |
 | CR-03 | critical | fixed | edd47eee; executable RED/GREEN regression (not in the current review) |
