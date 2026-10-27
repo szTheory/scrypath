@@ -514,14 +514,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "phase105 evidence summary includes shifted-left visual gates" do
       summary_script = File.read!("scripts/ci/phase105_evidence.sh")
+      evidence_writer = File.read!("scripts/ci/ecommerce_evidence.cjs")
 
-      assert summary_script =~ "admin-light-parity.json"
-      assert summary_script =~ "ops-ui-visual-judge.json"
-      assert summary_script =~ "light_parity_status"
-      assert summary_script =~ "shell_wash_conclusion"
-      assert summary_script =~ "shell_wash_visual"
-      assert summary_script =~ "visual_judge_status"
-      assert summary_script =~ "visual_judge_claims"
+      assert summary_script =~ "ecommerce_evidence.cjs"
+      assert summary_script =~ "write-evidence"
+      assert summary_script =~ "--run-dir"
+      assert evidence_writer =~ "admin-light-parity.json"
+      assert evidence_writer =~ "light_parity_status"
+      assert evidence_writer =~ "shell_wash_conclusion"
+      assert evidence_writer =~ "shell_wash_visual"
+      assert evidence_writer =~ "visual_judge_status"
+      assert evidence_writer =~ "visual_judge_claims"
+      assert evidence_writer =~ "visual_judge_required: false"
+      refute evidence_writer =~ "ops-ui-visual-judge.json"
     end
   end
 

@@ -328,6 +328,12 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
       { encoding: "utf8" }
     );
     assert.equal(cli.status, 0, cli.stderr);
+
+    const summaryPath = path.join(runDir, "phase105-evidence-summary.md");
+    fs.writeFileSync(summaryPath, fs.readFileSync(summaryPath, "utf8").replace("eligibility: pass", "eligibility: fail"));
+    const mismatchedSummary = evidence.validateReceipt?.({ runDir });
+    assert.equal(mismatchedSummary?.valid, false);
+    assert.ok(mismatchedSummary?.reasons.some((reason) => reason.code === "summary_mismatch"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
@@ -347,6 +353,38 @@ test("missing or malformed required reports block receipt eligibility", () => {
     } finally {
       fs.rmSync(runDir, { recursive: true, force: true });
     }
+  }
+});
+
+test("writer CLI requires an explicit run directory and propagates incomplete proof", () => {
+  const script = path.join(__dirname, "ecommerce_evidence.cjs");
+  const missingRunDir = spawnSync(process.execPath, [script, "write-evidence"], { encoding: "utf8" });
+  assert.notEqual(missingRunDir.status, 0);
+
+  const { runDir } = createCompleteRun();
+  try {
+    fs.rmSync(path.join(runDir, "contrast-report.json"));
+    const result = spawnSync(process.execPath, [script, "write-evidence", "--run-dir", runDir], { encoding: "utf8" });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stdout, /\"eligible\": false/);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("legacy shell entrypoint delegates to the same writer with an explicit run directory", () => {
+  const wrapper = path.join(__dirname, "phase105_evidence.sh");
+  const missingRunDir = spawnSync("bash", [wrapper], { encoding: "utf8" });
+  assert.equal(missingRunDir.status, 64);
+
+  const { runDir } = createCompleteRun();
+  try {
+    const result = spawnSync("bash", [wrapper, "--run-dir", runDir], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(fs.existsSync(path.join(runDir, "phase105-evidence.json")));
+    assert.ok(fs.existsSync(path.join(runDir, "phase105-evidence-summary.md")));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
   }
 });
 
@@ -394,6 +432,7 @@ test("dirty local evidence keeps its fingerprint and cannot claim hosted clean p
       manifest.source.dirty = true;
       manifest.source.dirty_fingerprint = `sha256:${"d".repeat(64)}`;
       manifest.source.event_sha = null;
+      for (const image of Object.values(manifest.images)) image.source_fingerprint = manifest.source.dirty_fingerprint;
       manifest.workflow.event = "local";
       manifest.workflow.run_id = "local-123";
       manifest.workflow.ref = "local-worktree";
