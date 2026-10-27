@@ -567,6 +567,43 @@ test("Docker cache proof binds every checked Bake target to its manifest scope",
   assert.throws(() => writeDockerProbeProof({ manifestPath, outputPath, env }), /Bake settings do not match the checked scope/);
 });
 
+test("normal Docker observations honor import-only policy without certifying warm acceptance", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-import-only-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const manifestPath = path.join(root, "manifest.json"), outputPath = path.join(root, "proof.json");
+  const bindings = dockerRecipeBindings(FULL_DOCKER_SCOPES);
+  const manifest = {
+    scope: "full", tags: { browser: "browser", standalone_ops: "ops", web: "web" },
+    cache_scopes: FULL_DOCKER_SCOPES, cache_policy: { import: true, export: false },
+    recipe_digest: bindings.recipeDigest, recipe_ids: bindings.recipeIds, image_ids: bindings.imageIds,
+  };
+  const targets = Object.fromEntries(Object.entries(FULL_DOCKER_SCOPES).map(([service, scope]) => [service, {
+    "cache-from": [`type=gha,scope=${scope},version=2,timeout=120s`],
+  }]));
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  fs.writeFileSync(path.join(root, "bake.json"), JSON.stringify({ target: targets }));
+  const env = { PHASE182_CACHE_MODE: "normal", GITHUB_RUN_ID: "12345", GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_REPOSITORY: REPOSITORY, GITHUB_REF_NAME: BRANCH, GITHUB_SHA: SHA, PRIMARY_VERIFICATION_OUTCOME: "success" };
+  const observation = writeDockerProbeProof({ manifestPath, outputPath, env });
+  assert.equal(observation.cache.imports_enabled, true);
+  assert.equal(observation.cache.exporter, null);
+  assert.deepEqual(observation.cache.export_scopes, []);
+  assert.equal(observation.cache.actual_export, false);
+  const warm = cacheProof("docker-warm");
+  warm.cache = { ...warm.cache, ...observation.cache };
+  assert.throws(() => validateCacheAcceptance(warm), /Bake settings do not match the checked scope|actual GHA import and export/);
+  // Disabling imports must be observed honestly too, with no configured imports.
+  manifest.cache_policy.import = false;
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  fs.writeFileSync(path.join(root, "bake.json"), JSON.stringify({ target: Object.fromEntries(Object.keys(targets).map((service) => [service, {}])) }));
+  const uncached = writeDockerProbeProof({ manifestPath, outputPath, env });
+  assert.equal(uncached.cache.imports_enabled, false);
+  assert.deepEqual(uncached.cache.import_scopes, []);
+  // A manifest that says imports are disabled cannot hide configured imports.
+  fs.writeFileSync(path.join(root, "bake.json"), JSON.stringify({ target: targets }));
+  assert.throws(() => writeDockerProbeProof({ manifestPath, outputPath, env }), /Bake settings do not match the checked scope/);
+});
+
 test("required cache modes are exact and ordered", () => {
   assert.deepEqual(REQUIRED_CACHE_MODES, [
     "docker-warm",
