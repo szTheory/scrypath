@@ -346,32 +346,21 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "run: mix verify.repository_contracts"
     end
 
-    test "repository contracts execute counted browser build, lifecycle, evidence, and target behavior tests" do
-      {output, status} =
-        System.cmd(
-          "node",
-          [
-            "--test",
-            "--test-reporter=tap",
+    test "required repository-contracts lane runs counted browser build and behavior tests" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "repository-contracts")
+
+      assert job =~ "node --test --test-reporter=tap"
+
+      for test_file <- [
             "scripts/ci/ecommerce_build.test.cjs",
             "scripts/ci/ecommerce_lifecycle.test.cjs",
             "scripts/ci/ecommerce_evidence.test.cjs",
             "scripts/ci/ecommerce_target.test.cjs"
-          ],
-          stderr_to_stdout: true
-        )
-
-      assert status == 0,
-             "browser build and behavior tests failed with status #{status}:\n#{output}"
-
-      assert [_, count] = Regex.run(~r/^# tests (\d+)$/m, output),
-             "Node test output did not report a test count:\n#{output}"
-
-      assert String.to_integer(count) > 0,
-             "browser build and behavior tests ran zero tests:\n#{output}"
-
-      assert output =~ ~r/^# fail 0$/m,
-             "browser build and behavior tests reported failures:\n#{output}"
+          ] do
+        assert job =~ test_file,
+               "repository-contracts must execute #{test_file} outside the ExUnit suite"
+      end
     end
 
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do

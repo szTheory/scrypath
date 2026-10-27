@@ -181,6 +181,15 @@ jobs:
           key: ${{ steps.beam_cache.outputs.resolved_key }}
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
       - run: mix deps.get
+      - name: Verify browser build, lifecycle, evidence, and target behavior
+        run: |
+          node --test --test-reporter=tap \
+            scripts/ci/ecommerce_build.test.cjs \
+            scripts/ci/ecommerce_lifecycle.test.cjs \
+            scripts/ci/ecommerce_evidence.test.cjs \
+            scripts/ci/ecommerce_target.test.cjs | tee "$RUNNER_TEMP/browser-behavior.tap"
+          grep -Eq '^# tests [1-9][0-9]*$' "$RUNNER_TEMP/browser-behavior.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/browser-behavior.tap"
       - run: mix verify.repository_contracts
 
   backend:

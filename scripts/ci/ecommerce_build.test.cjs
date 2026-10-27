@@ -152,7 +152,7 @@ function buildDriver(scope, project, options = {}) {
       const source = state.manifest || options.manifest;
       return JSON.stringify({
         Id: `sha256:${service.padEnd(64, "a").slice(0, 64)}`,
-        RepoTags: [tag],
+        RepoTags: [`docker.io/library/${tag}:latest`],
         Config: { Labels: {
           "org.opencontainers.image.revision": state.revisionMismatch === service ? "sha256:wrong-source" : source?.source_sha || execFileSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).trim(),
           ...(source?.source_fingerprint ? { "org.opencontainers.image.source-fingerprint": source.source_fingerprint } : {}),

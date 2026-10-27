@@ -378,7 +378,10 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
     for (const [service, tag] of Object.entries(resolved.tags)) {
       const image = inspectJson(runCommand, "image", tag, env);
       const labels = image.Config?.Labels || {};
-      if (!image.Id || !image.RepoTags?.includes(tag)) throw new Error(`local image tag is missing: ${tag}`);
+      const localTags = new Set([tag, `${tag}:latest`, `docker.io/library/${tag}:latest`]);
+      if (!image.Id || !image.RepoTags?.some((repoTag) => localTags.has(repoTag))) {
+        throw new Error(`local image tag is missing: ${tag}`);
+      }
       if (labels[revisionLabel] !== resolved.sourceSha) throw new Error(`local image source SHA mismatch: ${service}`);
       if ((resolved.sourceFingerprint && labels[fingerprintLabel] !== resolved.sourceFingerprint) || (!resolved.sourceFingerprint && labels[fingerprintLabel])) {
         throw new Error(`local image source fingerprint mismatch: ${service}`);
