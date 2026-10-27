@@ -18,9 +18,9 @@ affects: [ci, contributor-verification, phase-182-closeout]
 actuals:
   tokens: 20536
   tasks: 2
-  commits: 37
+  commits: 39
   plan_head_before: 532686900769264eea618e5c9a1a681014d09b1f
-  plan_head_after: b87660a79a10453491bee063558623df2df38a2c
+  plan_head_after: 87e944dee2ed56d9e0fae9bb5ddc3c976e24fba0
 
 # Tech tracking
 tech-stack:
@@ -177,8 +177,9 @@ Acceptance task commits:
 
 1. **Task 1 — cache acceptance:** `6c6bbdd3` (`docs(182-08): record actual cache acceptance`)
 2. **Task 2 — full browser acceptance:** `b87660a7` (`docs(182-08): record full browser acceptance`)
+3. **Task 2 follow-up — correct the warm receipt digest in both acceptance records:** `87e944de` (`docs(182-08): correct warm receipt digest`)
 
-The plan metadata commit contains this summary and is recorded separately in the final executor return.
+The first summary metadata commit, `48f427d7`, preceded the digest audit and is superseded by the final summary metadata commit recorded in the executor return. The measured 39 commits present before this final summary update include that earlier metadata commit and all 38 source/review/acceptance task commits.
 
 ## Verification
 
@@ -237,7 +238,8 @@ Plan 182-08 acceptance is recorded for the frozen e37 implementation. The child 
 ## Self-Check: PASSED
 
 - The cache and browser acceptance documents and all listed source paths exist.
-- All 37 pre-summary plan commits are in the current branch history; the cache and browser acceptance docs are separate task commits.
+- All 38 source/review/acceptance task commits are in the current branch history; the cache, browser, and digest-correction docs commits are separate task commits.
+- The warm Docker receipt digest in both acceptance records matches the manifest-listed receipt bytes: `f497e12d9d5af1fe196adf389392ae7a4241306a0ff2035712e8076457087a6a`.
 - Both aggregate validators pass against the manifest-listed session root; saved receipt and archive digests match their immutable bytes.
 - The current implementation source tree is byte-for-byte unchanged from e37; only planning documentation follows the frozen implementation.
 - `STATE.md`, `ROADMAP.md`, `REQUIREMENTS.md`, `PROJECT.md`, configuration, source, workflows, tests, and retained preview were not modified during this finalization.
