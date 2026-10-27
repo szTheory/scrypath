@@ -1333,7 +1333,10 @@ function validateCompletedJobs(jobs, { allowPending = false } = {}) {
 }
 
 function getJobLog(command, repo, runId, attempt, job) {
-  const result = command(GH, ["run", "view", runId, "--attempt", String(attempt), "--job", String(job.id), "--log", "--repo", repo], { maxBuffer: 32 * 1024 * 1024 });
+  // The selected job came from the pinned run-attempt jobs endpoint. Download
+  // its plain-text log directly: `gh run view --log` fetches the whole run ZIP.
+  // Capture raw ANSI bytes as data; never print this untrusted log to a terminal.
+  const result = command(GH, ["api", "--allow-escape-sequences", `repos/${repo}/actions/jobs/${job.id}/logs`], { maxBuffer: 32 * 1024 * 1024 });
   return commandText(result);
 }
 

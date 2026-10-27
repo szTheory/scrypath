@@ -806,8 +806,8 @@ test("collectRun downloads the selected job log directly without the whole-run a
   const flags = { repo: REPOSITORY, branch: BRANCH, sha: SHA, sessionId: SESSION_ID, mode: "full", outputDir: path.join(root, "candidate") };
   const result = collectRun(flags, { command, pollMilliseconds: 0, timeoutSeconds: 2, browserValidator: validBrowserReceipt });
   assert.equal(result.browser.eligible, true);
-  assert.ok(command.calls.some((call) => call.includes("/actions/jobs/8/logs")));
-  assert.equal(command.calls.some((call) => call.startsWith("gh run view")), false);
+  assert.ok(command.calls.some((call) => call.includes(`repos/${REPOSITORY}/actions/jobs/108/logs`)));
+  assert.equal(command.calls.some((call) => call[0] === "run" && call[1] === "view"), false);
 });
 
 test("collectRun waits for selected-attempt job and artifact metadata without redispatching", (t) => {
