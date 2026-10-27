@@ -5,6 +5,21 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      phase182_cache_mode:
+        description: Optional cache acceptance probe to run in the existing CI jobs
+        type: choice
+        default: normal
+        options:
+          - normal
+          - docker-cold
+          - beam-cold
+          - beam-fallback
+          - beam-lock-change
+      phase182_probe_namespace:
+        description: Optional isolated lowercase cache namespace (empty uses the production namespace)
+        type: string
+        default: ""
   schedule:
     - cron: "37 6 * * *"
 
@@ -24,22 +39,88 @@ jobs:
       # UAT-09 asserts a release-history subject from the root test suite.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with: {fetch-depth: 0}
+      - name: Validate Phase 182 cache probe inputs
+        id: phase182_inputs
+        env:
+          PHASE182_CACHE_MODE: ${{ inputs.phase182_cache_mode || 'normal' }}
+          PHASE182_PROBE_NAMESPACE: ${{ inputs.phase182_probe_namespace || '' }}
+        run: node scripts/ci/phase182_acceptance.cjs validate-inputs --output "$GITHUB_OUTPUT"
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
+      - name: Prepare isolated comment-only lock probe checkout
+        id: phase182_lock_probe
+        if: steps.phase182_inputs.outputs.mode == 'beam-lock-change'
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUNNER_TEMP: ${{ runner.temp }}
+        run: node scripts/ci/phase182_acceptance.cjs prepare-lock --output "$GITHUB_OUTPUT"
       - id: beam_cache
-        run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.namespace }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          PHASE182_BEAM_ROOT: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
+          PHASE182_BEAM_PLAN: ${{ runner.temp }}/phase182-beam-cache-plan.json
+        run: node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root "$PHASE182_BEAM_ROOT" --output "$PHASE182_BEAM_PLAN" --output-github "$GITHUB_OUTPUT"
+      - id: phase182_downloads_cache
+        name: Restore Hex download archive cache
+        if: steps.phase182_inputs.outputs.mode != 'beam-cold'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - id: phase182_resolved_cache
+        name: Restore resolved BEAM build cache
+        if: steps.phase182_inputs.outputs.mode != 'beam-cold'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
-      - run: mix deps.get
-      - run: mix verify.core --exclude integration --exclude docs_contract
+      - id: mix_deps_get
+        run: mix deps.get
+        working-directory: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
+      - id: phase182_compile
+        if: startsWith(steps.phase182_inputs.outputs.mode, 'beam-')
+        run: mix compile --warnings-as-errors
+        working-directory: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
+      - id: core_verify
+        run: mix verify.core --exclude integration --exclude docs_contract
+        working-directory: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
+      - name: Write Phase 182 BEAM cache proof
+        id: phase182_beam_proof
+        if: always() && startsWith(steps.phase182_inputs.outputs.mode, 'beam-')
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          PHASE182_BEAM_PLAN: ${{ runner.temp }}/phase182-beam-cache-plan.json
+          PHASE182_LOCK_PROBE_MANIFEST: ${{ steps.phase182_lock_probe.outputs.lock_manifest }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          RUNNER_NAME: ${{ runner.name }}
+          DOWNLOADS_CACHE_HIT: ${{ steps.phase182_downloads_cache.outputs.cache-hit }}
+          DOWNLOADS_MATCHED_KEY: ${{ steps.phase182_downloads_cache.outputs.cache-matched-key }}
+          RESOLVED_CACHE_HIT: ${{ steps.phase182_resolved_cache.outputs.cache-hit }}
+          RESOLVED_MATCHED_KEY: ${{ steps.phase182_resolved_cache.outputs.cache-matched-key }}
+          DEPS_GET_OUTCOME: ${{ steps.mix_deps_get.outcome }}
+          COMPILE_OUTCOME: ${{ steps.phase182_compile.outcome }}
+          VERIFY_OUTCOME: ${{ steps.core_verify.outcome }}
+        run: node scripts/ci/phase182_acceptance.cjs write-beam-proof --plan "$PHASE182_BEAM_PLAN" --output "$RUNNER_TEMP/phase182-cache-proof.json"
+      - name: Upload Phase 182 BEAM cache proof
+        if: always() && startsWith(steps.phase182_inputs.outputs.mode, 'beam-') && steps.phase182_beam_proof.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: phase182-cache-probe-${{ steps.phase182_inputs.outputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phase182-cache-proof.json
+          if-no-files-found: error
+          retention-days: 7
 
   package:
     name: package (required)
@@ -308,6 +389,12 @@ jobs:
       BEAM_CACHE_PROFILE: ecommerce-test
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Validate Phase 182 cache probe inputs
+        id: phase182_inputs
+        env:
+          PHASE182_CACHE_MODE: ${{ inputs.phase182_cache_mode || 'normal' }}
+          PHASE182_PROBE_NAMESPACE: ${{ inputs.phase182_probe_namespace || '' }}
+        run: node scripts/ci/phase182_acceptance.cjs validate-inputs --output "$GITHUB_OUTPUT"
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
@@ -333,6 +420,15 @@ jobs:
             echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
             echo "E2E_IMAGE_OVERRIDE=$output_dir/image-override.json"
           } >> "$GITHUB_ENV"
+      - name: Configure scoped mounted Docker cache probe
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.namespace }}
+          E2E_PREBUILT_MANIFEST: ${{ runner.temp }}/ecommerce-mounted-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
+        run: node scripts/ci/phase182_acceptance.cjs configure-docker --manifest "$E2E_PREBUILT_MANIFEST"
+      - name: Record pre-probe Buildx builders
+        if: steps.phase182_inputs.outputs.mode == 'docker-cold'
+        run: docker buildx ls --format '{{.Name}}' > "$RUNNER_TEMP/phase182-builders-before.txt"
       - name: Set up pinned Buildx for mounted Compose images
         id: ecommerce_buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1, immutable signed Docker release
@@ -340,6 +436,9 @@ jobs:
           name: ${{ env.BUILDER_ID }}
           version: v0.37.2
           driver-opts: image=moby/buildkit:v0.33.1
+      - name: Inspect newly created mounted Buildx builder
+        if: steps.phase182_inputs.outputs.mode == 'docker-cold'
+        run: docker buildx inspect "$BUILDER_ID" --bootstrap > "$RUNNER_TEMP/phase182-builder-inspect.txt"
       - name: Bake and load checked mounted images
         id: ecommerce_bake
         continue-on-error: true
@@ -364,9 +463,31 @@ jobs:
         if: steps.ecommerce_bake.outcome == 'failure' && steps.ecommerce_handoff.outcome == 'success'
         run: echo "::warning title=BuildKit cache performance::Bake returned failure after the checked images loaded. Inspect Docker Bake logs; image handoff is valid and mounted verification will continue."
       - name: Run mounted E2E proof
+        id: mounted_verify
         env:
           E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: mix verify.ecommerce_mounted
+      - name: Write Phase 182 Docker cold-cache proof
+        id: phase182_docker_proof
+        if: always() && steps.phase182_inputs.outputs.mode == 'docker-cold'
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          BUILDER_ID: ${{ env.BUILDER_ID }}
+          PRIMARY_VERIFICATION_OUTCOME: ${{ steps.mounted_verify.outcome }}
+        run: node scripts/ci/phase182_acceptance.cjs write-docker-proof --manifest "$E2E_PREBUILT_MANIFEST" --output "$RUNNER_TEMP/phase182-cache-proof.json" --baseline "$RUNNER_TEMP/phase182-builders-before.txt" --inspect "$RUNNER_TEMP/phase182-builder-inspect.txt"
+      - name: Upload Phase 182 Docker cold-cache proof
+        if: always() && steps.phase182_inputs.outputs.mode == 'docker-cold' && steps.phase182_docker_proof.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: phase182-cache-probe-docker-cold-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phase182-cache-proof.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload mounted E2E failure evidence
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -517,6 +638,12 @@ jobs:
       - name: Verify checked-out source SHA
         shell: bash
         run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+      - name: Validate Phase 182 cache probe inputs
+        id: phase182_inputs
+        env:
+          PHASE182_CACHE_MODE: ${{ inputs.phase182_cache_mode || 'normal' }}
+          PHASE182_PROBE_NAMESPACE: ${{ inputs.phase182_probe_namespace || '' }}
+        run: node scripts/ci/phase182_acceptance.cjs validate-inputs --output "$GITHUB_OUTPUT"
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
@@ -542,6 +669,12 @@ jobs:
             echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
             echo "E2E_IMAGE_OVERRIDE=$output_dir/image-override.json"
           } >> "$GITHUB_ENV"
+      - name: Configure scoped full Docker cache namespace
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.namespace }}
+          E2E_PREBUILT_MANIFEST: ${{ runner.temp }}/ecommerce-full-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
+        run: node scripts/ci/phase182_acceptance.cjs configure-docker --manifest "$E2E_PREBUILT_MANIFEST"
       - name: Set up pinned Buildx for full Compose images
         id: ecommerce_buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1, immutable signed Docker release
@@ -587,6 +720,27 @@ jobs:
           E2E_WORKFLOW_RUN_ATTEMPT: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ATTEMPT }}
           E2E_JOB_NAME: ${{ steps.e2e_clock.outputs.E2E_JOB_NAME }}
         run: mix verify.ecommerce_e2e
+      - name: Write Phase 182 Docker warm-cache proof
+        id: phase182_docker_proof
+        if: always() && steps.phase182_inputs.outputs.mode == 'normal'
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mode }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          PRIMARY_VERIFICATION_OUTCOME: ${{ steps.ecommerce_verify.outcome }}
+          E2E_PREBUILT_MANIFEST: ${{ runner.temp }}/ecommerce-full-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
+        run: node scripts/ci/phase182_acceptance.cjs write-docker-proof --manifest "$E2E_PREBUILT_MANIFEST" --output "$RUNNER_TEMP/phase182-cache-proof.json"
+      - name: Upload Phase 182 Docker warm-cache proof
+        if: always() && steps.phase182_inputs.outputs.mode == 'normal' && steps.phase182_docker_proof.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: phase182-cache-probe-docker-warm-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phase182-cache-proof.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload advisory E2E evidence
         id: ecommerce_upload
         if: always()

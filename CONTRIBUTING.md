@@ -233,6 +233,81 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`** as required merge gates. The compatibility, deep-quality, Phoenix example, optional operator app, and full E2E lanes remain advisory or path-scoped as labeled.
 
+### Exact-source cache acceptance probes
+
+Manual `ci.yml` dispatches default to `phase182_cache_mode=normal`, which keeps
+the existing jobs and commands unchanged. It runs the normal full advisory
+browser job and records a Docker warm-cache receipt from that job. Optional
+modes reuse the existing jobs:
+
+| Mode | Existing job | Evidence being exercised |
+|------|--------------|--------------------------|
+| `docker-cold` | `ecommerce-mounted` | A new per-run Buildx builder with every Bake cache import/export removed, followed by `mix verify.ecommerce_mounted`. |
+| `beam-cold` | `core` | Cache restore steps are skipped on the fresh hosted runner; `mix deps.get`, `mix compile --warnings-as-errors`, and the canonical core verifier run normally. |
+| `beam-fallback` | `core` | Run-unique primary cache keys miss; compatible Hex archive fallback is accepted only when Actions reports the matched key. Resolved build restore is disabled, then normal resolution, compilation, and core verification run. |
+| `beam-lock-change` | `core` | A separate temporary checkout receives one comment-only `mix.lock` change and a local probe-only commit. The source checkout stays unchanged; compatible Hex fallback, an exact resolved-cache miss, and the normal Mix commands are recorded. |
+
+`phase182_probe_namespace` accepts a lowercase slug of up to 32 characters.
+Leave it empty to use the production cache namespace. Use a distinct slug for
+candidate experiments: Docker scopes and BEAM Actions Cache keys then stay in
+that namespace. No mode deletes caches. The normal full job remains the trusted
+production cache writer; an unnamespaced candidate run cannot export the stable
+Docker cache. A `docker-warm` acceptance therefore needs actual GHA import and
+export log lines; use a trusted main dispatch or an explicit probe namespace
+and run again after it has seeded that namespace.
+
+The exact-source collector dispatches `ci.yml` at the requested branch and full
+SHA, then reads that new run's attempt-specific jobs, raw logs, and immutable
+artifact bytes. Its existing `gh` identity needs workflow-dispatch permission
+for `ci.yml` at the owned candidate ref plus Actions read access to run attempts,
+jobs, logs, and artifacts. `gh auth status` and read-only access do not prove
+dispatch capability. A denied operation is an authentication/capability gate;
+use the already approved identity, without adding secrets or widening workflow
+token permissions. The collector never pushes. If a separate push is needed,
+it must use existing permission and target only the owned branch.
+
+Keep candidate evidence outside the checkout. The first invocation creates a
+session manifest bound to repository, branch, full source SHA, and your explicit
+session ID. Repeated modes (including retries of one mode) get fresh
+invocation/run-attempt directories and preserve earlier failures. Reuse a root
+only for the exact same source/ref/session; a changed SHA needs a new root.
+The workflow retains proof artifacts for seven days. Run each required cache
+mode in one session, then validate the aggregate:
+
+```sh
+repo="OWNER/REPO"
+branch="YOUR_OWNED_BRANCH"
+sha="$(git rev-parse HEAD)"
+session="phase182-$(date -u +%Y%m%dT%H%M%SZ)"
+root="/tmp/scrypath-phase182/$session"
+namespace="candidate-2026"
+
+# Seed this isolated namespace before collecting warm/fallback evidence. The
+# first run may have no import hit; run normal again so it can prove import and
+# export from the cache created by the first run.
+gh workflow run ci.yml --ref "$branch" --repo "$repo" \
+  -f phase182_cache_mode=normal -f "phase182_probe_namespace=$namespace"
+# Wait for the seed run to finish, then dispatch normal once more with the same
+# command and wait for success before collecting the acceptance receipts.
+
+for mode in docker-warm docker-cold beam-fallback beam-lock-change beam-cold; do
+  node scripts/ci/phase182_acceptance.cjs run \
+    --mode "$mode" --repo "$repo" --branch "$branch" --sha "$sha" \
+    --session-id "$session" --output-dir "$root" \
+    --probe-namespace "$namespace"
+done
+
+node scripts/ci/phase182_acceptance.cjs validate \
+  --mode caches --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --input "$root"
+```
+
+`docker-warm` dispatches the default `normal` workflow input. Cache modes require
+successful canonical verifier steps and actual BuildKit or Actions Cache log
+evidence in addition to their JSON receipts. The executable tests protect the
+collector and wiring only; they do not stand in for a real hosted browser or
+cache acceptance run.
+
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
 The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
