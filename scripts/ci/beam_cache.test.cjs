@@ -19,7 +19,10 @@ function jobBlock(name) {
 test("root Mix cache jobs use a compatible Hex fallback and strict resolved cache plan", () => {
   for (const name of rootCacheJobs) {
     const block = jobBlock(name);
-    assert.match(block, /beam_cache\.cjs plan --graph root/, `${name} should derive its cache identity from the runtime`);
+    const planner = name === "core"
+      ? /phase182_acceptance\.cjs beam-plan --graph root/
+      : /beam_cache\.cjs plan --graph root/;
+    assert.match(block, planner, `${name} should derive its cache identity from the runtime`);
     assert.match(block, /~\/\.hex\/packages/, `${name} may cache only Hex package archives for download fallback`);
     assert.match(block, /downloads_restore_prefix/, `${name} should limit download fallback to a compatible prefix`);
     assert.match(block, /outputs\.resolved_paths/, `${name} should restore only graph-allowlisted resolved paths`);

@@ -231,17 +231,23 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       ])
     end
 
-    test "Node BEAM cache boundaries execute inside the existing wiring contract lane" do
+    test "Node BEAM cache and exact-source collector boundaries execute inside the wiring contract lane" do
       {output, status} =
         System.cmd(
           "node",
-          ["--test", "--test-reporter=tap", "scripts/ci/beam_cache.test.cjs"],
+          [
+            "--test",
+            "--test-reporter=tap",
+            "scripts/ci/beam_cache.test.cjs",
+            "scripts/ci/phase182_acceptance.test.cjs"
+          ],
           stderr_to_stdout: true
         )
 
       assert status == 0, output
       assert output =~ ~r/# tests [1-9]\d*/
       assert output =~ "# fail 0"
+      assert output =~ "BEAM probe keys preserve normal keys and isolate forced fallback misses"
     end
   end
 
@@ -562,6 +568,44 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert contributing =~ "**`ecommerce-mounted`**"
       assert contributing =~ "`ecommerce-e2e` is advisory today"
+    end
+
+    test "Phase 182 cache probes are opt-in and keep existing jobs and canonical verifiers" do
+      ci = File.read!(@ci_yml)
+      [triggers, _jobs] = String.split(ci, "\njobs:\n", parts: 2)
+      core = workflow_job_block(ci, "core")
+      mounted = workflow_job_block(ci, "ecommerce-mounted")
+      full = workflow_job_block(ci, "ecommerce-e2e")
+
+      assert triggers =~ "workflow_dispatch:"
+      assert triggers =~ "phase182_cache_mode:"
+      assert triggers =~ "default: normal"
+      assert triggers =~ "phase182_probe_namespace:"
+      assert triggers =~ "type: string"
+      assert triggers =~ "default: \"\""
+
+      for mode <- ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"] do
+        assert triggers =~ "- #{mode}"
+      end
+
+      assert core =~ "phase182_acceptance.cjs validate-inputs"
+      assert core =~ "phase182_acceptance.cjs beam-plan"
+      assert core =~ "if: steps.phase182_inputs.outputs.mode != 'beam-cold'"
+      assert core =~ "mix deps.get"
+      assert core =~ "mix compile --warnings-as-errors"
+      assert core =~ "mix verify.core --exclude integration --exclude docs_contract"
+      assert core =~ "phase182_acceptance.cjs prepare-lock"
+      assert core =~ "phase182_acceptance.cjs write-beam-proof"
+
+      assert mounted =~ "phase182_acceptance.cjs configure-docker"
+      assert mounted =~ "docker buildx inspect \"$BUILDER_ID\" --bootstrap"
+      assert mounted =~ "mix verify.ecommerce_mounted"
+      assert mounted =~ "phase182-cache-probe-docker-cold-${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert full =~ "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+      assert full =~ "phase182_acceptance.cjs configure-docker"
+      assert full =~ "mix verify.ecommerce_e2e"
+      assert full =~ "phase182-cache-probe-docker-warm-${{ github.run_id }}-${{ github.run_attempt }}"
     end
 
     test "mounted and full E2E bake the checked local Compose graph without pushing" do

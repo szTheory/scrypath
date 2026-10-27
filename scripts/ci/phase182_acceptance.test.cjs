@@ -3,6 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
+const { execFileSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -10,11 +11,16 @@ const { Worker } = require("node:worker_threads");
 
 const {
   REQUIRED_CACHE_MODES,
+  beamPlanForProbe,
   collectRun,
+  configureDockerBake,
+  prepareLockProbe,
   validateAggregate,
   validateBrowserAcceptance,
   validateCacheAcceptance,
   validateFlags,
+  validateWorkflowInputs,
+  writeBeamProbeProof,
 } = require("./phase182_acceptance.cjs");
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
@@ -86,13 +92,18 @@ function cacheProof(mode, overrides = {}) {
   const isDocker = mode.startsWith("docker-");
   const cold = mode === "docker-cold" || mode === "beam-cold";
   const run = overrides.run || exactRun();
+  const downloadsKey = "beam-downloads-key-current";
+  const downloadsRestoreKey = "beam-downloads-key-old";
+  const resolvedKey = "beam-resolved-key-current";
   const logText = mode === "docker-warm"
     ? "Run mix verify.ecommerce_e2e\nimporting cache manifest from gha:scope=scrypath-probe\nexporting cache to gha:scope=scrypath-probe\n"
     : mode === "beam-cold"
       ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\n"
       : mode.startsWith("beam-")
-        ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: beam-downloads-key\nCache not found for input keys: beam-resolved-key\n"
+        ? `Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: ${downloadsRestoreKey}\nCache not found for input keys: ${resolvedKey}\n`
         : "Run mix verify.ecommerce_mounted\nfresh builder; imports disabled\n";
+  const importLog = "importing cache manifest from gha:scope=scrypath-probe";
+  const exportLog = "exporting cache to gha:scope=scrypath-probe";
   return {
     mode,
     run,
@@ -125,8 +136,8 @@ function cacheProof(mode, overrides = {}) {
       imports_enabled: !cold,
       actual_import: !cold,
       actual_export: isDocker && mode === "docker-warm",
-      imported_digest: !cold ? `sha256:${"a".repeat(64)}` : null,
-      exported_digest: isDocker && mode === "docker-warm" ? `sha256:${"b".repeat(64)}` : null,
+      imported_digest: mode === "docker-warm" ? `sha256:${crypto.createHash("sha256").update(importLog).digest("hex")}` : null,
+      exported_digest: isDocker && mode === "docker-warm" ? `sha256:${crypto.createHash("sha256").update(exportLog).digest("hex")}` : null,
       importer: mode === "docker-warm" ? "gha" : null,
       exporter: mode === "docker-warm" ? "gha" : null,
       import_scopes: mode === "docker-warm" ? ["scrypath-probe"] : [],
@@ -141,16 +152,16 @@ function cacheProof(mode, overrides = {}) {
       resolved_lock_before: mode === "beam-lock-change" ? "d".repeat(64) : "d".repeat(64),
       resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
       runtime: { runner_image: "ubuntu24/20261019.1.0", elixir: "1.19.0", otp: "Erlang/OTP 28.1", os: "Linux", arch: "X64", mix_env: "test", mix_target: "host", profile: "root-test" },
-      downloads_hit: mode === "beam-fallback" || mode === "beam-lock-change",
+      downloads_hit: false,
       downloads_restored: mode === "beam-fallback" || mode === "beam-lock-change",
       resolved_hit: !cold && mode !== "beam-fallback" && mode !== "beam-lock-change",
       resolved_primary_hit: mode !== "beam-cold" && mode !== "beam-fallback" && mode !== "beam-lock-change",
-      downloads_key: "beam-downloads-key",
-      resolved_key: "beam-resolved-key",
+      downloads_key: downloadsKey,
+      resolved_key: resolvedKey,
       downloads_restore_prefix: "beam-downloads-",
-      downloads_restore_key: "beam-downloads-key-old",
-      resolved_restore_prefix: "beam-resolved-",
-      resolved_restore_key: "beam-resolved-key-old",
+      downloads_restore_key: downloadsRestoreKey,
+      resolved_restore_prefix: mode === "beam-fallback" || mode === "beam-lock-change" ? "" : "beam-resolved-",
+      resolved_restore_key: null,
       resolved_lock_before: "d".repeat(64),
       resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
       log_text: logText,
@@ -267,6 +278,132 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
   for (const mode of ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]) {
     assert.match(workflow, new RegExp(`^\\s+- ${mode.replaceAll("-", "\\-")}\\s*$`, "m"));
   }
+});
+
+test("workflow input validation writes only bounded mode and namespace outputs", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-inputs-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const outputPath = path.join(root, "github-output.txt");
+  const result = validateWorkflowInputs({ mode: "beam-fallback", namespace: "candidate-7", outputPath });
+  assert.deepEqual(result, { mode: "beam-fallback", namespace: "candidate-7" });
+  assert.match(fs.readFileSync(outputPath, "utf8"), /^mode=beam-fallback\nproof_mode=beam-fallback\nnamespace=candidate-7\n$/);
+  assert.throws(() => validateWorkflowInputs({ mode: "beam-fallback;touch-pwned", namespace: "" }), /cache mode/);
+  assert.throws(() => validateWorkflowInputs({ mode: "beam-fallback", namespace: "candidate\nkey=override" }), /lowercase slug/);
+});
+
+test("BEAM probe keys preserve normal keys and isolate forced fallback misses", () => {
+  const plan = {
+    identity: { locks_digest: "d".repeat(64), source_digest: "e".repeat(64) },
+    downloads_restore_prefix: "beam-downloads-compatible-",
+    resolved_restore_prefix: "beam-resolved-lock-",
+    downloads_key: `beam-downloads-compatible-${"d".repeat(64)}`,
+    resolved_key: `beam-resolved-lock-${"e".repeat(64)}`,
+    paths: { downloads: ["~/.hex/packages"], resolved: ["deps", "_build/test"] },
+  };
+  const normal = beamPlanForProbe(plan, { mode: "normal", runId: "101", attempt: 1 });
+  assert.equal(normal.downloads_key, plan.downloads_key);
+  assert.equal(normal.resolved_key, plan.resolved_key);
+  const fallback = beamPlanForProbe(plan, { mode: "beam-fallback", namespace: "candidate-7", runId: "101", attempt: 2 });
+  assert.ok(fallback.downloads_key.startsWith(`${plan.downloads_restore_prefix}phase182-candidate-7-`));
+  assert.ok(fallback.downloads_key.endsWith("-phase182-101-2"));
+  assert.ok(fallback.downloads_restore_prefix.startsWith(plan.downloads_restore_prefix));
+  assert.equal(fallback.resolved_restore_prefix, "");
+  assert.ok(fallback.resolved_key.endsWith("-phase182-101-2"));
+});
+
+test("Docker cache policy namespaces imports and exports and strips every cold cache setting", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-docker-policy-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const manifestPath = path.join(root, "image-handoff.json");
+  const bakePath = path.join(root, "bake.json");
+  const manifest = {
+    scope: "full",
+    cache_scopes: { web: "scrypath-web-v1", browser: "scrypath-browser-v1" },
+    cache_policy: { import: true, export: false },
+  };
+  const bake = {
+    target: {
+      web: { "cache-from": ["type=gha,scope=scrypath-web-v1,version=2,timeout=120s"] },
+      browser: { "cache-from": ["type=gha,scope=scrypath-browser-v1,version=2,timeout=120s"] },
+    },
+  };
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest));
+  fs.writeFileSync(bakePath, JSON.stringify(bake));
+  const namespaced = configureDockerBake({ manifestPath, mode: "normal", namespace: "candidate-7" });
+  assert.equal(namespaced.manifest.cache_policy.export, true);
+  for (const target of Object.values(namespaced.bake.target)) {
+    assert.match(target["cache-from"][0], /scope=.*-phase182-candidate-7/);
+    assert.match(target["cache-to"][0], /scope=.*-phase182-candidate-7/);
+    assert.match(target["cache-to"][0], /mode=max/);
+  }
+
+  const coldRoot = path.join(root, "cold");
+  fs.mkdirSync(coldRoot);
+  const coldManifestPath = path.join(coldRoot, "image-handoff.json");
+  fs.writeFileSync(coldManifestPath, JSON.stringify({
+    scope: "focused",
+    cache_scopes: { web: "scrypath-web-v1" },
+    cache_policy: { import: true, export: false },
+  }));
+  fs.writeFileSync(path.join(coldRoot, "bake.json"), JSON.stringify({ target: {
+    web: { "cache-from": ["type=gha,scope=scrypath-web-v1"], "cache-to": ["type=gha,scope=scrypath-web-v1"] },
+  } }));
+  const cold = configureDockerBake({ manifestPath: coldManifestPath, mode: "docker-cold" });
+  assert.equal(cold.manifest.cache_policy.import, false);
+  assert.ok(Object.values(cold.bake.target).every((target) => !target["cache-from"] && !target["cache-to"]));
+});
+
+test("lock-change probe commits only a comment-only change in its temporary checkout", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-lock-copy-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const source = path.join(root, "source");
+  const runnerTemp = path.join(root, "runner-temp");
+  fs.mkdirSync(source);
+  execFileSync("git", ["init", "--quiet", source]);
+  fs.writeFileSync(path.join(source, "mix.lock"), "%{}\n");
+  execFileSync("git", ["-C", source, "add", "mix.lock"]);
+  execFileSync("git", ["-C", source, "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "baseline"]);
+  const sourceBytes = fs.readFileSync(path.join(source, "mix.lock"));
+  const result = prepareLockProbe({ workspace: source, runnerTemp, runId: "123", attempt: 2 });
+  assert.equal(fs.readFileSync(path.join(source, "mix.lock")).equals(sourceBytes), true);
+  assert.equal(result.manifest.owned_copy, true);
+  assert.match(result.manifest.probe_commit, /^[a-f0-9]{40}$/);
+  assert.equal(execFileSync("git", ["-C", result.workdir, "status", "--porcelain"], { encoding: "utf8" }).trim(), "");
+  assert.deepEqual(execFileSync("git", ["-C", result.workdir, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], { encoding: "utf8" }).trim().split("\n"), ["mix.lock"]);
+  assert.equal(fs.readFileSync(path.join(result.workdir, "mix.lock"), "utf8"), `${sourceBytes.toString()}# phase182 lock probe run 123 attempt 2\n`);
+  const planPath = path.join(root, "beam-plan.json");
+  const proofPath = path.join(root, "beam-proof.json");
+  fs.writeFileSync(planPath, JSON.stringify({ identity: {
+    locks_digest: result.manifest.lock_after,
+    source_digest: "e".repeat(64),
+    runner_image: "ubuntu24/20261019.1.0",
+    os: "Linux",
+    arch: "X64",
+    elixir: "1.19.0",
+    otp: "Erlang/OTP 28.1",
+    mix_env: "test",
+    mix_target: "host",
+    profile: "root-test",
+  }, downloads_key: "downloads-primary", downloads_restore_prefix: "downloads-", resolved_key: "resolved-primary", resolved_restore_prefix: "" }));
+  const proof = writeBeamProbeProof({
+    planPath,
+    outputPath: proofPath,
+    lockManifestPath: result.manifestPath,
+    env: {
+      PHASE182_CACHE_MODE: "beam-lock-change",
+      GITHUB_REPOSITORY: REPOSITORY,
+      GITHUB_REF_NAME: BRANCH,
+      GITHUB_SHA: SHA,
+      GITHUB_RUN_ID: "123",
+      GITHUB_RUN_ATTEMPT: "2",
+      RUNNER_NAME: "GitHub Actions 123",
+      DOWNLOADS_MATCHED_KEY: "downloads-compatible-old",
+      DEPS_GET_OUTCOME: "success",
+      COMPILE_OUTCOME: "success",
+      VERIFY_OUTCOME: "success",
+    },
+  });
+  assert.deepEqual(proof.lock_probe, { owned_copy: true, source_lock_unchanged: true, versions_unchanged: true });
 });
 
 test("collectRun retains repeated-mode attempts in distinct directories and rejects session mismatch without mutation", async (t) => {
@@ -587,7 +724,7 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
         : activeMode === "beam-cold"
           ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\n"
           : activeMode.startsWith("beam-")
-          ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: beam-downloads-key\nCache not found for input keys: beam-resolved-key\n"
+          ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: beam-downloads-key-old\nCache not found for input keys: beam-resolved-key-current\n"
         : "Run advisory full E2E proof\n" };
     }
     throw new Error(`unexpected command: ${text}`);

@@ -3,13 +3,15 @@
 "use strict";
 
 const crypto = require("node:crypto");
-const { spawnSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const beamCache = require("./beam_cache.cjs");
 
 const GH = process.env.GH_BIN || "gh";
 const WORKFLOW = ".github/workflows/ci.yml";
+const DISPATCH_CACHE_MODES = ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"];
 const REQUIRED_JOBS = [
   "core (required)",
   "package (required)",
@@ -178,6 +180,291 @@ function validateProbeNamespace(value) {
   if (value === undefined || value === "") return "";
   if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(value)) throw new Error("probe namespace must be a lowercase slug of at most 32 characters");
   return value;
+}
+
+function validateDispatchCacheMode(value) {
+  const mode = value || "normal";
+  if (!DISPATCH_CACHE_MODES.includes(mode)) throw new Error(`phase182 cache mode must be one of ${DISPATCH_CACHE_MODES.join(", ")}`);
+  return mode;
+}
+
+function appendWorkflowOutputs(outputPath, values) {
+  if (!outputPath) return;
+  let contents = "";
+  for (const [name, value] of Object.entries(values)) {
+    const text = String(value ?? "");
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) || /[\r\n\0]/.test(text)) throw new Error("workflow output contains an invalid name or multiline value");
+    contents += `${name}=${text}\n`;
+  }
+  fs.appendFileSync(outputPath, contents, { mode: 0o600 });
+}
+
+function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } = {}) {
+  const validatedMode = validateDispatchCacheMode(mode);
+  const validatedNamespace = validateProbeNamespace(namespace);
+  appendWorkflowOutputs(outputPath, {
+    mode: validatedMode,
+    proof_mode: validatedMode === "normal" ? "docker-warm" : validatedMode,
+    namespace: validatedNamespace,
+  });
+  return { mode: validatedMode, namespace: validatedNamespace };
+}
+
+function validRunIdentity(runId, attempt) {
+  const id = String(runId ?? "");
+  const number = Number(attempt);
+  if (!/^[1-9][0-9]*$/.test(id) || !Number.isSafeInteger(number) || number < 1) throw new Error("GitHub run ID and attempt must be positive integers");
+  return { runId: id, attempt: number };
+}
+
+function prepareLockProbe({ workspace = REPOSITORY_ROOT, runnerTemp = os.tmpdir(), runId, attempt, sourceSha } = {}) {
+  const identity = validRunIdentity(runId, attempt);
+  const sourceRoot = fs.realpathSync(workspace);
+  const tempRoot = path.resolve(runnerTemp);
+  if (tempRoot === sourceRoot || tempRoot.startsWith(`${sourceRoot}${path.sep}`)) throw new Error("lock probe temporary checkout must be outside the source checkout");
+  fs.mkdirSync(tempRoot, { recursive: true });
+  const workdir = path.join(tempRoot, `phase182-beam-lock-${identity.runId}-${identity.attempt}`);
+  if (fs.existsSync(workdir)) throw new Error("lock probe checkout path already exists; refusing to reuse prior probe state");
+  const sourceHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: sourceRoot, encoding: "utf8" }).trim();
+  if (sourceSha && sourceHead !== sourceSha) throw new Error("lock probe source checkout does not match the workflow SHA");
+  const sourceLock = fs.readFileSync(path.join(sourceRoot, "mix.lock"));
+  execFileSync("git", ["clone", "--local", "--no-hardlinks", sourceRoot, workdir], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const clonedHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: workdir, encoding: "utf8" }).trim();
+  if (clonedHead !== sourceHead || !fs.readFileSync(path.join(workdir, "mix.lock")).equals(sourceLock)) {
+    throw new Error("temporary lock probe checkout does not match the source revision and lock bytes");
+  }
+  const comment = `# phase182 lock probe run ${identity.runId} attempt ${identity.attempt}\n`;
+  const separator = sourceLock.length === 0 || sourceLock.at(-1) === 10 ? Buffer.alloc(0) : Buffer.from("\n");
+  const suffix = Buffer.concat([separator, Buffer.from(comment)]);
+  fs.writeFileSync(path.join(workdir, "mix.lock"), Buffer.concat([sourceLock, suffix]));
+  const changedLock = fs.readFileSync(path.join(workdir, "mix.lock"));
+  if (!changedLock.equals(Buffer.concat([sourceLock, suffix]))) throw new Error("temporary lock probe did not preserve a comment-only lock change");
+  execFileSync("git", ["add", "mix.lock"], { cwd: workdir, stdio: "ignore" });
+  execFileSync("git", ["-c", "user.name=Phase 182 Cache Probe", "-c", "user.email=ci-cache-probe@example.invalid", "commit", "-m", "chore(ci): phase 182 comment-only cache probe"], { cwd: workdir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const changedFiles = execFileSync("git", ["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], { cwd: workdir, encoding: "utf8" }).trim().split(/\r?\n/).filter(Boolean);
+  const status = execFileSync("git", ["status", "--porcelain"], { cwd: workdir, encoding: "utf8" }).trim();
+  if (JSON.stringify(changedFiles) !== JSON.stringify(["mix.lock"]) || status !== "") throw new Error("temporary lock probe commit must contain only mix.lock and leave its checkout clean");
+  const manifestPath = path.join(tempRoot, `phase182-beam-lock-${identity.runId}-${identity.attempt}.json`);
+  const manifest = {
+    schema: 1,
+    source_root: sourceRoot,
+    workdir,
+    source_sha: sourceHead,
+    lock_before: sha256(sourceLock),
+    lock_after: sha256(changedLock),
+    suffix: suffix.toString("utf8"),
+    owned_copy: true,
+    probe_commit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: workdir, encoding: "utf8" }).trim(),
+  };
+  writeAtomic(manifestPath, manifest);
+  return { workdir, manifestPath, manifest };
+}
+
+function beamPlanForProbe(plan, { mode = "normal", namespace = "", runId, attempt } = {}) {
+  const validatedMode = validateDispatchCacheMode(mode);
+  const safeNamespace = validateProbeNamespace(namespace);
+  const identity = validRunIdentity(runId, attempt);
+  if (!plan || !plan.identity || !/^[a-f0-9]{64}$/.test(plan.identity.locks_digest || "") || !/^[a-f0-9]{64}$/.test(plan.identity.source_digest || "")) {
+    throw new Error("BEAM cache plan is missing its exact lock/source identity");
+  }
+  const result = structuredClone(plan);
+  const namespaceSuffix = safeNamespace ? `phase182-${safeNamespace}-` : "";
+  result.downloads_restore_prefix = `${plan.downloads_restore_prefix}${namespaceSuffix}`;
+  result.resolved_restore_prefix = `${plan.resolved_restore_prefix}${namespaceSuffix}`;
+  result.downloads_key = `${result.downloads_restore_prefix}${plan.identity.locks_digest}`;
+  result.resolved_key = `${result.resolved_restore_prefix}${plan.identity.source_digest}`;
+  if (validatedMode === "beam-fallback" || validatedMode === "beam-lock-change") {
+    const unique = `phase182-${identity.runId}-${identity.attempt}`;
+    result.downloads_key = `${result.downloads_key}-${unique}`;
+    result.resolved_key = `${result.resolved_key}-${unique}`;
+    // A resolved build is never restored in these probes. The compatible Hex
+    // archive prefix remains available so the test isolates the intended layer.
+    result.resolved_restore_prefix = "";
+  }
+  result.probe = { mode: validatedMode, namespace: safeNamespace, run_id: identity.runId, run_attempt: identity.attempt };
+  return result;
+}
+
+function configureDockerBake({ manifestPath, mode = "normal", namespace = "" } = {}) {
+  const validatedMode = validateDispatchCacheMode(mode);
+  const safeNamespace = validateProbeNamespace(namespace);
+  const manifestFile = path.resolve(requireText(manifestPath, "Docker build manifest"));
+  const manifest = parseJsonText(fs.readFileSync(manifestFile, "utf8"), "Docker image handoff manifest");
+  const bakeFile = path.join(path.dirname(manifestFile), "bake.json");
+  const bake = parseJsonText(fs.readFileSync(bakeFile, "utf8"), "Docker Bake configuration");
+  if (!bake.target || !manifest.cache_scopes || typeof manifest.cache_scopes !== "object") throw new Error("Docker build manifest is missing target cache scopes");
+
+  const cold = validatedMode === "docker-cold";
+  const namespaced = Boolean(safeNamespace);
+  if (cold && manifest.scope !== "focused") throw new Error("docker-cold is only valid for the existing mounted focused build");
+  if (namespaced && manifest.scope !== "focused" && manifest.scope !== "full") throw new Error("probe cache namespace requires the existing mounted or full Compose build");
+  const scopes = {};
+  for (const [service, target] of Object.entries(bake.target)) {
+    const originalScope = manifest.cache_scopes[service];
+    if (typeof originalScope !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(originalScope)) throw new Error(`Docker cache scope is missing or invalid for ${service}`);
+    const scope = namespaced ? `${originalScope}-phase182-${safeNamespace}` : originalScope;
+    scopes[service] = scope;
+    if (cold) {
+      delete target["cache-from"];
+      delete target["cache-to"];
+    } else if (namespaced) {
+      target["cache-from"] = [`type=gha,scope=${scope},version=2,timeout=120s`];
+      if (manifest.scope === "full") target["cache-to"] = [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`];
+      else delete target["cache-to"];
+    }
+  }
+  if (namespaced || cold) {
+    manifest.cache_scopes = scopes;
+    manifest.cache_policy = cold ? { import: false, export: false } : { import: true, export: manifest.scope === "full" };
+    manifest.import_status = cold ? "not_configured" : "pending";
+    manifest.export_status = manifest.cache_policy.export ? "pending" : "not_configured";
+    writeAtomic(manifestFile, manifest);
+    writeAtomic(bakeFile, bake);
+  }
+  return { manifest, bake, manifestFile, bakeFile, mode: validatedMode, namespace: safeNamespace };
+}
+
+function ghaCacheSettings(bake) {
+  const targets = Object.values(bake.target || {});
+  const settings = (field) => targets.flatMap((target) => Array.isArray(target[field]) ? target[field] : []);
+  const imports = settings("cache-from").filter((value) => /^type=gha,/.test(value));
+  const exports = settings("cache-to").filter((value) => /^type=gha,/.test(value));
+  const scope = (value) => value.match(/(?:^|,)scope=([^,]+)/)?.[1] || "";
+  return {
+    imports,
+    exports,
+    importScopes: [...new Set(imports.map(scope).filter(Boolean))].sort(),
+    exportScopes: [...new Set(exports.map(scope).filter(Boolean))].sort(),
+  };
+}
+
+function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", inspectPath = "", env = process.env } = {}) {
+  const mode = validateDispatchCacheMode(env.PHASE182_CACHE_MODE);
+  if (mode !== "normal" && mode !== "docker-cold") throw new Error("Docker probe proof is only valid for normal or docker-cold dispatches");
+  const identity = validRunIdentity(env.GITHUB_RUN_ID, env.GITHUB_RUN_ATTEMPT);
+  const manifest = parseJsonText(fs.readFileSync(manifestPath, "utf8"), "Docker image handoff manifest");
+  const bake = parseJsonText(fs.readFileSync(path.join(path.dirname(manifestPath), "bake.json"), "utf8"), "Docker Bake configuration");
+  const settings = ghaCacheSettings(bake);
+  const artifactMode = mode === "normal" ? "docker-warm" : mode;
+  const scopes = mode === "docker-cold" ? [] : settings.importScopes;
+  const exportScopes = mode === "normal" ? settings.exportScopes : [];
+  const cacheFrom = Object.values(bake.target || {}).flatMap((target) => Array.isArray(target["cache-from"]) ? target["cache-from"] : []);
+  let builder;
+  if (mode === "docker-cold") {
+    const builderId = requireText(manifest.builder_id || env.BUILDER_ID, "fresh builder ID");
+    const baseline = fs.readFileSync(baselinePath, "utf8").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const inspect = fs.readFileSync(inspectPath, "utf8");
+    const inspectedName = inspect.match(/^Name:\s*(.+)$/m)?.[1]?.trim();
+    const driver = inspect.match(/^Driver:\s*(.+)$/m)?.[1]?.trim();
+    const fresh = inspectedName === builderId && !baseline.includes(builderId) && driver === "docker-container";
+    if (!fresh || settings.imports.length || settings.exports.length || cacheFrom.length) throw new Error("docker-cold builder or Bake configuration is not fresh and cache-free");
+    builder = {
+      id: builderId,
+      created_for_run_id: identity.runId,
+      created_for_attempt: identity.attempt,
+      created_at: new Date().toISOString(),
+      driver,
+      cache_from: cacheFrom,
+      fresh,
+      persistent: false,
+      baseline_names: baseline,
+    };
+  }
+  const primaryOutcome = env.PRIMARY_VERIFICATION_OUTCOME || "";
+  const proof = {
+    schema: 1,
+    mode: artifactMode,
+    repository: requireText(env.GITHUB_REPOSITORY, "GitHub repository"),
+    branch: requireText(env.GITHUB_REF_NAME, "GitHub branch"),
+    source_sha: validateSha(env.GITHUB_SHA, "GitHub source SHA"),
+    run_id: identity.runId,
+    run_attempt: identity.attempt,
+    commands: { primary_verification: primaryOutcome },
+    normal_command_outcome: primaryOutcome,
+    ...(builder ? { builder } : {}),
+    cache: {
+      kind: "buildkit",
+      imports_enabled: mode === "docker-cold" ? false : settings.imports.length > 0,
+      actual_import: false,
+      actual_export: false,
+      imported_digest: null,
+      exported_digest: null,
+      importer: scopes.length ? "gha" : null,
+      exporter: exportScopes.length || mode === "normal" && manifest.cache_policy?.export ? "gha" : null,
+      import_scopes: scopes,
+      export_scopes: exportScopes,
+      ...(mode === "docker-cold" ? { miss_reason: "fresh builder with BuildKit cache imports disabled" } : {}),
+    },
+  };
+  writeAtomic(outputPath, proof);
+  return proof;
+}
+
+function writeBeamProbeProof({ planPath, outputPath, lockManifestPath = "", env = process.env } = {}) {
+  const mode = validateDispatchCacheMode(env.PHASE182_CACHE_MODE);
+  if (!mode.startsWith("beam-")) throw new Error("BEAM cache proof is only valid for a BEAM probe dispatch");
+  const identity = validRunIdentity(env.GITHUB_RUN_ID, env.GITHUB_RUN_ATTEMPT);
+  const plan = parseJsonText(fs.readFileSync(planPath, "utf8"), "BEAM cache probe plan");
+  const lockManifest = lockManifestPath ? parseJsonText(fs.readFileSync(lockManifestPath, "utf8"), "temporary lock probe manifest") : null;
+  const downloadsKey = plan.downloads_key;
+  const resolvedKey = plan.resolved_key;
+  const downloadsRestoreKey = env.DOWNLOADS_MATCHED_KEY || "";
+  const resolvedRestoreKey = env.RESOLVED_MATCHED_KEY || "";
+  const downloadsHit = env.DOWNLOADS_CACHE_HIT === "true";
+  const resolvedHit = env.RESOLVED_CACHE_HIT === "true";
+  const sourceLock = lockManifest ? fs.readFileSync(path.join(lockManifest.source_root, "mix.lock")) : null;
+  const changedLock = lockManifest ? fs.readFileSync(path.join(lockManifest.workdir, "mix.lock")) : null;
+  const expectedChangedLock = lockManifest ? Buffer.concat([sourceLock, Buffer.from(lockManifest.suffix)]) : null;
+  const lockProbe = lockManifest ? {
+    owned_copy: lockManifest.owned_copy === true,
+    source_lock_unchanged: sha256(sourceLock) === lockManifest.lock_before,
+    versions_unchanged: changedLock.equals(expectedChangedLock) && sha256(changedLock) === lockManifest.lock_after,
+  } : undefined;
+  const cache = {
+    kind: "beam",
+    imports_enabled: mode !== "beam-cold",
+    downloads_key: downloadsKey,
+    downloads_restore_prefix: plan.downloads_restore_prefix,
+    downloads_restore_key: downloadsRestoreKey || null,
+    downloads_hit: downloadsHit,
+    downloads_restored: Boolean(downloadsRestoreKey),
+    resolved_key: resolvedKey,
+    resolved_restore_prefix: plan.resolved_restore_prefix,
+    resolved_restore_key: resolvedRestoreKey || null,
+    resolved_hit: resolvedHit,
+    resolved_primary_hit: resolvedHit,
+    fallback: Boolean(downloadsRestoreKey && downloadsRestoreKey !== downloadsKey),
+    resolved_lock_before: lockManifest?.lock_before || plan.identity.locks_digest,
+    resolved_lock_after: lockManifest?.lock_after || plan.identity.locks_digest,
+    runtime: Object.fromEntries(["runner_image", "os", "arch", "elixir", "otp", "mix_env", "mix_target", "profile"].map((key) => [key, plan.identity[key]])),
+  };
+  const commands = {
+    deps_get: env.DEPS_GET_OUTCOME || "",
+    compile: env.COMPILE_OUTCOME || "",
+    verify: env.VERIFY_OUTCOME || "",
+    primary_verification: env.VERIFY_OUTCOME || "",
+  };
+  const proof = {
+    schema: 1,
+    mode,
+    repository: requireText(env.GITHUB_REPOSITORY, "GitHub repository"),
+    branch: requireText(env.GITHUB_REF_NAME, "GitHub branch"),
+    source_sha: validateSha(env.GITHUB_SHA, "GitHub source SHA"),
+    run_id: identity.runId,
+    run_attempt: identity.attempt,
+    runner: {
+      fresh: true,
+      id: `${requireText(env.RUNNER_NAME, "GitHub runner name")} ${identity.runId}/${identity.attempt}`,
+      created_for_run_id: identity.runId,
+      created_for_attempt: identity.attempt,
+    },
+    cache,
+    commands,
+    normal_command_outcome: commands.verify,
+    ...(lockProbe ? { lock_probe: lockProbe } : {}),
+  };
+  writeAtomic(outputPath, proof);
+  return proof;
 }
 
 function validateFlags(flags, { createOutput = true } = {}) {
@@ -506,6 +793,7 @@ function validateCacheAcceptance(proof) {
   }
   const lines = cache.log_text.split(/\r?\n/);
   const has = (pattern) => lines.some((line) => pattern.test(line));
+  const matching = (pattern) => lines.filter((line) => pattern.test(line));
   const artifact = proof.artifact;
   if (!artifact || artifact.name !== `phase182-cache-probe-${mode}-${proof.run.id}-${proof.run.attempt}` ||
       artifact.source_sha !== identity.sha || artifact.run_id !== String(proof.run.id) || Number(artifact.attempt) !== proof.run.attempt ||
@@ -513,11 +801,18 @@ function validateCacheAcceptance(proof) {
     throw new Error("cache proof immutable artifact does not join the selected run/source/attempt");
   }
   if (mode === "docker-warm") {
+    const imports = matching(/importing cache manifest from gha|importing cache from gha/i);
+    const exports = matching(/exporting cache.*gha|exporting cache manifest.*gha/i);
+    const importDigest = imports.length ? sha256(imports.join("\n")) : "";
+    const exportDigest = exports.length ? sha256(exports.join("\n")) : "";
     if (cache.kind !== "buildkit" || cache.imports_enabled !== true || cache.actual_import !== true || cache.actual_export !== true ||
-        !/^sha256:[a-f0-9]{64}$/.test(cache.imported_digest || "") || !/^sha256:[a-f0-9]{64}$/.test(cache.exported_digest || "") ||
+        !/^sha256:[a-f0-9]{64}$/.test(cache.imported_digest || "") || cache.imported_digest !== `sha256:${importDigest}` ||
+        !/^sha256:[a-f0-9]{64}$/.test(cache.exported_digest || "") || cache.exported_digest !== `sha256:${exportDigest}` ||
         cache.importer !== "gha" || cache.exporter !== "gha" || !Array.isArray(cache.import_scopes) || cache.import_scopes.length === 0 ||
         !Array.isArray(cache.export_scopes) || cache.export_scopes.length === 0 ||
-        proof.commands.primary_verification !== "success" || !has(/importing cache manifest from gha/i) || !has(/exporting cache.*gha|exporting cache manifest.*gha/i)) {
+        proof.commands.primary_verification !== "success" || imports.length === 0 || exports.length === 0 ||
+        !cache.import_scopes.every((scope) => imports.some((line) => line.includes(`scope=${scope}`))) ||
+        !cache.export_scopes.every((scope) => exports.some((line) => line.includes(`scope=${scope}`)))) {
       throw new Error("docker-warm requires actual GHA import and export log evidence");
     }
   } else if (mode === "docker-cold") {
@@ -540,23 +835,25 @@ function validateCacheAcceptance(proof) {
     if (mode === "beam-cold") {
       if (cache.imports_enabled !== false || proof.runner?.fresh !== true || !proof.runner?.id ||
           proof.runner.created_for_run_id !== String(proof.run.id) || proof.runner.created_for_attempt !== proof.run.attempt ||
-          cache.downloads_hit === true || cache.resolved_hit === true || hasRestore) {
+          cache.downloads_hit === true || cache.resolved_hit === true || hasRestore || has(/Cache not found for input keys:/i)) {
         throw new Error("beam-cold imports must be disabled on a fresh runner");
       }
     } else if (mode === "beam-fallback") {
-      if (cache.imports_enabled !== true || cache.downloads_restored !== true || cache.resolved_primary_hit !== false || cache.fallback !== true ||
-          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || !cache.resolved_restore_prefix ||
-          !cache.downloads_restore_key?.startsWith(cache.downloads_restore_prefix) ||
-          !cache.resolved_restore_key?.startsWith(cache.resolved_restore_prefix) || cache.resolved_restore_key === cache.resolved_key ||
-          !hasRestore || !/^[a-f0-9]{64}$/.test(cache.resolved_lock_before || "") || cache.resolved_lock_before !== cache.resolved_lock_after) {
+      if (cache.imports_enabled !== true || cache.downloads_restored !== true || cache.downloads_hit === true || cache.resolved_primary_hit !== false || cache.fallback !== true ||
+          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || cache.resolved_restore_prefix !== "" ||
+          !cache.downloads_restore_key?.startsWith(cache.downloads_restore_prefix) || cache.downloads_restore_key === cache.downloads_key ||
+          cache.resolved_restore_key || !has(new RegExp(`Cache restored from key: ${escapeRegExp(cache.downloads_restore_key)}`)) ||
+          !has(new RegExp(`Cache not found for input keys: ${escapeRegExp(cache.resolved_key)}`)) ||
+          !/^[a-f0-9]{64}$/.test(cache.resolved_lock_before || "") || cache.resolved_lock_before !== cache.resolved_lock_after) {
         throw new Error("beam-fallback requires a compatible download restore and exact-lock resolved miss");
       }
     } else if (mode === "beam-lock-change") {
       const lockProbe = proof.lock_probe;
-      if (cache.imports_enabled !== true || cache.downloads_restored !== true || cache.resolved_primary_hit !== false || cache.fallback !== true ||
-          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || !cache.resolved_restore_prefix ||
-          !cache.downloads_restore_key?.startsWith(cache.downloads_restore_prefix) ||
-          !cache.resolved_restore_key?.startsWith(cache.resolved_restore_prefix) || cache.resolved_restore_key === cache.resolved_key || !hasRestore ||
+      if (cache.imports_enabled !== true || cache.downloads_restored !== true || cache.downloads_hit === true || cache.resolved_primary_hit !== false || cache.fallback !== true ||
+          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || cache.resolved_restore_prefix !== "" ||
+          !cache.downloads_restore_key?.startsWith(cache.downloads_restore_prefix) || cache.downloads_restore_key === cache.downloads_key ||
+          cache.resolved_restore_key || !has(new RegExp(`Cache restored from key: ${escapeRegExp(cache.downloads_restore_key)}`)) ||
+          !has(new RegExp(`Cache not found for input keys: ${escapeRegExp(cache.resolved_key)}`)) ||
           !/^[a-f0-9]{64}$/.test(cache.resolved_lock_before || "") || !/^[a-f0-9]{64}$/.test(cache.resolved_lock_after || "") ||
           cache.resolved_lock_before === cache.resolved_lock_after || !lockProbe || lockProbe.owned_copy !== true ||
           lockProbe.source_lock_unchanged !== true || lockProbe.versions_unchanged !== true) {
@@ -565,6 +862,10 @@ function validateCacheAcceptance(proof) {
     }
   }
   return true;
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function workflowCacheInput(mode) {
@@ -845,12 +1146,22 @@ function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run,
       String(probe.run_id) !== run.id || Number(probe.run_attempt) !== run.attempt) {
     throw new Error("cache proof artifact identity does not match its selected run/ref/source/mode");
   }
+  const cache = { ...probe.cache };
+  const lines = jobLog.split(/\r?\n/);
+  if (mode.startsWith("docker-")) {
+    const imports = lines.filter((line) => /importing cache manifest from gha|importing cache from gha/i.test(line));
+    const exports = lines.filter((line) => /exporting cache.*gha|exporting cache manifest.*gha/i.test(line));
+    cache.actual_import = imports.length > 0;
+    cache.actual_export = exports.length > 0;
+    cache.imported_digest = imports.length ? `sha256:${sha256(imports.join("\n"))}` : null;
+    cache.exported_digest = exports.length ? `sha256:${sha256(exports.join("\n"))}` : null;
+  }
   const proof = {
     ...probe,
     run,
     session,
     cache: {
-      ...probe.cache,
+      ...cache,
       log_text: jobLog,
       log_sha256: sha256(jobLog),
     },
@@ -1089,6 +1400,12 @@ function help() {
   process.stdout.write("Usage:\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs run --mode docker-warm|docker-cold|beam-fallback|beam-lock-change|beam-cold|full --branch BRANCH --sha SHA --session-id SESSION --output-dir DIR [--repo OWNER/REPO] [--probe-namespace SLUG]\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input DIR --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate-inputs --output GITHUB_OUTPUT\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs prepare-lock --output GITHUB_OUTPUT\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root DIR --output FILE\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs configure-docker --manifest FILE\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs write-docker-proof --manifest FILE --output FILE\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs write-beam-proof --plan FILE --output FILE [--lock-manifest FILE]\n");
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -1096,6 +1413,72 @@ function main(argv = process.argv.slice(2)) {
     const { positional, flags } = parseArgs(argv);
     const commandName = positional[0];
     if (commandName === "help" || commandName === undefined || commandName === "--help") { help(); return 0; }
+    if (commandName === "validate-inputs") {
+      const result = validateWorkflowInputs({
+        mode: process.env.PHASE182_CACHE_MODE || "normal",
+        namespace: process.env.PHASE182_PROBE_NAMESPACE || "",
+        outputPath: flags.output || process.env.GITHUB_OUTPUT,
+      });
+      process.stdout.write(`${JSON.stringify(result)}\n`);
+      return 0;
+    }
+    if (commandName === "prepare-lock") {
+      const prepared = prepareLockProbe({
+        workspace: process.env.GITHUB_WORKSPACE || REPOSITORY_ROOT,
+        runnerTemp: process.env.RUNNER_TEMP || os.tmpdir(),
+        runId: process.env.GITHUB_RUN_ID,
+        attempt: process.env.GITHUB_RUN_ATTEMPT,
+        sourceSha: process.env.GITHUB_SHA,
+      });
+      appendWorkflowOutputs(flags.output || process.env.GITHUB_OUTPUT, {
+        beam_root: prepared.workdir,
+        lock_manifest: prepared.manifestPath,
+      });
+      process.stdout.write(`${JSON.stringify({ beam_root: prepared.workdir, lock_manifest: prepared.manifestPath })}\n`);
+      return 0;
+    }
+    if (commandName === "beam-plan") {
+      if (flags.graph !== "root" || !flags.root || !flags.output) throw new Error("beam-plan requires --graph root, --root DIR and --output FILE");
+      const rawPlan = beamCache.buildPlan({ graph: flags.graph, root: flags.root });
+      const plan = beamPlanForProbe(rawPlan, {
+        mode: process.env.PHASE182_CACHE_MODE || "normal",
+        namespace: process.env.PHASE182_PROBE_NAMESPACE || "",
+        runId: process.env.GITHUB_RUN_ID,
+        attempt: process.env.GITHUB_RUN_ATTEMPT,
+      });
+      if (plan.probe.mode === "beam-lock-change") {
+        plan.paths.resolved = plan.paths.resolved.map((relativePath) => path.resolve(flags.root, relativePath));
+      }
+      beamCache.writePlan(flags.output, plan);
+      beamCache.appendGithubOutputs(flags["output-github"] || process.env.GITHUB_OUTPUT, plan);
+      process.stdout.write(`BEAM cache probe plan written: mode=${plan.probe.mode} namespace=${plan.probe.namespace || "production"}\n`);
+      return 0;
+    }
+    if (commandName === "configure-docker") {
+      if (!flags.manifest) throw new Error("configure-docker requires --manifest FILE");
+      const result = configureDockerBake({
+        manifestPath: flags.manifest,
+        mode: process.env.PHASE182_CACHE_MODE || "normal",
+        namespace: process.env.PHASE182_PROBE_NAMESPACE || "",
+      });
+      process.stdout.write(`Docker cache policy configured: scope=${result.manifest.scope} namespace=${result.namespace || "production"} mode=${result.mode}\n`);
+      return 0;
+    }
+    if (commandName === "write-docker-proof") {
+      if (!flags.manifest || !flags.output) throw new Error("write-docker-proof requires --manifest FILE and --output FILE");
+      writeDockerProbeProof({
+        manifestPath: flags.manifest,
+        outputPath: flags.output,
+        baselinePath: flags.baseline || "",
+        inspectPath: flags.inspect || "",
+      });
+      return 0;
+    }
+    if (commandName === "write-beam-proof") {
+      if (!flags.plan || !flags.output) throw new Error("write-beam-proof requires --plan FILE and --output FILE");
+      writeBeamProbeProof({ planPath: flags.plan, outputPath: flags.output, lockManifestPath: flags["lock-manifest"] || process.env.PHASE182_LOCK_PROBE_MANIFEST || "" });
+      return 0;
+    }
     if (commandName === "run") {
       const parsed = toFlags(flags);
       if (!parsed.repo) {
@@ -1131,4 +1514,19 @@ function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) process.exitCode = main();
 
-module.exports = { REQUIRED_CACHE_MODES, collectRun, validateAggregate, validateBrowserAcceptance, validateCacheAcceptance, validateFlags };
+module.exports = {
+  REQUIRED_CACHE_MODES,
+  beamPlanForProbe,
+  collectRun,
+  configureDockerBake,
+  prepareLockProbe,
+  validateAggregate,
+  validateBrowserAcceptance,
+  validateCacheAcceptance,
+  validateDispatchCacheMode,
+  validateFlags,
+  validateProbeNamespace,
+  validateWorkflowInputs,
+  writeBeamProbeProof,
+  writeDockerProbeProof,
+};
