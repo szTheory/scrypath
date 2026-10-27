@@ -1216,3 +1216,11 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
   command.setMode = (nextMode) => { activeMode = nextMode; };
   return command;
 }
+
+test("full aggregate accepts the parsed receipt from the latest eligible session invocation", (t) => {
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'phase182-full-aggregate-'));
+ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const flags={repo:REPOSITORY,branch:BRANCH,sha:SHA,sessionId:SESSION_ID,mode:'full',outputDir:path.join(root,'candidate')};
+ collectRun(flags,{command:successfulCommandDouble({mode:'full'}),pollMilliseconds:0,timeoutSeconds:2,browserValidator:validBrowserReceipt});
+ assert.equal(validateAggregate(flags,'full').eligible,true);
+});
