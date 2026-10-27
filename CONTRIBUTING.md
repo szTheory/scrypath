@@ -259,7 +259,13 @@ debugging. Run the complete advisory lane with:
 make -C examples/scrypath_ecommerce verify-e2e
 ```
 
-`ecommerce-e2e` is advisory today (not a required merge gate). It preserves the full Phase 105 browser/operator proof on scheduled and manual runs through one Docker-owned command, including deterministic browser checks, light screenshot parity, static contrast, optional visual judgment, cleanup, and bounded artifacts.
+`ecommerce-mounted` is the required focused Docker proof. It receives a run ID and uploads only that invocation's failure bundle when a run fails. The scheduled/manual `ecommerce-e2e` job remains advisory and continues to use the canonical `mix verify.ecommerce_e2e` command. Its full Chromium inventory and execution, light screenshot parity, static contrast, diagnostics, cleanup, and strict evidence aggregation run inside an isolated Docker project. The acceptance path does not invoke the dormant paid visual judge or require an API key.
+
+The full job has a 30-minute Actions timeout measured from its first step, before checkout, toolchain setup, dependency fetch, and image build. That step records the job start, exact event/ref/SHA/run/attempt identity, and an inner deadline. The browser verifier initially reserves 300 seconds for evidence finalization and upload; this is provisional until Phase 182-08 confirms or replaces it using the measured maximum finalization/upload time plus at least 60 seconds. The job exposes the raw `ecommerce_verify` step outcome separately from the job conclusion because `continue-on-error` makes the lane advisory. A successful advisory job conclusion alone does not establish a passing browser proof.
+
+Each invocation owns a fresh directory under `examples/scrypath_ecommerce/test-results/docker-full/<run-id>/` (or `docker-focused/<run-id>/` for mounted verification). The full job uploads only its current run directory, always attempts the upload, fails if the required directory is missing, and retains the artifact for seven days. Its outputs preserve the raw verifier outcome and the uploaded artifact ID, URL, and digest. The bundle contains source/run metadata, inventory and execution reports, HTML, retained failure traces, light-parity and contrast results, lifecycle and stage statuses, copy diagnostics, and applicable iteration 3 screenshots. A run's strict receipt is the evidence authority; readiness-only diagnostics and loose directory presence are not acceptance.
+
+Inventory equality covers the selected Playwright cases and rejects skipped or retried execution. Viewport/width checks, screenshot parity, and contrast reports cover their named checks; they do not amount to a complete rendered UX review. A real full-browser and hosted exact-SHA run is still required for the applicable Phase 182 requirements.
 
 Phase 111 freezes a dual-window evidence model for any future promotion decision:
 
@@ -281,24 +287,14 @@ For rendered UI and content review, follow [the repository UI review loop](https
 the output starts pending and includes the complete current screen inventory.
 It supplements state/functional proofs and does not add a required CI lane.
 
-Run locally:
+Run the canonical focused or full Docker verifier locally:
 
 ```sh
-mix deps.get
-cd examples/scrypath_ecommerce
-mix deps.get
-mix e2e.prepare
-npm ci
-npx playwright install --with-deps chromium
-MIX_ENV=test PHX_SERVER=true mix phx.server
-# second shell
-cd examples/scrypath_ecommerce
-npm run test:e2e
-npm run test:e2e:admin-light-parity
-make contrast
-# optional advisory review, skipped in CI unless OPS_UI_LLM_JUDGE=1 and OPENAI_API_KEY exist
-OPS_UI_LLM_JUDGE=1 OPENAI_API_KEY=... npm run test:e2e:ops-ui-visual-judge
+mix verify.ecommerce_mounted
+mix verify.ecommerce_e2e
 ```
+
+The verifier prints the unique run directory; inspect the receipt and summary from that directory rather than combining files from earlier runs. To run a readiness-only diagnostic, invoke `examples/scrypath_ecommerce/scripts/verify-e2e.sh full --readiness-only`; it does not run Playwright and is never browser acceptance. The separate `npm run test:e2e:ops-ui-visual-judge` entrypoint remains dormant legacy tooling and is not part of either canonical command.
 
 ### Promotion criteria
 

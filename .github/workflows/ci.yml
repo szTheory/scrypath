@@ -248,10 +248,18 @@ jobs:
             _build
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
-      - run: mix verify.ecommerce_mounted
-      - if: failure()
+      - name: Run mounted E2E proof
+        env:
+          E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: mix verify.ecommerce_mounted
+      - name: Upload mounted E2E failure evidence
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with: {name: ecommerce-mounted-artifacts, path: examples/scrypath_ecommerce/test-results/docker-focused, if-no-files-found: warn, retention-days: 7}
+        with:
+          name: ecommerce-mounted-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
+          path: examples/scrypath_ecommerce/test-results/docker-focused/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          retention-days: 7
 
   coverage:
     name: coverage (advisory)
@@ -343,9 +351,38 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     continue-on-error: true
-    timeout-minutes: 20
+    timeout-minutes: 30
+    outputs:
+      verification_outcome: ${{ steps.ecommerce_verify.outcome }}
+      artifact_id: ${{ steps.ecommerce_upload.outputs.artifact-id }}
+      artifact_url: ${{ steps.ecommerce_upload.outputs.artifact-url }}
+      artifact_digest: ${{ steps.ecommerce_upload.outputs.artifact-digest }}
     steps:
+      - name: Record E2E job start and deadline
+        id: e2e_clock
+        shell: bash
+        run: |
+          E2E_JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          E2E_JOB_STARTED_EPOCH=$(date -u +%s)
+          E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))
+          E2E_FINALIZATION_MARGIN_SECONDS=300
+          {
+            echo "E2E_JOB_STARTED_AT=$E2E_JOB_STARTED_AT"
+            echo "E2E_JOB_STARTED_EPOCH=$E2E_JOB_STARTED_EPOCH"
+            echo "E2E_DEADLINE_EPOCH=$E2E_DEADLINE_EPOCH"
+            echo "E2E_FINALIZATION_MARGIN_SECONDS=$E2E_FINALIZATION_MARGIN_SECONDS"
+            echo "E2E_EVENT_NAME=$GITHUB_EVENT_NAME"
+            echo "E2E_GIT_REF=$GITHUB_REF"
+            echo "E2E_EVENT_SHA=$GITHUB_SHA"
+            echo "E2E_WORKFLOW_RUN_ID=$GITHUB_RUN_ID"
+            echo "E2E_WORKFLOW_RUN_ATTEMPT=$GITHUB_RUN_ATTEMPT"
+            echo "E2E_JOB_NAME=ecommerce-e2e (advisory)"
+          } >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with: {fetch-depth: 0}
+      - name: Verify checked-out source SHA
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
@@ -355,12 +392,27 @@ jobs:
             _build
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
-      - run: mix verify.ecommerce_e2e
+      - name: Run advisory full E2E proof
+        id: ecommerce_verify
+        env:
+          E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          E2E_JOB_STARTED_AT: ${{ steps.e2e_clock.outputs.E2E_JOB_STARTED_AT }}
+          E2E_DEADLINE_EPOCH: ${{ steps.e2e_clock.outputs.E2E_DEADLINE_EPOCH }}
+          E2E_FINALIZATION_MARGIN_SECONDS: ${{ steps.e2e_clock.outputs.E2E_FINALIZATION_MARGIN_SECONDS }}
+          E2E_SOURCE_MODE: hosted
+          E2E_EVENT_NAME: ${{ steps.e2e_clock.outputs.E2E_EVENT_NAME }}
+          E2E_GIT_REF: ${{ steps.e2e_clock.outputs.E2E_GIT_REF }}
+          E2E_EVENT_SHA: ${{ steps.e2e_clock.outputs.E2E_EVENT_SHA }}
+          E2E_WORKFLOW_RUN_ID: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ID }}
+          E2E_WORKFLOW_RUN_ATTEMPT: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ATTEMPT }}
+          E2E_JOB_NAME: ${{ steps.e2e_clock.outputs.E2E_JOB_NAME }}
+        run: mix verify.ecommerce_e2e
       - name: Upload advisory E2E evidence
+        id: ecommerce_upload
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: ecommerce-e2e-evidence
-          path: examples/scrypath_ecommerce/test-results/docker-full
-          if-no-files-found: warn
+          name: ecommerce-e2e-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: examples/scrypath_ecommerce/test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
           retention-days: 7
