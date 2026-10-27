@@ -58,7 +58,7 @@ key-decisions:
   - "Use the approved 1800-second full-job budget with a separate 300-second body-finalization reserve; do not treat remaining time after upload as that reserve."
   - "Retain Playwright traces on failure; passing runs correctly produce no failure trace."
 
-requirements-completed: [BROW-01, BROW-02, BROW-03, CACHE-01, CACHE-02]
+requirements-completed: []
 
 coverage:
   - id: D1
@@ -111,8 +111,11 @@ coverage:
 # Metrics
 duration: "not recorded across executor handoff"
 completed: 2026-10-27
-status: complete
+status: in_progress
 ---
+
+> Historical evidence checkpoint: the receipts below belong to frozen implementation `e37f5bde914d123f0bf7dcb9c12daec64d465657`. Worktree closeout `40551292192` at `8b34f5452e254d9aeda6bc2ed0394304bb5e91b6` passed required gates but exposed a default import-only cache observation defect after browser success. The subsequent producer-policy repair requires fresh acceptance; these receipts are not relabeled for the new source.
+
 
 # Phase 182 Plan 08: Reliable full browser verification and CI caches Summary
 
@@ -233,15 +236,17 @@ None.
 
 ## Next Phase Readiness
 
+Plan 08 remains in progress: default unnamespaced worktree closeout exposed an import-only Docker observation failure after browser verification succeeded. The producer-policy repair is implemented and reviewed; fresh candidate acceptance and closeout remain required.
+
 Plan 182-08 acceptance is recorded for the frozen e37 implementation. The child terminal closeout runs after this summary is committed, and root retains ownership of merge, final phase review, shared STATE/ROADMAP/REQUIREMENTS tracking, and exact-root-SHA terminal closeout.
 
-## Self-Check: PASSED
+## Historical Self-Check at 8b34f545: PASSED
 
 - The cache and browser acceptance documents and all listed source paths exist.
 - All 38 source/review/acceptance task commits are in the current branch history; the cache, browser, and digest-correction docs commits are separate task commits.
 - The warm Docker receipt digest in both acceptance records matches the manifest-listed receipt bytes: `f497e12d9d5af1fe196adf389392ae7a4241306a0ff2035712e8076457087a6a`.
 - Both aggregate validators pass against the manifest-listed session root; saved receipt and archive digests match their immutable bytes.
-- The current implementation source tree is byte-for-byte unchanged from e37; only planning documentation follows the frozen implementation.
+- At documentation head `8b34f5452e254d9aeda6bc2ed0394304bb5e91b6`, the implementation source tree was unchanged from e37. The later import-only producer-policy repair changes source and requires fresh acceptance before this plan closes.
 - `STATE.md`, `ROADMAP.md`, `REQUIREMENTS.md`, `PROJECT.md`, configuration, source, workflows, tests, and retained preview were not modified during this finalization.
 
 ---

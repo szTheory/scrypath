@@ -1,3 +1,6 @@
+
+> Historical evidence checkpoint: the receipts below belong to frozen implementation `e37f5bde914d123f0bf7dcb9c12daec64d465657`. Worktree closeout `40551292192` at `8b34f5452e254d9aeda6bc2ed0394304bb5e91b6` passed required gates but exposed a default import-only cache observation defect after browser success. The subsequent producer-policy repair requires fresh acceptance; these receipts are not relabeled for the new source.
+
 # Phase 182 cache acceptance
 
 ## Frozen source and authority
