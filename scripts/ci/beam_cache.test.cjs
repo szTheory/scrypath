@@ -106,11 +106,13 @@ test("identity inputs fail closed when required runtime or graph data is missing
 test("archive paths are graph-allowlisted and exclude credentials and isolated proof builds", () => {
   const root = cachePlan(identity());
   const ops = cachePlan(identity({ graph: "ops" }));
+  const ecommerce = cachePlan(identity({ graph: "ecommerce" }));
   const phoenix = cachePlan(identity({ graph: "phoenix-example" }));
   assert.deepEqual(root.paths.downloads, ["~/.hex/packages"]);
   assert.deepEqual(root.paths.resolved, ["deps", "_build/test"]);
   assert.deepEqual(root.paths.plt, ["priv/plts"]);
   assert.deepEqual(ops.paths.resolved, ["deps", "_build/test", "scrypath_ops/deps", "scrypath_ops/_build/test"]);
+  assert.deepEqual(ecommerce.paths.resolved, ["deps", "_build/test"]);
   assert.ok(phoenix.paths.resolved.includes("examples/phoenix_meilisearch/_build/test"));
 
   const allPaths = JSON.stringify([root.paths, ops.paths, phoenix.paths]);
@@ -186,7 +188,6 @@ test("path graph manifests and locks fingerprint only the consuming resolved cac
   const plan = (graph) => buildPlan({ graph, root, env, elixirVersionOutput: versions });
   const rootBefore = plan("root");
   const opsBefore = plan("ops");
-  const ecommerceBefore = plan("ecommerce");
   const phoenixBefore = plan("phoenix-example");
 
   fs.appendFileSync(path.join(root, "scrypath_ops/mix.lock"), "changed\n");
@@ -194,12 +195,21 @@ test("path graph manifests and locks fingerprint only the consuming resolved cac
   assert.notEqual(opsChanged.resolved_key, opsBefore.resolved_key);
   assert.equal(opsChanged.downloads_restore_prefix, opsBefore.downloads_restore_prefix);
   assert.equal(plan("root").resolved_key, rootBefore.resolved_key);
+  fs.appendFileSync(path.join(root, "scrypath_ops/mix.exs"), "changed\n");
+  assert.notEqual(plan("ops").downloads_restore_prefix, opsChanged.downloads_restore_prefix);
 
+  const ecommerceBefore = plan("ecommerce");
+  fs.appendFileSync(path.join(root, "examples/scrypath_ecommerce/mix.lock"), "changed\n");
+  const ecommerceLockChanged = plan("ecommerce");
+  assert.notEqual(ecommerceLockChanged.resolved_restore_prefix, ecommerceBefore.resolved_restore_prefix);
+  assert.equal(ecommerceLockChanged.downloads_restore_prefix, ecommerceBefore.downloads_restore_prefix);
   fs.appendFileSync(path.join(root, "examples/scrypath_ecommerce/mix.exs"), "changed\n");
-  assert.notEqual(plan("ecommerce").downloads_restore_prefix, ecommerceBefore.downloads_restore_prefix);
+  assert.notEqual(plan("ecommerce").downloads_restore_prefix, ecommerceLockChanged.downloads_restore_prefix);
 
   fs.appendFileSync(path.join(root, "examples/phoenix_meilisearch/mix.lock"), "changed\n");
   const phoenixChanged = plan("phoenix-example");
   assert.notEqual(phoenixChanged.resolved_restore_prefix, phoenixBefore.resolved_restore_prefix);
   assert.equal(phoenixChanged.downloads_restore_prefix, phoenixBefore.downloads_restore_prefix);
+  fs.appendFileSync(path.join(root, "examples/phoenix_meilisearch/mix.exs"), "changed\n");
+  assert.notEqual(plan("phoenix-example").downloads_restore_prefix, phoenixChanged.downloads_restore_prefix);
 });

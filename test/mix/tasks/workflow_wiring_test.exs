@@ -233,10 +233,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "Node BEAM cache boundaries execute inside the existing wiring contract lane" do
       {output, status} =
-        System.cmd("node", ["--test", "scripts/ci/beam_cache.test.cjs"], stderr_to_stdout: true)
+        System.cmd(
+          "node",
+          ["--test", "--test-reporter=tap", "scripts/ci/beam_cache.test.cjs"],
+          stderr_to_stdout: true
+        )
 
       assert status == 0, output
-      assert output =~ "# tests"
+      assert output =~ ~r/# tests [1-9]\d*/
       assert output =~ "# fail 0"
     end
   end
@@ -514,10 +518,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert deep_quality =~ "MIX_ENV: test"
 
       assert length(Regex.scan(~r|elixir scripts/ci/dependency_audit\.exs|, deep_quality)) == 1
-      refute deep_quality =~ "mix deps.get"
+      assert deep_quality =~ "mix deps.get"
       refute deep_quality =~ "mix verify.deep_quality"
-      assert deep_quality =~ "priv/plts"
-      assert deep_quality =~ "hashFiles('mix.lock', 'mix.exs')"
+      assert deep_quality =~ "MIX_TARGET: host"
+      assert deep_quality =~ "BEAM_CACHE_PROFILE: deep-quality-test"
+      assert deep_quality =~ "outputs.plt_paths"
+      assert deep_quality =~ "outputs.plt_key"
     end
   end
 
@@ -532,7 +538,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert ops_ui =~ "POSTGRES_PASSWORD: postgres"
       assert ops_ui =~ "ports: [5433:5432]"
       assert ops_ui =~ "pg_isready -U postgres"
-      assert ops_ui =~ ~s(env: {PGPORT: "5433"})
+
+      assert ops_ui =~ ~s|PGPORT: "5433"|
     end
 
     test "required backend job provides the real-Postgres loader lane" do
