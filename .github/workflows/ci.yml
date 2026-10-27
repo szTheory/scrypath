@@ -395,6 +395,8 @@ jobs:
       E2E_PROJECT_NAME: scrypath-e2e-${{ github.run_id }}-${{ github.run_attempt }}-mounted
       E2E_SCOPE: focused
       E2E_SOURCE_MODE: hosted
+      PHASE182_CACHE_MODE: ${{ inputs.phase182_cache_mode || 'normal' }}
+      PHASE182_PROBE_NAMESPACE: ${{ inputs.phase182_probe_namespace || '' }}
       SCRYPATH_SOURCE_SHA: ${{ github.sha }}
       MIX_ENV: test
       MIX_TARGET: host
@@ -615,6 +617,8 @@ jobs:
       E2E_EVENT_NAME: ${{ github.event_name }}
       E2E_PROJECT_NAME: scrypath-e2e-${{ github.run_id }}-${{ github.run_attempt }}-full
       E2E_SCOPE: full
+      PHASE182_CACHE_MODE: ${{ inputs.phase182_cache_mode || 'normal' }}
+      PHASE182_PROBE_NAMESPACE: ${{ inputs.phase182_probe_namespace || '' }}
       SCRYPATH_SOURCE_SHA: ${{ github.sha }}
       MIX_ENV: test
       MIX_TARGET: host

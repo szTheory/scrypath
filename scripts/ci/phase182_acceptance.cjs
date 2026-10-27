@@ -8,10 +8,10 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const beamCache = require("./beam_cache.cjs");
+const ecommerceBuild = require("./ecommerce_build.cjs");
 
 const GH = process.env.GH_BIN || "gh";
 const WORKFLOW = ".github/workflows/ci.yml";
-const DISPATCH_CACHE_MODES = ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"];
 const REQUIRED_JOBS = [
   "core (required)",
   "package (required)",
@@ -178,13 +178,15 @@ function validateMode(mode) {
 
 function validateProbeNamespace(value) {
   if (value === undefined || value === "") return "";
-  if (!/^[a-z0-9][a-z0-9-]{0,31}$/.test(value)) throw new Error("probe namespace must be a lowercase slug of at most 32 characters");
+  // Keep the command's boundary validator aligned with the policy resolver used
+  // by prepare, configure, and handoff verification.
+  ecommerceBuild.cacheProbeFor("focused", { web: "scope" }, {}, { namespace: value });
   return value;
 }
 
 function validateDispatchCacheMode(value) {
   const mode = value || "normal";
-  if (!DISPATCH_CACHE_MODES.includes(mode)) throw new Error(`phase182 cache mode must be one of ${DISPATCH_CACHE_MODES.join(", ")}`);
+  ecommerceBuild.cacheProbeFor("focused", { web: "scope" }, {}, { mode });
   return mode;
 }
 
@@ -285,42 +287,29 @@ function beamPlanForProbe(plan, { mode = "normal", namespace = "", runId, attemp
   return result;
 }
 
-function configureDockerBake({ manifestPath, mode = "normal", namespace = "" } = {}) {
+function configureDockerBake({ manifestPath, mode = "normal", namespace = "", env = process.env } = {}) {
   const validatedMode = validateDispatchCacheMode(mode);
   const safeNamespace = validateProbeNamespace(namespace);
   const manifestFile = path.resolve(requireText(manifestPath, "Docker build manifest"));
   const manifest = parseJsonText(fs.readFileSync(manifestFile, "utf8"), "Docker image handoff manifest");
   const bakeFile = path.join(path.dirname(manifestFile), "bake.json");
   const bake = parseJsonText(fs.readFileSync(bakeFile, "utf8"), "Docker Bake configuration");
-  if (!bake.target || !manifest.cache_scopes || typeof manifest.cache_scopes !== "object") throw new Error("Docker build manifest is missing target cache scopes");
-
-  const cold = validatedMode === "docker-cold";
-  const namespaced = Boolean(safeNamespace);
-  if (cold && manifest.scope !== "focused") throw new Error("docker-cold is only valid for the existing mounted focused build");
-  if (namespaced && manifest.scope !== "focused" && manifest.scope !== "full") throw new Error("probe cache namespace requires the existing mounted or full Compose build");
-  const scopes = {};
-  for (const [service, target] of Object.entries(bake.target)) {
-    const originalScope = manifest.cache_scopes[service];
-    if (typeof originalScope !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(originalScope)) throw new Error(`Docker cache scope is missing or invalid for ${service}`);
-    const scope = namespaced ? `${originalScope}-phase182-${safeNamespace}` : originalScope;
-    scopes[service] = scope;
-    if (cold) {
-      delete target["cache-from"];
-      delete target["cache-to"];
-    } else if (namespaced) {
-      target["cache-from"] = [`type=gha,scope=${scope},version=2,timeout=120s`];
-      if (manifest.scope === "full") target["cache-to"] = [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`];
-      else delete target["cache-to"];
-    }
+  if (!bake.target || !manifest.cache_base_scopes || typeof manifest.cache_base_scopes !== "object") {
+    throw new Error("Docker build manifest is missing base target cache scopes");
   }
-  if (namespaced || cold) {
-    manifest.cache_scopes = scopes;
-    manifest.cache_policy = cold ? { import: false, export: false } : { import: true, export: manifest.scope === "full" };
-    manifest.import_status = cold ? "not_configured" : "pending";
-    manifest.export_status = manifest.cache_policy.export ? "pending" : "not_configured";
-    writeAtomic(manifestFile, manifest);
-    writeAtomic(bakeFile, bake);
+  const expected = ecommerceBuild.cacheProbeFor(manifest.scope, manifest.cache_base_scopes, env, {
+    mode: validatedMode,
+    namespace: safeNamespace,
+  });
+  if (canonicalJson(manifest.cache_probe) !== canonicalJson({ mode: expected.mode, namespace: expected.namespace }) ||
+    canonicalJson(manifest.cache_scopes) !== canonicalJson(expected.scopes) ||
+    canonicalJson(manifest.cache_policy) !== canonicalJson(expected.policy)) {
+    throw new Error("prepared Docker cache probe does not match the validated dispatch policy");
   }
+  ecommerceBuild.verifyCacheProbeBake(bake, expected);
+  manifest.import_status = expected.policy.import ? "pending" : "not_configured";
+  manifest.export_status = expected.policy.export ? "pending" : "not_configured";
+  writeAtomic(manifestFile, manifest);
   return { manifest, bake, manifestFile, bakeFile, mode: validatedMode, namespace: safeNamespace };
 }
 
@@ -1540,7 +1529,7 @@ function toFlags(flags) {
 function help() {
   process.stdout.write("Usage:\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs run --mode docker-warm|docker-cold|beam-fallback|beam-lock-change|beam-cold|full --branch BRANCH --sha SHA --session-id SESSION --output-dir DIR [--repo OWNER/REPO] [--probe-namespace SLUG]\n");
-  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input DIR --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate-inputs --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs prepare-lock --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root DIR --output FILE\n");

@@ -10,6 +10,7 @@ const exampleRoot = path.join(repositoryRoot, "examples/scrypath_ecommerce");
 const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
 const trustedCacheRepository = "szTheory/scrypath";
+const cacheProbeModes = new Set(["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]);
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -131,6 +132,66 @@ function cacheSetting(scope, options = {}) {
   return `type=gha,scope=${scope},version=2${options.mode ? `,mode=${options.mode}` : ""},timeout=120s`;
 }
 
+function cacheProbeFor(scope, baseScopes, env = process.env, requested = {}) {
+  const mode = requested.mode ?? env.PHASE182_CACHE_MODE ?? "normal";
+  const namespace = requested.namespace ?? env.PHASE182_PROBE_NAMESPACE ?? "";
+  if (!cacheProbeModes.has(mode)) throw new Error(`phase182 cache mode must be one of ${[...cacheProbeModes].join(", ")}`);
+  if (namespace !== "" && !/^[a-z0-9][a-z0-9-]{0,31}$/.test(namespace)) {
+    throw new Error("probe namespace must be a lowercase slug of at most 32 characters");
+  }
+  if (mode === "docker-cold" && scope !== "focused") {
+    throw new Error("docker-cold is only valid for the existing mounted focused build");
+  }
+  if (namespace && scope !== "focused" && scope !== "full") {
+    throw new Error("probe cache namespace requires the existing mounted or full Compose build");
+  }
+
+  const cold = mode === "docker-cold";
+  const scopes = Object.fromEntries(Object.entries(baseScopes).map(([service, base]) => [
+    service,
+    namespace ? `${base}-phase182-${namespace}` : base,
+  ]));
+  const basePolicy = cachePolicyFor(env.E2E_CACHE_JOB, env);
+  const trustedNamespacedDispatch = Boolean(namespace) &&
+    env.GITHUB_REPOSITORY === trustedCacheRepository &&
+    env.GITHUB_EVENT_NAME === "workflow_dispatch";
+  const policy = cold
+    ? { import: false, export: false }
+    : {
+      import: basePolicy.import,
+      export: namespace
+        ? basePolicy.import && scope === "full" && trustedNamespacedDispatch
+        : basePolicy.export,
+    };
+  return { mode, namespace, scopes, policy };
+}
+
+function applyCacheProbeToBake(bake, probe) {
+  for (const [service, target] of Object.entries(bake.target || {})) {
+    const scope = probe.scopes[service];
+    if (!scope) throw new Error(`Docker cache scope is missing for Bake target ${service}`);
+    if (probe.policy.import) target["cache-from"] = [cacheSetting(scope)];
+    else delete target["cache-from"];
+    if (probe.policy.export) target["cache-to"] = [cacheSetting(scope, { mode: "max" })];
+    else delete target["cache-to"];
+  }
+  return bake;
+}
+
+function verifyCacheProbeBake(bake, probe) {
+  const targets = bake.target || {};
+  if (Object.keys(targets).length !== Object.keys(probe.scopes).length || Object.keys(targets).some((service) => !probe.scopes[service])) {
+    throw new Error("Docker Bake targets do not match the checked cache scope map");
+  }
+  for (const [service, target] of Object.entries(targets)) {
+    const expectedFrom = probe.policy.import ? [cacheSetting(probe.scopes[service])] : undefined;
+    const expectedTo = probe.policy.export ? [cacheSetting(probe.scopes[service], { mode: "max" })] : undefined;
+    if (canonicalJson(target["cache-from"]) !== canonicalJson(expectedFrom) || canonicalJson(target["cache-to"]) !== canonicalJson(expectedTo)) {
+      throw new Error(`Docker Bake cache settings do not match the checked policy for ${service}`);
+    }
+  }
+}
+
 function resolveBuild(scope, project, env = process.env, runCommand = run) {
   const args = composeArgs(scope, project);
   const callOptions = {
@@ -228,6 +289,8 @@ function prepareBuild({ scope, output, env = process.env, runCommand = run, proj
   if (!project) throw new Error("E2E_PROJECT_NAME is required for a checked prebuilt handoff");
   const outputDirectory = path.resolve(output);
   const resolved = resolveBuild(scope, project, env, runCommand);
+  const cacheProbe = cacheProbeFor(scope, resolved.cacheScopes, env);
+  applyCacheProbeToBake(resolved.bake, cacheProbe);
   const overridePath = path.join(outputDirectory, "image-override.json");
   const manifestPath = path.join(outputDirectory, "image-handoff.json");
   const override = {
@@ -244,10 +307,12 @@ function prepareBuild({ scope, output, env = process.env, runCommand = run, proj
     tags: resolved.tags,
     image_ids: {},
     builder_id: env.BUILDER_ID || null,
-    cache_scopes: resolved.cacheScopes,
-    cache_policy: resolved.cachePolicy,
-    import_status: resolved.cachePolicy.import ? "pending" : "not_configured",
-    export_status: resolved.cachePolicy.export ? "pending" : "not_configured",
+    cache_base_scopes: resolved.cacheScopes,
+    cache_scopes: cacheProbe.scopes,
+    cache_probe: { mode: cacheProbe.mode, namespace: cacheProbe.namespace },
+    cache_policy: cacheProbe.policy,
+    import_status: cacheProbe.policy.import ? "pending" : "not_configured",
+    export_status: cacheProbe.policy.export ? "pending" : "not_configured",
     override_path: overridePath,
   };
   writeJson(path.join(outputDirectory, "resolved-compose.json"), resolved.model);
@@ -278,18 +343,25 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
   if (!project || !scope) throw new Error("E2E_PROJECT_NAME and E2E_SCOPE are required for prebuilt verification");
 
   const resolved = resolveBuild(scope, project, env, runCommand);
+  const cacheProbe = cacheProbeFor(scope, resolved.cacheScopes, env);
+  const bakePath = path.join(path.dirname(path.resolve(manifestPath)), "bake.json");
+  const bake = JSON.parse(fs.readFileSync(bakePath, "utf8"));
   if (manifest.source_sha !== resolved.sourceSha || manifest.source_fingerprint !== (resolved.sourceFingerprint || null)) {
     throw new Error("image handoff source SHA or fingerprint mismatch");
   }
   if (manifest.model_digest !== resolved.modelDigest || manifest.recipe_digest !== resolved.recipeDigest) {
     throw new Error("image handoff Compose model or recipe digest mismatch");
   }
-  if (canonicalJson(manifest.tags) !== canonicalJson(resolved.tags) || canonicalJson(manifest.cache_scopes) !== canonicalJson(resolved.cacheScopes)) {
+  if (canonicalJson(manifest.tags) !== canonicalJson(resolved.tags) ||
+    canonicalJson(manifest.cache_base_scopes) !== canonicalJson(resolved.cacheScopes) ||
+    canonicalJson(manifest.cache_scopes) !== canonicalJson(cacheProbe.scopes)) {
     throw new Error("image handoff tags or cache scopes mismatch");
   }
-  if (canonicalJson(manifest.cache_policy) !== canonicalJson(resolved.cachePolicy)) {
+  if (canonicalJson(manifest.cache_probe) !== canonicalJson({ mode: cacheProbe.mode, namespace: cacheProbe.namespace }) ||
+    canonicalJson(manifest.cache_policy) !== canonicalJson(cacheProbe.policy)) {
     throw new Error("image handoff cache policy mismatch");
   }
+  verifyCacheProbeBake(bake, cacheProbe);
 
   const overridePath = env.E2E_IMAGE_OVERRIDE || manifest.override_path;
   if (!overridePath || path.resolve(overridePath) !== path.resolve(manifest.override_path)) {
@@ -421,4 +493,11 @@ if (require.main === module) {
   }
 }
 
-module.exports = { prepareBuild, verifyHandoff, recordCacheOutcome };
+module.exports = {
+  applyCacheProbeToBake,
+  cacheProbeFor,
+  prepareBuild,
+  recordCacheOutcome,
+  verifyCacheProbeBake,
+  verifyHandoff,
+};

@@ -600,11 +600,18 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert core =~ "mix deps.get"
       assert core =~ "mix compile --warnings-as-errors"
       assert core =~ "mix verify.core --exclude integration --exclude docs_contract"
-      assert String.index(core, "mix verify.core --exclude integration --exclude docs_contract") <
-               String.index(core, "name: Save Hex download archive cache")
 
-      assert String.index(core, "name: Save Hex download archive cache") <
-               String.index(core, "name: Save resolved BEAM build cache")
+      assert elem(
+               :binary.match(
+                 core,
+                 "mix verify.core --exclude integration --exclude docs_contract"
+               ),
+               0
+             ) <
+               elem(:binary.match(core, "name: Save Hex download archive cache"), 0)
+
+      assert elem(:binary.match(core, "name: Save Hex download archive cache"), 0) <
+               elem(:binary.match(core, "name: Save resolved BEAM build cache"), 0)
 
       assert core =~ "phase182_acceptance.cjs prepare-lock"
       assert core =~ "phase182_acceptance.cjs write-beam-proof"
@@ -612,12 +619,18 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert mounted =~ "phase182_acceptance.cjs configure-docker"
       assert mounted =~ "docker buildx inspect \"$BUILDER_ID\" --bootstrap"
       assert mounted =~ "mix verify.ecommerce_mounted"
-      assert mounted =~ "phase182-cache-probe-docker-cold-${{ github.run_id }}-${{ github.run_attempt }}"
 
-      assert full =~ "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+      assert mounted =~
+               "phase182-cache-probe-docker-cold-${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert full =~
+               "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
       assert full =~ "phase182_acceptance.cjs configure-docker"
       assert full =~ "mix verify.ecommerce_e2e"
-      assert full =~ "phase182-cache-probe-docker-warm-${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert full =~
+               "phase182-cache-probe-docker-warm-${{ github.run_id }}-${{ github.run_attempt }}"
     end
 
     test "mounted and full E2E bake the checked local Compose graph without pushing" do

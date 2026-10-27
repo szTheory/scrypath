@@ -24,6 +24,7 @@ const {
   writeBeamProbeProof,
   writeDockerProbeProof,
 } = require("./phase182_acceptance.cjs");
+const { applyCacheProbeToBake, cacheProbeFor } = require("./ecommerce_build.cjs");
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 const OTHER_SHA = "fedcba9876543210fedcba9876543210fedcba98";
@@ -407,6 +408,19 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
   for (const mode of ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]) {
     assert.match(workflow, new RegExp(`^\\s+- ${mode.replaceAll("-", "\\-")}\\s*$`, "m"));
   }
+  for (const jobName of ["ecommerce-mounted", "ecommerce-e2e"]) {
+    const job = workflow.match(new RegExp(`  ${jobName}:[\\s\\S]*?(?=\\n  [a-zA-Z0-9_-]+:\\n|$)`))?.[0] || "";
+    assert.match(job, /PHASE182_CACHE_MODE: \$\{\{ inputs\.phase182_cache_mode \|\| 'normal' \}\}/);
+    assert.match(job, /PHASE182_PROBE_NAMESPACE: \$\{\{ inputs\.phase182_probe_namespace \|\| '' \}\}/);
+  }
+});
+
+test("acceptance help and contributor runbook require a session root and exact identity", () => {
+  const help = execFileSync(process.execPath, [path.join(__dirname, "phase182_acceptance.cjs"), "help"], { encoding: "utf8" });
+  const guide = fs.readFileSync(path.join(__dirname, "../../CONTRIBUTING.md"), "utf8");
+  assert.match(help, /validate --mode caches\|full --input SESSION_ROOT --repo OWNER\/REPO --branch BRANCH --sha SHA --session-id SESSION/);
+  assert.match(guide, /validate \\\n\s+--mode caches --repo "\$repo" --branch "\$branch" --sha "\$sha" \\\n\s+--session-id "\$session" --input "\$root"/);
+  assert.match(guide, /validate \\\n\s+--mode full --repo "\$repo" --branch "\$branch" --sha "\$sha" \\\n\s+--session-id "\$session" --input "\$root"/);
 });
 
 test("workflow input validation writes only bounded mode and namespace outputs", (t) => {
@@ -440,46 +454,41 @@ test("BEAM probe keys preserve normal keys and isolate forced fallback misses", 
   assert.ok(fallback.resolved_key.endsWith("-phase182-101-2"));
 });
 
-test("Docker cache policy namespaces imports and exports and strips every cold cache setting", (t) => {
+test("Docker cache configuration verifies the prevalidated policy without rewriting Bake", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-docker-policy-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const manifestPath = path.join(root, "image-handoff.json");
   const bakePath = path.join(root, "bake.json");
+  const env = {
+    GITHUB_ACTIONS: "true",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    GITHUB_REPOSITORY: REPOSITORY,
+    GITHUB_REF: "refs/heads/candidate/phase182",
+    E2E_CACHE_JOB: "full",
+  };
+  const cacheBaseScopes = { web: "scrypath-web-v1", browser: "scrypath-browser-v1" };
+  const probe = cacheProbeFor("full", cacheBaseScopes, env, { mode: "normal", namespace: "candidate-7" });
+  const bake = { target: { web: {}, browser: {} } };
+  applyCacheProbeToBake(bake, probe);
   const manifest = {
     scope: "full",
-    cache_scopes: { web: "scrypath-web-v1", browser: "scrypath-browser-v1" },
-    cache_policy: { import: true, export: false },
-  };
-  const bake = {
-    target: {
-      web: { "cache-from": ["type=gha,scope=scrypath-web-v1,version=2,timeout=120s"] },
-      browser: { "cache-from": ["type=gha,scope=scrypath-browser-v1,version=2,timeout=120s"] },
-    },
+    cache_base_scopes: cacheBaseScopes,
+    cache_scopes: probe.scopes,
+    cache_probe: { mode: probe.mode, namespace: probe.namespace },
+    cache_policy: probe.policy,
   };
   fs.writeFileSync(manifestPath, JSON.stringify(manifest));
   fs.writeFileSync(bakePath, JSON.stringify(bake));
-  const namespaced = configureDockerBake({ manifestPath, mode: "normal", namespace: "candidate-7" });
-  assert.equal(namespaced.manifest.cache_policy.export, true);
-  for (const target of Object.values(namespaced.bake.target)) {
-    assert.match(target["cache-from"][0], /scope=.*-phase182-candidate-7/);
-    assert.match(target["cache-to"][0], /scope=.*-phase182-candidate-7/);
+  const originalBake = fs.readFileSync(bakePath, "utf8");
+  const configured = configureDockerBake({ manifestPath, mode: "normal", namespace: "candidate-7", env });
+  assert.deepEqual(configured.manifest.cache_policy, { import: true, export: true });
+  for (const [service, target] of Object.entries(configured.bake.target)) {
+    assert.match(target["cache-from"][0], new RegExp(`scope=${probe.scopes[service]}`));
+    assert.match(target["cache-to"][0], new RegExp(`scope=${probe.scopes[service]}`));
     assert.match(target["cache-to"][0], /mode=max/);
   }
-
-  const coldRoot = path.join(root, "cold");
-  fs.mkdirSync(coldRoot);
-  const coldManifestPath = path.join(coldRoot, "image-handoff.json");
-  fs.writeFileSync(coldManifestPath, JSON.stringify({
-    scope: "focused",
-    cache_scopes: { web: "scrypath-web-v1" },
-    cache_policy: { import: true, export: false },
-  }));
-  fs.writeFileSync(path.join(coldRoot, "bake.json"), JSON.stringify({ target: {
-    web: { "cache-from": ["type=gha,scope=scrypath-web-v1"], "cache-to": ["type=gha,scope=scrypath-web-v1"] },
-  } }));
-  const cold = configureDockerBake({ manifestPath: coldManifestPath, mode: "docker-cold" });
-  assert.equal(cold.manifest.cache_policy.import, false);
-  assert.ok(Object.values(cold.bake.target).every((target) => !target["cache-from"] && !target["cache-to"]));
+  assert.equal(fs.readFileSync(bakePath, "utf8"), originalBake);
+  assert.throws(() => configureDockerBake({ manifestPath, mode: "beam-cold", namespace: "candidate-7", env }), /prepared Docker cache probe/);
 });
 
 test("lock-change probe commits only a comment-only change in its temporary checkout", (t) => {
