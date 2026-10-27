@@ -237,6 +237,14 @@ jobs:
     name: ecommerce-mounted (required)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      BUILDER_ID: scrypath-mounted-${{ github.run_id }}-${{ github.run_attempt }}
+      E2E_CACHE_JOB: mounted
+      E2E_EVENT_NAME: ${{ github.event_name }}
+      E2E_PROJECT_NAME: scrypath-e2e-${{ github.run_id }}-${{ github.run_attempt }}-mounted
+      E2E_SCOPE: focused
+      E2E_SOURCE_MODE: hosted
+      SCRYPATH_SOURCE_SHA: ${{ github.sha }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
@@ -248,6 +256,46 @@ jobs:
             _build
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
+      - name: Prepare checked mounted Compose images
+        id: ecommerce_prepare
+        shell: bash
+        run: |
+          output_dir="$RUNNER_TEMP/ecommerce-mounted-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          node scripts/ci/ecommerce_build.cjs prepare --scope focused --output "$output_dir"
+          {
+            echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
+            echo "E2E_IMAGE_OVERRIDE=$output_dir/image-override.json"
+          } >> "$GITHUB_ENV"
+      - name: Set up pinned Buildx for mounted Compose images
+        id: ecommerce_buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1, immutable signed Docker release
+        with:
+          name: ${{ env.BUILDER_ID }}
+          version: v0.37.2
+          driver-opts: image=moby/buildkit:v0.33.1
+      - name: Bake and load checked mounted images
+        id: ecommerce_bake
+        continue-on-error: true
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0, immutable signed Docker release
+        with:
+          source: .
+          files: ${{ runner.temp }}/ecommerce-mounted-${{ github.run_id }}-${{ github.run_attempt }}/bake.json
+          load: true
+          push: false
+          progress: plain
+      - name: Verify mounted image handoff
+        id: ecommerce_handoff
+        if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        run: node scripts/ci/ecommerce_build.cjs verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"
+      - name: Record mounted cache interaction outcome
+        if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        env:
+          BAKE_OUTCOME: ${{ steps.ecommerce_bake.outcome }}
+          HANDOFF_OUTCOME: ${{ steps.ecommerce_handoff.outcome }}
+        run: node scripts/ci/ecommerce_build.cjs cache-outcome --manifest "$E2E_PREBUILT_MANIFEST" --bake-outcome "$BAKE_OUTCOME" --handoff-outcome "$HANDOFF_OUTCOME"
+      - name: Warn when mounted Bake needs cache fallback
+        if: steps.ecommerce_bake.outcome == 'failure' && steps.ecommerce_handoff.outcome == 'success'
+        run: echo "::warning title=BuildKit cache performance::Bake returned failure after the checked images loaded. Inspect Docker Bake logs; image handoff is valid and mounted verification will continue."
       - name: Run mounted E2E proof
         env:
           E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -257,7 +305,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ecommerce-mounted-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
-          path: examples/scrypath_ecommerce/test-results/docker-focused/${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            examples/scrypath_ecommerce/test-results/docker-focused/${{ github.run_id }}-${{ github.run_attempt }}
+            ${{ runner.temp }}/ecommerce-mounted-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
           if-no-files-found: warn
           retention-days: 7
 
@@ -352,6 +402,13 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     timeout-minutes: 30
+    env:
+      BUILDER_ID: scrypath-full-${{ github.run_id }}-${{ github.run_attempt }}
+      E2E_CACHE_JOB: full
+      E2E_EVENT_NAME: ${{ github.event_name }}
+      E2E_PROJECT_NAME: scrypath-e2e-${{ github.run_id }}-${{ github.run_attempt }}-full
+      E2E_SCOPE: full
+      SCRYPATH_SOURCE_SHA: ${{ github.sha }}
     outputs:
       verification_outcome: ${{ steps.ecommerce_verify.outcome }}
       artifact_id: ${{ steps.ecommerce_upload.outputs.artifact-id }}
@@ -392,6 +449,46 @@ jobs:
             _build
           key: ${{ runner.os }}-test-elixir-1.19.0-otp-28.1-${{ hashFiles('mix.lock', 'mix.exs') }}
       - run: mix deps.get
+      - name: Prepare checked full Compose images
+        id: ecommerce_prepare
+        shell: bash
+        run: |
+          output_dir="$RUNNER_TEMP/ecommerce-full-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          node scripts/ci/ecommerce_build.cjs prepare --scope full --output "$output_dir"
+          {
+            echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
+            echo "E2E_IMAGE_OVERRIDE=$output_dir/image-override.json"
+          } >> "$GITHUB_ENV"
+      - name: Set up pinned Buildx for full Compose images
+        id: ecommerce_buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1, immutable signed Docker release
+        with:
+          name: ${{ env.BUILDER_ID }}
+          version: v0.37.2
+          driver-opts: image=moby/buildkit:v0.33.1
+      - name: Bake and load checked full images
+        id: ecommerce_bake
+        continue-on-error: true
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0, immutable signed Docker release
+        with:
+          source: .
+          files: ${{ runner.temp }}/ecommerce-full-${{ github.run_id }}-${{ github.run_attempt }}/bake.json
+          load: true
+          push: false
+          progress: plain
+      - name: Verify full image handoff
+        id: ecommerce_handoff
+        if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        run: node scripts/ci/ecommerce_build.cjs verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"
+      - name: Record full cache interaction outcome
+        if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        env:
+          BAKE_OUTCOME: ${{ steps.ecommerce_bake.outcome }}
+          HANDOFF_OUTCOME: ${{ steps.ecommerce_handoff.outcome }}
+        run: node scripts/ci/ecommerce_build.cjs cache-outcome --manifest "$E2E_PREBUILT_MANIFEST" --bake-outcome "$BAKE_OUTCOME" --handoff-outcome "$HANDOFF_OUTCOME"
+      - name: Warn when full Bake needs cache fallback
+        if: steps.ecommerce_bake.outcome == 'failure' && steps.ecommerce_handoff.outcome == 'success'
+        run: echo "::warning title=BuildKit cache performance::Bake returned failure after the checked images loaded. Inspect Docker Bake logs; image handoff is valid and full verification will continue."
       - name: Run advisory full E2E proof
         id: ecommerce_verify
         env:
@@ -413,6 +510,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ecommerce-e2e-evidence-${{ github.run_id }}-${{ github.run_attempt }}
-          path: examples/scrypath_ecommerce/test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            examples/scrypath_ecommerce/test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}
+            ${{ runner.temp }}/ecommerce-full-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
           if-no-files-found: error
           retention-days: 7

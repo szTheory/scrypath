@@ -277,13 +277,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "run: mix verify.repository_contracts"
     end
 
-    test "repository contracts execute counted browser lifecycle, evidence, and target behavior tests" do
+    test "repository contracts execute counted browser build, lifecycle, evidence, and target behavior tests" do
       {output, status} =
         System.cmd(
           "node",
           [
             "--test",
             "--test-reporter=tap",
+            "scripts/ci/ecommerce_build.test.cjs",
             "scripts/ci/ecommerce_lifecycle.test.cjs",
             "scripts/ci/ecommerce_evidence.test.cjs",
             "scripts/ci/ecommerce_target.test.cjs"
@@ -291,16 +292,16 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
           stderr_to_stdout: true
         )
 
-      assert status == 0, "browser behavior tests failed with status #{status}:\n#{output}"
+      assert status == 0, "browser build and behavior tests failed with status #{status}:\n#{output}"
 
       assert [_, count] = Regex.run(~r/^# tests (\d+)$/m, output),
              "Node test output did not report a test count:\n#{output}"
 
       assert String.to_integer(count) > 0,
-             "browser behavior test command ran zero tests:\n#{output}"
+             "browser build and behavior tests ran zero tests:\n#{output}"
 
       assert output =~ ~r/^# fail 0$/m,
-             "browser behavior tests reported failures:\n#{output}"
+             "browser build and behavior tests reported failures:\n#{output}"
     end
 
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
@@ -494,6 +495,25 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert contributing =~ "**`ecommerce-mounted`**"
       assert contributing =~ "`ecommerce-e2e` is advisory today"
+    end
+
+    test "mounted and full E2E bake the checked local Compose graph without pushing" do
+      ci = File.read!(@ci_yml)
+
+      for {job_name, cache_job} <- [{"ecommerce-mounted", "mounted"}, {"ecommerce-e2e", "full"}] do
+        job = workflow_job_block(ci, job_name)
+
+        assert job =~ "E2E_CACHE_JOB: #{cache_job}"
+        assert job =~ "uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069"
+        assert job =~ "version: v0.37.2"
+        assert job =~ "driver-opts: image=moby/buildkit:v0.33.1"
+        assert job =~ "uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e"
+        assert job =~ "files: ${{ runner.temp }}/ecommerce-#{cache_job}-${{ github.run_id }}-${{ github.run_attempt }}/bake.json"
+        assert job =~ "load: true"
+        assert job =~ "push: false"
+        assert job =~ "ecommerce_build.cjs verify-handoff --manifest"
+        assert job =~ "ecommerce_build.cjs cache-outcome --manifest"
+      end
     end
 
     test "ecommerce-e2e preserves raw outcome and uploads only this run's evidence" do
