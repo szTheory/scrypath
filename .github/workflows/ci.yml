@@ -480,6 +480,9 @@ jobs:
       - name: Verify mounted image handoff
         id: ecommerce_handoff
         if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mounted_docker_mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.mounted_docker_namespace }}
         run: node scripts/ci/ecommerce_build.cjs verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"
       - name: Record mounted cache interaction outcome
         if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
@@ -730,6 +733,9 @@ jobs:
       - name: Verify full image handoff
         id: ecommerce_handoff
         if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'
+        env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.full_docker_mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.full_docker_namespace }}
         run: node scripts/ci/ecommerce_build.cjs verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"
       - name: Record full cache interaction outcome
         if: always() && steps.ecommerce_prepare.outcome == 'success' && steps.ecommerce_bake.outcome != 'skipped'

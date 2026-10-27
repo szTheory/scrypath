@@ -556,6 +556,13 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
     const dockerJob = jobName === "ecommerce-mounted" ? "mounted" : "full";
     assert.ok(job.includes("PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs." + dockerJob + "_docker_mode }}"));
     assert.ok(job.includes("PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs." + dockerJob + "_docker_namespace }}"));
+    const verifyStepName = `- name: Verify ${dockerJob} image handoff`;
+    const verifyStepStart = job.indexOf(verifyStepName);
+    assert.notEqual(verifyStepStart, -1, `${jobName} must verify its checked image handoff`);
+    const verifyStepEnd = job.indexOf("\n      - ", verifyStepStart + verifyStepName.length);
+    const verifyStep = job.slice(verifyStepStart, verifyStepEnd < 0 ? undefined : verifyStepEnd);
+    assert.match(verifyStep, new RegExp(`PHASE182_CACHE_MODE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_mode \\}\\}`));
+    assert.match(verifyStep, new RegExp(`PHASE182_PROBE_NAMESPACE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_namespace \\}\\}`));
   }
 });
 
