@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
-const { execFileSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -616,6 +616,22 @@ test("acceptance help and contributor runbook require a session root and exact i
   assert.match(help, /validate --mode caches\|full --input SESSION_ROOT --repo OWNER\/REPO --branch BRANCH --sha SHA --session-id SESSION/);
   assert.match(guide, /validate \\\n\s+--mode caches --repo "\$repo" --branch "\$branch" --sha "\$sha" \\\n\s+--session-id "\$session" --input "\$root"/);
   assert.match(guide, /validate \\\n\s+--mode full --repo "\$repo" --branch "\$branch" --sha "\$sha" \\\n\s+--session-id "\$session" --input "\$root"/);
+});
+
+test("validate CLI forwards the requested namespace to session identity checks", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-validate-namespace-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, "phase182-session.json"), JSON.stringify({
+    schema: 1, repository: REPOSITORY, branch: BRANCH, sha: SHA, session_id: SESSION_ID,
+    probe_namespace: "isolated", invocations: [],
+  }));
+  const result = spawnSync(process.execPath, [path.join(__dirname, "phase182_acceptance.cjs"),
+    "validate", "--mode", "full", "--input", root, "--repo", REPOSITORY, "--branch", BRANCH,
+    "--sha", SHA, "--session-id", SESSION_ID, "--probe-namespace", "isolated",
+  ], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /full acceptance aggregate is missing/);
+  assert.doesNotMatch(result.stderr, /identity mismatch/);
 });
 
 test("workflow input validation writes only bounded mode and namespace outputs", (t) => {
