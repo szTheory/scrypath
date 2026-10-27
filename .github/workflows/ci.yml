@@ -496,6 +496,8 @@ jobs:
       - name: Run mounted E2E proof
         id: mounted_verify
         env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.mounted_docker_mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.mounted_docker_namespace }}
           E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: mix verify.ecommerce_mounted
       - name: Write Phase 182 Docker cold-cache proof
@@ -749,6 +751,8 @@ jobs:
       - name: Run advisory full E2E proof
         id: ecommerce_verify
         env:
+          PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.full_docker_mode }}
+          PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.full_docker_namespace }}
           E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
           E2E_JOB_STARTED_AT: ${{ steps.e2e_clock.outputs.E2E_JOB_STARTED_AT }}
           E2E_DEADLINE_EPOCH: ${{ steps.e2e_clock.outputs.E2E_DEADLINE_EPOCH }}

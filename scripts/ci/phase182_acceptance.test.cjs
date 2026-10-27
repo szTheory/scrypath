@@ -561,8 +561,17 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
     assert.notEqual(verifyStepStart, -1, `${jobName} must verify its checked image handoff`);
     const verifyStepEnd = job.indexOf("\n      - ", verifyStepStart + verifyStepName.length);
     const verifyStep = job.slice(verifyStepStart, verifyStepEnd < 0 ? undefined : verifyStepEnd);
-    assert.match(verifyStep, new RegExp(`PHASE182_CACHE_MODE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_mode \\}\\}`));
-    assert.match(verifyStep, new RegExp(`PHASE182_PROBE_NAMESPACE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_namespace \\}\\}`));
+    const runStepName = jobName === "ecommerce-mounted"
+      ? "- name: Run mounted E2E proof"
+      : "- name: Run advisory full E2E proof";
+    const runStepStart = job.indexOf(runStepName);
+    assert.notEqual(runStepStart, -1, `${jobName} must run its ordinary E2E verification`);
+    const runStepEnd = job.indexOf("\n      - ", runStepStart + runStepName.length);
+    const runStep = job.slice(runStepStart, runStepEnd < 0 ? undefined : runStepEnd);
+    for (const [stepName, step] of [["handoff", verifyStep], ["E2E verification", runStep]]) {
+      assert.match(step, new RegExp(`PHASE182_CACHE_MODE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_mode \\}\\}`), `${jobName} ${stepName} must retain the resolved Docker mode`);
+      assert.match(step, new RegExp(`PHASE182_PROBE_NAMESPACE: \\x24\\{\\{ steps\\.phase182_inputs\\.outputs\\.${dockerJob}_docker_namespace \\}\\}`), `${jobName} ${stepName} must retain the resolved Docker namespace`);
+    }
   }
 });
 
