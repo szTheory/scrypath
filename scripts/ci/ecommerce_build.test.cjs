@@ -111,9 +111,24 @@ else process.exit(2);
   return { ...result, calls, helperCalls, overridePath };
 }
 
-function composeGraph(scope, project, changeModel = false) {
+function composeGraph(scope, project, changeModel = false, env = process.env) {
   const services = {
-    web: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile" } },
+    web: {
+      build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile" },
+      environment: {
+        E2E_RUN_ID: env.E2E_RUN_ID || "local-focused",
+        E2E_ARTIFACT_DIR: env.E2E_CONTAINER_ARTIFACT_DIR || "/tmp/local-focused",
+        E2E_DEADLINE_EPOCH: env.E2E_DEADLINE_EPOCH || "0",
+        E2E_EVENT_SHA: env.E2E_EVENT_SHA || "unknown",
+        E2E_GIT_REF: env.E2E_GIT_REF || "local",
+        E2E_JOB_NAME: env.E2E_JOB_NAME || "local-ecommerce-e2e",
+        E2E_JOB_STARTED_AT: env.E2E_JOB_STARTED_AT || "unknown",
+        E2E_SOURCE_MODE: env.E2E_SOURCE_MODE || "local",
+        E2E_WORKFLOW_RUN_ATTEMPT: env.E2E_WORKFLOW_RUN_ATTEMPT || "1",
+        E2E_WORKFLOW_RUN_ID: env.E2E_WORKFLOW_RUN_ID || "local",
+        SCRYPATH_SOURCE_SHA: env.SCRYPATH_SOURCE_SHA || "unknown",
+      },
+    },
     browser: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile.e2e", args: { PLAYWRIGHT_VERSION: "1.60.0" } } },
   };
   if (scope === "full") {
@@ -142,7 +157,7 @@ function buildDriver(scope, project, options = {}) {
     if (command !== "docker") {
       return execFileSync(command, args, { cwd: callOptions.cwd, env: callOptions.env, encoding: "utf8" }).trimEnd();
     }
-    const graph = composeGraph(scope, project, state.modelChange);
+    const graph = composeGraph(scope, project, state.modelChange, callOptions.env || process.env);
     if (args.includes("config")) return JSON.stringify(graph.model);
     if (args.includes("build") && args.includes("--print")) return JSON.stringify(graph.bake);
     if (args[0] === "image" && args[1] === "inspect") {
@@ -516,6 +531,34 @@ test("verify-handoff rejects a changed event cache policy", (t) => {
 
 test("verify-handoff rejects a changed Compose model before inspecting images", (t) => {
   const fixture = prepareFixture(t);
+  fixture.docker.state.modelChange = true;
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /Compose model or recipe digest mismatch/,
+  );
+});
+
+test("verify-handoff ignores run-scoped Compose environment values but retains source checks", (t) => {
+  const fixture = prepareFixture(t);
+  Object.assign(fixture.env, {
+    E2E_RUN_ID: "40456281741-1",
+    E2E_CONTAINER_ARTIFACT_DIR: "/tmp/40456281741-1",
+    E2E_DEADLINE_EPOCH: "1793061000",
+    E2E_EVENT_SHA: fixture.manifest.source_sha,
+    E2E_GIT_REF: "agent-p182-08-1793071051075",
+    E2E_JOB_NAME: "ecommerce-mounted",
+    E2E_JOB_STARTED_AT: "2026-10-27T05:39:38Z",
+    E2E_SOURCE_MODE: "hosted",
+    E2E_WORKFLOW_RUN_ATTEMPT: "1",
+    E2E_WORKFLOW_RUN_ID: "40456281741",
+    SCRYPATH_SOURCE_SHA: fixture.manifest.source_sha,
+  });
+
+  assert.equal(
+    verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }).handoff_status,
+    "loaded",
+  );
+
   fixture.docker.state.modelChange = true;
   assert.throws(
     () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),

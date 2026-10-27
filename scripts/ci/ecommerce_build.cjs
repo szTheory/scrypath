@@ -11,6 +11,19 @@ const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
 const trustedCacheRepository = "szTheory/scrypath";
 const cacheProbeModes = new Set(["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]);
+const runScopedComposeEnvironment = new Set([
+  "E2E_ARTIFACT_DIR",
+  "E2E_DEADLINE_EPOCH",
+  "E2E_EVENT_SHA",
+  "E2E_GIT_REF",
+  "E2E_JOB_NAME",
+  "E2E_JOB_STARTED_AT",
+  "E2E_RUN_ID",
+  "E2E_SOURCE_MODE",
+  "E2E_WORKFLOW_RUN_ATTEMPT",
+  "E2E_WORKFLOW_RUN_ID",
+  "SCRYPATH_SOURCE_SHA",
+]);
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -24,6 +37,17 @@ function canonicalize(value) {
 
 function canonicalJson(value) {
   return JSON.stringify(canonicalize(value));
+}
+
+function composeModelForDigest(model) {
+  const stableModel = structuredClone(model);
+  for (const service of Object.values(stableModel.services || {})) {
+    if (!service.environment || Array.isArray(service.environment)) continue;
+    for (const key of runScopedComposeEnvironment) {
+      if (Object.hasOwn(service.environment, key)) service.environment[key] = "<phase182-run-scoped>";
+    }
+  }
+  return stableModel;
 }
 
 function digest(value) {
@@ -268,7 +292,7 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
     services,
     sourceSha,
     sourceFingerprint: fingerprint,
-    modelDigest: digest(canonicalJson(model)),
+    modelDigest: digest(canonicalJson(composeModelForDigest(model))),
     recipeDigest,
     tags,
     cacheScopes,

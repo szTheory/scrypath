@@ -570,7 +570,44 @@ function ensureSessionLocked(flags) {
 function beginInvocation(flags) {
   return withSessionLock(flags.outputDir, () => {
     const { manifestPath, manifest } = ensureSessionLocked(flags);
-    if (manifest.invocations.some((entry) => entry.status === "running")) throw new Error("candidate session has an unfinished invocation; reconcile it before dispatching another run");
+    if (manifest.invocations.some((entry) => entry.status === "running")) {
+      const error = "candidate session has an unfinished invocation; reconcile it before dispatching another run";
+      const token = `${Date.now()}-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+      const relativeDir = path.posix.join("attempts", flags.mode, token);
+      const invocationDir = path.join(flags.outputDir, ...relativeDir.split("/"));
+      fs.mkdirSync(invocationDir, { recursive: false, mode: 0o700 });
+      const receipt = {
+        schema: 1,
+        repository: flags.repo,
+        branch: flags.branch,
+        sha: flags.sha,
+        session_id: flags.sessionId,
+        mode: flags.mode,
+        invocation_id: token,
+        eligible: false,
+        error,
+        collected_at: new Date().toISOString(),
+      };
+      const receiptPath = path.join(invocationDir, "receipt.json");
+      writeAtomic(receiptPath, receipt);
+      const entry = {
+        invocation_id: token,
+        mode: flags.mode,
+        directory: relativeDir,
+        status: "ineligible",
+        started_at: receipt.collected_at,
+        completed_at: receipt.collected_at,
+        receipt: path.relative(flags.outputDir, receiptPath).split(path.sep).join("/"),
+        receipt_sha256: sha256(fs.readFileSync(receiptPath)),
+        run_id: null,
+        run_attempt: null,
+        error,
+      };
+      manifest.invocations.push(entry);
+      writeAtomic(manifestPath, manifest);
+      updateAggregatesLocked(flags, manifest);
+      throw new Error(error);
+    }
     const token = `${Date.now()}-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     const relativeDir = path.posix.join("attempts", flags.mode, token);
     const invocationDir = path.join(flags.outputDir, ...relativeDir.split("/"));
