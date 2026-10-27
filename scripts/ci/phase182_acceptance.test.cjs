@@ -753,6 +753,24 @@ test("lock-change probe commits only a comment-only change in its temporary chec
   assert.deepEqual(proof.lock_probe, { owned_copy: true, source_lock_unchanged: true, versions_unchanged: true });
 });
 
+test("collectRun waits for selected-attempt job and artifact metadata without redispatching", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-metadata-readiness-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const commands = successfulCommandDouble({ mode: "full", pendingJobReads: 2, pendingArtifactReads: 1 });
+  const result = collectRun({
+    repo: REPOSITORY,
+    branch: BRANCH,
+    sha: SHA,
+    sessionId: SESSION_ID,
+    mode: "full",
+    outputDir: path.join(root, "candidate"),
+  }, { command: commands, pollMilliseconds: 0, timeoutSeconds: 2, sleep: () => {}, browserValidator: validBrowserReceipt });
+
+  assert.equal(JSON.parse(fs.readFileSync(result.receiptPath, "utf8")).eligible, true);
+  assert.equal(result.run.id, "12345");
+  assert.equal(commands.calls.filter((args) => args[0] === "workflow" && args[1] === "run").length, 1);
+});
+
 test("collectRun retains repeated-mode attempts in distinct directories and rejects session mismatch without mutation", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-session-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -962,13 +980,15 @@ function authorityAggregate(run) {
   };
 }
 
-function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, wrongArtifactRepository = false, refSha = SHA, attempt = 1, rawVerifierFailure = false } = {}) {
+function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, wrongArtifactRepository = false, refSha = SHA, attempt = 1, rawVerifierFailure = false, pendingJobReads = 0, pendingArtifactReads = 0 } = {}) {
   const calls = [];
   let activeMode = mode;
   let dispatched = false;
   let runCounter = 12344;
   let run;
   let artifacts = [];
+  let jobReads = 0;
+  let artifactReads = 0;
   const browserMembers = Object.fromEntries([
     "phase105-evidence.json",
     "phase105-evidence-summary.md",
@@ -1108,10 +1128,16 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
       if (attemptDetail) return { stdout: JSON.stringify({ conclusion: "failure", run_attempt: Number(attemptDetail[2]) }) };
       if (endpoint.endsWith("/actions/workflows/ci.yml")) return { stdout: JSON.stringify({ id: 77, name: "CI", path: ".github/workflows/ci.yml" }) };
       if (/\/actions\/runs\/\d+\/attempts\/\d+\/jobs/.test(endpoint)) {
-        const selectedJobs = incompleteJobs ? jobs.filter((job) => job.name !== "package (required)") : jobs;
+        const observedJobs = jobReads++ < pendingJobReads
+          ? jobs.map((job) => job.name === "ecommerce-e2e (advisory)" ? { ...job, status: "in_progress", conclusion: null, completed_at: null } : job)
+          : jobs;
+        const selectedJobs = incompleteJobs ? observedJobs.filter((job) => job.name !== "package (required)") : observedJobs;
         return { stdout: JSON.stringify(paginated ? [{ jobs: selectedJobs.slice(0, 4) }, { jobs: selectedJobs.slice(4) }] : { jobs: selectedJobs }) };
       }
-      if (/\/actions\/runs\/\d+\/artifacts/.test(endpoint)) return { stdout: JSON.stringify(paginated ? [{ artifacts: [] }, { artifacts }] : { artifacts }) };
+      if (/\/actions\/runs\/\d+\/artifacts/.test(endpoint)) {
+        const observedArtifacts = artifactReads++ < pendingArtifactReads ? [] : artifacts;
+        return { stdout: JSON.stringify(paginated ? [{ artifacts: [] }, { artifacts: observedArtifacts }] : { artifacts: observedArtifacts }) };
+      }
       const archive = endpoint.match(/\/actions\/artifacts\/(\d+)\/zip$/);
       if (archive) return { stdout: tamperArchive ? Buffer.from("mutated archive bytes") : artifacts.find((item) => String(item.id) === archive[1]).archive };
     }
