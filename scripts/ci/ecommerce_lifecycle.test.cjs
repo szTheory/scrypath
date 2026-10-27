@@ -49,6 +49,29 @@ if (args[0] === "compose" && args.includes("down") && process.env.FAKE_DOCKER_DO
 if (args[0] === "compose" && args.includes("logs")) process.stdout.write("fake compose diagnostics\\n");
 if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1" && process.env.FAKE_DOCKER_CONFIG_FAIL !== "1") process.stdout.write("browser-container\\n");
 if (args[0] === "cp" && process.env.FAKE_DOCKER_CP_FAIL === "1") process.exit(42);
+if (args[0] === "cp") {
+  const destination = args.at(-1);
+  fs.mkdirSync(destination, { recursive: true });
+  const stages = Object.fromEntries(["inventory", "browser", "light_parity", "contrast"].map(name => [name, {started_at:"2026-10-26T12:00:00Z",ended_at:"2026-10-26T12:00:01Z",exit_code:0}]));
+  fs.writeFileSync(destination + "/stages.json", JSON.stringify(stages) + "\\n");
+  fs.writeFileSync(destination + "/phase105-evidence.ndjson", "{\\"operation\\":\\"browser\\"}\\n");
+  fs.writeFileSync(destination + "/phase105-playwright-list.json", JSON.stringify({suites:[],errors:[]}));
+  if (process.env.FAKE_DOCKER_OMIT_REPORT !== "1") fs.writeFileSync(destination + "/phase105-playwright.json", JSON.stringify({suites:[],errors:[]}));
+  fs.mkdirSync(destination + "/playwright-report", { recursive: true });
+  fs.writeFileSync(destination + "/playwright-report/index.html", "<html>owned</html>\\n");
+  fs.writeFileSync(destination + "/admin-light-parity.json", JSON.stringify({status:"pass",missing:[],extra:[],width_mismatches:[]}));
+  fs.writeFileSync(destination + "/contrast-report.json", JSON.stringify({status:"pass"}));
+}
+if (args[0] === "inspect") process.stdout.write("sha256:" + "a".repeat(64) + "\\n");
+if (args[0] === "run") {
+  const volume = args.find(value => value.endsWith(":/evidence"));
+  const destination = volume ? volume.slice(0, volume.lastIndexOf(":/evidence")) : null;
+  if (destination) {
+    fs.writeFileSync(destination + "/phase105-evidence-input.json", JSON.stringify({synthetic:true}));
+    fs.writeFileSync(destination + "/phase105-evidence.json", JSON.stringify({eligibility:{eligible:false},reasons:[{code:"synthetic_docker_double"}]}));
+    fs.writeFileSync(destination + "/phase105-evidence-summary.md", "synthetic lifecycle test evidence\\n");
+  }
+}
 if (args[0] === "ps" && process.env.FAKE_LEAK_CONTAINER === "1") process.stdout.write("owned-container\\n");
 if (args[0] === "volume" && process.env.FAKE_LEAK_VOLUME === "1") process.stdout.write("owned-volume\\n");
 if (args[0] === "network" && process.env.FAKE_LEAK_NETWORK === "1") process.stdout.write("owned-network\\n");
@@ -180,12 +203,14 @@ if (args.includes("test:e2e")) {
   if (delay > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay);
   const root = process.env.E2E_ARTIFACT_DIR;
   fs.mkdirSync(root, { recursive: true });
-  fs.writeFileSync(process.env.E2E_PLAYWRIGHT_REPORT, ${JSON.stringify(playwrightJson)} + "\\n");
-  fs.mkdirSync(process.env.E2E_HTML_REPORT_DIR, { recursive: true });
-  fs.writeFileSync(process.env.E2E_HTML_REPORT_DIR + "/index.html", "<html>owned report</html>\\n");
+  if (process.env.FAKE_BROWSER_NO_REPORT !== "1") {
+    fs.writeFileSync(process.env.E2E_PLAYWRIGHT_REPORT, ${JSON.stringify(playwrightJson)} + "\\n");
+    fs.mkdirSync(process.env.E2E_HTML_REPORT_DIR, { recursive: true });
+    fs.writeFileSync(process.env.E2E_HTML_REPORT_DIR + "/index.html", "<html>owned report</html>\\n");
+  }
 }
 if (args.includes("test:e2e:admin-light-parity")) {
-  fs.writeFileSync(process.env.E2E_LIGHT_REPORT, JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }) + "\\n");
+  fs.writeFileSync(process.env.ADMIN_LIGHT_PARITY_REPORT, JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }) + "\\n");
 }
 `,
   );
@@ -208,7 +233,6 @@ function runBrowser(t, extraEnv = {}) {
   const { binDirectory, curlLog, browserLog } = installBrowserDoubles(root);
   const runId = extraEnv.E2E_RUN_ID || "browser-test-run";
   const artifactDirectory = path.join(root, "owned-evidence", runId);
-  mkdirSync(artifactDirectory, { recursive: true });
   const result = spawnSync("bash", [browserSource], {
     cwd: path.dirname(browserSource),
     encoding: "utf8",
@@ -311,11 +335,19 @@ test("full browser execution starts only after both Ops fixture routes respond",
 
 test("full browser discovery rejects a successful no-op and records its raw inventory failure", (t) => {
   const result = runBrowser(t, { E2E_READINESS_ONLY: "0", FAKE_BROWSER_NOOP: "1" });
-  assert.notEqual(result.status, 0, "empty discovery output must not pass as a zero-case suite");
+  assert.notEqual(result.status, 0, `empty discovery output must not pass as a zero-case suite: ${JSON.stringify({ stdout: result.stdout, stderr: result.stderr, invocations: result.browserInvocations })}`);
   assert.doesNotMatch(result.browserInvocations, /npm run test:e2e /, "execution cannot start after invalid inventory");
   const stages = JSON.parse(readFileSync(path.join(result.artifactDirectory, "stages.json"), "utf8"));
   assert.notEqual(stages.inventory.exit_code, 0);
   assert.equal(stages.browser.exit_code, null);
+});
+
+test("full browser execution rejects missing current-run JSON or HTML reports", (t) => {
+  const result = runBrowser(t, { E2E_READINESS_ONLY: "0", FAKE_BROWSER_NO_REPORT: "1" });
+  assert.equal(result.status, 74, result.stderr);
+  const stages = JSON.parse(readFileSync(path.join(result.artifactDirectory, "stages.json"), "utf8"));
+  assert.equal(stages.browser.exit_code, 74);
+  assert.match(result.stderr, /did not produce.*JSON and HTML/i);
 });
 
 test("full browser deadline records timeout without replacing the raw test status", (t) => {
@@ -339,9 +371,12 @@ test("verifier creates a fresh per-run bundle and excludes a previous capture se
   assert.equal(path.basename(result.artifactDirectory), "run-unique-18204");
   assert.equal(path.basename(path.dirname(result.artifactDirectory)), "docker-full");
   assert.equal(result.lifecycle.run_id, "run-unique-18204");
-  for (const file of ["source.json", "compose-model.json", "stages.json", "artifact-manifest.json", "phase105-inventory.json"]) {
+  for (const file of ["source.json", "compose-model.json", "stages.json", "artifact-manifest.json", "phase105-inventory.json", "phase105-evidence-input.json", "phase105-evidence.json", "phase105-evidence-summary.md"]) {
     assert.ok(existsSync(path.join(result.artifactDirectory, file)), `owned bundle is missing ${file}`);
   }
+  const downIndex = result.calls.findIndex((call) => call.includes("down"));
+  const aggregateIndex = result.calls.findIndex((call) => call[0] === "run");
+  assert.ok(aggregateIndex > downIndex, "strict evidence aggregation must happen after owned Compose cleanup");
   assert.equal(existsSync(path.join(result.artifactDirectory, "stale-sentinel.txt")), false);
   assert.equal(existsSync(path.join(path.dirname(result.artifactDirectory), "previous-run", "stale-sentinel.txt")), true);
 });
@@ -381,7 +416,7 @@ test("browser failure stays primary when artifact copies and Compose down also f
   const logIndex = result.calls.findIndex((call) => call.includes("logs"));
   const downIndex = result.calls.findIndex((call) => call.includes("down"));
   assert.ok(logIndex >= 0 && downIndex > logIndex, "diagnostics must be collected before teardown");
-  assert.equal(result.calls.filter((call) => call[0] === "cp").length, 2);
+  assert.equal(result.calls.filter((call) => call[0] === "cp").length, 1);
 });
 
 test("artifact copy failure makes an otherwise successful verification fail", (t) => {
@@ -393,6 +428,17 @@ test("artifact copy failure makes an otherwise successful verification fail", (t
   assert.equal(result.lifecycle.original_exit_status, 0);
   assert.equal(result.lifecycle.artifact_copy_status, "failed");
   assert.equal(result.lifecycle.cleanup.status, "clean");
+});
+
+test("missing current-run reports block an otherwise successful verifier", (t) => {
+  const result = runVerifier(t, ["full"], {
+    FAKE_BROWSER_CONTAINER: "1",
+    FAKE_DOCKER_OMIT_REPORT: "1",
+  });
+  assert.equal(result.status, 74, result.stderr);
+  assert.equal(result.lifecycle.original_exit_status, 0);
+  assert.equal(result.lifecycle.artifact_copy_status, "failed");
+  assert.match(result.stderr, /missing required browser evidence: phase105-playwright.json/i);
 });
 
 test("Compose down failure makes an otherwise successful verification fail", (t) => {
