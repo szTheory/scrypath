@@ -1,7 +1,7 @@
 ---
 phase: 182-reliable-full-browser-verification-and-ci-caches
-verified: "2026-10-27T23:44:31Z"
-status: human_needed
+verified: "2026-10-27T23:58:21Z"
+status: passed
 score: "35/35 must-have truths verified"
 covered_files:
   - .dockerignore
@@ -55,9 +55,16 @@ covered_files:
   - scripts/ci/phase182_acceptance.cjs
   - scripts/ci/phase182_acceptance.test.cjs
   - test/mix/tasks/workflow_wiring_test.exs
-covered_digest: "v3:sha256:22556519726993a1ffcfd7a38a4ac56c5d1b012145a433a14810bc4600320ab0"
+covered_digest: "v3:sha256:0d5f7943256f12d916444c596fbf4af9dc601c04e88df9dac45cbbbde462b10f"
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: human_needed
+  previous_score: 35/35
+  gaps_closed:
+    - "Plan 08 test-tier prohibition against fabricated independent-reviewer claims lacked wired execution enforcement."
+  gaps_remaining: []
+  regressions: []
 decision_coverage:
   honored: 18
   total: 18
@@ -73,20 +80,17 @@ prohibitions:
     evidence: "ecommerce_evidence.test.cjs and phase182_acceptance.test.cjs reject these states; current receipts have exact source joins, zero skips/retries and raw success."
   - statement: "MUST NOT activate a paid visual judge or fabricate independent reviewer approval to certify this infrastructure phase."
     verification: test
-    status: unverified
-    evidence: "Tests prove the judge is inactive and the evidence schema marks it not-required. No wired executable check covers the independent-reviewer-claim clause; the authored evidence says no independent approval was made."
-human_verification:
-  - test: "Resolve the remaining test-tier prohibition: decide whether a wired assertion is required to prevent an independent reviewer-approval claim for this infrastructure phase."
-    expected: "Either add and run a deterministic check for that claim boundary, or explicitly accept this prohibition as not independently test-enforced; the existing artifacts make no independent-approval claim."
-    why_human: "The test-tier prohibition is explicitly retained as flagged-unverified in 182-SOURCE-AUDIT.md, and no executable test asserts its independent-reviewer-claim clause. That process decision cannot be inferred from the current browser/cache success receipts."
+    status: verified
+    evidence: "ecommerce_evidence.test.cjs proves the writer excludes injected approval metadata, the API/CLI reject aggregate injection with receipt_mismatch, and the API/CLI reject summary injection with summary_mismatch; workflow tests keep the paid judge inactive."
+human_verification: []
 ---
 
 # Phase 182: Reliable full browser verification and CI caches — Verification Report
 
 **Phase Goal:** Contributors can run every intended mounted/standalone browser scenario through the canonical full verifier, with a successful bounded hosted run and safe cache reuse.
-**Verified:** 2026-10-27T23:44:31Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Verified:** 2026-10-27T23:58:21Z
+**Status:** passed
+**Re-verification:** Yes — after closure of the flagged prohibition coverage gap
 
 ## Goal Achievement
 
@@ -132,7 +136,7 @@ Roadmap success criteria are retained as the first five truths. Plan-specific tr
 | 34 | Exact-source hosted full run executes every intended case under 1800 seconds with raw success, complete artifacts and owned cleanup. | ✓ VERIFIED | E1/E2: two distinct hosted invocations at `1c726370…`, each 189/189, 817–887s, no skips/retries/flakes, complete artifacts and clean disposal. |
 | 35 | Acceptance uses no retry/skip masking, assertion weakening, baseline rewrite, judge, UI redesign, preview mutation or required-lane change. | ✓ VERIFIED | Corrected assertion is executable/current; history remains intact; guard/workflow tests and E1–E5 prove the stated boundaries. |
 
-**Score:** 35/35 truths verified; 0 behavior-unverified truths. One separate test-tier prohibition remains flagged below, so the overall status is `human_needed`.
+**Score:** 35/35 truths verified; 0 behavior-unverified truths. All five roadmap requirements and all three test-tier prohibitions are verified.
 
 ### Required Artifacts
 
@@ -168,7 +172,7 @@ All PLAN-declared artifacts pass `verify.artifacts`: 37/37 declarations across e
 | `182-CACHE-ACCEPTANCE.md` | Five-mode Docker/BEAM receipts | ✓ VERIFIED | Historical source/session and eligibility distinctions retained. |
 | `182-REVIEW-DISPOSITION.md`, `182-REVIEW-REPAIR.md`, `182-REVIEW.md` | Review disposition and repair proof | ✓ VERIFIED | Current blockers fixed; WR-03 retained as deferred warning. |
 | `182-VALIDATION.md`, `182-SECURITY.md`, `182-UI-REVIEW.md` | Phase validation, security and applicability | ✓ VERIFIED | Nyquist 16/16; L1 threats 20/20 closed; UI applicability N/A. |
-| `182-CONTEXT.md`, `182-RESEARCH.md`, `182-SOURCE-AUDIT.md` | Scope and evidence lineage | ✓ VERIFIED | Decision coverage 18/18; unresolved descriptor-less prohibitions remain visible. |
+| `182-CONTEXT.md`, `182-RESEARCH.md`, `182-SOURCE-AUDIT.md` | Scope and evidence lineage | ✓ VERIFIED | Decision coverage 18/18; planning-time descriptor-less projection remains documented, followed by execution evidence for its enforcement. |
 
 ### Key Link Verification
 
@@ -204,10 +208,11 @@ Plan key links are string-form, so the CLI parser returned zero structured links
 | Current local full browser run | `phase105-evidence.json` at `/private/tmp/scrypath-phase182-acceptance/1c72637038f2c225d56e2311678b05f912b014f3/local-full` | 189 first attempts, clean local-checkout proof; not presented as hosted evidence. Thirteen targeted cases pass; corrected backend assertion matches current decoder. | ✓ PASS |
 | Current-source Docker warm cache | Hosted receipt for run 40597095307 | Actual Buildx imports/useful hits/exports for browser, standalone_ops and web targets; source/image joined; all three targets report cache import/export. | ✓ PASS |
 | Changed-lock and cold BEAM behavior | Run receipts 40586263728 and 40588198343 in cache acceptance | Lock change produces distinct natural resolved key; `deps.get`, compile and verify succeed. Cold run restores no cache and succeeds. | ✓ PASS |
-| Fresh merged-root checks | `/private/tmp/scrypath-phase182-execution/final-root-*.log` | 115 Node tests; 961 Elixir tests + 5 properties; 98 repository contracts; formatting, actionlint and docs checks passed. | ✓ PASS |
+| Fresh merged-root checks | `/private/tmp/scrypath-phase182-execution/prohibition-coverage-six-suites.log` and prior `/private/tmp/scrypath-phase182-execution/final-root-*.log` | Current required six-suite Node path: 118/118 passed, including the added tests; prior Elixir 961 tests + 5 properties, 98 repository contracts, formatting, actionlint and docs checks passed. | ✓ PASS |
+| Focused reviewer-claim regressions | `node --test --test-name-pattern='synthetic untrusted reviewer metadata|receipt validation rejects a synthetic independent approval inserted|receipt validation rejects an appended synthetic independent approval' scripts/ci/ecommerce_evidence.test.cjs` | 3/3 passed; the saved focused file log reports 23/23 passed. | ✓ PASS |
 | Child documentation closeout | `/private/tmp/scrypath-phase182-execution/04e9a880-closeout-receipt.json` and `04e9a880-default-proof/result.json` | Run 40600930723 passed the five required jobs, coverage and immutable attestation; separate source `04e9a880…`; default proof is import-only, not counted as warm-cache proof. | ✓ PASS |
 
-The changed browser assertion modifies only `admin_screenshots.spec.ts`; source `1c726370…` is the current browser proof, while the five-mode cache cohort remains bound to `0b7fe128…`. BEAM manifests, locks, and source graph bytes match the old hosted identity and exclude the changed spec. The current warm receipt covers the changed browser image. No mixed-SHA five-mode claim is made. Exact non-planning implementation bytes at this root match source `1c726370…`; the final root closeout remains a separate later action. No public-main merge, Hex release, or blanket resolution of Phase 184 dependency-audit debt is claimed.
+The changed browser assertion modifies only `admin_screenshots.spec.ts`; source `1c726370…` is the current browser proof, while the five-mode cache cohort remains bound to `0b7fe128…`. BEAM manifests, locks, and source graph bytes match the old hosted identity and exclude the changed spec. The current warm receipt covers the changed browser image. The only later non-planning delta is the test-only addition in `scripts/ci/ecommerce_evidence.test.cjs`; runtime code, workflow, browser specs, cache implementation/config, Dockerfiles and BEAM inputs remain unchanged. No mixed-SHA five-mode claim is made. The final root closeout remains a separate later action. No public-main merge, Hex release, or blanket resolution of Phase 184 dependency-audit debt is claimed.
 
 ### Probe Execution
 
@@ -231,24 +236,25 @@ There are no additional REQUIREMENTS.md IDs mapped to Phase 182 and omitted from
 
 ### Test Quality Audit
 
-Requirement-linked test files were present and included in the fresh merged-root test logs. The scan found no unconditional disabled/focused test definitions. `test.skip` calls in follow-up/iteration-3 specs are safety guards used only for rejected targets; the full receipts show they did not fire. The saved-search motion test has a stated cardinality condition, which also did not fire in accepted runs. Test fixtures write independent, hand-constructed inputs; no test generates its expected result by invoking the implementation under test.
+Requirement-linked test files were present and included in the fresh merged-root test logs. The scan found no unconditional disabled/focused test definitions. `test.skip` calls in follow-up/iteration-3 specs are safety guards used only for rejected targets; the full receipts show they did not fire. The saved-search motion test has a stated cardinality condition, which also did not fire in accepted runs. Test fixtures write independent, hand-constructed inputs; no test generates its expected result by invoking the implementation under test. The three added approval-boundary tests use conspicuously synthetic fixture identities and markers, and exercise the existing production writer, receipt validator and CLI.
 
 | Test file(s) | Linked requirements | Active | Skipped in accepted run | Circular | Assertion level | Verdict |
 |---|---|---|---|---|---|---|
 | `ecommerce_lifecycle.test.cjs`, `workflow_wiring_test.exs` | BROW-01 | Yes | 0 | No | Behavioral lifecycle + wiring | ✓ PASS |
 | `ecommerce_target.test.cjs`, `ecommerce_evidence.test.cjs`, targeted Playwright specs | BROW-02 | Yes | 0 | No | Behavioral guard, identity and browser journey | ✓ PASS |
 | `ecommerce_evidence.test.cjs`, `phase182_acceptance.test.cjs`, lifecycle tests | BROW-03 | Yes | 0 | No | Fail-closed assertions + exact hosted behavior | ✓ PASS |
+| `ecommerce_evidence.test.cjs` (23/23 focused; three new cases rerun 3/3) | Prohibition: no fabricated reviewer approval | Yes | 0 | No | Behavioral writer whitelist + API/CLI tamper rejection | ✓ PASS |
 | `ecommerce_build.test.cjs`, `phase182_acceptance.test.cjs` | CACHE-01 | Yes | N/A | No | Policy assertions + real warm/cold receipts | ✓ PASS |
 | `beam_cache.test.cjs`, `phase182_acceptance.test.cjs` | CACHE-02 | Yes | N/A | No | Key invalidation + real fallback/lock/cold receipts | ✓ PASS |
 
-**Disabled tests on requirements:** 0 disabled definitions; conditional safety/data skips did not occur in the accepted full run.  
-**Circular patterns detected:** 0.  
-**Insufficient assertions:** 0 for the five roadmap requirements.  
+**Disabled tests on requirements:** 0 disabled definitions; conditional safety/data skips did not occur in the accepted full run.
+**Circular patterns detected:** 0.
+**Insufficient assertions:** 0 for the five roadmap requirements.
 **Coverage quantity:** 13/13 required follow-up and iteration-3 identities passed once.
 
 ### Prohibition Verification
 
-Two test-tier prohibitions have wired regression enforcement: preview refusal before mutation, and rejection of incomplete/skipped/retried/masked or wrong-source clean-pass claims. The paid judge clause also has tests proving the path and API key are inactive. The remaining independent-reviewer-claim clause is different: plan 08 marks the prohibition `verification: test`, while `182-SOURCE-AUDIT.md` explicitly says its descriptor-less projection remains flagged-unverified. No linked executable check covers that clause. Phase evidence documents correctly state that no independent approval occurred, but those statements do not substitute for the missing test enforcement. This one unresolved item routes to the developer for a decision; it does not negate the five satisfied runtime requirements.
+All three test-tier prohibitions have wired regression enforcement. The preview guard test proves refusal precedes mutation; evidence and acceptance tests reject incomplete, skipped, retried, masked or unrelated-source clean-pass claims. The paid judge remains inactive in workflow tests. The new reviewer-claim regressions close the prior gap at the canonical certification boundary: synthetic approval fields injected into the run manifest and Playwright metadata do not appear in the writer's receipt or summary; injected approval fields in stored receipts are rejected by both the API and CLI as `receipt_mismatch`; appended approval claims in derived Markdown are rejected by both as `summary_mismatch`. The CLI exits 1 in both tampering cases. `buildReceipt` uses an explicit output schema, `validateReceipt` recomputes and compares the canonical aggregate, and summary validation compares against `renderSummary(receipt)`. These tests cover the system's observable canonical-claim boundary; they do not assert that a real human reviewed or approved anything, and no such claim is made.
 
 ### Decision Coverage
 
@@ -265,19 +271,14 @@ Nyquist validation records 16/16 task coverage. The L1 security register reports
 
 ### Human Verification Required
 
-#### 1. Decide the remaining prohibition enforcement gap
-
-**Test:** Review the test-tier prohibition in `182-08-PLAN.md` and decide whether to require a deterministic test that prevents an independent reviewer-approval claim, or accept the current source-bound evidence and explicit no-approval statements without such a test.  
-**Expected:** The prohibition is either made executable and verified, or the developer explicitly resolves the flagged test-tier item; no human approval is inferred or fabricated.  
-**Why human:** The phase’s evidence provides no independent reviewer approval, but the plan/source audit records this prohibition as flagged-unverified and no executable check enforces its reviewer-claim clause.
-
-This is an escalation about a verification-integrity prohibition, not a routine UAT, visual-design review, or request for risk approval. The phase goal truths and all five roadmap requirements are otherwise verified.
+N/A — infrastructure/tooling phase with no user-facing product change. All acceptance criteria, including the previously flagged certification-boundary prohibition, have executable evidence. No UAT, visual-design approval, or human reviewer approval is claimed.
 
 ### Gaps Summary
 
-No functional truth failed; required artifacts, manually traced key links and all five requirement IDs are verified. Overall status is `human_needed` only because the test-tier prohibition against fabricating independent reviewer approval has no wired executable assertion and the phase’s own source audit keeps it flagged-unverified. WR-03 is an advisory deferred rerun limitation, not a blocker or human risk approval. Source-bound browser and cache evidence retain their separate SHA cutoffs as described above.
+No truth failed and no human verification remains. The three plan prohibitions have wired test enforcement, and the previously flagged reviewer-claim gap is closed by synthetic input, aggregate-tampering and summary-tampering regressions. All five requirement IDs are satisfied. WR-03 remains an advisory deferred rerun limitation, not a blocker or human risk approval. Source-bound browser and cache evidence retain their separate SHA cutoffs as described above. A final root exact-HEAD closeout is still planned after tracking writes and will run its required gates against that final HEAD; it is not inferred here.
 
 ---
 
-_Verified: 2026-10-27T23:44:31Z_  
+_Verified: 2026-10-27T23:58:21Z_
+
 _Verifier: the agent (gsd-verifier)_
