@@ -23,6 +23,10 @@ const browserSource = path.join(
   repositoryRoot,
   "examples/scrypath_ecommerce/docker-playwright.sh",
 );
+const composeE2eSource = path.join(
+  repositoryRoot,
+  "examples/scrypath_ecommerce/compose.e2e.yaml",
+);
 
 function tempDirectory(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), "scrypath-e2e-lifecycle-"));
@@ -374,11 +378,32 @@ test("verifier creates a fresh per-run bundle and excludes a previous capture se
   for (const file of ["source.json", "compose-model.json", "stages.json", "artifact-manifest.json", "phase105-inventory.json", "phase105-evidence-input.json", "phase105-evidence.json", "phase105-evidence-summary.md"]) {
     assert.ok(existsSync(path.join(result.artifactDirectory, file)), `owned bundle is missing ${file}`);
   }
+  const manifest = JSON.parse(readFileSync(path.join(result.artifactDirectory, "artifact-manifest.json"), "utf8"));
+  assert.equal(manifest.source, "/tmp/run-unique-18204");
+  assert.deepEqual(manifest.allowlist, [
+    "/tmp/run-unique-18204/phase105-playwright-list.json",
+    "/tmp/run-unique-18204/phase105-playwright.json",
+    "/tmp/run-unique-18204/phase105-evidence.ndjson",
+    "/tmp/run-unique-18204/playwright-report/",
+    "/tmp/run-unique-18204/test-results/",
+    "/tmp/run-unique-18204/ui-review-artifacts/iteration3-journeys/",
+  ]);
+  assert.ok(Array.isArray(manifest.copied_files));
   const downIndex = result.calls.findIndex((call) => call.includes("down"));
   const aggregateIndex = result.calls.findIndex((call) => call[0] === "run");
   assert.ok(aggregateIndex > downIndex, "strict evidence aggregation must happen after owned Compose cleanup");
   assert.equal(existsSync(path.join(result.artifactDirectory, "stale-sentinel.txt")), false);
   assert.equal(existsSync(path.join(path.dirname(result.artifactDirectory), "previous-run", "stale-sentinel.txt")), true);
+});
+
+test("Compose browser evidence directory ends with the exact run ID", () => {
+  const verifier = readFileSync(verifierSource, "utf8");
+  const compose = readFileSync(composeE2eSource, "utf8");
+  const browser = readFileSync(browserSource, "utf8");
+
+  assert.match(verifier, /export E2E_CONTAINER_ARTIFACT_DIR="\/tmp\/\$run_id"/);
+  assert.match(compose, /E2E_ARTIFACT_DIR: \$\{E2E_CONTAINER_ARTIFACT_DIR:-\/tmp\/\$\{E2E_RUN_ID/);
+  assert.match(browser, /artifact_dir="\$\{E2E_ARTIFACT_DIR:-\/tmp\/\$\{run_id\}\}"/);
 });
 
 test("full readiness fails when either Ops fixture route stays unavailable", (t) => {

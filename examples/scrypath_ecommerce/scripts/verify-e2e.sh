@@ -163,7 +163,7 @@ export E2E_SCOPE="$scope"
 export SCRYPATH_SOURCE_SHA="$(git rev-parse HEAD)"
 export PLAYWRIGHT_VERSION="${PLAYWRIGHT_VERSION:-1.60.0}"
 export E2E_RUN_ID="$run_id"
-export E2E_CONTAINER_ARTIFACT_DIR="/tmp/scrypath-e2e-$run_id"
+export E2E_CONTAINER_ARTIFACT_DIR="/tmp/$run_id"
 export E2E_JOB_STARTED_AT="$job_started_at"
 export E2E_DEADLINE_EPOCH="$deadline_epoch"
 export E2E_FINALIZATION_MARGIN_SECONDS="$finalization_margin"
@@ -345,7 +345,7 @@ write_run_metadata() {
   printf '{"run_id":"%s","source":"%s","copy_status":"%s","diagnostic_only":%s,"acceptance_eligible":false,"allowlist":["%s/phase105-playwright-list.json","%s/phase105-playwright.json","%s/phase105-evidence.ndjson","%s/playwright-report/","%s/test-results/","%s/ui-review-artifacts/iteration3-journeys/"],"copied_files":[%s]}\n' \
     "$run_id" "$E2E_CONTAINER_ARTIFACT_DIR" "$([[ "$artifact_copy_status" == 0 ]] && printf success || printf failed)" "$([[ "$mode" == "--readiness-only" ]] && printf true || printf false)" \
     "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" \
-    "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$copied_files" >"$artifact_dir/artifact-manifest.json"
+    "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$copied_files" >"$artifact_dir/artifact-manifest.json"
 }
 
 aggregate_full_evidence() {
@@ -395,7 +395,7 @@ const walk = (directory, prefix = "") => {
 const allowed = (name) => name.startsWith("test-results/") || name.startsWith("playwright-report/") || name.startsWith("ui-review-artifacts/iteration3-journeys/") || name.startsWith("logs/") || name.startsWith("compose/");
 const copiedFiles = walk(root).filter(allowed);
 const artifacts = copiedFiles.map((name) => ({ path: name, required: false, copied: true, copy_status: "success" }));
-fs.writeFileSync(path.join(root, "artifact-manifest.json"), `${JSON.stringify({run_id:process.env.E2E_RUN_ID,copied_from:`/tmp/scrypath-e2e-${process.env.E2E_RUN_ID}`,copy_status:Number(process.env.E2E_ARTIFACT_COPY_EXIT_CODE||1)===0?"success":"failed",allowlist:["phase105-playwright-list.json","phase105-playwright.json","phase105-evidence.ndjson","playwright-report/","test-results/","ui-review-artifacts/iteration3-journeys/"],copied_files:copiedFiles}, null, 2)}\n`);
+fs.writeFileSync(path.join(root, "artifact-manifest.json"), `${JSON.stringify({run_id:process.env.E2E_RUN_ID,copied_from:`/tmp/${process.env.E2E_RUN_ID}`,copy_status:Number(process.env.E2E_ARTIFACT_COPY_EXIT_CODE||1)===0?"success":"failed",allowlist:["phase105-playwright-list.json","phase105-playwright.json","phase105-evidence.ndjson","playwright-report/","test-results/","ui-review-artifacts/iteration3-journeys/"],copied_files:copiedFiles}, null, 2)}\n`);
 const status = (name) => maybeRead(name)?.status || "missing";
 const failed = Object.entries(stages).filter(([, stage]) => Number.isInteger(stage?.exit_code) && stage.exit_code !== 0).sort((a,b) => Date.parse(a[1].started_at||"")-Date.parse(b[1].started_at||""))[0];
 const dirty = process.env.E2E_SOURCE_DIRTY === "true";
