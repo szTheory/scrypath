@@ -142,6 +142,7 @@ function browserProof(overrides = {}) {
       case_count: 8,
       attempts_total: 8,
       event: "workflow_dispatch",
+      workflow: { ref: `refs/heads/${BRANCH}` },
       source: { mode: "hosted", dirty: false, checkout_head: SHA, built_source_sha: SHA, event_sha: SHA },
       images: {
         application: { built_id: `sha256:${"1".repeat(64)}`, runtime_id: `sha256:${"1".repeat(64)}`, source_sha: SHA },
@@ -262,6 +263,12 @@ function cacheProof(mode, overrides = {}) {
     ...overrides,
   };
 }
+
+test("validateBrowserAcceptance rejects a workflow ref from another branch", () => {
+  const proof = browserProof();
+  proof.aggregate.workflow.ref = "refs/heads/stale-candidate";
+  assert.throws(() => validateBrowserAcceptance(proof), /workflow ref/);
+});
 
 test("validateBrowserAcceptance accepts one exact-source, eligible aggregate with raw success", () => {
   assert.equal(validateBrowserAcceptance(browserProof()), true);
@@ -964,6 +971,7 @@ function validBrowserReceipt(_runDirectory, context) {
 function authorityAggregate(run) {
   return {
     schema_version: 1,
+    workflow: { ref: `refs/heads/${run.branch}` },
     source: { mode: "hosted", dirty: false, checkout_head: SHA, built_source_sha: SHA, event_sha: SHA },
     images: {
       application: { built_id: `sha256:${"1".repeat(64)}`, runtime_id: `sha256:${"1".repeat(64)}`, source_sha: SHA },
