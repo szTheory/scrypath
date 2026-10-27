@@ -100,6 +100,7 @@ function normalizeRepoFile(value, repoRoot = process.cwd()) {
     }
   }
 
+  if (/^[^/]+\.spec\.ts$/.test(relative)) relative = `e2e/${relative}`;
   if (relative.startsWith("e2e/")) relative = `examples/scrypath_ecommerce/${relative}`;
   if (relative === "." || relative === "") throw new TypeError("file must identify a source file");
   return relative;
@@ -247,12 +248,76 @@ function addDuplicateReasons(cases, kind, reasons) {
   }
 }
 
+// Required scenario identities are an explicit verification contract. Additions are
+// allowed; removing or renaming an intended case requires a reviewed contract change.
+const REQUIRED_UI_CASES = [
+  [
+    "ui_followup.spec.ts",
+    "active, backend-failed, retrying and completed observations have distinct useful states"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "generic fields remain readable across compact themes without guessing data types"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "mounted: copy feedback leaves timestamp and refresh geometry unchanged"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "multi-schema result limit applies to the combined response and help is local"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "readable results retain submitted criteria, copy exact data and lead to the saved file"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "standalone: copy feedback leaves timestamp and refresh geometry unchanged"
+  ],
+  [
+    "ui_followup.spec.ts",
+    "task help stays within the installed mount and explains saved inputs"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "combined results are one compact backend-ordered list with real page traversal and complete copyable source data"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "contextual help opens at a visible heading in a new tab and preserves the task"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "health stages align, icons are consistent, refresh is singular and settings explain missing filters"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "limits validate on blur, correct inline and preserve the previous run on invalid submission"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "one purposeful zero-match state and no duplicate per-schema empty cards"
+  ],
+  [
+    "ui_iteration3.spec.ts",
+    "Save sits by Run, validates the name and offers Save and Save as after edits"
+  ]
+];
+
 function mandatoryInventoryReasons(cases) {
   const reasons = [];
   const requiredFiles = ["ui_followup.spec.ts", "ui_iteration3.spec.ts", "phase173_shell.spec.ts"];
   for (const basename of requiredFiles) {
     if (!cases.some((item) => path.posix.basename(item.identity.file) === basename)) {
       reasons.push(errorReason("missing_required_suite", `Full inventory is missing ${basename}`));
+    }
+  }
+  const actualKeys = new Set(cases.map((item) => item.identity.key));
+  for (const [file, title] of REQUIRED_UI_CASES) {
+    const expected = caseIdentity({ file: `e2e/${file}`, project: "chromium", title_path: [file, title] });
+    if (!actualKeys.has(expected.key)) {
+      reasons.push(errorReason("missing_required_case", `Full inventory is missing intended case: ${title}`, expected.key));
     }
   }
   const phase173 = cases.filter((item) => path.posix.basename(item.identity.file) === "phase173_shell.spec.ts");

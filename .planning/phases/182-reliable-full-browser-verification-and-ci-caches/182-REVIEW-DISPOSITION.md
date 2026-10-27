@@ -5,21 +5,21 @@ titles: json
 findings:
   - id: CR-01
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "IPv6 loopback bypasses retained-preview refusal — BLOCKER"
   - id: CR-02
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Lock-change proof passes on a forced cache miss — BLOCKER"
   - id: CR-03
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Mandatory inventory accepts one case from each required suite — BLOCKER"
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Fixture route readiness treats redirects as success — WARNING"
-open: 4
+open: 0
 total: 4
 recorded: 2026-10-27T19:59:50.281Z
 ---
@@ -28,10 +28,10 @@ recorded: 2026-10-27T19:59:50.281Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | open | - |
-| CR-02 | critical | open | - |
-| CR-03 | critical | open | - |
-| WR-01 | warning | open | - |
+| CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression |
+| CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression |
+| CR-03 | critical | fixed | edd47eee; executable RED/GREEN regression |
+| WR-01 | warning | fixed | 2f615705; executable RED/GREEN regression |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.

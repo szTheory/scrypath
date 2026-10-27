@@ -294,7 +294,7 @@ function beamPlanForProbe(plan, { mode = "normal", namespace = "", runId, attemp
   result.resolved_restore_prefix = `${plan.resolved_restore_prefix}${namespaceSuffix}`;
   result.downloads_key = `${result.downloads_restore_prefix}${plan.identity.locks_digest}`;
   result.resolved_key = `${result.resolved_restore_prefix}${plan.identity.source_digest}`;
-  if (validatedMode === "beam-fallback" || validatedMode === "beam-lock-change") {
+  if (validatedMode === "beam-fallback") {
     const unique = `phase182-${identity.runId}-${identity.attempt}`;
     result.downloads_key = `${result.downloads_key}-${unique}`;
     result.resolved_key = `${result.resolved_key}-${unique}`;
@@ -439,6 +439,44 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
   return proof;
 }
 
+// Root probes have one lock. Preserve the same path/NUL/byte framing used by
+// beamCache.hashPaths; the producer also checks this against the on-disk planner.
+function rootLockIdentity(identity, bytes) {
+  const canonical = beamCache.cacheIdentity(identity);
+  if (canonical.graph !== "root") throw new Error("canonical lock proof requires the root graph");
+  return { ...canonical, locks_digest: crypto.createHash("sha256").update("mix.lock\0").update(bytes).update("\0").digest("hex") };
+}
+
+function lockBytes(encoded) {
+  if (typeof encoded !== "string" || encoded.length > 2 * 1024 * 1024) throw new Error("canonical lock bytes are missing or oversized");
+  const bytes = Buffer.from(encoded, "base64");
+  if (bytes.toString("base64") !== encoded) throw new Error("canonical lock bytes are not valid base64");
+  return bytes;
+}
+
+function lockCommentSuffix(before, runId, attempt) {
+  return Buffer.from(`${before.length && before.at(-1) !== 10 ? "\n" : ""}# phase182 lock probe run ${runId} attempt ${attempt}\n`);
+}
+
+function validateLockIdentityProof(proof) {
+  const lock = proof.lock_probe;
+  const before = lockBytes(lock?.before_bytes_base64);
+  const after = lockBytes(lock?.after_bytes_base64);
+  const baseline = rootLockIdentity(proof.cache.identity, before);
+  const changed = rootLockIdentity(proof.cache.identity, after);
+  const options = { mode: "normal", namespace: proof.session.probe_namespace || "", runId: proof.run.id, attempt: proof.run.attempt };
+  const baselinePlan = beamPlanForProbe(beamCache.cachePlan(baseline), options);
+  const changedPlan = beamPlanForProbe(beamCache.cachePlan(changed), options);
+  if (!after.equals(Buffer.concat([before, lockCommentSuffix(before, proof.run.id, proof.run.attempt)])) ||
+      sha256(before) !== proof.cache.resolved_lock_before || sha256(after) !== proof.cache.resolved_lock_after ||
+      canonicalJson(lock.baseline_identity) !== canonicalJson(baseline) || canonicalJson(lock.changed_identity) !== canonicalJson(changed) ||
+      canonicalJson(proof.cache.identity) !== canonicalJson(changed) || baseline.locks_digest === changed.locks_digest ||
+      lock.baseline_resolved_key !== baselinePlan.resolved_key || lock.changed_resolved_key !== changedPlan.resolved_key ||
+      proof.cache.resolved_key !== changedPlan.resolved_key || baselinePlan.resolved_key === changedPlan.resolved_key) {
+    throw new Error("canonical lock bytes, before/after cache identities and natural changed-lock keys must agree");
+  }
+}
+
 function writeBeamProbeProof({ planPath, outputPath, lockManifestPath = "", env = process.env } = {}) {
   const mode = validateDispatchCacheMode(env.PHASE182_CACHE_MODE);
   if (!mode.startsWith("beam-")) throw new Error("BEAM cache proof is only valid for a BEAM probe dispatch");
@@ -454,11 +492,28 @@ function writeBeamProbeProof({ planPath, outputPath, lockManifestPath = "", env 
   const sourceLock = lockManifest ? fs.readFileSync(path.join(lockManifest.source_root, "mix.lock")) : null;
   const changedLock = lockManifest ? fs.readFileSync(path.join(lockManifest.workdir, "mix.lock")) : null;
   const expectedChangedLock = lockManifest ? Buffer.concat([sourceLock, Buffer.from(lockManifest.suffix)]) : null;
-  const lockProbe = lockManifest ? {
-    owned_copy: lockManifest.owned_copy === true,
-    source_lock_unchanged: sha256(sourceLock) === lockManifest.lock_before,
-    versions_unchanged: changedLock.equals(expectedChangedLock) && sha256(changedLock) === lockManifest.lock_after,
-  } : undefined;
+  let lockProbe;
+  if (lockManifest) {
+    const baselineIdentity = rootLockIdentity(plan.identity, sourceLock);
+    const changedIdentity = rootLockIdentity(plan.identity, changedLock);
+    if (canonicalJson(plan.identity) !== canonicalJson(changedIdentity) ||
+        beamCache.hashPaths(lockManifest.source_root, ["mix.lock"]) !== baselineIdentity.locks_digest ||
+        beamCache.hashPaths(lockManifest.workdir, ["mix.lock"]) !== changedIdentity.locks_digest) {
+      throw new Error("canonical lock cache plan does not match the actual changed checkout");
+    }
+    const options = { mode: "normal", namespace: plan.probe?.namespace || "", runId: identity.runId, attempt: identity.attempt };
+    const baselinePlan = beamPlanForProbe(beamCache.cachePlan(baselineIdentity), options);
+    const changedPlan = beamPlanForProbe(beamCache.cachePlan(changedIdentity), options);
+    if (plan.resolved_key !== changedPlan.resolved_key) throw new Error("canonical lock probe must use the natural changed-lock key");
+    lockProbe = {
+      owned_copy: lockManifest.owned_copy === true,
+      source_lock_unchanged: sha256(sourceLock) === lockManifest.lock_before,
+      versions_unchanged: changedLock.equals(expectedChangedLock) && sha256(changedLock) === lockManifest.lock_after,
+      before_bytes_base64: sourceLock.toString("base64"), after_bytes_base64: changedLock.toString("base64"),
+      baseline_identity: baselineIdentity, changed_identity: changedIdentity,
+      baseline_resolved_key: baselinePlan.resolved_key, changed_resolved_key: changedPlan.resolved_key,
+    };
+  }
   const cache = {
     kind: "beam",
     identity: plan.identity,
@@ -1182,7 +1237,7 @@ function validateCacheAcceptance(proof) {
     } else if (mode === "beam-lock-change") {
       const lockProbe = proof.lock_probe;
       if (cache.imports_enabled !== true || cache.downloads_restored !== true || cache.downloads_hit === true || cache.resolved_primary_hit !== false || cache.fallback !== true ||
-          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || cache.resolved_restore_prefix !== "" ||
+          !cache.downloads_key || !cache.resolved_key || !cache.downloads_restore_prefix || !cache.resolved_restore_prefix ||
           !cache.downloads_restore_key?.startsWith(cache.downloads_restore_prefix) || cache.downloads_restore_key === cache.downloads_key ||
           cache.resolved_restore_key || !has(new RegExp(`Cache restored from key: ${escapeRegExp(cache.downloads_restore_key)}`)) ||
           !has(new RegExp(`Cache not found for input keys: ${escapeRegExp(cache.resolved_key)}`)) ||
@@ -1191,6 +1246,7 @@ function validateCacheAcceptance(proof) {
           lockProbe.source_lock_unchanged !== true || lockProbe.versions_unchanged !== true) {
         throw new Error("beam-lock-change requires a byte-changed lock miss with a compatible download fallback");
       }
+      validateLockIdentityProof(proof);
     }
   }
   return true;

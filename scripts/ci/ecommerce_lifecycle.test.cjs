@@ -220,6 +220,7 @@ const args = process.argv.slice(2);
 const url = args.at(-1) || "";
 fs.appendFileSync(process.env.FAKE_CURL_LOG, url + "\\n");
 if (process.env.FAKE_CURL_FAIL_URL === url) process.exit(22);
+if (args.includes("--write-out")) process.stdout.write(process.env.FAKE_CURL_REDIRECT_URL === url ? "302" : "200");
 `,
   );
   writeFileSync(
@@ -576,4 +577,13 @@ test("KEEP_E2E_STACK preserves the owned project and is reported as not clean", 
   assert.equal(result.lifecycle.cleanup.containers, 1);
   assert.equal(result.lifecycle.cleanup.networks, 1);
   assert.equal(result.lifecycle.cleanup.volumes, 1);
+});
+
+
+test("redirecting Ops fixture routes cannot satisfy full readiness", (t) => {
+  for (const url of ["http://web:4002/admin/search/phase173/health", "http://standalone_ops:4003/ops/phase173/health"]) {
+    const result = runBrowser(t, { FAKE_CURL_REDIRECT_URL: url, E2E_READINESS_TIMEOUT_SECONDS: "1" });
+    assert.notEqual(result.status, 0, url);
+    assert.equal(result.browserInvocations, "", "a redirect must not reach the browser");
+  }
 });

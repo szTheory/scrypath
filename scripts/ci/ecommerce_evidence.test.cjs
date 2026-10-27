@@ -14,36 +14,20 @@ try {
   if (error.code !== "MODULE_NOT_FOUND") throw error;
 }
 
-function testCase({ file = "e2e/example.spec.ts", project = "chromium", title, expectedStatus = "passed" }) {
-  return { file, project, title, expectedStatus };
+function testCase({ file = "e2e/example.spec.ts", project = "chromium", title, expectedStatus = "passed", suiteTitle }) {
+  return { file, project, title, expectedStatus, suiteTitle };
 }
 
 function playwrightReport(cases, { results = false, errors = [] } = {}) {
   return {
-    config: { rootDir: "." },
-    errors,
-    suites: [
-      {
-        title: "e2e",
-        suites: [],
-        specs: cases.map((item) => ({
-          title: item.title,
-          file: item.file,
-          tests: [
-            {
-              projectName: item.project,
-              expectedStatus: item.expectedStatus,
-              ...(results
-                ? {
-                    status: item.status || "passed",
-                    results: item.results || [{ retry: 0, status: item.status || "passed", duration: 1 }]
-                  }
-                : {})
-            }
-          ]
-        }))
-      }
-    ]
+    config: { rootDir: "." }, errors,
+    suites: cases.map((item) => ({
+      title: item.suiteTitle || "e2e", suites: [],
+      specs: [{ title: item.title, file: item.file, tests: [{
+        projectName: item.project, expectedStatus: item.expectedStatus,
+        ...(results ? { status: item.status || "passed", results: item.results || [{ retry: 0, status: item.status || "passed", duration: 1 }] } : {})
+      }] }]
+    }))
   };
 }
 
@@ -228,11 +212,21 @@ function tokenContrastReport({ aaFails = 0, advisories = 1, passes = 0 } = {}) {
 
 function completeReceiptCases() {
   return [
-    testCase({ file: "e2e/ui_followup.spec.ts", title: "mounted: copy feedback keeps geometry stable" }),
-    testCase({ file: "e2e/ui_followup.spec.ts", title: "standalone: copy feedback keeps geometry stable" }),
-    testCase({ file: "e2e/ui_iteration3.spec.ts", title: "save sits by run and validates the name" }),
-    testCase({ file: "e2e/phase173_shell.spec.ts", title: "mounted shell renders light preference" }),
-    testCase({ file: "e2e/phase173_shell.spec.ts", title: "standalone shell renders light preference" })
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "active, backend-failed, retrying and completed observations have distinct useful states" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "generic fields remain readable across compact themes without guessing data types" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "mounted: copy feedback leaves timestamp and refresh geometry unchanged" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "multi-schema result limit applies to the combined response and help is local" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "readable results retain submitted criteria, copy exact data and lead to the saved file" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "standalone: copy feedback leaves timestamp and refresh geometry unchanged" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", suiteTitle: "ui_followup.spec.ts", title: "task help stays within the installed mount and explains saved inputs" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "combined results are one compact backend-ordered list with real page traversal and complete copyable source data" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "contextual help opens at a visible heading in a new tab and preserves the task" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "health stages align, icons are consistent, refresh is singular and settings explain missing filters" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "limits validate on blur, correct inline and preserve the previous run on invalid submission" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "one purposeful zero-match state and no duplicate per-schema empty cards" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "Save sits by Run, validates the name and offers Save and Save as after edits" }),
+    testCase({ file: "e2e/phase173_shell.spec.ts", suiteTitle: "phase173_shell.spec.ts", title: "mounted shell renders light preference" }),
+    testCase({ file: "e2e/phase173_shell.spec.ts", suiteTitle: "phase173_shell.spec.ts", title: "standalone shell renders light preference" })
   ];
 }
 
@@ -323,7 +317,7 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
     assert.equal(receipt?.eligibility.eligible, true);
     assert.equal(receipt?.eligibility.clean, true);
     assert.equal(receipt?.eligibility.class, "hosted-exact-sha");
-    assert.equal(receipt?.cases.length, 5);
+    assert.equal(receipt?.cases.length, 15);
     assert.equal(receipt?.visual_judge_status, "not-required");
     assert.equal(receipt?.workflow.sha, receipt?.source.event_sha);
     assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
@@ -584,5 +578,20 @@ test("artifact selection matches the hosted uploader hidden-file policy", () => 
     assert.ok(receipt?.reasons.some((reason) => reason.code === "unsafe_artifact_path"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+
+test("full inventory requires every intended UI identity even when reports omit the same case", () => {
+  const cases = completeReceiptCases();
+  const verify = (items) => evidence.reconcileInventory({ inventory: playwrightReport(items), report: playwrightReport(items, { results: true }), requireMandatoryCases: true });
+  assert.equal(verify(cases).eligible, true);
+  for (const expected of cases.filter((item) => /ui_(followup|iteration3)/.test(item.file))) {
+    const reduced = cases.filter((item) => item !== expected);
+    const result = verify(reduced);
+    assert.equal(result.eligible, false, expected.title);
+    assert.ok(result.reasons.some((r) => r.code === "missing_required_case"), expected.title);
+    const renamed = cases.map((item) => item === expected ? { ...item, title: item.title + " removed" } : item);
+    assert.equal(verify(renamed).eligible, false, "a replacement title cannot fill the required identity");
   }
 });

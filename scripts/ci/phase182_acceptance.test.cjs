@@ -27,7 +27,7 @@ const {
 } = require("./phase182_acceptance.cjs");
 const { applyCacheProbeToBake, cacheProbeFor } = require("./ecommerce_build.cjs");
 
-const { cachePlan } = require("./beam_cache.cjs");
+const { cachePlan, hashPaths } = require("./beam_cache.cjs");
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 const OTHER_SHA = "fedcba9876543210fedcba9876543210fedcba98";
@@ -162,9 +162,15 @@ function cacheProof(mode, overrides = {}) {
   const run = overrides.run || exactRun();
   const namespace = overrides.session?.probe_namespace || "";
   const runtime = { runner_image: "ubuntu24/20261019.1.0", elixir: "1.19.0", otp: "Erlang/OTP 28.1", os: "Linux", arch: "X64", mix_env: "test", mix_target: "host", profile: "root-test" };
-  const plan = beamPlanForProbe(cachePlan({ ...runtime, graph: "root", manifests_digest: "a".repeat(64), locks_digest: "d".repeat(64), source_digest: "f".repeat(64) }), {
+  const beforeBytes = Buffer.from("%{}\n");
+  const afterBytes = Buffer.concat([beforeBytes, Buffer.from(`# phase182 lock probe run ${run.id} attempt ${run.attempt}\n`)]);
+  const lockDigest = (bytes) => crypto.createHash("sha256").update("mix.lock\0").update(bytes).update("\0").digest("hex");
+  const baselineIdentity = cachePlan({ ...runtime, graph: "root", manifests_digest: "a".repeat(64), locks_digest: lockDigest(beforeBytes), source_digest: "f".repeat(64) }).identity;
+  const changedIdentity = { ...baselineIdentity, locks_digest: lockDigest(afterBytes) };
+  const plan = beamPlanForProbe(cachePlan(mode === "beam-lock-change" ? changedIdentity : { ...baselineIdentity, locks_digest: "d".repeat(64) }), {
     mode: isDocker ? "normal" : mode, namespace, runId: run.id, attempt: run.attempt,
   });
+  const baselinePlan = beamPlanForProbe(cachePlan(baselineIdentity), { mode: "normal", namespace, runId: run.id, attempt: run.attempt });
   const downloadsKey = plan.downloads_key;
   const downloadsRestoreKey = mode === "beam-cold" ? null : `${plan.downloads_restore_prefix}${"c".repeat(64)}`;
   const resolvedKey = plan.resolved_key;
@@ -248,8 +254,6 @@ function cacheProof(mode, overrides = {}) {
       hit: !cold,
       miss_reason: cold ? "cache import disabled" : null,
       fallback: mode === "beam-fallback" || mode === "beam-lock-change",
-      resolved_lock_before: mode === "beam-lock-change" ? "d".repeat(64) : "d".repeat(64),
-      resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
       runtime,
       identity: plan.identity,
       downloads_hit: false,
@@ -262,14 +266,19 @@ function cacheProof(mode, overrides = {}) {
       downloads_restore_key: downloadsRestoreKey,
       resolved_restore_prefix: plan.resolved_restore_prefix,
       resolved_restore_key: null,
-      resolved_lock_before: "d".repeat(64),
-      resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
+      resolved_lock_before: mode === "beam-lock-change" ? crypto.createHash("sha256").update(beforeBytes).digest("hex") : "d".repeat(64),
+      resolved_lock_after: mode === "beam-lock-change" ? crypto.createHash("sha256").update(afterBytes).digest("hex") : "d".repeat(64),
       log_text: logText,
     },
     runner: { fresh: true, id: "GitHub Actions 12345/1", created_for_run_id: run.id, created_for_attempt: run.attempt },
     normal_command_outcome: "success",
     commands: { deps_get: "success", compile: "success", verify: "success", primary_verification: "success" },
-    ...(mode === "beam-lock-change" ? { lock_probe: { owned_copy: true, source_lock_unchanged: true, versions_unchanged: true } } : {}),
+    ...(mode === "beam-lock-change" ? { lock_probe: {
+      owned_copy: true, source_lock_unchanged: true, versions_unchanged: true,
+      before_bytes_base64: beforeBytes.toString("base64"), after_bytes_base64: afterBytes.toString("base64"),
+      baseline_identity: baselineIdentity, changed_identity: changedIdentity,
+      baseline_resolved_key: baselinePlan.resolved_key, changed_resolved_key: plan.resolved_key,
+    } } : {}),
     job_conclusion: "success",
     ...overrides,
   };
@@ -813,18 +822,12 @@ test("lock-change probe commits only a comment-only change in its temporary chec
   assert.equal(fs.readFileSync(path.join(result.workdir, "mix.lock"), "utf8"), `${sourceBytes.toString()}# phase182 lock probe run 123 attempt 2\n`);
   const planPath = path.join(root, "beam-plan.json");
   const proofPath = path.join(root, "beam-proof.json");
-  fs.writeFileSync(planPath, JSON.stringify({ identity: {
-    locks_digest: result.manifest.lock_after,
-    source_digest: "e".repeat(64),
-    runner_image: "ubuntu24/20261019.1.0",
-    os: "Linux",
-    arch: "X64",
-    elixir: "1.19.0",
-    otp: "Erlang/OTP 28.1",
-    mix_env: "test",
-    mix_target: "host",
-    profile: "root-test",
-  }, downloads_key: "downloads-primary", downloads_restore_prefix: "downloads-", resolved_key: "resolved-primary", resolved_restore_prefix: "" }));
+  const probePlan = beamPlanForProbe(cachePlan({
+    graph: "root", manifests_digest: "a".repeat(64),
+    locks_digest: hashPaths(result.workdir, ["mix.lock"]), source_digest: "e".repeat(64),
+    runner_image: "ubuntu24/20261019.1.0", os: "Linux", arch: "X64", elixir: "1.19.0", otp: "Erlang/OTP 28.1", mix_env: "test", mix_target: "host", profile: "root-test",
+  }), { mode: "beam-lock-change", runId: "123", attempt: 2 });
+  fs.writeFileSync(planPath, JSON.stringify(probePlan));
   const proof = writeBeamProbeProof({
     planPath,
     outputPath: proofPath,
@@ -843,7 +846,14 @@ test("lock-change probe commits only a comment-only change in its temporary chec
       VERIFY_OUTCOME: "success",
     },
   });
-  assert.deepEqual(proof.lock_probe, { owned_copy: true, source_lock_unchanged: true, versions_unchanged: true });
+  for (const field of ["owned_copy", "source_lock_unchanged", "versions_unchanged"]) assert.equal(proof.lock_probe[field], true);
+  assert.equal(proof.lock_probe.baseline_identity.locks_digest, hashPaths(source, ["mix.lock"]));
+  assert.equal(proof.lock_probe.changed_identity.locks_digest, hashPaths(result.workdir, ["mix.lock"]));
+  assert.notEqual(proof.lock_probe.baseline_resolved_key, proof.lock_probe.changed_resolved_key);
+  const wrong = structuredClone(probePlan);
+  wrong.identity.locks_digest = hashPaths(source, ["mix.lock"]);
+  fs.writeFileSync(planPath, JSON.stringify(wrong));
+  assert.throws(() => writeBeamProbeProof({ planPath, outputPath: proofPath, lockManifestPath: result.manifestPath, env: { PHASE182_CACHE_MODE: "beam-lock-change", GITHUB_RUN_ID: "123", GITHUB_RUN_ATTEMPT: "2" } }), /canonical lock/);
 });
 
 test("collectRun downloads the selected job log directly without the whole-run archive", (t) => {
@@ -1293,4 +1303,20 @@ test("full aggregate accepts the parsed receipt from the latest eligible session
  const flags={repo:REPOSITORY,branch:BRANCH,sha:SHA,sessionId:SESSION_ID,mode:'full',outputDir:path.join(root,'candidate')};
  collectRun(flags,{command:successfulCommandDouble({mode:'full'}),pollMilliseconds:0,timeoutSeconds:2,browserValidator:validBrowserReceipt});
  assert.equal(validateAggregate(flags,'full').eligible,true);
+});
+
+test("lock-change requires canonical before/after identities bound to the changed bytes", () => {
+  const proof = cacheProof("beam-lock-change");
+  proof.lock_probe.baseline_identity = { ...proof.cache.identity };
+  proof.lock_probe.changed_identity = { ...proof.cache.identity };
+  proof.lock_probe.before_bytes_base64 = Buffer.from("%{}\n").toString("base64");
+  proof.lock_probe.after_bytes_base64 = Buffer.from(`%{}\n# phase182 lock probe run ${proof.run.id} attempt ${proof.run.attempt}\n`).toString("base64");
+  assert.throws(() => validateCacheAcceptance(proof), /canonical lock/);
+});
+
+test("lock-change keys retain the normal changed-lock identity without a forced run miss", () => {
+  const base = cachePlan({ graph: "root", runner_image: "ubuntu24/20261019.1.0", os: "Linux", arch: "X64", elixir: "1.19.0", otp: "28.1", mix_env: "test", mix_target: "host", profile: "root-test", manifests_digest: "a".repeat(64), locks_digest: "b".repeat(64), source_digest: "c".repeat(64) });
+  const normal = beamPlanForProbe(base, { mode: "normal", namespace: "lock-contract", runId: "101", attempt: 1 });
+  const changed = beamPlanForProbe(base, { mode: "beam-lock-change", namespace: "lock-contract", runId: "102", attempt: 1 });
+  for (const key of ["downloads_key", "resolved_key", "downloads_restore_prefix", "resolved_restore_prefix"]) assert.equal(changed[key], normal[key], key);
 });

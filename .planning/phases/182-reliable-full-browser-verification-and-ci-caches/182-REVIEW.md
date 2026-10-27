@@ -1,97 +1,76 @@
 ---
 phase: 182-reliable-full-browser-verification-and-ci-caches
-reviewed: 2026-10-27T19:57:33Z
+reviewed: 2026-10-27T20:12:14Z
 depth: standard
-files_reviewed: 24
+files_reviewed: 9
 files_reviewed_list:
-  - .dockerignore
-  - .github/workflows/ci.yml
   - CONTRIBUTING.md
-  - examples/scrypath_ecommerce/compose.e2e.yaml
   - examples/scrypath_ecommerce/docker-playwright.sh
-  - examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts
-  - examples/scrypath_ecommerce/e2e/admin_screenshots.spec.ts
   - examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs
-  - examples/scrypath_ecommerce/e2e/ui_followup.spec.ts
-  - examples/scrypath_ecommerce/e2e/ui_iteration3.spec.ts
-  - examples/scrypath_ecommerce/playwright.config.ts
-  - examples/scrypath_ecommerce/scripts/verify-e2e.sh
-  - scripts/ci/beam_cache.cjs
-  - scripts/ci/beam_cache.test.cjs
-  - scripts/ci/ecommerce_build.cjs
-  - scripts/ci/ecommerce_build.test.cjs
   - scripts/ci/ecommerce_evidence.cjs
   - scripts/ci/ecommerce_evidence.test.cjs
   - scripts/ci/ecommerce_lifecycle.test.cjs
   - scripts/ci/ecommerce_target.test.cjs
-  - scripts/ci/phase105_evidence.sh
   - scripts/ci/phase182_acceptance.cjs
   - scripts/ci/phase182_acceptance.test.cjs
-  - test/mix/tasks/workflow_wiring_test.exs
 findings:
-  critical: 3
-  warning: 1
+  critical: 0
+  warning: 0
   info: 0
-  total: 4
-status: issues_found
-source_sha: e6c330fe99427a71220a6dd66d7c9465caf0bb95
-implementation_source_sha: ec248fd2f7eea9314e600bcc10262729d2cce69e
-review_base: ba624a7452e717c335a26369b8db8523d2551ee9
-review_boundary: final root source review; implementation tree matches the accepted source; not human approval
+  total: 0
+status: clean
+source_sha: 762baf3004a7b4be32975d0031cdae6e0947d6b3
+implementation_source_sha: 01d1f87167a984e708bfa45326a12ea05a225427
+review_base: 5918efd30c4364c1607e0757a2344a252665eb01
+review_boundary: correction review before renewed acceptance; not phase completion or human approval
 ---
 
-# Phase 182: Code Review Report
+# Phase 182: Correction Review Report
 
-**Reviewed:** 2026-10-27T19:57:33Z
+**Reviewed:** 2026-10-27T20:12:14Z
 **Depth:** standard
-**Files Reviewed:** 24
-**Status:** issues_found
-**Source SHA:** `e6c330fe99427a71220a6dd66d7c9465caf0bb95`
-**Implementation SHA:** `ec248fd2f7eea9314e600bcc10262729d2cce69e`
-**Scope:** Explicit 24-file Phase 182 source scope compared with `ba624a7452e717c335a26369b8db8523d2551ee9`.
+**Files Reviewed:** 9
+**Status:** clean for the four repaired findings
+**Source SHA:** `762baf3004a7b4be32975d0031cdae6e0947d6b3`
+**Implementation fix SHA:** `01d1f87167a984e708bfa45326a12ea05a225427`
+**Scope:** The four findings from the prior review and their source/test corrections since `5918efd30c4364c1607e0757a2344a252665eb01`.
 
 ## Summary
 
-The final source tree contains three blockers in preview-target refusal, required browser-case coverage, and BEAM lock-invalidation proof, plus a warning in route readiness detection. The supplied acceptance record reports 189 first-attempt cases and six exact-source hosted runs; those results do not close the source-level gaps in the guard and acceptance predicates. The known deep-quality dependency audit remains Phase 184 work and is not represented here as green.
+All four findings from the prior review are fixed in the current source and have focused regression coverage. I found no remaining correctness or security defect in these corrections.
 
-I reviewed the source and phase artifacts without running tests, dispatching CI, or using the retained preview. The current repository HEAD is `e6c330fe99427a71220a6dd66d7c9465caf0bb95`; the reviewed implementation files match the accepted implementation tree at `ec248fd2f7eea9314e600bcc10262729d2cce69e`. The worktree also has unrelated planning edits, which are outside this report's owned file.
+This review covers the correction diff and the related Phase 182 requirements. It does not establish fresh local or hosted acceptance at this source. The phase records correctly say those runs and final closeout remain pending; historical EC receipts do not prove the corrected source. The provided 115-test CI log was not rerun or independently verified here. No CI was dispatched, no preview was used, and no source file was changed.
+
+The finding counts above are open findings after correction review. The closed prior findings below retain their canonical IDs and classifications for disposition tracking.
 
 ## Narrative Findings (AI reviewer)
 
-### Critical Issues
+No open findings in the four repaired areas.
 
-### CR-01: IPv6 loopback bypasses retained-preview refusal — BLOCKER
+## Prior Finding Disposition
 
-**File:** `examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs:1,19`
-**Issue:** The guard only recognizes `localhost` and `127.0.0.1`. `new URL("http://[::1]:4002").hostname` is `"[::1]"`, so an IPv6 loopback preview on port 4002 returns no refusal reason and `guardVerificationTarget` runs the action. Both `ui_followup.spec.ts` and `ui_iteration3.spec.ts` use this guard before their scenario setup, leaving the retained-preview safety boundary bypassable by that loopback address.
-**Fix:** Normalize hostnames and use an IP parser to reject every loopback address on port 4002, including `::1` and IPv4 loopback aliases. Add a guard regression proving the refusal callback runs and the action does not run for IPv6 loopback.
+#### CR-01: IPv6 loopback bypasses retained-preview refusal — BLOCKER — FIXED
 
-### CR-02: Lock-change proof passes on a forced cache miss — BLOCKER
+**Disposition:** Fixed at `b6bf7bf0f951870514720fcabc24a056262d99df`.
+**Review:** `isLoopback` strips URL brackets and a trailing dot, uses `node:net` IP parsing, rejects `localhost`, all numeric IPv4 `127/8` addresses, IPv6 `::1`, and IPv4-mapped `127/8` addresses. The shared guard still permits the Docker hostname and explicitly isolated local ports. The updated target test verifies refusal callback execution and that the mutation action does not execute for expanded IPv6, mapped IPv4, IPv4 shorthand, and trailing-dot localhost forms.
 
-**File:** `scripts/ci/phase182_acceptance.cjs:297-304,1182-1192`
-**Issue:** `beamPlanForProbe` appends a unique run/attempt suffix to the resolved key and clears the resolved restore prefix for both fallback and lock-change probes. This guarantees a miss regardless of whether the lock-derived cache identity changed. The validator only requires differing raw `resolved_lock_before`/`resolved_lock_after` hashes and a resolved miss; it never checks that the lock-derived identity/key changed. The regression fixture demonstrates the gap: `phase182_acceptance.test.cjs:251-272` uses identity lock digest `d…d`, raw lock hashes `d…d`/`e…e`, and the test accepts that proof at `:329-335`. This can certify CACHE-02 lock invalidation without demonstrating that lock identity invalidates resolved state.
-**Fix:** Record and validate the canonical lock-derived digest/key for both the baseline and changed lock, and require the changed lock to produce a different resolved identity. Do not use a per-run forced miss as evidence of lock invalidation; preserve a compatible download fallback while demonstrating the exact changed-lock key misses.
+#### CR-02: Lock-change proof passes on a forced cache miss — BLOCKER — FIXED
 
-### CR-03: Mandatory inventory accepts one case from each required suite — BLOCKER
+**Disposition:** Fixed at `01d1f87167a984e708bfa45326a12ea05a225427`.
+**Review:** The lock-change mode no longer adds a per-run key suffix or disables its resolved restore prefix. `writeBeamProbeProof` derives canonical lock identities from the exact source and probe lock bytes, checks both against `beamCache.hashPaths` on their actual checkouts, and requires the plan's natural resolved key to match the changed-lock identity. Acceptance verifies the base64 bytes, run-bound comment-only mutation, raw digests, before/after identities, and distinct natural resolved keys. Regressions reject the former mismatched-identity fixture, exercise a temporary Git lock copy, and reject a producer plan that uses the original lock identity. Fallback mode retains its separate forced miss.
 
-**File:** `scripts/ci/ecommerce_evidence.cjs:250-264`
-**Issue:** `mandatoryInventoryReasons` checks only that the inventory contains at least one case from each required filename and both Phase 173 entrypoints. The later report reconciliation proves only that every case still present in the inventory ran. If most or all intended `ui_followup` or `ui_iteration3` cases are removed or disabled, the reduced inventory and its matching report can still be eligible. This does not enforce D-06's requirement that every intended follow-up/iteration case execute.
-**Fix:** Validate the required composite identities or stable required title-path set for both suites, including applicable entrypoints, against the inventory before reconciling results. Add a regression that removes or disables one intended case and requires ineligibility; keep the requirement identity-based rather than relying on historical total counts.
+#### CR-03: Mandatory inventory accepts one case from each required suite — BLOCKER — FIXED
 
-### Warnings
+**Disposition:** Fixed at `edd47eee6a0acadc78db8e097039069eefde40c0`.
+**Review:** The evidence validator now requires all thirteen intended `ui_followup` and `ui_iteration3` composite identities, including project, title path, and inferred entrypoint. Bare Playwright spec filenames normalize to the same repository-relative identity as `e2e/<file>`. The regression removes or renames each required case from both inventory and results and requires rejection. This enforces the D-06 intended-case contract without using historical total counts.
 
-### WR-01: Fixture route readiness treats redirects as success — WARNING
+#### WR-01: Fixture route readiness treats redirects as success — WARNING — FIXED
 
-**File:** `examples/scrypath_ecommerce/docker-playwright.sh:143-153,173-180`
-**Issue:** `curl --fail` rejects HTTP errors but returns success for 3xx responses, and this request does not follow redirects or inspect the final status. A health route redirected to a login or fallback page is therefore recorded as ready; `--readiness-only` can exit successfully without observing a successful health response from the intended route.
-**Fix:** Capture the response status and require the intended 2xx response for each route. If redirects are expected, follow them with a bounded redirect count and validate the final URL and status.
-
-### Earlier Finding Disposition
-
-The findings in the prior report at source SHA `7f8c4592d92507b05c47d36c8436a87545bdcc0b` were rechecked and remain fixed in the current source: validation CLI namespace forwarding; cache namespace binding; browser workflow-ref binding; selected-run/job/artifact readiness snapshot; full aggregate eligibility read from its parsed receipt; direct REST job-log transport and timestamp parsing; and separation of import-only observation from strict warm-cache acceptance. The findings above are new gaps in different predicates and boundaries.
+**Disposition:** Fixed at `2f615705e1771a2f0efe15bd7b402f05774e6c46`.
+**Review:** The shared route probe now captures the HTTP status and accepts only 2xx responses. The lifecycle regression injects a 302 from each mounted and standalone health route and confirms the browser is not invoked.
 
 ---
 
-_Reviewed: 2026-10-27T19:57:33Z_
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-10-27T20:12:14Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_

@@ -150,7 +150,9 @@ if [[ "$scope" == "full" ]]; then
     if (( remaining < request_timeout )); then
       request_timeout="$remaining"
     fi
-    curl --silent --fail --max-time "$request_timeout" "$url" >/dev/null 2>&1
+    local http_status
+    http_status="$(curl --silent --fail --max-time "$request_timeout" --output /dev/null --write-out '%{http_code}' "$url" 2>/dev/null)" || return 1
+    [[ "$http_status" =~ ^2[0-9][0-9]$ ]]
   }
 
   echo "Confirming the mounted web service is stable at $base_url within ${readiness_timeout}s..."

@@ -245,7 +245,7 @@ modes reuse the existing jobs:
 | `docker-cold` | `ecommerce-mounted` | A new per-run Buildx builder with every Bake cache import/export removed, followed by `mix verify.ecommerce_mounted`. |
 | `beam-cold` | `core` | Cache restore steps are skipped on the fresh hosted runner; `mix deps.get`, `mix compile --warnings-as-errors`, and the canonical core verifier run normally. |
 | `beam-fallback` | `core` | Run-unique primary cache keys miss; compatible Hex archive fallback is accepted only when Actions reports the matched key. Resolved build restore is disabled, then normal resolution, compilation, and core verification run. |
-| `beam-lock-change` | `core` | A separate temporary checkout receives one comment-only `mix.lock` change and a local probe-only commit. The source checkout stays unchanged; compatible Hex fallback, an exact resolved-cache miss, and the normal Mix commands are recorded. |
+| `beam-lock-change` | `core` | A separate temporary checkout receives one comment-only `mix.lock` change and a local probe-only commit. The source checkout stays unchanged. The proof binds the exact before/after lock bytes to canonical cache identities and different natural resolved keys; no forced run suffix supplies the lock-change miss. Compatible Hex fallback, the exact changed-lock miss, and normal Mix commands are recorded. |
 
 `phase182_probe_namespace` accepts a lowercase slug of up to 32 characters.
 Leave it empty to use the production cache namespace. Use a distinct slug for

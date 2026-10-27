@@ -1,4 +1,12 @@
-const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1"]);
+import { isIP } from "node:net";
+
+function isLoopback(hostname) {
+  const host = hostname.replace(/^\[|\]$/g, "").replace(/\.$/, "");
+  const version = isIP(host);
+  return host === "localhost" ||
+    (version === 4 && host.startsWith("127.")) ||
+    (version === 6 && (host === "::1" || /^::ffff:7f[0-9a-f]{2}:/i.test(host)));
+}
 const INVALID_TARGET_REASON = "A valid verifier URL is required.";
 const PREVIEW_TARGET_REASON = "Run against the owned disposable verifier, never the retained preview.";
 
@@ -16,7 +24,7 @@ export function previewRefusalReason(baseURL) {
     return INVALID_TARGET_REASON;
   }
 
-  if (LOOPBACK_HOSTS.has(target.hostname) && target.port === "4002") {
+  if (isLoopback(target.hostname) && target.port === "4002") {
     return PREVIEW_TARGET_REASON;
   }
 
