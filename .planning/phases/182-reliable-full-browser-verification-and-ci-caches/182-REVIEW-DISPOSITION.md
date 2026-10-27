@@ -3,16 +3,35 @@ phase: 182
 review: 182-REVIEW.md
 titles: json
 findings:
-open: 0
-total: 0
-unparsed: 4
-recorded: 2026-10-27T19:59:40.245Z
+  - id: CR-01
+    severity: critical
+    disposition: open
+    title: "IPv6 loopback bypasses retained-preview refusal — BLOCKER"
+  - id: CR-02
+    severity: critical
+    disposition: open
+    title: "Lock-change proof passes on a forced cache miss — BLOCKER"
+  - id: CR-03
+    severity: critical
+    disposition: open
+    title: "Mandatory inventory accepts one case from each required suite — BLOCKER"
+  - id: WR-01
+    severity: warning
+    disposition: open
+    title: "Fixture route readiness treats redirects as success — WARNING"
+open: 4
+total: 4
+recorded: 2026-10-27T19:59:50.281Z
 ---
 
 # Phase 182: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
+| CR-01 | critical | open | - |
+| CR-02 | critical | open | - |
+| CR-03 | critical | open | - |
+| WR-01 | warning | open | - |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
