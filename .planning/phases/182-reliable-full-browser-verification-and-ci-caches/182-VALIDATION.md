@@ -1,15 +1,15 @@
 ---
 phase: "182"
 slug: "reliable-full-browser-verification-and-ci-caches"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-10-26"
 ---
 
 # Phase 182 — Validation Strategy
 
-Planning contract only; no implementation, test pass, cache hit or hosted acceptance is claimed.
+Execution coverage validated on 2026-10-27. The historical planning assumptions below remain identified; current machine evidence is recorded in 182-ACCEPTANCE.md and 182-CACHE-ACCEPTANCE.md.
 
 ## Test Infrastructure
 
@@ -34,26 +34,26 @@ Use the configured BEAM tuple explicitly if the shell has no active tool version
 
 ## Per-Task Verification Map
 
-Actual task IDs match the XML `id` attributes in 182-NN-PLAN.md. Every command has an immediate observable `fails_when` in its task. Status remains pending/unvalidated until execution. Relative paths resolve from the executor's absolute checkout root.
+Actual task IDs match the XML `id` attributes in 182-NN-PLAN.md. Every command has an immediate observable `fails_when` in its task. All sixteen task behaviors are covered by executable checks and current integration receipts. Relative paths resolve from the executor's absolute checkout root.
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 182-01-01 | 01 | 1 | BROW-01 | T-182-01 | Full/focused model and both real fixture routes | Node behavior + real Docker | `node --test scripts/ci/ecommerce_lifecycle.test.cjs; bash examples/scrypath_ecommerce/scripts/verify-e2e.sh full --readiness-only` | Harness exists; test/flag created here | pending |
-| 182-01-02 | 01 | 1 | BROW-01, BROW-03 | T-182-02 | Owned cleanup and original status | Node behavior | `node --test scripts/ci/ecommerce_lifecycle.test.cjs` | Created by 182-01-01 | pending |
-| 182-02-01 | 02 | 2 | BROW-02 | T-182-03 | Hostname guard refuses preview before mutation | Node behavior | `node --test scripts/ci/ecommerce_target.test.cjs` | Created here | pending |
-| 182-02-02 | 02 | 2 | BROW-02, BROW-03 | T-182-04 | Decoder semantics; required behavior-test reachability | Node + ExUnit | `node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_target.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs` | Existing ExUnit; Node prerequisite | pending |
-| 182-03-01 | 03 | 2 | BROW-02, BROW-03 | T-182-05 | Complete distinct identity/attempt set; empty/order edges | Node behavior | `node --test scripts/ci/ecommerce_evidence.test.cjs` | Created here | pending |
-| 182-03-02 | 03 | 2 | BROW-03 | T-182-06 | One aggregate; source/raw/path validation | Node behavior | `node --test scripts/ci/ecommerce_evidence.test.cjs` | Created by 182-03-01 | pending |
-| 182-04-01 | 04 | 3 | BROW-01, BROW-02, BROW-03 | T-182-07, T-182-09 | Fresh owned files, copy failures and deadlines | Node behavior | `node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_evidence.test.cjs scripts/ci/ecommerce_target.test.cjs` | Prerequisite suites extended | pending |
-| 182-04-02 | 04 | 3 | BROW-03 | T-182-08, T-182-09 | Raw step/SHA/upload and 30-minute budget | ExUnit + required lane | `MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs test/scrypath/phase108_contract_test.exs test/scrypath/phase111_contract_test.exs; MIX_ENV=test mix verify.repository_contracts` | Existing ExUnit/capability | pending |
-| 182-05-01 | 05 | 4 | CACHE-01, BROW-03 | T-182-10 | Compose/Bake graph/source/image no-build parity | Node behavior | `node --test scripts/ci/ecommerce_build.test.cjs scripts/ci/ecommerce_lifecycle.test.cjs` | Build suite created here | pending |
-| 182-05-02 | 05 | 4 | CACHE-01 | T-182-11, T-182-12 | Trusted exporter and recipe scopes | Node + ExUnit | `node --test scripts/ci/ecommerce_build.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | Created prerequisite + existing ExUnit | pending |
-| 182-06-01 | 06 | 5 | CACHE-02 | T-182-13, T-182-14 | Strict compiled boundary; download-only fallback | Node behavior | `node --test scripts/ci/beam_cache.test.cjs` | Created here | pending |
-| 182-06-02 | 06 | 5 | CACHE-02 | T-182-13, T-182-15 | Path graphs, PLTs and unconditional commands | Node + ExUnit | `node --test scripts/ci/beam_cache.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | Created prerequisite + existing ExUnit | pending |
-| 182-07-01 | 07 | 6 | BROW-03, CACHE-01, CACHE-02 | T-182-16 | Exact hosted run/artifact/raw-source joins | Node behavior | `node --test scripts/ci/phase182_acceptance.test.cjs` | Created here | pending |
-| 182-07-02 | 07 | 6 | CACHE-01, CACHE-02 | T-182-17 | Fresh builder/no imports; owned lock/cache probes | Node + ExUnit | `node --test scripts/ci/phase182_acceptance.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/ecommerce_build.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | Created prerequisite + existing ExUnit | pending |
-| 182-08-01 | 08 | 7 | CACHE-01, CACHE-02 | T-182-18 | Actual warm/cold/fallback/lock proof | Hosted integration | `phase182_acceptance run modes docker-warm, docker-cold, beam-fallback, beam-lock-change, beam-cold; validate --mode caches (exact commands below)` | CLI created by 182-07 | pending |
-| 182-08-02 | 08 | 7 | BROW-01, BROW-02, BROW-03 | T-182-19 | Complete changed-source full proof and final closeout | Docker + hosted integration | `make -C examples/scrypath_ecommerce verify-e2e; warning-as-error suite; repository contracts; phase182_acceptance run/validate full; ci_monitor closeout (exact commands below)` | Existing canonical commands; collector prerequisite | pending |
+| 182-01-01 | 01 | 1 | BROW-01 | T-182-01 | Full/focused model and both real fixture routes | Node behavior + real Docker | `node --test scripts/ci/ecommerce_lifecycle.test.cjs; bash examples/scrypath_ecommerce/scripts/verify-e2e.sh full --readiness-only` | yes | pass |
+| 182-01-02 | 01 | 1 | BROW-01, BROW-03 | T-182-02 | Owned cleanup and original status | Node behavior | `node --test scripts/ci/ecommerce_lifecycle.test.cjs` | yes | pass |
+| 182-02-01 | 02 | 2 | BROW-02 | T-182-03 | Hostname guard refuses preview before mutation | Node behavior | `node --test scripts/ci/ecommerce_target.test.cjs` | yes | pass |
+| 182-02-02 | 02 | 2 | BROW-02, BROW-03 | T-182-04 | Decoder semantics; required behavior-test reachability | Node + ExUnit | `node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_target.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs` | yes | pass |
+| 182-03-01 | 03 | 2 | BROW-02, BROW-03 | T-182-05 | Complete distinct identity/attempt set; empty/order edges | Node behavior | `node --test scripts/ci/ecommerce_evidence.test.cjs` | yes | pass |
+| 182-03-02 | 03 | 2 | BROW-03 | T-182-06 | One aggregate; source/raw/path validation | Node behavior | `node --test scripts/ci/ecommerce_evidence.test.cjs` | yes | pass |
+| 182-04-01 | 04 | 3 | BROW-01, BROW-02, BROW-03 | T-182-07, T-182-09 | Fresh owned files, copy failures and deadlines | Node behavior | `node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_evidence.test.cjs scripts/ci/ecommerce_target.test.cjs` | yes | pass |
+| 182-04-02 | 04 | 3 | BROW-03 | T-182-08, T-182-09 | Raw step/SHA/upload and 30-minute budget | ExUnit + required lane | `MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs test/scrypath/phase108_contract_test.exs test/scrypath/phase111_contract_test.exs; MIX_ENV=test mix verify.repository_contracts` | yes | pass |
+| 182-05-01 | 05 | 4 | CACHE-01, BROW-03 | T-182-10 | Compose/Bake graph/source/image no-build parity | Node behavior | `node --test scripts/ci/ecommerce_build.test.cjs scripts/ci/ecommerce_lifecycle.test.cjs` | yes | pass |
+| 182-05-02 | 05 | 4 | CACHE-01 | T-182-11, T-182-12 | Trusted exporter and recipe scopes | Node + ExUnit | `node --test scripts/ci/ecommerce_build.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | yes | pass |
+| 182-06-01 | 06 | 5 | CACHE-02 | T-182-13, T-182-14 | Strict compiled boundary; download-only fallback | Node behavior | `node --test scripts/ci/beam_cache.test.cjs` | yes | pass |
+| 182-06-02 | 06 | 5 | CACHE-02 | T-182-13, T-182-15 | Path graphs, PLTs and unconditional commands | Node + ExUnit | `node --test scripts/ci/beam_cache.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | yes | pass |
+| 182-07-01 | 07 | 6 | BROW-03, CACHE-01, CACHE-02 | T-182-16 | Exact hosted run/artifact/raw-source joins | Node behavior | `node --test scripts/ci/phase182_acceptance.test.cjs` | yes | pass |
+| 182-07-02 | 07 | 6 | CACHE-01, CACHE-02 | T-182-17 | Fresh builder/no imports; owned lock/cache probes | Node + ExUnit | `node --test scripts/ci/phase182_acceptance.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/ecommerce_build.test.cjs; MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` | yes | pass |
+| 182-08-01 | 08 | 7 | CACHE-01, CACHE-02 | T-182-18 | Actual warm/cold/fallback/lock proof | Hosted integration | `phase182_acceptance run modes docker-warm, docker-cold, beam-fallback, beam-lock-change, beam-cold; validate --mode caches (exact commands below)` | yes | pass |
+| 182-08-02 | 08 | 7 | BROW-01, BROW-02, BROW-03 | T-182-19 | Complete changed-source full proof and final closeout | Docker + hosted integration | `make -C examples/scrypath_ecommerce verify-e2e; warning-as-error suite; repository contracts; phase182_acceptance run/validate full; ci_monitor closeout (exact commands below)` | yes | pass |
 
 ### Exact integration commands for 182-08
 
@@ -61,33 +61,24 @@ These commands are created/wired by 182-07 before 182-08 begins. Both hosted tas
 
 The SHA-specific --output-dir is a candidate-session root bound by a manifest to repository, branch, SHA and the explicit --session-id. Every invocation, including a repeated mode, allocates exclusive fresh per-mode/invocation and run/attempt subdirectories and preserves all attempts/failures. Only source-checked manifest-listed receipts may enter atomic root aggregates; stale loose files and wrong SHA/ref/session cannot contribute. A changed candidate needs a new session/root. The named temporary output root is an intentional runtime artifact, not a source-file path. 182-07-01 tests repeated modes, source/session mismatch, stale-file exclusion, aggregate serialization and denied dispatch/read operations.
 
-Task 182-08-01:
+Task 182-08-01 and 182-08-02 used the frozen implementation identity below. Each `run` was dispatched once in this candidate session; the manifest preserves previous candidates separately. These commands are reproduction commands, not instructions to redispatch completed work.
 
 ```sh
-node scripts/ci/phase182_acceptance.cjs run --mode docker-warm --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs run --mode docker-cold --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs run --mode beam-fallback --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs run --mode beam-lock-change --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs run --mode beam-cold --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs validate --mode caches --input "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)/cache-acceptance.json"
+node scripts/ci/phase182_acceptance.cjs run --mode docker-warm --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs run --mode docker-cold --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs run --mode beam-fallback --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs run --mode beam-lock-change --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs run --mode beam-cold --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs run --mode full --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs validate --mode caches --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
+node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha ec248fd2f7eea9314e600bcc10262729d2cce69e --session-id phase182-08-ec248fd2-20261027T175951Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session
 ```
 
-Each exits nonzero on the missing-proof/no-op/status/source/budget conditions stated immediately after its command in 182-08-PLAN.md.
+Both validators returned valid/eligible with six invocations. Each hosted invocation passed 189 distinct cases in 189 first attempts and clean disposal. Canonical local full also passed 189/189. The Node behavior suite passed 110 tests; warning-as-error root verification passed 961 tests plus five properties, and repository contracts passed 98 tests. Final merged checks and exact-head closeout are separately recorded by the phase verifier.
 
-Task 182-08-02:
+The configured 300-second finalization reserve exceeds the observed maximum browser-end-to-upload interval (21 seconds) plus 60 seconds. Whole job durations range from 762 to 952 seconds, below 1800; upload completes with 861–1055 seconds left. These are distinct measurements.
 
-```sh
-make -C examples/scrypath_ecommerce verify-e2e
-MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors --exclude integration --exclude docs_contract
-MIX_ENV=test mix verify.repository_contracts
-node scripts/ci/phase182_acceptance.cjs run --mode full --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)" --session-id "phase182-$(git rev-parse HEAD)" --output-dir "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)"
-node scripts/ci/phase182_acceptance.cjs validate --mode full --input "${TMPDIR:-/tmp}/scrypath-phase182-acceptance/$(git rev-parse HEAD)/full-acceptance.json"
-node scripts/ci_monitor.cjs closeout --push --branch "$(git branch --show-current)" --sha "$(git rev-parse HEAD)"
-```
-
-Each exits nonzero on the missing-proof/no-op/status/source/budget conditions stated immediately after its command in 182-08-PLAN.md.
-
-### Planning-only state
+### Historical planning boundary
 
 - Eight plans, sixteen tasks, seven waves. Wave 2 plans 182-02/03 have disjoint file ownership; subsequent shared workflow/verifier edits are sequenced.
 - First task is a real production full-stack readiness tracer. Diagnostic mode is never accepted as full-browser proof.
@@ -95,7 +86,7 @@ Each exits nonzero on the missing-proof/no-op/status/source/budget conditions st
 - ASVS Level 1; high/critical threats block completion. T-182-SC is the shared reserved supply-chain ID; T-182-01 through T-182-19 are unique.
 - The BROW-02 adjacency/empty/ordering probe items become explicit truths in 182-03. Four unclassified rows (BROW-01/BROW-03/CACHE-01/CACHE-02) stay flagged unresolved assumptions, with concrete existing-contract proof; none is auto-dismissed.
 - Descriptor-less fallback prohibitions remain flagged-unverified, without inventing human acceptance tasks. Routine security canon is referred to $gsd-secure-phase.
-- No implementation, source tests, preview work or hosted acceptance ran during planning.
+- No implementation, source tests, preview work or hosted acceptance ran during planning. Execution evidence is recorded above and does not rewrite that boundary.
 
 
 ## Wave 0 Requirements
@@ -117,12 +108,20 @@ All behaviors have executable acceptance; none relies on post-implementation hum
 ## Validation Sign-Off
 
 - [x] Actual task IDs, waves and threat references mapped after planning (execution remains unvalidated)
-- [ ] All tasks have automated verification and immediate failure signals
-- [ ] New behavior checks exist before dependent implementation tasks
-- [ ] No three consecutive tasks lack automated feedback
-- [ ] Full inventory, hosted proof and separate warm/cold acceptance are executable
-- [ ] No watch-mode commands or pending UAT used as completion evidence
-- [ ] Actual runtime measured and feedback/deadline margins recorded
-- [ ] `nyquist_compliant: true` set only after validation confirms compliance
+- [x] All tasks have automated verification and immediate failure signals
+- [x] New behavior checks exist before dependent implementation tasks
+- [x] No three consecutive tasks lack automated feedback
+- [x] Full inventory, hosted proof and separate warm/cold acceptance are executable
+- [x] No watch-mode commands or pending UAT used as completion evidence
+- [x] Actual runtime measured and feedback/deadline margins recorded
+- [x] `nyquist_compliant: true` set only after validation confirms compliance
 
-**Approval:** pending; this draft records no maintainer approval or independent review.
+**Validation:** automated coverage confirmed 2026-10-27; no maintainer approval or independent design review is implied. No manual-only acceptance or pending UAT is used.
+
+## Validation Audit 2026-10-27
+
+| Metric | Count |
+|---|---|
+| Gaps found | 0 |
+| Resolved | 0 |
+| Escalated | 0 |
