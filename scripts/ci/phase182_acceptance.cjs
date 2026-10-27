@@ -379,7 +379,7 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
     target_cache_settings: targetCacheSettings,
     import_scopes: scopes,
     export_scopes: exportScopes,
-  }, artifactMode);
+  }, artifactMode, manifest.cache_policy);
   const cacheFrom = Object.values(bake.target || {}).flatMap((target) => Array.isArray(target["cache-from"]) ? target["cache-from"] : []);
   let builder;
   if (mode === "docker-cold") {
@@ -867,7 +867,11 @@ function targetGhaScopes(settings, field) {
     .map((value) => value.match(/(?:^|,)scope=([^,]+)/)?.[1] || "");
 }
 
-function validateDockerTargetBindings(cache, mode) {
+function validateDockerTargetBindings(cache, mode, policy = { import: mode === "docker-warm", export: mode === "docker-warm" }) {
+  if (!policy || typeof policy.import !== "boolean" || typeof policy.export !== "boolean" ||
+      mode === "docker-cold" && (policy.import || policy.export)) {
+    throw new Error("Docker cache proof has an invalid checked cache policy");
+  }
   const expectedTargets = expectedDockerTargets(cache.scope, mode);
   const targetScopes = cache.target_scopes;
   const targetSettings = cache.target_cache_settings;
@@ -887,7 +891,9 @@ function validateDockerTargetBindings(cache, mode) {
     }
     const importScopes = targetGhaScopes(settings, "import");
     const exportScopes = targetGhaScopes(settings, "export");
-    if (mode === "docker-warm" && (canonicalJson(importScopes) !== canonicalJson([scope]) || canonicalJson(exportScopes) !== canonicalJson([scope]))) {
+    if (mode === "docker-warm" && (canonicalJson(importScopes) !== canonicalJson(policy.import ? [scope] : []) ||
+        canonicalJson(exportScopes) !== canonicalJson(policy.export ? [scope] : []) ||
+        !policy.import && settings.import.length !== 0 || !policy.export && settings.export.length !== 0)) {
       throw new Error(`Docker cache proof Bake settings do not match the checked scope for ${service}`);
     }
     if (mode === "docker-cold" && (settings.import.length !== 0 || settings.export.length !== 0)) {
@@ -896,9 +902,10 @@ function validateDockerTargetBindings(cache, mode) {
     mappedScopes.push(scope);
   }
   if (new Set(mappedScopes).size !== expectedTargets.length) throw new Error("Docker cache proof target scopes must be distinct per recipe");
-  const expectedScopes = mode === "docker-warm" ? mappedScopes.slice().sort() : [];
-  if (canonicalJson(cache.import_scopes) !== canonicalJson(expectedScopes) ||
-      canonicalJson(cache.export_scopes) !== canonicalJson(expectedScopes)) {
+  const expectedImports = policy.import ? mappedScopes.slice().sort() : [];
+  const expectedExports = policy.export ? mappedScopes.slice().sort() : [];
+  if (canonicalJson(cache.import_scopes) !== canonicalJson(expectedImports) ||
+      canonicalJson(cache.export_scopes) !== canonicalJson(expectedExports)) {
     throw new Error("Docker cache proof scopes do not match the checked target mapping");
   }
   return expectedTargets;
