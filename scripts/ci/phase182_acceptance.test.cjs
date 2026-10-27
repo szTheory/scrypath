@@ -315,6 +315,14 @@ test("browser acceptance rejects incomplete aggregate, wrong digest and over-bud
   );
 });
 
+test("cache acceptance rejects keys and scopes from a different requested namespace", () => {
+  for (const mode of ["docker-warm", "beam-fallback", "beam-lock-change", "beam-cold"]) {
+    const proof = cacheProof(mode);
+    proof.session.probe_namespace = "isolated-candidate";
+    assert.throws(() => validateCacheAcceptance(proof), /requested.*namespace|namespace.*requested/);
+  }
+});
+
 test("cold cache acceptance requires a new builder and disabled imports", () => {
   assert.equal(validateCacheAcceptance(cacheProof("docker-cold")), true);
   assert.throws(
