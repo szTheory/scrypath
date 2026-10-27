@@ -5,7 +5,7 @@ milestone_name: Foundation and CI
 current_phase: 182
 current_phase_name: Reliable full browser verification and CI caches
 status: executing
-stopped_at: All eight plans and reviewed repairs merged; final phase-goal verification pending
+stopped_at: Final review found inherited numeric screenshot assertion; scoped correction and fresh full proof pending
 last_updated: "2026-10-27T22:21:39.706305+00:00"
 last_activity: 2026-10-27
 last_activity_desc: Phase 182 corrected-source acceptance and repair-head closeout passed; phase hooks and verifier next
@@ -45,3 +45,7 @@ Runtime control: `/private/tmp/scrypath-phase182-execution/review-repair-candida
 Preserve the unrelated `.planning/config.json` edit, untracked milestone lock and retained preview/data. Phase184 owns the known deep-quality dependency-audit debt; no blanket risk acceptance or all-advisory-green claim. PR122 merge/Hex publication and inherited v1.44 debt remain separate. v1.45 has three later phases; UI engine/polish remains v1.46–47 and adopter features v1.48.
 
 After verified Phase182 completion, the next approved action is `$gsd-discuss-phase 183` for maintainer tooling outside the Hex package. Do not automatically implement it.
+
+## Final review follow-up (2026-10-27)
+
+Whole24 review returned WR-02 (numeric settings screenshot assertion) and WR-03 (baseline rerun artifact names). WR-02 is a real inherited test assertion bug and is being corrected within BROW verification. WR-03 is recorded as deferred in the canonical disposition: Phase182 changed browser/cache artifact names are run/attempt scoped; default closeout dispatches fresh workflow runs; same-run rerun support for the older coverage/attestation pipeline is separate follow-up, not a new trust approval. No phase completion or current-source settings assertion pass is claimed. Preserve the accepted0b7 cache cohort at its own source; refresh named browser evidence for the assertion correction and document unchanged cache scope explicitly.
