@@ -14,6 +14,7 @@ const {
   beamPlanForProbe,
   collectRun,
   configureDockerBake,
+  parseBuildKitCacheProgress,
   prepareLockProbe,
   validateAggregate,
   validateBrowserAcceptance,
@@ -21,6 +22,7 @@ const {
   validateFlags,
   validateWorkflowInputs,
   writeBeamProbeProof,
+  writeDockerProbeProof,
 } = require("./phase182_acceptance.cjs");
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";
@@ -30,6 +32,47 @@ const BRANCH = "candidate/phase182";
 const SESSION_ID = "candidate-run-01";
 const STARTED = "2026-10-26T12:00:00Z";
 const COMPLETED = "2026-10-26T12:10:00Z";
+const FULL_DOCKER_SCOPES = {
+  browser: "scrypath-ecommerce-browser-v1",
+  standalone_ops: "scrypath-ecommerce-standalone-ops-v1",
+  web: "scrypath-ecommerce-app-v1",
+};
+
+function buildKitCacheLog(targetScopes = FULL_DOCKER_SCOPES) {
+  const lines = [];
+  let vertex = 1;
+  for (const service of Object.keys(targetScopes).sort()) {
+    lines.push(`#${vertex} [${service}] importing cache manifest from gha`);
+    lines.push(`#${vertex} DONE 0.4s`);
+    vertex += 1;
+  }
+  for (const service of Object.keys(targetScopes).sort()) {
+    lines.push(`#${vertex} [${service} 3/6] COPY mix.exs mix.exs`);
+    lines.push(`#${vertex} CACHED`);
+    vertex += 1;
+  }
+  for (const service of Object.keys(targetScopes).sort()) {
+    lines.push(`#${vertex} [${service}] exporting to GitHub Actions Cache`);
+    lines.push(`#${vertex} preparing build cache for export`);
+    lines.push(`#${vertex} writing cache image manifest`);
+    lines.push(`#${vertex} DONE 1.2s`);
+    vertex += 1;
+  }
+  return lines.join("\n");
+}
+
+function refreshDockerEvidence(proof, logText) {
+  const evidence = parseBuildKitCacheProgress(logText, proof.cache.target_scopes);
+  proof.cache.log_text = logText;
+  proof.cache.log_sha256 = crypto.createHash("sha256").update(logText).digest("hex");
+  proof.cache.actual_import = evidence.import_complete;
+  proof.cache.actual_export = evidence.export_complete;
+  proof.cache.imported_digest = evidence.imported_digest;
+  proof.cache.exported_digest = evidence.exported_digest;
+  proof.cache.cached_steps_digest = evidence.cached_steps_digest;
+  proof.cache.progress = evidence.targets;
+  return proof;
+}
 
 function exactRun(overrides = {}) {
   return {
@@ -96,14 +139,23 @@ function cacheProof(mode, overrides = {}) {
   const downloadsRestoreKey = "beam-downloads-key-old";
   const resolvedKey = "beam-resolved-key-current";
   const logText = mode === "docker-warm"
-    ? "Run mix verify.ecommerce_e2e\nimporting cache manifest from gha:scope=scrypath-probe\nexporting cache to gha:scope=scrypath-probe\n"
+    ? `Run mix verify.ecommerce_e2e\n${buildKitCacheLog()}\n`
     : mode === "beam-cold"
       ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\n"
       : mode.startsWith("beam-")
         ? `Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: ${downloadsRestoreKey}\nCache not found for input keys: ${resolvedKey}\n`
         : "Run mix verify.ecommerce_mounted\nfresh builder; imports disabled\n";
-  const importLog = "importing cache manifest from gha:scope=scrypath-probe";
-  const exportLog = "exporting cache to gha:scope=scrypath-probe";
+  const targetScopes = mode === "docker-warm" ? { ...FULL_DOCKER_SCOPES } : {
+    browser: "scrypath-ecommerce-browser-v1",
+    web: "scrypath-ecommerce-app-v1",
+  };
+  const targetCacheSettings = Object.fromEntries(Object.entries(targetScopes).map(([service, scope]) => [service, {
+    import: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,timeout=120s`] : [],
+    export: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`] : [],
+  }]));
+  const dockerEvidence = isDocker && mode === "docker-warm"
+    ? parseBuildKitCacheProgress(logText, targetScopes)
+    : null;
   return {
     mode,
     run,
@@ -134,14 +186,20 @@ function cacheProof(mode, overrides = {}) {
     cache: {
       kind: isDocker ? "buildkit" : "beam",
       imports_enabled: !cold,
-      actual_import: !cold,
-      actual_export: isDocker && mode === "docker-warm",
-      imported_digest: mode === "docker-warm" ? `sha256:${crypto.createHash("sha256").update(importLog).digest("hex")}` : null,
-      exported_digest: isDocker && mode === "docker-warm" ? `sha256:${crypto.createHash("sha256").update(exportLog).digest("hex")}` : null,
+      actual_import: dockerEvidence ? dockerEvidence.import_complete : false,
+      actual_export: dockerEvidence ? dockerEvidence.export_complete : false,
+      imported_digest: dockerEvidence?.imported_digest || null,
+      exported_digest: dockerEvidence?.exported_digest || null,
+      cached_steps_digest: dockerEvidence?.cached_steps_digest || null,
+      progress: dockerEvidence?.targets || null,
       importer: mode === "docker-warm" ? "gha" : null,
       exporter: mode === "docker-warm" ? "gha" : null,
-      import_scopes: mode === "docker-warm" ? ["scrypath-probe"] : [],
-      export_scopes: mode === "docker-warm" ? ["scrypath-probe"] : [],
+      scope: mode === "docker-warm" ? "full" : "focused",
+      expected_targets: Object.keys(targetScopes).sort(),
+      target_scopes: targetScopes,
+      target_cache_settings: targetCacheSettings,
+      import_scopes: mode === "docker-warm" ? Object.values(targetScopes).sort() : [],
+      export_scopes: mode === "docker-warm" ? Object.values(targetScopes).sort() : [],
       log_sha256: crypto.createHash("sha256").update(logText).digest("hex"),
       log_text: logText,
       cache_key: `${mode}-resolved-key`,
@@ -252,12 +310,83 @@ test("warm and fallback cache claims require actual import/export log evidence a
     /normal verification command/,
   );
   const missingLog = cacheProof("docker-warm");
-  missingLog.cache.log_text = "Run mix verify.ecommerce_e2e\ncache import enabled\n";
-  missingLog.cache.log_sha256 = crypto.createHash("sha256").update(missingLog.cache.log_text).digest("hex");
+  refreshDockerEvidence(missingLog, "Run mix verify.ecommerce_e2e\nexporting to GitHub Actions Cache\n");
   assert.throws(() => validateCacheAcceptance(missingLog), /actual GHA import and export/);
   assert.throws(() => validateCacheAcceptance(cacheProof("beam-lock-change", {
     lock_probe: { owned_copy: true, source_lock_unchanged: false, versions_unchanged: true },
   })), /byte-changed lock miss/);
+});
+
+test("BuildKit cache acceptance requires per-target imports, useful cache hits, and completed exports", () => {
+  const validLog = buildKitCacheLog();
+  const warm = cacheProof("docker-warm");
+  assert.equal(validateCacheAcceptance(warm), true);
+
+  const missingTarget = cacheProof("docker-warm");
+  refreshDockerEvidence(missingTarget, validLog.replace(/#\d+ \[standalone_ops\] importing cache manifest from gha\n#\d+ DONE 0\.4s\n/, ""));
+  assert.throws(() => validateCacheAcceptance(missingTarget), /actual GHA import and export/);
+
+  const missingDone = cacheProof("docker-warm");
+  refreshDockerEvidence(missingDone, validLog.replace(/(#\d+ \[web\] exporting to GitHub Actions Cache\n(?:#\d+ .*\n)*?)#(\d+) DONE 1\.2s/, "$1#$2 ERROR: cache exporter failed"));
+  assert.throws(() => validateCacheAcceptance(missingDone), /actual GHA import and export/);
+
+  const missingCachedStep = cacheProof("docker-warm");
+  refreshDockerEvidence(missingCachedStep, validLog.replace(/#\d+ \[browser 3\/6\] COPY mix\.exs mix\.exs\n#\d+ CACHED\n/, ""));
+  assert.throws(() => validateCacheAcceptance(missingCachedStep), /actual GHA import and export/);
+
+  const ignoredExporter = cacheProof("docker-warm");
+  refreshDockerEvidence(ignoredExporter, `${validLog}\nWARNING: cache exporter failed and was ignored`);
+  assert.throws(() => validateCacheAcceptance(ignoredExporter), /actual GHA import and export/);
+
+  const genericExporter = cacheProof("docker-warm");
+  refreshDockerEvidence(genericExporter, validLog.replace(/#\d+ \[web\] exporting to GitHub Actions Cache/, "#99 exporting to GitHub Actions Cache"));
+  assert.throws(() => validateCacheAcceptance(genericExporter), /actual GHA import and export/);
+
+  const forgedMapping = cacheProof("docker-warm");
+  forgedMapping.cache.target_scopes.web = forgedMapping.cache.target_scopes.browser;
+  assert.throws(() => validateCacheAcceptance(forgedMapping), /Bake settings do not match the checked scope/);
+
+  const statusOnly = cacheProof("docker-warm");
+  refreshDockerEvidence(statusOnly, "BuildKit cache importer: gha\nBuildKit cache exporter: gha\n");
+  statusOnly.cache.actual_import = true;
+  statusOnly.cache.actual_export = true;
+  assert.throws(() => validateCacheAcceptance(statusOnly), /actual GHA import and export/);
+});
+
+test("Docker cache proof binds every checked Bake target to its manifest scope", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-checked-bake-proof-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const manifestPath = path.join(root, "image-handoff.json");
+  const outputPath = path.join(root, "phase182-cache-proof.json");
+  const targetCacheSettings = Object.fromEntries(Object.entries(FULL_DOCKER_SCOPES).map(([service, scope]) => [service, {
+    "cache-from": [`type=gha,scope=${scope},version=2,timeout=120s`],
+    "cache-to": [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`],
+  }]));
+  fs.writeFileSync(manifestPath, JSON.stringify({
+    scope: "full",
+    tags: { browser: "test-browser", standalone_ops: "test-ops", web: "test-web" },
+    cache_scopes: FULL_DOCKER_SCOPES,
+    cache_policy: { import: true, export: true },
+  }));
+  fs.writeFileSync(path.join(root, "bake.json"), JSON.stringify({ target: targetCacheSettings }));
+  const env = {
+    PHASE182_CACHE_MODE: "normal",
+    GITHUB_RUN_ID: "12345",
+    GITHUB_RUN_ATTEMPT: "1",
+    GITHUB_REPOSITORY: REPOSITORY,
+    GITHUB_REF_NAME: BRANCH,
+    GITHUB_SHA: SHA,
+    PRIMARY_VERIFICATION_OUTCOME: "success",
+  };
+
+  const proof = writeDockerProbeProof({ manifestPath, outputPath, env });
+  assert.deepEqual(proof.cache.target_scopes, FULL_DOCKER_SCOPES);
+  assert.deepEqual(Object.keys(proof.cache.target_cache_settings).sort(), Object.keys(FULL_DOCKER_SCOPES).sort());
+  assert.equal(JSON.parse(fs.readFileSync(outputPath, "utf8")).cache.target_scopes.web, FULL_DOCKER_SCOPES.web);
+
+  const forgedManifest = { ...JSON.parse(fs.readFileSync(manifestPath, "utf8")), cache_scopes: { ...FULL_DOCKER_SCOPES, web: "scrypath-forged-v1" } };
+  fs.writeFileSync(manifestPath, JSON.stringify(forgedManifest));
+  assert.throws(() => writeDockerProbeProof({ manifestPath, outputPath, env }), /Bake settings do not match the checked scope/);
 });
 
 test("required cache modes are exact and ordered", () => {
@@ -720,7 +849,7 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
     }
     if (args[0] === "run" && args[1] === "view") {
       return { stdout: activeMode === "docker-warm"
-        ? "Run mix verify.ecommerce_e2e\nimporting cache manifest from gha:scope=scrypath-probe\nexporting cache to gha:scope=scrypath-probe\n"
+        ? `Run mix verify.ecommerce_e2e\n${buildKitCacheLog()}\n`
         : activeMode === "beam-cold"
           ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\n"
           : activeMode.startsWith("beam-")
