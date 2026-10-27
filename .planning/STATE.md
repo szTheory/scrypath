@@ -5,7 +5,7 @@ milestone_name: Foundation and CI
 current_phase: 182
 current_phase_name: Reliable full browser verification and CI caches
 status: executing
-stopped_at: Phase 182 Wave 6 preflight repair running; do not dispatch 182-08 until repaired merge gates pass
+stopped_at: Phase 182 Wave 6 repairs merged and verified; Wave 7 ready for real hosted acceptance in 182-08
 last_updated: "2026-10-26T23:59:31.498Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 182 execution started
@@ -14,8 +14,8 @@ progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 6
-  percent: 75
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -25,22 +25,21 @@ progress:
 Scope, research reuse and all 21 requirements were explicitly confirmed by the
 maintainer on 2026-10-26. The maintainer then explicitly approved the roadmap
 covering Phases 182–185 with 21/21 requirements mapped once. Phase 182 now has
-eight checked plans, 16 tasks and seven waves. Plans 182-01 through 182-06 are
-merged and locally verified; Wave 6 executes plan 182-07 in a GSD-owned worktree.
+eight checked plans, 16 tasks and seven waves. Plans 182-01 through 182-07 are
+merged and locally verified; Wave 7 executes real acceptance in plan 182-08.
 No full-browser, hosted cache, delivery or final-source closeout pass is claimed.
 
 Plan 182-07's initial implementation is merged at `02d4fa5c`. Its combined Node
 suite passed 84 tests and the root suite passed 961 tests + five properties;
-the docs build and actionlint passed, while the touched wiring test still needs
-formatting. Upstream preflight found three acceptance blockers: combined cache
+the docs build and actionlint passed. Upstream preflight found three acceptance blockers: combined cache
 actions lack matched-key outputs; the BuildKit GHA progress parser expects
 synthetic wording; and probe cache rewrites disagree with checked image handoff.
-The repair worker is running in
-`/Users/jon/projects/scrypath/.claude/worktrees/agent-p182-07-repair-1793069489710`.
-Its GSD manifest is `/private/tmp/scrypath-phase182-execution/wave-6-repair.json`
-and its bounded task is `preflight-repairs.txt` in that directory. Reconcile this
-recorded worker and run fresh merged gates before dispatching 182-08, even though
-the initial 182-07 summary exists. Preserve both the earlier evidence and repair.
+All three are repaired in commits `0e60d9d2`, `d101f07f`, and `29fab44b`, with
+summary reconciliation `3c64cda9`; the GSD repair worktree is merged and removed.
+Fresh merged verification passed 90 Node tests, 961 root tests + five properties,
+CI-version formatting, actionlint, and the docs build. Preserve the original
+bounded evidence and appended repair record. The archived worker manifest is
+`/private/tmp/scrypath-phase182-execution/wave-6-repair.json`.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`, based on the local v1.44 archive
@@ -182,10 +181,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 182 (Reliable full browser verification and CI caches) — EXECUTING
-Plan: 7 of 8 — Wave 6 preflight integration repair running
+Plan: 8 of 8 — Wave 7 real hosted acceptance
 Status: Executing Phase 182
-Progress: [████████░░] 75% (6/8 plans)
-Last activity: 2026-10-26 — Wave 5 merged; 63 Node tests and 960 root tests + five properties pass; CI formatter passes
+Progress: [█████████░] 88% (7/8 plans)
+Last activity: 2026-10-26 — Wave 6 repairs merged; 90 Node tests and 961 root tests + five properties pass; docs/format/actionlint pass
 
 ## Delivered Evidence
 
@@ -244,8 +243,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-26T23:22:47.397Z
-Stopped at: Phase 182 Wave 6 preflight repair running; do not dispatch 182-08 until repaired merge gates pass
-Resume file: .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md
+Stopped at: Phase 182 Wave 6 repairs merged and verified; Wave 7 ready for real hosted acceptance in 182-08
+Resume file: .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
