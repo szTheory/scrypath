@@ -592,7 +592,10 @@ if [[ "$mode" == "--readiness-only" ]]; then
 else
   [[ "$scope" != "full" ]] || readiness_started=1
   if (( prebuilt_mode )); then
-    run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+    run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
+    if (( run_status == 0 )); then
+      run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+    fi
   else
     run_verification_bounded "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
   fi
