@@ -20,6 +20,7 @@ const {
   validateBrowserAcceptance,
   validateCacheAcceptance,
   validateFlags,
+  validateDockerHandoffBindings,
   validateWorkflowInputs,
   writeBeamProbeProof,
   writeDockerProbeProof,
@@ -63,7 +64,10 @@ function buildKitCacheLog(targetScopes = FULL_DOCKER_SCOPES) {
 }
 
 function refreshDockerEvidence(proof, logText) {
-  const evidence = parseBuildKitCacheProgress(logText, proof.cache.target_scopes);
+  const evidence = parseBuildKitCacheProgress(logText, proof.cache.target_scopes, {
+    recipe_ids: proof.cache.recipe_ids,
+    image_ids: proof.cache.image_ids,
+  });
   proof.cache.log_text = logText;
   proof.cache.log_sha256 = crypto.createHash("sha256").update(logText).digest("hex");
   proof.cache.actual_import = evidence.import_complete;
@@ -71,8 +75,25 @@ function refreshDockerEvidence(proof, logText) {
   proof.cache.imported_digest = evidence.imported_digest;
   proof.cache.exported_digest = evidence.exported_digest;
   proof.cache.cached_steps_digest = evidence.cached_steps_digest;
+  proof.cache.cache_binding_digest = evidence.cache_binding_digest;
   proof.cache.progress = evidence.targets;
   return proof;
+}
+
+function dockerRecipeBindings(targetScopes) {
+  const recipeIds = Object.fromEntries(Object.keys(targetScopes).sort().map((service, index) => [
+    service,
+    `sha256:${String(index + 1).repeat(64)}`,
+  ]));
+  const imageIds = Object.fromEntries(Object.keys(targetScopes).sort().map((service, index) => [
+    service,
+    `sha256:${String(index + 4).repeat(64)}`,
+  ]));
+  return {
+    recipeIds,
+    imageIds,
+    recipeDigest: `sha256:${crypto.createHash("sha256").update(JSON.stringify(recipeIds)).digest("hex")}`,
+  };
 }
 
 function exactRun(overrides = {}) {
@@ -154,8 +175,12 @@ function cacheProof(mode, overrides = {}) {
     import: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,timeout=120s`] : [],
     export: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`] : [],
   }]));
+  const recipeBindings = dockerRecipeBindings(targetScopes);
   const dockerEvidence = isDocker && mode === "docker-warm"
-    ? parseBuildKitCacheProgress(logText, targetScopes)
+    ? parseBuildKitCacheProgress(logText, targetScopes, {
+      recipe_ids: recipeBindings.recipeIds,
+      image_ids: recipeBindings.imageIds,
+    })
     : null;
   return {
     mode,
@@ -192,6 +217,7 @@ function cacheProof(mode, overrides = {}) {
       imported_digest: dockerEvidence?.imported_digest || null,
       exported_digest: dockerEvidence?.exported_digest || null,
       cached_steps_digest: dockerEvidence?.cached_steps_digest || null,
+      cache_binding_digest: dockerEvidence?.cache_binding_digest || null,
       progress: dockerEvidence?.targets || null,
       importer: mode === "docker-warm" ? "gha" : null,
       exporter: mode === "docker-warm" ? "gha" : null,
@@ -199,6 +225,9 @@ function cacheProof(mode, overrides = {}) {
       expected_targets: Object.keys(targetScopes).sort(),
       target_scopes: targetScopes,
       target_cache_settings: targetCacheSettings,
+      recipe_digest: recipeBindings.recipeDigest,
+      recipe_ids: recipeBindings.recipeIds,
+      image_ids: recipeBindings.imageIds,
       import_scopes: mode === "docker-warm" ? Object.values(targetScopes).sort() : [],
       export_scopes: mode === "docker-warm" ? Object.values(targetScopes).sort() : [],
       log_sha256: crypto.createHash("sha256").update(logText).digest("hex"),
@@ -354,6 +383,94 @@ test("BuildKit cache acceptance requires per-target imports, useful cache hits, 
   assert.throws(() => validateCacheAcceptance(statusOnly), /actual GHA import and export/);
 });
 
+test("BuildKit attributes deduplicated cached vertices only to identical recipe and image outputs", () => {
+  const proof = cacheProof("docker-warm");
+  const recipeIds = { ...proof.cache.recipe_ids, web: proof.cache.recipe_ids.standalone_ops };
+  const imageIds = { ...proof.cache.image_ids, web: proof.cache.image_ids.standalone_ops };
+  proof.cache.recipe_ids = recipeIds;
+  proof.cache.image_ids = imageIds;
+  proof.cache.recipe_digest = `sha256:${crypto.createHash("sha256").update(JSON.stringify(recipeIds)).digest("hex")}`;
+  const sharedLog = buildKitCacheLog().replace(/^#\d+ \[web 3\/6\] COPY mix\.exs mix\.exs\n#\d+ CACHED\n/m, "");
+  refreshDockerEvidence(proof, sharedLog);
+
+  assert.equal(proof.cache.actual_import, true);
+  assert.equal(proof.cache.actual_export, true);
+  assert.deepEqual(proof.cache.progress.web.cached_steps, []);
+  assert.deepEqual(proof.cache.progress.web.shared_cached_steps, [{
+    from: "standalone_ops",
+    steps: proof.cache.progress.standalone_ops.cached_steps,
+  }]);
+  assert.equal(validateCacheAcceptance(proof), true);
+
+  const unrelatedRecipe = cacheProof("docker-warm");
+  refreshDockerEvidence(unrelatedRecipe, sharedLog);
+  assert.equal(unrelatedRecipe.cache.actual_import, false);
+  assert.throws(() => validateCacheAcceptance(unrelatedRecipe), /actual GHA import and export/);
+
+  const differentImage = cacheProof("docker-warm");
+  const distinctRecipes = { ...differentImage.cache.recipe_ids, web: differentImage.cache.recipe_ids.standalone_ops };
+  differentImage.cache.recipe_ids = distinctRecipes;
+  differentImage.cache.recipe_digest = `sha256:${crypto.createHash("sha256").update(JSON.stringify(distinctRecipes)).digest("hex")}`;
+  refreshDockerEvidence(differentImage, sharedLog);
+  assert.equal(differentImage.cache.actual_import, false);
+  assert.throws(() => validateCacheAcceptance(differentImage), /actual GHA import and export/);
+
+  const sharedFailure = buildKitCacheLog().replace(/#\d+ DONE 1\.2s/, "#99 ERROR: cache exporter failed");
+  const failedProof = cacheProof("docker-warm");
+  failedProof.cache.recipe_ids = recipeIds;
+  failedProof.cache.image_ids = imageIds;
+  failedProof.cache.recipe_digest = proof.cache.recipe_digest;
+  refreshDockerEvidence(failedProof, sharedFailure.replace(/^#\d+ \[web 3\/6\] COPY mix\.exs mix\.exs\n#\d+ CACHED\n/m, ""));
+  assert.equal(failedProof.cache.actual_export, false);
+  assert.throws(() => validateCacheAcceptance(failedProof), /actual GHA import and export/);
+});
+
+test("BuildKit rejects malformed recipe bindings and malformed progress as cache proof", () => {
+  const malformedBinding = cacheProof("docker-warm");
+  malformedBinding.cache.recipe_ids.web = "sha256:not-a-digest";
+  assert.throws(() => validateCacheAcceptance(malformedBinding), /invalid recipe or image identity/);
+
+  const mismatchedDigest = cacheProof("docker-warm");
+  mismatchedDigest.cache.recipe_digest = `sha256:${"0".repeat(64)}`;
+  assert.throws(() => validateCacheAcceptance(mismatchedDigest), /recipe digest/);
+
+  const malformedProgress = parseBuildKitCacheProgress(
+    "#x [web 1/3] COPY mix.exs mix.exs\n#x CACHED\n#not-a-vertex DONE 0.1s",
+    FULL_DOCKER_SCOPES,
+    { recipe_ids: dockerRecipeBindings(FULL_DOCKER_SCOPES).recipeIds, image_ids: dockerRecipeBindings(FULL_DOCKER_SCOPES).imageIds },
+  );
+  assert.equal(malformedProgress.import_complete, false);
+  assert.equal(malformedProgress.export_complete, false);
+  assert.equal(malformedProgress.cached_steps_digest, null);
+});
+
+test("warm cache bindings join the exact full image handoff identities", () => {
+  const cache = cacheProof("docker-warm").cache;
+  const handoff = {
+    schema_version: 1,
+    scope: "full",
+    source_sha: SHA,
+    cache_probe: { mode: "normal", namespace: "candidate-7" },
+    handoff_status: "runtime_verified",
+    cache_action_outcome: "success",
+    cache_handoff_outcome: "success",
+    import_status: "completed",
+    export_status: "completed",
+    cache_scopes: cache.target_scopes,
+    recipe_digest: cache.recipe_digest,
+    recipe_ids: cache.recipe_ids,
+    image_ids: cache.image_ids,
+    runtime_image_ids: cache.image_ids,
+  };
+  assert.equal(validateDockerHandoffBindings({ cache, handoff, mode: "docker-warm", sourceSha: SHA }), true);
+  assert.throws(() => validateDockerHandoffBindings({
+    cache,
+    handoff: { ...handoff, image_ids: { ...handoff.image_ids, web: `sha256:${"e".repeat(64)}` } },
+    mode: "docker-warm",
+    sourceSha: SHA,
+  }), /recipe or image identities differ/);
+});
+
 test("BuildKit cache acceptance parses GitHub CLI job log prefixes without changing raw evidence", () => {
   const lines = buildKitCacheLog().split("\n");
   const githubLog = lines.map((line, index) =>
@@ -377,9 +494,13 @@ test("Docker cache proof binds every checked Bake target to its manifest scope",
     "cache-from": [`type=gha,scope=${scope},version=2,timeout=120s`],
     "cache-to": [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`],
   }]));
+  const recipeBindings = dockerRecipeBindings(FULL_DOCKER_SCOPES);
   fs.writeFileSync(manifestPath, JSON.stringify({
     scope: "full",
     tags: { browser: "test-browser", standalone_ops: "test-ops", web: "test-web" },
+    recipe_digest: recipeBindings.recipeDigest,
+    recipe_ids: recipeBindings.recipeIds,
+    image_ids: recipeBindings.imageIds,
     cache_scopes: FULL_DOCKER_SCOPES,
     cache_policy: { import: true, export: true },
   }));
@@ -397,6 +518,8 @@ test("Docker cache proof binds every checked Bake target to its manifest scope",
   const proof = writeDockerProbeProof({ manifestPath, outputPath, env });
   assert.deepEqual(proof.cache.target_scopes, FULL_DOCKER_SCOPES);
   assert.deepEqual(Object.keys(proof.cache.target_cache_settings).sort(), Object.keys(FULL_DOCKER_SCOPES).sort());
+  assert.deepEqual(proof.cache.recipe_ids, recipeBindings.recipeIds);
+  assert.deepEqual(proof.cache.image_ids, recipeBindings.imageIds);
   assert.equal(JSON.parse(fs.readFileSync(outputPath, "utf8")).cache.target_scopes.web, FULL_DOCKER_SCOPES.web);
 
   const forgedManifest = { ...JSON.parse(fs.readFileSync(manifestPath, "utf8")), cache_scopes: { ...FULL_DOCKER_SCOPES, web: "scrypath-forged-v1" } };
@@ -424,8 +547,15 @@ test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
   }
   for (const jobName of ["ecommerce-mounted", "ecommerce-e2e"]) {
     const job = workflow.match(new RegExp(`  ${jobName}:[\\s\\S]*?(?=\\n  [a-zA-Z0-9_-]+:\\n|$)`))?.[0] || "";
-    assert.match(job, /PHASE182_CACHE_MODE: \$\{\{ inputs\.phase182_cache_mode \|\| 'normal' \}\}/);
-    assert.match(job, /PHASE182_PROBE_NAMESPACE: \$\{\{ inputs\.phase182_probe_namespace \|\| '' \}\}/);
+    const beamPlanStart = job.indexOf("- id: beam_cache");
+    const beamPlanEnd = job.indexOf("\n      - ", beamPlanStart + 1);
+    const beamPlan = job.slice(beamPlanStart, beamPlanEnd < 0 ? undefined : beamPlanEnd);
+    assert.match(beamPlan, /PHASE182_CACHE_MODE: normal/);
+    assert.match(beamPlan, /PHASE182_PROBE_NAMESPACE: ""/);
+    assert.doesNotMatch(job.slice(0, job.indexOf("    steps:")), /PHASE182_CACHE_MODE:|PHASE182_PROBE_NAMESPACE:/);
+    const dockerJob = jobName === "ecommerce-mounted" ? "mounted" : "full";
+    assert.ok(job.includes("PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs." + dockerJob + "_docker_mode }}"));
+    assert.ok(job.includes("PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs." + dockerJob + "_docker_namespace }}"));
   }
 });
 
@@ -442,8 +572,49 @@ test("workflow input validation writes only bounded mode and namespace outputs",
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const outputPath = path.join(root, "github-output.txt");
   const result = validateWorkflowInputs({ mode: "beam-fallback", namespace: "candidate-7", outputPath });
-  assert.deepEqual(result, { mode: "beam-fallback", namespace: "candidate-7" });
-  assert.match(fs.readFileSync(outputPath, "utf8"), /^mode=beam-fallback\nproof_mode=beam-fallback\nnamespace=candidate-7\n$/);
+  assert.deepEqual(result, {
+    mode: "beam-fallback",
+    namespace: "candidate-7",
+    beam_mode: "beam-fallback",
+    beam_namespace: "candidate-7",
+    mounted_docker_mode: "normal",
+    mounted_docker_namespace: "",
+    full_docker_mode: "normal",
+    full_docker_namespace: "",
+  });
+  assert.match(fs.readFileSync(outputPath, "utf8"), /^mode=beam-fallback\nproof_mode=beam-fallback\nnamespace=candidate-7\nbeam_mode=beam-fallback\nbeam_namespace=candidate-7\nmounted_docker_mode=normal\nmounted_docker_namespace=\nfull_docker_mode=normal\nfull_docker_namespace=\n$/);
+  assert.deepEqual(validateWorkflowInputs({ mode: "docker-cold", namespace: "cold-7" }), {
+    mode: "docker-cold",
+    namespace: "cold-7",
+    beam_mode: "normal",
+    beam_namespace: "",
+    mounted_docker_mode: "docker-cold",
+    mounted_docker_namespace: "",
+    full_docker_mode: "normal",
+    full_docker_namespace: "",
+  });
+  assert.deepEqual(validateWorkflowInputs({ mode: "normal", namespace: "warm-7" }), {
+    mode: "normal",
+    namespace: "warm-7",
+    beam_mode: "normal",
+    beam_namespace: "",
+    mounted_docker_mode: "normal",
+    mounted_docker_namespace: "warm-7",
+    full_docker_mode: "normal",
+    full_docker_namespace: "warm-7",
+  });
+  for (const mode of ["beam-cold", "beam-fallback", "beam-lock-change"]) {
+    assert.deepEqual(validateWorkflowInputs({ mode, namespace: "candidate-7" }), {
+      mode,
+      namespace: "candidate-7",
+      beam_mode: mode,
+      beam_namespace: "candidate-7",
+      mounted_docker_mode: "normal",
+      mounted_docker_namespace: "",
+      full_docker_mode: "normal",
+      full_docker_namespace: "",
+    });
+  }
   assert.throws(() => validateWorkflowInputs({ mode: "beam-fallback;touch-pwned", namespace: "" }), /cache mode/);
   assert.throws(() => validateWorkflowInputs({ mode: "beam-fallback", namespace: "candidate\nkey=override" }), /lowercase slug/);
 });
@@ -786,6 +957,23 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
     "lifecycle.json",
     "playwright-report/index.html",
   ].map((name) => [name, name.endsWith(".json") ? "{}" : "fixture\n"]));
+  const warmCache = cacheProof("docker-warm").cache;
+  browserMembers["image-handoff.json"] = JSON.stringify({
+    schema_version: 1,
+    scope: "full",
+    source_sha: SHA,
+    cache_probe: { mode: "normal", namespace: "candidate-7" },
+    handoff_status: "runtime_verified",
+    cache_action_outcome: "success",
+    cache_handoff_outcome: "success",
+    import_status: "completed",
+    export_status: "completed",
+    cache_scopes: warmCache.target_scopes,
+    recipe_digest: warmCache.recipe_digest,
+    recipe_ids: warmCache.recipe_ids,
+    image_ids: warmCache.image_ids,
+    runtime_image_ids: warmCache.image_ids,
+  });
   const browserArchive = Buffer.from("phase182-browser-archive");
   const cacheArchive = Buffer.from("phase182-cache-archive");
   const jobs = [

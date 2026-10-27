@@ -128,6 +128,8 @@ function recipeOptions(target) {
   }
   if (normalized.labels) {
     delete normalized.labels["com.docker.compose.project"];
+    delete normalized.labels["com.docker.compose.service"];
+    delete normalized.labels["com.docker.compose.version"];
     delete normalized.labels[revisionLabel];
     delete normalized.labels[fingerprintLabel];
   }
@@ -294,6 +296,7 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
     sourceFingerprint: fingerprint,
     modelDigest: digest(canonicalJson(composeModelForDigest(model))),
     recipeDigest,
+    recipeIds,
     tags,
     cacheScopes,
     cachePolicy,
@@ -328,6 +331,7 @@ function prepareBuild({ scope, output, env = process.env, runCommand = run, proj
     source_fingerprint: resolved.sourceFingerprint || null,
     model_digest: resolved.modelDigest,
     recipe_digest: resolved.recipeDigest,
+    recipe_ids: resolved.recipeIds,
     tags: resolved.tags,
     image_ids: {},
     builder_id: env.BUILDER_ID || null,
@@ -373,7 +377,8 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
   if (manifest.source_sha !== resolved.sourceSha || manifest.source_fingerprint !== (resolved.sourceFingerprint || null)) {
     throw new Error("image handoff source SHA or fingerprint mismatch");
   }
-  if (manifest.model_digest !== resolved.modelDigest || manifest.recipe_digest !== resolved.recipeDigest) {
+  if (manifest.model_digest !== resolved.modelDigest || manifest.recipe_digest !== resolved.recipeDigest ||
+    canonicalJson(manifest.recipe_ids) !== canonicalJson(resolved.recipeIds)) {
     throw new Error("image handoff Compose model or recipe digest mismatch");
   }
   if (canonicalJson(manifest.tags) !== canonicalJson(resolved.tags) ||

@@ -204,12 +204,30 @@ function appendWorkflowOutputs(outputPath, values) {
 function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } = {}) {
   const validatedMode = validateDispatchCacheMode(mode);
   const validatedNamespace = validateProbeNamespace(namespace);
+  const beamProbe = validatedMode.startsWith("beam-");
+  const mountedDockerMode = validatedMode === "docker-cold" ? "docker-cold" : "normal";
+  const dockerNamespace = validatedMode === "normal" ? validatedNamespace : "";
   appendWorkflowOutputs(outputPath, {
     mode: validatedMode,
     proof_mode: validatedMode === "normal" ? "docker-warm" : validatedMode,
     namespace: validatedNamespace,
+    beam_mode: beamProbe ? validatedMode : "normal",
+    beam_namespace: beamProbe ? validatedNamespace : "",
+    mounted_docker_mode: mountedDockerMode,
+    mounted_docker_namespace: dockerNamespace,
+    full_docker_mode: "normal",
+    full_docker_namespace: dockerNamespace,
   });
-  return { mode: validatedMode, namespace: validatedNamespace };
+  return {
+    mode: validatedMode,
+    namespace: validatedNamespace,
+    beam_mode: beamProbe ? validatedMode : "normal",
+    beam_namespace: beamProbe ? validatedNamespace : "",
+    mounted_docker_mode: mountedDockerMode,
+    mounted_docker_namespace: dockerNamespace,
+    full_docker_mode: "normal",
+    full_docker_namespace: dockerNamespace,
+  };
 }
 
 function validRunIdentity(runId, attempt) {
@@ -347,6 +365,12 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
       canonicalJson(expectedTargets) !== canonicalJson(Object.keys(targetScopes).sort())) {
     throw new Error("checked Docker Bake targets do not match the image handoff manifest");
   }
+  validateDockerRecipeBindings({
+    recipeIds: manifest.recipe_ids,
+    imageIds: manifest.image_ids,
+    recipeDigest: manifest.recipe_digest,
+    expectedTargets,
+  });
   validateDockerTargetBindings({
     scope: manifest.scope,
     expected_targets: expectedTargets,
@@ -402,6 +426,9 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
       expected_targets: expectedTargets,
       target_scopes: targetScopes,
       target_cache_settings: targetCacheSettings,
+      recipe_digest: manifest.recipe_digest,
+      recipe_ids: structuredClone(manifest.recipe_ids),
+      image_ids: structuredClone(manifest.image_ids),
       import_scopes: scopes,
       export_scopes: exportScopes,
       ...(mode === "docker-cold" ? { miss_reason: "fresh builder with BuildKit cache imports disabled" } : {}),
@@ -870,7 +897,57 @@ function validateDockerTargetBindings(cache, mode) {
   return expectedTargets;
 }
 
-function parseBuildKitCacheProgress(logText, targetScopes) {
+function validateDockerRecipeBindings({ recipeIds, imageIds, recipeDigest, expectedTargets }) {
+  const exactKeys = (value) => value && typeof value === "object" && !Array.isArray(value) &&
+    canonicalJson(Object.keys(value).sort()) === canonicalJson(expectedTargets.slice().sort());
+  if (!exactKeys(recipeIds) || !exactKeys(imageIds)) {
+    throw new Error("Docker cache proof is missing exact per-target recipe and image identities");
+  }
+  for (const service of expectedTargets) {
+    if (!/^sha256:[a-f0-9]{64}$/.test(recipeIds[service] || "") ||
+        !/^sha256:[a-f0-9]{64}$/.test(imageIds[service] || "")) {
+      throw new Error(`Docker cache proof has an invalid recipe or image identity for ${service}`);
+    }
+  }
+  if (recipeDigest !== `sha256:${sha256(canonicalJson(recipeIds))}`) {
+    throw new Error("Docker cache proof recipe digest does not match the per-target recipe identities");
+  }
+  return true;
+}
+
+function validateDockerHandoffBindings({ cache, handoff, mode, sourceSha }) {
+  const expectedScope = mode === "docker-warm" ? "full" : mode === "docker-cold" ? "focused" : "";
+  const expectedProbeMode = mode === "docker-warm" ? "normal" : mode;
+  if (!expectedScope || !handoff || handoff.schema_version !== 1 || handoff.scope !== expectedScope ||
+      handoff.source_sha !== sourceSha || handoff.cache_probe?.mode !== expectedProbeMode ||
+      handoff.handoff_status !== "runtime_verified" || handoff.cache_action_outcome !== "success" ||
+      handoff.cache_handoff_outcome !== "success" ||
+      canonicalJson(handoff.cache_scopes) !== canonicalJson(cache.target_scopes)) {
+    throw new Error("Docker cache proof does not join the checked browser image handoff");
+  }
+  if (mode === "docker-warm" && (handoff.import_status !== "completed" || handoff.export_status !== "completed")) {
+    throw new Error("Docker warm proof requires completed per-target import and export handoff status");
+  }
+  if (mode === "docker-cold" && (handoff.import_status !== "not_configured" || handoff.export_status !== "not_configured")) {
+    throw new Error("Docker cold proof must retain disabled import and export handoff status");
+  }
+  const expectedTargets = validateDockerTargetBindings(cache, mode);
+  validateDockerRecipeBindings({
+    recipeIds: handoff.recipe_ids,
+    imageIds: handoff.image_ids,
+    recipeDigest: handoff.recipe_digest,
+    expectedTargets,
+  });
+  if (canonicalJson(cache.recipe_ids) !== canonicalJson(handoff.recipe_ids) ||
+      cache.recipe_digest !== handoff.recipe_digest ||
+      canonicalJson(cache.image_ids) !== canonicalJson(handoff.image_ids) ||
+      canonicalJson(handoff.runtime_image_ids) !== canonicalJson(handoff.image_ids)) {
+    throw new Error("Docker cache proof recipe or image identities differ from the verified handoff");
+  }
+  return true;
+}
+
+function parseBuildKitCacheProgress(logText, targetScopes, recipeBindings = {}) {
   const expectedTargets = Object.keys(targetScopes || {}).sort();
   const targetSet = new Set(expectedTargets);
   const lines = String(logText).split(/\r?\n/);
@@ -920,9 +997,34 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
     }
   }
 
+  const recipeIds = recipeBindings.recipe_ids || {};
+  const imageIds = recipeBindings.image_ids || {};
+  const sharedCachedSteps = new Map(expectedTargets.map((service) => [service, []]));
+  const recipeGroups = new Map();
+  for (const service of expectedTargets) {
+    const recipeId = recipeIds[service];
+    const imageId = imageIds[service];
+    if (typeof recipeId !== "string" || typeof imageId !== "string" || !recipeId || !imageId) continue;
+    const key = `${recipeId}\0${imageId}`;
+    if (!recipeGroups.has(key)) recipeGroups.set(key, []);
+    recipeGroups.get(key).push(service);
+  }
+  for (const services of recipeGroups.values()) {
+    if (services.length < 2) continue;
+    const hitSources = services.filter((service) => cachedSteps.get(service).length > 0);
+    if (!hitSources.length) continue;
+    for (const service of services) {
+      if (cachedSteps.get(service).length > 0) continue;
+      for (const from of hitSources) {
+        sharedCachedSteps.get(service).push({ from, steps: cachedSteps.get(from).slice() });
+      }
+    }
+  }
+
   const importComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
     const entries = imports.get(service);
-    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) && cachedSteps.get(service).length > 0;
+    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) &&
+      (cachedSteps.get(service).length > 0 || sharedCachedSteps.get(service).length > 0);
   });
   const matchingLines = (predicate) => buildKitLines.flatMap((line, index) => predicate(line) ? [lines[index]] : []);
   const cacheFailureLines = matchingLines((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
@@ -935,17 +1037,21 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
   const importBytes = matchedLines(importLineIndexes).join("\n");
   const exportBytes = matchedLines(exportLineIndexes).join("\n");
   const cachedBytes = matchedLines(cachedLineIndexes).join("\n");
+  const progressTargets = Object.fromEntries(expectedTargets.map((service) => [service, {
+    imports: imports.get(service),
+    cached_steps: cachedSteps.get(service),
+    shared_cached_steps: sharedCachedSteps.get(service),
+    exports: exports.get(service),
+  }]));
+  const cacheBindings = { recipe_ids: recipeIds, image_ids: imageIds };
   return {
     import_complete: importComplete,
     export_complete: exportComplete,
     imported_digest: importBytes ? `sha256:${sha256(importBytes)}` : null,
     exported_digest: exportBytes ? `sha256:${sha256(exportBytes)}` : null,
     cached_steps_digest: cachedBytes ? `sha256:${sha256(cachedBytes)}` : null,
-    targets: Object.fromEntries(expectedTargets.map((service) => [service, {
-      imports: imports.get(service),
-      cached_steps: cachedSteps.get(service),
-      exports: exports.get(service),
-    }])),
+    cache_binding_digest: cachedBytes ? `sha256:${sha256(canonicalJson({ cached: cachedBytes, bindings: cacheBindings, targets: progressTargets }))}` : null,
+    targets: progressTargets,
     exporter_warnings: exporterWarnings,
     cache_errors: cacheFailureLines,
   };
@@ -978,17 +1084,34 @@ function validateCacheAcceptance(proof) {
   }
   if (mode === "docker-warm") {
     const expectedTargets = validateDockerTargetBindings(cache, mode);
-    const evidence = parseBuildKitCacheProgress(cache.log_text, cache.target_scopes);
+    validateDockerRecipeBindings({
+      recipeIds: cache.recipe_ids,
+      imageIds: cache.image_ids,
+      recipeDigest: cache.recipe_digest,
+      expectedTargets,
+    });
+    const evidence = parseBuildKitCacheProgress(cache.log_text, cache.target_scopes, {
+      recipe_ids: cache.recipe_ids,
+      image_ids: cache.image_ids,
+    });
     if (cache.kind !== "buildkit" || cache.imports_enabled !== true || cache.actual_import !== evidence.import_complete || cache.actual_export !== evidence.export_complete ||
         evidence.import_complete !== true || evidence.export_complete !== true ||
         cache.imported_digest !== evidence.imported_digest || cache.exported_digest !== evidence.exported_digest ||
-        cache.cached_steps_digest !== evidence.cached_steps_digest || canonicalJson(cache.progress) !== canonicalJson(evidence.targets) ||
+        cache.cached_steps_digest !== evidence.cached_steps_digest || cache.cache_binding_digest !== evidence.cache_binding_digest ||
+        canonicalJson(cache.progress) !== canonicalJson(evidence.targets) ||
         cache.importer !== "gha" || cache.exporter !== "gha" || expectedTargets.length < 2 ||
         proof.commands.primary_verification !== "success") {
       throw new Error("docker-warm requires actual GHA import and export log evidence");
     }
   } else if (mode === "docker-cold") {
-    if (cache.kind !== "buildkit" || cache.imports_enabled !== false || cache.actual_import !== false || !proof.builder || proof.builder.fresh !== true || proof.builder.persistent !== false ||
+    const expectedTargets = validateDockerTargetBindings(cache, mode);
+    validateDockerRecipeBindings({
+      recipeIds: cache.recipe_ids,
+      imageIds: cache.image_ids,
+      recipeDigest: cache.recipe_digest,
+      expectedTargets,
+    });
+    if (cache.kind !== "buildkit" || cache.imports_enabled !== false || cache.actual_import !== false || cache.actual_export !== false || !proof.builder || proof.builder.fresh !== true || proof.builder.persistent !== false ||
         proof.builder.created_for_run_id !== String(proof.run.id) || proof.builder.created_for_attempt !== proof.run.attempt || !requireText(proof.builder.id, "fresh builder ID") ||
         proof.builder.driver !== "docker-container" || !Array.isArray(proof.builder.cache_from) || proof.builder.cache_from.length !== 0 ||
         validTimestamp(proof.builder.created_at, "fresh builder creation time") < validTimestamp(proof.run.started_at, "run start") ||
@@ -1330,7 +1453,7 @@ function cacheLogForMode(mode, command, repo, run, jobs) {
   return { job, raw };
 }
 
-function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run, session, jobLog) {
+function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run, session, jobLog, imageHandoff) {
   const { archivePath } = downloadArtifact(command, repo, artifact, runDirectory);
   const members = listArchive(command, archivePath);
   const probe = readJsonMember(command, archivePath, members, "phase182-cache-proof.json");
@@ -1340,12 +1463,19 @@ function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run,
   }
   const cache = { ...probe.cache };
   if (mode.startsWith("docker-")) {
-    const evidence = parseBuildKitCacheProgress(jobLog, cache.target_scopes);
+    if (mode === "docker-warm") {
+      validateDockerHandoffBindings({ cache, handoff: imageHandoff, mode, sourceSha: run.sha });
+    }
+    const evidence = parseBuildKitCacheProgress(jobLog, cache.target_scopes, {
+      recipe_ids: cache.recipe_ids,
+      image_ids: cache.image_ids,
+    });
     cache.actual_import = evidence.import_complete;
     cache.actual_export = evidence.export_complete;
     cache.imported_digest = evidence.imported_digest;
     cache.exported_digest = evidence.exported_digest;
     cache.cached_steps_digest = evidence.cached_steps_digest;
+    cache.cache_binding_digest = evidence.cache_binding_digest;
     cache.progress = evidence.targets;
   }
   const proof = {
@@ -1397,6 +1527,11 @@ function collectRun(inputFlags, dependencies = {}) {
     fs.mkdirSync(runDirectory, { recursive: false, mode: 0o700 });
     const browserDownload = downloadArtifact(command, flags.repo, browserArtifact, runDirectory);
     const browserLog = getJobLog(command, flags.repo, run.id, run.attempt, browserJob);
+    let imageHandoff = null;
+    if (flags.mode === "docker-warm") {
+      const browserMembers = listArchive(command, browserDownload.archivePath);
+      imageHandoff = readJsonMember(command, browserDownload.archivePath, browserMembers, "image-handoff.json");
+    }
     const browser = validateBrowserArchive(command, browserDownload.archivePath, path.join(runDirectory, "browser"), run, browserJob, browserArtifact, flags, dependencies.browserValidator);
 
     let cache;
@@ -1404,7 +1539,7 @@ function collectRun(inputFlags, dependencies = {}) {
     if (REQUIRED_CACHE_MODES.includes(flags.mode)) {
       cacheArtifact = requireArtifact(artifacts, `phase182-cache-probe-${flags.mode}-${run.id}-${run.attempt}`, run, flags.repo);
       const { job, raw } = cacheLogForMode(flags.mode, command, flags.repo, run, jobs);
-      cache = validateProbeArtifact(command, flags.repo, cacheArtifact, runDirectory, flags.mode, run, session, raw);
+      cache = validateProbeArtifact(command, flags.repo, cacheArtifact, runDirectory, flags.mode, run, session, raw, imageHandoff);
       cache.cache_job = { id: String(job.id), name: job.name, conclusion: job.conclusion };
     }
     const receipt = {
@@ -1717,6 +1852,7 @@ module.exports = {
   validateBrowserAcceptance,
   validateCacheAcceptance,
   validateDispatchCacheMode,
+  validateDockerHandoffBindings,
   validateFlags,
   validateProbeNamespace,
   validateWorkflowInputs,
