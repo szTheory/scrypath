@@ -1205,23 +1205,47 @@ function waitForDispatchedRun(command, flags, beforeIds, options) {
   if (!Number.isSafeInteger(timeoutSeconds) || timeoutSeconds < 1 || timeoutSeconds > MAX_POLL_SECONDS) throw new Error(`timeout must be between 1 and ${MAX_POLL_SECONDS} seconds`);
   const pollMilliseconds = options.pollMilliseconds ?? 5000;
   const deadline = Date.now() + timeoutSeconds * 1000;
+  let selectedRunId = null;
+  let pendingDetail = "";
   while (Date.now() <= deadline) {
-    const candidate = listWorkflowRuns(command, flags.repo, flags.branch)
-      .filter((run) => !beforeIds.has(String(run.id)) && !beforeIds.has(String(run.databaseId)))
-      .find((run) => (run.head_sha || run.headSha) === flags.sha && (run.head_branch || run.headBranch) === flags.branch && run.event === "workflow_dispatch");
-    if (candidate) {
-      const runId = String(candidate.id ?? candidate.databaseId);
+    if (!selectedRunId) {
+      const candidate = listWorkflowRuns(command, flags.repo, flags.branch)
+        .filter((run) => !beforeIds.has(String(run.id)) && !beforeIds.has(String(run.databaseId)))
+        .find((run) => (run.head_sha || run.headSha) === flags.sha && (run.head_branch || run.headBranch) === flags.branch && run.event === "workflow_dispatch");
+      if (candidate) selectedRunId = String(candidate.id ?? candidate.databaseId);
+    }
+    if (selectedRunId) {
+      const runId = selectedRunId;
       const detail = apiJson(command, `repos/${flags.repo}/actions/runs/${runId}`);
       const summary = runSummary(detail, flags.repo);
       if (summary.repository !== flags.repo || summary.head_repository !== flags.repo || !summary.repository_id || !summary.head_repository_id || summary.workflow !== WORKFLOW || summary.sha !== flags.sha || summary.branch !== flags.branch || summary.event !== "workflow_dispatch" || summary.id !== runId) {
         throw new Error("new workflow dispatch run does not match the requested ref and source SHA");
       }
-      if (summary.status === "completed") return summary;
+      if (summary.status === "completed") {
+        // Run, attempt-job and artifact endpoints can become terminal at different
+        // times. Read readiness without redispatching, then retain that exact
+        // snapshot so a second fetch cannot regress to older metadata.
+        const jobs = collectAttemptJobs(command, flags.repo, runId, summary.attempt);
+        const browserJob = validateCompletedJobs(jobs, { allowPending: true });
+        if (browserJob) {
+          const artifacts = flattenPages(apiJson(command, `repos/${flags.repo}/actions/runs/${runId}/artifacts?per_page=100`, { paginate: true }), "artifacts", "artifact");
+          const requiredNames = [`ecommerce-e2e-evidence-${runId}-${summary.attempt}`];
+          if (REQUIRED_CACHE_MODES.includes(flags.mode)) requiredNames.push(`phase182-cache-probe-${flags.mode}-${runId}-${summary.attempt}`);
+          const missing = requiredNames.find((name) => !artifacts.some((artifact) => artifact.name === name));
+          if (!missing) {
+            for (const name of requiredNames) requireArtifact(artifacts, name, summary, flags.repo);
+            return { run: summary, jobs, browserJob, artifacts };
+          }
+          pendingDetail = `expected exactly one live ${missing} artifact from the selected attempt`;
+        } else {
+          try { validateCompletedJobs(jobs); } catch (error) { pendingDetail = error.message; }
+        }
+      }
     }
     if (options.sleep) options.sleep(pollMilliseconds);
     else Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, pollMilliseconds);
   }
-  throw new Error(`timed out waiting for a newly dispatched CI run at ${flags.sha} on ${flags.branch}`);
+  throw new Error(`timed out waiting for a newly dispatched CI run at ${flags.sha} on ${flags.branch}${pendingDetail ? `: ${pendingDetail}` : ""}`);
 }
 
 function collectAttemptJobs(command, repo, runId, attempt) {
@@ -1256,18 +1280,27 @@ function summarizePreviousAttempts(command, repo, runId, latestAttempt) {
   return attempts;
 }
 
-function validateCompletedJobs(jobs) {
+function validateCompletedJobs(jobs, { allowPending = false } = {}) {
+  let pending = false;
   for (const name of REQUIRED_JOBS) {
     const matches = jobs.filter((job) => job.name === name);
-    if (matches.length !== 1 || matches[0].status !== "completed" || matches[0].conclusion !== "success") {
+    if (matches.length !== 1 || matches[0].status !== "completed") {
+      if (allowPending && matches.length <= 1) { pending = true; continue; }
+      throw new Error(`${name} must have exactly one completed successful job in the selected attempt`);
+    }
+    if (matches[0].conclusion !== "success") {
       throw new Error(`${name} must have exactly one completed successful job in the selected attempt`);
     }
   }
   const browserJobs = jobs.filter((job) => job.name === "ecommerce-e2e (advisory)");
-  if (browserJobs.length !== 1 || browserJobs[0].status !== "completed" || !["success", "failure"].includes(browserJobs[0].conclusion)) {
+  if (browserJobs.length !== 1 || browserJobs[0].status !== "completed") {
+    if (allowPending && browserJobs.length <= 1) return null;
     throw new Error("full advisory browser job must have exactly one completed attempt");
   }
-  return browserJobs[0];
+  if (!["success", "failure"].includes(browserJobs[0].conclusion)) {
+    throw new Error("full advisory browser job must have exactly one completed attempt");
+  }
+  return pending ? null : browserJobs[0];
 }
 
 function getJobLog(command, repo, runId, attempt, job) {
@@ -1515,13 +1548,12 @@ function collectRun(inputFlags, dependencies = {}) {
     const cacheMode = workflowCacheInput(flags.mode);
     const dispatch = ["workflow", "run", "ci.yml", "--ref", flags.branch, "-f", `phase182_cache_mode=${cacheMode}`, "-f", `phase182_probe_namespace=${flags.probeNamespace}`, "--repo", flags.repo];
     command(GH, dispatch);
-    run = waitForDispatchedRun(command, flags, beforeIds, dependencies);
+    const completed = waitForDispatchedRun(command, flags, beforeIds, dependencies);
+    run = completed.run;
     run.previous_attempts = summarizePreviousAttempts(command, flags.repo, run.id, run.attempt);
     const workflow = apiJson(command, `repos/${flags.repo}/actions/workflows/ci.yml`);
     if (workflow.path !== WORKFLOW) throw new Error("selected workflow metadata is not the existing CI workflow");
-    const jobs = collectAttemptJobs(command, flags.repo, run.id, run.attempt);
-    const browserJob = validateCompletedJobs(jobs);
-    const artifacts = flattenPages(apiJson(command, `repos/${flags.repo}/actions/runs/${run.id}/artifacts?per_page=100`, { paginate: true }), "artifacts", "artifact");
+    const { jobs, browserJob, artifacts } = completed;
     const browserArtifact = requireArtifact(artifacts, `ecommerce-e2e-evidence-${run.id}-${run.attempt}`, run, flags.repo);
     const runDirectory = path.join(invocation.invocationDir, "runs", `${run.id}-attempt-${run.attempt}`);
     fs.mkdirSync(path.dirname(runDirectory), { recursive: true, mode: 0o700 });
