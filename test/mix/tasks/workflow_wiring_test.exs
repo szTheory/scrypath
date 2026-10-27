@@ -768,7 +768,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       verifier = File.read!("examples/scrypath_ecommerce/scripts/verify-e2e.sh")
 
       assert verifier =~ "test-results/docker-${scope}"
-      assert verifier =~ ~s|"/tmp/scrypath-e2e-$run_id"|
+      assert verifier =~ ~s|"/tmp/$run_id"|
       assert verifier =~ "E2E_CONTAINER_ARTIFACT_DIR"
       assert verifier =~ "compose.log"
       assert verifier =~ "artifact_copy_status"
