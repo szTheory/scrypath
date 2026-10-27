@@ -355,7 +355,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
           stderr_to_stdout: true
         )
 
-      assert status == 0, "browser build and behavior tests failed with status #{status}:\n#{output}"
+      assert status == 0,
+             "browser build and behavior tests failed with status #{status}:\n#{output}"
 
       assert [_, count] = Regex.run(~r/^# tests (\d+)$/m, output),
              "Node test output did not report a test count:\n#{output}"
@@ -574,7 +575,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         assert job =~ "version: v0.37.2"
         assert job =~ "driver-opts: image=moby/buildkit:v0.33.1"
         assert job =~ "uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e"
-        assert job =~ "files: ${{ runner.temp }}/ecommerce-#{cache_job}-${{ github.run_id }}-${{ github.run_attempt }}/bake.json"
+
+        assert job =~
+                 "files: ${{ runner.temp }}/ecommerce-#{cache_job}-${{ github.run_id }}-${{ github.run_attempt }}/bake.json"
+
         assert job =~ "load: true"
         assert job =~ "push: false"
         assert job =~ "ecommerce_build.cjs verify-handoff --manifest"

@@ -156,7 +156,10 @@ None - plan executed as written.
 ## Issues Encountered
 
 - Initial `mix` verification could not start because dependencies had not been fetched. The default `mix deps.get` then failed when Hex tried to write `/Users/jon/.hex/cache.ets` (`:eaccess`). Redirecting `HEX_HOME` and `MIX_HOME` to `/private/tmp/scrypath-phase182-06-*` allowed the locked dependency fetch and warning-as-error checks to complete; no lockfile changes were made.
-- An optional `mix format --check-formatted test/mix/tasks/workflow_wiring_test.exs` check still reports two unchanged formatting issues already present before this plan. It did not report the lines changed by this plan. The plan’s compile/test verification passed.
+- The executor's formatter check reported two formatting issues from the preceding
+  plan in the same touched wiring test. Post-merge verification reproduced them
+  under CI's Elixir 1.19.0; the orchestrator formatted that file and confirmed the
+  formatter passes before advancing the wave.
 - No hosted cache fallback, changed-lock miss, or cold-cache execution was claimed; those receipts remain assigned to 182-08.
 
 ## User Setup Required
