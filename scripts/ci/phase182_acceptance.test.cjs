@@ -259,6 +259,16 @@ test("required cache modes are exact and ordered", () => {
   ]);
 });
 
+test("CI exposes bounded opt-in phase182 cache probe inputs", () => {
+  const workflow = fs.readFileSync(path.join(__dirname, "../../.github/workflows/ci.yml"), "utf8");
+  assert.match(workflow, /workflow_dispatch:\n\s+inputs:\n/);
+  assert.match(workflow, /phase182_cache_mode:\n\s+description: [^\n]+\n\s+type: choice\n\s+default: normal\n\s+options:\n(?:\s+- [^\n]+\n){5}/);
+  assert.match(workflow, /phase182_probe_namespace:\n\s+description: [^\n]+\n\s+type: string\n\s+default: ""/);
+  for (const mode of ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]) {
+    assert.match(workflow, new RegExp(`^\\s+- ${mode.replaceAll("-", "\\-")}\\s*$`, "m"));
+  }
+});
+
 test("collectRun retains repeated-mode attempts in distinct directories and rejects session mismatch without mutation", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-session-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
