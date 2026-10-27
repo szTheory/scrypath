@@ -141,7 +141,9 @@ Plan metadata is committed separately after this summary's self-check.
 
 ## Deviations from Plan
 
-None - plan executed exactly as written.
+Post-merge root verification found that the historical Phase 147 contract also
+requires the literal advisory-posture sentence in CONTRIBUTING. Restored that
+wording while preserving the scheduled/manual trigger and new evidence runbook.
 
 ## Issues Encountered
 

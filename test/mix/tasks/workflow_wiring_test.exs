@@ -493,7 +493,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert workflow_job_block(ci, "ecommerce-mounted") =~ "mix verify.ecommerce_mounted"
 
       assert contributing =~ "**`ecommerce-mounted`**"
-      assert contributing =~ "`ecommerce-e2e` job remains advisory"
+      assert contributing =~ "`ecommerce-e2e` is advisory today"
     end
 
     test "ecommerce-e2e preserves raw outcome and uploads only this run's evidence" do
