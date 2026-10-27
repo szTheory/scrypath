@@ -219,6 +219,43 @@ test("prepare derives focused and full local tags and keeps separate recipe scop
   assert.ok(Object.entries(full.manifest.tags).every(([service, tag]) => tag === `${full.project}-${service}`));
 });
 
+test("trusted full CI prepares bounded version-2 cache exporters", (t) => {
+  const project = "scrypath-e2e-build-test";
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const env = {
+    ...process.env,
+    E2E_SCOPE: "full",
+    E2E_CACHE_JOB: "full",
+    E2E_EVENT_NAME: "workflow_dispatch",
+    E2E_PROJECT_NAME: project,
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/heads/main",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+  };
+  const docker = buildDriver("full", project);
+  prepareBuild({ scope: "full", output, env, runCommand: docker.run, project });
+  const bake = JSON.parse(readFileSync(path.join(output, "bake.json"), "utf8"));
+
+  assert.deepEqual(bake.target.web["cache-from"], [
+    "type=gha,scope=scrypath-ecommerce-app-v1,version=2,timeout=120s",
+  ]);
+  assert.deepEqual(bake.target.web["cache-to"], [
+    "type=gha,scope=scrypath-ecommerce-app-v1,version=2,mode=max,timeout=120s",
+  ]);
+  assert.deepEqual(bake.target.browser["cache-from"], [
+    "type=gha,scope=scrypath-ecommerce-browser-v1,version=2,timeout=120s",
+  ]);
+  assert.deepEqual(bake.target.browser["cache-to"], [
+    "type=gha,scope=scrypath-ecommerce-browser-v1,version=2,mode=max,timeout=120s",
+  ]);
+  assert.deepEqual(bake.target.standalone_ops["cache-from"], [
+    "type=gha,scope=scrypath-ecommerce-standalone-ops-v1,version=2,timeout=120s",
+  ]);
+  assert.deepEqual(bake.target.standalone_ops["cache-to"], [
+    "type=gha,scope=scrypath-ecommerce-standalone-ops-v1,version=2,mode=max,timeout=120s",
+  ]);
+});
+
 test("verify-handoff rejects a changed Compose model before inspecting images", (t) => {
   const fixture = prepareFixture(t);
   fixture.docker.state.modelChange = true;
