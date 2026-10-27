@@ -5,8 +5,8 @@ milestone_name: Foundation and CI
 current_phase: 182
 current_phase_name: Reliable full browser verification and CI caches
 status: executing
-stopped_at: Final review found inherited numeric screenshot assertion; scoped correction and fresh full proof pending
-last_updated: "2026-10-27T22:21:39.706305+00:00"
+stopped_at: Reviewed settings assertion corrected in GSD checkout; scoped local and hosted browser refresh running
+last_updated: "2026-10-27T22:46:28.439347+00:00"
 last_activity: 2026-10-27
 last_activity_desc: Phase 182 corrected-source acceptance and repair-head closeout passed; phase hooks and verifier next
 state_head: 1eec7e22acf5551eab6e3b4e12e5024df043c238
@@ -20,32 +20,30 @@ progress:
 
 # Project State
 
-## Current execution position
+## Active owned correction — read before dispatch
 
-Phase 182 of v1.45 is executing final verification. All eight plans and four final-review repairs are merged on `planning/v1.45-foundation-ci`; no phase completion has been called. Merge: `542da3330b82dcc2ef32a7883a09f47449196680`.
+Phase182 of v1.45 remains executing; all eight plan summaries exist, but phase completion has NOT been called. ROOT `/Users/jon/projects/scrypath` is on `planning/v1.45-foundation-ci`.
 
-The GSD repair worktree was merged and removed through its owning adapter. No AI executor or repair checkout remains active. Continue all phase-level work from `/Users/jon/projects/scrypath`.
+The root orchestrator owns GSD checkout `/Users/jon/projects/scrypath/.claude/worktrees/agent-p182-final-review-repair`, branch `worktree-agent-p182-final-review-repair`. No AI executor is active. Frozen candidate `1c72637038f2c225d56e2311678b05f912b014f3` contains the single assertion correction30becbc4 and native correction review. Do not start another writer or redispatch its running workflows.
 
-## Evidence ready for phase verification
+## Current browser refresh
 
-Frozen implementation `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` passed local full 189/189 and a hosted session with seven recorded invocations, six eligible; all six accepted runs passed 189 first attempts, parity/contrast, exact source/image/ref joins and clean disposal. The initial no-hit cache producer remains ineligible and preserved. Both aggregate validators pass. Current records are `182-ACCEPTANCE.md`, `182-CACHE-ACCEPTANCE.md` and `182-08-SUMMARY.md`.
+Whole24 final review found WR-02: inherited RegExp bitwise OR produced numeric0 in a settings screenshot assertion. Source-derived RED reproduced it; GREEN verifies both real status strings and rejects numeric text. The corrected Node suite passed115/115. Correction review closed WR-02; the canonical ledger has five fixed findings, one deferred warning and zero open.
 
-Actual documentation head `cac118591f41feb5199e9ab3d1499d6e1c3a01e6` passed closeout run 40592008863: all five required jobs, coverage, immutable attestation and full189/189 with successful ordinary import-only proof generation. Receipt and verified raw bundle facts: `/private/tmp/scrypath-phase182-execution/cac11859-closeout-receipt.json` and `cac11859-default-proof/result.json`.
+Control `/private/tmp/scrypath-phase182-execution/assertion-repair-candidate-control.json` owns a new source-bound warm/full session at1c726370. Coordinator/log: `run-assertion-refresh.cjs` / `assertion-refresh-batch.log` in that directory; exec71462. Current warm run40597095307; full follows sequentially. Local canonical full uses run `phase182-1c726370-local`, project `scrypath_verify_full_1c726370_local`, exec68632 and `assertion-repair-local-full.log`. Both real routes passed readiness and browser execution is running. No local or hosted current-source pass is yet claimed.
 
-Merged source/report parity to the child was checked; only this root STATE checkpoint intentionally differed. The implementation tree matches the frozen accepted source. Fresh merged checks are recorded in `/private/tmp/scrypath-phase182-execution/final-root-*.log`; phase hooks and the goal verifier must inspect their terminal results before advancement.
+## Reused proof and named invalidators
 
-## Remaining authorized work
+The exact-source cache cohort at `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` is validated: seven recorded invocations, six eligible189/189; the initial no-hit producer stays ineligible. Its five cache scenarios remain bound to0b7. The only non-planning change from0b7 is one assertion line in `admin_screenshots.spec.ts`; explicit tree parity excluding only that spec passed. Cache implementation/configuration, Dockerfiles, locks and BEAM graph inputs are unchanged. PROJECT requires reuse unless a named invalidator changes: refresh local/full browser and current warm image-input evidence, retain unchanged cold/BEAM evidence at the earlier cutoff, and never relabel old receipts or weaken aggregate source joins. Record both cutoffs transparently.
 
-Run mandatory verify:post hooks (Nyquist, security, UI), final whole-phase code review/disposition, then the native goal verifier with its CLI-owned covered-input fingerprint. Confirm fresh passed owner status, call `phase.complete 182` once, reconcile PROJECT/ROADMAP/STATE/REQUIREMENTS and next-phase routing, then check report freshness. Final ROOT exact-head closeout runs after every tracked write; keep that receipt outside the checkout and make no tracked edits after terminal attestation.
+Earlier documentation `cac118591f41feb5199e9ab3d1499d6e1c3a01e6` passed run40592008863 (five required, coverage, attestation, full189/189, default import-only observations), then merged through GSD at542da333. Fresh merged115 Node,961 Elixir+5properties,98 contracts,format/actionlint/docs passed. Those browser receipts predate WR-02 and do not prove the corrected settings assertion.
 
-Runtime control: `/private/tmp/scrypath-phase182-execution/review-repair-candidate-control.json`; session receipts remain under its outputDir. All original failures and older source-bound cohorts remain preserved. Do not redispatch or relabel completed work.
+## Remaining closeout
 
-## Boundaries and next phase
+After current warm/full and local proof pass: archive/validate actual bundles; update acceptance/SUMMARY records with distinct source cutoffs and named-input parity; close out the actual child documentation head including required jobs/coverage/attestation and raw full/default-policy proof. Merge only through `worktree.cleanup-wave` using `/private/tmp/scrypath-phase182-execution/wave-assertion-repair.json`, base `e43fdf16200bc8e1fd313642334f2053e90c1acb`. ROOT STATE checkpoints intentionally differ. Verify actual source/report parity and preserve config. Fresh postmerge checks and applicable hook evidence, final review/disposition reconciliation, native goal verifier plus CLI-owned fingerprint, fresh passed owner, `phase.complete182` ONCE, transition tracking/freshness and final ROOT exact-head closeout remain. No tracked writes after final ROOT terminal attestation.
 
-Preserve the unrelated `.planning/config.json` edit, untracked milestone lock and retained preview/data. Phase184 owns the known deep-quality dependency-audit debt; no blanket risk acceptance or all-advisory-green claim. PR122 merge/Hex publication and inherited v1.44 debt remain separate. v1.45 has three later phases; UI engine/polish remains v1.46–47 and adopter features v1.48.
+## Deferred boundaries
 
-After verified Phase182 completion, the next approved action is `$gsd-discuss-phase 183` for maintainer tooling outside the Hex package. Do not automatically implement it.
+WR-03 is baseline-only coverage/attestation naming for same-run reruns; the canonical disposition records its deferred status and coordinated future name/ci_monitor change. Fresh dispatches use distinct runs; Phase182 browser/cache artifacts already bind run/attempt; retries are not clean proof. This is not maintainer risk approval. Known deep-quality dependency-audit debt remains Phase184. Do not claim every advisory job is green.
 
-## Final review follow-up (2026-10-27)
-
-Whole24 review returned WR-02 (numeric settings screenshot assertion) and WR-03 (baseline rerun artifact names). WR-02 is a real inherited test assertion bug and is being corrected within BROW verification. WR-03 is recorded as deferred in the canonical disposition: Phase182 changed browser/cache artifact names are run/attempt scoped; default closeout dispatches fresh workflow runs; same-run rerun support for the older coverage/attestation pipeline is separate follow-up, not a new trust approval. No phase completion or current-source settings assertion pass is claimed. Preserve the accepted0b7 cache cohort at its own source; refresh named browser evidence for the assertion correction and document unchanged cache scope explicitly.
+Preserve unrelated `.planning/config.json`, milestone.lock and retained preview/data. PR122 merge, Hex publication and the19 inherited v1.44 audit items remain separate. v1.45 has three later phases; after actual verified182 completion, next is `$gsd-discuss-phase183` (maintainer tooling outside Hex), with no automatic implementation.

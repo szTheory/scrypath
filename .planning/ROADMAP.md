@@ -17,7 +17,7 @@
 
 ## Current Posture
 
-**Phase 182 is in final phase-goal verification (2026-10-27).** All eight plans and four reviewed repairs are merged. The corrected frozen source has local full189/189 and six eligible hosted189/189 receipts, with the initial ineligible cache producer preserved. The actual repair documentation head passed all required CI jobs, coverage, attestation and full browser proof. Phase completion has not been called.
+**Phase 182 is refreshing scoped browser proof after final review (2026-10-27).** All eight plans and four reviewed repairs are merged. The corrected frozen source has local full189/189 and six eligible hosted189/189 receipts, with the initial ineligible cache producer preserved. The actual repair documentation head passed all required CI jobs, coverage, attestation and full browser proof. Phase completion has not been called. The inherited WR-02 settings assertion is now corrected and reviewed; current local and hosted warm/full browser evidence is running at1c726370. Unchanged cache evidence retains its0b7 source cutoff; see STATE and REVIEW-REPAIR for named invalidators.
 
 Continue `$gsd-execute-phase 182` from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, through mandatory hooks, goal verification and final ROOT-SHA closeout. Preserve unrelated config and retained-preview data. Current source-bound details and limits are in the acceptance records; older receipts remain historical.
 
