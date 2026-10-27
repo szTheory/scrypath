@@ -27,6 +27,8 @@ const {
 } = require("./phase182_acceptance.cjs");
 const { applyCacheProbeToBake, cacheProbeFor } = require("./ecommerce_build.cjs");
 
+const { cachePlan } = require("./beam_cache.cjs");
+
 const SHA = "0123456789abcdef0123456789abcdef01234567";
 const OTHER_SHA = "fedcba9876543210fedcba9876543210fedcba98";
 const REPOSITORY = "szTheory/scrypath";
@@ -158,9 +160,14 @@ function cacheProof(mode, overrides = {}) {
   const isDocker = mode.startsWith("docker-");
   const cold = mode === "docker-cold" || mode === "beam-cold";
   const run = overrides.run || exactRun();
-  const downloadsKey = "beam-downloads-key-current";
-  const downloadsRestoreKey = "beam-downloads-key-old";
-  const resolvedKey = "beam-resolved-key-current";
+  const namespace = overrides.session?.probe_namespace || "";
+  const runtime = { runner_image: "ubuntu24/20261019.1.0", elixir: "1.19.0", otp: "Erlang/OTP 28.1", os: "Linux", arch: "X64", mix_env: "test", mix_target: "host", profile: "root-test" };
+  const plan = beamPlanForProbe(cachePlan({ ...runtime, graph: "root", manifests_digest: "a".repeat(64), locks_digest: "d".repeat(64), source_digest: "f".repeat(64) }), {
+    mode: isDocker ? "normal" : mode, namespace, runId: run.id, attempt: run.attempt,
+  });
+  const downloadsKey = plan.downloads_key;
+  const downloadsRestoreKey = mode === "beam-cold" ? null : `${plan.downloads_restore_prefix}${"c".repeat(64)}`;
+  const resolvedKey = plan.resolved_key;
   const logText = mode === "docker-warm"
     ? `Run mix verify.ecommerce_e2e\n${buildKitCacheLog()}\n`
     : mode === "beam-cold"
@@ -172,6 +179,9 @@ function cacheProof(mode, overrides = {}) {
     browser: "scrypath-ecommerce-browser-v1",
     web: "scrypath-ecommerce-app-v1",
   };
+  if (namespace && mode === "docker-warm") {
+    for (const service of Object.keys(targetScopes)) targetScopes[service] += `-phase182-${namespace}`;
+  }
   const targetCacheSettings = Object.fromEntries(Object.entries(targetScopes).map(([service, scope]) => [service, {
     import: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,timeout=120s`] : [],
     export: mode === "docker-warm" ? [`type=gha,scope=${scope},version=2,mode=max,timeout=120s`] : [],
@@ -240,16 +250,17 @@ function cacheProof(mode, overrides = {}) {
       fallback: mode === "beam-fallback" || mode === "beam-lock-change",
       resolved_lock_before: mode === "beam-lock-change" ? "d".repeat(64) : "d".repeat(64),
       resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
-      runtime: { runner_image: "ubuntu24/20261019.1.0", elixir: "1.19.0", otp: "Erlang/OTP 28.1", os: "Linux", arch: "X64", mix_env: "test", mix_target: "host", profile: "root-test" },
+      runtime,
+      identity: plan.identity,
       downloads_hit: false,
       downloads_restored: mode === "beam-fallback" || mode === "beam-lock-change",
       resolved_hit: !cold && mode !== "beam-fallback" && mode !== "beam-lock-change",
       resolved_primary_hit: mode !== "beam-cold" && mode !== "beam-fallback" && mode !== "beam-lock-change",
       downloads_key: downloadsKey,
       resolved_key: resolvedKey,
-      downloads_restore_prefix: "beam-downloads-",
+      downloads_restore_prefix: plan.downloads_restore_prefix,
       downloads_restore_key: downloadsRestoreKey,
-      resolved_restore_prefix: mode === "beam-fallback" || mode === "beam-lock-change" ? "" : "beam-resolved-",
+      resolved_restore_prefix: plan.resolved_restore_prefix,
       resolved_restore_key: null,
       resolved_lock_before: "d".repeat(64),
       resolved_lock_after: mode === "beam-lock-change" ? "e".repeat(64) : "d".repeat(64),
@@ -320,6 +331,10 @@ test("cache acceptance rejects keys and scopes from a different requested namesp
     const proof = cacheProof(mode);
     proof.session.probe_namespace = "isolated-candidate";
     assert.throws(() => validateCacheAcceptance(proof), /requested.*namespace|namespace.*requested/);
+    const isolated = cacheProof(mode, { session: { ...proof.session } });
+    assert.equal(validateCacheAcceptance(isolated), true);
+    isolated.session.probe_namespace = "";
+    assert.throws(() => validateCacheAcceptance(isolated), /requested.*namespace|namespace.*requested/);
   }
 });
 
@@ -389,7 +404,7 @@ test("BuildKit cache acceptance requires per-target imports, useful cache hits, 
 
   const forgedMapping = cacheProof("docker-warm");
   forgedMapping.cache.target_scopes.web = forgedMapping.cache.target_scopes.browser;
-  assert.throws(() => validateCacheAcceptance(forgedMapping), /Bake settings do not match the checked scope/);
+  assert.throws(() => validateCacheAcceptance(forgedMapping), /requested probe namespace/);
 
   const statusOnly = cacheProof("docker-warm");
   refreshDockerEvidence(statusOnly, "BuildKit cache importer: gha\nBuildKit cache exporter: gha\n");
@@ -811,7 +826,20 @@ test("collectRun retains repeated-mode attempts in distinct directories and reje
     () => collectRun({ ...flags, sha: OTHER_SHA }, { command: commands, pollMilliseconds: 0 }),
     /session.*identity/i,
   );
+  assert.throws(
+    () => collectRun({ ...flags, probeNamespace: "different" }, { command: commands, pollMilliseconds: 0 }),
+    /session.*identity/i,
+  );
   assert.equal(fs.readFileSync(manifestPath, "utf8"), before);
+});
+
+test("collectRun rejects an artifact when dispatch wiring drops the requested namespace", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-wrong-namespace-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  assert.throws(() => collectRun({
+    repo: REPOSITORY, branch: BRANCH, sha: SHA, sessionId: SESSION_ID,
+    mode: "docker-warm", probeNamespace: "isolated", outputDir: path.join(root, "candidate"),
+  }, { command: successfulCommandDouble({ mode: "docker-warm" }), pollMilliseconds: 0, timeoutSeconds: 2, browserValidator: validBrowserReceipt }), /requested probe namespace/);
 });
 
 test("cache acceptance uses only session-listed receipts and preserves every probe attempt", async (t) => {
@@ -1163,7 +1191,7 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
         : activeMode === "beam-cold"
           ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\n"
           : activeMode.startsWith("beam-")
-          ? "Run mix deps.get\nRun mix compile\nRun mix verify.core\nCache restored from key: beam-downloads-key-old\nCache not found for input keys: beam-resolved-key-current\n"
+          ? cacheProof(activeMode, { run: exactRun({ id: String(run.id), attempt }) }).cache.log_text
         : "Run advisory full E2E proof\n" };
     }
     throw new Error(`unexpected command: ${text}`);

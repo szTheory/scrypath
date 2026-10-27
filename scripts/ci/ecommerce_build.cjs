@@ -528,6 +528,7 @@ if (require.main === module) {
 module.exports = {
   applyCacheProbeToBake,
   cacheProbeFor,
+  cacheScopeFor,
   prepareBuild,
   recordCacheOutcome,
   verifyCacheProbeBake,

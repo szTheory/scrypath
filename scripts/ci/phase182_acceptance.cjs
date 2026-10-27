@@ -461,6 +461,7 @@ function writeBeamProbeProof({ planPath, outputPath, lockManifestPath = "", env 
   } : undefined;
   const cache = {
     kind: "beam",
+    identity: plan.identity,
     imports_enabled: mode !== "beam-cold",
     downloads_key: downloadsKey,
     downloads_restore_prefix: plan.downloads_restore_prefix,
@@ -575,6 +576,7 @@ function sessionIdentity(flags) {
     branch: flags.branch,
     sha: flags.sha,
     session_id: flags.sessionId,
+    probe_namespace: flags.probeNamespace || "",
     created_at: new Date().toISOString(),
     invocations: [],
   };
@@ -588,7 +590,7 @@ function ensureSessionLocked(flags) {
     writeAtomic(manifestPath, sessionIdentity(flags));
   }
   const manifest = parseJsonText(fs.readFileSync(manifestPath, "utf8"), "candidate session manifest");
-  for (const [key, expected] of [["repository", flags.repo], ["branch", flags.branch], ["sha", flags.sha], ["session_id", flags.sessionId]]) {
+  for (const [key, expected] of [["repository", flags.repo], ["branch", flags.branch], ["sha", flags.sha], ["session_id", flags.sessionId], ["probe_namespace", flags.probeNamespace || ""]]) {
     if (manifest[key] !== expected) throw new Error(`candidate session identity mismatch for ${key}; use a new session root for changed source/ref/session identity`);
   }
   if (manifest.schema !== 1 || !Array.isArray(manifest.invocations)) throw new Error("candidate session manifest is malformed");
@@ -610,6 +612,7 @@ function beginInvocation(flags) {
         branch: flags.branch,
         sha: flags.sha,
         session_id: flags.sessionId,
+        probe_namespace: flags.probeNamespace || "",
         mode: flags.mode,
         invocation_id: token,
         eligible: false,
@@ -716,7 +719,7 @@ function readManifestReceipt(root, entry, expectedIdentity) {
 }
 
 function updateAggregatesLocked(flags, manifest) {
-  const expected = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const expected = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   const receipts = manifest.invocations.filter((entry) => entry.status !== "running" && entry.receipt).map((entry) => ({
     entry,
     receipt: readManifestReceipt(flags.outputDir, entry, expected),
@@ -1077,6 +1080,29 @@ function validateCacheAcceptance(proof) {
   if (!cache || !["buildkit", "beam"].includes(cache.kind)) throw new Error("cache proof kind is missing");
   if (!/^[a-f0-9]{64}$/.test(cache.log_sha256 || "") || typeof cache.log_text !== "string" || sha256(cache.log_text) !== cache.log_sha256) {
     throw new Error("cache proof is missing real hashed job log evidence");
+  }
+  const namespace = validateProbeNamespace(proof.session.probe_namespace);
+  const inputs = validateWorkflowInputs({ mode: workflowCacheInput(mode), namespace });
+  if (mode.startsWith("docker-")) {
+    const targets = mode === "docker-warm" ? ["browser", "standalone_ops", "web"] : ["browser", "web"];
+    const baseScopes = Object.fromEntries(targets.map((service) => [service, ecommerceBuild.cacheScopeFor(service)]));
+    const expected = ecommerceBuild.cacheProbeFor(mode === "docker-warm" ? "full" : "focused", baseScopes, {}, {
+      mode: mode === "docker-cold" ? "docker-cold" : "normal",
+      namespace: mode === "docker-warm" ? inputs.full_docker_namespace : inputs.mounted_docker_namespace,
+    });
+    if (canonicalJson(cache.target_scopes) !== canonicalJson(expected.scopes)) {
+      throw new Error("Docker cache scopes do not match the requested probe namespace");
+    }
+  } else {
+    const expected = beamPlanForProbe(beamCache.cachePlan(cache.identity), {
+      mode, namespace: inputs.beam_namespace, runId: proof.run.id, attempt: proof.run.attempt,
+    });
+    for (const key of ["downloads_key", "downloads_restore_prefix", "resolved_key", "resolved_restore_prefix"]) {
+      if (cache[key] !== expected[key]) throw new Error(`BEAM ${key} does not match the requested probe namespace and cache identity`);
+    }
+    if (cache.identity.graph !== "root" || Object.entries(cache.runtime || {}).some(([key, value]) => value !== expected.identity[key])) {
+      throw new Error("BEAM cache identity does not match the recorded runtime and root graph");
+    }
   }
   const lines = cache.log_text.split(/\r?\n/);
   const has = (pattern) => lines.some((line) => pattern.test(line));
@@ -1542,7 +1568,7 @@ function collectRun(inputFlags, dependencies = {}) {
   const flags = validateFlags(inputFlags);
   const command = dependencies.command || runCommand;
   const invocation = beginInvocation(flags);
-  const session = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const session = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   let run = null;
   try {
     command(GH, ["auth", "status"]);
@@ -1585,6 +1611,7 @@ function collectRun(inputFlags, dependencies = {}) {
       branch: flags.branch,
       sha: flags.sha,
       session_id: flags.sessionId,
+      probe_namespace: flags.probeNamespace || "",
       mode: flags.mode,
       invocation_id: invocation.entry.invocation_id,
       eligible: browser.eligible === true && (!cache || cache.mode === flags.mode),
@@ -1624,6 +1651,7 @@ function collectRun(inputFlags, dependencies = {}) {
       branch: flags.branch,
       sha: flags.sha,
       session_id: flags.sessionId,
+      probe_namespace: flags.probeNamespace || "",
       mode: flags.mode,
       invocation_id: invocation.entry.invocation_id,
       eligible: false,
@@ -1640,7 +1668,7 @@ function verifyManifest(flags) {
   const manifestPath = path.join(flags.outputDir, "phase182-session.json");
   if (!fs.existsSync(manifestPath)) throw new Error("candidate session manifest is missing");
   const manifest = parseJsonText(fs.readFileSync(manifestPath, "utf8"), "candidate session manifest");
-  const identity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const identity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   for (const [key, value] of Object.entries(identity)) if (manifest[key] !== value) throw new Error(`candidate session identity mismatch for ${key}`);
   if (manifest.schema !== 1 || !Array.isArray(manifest.invocations)) throw new Error("candidate session manifest is malformed");
   if (manifest.invocations.some((entry) => entry.status === "running")) throw new Error("candidate session has unfinished invocations; reconcile them before acceptance");
@@ -1689,7 +1717,7 @@ function validateAggregate(flags, kind) {
   const expectedPath = path.join(flags.outputDir, kind === "caches" ? "cache-acceptance.json" : "full-acceptance.json");
   if (!fs.existsSync(expectedPath)) throw new Error(`${kind} acceptance aggregate is missing; no stale or synthetic file can satisfy the session`);
   const aggregate = parseJsonText(fs.readFileSync(expectedPath, "utf8"), `${kind} acceptance aggregate`);
-  const expectedIdentity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const expectedIdentity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   for (const [key, value] of Object.entries(expectedIdentity)) if (aggregate[key] !== value) throw new Error(`${kind} acceptance aggregate has a foreign ${key}`);
   if (aggregate.eligible !== true) throw new Error(`${kind} acceptance aggregate is not eligible`);
   if (kind === "caches") {
@@ -1764,7 +1792,7 @@ function toFlags(flags) {
 function help() {
   process.stdout.write("Usage:\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs run --mode docker-warm|docker-cold|beam-fallback|beam-lock-change|beam-cold|full --branch BRANCH --sha SHA --session-id SESSION --output-dir DIR [--repo OWNER/REPO] [--probe-namespace SLUG]\n");
-  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION [--probe-namespace SLUG]\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate-inputs --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs prepare-lock --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root DIR --output FILE\n");
