@@ -67,3 +67,14 @@ test("follow-up and iteration-3 suites guard before setup and retain all selecte
   assert.doesNotMatch(followup, /new URL\(baseURL\)\.port/);
   assert.doesNotMatch(iteration3, /new URL\(baseURL\)\.port/);
 });
+
+
+test("all loopback spellings refuse the retained preview before mutation", async () => {
+  const { guardVerificationTarget, previewRefusalReason } = await verificationTarget;
+  for (const host of ["[::1]", "[0:0:0:0:0:0:0:1]", "127.0.0.2", "127.1", "[::ffff:127.0.0.1]", "localhost."]) {
+    const events = [];
+    await guardVerificationTarget(`http://${host}:4002`, () => events.push("refused"), () => events.push("mutated"));
+    assert.deepEqual(events, ["refused"], host);
+    assert.equal(previewRefusalReason(`http://${host}:4014`), null);
+  }
+});
