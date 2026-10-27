@@ -1,6 +1,6 @@
 ---
 phase: 182-reliable-full-browser-verification-and-ci-caches
-reviewed: 2026-10-27T17:55:53Z
+reviewed: 2026-10-27T19:57:33Z
 depth: standard
 files_reviewed: 24
 files_reviewed_list:
@@ -29,46 +29,69 @@ files_reviewed_list:
   - scripts/ci/phase182_acceptance.test.cjs
   - test/mix/tasks/workflow_wiring_test.exs
 findings:
-  critical: 0
-  warning: 0
+  critical: 3
+  warning: 1
   info: 0
-  total: 0
-status: clean
-source_sha: 7f8c4592d92507b05c47d36c8436a87545bdcc0b
+  total: 4
+status: issues_found
+source_sha: e6c330fe99427a71220a6dd66d7c9465caf0bb95
+implementation_source_sha: ec248fd2f7eea9314e600bcc10262729d2cce69e
 review_base: ba624a7452e717c335a26369b8db8523d2551ee9
-review_boundary: early internal source review; not phase completion or human approval
+review_boundary: final root source review; implementation tree matches the accepted source; not human approval
 ---
 
 # Phase 182: Code Review Report
 
-**Reviewed:** 2026-10-27T17:55:53Z  
-**Depth:** standard  
-**Files Reviewed:** 24  
-**Status:** clean  
-**Source SHA:** `7f8c4592d92507b05c47d36c8436a87545bdcc0b`  
-**Scope:** Explicit 24-file Phase 182 source scope, compared with `ba624a7452e717c335a26369b8db8523d2551ee9`.  
-**Boundary:** Early internal source review before another hosted acceptance batch. This is not phase completion or human approval; full and mode-specific hosted evidence remains pending.
+**Reviewed:** 2026-10-27T19:57:33Z
+**Depth:** standard
+**Files Reviewed:** 24
+**Status:** issues_found
+**Source SHA:** `e6c330fe99427a71220a6dd66d7c9465caf0bb95`
+**Implementation SHA:** `ec248fd2f7eea9314e600bcc10262729d2cce69e`
+**Scope:** Explicit 24-file Phase 182 source scope compared with `ba624a7452e717c335a26369b8db8523d2551ee9`.
 
 ## Summary
 
-The full-mode aggregate blocker found at `c0cbfa2777eafc4268f9e09b9552bf21b1a25bd1` remains fixed: validation checks `receipt.browser.eligible` on the parsed receipt paired with each manifest entry. The REST job-log transport and timestamp parsing fixes also remain intact. In the latest producer delta, Docker proof writing now validates observed Bake settings against the generated manifest's import/export policy, so a normal run configured for import-only can produce an honest observation. Strict warm acceptance still calls the validator with its default import-and-export requirements, and separately requires actual import and export log evidence. The supplied RED/GREEN and historical observation replay are consistent with this change; the replay used an earlier source SHA and is not current hosted acceptance. I did not run tests or perform live Docker, browser, or hosted CI operations during this follow-up.
+The final source tree contains three blockers in preview-target refusal, required browser-case coverage, and BEAM lock-invalidation proof, plus a warning in route readiness detection. The supplied acceptance record reports 189 first-attempt cases and six exact-source hosted runs; those results do not close the source-level gaps in the guard and acceptance predicates. The known deep-quality dependency audit remains Phase 184 work and is not represented here as green.
+
+I reviewed the source and phase artifacts without running tests, dispatching CI, or using the retained preview. The current repository HEAD is `e6c330fe99427a71220a6dd66d7c9465caf0bb95`; the reviewed implementation files match the accepted implementation tree at `ec248fd2f7eea9314e600bcc10262729d2cce69e`. The worktree also has unrelated planning edits, which are outside this report's owned file.
 
 ## Narrative Findings (AI reviewer)
 
-No open findings at source SHA `7f8c4592d92507b05c47d36c8436a87545bdcc0b` in the explicit 24-file scope.
+### Critical Issues
 
-## Prior finding disposition
+### CR-01: IPv6 loopback bypasses retained-preview refusal — BLOCKER
 
-- **CR-01 (namespace lost by the validation CLI): Fixed.** `main` forwards `flags["probe-namespace"]` to `validateFlags`; the namespace regression covers the non-empty value.
-- **WR-01 (cache proof namespace binding): Fixed.** `validateCacheAcceptance` checks the session namespace, derives Docker scopes from `cacheScopeFor` and effective workflow inputs, and derives BEAM keys from recorded cache identity. Session, receipt, and aggregate identity retain the namespace, including the empty value.
-- **WR-02 (browser workflow ref binding): Fixed.** The browser receipt's workflow metadata is carried into the aggregate and checked against `refs/heads/<selected branch>`; manifest validation checks the archived aggregate ref again.
-- **Readiness finding (run/job/artifact endpoint timing): Fixed.** The collector pins the run ID, waits within a bounded timeout for selected-attempt jobs and named artifacts, preserves terminal failure and duplicate/ownership/digest checks, and uses the same selected snapshot downstream.
-- **CR-02 (full aggregate reads browser eligibility from receipt path): Fixed at `scripts/ci/phase182_acceptance.cjs:1748`.** The filter now destructures `{ entry, receipt }` and checks `receipt.browser?.eligible`. Regression coverage is added at `scripts/ci/phase182_acceptance.test.cjs:1220`.
-- **Transport delta: Fixed.** `getJobLog` requests `/repos/<repo>/actions/jobs/<selected-job-id>/logs` through `gh api --allow-escape-sequences` and treats the response as data, avoiding the whole-run ZIP transport. `parseBuildKitCacheProgress` accepts REST timestamp-only lines and existing `gh run view` tab-prefixed lines; hashing still uses the unnormalized log text. Regressions cover collector transport selection and timestamped parser input. The reported RED/GREEN run and 109 passing CI Node tests were not rerun for this review; the supplied real historical replay is not new-source hosted acceptance.
-- **CR-03 (import-only observations rejected by the producer): Fixed without changing acceptance policy.** `writeDockerProbeProof` passes the manifest's policy into `validateDockerTargetBindings`; the validator checks configured per-target import/export settings and scope lists against that policy. Calls from strict `validateCacheAcceptance` do not pass a policy and retain the default warm requirement of both import and export, followed by explicit actual-import and actual-export evidence checks. The reported RED/GREEN run and 110 passing CI Node tests were not rerun here. The supplied immutable image-handoff replay is historical and is not current-source hosted acceptance.
+**File:** `examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs:1,19`
+**Issue:** The guard only recognizes `localhost` and `127.0.0.1`. `new URL("http://[::1]:4002").hostname` is `"[::1]"`, so an IPv6 loopback preview on port 4002 returns no refusal reason and `guardVerificationTarget` runs the action. Both `ui_followup.spec.ts` and `ui_iteration3.spec.ts` use this guard before their scenario setup, leaving the retained-preview safety boundary bypassable by that loopback address.
+**Fix:** Normalize hostnames and use an IP parser to reject every loopback address on port 4002, including `::1` and IPv4 loopback aliases. Add a guard regression proving the refusal callback runs and the action does not run for IPv6 loopback.
+
+### CR-02: Lock-change proof passes on a forced cache miss — BLOCKER
+
+**File:** `scripts/ci/phase182_acceptance.cjs:297-304,1182-1192`
+**Issue:** `beamPlanForProbe` appends a unique run/attempt suffix to the resolved key and clears the resolved restore prefix for both fallback and lock-change probes. This guarantees a miss regardless of whether the lock-derived cache identity changed. The validator only requires differing raw `resolved_lock_before`/`resolved_lock_after` hashes and a resolved miss; it never checks that the lock-derived identity/key changed. The regression fixture demonstrates the gap: `phase182_acceptance.test.cjs:251-272` uses identity lock digest `d…d`, raw lock hashes `d…d`/`e…e`, and the test accepts that proof at `:329-335`. This can certify CACHE-02 lock invalidation without demonstrating that lock identity invalidates resolved state.
+**Fix:** Record and validate the canonical lock-derived digest/key for both the baseline and changed lock, and require the changed lock to produce a different resolved identity. Do not use a per-run forced miss as evidence of lock invalidation; preserve a compatible download fallback while demonstrating the exact changed-lock key misses.
+
+### CR-03: Mandatory inventory accepts one case from each required suite — BLOCKER
+
+**File:** `scripts/ci/ecommerce_evidence.cjs:250-264`
+**Issue:** `mandatoryInventoryReasons` checks only that the inventory contains at least one case from each required filename and both Phase 173 entrypoints. The later report reconciliation proves only that every case still present in the inventory ran. If most or all intended `ui_followup` or `ui_iteration3` cases are removed or disabled, the reduced inventory and its matching report can still be eligible. This does not enforce D-06's requirement that every intended follow-up/iteration case execute.
+**Fix:** Validate the required composite identities or stable required title-path set for both suites, including applicable entrypoints, against the inventory before reconciling results. Add a regression that removes or disables one intended case and requires ineligibility; keep the requirement identity-based rather than relying on historical total counts.
+
+### Warnings
+
+### WR-01: Fixture route readiness treats redirects as success — WARNING
+
+**File:** `examples/scrypath_ecommerce/docker-playwright.sh:143-153,173-180`
+**Issue:** `curl --fail` rejects HTTP errors but returns success for 3xx responses, and this request does not follow redirects or inspect the final status. A health route redirected to a login or fallback page is therefore recorded as ready; `--readiness-only` can exit successfully without observing a successful health response from the intended route.
+**Fix:** Capture the response status and require the intended 2xx response for each route. If redirects are expected, follow them with a bounded redirect count and validate the final URL and status.
+
+### Earlier Finding Disposition
+
+The findings in the prior report at source SHA `7f8c4592d92507b05c47d36c8436a87545bdcc0b` were rechecked and remain fixed in the current source: validation CLI namespace forwarding; cache namespace binding; browser workflow-ref binding; selected-run/job/artifact readiness snapshot; full aggregate eligibility read from its parsed receipt; direct REST job-log transport and timestamp parsing; and separation of import-only observation from strict warm-cache acceptance. The findings above are new gaps in different predicates and boundaries.
 
 ---
 
-_Reviewed: 2026-10-27T17:55:53Z_  
+_Reviewed: 2026-10-27T19:57:33Z_
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
