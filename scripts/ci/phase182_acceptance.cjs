@@ -1745,7 +1745,7 @@ function validateAggregate(flags, kind) {
     const expectedBrowserAggregates = [...new Set(session.eligible.map(({ receipt }) => receipt.browser?.receipt_path).filter(Boolean))];
     if (canonicalJson(aggregate.browser_aggregates) !== canonicalJson(expectedBrowserAggregates)) throw new Error("cache acceptance does not reference exactly the session's accepted browser aggregates");
   } else {
-    const full = session.eligible.filter(({ entry }) => entry.mode === "full" && entry.receipt.browser?.eligible === true);
+    const full = session.eligible.filter(({ entry, receipt }) => entry.mode === "full" && receipt.browser?.eligible === true);
     if (!full.length || session.manifest.invocations.filter((entry) => entry.mode === "full").at(-1)?.status !== "eligible" || aggregate.accepted !== full.at(-1).entry.receipt || aggregate.browser_aggregate !== full.at(-1).receipt.browser.receipt_path) {
       throw new Error("full acceptance does not reference an eligible authoritative browser aggregate from this session");
     }
