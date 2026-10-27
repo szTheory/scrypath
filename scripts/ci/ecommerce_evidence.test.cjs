@@ -207,3 +207,238 @@ test("malformed and zero-case CLI reports exit nonzero", () => {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
 });
+
+const SOURCE_SHA = "a".repeat(40);
+const IMAGE_ID = `sha256:${"b".repeat(64)}`;
+
+function completeReceiptCases() {
+  return [
+    testCase({ file: "e2e/ui_followup.spec.ts", title: "mounted: copy feedback keeps geometry stable" }),
+    testCase({ file: "e2e/ui_followup.spec.ts", title: "standalone: copy feedback keeps geometry stable" }),
+    testCase({ file: "e2e/ui_iteration3.spec.ts", title: "save sits by run and validates the name" }),
+    testCase({ file: "e2e/phase173_shell.spec.ts", title: "mounted shell renders light preference" }),
+    testCase({ file: "e2e/phase173_shell.spec.ts", title: "standalone shell renders light preference" })
+  ];
+}
+
+function stage(startedAt, endedAt, exitCode = 0) {
+  return { started_at: startedAt, ended_at: endedAt, exit_code: exitCode };
+}
+
+function createCompleteRun() {
+  const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-evidence-run-"));
+  const cases = completeReceiptCases();
+  const image = { built_id: IMAGE_ID, runtime_id: IMAGE_ID, source_sha: SOURCE_SHA };
+  const manifest = {
+    schema_version: 1,
+    source: {
+      mode: "hosted",
+      checkout_head: SOURCE_SHA,
+      dirty: false,
+      event_sha: SOURCE_SHA,
+      built_source_sha: SOURCE_SHA
+    },
+    images: { application: { ...image }, browser: { ...image } },
+    compose: {
+      scope: "full",
+      project: "scrypath_ecommerce_verify_phase182",
+      targets: ["web", "standalone_ops"],
+      model_digest: `sha256:${"c".repeat(64)}`
+    },
+    browser: { engine: "chromium", version: "140.0.0.0", package: "@playwright/test", package_version: "1.54.2" },
+    workflow: {
+      event: "workflow_dispatch",
+      ref: "refs/heads/worktree-agent-p182-03",
+      sha: SOURCE_SHA,
+      run_id: "123456789",
+      run_attempt: 1,
+      job_name: "phase105-e2e",
+      job_conclusion: "success"
+    },
+    stages: {
+      inventory: stage("2026-10-26T23:00:00.000Z", "2026-10-26T23:00:01.000Z"),
+      browser: stage("2026-10-26T23:00:02.000Z", "2026-10-26T23:01:02.000Z"),
+      light_parity: stage("2026-10-26T23:01:03.000Z", "2026-10-26T23:01:04.000Z"),
+      contrast: stage("2026-10-26T23:01:05.000Z", "2026-10-26T23:01:06.000Z"),
+      artifact_copy: stage("2026-10-26T23:01:07.000Z", "2026-10-26T23:01:08.000Z")
+    },
+    checkers: {
+      light_parity: { path: "admin-light-parity.json", status: "pass" },
+      contrast: { path: "contrast-report.json", status: "pass" }
+    },
+    cleanup: { status: "clean", project: "scrypath_ecommerce_verify_phase182", containers: 0, networks: 0, volumes: 0 },
+    artifacts: [
+      {
+        path: "ui-review-artifacts/iteration3-journeys/iteration3-proof.png",
+        required: true,
+        copied: true,
+        copy_status: "success"
+      }
+    ],
+    allowed_skips: [],
+    first_failure: null
+  };
+
+  fs.mkdirSync(path.join(runDir, "playwright-report"), { recursive: true });
+  fs.mkdirSync(path.join(runDir, "ui-review-artifacts/iteration3-journeys"), { recursive: true });
+  fs.writeFileSync(path.join(runDir, "phase105-playwright-list.json"), JSON.stringify(playwrightReport(cases)));
+  fs.writeFileSync(path.join(runDir, "phase105-playwright.json"), JSON.stringify(playwrightReport(cases, { results: true })));
+  fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${JSON.stringify({ operation: "seed" })}\n`);
+  fs.writeFileSync(path.join(runDir, "admin-light-parity.json"), JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }));
+  fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify({ status: "pass", failures: [] }));
+  fs.writeFileSync(path.join(runDir, "lifecycle.json"), JSON.stringify({ cleanup: { ...manifest.cleanup } }));
+  fs.writeFileSync(path.join(runDir, "playwright-report/index.html"), "<html>complete report</html>\n");
+  fs.writeFileSync(path.join(runDir, "ui-review-artifacts/iteration3-journeys/iteration3-proof.png"), "synthetic screenshot fixture\n");
+  fs.writeFileSync(path.join(runDir, "phase105-evidence-input.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+  return { runDir, manifest };
+}
+
+function updateRunManifest(runDir, update) {
+  const file = path.join(runDir, "phase105-evidence-input.json");
+  const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
+  update(manifest);
+  fs.writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+test("one aggregate binds exact source, reports, checkers, artifacts and derived summary", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const receipt = evidence.writeEvidence?.({ runDir });
+
+    assert.equal(receipt?.eligibility.eligible, true);
+    assert.equal(receipt?.eligibility.clean, true);
+    assert.equal(receipt?.eligibility.class, "hosted-exact-sha");
+    assert.equal(receipt?.cases.length, 5);
+    assert.equal(receipt?.visual_judge_status, "not-required");
+    assert.equal(receipt?.workflow.sha, receipt?.source.event_sha);
+    assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
+    assert.equal(receipt?.images.application.built_id, receipt?.images.application.runtime_id);
+    assert.equal(receipt?.images.browser.built_id, receipt?.images.browser.runtime_id);
+    assert.ok(receipt?.artifacts.every((artifact) => artifact.present && artifact.sha256));
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(runDir, "phase105-evidence.json"), "utf8")), receipt);
+    assert.equal(
+      fs.readFileSync(path.join(runDir, "phase105-evidence-summary.md"), "utf8"),
+      evidence.renderSummary?.(receipt)
+    );
+    assert.equal(evidence.validateReceipt?.({ runDir }).valid, true);
+
+    const cli = spawnSync(
+      process.execPath,
+      [path.join(__dirname, "ecommerce_evidence.cjs"), "validate-receipt", "--run-dir", runDir],
+      { encoding: "utf8" }
+    );
+    assert.equal(cli.status, 0, cli.stderr);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("missing or malformed required reports block receipt eligibility", () => {
+  for (const malformed of [false, true]) {
+    const { runDir } = createCompleteRun();
+    try {
+      const reportPath = path.join(runDir, "phase105-playwright.json");
+      if (malformed) fs.writeFileSync(reportPath, "{");
+      else fs.rmSync(reportPath);
+      const receipt = evidence.writeEvidence?.({ runDir });
+
+      assert.equal(receipt?.eligibility.eligible, false);
+      assert.ok(receipt?.reasons.length > 0);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("forged SHA or image identity rejects even when the advisory job says success", () => {
+  for (const mutate of [
+    (manifest) => (manifest.source.event_sha = "f".repeat(40)),
+    (manifest) => (manifest.images.application.runtime_id = `sha256:${"e".repeat(64)}`)
+  ]) {
+    const { runDir } = createCompleteRun();
+    try {
+      updateRunManifest(runDir, mutate);
+      const receipt = evidence.writeEvidence?.({ runDir });
+      assert.equal(receipt?.workflow.job_conclusion, "success");
+      assert.equal(receipt?.eligibility.eligible, false);
+      assert.ok(receipt?.reasons.length > 0);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("failed artifact copies, raw verifier errors, and unclean cleanup block eligibility", () => {
+  const mutations = [
+    (manifest) => (manifest.artifacts[0].copied = false),
+    (manifest) => (manifest.stages.browser.exit_code = 1),
+    (manifest) => (manifest.cleanup.containers = 1)
+  ];
+  for (const mutate of mutations) {
+    const { runDir } = createCompleteRun();
+    try {
+      updateRunManifest(runDir, mutate);
+      const receipt = evidence.writeEvidence?.({ runDir });
+      assert.equal(receipt?.eligibility.eligible, false);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("dirty local evidence keeps its fingerprint and cannot claim hosted clean proof", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    updateRunManifest(runDir, (manifest) => {
+      manifest.source.mode = "local";
+      manifest.source.dirty = true;
+      manifest.source.dirty_fingerprint = `sha256:${"d".repeat(64)}`;
+      manifest.source.event_sha = null;
+      manifest.workflow.event = "local";
+      manifest.workflow.run_id = "local-123";
+      manifest.workflow.ref = "local-worktree";
+    });
+    const receipt = evidence.writeEvidence?.({ runDir });
+
+    assert.equal(receipt?.eligibility.eligible, true);
+    assert.equal(receipt?.eligibility.clean, false);
+    assert.equal(receipt?.eligibility.class, "local-dirty");
+    assert.equal(receipt?.source.dirty_fingerprint, `sha256:${"d".repeat(64)}`);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("artifact path traversal and symlink escapes are rejected", () => {
+  const { runDir } = createCompleteRun();
+  const outside = path.join(os.tmpdir(), `scrypath-evidence-outside-${process.pid}.txt`);
+  try {
+    fs.writeFileSync(outside, "outside\n");
+    updateRunManifest(runDir, (manifest) => {
+      manifest.artifacts.push({ path: "../outside.txt", required: true, copied: true, copy_status: "success" });
+    });
+    const traversal = evidence.writeEvidence?.({ runDir });
+    assert.equal(traversal?.eligibility.eligible, false);
+    assert.ok(traversal?.reasons.some((reason) => reason.code === "unsafe_artifact_path"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+    fs.rmSync(outside, { force: true });
+  }
+
+  const symlinkRun = createCompleteRun();
+  const symlinkOutside = path.join(os.tmpdir(), `scrypath-evidence-symlink-${process.pid}.txt`);
+  try {
+    fs.writeFileSync(symlinkOutside, "outside\n");
+    const linkPath = path.join(symlinkRun.runDir, "ui-review-artifacts/iteration3-journeys/linked.png");
+    fs.symlinkSync(symlinkOutside, linkPath);
+    updateRunManifest(symlinkRun.runDir, (manifest) => {
+      manifest.artifacts.push({ path: "ui-review-artifacts/iteration3-journeys/linked.png", required: true, copied: true, copy_status: "success" });
+    });
+    const receipt = evidence.writeEvidence?.({ runDir: symlinkRun.runDir });
+    assert.equal(receipt?.eligibility.eligible, false);
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "unsafe_artifact_path"));
+  } finally {
+    fs.rmSync(symlinkRun.runDir, { recursive: true, force: true });
+    fs.rmSync(symlinkOutside, { force: true });
+  }
+});
