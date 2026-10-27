@@ -1,6 +1,6 @@
 ---
 phase: 182-reliable-full-browser-verification-and-ci-caches
-reviewed: 2026-10-27T23:34:55Z
+reviewed: 2026-10-27T23:55:36Z
 depth: standard
 files_reviewed: 24
 files_reviewed_list:
@@ -38,22 +38,20 @@ status: issues_found
 
 # Phase 182: Code Review Report
 
-**Reviewed:** 2026-10-27T23:34:55Z
+**Reviewed:** 2026-10-27T23:55:36Z
 **Depth:** standard
 **Files Reviewed:** 24
 **Status:** issues_found
 
 ## Summary
 
-Reviewed all 24 in-scope files against base `ba624a7452e717c335a26369b8db8523d2551ee9`; the scoped implementation diff contains 9,155 insertions and 411 deletions. The current repository HEAD is `c9d778bd40e37a05c32d82f46003bd99b5b61ef6`, and its non-planning source is byte-identical to the accepted assertion source `1c72637038f2c225d56e2311678b05f912b014f3`. The only implementation delta from the previously accepted `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` is the one settings-assertion line in `admin_screenshots.spec.ts`.
+The standard-depth review covers the original 24 non-planning files against base `ba624a7452e717c335a26369b8db8523d2551ee9`; the current scoped diff is 9,263 insertions and 411 deletions. This reconciliation reviews the subsequent assertion correction and the 108-line test-only addition to `scripts/ci/ecommerce_evidence.test.cjs`. At current `HEAD` `091e16c6ed7bb39577c0af6d3418a4e965653773`, that test is the only non-planning change since `1c72637038f2c225d56e2311678b05f912b014f3`; production code, workflow, browser/cache inputs and acceptance predicates are unchanged. No new review finding was found.
 
-The full-phase review's WR-02 numeric-locator defect is fixed by `30becbc45616d957678c9a0051a1299e0800203b`. The source-derived RED check reproduced the numeric-`0` locator, and GREEN verifies that both intended status strings match while numeric text does not. The recorded 115 Node behavior checks passed with zero skips.
+The three new behavior tests exercise the canonical evidence boundary with explicitly synthetic fixtures: approval-shaped input metadata is absent from the receipt and summary, a synthetic claim inserted into the stored receipt yields `receipt_mismatch`, and an appended claim in the Markdown summary yields `summary_mismatch`. The latter two cases verify both the validation API and CLI failure status. The focused suite passed 23/23 and the existing six-suite Node path passed 118/118, with no skips. These checks cover serialization and recomputation safeguards; they do not establish a real reviewer identity, independent human approval, or generalized LLM honesty.
 
-Current-source evidence at `1c72637038f2c225d56e2311678b05f912b014f3` is now complete for the changed browser input. The local full archive validated at 189 cases in 189 first attempts. The current hosted session validated two eligible invocations: strict Docker warm run [40597095307](https://github.com/szTheory/scrypath/actions/runs/40597095307) and full browser run [40598906757](https://github.com/szTheory/scrypath/actions/runs/40598906757), each with 189 first attempts and no skips, retries or flakes. Strict warm proof recorded imports, useful hits and exports for all three targets. Maximum browser-end-to-upload time was 22 seconds; with the required 60-second margin this remains within the 300-second reserve.
+Runtime evidence remains bound to its original cutoffs. Local full and hosted warm/full browser proof remain at `1c72637038f2c225d56e2311678b05f912b014f3` (189/189 first attempts); the five-mode cache cohort remains at `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` (seven invocations, six eligible, with the initial no-hit producer preserved); and child documentation closeout remains at `04e9a8809f3dcd4b590a30dee8301086a8122597`, run 40600930723. The test-only addition changes none of those proof inputs, and no new or mixed-SHA acceptance claim is made.
 
-The complete five-mode cache cohort remains bound to `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8`: seven recorded invocations, six eligible, with the initial no-hit producer preserved as ineligible. The new current-source warm refresh covers the changed browser image input. Cold and BEAM evidence retain their earlier source cutoff; cache code/configuration, Dockerfiles, locks and BEAM source inputs are unchanged. Reconstructed BEAM identity from current bytes matches the original hosted identity, and the changed spec is excluded from all four BEAM graphs. No mixed-SHA aggregate or current-SHA five-mode cache claim is made.
-
-Child documentation closeout at `04e9a8809f3dcd4b590a30dee8301086a8122597` passed run 40600930723: all five required jobs, coverage, immutable attestation and raw full 189/189. Its default-policy import-only observation is not strict warm-cache acceptance. Fresh merged checks passed 115 Node tests, 961 Elixir tests plus five properties, 98 repository contracts, formatting, actionlint and documentation checks. All 16 Nyquist tasks are covered and 20 authored L1 security controls are closed; all six UI applicability checks remain N/A because this correction only changes a test assertion. These records do not establish independent human approval or phase completion. Known deep-quality dependency-audit debt remains assigned to Phase 184.
+The prior native goal-verifier report remains `human_needed` because the test-tier prohibition against fabricated independent-review approval lacked an explicit wired assertion. The new tests directly cover that gap, but this report does not override or replace the verifier; its CLI-owned re-evaluation and covered-input fingerprint remain pending. No human approval or phase completion is claimed. WR-03 remains the one deferred baseline warning; known deep-quality dependency-audit debt remains assigned to Phase 184.
 
 ## Narrative Findings (AI reviewer)
 
@@ -69,16 +67,16 @@ Child documentation closeout at `04e9a8809f3dcd4b590a30dee8301086a8122597` passe
 
 #### Closed historical findings (preserved disposition; not open)
 
-- **WR-02 — Settings screenshot assertion targets numeric text:** fixed by `30becbc4`; RED/GREEN evidence is recorded in `assertion-selector-red.log` and `assertion-selector-green.log`.
+- **WR-02 — Settings screenshot assertion targets numeric text:** fixed by `30becbc4`; source-derived RED/GREEN evidence is recorded in `assertion-selector-red.log` and `assertion-selector-green.log`.
 - **CR-01 — IPv6 loopback bypasses retained-preview refusal:** fixed by `b6bf7bf0` with executable regression coverage.
 - **CR-02 — Lock-change proof passes on a forced cache miss:** fixed by `01d1f871` with exact-byte, canonical-identity and natural-key checks.
 - **CR-03 — Mandatory inventory accepts one case from each required suite:** fixed by `edd47eee` with all required stable UI identities enforced.
 - **WR-01 — Fixture route readiness treats redirects as success:** fixed by `2f615705` with 2xx-only readiness checks.
 
-The five findings above are historical closed/deferred dispositions and are not open findings under new IDs. This report does not claim all advisory CI jobs are green.
+These five findings are closed or deferred in the canonical disposition; they are preserved as history and are not reopened or reused.
 
 ---
 
-_Reviewed: 2026-10-27T23:34:55Z_
+_Reviewed: 2026-10-27T23:55:36Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
