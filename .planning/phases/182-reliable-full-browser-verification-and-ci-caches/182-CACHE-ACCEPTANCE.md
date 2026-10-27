@@ -3,6 +3,7 @@ phase: "182"
 plan: "08"
 status: accepted
 source_sha: 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8
+current_warm_source_sha: 1c72637038f2c225d56e2311678b05f912b014f3
 repository: szTheory/scrypath
 branch: worktree-agent-p182-final-review-repair
 session_id: phase182-review-repair-0b7fe128-20261027T201345Z
@@ -10,6 +11,113 @@ probe_namespace: candidate-556416f7
 ---
 
 # Phase 182 — Cache acceptance
+
+## Supplemental current-source warm proof
+
+The only non-planning change from `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` to `1c72637038f2c225d56e2311678b05f912b014f3` is the WR-02 settings assertion line in `examples/scrypath_ecommerce/e2e/admin_screenshots.spec.ts` (fix `30becbc4`). It now uses an actual RegExp for both rendered status strings; it cannot pass by locating numeric text. The source-derived RED/GREEN logs and 115 passing Node checks are retained outside the checkout.
+
+PROJECT's named-invalidator policy reuses passing evidence within its source/scenario boundaries. Cache implementation/configuration, Dockerfiles, dependencies/locks and BEAM graph inputs are unchanged. An exact file-tree comparison excluding only that spec passed; rebuilding the original hosted BEAM identity from current input bytes produced the identical manifest, lock and source digests (this is input parity at the original tuple, not a new hosted BEAM run). The spec is outside all four BEAM source graphs. The changed browser image input is covered by the new strict warm receipt; local and hosted full execution cover the stronger assertion.
+
+The complete five-mode cache aggregate remains valid at `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` with seven recorded invocations (six eligible). The new two-invocation session at `1c72637038f2c225d56e2311678b05f912b014f3` has a strict eligible warm receipt and a valid full aggregate. No five-mode cache aggregate at the newer SHA is claimed, no receipts cross source/session identities, and no acceptance predicate was changed. Earlier full passes are not relabeled as proof of the corrected assertion.
+
+Current run [40597095307](https://github.com/szTheory/scrypath/actions/runs/40597095307) / attempt 1 at `1c72637038f2c225d56e2311678b05f912b014f3`: [12777840996](https://api.github.com/repos/szTheory/scrypath/actions/artifacts/12777840996) `sha256:bf200d90ae10a58885c2c3a301c9238ee7df0d64ce87bd9e80ca73eed2ef8eaa`. Receipt SHA-256 `0b36049c9f184f12d77847649cd3f1013c8fdcd5581b388c1cdbb96c3cd9cf17`; raw cache log SHA-256 `2e9290658b10605fb3cc052d3d743862d06037c456526d8f50f900bc2f0dee1a`. The canonical collector accepted actual GHA imports, useful cached vertices and completed exports for all three targets, with checked recipe/image attribution and normal verifier success.
+
+```json
+{
+  "source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+  "run_id": "40597095307",
+  "target_scopes": {
+    "browser": "scrypath-ecommerce-browser-v1-phase182-candidate-556416f7",
+    "standalone_ops": "scrypath-ecommerce-standalone-ops-v1-phase182-candidate-556416f7",
+    "web": "scrypath-ecommerce-app-v1-phase182-candidate-556416f7"
+  },
+  "recipe_ids": {
+    "browser": "sha256:2631878451eecd4439035da289b3ce22e195773bbf462b2f7a4afd0bc9b50495",
+    "standalone_ops": "sha256:d011d45df70c6bdd18253cdd203025967ef2c5cd51352b50f7b860ecfe70ad85",
+    "web": "sha256:d011d45df70c6bdd18253cdd203025967ef2c5cd51352b50f7b860ecfe70ad85"
+  },
+  "image_ids": {
+    "browser": "sha256:027c5767bb099b6ce408840a28cd12285f1abf16a13c75b2ae9373914dd53744",
+    "standalone_ops": "sha256:da86d633cf25c4620cc17cc3f4bce12c8f5f40823207e517f11320482e54c74a",
+    "web": "sha256:da86d633cf25c4620cc17cc3f4bce12c8f5f40823207e517f11320482e54c74a"
+  },
+  "progress": {
+    "browser": {
+      "imports": [
+        {
+          "id": "10",
+          "outcome": "DONE"
+        }
+      ],
+      "cached_steps": [
+        "17",
+        "18",
+        "19"
+      ],
+      "shared_cached_steps": [],
+      "exports": [
+        {
+          "id": "42",
+          "outcome": "DONE"
+        }
+      ]
+    },
+    "standalone_ops": {
+      "imports": [
+        {
+          "id": "15",
+          "outcome": "DONE"
+        }
+      ],
+      "cached_steps": [
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25"
+      ],
+      "shared_cached_steps": [],
+      "exports": [
+        {
+          "id": "34",
+          "outcome": "DONE"
+        }
+      ]
+    },
+    "web": {
+      "imports": [
+        {
+          "id": "16",
+          "outcome": "DONE"
+        }
+      ],
+      "cached_steps": [],
+      "shared_cached_steps": [
+        {
+          "from": "standalone_ops",
+          "steps": [
+            "20",
+            "21",
+            "22",
+            "23",
+            "24",
+            "25"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "id": "35",
+          "outcome": "DONE"
+        }
+      ]
+    }
+  }
+}
+```
+
+The following unchanged five-mode record retains its original source and aggregate command.
 
 Frozen implementation: `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` on `worktree-agent-p182-final-review-repair`. All six accepted invocations join this repository, source, branch, session and namespace. These records do not relabel implementation evidence for later documentation or root commits. Terminal closeout receipts are kept outside the checkout after all tracked writes.
 

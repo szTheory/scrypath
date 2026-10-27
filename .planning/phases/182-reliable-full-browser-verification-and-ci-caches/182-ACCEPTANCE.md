@@ -2,14 +2,160 @@
 phase: "182"
 plan: "08"
 status: accepted
-source_sha: 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8
+source_sha: 1c72637038f2c225d56e2311678b05f912b014f3
+retained_cache_source_sha: 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8
 repository: szTheory/scrypath
 branch: worktree-agent-p182-final-review-repair
-session_id: phase182-review-repair-0b7fe128-20261027T201345Z
+session_id: phase182-assertion-1c726370-20261027T224427Z
 probe_namespace: candidate-556416f7
 ---
 
-# Phase 182 — Full browser acceptance
+# Phase 182 — Current full browser acceptance
+
+The only non-planning change from `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` to `1c72637038f2c225d56e2311678b05f912b014f3` is the WR-02 settings assertion line in `examples/scrypath_ecommerce/e2e/admin_screenshots.spec.ts` (fix `30becbc4`). It now uses an actual RegExp for both rendered status strings; it cannot pass by locating numeric text. The source-derived RED/GREEN logs and 115 passing Node checks are retained outside the checkout.
+
+PROJECT's named-invalidator policy reuses passing evidence within its source/scenario boundaries. Cache implementation/configuration, Dockerfiles, dependencies/locks and BEAM graph inputs are unchanged. An exact file-tree comparison excluding only that spec passed; rebuilding the original hosted BEAM identity from current input bytes produced the identical manifest, lock and source digests (this is input parity at the original tuple, not a new hosted BEAM run). The spec is outside all four BEAM source graphs. The changed browser image input is covered by the new strict warm receipt; local and hosted full execution cover the stronger assertion.
+
+The complete five-mode cache aggregate remains valid at `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` with seven recorded invocations (six eligible). The new two-invocation session at `1c72637038f2c225d56e2311678b05f912b014f3` has a strict eligible warm receipt and a valid full aggregate. No five-mode cache aggregate at the newer SHA is claimed, no receipts cross source/session identities, and no acceptance predicate was changed. Earlier full passes are not relabeled as proof of the corrected assertion.
+
+## Corrected-source hosted proof
+
+| Mode/run | Cases/attempts | Through upload/job(s) | Finalization(s) | Budget left(s) | Browser artifact |
+| --- | --- | --- | --- | --- | --- |
+| `docker-warm` [40597095307](https://github.com/szTheory/scrypath/actions/runs/40597095307) | 189/189 | 873/887 | 22 | 927 | [12777860977](https://api.github.com/repos/szTheory/scrypath/actions/artifacts/12777860977) `sha256:adc96a02e1b7bcff831169b13460272878c16d7c5aab7450e9054f0c641586a5` |
+| `full` [40598906757](https://github.com/szTheory/scrypath/actions/runs/40598906757) | 189/189 | 812/817 | 22 | 988 | [12779125946](https://api.github.com/repos/szTheory/scrypath/actions/artifacts/12779125946) `sha256:264dba5b4ad68ed883605aed0b6b586200ea2e872eb7a6a6c163d37b858c3f42` |
+
+Each current receipt joins the exact checkout/event SHA, branch, run/attempt, built/runtime images and artifacts. Both report raw verifier success, all 189 first attempts, required parity/contrast, both actual fixture routes and zero owned containers/networks/volumes. Full receipt SHA-256 `dc20d3e7c0e0cea7832a0dcbbd84e6d71ed83a71d49cc295cd967f4edc1a6787`; current manifest SHA-256 `1f1a2244377a57553e193813583988a9c47a741ee04e18efba0a213e0f3d2e14`.
+
+```json
+{
+  "source": {
+    "mode": "hosted",
+    "checkout_head": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "dirty": false,
+    "event_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "built_source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "dirty_fingerprint": null
+  },
+  "workflow": {
+    "event": "workflow_dispatch",
+    "ref": "refs/heads/worktree-agent-p182-final-review-repair",
+    "sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "run_id": "40598906757",
+    "run_attempt": 1,
+    "job_name": "ecommerce-e2e (advisory)",
+    "job_conclusion": "success"
+  },
+  "images": {
+    "application": {
+      "built_id": "sha256:da86d633cf25c4620cc17cc3f4bce12c8f5f40823207e517f11320482e54c74a",
+      "runtime_id": "sha256:da86d633cf25c4620cc17cc3f4bce12c8f5f40823207e517f11320482e54c74a",
+      "source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+      "source_fingerprint": null
+    },
+    "browser": {
+      "built_id": "sha256:590e55242c3b49b65877423600a50da07caf35f5d8615c490a99806c8c1dd896",
+      "runtime_id": "sha256:590e55242c3b49b65877423600a50da07caf35f5d8615c490a99806c8c1dd896",
+      "source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+      "source_fingerprint": null
+    }
+  },
+  "checkers": {
+    "light_parity": {
+      "path": "admin-light-parity.json",
+      "status": "pass",
+      "outcome": "success",
+      "missing": 0,
+      "extra": 0,
+      "width_mismatches": 0
+    },
+    "contrast": {
+      "path": "contrast-report.json",
+      "status": "pass",
+      "outcome": "success",
+      "missing": null,
+      "extra": null,
+      "width_mismatches": null,
+      "aa_fail": 0,
+      "total": 101
+    }
+  },
+  "cleanup": {
+    "status": "clean",
+    "project": "scrypath-e2e-40598906757-1-full",
+    "containers": 0,
+    "networks": 0,
+    "volumes": 0
+  }
+}
+```
+
+## Corrected-source local proof
+
+```json
+{
+  "source": {
+    "mode": "local",
+    "checkout_head": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "dirty": false,
+    "event_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "built_source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+    "dirty_fingerprint": null
+  },
+  "eligibility": {
+    "eligible": true,
+    "clean": false,
+    "class": "local-clean",
+    "status": "pass",
+    "reason_count": 0
+  },
+  "cases": 189,
+  "attempts": 189,
+  "checkers": {
+    "light_parity": {
+      "path": "admin-light-parity.json",
+      "status": "pass",
+      "outcome": "success",
+      "missing": 0,
+      "extra": 0,
+      "width_mismatches": 0
+    },
+    "contrast": {
+      "path": "contrast-report.json",
+      "status": "pass",
+      "outcome": "success",
+      "missing": null,
+      "extra": null,
+      "width_mismatches": null,
+      "aa_fail": 0,
+      "total": 101
+    }
+  },
+  "cleanup": {
+    "status": "clean",
+    "project": "scrypath_verify_full_1c726370_local",
+    "containers": 0,
+    "networks": 0,
+    "volumes": 0
+  }
+}
+```
+
+Command: `env BUILDX_CONFIG=/private/tmp/scrypath-phase182-buildx E2E_RUN_ID=phase182-1c726370-local E2E_PROJECT_NAME=scrypath_verify_full_1c726370_local E2E_DOCKER_TIMEOUT_SECONDS=1800 E2E_FINALIZATION_MARGIN_SECONDS=300 make -C examples/scrypath_ecommerce verify-e2e`. Archive: `/private/tmp/scrypath-phase182-acceptance/1c72637038f2c225d56e2311678b05f912b014f3/local-full`. This source-clean local class is not hosted proof.
+
+## Budget and authority
+
+Maximum current finalization/upload interval 22s plus the required 60s margin is below the configured 300s reserve. Whole jobs 817–887s remain below 1800; remaining budget after upload 927–988s is a distinct measurement. Current artifacts retain seven-day hosted retention and immutable digests; downloaded bytes remain outside the checkout. No failure traces are claimed for passing cases, no independent design approval or paid judge is implied.
+
+```sh
+node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-final-review-repair --sha 1c72637038f2c225d56e2311678b05f912b014f3 --session-id phase182-assertion-1c726370-20261027T224427Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/1c72637038f2c225d56e2311678b05f912b014f3/phase182-assertion-1c726370-20261027T224427Z/collector-session
+```
+
+Result: valid/eligible, two current eligible invocations. The unchanged five-mode cache authority is the earlier 0b7 command in 182-CACHE-ACCEPTANCE.md. Source/scenario reuse and the single named invalidator are explicit; no cross-SHA aggregate is invented.
+
+## Earlier 0b7 browser cohort — preserved source cutoff
+
+The following record predates WR-02's assertion correction. It remains historical evidence for its stated source and cache scenarios; it is not current proof of the corrected settings assertion.
 
 Frozen implementation: `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` on `worktree-agent-p182-final-review-repair`. All six accepted invocations join this repository, source, branch, session and namespace. These records do not relabel implementation evidence for later documentation or root commits. Terminal closeout receipts are kept outside the checkout after all tracked writes.
 
@@ -26,7 +172,7 @@ Session root: `/private/tmp/scrypath-phase182-acceptance/0b7fe128d94dd8ac25e923a
 
 All six hosted receipts report raw verifier success, job success, parity/contrast pass, complete owned artifacts and zero owned containers/networks/volumes after disposal. Source checkout, event, built/runtime images and workflow ref join the selected SHA and branch. No passed retry or skipped case is counted as clean first-pass evidence.
 
-## Final full inventory
+### Final full inventory
 
 | Chromium file | Executed cases |
 | --- | --- |
@@ -53,7 +199,7 @@ All six hosted receipts report raw verifier success, job success, parity/contras
 
 Total: 189 cases / 189 first-attempt passes. This includes mounted and standalone Phase 173 coverage, all seven ui_followup cases and six ui_iteration3 cases. Both actual Ops health routes passed before browser execution.
 
-## Source, image and checker joins
+### Source, image and checker joins
 
 ```json
 {
@@ -118,7 +264,7 @@ Total: 189 cases / 189 first-attempt passes. This includes mounted and standalon
 }
 ```
 
-## Local canonical proof
+### Local canonical proof
 
 ```json
 {
@@ -170,13 +316,13 @@ Total: 189 cases / 189 first-attempt passes. This includes mounted and standalon
 
 Exact command: `env BUILDX_CONFIG=/private/tmp/scrypath-phase182-buildx E2E_RUN_ID=20261027T2014-0b7fe128-local E2E_PROJECT_NAME=scrypath_verify_full_0b7fe128_local E2E_DOCKER_TIMEOUT_SECONDS=1800 E2E_FINALIZATION_MARGIN_SECONDS=300 make -C examples/scrypath_ecommerce verify-e2e`. The approved 1800-second ceiling and 300-second finalization reserve were used; this local-clean class is not relabeled hosted proof. Preserved local bundle: `/private/tmp/scrypath-phase182-acceptance/0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8/local-full`.
 
-## Timing and artifact limits
+### Timing and artifact limits
 
 The whole browser job, including setup/build and upload, remains below 1800 seconds in every accepted run. The maximum observed browser-end-to-upload interval is 22 seconds; observation plus at least 60 seconds remains below the configured 300-second body reserve. Measured remaining time after upload is a separate field, not that configured reserve.
 
 The bounded archives retain complete JSON, HTML, screenshots, iteration-3 captures, health/readiness, service logs, image handoff and lifecycle data. Playwright retain-on-failure is preserved: all accepted cases passed, so no failure trace is claimed. Artifacts have the existing seven-day hosted retention; immutable digests and source/run identities are recorded, and downloaded bytes remain outside the checkout. Functional/parity/contrast passes are not independent design review or paid-judge approval.
 
-## Requirement evidence
+### Requirement evidence
 
 | Requirement | Current evidence |
 | --- | --- |
@@ -186,7 +332,7 @@ The bounded archives retain complete JSON, HTML, screenshots, iteration-3 captur
 | CACHE-01 | Current Docker warm and fresh-builder/import-disabled cold receipts in 182-CACHE-ACCEPTANCE.md. |
 | CACHE-02 | Current compatible BEAM fallback, lock-byte invalidation and no-import cold receipts in 182-CACHE-ACCEPTANCE.md. |
 
-## Machine authority
+### Machine authority
 
 ```sh
 node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-final-review-repair --sha 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8 --session-id phase182-review-repair-0b7fe128-20261027T201345Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8/phase182-review-repair-0b7fe128-20261027T201345Z/collector-session
@@ -194,7 +340,7 @@ node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scr
 
 Result: valid and eligible, seven recorded invocations (six eligible). Full aggregate SHA-256: `ab15269997252418901b74f0de5035d70a80d864d8f6e6a9ea9a1e8b56ef22a2`. Manifest SHA-256: `3eba92ebb4d04bc8f11861127c4475dfb4c3e39b9855e35847c455daddabb26d`. Current source/collector, warning-as-error and repository contract checks passed with 115 Node tests, 961 Elixir tests plus five properties, and 98 repository contracts respectively.
 
-## Preserved history and limits
+### Preserved history and limits
 
 Initial corrected-source run [40576150719](https://github.com/szTheory/scrypath/actions/runs/40576150719) passed browser189/189 but failed warm acceptance because all three imports had zero useful cached vertices. All three exports completed without warnings; actual cache inventory binds the resulting Docker and BEAM caches to the new repair branch. [GitHub cache branch restrictions](https://docs.docker.com/build/cache/backends/gha/#scope) prevented the older worktree branch from seeding this branch. After checking that changed cache state, a new warm consumer was collected in the SAME candidate session. The first ineligible receipt remains in the manifest and atomic attempt history; it is a cache producer, never clean warm acceptance. No browser retry or acceptance predicate was changed.
 
