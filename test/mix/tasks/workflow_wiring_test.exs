@@ -182,6 +182,65 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "CACHE-02 graph-aware BEAM cache wiring" do
+    test "path-dependent CI consumers key their graph before normal dependency resolution and verification" do
+      ci = File.read!(@ci_yml)
+
+      for {job_name, graph, profile, verify_command} <- [
+            {"ops-ui", "ops", "ops-test", "mix verify.ops_ui"},
+            {"phoenix-example", "phoenix-example", "phoenix-test", "mix verify.phoenix_example"},
+            {"ecommerce-mounted", "ecommerce", "ecommerce-test", "mix verify.ecommerce_mounted"},
+            {"ecommerce-e2e", "ecommerce", "ecommerce-test", "mix verify.ecommerce_e2e"}
+          ] do
+        job = workflow_job_block(ci, job_name)
+
+        assert job =~ "beam_cache.cjs plan --graph #{graph}"
+        assert job =~ "MIX_ENV: test"
+        assert job =~ "MIX_TARGET: host"
+        assert job =~ "BEAM_CACHE_PROFILE: #{profile}"
+
+        assert_ordered_steps(job, [
+          "beam_cache.cjs plan --graph #{graph}",
+          "actions/cache@",
+          "mix deps.get",
+          verify_command
+        ])
+      end
+    end
+
+    test "deep-quality resolves dependencies and caches PLTs separately with a strict key" do
+      deep_quality = File.read!(@ci_yml) |> workflow_job_block("deep-quality")
+
+      assert deep_quality =~ "beam_cache.cjs plan --graph root"
+      assert deep_quality =~ "MIX_ENV: test"
+      assert deep_quality =~ "MIX_TARGET: host"
+      assert deep_quality =~ "BEAM_CACHE_PROFILE: deep-quality-test"
+      assert deep_quality =~ "outputs.plt_paths"
+      assert deep_quality =~ "outputs.plt_key"
+      assert deep_quality =~ "mix deps.get"
+
+      assert deep_quality =~
+               ~r|path: \$\{\{ steps\.beam_cache\.outputs\.plt_paths \}\}\n\s+key: \$\{\{ steps\.beam_cache\.outputs\.plt_key \}\}\n\s+- run:|
+
+      assert_ordered_steps(deep_quality, [
+        "beam_cache.cjs plan --graph root",
+        "actions/cache@",
+        "mix deps.get",
+        "elixir scripts/ci/dependency_audit.exs",
+        "run_deep_quality_without_audit"
+      ])
+    end
+
+    test "Node BEAM cache boundaries execute inside the existing wiring contract lane" do
+      {output, status} =
+        System.cmd("node", ["--test", "scripts/ci/beam_cache.test.cjs"], stderr_to_stdout: true)
+
+      assert status == 0, output
+      assert output =~ "# tests"
+      assert output =~ "# fail 0"
+    end
+  end
+
   describe "INFRA-04 D-19: scheduled drift-issue wiring" do
     test "create-an-issue step is guarded on failure() + schedule event" do
       yml = File.read!(@verify_published_yml)

@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 
-const { cacheIdentity, cachePlan, runtimeIdentity } = require("./beam_cache.cjs");
+const { buildPlan, cacheIdentity, cachePlan, runtimeIdentity } = require("./beam_cache.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const workflow = fs.readFileSync(path.join(repositoryRoot, ".github/workflows/ci.yml"), "utf8");
@@ -116,4 +116,90 @@ test("archive paths are graph-allowlisted and exclude credentials and isolated p
   const allPaths = JSON.stringify([root.paths, ops.paths, phoenix.paths]);
   assert.doesNotMatch(allPaths, /\.mix|HEX_HOME|MIX_HOME|no_optional_deps|package[-_]consumer/i);
   assert.doesNotMatch(allPaths, /~\/\.hex(?:\n|\s|$)/);
+});
+
+test("path-dependent CI cache consumers use their dependency graph and resolve before verification", () => {
+  const consumers = [
+    ["ops-ui", "ops", "ops-test", "mix verify.ops_ui"],
+    ["phoenix-example", "phoenix-example", "phoenix-test", "mix verify.phoenix_example"],
+    ["ecommerce-mounted", "ecommerce", "ecommerce-test", "mix verify.ecommerce_mounted"],
+    ["ecommerce-e2e", "ecommerce", "ecommerce-test", "mix verify.ecommerce_e2e"]
+  ];
+
+  for (const [jobName, graph, profile, verifyCommand] of consumers) {
+    const block = jobBlock(jobName);
+    assert.match(block, new RegExp(`beam_cache\\.cjs plan --graph ${graph}`), `${jobName} should key its actual graph`);
+    assert.match(block, /MIX_ENV: test/, `${jobName} should identify test compilation`);
+    assert.match(block, /MIX_TARGET: host/, `${jobName} should identify the host target`);
+    assert.match(block, new RegExp(`BEAM_CACHE_PROFILE: ${profile}`), `${jobName} should identify its compilation profile`);
+    const cacheIndex = block.indexOf("actions/cache@");
+    const depsIndex = block.indexOf("mix deps.get");
+    const verifyIndex = block.indexOf(verifyCommand);
+    assert.ok(cacheIndex >= 0 && depsIndex > cacheIndex, `${jobName} must resolve dependencies after cache restore`);
+    assert.ok(verifyIndex > depsIndex, `${jobName} must run canonical verification after deps.get`);
+  }
+
+  const deepQuality = jobBlock("deep-quality");
+  assert.match(deepQuality, /beam_cache\.cjs plan --graph root/);
+  assert.match(deepQuality, /outputs\.plt_paths/);
+  assert.match(deepQuality, /outputs\.plt_key/);
+  const pltCache = deepQuality.match(/- uses: actions\/cache@[^\n]+\n(?:(?!      - ).*\n)*?          path: \$\{\{ steps\.beam_cache\.outputs\.plt_paths \}\}[\s\S]*?(?=      - |$)/);
+  assert.ok(pltCache, "deep-quality should cache PLTs in their own action");
+  assert.doesNotMatch(pltCache[0], /restore-keys:/, "PLT cache must remain exact-key only");
+  assert.ok(deepQuality.indexOf("mix deps.get") > deepQuality.indexOf("actions/cache@"));
+});
+
+test("path graph manifests and locks fingerprint only the consuming resolved cache", (t) => {
+  const root = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "beam-cache-graph-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const files = {
+    "mix.exs": "root manifest\n",
+    "mix.lock": "root lock\n",
+    "lib/root.ex": "root source\n",
+    "scrypath_ops/mix.exs": "ops manifest\n",
+    "scrypath_ops/mix.lock": "ops lock\n",
+    "scrypath_ops/lib/ops.ex": "ops source\n",
+    "examples/scrypath_ecommerce/mix.exs": "ecommerce manifest\n",
+    "examples/scrypath_ecommerce/mix.lock": "ecommerce lock\n",
+    "examples/scrypath_ecommerce/lib/ecommerce.ex": "ecommerce source\n",
+    "examples/phoenix_meilisearch/mix.exs": "phoenix manifest\n",
+    "examples/phoenix_meilisearch/mix.lock": "phoenix lock\n",
+    "examples/phoenix_meilisearch/lib/phoenix.ex": "phoenix source\n"
+  };
+  for (const [relative, contents] of Object.entries(files)) {
+    const absolute = path.join(root, relative);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, contents);
+  }
+
+  const env = {
+    ImageOS: "ubuntu24",
+    ImageVersion: "20261019.1.0",
+    RUNNER_OS: "Linux",
+    RUNNER_ARCH: "X64",
+    MIX_ENV: "test",
+    MIX_TARGET: "host",
+    BEAM_CACHE_PROFILE: "fixture-test"
+  };
+  const versions = "Erlang/OTP 28.1 [erts-16.1]\nElixir 1.19.0 (compiled with Erlang/OTP 28)\n";
+  const plan = (graph) => buildPlan({ graph, root, env, elixirVersionOutput: versions });
+  const rootBefore = plan("root");
+  const opsBefore = plan("ops");
+  const ecommerceBefore = plan("ecommerce");
+  const phoenixBefore = plan("phoenix-example");
+
+  fs.appendFileSync(path.join(root, "scrypath_ops/mix.lock"), "changed\n");
+  const opsChanged = plan("ops");
+  assert.notEqual(opsChanged.resolved_key, opsBefore.resolved_key);
+  assert.equal(opsChanged.downloads_restore_prefix, opsBefore.downloads_restore_prefix);
+  assert.equal(plan("root").resolved_key, rootBefore.resolved_key);
+
+  fs.appendFileSync(path.join(root, "examples/scrypath_ecommerce/mix.exs"), "changed\n");
+  assert.notEqual(plan("ecommerce").downloads_restore_prefix, ecommerceBefore.downloads_restore_prefix);
+
+  fs.appendFileSync(path.join(root, "examples/phoenix_meilisearch/mix.lock"), "changed\n");
+  const phoenixChanged = plan("phoenix-example");
+  assert.notEqual(phoenixChanged.resolved_restore_prefix, phoenixBefore.resolved_restore_prefix);
+  assert.equal(phoenixChanged.downloads_restore_prefix, phoenixBefore.downloads_restore_prefix);
 });
