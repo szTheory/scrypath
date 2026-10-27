@@ -354,6 +354,20 @@ test("BuildKit cache acceptance requires per-target imports, useful cache hits, 
   assert.throws(() => validateCacheAcceptance(statusOnly), /actual GHA import and export/);
 });
 
+test("BuildKit cache acceptance parses GitHub CLI job log prefixes without changing raw evidence", () => {
+  const lines = buildKitCacheLog().split("\n");
+  const githubLog = lines.map((line, index) =>
+    `ecommerce-e2e (advisory)\tBake and load checked full images\t${index === 0 ? "\uFEFF" : ""}2026-10-27T09:24:18.5308241Z ${line}`,
+  ).join("\n");
+  const proof = cacheProof("docker-warm");
+  refreshDockerEvidence(proof, githubLog);
+
+  assert.equal(proof.cache.actual_import, true);
+  assert.equal(proof.cache.actual_export, true);
+  assert.equal(proof.cache.log_sha256, crypto.createHash("sha256").update(githubLog).digest("hex"));
+  assert.equal(validateCacheAcceptance(proof), true);
+});
+
 test("Docker cache proof binds every checked Bake target to its manifest scope", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-checked-bake-proof-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

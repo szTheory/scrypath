@@ -874,11 +874,15 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
   const expectedTargets = Object.keys(targetScopes || {}).sort();
   const targetSet = new Set(expectedTargets);
   const lines = String(logText).split(/\r?\n/);
+  const buildKitLines = lines.map((line) => line.replace(
+    /^[^\t\r\n]+\t[^\t\r\n]+\t\uFEFF?\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s+#/,
+    "#",
+  ));
   const vertices = new Map();
   const byIdLines = new Map();
   const terminal = new Map();
   for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
+    const line = buildKitLines[index];
     const start = line.match(/^#(\d+)\s+(?:\[([^\]]+)\]\s+)?(.*?)\s*$/);
     if (!start) continue;
     const id = start[1];
@@ -920,8 +924,9 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
     const entries = imports.get(service);
     return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) && cachedSteps.get(service).length > 0;
   });
-  const cacheFailureLines = lines.filter((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
-  const exporterWarnings = lines.filter((line) => /warning/i.test(line) && /cache|exporter/i.test(line) && /ignored|fail|error|unsupported|not supported/i.test(line));
+  const matchingLines = (predicate) => buildKitLines.flatMap((line, index) => predicate(line) ? [lines[index]] : []);
+  const cacheFailureLines = matchingLines((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
+  const exporterWarnings = matchingLines((line) => /warning/i.test(line) && /cache|exporter/i.test(line) && /ignored|fail|error|unsupported|not supported/i.test(line));
   const exportComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
     const entries = exports.get(service);
     return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome);
