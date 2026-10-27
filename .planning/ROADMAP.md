@@ -17,11 +17,11 @@
 
 ## Current Posture
 
-**Phase 182 is refreshing scoped browser proof after final review (2026-10-27).** All eight plans and four reviewed repairs are merged. The corrected frozen source has local full189/189 and six eligible hosted189/189 receipts, with the initial ineligible cache producer preserved. The actual repair documentation head passed all required CI jobs, coverage, attestation and full browser proof. Phase completion has not been called. The inherited WR-02 settings assertion is now corrected and reviewed; current local and hosted warm/full browser evidence is running at1c726370. Unchanged cache evidence retains its0b7 source cutoff; see STATE and REVIEW-REPAIR for named invalidators.
+**Phase 182 is in final goal verification (2026-10-27).** All eight plans and five reviewed fixes are merged. Corrected browser source 1c has local 189/189 and hosted warm/full 189/189; unchanged five-mode cache evidence retains source 0b7 with explicit input parity. Actual child documentation 04e9a880 passed required gates,coverage,attestation and full 189/189 under the default import-only policy. Fresh merged checks passed115 Node,961 Elixir tests plus five properties and 98 contracts plus formatting/actionlint/docs. Phase completion has not been called.
 
-Continue `$gsd-execute-phase 182` from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, through mandatory hooks, goal verification and final ROOT-SHA closeout. Preserve unrelated config and retained-preview data. Current source-bound details and limits are in the acceptance records; older receipts remain historical.
+Continue `$gsd-execute-phase 182` from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, through native goal verification, transition and final ROOT-SHA closeout. Current acceptance records preserve both source cutoffs and all failures. No independent design approval or every-advisory-green claim is made. Preserve config and retained-preview data.
 
-The v1.44 archive, its 19 debt items and deferrals remain intact. PR #122 merge/Hex publication remain separate; known dependency-audit debt remains Phase184. This does not complete v1.45 or claim every advisory job is green.
+The v1.44 archive and 19 inherited audit-debt items remain intact; PR122 merge and Hex publication are separate. WR-03's baseline same-run rerun naming limitation is explicitly deferred in the disposition; known dependency-audit debt remains Phase 184. v1.45 has three later phases and is not complete.
 
 ## v1.45 Foundation and CI
 

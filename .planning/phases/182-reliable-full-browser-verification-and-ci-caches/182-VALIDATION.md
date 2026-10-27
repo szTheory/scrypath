@@ -2,6 +2,8 @@
 phase: "182"
 slug: "reliable-full-browser-verification-and-ci-caches"
 status: validated
+current_browser_source_sha: 1c72637038f2c225d56e2311678b05f912b014f3
+retained_cache_source_sha: 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-26"
@@ -61,7 +63,7 @@ These commands are created/wired by 182-07 before 182-08 begins. Both hosted tas
 
 The SHA-specific --output-dir is a candidate-session root bound by a manifest to repository, branch, SHA and the explicit --session-id. Every invocation, including a repeated mode, allocates exclusive fresh per-mode/invocation and run/attempt subdirectories and preserves all attempts/failures. Only source-checked manifest-listed receipts may enter atomic root aggregates; stale loose files and wrong SHA/ref/session cannot contribute. A changed candidate needs a new session/root. The named temporary output root is an intentional runtime artifact, not a source-file path. 182-07-01 tests repeated modes, source/session mismatch, stale-file exclusion, aggregate serialization and denied dispatch/read operations.
 
-Task 182-08-01 and 182-08-02 used the frozen implementation identity below. The same candidate session preserves an initial ineligible warm producer and the six eligible mode/full invocations; earlier candidate manifests remain separate. These commands are reproduction commands, not instructions to redispatch completed work.
+The original 0b7 cohort for Task 182-08-01/02 used the frozen identity below. Its cache evidence remains source-bound; current corrected-assertion browser evidence is recorded in the later section. The same candidate session preserves an initial ineligible warm producer and the six eligible mode/full invocations; earlier candidate manifests remain separate. These commands are reproduction commands, not instructions to redispatch completed work.
 
 ```sh
 node scripts/ci/phase182_acceptance.cjs run --mode docker-warm --repo szTheory/scrypath --branch worktree-agent-p182-final-review-repair --sha 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8 --session-id phase182-review-repair-0b7fe128-20261027T201345Z --probe-namespace candidate-556416f7 --output-dir /private/tmp/scrypath-phase182-acceptance/0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8/phase182-review-repair-0b7fe128-20261027T201345Z/collector-session
@@ -77,6 +79,19 @@ node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scr
 Both validators returned valid/eligible with seven recorded invocations (six eligible). Each accepted hosted invocation passed 189 distinct cases in 189 first attempts and clean disposal. Canonical local full also passed 189/189. The Node behavior suite passed 115 tests; warning-as-error root verification passed 961 tests plus five properties, and repository contracts passed 98 tests. Final merged checks and exact-head closeout are separately recorded by the phase verifier.
 
 The configured 300-second finalization reserve exceeds the observed maximum browser-end-to-upload interval (22 seconds) plus 60 seconds. Whole job durations range from 689 to 950 seconds, below 1800; upload completes with 863–1118 seconds left. These are distinct measurements.
+
+### Current assertion refresh and unchanged cache inputs
+
+WR-02 corrected only one settings assertion line in `admin_screenshots.spec.ts` (30becbc4). Source-derived RED/GREEN verifies a real status RegExp rather than numeric 0; the current canonical local full and both hosted warm/full runs passed 189 distinct cases in 189 first attempts at `1c72637038f2c225d56e2311678b05f912b014f3`. Node 115 passed; final merged/root checks are separately recorded. No skipped/retried/flaky outcome is counted as clean.
+
+PROJECT's named-invalidator policy retains the five-mode cache aggregate at `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8`. All other non-planning bytes are identical; cache policy/configuration, Dockerfiles, dependency/lock bytes and all BEAM graph inputs are unchanged. Reconstructing the original hosted BEAM identity using current input bytes yielded the identical manifest/lock/source digests; this is input parity, not a new hosted BEAM run. Current strict warm proof additionally covers the changed browser-image input. The newer full aggregate has two eligible invocations, not a fabricated five-mode current-SHA cache aggregate. Original failures and both source cutoffs stay visible.
+
+```sh
+node scripts/ci/phase182_acceptance.cjs validate --mode caches --repo szTheory/scrypath --branch worktree-agent-p182-final-review-repair --sha 0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8 --session-id phase182-review-repair-0b7fe128-20261027T201345Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8/phase182-review-repair-0b7fe128-20261027T201345Z/collector-session
+node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-final-review-repair --sha 1c72637038f2c225d56e2311678b05f912b014f3 --session-id phase182-assertion-1c726370-20261027T224427Z --probe-namespace candidate-556416f7 --input /private/tmp/scrypath-phase182-acceptance/1c72637038f2c225d56e2311678b05f912b014f3/phase182-assertion-1c726370-20261027T224427Z/collector-session
+```
+
+Both validators return valid/eligible within their own source/session identities. Current hosted durations are 817–887s; maximum browser-end-to-upload 22s plus 60s fits 300s reserve. All sixteen task behaviors remain covered by actual checks and source-bound integration evidence; no manual UAT or human approval is substituted.
 
 ### Historical planning boundary
 

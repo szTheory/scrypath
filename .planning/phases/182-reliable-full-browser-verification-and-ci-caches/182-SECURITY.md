@@ -50,6 +50,10 @@ Paths below resolve under `scripts/ci/` unless otherwise stated. Test file refer
 | T-182-18 | Repudiation | Cache acceptance claims | high | mitigate | phase182_acceptance.test.cjs; current five-mode cache validator eligible; observations cannot grant strict warm acceptance | closed |
 | T-182-19 | Repudiation | Final full-browser source/budget/cleanup | high | mitigate | phase182_acceptance.test.cjs; current full aggregate eligible189/189, clean disposal, measured timings and exact-head closeout | closed |
 
+## Assertion-only follow-up
+
+The later WR-02 correction at 30becbc4 changes one E2E assertion; the 20 authored mitigation implementations and trust boundaries are unchanged. Current warm/full browser proof at `1c72637038f2c225d56e2311678b05f912b014f3` passes 189 first attempts per invocation; retained unchanged cold/BEAM scenarios stay bound to `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8` with explicit source/input parity. This reuses the existing L1 mitigation inspection and does not claim a new independent security audit or add accepted risks. WR-03 is an unchanged baseline operational rerun limitation, recorded as deferred in REVIEW-DISPOSITION; fresh-run closeout remains the supported path.
+
 ## Accepted risks
 
 No accepted risks. The known deep-quality dependency audit debt is scoped to Phase 184 and is not waived by this report. No open blocking threat is hidden by transfer or approval.
