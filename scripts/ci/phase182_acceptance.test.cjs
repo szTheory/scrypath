@@ -1294,3 +1294,19 @@ test("full aggregate accepts the parsed receipt from the latest eligible session
  collectRun(flags,{command:successfulCommandDouble({mode:'full'}),pollMilliseconds:0,timeoutSeconds:2,browserValidator:validBrowserReceipt});
  assert.equal(validateAggregate(flags,'full').eligible,true);
 });
+
+test("lock-change requires canonical before/after identities bound to the changed bytes", () => {
+  const proof = cacheProof("beam-lock-change");
+  proof.lock_probe.baseline_identity = { ...proof.cache.identity };
+  proof.lock_probe.changed_identity = { ...proof.cache.identity };
+  proof.lock_probe.before_bytes_base64 = Buffer.from("%{}\n").toString("base64");
+  proof.lock_probe.after_bytes_base64 = Buffer.from(`%{}\n# phase182 lock probe run ${proof.run.id} attempt ${proof.run.attempt}\n`).toString("base64");
+  assert.throws(() => validateCacheAcceptance(proof), /canonical lock/);
+});
+
+test("lock-change keys retain the normal changed-lock identity without a forced run miss", () => {
+  const base = cachePlan({ graph: "root", runner_image: "ubuntu24/20261019.1.0", os: "Linux", arch: "X64", elixir: "1.19.0", otp: "28.1", mix_env: "test", mix_target: "host", profile: "root-test", manifests_digest: "a".repeat(64), locks_digest: "b".repeat(64), source_digest: "c".repeat(64) });
+  const normal = beamPlanForProbe(base, { mode: "normal", namespace: "lock-contract", runId: "101", attempt: 1 });
+  const changed = beamPlanForProbe(base, { mode: "beam-lock-change", namespace: "lock-contract", runId: "102", attempt: 1 });
+  for (const key of ["downloads_key", "resolved_key", "downloads_restore_prefix", "resolved_restore_prefix"]) assert.equal(changed[key], normal[key], key);
+});
