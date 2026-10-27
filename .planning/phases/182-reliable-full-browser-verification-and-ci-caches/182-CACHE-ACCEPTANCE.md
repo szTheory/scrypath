@@ -11,6 +11,8 @@ probe_namespace: candidate-556416f7
 
 # Phase 182 — Cache acceptance
 
+**Final-review repair checkpoint (2026-10-27):** This record preserves the prior EC source evidence. The later final review found three source-level blockers and one readiness warning; eight test/fix commits now correct them at `01d1f871`. Those earlier runs do not prove the corrected source. New local/hosted acceptance and final-root closeout remain pending; no phase completion is claimed. See 182-REVIEW-REPAIR.md.
+
 Frozen implementation: `ec248fd2f7eea9314e600bcc10262729d2cce69e` on `worktree-agent-p182-08-1793071051075`. All six accepted invocations join this repository, source, branch, session and namespace. These records do not relabel implementation evidence for later documentation or root commits. Terminal closeout receipts are kept outside the checkout after all tracked writes.
 
 Session root: `/private/tmp/scrypath-phase182-acceptance/ec248fd2f7eea9314e600bcc10262729d2cce69e/phase182-08-ec248fd2-20261027T175951Z/collector-session`. Authority is the manifest-listed receipt set, not loose files or a green workflow conclusion.

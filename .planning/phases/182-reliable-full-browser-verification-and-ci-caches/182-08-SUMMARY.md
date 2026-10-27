@@ -34,7 +34,7 @@ key-files:
     - scripts/ci/phase182_acceptance.cjs
     - scripts/ci/phase182_acceptance.test.cjs
     - test/mix/tasks/workflow_wiring_test.exs
-requirements-completed: [BROW-01, BROW-02, BROW-03, CACHE-01, CACHE-02]
+requirements-completed: []
 coverage:
   - id: D1
     requirement: BROW-01
@@ -77,10 +77,12 @@ coverage:
         status: pass
     human_judgment: false
 completed: 2026-10-27
-status: complete
+status: in_progress
 ---
 
 # Phase 182 Plan 08 — Real browser and cache acceptance
+
+**Final-review repair checkpoint (2026-10-27):** This record preserves the prior EC source evidence. The later final review found three source-level blockers and one readiness warning; eight test/fix commits now correct them at `01d1f871`. Those earlier runs do not prove the corrected source. New local/hosted acceptance and final-root closeout remain pending; no phase completion is claimed. See 182-REVIEW-REPAIR.md.
 
 All five cache scenarios and the final full collection passed at `ec248fd2f7eea9314e600bcc10262729d2cce69e`. Each of six hosted invocations completed 189 cases in 189 first-pass attempts, with raw verifier success, exact source/image/ref joins, required artifacts and clean owned disposal. Both canonical aggregate validators returned eligible with six invocations.
 
