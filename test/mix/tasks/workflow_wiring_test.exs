@@ -277,7 +277,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "run: mix verify.repository_contracts"
     end
 
-    test "repository contracts execute counted browser lifecycle and target behavior tests" do
+    test "repository contracts execute counted browser lifecycle, evidence, and target behavior tests" do
       {output, status} =
         System.cmd(
           "node",
@@ -285,6 +285,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
             "--test",
             "--test-reporter=tap",
             "scripts/ci/ecommerce_lifecycle.test.cjs",
+            "scripts/ci/ecommerce_evidence.test.cjs",
             "scripts/ci/ecommerce_target.test.cjs"
           ],
           stderr_to_stdout: true
@@ -492,20 +493,104 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert workflow_job_block(ci, "ecommerce-mounted") =~ "mix verify.ecommerce_mounted"
 
       assert contributing =~ "**`ecommerce-mounted`**"
-      assert contributing =~ "`ecommerce-e2e` is advisory today"
+      assert contributing =~ "`ecommerce-e2e` job remains advisory"
     end
 
-    test "ecommerce-e2e runs the canonical full proof and always uploads evidence" do
+    test "ecommerce-e2e preserves raw outcome and uploads only this run's evidence" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "ecommerce-e2e")
+
+      assert job =~ "timeout-minutes: 30"
+
+      verify = workflow_named_step_block(job, "Run advisory full E2E proof")
+      upload = workflow_named_step_block(job, "Upload advisory E2E evidence")
+      start_clock = workflow_named_step_block(job, "Record E2E job start and deadline")
+
+      checkout =
+        workflow_step_with_uses_block(
+          job,
+          "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+        )
+
+      assert job =~ "name: ecommerce-e2e (advisory)"
+
+      assert job =~
+               "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
+      assert job =~ "continue-on-error: true"
+      assert job =~ "timeout-minutes: 30"
+      assert job =~ "verification_outcome: ${{ steps.ecommerce_verify.outcome }}"
+      assert job =~ "artifact_id: ${{ steps.ecommerce_upload.outputs.artifact-id }}"
+      assert job =~ "artifact_url: ${{ steps.ecommerce_upload.outputs.artifact-url }}"
+      assert job =~ "artifact_digest: ${{ steps.ecommerce_upload.outputs.artifact-digest }}"
+      assert start_clock =~ "E2E_JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      assert start_clock =~ "E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))"
+      assert start_clock =~ "GITHUB_SHA"
+      assert start_clock =~ "E2E_FINALIZATION_MARGIN_SECONDS=300"
+      assert verify =~ "id: ecommerce_verify"
+      assert verify =~ "run: mix verify.ecommerce_e2e"
+      assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
+      assert verify =~ "E2E_SOURCE_MODE: hosted"
+      assert verify =~ "E2E_EVENT_SHA: ${{ steps.e2e_clock.outputs.E2E_EVENT_SHA }}"
+
+      assert verify =~
+               "E2E_WORKFLOW_RUN_ATTEMPT: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ATTEMPT }}"
+
+      assert upload =~ "id: ecommerce_upload"
+      assert upload =~ "if: always()"
+      assert upload =~ "test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}"
+      assert upload =~ "if-no-files-found: error"
+      assert upload =~ "retention-days: 7"
+      assert upload =~ "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+
+      assert :binary.match(job, "Record E2E job start and deadline") <
+               :binary.match(
+                 job,
+                 "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+               )
+
+      assert checkout =~ "fetch-depth: 0"
+    end
+
+    test "mounted E2E failure upload is scoped to the current invocation" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "ecommerce-mounted")
+      verify = workflow_named_step_block(job, "Run mounted E2E proof")
+
+      upload = workflow_named_step_block(job, "Upload mounted E2E failure evidence")
+
+      assert job =~ "name: ecommerce-mounted (required)"
+      assert verify =~ "mix verify.ecommerce_mounted"
+      assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
+      assert upload =~ "if: failure()"
+
+      assert upload =~
+               "test-results/docker-focused/${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert upload =~ "if-no-files-found: warn"
+      assert upload =~ "retention-days: 7"
+    end
+
+    test "exactly the five established required jobs remain required" do
       ci = File.read!(@ci_yml)
 
-      assert workflow_job_block(ci, "ecommerce-e2e") =~ "mix verify.ecommerce_e2e"
-      assert ci =~ "- name: Upload advisory E2E evidence"
-      assert ci =~ "if: always()"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/docker-full"
+      required =
+        Regex.scan(~r/^  ([a-z][a-z0-9-]+):\n    name: .*\(required\)$/m, ci)
+        |> Enum.map(fn [_, job] -> job end)
+        |> Enum.sort()
+
+      assert required == [
+               "backend",
+               "core",
+               "ecommerce-mounted",
+               "package",
+               "repository-contracts"
+             ]
     end
 
-    test "full Docker proof retains browser, light parity, contrast, and optional visual judgment" do
+    test "full Docker proof retains browser, light parity, and contrast without activating the judge" do
       docker_runner = File.read!("examples/scrypath_ecommerce/docker-playwright.sh")
+      compose = File.read!("examples/scrypath_ecommerce/compose.e2e.yaml")
       package_json = File.read!("examples/scrypath_ecommerce/package.json")
 
       assert package_json =~ ~s("test:e2e": "playwright test --workers=1")
@@ -515,16 +600,20 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert docker_runner =~ "npm run test:e2e"
       assert docker_runner =~ "npm run test:e2e:admin-light-parity"
       assert docker_runner =~ "node contrast-checker.mjs"
-      assert docker_runner =~ "npm run test:e2e:ops-ui-visual-judge"
+      refute docker_runner =~ "npm run test:e2e:ops-ui-visual-judge"
+      refute compose =~ "OPS_UI_LLM_JUDGE"
+      refute compose =~ "OPENAI_API_KEY"
     end
 
     test "Docker verifier bounds collected artifacts to logs and browser reports" do
       verifier = File.read!("examples/scrypath_ecommerce/scripts/verify-e2e.sh")
 
       assert verifier =~ "test-results/docker-${scope}"
+      assert verifier =~ ~s|"/tmp/scrypath-e2e-$run_id"|
+      assert verifier =~ "E2E_CONTAINER_ARTIFACT_DIR"
       assert verifier =~ "compose.log"
-      assert verifier =~ "test-results/."
-      assert verifier =~ "playwright-report/."
+      assert verifier =~ "artifact_copy_status"
+      assert verifier =~ "artifact-manifest.json"
     end
 
     test "playwright config emits structured phase105 report and forbids acceptance retries" do
