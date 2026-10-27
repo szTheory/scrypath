@@ -139,7 +139,12 @@ cd "$example_dir"
 
 sha="$(git rev-parse --short=8 HEAD 2>/dev/null || printf 'workspace')"
 safe_sha="$(printf '%s' "$sha" | tr -cd '[:alnum:]_-')"
-project="scrypath_ecommerce_verify_${scope}_${safe_sha}_$$"
+project="${E2E_PROJECT_NAME:-scrypath_ecommerce_verify_${scope}_${safe_sha}_$$}"
+if [[ ! "$project" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]]; then
+  echo "E2E_PROJECT_NAME must be a lowercase Compose project name." >&2
+  exit 64
+fi
+export E2E_PROJECT_NAME="$project"
 artifact_parent="$example_dir/test-results/docker-${scope}"
 artifact_dir="$artifact_parent/$run_id"
 mkdir -p "$artifact_parent"
@@ -151,6 +156,8 @@ compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
 if [[ "$scope" == "full" ]]; then
   compose+=(-f compose.phase173.yaml)
 fi
+repo_root="$(cd "$example_dir/../.." && pwd)"
+build_helper="$repo_root/scripts/ci/ecommerce_build.cjs"
 
 export E2E_SCOPE="$scope"
 export SCRYPATH_SOURCE_SHA="$(git rev-parse HEAD)"
@@ -178,12 +185,30 @@ source_dirty=false
 source_fingerprint=""
 if [[ -n "$dirty_files" ]]; then
   source_dirty=true
-  source_fingerprint="$(git ls-files -co --exclude-standard -z 2>/dev/null | xargs -0 shasum -a 256 2>/dev/null | hash_stdin | sed 's/^/sha256:/')"
+  source_fingerprint="$(node "$build_helper" fingerprint)"
 fi
 export E2E_SOURCE_FINGERPRINT="$source_fingerprint"
 printf '{"mode":"%s","checkout_head":"%s","built_source_sha":"%s","event_sha":"%s","dirty":%s,"dirty_fingerprint":"%s","job_started_at":"%s","run_id":"%s"}\n' \
   "$E2E_SOURCE_MODE" "$SCRYPATH_SOURCE_SHA" "$SCRYPATH_SOURCE_SHA" "$E2E_EVENT_SHA" \
   "$source_dirty" "$source_fingerprint" "$job_started_at" "$run_id" >"$artifact_dir/source.json"
+
+prebuilt_mode=0
+if [[ -n "${E2E_PREBUILT_MANIFEST:-}" || -n "${E2E_IMAGE_OVERRIDE:-}" ]]; then
+  if [[ -z "${E2E_PREBUILT_MANIFEST:-}" || -z "${E2E_IMAGE_OVERRIDE:-}" ]]; then
+    echo "Prebuilt verification requires both E2E_PREBUILT_MANIFEST and E2E_IMAGE_OVERRIDE." >&2
+    exit 64
+  fi
+  if [[ "$mode" == "--readiness-only" ]]; then
+    echo "Prebuilt readiness-only mode is unsupported; run the canonical browser verifier instead." >&2
+    exit 64
+  fi
+  if [[ ! -f "$E2E_PREBUILT_MANIFEST" || ! -f "$E2E_IMAGE_OVERRIDE" ]]; then
+    echo "Prebuilt handoff manifest or image override does not exist." >&2
+    exit 69
+  fi
+  prebuilt_mode=1
+  compose+=(-f "$E2E_IMAGE_OVERRIDE")
+fi
 
 run_status=0
 artifact_copy_status=0
@@ -481,6 +506,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if (( prebuilt_mode )); then
+  if ! run_verification_bounded node "$build_helper" verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"; then
+    run_status=69
+    echo "Prebuilt image handoff validation failed; refusing to start Compose." >&2
+    exit "$run_status"
+  fi
+fi
+
 echo "Validating Compose model for '$scope' verification..."
 if run_verification_bounded "${compose[@]}" config --quiet; then
   compose_validation_status=0
@@ -500,7 +533,15 @@ if [[ "$mode" == "--readiness-only" ]]; then
   fi
 else
   [[ "$scope" != "full" ]] || readiness_started=1
-  run_verification_bounded "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+  if (( prebuilt_mode )); then
+    run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+  else
+    run_verification_bounded "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+  fi
+fi
+
+if (( prebuilt_mode )) && (( run_status == 0 )); then
+  run_verification_bounded node "$build_helper" verify-handoff --manifest "$E2E_PREBUILT_MANIFEST" --runtime || run_status=$?
 fi
 
 if (( run_status != 0 )); then

@@ -1,7 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 const {
   chmodSync,
   existsSync,
@@ -14,6 +14,7 @@ const {
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { prepareBuild, verifyHandoff } = require("./ecommerce_build.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const verifierSource = path.join(
@@ -27,7 +28,7 @@ function makeTempDirectory(t) {
   return directory;
 }
 
-function runPrebuiltVerifier(t) {
+function runPrebuiltVerifier(t, extraEnv = {}) {
   const root = makeTempDirectory(t);
   const exampleDirectory = path.join(root, "examples/scrypath_ecommerce");
   const scriptDirectory = path.join(exampleDirectory, "scripts");
@@ -53,6 +54,7 @@ function runPrebuiltVerifier(t) {
     `"use strict";
 const fs = require("node:fs");
 fs.appendFileSync(process.env.FAKE_HELPER_LOG, JSON.stringify({args:process.argv.slice(2),hasRuntimeToken:Boolean(process.env.ACTIONS_RUNTIME_TOKEN)}) + "\\n");
+if (process.env.FAKE_HELPER_FAIL === "1") process.exit(1);
 `,
   );
   writeFileSync(
@@ -96,6 +98,7 @@ else process.exit(2);
       E2E_FINALIZE_TIMEOUT_SECONDS: "10",
       E2E_FINALIZATION_MARGIN_SECONDS: "0",
       E2E_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 120),
+      ...extraEnv,
     },
   });
   const calls = existsSync(dockerLog)
@@ -105,6 +108,79 @@ else process.exit(2);
     ? readFileSync(helperLog, "utf8").trim().split("\n").filter(Boolean).map(JSON.parse)
     : [];
   return { ...result, calls, helperCalls, overridePath };
+}
+
+function composeGraph(scope, project, changeModel = false) {
+  const services = {
+    web: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile" } },
+    browser: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile.e2e", args: { PLAYWRIGHT_VERSION: "1.60.0" } } },
+  };
+  if (scope === "full") {
+    services.standalone_ops = { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile", target: "ops" } };
+  }
+  if (changeModel) services.web.build.target = "changed";
+  const target = Object.fromEntries(Object.entries(services).map(([name, service]) => [name, {
+    context: repositoryRoot,
+    dockerfile: path.resolve(repositoryRoot, service.build.dockerfile),
+    ...(service.build.args ? { args: service.build.args } : {}),
+    ...(service.build.target ? { target: service.build.target } : {}),
+    labels: {
+      "com.docker.compose.project": project,
+      "com.docker.compose.service": name,
+      "com.docker.compose.version": "2.39.0",
+    },
+    tags: [`${project}-${name}`],
+    output: ["type=docker"],
+  }]));
+  return { model: { services }, bake: { group: { default: { targets: Object.keys(target) } }, target } };
+}
+
+function buildDriver(scope, project, options = {}) {
+  const state = { modelChange: false, missingTag: "", runtimeMismatch: "", revisionMismatch: "", manifest: null };
+  const driver = (command, args, callOptions = {}) => {
+    if (command !== "docker") {
+      return execFileSync(command, args, { cwd: callOptions.cwd, env: callOptions.env, encoding: "utf8" }).trimEnd();
+    }
+    const graph = composeGraph(scope, project, state.modelChange);
+    if (args.includes("config")) return JSON.stringify(graph.model);
+    if (args.includes("build") && args.includes("--print")) return JSON.stringify(graph.bake);
+    if (args[0] === "image" && args[1] === "inspect") {
+      const tag = args.at(-1);
+      if (tag === state.missingTag) throw new Error("No such image");
+      const service = tag.slice(`${project}-`.length);
+      const source = state.manifest || options.manifest;
+      return JSON.stringify({
+        Id: `sha256:${service.padEnd(64, "a").slice(0, 64)}`,
+        RepoTags: [tag],
+        Config: { Labels: {
+          "org.opencontainers.image.revision": state.revisionMismatch === service ? "sha256:wrong-source" : source?.source_sha || execFileSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).trim(),
+          ...(source?.source_fingerprint ? { "org.opencontainers.image.source-fingerprint": source.source_fingerprint } : {}),
+        } },
+      });
+    }
+    if (args[0] === "compose" && args.includes("ps")) {
+      const service = args.at(-1);
+      return `${service}-container`;
+    }
+    if (args[0] === "inspect") {
+      const container = args.at(-1);
+      const service = container.replace(/-container$/, "");
+      const id = `sha256:${service.padEnd(64, "a").slice(0, 64)}`;
+      return JSON.stringify({ Image: state.runtimeMismatch === service ? `sha256:${"f".repeat(64)}` : id });
+    }
+    throw new Error(`unexpected Docker command: ${args.join(" ")}`);
+  };
+  return { state, run: driver };
+}
+
+function prepareFixture(t, scope = "focused") {
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const project = "scrypath-e2e-build-test";
+  const env = { ...process.env, E2E_SCOPE: scope, E2E_PROJECT_NAME: project };
+  const docker = buildDriver(scope, project);
+  const result = prepareBuild({ scope, output, env, runCommand: docker.run, project });
+  docker.state.manifest = result.manifest;
+  return { ...result, project, env, docker };
 }
 
 test("prebuilt verification uses the checked image override without a Compose build", (t) => {
@@ -118,4 +194,87 @@ test("prebuilt verification uses the checked image override without a Compose bu
   assert.equal(result.helperCalls.length, 2, "verify-handoff must run before Compose up and after runtime starts");
   assert.ok(result.helperCalls.every((call) => call.args[0] === "verify-handoff"));
   assert.ok(result.helperCalls.every((call) => call.hasRuntimeToken === false));
+});
+
+test("prebuilt verification refuses a failed handoff before Compose starts", (t) => {
+  const result = runPrebuiltVerifier(t, { FAKE_HELPER_FAIL: "1" });
+  assert.equal(result.status, 69);
+  assert.ok(!result.calls.some((call) => call.includes("up")));
+  assert.ok(!result.calls.some((call) => call.includes("build") && !call.includes("--print")));
+});
+
+test("prepare derives focused and full local tags and keeps separate recipe scopes", (t) => {
+  const focused = prepareFixture(t, "focused");
+  assert.deepEqual(Object.keys(focused.manifest.tags).sort(), ["browser", "web"]);
+  assert.equal(focused.manifest.cache_scopes.web, "scrypath-ecommerce-app-v1");
+  assert.equal(focused.manifest.cache_scopes.browser, "scrypath-ecommerce-browser-v1");
+
+  const full = prepareFixture(t, "full");
+  assert.deepEqual(Object.keys(full.manifest.tags).sort(), ["browser", "standalone_ops", "web"]);
+  assert.equal(full.manifest.cache_scopes.standalone_ops, "scrypath-ecommerce-standalone-ops-v1");
+  assert.equal(new Set(Object.values(full.manifest.cache_scopes)).size, 3);
+  const bake = JSON.parse(readFileSync(path.join(full.outputDirectory, "bake.json"), "utf8"));
+  assert.ok(Object.values(bake.target).every((target) => target.output?.includes("type=docker")));
+  assert.ok(Object.values(bake.target).every((target) => !target.push));
+  assert.ok(Object.entries(full.manifest.tags).every(([service, tag]) => tag === `${full.project}-${service}`));
+});
+
+test("verify-handoff rejects a changed Compose model before inspecting images", (t) => {
+  const fixture = prepareFixture(t);
+  fixture.docker.state.modelChange = true;
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /Compose model or recipe digest mismatch/,
+  );
+});
+
+test("verify-handoff rejects a changed generated tag mapping", (t) => {
+  const fixture = prepareFixture(t);
+  const override = JSON.parse(readFileSync(fixture.overridePath, "utf8"));
+  override.services.web.image = "untrusted/web:latest";
+  writeFileSync(fixture.overridePath, JSON.stringify(override));
+  fixture.env.E2E_IMAGE_OVERRIDE = fixture.overridePath;
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /override tag mapping mismatch/,
+  );
+});
+
+test("verify-handoff rejects a missing local image", (t) => {
+  const fixture = prepareFixture(t);
+  fixture.docker.state.missingTag = fixture.manifest.tags.web;
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /could not inspect image .*web/,
+  );
+});
+
+test("verify-handoff rejects an image with the wrong source revision", (t) => {
+  const fixture = prepareFixture(t);
+  fixture.docker.state.revisionMismatch = "web";
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /local image source SHA mismatch: web/,
+  );
+});
+
+test("verify-handoff rejects a manifest with a changed local tag", (t) => {
+  const fixture = prepareFixture(t);
+  const manifest = JSON.parse(readFileSync(fixture.manifestPath, "utf8"));
+  manifest.tags.web = "registry.example.invalid/web:latest";
+  writeFileSync(fixture.manifestPath, JSON.stringify(manifest));
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /tags or cache scopes mismatch/,
+  );
+});
+
+test("verify-handoff rejects a runtime image ID mismatch", (t) => {
+  const fixture = prepareFixture(t);
+  verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run });
+  fixture.docker.state.runtimeMismatch = "web";
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }),
+    /runtime image ID mismatch: web/,
+  );
 });
