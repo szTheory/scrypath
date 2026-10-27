@@ -515,6 +515,16 @@ test("BuildKit cache acceptance parses GitHub CLI job log prefixes without chang
   assert.equal(validateCacheAcceptance(proof), true);
 });
 
+test("BuildKit cache acceptance parses timestamped REST job logs and preserves raw bytes", () => {
+  const raw = buildKitCacheLog().split("\n").map((line, index) =>
+    `${index === 0 ? "\uFEFF" : ""}2026-10-27T15:23:50.1767099Z ${line}`,
+  ).join("\n");
+  const proof = cacheProof("docker-warm");
+  refreshDockerEvidence(proof, raw);
+  assert.equal(validateCacheAcceptance(proof), true);
+  assert.equal(proof.cache.log_sha256, crypto.createHash("sha256").update(raw).digest("hex"));
+});
+
 test("Docker cache proof binds every checked Bake target to its manifest scope", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-checked-bake-proof-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
