@@ -799,6 +799,17 @@ test("lock-change probe commits only a comment-only change in its temporary chec
   assert.deepEqual(proof.lock_probe, { owned_copy: true, source_lock_unchanged: true, versions_unchanged: true });
 });
 
+test("collectRun downloads the selected job log directly without the whole-run archive", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-job-logs-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const command = successfulCommandDouble({ mode: "full", jobLogsOnly: true });
+  const flags = { repo: REPOSITORY, branch: BRANCH, sha: SHA, sessionId: SESSION_ID, mode: "full", outputDir: path.join(root, "candidate") };
+  const result = collectRun(flags, { command, pollMilliseconds: 0, timeoutSeconds: 2, browserValidator: validBrowserReceipt });
+  assert.equal(result.browser.eligible, true);
+  assert.ok(command.calls.some((call) => call.includes("/actions/jobs/8/logs")));
+  assert.equal(command.calls.some((call) => call.startsWith("gh run view")), false);
+});
+
 test("collectRun waits for selected-attempt job and artifact metadata without redispatching", (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-metadata-readiness-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -1040,7 +1051,7 @@ function authorityAggregate(run) {
   };
 }
 
-function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, wrongArtifactRepository = false, refSha = SHA, attempt = 1, rawVerifierFailure = false, pendingJobReads = 0, pendingArtifactReads = 0 } = {}) {
+function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, wrongArtifactRepository = false, refSha = SHA, attempt = 1, rawVerifierFailure = false, pendingJobReads = 0, pendingArtifactReads = 0, jobLogsOnly = false } = {}) {
   const calls = [];
   let activeMode = mode;
   let dispatched = false;
@@ -1198,10 +1209,15 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
         const observedArtifacts = artifactReads++ < pendingArtifactReads ? [] : artifacts;
         return { stdout: JSON.stringify(paginated ? [{ artifacts: [] }, { artifacts: observedArtifacts }] : { artifacts: observedArtifacts }) };
       }
+      if (/\/actions\/jobs\/\d+\/logs$/.test(endpoint)) {
+        assert.ok(args.includes("--allow-escape-sequences"), "raw logs must be captured as data");
+        return { stdout: fixtureJobLog() };
+      }
       const archive = endpoint.match(/\/actions\/artifacts\/(\d+)\/zip$/);
       if (archive) return { stdout: tamperArchive ? Buffer.from("mutated archive bytes") : artifacts.find((item) => String(item.id) === archive[1]).archive };
     }
     if (args[0] === "run" && args[1] === "view") {
+      if (jobLogsOnly) throw new Error("whole-run log archive transport failed");
       return { stdout: activeMode === "docker-warm"
         ? `Run mix verify.ecommerce_e2e\n${buildKitCacheLog()}\n`
         : activeMode === "beam-cold"
@@ -1211,6 +1227,13 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
         : "Run advisory full E2E proof\n" };
     }
     throw new Error(`unexpected command: ${text}`);
+  }
+  function fixtureJobLog() {
+    return activeMode === "docker-warm"
+      ? `Run mix verify.ecommerce_e2e\n${buildKitCacheLog()}\n`
+      : activeMode.startsWith("beam-")
+        ? cacheProof(activeMode, { run: exactRun({ id: String(run.id), attempt }) }).cache.log_text
+        : "Run advisory full E2E proof\n";
   }
   command.calls = calls;
   command.setMode = (nextMode) => { activeMode = nextMode; };
