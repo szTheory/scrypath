@@ -28,3 +28,7 @@ Correction review closed WR-02; WR-03 remains explicitly deferred and the ledger
 ## Integration checkpoint
 
 The reviewed assertion correction and current proof records merged through GSD at 37cdd0bc after actual child documentation 04e9a880 passed run 40600930723 (required jobs,coverage,attestation and raw full 189/189/default-policy proof). Merged implementation parity to 1c passed; root STATE/ROADMAP intentionally differed. Fresh merged 115 Node,961 Elixir tests plus five properties,98 contracts,format/actionlint/docs passed. All source-bound failures and earlier cohorts remain preserved. Repair implementation and proof integration are complete; consult STATE and the goal-verification owner for the later phase/terminal-closeout lifecycle. This checkpoint is not human approval.
+
+## Test-tier prohibition coverage
+
+All runtime truths and requirements passed native verification. Its sole remaining human_needed item was absent executable coverage for an independent-approval claim. Three adversarial regressions now prove existing canonical output whitelisting and receipt/summary recomputation reject or omit synthetic certification claims. Focused23/23 and six-suite118/118 passed; only `ecommerce_evidence.test.cjs` changed. No runtime code, workflow, cache policy, browser spec or source-bound acceptance predicate changed. Native re-verification owns any new status and fingerprint; no approval or manual status override is inferred.

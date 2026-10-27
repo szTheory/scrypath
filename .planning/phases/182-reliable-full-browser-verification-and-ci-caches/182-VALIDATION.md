@@ -93,6 +93,10 @@ node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scr
 
 Both validators return valid/eligible within their own source/session identities. Current hosted durations are 817–887s; maximum browser-end-to-upload 22s plus 60s fits 300s reserve. All sixteen task behaviors remain covered by actual checks and source-bound integration evidence; no manual UAT or human approval is substituted.
 
+### Executable approval-claim boundary
+
+The initial goal verifier confirmed35/35 truths and all5 requirements but identified one missing test-tier prohibition assertion. Three added behavior regressions exercise the existing canonical writer/validator against synthetic independent-approval metadata, stored receipt injection and summary tampering. Unsupported input claims are omitted; API and CLI reject receipt/summary certification tampering. The focused file passed23/23 and all required six Node suites passed118/118. The existing required workflow path already executes this file; no new job or runtime implementation changed. Logs: `prohibition-coverage-focused.log` and `prohibition-coverage-six-suites.log` in the external execution directory. One coverage gap found, one resolved, zero escalated. No human approval is inferred; native re-verification owns the new verdict/fingerprint.
+
 ### Historical planning boundary
 
 - Eight plans, sixteen tasks, seven waves. Wave 2 plans 182-02/03 have disjoint file ownership; subsequent shared workflow/verifier edits are sequenced.

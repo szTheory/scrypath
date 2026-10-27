@@ -224,3 +224,7 @@ This metadata commit is absent from its own table. Entire-plan duration/token us
 ## Handoff
 
 Current source-bound records and canonical validators pass. Terminal child closeout must run after all tracked writes at the actual documentation head, with raw browser/default-policy proof checked separately from required gates. Root then merges through GSD, checks parity and applicable hooks/goal verification, transitions tracking and obtains its own final exact-head closeout. Phase completion is not claimed by this plan summary alone.
+
+## Final prohibition coverage
+
+Native goal verification confirmed35/35 truths and all5 requirements, then found the independent-approval-claim test-tier clause lacked an explicit regression. Three tests were added to the existing required evidence suite; they prove unsupported input approval metadata is omitted and stored aggregate/summary approval injection is rejected by the API and CLI. Focused23/23 and complete Node118/118 passed. Production/browser/cache code and the tested screenshot spec are unchanged from1c; the only additional non-planning delta is this regression test file, so existing source-bound runtime proof remains at its stated cutoffs. SOURCE-AUDIT and VALIDATION now record the wired enforcement. The first draft test expectation for null claim rendering was corrected to the existing `unknown` summary text; no implementation change was required. The initial verifier verdict is preserved; the native verifier must independently re-evaluate and regenerate its CLI fingerprint.

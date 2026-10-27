@@ -595,3 +595,111 @@ test("full inventory requires every intended UI identity even when reports omit 
     assert.equal(verify(renamed).eligible, false, "a replacement title cannot fill the required identity");
   }
 });
+
+test("synthetic untrusted reviewer metadata cannot become canonical evidence", () => {
+  const { runDir } = createCompleteRun();
+  const marker = "TEST_FIXTURE_ONLY_NOT_A_REAL_REVIEW_OR_APPROVAL";
+  const syntheticApproval = {
+    status: "approved",
+    reviewer: "SYNTHETIC_TEST_FIXTURE_NOT_A_PERSON",
+    marker
+  };
+  try {
+    updateRunManifest(runDir, (manifest) => {
+      manifest.independent_reviewer_approval = syntheticApproval;
+      manifest.reviewer_approval = syntheticApproval;
+    });
+
+    for (const fileName of ["phase105-playwright-list.json", "phase105-playwright.json"]) {
+      const reportPath = path.join(runDir, fileName);
+      const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+      report.metadata = {
+        independent_reviewer_approval: syntheticApproval,
+        reviewer_approval: syntheticApproval
+      };
+      fs.writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`);
+    }
+
+    const receipt = evidence.writeEvidence?.({ runDir });
+    const receiptText = fs.readFileSync(path.join(runDir, "phase105-evidence.json"), "utf8");
+    const summary = fs.readFileSync(path.join(runDir, "phase105-evidence-summary.md"), "utf8");
+
+    assert.equal(receipt?.eligibility.eligible, true);
+    assert.equal(receipt?.visual_judge_status, "not-required");
+    assert.equal(receipt?.visual_judge_claims, null);
+    assert.equal(receipt?.visual_judge_findings, null);
+    assert.equal(receipt?.visual_judge_required, false);
+    assert.equal(Object.hasOwn(receipt, "independent_reviewer_approval"), false);
+    assert.equal(Object.hasOwn(receipt, "reviewer_approval"), false);
+    assert.equal(receiptText.includes(marker), false);
+    assert.doesNotMatch(receiptText, /independent_reviewer_approval|reviewer_approval/);
+    assert.equal(summary.includes(marker), false);
+    assert.doesNotMatch(summary, /independent_reviewer_approval|reviewer_approval/);
+    assert.match(summary, /- visual_judge_status: not-required/);
+    assert.match(summary, /- visual_judge_claims: unknown/);
+    assert.match(summary, /- required: false/);
+    assert.equal(evidence.validateReceipt?.({ runDir }).valid, true);
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("receipt validation rejects a synthetic independent approval inserted into the stored aggregate", () => {
+  const { runDir } = createCompleteRun();
+  const marker = "TEST_FIXTURE_ONLY_NOT_A_REAL_REVIEW_OR_APPROVAL";
+  try {
+    evidence.writeEvidence?.({ runDir });
+    const receiptPath = path.join(runDir, "phase105-evidence.json");
+    const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+    receipt.independent_reviewer_approval = {
+      status: "approved",
+      reviewer: "SYNTHETIC_TEST_FIXTURE_NOT_A_PERSON",
+      marker
+    };
+    fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+
+    const validation = evidence.validateReceipt?.({ runDir });
+    assert.equal(validation?.valid, false);
+    assert.ok(validation?.reasons.some((reason) => reason.code === "receipt_mismatch"));
+
+    const cli = spawnSync(
+      process.execPath,
+      [path.join(__dirname, "ecommerce_evidence.cjs"), "validate-receipt", "--run-dir", runDir],
+      { encoding: "utf8" }
+    );
+    assert.equal(cli.status, 1, cli.stderr);
+    const cliResult = JSON.parse(cli.stdout);
+    assert.equal(cliResult.valid, false);
+    assert.ok(cliResult.reasons.some((reason) => reason.code === "receipt_mismatch"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("receipt validation rejects an appended synthetic independent approval in its Markdown summary", () => {
+  const { runDir } = createCompleteRun();
+  const marker = "TEST_FIXTURE_ONLY_NOT_A_REAL_REVIEW_OR_APPROVAL";
+  try {
+    evidence.writeEvidence?.({ runDir });
+    fs.appendFileSync(
+      path.join(runDir, "phase105-evidence-summary.md"),
+      `\n- independent_reviewer_approval: ${marker}\n`
+    );
+
+    const validation = evidence.validateReceipt?.({ runDir });
+    assert.equal(validation?.valid, false);
+    assert.ok(validation?.reasons.some((reason) => reason.code === "summary_mismatch"));
+
+    const cli = spawnSync(
+      process.execPath,
+      [path.join(__dirname, "ecommerce_evidence.cjs"), "validate-receipt", "--run-dir", runDir],
+      { encoding: "utf8" }
+    );
+    assert.equal(cli.status, 1, cli.stderr);
+    const cliResult = JSON.parse(cli.stdout);
+    assert.equal(cliResult.valid, false);
+    assert.ok(cliResult.reasons.some((reason) => reason.code === "summary_mismatch"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
