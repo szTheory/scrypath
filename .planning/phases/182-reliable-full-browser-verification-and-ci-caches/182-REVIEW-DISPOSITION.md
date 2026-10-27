@@ -3,6 +3,14 @@ phase: 182
 review: 182-REVIEW.md
 titles: json
 findings:
+  - id: WR-02
+    severity: warning
+    disposition: open
+    title: "Settings screenshot assertion targets numeric text"
+  - id: WR-03
+    severity: warning
+    disposition: open
+    title: "Artifact uploads reuse names on workflow reruns"
   - id: CR-01
     severity: critical
     disposition: fixed
@@ -19,19 +27,21 @@ findings:
     severity: warning
     disposition: fixed
     title: "Fixture route readiness treats redirects as success — WARNING"
-open: 0
-total: 4
-recorded: 2026-10-27T19:59:50.281Z
+open: 2
+total: 6
+recorded: 2026-10-27T22:38:07.326Z
 ---
 
 # Phase 182: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression |
-| CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression |
-| CR-03 | critical | fixed | edd47eee; executable RED/GREEN regression |
-| WR-01 | warning | fixed | 2f615705; executable RED/GREEN regression |
+| WR-02 | warning | open | - |
+| WR-03 | warning | open | - |
+| CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression (not in the current review) |
+| CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression (not in the current review) |
+| CR-03 | critical | fixed | edd47eee; executable RED/GREEN regression (not in the current review) |
+| WR-01 | warning | fixed | 2f615705; executable RED/GREEN regression (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
