@@ -69,7 +69,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 4. Repeated Docker verification builds restore/export a buildx GHA cache, and the same build succeeds without a cache. (CACHE-01)
 5. BEAM jobs safely restore fallback caches across appropriate version/environment keys, invalidate changed-lock inputs and succeed from a cold cache. (CACHE-02)
 
-**Plans**: 1/8 plans executed across 7 waves (planning artifacts; execution not started).
+**Plans**: 3/8 plans executed across 7 waves (planning artifacts; execution not started).
 
 Plans:
 
@@ -79,8 +79,8 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 182-02-PLAN.md — Safe Docker browser targets and current assertions (wave 2)
-- [ ] 182-03-PLAN.md — Strict inventory, attempts and one evidence authority (wave 2)
+- [x] 182-02-PLAN.md — Safe Docker browser targets and current assertions (wave 2)
+- [x] 182-03-PLAN.md — Strict inventory, attempts and one evidence authority (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -164,7 +164,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 182. Reliable full browser verification and CI caches | 1/8 | In Progress | — |
+| 182. Reliable full browser verification and CI caches | 3/8 | In Progress | — |
 | 183. Maintainer tooling outside the Hex package | 0/TBD | Not started | — |
 | 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |

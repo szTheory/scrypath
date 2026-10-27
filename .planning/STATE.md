@@ -5,28 +5,29 @@ milestone_name: Foundation and CI
 current_phase: 182
 current_phase_name: Reliable full browser verification and CI caches
 status: executing
-stopped_at: Phase 182 planned and checked; next $gsd-execute-phase 182; no implementation started
-last_updated: "2026-10-26T23:25:03.459Z"
+stopped_at: Phase 182 Wave 2 merged and verified; Wave 3 ready to execute plan 182-04
+last_updated: "2026-10-26T23:59:31.498Z"
 last_activity: 2026-10-26
 last_activity_desc: Phase 182 execution started
-state_head: ba624a7452e717c335a26369b8db8523d2551ee9
+state_head: 1eec7e22acf5551eab6e3b4e12e5024df043c238
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 0
-  percent: 0
+  completed_plans: 3
+  percent: 38
 ---
 
 # Project State
 
-## v1.45 Foundation and CI — Phase 182 ready to execute
+## v1.45 Foundation and CI — Phase 182 executing
 
 Scope, research reuse and all 21 requirements were explicitly confirmed by the
 maintainer on 2026-10-26. The maintainer then explicitly approved the roadmap
 covering Phases 182–185 with 21/21 requirements mapped once. Phase 182 now has
-eight checked plans, 16 tasks and seven waves. Implementation has not started;
-no source test pass, hosted browser/cache success or delivery is inferred from planning.
+eight checked plans, 16 tasks and seven waves. Plans 182-01 through 182-03 are
+merged and locally verified; Wave 3 executes plan 182-04 in a GSD-owned worktree.
+No full-browser, hosted cache, delivery or final-source closeout pass is claimed.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`, based on the local v1.44 archive
@@ -42,7 +43,10 @@ covered; all eight plan structures and 32 failure-direction statements pass
 their deterministic checks. The command-path probe is not applicable to these
 forms and does not prove path validity. The validation strategy remains draft,
 with real Docker, cache and hosted acceptance required during execution.
-Next, run **`$gsd-execute-phase 182`**. v1.46/v1.47 UI engine/polish and v1.48 adopter
+Execution continues under **`$gsd-execute-phase 182`**. Wave 1 passed 12 lifecycle
+tests, four focused contracts and the root suite (953 tests + five properties,
+zero failures), plus the real two-route diagnostic with clean owned disposal.
+v1.46/v1.47 UI engine/polish and v1.48 adopter
 features remain deferred. PR #122 merge/publication and inherited audit debt
 remain separate; the historical paragraphs below preserve their old cutoffs.
 The durable scope, decisions, working branch, verification limits and next
@@ -165,9 +169,10 @@ See PROJECT.md (updated 2026-10-25). Core value: make search indexing feel nativ
 ## Current Position
 
 Phase: 182 (Reliable full browser verification and CI caches) — EXECUTING
-Plan: 1 of 8
+Plan: 4 of 8 — Wave 3 executing plan 182-04
 Status: Executing Phase 182
-Last activity: 2026-10-26 — Phase 182 execution started
+Progress: [████░░░░░░] 38% (3/8 plans)
+Last activity: 2026-10-26 — Wave 2 merged; 33 Node tests and 954 root tests + five properties pass
 
 ## Delivered Evidence
 
@@ -226,8 +231,8 @@ Both disposable verification projects and their owned networks/volumes were remo
 ## Session Continuity
 
 Last session: 2026-10-26T23:22:47.397Z
-Stopped at: Phase 182 planned and checked; next $gsd-execute-phase 182; no implementation started
-Resume file: .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md
+Stopped at: Phase 182 Wave 2 merged and verified; Wave 3 ready to execute plan 182-04
+Resume file: .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md
 
 Phases 173–177 have complete plan sets and 21 summaries (Phase 173: 4, Phase 174: 3, Phase 175: 4, Phase 176: 5, Phase 177: 5). All five phase verification reports pass. Phase 174 is current-source verified at 19/19 must-haves. Phase 177 verifies 69/69 truths. PR #98 is draft at exact head `bebeb863493d1667ffa5f8c9fa3e890b484c5c1a`; run 38338089123 passed the five required jobs, with `deep-quality (advisory)` failed and `ecommerce-e2e (advisory)` skipped. T-177-05 stays blocking pending final-source closeout and merged-main attestation; T-177-06 remains a separate open medium recordkeeping gap below the configured high threshold.
 
