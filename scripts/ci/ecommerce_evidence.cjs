@@ -360,6 +360,16 @@ function resolveRunRoot(runDir) {
   return root;
 }
 
+function isAllowedArtifactPath(value) {
+  if (typeof value !== "string" || value.trim() === "" || value.includes("\0")) return false;
+  const relative = value.trim().replaceAll("\\", "/");
+  const segments = relative.split("/");
+  return !relative.startsWith("/") &&
+    !/^[A-Za-z]:\//.test(relative) &&
+    !segments.some((segment) => segment === "" || segment === "." || segment === ".." || segment.startsWith(".")) &&
+    ALLOWED_ARTIFACT_PREFIXES.some((prefix) => relative.startsWith(prefix));
+}
+
 function normalizeArtifactPath(value, { allowOutputs = false } = {}) {
   if (typeof value !== "string" || value.trim() === "" || value.includes("\0")) {
     throw new TypeError("artifact path must be a non-empty relative path");
@@ -368,6 +378,7 @@ function normalizeArtifactPath(value, { allowOutputs = false } = {}) {
   if (normalized.startsWith("/") || /^[A-Za-z]:\//.test(normalized)) throw new TypeError("absolute artifact paths are forbidden");
   const segments = normalized.split("/");
   if (segments.some((segment) => segment === ".." || segment === "")) throw new TypeError("artifact traversal is forbidden");
+  if (segments.some((segment) => segment.startsWith("."))) throw new TypeError("hidden artifact paths are excluded by the hosted uploader");
   const clean = path.posix.normalize(normalized);
   if (
     !REQUIRED_ARTIFACT_PATHS.includes(clean) &&
@@ -1016,6 +1027,7 @@ if (require.main === module) {
 
 module.exports = {
   caseIdentity,
+  isAllowedArtifactPath,
   reconcileInventory,
   runReconcile,
   renderSummary,

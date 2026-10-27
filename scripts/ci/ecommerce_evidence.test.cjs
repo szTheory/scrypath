@@ -563,3 +563,26 @@ test("artifact path traversal and symlink escapes are rejected", () => {
     fs.rmSync(symlinkOutside, { force: true });
   }
 });
+
+test("artifact selection matches the hosted uploader hidden-file policy", () => {
+  assert.equal(evidence.isAllowedArtifactPath("test-results/.last-run.json"), false);
+  assert.equal(evidence.isAllowedArtifactPath("test-results/.hidden/screenshot.png"), false);
+  assert.equal(evidence.isAllowedArtifactPath("test-results/admin-screenshots/owned.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("playwright-report/data/trace.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("ui-review-artifacts/iteration3-journeys/health.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("../test-results/escape.png"), false);
+
+  const { runDir } = createCompleteRun();
+  try {
+    fs.mkdirSync(path.join(runDir, "test-results"), { recursive: true });
+    fs.writeFileSync(path.join(runDir, "test-results/.last-run.json"), '{"status":"passed"}\n');
+    updateRunManifest(runDir, (manifest) => {
+      manifest.artifacts.push({ path: "test-results/.last-run.json", required: false, copied: true, copy_status: "success" });
+    });
+    const receipt = evidence.writeEvidence?.({ runDir });
+    assert.equal(receipt?.eligibility.eligible, false);
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "unsafe_artifact_path"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});

@@ -372,6 +372,7 @@ set -Eeuo pipefail
 node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
+const { isAllowedArtifactPath } = require("/app/scripts/ci/ecommerce_evidence.cjs");
 const root = "/evidence";
 const read = (name) => JSON.parse(fs.readFileSync(path.join(root, name), "utf8"));
 const maybeRead = (name) => { try { return read(name); } catch { return null; } };
@@ -393,8 +394,7 @@ const walk = (directory, prefix = "") => {
   }
   return files;
 };
-const allowed = (name) => name.startsWith("test-results/") || name.startsWith("playwright-report/") || name.startsWith("ui-review-artifacts/iteration3-journeys/") || name.startsWith("logs/") || name.startsWith("compose/");
-const copiedFiles = walk(root).filter(allowed);
+const copiedFiles = walk(root).filter(isAllowedArtifactPath);
 const artifacts = copiedFiles.map((name) => ({ path: name, required: false, copied: true, copy_status: "success" }));
 fs.writeFileSync(path.join(root, "artifact-manifest.json"), `${JSON.stringify({run_id:process.env.E2E_RUN_ID,copied_from:`/tmp/${process.env.E2E_RUN_ID}`,copy_status:Number(process.env.E2E_ARTIFACT_COPY_EXIT_CODE||1)===0?"success":"failed",allowlist:["phase105-playwright-list.json","phase105-playwright.json","phase105-evidence.ndjson","playwright-report/","test-results/","ui-review-artifacts/iteration3-journeys/"],copied_files:copiedFiles}, null, 2)}\n`);
 const status = (name) => maybeRead(name)?.status || "missing";

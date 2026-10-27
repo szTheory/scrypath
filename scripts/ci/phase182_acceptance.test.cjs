@@ -657,6 +657,23 @@ test("collectRun rejects a failed raw verifier step masked by an advisory green 
   );
 });
 
+test("collectRun validates GitHub job-step conclusions and preserves evidence paths inside nested upload roots", async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-hosted-archive-shape-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const commands = successfulCommandDouble({ mode: "full" });
+  const browserValidator = (runDirectory, context) => {
+    assert.equal(fs.readFileSync(path.join(runDirectory, "test-results/admin-screenshots/owned.png"), "utf8"), "owned screenshot bytes");
+    assert.equal(fs.readFileSync(path.join(runDirectory, "playwright-report/data/owned.png"), "utf8"), "playwright attachment bytes");
+    assert.equal(fs.readFileSync(path.join(runDirectory, "ui-review-artifacts/iteration3-journeys/owned.png"), "utf8"), "iteration3 screenshot bytes");
+    assert.equal(fs.existsSync(path.join(runDirectory, "test-results/.last-run.json")), false);
+    return validBrowserReceipt(runDirectory, context);
+  };
+  const result = collectRun({ repo: REPOSITORY, branch: BRANCH, sha: SHA, sessionId: SESSION_ID, mode: "full", outputDir: path.join(root, "candidate") },
+    { command: commands, pollMilliseconds: 0, timeoutSeconds: 2, browserValidator });
+  assert.equal(result.browser.eligible, true);
+  assert.equal(result.browser.raw_verifier_outcome, "success");
+});
+
 test("collectRun fails closed when run/job/artifact access or dispatch is denied", async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phase182-denied-"));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -685,6 +702,7 @@ test("collectRun rejects wrong refs, incomplete job pages, absent artifacts and 
     [{ missingBrowserArtifact: true }, /expected exactly one live ecommerce-e2e-evidence/],
     [{ tamperArchive: true }, /immutable archive digest/],
     [{ wrongArtifactSource: true }, /artifact belongs to another run\/ref\/source/],
+    [{ wrongArtifactRepository: true }, /artifact is not owned by szTheory\/scrypath/],
   ];
   for (const [options, expected] of cases) {
     const commands = successfulCommandDouble({ ...options, mode: "full" });
@@ -735,7 +753,7 @@ function authorityAggregate(run) {
   };
 }
 
-function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, refSha = SHA, attempt = 1, rawVerifierFailure = false } = {}) {
+function successfulCommandDouble({ staleRun = false, paginated = false, denied = null, mode = "full", missingBrowserArtifact = false, tamperArchive = false, incompleteJobs = false, wrongArtifactSource = false, wrongArtifactRepository = false, refSha = SHA, attempt = 1, rawVerifierFailure = false } = {}) {
   const calls = [];
   let activeMode = mode;
   let dispatched = false;
@@ -765,14 +783,28 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
     { id: 106, name: "coverage (advisory)", status: "completed", conclusion: "success", steps: [] },
     { id: 107, name: "closeout-attestation", status: "completed", conclusion: "success", steps: [] },
     { id: 108, name: "ecommerce-e2e (advisory)", status: "completed", conclusion: "success", started_at: STARTED, completed_at: "2026-10-26T12:11:00Z", steps: [
-      { name: "Run advisory full E2E proof", status: "completed", outcome: rawVerifierFailure ? "failure" : "success", conclusion: "success", started_at: STARTED, completed_at: COMPLETED },
-      { name: "Upload advisory E2E evidence", status: "completed", outcome: "success", conclusion: "success", started_at: COMPLETED, completed_at: "2026-10-26T12:10:10Z" },
+      { name: "Run advisory full E2E proof", status: "completed", conclusion: rawVerifierFailure ? "failure" : "success", started_at: STARTED, completed_at: COMPLETED },
+      { name: "Upload advisory E2E evidence", status: "completed", conclusion: "success", started_at: COMPLETED, completed_at: "2026-10-26T12:10:10Z" },
     ] },
   ];
   const artifactsFor = (runId) => {
-    const artifactWorkflow = { id: runId, head_sha: wrongArtifactSource ? OTHER_SHA : SHA, head_branch: BRANCH, head_repository: { full_name: REPOSITORY } };
+    // The workflow_run object returned by GitHub's artifact-list API exposes repository IDs,
+    // but omits the nested head_repository.full_name object.
+    const artifactWorkflow = {
+      id: runId,
+      head_sha: wrongArtifactSource ? OTHER_SHA : SHA,
+      head_branch: BRANCH,
+      repository_id: wrongArtifactRepository ? 999 : 1211932882,
+      head_repository_id: 1211932882,
+    };
     const selectedRun = exactRun({ id: String(runId), attempt });
-    const members = { ...browserMembers, "phase105-evidence.json": JSON.stringify(authorityAggregate(selectedRun)) };
+    const archiveRoot = `scrypath/scrypath/examples/scrypath_ecommerce/test-results/docker-full/${runId}-${attempt}/`;
+    const members = Object.fromEntries(Object.entries({ ...browserMembers, "phase105-evidence.json": JSON.stringify(authorityAggregate(selectedRun)) })
+      .map(([member, contents]) => [`${archiveRoot}${member}`, contents]));
+    members[`${archiveRoot}test-results/admin-screenshots/owned.png`] = "owned screenshot bytes";
+    members[`${archiveRoot}test-results/.last-run.json`] = '{"status":"passed"}\n';
+    members[`${archiveRoot}playwright-report/data/owned.png`] = "playwright attachment bytes";
+    members[`${archiveRoot}ui-review-artifacts/iteration3-journeys/owned.png`] = "iteration3 screenshot bytes";
     const result = [{
       id: runId * 10 + 1,
       name: `ecommerce-e2e-evidence-${runId}-${attempt}`,
@@ -800,7 +832,8 @@ function successfulCommandDouble({ staleRun = false, paginated = false, denied =
   const runFor = (runId) => ({
     id: runId,
     run_attempt: attempt,
-    repository: { full_name: REPOSITORY },
+    repository: { id: 1211932882, full_name: REPOSITORY },
+    head_repository: { id: 1211932882, full_name: REPOSITORY },
     head_sha: SHA,
     head_branch: BRANCH,
     event: "workflow_dispatch",

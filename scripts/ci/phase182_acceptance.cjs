@@ -1050,6 +1050,9 @@ function runSummary(raw, repo) {
     id: String(raw.id ?? raw.databaseId ?? ""),
     attempt: Number(raw.run_attempt ?? raw.runAttempt ?? raw.attempt),
     repository: raw.repository?.full_name || raw.repository || repo,
+    repository_id: repositoryId(raw.repository?.id ?? raw.repository_id),
+    head_repository: raw.head_repository?.full_name || "",
+    head_repository_id: repositoryId(raw.head_repository?.id ?? raw.head_repository_id),
     branch: raw.head_branch || raw.headBranch || "",
     sha: raw.head_sha || raw.headSha || "",
     event: raw.event || "",
@@ -1061,6 +1064,11 @@ function runSummary(raw, repo) {
     previous_attempts: [],
     workflow_id: raw.workflow_id || raw.workflowDatabaseId,
   };
+}
+
+function repositoryId(value) {
+  const id = String(value ?? "");
+  return /^[1-9][0-9]*$/.test(id) && Number.isSafeInteger(Number(id)) ? id : null;
 }
 
 function waitForDispatchedRun(command, flags, beforeIds, options) {
@@ -1076,7 +1084,7 @@ function waitForDispatchedRun(command, flags, beforeIds, options) {
       const runId = String(candidate.id ?? candidate.databaseId);
       const detail = apiJson(command, `repos/${flags.repo}/actions/runs/${runId}`);
       const summary = runSummary(detail, flags.repo);
-      if (summary.repository !== flags.repo || summary.workflow !== WORKFLOW || summary.sha !== flags.sha || summary.branch !== flags.branch || summary.event !== "workflow_dispatch" || summary.id !== runId) {
+      if (summary.repository !== flags.repo || summary.head_repository !== flags.repo || !summary.repository_id || !summary.head_repository_id || summary.workflow !== WORKFLOW || summary.sha !== flags.sha || summary.branch !== flags.branch || summary.event !== "workflow_dispatch" || summary.id !== runId) {
         throw new Error("new workflow dispatch run does not match the requested ref and source SHA");
       }
       if (summary.status === "completed") return summary;
@@ -1153,7 +1161,11 @@ function requireArtifact(artifacts, name, run, repo) {
   if (String(artifact.workflow_run?.id) !== run.id || artifact.workflow_run?.head_sha !== run.sha || artifact.workflow_run?.head_branch !== run.branch) {
     throw new Error(`${name} artifact belongs to another run/ref/source`);
   }
-  if (artifact.workflow_run?.head_repository?.full_name !== repo) throw new Error(`${name} artifact is not owned by ${repo}`);
+  const workflowRun = artifact.workflow_run;
+  if (repositoryId(workflowRun?.repository_id) !== run.repository_id || repositoryId(workflowRun?.head_repository_id) !== run.head_repository_id) {
+    throw new Error(`${name} artifact is not owned by ${repo}`);
+  }
+  if (workflowRun?.head_repository?.full_name && workflowRun.head_repository.full_name !== repo) throw new Error(`${name} artifact is not owned by ${repo}`);
   return artifact;
 }
 
@@ -1185,11 +1197,16 @@ function listArchive(command, archivePath) {
 function logicalArtifactPath(member) {
   const exact = EVIDENCE_FILES.find((file) => member === file || member.endsWith(`/${file}`));
   if (exact) return exact;
-  for (const prefix of ["test-results/", "playwright-report/", "ui-review-artifacts/", "logs/", "compose/"]) {
-    const index = member.indexOf(prefix);
-    if (index >= 0) return member.slice(index);
-  }
-  return null;
+  // Hosted uploads wrap the run directory in test-results/docker-full/<run>/,
+  // so keep the deepest allowlisted root (for example the inner playwright-report/)
+  // rather than treating that outer storage path as the declared artifact path.
+  const candidates = ["test-results/", "playwright-report/", "ui-review-artifacts/", "logs/", "compose/"]
+    .map((prefix) => ({ prefix, index: member.lastIndexOf(prefix) }))
+    .filter(({ index }) => index >= 0)
+    .sort((left, right) => right.index - left.index);
+  const logical = candidates.length ? member.slice(candidates[0].index) : null;
+  if (logical?.split("/").some((segment) => segment.startsWith("."))) return null;
+  return logical;
 }
 
 function extractBrowserArchive(command, archivePath, runDirectory) {
@@ -1231,10 +1248,13 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
   const browserStage = stages.browser || {};
   const verifierStep = findStep(browserJob, "Run advisory full E2E proof");
   const uploadStep = findStep(browserJob, "Upload advisory E2E evidence");
-  if (verifierStep.status !== "completed" || !["success", "failure"].includes(verifierStep.outcome)) {
+  // The Actions jobs REST endpoint exposes `conclusion` on step records, not
+  // the workflow expression `outcome` field. Job-level continue-on-error keeps
+  // this per-step conclusion available even when the advisory job is green.
+  if (verifierStep.status !== "completed" || !["success", "failure"].includes(verifierStep.conclusion)) {
     throw new Error("raw ecommerce verifier step has no completed outcome");
   }
-  if ((browserStage.exit_code === 0) !== (verifierStep.outcome === "success")) {
+  if ((browserStage.exit_code === 0) !== (verifierStep.conclusion === "success")) {
     throw new Error("raw ecommerce verifier step disagrees with its aggregate exit status");
   }
   if (uploadStep.status !== "completed" || uploadStep.conclusion !== "success") {
@@ -1248,7 +1268,7 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
     run,
     session: { repository: identity.repo, branch: identity.branch, sha: identity.sha, session_id: identity.sessionId },
     eligible: validation.eligible,
-    raw_verifier_outcome: verifierStep.outcome,
+    raw_verifier_outcome: verifierStep.conclusion,
     job_conclusion: browserJob.conclusion,
     job_started_at: jobStarted,
     job_completed_at: jobCompleted,
