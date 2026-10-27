@@ -55,7 +55,7 @@ WR-03 remains visible as deferred. The two upload names are unchanged from the r
 
 ## Warnings
 
-### WR-03: Coverage and attestation artifact names are not attempt-scoped — WARNING (deferred)
+### WR-03: Artifact uploads reuse names on workflow reruns
 
 **Severity:** WARNING
 **Disposition:** Deferred; this is a baseline-only limitation, not a Phase 182 source regression.
@@ -71,11 +71,10 @@ WR-03 remains visible as deferred. The two upload names are unchanged from the r
 - **CR-03 — Mandatory inventory accepts one case from each required suite:** fixed by `edd47eee` with all required stable UI identities enforced.
 - **WR-01 — Fixture route readiness treats redirects as success:** fixed by `2f615705` with 2xx-only readiness checks.
 
-The correction review must not reopen these five closed findings. The earlier full-browser and cache receipts remain tied to their recorded source cutoffs; this report makes no current-source browser-acceptance or phase-completion claim.
+These five findings are closed at this review’s source cutoff. The earlier full-browser and cache receipts remain tied to their recorded source cutoffs; this report makes no current-source browser-acceptance or phase-completion claim.
 
 ---
 
 _Reviewed: 2026-10-27T22:41:32Z_
 _Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
-
