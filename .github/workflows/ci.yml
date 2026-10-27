@@ -69,7 +69,7 @@ jobs:
       - id: phase182_downloads_cache
         name: Restore Hex download archive cache
         if: steps.phase182_inputs.outputs.mode != 'beam-cold'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
@@ -77,7 +77,7 @@ jobs:
       - id: phase182_resolved_cache
         name: Restore resolved BEAM build cache
         if: steps.phase182_inputs.outputs.mode != 'beam-cold'
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -92,6 +92,18 @@ jobs:
       - id: core_verify
         run: mix verify.core --exclude integration --exclude docs_contract
         working-directory: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
+      - name: Save Hex download archive cache
+        if: success() && steps.phase182_inputs.outputs.mode != 'beam-cold' && steps.core_verify.outcome == 'success' && steps.phase182_downloads_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.hex/packages
+          key: ${{ steps.beam_cache.outputs.downloads_key }}
+      - name: Save resolved BEAM build cache
+        if: success() && steps.phase182_inputs.outputs.mode != 'beam-cold' && steps.core_verify.outcome == 'success' && steps.phase182_resolved_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ steps.beam_cache.outputs.resolved_paths }}
+          key: ${{ steps.beam_cache.outputs.resolved_key }}
       - name: Write Phase 182 BEAM cache proof
         id: phase182_beam_proof
         if: always() && startsWith(steps.phase182_inputs.outputs.mode, 'beam-')

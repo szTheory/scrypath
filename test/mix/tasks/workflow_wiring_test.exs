@@ -591,9 +591,21 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert core =~ "phase182_acceptance.cjs validate-inputs"
       assert core =~ "phase182_acceptance.cjs beam-plan"
       assert core =~ "if: steps.phase182_inputs.outputs.mode != 'beam-cold'"
+      assert core =~ "uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25"
+      assert core =~ "uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25"
+      assert core =~ "steps.phase182_downloads_cache.outputs.cache-matched-key"
+      assert core =~ "steps.phase182_resolved_cache.outputs.cache-matched-key"
+      assert core =~ "steps.phase182_downloads_cache.outputs.cache-hit != 'true'"
+      assert core =~ "steps.phase182_resolved_cache.outputs.cache-hit != 'true'"
       assert core =~ "mix deps.get"
       assert core =~ "mix compile --warnings-as-errors"
       assert core =~ "mix verify.core --exclude integration --exclude docs_contract"
+      assert String.index(core, "mix verify.core --exclude integration --exclude docs_contract") <
+               String.index(core, "name: Save Hex download archive cache")
+
+      assert String.index(core, "name: Save Hex download archive cache") <
+               String.index(core, "name: Save resolved BEAM build cache")
+
       assert core =~ "phase182_acceptance.cjs prepare-lock"
       assert core =~ "phase182_acceptance.cjs write-beam-proof"
 
