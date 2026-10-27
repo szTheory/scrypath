@@ -1,11 +1,12 @@
 ---
 phase: 182-reliable-full-browser-verification-and-ci-caches
-reviewed: 2026-10-27T14:51:43Z
+reviewed: 2026-10-27T15:03:21Z
 depth: standard
-files_reviewed: 13
+files_reviewed: 14
 files_reviewed_list:
   - .dockerignore
   - .github/workflows/ci.yml
+  - CONTRIBUTING.md
   - examples/scrypath_ecommerce/Makefile
   - examples/scrypath_ecommerce/compose.e2e.yaml
   - examples/scrypath_ecommerce/compose.phase173.yaml
@@ -18,44 +19,45 @@ files_reviewed_list:
   - scripts/ci/phase182_acceptance.cjs
   - scripts/ci/phase182_acceptance.test.cjs
 findings:
-  critical: 0
-  warning: 2
+  critical: 1
+  warning: 0
   info: 0
-  total: 2
+  total: 1
 status: issues_found
 ---
 
 # Phase 182: Code Review Report
 
-**Reviewed:** 2026-10-27T14:51:43Z  
+**Reviewed:** 2026-10-27T15:03:21Z  
 **Depth:** standard  
-**Files Reviewed:** 13  
+**Files Reviewed:** 14  
 **Status:** issues_found  
-**Source:** `5f250d1f020672787e82fc27e98928172562c1ae` (`worktree-agent-p182-08-1793071051075`)  
+**Source:** `b35b04411f27eac8e8b0e7fed1f43e8ea1616192` (`worktree-agent-p182-08-1793071051075`)  
 **Boundary:** Early internal source review before the next hosted acceptance batch. Hosted full-browser and cache evidence remains pending; this review does not claim phase completion or human approval.
 
 ## Summary
 
-Reviewed the explicit 13-file source scope, including the pinned-run readiness flow, cache modes and keys, Docker handoff, evidence collection, archive validation, and cleanup deadlines. The new readiness loop waits on the selected attempt and preserves that snapshot. Two evidence-validation gaps remain: the collector does not bind cache proof keys/scopes to the requested namespace, and it does not bind the browser receipt's workflow ref to the selected branch.
+Re-reviewed the prior findings, namespace wiring changes, browser-ref propagation, and the pinned-run readiness delta. The cache namespace and browser-ref findings from the early review are fixed: namespace now joins the dispatch, session, receipt, and aggregate; cache scopes and BEAM keys are checked against the requested effective namespace; and browser workflow ref is carried into and checked in the aggregate. The collector now waits on one selected run while attempt jobs and named artifacts become available, then uses that same snapshot for validation.
 
-## Warnings
+One blocker remains: the documented `validate --probe-namespace` option is ignored, so aggregate validation fails for every non-empty namespace session.
 
-### WR-01: Cache proof is not checked against the requested cache namespace
+## Narrative Findings (AI reviewer)
 
-**Classification:** WARNING  
-**File:** `scripts/ci/phase182_acceptance.cjs:1490-1498`  
-**Issue:** The collector checks a downloaded cache proof's mode, repository, branch, source SHA, run ID, and attempt, then validates only that Docker scopes are syntactically valid/distinct and that BEAM keys have the expected broad relationships. It never compares the proof's scopes or keys with `flags.probeNamespace`. If workflow output wiring drops the requested namespace, a probe can use the production namespace and still be accepted as evidence for the isolated namespace requested by the collector.  
-**Fix:** Pass the validated namespace into `validateProbeArtifact` and `validateCacheAcceptance`; derive the expected per-target Docker scopes and BEAM key/restore prefixes from the base scopes plus that namespace, and reject mismatches (including the empty namespace case).
+### CR-01: Aggregate validation discards the requested probe namespace
 
-### WR-02: Browser acceptance does not bind the recorded workflow ref to the selected branch
+**Classification:** BLOCKER  
+**File:** `scripts/ci/phase182_acceptance.cjs:1896`  
+**Issue:** The CLI advertises `validate --probe-namespace`, and the contributor runbook requires passing the same namespace to both collection and validation. However, the `validate` handler hardcodes `probeNamespace: ""` instead of reading `flags["probe-namespace"]`. A session collected with a non-empty namespace stores that value in its manifest and receipts; `validateAggregate` then compares them against the empty namespace and rejects the session. Thus the documented namespaced cache acceptance flow cannot complete.  
+**Fix:** Set `probeNamespace: flags["probe-namespace"] || ""` in `inputFlags` (or pass it directly to `validateFlags`) so the provided namespace is validated and used for aggregate identity checks.
 
-**Classification:** WARNING  
-**File:** `scripts/ci/phase182_acceptance.cjs:817-825`  
-**Issue:** Browser aggregate validation joins repository, SHA, run ID, attempt, and event, but ignores the aggregate's recorded `workflow.ref`. The evidence producer requires a non-empty ref, but neither it nor this collector checks that the ref identifies the selected branch. A receipt with a correct SHA and run identity but a different or stale ref can therefore be accepted, despite the workflow ref being part of the required provenance.  
-**Fix:** In `validateBrowserArchive`, compare `validation.receipt.workflow.ref` to the selected run's full branch ref (for this dispatch path, `refs/heads/${identity.branch}`), and preserve that validated ref in the aggregate proof.
+## Prior finding disposition
+
+- **WR-01 (cache proof namespace binding): Fixed.** `validateCacheAcceptance` reads the session namespace, derives each Docker scope from the exported `cacheScopeFor` helper and the effective per-job workflow inputs, and derives BEAM keys from the recorded cache identity. Session/receipt/aggregate identities retain the namespace, including the empty value.
+- **WR-02 (browser workflow ref binding): Fixed.** `validateBrowserArchive` carries `receipt.workflow` into the proof aggregate, `validateBrowserAcceptance` checks `refs/heads/<selected branch>`, and manifest validation repeats the archive ref check.
+- **Readiness delta:** The collector pins the selected run ID, polls attempt-specific job state and named artifacts up to its bounded timeout, and passes the same run/jobs/artifact snapshot to downstream validators. Terminal job failures and malformed or duplicate artifacts still fail closed.
 
 ---
 
-_Reviewed: 2026-10-27T14:51:43Z_  
+_Reviewed: 2026-10-27T15:03:21Z_  
 _Reviewer: the agent (gsd-code-reviewer)_  
 _Depth: standard_
