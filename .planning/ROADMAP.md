@@ -17,24 +17,11 @@
 
 ## Current Posture
 
-**v1.45 roadmap approved on 2026-10-26.** The maintainer explicitly confirmed
-the scope, all 21 requirements and the four-phase roadmap. Existing research is reused by choice;
-no fresh ecosystem audit or independent review is claimed. Implementation has
-not started. Continue from `/Users/jon/projects/scrypath`, branch
-`planning/v1.45-foundation-ci`; preserve the unrelated config edit.
+**Phase 182 is in final phase-goal verification (2026-10-27).** All eight plans and four reviewed repairs are merged. The corrected frozen source has local full189/189 and six eligible hosted189/189 receipts, with the initial ineligible cache producer preserved. The actual repair documentation head passed all required CI jobs, coverage, attestation and full browser proof. Phase completion has not been called.
 
-The v1.44 archive, its 19 debt items and historical deferrals remain intact.
-Its local completion is distinct from PR #122 merge or Hex publication, which
-remain separate pending work as recorded at this planning boundary. New v1.45
-checks do not extend old source-bound receipts or accept inherited risk.
+Continue `$gsd-execute-phase 182` from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, through mandatory hooks, goal verification and final ROOT-SHA closeout. Preserve unrelated config and retained-preview data. Current source-bound details and limits are in the acceptance records; older receipts remain historical.
 
-Phase 182 has eight checked plans across seven waves, covering all five phase
-requirements and 18 decisions. Research and plan checks establish no source
-test, browser/cache acceptance, maintainer approval or delivery claim.
-Next, run `$gsd-execute-phase 182`. Each phase retains the
-full discuss → plan → execute → verify lifecycle, plus applicable UI-spec,
-code-review and security work. No phase replay or implementation is authorized
-merely to refresh historical evidence.
+The v1.44 archive, its 19 debt items and deferrals remain intact. PR #122 merge/Hex publication remain separate; known dependency-audit debt remains Phase184. This does not complete v1.45 or claim every advisory job is green.
 
 ## v1.45 Foundation and CI
 
@@ -69,7 +56,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 4. Repeated Docker verification builds restore/export a buildx GHA cache, and the same build succeeds without a cache. (CACHE-01)
 5. BEAM jobs safely restore fallback caches across appropriate version/environment keys, invalidate changed-lock inputs and succeed from a cold cache. (CACHE-02)
 
-**Plans**: 8/8 plans executed across 7 waves (planning artifacts; execution not started).
+**Plans**: 8/8 plans merged across 7 waves; final phase-goal verification pending.
 
 Plans:
 
