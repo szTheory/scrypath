@@ -14,7 +14,7 @@ const {
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { prepareBuild, verifyHandoff } = require("./ecommerce_build.cjs");
+const { prepareBuild, verifyHandoff, recordCacheOutcome } = require("./ecommerce_build.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const verifierSource = path.join(
@@ -216,6 +216,7 @@ test("prepare derives focused and full local tags and keeps separate recipe scop
   const bake = JSON.parse(readFileSync(path.join(full.outputDirectory, "bake.json"), "utf8"));
   assert.ok(Object.values(bake.target).every((target) => target.output?.includes("type=docker")));
   assert.ok(Object.values(bake.target).every((target) => !target.push));
+  assert.ok(Object.values(bake.target).every((target) => !target["cache-from"] && !target["cache-to"]));
   assert.ok(Object.entries(full.manifest.tags).every(([service, tag]) => tag === `${full.project}-${service}`));
 });
 
@@ -226,7 +227,7 @@ test("trusted full CI prepares bounded version-2 cache exporters", (t) => {
     ...process.env,
     E2E_SCOPE: "full",
     E2E_CACHE_JOB: "full",
-    E2E_EVENT_NAME: "workflow_dispatch",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
     E2E_PROJECT_NAME: project,
     GITHUB_ACTIONS: "true",
     GITHUB_REF: "refs/heads/main",
@@ -254,6 +255,167 @@ test("trusted full CI prepares bounded version-2 cache exporters", (t) => {
   assert.deepEqual(bake.target.standalone_ops["cache-to"], [
     "type=gha,scope=scrypath-ecommerce-standalone-ops-v1,version=2,mode=max,timeout=120s",
   ]);
+});
+
+test("pull requests can import but cannot export shared cache scopes", (t) => {
+  const project = "scrypath-e2e-build-test";
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const env = {
+    ...process.env,
+    E2E_CACHE_JOB: "full",
+    GITHUB_EVENT_NAME: "pull_request",
+    E2E_PROJECT_NAME: project,
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/pull/55/merge",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+  };
+  const docker = buildDriver("full", project);
+  const result = prepareBuild({ scope: "full", output, env, runCommand: docker.run, project });
+  const bake = JSON.parse(readFileSync(path.join(output, "bake.json"), "utf8"));
+
+  assert.equal(result.manifest.cache_policy.import, true);
+  assert.equal(result.manifest.cache_policy.export, false);
+  assert.ok(Object.values(bake.target).every((target) => target["cache-from"]?.length === 1));
+  assert.ok(Object.values(bake.target).every((target) => !target["cache-to"]));
+});
+
+test("mounted CI imports stable scopes without exporting them", (t) => {
+  const project = "scrypath-e2e-build-test";
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const env = {
+    ...process.env,
+    E2E_CACHE_JOB: "mounted",
+    GITHUB_EVENT_NAME: "push",
+    E2E_PROJECT_NAME: project,
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/heads/main",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+  };
+  const docker = buildDriver("focused", project);
+  const result = prepareBuild({ scope: "focused", output, env, runCommand: docker.run, project });
+  const bake = JSON.parse(readFileSync(path.join(output, "bake.json"), "utf8"));
+
+  assert.equal(result.manifest.cache_policy.import, true);
+  assert.equal(result.manifest.cache_policy.export, false);
+  assert.ok(Object.values(bake.target).every((target) => target["cache-from"]?.length === 1));
+  assert.ok(Object.values(bake.target).every((target) => !target["cache-to"]));
+});
+
+test("non-main or fork full CI cannot export a shared cache scope", (t) => {
+  for (const [repository, ref] of [
+    ["szTheory/scrypath", "refs/heads/feature/cache-experiment"],
+    ["fork-owner/scrypath", "refs/heads/main"],
+  ]) {
+    const project = "scrypath-e2e-build-test";
+    const output = path.join(makeTempDirectory(t), repository.replace("/", "-"));
+    const env = {
+      ...process.env,
+      E2E_CACHE_JOB: "full",
+      GITHUB_EVENT_NAME: "workflow_dispatch",
+      E2E_PROJECT_NAME: project,
+      GITHUB_ACTIONS: "true",
+      GITHUB_REF: ref,
+      GITHUB_REPOSITORY: repository,
+    };
+    const docker = buildDriver("full", project);
+    const result = prepareBuild({ scope: "full", output, env, runCommand: docker.run, project });
+
+    assert.equal(result.manifest.cache_policy.import, true);
+    assert.equal(result.manifest.cache_policy.export, false);
+  }
+});
+
+test("distinct Compose recipes cannot share a normalized cache scope", (t) => {
+  const project = "scrypath-e2e-build-test";
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const base = buildDriver("full", project);
+  const runCommand = (command, args, options = {}) => {
+    const result = base.run(command, args, options);
+    if (command !== "docker") return result;
+    if (args.includes("config")) {
+      const model = JSON.parse(result);
+      model.services["standalone-ops"] = {
+        build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile.e2e" },
+      };
+      return JSON.stringify(model);
+    }
+    if (args.includes("build") && args.includes("--print")) {
+      const bake = JSON.parse(result);
+      bake.target["standalone-ops"] = {
+        ...bake.target.browser,
+        dockerfile: path.resolve(repositoryRoot, "examples/scrypath_ecommerce/Dockerfile.e2e"),
+      };
+      return JSON.stringify(bake);
+    }
+    return result;
+  };
+
+  assert.throws(
+    () => prepareBuild({ scope: "full", output, env: { ...process.env, E2E_PROJECT_NAME: project }, runCommand, project }),
+    /distinct Compose recipes collide on cache scope scrypath-ecommerce-standalone-ops-v1/,
+  );
+});
+
+test("cache outcome records Buildx completion and exporter fallback honestly", (t) => {
+  const fixture = prepareFixture(t, "full");
+  const manifest = JSON.parse(readFileSync(fixture.manifestPath, "utf8"));
+  manifest.cache_policy = { import: true, export: true };
+  writeFileSync(fixture.manifestPath, JSON.stringify(manifest));
+  const completed = recordCacheOutcome({
+    manifestPath: fixture.manifestPath,
+    bakeOutcome: "success",
+    handoffOutcome: "success",
+  });
+  assert.equal(completed.import_status, "completed");
+  assert.equal(completed.export_status, "completed");
+
+  const fallback = recordCacheOutcome({
+    manifestPath: fixture.manifestPath,
+    bakeOutcome: "failure",
+    handoffOutcome: "success",
+  });
+  assert.equal(fallback.import_status, "unknown");
+  assert.equal(fallback.export_status, "failed_after_image_handoff");
+  assert.equal(fallback.cache_action_outcome, "failure");
+});
+
+test("image cache contexts exclude local env files and private verification outputs", () => {
+  const patterns = readFileSync(path.join(repositoryRoot, ".dockerignore"), "utf8").split(/\r?\n/);
+
+  for (const pattern of [
+    ".env",
+    ".env.*",
+    "**/.env",
+    "**/.env.*",
+    ".planning",
+    "examples/*/test-results",
+    "examples/*/playwright-report",
+  ]) {
+    assert.ok(patterns.includes(pattern), `Docker build context must exclude ${pattern}`);
+  }
+});
+
+test("verify-handoff rejects a changed event cache policy", (t) => {
+  const project = "scrypath-e2e-build-test";
+  const output = path.join(makeTempDirectory(t), "prepared");
+  const env = {
+    ...process.env,
+    E2E_CACHE_JOB: "full",
+    GITHUB_EVENT_NAME: "workflow_dispatch",
+    E2E_PROJECT_NAME: project,
+    E2E_SCOPE: "full",
+    GITHUB_ACTIONS: "true",
+    GITHUB_REF: "refs/heads/main",
+    GITHUB_REPOSITORY: "szTheory/scrypath",
+  };
+  const docker = buildDriver("full", project);
+  const prepared = prepareBuild({ scope: "full", output, env, runCommand: docker.run, project });
+  env.GITHUB_EVENT_NAME = "pull_request";
+
+  assert.throws(
+    () => verifyHandoff({ manifestPath: prepared.manifestPath, env, runCommand: docker.run }),
+    /cache policy mismatch/,
+  );
 });
 
 test("verify-handoff rejects a changed Compose model before inspecting images", (t) => {

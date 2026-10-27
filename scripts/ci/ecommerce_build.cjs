@@ -9,6 +9,7 @@ const repositoryRoot = path.resolve(__dirname, "../..");
 const exampleRoot = path.join(repositoryRoot, "examples/scrypath_ecommerce");
 const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
+const trustedCacheRepository = "szTheory/scrypath";
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -117,6 +118,19 @@ function cacheScopeFor(service) {
   return `scrypath-ecommerce-${slug}-v1`;
 }
 
+function cachePolicyFor(job, env) {
+  const enabled = env.GITHUB_ACTIONS === "true" && (job === "mounted" || job === "full");
+  const canExport = enabled && job === "full" &&
+    env.GITHUB_REPOSITORY === trustedCacheRepository &&
+    env.GITHUB_REF === "refs/heads/main" &&
+    (env.GITHUB_EVENT_NAME === "schedule" || env.GITHUB_EVENT_NAME === "workflow_dispatch");
+  return { import: enabled, export: canExport };
+}
+
+function cacheSetting(scope, options = {}) {
+  return `type=gha,scope=${scope},version=2${options.mode ? `,mode=${options.mode}` : ""},timeout=120s`;
+}
+
 function resolveBuild(scope, project, env = process.env, runCommand = run) {
   const args = composeArgs(scope, project);
   const callOptions = {
@@ -157,6 +171,7 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
   const cacheScopes = {};
   const recipeIds = {};
   const scopeOwners = new Map();
+  const cachePolicy = cachePolicyFor(env.E2E_CACHE_JOB, env);
   for (const service of services) {
     const target = targets[service];
     if (!target.context || !target.dockerfile) throw new Error(`Bake target ${service} is missing its Compose build context`);
@@ -178,6 +193,10 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
     scopeOwners.set(cacheScope, recipeId);
     recipeIds[service] = recipeId;
     cacheScopes[service] = cacheScope;
+    if (cachePolicy.import) target["cache-from"] = [cacheSetting(cacheScope)];
+    else delete target["cache-from"];
+    if (cachePolicy.export) target["cache-to"] = [cacheSetting(cacheScope, { mode: "max" })];
+    else delete target["cache-to"];
   }
 
   const recipeDigest = digest(canonicalJson(recipeIds));
@@ -192,6 +211,7 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
     recipeDigest,
     tags,
     cacheScopes,
+    cachePolicy,
   };
 }
 
@@ -225,8 +245,9 @@ function prepareBuild({ scope, output, env = process.env, runCommand = run, proj
     image_ids: {},
     builder_id: env.BUILDER_ID || null,
     cache_scopes: resolved.cacheScopes,
-    import_status: "not_configured",
-    export_status: "not_configured",
+    cache_policy: resolved.cachePolicy,
+    import_status: resolved.cachePolicy.import ? "pending" : "not_configured",
+    export_status: resolved.cachePolicy.export ? "pending" : "not_configured",
     override_path: overridePath,
   };
   writeJson(path.join(outputDirectory, "resolved-compose.json"), resolved.model);
@@ -265,6 +286,9 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
   }
   if (canonicalJson(manifest.tags) !== canonicalJson(resolved.tags) || canonicalJson(manifest.cache_scopes) !== canonicalJson(resolved.cacheScopes)) {
     throw new Error("image handoff tags or cache scopes mismatch");
+  }
+  if (canonicalJson(manifest.cache_policy) !== canonicalJson(resolved.cachePolicy)) {
+    throw new Error("image handoff cache policy mismatch");
   }
 
   const overridePath = env.E2E_IMAGE_OVERRIDE || manifest.override_path;
@@ -315,6 +339,35 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
   return manifest;
 }
 
+function recordCacheOutcome({ manifestPath, bakeOutcome, handoffOutcome } = {}) {
+  if (!manifestPath) throw new Error("--manifest FILE is required");
+  if (bakeOutcome !== "success" && bakeOutcome !== "failure") {
+    throw new Error("--bake-outcome must be success or failure");
+  }
+  if (handoffOutcome !== "success" && handoffOutcome !== "failure" && handoffOutcome !== "skipped") {
+    throw new Error("--handoff-outcome must be success, failure, or skipped");
+  }
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  if (manifest.schema_version !== 1 || !manifest.cache_policy) {
+    throw new Error("image handoff manifest is missing cache policy metadata");
+  }
+  const completed = bakeOutcome === "success";
+  const imageHandoffPassed = handoffOutcome === "success";
+  // A completed Buildx step means the configured cache operations did not fail the build.
+  // It does not prove a cache hit; actual warm-restore evidence is collected by the later
+  // hosted acceptance plan.
+  manifest.import_status = manifest.cache_policy.import
+    ? completed ? "completed" : "unknown"
+    : "not_configured";
+  manifest.export_status = manifest.cache_policy.export
+    ? completed ? "completed" : imageHandoffPassed ? "failed_after_image_handoff" : "unknown"
+    : "not_configured";
+  manifest.cache_action_outcome = bakeOutcome;
+  manifest.cache_handoff_outcome = handoffOutcome;
+  writeJson(manifestPath, manifest);
+  return manifest;
+}
+
 function parseOptions(args) {
   const options = {};
   for (let index = 0; index < args.length; index += 1) {
@@ -347,7 +400,16 @@ function main(argv) {
     process.stdout.write(`${JSON.stringify(manifest)}\n`);
     return;
   }
-  throw new Error("usage: ecommerce_build.cjs fingerprint | prepare --scope focused|full --output DIR | verify-handoff --manifest FILE [--runtime]");
+  if (command === "cache-outcome") {
+    const manifest = recordCacheOutcome({
+      manifestPath: options.manifest,
+      bakeOutcome: options["bake-outcome"],
+      handoffOutcome: options["handoff-outcome"],
+    });
+    process.stdout.write(`${JSON.stringify(manifest)}\n`);
+    return;
+  }
+  throw new Error("usage: ecommerce_build.cjs fingerprint | prepare --scope focused|full --output DIR | verify-handoff --manifest FILE [--runtime] | cache-outcome --manifest FILE --bake-outcome success|failure --handoff-outcome success|failure|skipped");
 }
 
 if (require.main === module) {
@@ -359,4 +421,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { prepareBuild, verifyHandoff };
+module.exports = { prepareBuild, verifyHandoff, recordCacheOutcome };
