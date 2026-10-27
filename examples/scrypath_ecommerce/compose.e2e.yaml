@@ -17,7 +17,7 @@ services:
       CI: "1"
       E2E_SCOPE: ${E2E_SCOPE:-focused}
       E2E_RUN_ID: ${E2E_RUN_ID:-local-${E2E_SCOPE:-focused}}
-      E2E_ARTIFACT_DIR: ${E2E_CONTAINER_ARTIFACT_DIR:-/tmp/scrypath-e2e-${E2E_RUN_ID:-local-${E2E_SCOPE:-focused}}}
+      E2E_ARTIFACT_DIR: ${E2E_CONTAINER_ARTIFACT_DIR:-/tmp/${E2E_RUN_ID:-local-${E2E_SCOPE:-focused}}}
       E2E_JOB_STARTED_AT: ${E2E_JOB_STARTED_AT:-unknown}
       E2E_DEADLINE_EPOCH: ${E2E_DEADLINE_EPOCH:-0}
       E2E_FINALIZATION_MARGIN_SECONDS: ${E2E_FINALIZATION_MARGIN_SECONDS:-300}

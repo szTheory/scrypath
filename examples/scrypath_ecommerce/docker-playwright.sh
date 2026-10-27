@@ -6,7 +6,7 @@ scope="${E2E_SCOPE:-focused}"
 base_url="${PLAYWRIGHT_BASE_URL:-http://web:4002}"
 readiness_only="${E2E_READINESS_ONLY:-0}"
 run_id="${E2E_RUN_ID:-local-${scope}}"
-artifact_dir="${E2E_ARTIFACT_DIR:-/tmp/scrypath-e2e-${run_id}}"
+artifact_dir="${E2E_ARTIFACT_DIR:-/tmp/${run_id}}"
 
 if [[ "$readiness_only" != "0" && "$readiness_only" != "1" ]]; then
   echo "E2E_READINESS_ONLY must be 0 or 1." >&2

@@ -23,6 +23,10 @@ const browserSource = path.join(
   repositoryRoot,
   "examples/scrypath_ecommerce/docker-playwright.sh",
 );
+const composeE2eSource = path.join(
+  repositoryRoot,
+  "examples/scrypath_ecommerce/compose.e2e.yaml",
+);
 
 function tempDirectory(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), "scrypath-e2e-lifecycle-"));
@@ -60,16 +64,40 @@ if (args[0] === "cp") {
   fs.mkdirSync(destination + "/playwright-report", { recursive: true });
   fs.writeFileSync(destination + "/playwright-report/index.html", "<html>owned</html>\\n");
   fs.writeFileSync(destination + "/admin-light-parity.json", JSON.stringify({status:"pass",missing:[],extra:[],width_mismatches:[]}));
-  fs.writeFileSync(destination + "/contrast-report.json", JSON.stringify({status:"pass"}));
+  const contrastFindings = [{severity:"aaa-body-advisory",producer:"token",pass_aa:true}];
+  fs.writeFileSync(destination + "/contrast-report.json", JSON.stringify({
+    schema:"scrypath.contrast.v1",
+    producer:"token",
+    generated:"2026-10-26T12:00:01.000Z",
+    summary:{aa_fail:0,aaa_advisory:1,total:1},
+    findings:contrastFindings
+  }));
 }
 if (args[0] === "inspect") process.stdout.write("sha256:" + "a".repeat(64) + "\\n");
 if (args[0] === "run") {
+  const input = fs.readFileSync(0, "utf8");
+  fs.writeFileSync(process.env.FAKE_DOCKER_STDIN_FILE, input);
   const volume = args.find(value => value.endsWith(":/evidence"));
   const destination = volume ? volume.slice(0, volume.lastIndexOf(":/evidence")) : null;
-  if (destination) {
-    fs.writeFileSync(destination + "/phase105-evidence-input.json", JSON.stringify({synthetic:true}));
-    fs.writeFileSync(destination + "/phase105-evidence.json", JSON.stringify({eligibility:{eligible:false},reasons:[{code:"synthetic_docker_double"}]}));
-    fs.writeFileSync(destination + "/phase105-evidence-summary.md", "synthetic lifecycle test evidence\\n");
+  const hasWriter = input.includes("node /app/scripts/ci/ecommerce_evidence.cjs write-evidence --run-dir /evidence");
+  if (destination && hasWriter && process.env.FAKE_DOCKER_RUN_OMIT_RECEIPT !== "1") {
+    const runId = process.env.E2E_WORKFLOW_RUN_ID || process.env.E2E_RUN_ID;
+    const sourceSha = process.env.SCRYPATH_SOURCE_SHA;
+    const eventSha = process.env.E2E_EVENT_SHA;
+    const contrast = JSON.parse(fs.readFileSync(destination + "/contrast-report.json", "utf8"));
+    fs.writeFileSync(destination + "/phase105-evidence-input.json", JSON.stringify({
+      source: { checkout_head: sourceSha, built_source_sha: sourceSha },
+      workflow: { run_id: runId, sha: eventSha },
+      checkers: { contrast: { path: "contrast-report.json", status: contrast.schema === "scrypath.contrast.v1" && contrast.producer === "token" && contrast.summary?.total === contrast.findings?.length && contrast.summary?.aa_fail === 0 ? "pass" : "fail" } }
+    }));
+    fs.writeFileSync(destination + "/phase105-evidence.json", JSON.stringify({
+      schema_version: 1,
+      authority: "scripts/ci/ecommerce_evidence.cjs",
+      run_id: runId,
+      sha: eventSha,
+      eligibility: { eligible: true }
+    }));
+    fs.writeFileSync(destination + "/phase105-evidence-summary.md", "# Phase 105 E2E Evidence Summary\\n\\n- run_id: " + runId + "\\n- sha: " + eventSha + "\\n");
   }
 }
 if (args[0] === "ps" && process.env.FAKE_LEAK_CONTAINER === "1") process.stdout.write("owned-container\\n");
@@ -109,6 +137,7 @@ function runVerifier(t, args, extraEnv = {}) {
   writeFileSync(scriptPath, readFileSync(verifierSource));
 
   const { binDirectory, logPath } = installDockerDouble(root);
+  const aggregateInputPath = path.join(root, "docker-run.stdin");
   const runId = extraEnv.E2E_RUN_ID || "lifecycle-test-run";
   if (extraEnv.FAKE_PREVIOUS_CAPTURE === "1") {
     const previousDirectory = path.join(exampleDirectory, "test-results", `docker-${args[0]}`, "previous-run");
@@ -122,6 +151,7 @@ function runVerifier(t, args, extraEnv = {}) {
       ...process.env,
       PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
       FAKE_DOCKER_LOG: logPath,
+      FAKE_DOCKER_STDIN_FILE: aggregateInputPath,
       FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
       E2E_RUN_ID: runId,
       ...extraEnv,
@@ -138,7 +168,7 @@ function runVerifier(t, args, extraEnv = {}) {
   const lifecycle = lifecyclePath && existsSync(lifecyclePath)
     ? JSON.parse(readFileSync(lifecyclePath, "utf8"))
     : null;
-  return { ...result, calls: dockerCalls(logPath), artifactDirectory, lifecycle };
+  return { ...result, calls: dockerCalls(logPath), artifactDirectory, aggregateInputPath, lifecycle };
 }
 
 function composeProjectCalls(calls) {
@@ -265,6 +295,21 @@ function runBrowser(t, extraEnv = {}) {
   };
 }
 
+test("run_bounded forwards an actual Bash heredoc to its asynchronous command", () => {
+  const verifier = readFileSync(verifierSource, "utf8");
+  const start = verifier.indexOf("run_bounded() {");
+  const end = verifier.indexOf("\n}\n\nrun_execution_bounded()", start);
+  assert.ok(start >= 0 && end > start, "expected the production run_bounded function");
+  const functionSource = verifier.slice(start, end + 2);
+  const result = spawnSync(
+    "bash",
+    ["-c", `${functionSource}\nrun_bounded 5 cat <<'PAYLOAD'\nphase182-heredoc-payload\nPAYLOAD\n`],
+    { encoding: "utf8", timeout: 10_000 },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "phase182-heredoc-payload\n");
+});
+
 test("full readiness diagnostic uses the full overlay without claiming browser acceptance", (t) => {
   const result = runVerifier(t, ["full", "--readiness-only"]);
   assert.equal(result.status, 0, result.stderr);
@@ -374,11 +419,50 @@ test("verifier creates a fresh per-run bundle and excludes a previous capture se
   for (const file of ["source.json", "compose-model.json", "stages.json", "artifact-manifest.json", "phase105-inventory.json", "phase105-evidence-input.json", "phase105-evidence.json", "phase105-evidence-summary.md"]) {
     assert.ok(existsSync(path.join(result.artifactDirectory, file)), `owned bundle is missing ${file}`);
   }
+  const aggregateInput = readFileSync(result.aggregateInputPath, "utf8");
+  assert.match(aggregateInput, /node \/app\/scripts\/ci\/ecommerce_evidence\.cjs write-evidence --run-dir \/evidence/);
+  const receiptInput = JSON.parse(readFileSync(path.join(result.artifactDirectory, "phase105-evidence-input.json"), "utf8"));
+  const receipt = JSON.parse(readFileSync(path.join(result.artifactDirectory, "phase105-evidence.json"), "utf8"));
+  const summary = readFileSync(path.join(result.artifactDirectory, "phase105-evidence-summary.md"), "utf8");
+  assert.equal(receiptInput.source.checkout_head, "deadbeef00000000000000000000000000000000");
+  assert.equal(receipt.run_id, "run-unique-18204");
+  assert.equal(receipt.eligibility.eligible, true);
+  assert.match(summary, /- run_id: run-unique-18204/);
+  const manifest = JSON.parse(readFileSync(path.join(result.artifactDirectory, "artifact-manifest.json"), "utf8"));
+  assert.equal(manifest.source, "/tmp/run-unique-18204");
+  assert.deepEqual(manifest.allowlist, [
+    "/tmp/run-unique-18204/phase105-playwright-list.json",
+    "/tmp/run-unique-18204/phase105-playwright.json",
+    "/tmp/run-unique-18204/phase105-evidence.ndjson",
+    "/tmp/run-unique-18204/playwright-report/",
+    "/tmp/run-unique-18204/test-results/",
+    "/tmp/run-unique-18204/ui-review-artifacts/iteration3-journeys/",
+  ]);
+  assert.ok(Array.isArray(manifest.copied_files));
   const downIndex = result.calls.findIndex((call) => call.includes("down"));
   const aggregateIndex = result.calls.findIndex((call) => call[0] === "run");
   assert.ok(aggregateIndex > downIndex, "strict evidence aggregation must happen after owned Compose cleanup");
   assert.equal(existsSync(path.join(result.artifactDirectory, "stale-sentinel.txt")), false);
   assert.equal(existsSync(path.join(path.dirname(result.artifactDirectory), "previous-run", "stale-sentinel.txt")), true);
+});
+
+test("a zero-exit no-op aggregate writer cannot pass without current validated outputs", (t) => {
+  const result = runVerifier(t, ["full"], { FAKE_DOCKER_RUN_OMIT_RECEIPT: "1" });
+  assert.equal(result.status, 76, result.stderr);
+  assert.match(result.stderr, /did not create 'phase105-evidence-input\.json'/);
+  assert.match(readFileSync(result.aggregateInputPath, "utf8"), /write-evidence --run-dir \/evidence/);
+  assert.equal(existsSync(path.join(result.artifactDirectory, "phase105-evidence.json")), false);
+  assert.equal(result.lifecycle.cleanup.status, "clean");
+});
+
+test("Compose browser evidence directory ends with the exact run ID", () => {
+  const verifier = readFileSync(verifierSource, "utf8");
+  const compose = readFileSync(composeE2eSource, "utf8");
+  const browser = readFileSync(browserSource, "utf8");
+
+  assert.match(verifier, /export E2E_CONTAINER_ARTIFACT_DIR="\/tmp\/\$run_id"/);
+  assert.match(compose, /E2E_ARTIFACT_DIR: \$\{E2E_CONTAINER_ARTIFACT_DIR:-\/tmp\/\$\{E2E_RUN_ID/);
+  assert.match(browser, /artifact_dir="\$\{E2E_ARTIFACT_DIR:-\/tmp\/\$\{run_id\}\}"/);
 });
 
 test("full readiness fails when either Ops fixture route stays unavailable", (t) => {

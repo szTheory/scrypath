@@ -204,12 +204,31 @@ function appendWorkflowOutputs(outputPath, values) {
 function validateWorkflowInputs({ mode = "normal", namespace = "", outputPath } = {}) {
   const validatedMode = validateDispatchCacheMode(mode);
   const validatedNamespace = validateProbeNamespace(namespace);
+  const beamProbe = validatedMode.startsWith("beam-");
+  const beamNamespace = beamProbe || validatedMode === "normal" ? validatedNamespace : "";
+  const mountedDockerMode = validatedMode === "docker-cold" ? "docker-cold" : "normal";
+  const dockerNamespace = validatedMode === "normal" ? validatedNamespace : "";
   appendWorkflowOutputs(outputPath, {
     mode: validatedMode,
     proof_mode: validatedMode === "normal" ? "docker-warm" : validatedMode,
     namespace: validatedNamespace,
+    beam_mode: beamProbe ? validatedMode : "normal",
+    beam_namespace: beamNamespace,
+    mounted_docker_mode: mountedDockerMode,
+    mounted_docker_namespace: dockerNamespace,
+    full_docker_mode: "normal",
+    full_docker_namespace: dockerNamespace,
   });
-  return { mode: validatedMode, namespace: validatedNamespace };
+  return {
+    mode: validatedMode,
+    namespace: validatedNamespace,
+    beam_mode: beamProbe ? validatedMode : "normal",
+    beam_namespace: beamNamespace,
+    mounted_docker_mode: mountedDockerMode,
+    mounted_docker_namespace: dockerNamespace,
+    full_docker_mode: "normal",
+    full_docker_namespace: dockerNamespace,
+  };
 }
 
 function validRunIdentity(runId, attempt) {
@@ -347,6 +366,12 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
       canonicalJson(expectedTargets) !== canonicalJson(Object.keys(targetScopes).sort())) {
     throw new Error("checked Docker Bake targets do not match the image handoff manifest");
   }
+  validateDockerRecipeBindings({
+    recipeIds: manifest.recipe_ids,
+    imageIds: manifest.image_ids,
+    recipeDigest: manifest.recipe_digest,
+    expectedTargets,
+  });
   validateDockerTargetBindings({
     scope: manifest.scope,
     expected_targets: expectedTargets,
@@ -354,7 +379,7 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
     target_cache_settings: targetCacheSettings,
     import_scopes: scopes,
     export_scopes: exportScopes,
-  }, artifactMode);
+  }, artifactMode, manifest.cache_policy);
   const cacheFrom = Object.values(bake.target || {}).flatMap((target) => Array.isArray(target["cache-from"]) ? target["cache-from"] : []);
   let builder;
   if (mode === "docker-cold") {
@@ -402,6 +427,9 @@ function writeDockerProbeProof({ manifestPath, outputPath, baselinePath = "", in
       expected_targets: expectedTargets,
       target_scopes: targetScopes,
       target_cache_settings: targetCacheSettings,
+      recipe_digest: manifest.recipe_digest,
+      recipe_ids: structuredClone(manifest.recipe_ids),
+      image_ids: structuredClone(manifest.image_ids),
       import_scopes: scopes,
       export_scopes: exportScopes,
       ...(mode === "docker-cold" ? { miss_reason: "fresh builder with BuildKit cache imports disabled" } : {}),
@@ -433,6 +461,7 @@ function writeBeamProbeProof({ planPath, outputPath, lockManifestPath = "", env 
   } : undefined;
   const cache = {
     kind: "beam",
+    identity: plan.identity,
     imports_enabled: mode !== "beam-cold",
     downloads_key: downloadsKey,
     downloads_restore_prefix: plan.downloads_restore_prefix,
@@ -547,6 +576,7 @@ function sessionIdentity(flags) {
     branch: flags.branch,
     sha: flags.sha,
     session_id: flags.sessionId,
+    probe_namespace: flags.probeNamespace || "",
     created_at: new Date().toISOString(),
     invocations: [],
   };
@@ -560,7 +590,7 @@ function ensureSessionLocked(flags) {
     writeAtomic(manifestPath, sessionIdentity(flags));
   }
   const manifest = parseJsonText(fs.readFileSync(manifestPath, "utf8"), "candidate session manifest");
-  for (const [key, expected] of [["repository", flags.repo], ["branch", flags.branch], ["sha", flags.sha], ["session_id", flags.sessionId]]) {
+  for (const [key, expected] of [["repository", flags.repo], ["branch", flags.branch], ["sha", flags.sha], ["session_id", flags.sessionId], ["probe_namespace", flags.probeNamespace || ""]]) {
     if (manifest[key] !== expected) throw new Error(`candidate session identity mismatch for ${key}; use a new session root for changed source/ref/session identity`);
   }
   if (manifest.schema !== 1 || !Array.isArray(manifest.invocations)) throw new Error("candidate session manifest is malformed");
@@ -570,7 +600,45 @@ function ensureSessionLocked(flags) {
 function beginInvocation(flags) {
   return withSessionLock(flags.outputDir, () => {
     const { manifestPath, manifest } = ensureSessionLocked(flags);
-    if (manifest.invocations.some((entry) => entry.status === "running")) throw new Error("candidate session has an unfinished invocation; reconcile it before dispatching another run");
+    if (manifest.invocations.some((entry) => entry.status === "running")) {
+      const error = "candidate session has an unfinished invocation; reconcile it before dispatching another run";
+      const token = `${Date.now()}-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
+      const relativeDir = path.posix.join("attempts", flags.mode, token);
+      const invocationDir = path.join(flags.outputDir, ...relativeDir.split("/"));
+      fs.mkdirSync(invocationDir, { recursive: false, mode: 0o700 });
+      const receipt = {
+        schema: 1,
+        repository: flags.repo,
+        branch: flags.branch,
+        sha: flags.sha,
+        session_id: flags.sessionId,
+        probe_namespace: flags.probeNamespace || "",
+        mode: flags.mode,
+        invocation_id: token,
+        eligible: false,
+        error,
+        collected_at: new Date().toISOString(),
+      };
+      const receiptPath = path.join(invocationDir, "receipt.json");
+      writeAtomic(receiptPath, receipt);
+      const entry = {
+        invocation_id: token,
+        mode: flags.mode,
+        directory: relativeDir,
+        status: "ineligible",
+        started_at: receipt.collected_at,
+        completed_at: receipt.collected_at,
+        receipt: path.relative(flags.outputDir, receiptPath).split(path.sep).join("/"),
+        receipt_sha256: sha256(fs.readFileSync(receiptPath)),
+        run_id: null,
+        run_attempt: null,
+        error,
+      };
+      manifest.invocations.push(entry);
+      writeAtomic(manifestPath, manifest);
+      updateAggregatesLocked(flags, manifest);
+      throw new Error(error);
+    }
     const token = `${Date.now()}-${process.pid}-${crypto.randomBytes(6).toString("hex")}`;
     const relativeDir = path.posix.join("attempts", flags.mode, token);
     const invocationDir = path.join(flags.outputDir, ...relativeDir.split("/"));
@@ -651,7 +719,7 @@ function readManifestReceipt(root, entry, expectedIdentity) {
 }
 
 function updateAggregatesLocked(flags, manifest) {
-  const expected = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const expected = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   const receipts = manifest.invocations.filter((entry) => entry.status !== "running" && entry.receipt).map((entry) => ({
     entry,
     receipt: readManifestReceipt(flags.outputDir, entry, expected),
@@ -752,6 +820,9 @@ function validateBrowserAcceptance(proof) {
   if (browser.repository !== identity.repository || browser.source_sha !== identity.sha || browser.run_id !== String(proof.run.id) || Number(browser.attempt) !== proof.run.attempt) {
     throw new Error("browser aggregate identity does not join the selected run/source");
   }
+  if (browser.workflow?.ref !== `refs/heads/${identity.branch}`) {
+    throw new Error("browser workflow ref does not match the selected branch");
+  }
   if (!Number.isSafeInteger(browser.case_count) || browser.case_count <= 0 || !Number.isSafeInteger(browser.attempts_total) || browser.attempts_total <= 0) {
     throw new Error("browser aggregate has zero or malformed cases/attempts");
   }
@@ -796,7 +867,11 @@ function targetGhaScopes(settings, field) {
     .map((value) => value.match(/(?:^|,)scope=([^,]+)/)?.[1] || "");
 }
 
-function validateDockerTargetBindings(cache, mode) {
+function validateDockerTargetBindings(cache, mode, policy = { import: mode === "docker-warm", export: mode === "docker-warm" }) {
+  if (!policy || typeof policy.import !== "boolean" || typeof policy.export !== "boolean" ||
+      mode === "docker-cold" && (policy.import || policy.export)) {
+    throw new Error("Docker cache proof has an invalid checked cache policy");
+  }
   const expectedTargets = expectedDockerTargets(cache.scope, mode);
   const targetScopes = cache.target_scopes;
   const targetSettings = cache.target_cache_settings;
@@ -816,7 +891,9 @@ function validateDockerTargetBindings(cache, mode) {
     }
     const importScopes = targetGhaScopes(settings, "import");
     const exportScopes = targetGhaScopes(settings, "export");
-    if (mode === "docker-warm" && (canonicalJson(importScopes) !== canonicalJson([scope]) || canonicalJson(exportScopes) !== canonicalJson([scope]))) {
+    if (mode === "docker-warm" && (canonicalJson(importScopes) !== canonicalJson(policy.import ? [scope] : []) ||
+        canonicalJson(exportScopes) !== canonicalJson(policy.export ? [scope] : []) ||
+        !policy.import && settings.import.length !== 0 || !policy.export && settings.export.length !== 0)) {
       throw new Error(`Docker cache proof Bake settings do not match the checked scope for ${service}`);
     }
     if (mode === "docker-cold" && (settings.import.length !== 0 || settings.export.length !== 0)) {
@@ -825,23 +902,78 @@ function validateDockerTargetBindings(cache, mode) {
     mappedScopes.push(scope);
   }
   if (new Set(mappedScopes).size !== expectedTargets.length) throw new Error("Docker cache proof target scopes must be distinct per recipe");
-  const expectedScopes = mode === "docker-warm" ? mappedScopes.slice().sort() : [];
-  if (canonicalJson(cache.import_scopes) !== canonicalJson(expectedScopes) ||
-      canonicalJson(cache.export_scopes) !== canonicalJson(expectedScopes)) {
+  const expectedImports = policy.import ? mappedScopes.slice().sort() : [];
+  const expectedExports = policy.export ? mappedScopes.slice().sort() : [];
+  if (canonicalJson(cache.import_scopes) !== canonicalJson(expectedImports) ||
+      canonicalJson(cache.export_scopes) !== canonicalJson(expectedExports)) {
     throw new Error("Docker cache proof scopes do not match the checked target mapping");
   }
   return expectedTargets;
 }
 
-function parseBuildKitCacheProgress(logText, targetScopes) {
+function validateDockerRecipeBindings({ recipeIds, imageIds, recipeDigest, expectedTargets }) {
+  const exactKeys = (value) => value && typeof value === "object" && !Array.isArray(value) &&
+    canonicalJson(Object.keys(value).sort()) === canonicalJson(expectedTargets.slice().sort());
+  if (!exactKeys(recipeIds) || !exactKeys(imageIds)) {
+    throw new Error("Docker cache proof is missing exact per-target recipe and image identities");
+  }
+  for (const service of expectedTargets) {
+    if (!/^sha256:[a-f0-9]{64}$/.test(recipeIds[service] || "") ||
+        !/^sha256:[a-f0-9]{64}$/.test(imageIds[service] || "")) {
+      throw new Error(`Docker cache proof has an invalid recipe or image identity for ${service}`);
+    }
+  }
+  if (recipeDigest !== `sha256:${sha256(canonicalJson(recipeIds))}`) {
+    throw new Error("Docker cache proof recipe digest does not match the per-target recipe identities");
+  }
+  return true;
+}
+
+function validateDockerHandoffBindings({ cache, handoff, mode, sourceSha }) {
+  const expectedScope = mode === "docker-warm" ? "full" : mode === "docker-cold" ? "focused" : "";
+  const expectedProbeMode = mode === "docker-warm" ? "normal" : mode;
+  if (!expectedScope || !handoff || handoff.schema_version !== 1 || handoff.scope !== expectedScope ||
+      handoff.source_sha !== sourceSha || handoff.cache_probe?.mode !== expectedProbeMode ||
+      handoff.handoff_status !== "runtime_verified" || handoff.cache_action_outcome !== "success" ||
+      handoff.cache_handoff_outcome !== "success" ||
+      canonicalJson(handoff.cache_scopes) !== canonicalJson(cache.target_scopes)) {
+    throw new Error("Docker cache proof does not join the checked browser image handoff");
+  }
+  if (mode === "docker-warm" && (handoff.import_status !== "completed" || handoff.export_status !== "completed")) {
+    throw new Error("Docker warm proof requires completed per-target import and export handoff status");
+  }
+  if (mode === "docker-cold" && (handoff.import_status !== "not_configured" || handoff.export_status !== "not_configured")) {
+    throw new Error("Docker cold proof must retain disabled import and export handoff status");
+  }
+  const expectedTargets = validateDockerTargetBindings(cache, mode);
+  validateDockerRecipeBindings({
+    recipeIds: handoff.recipe_ids,
+    imageIds: handoff.image_ids,
+    recipeDigest: handoff.recipe_digest,
+    expectedTargets,
+  });
+  if (canonicalJson(cache.recipe_ids) !== canonicalJson(handoff.recipe_ids) ||
+      cache.recipe_digest !== handoff.recipe_digest ||
+      canonicalJson(cache.image_ids) !== canonicalJson(handoff.image_ids) ||
+      canonicalJson(handoff.runtime_image_ids) !== canonicalJson(handoff.image_ids)) {
+    throw new Error("Docker cache proof recipe or image identities differ from the verified handoff");
+  }
+  return true;
+}
+
+function parseBuildKitCacheProgress(logText, targetScopes, recipeBindings = {}) {
   const expectedTargets = Object.keys(targetScopes || {}).sort();
   const targetSet = new Set(expectedTargets);
   const lines = String(logText).split(/\r?\n/);
+  const buildKitLines = lines.map((line) => line.replace(
+    /^(?:[^\t\r\n]+\t[^\t\r\n]+\t)?\uFEFF?\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\s+#/,
+    "#",
+  ));
   const vertices = new Map();
   const byIdLines = new Map();
   const terminal = new Map();
   for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
+    const line = buildKitLines[index];
     const start = line.match(/^#(\d+)\s+(?:\[([^\]]+)\]\s+)?(.*?)\s*$/);
     if (!start) continue;
     const id = start[1];
@@ -879,12 +1011,38 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
     }
   }
 
+  const recipeIds = recipeBindings.recipe_ids || {};
+  const imageIds = recipeBindings.image_ids || {};
+  const sharedCachedSteps = new Map(expectedTargets.map((service) => [service, []]));
+  const recipeGroups = new Map();
+  for (const service of expectedTargets) {
+    const recipeId = recipeIds[service];
+    const imageId = imageIds[service];
+    if (typeof recipeId !== "string" || typeof imageId !== "string" || !recipeId || !imageId) continue;
+    const key = `${recipeId}\0${imageId}`;
+    if (!recipeGroups.has(key)) recipeGroups.set(key, []);
+    recipeGroups.get(key).push(service);
+  }
+  for (const services of recipeGroups.values()) {
+    if (services.length < 2) continue;
+    const hitSources = services.filter((service) => cachedSteps.get(service).length > 0);
+    if (!hitSources.length) continue;
+    for (const service of services) {
+      if (cachedSteps.get(service).length > 0) continue;
+      for (const from of hitSources) {
+        sharedCachedSteps.get(service).push({ from, steps: cachedSteps.get(from).slice() });
+      }
+    }
+  }
+
   const importComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
     const entries = imports.get(service);
-    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) && cachedSteps.get(service).length > 0;
+    return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome) &&
+      (cachedSteps.get(service).length > 0 || sharedCachedSteps.get(service).length > 0);
   });
-  const cacheFailureLines = lines.filter((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
-  const exporterWarnings = lines.filter((line) => /warning/i.test(line) && /cache|exporter/i.test(line) && /ignored|fail|error|unsupported|not supported/i.test(line));
+  const matchingLines = (predicate) => buildKitLines.flatMap((line, index) => predicate(line) ? [lines[index]] : []);
+  const cacheFailureLines = matchingLines((line) => /(?:^|\s)ERROR(?::|\s)/i.test(line) && /cache|export|import/i.test(line));
+  const exporterWarnings = matchingLines((line) => /warning/i.test(line) && /cache|exporter/i.test(line) && /ignored|fail|error|unsupported|not supported/i.test(line));
   const exportComplete = expectedTargets.length > 0 && expectedTargets.every((service) => {
     const entries = exports.get(service);
     return entries.length === 1 && ["DONE", "CACHED"].includes(entries[0].outcome);
@@ -893,17 +1051,21 @@ function parseBuildKitCacheProgress(logText, targetScopes) {
   const importBytes = matchedLines(importLineIndexes).join("\n");
   const exportBytes = matchedLines(exportLineIndexes).join("\n");
   const cachedBytes = matchedLines(cachedLineIndexes).join("\n");
+  const progressTargets = Object.fromEntries(expectedTargets.map((service) => [service, {
+    imports: imports.get(service),
+    cached_steps: cachedSteps.get(service),
+    shared_cached_steps: sharedCachedSteps.get(service),
+    exports: exports.get(service),
+  }]));
+  const cacheBindings = { recipe_ids: recipeIds, image_ids: imageIds };
   return {
     import_complete: importComplete,
     export_complete: exportComplete,
     imported_digest: importBytes ? `sha256:${sha256(importBytes)}` : null,
     exported_digest: exportBytes ? `sha256:${sha256(exportBytes)}` : null,
     cached_steps_digest: cachedBytes ? `sha256:${sha256(cachedBytes)}` : null,
-    targets: Object.fromEntries(expectedTargets.map((service) => [service, {
-      imports: imports.get(service),
-      cached_steps: cachedSteps.get(service),
-      exports: exports.get(service),
-    }])),
+    cache_binding_digest: cachedBytes ? `sha256:${sha256(canonicalJson({ cached: cachedBytes, bindings: cacheBindings, targets: progressTargets }))}` : null,
+    targets: progressTargets,
     exporter_warnings: exporterWarnings,
     cache_errors: cacheFailureLines,
   };
@@ -926,6 +1088,29 @@ function validateCacheAcceptance(proof) {
   if (!/^[a-f0-9]{64}$/.test(cache.log_sha256 || "") || typeof cache.log_text !== "string" || sha256(cache.log_text) !== cache.log_sha256) {
     throw new Error("cache proof is missing real hashed job log evidence");
   }
+  const namespace = validateProbeNamespace(proof.session.probe_namespace);
+  const inputs = validateWorkflowInputs({ mode: workflowCacheInput(mode), namespace });
+  if (mode.startsWith("docker-")) {
+    const targets = mode === "docker-warm" ? ["browser", "standalone_ops", "web"] : ["browser", "web"];
+    const baseScopes = Object.fromEntries(targets.map((service) => [service, ecommerceBuild.cacheScopeFor(service)]));
+    const expected = ecommerceBuild.cacheProbeFor(mode === "docker-warm" ? "full" : "focused", baseScopes, {}, {
+      mode: mode === "docker-cold" ? "docker-cold" : "normal",
+      namespace: mode === "docker-warm" ? inputs.full_docker_namespace : inputs.mounted_docker_namespace,
+    });
+    if (canonicalJson(cache.target_scopes) !== canonicalJson(expected.scopes)) {
+      throw new Error("Docker cache scopes do not match the requested probe namespace");
+    }
+  } else {
+    const expected = beamPlanForProbe(beamCache.cachePlan(cache.identity), {
+      mode, namespace: inputs.beam_namespace, runId: proof.run.id, attempt: proof.run.attempt,
+    });
+    for (const key of ["downloads_key", "downloads_restore_prefix", "resolved_key", "resolved_restore_prefix"]) {
+      if (cache[key] !== expected[key]) throw new Error(`BEAM ${key} does not match the requested probe namespace and cache identity`);
+    }
+    if (cache.identity.graph !== "root" || Object.entries(cache.runtime || {}).some(([key, value]) => value !== expected.identity[key])) {
+      throw new Error("BEAM cache identity does not match the recorded runtime and root graph");
+    }
+  }
   const lines = cache.log_text.split(/\r?\n/);
   const has = (pattern) => lines.some((line) => pattern.test(line));
   const artifact = proof.artifact;
@@ -936,17 +1121,34 @@ function validateCacheAcceptance(proof) {
   }
   if (mode === "docker-warm") {
     const expectedTargets = validateDockerTargetBindings(cache, mode);
-    const evidence = parseBuildKitCacheProgress(cache.log_text, cache.target_scopes);
+    validateDockerRecipeBindings({
+      recipeIds: cache.recipe_ids,
+      imageIds: cache.image_ids,
+      recipeDigest: cache.recipe_digest,
+      expectedTargets,
+    });
+    const evidence = parseBuildKitCacheProgress(cache.log_text, cache.target_scopes, {
+      recipe_ids: cache.recipe_ids,
+      image_ids: cache.image_ids,
+    });
     if (cache.kind !== "buildkit" || cache.imports_enabled !== true || cache.actual_import !== evidence.import_complete || cache.actual_export !== evidence.export_complete ||
         evidence.import_complete !== true || evidence.export_complete !== true ||
         cache.imported_digest !== evidence.imported_digest || cache.exported_digest !== evidence.exported_digest ||
-        cache.cached_steps_digest !== evidence.cached_steps_digest || canonicalJson(cache.progress) !== canonicalJson(evidence.targets) ||
+        cache.cached_steps_digest !== evidence.cached_steps_digest || cache.cache_binding_digest !== evidence.cache_binding_digest ||
+        canonicalJson(cache.progress) !== canonicalJson(evidence.targets) ||
         cache.importer !== "gha" || cache.exporter !== "gha" || expectedTargets.length < 2 ||
         proof.commands.primary_verification !== "success") {
       throw new Error("docker-warm requires actual GHA import and export log evidence");
     }
   } else if (mode === "docker-cold") {
-    if (cache.kind !== "buildkit" || cache.imports_enabled !== false || cache.actual_import !== false || !proof.builder || proof.builder.fresh !== true || proof.builder.persistent !== false ||
+    const expectedTargets = validateDockerTargetBindings(cache, mode);
+    validateDockerRecipeBindings({
+      recipeIds: cache.recipe_ids,
+      imageIds: cache.image_ids,
+      recipeDigest: cache.recipe_digest,
+      expectedTargets,
+    });
+    if (cache.kind !== "buildkit" || cache.imports_enabled !== false || cache.actual_import !== false || cache.actual_export !== false || !proof.builder || proof.builder.fresh !== true || proof.builder.persistent !== false ||
         proof.builder.created_for_run_id !== String(proof.run.id) || proof.builder.created_for_attempt !== proof.run.attempt || !requireText(proof.builder.id, "fresh builder ID") ||
         proof.builder.driver !== "docker-container" || !Array.isArray(proof.builder.cache_from) || proof.builder.cache_from.length !== 0 ||
         validTimestamp(proof.builder.created_at, "fresh builder creation time") < validTimestamp(proof.run.started_at, "run start") ||
@@ -1013,6 +1215,9 @@ function runSummary(raw, repo) {
     id: String(raw.id ?? raw.databaseId ?? ""),
     attempt: Number(raw.run_attempt ?? raw.runAttempt ?? raw.attempt),
     repository: raw.repository?.full_name || raw.repository || repo,
+    repository_id: repositoryId(raw.repository?.id ?? raw.repository_id),
+    head_repository: raw.head_repository?.full_name || "",
+    head_repository_id: repositoryId(raw.head_repository?.id ?? raw.head_repository_id),
     branch: raw.head_branch || raw.headBranch || "",
     sha: raw.head_sha || raw.headSha || "",
     event: raw.event || "",
@@ -1026,28 +1231,57 @@ function runSummary(raw, repo) {
   };
 }
 
+function repositoryId(value) {
+  const id = String(value ?? "");
+  return /^[1-9][0-9]*$/.test(id) && Number.isSafeInteger(Number(id)) ? id : null;
+}
+
 function waitForDispatchedRun(command, flags, beforeIds, options) {
   const timeoutSeconds = Number(options.timeoutSeconds || 3600);
   if (!Number.isSafeInteger(timeoutSeconds) || timeoutSeconds < 1 || timeoutSeconds > MAX_POLL_SECONDS) throw new Error(`timeout must be between 1 and ${MAX_POLL_SECONDS} seconds`);
   const pollMilliseconds = options.pollMilliseconds ?? 5000;
   const deadline = Date.now() + timeoutSeconds * 1000;
+  let selectedRunId = null;
+  let pendingDetail = "";
   while (Date.now() <= deadline) {
-    const candidate = listWorkflowRuns(command, flags.repo, flags.branch)
-      .filter((run) => !beforeIds.has(String(run.id)) && !beforeIds.has(String(run.databaseId)))
-      .find((run) => (run.head_sha || run.headSha) === flags.sha && (run.head_branch || run.headBranch) === flags.branch && run.event === "workflow_dispatch");
-    if (candidate) {
-      const runId = String(candidate.id ?? candidate.databaseId);
+    if (!selectedRunId) {
+      const candidate = listWorkflowRuns(command, flags.repo, flags.branch)
+        .filter((run) => !beforeIds.has(String(run.id)) && !beforeIds.has(String(run.databaseId)))
+        .find((run) => (run.head_sha || run.headSha) === flags.sha && (run.head_branch || run.headBranch) === flags.branch && run.event === "workflow_dispatch");
+      if (candidate) selectedRunId = String(candidate.id ?? candidate.databaseId);
+    }
+    if (selectedRunId) {
+      const runId = selectedRunId;
       const detail = apiJson(command, `repos/${flags.repo}/actions/runs/${runId}`);
       const summary = runSummary(detail, flags.repo);
-      if (summary.repository !== flags.repo || summary.workflow !== WORKFLOW || summary.sha !== flags.sha || summary.branch !== flags.branch || summary.event !== "workflow_dispatch" || summary.id !== runId) {
+      if (summary.repository !== flags.repo || summary.head_repository !== flags.repo || !summary.repository_id || !summary.head_repository_id || summary.workflow !== WORKFLOW || summary.sha !== flags.sha || summary.branch !== flags.branch || summary.event !== "workflow_dispatch" || summary.id !== runId) {
         throw new Error("new workflow dispatch run does not match the requested ref and source SHA");
       }
-      if (summary.status === "completed") return summary;
+      if (summary.status === "completed") {
+        // Run, attempt-job and artifact endpoints can become terminal at different
+        // times. Read readiness without redispatching, then retain that exact
+        // snapshot so a second fetch cannot regress to older metadata.
+        const jobs = collectAttemptJobs(command, flags.repo, runId, summary.attempt);
+        const browserJob = validateCompletedJobs(jobs, { allowPending: true });
+        if (browserJob) {
+          const artifacts = flattenPages(apiJson(command, `repos/${flags.repo}/actions/runs/${runId}/artifacts?per_page=100`, { paginate: true }), "artifacts", "artifact");
+          const requiredNames = [`ecommerce-e2e-evidence-${runId}-${summary.attempt}`];
+          if (REQUIRED_CACHE_MODES.includes(flags.mode)) requiredNames.push(`phase182-cache-probe-${flags.mode}-${runId}-${summary.attempt}`);
+          const missing = requiredNames.find((name) => !artifacts.some((artifact) => artifact.name === name));
+          if (!missing) {
+            for (const name of requiredNames) requireArtifact(artifacts, name, summary, flags.repo);
+            return { run: summary, jobs, browserJob, artifacts };
+          }
+          pendingDetail = `expected exactly one live ${missing} artifact from the selected attempt`;
+        } else {
+          try { validateCompletedJobs(jobs); } catch (error) { pendingDetail = error.message; }
+        }
+      }
     }
     if (options.sleep) options.sleep(pollMilliseconds);
     else Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, pollMilliseconds);
   }
-  throw new Error(`timed out waiting for a newly dispatched CI run at ${flags.sha} on ${flags.branch}`);
+  throw new Error(`timed out waiting for a newly dispatched CI run at ${flags.sha} on ${flags.branch}${pendingDetail ? `: ${pendingDetail}` : ""}`);
 }
 
 function collectAttemptJobs(command, repo, runId, attempt) {
@@ -1082,22 +1316,34 @@ function summarizePreviousAttempts(command, repo, runId, latestAttempt) {
   return attempts;
 }
 
-function validateCompletedJobs(jobs) {
+function validateCompletedJobs(jobs, { allowPending = false } = {}) {
+  let pending = false;
   for (const name of REQUIRED_JOBS) {
     const matches = jobs.filter((job) => job.name === name);
-    if (matches.length !== 1 || matches[0].status !== "completed" || matches[0].conclusion !== "success") {
+    if (matches.length !== 1 || matches[0].status !== "completed") {
+      if (allowPending && matches.length <= 1) { pending = true; continue; }
+      throw new Error(`${name} must have exactly one completed successful job in the selected attempt`);
+    }
+    if (matches[0].conclusion !== "success") {
       throw new Error(`${name} must have exactly one completed successful job in the selected attempt`);
     }
   }
   const browserJobs = jobs.filter((job) => job.name === "ecommerce-e2e (advisory)");
-  if (browserJobs.length !== 1 || browserJobs[0].status !== "completed" || !["success", "failure"].includes(browserJobs[0].conclusion)) {
+  if (browserJobs.length !== 1 || browserJobs[0].status !== "completed") {
+    if (allowPending && browserJobs.length <= 1) return null;
     throw new Error("full advisory browser job must have exactly one completed attempt");
   }
-  return browserJobs[0];
+  if (!["success", "failure"].includes(browserJobs[0].conclusion)) {
+    throw new Error("full advisory browser job must have exactly one completed attempt");
+  }
+  return pending ? null : browserJobs[0];
 }
 
 function getJobLog(command, repo, runId, attempt, job) {
-  const result = command(GH, ["run", "view", runId, "--attempt", String(attempt), "--job", String(job.id), "--log", "--repo", repo], { maxBuffer: 32 * 1024 * 1024 });
+  // The selected job came from the pinned run-attempt jobs endpoint. Download
+  // its plain-text log directly: `gh run view --log` fetches the whole run ZIP.
+  // Capture raw ANSI bytes as data; never print this untrusted log to a terminal.
+  const result = command(GH, ["api", "--allow-escape-sequences", `repos/${repo}/actions/jobs/${job.id}/logs`], { maxBuffer: 32 * 1024 * 1024 });
   return commandText(result);
 }
 
@@ -1116,7 +1362,11 @@ function requireArtifact(artifacts, name, run, repo) {
   if (String(artifact.workflow_run?.id) !== run.id || artifact.workflow_run?.head_sha !== run.sha || artifact.workflow_run?.head_branch !== run.branch) {
     throw new Error(`${name} artifact belongs to another run/ref/source`);
   }
-  if (artifact.workflow_run?.head_repository?.full_name !== repo) throw new Error(`${name} artifact is not owned by ${repo}`);
+  const workflowRun = artifact.workflow_run;
+  if (repositoryId(workflowRun?.repository_id) !== run.repository_id || repositoryId(workflowRun?.head_repository_id) !== run.head_repository_id) {
+    throw new Error(`${name} artifact is not owned by ${repo}`);
+  }
+  if (workflowRun?.head_repository?.full_name && workflowRun.head_repository.full_name !== repo) throw new Error(`${name} artifact is not owned by ${repo}`);
   return artifact;
 }
 
@@ -1148,11 +1398,16 @@ function listArchive(command, archivePath) {
 function logicalArtifactPath(member) {
   const exact = EVIDENCE_FILES.find((file) => member === file || member.endsWith(`/${file}`));
   if (exact) return exact;
-  for (const prefix of ["test-results/", "playwright-report/", "ui-review-artifacts/", "logs/", "compose/"]) {
-    const index = member.indexOf(prefix);
-    if (index >= 0) return member.slice(index);
-  }
-  return null;
+  // Hosted uploads wrap the run directory in test-results/docker-full/<run>/,
+  // so keep the deepest allowlisted root (for example the inner playwright-report/)
+  // rather than treating that outer storage path as the declared artifact path.
+  const candidates = ["test-results/", "playwright-report/", "ui-review-artifacts/", "logs/", "compose/"]
+    .map((prefix) => ({ prefix, index: member.lastIndexOf(prefix) }))
+    .filter(({ index }) => index >= 0)
+    .sort((left, right) => right.index - left.index);
+  const logical = candidates.length ? member.slice(candidates[0].index) : null;
+  if (logical?.split("/").some((segment) => segment.startsWith("."))) return null;
+  return logical;
 }
 
 function extractBrowserArchive(command, archivePath, runDirectory) {
@@ -1194,10 +1449,13 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
   const browserStage = stages.browser || {};
   const verifierStep = findStep(browserJob, "Run advisory full E2E proof");
   const uploadStep = findStep(browserJob, "Upload advisory E2E evidence");
-  if (verifierStep.status !== "completed" || !["success", "failure"].includes(verifierStep.outcome)) {
+  // The Actions jobs REST endpoint exposes `conclusion` on step records, not
+  // the workflow expression `outcome` field. Job-level continue-on-error keeps
+  // this per-step conclusion available even when the advisory job is green.
+  if (verifierStep.status !== "completed" || !["success", "failure"].includes(verifierStep.conclusion)) {
     throw new Error("raw ecommerce verifier step has no completed outcome");
   }
-  if ((browserStage.exit_code === 0) !== (verifierStep.outcome === "success")) {
+  if ((browserStage.exit_code === 0) !== (verifierStep.conclusion === "success")) {
     throw new Error("raw ecommerce verifier step disagrees with its aggregate exit status");
   }
   if (uploadStep.status !== "completed" || uploadStep.conclusion !== "success") {
@@ -1211,7 +1469,7 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
     run,
     session: { repository: identity.repo, branch: identity.branch, sha: identity.sha, session_id: identity.sessionId },
     eligible: validation.eligible,
-    raw_verifier_outcome: verifierStep.outcome,
+    raw_verifier_outcome: verifierStep.conclusion,
     job_conclusion: browserJob.conclusion,
     job_started_at: jobStarted,
     job_completed_at: jobCompleted,
@@ -1236,6 +1494,7 @@ function validateBrowserArchive(command, archivePath, runDirectory, run, browser
       case_count: receipt.tests_total,
       attempts_total: receipt.attempts_total,
       event: receipt.event,
+      workflow: receipt.workflow,
       source: receipt.source,
       images: receipt.images,
     },
@@ -1268,7 +1527,7 @@ function cacheLogForMode(mode, command, repo, run, jobs) {
   return { job, raw };
 }
 
-function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run, session, jobLog) {
+function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run, session, jobLog, imageHandoff) {
   const { archivePath } = downloadArtifact(command, repo, artifact, runDirectory);
   const members = listArchive(command, archivePath);
   const probe = readJsonMember(command, archivePath, members, "phase182-cache-proof.json");
@@ -1278,12 +1537,19 @@ function validateProbeArtifact(command, repo, artifact, runDirectory, mode, run,
   }
   const cache = { ...probe.cache };
   if (mode.startsWith("docker-")) {
-    const evidence = parseBuildKitCacheProgress(jobLog, cache.target_scopes);
+    if (mode === "docker-warm") {
+      validateDockerHandoffBindings({ cache, handoff: imageHandoff, mode, sourceSha: run.sha });
+    }
+    const evidence = parseBuildKitCacheProgress(jobLog, cache.target_scopes, {
+      recipe_ids: cache.recipe_ids,
+      image_ids: cache.image_ids,
+    });
     cache.actual_import = evidence.import_complete;
     cache.actual_export = evidence.export_complete;
     cache.imported_digest = evidence.imported_digest;
     cache.exported_digest = evidence.exported_digest;
     cache.cached_steps_digest = evidence.cached_steps_digest;
+    cache.cache_binding_digest = evidence.cache_binding_digest;
     cache.progress = evidence.targets;
   }
   const proof = {
@@ -1312,7 +1578,7 @@ function collectRun(inputFlags, dependencies = {}) {
   const flags = validateFlags(inputFlags);
   const command = dependencies.command || runCommand;
   const invocation = beginInvocation(flags);
-  const session = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const session = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   let run = null;
   try {
     command(GH, ["auth", "status"]);
@@ -1322,19 +1588,23 @@ function collectRun(inputFlags, dependencies = {}) {
     const cacheMode = workflowCacheInput(flags.mode);
     const dispatch = ["workflow", "run", "ci.yml", "--ref", flags.branch, "-f", `phase182_cache_mode=${cacheMode}`, "-f", `phase182_probe_namespace=${flags.probeNamespace}`, "--repo", flags.repo];
     command(GH, dispatch);
-    run = waitForDispatchedRun(command, flags, beforeIds, dependencies);
+    const completed = waitForDispatchedRun(command, flags, beforeIds, dependencies);
+    run = completed.run;
     run.previous_attempts = summarizePreviousAttempts(command, flags.repo, run.id, run.attempt);
     const workflow = apiJson(command, `repos/${flags.repo}/actions/workflows/ci.yml`);
     if (workflow.path !== WORKFLOW) throw new Error("selected workflow metadata is not the existing CI workflow");
-    const jobs = collectAttemptJobs(command, flags.repo, run.id, run.attempt);
-    const browserJob = validateCompletedJobs(jobs);
-    const artifacts = flattenPages(apiJson(command, `repos/${flags.repo}/actions/runs/${run.id}/artifacts?per_page=100`, { paginate: true }), "artifacts", "artifact");
+    const { jobs, browserJob, artifacts } = completed;
     const browserArtifact = requireArtifact(artifacts, `ecommerce-e2e-evidence-${run.id}-${run.attempt}`, run, flags.repo);
     const runDirectory = path.join(invocation.invocationDir, "runs", `${run.id}-attempt-${run.attempt}`);
     fs.mkdirSync(path.dirname(runDirectory), { recursive: true, mode: 0o700 });
     fs.mkdirSync(runDirectory, { recursive: false, mode: 0o700 });
     const browserDownload = downloadArtifact(command, flags.repo, browserArtifact, runDirectory);
     const browserLog = getJobLog(command, flags.repo, run.id, run.attempt, browserJob);
+    let imageHandoff = null;
+    if (flags.mode === "docker-warm") {
+      const browserMembers = listArchive(command, browserDownload.archivePath);
+      imageHandoff = readJsonMember(command, browserDownload.archivePath, browserMembers, "image-handoff.json");
+    }
     const browser = validateBrowserArchive(command, browserDownload.archivePath, path.join(runDirectory, "browser"), run, browserJob, browserArtifact, flags, dependencies.browserValidator);
 
     let cache;
@@ -1342,7 +1612,7 @@ function collectRun(inputFlags, dependencies = {}) {
     if (REQUIRED_CACHE_MODES.includes(flags.mode)) {
       cacheArtifact = requireArtifact(artifacts, `phase182-cache-probe-${flags.mode}-${run.id}-${run.attempt}`, run, flags.repo);
       const { job, raw } = cacheLogForMode(flags.mode, command, flags.repo, run, jobs);
-      cache = validateProbeArtifact(command, flags.repo, cacheArtifact, runDirectory, flags.mode, run, session, raw);
+      cache = validateProbeArtifact(command, flags.repo, cacheArtifact, runDirectory, flags.mode, run, session, raw, imageHandoff);
       cache.cache_job = { id: String(job.id), name: job.name, conclusion: job.conclusion };
     }
     const receipt = {
@@ -1351,6 +1621,7 @@ function collectRun(inputFlags, dependencies = {}) {
       branch: flags.branch,
       sha: flags.sha,
       session_id: flags.sessionId,
+      probe_namespace: flags.probeNamespace || "",
       mode: flags.mode,
       invocation_id: invocation.entry.invocation_id,
       eligible: browser.eligible === true && (!cache || cache.mode === flags.mode),
@@ -1390,6 +1661,7 @@ function collectRun(inputFlags, dependencies = {}) {
       branch: flags.branch,
       sha: flags.sha,
       session_id: flags.sessionId,
+      probe_namespace: flags.probeNamespace || "",
       mode: flags.mode,
       invocation_id: invocation.entry.invocation_id,
       eligible: false,
@@ -1406,7 +1678,7 @@ function verifyManifest(flags) {
   const manifestPath = path.join(flags.outputDir, "phase182-session.json");
   if (!fs.existsSync(manifestPath)) throw new Error("candidate session manifest is missing");
   const manifest = parseJsonText(fs.readFileSync(manifestPath, "utf8"), "candidate session manifest");
-  const identity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const identity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   for (const [key, value] of Object.entries(identity)) if (manifest[key] !== value) throw new Error(`candidate session identity mismatch for ${key}`);
   if (manifest.schema !== 1 || !Array.isArray(manifest.invocations)) throw new Error("candidate session manifest is malformed");
   if (manifest.invocations.some((entry) => entry.status === "running")) throw new Error("candidate session has unfinished invocations; reconcile them before acceptance");
@@ -1430,6 +1702,7 @@ function verifyManifest(flags) {
       if (String(aggregate.run_id) !== receipt.run?.id) aggregateMismatches.push("run ID");
       if (Number(aggregate.run_attempt) !== receipt.run?.attempt) aggregateMismatches.push("run attempt");
       if (aggregate.sha !== flags.sha) aggregateMismatches.push("source SHA");
+      if (aggregate.workflow?.ref !== `refs/heads/${flags.branch}`) aggregateMismatches.push("workflow ref");
       if (aggregate.event !== "workflow_dispatch") aggregateMismatches.push("event");
       if (aggregate.source?.mode !== "hosted" || aggregate.source?.dirty !== false || aggregate.source?.checkout_head !== flags.sha || aggregate.source?.built_source_sha !== flags.sha || aggregate.source?.event_sha !== flags.sha) aggregateMismatches.push("hosted source identity");
       if (aggregate.eligibility?.eligible !== true) aggregateMismatches.push("eligibility");
@@ -1454,7 +1727,7 @@ function validateAggregate(flags, kind) {
   const expectedPath = path.join(flags.outputDir, kind === "caches" ? "cache-acceptance.json" : "full-acceptance.json");
   if (!fs.existsSync(expectedPath)) throw new Error(`${kind} acceptance aggregate is missing; no stale or synthetic file can satisfy the session`);
   const aggregate = parseJsonText(fs.readFileSync(expectedPath, "utf8"), `${kind} acceptance aggregate`);
-  const expectedIdentity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId };
+  const expectedIdentity = { repository: flags.repo, branch: flags.branch, sha: flags.sha, session_id: flags.sessionId, probe_namespace: flags.probeNamespace || "" };
   for (const [key, value] of Object.entries(expectedIdentity)) if (aggregate[key] !== value) throw new Error(`${kind} acceptance aggregate has a foreign ${key}`);
   if (aggregate.eligible !== true) throw new Error(`${kind} acceptance aggregate is not eligible`);
   if (kind === "caches") {
@@ -1482,7 +1755,7 @@ function validateAggregate(flags, kind) {
     const expectedBrowserAggregates = [...new Set(session.eligible.map(({ receipt }) => receipt.browser?.receipt_path).filter(Boolean))];
     if (canonicalJson(aggregate.browser_aggregates) !== canonicalJson(expectedBrowserAggregates)) throw new Error("cache acceptance does not reference exactly the session's accepted browser aggregates");
   } else {
-    const full = session.eligible.filter(({ entry }) => entry.mode === "full" && entry.receipt.browser?.eligible === true);
+    const full = session.eligible.filter(({ entry, receipt }) => entry.mode === "full" && receipt.browser?.eligible === true);
     if (!full.length || session.manifest.invocations.filter((entry) => entry.mode === "full").at(-1)?.status !== "eligible" || aggregate.accepted !== full.at(-1).entry.receipt || aggregate.browser_aggregate !== full.at(-1).receipt.browser.receipt_path) {
       throw new Error("full acceptance does not reference an eligible authoritative browser aggregate from this session");
     }
@@ -1529,7 +1802,7 @@ function toFlags(flags) {
 function help() {
   process.stdout.write("Usage:\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs run --mode docker-warm|docker-cold|beam-fallback|beam-lock-change|beam-cold|full --branch BRANCH --sha SHA --session-id SESSION --output-dir DIR [--repo OWNER/REPO] [--probe-namespace SLUG]\n");
-  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION\n");
+  process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate --mode caches|full --input SESSION_ROOT --repo OWNER/REPO --branch BRANCH --sha SHA --session-id SESSION [--probe-namespace SLUG]\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs validate-inputs --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs prepare-lock --output GITHUB_OUTPUT\n");
   process.stdout.write("  node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root DIR --output FILE\n");
@@ -1630,7 +1903,7 @@ function main(argv = process.argv.slice(2)) {
         outputDir: flags.input,
         mode: "full",
       };
-      const validated = validateFlags({ ...inputFlags, probeNamespace: "" }, { createOutput: false });
+      const validated = validateFlags({ ...inputFlags, probeNamespace: flags["probe-namespace"] }, { createOutput: false });
       const result = validateAggregate(validated, kind);
       process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
       return 0;
@@ -1655,6 +1928,7 @@ module.exports = {
   validateBrowserAcceptance,
   validateCacheAcceptance,
   validateDispatchCacheMode,
+  validateDockerHandoffBindings,
   validateFlags,
   validateProbeNamespace,
   validateWorkflowInputs,

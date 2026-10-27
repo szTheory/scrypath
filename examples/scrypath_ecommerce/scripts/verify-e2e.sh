@@ -66,7 +66,7 @@ finalization_deadline_epoch=$((deadline_epoch - 60))
 run_bounded() {
   local timeout_seconds="$1"
   shift
-  "$@" &
+  "$@" <&0 &
   local command_pid=$!
   local deadline=$((SECONDS + timeout_seconds))
   local process_state
@@ -163,7 +163,7 @@ export E2E_SCOPE="$scope"
 export SCRYPATH_SOURCE_SHA="$(git rev-parse HEAD)"
 export PLAYWRIGHT_VERSION="${PLAYWRIGHT_VERSION:-1.60.0}"
 export E2E_RUN_ID="$run_id"
-export E2E_CONTAINER_ARTIFACT_DIR="/tmp/scrypath-e2e-$run_id"
+export E2E_CONTAINER_ARTIFACT_DIR="/tmp/$run_id"
 export E2E_JOB_STARTED_AT="$job_started_at"
 export E2E_DEADLINE_EPOCH="$deadline_epoch"
 export E2E_FINALIZATION_MARGIN_SECONDS="$finalization_margin"
@@ -345,11 +345,12 @@ write_run_metadata() {
   printf '{"run_id":"%s","source":"%s","copy_status":"%s","diagnostic_only":%s,"acceptance_eligible":false,"allowlist":["%s/phase105-playwright-list.json","%s/phase105-playwright.json","%s/phase105-evidence.ndjson","%s/playwright-report/","%s/test-results/","%s/ui-review-artifacts/iteration3-journeys/"],"copied_files":[%s]}\n' \
     "$run_id" "$E2E_CONTAINER_ARTIFACT_DIR" "$([[ "$artifact_copy_status" == 0 ]] && printf success || printf failed)" "$([[ "$mode" == "--readiness-only" ]] && printf true || printf false)" \
     "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" \
-    "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$copied_files" >"$artifact_dir/artifact-manifest.json"
+    "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$E2E_CONTAINER_ARTIFACT_DIR" "$copied_files" >"$artifact_dir/artifact-manifest.json"
 }
 
 aggregate_full_evidence() {
   local conclusion="success"
+  local writer_status
   if (( original_exit_status != 0 || artifact_copy_status != 0 || cleanup_status != 0 )); then conclusion="failure"; fi
   if [[ ! "$browser_image_id" =~ ^sha256:[a-f0-9]{64}$ ]]; then
     echo "Strict evidence aggregation requires the immutable browser image for this run." >&2
@@ -371,6 +372,7 @@ set -Eeuo pipefail
 node <<'NODE'
 const fs = require("node:fs");
 const path = require("node:path");
+const { isAllowedArtifactPath } = require("/app/scripts/ci/ecommerce_evidence.cjs");
 const root = "/evidence";
 const read = (name) => JSON.parse(fs.readFileSync(path.join(root, name), "utf8"));
 const maybeRead = (name) => { try { return read(name); } catch { return null; } };
@@ -392,11 +394,30 @@ const walk = (directory, prefix = "") => {
   }
   return files;
 };
-const allowed = (name) => name.startsWith("test-results/") || name.startsWith("playwright-report/") || name.startsWith("ui-review-artifacts/iteration3-journeys/") || name.startsWith("logs/") || name.startsWith("compose/");
-const copiedFiles = walk(root).filter(allowed);
+const copiedFiles = walk(root).filter(isAllowedArtifactPath);
 const artifacts = copiedFiles.map((name) => ({ path: name, required: false, copied: true, copy_status: "success" }));
-fs.writeFileSync(path.join(root, "artifact-manifest.json"), `${JSON.stringify({run_id:process.env.E2E_RUN_ID,copied_from:`/tmp/scrypath-e2e-${process.env.E2E_RUN_ID}`,copy_status:Number(process.env.E2E_ARTIFACT_COPY_EXIT_CODE||1)===0?"success":"failed",allowlist:["phase105-playwright-list.json","phase105-playwright.json","phase105-evidence.ndjson","playwright-report/","test-results/","ui-review-artifacts/iteration3-journeys/"],copied_files:copiedFiles}, null, 2)}\n`);
+fs.writeFileSync(path.join(root, "artifact-manifest.json"), `${JSON.stringify({run_id:process.env.E2E_RUN_ID,copied_from:`/tmp/${process.env.E2E_RUN_ID}`,copy_status:Number(process.env.E2E_ARTIFACT_COPY_EXIT_CODE||1)===0?"success":"failed",allowlist:["phase105-playwright-list.json","phase105-playwright.json","phase105-evidence.ndjson","playwright-report/","test-results/","ui-review-artifacts/iteration3-journeys/"],copied_files:copiedFiles}, null, 2)}\n`);
 const status = (name) => maybeRead(name)?.status || "missing";
+const contrast = maybeRead("contrast-report.json");
+const contrastSummary = contrast?.summary || {};
+const contrastFindings = Array.isArray(contrast?.findings) ? contrast.findings : [];
+const contrastCountsMatch = Number.isSafeInteger(contrastSummary.aa_fail) &&
+  Number.isSafeInteger(contrastSummary.aaa_advisory) &&
+  Number.isSafeInteger(contrastSummary.total) &&
+  contrastSummary.aa_fail === contrastFindings.filter((finding) => finding?.severity === "aa-fail").length &&
+  contrastSummary.aaa_advisory === contrastFindings.filter((finding) => finding?.severity === "aaa-body-advisory").length &&
+  contrastSummary.total === contrastFindings.length;
+const contrastFindingsMatch = contrastFindings.every((finding) =>
+  finding && finding.producer === "token" &&
+  ["pass", "aa-fail", "aaa-body-advisory"].includes(finding.severity) &&
+  typeof finding.pass_aa === "boolean" &&
+  ((finding.severity === "aa-fail") === (finding.pass_aa === false))
+);
+const contrastValid = contrast?.schema === "scrypath.contrast.v1" &&
+  contrast.producer === "token" && typeof contrast.generated === "string" &&
+  contrast.generated.length > 0 && Array.isArray(contrast.findings) && contrast.findings.length > 0 &&
+  contrastCountsMatch && contrastFindingsMatch;
+const contrastPassed = contrastValid && stages.contrast?.exit_code === 0 && contrastSummary.aa_fail === 0;
 const failed = Object.entries(stages).filter(([, stage]) => Number.isInteger(stage?.exit_code) && stage.exit_code !== 0).sort((a,b) => Date.parse(a[1].started_at||"")-Date.parse(b[1].started_at||""))[0];
 const dirty = process.env.E2E_SOURCE_DIRTY === "true";
 const sourceSha = process.env.SCRYPATH_SOURCE_SHA;
@@ -408,7 +429,7 @@ const input = {
   compose:{scope:process.env.E2E_SCOPE,project:process.env.E2E_COMPOSE_PROJECT,targets:["browser","standalone_ops","web"],model_digest:process.env.E2E_COMPOSE_MODEL_DIGEST},
   browser:{engine:"chromium",version:process.env.E2E_PLAYWRIGHT_VERSION,package:"@playwright/test",package_version:require("@playwright/test/package.json").version},
   workflow:{event:process.env.E2E_EVENT_NAME,ref:process.env.E2E_GIT_REF,sha:process.env.E2E_EVENT_SHA,run_id:process.env.E2E_WORKFLOW_RUN_ID,run_attempt:Number(process.env.E2E_WORKFLOW_RUN_ATTEMPT),job_name:process.env.E2E_JOB_NAME,job_conclusion:process.env.E2E_JOB_CONCLUSION},
-  stages,checkers:{light_parity:{path:"admin-light-parity.json",status:status("admin-light-parity.json")},contrast:{path:"contrast-report.json",status:status("contrast-report.json")}},
+  stages,checkers:{light_parity:{path:"admin-light-parity.json",status:status("admin-light-parity.json")},contrast:{path:"contrast-report.json",status:contrastPassed?"pass":"fail"}},
   cleanup:{status:lifecycle.cleanup?.status,project:lifecycle.cleanup?.project,containers:lifecycle.cleanup?.containers,networks:lifecycle.cleanup?.networks,volumes:lifecycle.cleanup?.volumes},
   allowed_skips:[],artifacts,first_failure:failed?{stage:failed[0],exit_code:failed[1].exit_code}:Number(lifecycle.original_exit_status)===0?null:{stage:"verifier",exit_code:Number(lifecycle.original_exit_status)||1}
 };
@@ -416,6 +437,43 @@ fs.writeFileSync(path.join(root,"phase105-evidence-input.json"),`${JSON.stringif
 NODE
 node /app/scripts/ci/ecommerce_evidence.cjs write-evidence --run-dir /evidence
 CONTAINER_SCRIPT
+  writer_status=$?
+  for required in phase105-evidence-input.json phase105-evidence.json phase105-evidence-summary.md; do
+    if [[ ! -s "$artifact_dir/$required" ]]; then
+      echo "Strict full-run evidence aggregation did not create '$required'." >&2
+      return 77
+    fi
+  done
+  if ! node - "$artifact_dir/phase105-evidence-input.json" "$artifact_dir/phase105-evidence.json" \
+    "$artifact_dir/phase105-evidence-summary.md" "$E2E_WORKFLOW_RUN_ID" "$SCRYPATH_SOURCE_SHA" "$E2E_EVENT_SHA" <<'RECEIPT_CHECK'
+const fs = require("node:fs");
+const [inputPath, receiptPath, summaryPath, runId, sourceSha, eventSha] = process.argv.slice(2);
+const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+const summary = fs.readFileSync(summaryPath, "utf8");
+if (input.source?.checkout_head !== sourceSha || input.source?.built_source_sha !== sourceSha) {
+  throw new Error("aggregate input does not match the built source SHA");
+}
+if (input.workflow?.run_id !== runId || input.workflow?.sha !== eventSha) {
+  throw new Error("aggregate input does not match the workflow run and event SHA");
+}
+if (input.checkers?.contrast?.status !== "pass") {
+  throw new Error("aggregate input does not record a passing validated contrast report");
+}
+if (receipt.schema_version !== 1 || receipt.authority !== "scripts/ci/ecommerce_evidence.cjs" ||
+    receipt.run_id !== runId || receipt.sha !== eventSha || receipt.eligibility?.eligible !== true) {
+  throw new Error("aggregate receipt is invalid, ineligible, or bound to another run/source");
+}
+if (!summary.includes(`# Phase 105 E2E Evidence Summary`) ||
+    !summary.includes(`- run_id: ${runId}`) || !summary.includes(`- sha: ${eventSha}`)) {
+  throw new Error("aggregate summary is missing or bound to another run/source");
+}
+RECEIPT_CHECK
+  then
+    echo "Strict full-run evidence aggregate validation failed." >&2
+    return 78
+  fi
+  return "$writer_status"
 }
 
 cleanup() {
@@ -534,7 +592,10 @@ if [[ "$mode" == "--readiness-only" ]]; then
 else
   [[ "$scope" != "full" ]] || readiness_started=1
   if (( prebuilt_mode )); then
-    run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+    run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
+    if (( run_status == 0 )); then
+      run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+    fi
   else
     run_verification_bounded "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
   fi

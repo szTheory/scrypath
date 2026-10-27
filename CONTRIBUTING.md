@@ -306,11 +306,11 @@ node scripts/ci/phase182_acceptance.cjs run \
 
 node scripts/ci/phase182_acceptance.cjs validate \
   --mode caches --repo "$repo" --branch "$branch" --sha "$sha" \
-  --session-id "$session" --input "$root"
+  --session-id "$session" --input "$root" --probe-namespace "$namespace"
 
 node scripts/ci/phase182_acceptance.cjs validate \
   --mode full --repo "$repo" --branch "$branch" --sha "$sha" \
-  --session-id "$session" --input "$root"
+  --session-id "$session" --input "$root" --probe-namespace "$namespace"
 ```
 
 `docker-warm` dispatches the default `normal` workflow input. Cache modes require
@@ -318,7 +318,8 @@ successful canonical verifier steps and actual BuildKit or Actions Cache log
 evidence in addition to their JSON receipts. The executable tests protect the
 collector and wiring only; they do not stand in for a real hosted browser or
 cache acceptance run. Both validation commands require the session root plus
-`--repo`, `--branch`, full `--sha`, and `--session-id`; `--input` is not a receipt
+`--repo`, `--branch`, full `--sha`, `--session-id`, and the same
+`--probe-namespace` used for collection (including its empty default); `--input` is not a receipt
 file. Run the `full` collection and validation after the cache-mode receipts for
 the exact real-acceptance sequence used by the Phase 182-08 executor.
 

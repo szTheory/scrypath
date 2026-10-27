@@ -211,6 +211,21 @@ test("malformed and zero-case CLI reports exit nonzero", () => {
 const SOURCE_SHA = "a".repeat(40);
 const IMAGE_ID = `sha256:${"b".repeat(64)}`;
 
+function tokenContrastReport({ aaFails = 0, advisories = 1, passes = 0 } = {}) {
+  const findings = [
+    ...Array.from({ length: aaFails }, () => ({ severity: "aa-fail", producer: "token", pass_aa: false })),
+    ...Array.from({ length: advisories }, () => ({ severity: "aaa-body-advisory", producer: "token", pass_aa: true })),
+    ...Array.from({ length: passes }, () => ({ severity: "pass", producer: "token", pass_aa: true }))
+  ];
+  return {
+    schema: "scrypath.contrast.v1",
+    producer: "token",
+    generated: "2026-10-26T23:00:00.000Z",
+    summary: { aa_fail: aaFails, aaa_advisory: advisories, total: findings.length },
+    findings
+  };
+}
+
 function completeReceiptCases() {
   return [
     testCase({ file: "e2e/ui_followup.spec.ts", title: "mounted: copy feedback keeps geometry stable" }),
@@ -285,7 +300,7 @@ function createCompleteRun() {
   fs.writeFileSync(path.join(runDir, "phase105-playwright.json"), JSON.stringify(playwrightReport(cases, { results: true })));
   fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${JSON.stringify({ operation: "seed" })}\n`);
   fs.writeFileSync(path.join(runDir, "admin-light-parity.json"), JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }));
-  fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify({ status: "pass", failures: [] }));
+  fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify(tokenContrastReport()));
   fs.writeFileSync(path.join(runDir, "lifecycle.json"), JSON.stringify({ cleanup: { ...manifest.cleanup } }));
   fs.writeFileSync(path.join(runDir, "playwright-report/index.html"), "<html>complete report</html>\n");
   fs.writeFileSync(path.join(runDir, "ui-review-artifacts/iteration3-journeys/iteration3-proof.png"), "synthetic screenshot fixture\n");
@@ -314,6 +329,16 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
     assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
     assert.equal(receipt?.images.application.built_id, receipt?.images.application.runtime_id);
     assert.equal(receipt?.images.browser.built_id, receipt?.images.browser.runtime_id);
+    assert.deepEqual(receipt?.checkers.contrast, {
+      path: "contrast-report.json",
+      status: "pass",
+      outcome: "success",
+      missing: null,
+      extra: null,
+      width_mismatches: null,
+      aa_fail: 0,
+      total: 1
+    });
     assert.ok(receipt?.artifacts.every((artifact) => artifact.present && artifact.sha256));
     assert.deepEqual(JSON.parse(fs.readFileSync(path.join(runDir, "phase105-evidence.json"), "utf8")), receipt);
     assert.equal(
@@ -336,6 +361,63 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
     assert.ok(mismatchedSummary?.reasons.some((reason) => reason.code === "summary_mismatch"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("contrast eligibility follows the token report schema, consistent counts, zero AA failures, and raw stage result", () => {
+  const cases = [
+    {
+      name: "wrong schema",
+      mutateReport(report) { report.schema = "untrusted.contrast.v0"; }
+    },
+    {
+      name: "wrong producer",
+      mutateReport(report) { report.producer = "untrusted"; }
+    },
+    {
+      name: "inconsistent summary",
+      mutateReport(report) { report.summary.total += 1; }
+    },
+    {
+      name: "empty report",
+      report: tokenContrastReport({ advisories: 0 })
+    },
+    {
+      name: "AA failure",
+      report: tokenContrastReport({ aaFails: 1 }),
+      stageExitCode: 1,
+      checkerStatus: "fail"
+    },
+    {
+      name: "nonzero stage despite a zero-AA report",
+      report: tokenContrastReport(),
+      stageExitCode: 1,
+      checkerStatus: "fail"
+    }
+  ];
+
+  for (const scenario of cases) {
+    const { runDir } = createCompleteRun();
+    try {
+      const reportPath = path.join(runDir, "contrast-report.json");
+      const report = scenario.report || JSON.parse(fs.readFileSync(reportPath, "utf8"));
+      scenario.mutateReport?.(report);
+      fs.writeFileSync(reportPath, JSON.stringify(report));
+      updateRunManifest(runDir, (manifest) => {
+        if (scenario.stageExitCode !== undefined) {
+          manifest.stages.contrast.exit_code = scenario.stageExitCode;
+        }
+        if (scenario.checkerStatus) manifest.checkers.contrast.status = scenario.checkerStatus;
+      });
+
+      const receipt = evidence.writeEvidence?.({ runDir });
+      assert.equal(receipt?.eligibility.eligible, false, `${scenario.name} must not certify contrast`);
+      if (scenario.name === "wrong schema" || scenario.name === "wrong producer" || scenario.name === "inconsistent summary" || scenario.name === "empty report") {
+        assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_contrast_report"));
+      }
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
   }
 });
 
@@ -479,5 +561,28 @@ test("artifact path traversal and symlink escapes are rejected", () => {
   } finally {
     fs.rmSync(symlinkRun.runDir, { recursive: true, force: true });
     fs.rmSync(symlinkOutside, { force: true });
+  }
+});
+
+test("artifact selection matches the hosted uploader hidden-file policy", () => {
+  assert.equal(evidence.isAllowedArtifactPath("test-results/.last-run.json"), false);
+  assert.equal(evidence.isAllowedArtifactPath("test-results/.hidden/screenshot.png"), false);
+  assert.equal(evidence.isAllowedArtifactPath("test-results/admin-screenshots/owned.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("playwright-report/data/trace.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("ui-review-artifacts/iteration3-journeys/health.png"), true);
+  assert.equal(evidence.isAllowedArtifactPath("../test-results/escape.png"), false);
+
+  const { runDir } = createCompleteRun();
+  try {
+    fs.mkdirSync(path.join(runDir, "test-results"), { recursive: true });
+    fs.writeFileSync(path.join(runDir, "test-results/.last-run.json"), '{"status":"passed"}\n');
+    updateRunManifest(runDir, (manifest) => {
+      manifest.artifacts.push({ path: "test-results/.last-run.json", required: false, copied: true, copy_status: "success" });
+    });
+    const receipt = evidence.writeEvidence?.({ runDir });
+    assert.equal(receipt?.eligibility.eligible, false);
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "unsafe_artifact_path"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
   }
 });

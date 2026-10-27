@@ -11,6 +11,19 @@ const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
 const trustedCacheRepository = "szTheory/scrypath";
 const cacheProbeModes = new Set(["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"]);
+const runScopedComposeEnvironment = new Set([
+  "E2E_ARTIFACT_DIR",
+  "E2E_DEADLINE_EPOCH",
+  "E2E_EVENT_SHA",
+  "E2E_GIT_REF",
+  "E2E_JOB_NAME",
+  "E2E_JOB_STARTED_AT",
+  "E2E_RUN_ID",
+  "E2E_SOURCE_MODE",
+  "E2E_WORKFLOW_RUN_ATTEMPT",
+  "E2E_WORKFLOW_RUN_ID",
+  "SCRYPATH_SOURCE_SHA",
+]);
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -24,6 +37,17 @@ function canonicalize(value) {
 
 function canonicalJson(value) {
   return JSON.stringify(canonicalize(value));
+}
+
+function composeModelForDigest(model) {
+  const stableModel = structuredClone(model);
+  for (const service of Object.values(stableModel.services || {})) {
+    if (!service.environment || Array.isArray(service.environment)) continue;
+    for (const key of runScopedComposeEnvironment) {
+      if (Object.hasOwn(service.environment, key)) service.environment[key] = "<phase182-run-scoped>";
+    }
+  }
+  return stableModel;
 }
 
 function digest(value) {
@@ -104,6 +128,8 @@ function recipeOptions(target) {
   }
   if (normalized.labels) {
     delete normalized.labels["com.docker.compose.project"];
+    delete normalized.labels["com.docker.compose.service"];
+    delete normalized.labels["com.docker.compose.version"];
     delete normalized.labels[revisionLabel];
     delete normalized.labels[fingerprintLabel];
   }
@@ -268,8 +294,9 @@ function resolveBuild(scope, project, env = process.env, runCommand = run) {
     services,
     sourceSha,
     sourceFingerprint: fingerprint,
-    modelDigest: digest(canonicalJson(model)),
+    modelDigest: digest(canonicalJson(composeModelForDigest(model))),
     recipeDigest,
+    recipeIds,
     tags,
     cacheScopes,
     cachePolicy,
@@ -304,6 +331,7 @@ function prepareBuild({ scope, output, env = process.env, runCommand = run, proj
     source_fingerprint: resolved.sourceFingerprint || null,
     model_digest: resolved.modelDigest,
     recipe_digest: resolved.recipeDigest,
+    recipe_ids: resolved.recipeIds,
     tags: resolved.tags,
     image_ids: {},
     builder_id: env.BUILDER_ID || null,
@@ -349,7 +377,8 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
   if (manifest.source_sha !== resolved.sourceSha || manifest.source_fingerprint !== (resolved.sourceFingerprint || null)) {
     throw new Error("image handoff source SHA or fingerprint mismatch");
   }
-  if (manifest.model_digest !== resolved.modelDigest || manifest.recipe_digest !== resolved.recipeDigest) {
+  if (manifest.model_digest !== resolved.modelDigest || manifest.recipe_digest !== resolved.recipeDigest ||
+    canonicalJson(manifest.recipe_ids) !== canonicalJson(resolved.recipeIds)) {
     throw new Error("image handoff Compose model or recipe digest mismatch");
   }
   if (canonicalJson(manifest.tags) !== canonicalJson(resolved.tags) ||
@@ -378,7 +407,10 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
     for (const [service, tag] of Object.entries(resolved.tags)) {
       const image = inspectJson(runCommand, "image", tag, env);
       const labels = image.Config?.Labels || {};
-      if (!image.Id || !image.RepoTags?.includes(tag)) throw new Error(`local image tag is missing: ${tag}`);
+      const localTags = new Set([tag, `${tag}:latest`, `docker.io/library/${tag}:latest`]);
+      if (!image.Id || !image.RepoTags?.some((repoTag) => localTags.has(repoTag))) {
+        throw new Error(`local image tag is missing: ${tag}`);
+      }
       if (labels[revisionLabel] !== resolved.sourceSha) throw new Error(`local image source SHA mismatch: ${service}`);
       if ((resolved.sourceFingerprint && labels[fingerprintLabel] !== resolved.sourceFingerprint) || (!resolved.sourceFingerprint && labels[fingerprintLabel])) {
         throw new Error(`local image source fingerprint mismatch: ${service}`);
@@ -496,6 +528,7 @@ if (require.main === module) {
 module.exports = {
   applyCacheProbeToBake,
   cacheProbeFor,
+  cacheScopeFor,
   prepareBuild,
   recordCacheOutcome,
   verifyCacheProbeBake,

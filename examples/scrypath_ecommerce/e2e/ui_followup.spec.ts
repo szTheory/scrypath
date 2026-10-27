@@ -147,7 +147,9 @@ test("generic fields remain readable across compact themes without guessing data
   await page.goto("/admin/search/ui-fixtures");
   await waitForLiveConnected(page);
   const hit = page.locator("#typed-result-fixture");
-  await hit.getByText(/^Fields \(/).click();
+  const fieldsSummary = hit.locator(".ops-hit-inspection > details").first().locator("summary").first();
+  await expect(fieldsSummary).toContainText(/Fields \(/);
+  await fieldsSummary.click();
   await expect(hit).toContainText("false");
   await expect(hit).toContainText("null");
   await expect(hit).toContainText("custom-key-42");

@@ -111,9 +111,24 @@ else process.exit(2);
   return { ...result, calls, helperCalls, overridePath };
 }
 
-function composeGraph(scope, project, changeModel = false) {
+function composeGraph(scope, project, changeModel = false, env = process.env) {
   const services = {
-    web: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile" } },
+    web: {
+      build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile" },
+      environment: {
+        E2E_RUN_ID: env.E2E_RUN_ID || "local-focused",
+        E2E_ARTIFACT_DIR: env.E2E_CONTAINER_ARTIFACT_DIR || "/tmp/local-focused",
+        E2E_DEADLINE_EPOCH: env.E2E_DEADLINE_EPOCH || "0",
+        E2E_EVENT_SHA: env.E2E_EVENT_SHA || "unknown",
+        E2E_GIT_REF: env.E2E_GIT_REF || "local",
+        E2E_JOB_NAME: env.E2E_JOB_NAME || "local-ecommerce-e2e",
+        E2E_JOB_STARTED_AT: env.E2E_JOB_STARTED_AT || "unknown",
+        E2E_SOURCE_MODE: env.E2E_SOURCE_MODE || "local",
+        E2E_WORKFLOW_RUN_ATTEMPT: env.E2E_WORKFLOW_RUN_ATTEMPT || "1",
+        E2E_WORKFLOW_RUN_ID: env.E2E_WORKFLOW_RUN_ID || "local",
+        SCRYPATH_SOURCE_SHA: env.SCRYPATH_SOURCE_SHA || "unknown",
+      },
+    },
     browser: { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile.e2e", args: { PLAYWRIGHT_VERSION: "1.60.0" } } },
   };
   if (scope === "full") {
@@ -142,7 +157,7 @@ function buildDriver(scope, project, options = {}) {
     if (command !== "docker") {
       return execFileSync(command, args, { cwd: callOptions.cwd, env: callOptions.env, encoding: "utf8" }).trimEnd();
     }
-    const graph = composeGraph(scope, project, state.modelChange);
+    const graph = composeGraph(scope, project, state.modelChange, callOptions.env || process.env);
     if (args.includes("config")) return JSON.stringify(graph.model);
     if (args.includes("build") && args.includes("--print")) return JSON.stringify(graph.bake);
     if (args[0] === "image" && args[1] === "inspect") {
@@ -152,7 +167,7 @@ function buildDriver(scope, project, options = {}) {
       const source = state.manifest || options.manifest;
       return JSON.stringify({
         Id: `sha256:${service.padEnd(64, "a").slice(0, 64)}`,
-        RepoTags: [tag],
+        RepoTags: [`docker.io/library/${tag}:latest`],
         Config: { Labels: {
           "org.opencontainers.image.revision": state.revisionMismatch === service ? "sha256:wrong-source" : source?.source_sha || execFileSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).trim(),
           ...(source?.source_fingerprint ? { "org.opencontainers.image.source-fingerprint": source.source_fingerprint } : {}),
@@ -281,10 +296,14 @@ test("probe cache exports reject unsafe namespaces, pull requests, and untrusted
 test("prebuilt verification uses the checked image override without a Compose build", (t) => {
   const result = runPrebuiltVerifier(t, { PHASE182_CACHE_MODE: "normal", PHASE182_PROBE_NAMESPACE: "candidate-2026" });
   assert.equal(result.status, 0, `prebuilt verifier failed:\n${result.stdout}\n${result.stderr}`);
+  const pull = result.calls.find((call) => call[0] === "compose" && call.includes("pull"));
   const up = result.calls.find((call) => call[0] === "compose" && call.includes("up"));
+  assert.ok(pull, "prebuilt verification must pull only its external runtime dependencies");
+  assert.deepEqual(pull.slice(-2), ["postgres", "meilisearch"]);
   assert.ok(up, "expected one canonical Compose up invocation");
   assert.ok(up.includes("--no-build"), "prebuilt verification must start Compose with --no-build");
   assert.ok(up.includes("--pull") && up[up.indexOf("--pull") + 1] === "never");
+  assert.ok(result.calls.indexOf(pull) < result.calls.indexOf(up), "external dependencies must be present before Compose up with pull disabled");
   assert.ok(up.includes(result.overridePath), "Compose must include the checked image override file");
   assert.equal(result.helperCalls.length, 2, "verify-handoff must run before Compose up and after runtime starts");
   assert.ok(result.helperCalls.every((call) => call.args[0] === "verify-handoff"));
@@ -295,6 +314,7 @@ test("prebuilt verification uses the checked image override without a Compose bu
 test("prebuilt verification refuses a failed handoff before Compose starts", (t) => {
   const result = runPrebuiltVerifier(t, { FAKE_HELPER_FAIL: "1" });
   assert.equal(result.status, 69);
+  assert.ok(!result.calls.some((call) => call.includes("pull")));
   assert.ok(!result.calls.some((call) => call.includes("up")));
   assert.ok(!result.calls.some((call) => call.includes("build") && !call.includes("--print")));
 });
@@ -516,6 +536,34 @@ test("verify-handoff rejects a changed event cache policy", (t) => {
 
 test("verify-handoff rejects a changed Compose model before inspecting images", (t) => {
   const fixture = prepareFixture(t);
+  fixture.docker.state.modelChange = true;
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
+    /Compose model or recipe digest mismatch/,
+  );
+});
+
+test("verify-handoff ignores run-scoped Compose environment values but retains source checks", (t) => {
+  const fixture = prepareFixture(t);
+  Object.assign(fixture.env, {
+    E2E_RUN_ID: "40456281741-1",
+    E2E_CONTAINER_ARTIFACT_DIR: "/tmp/40456281741-1",
+    E2E_DEADLINE_EPOCH: "1793061000",
+    E2E_EVENT_SHA: fixture.manifest.source_sha,
+    E2E_GIT_REF: "agent-p182-08-1793071051075",
+    E2E_JOB_NAME: "ecommerce-mounted",
+    E2E_JOB_STARTED_AT: "2026-10-27T05:39:38Z",
+    E2E_SOURCE_MODE: "hosted",
+    E2E_WORKFLOW_RUN_ATTEMPT: "1",
+    E2E_WORKFLOW_RUN_ID: "40456281741",
+    SCRYPATH_SOURCE_SHA: fixture.manifest.source_sha,
+  });
+
+  assert.equal(
+    verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }).handoff_status,
+    "loaded",
+  );
+
   fixture.docker.state.modelChange = true;
   assert.throws(
     () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
