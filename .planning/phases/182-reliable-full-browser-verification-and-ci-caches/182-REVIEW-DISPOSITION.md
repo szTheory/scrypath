@@ -37,7 +37,7 @@ recorded: 2026-10-27T22:43:40.760Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-03 | warning | deferred | Original WR-03 identity retained after correction-review title normalization. Baseline coverage/attestation names are unchanged from ba624a74; fresh closeout dispatches use distinct runs, browser/cache artifacts bind run/attempt, and retries cannot become clean stability proof. Future same-run rerun support must update names and ci_monitor consumers together. https://github.com/actions/upload-artifact#usage; no human risk approval implied. |
-| WR-02 | warning | fixed | 30becbc4; source-derived numeric0 RED and real-status RegExp GREEN,115 Node checks; current-source full browser refresh pending (not in current review) (not in the current review) |
+| WR-02 | warning | fixed | 30becbc4; source-derived numeric0 RED and real-status RegExp GREEN,115 Node checks; current1c726370 local189/189 and hosted warm/full189/189 accepted; source-bound artifacts in182-ACCEPTANCE (not in current review) (not in the current review) |
 | CR-01 | critical | fixed | b6bf7bf0; executable RED/GREEN regression (not in the current review) |
 | CR-02 | critical | fixed | 01d1f871; executable RED/GREEN regression (not in the current review) |
 | CR-03 | critical | fixed | edd47eee; executable RED/GREEN regression (not in the current review) |
