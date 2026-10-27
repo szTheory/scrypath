@@ -1893,7 +1893,7 @@ function main(argv = process.argv.slice(2)) {
         outputDir: flags.input,
         mode: "full",
       };
-      const validated = validateFlags({ ...inputFlags, probeNamespace: "" }, { createOutput: false });
+      const validated = validateFlags({ ...inputFlags, probeNamespace: flags["probe-namespace"] }, { createOutput: false });
       const result = validateAggregate(validated, kind);
       process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
       return 0;
