@@ -35,7 +35,7 @@ function playwrightReport(cases, { results = false, errors = [] } = {}) {
               expectedStatus: item.expectedStatus,
               ...(results
                 ? {
-                    status: item.status || "expected",
+                    status: item.status || "passed",
                     results: item.results || [{ retry: 0, status: item.status || "passed", duration: 1 }]
                   }
                 : {})
@@ -176,7 +176,7 @@ test("an intentional skip needs an identity-scoped reason and never becomes a cl
   const key = evidence.caseIdentity?.({
     file: item.file,
     project: item.project,
-    title_path: [item.title],
+    title_path: ["e2e", item.title],
     entrypoint: "shared"
   })?.key;
   const explained = evidence.reconcileInventory?.({
