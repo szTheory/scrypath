@@ -277,6 +277,31 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "run: mix verify.repository_contracts"
     end
 
+    test "repository contracts execute counted browser lifecycle and target behavior tests" do
+      {output, status} =
+        System.cmd(
+          "node",
+          [
+            "--test",
+            "--test-reporter=tap",
+            "scripts/ci/ecommerce_lifecycle.test.cjs",
+            "scripts/ci/ecommerce_target.test.cjs"
+          ],
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, "browser behavior tests failed with status #{status}:\n#{output}"
+
+      assert [_, count] = Regex.run(~r/^# tests (\d+)$/m, output),
+             "Node test output did not report a test count:\n#{output}"
+
+      assert String.to_integer(count) > 0,
+             "browser behavior test command ran zero tests:\n#{output}"
+
+      assert output =~ ~r/^# fail 0$/m,
+             "browser behavior tests reported failures:\n#{output}"
+    end
+
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
       ci = File.read!(@ci_yml)
       assert ci =~ "\n  compatibility:\n"
