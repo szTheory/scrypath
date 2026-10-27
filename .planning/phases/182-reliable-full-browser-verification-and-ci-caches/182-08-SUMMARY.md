@@ -3,38 +3,21 @@ phase: 182-reliable-full-browser-verification-and-ci-caches
 plan: "08"
 subsystem: ci
 tags: [github-actions, docker-buildx, beam-cache, playwright, exact-sha]
-
-# Dependency graph
-requires:
-  - phase: 182-reliable-full-browser-verification-and-ci-caches-07
-    provides: Exact-source acceptance collector and opt-in Docker/BEAM cache probes.
+requires: [182-07]
 provides:
-  - Real current-source Docker warm/cold and BEAM fallback/lock-change/cold acceptance receipts.
-  - Full 189-case local and exact-source hosted browser acceptance with measured upload and job timing.
-  - Requirement-level evidence records in 182-CACHE-ACCEPTANCE.md and 182-ACCEPTANCE.md.
+  - Exact-source real cache and complete browser acceptance with preserved failure history.
 affects: [ci, contributor-verification, phase-182-closeout]
-
-# Actuals are measured from the realized non-planning diff: 82,143 changed source-line bytes / 4.
 actuals:
-  tokens: 20536
   tasks: 2
-  commits: 39
-  plan_head_before: 532686900769264eea618e5c9a1a681014d09b1f
-  plan_head_after: 87e944dee2ed56d9e0fae9bb5ddc3c976e24fba0
-
-# Tech tracking
-tech-stack:
-  added: []
-  patterns:
-    - "Manifest-listed receipts bind browser/cache evidence to one exact repository, branch, SHA, attempt, session, and namespace."
-    - "BuildKit cache progress is attributed per target and shared only for targets with identical recipe and image identity."
-    - "Compatible BEAM dependency restore can coexist with strict compiled-cache invalidation after lock changes."
-
+  commits: 45
+plan_head_before: 532686900769264eea618e5c9a1a681014d09b1f
+plan_head_after: e62977354f3933e1cbc14de9a5916b718cc0f5d0
 key-files:
   created:
-    - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-CACHE-ACCEPTANCE.md
-    - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-ACCEPTANCE.md
     - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md
+    - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-ACCEPTANCE.md
+    - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-CACHE-ACCEPTANCE.md
+    - .planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW.md
   modified:
     - .github/workflows/ci.yml
     - CONTRIBUTING.md
@@ -51,204 +34,141 @@ key-files:
     - scripts/ci/phase182_acceptance.cjs
     - scripts/ci/phase182_acceptance.test.cjs
     - test/mix/tasks/workflow_wiring_test.exs
-
-key-decisions:
-  - "Keep stable, bounded cache namespaces while binding each e37 consumer proof to its own source, recipe, image, and runtime identity."
-  - "Count duplicated BuildKit cached steps only across targets whose resolved recipe and image IDs match."
-  - "Use the approved 1800-second full-job budget with a separate 300-second body-finalization reserve; do not treat remaining time after upload as that reserve."
-  - "Retain Playwright traces on failure; passing runs correctly produce no failure trace."
-
-requirements-completed: []
-
+requirements-completed: [BROW-01, BROW-02, BROW-03, CACHE-01, CACHE-02]
 coverage:
   - id: D1
-    description: "Real Docker warm imports/useful hits/exports and fresh-builder import-disabled mounted cold execution are validated from exact-source hosted receipts."
-    requirement: CACHE-01
+    requirement: BROW-01
+    description: "Exact-source BROW-01 behavior is covered by current machine receipts and executable contracts."
     verification:
       - kind: integration
-        ref: "node scripts/ci/phase182_acceptance.cjs validate --mode caches --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha e37f5bde914d123f0bf7dcb9c12daec64d465657 --session-id phase182-08-e37f5bde-20261027T154542Z --probe-namespace candidate-556416f7 --input <collector-session-root>"
+        ref: "182-ACCEPTANCE.md"
         status: pass
     human_judgment: false
   - id: D2
-    description: "BEAM compatible download fallback, strict lock-change compiled miss, and representative no-import cold execution pass with normal Mix commands."
-    requirement: CACHE-02
+    requirement: BROW-02
+    description: "Exact-source BROW-02 behavior is covered by current machine receipts and executable contracts."
     verification:
       - kind: integration
-        ref: "node scripts/ci/phase182_acceptance.cjs validate --mode caches --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha e37f5bde914d123f0bf7dcb9c12daec64d465657 --session-id phase182-08-e37f5bde-20261027T154542Z --probe-namespace candidate-556416f7 --input <collector-session-root>"
+        ref: "182-ACCEPTANCE.md"
         status: pass
     human_judgment: false
   - id: D3
-    description: "The canonical local full browser command and exact-source hosted full run execute the complete mounted/standalone route inventory within the approved time budget."
-    requirement: BROW-01
+    requirement: BROW-03
+    description: "Exact-source BROW-03 behavior is covered by current machine receipts and executable contracts."
     verification:
       - kind: integration
-        ref: "node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha e37f5bde914d123f0bf7dcb9c12daec64d465657 --session-id phase182-08-e37f5bde-20261027T154542Z --probe-namespace candidate-556416f7 --input <collector-session-root>"
-        status: pass
-      - kind: integration
-        ref: "env BUILDX_CONFIG=/private/tmp/scrypath-phase182-buildx E2E_RUN_ID=20261027T1548-e37f5bde-local E2E_PROJECT_NAME=scrypath_verify_full_e37f5bde_local E2E_DOCKER_TIMEOUT_SECONDS=1800 E2E_FINALIZATION_MARGIN_SECONDS=300 make -C examples/scrypath_ecommerce verify-e2e"
-        status: pass
-      - kind: other
-        ref: ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-ACCEPTANCE.md"
+        ref: "182-ACCEPTANCE.md"
         status: pass
     human_judgment: false
   - id: D4
-    description: "All intended ui_followup and ui_iteration3 cases execute and pass on their first attempt with run-owned screenshots."
-    requirement: BROW-02
+    requirement: CACHE-01
+    description: "Exact-source CACHE-01 behavior is covered by current machine receipts and executable contracts."
     verification:
       - kind: integration
-        ref: "node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha e37f5bde914d123f0bf7dcb9c12daec64d465657 --session-id phase182-08-e37f5bde-20261027T154542Z --probe-namespace candidate-556416f7 --input <collector-session-root>"
+        ref: "182-CACHE-ACCEPTANCE.md"
         status: pass
     human_judgment: false
   - id: D5
-    description: "The changed-source hosted full workflow has raw-success 189/189 proof, exact source/image joins, complete bounded artifacts, and successful cleanup inside 1800 seconds."
-    requirement: BROW-03
+    requirement: CACHE-02
+    description: "Exact-source CACHE-02 behavior is covered by current machine receipts and executable contracts."
     verification:
       - kind: integration
-        ref: "node scripts/ci/phase182_acceptance.cjs validate --mode full --repo szTheory/scrypath --branch worktree-agent-p182-08-1793071051075 --sha e37f5bde914d123f0bf7dcb9c12daec64d465657 --session-id phase182-08-e37f5bde-20261027T154542Z --probe-namespace candidate-556416f7 --input <collector-session-root>"
+        ref: "182-CACHE-ACCEPTANCE.md"
         status: pass
     human_judgment: false
-
-# Metrics
-duration: "not recorded across executor handoff"
 completed: 2026-10-27
-status: in_progress
+status: complete
 ---
 
-> Historical evidence checkpoint: the receipts below belong to frozen implementation `e37f5bde914d123f0bf7dcb9c12daec64d465657`. Worktree closeout `40551292192` at `8b34f5452e254d9aeda6bc2ed0394304bb5e91b6` passed required gates but exposed a default import-only cache observation defect after browser success. The subsequent producer-policy repair requires fresh acceptance; these receipts are not relabeled for the new source.
+# Phase 182 Plan 08 — Real browser and cache acceptance
 
+All five cache scenarios and the final full collection passed at `ec248fd2f7eea9314e600bcc10262729d2cce69e`. Each of six hosted invocations completed 189 cases in 189 first-pass attempts, with raw verifier success, exact source/image/ref joins, required artifacts and clean owned disposal. Both canonical aggregate validators returned eligible with six invocations.
 
-# Phase 182 Plan 08: Reliable full browser verification and CI caches Summary
+## Task outcomes
 
-**Exact-source Docker/BEAM cache receipts and a complete 189-case browser proof, with the full run inside the approved 1800-second budget**
-
-## Performance
-
-- **Duration:** Not reliably recorded across the interrupted executor handoff. The six-run acceptance batch itself took 1h 24m 21.849s from the persisted control timestamps; this is not the duration of the whole plan.
-- **Started:** The original plan start time was not retained.
-- **Completed:** 2026-10-27
-- **Tasks:** 2
-- **Files modified:** 19 across plan implementation, acceptance records, review record, and this summary.
-- **Source-diff estimate:** 82,143 changed source-line bytes / 4 = 20,536 estimate tokens; this is not a harness-token count.
-
-## Accomplishments
-
-- Accepted real Docker BuildKit warm import/useful-reuse/export, fresh-builder mounted cold proof, and BEAM compatible fallback, lock-change invalidation, and cold execution. Exact run IDs, target recipe identities, cache keys/scopes, raw log hashes, artifact digests, and prior ineligible attempts are recorded in [182-CACHE-ACCEPTANCE.md](./182-CACHE-ACCEPTANCE.md).
-- Accepted full local and exact-source hosted browser proof. All 189 cases ran once and passed, including mounted and standalone Phase 173 cases, all 7 `ui_followup` cases, and all 6 `ui_iteration3` cases. Both Ops readiness routes passed; parity/contrast checks passed; artifacts copied; owned cleanup ended at zero. Run identities, full inventory, immutable digests, timing, and limitations are in [182-ACCEPTANCE.md](./182-ACCEPTANCE.md).
-- Reconciled six accepted hosted runs at one e37 source SHA, branch, session, and cache namespace. Both strict cache and full aggregate validators returned eligible with six invocations. The canonical local full command passed with `E2E_DOCKER_TIMEOUT_SECONDS=1800` and a separate `E2E_FINALIZATION_MARGIN_SECONDS=300`.
-
-## Task Commits
-
-Plan source, regression, and review commits, in chronological order (work across the cache and browser acceptance tasks was interleaved):
-
-1. `9ef84888` preserve run-scoped browser evidence
-2. `24a97406` align artifact path contract
-3. `2ab82a4a` target fields disclosure by structure
-4. `770b10e3` disambiguate nested result disclosures
-5. `e627e47a` tolerate disclosure label whitespace
-6. `4c84ec14` preserve and validate full evidence receipts
-7. `2dc1f0b0` await saved-search picker closure
-8. `aa637a9e` repair hosted image handoff checks
-9. `57d81cd8` stabilize hosted Compose handoffs
-10. `f85b960c` pull runtime dependencies for mounted proof
-11. `96c23e65` validate hosted artifact contracts
-12. `0b62d50e` parse GitHub-prefixed BuildKit cache logs
-13. `f4db59b8` bind cache hits to exact recipe outputs
-14. `86eff19e` preserve cache probe identity during handoff
-15. `dde08b5d` pass cache probe scope to E2E verifier
-16. `b8cb4035` namespace trusted BEAM seed caches
-17. `9d9ba977` reproduce lagging Actions metadata
-18. `5f250d1f` await complete Actions metadata
-19. `8ac1c4e8` record early evidence contract review
-20. `fc72cb77` reject foreign browser workflow refs
-21. `ed6d2f3c` bind browser proof to selected workflow ref
-22. `6f2f2970` reproduce unbound cache namespace selection
-23. `b35b0441` bind cache evidence to requested namespace
-24. `dac69aeb` record follow-up provenance review
-25. `4f75605c` reproduce validation CLI namespace loss
-26. `d4b8fc0c` preserve namespace in validation CLI
-27. `c0cbfa27` close reviewed provenance findings
-28. `c5a6840e` reproduce full aggregate receipt selection bug
-29. `b309d0d1` validate full aggregate using parsed receipts
-30. `556416f7` record full source review and fixed findings
-31. `28e1b770` reproduce whole-run log download failure
-32. `53f51a8f` download logs directly for selected jobs
-33. `2ca0bb05` cover raw REST BuildKit log timestamps
-34. `8c2f1f38` parse timestamped job logs without changing raw hashes
-35. `e37f5bde` review direct job-log transport
-
-Acceptance task commits:
-
-1. **Task 1 — cache acceptance:** `6c6bbdd3` (`docs(182-08): record actual cache acceptance`)
-2. **Task 2 — full browser acceptance:** `b87660a7` (`docs(182-08): record full browser acceptance`)
-3. **Task 2 follow-up — correct the warm receipt digest in both acceptance records:** `87e944de` (`docs(182-08): correct warm receipt digest`)
-
-The first summary metadata commit, `48f427d7`, preceded the digest audit and is superseded by the final summary metadata commit recorded in the executor return. The measured 39 commits present before this final summary update include that earlier metadata commit and all 38 source/review/acceptance task commits.
+1. Cache acceptance: [182-CACHE-ACCEPTANCE.md](182-CACHE-ACCEPTANCE.md) records real warm imports/useful hits/exports, fresh-builder no-import cold execution, compatible BEAM download fallback, changed-lock compiled invalidation and representative no-import BEAM cold execution.
+2. Browser acceptance: [182-ACCEPTANCE.md](182-ACCEPTANCE.md) records the complete local and hosted inventory, both fixture routes, all seven follow-up and six iteration-3 cases, source/image joins, artifacts and measured budget.
 
 ## Verification
 
-- `node scripts/ci/phase182_acceptance.cjs validate --mode caches ... --input <collector-session-root>` — **PASS**, eligible, six invocations, exact repo/branch/SHA/session/namespace.
-- `node scripts/ci/phase182_acceptance.cjs validate --mode full ... --input <collector-session-root>` — **PASS**, eligible, six invocations, exact repo/branch/SHA/session/namespace.
-- Canonical local command `make -C examples/scrypath_ecommerce verify-e2e` with the recorded 1800-second timeout and 300-second finalization reserve — **PASS**, 189/189 first-attempt cases, skips/unexpected/flaky 0, both routes pass, artifacts copied, cleanup 0.
-- Six accepted hosted receipts — **PASS**, each raw browser verifier successful at 189 cases/189 attempts and each whole workflow below 1800 seconds. Full hosted run 40545747370 took 826 seconds through workflow completion; 985 seconds remained in the 1800-second budget after upload.
-- `node --test` source/collector suite — **PASS**, 109 tests, 0 failures, no skips (`/private/tmp/scrypath-phase182-execution/direct-log-node.log`).
-- Warning-as-error root suite — **PASS**, 961 tests plus 5 properties, 0 failures (`/private/tmp/scrypath-phase182-execution/e37-root-tests.log`).
-- Repository contracts — **PASS**, 98 tests, 0 failures (`/private/tmp/scrypath-phase182-execution/e37-repository-contracts.log`).
-- Elixir 1.19.0 formatting, `actionlint`, and warnings-as-errors docs check — **PASS** before acceptance; those source paths did not change afterward.
+- Node CI behavior suite: 110 tests, zero failures/skips (`/private/tmp/scrypath-phase182-execution/import-only-node.log`).
+- Warning-as-error root suite: 961 tests plus five properties, zero failures (`/private/tmp/scrypath-phase182-execution/ec-root-tests.log`).
+- Repository contracts: 98 tests, zero failures (`/private/tmp/scrypath-phase182-execution/ec-repository-contracts.log`).
+- Canonical local full: 189/189, skipped/unexpected/flaky zero, parity/contrast and both routes pass, owned containers/networks/volumes zero.
+- Six current-source hosted invocations: 189/189 each, nonpass zero and clean disposal.
+- Strict cache and full aggregate validators: valid/eligible, six invocations.
+- CI-version formatting, actionlint and warnings-as-errors docs passed earlier; their relevant source paths did not change afterward.
 
-The maximum observed browser-stage-end-to-upload interval was 21 seconds. The configured 300-second body-finalization reserve therefore exceeded observation by 279 seconds, including 219 seconds beyond the required 60-second margin. The separate receipt field for remaining 1800-second budget after upload ranged from 884 to 1100 seconds (985 seconds for the full run). See [182-ACCEPTANCE.md](./182-ACCEPTANCE.md) for all six measurements.
+The configured body-finalization reserve is 300 seconds. The observed maximum browser-end-to-upload interval is 21 seconds; adding the required 60-second margin remains below 300. Remaining budget after upload ranges from 861 to 1055 seconds. Whole full-job duration and upload timings are recorded separately.
 
-## Files Created/Modified
+## Task commits
 
-- `182-CACHE-ACCEPTANCE.md` — exact-source Docker/BEAM proof, immutable receipt and cache artifact digests, mode identities, and preserved attempt history.
-- `182-ACCEPTANCE.md` — hosted/local browser results, full inventory, archive digests, timing, artifact limits, and requirement mapping.
-- `.github/workflows/ci.yml`, `CONTRIBUTING.md`, and `scripts/ci/phase182_acceptance.cjs` — selected workflow cache policy, documented acceptance commands, and source-bound collection/validation.
-- `examples/scrypath_ecommerce/compose.e2e.yaml`, `docker-playwright.sh`, `scripts/verify-e2e.sh`, and the listed `scripts/ci/ecommerce_*` modules/tests — full Compose scope, image handoff, evidence collection, artifact copying, and regressions.
-- `examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts`, `e2e/ui_followup.spec.ts`, and `test/mix/tasks/workflow_wiring_test.exs` — cross-environment browser guards and executable repository wiring contracts.
+| Commit | Change |
+| --- | --- |
+| `9ef84888` | fix(182-08): preserve run-scoped browser evidence |
+| `24a97406` | test(182-08): align artifact path contract |
+| `2ab82a4a` | fix(182-08): target fields disclosure by structure |
+| `770b10e3` | fix(182-08): disambiguate nested result disclosures |
+| `e627e47a` | fix(182-08): tolerate disclosure label whitespace |
+| `4c84ec14` | fix(182-08): preserve and validate full evidence receipts |
+| `2dc1f0b0` | fix(182-08): await saved-search picker closure |
+| `aa637a9e` | fix(182-08): repair hosted image handoff checks |
+| `57d81cd8` | fix(182-08): stabilize hosted Compose handoffs |
+| `f85b960c` | fix(182-08): pull runtime dependencies for mounted proof |
+| `96c23e65` | fix(182-08): validate hosted artifact contracts |
+| `0b62d50e` | fix(182-08): parse GitHub-prefixed BuildKit cache logs |
+| `f4db59b8` | fix(182-08): bind cache hits to exact recipe outputs |
+| `86eff19e` | fix(182-08): preserve cache probe identity during handoff |
+| `dde08b5d` | fix(182-08): pass cache probe scope to E2E verifier |
+| `b8cb4035` | fix(182-08): namespace trusted BEAM seed caches |
+| `9d9ba977` | test(182-08): reproduce lagging Actions metadata |
+| `5f250d1f` | fix(182-08): await complete Actions metadata |
+| `8ac1c4e8` | docs(182-08): record early evidence contract review |
+| `fc72cb77` | test(182-08): reject foreign browser workflow refs |
+| `ed6d2f3c` | fix(182-08): bind browser proof to selected workflow ref |
+| `6f2f2970` | test(182-08): reproduce unbound cache namespace selection |
+| `b35b0441` | fix(182-08): bind cache evidence to requested namespace |
+| `dac69aeb` | docs(182-08): record follow-up provenance review |
+| `4f75605c` | test(182-08): reproduce validation CLI namespace loss |
+| `d4b8fc0c` | fix(182-08): preserve namespace in validation CLI |
+| `c0cbfa27` | docs(182-08): close reviewed provenance findings |
+| `c5a6840e` | test(182-08): reproduce full aggregate receipt selection bug |
+| `b309d0d1` | fix(182-08): validate full aggregate using parsed receipts |
+| `556416f7` | docs(182-08): record full source review and fixed findings |
+| `28e1b770` | test(182-08): reproduce whole-run log download failure |
+| `53f51a8f` | fix(182-08): download logs directly for selected jobs |
+| `2ca0bb05` | test(182-08): cover raw REST BuildKit log timestamps |
+| `8c2f1f38` | fix(182-08): parse timestamped job logs without changing raw hashes |
+| `e37f5bde` | docs(182-08): review direct job-log transport |
+| `6c6bbdd3` | docs(182-08): record actual cache acceptance |
+| `b87660a7` | docs(182-08): record full browser acceptance |
+| `48f427d7` | docs(182-08): complete reliable browser and cache acceptance |
+| `87e944de` | docs(182-08): correct warm receipt digest |
+| `8b34f545` | docs(182-08): finalize accepted plan summary |
+| `851c0456` | test(182-08): reproduce import-only observation rejection |
+| `7f8c4592` | fix(182-08): observe configured Docker cache policy without granting acceptance |
+| `ec248fd2` | docs(182-08): preserve prior evidence and reopen policy follow-up |
+| `51ceb707` | docs(182-08): record corrected-source real cache acceptance |
+| `e6297735` | docs(182-08): record corrected-source complete browser acceptance |
 
-## Decisions Made
+The following summary metadata commit is intentionally absent from its own commit table. Entire-plan token use and duration were not measured reliably across handoffs; no source-size proxy is presented as harness tokens. The current batch timestamps are in its persisted control file.
 
-- Keep the namespace seeded by run 40530439125 stable across revisions, but require each current consumer to prove its own exact source, recipe, image, and runtime identity.
-- Treat `web` and `standalone_ops` BuildKit progress as shared only where their resolved recipe and image IDs are identical; retain distinct per-target import/export completion.
-- Keep the local full proof on its existing Compose path, within the approved 1800-second ceiling, and account separately for the 300-second body-finalization reserve.
-- Preserve Playwright's `retain-on-failure` trace policy. Since every accepted case passed, the current archives contain no trace file; no failure trace is claimed.
+## Acceptance-driven repairs and deviations
 
-## Deviations from Plan
+Real runs exposed stale selectors, artifact/Compose/image identity mismatches, GitHub API metadata lag/shape differences, deduplicated BuildKit progress, scoped mode/namespace propagation, aggregate receipt selection, log transport and policy/eligibility coupling. They were repaired through scoped bug/blocker fixes and executable regressions, not by dropping cases or weakening assertions. Current strict acceptance retains all source/ref/namespace/digest joins and actual cache evidence.
 
-### Acceptance-driven fixes
+The final producer-policy repair lets ordinary import-only runs emit honest observations while strict warm acceptance continues to require actual imports and exports. Old 8b34 advisory failure remains recorded; it was not waived as Phase 184 debt.
 
-All fixes stayed within the plan's real-evidence repair-and-rerun flow; no architecture or product scope was added.
+## Preserved history and limits
 
-1. **[Rule 1 - Bug] Bind cache reuse to exact resolved recipes and target outputs.** BuildKit deduplicates `web` and `standalone_ops`; the evidence now accepts their shared cached vertices only for matching recipe/image identity and retains each target's separate import/export status. Relevant commits include `f4db59b8`, `0b62d50e`, and `8c2f1f38`.
-2. **[Rule 3 - Blocking] Preserve cold-mode scope and cache identity across the mounted job handoff.** The mounted cold proof uses a fresh builder with no imports while the workflow's full browser job remains required and successful. Relevant commits include `86eff19e`, `dde08b5d`, and `b35b0441`.
-3. **[Rule 1 - Bug] Bind hosted browser/cache receipts to the selected branch, namespace, run attempt, and parsed aggregate receipt.** Regressions and fixes cover job-metadata readiness, foreign refs, namespace forwarding, full receipt selection, direct selected-job log download, and REST timestamp parsing. Relevant commits include `5f250d1f`, `ed6d2f3c`, `d4b8fc0c`, `b309d0d1`, and `53f51a8f`.
+Earlier candidates and failures remain in `/private/tmp/scrypath-phase182-acceptance` and `/private/tmp/scrypath-phase182-local-e2e-failures`. The earlier e37 six-mode set remains valid only for e37; its recorded documents are preserved at [8b34f545](https://github.com/szTheory/scrypath/tree/8b34f5452e254d9aeda6bc2ed0394304bb5e91b6/.planning/phases/182-reliable-full-browser-verification-and-ci-caches).
 
-**Total deviations:** 3 acceptance-driven auto-fixes (2 Rule 1, 1 Rule 3). **Impact:** Necessary for the prescribed real acceptance; no unrelated scope was added.
+Closeout [40551292192](https://github.com/szTheory/scrypath/actions/runs/40551292192) passed its five required jobs, coverage and attestation at 8b34f545, but its full advisory job failed after browser success: the producer wrongly required exports under an ordinary import-only branch policy. Regression `851c0456` reproduced it; `7f8c4592` lets observation generation honor the checked policy while strict warm acceptance still requires actual imports and exports. The immutable old handoff replay reproduces the old failure and corrected behavior; it is not new-source hosted acceptance. Current EC receipts below were obtained after the repair.
 
-## Issues Encountered
+Older metadata lag, whole-run log ZIP transport failures, selector/handoff repairs, incomplete 900-second local attempts and their later source revisions are not rewritten as clean stability evidence. Source-bound history and failures remain visible in the prior documents and runtime directories. The known deep-quality dependency audit debt remains Phase 184; this report does not say every advisory CI job is green.
 
-Earlier source candidates and attempts remain accurately classified in the acceptance reports. Some prior collectors failed on GH HOME-cache writes, Actions metadata lag, parser limitations, or whole-run log ZIP transport (`HTTP2CANCEL`; later HTTP/1 read `unexpectedEOF`). Earlier 900-second local attempts ended at 77/189 or with incomplete browser execution. These historical outcomes were not rewritten as passes and do not replace the eligible e37 receipts. No clean-stability claim is made over the full historical set.
+No paid judge, retry/skip masking, automatic baseline rewrite, UI redesign, new dependency, required-lane change or retained-preview mutation was used. This is representative maintainer/demo evidence at the stated source and toolchain, not outside-adopter or universal production reliability evidence. Descriptor-less/unclassified planning assumptions remain flagged as such; no human approval or design review is fabricated.
 
-The deep-quality dependency audit debt remains deferred to Phase 184. No claim is made that all advisory CI jobs are green. The accepted browser archives include JSON, HTML, screenshots, iteration3 journey captures, health/readiness and service logs; they have no traces because all cases passed under the configured retain-on-failure policy. No paid judge, simulated reviewer approval, baseline rewrite, retry/skip masking, preview mutation, or new required lane was used.
+## Self-check and handoff
 
-## User Setup Required
-
-None.
-
-## Next Phase Readiness
-
-Plan 08 remains in progress: default unnamespaced worktree closeout exposed an import-only Docker observation failure after browser verification succeeded. The producer-policy repair is implemented and reviewed; fresh candidate acceptance and closeout remain required.
-
-Plan 182-08 acceptance is recorded for the frozen e37 implementation. The child terminal closeout runs after this summary is committed, and root retains ownership of merge, final phase review, shared STATE/ROADMAP/REQUIREMENTS tracking, and exact-root-SHA terminal closeout.
-
-## Historical Self-Check at 8b34f545: PASSED
-
-- The cache and browser acceptance documents and all listed source paths exist.
-- All 38 source/review/acceptance task commits are in the current branch history; the cache, browser, and digest-correction docs commits are separate task commits.
-- The warm Docker receipt digest in both acceptance records matches the manifest-listed receipt bytes: `f497e12d9d5af1fe196adf389392ae7a4241306a0ff2035712e8076457087a6a`.
-- Both aggregate validators pass against the manifest-listed session root; saved receipt and archive digests match their immutable bytes.
-- At documentation head `8b34f5452e254d9aeda6bc2ed0394304bb5e91b6`, the implementation source tree was unchanged from e37. The later import-only producer-policy repair changes source and requires fresh acceptance before this plan closes.
-- `STATE.md`, `ROADMAP.md`, `REQUIREMENTS.md`, `PROJECT.md`, configuration, source, workflows, tests, and retained preview were not modified during this finalization.
-
----
-*Phase: 182-reliable-full-browser-verification-and-ci-caches*
-*Completed: 2026-10-27*
+Both acceptance records exist, all listed commits are reachable, current source is unchanged from EC, and both canonical validators pass. Configuration and shared STATE/ROADMAP/REQUIREMENTS/PROJECT tracking were preserved in this checkout. Terminal closeout runs after all these tracked writes at the actual documentation head; its runtime receipt and default full-job outcome must be checked before merging. Root later performs phase-level hooks, verification, shared tracking and a separate final-root-SHA closeout.
