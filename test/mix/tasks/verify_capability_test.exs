@@ -69,6 +69,34 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
     end
   end
 
+  test "every maintainer Mix.Task has a :test preferred env and every verify key resolves" do
+    preferred_envs = Scrypath.MixProject.cli()[:preferred_envs]
+
+    {:ok, modules} = :application.get_key(:scrypath, :modules)
+
+    # Classify by the Mix.Task behaviour, not Mix.Task.task?/1: the latter also
+    # counts helper modules such as Mix.Tasks.Verify.PhoenixExample.Package.
+    maintainer_tasks =
+      for module <- modules,
+          String.starts_with?(Atom.to_string(module), "Elixir.Mix.Tasks.Verify"),
+          Code.ensure_loaded?(module),
+          Mix.Task in Keyword.get(module.module_info(:attributes), :behaviour, []) do
+        Mix.Task.task_name(module)
+      end
+
+    assert maintainer_tasks != [], "no Mix.Tasks.Verify* module declares the Mix.Task behaviour"
+
+    for name <- maintainer_tasks do
+      assert preferred_envs[String.to_atom(name)] == :test,
+             "#{name} is a maintainer task without a :test entry in mix.exs preferred_envs"
+    end
+
+    for {key, _env} <- preferred_envs, String.starts_with?(Atom.to_string(key), "verify") do
+      assert Mix.Task.get(Atom.to_string(key)),
+             "preferred_envs key #{key} does not resolve through Mix.Task.get/1"
+    end
+  end
+
   test "core runs the root gate then the no-optional-deps build" do
     {task_runner, calls} = recording_task_runner()
 
