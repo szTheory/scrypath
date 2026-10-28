@@ -13,6 +13,7 @@ defmodule Scrypath.MixProject do
       version: @version,
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       docs: docs(),
       package: package(),
@@ -82,6 +83,7 @@ defmodule Scrypath.MixProject do
         verify: :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
+        "verify.namespace_fence": :test,
         "verify.release_parity": :test,
         "verify.no_optional_deps": :test,
         "verify.coverage": :test,
@@ -104,6 +106,11 @@ defmodule Scrypath.MixProject do
       ]
     ]
   end
+
+  # Maintainer verifiers live in dev/mix/tasks and compile only under :test.
+  # Dependencies compile in :prod, so Hex, git and path consumers never see them.
+  defp elixirc_paths(:test), do: ["lib", "dev/mix/tasks"]
+  defp elixirc_paths(_env), do: ["lib"]
 
   defp deps do
     [

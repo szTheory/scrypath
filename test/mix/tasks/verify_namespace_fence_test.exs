@@ -1,7 +1,7 @@
-defmodule Mix.Tasks.Scrypath.NamespaceFenceTest do
+defmodule Mix.Tasks.Verify.NamespaceFenceTest do
   use ExUnit.Case, async: true
 
-  alias Mix.Tasks.Scrypath.NamespaceFence
+  alias Mix.Tasks.Verify.NamespaceFence
 
   describe "check/1" do
     test "flags planted Sigra references under lib/scrypath/" do

@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Scrypath.NamespaceFence do
+defmodule Mix.Tasks.Verify.NamespaceFence do
   @moduledoc """
   Fails when Sigra references leak outside the allowed integration namespace.
 
@@ -115,6 +115,6 @@ defmodule Mix.Tasks.Scrypath.NamespaceFence do
   defp ensure_no_args!([]), do: :ok
 
   defp ensure_no_args!(args) do
-    Mix.raise("scrypath.namespace_fence does not accept arguments, got: #{Enum.join(args, " ")}")
+    Mix.raise("verify.namespace_fence does not accept arguments, got: #{Enum.join(args, " ")}")
   end
 end

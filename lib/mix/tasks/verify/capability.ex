@@ -102,14 +102,14 @@ defmodule Mix.Tasks.Verify.Capability do
     command_runner = Keyword.get(opts, :command_runner, &run_mix_command!/2)
 
     task_runner.("verify.no_optional_deps", [])
-    task_runner.("scrypath.namespace_fence", [])
+    task_runner.("verify.namespace_fence", [])
     if include_audit?, do: command_runner.("hex.audit", [])
     command_runner.("dialyzer", [])
     :ok
   end
 
-  defp run_deep_quality_task!("scrypath.namespace_fence", []) do
-    Mix.Task.run("scrypath.namespace_fence")
+  defp run_deep_quality_task!("verify.namespace_fence", []) do
+    Mix.Task.run("verify.namespace_fence")
     :ok
   end
 
