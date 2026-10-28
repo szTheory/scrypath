@@ -186,7 +186,7 @@ defmodule Scrypath.Release.PackageContentsTest do
           path -> path
         end)
 
-      docs = extras |> Enum.map(&File.read!/1) |> Enum.join("\n")
+      docs = Enum.map_join(extras, "\n", &File.read!/1)
 
       undocumented =
         Enum.reject(PackageContract.public_tasks(), &String.contains?(docs, "mix #{&1}"))
