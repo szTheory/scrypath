@@ -3,9 +3,9 @@ phase: "183"
 slug: "maintainer-tooling-outside-the-hex-package"
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
 # audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
-status: draft
+status: validated
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-10-27"
 ---
 
@@ -51,49 +51,62 @@ Filled by the planner/executor; requirement → command map from RESEARCH.md § 
 
 | Requirement | Behavior | Test Type | Automated Command | File Exists | Status |
 |-------------|----------|-----------|-------------------|-------------|--------|
-| PKGH-01 | Inventory under `dev/mix/tasks`; `lib/mix/tasks/verify*` empty; `dev` not in `files:` | unit (boundary guard) | `mix test test/release/package_contents_test.exs` | ❌ W0 | ⬜ pending |
-| PKGH-01 | Unpacked archive holds exactly the 8 public task modules + allowed top-level entries | integration | `mix test test/release/package_contents_test.exs` | ❌ W0 | ⬜ pending |
-| PKGH-01 | Compiled consumer has 8 public tasks, no `Elixir.Mix.Tasks.Verify.*.beam` | integration | `mix test test/release/consumer_smoke_test.exs` | ✅ extend | ⬜ pending |
-| PKGH-01 | In-repo path-dep consumer `examples/phoenix_meilisearch` compiles cold with 0 Verify beams and the 8 public task beams (CONTEXT Integration Points) | integration (closeout-only) | 183-08 Task 1 path-dep gate (`mix deps.get`, then `MIX_ENV=dev mix compile` with `MIX_BUILD_PATH` set to a cold out-of-checkout dir, then `find` on its scrypath ebin) | ✅ existing app | ⬜ pending |
-| PKGH-02 | No Verify module gains `@moduledoc false` (D-07): count over lib/ and dev/ stays 27 | unit (grep count) | 183-07 Task 1 preservation gate | ✅ | ⬜ pending |
-| PKGH-02 | Every `use Mix.Task` in `dev/mix/tasks` has `:test` preferred_env | unit | `mix test test/mix/tasks/verify_capability_test.exs` | ❌ W0 | ⬜ pending |
-| PKGH-02 | Documented focused commands still callable | existing | `mix test test/mix/tasks/ test/scrypath/readiness_contract_test.exs` | ✅ | ⬜ pending |
-| PKGH-02 | Unpacked archive compiles without `dev/` (`prod`, `test`, `--warnings-as-errors`) | integration | `mix test test/release/package_contents_test.exs` | ❌ W0 | ⬜ pending |
-| PKGH-02 | Source-reading contract tests find moved sources | unit | `mix test test/scrypath/docs_contract_test.exs test/scrypath/phase99_contract_test.exs test/mix/tasks/` | ✅ | ⬜ pending |
-| PKGH-03 | Five leak mutations fail; control passes | integration (mutation) | `mix test test/release/package_contents_test.exs` | ❌ W0 | ⬜ pending |
-| PKGH-03 | Public operator tasks usable from installed package | integration | `mix test test/release/consumer_smoke_test.exs` | ✅ extend | ⬜ pending |
-| PKGH-03 | Gate runs in required lane and is pinned | unit | `mix test test/scrypath/docs_contract_test.exs` | ✅ update | ⬜ pending |
-| D-08 | `dev/` edits change BEAM cache graph keys | node unit | `node --test scripts/ci/beam_cache.test.cjs` | ✅ extend | ⬜ pending |
-| D-08 | `verify.workspace_clean`/HYG-02 cover `dev/**` | unit | `mix test test/mix/tasks/verify_workspace_clean_test.exs test/mix/tasks/workflow_wiring_test.exs` | ✅ extend | ⬜ pending |
+| PKGH-01 | Inventory under `dev/mix/tasks`; `lib/mix/tasks/verify*` empty; `dev` not in `files:` | unit (boundary guard) | `mix test test/release/package_contents_test.exs` | ✅ | ✅ green |
+| PKGH-01 | Unpacked archive holds exactly the 8 public task modules + allowed top-level entries | integration | `mix test test/release/package_contents_test.exs` | ✅ | ✅ green |
+| PKGH-01 | Compiled consumer has 8 public tasks, no `Elixir.Mix.Tasks.Verify.*.beam` | integration | `mix test test/release/consumer_smoke_test.exs` | ✅ | ✅ green |
+| PKGH-01 | In-repo path-dep consumer `examples/phoenix_meilisearch` compiles cold with 0 Verify beams and the 8 public task beams (CONTEXT Integration Points) | integration (closeout-only) | 183-08 Task 1 path-dep gate (`mix deps.get`, then `MIX_ENV=dev mix compile` with `MIX_BUILD_PATH` set to a cold out-of-checkout dir, then `find` on its scrypath ebin) | ✅ existing app | ⚠️ one-shot only (gap) |
+| PKGH-02 | No Verify module gains `@moduledoc false` (D-07): count over lib/ and dev/ stays 27 | unit (grep count) | 183-07 Task 1 preservation gate | ✅ | ⚠️ one-shot only (gap) |
+| PKGH-02 | Every `use Mix.Task` in `dev/mix/tasks` has `:test` preferred_env | unit | `mix test test/mix/tasks/verify_capability_test.exs` | ✅ | ✅ green |
+| PKGH-02 | Documented focused commands still callable | existing | `mix test test/mix/tasks/ test/scrypath/readiness_contract_test.exs` | ✅ | ✅ green |
+| PKGH-02 | Unpacked archive compiles without `dev/` (`prod`, `test`, `--warnings-as-errors`) | integration | `mix test test/release/package_contents_test.exs` | ✅ | ✅ green |
+| PKGH-02 | Source-reading contract tests find moved sources | unit | `mix test test/scrypath/docs_contract_test.exs test/scrypath/phase99_contract_test.exs test/mix/tasks/` | ✅ | ✅ green |
+| PKGH-03 | Five leak mutations fail; control passes | integration (mutation) | `mix test test/release/package_contents_test.exs` | ✅ | ✅ green |
+| PKGH-03 | Public operator tasks usable from installed package | integration | `mix test test/release/consumer_smoke_test.exs` | ✅ | ✅ green |
+| PKGH-03 | Gate runs in required lane and is pinned | unit | `mix test test/scrypath/docs_contract_test.exs` | ✅ | ✅ green |
+| D-08 | `dev/` edits change BEAM cache graph keys | node unit | `node --test scripts/ci/beam_cache.test.cjs` | ✅ | ✅ green |
+| D-08 | `verify.workspace_clean`/HYG-02 cover `dev/**` | unit | `mix test test/mix/tasks/verify_workspace_clean_test.exs test/mix/tasks/workflow_wiring_test.exs` | ✅ | ✅ green |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky / one-shot only (no durable regression test)*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `test/support/repo_tooling.ex` — `Scrypath.RepoTooling` path helper (PKGH-02)
-- [ ] `test/support/release/package_contract.ex` — `Scrypath.Release.PackageContract` (PKGH-01, PKGH-03)
-- [ ] `test/release/package_contents_test.exs` — control, five mutations, boundary guard, archive compile cases
-- [ ] `test/mix/tasks/verify_namespace_fence_test.exs` — moved/renamed fence test
-- [ ] D-04 preferred_envs guard test
-- [ ] `scripts/ci/beam_cache.test.cjs` fixture for `dev/`
+- [x] `test/support/repo_tooling.ex` — `Scrypath.RepoTooling` path helper (PKGH-02)
+- [x] `test/support/release/package_contract.ex` — `Scrypath.Release.PackageContract` (PKGH-01, PKGH-03)
+- [x] `test/release/package_contents_test.exs` — control, five mutations, boundary guard, archive compile cases
+- [x] `test/mix/tasks/verify_namespace_fence_test.exs` — moved/renamed fence test
+- [x] D-04 preferred_envs guard test
+- [x] `scripts/ci/beam_cache.test.cjs` fixture for `dev/`
 
 ---
 
 ## Manual-Only Verifications
 
-All phase behaviors have automated verification.
+No behavior needs human verification. Two rows are recorded as **gaps** because their automated proof ran once at closeout (evidence in 183-ACCEPTANCE.md) and no durable regression test re-checks them on later commits. Per the advisory-hook constraint, no tests were generated; these are follow-up candidates:
+
+| Requirement | Behavior | One-shot evidence | Gap | Suggested durable test |
+|-------------|----------|-------------------|-----|------------------------|
+| PKGH-01 | Path-dep consumer `examples/phoenix_meilisearch` compiles cold with 0 Verify beams + 8 public task beams | 183-ACCEPTANCE.md "Path-dependency consumers" (183-08 Task 1) | No test re-runs it; `consumer_smoke_test.exs` covers the git-tagged consumer shape only | Integration-tagged case in `test/release/consumer_smoke_test.exs` compiling a `path:` consumer into a tmp `MIX_BUILD_PATH` |
+| PKGH-02 | No `Mix.Tasks.Verify*` module gains `@moduledoc false` (count stays 27) | 183-07 Task 1 preservation gate; re-counted 27 on 2026-10-28 | Grep gate lives only in the plan's `<verify>` block | Unit case in `test/release/package_contents_test.exs` "tooling boundary" pinning the count / refuting new `@moduledoc false` in `dev/mix/tasks` |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s, apart from the named per-task exceptions listed under Sampling Rate
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s, apart from the named per-task exceptions listed under Sampling Rate (focused run 18 s; consumer smoke 13 s)
+- [ ] `nyquist_compliant: true` set in frontmatter — left false: 2 one-shot-only gaps recorded above (12/14 rows durably covered)
 
-**Approval:** pending
+**Approval:** validated (partial) 2026-10-28 — 12 durable-green, 2 one-shot-only gaps, 0 red
+
+## Validation Audit 2026-10-28
+
+| Metric | Count |
+|---|---|
+| Gaps found | 2 |
+| Resolved | 0 |
+| Escalated | 2 |
