@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 183
 current_phase_name: Maintainer tooling outside the Hex package
 status: planning
-stopped_at: Phase 182 complete; discuss Phase 183 next
-last_updated: "2026-10-28T00:12:34.331Z"
+stopped_at: Phase 183 context gathered
+last_updated: "2026-10-28T02:38:42.031Z"
 last_activity: 2026-10-27
-last_activity_desc: Phase 182 execution and verification complete; Phase 183 ready for discussion
-state_head: 262517657687b8e518d9943e36d53919934982f2
+last_activity_desc: Phase 183 context gathered; ready for planning
+state_head: 781b28dfcc7624e13a4df93513bde7df3799ec90
 progress:
   total_phases: 4
   completed_phases: 1
@@ -25,7 +25,7 @@ progress:
 Phase: 183 of 4 (Maintainer tooling outside the Hex package)
 Plan: Not started
 Status: planning
-Last activity: 2026-10-27 — Phase 182 completed; Phase 183 discussion is next.
+Last activity: 2026-10-27 — Phase 183 context gathered; planning is next.
 
 Progress: [███░░░░░░░] 25%
 
@@ -35,7 +35,7 @@ Next: **Phase 183 — Maintainer tooling outside the Hex package**. No plan star
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Next command: **`$gsd-discuss-phase 183`** — settle the approved package/tooling boundary before planning. No automatic execution of Phase 183 is requested.
+Next command: **`/gsd-plan-phase 183`** — context captured in `183-CONTEXT.md` (D-01–D-20). No automatic execution of Phase 183 is requested.
 
 ## Evidence and boundaries
 
@@ -65,8 +65,8 @@ Current focus: Phase 183's contributor-command parity and clean installed packag
 
 ## Session continuity
 
-Last session: 2026-10-28T00:07:59Z
-Stopped at: Phase 182 complete; ready to discuss Phase 183.
-Resume file: None.
+Last session: 2026-10-28T02:38:42.003Z
+Stopped at: Phase 183 context gathered
+Resume file: .planning/phases/183-maintainer-tooling-outside-the-hex-package/183-CONTEXT.md
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
