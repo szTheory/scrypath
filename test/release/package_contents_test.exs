@@ -221,6 +221,29 @@ defmodule Scrypath.Release.PackageContentsTest do
     end
   end
 
+  describe "packaged docs" do
+    test "no ExDoc extra and no packaged lib file names a Mix.Tasks.Verify module" do
+      # CHANGELOG.md is not an extra and is excluded on purpose: it is release-please-owned
+      # history (D-19).
+      extras =
+        MixProject.project()[:docs][:extras]
+        |> Enum.map(fn
+          {path, _opts} -> path
+          path -> path
+        end)
+
+      files = extras ++ Path.wildcard("lib/**/*.ex")
+
+      assert files != [], "the packaged-docs scan found no files; the guard went vacuous"
+
+      offenders =
+        Enum.filter(files, fn path -> String.contains?(File.read!(path), "Mix.Tasks.Verify") end)
+
+      assert offenders == [],
+             "Mix.Tasks.Verify is named in packaged docs or lib (verifiers compile only under :test, so the :dev docs build and HexDocs would carry dangling references): #{inspect(offenders)}"
+    end
+  end
+
   # Both describes below run a real `mix hex.build --unpack` on a tmp copy of the packaged
   # files. Every subprocess gets an explicit MIX_ENV and an isolated MIX_BUILD_PATH, because
   # preferred_envs routing sets Mix.env() in this VM only and never exports MIX_ENV.

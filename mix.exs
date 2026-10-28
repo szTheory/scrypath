@@ -192,6 +192,8 @@ defmodule Scrypath.MixProject do
       main: "readme",
       source_url: @source_url,
       source_ref: @source_ref,
+      # Verify task modules compile only under :test, so the published (:dev) docs omit them without any filter.
+      # A module filter is deliberately absent because it breaks the :test docs build (Phase 183, D-07 as amended).
       extras: [
         "README.md",
         "CONTRIBUTING.md",

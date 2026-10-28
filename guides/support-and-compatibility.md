@@ -72,6 +72,8 @@ This guide names the supported modes, but it does not restate their operational 
 
 ## Verification command family
 
+These verification commands run from a source checkout of the Scrypath repository; they are not part of the Hex package.
+
 The adopter verification path is intentionally split into two depths:
 
 - `mix verify.adopter` is the fast, service-free contract check for support/readiness guidance.
