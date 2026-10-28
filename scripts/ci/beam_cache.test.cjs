@@ -239,3 +239,59 @@ test("path graph manifests and locks fingerprint only the consuming resolved cac
   fs.appendFileSync(path.join(root, "examples/phoenix_meilisearch/mix.exs"), "changed\n");
   assert.notEqual(plan("phoenix-example").downloads_restore_prefix, phoenixChanged.downloads_restore_prefix);
 });
+
+test("dev maintainer sources fingerprint every graph", (t) => {
+  const root = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "beam-cache-dev-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  // D-08: dev/ holds the maintainer-only Mix tasks outside the Hex package. An edit there must
+  // rotate every graph's resolved key, or CI could restore stale verifier beams.
+  const files = {
+    "mix.exs": "root manifest\n",
+    "mix.lock": "root lock\n",
+    "lib/root.ex": "root source\n",
+    "dev/mix/tasks/verify.ex": "maintainer source\n",
+    "scrypath_ops/mix.exs": "ops manifest\n",
+    "scrypath_ops/mix.lock": "ops lock\n",
+    "scrypath_ops/lib/ops.ex": "ops source\n",
+    "examples/scrypath_ecommerce/mix.exs": "ecommerce manifest\n",
+    "examples/scrypath_ecommerce/mix.lock": "ecommerce lock\n",
+    "examples/scrypath_ecommerce/lib/ecommerce.ex": "ecommerce source\n",
+    "examples/phoenix_meilisearch/mix.exs": "phoenix manifest\n",
+    "examples/phoenix_meilisearch/mix.lock": "phoenix lock\n",
+    "examples/phoenix_meilisearch/lib/phoenix.ex": "phoenix source\n"
+  };
+  for (const [relative, contents] of Object.entries(files)) {
+    const absolute = path.join(root, relative);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, contents);
+  }
+
+  const env = {
+    ImageOS: "ubuntu24",
+    ImageVersion: "20261019.1.0",
+    RUNNER_OS: "Linux",
+    RUNNER_ARCH: "X64",
+    MIX_ENV: "test",
+    MIX_TARGET: "host",
+    BEAM_CACHE_PROFILE: "fixture-test"
+  };
+  const versions = "Erlang/OTP 28.1 [erts-16.1]\nElixir 1.19.0 (compiled with Erlang/OTP 28)\n";
+  const plan = (graph) => buildPlan({ graph, root, env, elixirVersionOutput: versions });
+  const graphNames = ["root", "ops", "ecommerce", "phoenix-example"];
+
+  const before = Object.fromEntries(graphNames.map((graph) => [graph, plan(graph)]));
+  for (const graph of graphNames) {
+    assert.ok(
+      before[graph].source_files.includes("dev/mix/tasks/verify.ex"),
+      `${graph} source_files should include dev/mix/tasks/verify.ex`
+    );
+  }
+
+  fs.appendFileSync(path.join(root, "dev/mix/tasks/verify.ex"), "changed\n");
+  for (const graph of graphNames) {
+    const after = plan(graph);
+    assert.notEqual(after.resolved_key, before[graph].resolved_key, `${graph} resolved_key must rotate on a dev/ edit`);
+    assert.notEqual(after.plt_key, before[graph].plt_key, `${graph} plt_key must rotate on a dev/ edit`);
+  }
+});
