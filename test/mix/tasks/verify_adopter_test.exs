@@ -76,7 +76,7 @@ defmodule Mix.Tasks.Verify.AdopterTest do
 
   describe "run/1 fast path" do
     test "advertises the current focused fast-test files" do
-      source = File.read!("lib/mix/tasks/verify.adopter.ex")
+      source = Scrypath.RepoTooling.task_source!("verify.adopter.ex")
 
       assert source =~ ~S|"test/scrypath/readiness_contract_test.exs"|
       assert source =~ ~S|"test/scrypath/phase110_contract_test.exs"|
