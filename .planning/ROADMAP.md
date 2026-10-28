@@ -39,7 +39,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 ## Phases
 
 - [x] **Phase 182: Reliable full browser verification and CI caches** — Contributors can exercise the full intended browser inventory in an isolated stack with reusable, safe caches. (completed 2026-10-27)
-- [ ] **Phase 183: Maintainer tooling outside the Hex package** — Contributors retain verification commands while adopters receive only supported library/operator surfaces.
+- [x] **Phase 183: Maintainer tooling outside the Hex package** — Contributors retain verification commands while adopters receive only supported library/operator surfaces. (completed 2026-10-28)
 - [ ] **Phase 184: Explicit and lean dependency graphs** — Adopters resolve supported dependencies without unused optional-app overhead, and maintainers receive reconciled lockfiles and audit results.
 - [ ] **Phase 185: Executable UI quality foundations** — Contributors get token, contrast and drift enforcement while operators retain the current supported appearance.
 
@@ -100,7 +100,7 @@ Plans:
 2. Documented canonical/historical source-checkout commands remain callable in their intended environments, and an unpacked package compiles with no development tree. (PKGH-02)
 3. The package/parity gate inspects actual archive/consumer behavior, fails if maintainer tooling leaks back into the package, and proves supported public operator tasks remain usable. (PKGH-03)
 
-**Plans**: 8/8 plans executed across 6 waves, all autonomous. The maintainer approved the D-07 amendment on 2026-10-28, so no checkpoint remains.
+**Plans**: 8/8 plans complete across 6 waves, all autonomous. The maintainer approved the D-07 amendment on 2026-10-28, so no checkpoint remains.
 
 Plans:
 
@@ -181,7 +181,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
-| 183. Maintainer tooling outside the Hex package | 8/8 | In Progress | — |
+| 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 

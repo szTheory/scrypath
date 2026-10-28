@@ -2,34 +2,34 @@
 gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
-current_phase: 183
-current_phase_name: Maintainer tooling outside the Hex package
-status: executing
-stopped_at: Completed 183-08-PLAN.md
-last_updated: "2026-10-28T14:06:18.614Z"
+current_phase: 184
+current_phase_name: Explicit and lean dependency graphs
+status: planning
+stopped_at: Phase 183 complete, ready to plan Phase 184
+last_updated: "2026-10-28T14:45:25.476Z"
 last_activity: 2026-10-28
-last_activity_desc: Phase 183 execution started
-state_head: ff761beaebc4136549eb4685653ec81788642d76
+last_activity_desc: Phase 183 complete, transitioned to Phase 184
+state_head: 3fd66dd4e0ef51af18af05e2cd6b92fe2a103fdf
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 16
   completed_plans: 16
-  percent: 25
+  percent: 50
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 183 (Maintainer tooling outside the Hex package) — EXECUTING
-Plan: 8 of 8 (all plans executed; phase verification pending)
-Status: Plan 183-08 complete; PR #123 open and unmerged, hosted closeout recorded
-Last activity: 2026-10-28 — Plan 183-08 acceptance, PR and hosted closeout
+Phase: 184 — Explicit and lean dependency graphs
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-28 — Phase 183 complete, transitioned to Phase 184
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
-Milestone: **v1.45 Foundation and CI** (1/4 phases complete).
+Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
 Next: **Phase 183 — Maintainer tooling outside the Hex package**. No plan started.
 
@@ -66,7 +66,7 @@ Current focus: Phase 183's contributor-command parity and clean installed packag
 ## Session continuity
 
 Last session: 2026-10-28T14:06:18.502Z
-Stopped at: Completed 183-08-PLAN.md
+Stopped at: Phase 183 complete, ready to plan Phase 184
 Resume file: None
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.

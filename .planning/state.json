@@ -11,7 +11,7 @@
     {
       "number": "183",
       "name": "Maintainer tooling outside the Hex package",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "184",
@@ -26,8 +26,8 @@
   ],
   "next": {
     "command": "/gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 2 of 4 · 25% · executing"
+    "label": "Advance to the next step (plan phase 184)",
+    "reason": "Phase 3 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-28T14:06:17.715Z"
+  "updated_at": "2026-10-28T14:45:25.490Z"
 }
