@@ -2,8 +2,9 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
   use ExUnit.Case, async: false
 
   alias Scrypath.MixProject
+  alias Scrypath.Release.PackageContract
 
-  test "a clean consumer app compiles the documented use Scrypath path" do
+  setup_all do
     version = MixProject.project()[:version]
     tag = "v#{version}"
     repo_root = File.cwd!()
@@ -21,29 +22,15 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     on_exit(fn -> File.rm_rf(tmp_root) end)
 
     build_packaged_artifact!(repo_root, artifact_dir)
+
+    # Ordering is load-bearing: the allowlist check must see the directory exactly as
+    # `hex.build --unpack` produced it. Once this test initializes the artifact as a
+    # repository, a top-level `.git` exists, which the check would report as a false
+    # violation created by this test.
+    # The result is captured, not asserted here, so a failure is reported against a test.
+    package_contract_result = PackageContract.check(artifact_dir)
+
     artifact_paths = artifact_paths!(artifact_dir)
-
-    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "lib/"))
-    assert "mix.exs" in artifact_paths
-    assert "README.md" in artifact_paths
-    assert "CHANGELOG.md" in artifact_paths
-    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "guides/"))
-    assert "docs/releasing.md" in artifact_paths
-
-    forbidden_prefixes = [
-      "scrypath_ops/",
-      "examples/",
-      "website/",
-      ".planning/",
-      "node_modules/",
-      "playwright-report/",
-      "test-results/"
-    ]
-
-    for prefix <- forbidden_prefixes do
-      refute Enum.any?(artifact_paths, &String.starts_with?(&1, prefix)),
-             "artifact unexpectedly included forbidden path prefix #{prefix}"
-    end
 
     artifact_git_url =
       artifact_dir
@@ -54,13 +41,48 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     File.write!(Path.join(app_dir, "mix.exs"), consumer_mix_exs(artifact_git_url, tag))
     write_consumer_schema!(app_dir)
 
+    run_mix!(["deps.get"], cd: app_dir, env: isolated_env)
+    run_mix!(["compile"], cd: app_dir, env: isolated_env)
+
+    %{
+      tag: tag,
+      tmp_root: tmp_root,
+      artifact_dir: artifact_dir,
+      artifact_git_url: artifact_git_url,
+      artifact_paths: artifact_paths,
+      app_dir: app_dir,
+      isolated_env: isolated_env,
+      package_contract_result: package_contract_result
+    }
+  end
+
+  test "a clean consumer app compiles the documented use Scrypath path", ctx do
+    %{
+      tag: tag,
+      artifact_paths: artifact_paths,
+      artifact_git_url: artifact_git_url,
+      app_dir: app_dir,
+      package_contract_result: package_contract_result
+    } = ctx
+
+    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "lib/"))
+    assert "mix.exs" in artifact_paths
+    assert "README.md" in artifact_paths
+    assert "CHANGELOG.md" in artifact_paths
+    assert Enum.any?(artifact_paths, &String.starts_with?(&1, "guides/"))
+    assert "docs/releasing.md" in artifact_paths
+
+    assert package_contract_result == :ok,
+           """
+           the real hex.build archive violates the package contract (allowlist, L0):
+
+           #{format_violations(package_contract_result)}
+           """
+
     consumer_mix = File.read!(Path.join(app_dir, "mix.exs"))
 
     assert consumer_mix =~ ~s|{:scrypath, git: "#{artifact_git_url}", tag: "#{tag}"}|
     refute Regex.match?(~r/path\s*:/, consumer_mix)
-
-    run_mix!(["deps.get"], cd: app_dir, env: isolated_env)
-    run_mix!(["compile"], cd: app_dir, env: isolated_env)
 
     assert File.exists?(
              Path.join(
@@ -150,6 +172,9 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
     run_command!("git", ["tag", tag], cd: artifact_dir)
     artifact_dir
   end
+
+  defp format_violations(:ok), do: "(none)"
+  defp format_violations({:error, lines}), do: Enum.join(lines, "\n")
 
   defp run_mix!(args, opts) do
     run_command!("mix", args, opts)
