@@ -11,7 +11,7 @@
     {
       "number": "183",
       "name": "Maintainer tooling outside the Hex package",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "184",
@@ -29,5 +29,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 2 of 4 · 25% · executing"
   },
-  "updated_at": "2026-10-28T13:01:58.362Z"
+  "updated_at": "2026-10-28T14:06:17.715Z"
 }

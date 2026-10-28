@@ -29,9 +29,9 @@ promoted with its storage decision already recorded in PROJECT.md.
 
 ### Maintainer tooling and Hex package boundaries
 
-- [ ] **PKGH-01**: An adopter receives no repository-only `verify.*` task source or verification support modules in the Hex archive or compiled dependency; the complete inventoried maintainer task tree lives under `dev/mix/tasks` outside the package allowlist.
-- [ ] **PKGH-02**: A contributor can invoke the documented canonical and historical verification commands from the source checkout in their intended environments after the move, while an unpacked package compiles without requiring the absent development tree.
-- [ ] **PKGH-03**: A maintainer can run the package/parity gate and prove the actual unpacked archive excludes maintainer tooling while retaining supported public operator tasks and consumer behavior; adding a repository-only task to packaged source fails the gate.
+- [x] **PKGH-01**: An adopter receives no repository-only `verify.*` task source or verification support modules in the Hex archive or compiled dependency; the complete inventoried maintainer task tree lives under `dev/mix/tasks` outside the package allowlist.
+- [x] **PKGH-02**: A contributor can invoke the documented canonical and historical verification commands from the source checkout in their intended environments after the move, while an unpacked package compiles without requiring the absent development tree.
+- [x] **PKGH-03**: A maintainer can run the package/parity gate and prove the actual unpacked archive excludes maintainer tooling while retaining supported public operator tasks and consumer behavior; adding a repository-only task to packaged source fails the gate.
 
 ### Explicit and lean dependency graphs
 
@@ -120,9 +120,9 @@ assignments on 2026-10-26. Implementation has not started.
 | BROW-03 | Phase 182 | Complete |
 | CACHE-01 | Phase 182 | Complete |
 | CACHE-02 | Phase 182 | Complete |
-| PKGH-01 | Phase 183 | Pending |
-| PKGH-02 | Phase 183 | Pending |
-| PKGH-03 | Phase 183 | Pending |
+| PKGH-01 | Phase 183 | Complete |
+| PKGH-02 | Phase 183 | Complete |
+| PKGH-03 | Phase 183 | Complete |
 | DEP-01 | Phase 184 | Pending |
 | DEP-02 | Phase 184 | Pending |
 | DEP-03 | Phase 184 | Pending |

@@ -100,7 +100,7 @@ Plans:
 2. Documented canonical/historical source-checkout commands remain callable in their intended environments, and an unpacked package compiles with no development tree. (PKGH-02)
 3. The package/parity gate inspects actual archive/consumer behavior, fails if maintainer tooling leaks back into the package, and proves supported public operator tasks remain usable. (PKGH-03)
 
-**Plans**: 7/8 plans executed across 6 waves, all autonomous. The maintainer approved the D-07 amendment on 2026-10-28, so no checkpoint remains.
+**Plans**: 8/8 plans executed across 6 waves, all autonomous. The maintainer approved the D-07 amendment on 2026-10-28, so no checkpoint remains.
 
 Plans:
 
@@ -128,7 +128,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 183-08-PLAN.md — Local phase gate, documented-command coverage, PROJECT.md line, PR-first open and exact-SHA hosted closeout (wave 6)
+- [x] 183-08-PLAN.md — Local phase gate, documented-command coverage, PROJECT.md line, PR-first open and exact-SHA hosted closeout (wave 6)
 
 ### Phase 184: Explicit and lean dependency graphs
 
@@ -181,7 +181,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
-| 183. Maintainer tooling outside the Hex package | 7/8 | In Progress | — |
+| 183. Maintainer tooling outside the Hex package | 8/8 | In Progress | — |
 | 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 

@@ -121,4 +121,27 @@ Per-wave sampling stayed on `mix verify.package` plus each task's focused files,
 
 ## Hosted evidence
 
-<!-- Filled in by 183-08 Task 2 -->
+### Pull request
+
+- PR #123, https://github.com/szTheory/scrypath/pull/123, title `fix(package): keep repository-only verify tasks out of the Hex package` (D-19), base `planning/v1.44-new-milestone` (PR #122 is still open and that branch is an ancestor of HEAD, so the diff shows only v1.45 work), head `planning/v1.45-foundation-ci`.
+- State at the time of recording: OPEN, unmerged, no auto-merge. No merge, tag, release or publish was performed, and CHANGELOG.md is untouched. No `.coderabbit.yaml` exists, so no automatic external reviewer ran.
+
+### Stage 1: candidate closeout
+
+Command: `node scripts/ci_monitor.cjs closeout --push --branch planning/v1.45-foundation-ci --sha ff761beaebc4136549eb4685653ec81788642d76` (exit 0). The candidate is the commit `docs(183-08): record phase 183 acceptance`; the cleanliness and STATE integrity gates passed immediately before it ran.
+
+| Field | Value |
+|---|---|
+| Workflow / event | `ci.yml` / `workflow_dispatch` |
+| Run | 40700112673, attempt 1, https://github.com/szTheory/scrypath/actions/runs/40700112673 |
+| Run SHA | `ff761beaebc4136549eb4685653ec81788642d76` |
+| Coverage artifact | id 12820409499, `sha256:7cbdfb02a69df1b4b72e215ef747dfcbd3d66f2fcd6b27eb5cdcbfb094b8a695` |
+| Closeout-attestation artifact | id 12820484785, `sha256:a1c1119f00009d30cc54694338aab03c86a75ba9b29df5e26b9df93ae0138b56` |
+
+Required jobs, all `success`: `core (required)`, `package (required)`, `repository-contracts (required)`, `backend (required)`, `ecommerce-mounted (required)`, plus `coverage (advisory)` and `closeout-attestation`.
+
+Other jobs in the same run: `compatibility (advisory)` x3 success, `ecommerce-e2e (advisory)` success, `phoenix-example (advisory)` success, `ops-ui-path` success, `ops-ui (path-scoped)` skipped, and `deep-quality (advisory)` **failure**. The deep-quality failure is advisory and not a required check. Its failing step is `scripts/ci/dependency_audit.exs`: the Hex audit reported an active advisory in the `examples/phoenix_meilisearch` and `examples/scrypath_ecommerce` dependency graphs ("HTTP/2 StreamError recovery rolls back connection state and bypasses per-connection limits in Bandit"). This phase touches neither example lockfile (`lock_sha_before` equals `lock_sha_after` for both graphs), so the cause is an external advisory against a locked dependency, not a package-boundary change. It is recorded here rather than fixed (out of scope for this phase).
+
+### Stage 2: exact final SHA
+
+Stage 2 reruns the same command at the final SHA after the `docs(183-08): record hosted closeout candidate` commit. Per CONTRIBUTING, no tracked file is written after a successful final attestation, so its receipt is written only outside the checkout, at `${TMPDIR}/scrypath-phase183-closeout/stage2-receipt.json` (this machine: `/var/folders/f3/f0clj9rd2zb85n2c849wcsrc0000gn/T/scrypath-phase183-closeout/stage2-receipt.json`). The run URL, run ID, SHA and artifact digests of stage 2 are reported by the executor in its return and are the authority for the final SHA.

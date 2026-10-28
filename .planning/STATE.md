@@ -5,16 +5,16 @@ milestone_name: Foundation and CI
 current_phase: 183
 current_phase_name: Maintainer tooling outside the Hex package
 status: executing
-stopped_at: Phase 183 context gathered
-last_updated: "2026-10-28T13:01:58.352Z"
+stopped_at: Completed 183-08-PLAN.md
+last_updated: "2026-10-28T14:06:18.614Z"
 last_activity: 2026-10-28
 last_activity_desc: Phase 183 execution started
-state_head: ccb50a05874176b5d9f5083328dba7d431287586
+state_head: ff761beaebc4136549eb4685653ec81788642d76
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 16
-  completed_plans: 8
+  completed_plans: 16
   percent: 25
 ---
 
@@ -23,9 +23,9 @@ progress:
 ## Current Position
 
 Phase: 183 (Maintainer tooling outside the Hex package) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 183
-Last activity: 2026-10-28 — Phase 183 execution started
+Plan: 8 of 8 (all plans executed; phase verification pending)
+Status: Plan 183-08 complete; PR #123 open and unmerged, hosted closeout recorded
+Last activity: 2026-10-28 — Plan 183-08 acceptance, PR and hosted closeout
 
 Progress: [███░░░░░░░] 25%
 
@@ -65,8 +65,18 @@ Current focus: Phase 183's contributor-command parity and clean installed packag
 
 ## Session continuity
 
-Last session: 2026-10-28T02:38:42.003Z
-Stopped at: Phase 183 context gathered
-Resume file: .planning/phases/183-maintainer-tooling-outside-the-hex-package/183-CONTEXT.md
+Last session: 2026-10-28T14:06:18.502Z
+Stopped at: Completed 183-08-PLAN.md
+Resume file: None
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
+
+## Performance Metrics
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 183 P08 | 35 min | 2 tasks | 2 files |
+
+## Decisions
+
+- [Phase 183]: 183-08: PR #123 based on planning/v1.44-new-milestone (PR #122 open, ancestor); advisory deep-quality Bandit audit failure recorded, not fixed
