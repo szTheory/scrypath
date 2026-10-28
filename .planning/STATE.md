@@ -2,46 +2,64 @@
 gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
-current_phase: 182
-current_phase_name: Reliable full browser verification and CI caches
-status: executing
-stopped_at: All35 truths verified; add deterministic approval-claim boundary coverage and reverify
-last_updated: "2026-10-27T23:33:42.348526+00:00"
-last_activity: 2026-10-27
-last_activity_desc: Phase 182 corrected-source acceptance and repair-head closeout passed; phase hooks and verifier next
-state_head: 1eec7e22acf5551eab6e3b4e12e5024df043c238
+status: ready_to_plan
+last_updated: "2026-10-28T00:04:12.240691+00:00"
+state_head: 7fb955a9c95383873106a10ec8e1e092364d3c04
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
   completed_plans: 8
-  percent: 100
+  percent: 25
+last_activity: 2026-10-27
+current_phase: 183
+current_phase_name: Maintainer tooling outside the Hex package
+stopped_at: Phase 182 complete; discuss Phase 183 next
+last_activity_desc: Phase 182 execution and verification complete; Phase 183 ready for discussion
 ---
 
 # Project State
 
 ## Current position
 
-Phase 182 of v1.45 is in final phase-goal verification. All eight plans and five reviewed fixes are merged in `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`. Latest integration `37cdd0bcb92640d1788322e8169ac310016a6581`; GSD removed the owned repair checkout. No executor or worktree writer remains active. Phase completion has NOT been called.
+Milestone: **v1.45 Foundation and CI** (1/4 phases complete).
+Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
+Next: **Phase 183 — Maintainer tooling outside the Hex package**. No plan started.
 
-## Executed evidence
+Working directory: `/Users/jon/projects/scrypath`.
+Branch: `planning/v1.45-foundation-ci`.
+Next command: **`$gsd-discuss-phase 183`** — settle the approved package/tooling boundary before planning. No automatic execution of Phase 183 is requested.
 
-Corrected browser cutoff `1c72637038f2c225d56e2311678b05f912b014f3`: source-derived assertion RED/GREEN; Node 115; local full 189/189; hosted warm40597095307 and full40598906757 each189 first attempts, parity/contrast pass and clean disposal. Strict current warm proof has actual imports/useful hits/exports for all three images. Current aggregate full validator passes with two eligible invocations; current jobs817–887s, maximum finalization/upload22s, so22+60<300 reserve.
+## Evidence and boundaries
 
-Retained five-mode cache cutoff `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8`: canonical cache aggregate valid with seven recorded invocations, six eligible; the initial no-hit producer remains ineligible. Only one screenshot assertion differs from1c. Cache implementation/configuration, Dockerfiles, dependency/lock bytes and BEAM inputs are unchanged; explicit tree parity and reconstructed original-hosted BEAM identity equality are recorded. PROJECT's named-invalidator policy retains unchanged cold/BEAM evidence at its original source; new warm/local/full proof covers the changed browser input and assertion. No cross-SHA aggregate or relabeled receipt is claimed.
+Phase 182's VERIFICATION, VALIDATION, SECURITY, UI-REVIEW, REVIEW and two acceptance records live in `phases/182-reliable-full-browser-verification-and-ci-caches/`. The assertion-corrected browser cutoff `1c72637038f2c225d56e2311678b05f912b014f3` passed local full 189/189 and current hosted warm/full 189/189. The unchanged five-mode cache aggregate retains cutoff `0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8`; its seven recorded invocations include six eligible receipts and the preserved initial cache producer. Only one screenshot assertion changed between those sources; exact non-planning parity and reconstructed BEAM identity equality document the named invalidator. The newer warm receipt covers changed browser-image reuse. The current Node regression suite passed 118/118; the merged root suite passed 961 tests plus five properties and repository contracts 98/98; final merged checks and exact-head CI are recorded separately. No cross-SHA aggregate or relabeled receipt is claimed.
 
-Actual child documentation `04e9a8809f3dcd4b590a30dee8301086a8122597` passed closeout 40600930723: all five required jobs, coverage, immutable attestation, full 189/189 and successful default import-only proof generation. Runtime receipts: `/private/tmp/scrypath-phase182-execution/04e9a880-closeout-receipt.json` and `04e9a880-default-proof/result.json`. GSD merge parity differed only in intentional root STATE/ROADMAP; merged implementation matches1c exactly.
+The final root verification checks the actual merged tree and current reports. Exact-root terminal CI runs after all tracked writes; runtime receipts are outside the checkout under `/private/tmp/scrypath-phase182-execution/`. Earlier child/source receipts do not substitute for that final root SHA. No human approval, independent visual review, main merge, package publication or universal production/adopter reliability is claimed.
 
-Fresh merged checks passed115 Node,961 Elixir tests plus five properties,98 repository contracts, CI-version formatting,actionlint and warning-free docs; logs `/private/tmp/scrypath-phase182-execution/final-root-*.log`. Previous first-merge logs are preserved as542da333-postmerge-*.log. Safety gates are clear; no structure map exists; no frontend implementation changed.
+## Project reference
 
-## Required remaining sequence
+See `.planning/PROJECT.md` (updated 2026-10-28).
+Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
+Current focus: Phase 183's contributor-command parity and clean installed package boundary.
 
-Nyquist covers all 16 tasks with actual executable checks; authored L1 security has 20 closed threats and no accepted risks. UI audit remains six pillars N/A and unchanged by the assertion-only delta; no design approval is claimed. Finish native review evidence reconciliation and canonical disposition, then native goal verifier and CLI-owned fingerprint. Read fresh passed owner status, call `phase.complete 182` ONCE, transition PROJECT/ROADMAP/STATE/REQUIREMENTS, check freshness, and run final ROOT exact-head closeout after ALL tracked writes. No tracked edits after that terminal attestation.
+## Recent decisions
 
-New control: `/private/tmp/scrypath-phase182-execution/assertion-repair-candidate-control.json`; retained cache control: `review-repair-candidate-control.json`. Both are validated and all completed invocations are preserved. Do not redispatch completed work. Native VERIFICATION now reports35/35 truths and all5 requirements verified, but human_needed solely for missing executable coverage of the independent-approval-claim prohibition. Its initial report is preserved; the authorized next action is test-only coverage of existing canonical receipt/summary rejection, then native re-verification. No human approval is being requested or inferred.
+- Accept browser stability only from complete distinct case identities, first attempts, raw status, exact source/image/ref and owned disposal.
+- Honor the actual Docker import/export policy when producing observations; keep strict warm acceptance dependent on actual useful remote reuse and exports.
+- Keep compatible BEAM downloads separate from strict compiled graph/lock/toolchain identities; preserve unconditional dependency resolution and verification.
 
-## Concerns and next action
+## Blockers and concerns
 
-Five findings are fixed; WR-03 remains explicitly deferred baseline same-run rerun artifact naming, with zero open ledger findings. Fresh closeout dispatches use distinct runs; browser/cache artifacts bind run/attempt and retries cannot become clean proof. Future rerun support must update names and ci_monitor consumers together; no human risk approval is implied. Known deep-quality dependency-audit debt remains Phase 184; do not claim every advisory job is green.
+- Phase 184: inherited deep-quality dependency audit debt remains; no blanket risk acceptance or all-advisory-green claim.
+- WR-03: baseline-only same-run rerun artifact naming is deferred in REVIEW-DISPOSITION. Fresh closeout dispatches work; future rerun support must change upload names and ci_monitor consumers together. No human risk approval is implied.
+- PR #122 merge and Hex publication remain separate pending work from the v1.44 archive boundary. The 19 inherited audit-debt items and historical deferrals remain in their archive/tracker.
+- Preserve the unrelated `.planning/config.json` edit and untracked milestone lock. Preserve retained preview data and its named checkout; this phase did not mutate or reseed it.
+- v1.46–v1.47 UI engine/polish and v1.48 adopter features remain deferred. No speculative reopening or phase replay without concrete evidence.
 
-Preserve unrelated `.planning/config.json`, milestone.lock and retained preview/data. PR122 merge/Hex publication and 19 inherited v1.44 audit items remain separate. v1.45 has three remaining phases; after actual verified182 completion, next is `$gsd-discuss-phase 183` (maintainer tooling outside Hex), with no automatic implementation.
+## Session continuity
+
+Last session: 2026-10-28.
+Stopped at: Phase 182 complete; ready to discuss Phase 183.
+Resume file: None.
+
+Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.

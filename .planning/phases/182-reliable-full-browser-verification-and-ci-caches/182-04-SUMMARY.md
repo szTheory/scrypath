@@ -99,12 +99,12 @@ status: complete
 
 ## Verification
 
-- `node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_evidence.test.cjs scripts/ci/ecommerce_target.test.cjs` — 38 tests passed; zero failures, skips, or todos.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs test/scrypath/phase108_contract_test.exs test/scrypath/phase111_contract_test.exs` — compilation passed; 69 tests passed.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix verify.repository_contracts` — 93 tests passed; the repository contract includes the counted lifecycle, evidence, and target Node suites.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix format --check-formatted test/mix/tasks/workflow_wiring_test.exs` — passed.
-- `git diff --check` — passed.
-- Task 1 RED evidence classified `RED_EVIDENCE_OK`; the target failed because the old browser runner did not produce the required same-selection inventory. Task 2 RED evidence classified `RED_EVIDENCE_OK`; the targeted ExUnit contract executed and failed on the expected `timeout-minutes: 30` assertion while the workflow still specified 20 minutes. The task 2 record is at `examples/scrypath_ecommerce/test-results/.tdd-red-evidence-182-04-02.json` (ignored generated evidence; not force-staged).
+- <code>node --test scripts/ci/ecommerce_lifecycle.test.cjs scripts/ci/ecommerce_evidence.test.cjs scripts/ci/ecommerce_target.test.cjs</code> — 38 tests passed; zero failures, skips, or todos.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_capability_test.exs test/scrypath/phase108_contract_test.exs test/scrypath/phase111_contract_test.exs</code> — compilation passed; 69 tests passed.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix verify.repository_contracts</code> — 93 tests passed; the repository contract includes the counted lifecycle, evidence, and target Node suites.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix format --check-formatted test/mix/tasks/workflow_wiring_test.exs</code> — passed.
+- <code>git diff --check</code> — passed.
+- Task 1 RED evidence classified `RED_EVIDENCE_OK`; the target failed because the old browser runner did not produce the required same-selection inventory. Task 2 RED evidence classified `RED_EVIDENCE_OK`; the targeted ExUnit contract executed and failed on the expected `timeout-minutes: 30` assertion while the workflow still specified 20 minutes. The task 2 RED run used the ignored generated fixture <code>examples/scrypath_ecommerce/test-results/.tdd-red-evidence-182-04-02.json</code>. That temporary runtime file has been removed; RED commit d08698b7 and GREEN commit dbdf04fb remain in Git, and final source-bound browser/cache acceptance is recorded separately by plan 08.
 - No real full-browser run or hosted exact-SHA acceptance was performed by this plan. Plan 182-08 must provide that evidence before the related requirements can be completed.
 
 ## Task Commits
@@ -136,7 +136,7 @@ Plan metadata is committed separately after this summary's self-check.
 
 ## TDD Gate Compliance
 
-- **Task 1 RED:** The named lifecycle test failed on the missing Playwright JSON inventory command; `gsd_run check tdd-red-evidence` returned `RED_EVIDENCE_OK`. **GREEN:** `4fdade75` implemented owned collection and the lifecycle suite passed.
+- **Task 1 RED:** The named lifecycle test failed on the missing Playwright JSON inventory command; <code>gsd_run check tdd-red-evidence</code> returned `RED_EVIDENCE_OK`. **GREEN:** `4fdade75` implemented owned collection and the lifecycle suite passed.
 - **Task 2 RED:** The TAP target wrapped the named ExUnit workflow contract; the ExUnit test executed and failed specifically because the job timeout was still 20 minutes instead of 30. The evidence classifier returned `RED_EVIDENCE_OK`. **GREEN:** `dbdf04fb` implemented the current-run workflow contract, docs, and supporting assertions; the required verification passed.
 
 ## Deviations from Plan

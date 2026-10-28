@@ -136,11 +136,11 @@ Both RED targets failed on their intended missing workflow behavior and were acc
 
 ## Verification
 
-- `node --test scripts/ci/beam_cache.test.cjs` — 8 tests passed, 0 failures.
-- `MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` — 58 tests passed, 0 failures. `HEX_HOME` and `MIX_HOME` were directed to `/private/tmp` for this invocation.
+- <code>node --test scripts/ci/beam_cache.test.cjs</code> — 8 tests passed, 0 failures.
+- <code>MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs</code> — 58 tests passed, 0 failures. `HEX_HOME` and `MIX_HOME` were directed to `/private/tmp` for this invocation.
 - `actionlint .github/workflows/ci.yml` — passed.
-- `git diff --check` — passed.
-- `gsd_run check evaluation-scope --plan "182-06" --commits-only --raw` — resolved all 4 task commits on this branch.
+- <code>git diff --check</code> — passed.
+- <code>gsd_run check evaluation-scope --plan "182-06" --commits-only --raw</code> — resolved all 4 task commits on this branch.
 
 ## Decisions Made
 

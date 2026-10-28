@@ -120,10 +120,10 @@ The summary metadata is committed separately after this file is written.
 
 ## Verification
 
-- `node --test scripts/ci/phase182_acceptance.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/ecommerce_build.test.cjs` - **PASS**, 46 tests.
-- `MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` - **PASS**, 59 tests, 0 failures.
-- `node --check scripts/ci/phase182_acceptance.cjs` - **PASS**.
-- `git diff --check` - **PASS**.
+- <code>node --test scripts/ci/phase182_acceptance.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/ecommerce_build.test.cjs</code> - **PASS**, 46 tests.
+- <code>MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs</code> - **PASS**, 59 tests, 0 failures.
+- <code>node --check scripts/ci/phase182_acceptance.cjs</code> - **PASS**.
+- <code>git diff --check</code> - **PASS**.
 
 ## Deviations from Plan
 
@@ -175,11 +175,11 @@ This follow-up repairs three concrete integration blockers found before Phase 18
 
 ### Repair verification
 
-- `node --test scripts/ci/ecommerce_*.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/phase182_acceptance.test.cjs` - **PASS**, 90 tests, 0 failures.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_ENV=test ASDF_ELIXIR_VERSION=1.19.0-otp-28 asdf exec mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` - **PASS**, Elixir 1.19.0 / OTP 28, 59 tests, 0 failures.
+- <code>node --test scripts/ci/ecommerce_*.test.cjs scripts/ci/beam_cache.test.cjs scripts/ci/phase182_acceptance.test.cjs</code> - **PASS**, 90 tests, 0 failures.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_ENV=test ASDF_ELIXIR_VERSION=1.19.0-otp-28 asdf exec mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs</code> - **PASS**, Elixir 1.19.0 / OTP 28, 59 tests, 0 failures.
 - `ASDF_ELIXIR_VERSION=1.19.0-otp-28 asdf exec mix format --check-formatted` - **PASS** under Elixir 1.19.0.
 - `actionlint .github/workflows/ci.yml` - **PASS**.
-- `git diff --check` - **PASS** before the repair commit.
+- <code>git diff --check</code> - **PASS** before the repair commit.
 
 The checkout did not initially have Mix dependencies fetched. The locked dependencies were fetched without changing `mix.lock`, using a Hex cache under `/private/tmp` after the default user-level Hex registry cache rejected writes. The focused ExUnit run then exposed unsupported `String.index/2` assertions in the cache wiring test; these were changed to `:binary.match/2` and formatted with the CI Elixir version. A first policy test attempt also exposed incomplete dispatch environment setup in the test fixture; the fixture was aligned with the workflow inputs, and the final complete Node run passed.
 

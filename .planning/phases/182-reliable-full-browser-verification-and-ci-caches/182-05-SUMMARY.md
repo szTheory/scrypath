@@ -110,10 +110,10 @@ Each task was committed atomically:
 
 ## Verification
 
-- `node --test scripts/ci/ecommerce_build.test.cjs scripts/ci/ecommerce_lifecycle.test.cjs` — **34 tests passed, 0 failed**.
-- `node --test scripts/ci/ecommerce_build.test.cjs` — **17 tests passed, 0 failed**.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex-home MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` — **55 tests passed, 0 failures**, warnings treated as errors.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex-home mix verify.repository_contracts` — **94 tests passed, 0 failures**.
+- <code>node --test scripts/ci/ecommerce_build.test.cjs scripts/ci/ecommerce_lifecycle.test.cjs</code> — **34 tests passed, 0 failed**.
+- <code>node --test scripts/ci/ecommerce_build.test.cjs</code> — **17 tests passed, 0 failed**.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex-home MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs</code> — **55 tests passed, 0 failures**, warnings treated as errors.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex-home mix verify.repository_contracts</code> — **94 tests passed, 0 failures**.
 - Ruby parsed `.github/workflows/ci.yml` successfully.
 - Generated Compose/Bake output was parsed with local `docker buildx bake --print`; the resolved full graph exposed the expected v2 scopes. This verifies generated configuration only, not a hosted cache hit or export.
 
@@ -133,7 +133,7 @@ Each task was committed atomically:
 - **Issue:** Existing Dockerfiles copy the build context with `COPY . .`, so root or nested `.env` files could enter built layers and exported cache state.
 - **Fix:** Added root and nested `.env` / `.env.*` exclusions to `.dockerignore` and regression coverage for secret/context exclusions.
 - **Files modified:** `.dockerignore`, `scripts/ci/ecommerce_build.test.cjs`
-- **Verification:** `node --test scripts/ci/ecommerce_build.test.cjs` passed.
+- **Verification:** <code>node --test scripts/ci/ecommerce_build.test.cjs</code> passed.
 - **Committed in:** `a85f4e51`
 
 **Total deviations:** 1 auto-fixed (Rule 2 - Missing Critical).  
@@ -141,7 +141,7 @@ Each task was committed atomically:
 
 ## Issues Encountered
 
-The default Hex cache path was not writable in this environment. Dependency fetching succeeded with `HEX_HOME=/private/tmp/scrypath-phase182-hex-home`; locked dependencies were unchanged.
+The default Hex cache path was not writable in this environment. Dependency fetching succeeded with <code>HEX_HOME=/private/tmp/scrypath-phase182-hex-home</code>; locked dependencies were unchanged.
 
 ## User Setup Required
 

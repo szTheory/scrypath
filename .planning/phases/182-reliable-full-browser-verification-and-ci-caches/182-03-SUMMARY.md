@@ -112,12 +112,12 @@ Plan metadata is recorded in the summary commit.
 
 ## Verification
 
-- `node --test scripts/ci/ecommerce_evidence.test.cjs` — 17 tests passed; zero failures, skips, or todos.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs` — compilation succeeded; 51 tests passed.
-- `HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix format --check-formatted test/mix/tasks/workflow_wiring_test.exs` — passed.
-- `bash -n scripts/ci/phase105_evidence.sh` — passed.
-- `git diff --check` — passed.
-- `gsd_run check evaluation-scope --plan 182-03 --commits-only --raw` — resolved the four task commits on this branch.
+- <code>node --test scripts/ci/ecommerce_evidence.test.cjs</code> — 17 tests passed; zero failures, skips, or todos.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix do compile --warnings-as-errors + test --warnings-as-errors test/mix/tasks/workflow_wiring_test.exs</code> — compilation succeeded; 51 tests passed.
+- <code>HEX_HOME=/private/tmp/scrypath-phase182-hex MIX_HOME=/private/tmp/scrypath-phase182-mix MIX_ENV=test mix format --check-formatted test/mix/tasks/workflow_wiring_test.exs</code> — passed.
+- <code>bash -n scripts/ci/phase105_evidence.sh</code> — passed.
+- <code>git diff --check</code> — passed.
+- <code>gsd_run check evaluation-scope --plan 182-03 --commits-only --raw</code> — resolved the four task commits on this branch.
 
 Task-level RED evidence was captured before implementation:
 - Task 1: the named single-case reconciliation test exited 1 on its planned `eligible === true` assertion because the reconciler was not yet implemented; its fixture setup and target test executed.

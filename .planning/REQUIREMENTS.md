@@ -23,9 +23,9 @@ promoted with its storage decision already recorded in PROJECT.md.
 
 ### Browser coverage and reliable full verification
 
-- [ ] **BROW-01**: A contributor can run the canonical full Docker E2E command and exercise mounted and standalone Ops scenarios in the same isolated, health-checked stack; full scope includes `compose.phase173.yaml`, while focused verification retains its existing service scope and teardown contract.
-- [ ] **BROW-02**: A contributor can execute every intended `ui_followup.spec.ts` and `ui_iteration3.spec.ts` case against Docker's `web:4002`; their guards continue to reject the retained local preview, and the collected case inventory explains counts and any intentional skips.
-- [ ] **BROW-03**: A maintainer can obtain a successful full scheduled/manual `ecommerce-e2e` run at the changed source SHA within a 30-minute job budget, with complete bounded artifacts and no unexplained skips or retries counted as clean passes; stale expectations are reconciled with current behavior using executable assertions.
+- [x] **BROW-01**: A contributor can run the canonical full Docker E2E command and exercise mounted and standalone Ops scenarios in the same isolated, health-checked stack; full scope includes `compose.phase173.yaml`, while focused verification retains its existing service scope and teardown contract.
+- [x] **BROW-02**: A contributor can execute every intended `ui_followup.spec.ts` and `ui_iteration3.spec.ts` case against Docker's `web:4002`; their guards continue to reject the retained local preview, and the collected case inventory explains counts and any intentional skips.
+- [x] **BROW-03**: A maintainer can obtain a successful full scheduled/manual `ecommerce-e2e` run at the changed source SHA within a 30-minute job budget, with complete bounded artifacts and no unexplained skips or retries counted as clean passes; stale expectations are reconciled with current behavior using executable assertions.
 
 ### Maintainer tooling and Hex package boundaries
 
@@ -45,8 +45,8 @@ promoted with its storage decision already recorded in PROJECT.md.
 
 ### CI cache reuse
 
-- [ ] **CACHE-01**: A contributor's Docker verification builds can reuse GitHub Actions buildx caches on subsequent runs and still build successfully when the cache is missing.
-- [ ] **CACHE-02**: A contributor's BEAM dependency/build jobs can use safe `restore-keys` fallbacks with environment/version-aware keys, while lockfile changes invalidate the appropriate cache and cold-cache runs remain valid.
+- [x] **CACHE-01**: A contributor's Docker verification builds can reuse GitHub Actions buildx caches on subsequent runs and still build successfully when the cache is missing.
+- [x] **CACHE-02**: A contributor's BEAM dependency/build jobs can use safe `restore-keys` fallbacks with environment/version-aware keys, while lockfile changes invalidate the appropriate cache and cold-cache runs remain valid.
 
 ### UI quality foundations for v1.46
 
@@ -115,11 +115,11 @@ assignments on 2026-10-26. Implementation has not started.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BROW-01 | Phase 182 | Pending |
-| BROW-02 | Phase 182 | Pending |
-| BROW-03 | Phase 182 | Pending |
-| CACHE-01 | Phase 182 | Pending |
-| CACHE-02 | Phase 182 | Pending |
+| BROW-01 | Phase 182 | Complete |
+| BROW-02 | Phase 182 | Complete |
+| BROW-03 | Phase 182 | Complete |
+| CACHE-01 | Phase 182 | Complete |
+| CACHE-02 | Phase 182 | Complete |
 | PKGH-01 | Phase 183 | Pending |
 | PKGH-02 | Phase 183 | Pending |
 | PKGH-03 | Phase 183 | Pending |

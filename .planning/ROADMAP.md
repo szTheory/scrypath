@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phase 182 planned and ready to execute)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phase 182 complete; Phase 183 ready for discussion)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -17,11 +17,12 @@
 
 ## Current Posture
 
-**Phase 182 is in final goal verification (2026-10-27).** All eight plans and five reviewed fixes are merged. Corrected browser source 1c has local 189/189 and hosted warm/full 189/189; unchanged five-mode cache evidence retains source 0b7 with explicit input parity. Actual child documentation 04e9a880 passed required gates,coverage,attestation and full 189/189 under the default import-only policy. Fresh merged checks passed115 Node,961 Elixir tests plus five properties and 98 contracts plus formatting/actionlint/docs. Phase completion has not been called.
+**Phase 182 is complete (2026-10-27): eight plans across seven waves.**
+BROW-01–03 and CACHE-01–02 have executable coverage and real source-bound local/hosted acceptance. See the phase VERIFICATION and two acceptance records for raw identities, limits and preserved failures. No human approval, independent design pass, merge to main or Hex publication is implied.
 
-Continue `$gsd-execute-phase 182` from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, through native goal verification, transition and final ROOT-SHA closeout. Current acceptance records preserve both source cutoffs and all failures. No independent design approval or every-advisory-green claim is made. Preserve config and retained-preview data.
+Continue from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, with `$gsd-discuss-phase 183`. The unrelated config edit and retained-preview data remain preserved. The final exact-root closeout receipt is stored outside the checkout after tracking writes.
 
-The v1.44 archive and 19 inherited audit-debt items remain intact; PR122 merge and Hex publication are separate. WR-03's baseline same-run rerun naming limitation is explicitly deferred in the disposition; known dependency-audit debt remains Phase 184. v1.45 has three later phases and is not complete.
+The v1.44 archive, its 19 debt items and historical deferrals remain intact. PR #122 merge and Hex publication remain separate. Known deep-quality dependency audit debt stays in Phase 184; completion of browser/cache work does not claim all advisory jobs green. v1.45 has three remaining phases and is not complete.
 
 ## v1.45 Foundation and CI
 
@@ -37,7 +38,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 
 ## Phases
 
-- [ ] **Phase 182: Reliable full browser verification and CI caches** — Contributors can exercise the full intended browser inventory in an isolated stack with reusable, safe caches.
+- [x] **Phase 182: Reliable full browser verification and CI caches** — Contributors can exercise the full intended browser inventory in an isolated stack with reusable, safe caches. (completed 2026-10-27)
 - [ ] **Phase 183: Maintainer tooling outside the Hex package** — Contributors retain verification commands while adopters receive only supported library/operator surfaces.
 - [ ] **Phase 184: Explicit and lean dependency graphs** — Adopters resolve supported dependencies without unused optional-app overhead, and maintainers receive reconciled lockfiles and audit results.
 - [ ] **Phase 185: Executable UI quality foundations** — Contributors get token, contrast and drift enforcement while operators retain the current supported appearance.
@@ -56,7 +57,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 4. Repeated Docker verification builds restore/export a buildx GHA cache, and the same build succeeds without a cache. (CACHE-01)
 5. BEAM jobs safely restore fallback caches across appropriate version/environment keys, invalidate changed-lock inputs and succeed from a cold cache. (CACHE-02)
 
-**Plans**: 8/8 plans merged across 7 waves; final phase-goal verification pending.
+**Plans**: 8/8 plans complete merged across 7 waves; final phase-goal verification pending.
 
 Plans:
 
@@ -147,11 +148,11 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Phase 182 is planned; execution has not started.
+**Execution Order:** 182 → 183 → 184 → 185. Phase 182 is complete; discuss Phase 183 next.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 182. Reliable full browser verification and CI caches | 8/8 | In Progress | — |
+| 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 0/TBD | Not started | — |
 | 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
