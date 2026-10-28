@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
   test "standalone deep quality audits once and shares every other quality check" do
     assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_with_audit/1, [
       {:task, "verify.no_optional_deps", []},
-      {:task, "scrypath.namespace_fence", []},
+      {:task, "verify.namespace_fence", []},
       {:command, "hex.audit", []},
       {:command, "dialyzer", []}
     ])
@@ -94,7 +94,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
   test "the internal no-audit path retains quality checks without auditing" do
     assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_without_audit/1, [
       {:task, "verify.no_optional_deps", []},
-      {:task, "scrypath.namespace_fence", []},
+      {:task, "verify.namespace_fence", []},
       {:command, "dialyzer", []}
     ])
   end
