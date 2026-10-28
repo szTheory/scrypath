@@ -236,6 +236,7 @@ do not simulate approvals.
 
 **Support and proof policy:**
 - `mix verify.adopter` is the canonical adopter proof spine.
+- Since Phase 183, repository-only `mix verify*` tasks (including `mix verify.adopter`) run from a source checkout. They live in `dev/mix/tasks/`, compile only under `MIX_ENV=test`, and are not part of the Hex package built from this source, which ships only the public `mix scrypath.*` operator tasks. The published 0.3.17 still contains them until a separate maintainer-confirmed release.
 - Fast proof is required for routine PR confidence; repeatable live proof should run in CI when its recurring confidence justifies the cost, and must remain prerequisite-bound and explicit.
 - Prefer exact-commit CI evidence for service-backed acceptance so maintainers do not have to repeat routine UAT locally.
 - Adopter issue intake must request reproducible evidence and flow classification.
