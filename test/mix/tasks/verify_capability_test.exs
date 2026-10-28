@@ -43,12 +43,13 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
         ] do
       path =
         if task == "ops_ui" do
-          "lib/mix/tasks/verify.ops_ui.ex"
+          Scrypath.RepoTooling.task_path("verify.ops_ui.ex")
         else
-          "lib/mix/tasks/verify/#{task}.ex"
+          Scrypath.RepoTooling.task_path("verify/#{task}.ex")
         end
 
       assert File.exists?(path)
+      assert Mix.Task.get("verify.#{task}")
     end
   end
 

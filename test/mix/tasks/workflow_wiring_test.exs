@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
-  @verify_task "lib/mix/tasks/verify.ex"
+  @verify_task Scrypath.RepoTooling.task_path("verify.ex")
 
   describe "HYG-02 no blanket compiler suppression" do
     test "mix.exs sets no elixirc_options" do
@@ -15,8 +15,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "no library source changes compiler options at runtime" do
       offenders =
-        "lib/**/*.ex"
-        |> Path.wildcard()
+        ["lib/**/*.ex", "dev/**/*.ex"]
+        |> Enum.flat_map(&Path.wildcard/1)
         |> Enum.filter(&(File.read!(&1) =~ "Code.put_compiler_option"))
 
       assert offenders == [],
@@ -25,8 +25,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "no_warn_undefined is limited to Oban modules" do
       site_count =
-        "lib/**/*.ex"
-        |> Path.wildcard()
+        ["lib/**/*.ex", "dev/**/*.ex"]
+        |> Enum.flat_map(&Path.wildcard/1)
         |> Enum.map(&assert_oban_suppressions!(File.read!(&1), &1))
         |> Enum.sum()
 
