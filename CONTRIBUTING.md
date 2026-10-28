@@ -25,6 +25,8 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 
 ## Canonical verification commands
 
+Repository-only `mix verify*` tasks live in `dev/mix/tasks/` and are not part of the Hex package; public operator tasks (`mix scrypath.*`) stay in `lib/mix/tasks/`. Command names and focused test paths are unchanged. Verifier tasks compile only under `MIX_ENV=test`, which `preferred_envs` selects automatically; `MIX_ENV=dev mix verify.adopter` (or `mix help verify.adopter` without `MIX_ENV=test`) reports that the task could not be found.
+
 Use capability-named commands for new work. Historical `verify.phase*` commands remain supported for their original focused proof and print/retain their original argument contracts; prefer the corresponding capability command when its scope matches.
 
 | Capability | Canonical command | Preserved proof |
