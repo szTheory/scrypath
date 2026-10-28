@@ -3,8 +3,8 @@ defmodule Scrypath.RepoTooling do
 
   # Single location of the repository-only verifier tree. Tests that pin verifier
   # behavior by reading its source go through this module so they never hold a
-  # literal path. Phase 183 flips this root from lib/mix/tasks to dev/mix/tasks.
-  @tasks_root "lib/mix/tasks"
+  # literal path. The verifier tree lives under dev/mix/tasks, outside the Hex package.
+  @tasks_root "dev/mix/tasks"
 
   def tasks_root, do: @tasks_root
 
