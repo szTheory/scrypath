@@ -100,7 +100,35 @@ Plans:
 2. Documented canonical/historical source-checkout commands remain callable in their intended environments, and an unpacked package compiles with no development tree. (PKGH-02)
 3. The package/parity gate inspects actual archive/consumer behavior, fails if maintainer tooling leaks back into the package, and proves supported public operator tasks remain usable. (PKGH-03)
 
-**Plans**: TBD during phase planning.
+**Plans**: 8 plans across 6 waves, all autonomous. The maintainer approved the D-07 amendment on 2026-10-28, so no checkpoint remains.
+
+Plans:
+
+**Wave 1**
+
+- [ ] 183-01-PLAN.md — Tracer: renamed namespace fence in dev/mix/tasks with env-keyed compile and :test preferred env (wave 1)
+- [ ] 183-02-PLAN.md — Formatter, credo, workspace gate, BEAM cache and ops-ui filter cover dev/ (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 183-03-PLAN.md — Scrypath.RepoTooling and location-independent source-reading tests (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 183-04-PLAN.md — Pure 52-file move to dev/mix/tasks, helper root flip, boundary and preferred_envs guards (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 183-05-PLAN.md — Fail-closed PackageContract gate, hermetic mutations, archive compiles, verify.phase11 wiring (wave 4)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 183-06-PLAN.md — Compiled-consumer task surface and CLI proof (wave 5)
+- [ ] 183-07-PLAN.md — Amended D-07 (unfiltered docs), packaged-docs guard, source-checkout doc qualifiers (wave 5)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 183-08-PLAN.md — Local phase gate, documented-command coverage, PROJECT.md line, PR-first open and exact-SHA hosted closeout (wave 6)
 
 ### Phase 184: Explicit and lean dependency graphs
 

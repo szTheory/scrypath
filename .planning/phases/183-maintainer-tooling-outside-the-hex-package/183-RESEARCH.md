@@ -642,24 +642,24 @@ CONTRIBUTING (insert before "Use capability-named commands for new work."): "Rep
 
 **If this table is empty:** not applicable; items above are low-risk and none block planning.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Is the maintainer comfortable amending D-07 (drop `filter_modules`)?**
+1. **Is the maintainer comfortable amending D-07 (drop `filter_modules`)?** **RESOLVED (2026-10-28, maintainer decision):** The maintainer answered the orchestrator's question prompt directly and approved the amendment. 183-CONTEXT.md D-07 carries an "Amended 2026-10-28 (maintainer-approved)" note, with the original text kept. 183-07 Task 1 implements it: `docs/0` stays unchanged and a hermetic guard is added that packaged docs never reference `Mix.Tasks.Verify`. No checkpoint remains.
    - What we know: D-07 requires both docs builds to be clean; with the filter the `:test` build is not (F1); without it both are.
    - What's unclear: whether "docs builds agree" (identical module lists) is a hard requirement beyond "both clean". They cannot agree without warnings; ExDoc offers no clean way to hide modules in `:test` while keeping `mix verify.x` references legal.
    - Recommendation: Plan without `filter_modules`; state the amendment and the evidence in the first plan's objective and in the PR description so the maintainer can veto. Add the hermetic guard that packaged docs never mention `Mix.Tasks.Verify`.
 
-2. **Should PR CI build `:dev` docs?**
+2. **Should PR CI build `:dev` docs?** **RESOLVED (183-07 and 183-08):** No dev-docs CI step is added. 183-07 Task 1 adds the hermetic packaged-docs guard. Both `MIX_ENV=test` and `MIX_ENV=dev mix docs --warnings-as-errors` run as gates in 183-07 Tasks 1 and 2 and in the 183-08 Task 1 phase gate, and their results are recorded in 183-ACCEPTANCE.md.
    - What we know: `:dev` docs have no PR-time coverage today; `hex.publish` builds them only at release time and does not pass `--warnings-as-errors`. A `:dev`-only warning would need an explicit reference to a Verify module in a packaged doc, which today does not exist (zero hits for `Mix.Tasks.Verify` in README, CONTRIBUTING, ARCHITECTURE, guides, docs).
    - Recommendation: do not add a dev-build CI step (lean gates; about 16 s extra dev compile). Use the hermetic doc-reference guard plus one recorded manual `MIX_ENV=dev mix docs --warnings-as-errors` run in the plan's acceptance evidence.
 
-3. **Where does the D-17 boundary guard live?**
+3. **Where does the D-17 boundary guard live?** **RESOLVED (183-04 Task 2):** The guard lives in `describe "tooling boundary"` in `test/release/package_contents_test.exs`. That file joins the `verify.phase11` list in 183-05 Task 3.
    - Recommendation: a `describe "tooling boundary"` in `test/release/package_contents_test.exs`, so it rides the same `verify.phase11` entry as the gate (the D-12 list needs no extra file).
 
-4. **D-14's 34/14 vs grep's 32/13 (F3).**
+4. **D-14's 34/14 vs grep's 32/13 (F3).** **RESOLVED (183-03 Task 2):** Acceptance is by grep. The gate is `test -z "$(grep -rn 'lib/mix/tasks/verify' test)"`, re-asserted after the move in 183-04 Task 1. No count is pinned.
    - Recommendation: acceptance by grep, not by count.
 
-5. **Test-env compile of the unpacked archive (D-10 "both envs").**
+5. **Test-env compile of the unpacked archive (D-10 "both envs").** **RESOLVED (183-05 Task 2):** `describe "unpacked archive compiles without the dev tree"` compiles the unpacked archive under both `MIX_ENV=prod` and `MIX_ENV=test`. It uses `Mix.Project.deps_path()` and copied `_build/test/lib` dependency builds, and runs with `--warnings-as-errors`, asserting 8 task beams and no Verify beam.
    - What we know: `prod` is hermetic with `MIX_DEPS_PATH=<repo deps>`, a copied `mix.lock` and isolated `MIX_BUILD_PATH` (5 s). `test` needs the dep builds: copying `_build/test/lib/*` except `scrypath` into the isolated build path made it a 1 s compile. Both need the repo's `deps/` and `_build/test` to exist, which is true in every lane that runs `package_contents_test` (`mix deps.get` and a test-env compile have already happened).
    - Recommendation: implement both as one extra test in `package_contents_test.exs` using `Mix.Project.deps_path()` and `Mix.Project.build_path()`; skip the `test`-env variant only if flaky, since L2 already proves the realistic `prod` path and the tiny-project matrix proves the "missing path tolerated" semantics.
 
