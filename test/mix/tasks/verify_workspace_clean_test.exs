@@ -23,6 +23,9 @@ defmodule Mix.Tasks.Verify.WorkspaceCleanTest do
 
       # D-05: test/** included even though not in package.files
       assert "test" in pathspecs
+
+      # D-08: dev/** (maintainer verifiers) included even though not packaged
+      assert "dev" in pathspecs
     end
   end
 

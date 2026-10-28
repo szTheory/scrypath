@@ -78,7 +78,7 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
 
   @doc """
   Returns the pathspec list used by `run/1` — derived from
-  `mix.exs` `package.files` plus `"test"`.
+  `mix.exs` `package.files` plus `"dev"` and `"test"`.
 
   Exposed publicly for testability.
   """
@@ -91,9 +91,10 @@ defmodule Mix.Tasks.Verify.WorkspaceClean do
       |> Keyword.get(:package, [])
       |> Keyword.get(:files, [])
 
-    # test/** included even though not packaged — uncommitted tests
-    # mean "the lib/ state being published was not tested as it will ship."
-    package_files ++ ["test"]
+    # dev/** and test/** are included even though neither is packaged:
+    # uncommitted maintainer verifiers or tests mean "the lib/ state being
+    # published was not verified as it will ship."
+    package_files ++ ["dev", "test"]
   end
 
   defp ensure_no_args!([]), do: :ok
