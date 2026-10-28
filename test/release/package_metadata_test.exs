@@ -49,6 +49,7 @@ defmodule Scrypath.Release.PackageMetadataTest do
     refute "node_modules" in package_files
     refute "playwright-report" in package_files
     refute "test-results" in package_files
+    refute "dev" in package_files
   end
 
   test "every root docs file is covered by the package allowlist" do

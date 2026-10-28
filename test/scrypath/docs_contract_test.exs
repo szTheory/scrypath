@@ -946,6 +946,7 @@ defmodule Scrypath.DocsContractTest do
   test "verify.phase11 keeps the release gate auth-free and complete" do
     assert_contains_all(@verify_phase11, [
       "test/release/package_metadata_test.exs",
+      "test/release/package_contents_test.exs",
       "test/release/consumer_smoke_test.exs",
       "test/scrypath/docs_contract_test.exs",
       "mix verify.release_publish"
