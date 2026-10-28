@@ -15,25 +15,25 @@ const graphs = {
   root: {
     manifests: ["mix.exs"],
     locks: ["mix.lock"],
-    sourceRoots: ["lib", "test", "config", "priv"],
+    sourceRoots: ["lib", "dev", "test", "config", "priv"],
     resolvedPaths: ["deps", "_build/test"]
   },
   ops: {
     manifests: ["mix.exs", "scrypath_ops/mix.exs"],
     locks: ["mix.lock", "scrypath_ops/mix.lock"],
-    sourceRoots: ["lib", "test", "config", "priv", "scrypath_ops/lib", "scrypath_ops/test", "scrypath_ops/config", "scrypath_ops/priv"],
+    sourceRoots: ["lib", "dev", "test", "config", "priv", "scrypath_ops/lib", "scrypath_ops/test", "scrypath_ops/config", "scrypath_ops/priv"],
     resolvedPaths: ["deps", "_build/test", "scrypath_ops/deps", "scrypath_ops/_build/test"]
   },
   ecommerce: {
     manifests: ["mix.exs", "scrypath_ops/mix.exs", "examples/scrypath_ecommerce/mix.exs"],
     locks: ["mix.lock", "scrypath_ops/mix.lock", "examples/scrypath_ecommerce/mix.lock"],
-    sourceRoots: ["lib", "test", "config", "priv", "scrypath_ops/lib", "scrypath_ops/test", "scrypath_ops/config", "scrypath_ops/priv", "examples/scrypath_ecommerce/lib", "examples/scrypath_ecommerce/test", "examples/scrypath_ecommerce/config", "examples/scrypath_ecommerce/priv"],
+    sourceRoots: ["lib", "dev", "test", "config", "priv", "scrypath_ops/lib", "scrypath_ops/test", "scrypath_ops/config", "scrypath_ops/priv", "examples/scrypath_ecommerce/lib", "examples/scrypath_ecommerce/test", "examples/scrypath_ecommerce/config", "examples/scrypath_ecommerce/priv"],
     resolvedPaths: ["deps", "_build/test"]
   },
   "phoenix-example": {
     manifests: ["mix.exs", "examples/phoenix_meilisearch/mix.exs"],
     locks: ["mix.lock", "examples/phoenix_meilisearch/mix.lock"],
-    sourceRoots: ["lib", "test", "config", "priv", "examples/phoenix_meilisearch/lib", "examples/phoenix_meilisearch/test", "examples/phoenix_meilisearch/config", "examples/phoenix_meilisearch/priv"],
+    sourceRoots: ["lib", "dev", "test", "config", "priv", "examples/phoenix_meilisearch/lib", "examples/phoenix_meilisearch/test", "examples/phoenix_meilisearch/config", "examples/phoenix_meilisearch/priv"],
     resolvedPaths: ["deps", "_build/test", "examples/phoenix_meilisearch/deps", "examples/phoenix_meilisearch/_build/test"]
   }
 };
