@@ -2,25 +2,32 @@
 gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
-status: ready_to_plan
+current_phase: 183
+current_phase_name: Maintainer tooling outside the Hex package
+status: planning
 stopped_at: Phase 182 complete; discuss Phase 183 next
-last_updated: "2026-10-28T00:07:59.726Z"
-state_head: a9169390515f9d41e2d33f9d96e6a5b66e4aa4c9
+last_updated: "2026-10-28T00:12:34.331Z"
+last_activity: 2026-10-27
+last_activity_desc: Phase 182 execution and verification complete; Phase 183 ready for discussion
+state_head: 262517657687b8e518d9943e36d53919934982f2
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 8
   completed_plans: 8
   percent: 25
-last_activity: 2026-10-27
-current_phase: 183
-current_phase_name: Maintainer tooling outside the Hex package
-last_activity_desc: Phase 182 execution and verification complete; Phase 183 ready for discussion
 ---
 
 # Project State
 
-## Current position
+## Current Position
+
+Phase: 183 of 4 (Maintainer tooling outside the Hex package)
+Plan: Not started
+Status: planning
+Last activity: 2026-10-27 — Phase 182 completed; Phase 183 discussion is next.
+
+Progress: [███░░░░░░░] 25%
 
 Milestone: **v1.45 Foundation and CI** (1/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
@@ -53,7 +60,7 @@ Current focus: Phase 183's contributor-command parity and clean installed packag
 - Phase 184: inherited deep-quality dependency audit debt remains; no blanket risk acceptance or all-advisory-green claim.
 - WR-03: baseline-only same-run rerun artifact naming is deferred in REVIEW-DISPOSITION. Fresh closeout dispatches work; future rerun support must change upload names and ci_monitor consumers together. No human risk approval is implied.
 - PR #122 merge and Hex publication remain separate pending work from the v1.44 archive boundary. The 19 inherited audit-debt items and historical deferrals remain in their archive/tracker.
-- Preserve the unrelated `.planning/config.json` edit and untracked milestone lock. Preserve retained preview data and its named checkout; this phase did not mutate or reseed it.
+- Preserve the unrelated `.planning/config.json` edit. The phase completion owner released the milestone lock. Preserve retained preview data and its named checkout; this phase did not mutate or reseed it.
 - v1.46–v1.47 UI engine/polish and v1.48 adopter features remain deferred. No speculative reopening or phase replay without concrete evidence.
 
 ## Session continuity
