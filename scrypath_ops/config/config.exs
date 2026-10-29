@@ -38,15 +38,6 @@ config :scrypath_ops, ScrypathOpsWeb.Endpoint,
   pubsub_server: ScrypathOps.PubSub,
   live_view: [signing_salt: "rzp5y59p"]
 
-# Configure the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :scrypath_ops, ScrypathOps.Mailer, adapter: Swoosh.Adapters.Local
-
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
