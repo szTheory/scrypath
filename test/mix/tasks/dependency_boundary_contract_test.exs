@@ -17,6 +17,9 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @mailbox_source "scrypath_ops/lib/scrypath_ops/mailer.ex"
   @mailbox_test "scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs"
   @dev_router "scrypath_ops/lib/scrypath_ops_web/dev_router.ex"
+  @telemetry_source "scrypath_ops/lib/scrypath_ops_web/telemetry.ex"
+  @application_source "scrypath_ops/lib/scrypath_ops/application.ex"
+  @endpoint_source "scrypath_ops/lib/scrypath_ops_web/endpoint.ex"
 
   test "Ops and ecommerce do not directly declare Swoosh" do
     for path <- [@ops_manifest, @host_manifest] do
@@ -138,6 +141,90 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
            "the removed /dev/mailbox route must be rejected regardless of Plug alias form"
   end
 
+  test "diagnostic dependencies are development-only and optional for mounted hosts" do
+    for dependency <- [:phoenix_live_dashboard, :telemetry_metrics, :telemetry_poller] do
+      options = dependency_options!(@ops_manifest, dependency)
+
+      assert Keyword.get(options, :only) == :dev,
+             "#{@ops_manifest}: #{dependency} must be available only during direct development"
+
+      assert Keyword.get(options, :optional) == true,
+             "#{@ops_manifest}: mounted hosts must not be forced to include #{dependency}"
+    end
+  end
+
+  test "diagnostic compilation, plugs, child startup, and dev routes share capability guards" do
+    telemetry_ast = read_ast!(@telemetry_source)
+    application_ast = read_ast!(@application_source)
+    endpoint_ast = read_ast!(@endpoint_source)
+    dev_router_ast = read_ast!(@dev_router)
+
+    assert conditional_has_calls_and_body?(
+             telemetry_ast,
+             [
+               {[:Code], :ensure_loaded?,
+                fn args -> alias_argument?(args, [:Telemetry, :Metrics]) end}
+             ],
+             fn
+               {:defmodule, _, [{:__aliases__, _, [:ScrypathOpsWeb, :Telemetry]} | _]} -> true
+               _ -> false
+             end
+           ),
+           "#{@telemetry_source}: module compilation must require Telemetry.Metrics"
+
+    assert conditional_has_calls_and_body?(
+             application_ast,
+             [
+               {[:Code], :ensure_loaded?,
+                fn args ->
+                  alias_argument?(args, [:ScrypathOpsWeb, :Telemetry])
+                end}
+             ],
+             fn
+               {:__aliases__, _, [:ScrypathOpsWeb, :Telemetry]} -> true
+               _ -> false
+             end
+           ),
+           "#{@application_source}: the diagnostics child must require its compiled module"
+
+    assert conditional_has_calls_and_body?(
+             endpoint_ast,
+             [
+               {[:Code], :ensure_loaded?,
+                fn args ->
+                  alias_argument?(args, [:Phoenix, :LiveDashboard, :RequestLogger])
+                end}
+             ],
+             fn
+               {:plug, _, [{:__aliases__, _, [:Phoenix, :LiveDashboard, :RequestLogger]} | _]} ->
+                 true
+
+               _ ->
+                 false
+             end
+           ),
+           "#{@endpoint_source}: RequestLogger must be installed only when available"
+
+    assert conditional_has_calls_and_body?(
+             dev_router_ast,
+             [
+               {[:Code], :ensure_loaded?,
+                fn args ->
+                  alias_argument?(args, [:Phoenix, :LiveDashboard, :Router])
+                end},
+               {[:Application], :compile_env,
+                fn args ->
+                  args == [:scrypath_ops, :dev_routes]
+                end}
+             ],
+             fn
+               {:live_dashboard, _, ["/dashboard", _opts]} -> true
+               _ -> false
+             end
+           ),
+           "#{@dev_router}: dashboard route must require both availability and dev_routes policy"
+  end
+
   defp direct_dependency_names!(path) do
     deps_body =
       path
@@ -148,6 +235,47 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       deps when is_list(deps) -> Enum.flat_map(deps, &dependency_name/1)
       other -> flunk("#{path}: expected a literal deps list, got #{Macro.to_string(other)}")
     end
+  end
+
+  defp dependency_options!(path, dependency) do
+    deps_body = path |> read_ast!() |> find_deps_body!()
+
+    Enum.find_value(deps_body, fn
+      {^dependency, _version} -> []
+      {:{}, _, [^dependency, _version, options]} when is_list(options) -> options
+      {:{}, _, [^dependency, options]} when is_list(options) -> options
+      _ -> nil
+    end) || flunk("#{path}: expected direct dependency #{dependency}")
+  end
+
+  defp conditional_has_calls_and_body?(ast, calls, body_predicate) do
+    has_node?(ast, fn
+      {:if, _, [condition, clauses]} when is_list(clauses) ->
+        Enum.all?(calls, fn {module, function, argument_predicate} ->
+          has_node?(condition, &remote_call?(&1, module, function, argument_predicate))
+        end) and has_node?(clauses, body_predicate)
+
+      _ ->
+        false
+    end)
+  end
+
+  defp remote_call?(
+         {{:., _, [{:__aliases__, _, module}, function]}, _, args},
+         module,
+         function,
+         argument_predicate
+       ) do
+    argument_predicate.(args)
+  end
+
+  defp remote_call?(_node, _module, _function, _argument_predicate), do: false
+
+  defp alias_argument?(args, expected_alias) do
+    Enum.any?(args, fn
+      {:__aliases__, _, ^expected_alias} -> true
+      _ -> false
+    end)
   end
 
   defp find_deps_body!(ast) do
