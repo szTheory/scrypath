@@ -4,16 +4,16 @@ milestone: v1.45
 milestone_name: Foundation and CI
 current_phase: 184
 current_phase_name: Explicit and lean dependency graphs
-status: planning
-stopped_at: Phase 184 context gathered; ready to plan
-last_updated: "2026-10-29T18:46:44.614Z"
+status: executing
+stopped_at: Phase 184 planned and independently checked; ready to execute
+last_updated: "2026-10-29T20:11:58.621Z"
 last_activity: 2026-10-29
-last_activity_desc: Phase 184 context gathered through delegated research and adversarial synthesis; ready to plan.
-state_head: e6f47e2185d61600dbcc246b4013bebff5f44b7d
+last_activity_desc: Phase 184 research and planning complete; independent checker passed after revision; 12 plans/24 tasks/11 waves, ready to execute.
+state_head: 218d6fb034123b9868687ceadd96976185a4fe03
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 16
+  total_plans: 28
   completed_plans: 16
   percent: 50
 ---
@@ -22,20 +22,20 @@ progress:
 
 ## Current Position
 
-Phase: 184 — Explicit and lean dependency graphs
+Phase: 184 (Explicit and lean dependency graphs) — READY TO EXECUTE
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-10-29 — Phase 184 context gathered through delegated research and adversarial synthesis; ready to plan.
+Status: Ready to execute
+Last activity: 2026-10-29 — Phase 184 research and planning complete; independent checker passed after revision; 12 plans/24 tasks/11 waves, ready to execute.
 
 Progress: [█████░░░░░] 50%
 
 Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Phase 184 — Explicit and lean dependency graphs. Context gathered; no implementation plan started.
+Next: Phase 184 — Explicit and lean dependency graphs. Twelve plans verified; execution has not started.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Next command: $gsd-plan-phase 184 — context captured in 184-CONTEXT.md (D-01–D-21); research-backed recommendations and discussion log are saved. No automatic execution is requested.
+Next command: $gsd-execute-phase 184 — run the 12 verified plans across 11 waves. No automatic execution is requested.
 
 ## Evidence and boundaries
 
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-28).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; discussion complete, ready to plan.
+Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; planning verified, ready to execute.
 
 ## Recent decisions
 
@@ -65,9 +65,9 @@ Current focus: Phase 184 dependency boundaries, optional-auth correctness and fo
 
 ## Session continuity
 
-Last session: 2026-10-29T18:46:43.654Z
-Stopped at: Phase 184 context gathered; ready to plan
-Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-CONTEXT.md
+Last session: 2026-10-29T20:11:58.372Z
+Stopped at: Phase 184 planned and independently checked; ready to execute
+Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
 

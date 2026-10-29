@@ -142,7 +142,42 @@ Plans:
 4. The relaxed compatible Sigra range passes optional-integration/auth checks, and audit failures are reported rather than suppressed. (DEP-06)
 5. Affected manifests/lockfiles form one verified update set with supported-stack checks, recorded dispositions for the roadmap's referenced Dependabot updates and explicit remaining advisory results. (DEP-07)
 
-**Plans**: TBD during phase planning.
+**Plans**: 12 autonomous plans across 11 waves; execution pending.
+
+Plans:
+**Wave 1**
+- [ ] 184-01-PLAN.md — Installed package Telemetry/Req tracer and two independent witnesses (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 184-02-PLAN.md — Remove direct mail declarations, implementation and Ops configuration (wave 2)
+- [ ] 184-08-PLAN.md — Compatible Actions updates and preserved cache/permission contracts (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 184-11-PLAN.md — Mailbox/host cleanup, durable contracts and coherent application compile (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 184-03-PLAN.md — Development diagnostics with compile/start and host ownership boundaries (wave 4)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 184-04-PLAN.md — Optional Sigra range and fail-closed validation/sensitive actions (wave 5)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 184-05-PLAN.md — Dev asset scopes/aliases and explicit production configuration (wave 6)
+
+**Wave 7** *(blocked on Wave 6 completion)*
+- [ ] 184-12-PLAN.md — Isolated asset builder, independent targets and static handoff contracts (wave 7)
+
+**Wave 8** *(blocked on Wave 7 completion)*
+- [ ] 184-06-PLAN.md — Clean Ops modes, real no-Sigra callbacks and both served asset bundles (wave 8)
+
+**Wave 9** *(blocked on Wave 8 completion)*
+- [ ] 184-07-PLAN.md — Four scoped dependency resolutions and compatible security/tooling updates (wave 9)
+
+**Wave 10** *(blocked on Wave 9 completion)*
+- [ ] 184-09-PLAN.md — Centralized dependency, build, optional-auth and security guidance (wave 10)
+
+**Wave 11** *(blocked on Wave 10 completion)*
+- [ ] 184-10-PLAN.md — Complete graph/PR/tuple evidence and exact final-source closeout (wave 11)
 
 ### Phase 185: Executable UI quality foundations
 
@@ -182,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 0/TBD | Not started | — |
+| 184. Explicit and lean dependency graphs | 0/12 | Planned     | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.
