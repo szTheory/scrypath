@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 184
 current_phase_name: Explicit and lean dependency graphs
 status: planning
-stopped_at: Phase 183 complete, ready to plan Phase 184
-last_updated: "2026-10-28T14:45:25.476Z"
-last_activity: 2026-10-28
-last_activity_desc: Phase 183 complete, transitioned to Phase 184
-state_head: 3fd66dd4e0ef51af18af05e2cd6b92fe2a103fdf
+stopped_at: Phase 184 context gathered; ready to plan
+last_updated: "2026-10-29T18:46:44.614Z"
+last_activity: 2026-10-29
+last_activity_desc: Phase 184 context gathered through delegated research and adversarial synthesis; ready to plan.
+state_head: e6f47e2185d61600dbcc246b4013bebff5f44b7d
 progress:
   total_phases: 4
   completed_phases: 2
@@ -25,17 +25,17 @@ progress:
 Phase: 184 — Explicit and lean dependency graphs
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-28 — Phase 183 complete, transitioned to Phase 184
+Last activity: 2026-10-29 — Phase 184 context gathered through delegated research and adversarial synthesis; ready to plan.
 
 Progress: [█████░░░░░] 50%
 
 Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: **Phase 183 — Maintainer tooling outside the Hex package**. No plan started.
+Next: Phase 184 — Explicit and lean dependency graphs. Context gathered; no implementation plan started.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Next command: **`/gsd-plan-phase 183`** — context captured in `183-CONTEXT.md` (D-01–D-20). No automatic execution of Phase 183 is requested.
+Next command: $gsd-plan-phase 184 — context captured in 184-CONTEXT.md (D-01–D-21); research-backed recommendations and discussion log are saved. No automatic execution is requested.
 
 ## Evidence and boundaries
 
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-28).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 183's contributor-command parity and clean installed package boundary.
+Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; discussion complete, ready to plan.
 
 ## Recent decisions
 
@@ -65,9 +65,9 @@ Current focus: Phase 183's contributor-command parity and clean installed packag
 
 ## Session continuity
 
-Last session: 2026-10-28T14:06:18.502Z
-Stopped at: Phase 183 complete, ready to plan Phase 184
-Resume file: None
+Last session: 2026-10-29T18:46:43.654Z
+Stopped at: Phase 184 context gathered; ready to plan
+Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-CONTEXT.md
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
 
