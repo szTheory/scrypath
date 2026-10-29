@@ -16,7 +16,7 @@
     {
       "number": "184",
       "name": "Explicit and lean dependency graphs",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "number": "185",
@@ -29,5 +29,5 @@
     "label": "Advance to the next step",
     "reason": "Phase 3 of 4 · 50% · executing"
   },
-  "updated_at": "2026-10-29T20:11:28.362Z"
+  "updated_at": "2026-10-29T20:17:37.259Z"
 }

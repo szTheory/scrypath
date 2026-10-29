@@ -146,7 +146,7 @@ Plans:
 
 Plans:
 **Wave 1**
-- [ ] 184-01-PLAN.md — Installed package Telemetry/Req tracer and two independent witnesses (wave 1)
+- [x] 184-01-PLAN.md — Installed package Telemetry/Req tracer and two independent witnesses (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 184-02-PLAN.md — Remove direct mail declarations, implementation and Ops configuration (wave 2)
@@ -217,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 0/12 | Planned     | — |
+| 184. Explicit and lean dependency graphs | 1/12 | In Progress | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.
