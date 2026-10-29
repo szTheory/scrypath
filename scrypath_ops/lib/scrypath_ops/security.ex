@@ -1,21 +1,15 @@
 defmodule ScrypathOps.Security do
   @moduledoc false
 
+  alias ScrypathOps.Integrations.Sigra, as: SigraIntegration
+
   @allowed_opsui_auth_modes ~w(basic proxy_headers sigra)
 
   def allowed_opsui_auth_modes, do: @allowed_opsui_auth_modes
 
   def auth_mode, do: System.get_env("OPSUI_AUTH_MODE", "basic")
 
-  def sigra_available? do
-    Code.ensure_loaded?(Sigra.Session) and
-      Code.ensure_loaded?(Sigra.Audit) and
-      function_exported?(Sigra.Audit, :log_safe, 3) and
-      Code.ensure_loaded?(ScrypathOps.Integrations.Sigra.OnMount) and
-      function_exported?(ScrypathOps.Integrations.Sigra.OnMount, :on_mount, 4) and
-      Code.ensure_loaded?(ScrypathOps.Integrations.Sigra.OperatorContext) and
-      function_exported?(ScrypathOps.Integrations.Sigra.OperatorContext, :from_socket, 1)
-  end
+  def sigra_available?, do: SigraIntegration.available?()
 
   def validate!(env \\ default_env()) do
     case validate(env) do
@@ -32,11 +26,7 @@ defmodule ScrypathOps.Security do
   def validate(%{auth_mode: "sigra"} = env) do
     cond do
       not sigra_available?() ->
-        {:error,
-         "OPSUI_AUTH_MODE=sigra requires the Sigra integration (Sigra.Session and " <>
-           "Sigra.Audit.log_safe/3) to be available. Add the optional Sigra dependency and " <>
-           "recompile scrypath_ops. See scrypath_ops/README.md and " <>
-           "guides/support-and-compatibility.md."}
+        {:error, SigraIntegration.unavailable_message()}
 
       not valid_sudo_confirm_path?(sigra_config_value(env, :sudo_confirm_path)) ->
         {:error, invalid_sudo_confirm_path_message()}

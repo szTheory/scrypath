@@ -23,7 +23,8 @@ tech-stack:
     - "Validate explicitly requested optional integrations against the runtime modules and functions the integration uses."
     - "Gate sensitive callbacks by selected auth mode and a typed identity with a valid, fresh sudo timestamp."
 key-files:
-  created: []
+  created:
+    - "scrypath_ops/lib/scrypath_ops/integrations/sigra/capability.ex"
   modified:
     - "scrypath_ops/mix.exs"
     - "scrypath_ops/lib/scrypath_ops/security.ex"
@@ -151,3 +152,9 @@ None - no external service configuration required.
 - Evaluation scope resolved four commits for plan 184-04.
 - Acceptance criteria and final Ops verification passed; formatting check passed.
 
+
+## Post-merge integration repair — 2026-10-29
+
+The first root wave gate failed the namespace-fence canary: direct external Sigra module references in `ScrypathOps.Security` crossed the existing integration boundary. The orchestrator moved the same capability predicate and unavailable message into the always-defined `ScrypathOps.Integrations.Sigra` module in `integrations/sigra/capability.ex`; Security delegates through its integration alias. The namespace allowlist was preserved.
+
+Fresh checks after this repair: namespace-fence tests **3 tests, 0 failures**; formatting of both changed source files passed; an isolated Elixir process with no dependency code paths rejected explicit Sigra and accepted basic/proxy modes; the root warning-as-error compile and fast suite passed **1005 tests plus 5 properties, 0 failures**. Tuple: Elixir 1.19.5 / OTP 28.5. Runtime receipts remain outside the checkout at `/private/tmp/scrypath-phase184-execution/wave5-capability-absence.log` and `wave5-merged-tests-repaired.log`. The original failure remains in `wave5-merged-tests.log`; no failed result was relabeled. Broader with/without dependency consumers and final-lock acceptance remain owned by plans 184-06/07/10.
