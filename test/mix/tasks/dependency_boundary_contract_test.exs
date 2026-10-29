@@ -205,16 +205,34 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
            ),
            "#{@endpoint_source}: RequestLogger must be installed only when available"
 
+    assert has_node?(dev_router_ast, fn node ->
+             remote_call?(node, [:Application], :compile_env, fn args ->
+               args == [:scrypath_ops, :dev_routes]
+             end)
+           end),
+           "#{@dev_router}: route policy must be tracked as a compile-time configuration input"
+
+    assert has_node?(dev_router_ast, fn
+             {{:., _,
+               [{:__aliases__, _, [:ScrypathOpsWeb, :OptionalDevRoutes]}, :dashboard_routes]}, _,
+              [policy_ast]} ->
+               has_node?(policy_ast, fn node ->
+                 remote_call?(node, [:Application], :compile_env, fn args ->
+                   args == [:scrypath_ops, :dev_routes]
+                 end)
+               end)
+
+             _ ->
+               false
+           end),
+           "#{@dev_router}: compile-time dev_routes policy must gate dashboard macro expansion"
+
     assert conditional_has_calls_and_body?(
              dev_router_ast,
              [
                {[:Code], :ensure_loaded?,
                 fn args ->
                   alias_argument?(args, [:Phoenix, :LiveDashboard, :Router])
-                end},
-               {[:Application], :compile_env,
-                fn args ->
-                  args == [:scrypath_ops, :dev_routes]
                 end}
              ],
              fn
