@@ -112,6 +112,12 @@ defmodule Scrypath.Release.ConsumerSmokeTest do
            )
   end
 
+  test "the same archive has independent Req 0.6 and Req 0.7 consumer workspaces", ctx do
+    consumer_names = ctx |> Map.get(:consumers, []) |> Enum.map(&Map.fetch!(&1, :name))
+
+    assert consumer_names == [:req_0_6, :req_0_7]
+  end
+
   test "the real Hex archive declares mandatory direct dependencies and keeps Telemetry directly owned",
        ctx do
     metadata = ctx.package_metadata
