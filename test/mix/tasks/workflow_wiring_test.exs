@@ -2,6 +2,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   use ExUnit.Case, async: true
 
   @ci_yml ".github/workflows/ci.yml"
+  @workflow_security_yml ".github/workflows/workflow-security.yml"
+  @website_yml ".github/workflows/website.yml"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -156,29 +158,232 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
-  describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
-    test "ci.yml pins actions/checkout v6 to immutable commits" do
+  describe "DEP-07 D-16/D-19: action pins and workflow trust boundaries" do
+    test "ci.yml pins actions/checkout v7.0.1 to its verified immutable commit" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/checkout@v4", "expected no legacy checkout@v4 pins"
-      assert yml =~ ~r|actions/checkout@[0-9a-f]{40} # v6|
+
+      assert_action_pin!(
+        yml,
+        "actions/checkout",
+        "3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "v7.0.1"
+      )
     end
 
-    test "ci.yml pins actions/cache v5 to immutable commits" do
+    test "ci.yml pins every cache component to v6.1.0's verified immutable commit" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/cache@v4", "expected no legacy cache@v4 pins"
-      assert yml =~ ~r|actions/cache@[0-9a-f]{40} # v5|
+
+      for action <- ["actions/cache", "actions/cache/restore", "actions/cache/save"] do
+        assert_action_pin!(
+          yml,
+          action,
+          "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+          "v6.1.0"
+        )
+      end
     end
 
     test "ci.yml pins checkout in every executable job" do
-      count = Regex.scan(~r|actions/checkout@[0-9a-f]{40} # v6|, File.read!(@ci_yml)) |> length()
+      count =
+        Regex.scan(
+          ~r|actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1|,
+          File.read!(@ci_yml)
+        )
+        |> length()
 
       assert count >= 10, "expected checkout pins across the CI graph, got #{count}"
     end
 
     test "ci.yml caches each BEAM verification lane" do
-      count = Regex.scan(~r|actions/cache@[0-9a-f]{40} # v5|, File.read!(@ci_yml)) |> length()
+      count =
+        Regex.scan(
+          ~r|actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6\.1\.0|,
+          File.read!(@ci_yml)
+        )
+        |> length()
 
       assert count >= 9, "expected cache pins across BEAM jobs, got #{count}"
+    end
+
+    test "workflow-security pins dependency review v5 and keeps its PR check fail-closed" do
+      security = File.read!(@workflow_security_yml)
+      dependency_review = workflow_job_block(security, "dependency-review")
+
+      assert_action_pin!(
+        security,
+        "actions/checkout",
+        "3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "v7.0.1"
+      )
+
+      assert_action_pin!(
+        security,
+        "actions/dependency-review-action",
+        "a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+        "v5.0.0"
+      )
+
+      assert dependency_review =~ "if: github.event_name == 'pull_request'"
+      assert dependency_review =~ "contents: read"
+      assert dependency_review =~ "pull-requests: read"
+      refute dependency_review =~ "continue-on-error: true"
+      refute dependency_review =~ "warn-only: true"
+    end
+
+    test "CI pin contract rejects a wrong action SHA or version comment" do
+      ci = File.read!(@ci_yml)
+      checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
+
+      wrong_sha = String.replace(ci, checkout_sha, String.duplicate("f", 40), global: false)
+      wrong_comment = String.replace(ci, "# v7.0.1", "# v7.0.0", global: false)
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_sha, "actions/checkout", checkout_sha, "v7.0.1")
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_comment, "actions/checkout", checkout_sha, "v7.0.1")
+      end
+    end
+
+    test "dependency audit remains failing while the independent quality check runs after it" do
+      ci = File.read!(@ci_yml)
+      deep_quality = workflow_job_block(ci, "deep-quality")
+      audit = workflow_step_block(deep_quality, "\n      - id: dependency_audit\n")
+
+      follow_up =
+        workflow_named_step_block(
+          deep_quality,
+          "Run deep quality checks independently of the dependency audit"
+        )
+
+      assert audit =~ "run: elixir scripts/ci/dependency_audit.exs"
+      refute audit =~ "continue-on-error: true"
+      assert follow_up =~ "!cancelled() && steps.dependency_audit.outcome != 'skipped'"
+      assert follow_up =~ "run_deep_quality_without_audit()"
+    end
+
+    test "all six affected workflows pin checkout v7.0.1 to its verified immutable commit" do
+      checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
+
+      for workflow <- [
+            @ci_yml,
+            @workflow_security_yml,
+            @website_yml,
+            @publish_hex_yml,
+            @release_please_yml,
+            @verify_published_yml
+          ] do
+        assert_action_pin!(File.read!(workflow), "actions/checkout", checkout_sha, "v7.0.1")
+      end
+    end
+
+    test "website pins Node and Pages actions to verified commits while retaining Node 22 cache inputs" do
+      website = File.read!(@website_yml)
+
+      assert_action_pin!(
+        website,
+        "actions/setup-node",
+        "949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "v7.1.0"
+      )
+
+      assert_action_pin!(
+        website,
+        "actions/deploy-pages",
+        "368f82528645a54fb793d4d04e342629a3f51346",
+        "v5.0.1"
+      )
+
+      for job_name <- ["build-and-check", "deploy"] do
+        job = workflow_job_block(website, job_name)
+
+        setup_node =
+          workflow_step_with_uses_block(
+            job,
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0"
+          )
+
+        assert setup_node =~ "node-version: '22'"
+        assert setup_node =~ "cache: npm"
+        assert setup_node =~ "cache-dependency-path: website/package-lock.json"
+      end
+
+      assert length(
+               Regex.scan(
+                 ~r|actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7\.1\.0|,
+                 website
+               )
+             ) ==
+               2
+    end
+
+    test "website events, full-history checkout and Pages permissions remain scoped" do
+      website = File.read!(@website_yml)
+      build = workflow_job_block(website, "build-and-check")
+      deploy = workflow_job_block(website, "deploy")
+
+      assert website =~ "  pull_request:\n"
+      assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
+      assert deploy =~ "if: github.event_name == 'push'"
+      assert build =~ "fetch-depth: 0"
+      assert deploy =~ "fetch-depth: 0"
+      assert website =~ "permissions:\n  contents: read"
+
+      assert deploy =~
+               "permissions:\n      contents: read\n      pages: write\n      id-token: write"
+
+      refute build =~ "pages: write"
+      refute build =~ "id-token: write"
+    end
+
+    test "release workflows retain tag selection, history, permissions and credential behavior" do
+      publish = File.read!(@publish_hex_yml)
+      release = File.read!(@release_please_yml)
+      verify_release = File.read!(@verify_published_yml)
+
+      publish_job = workflow_job_block(publish, "publish-scrypath")
+      release_job = workflow_job_block(release, "release-please")
+      release_publish_job = workflow_job_block(release, "publish-hex")
+      verify_job = workflow_job_block(verify_release, "verify-latest-published-release")
+
+      assert publish_job =~ "ref: ${{ inputs.tag }}"
+      assert release_job =~ "fetch-depth: 0"
+      refute release_job =~ ~r/^\s*ref:/m
+      assert release_publish_job =~ "ref: ${{ needs.release-please.outputs.tag_name }}"
+      assert verify_job =~ "fetch-depth: 0"
+      assert publish =~ "permissions:\n  contents: read"
+      assert release =~ "permissions:\n  contents: write\n  issues: write\n  pull-requests: write"
+      assert release_publish_job =~ "permissions:\n      contents: read"
+      assert verify_release =~ "permissions:\n  contents: read\n  issues: write"
+      refute publish_job =~ "persist-credentials: false"
+      refute release_job =~ "persist-credentials: false"
+      refute release_publish_job =~ "persist-credentials: false"
+      refute verify_job =~ "persist-credentials: false"
+    end
+
+    test "website action pin contracts reject wrong SHA and version comments" do
+      website = File.read!(@website_yml)
+      setup_node_sha = "949feb2413d6458794dcd2491c4babbbce0c15c1"
+      deploy_pages_sha = "368f82528645a54fb793d4d04e342629a3f51346"
+
+      wrong_setup_sha = String.replace(website, setup_node_sha, String.duplicate("f", 40))
+      wrong_deploy_comment = String.replace(website, "# v5.0.1", "# v5.0.0")
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_setup_sha, "actions/setup-node", setup_node_sha, "v7.1.0")
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(
+          wrong_deploy_comment,
+          "actions/deploy-pages",
+          deploy_pages_sha,
+          "v5.0.1"
+        )
+      end
     end
   end
 
@@ -412,9 +617,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute ci =~ "actions/cache@v4",
              "legacy actions/cache@v4 pin found — Node 20 deprecation risk"
 
-      # checkout went to @v6, cache went to @v5 — neither should sit at @v5/@v6 respectively
-      refute ci =~ "actions/checkout@v5",
-             "actions/checkout should be pinned to @v6, not @v5"
+      # Current immutable refs are v7.0.1 and v6.1.0, respectively.
+      refute ci =~ "actions/checkout@v6",
+             "actions/checkout should be pinned to v7.0.1, not v6"
     end
 
     test "UAT-06: docs/releasing.md ships §Release parity gate section to HexDocs" do
@@ -580,8 +785,11 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert core =~ "phase182_acceptance.cjs validate-inputs"
       assert core =~ "phase182_acceptance.cjs beam-plan"
       assert core =~ "if: steps.phase182_inputs.outputs.mode != 'beam-cold'"
-      assert core =~ "uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25"
-      assert core =~ "uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25"
+
+      assert core =~
+               "uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
+
+      assert core =~ "uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
       assert core =~ "steps.phase182_downloads_cache.outputs.cache-matched-key"
       assert core =~ "steps.phase182_resolved_cache.outputs.cache-matched-key"
       assert core =~ "steps.phase182_downloads_cache.outputs.cache-hit != 'true'"
@@ -657,7 +865,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       checkout =
         workflow_step_with_uses_block(
           job,
-          "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+          "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
         )
 
       assert job =~ "name: ecommerce-e2e (advisory)"
@@ -694,7 +902,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert :binary.match(job, "Record E2E job start and deadline") <
                :binary.match(
                  job,
-                 "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+                 "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
                )
 
       assert checkout =~ "fetch-depth: 0"
@@ -805,7 +1013,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       coverage_checkout =
         workflow_step_with_uses_block(
           coverage_job,
-          "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+          "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
         )
 
       assert length(Regex.scan(~r/^  coverage:$/m, ci)) == 1
@@ -960,5 +1168,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       {next_idx, _} -> binary_part(rest, 0, next_idx)
       :nomatch -> rest
     end
+  end
+
+  defp assert_action_pin!(workflow, action, sha, version) do
+    refs =
+      workflow
+      |> String.split("\n")
+      |> Enum.filter(&String.contains?(&1, "uses: #{action}@"))
+
+    assert refs != [], "expected at least one #{action} reference"
+
+    Enum.each(refs, fn ref ->
+      assert String.contains?(ref, "uses: #{action}@#{sha} # #{version}"),
+             "expected #{action} to use #{sha} with comment #{version}; found #{String.trim(ref)}"
+    end)
   end
 end

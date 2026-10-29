@@ -37,7 +37,7 @@ jobs:
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
       # UAT-09 asserts a release-history subject from the root test suite.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - name: Validate Phase 182 cache probe inputs
         id: phase182_inputs
@@ -69,7 +69,7 @@ jobs:
       - id: phase182_downloads_cache
         name: Restore Hex download archive cache
         if: steps.phase182_inputs.outputs.mode != 'beam-cold'
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
@@ -77,7 +77,7 @@ jobs:
       - id: phase182_resolved_cache
         name: Restore resolved BEAM build cache
         if: steps.phase182_inputs.outputs.mode != 'beam-cold'
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -94,13 +94,13 @@ jobs:
         working-directory: ${{ steps.phase182_lock_probe.outputs.beam_root || github.workspace }}
       - name: Save Hex download archive cache
         if: success() && steps.phase182_inputs.outputs.mode != 'beam-cold' && steps.core_verify.outcome == 'success' && steps.phase182_downloads_cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
       - name: Save resolved BEAM build cache
         if: success() && steps.phase182_inputs.outputs.mode != 'beam-cold' && steps.core_verify.outcome == 'success' && steps.phase182_resolved_cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -139,17 +139,17 @@ jobs:
     runs-on: ubuntu-latest
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -164,18 +164,18 @@ jobs:
     steps:
       # UAT-09 checks a release-history subject, so the contract suite requires
       # history beyond checkout's default depth of one.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -217,17 +217,17 @@ jobs:
       MIX_TARGET: host
       BEAM_CACHE_PROFILE: root-test
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -263,18 +263,18 @@ jobs:
           - {elixir: "1.19.0", otp: "28.1"}
     steps:
       # The compatibility lane also runs the root test suite, including UAT-09.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "${{ matrix.elixir }}", otp-version: "${{ matrix.otp }}"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -288,29 +288,32 @@ jobs:
     continue-on-error: true
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: deep-quality-test}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - run: mix local.hex 2.5.1 --force
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.plt_paths }}
           key: ${{ steps.beam_cache.outputs.plt_key }}
       - run: mix deps.get
-      - run: elixir scripts/ci/dependency_audit.exs
-      - run: mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'
+      - id: dependency_audit
+        run: elixir scripts/ci/dependency_audit.exs
+      - name: Run deep quality checks independently of the dependency audit
+        if: ${{ !cancelled() && steps.dependency_audit.outcome != 'skipped' }}
+        run: mix run --no-start -e 'Mix.Tasks.Verify.Capability.run_deep_quality_without_audit()'
 
   phoenix-example:
     name: phoenix-example (advisory)
@@ -327,17 +330,17 @@ jobs:
         env: {MEILI_NO_ANALYTICS: "true"}
     env: {PGPORT: "5433", SCRYPATH_MEILISEARCH_URL: http://127.0.0.1:7700, SCRYPATH_EXAMPLE_INTEGRATION: "1", MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: phoenix-test}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph phoenix-example --output "$RUNNER_TEMP/beam-cache-phoenix.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -350,7 +353,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs: {run: "${{ steps.check.outputs.run }}"}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - id: check
         run: |
@@ -375,17 +378,17 @@ jobs:
           --health-retries 5
     env: {PGPORT: "5433", MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: ops-test}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph ops --output "$RUNNER_TEMP/beam-cache-ops.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -409,7 +412,7 @@ jobs:
       MIX_TARGET: host
       BEAM_CACHE_PROFILE: ecommerce-test
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate Phase 182 cache probe inputs
         id: phase182_inputs
         env:
@@ -424,12 +427,12 @@ jobs:
           PHASE182_CACHE_MODE: normal
           PHASE182_PROBE_NAMESPACE: ""
         run: node scripts/ci/beam_cache.cjs plan --graph ecommerce --output "$RUNNER_TEMP/beam-cache-ecommerce.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -545,18 +548,18 @@ jobs:
       artifact_digest: ${{ steps.coverage_upload.outputs.artifact-digest }}
     steps:
       # Coverage runs the root test suite, which validates release history in UAT-09.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
         run: node scripts/ci/beam_cache.cjs plan --graph root --output "$RUNNER_TEMP/beam-cache-root.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}
@@ -666,7 +669,7 @@ jobs:
             echo "E2E_WORKFLOW_RUN_ATTEMPT=$GITHUB_RUN_ATTEMPT"
             echo "E2E_JOB_NAME=ecommerce-e2e (advisory)"
           } >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
       - name: Verify checked-out source SHA
         shell: bash
@@ -685,12 +688,12 @@ jobs:
           PHASE182_CACHE_MODE: normal
           PHASE182_PROBE_NAMESPACE: ""
         run: node scripts/ci/beam_cache.cjs plan --graph ecommerce --output "$RUNNER_TEMP/beam-cache-ecommerce.json"
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.hex/packages
           key: ${{ steps.beam_cache.outputs.downloads_key }}
           restore-keys: ${{ steps.beam_cache.outputs.downloads_restore_prefix }}
-      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.beam_cache.outputs.resolved_paths }}
           key: ${{ steps.beam_cache.outputs.resolved_key }}

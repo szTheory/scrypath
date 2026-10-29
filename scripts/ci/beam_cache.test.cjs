@@ -8,6 +8,20 @@ const { buildPlan, cacheIdentity, cachePlan, runtimeIdentity } = require("./beam
 const repositoryRoot = path.resolve(__dirname, "../..");
 const workflow = fs.readFileSync(path.join(repositoryRoot, ".github/workflows/ci.yml"), "utf8");
 const rootCacheJobs = ["core", "package", "repository-contracts", "backend", "compatibility", "coverage"];
+const cacheCommit = "55cc8345863c7cc4c66a329aec7e433d2d1c52a9";
+
+function assertCacheActionPins(source) {
+  const refs = source.split("\n").filter((line) => line.includes("uses: actions/cache"));
+  assert.ok(refs.length > 0, "CI should use actions/cache");
+
+  for (const ref of refs) {
+    assert.match(
+      ref,
+      new RegExp(`uses: actions/cache(?:/(?:restore|save))?@${cacheCommit} # v6\\.1\\.0$`),
+      `cache action pin and version comment must agree: ${ref.trim()}`
+    );
+  }
+}
 
 function jobBlock(name) {
   const start = workflow.indexOf(`  ${name}:\n`);
@@ -33,10 +47,20 @@ test("root Mix cache jobs use a compatible Hex fallback and strict resolved cach
   }
 });
 
+test("all CI cache components use the verified immutable v6.1.0 ref and reject drift", () => {
+  assertCacheActionPins(workflow);
+
+  const wrongPin = workflow.replace(cacheCommit, "f".repeat(40));
+  const wrongComment = workflow.replace("# v6.1.0", "# v6.1.1");
+
+  assert.throws(() => assertCacheActionPins(wrongPin), /pin and version comment must agree/);
+  assert.throws(() => assertCacheActionPins(wrongComment), /pin and version comment must agree/);
+});
+
 test("core probe restores expose matched keys and save primary keys only after successful verification", () => {
   const core = jobBlock("core");
-  const restore = "actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25";
-  const save = "actions/cache/save@caa296126883cff596d87d8935842f9db880ef25";
+  const restore = `actions/cache/restore@${cacheCommit}`;
+  const save = `actions/cache/save@${cacheCommit}`;
   assert.equal((core.match(new RegExp(restore, "g")) || []).length, 2);
   assert.equal((core.match(new RegExp(save, "g")) || []).length, 2);
   assert.match(core, /DOWNLOADS_MATCHED_KEY: \$\{\{ steps\.phase182_downloads_cache\.outputs\.cache-matched-key \}\}/);
@@ -98,6 +122,19 @@ test("every platform, toolchain, environment, target, profile and graph boundary
     const changed = cachePlan(identity({ [field]: value }));
     assert.notEqual(changed.downloads_restore_prefix, base.downloads_restore_prefix, `${field} must separate download fallback`);
     assert.notEqual(changed.resolved_restore_prefix, base.resolved_restore_prefix, `${field} must separate resolved fallback`);
+  }
+});
+
+test("download and resolved cache fallbacks cannot cross graphs or Mix environments", () => {
+  const root = cachePlan(identity());
+  const ops = cachePlan(identity({ graph: "ops" }));
+  const production = cachePlan(identity({ mix_env: "prod" }));
+
+  for (const candidate of [ops, production]) {
+    assert.notEqual(candidate.downloads_restore_prefix, root.downloads_restore_prefix);
+    assert.notEqual(candidate.resolved_restore_prefix, root.resolved_restore_prefix);
+    assert.notEqual(candidate.downloads_key, root.downloads_key);
+    assert.notEqual(candidate.resolved_key, root.resolved_key);
   }
 });
 
