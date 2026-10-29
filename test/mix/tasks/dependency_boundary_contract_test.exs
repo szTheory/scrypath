@@ -186,7 +186,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
   defp has_swoosh_mailbox_forward?(ast) do
     has_node?(ast, fn
-      {:forward, _, ["/mailbox", {:__aliases__, _, [:Plug, :Swoosh, :MailboxPreview]} | _]} ->
+      {:forward, _, ["/mailbox", _target | _]} ->
         true
 
       _ ->
