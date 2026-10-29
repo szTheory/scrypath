@@ -92,6 +92,52 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
            "#{@dev_router}: the diagnostics test fixture route must remain"
   end
 
+  test "mail configuration fixtures reject restored settings in every configuration site" do
+    restored_swoosh_config = Code.string_to_quoted!("config :swoosh, :api_client, false")
+
+    restored_mailer_config =
+      Code.string_to_quoted!("config :scrypath_ops, mailer: ScrypathOps.Mailer")
+
+    retained_host_config =
+      Code.string_to_quoted!(
+        "config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint, adapter: Bandit.PhoenixAdapter"
+      )
+
+    for path <- @ops_config_files ++ @host_config_files do
+      clean_ast = read_ast!(path)
+
+      refute has_swoosh_config?(clean_ast), "#{path}: clean fixture must have no Swoosh config"
+      refute has_mailer_module?(clean_ast), "#{path}: clean fixture must have no Mailer config"
+
+      assert has_swoosh_config?(restored_swoosh_config),
+             "#{path}: restored Swoosh client configuration must be detected"
+
+      assert has_mailer_module?(restored_mailer_config),
+             "#{path}: restored ScrypathOps.Mailer configuration must be detected"
+
+      refute has_swoosh_config?(retained_host_config),
+             "#{path}: unrelated host Endpoint configuration must remain allowed"
+    end
+  end
+
+  test "mailbox route fixtures reject the removed path regardless of target alias" do
+    clean_route = Code.string_to_quoted!("forward(\"/assets\", ScrypathOpsWeb.AssetPlug)")
+
+    qualified_mailbox_route =
+      Code.string_to_quoted!("forward(\"/mailbox\", Plug.Swoosh.MailboxPreview, [])")
+
+    aliased_mailbox_route = Code.string_to_quoted!("forward(\"/mailbox\", MailboxPreview)")
+
+    refute has_swoosh_mailbox_forward?(clean_route),
+           "ordinary asset forwards must remain allowed"
+
+    assert has_swoosh_mailbox_forward?(qualified_mailbox_route),
+           "the qualified mailbox route fixture must be detected"
+
+    assert has_swoosh_mailbox_forward?(aliased_mailbox_route),
+           "the removed /dev/mailbox route must be rejected regardless of Plug alias form"
+  end
+
   defp direct_dependency_names!(path) do
     deps_body =
       path
