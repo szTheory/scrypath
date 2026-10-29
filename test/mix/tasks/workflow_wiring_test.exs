@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
   @ci_yml ".github/workflows/ci.yml"
   @workflow_security_yml ".github/workflows/workflow-security.yml"
+  @website_yml ".github/workflows/website.yml"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -161,6 +162,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     test "ci.yml pins actions/checkout v7.0.1 to its verified immutable commit" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/checkout@v4", "expected no legacy checkout@v4 pins"
+
       assert_action_pin!(
         yml,
         "actions/checkout",
@@ -261,6 +263,127 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute audit =~ "continue-on-error: true"
       assert follow_up =~ "!cancelled() && steps.dependency_audit.outcome != 'skipped'"
       assert follow_up =~ "run_deep_quality_without_audit()"
+    end
+
+    test "all six affected workflows pin checkout v7.0.1 to its verified immutable commit" do
+      checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
+
+      for workflow <- [
+            @ci_yml,
+            @workflow_security_yml,
+            @website_yml,
+            @publish_hex_yml,
+            @release_please_yml,
+            @verify_published_yml
+          ] do
+        assert_action_pin!(File.read!(workflow), "actions/checkout", checkout_sha, "v7.0.1")
+      end
+    end
+
+    test "website pins Node and Pages actions to verified commits while retaining Node 22 cache inputs" do
+      website = File.read!(@website_yml)
+
+      assert_action_pin!(
+        website,
+        "actions/setup-node",
+        "949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "v7.1.0"
+      )
+
+      assert_action_pin!(
+        website,
+        "actions/deploy-pages",
+        "368f82528645a54fb793d4d04e342629a3f51346",
+        "v5.0.1"
+      )
+
+      for job_name <- ["build-and-check", "deploy"] do
+        job = workflow_job_block(website, job_name)
+
+        setup_node =
+          workflow_step_with_uses_block(
+            job,
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0"
+          )
+
+        assert setup_node =~ "node-version: '22'"
+        assert setup_node =~ "cache: npm"
+        assert setup_node =~ "cache-dependency-path: website/package-lock.json"
+      end
+
+      assert length(
+               Regex.scan(
+                 ~r|actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7\.1\.0|,
+                 website
+               )
+             ) ==
+               2
+    end
+
+    test "website events, full-history checkout and Pages permissions remain scoped" do
+      website = File.read!(@website_yml)
+      build = workflow_job_block(website, "build-and-check")
+      deploy = workflow_job_block(website, "deploy")
+
+      assert website =~ "  pull_request:\n"
+      assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
+      assert deploy =~ "if: github.event_name == 'push'"
+      assert build =~ "fetch-depth: 0"
+      assert deploy =~ "fetch-depth: 0"
+      assert website =~ "permissions:\n  contents: read"
+
+      assert deploy =~
+               "permissions:\n      contents: read\n      pages: write\n      id-token: write"
+
+      refute build =~ "pages: write"
+      refute build =~ "id-token: write"
+    end
+
+    test "release workflows retain tag selection, history, permissions and credential behavior" do
+      publish = File.read!(@publish_hex_yml)
+      release = File.read!(@release_please_yml)
+      verify_release = File.read!(@verify_published_yml)
+
+      publish_job = workflow_job_block(publish, "publish-scrypath")
+      release_job = workflow_job_block(release, "release-please")
+      release_publish_job = workflow_job_block(release, "publish-hex")
+      verify_job = workflow_job_block(verify_release, "verify-latest-published-release")
+
+      assert publish_job =~ "ref: ${{ inputs.tag }}"
+      assert release_job =~ "fetch-depth: 0"
+      refute release_job =~ ~r/^\s*ref:/m
+      assert release_publish_job =~ "ref: ${{ needs.release-please.outputs.tag_name }}"
+      assert verify_job =~ "fetch-depth: 0"
+      assert publish =~ "permissions:\n  contents: read"
+      assert release =~ "permissions:\n  contents: write\n  issues: write\n  pull-requests: write"
+      assert release_publish_job =~ "permissions:\n      contents: read"
+      assert verify_release =~ "permissions:\n  contents: read\n  issues: write"
+      refute publish_job =~ "persist-credentials: false"
+      refute release_job =~ "persist-credentials: false"
+      refute release_publish_job =~ "persist-credentials: false"
+      refute verify_job =~ "persist-credentials: false"
+    end
+
+    test "website action pin contracts reject wrong SHA and version comments" do
+      website = File.read!(@website_yml)
+      setup_node_sha = "949feb2413d6458794dcd2491c4babbbce0c15c1"
+      deploy_pages_sha = "368f82528645a54fb793d4d04e342629a3f51346"
+
+      wrong_setup_sha = String.replace(website, setup_node_sha, String.duplicate("f", 40))
+      wrong_deploy_comment = String.replace(website, "# v5.0.1", "# v5.0.0")
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_setup_sha, "actions/setup-node", setup_node_sha, "v7.1.0")
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(
+          wrong_deploy_comment,
+          "actions/deploy-pages",
+          deploy_pages_sha,
+          "v5.0.1"
+        )
+      end
     end
   end
 
@@ -662,7 +785,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert core =~ "phase182_acceptance.cjs validate-inputs"
       assert core =~ "phase182_acceptance.cjs beam-plan"
       assert core =~ "if: steps.phase182_inputs.outputs.mode != 'beam-cold'"
-      assert core =~ "uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
+
+      assert core =~
+               "uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
+
       assert core =~ "uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
       assert core =~ "steps.phase182_downloads_cache.outputs.cache-matched-key"
       assert core =~ "steps.phase182_resolved_cache.outputs.cache-matched-key"
