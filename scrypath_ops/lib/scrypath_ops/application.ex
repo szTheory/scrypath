@@ -19,12 +19,20 @@ defmodule ScrypathOps.Application do
   end
 
   defp start_supervisor(standalone?) do
-    base_children = [
-      ScrypathOpsWeb.Telemetry,
-      ScrypathOps.RecoveryObservation,
-      {Phoenix.PubSub, name: ScrypathOps.PubSub},
-      {Task.Supervisor, name: ScrypathOps.TaskSupervisor}
-    ]
+    diagnostic_children =
+      if Code.ensure_loaded?(ScrypathOpsWeb.Telemetry) do
+        [ScrypathOpsWeb.Telemetry]
+      else
+        []
+      end
+
+    base_children =
+      diagnostic_children ++
+        [
+          ScrypathOps.RecoveryObservation,
+          {Phoenix.PubSub, name: ScrypathOps.PubSub},
+          {Task.Supervisor, name: ScrypathOps.TaskSupervisor}
+        ]
 
     standalone_children =
       if standalone? do

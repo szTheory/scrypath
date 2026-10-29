@@ -1,5 +1,29 @@
+defmodule ScrypathOpsWeb.OptionalDevRoutes do
+  @moduledoc false
+
+  defmacro dashboard_routes(dev_routes_ast) do
+    dev_routes? = Macro.expand(dev_routes_ast, __CALLER__)
+
+    if Code.ensure_loaded?(Phoenix.LiveDashboard.Router) and dev_routes? do
+      quote do
+        import Phoenix.LiveDashboard.Router
+
+        scope "/dev" do
+          pipe_through(:browser)
+
+          live_dashboard("/dashboard", metrics: ScrypathOpsWeb.Telemetry)
+        end
+      end
+    else
+      quote(do: :ok)
+    end
+  end
+end
+
 defmodule ScrypathOpsWeb.DevRouter do
   use ScrypathOpsWeb, :router
+
+  require ScrypathOpsWeb.OptionalDevRoutes
 
   import ScrypathOpsWeb.Router, only: [scrypath_ops_routes: 2]
 
@@ -44,14 +68,8 @@ defmodule ScrypathOpsWeb.DevRouter do
     end
   end
 
-  # Enable LiveDashboard in development
-  if Application.compile_env(:scrypath_ops, :dev_routes) do
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through(:browser)
-
-      live_dashboard("/dashboard", metrics: ScrypathOpsWeb.Telemetry)
-    end
-  end
+  # Enable LiveDashboard only when its compile-time router capability is available.
+  ScrypathOpsWeb.OptionalDevRoutes.dashboard_routes(
+    Application.compile_env(:scrypath_ops, :dev_routes)
+  )
 end
