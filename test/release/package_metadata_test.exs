@@ -11,6 +11,27 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert project[:source_ref] == "v#{project[:version]}"
   end
 
+  test "project directly requires telemetry and the approved Req range" do
+    dependencies = MixProject.project()[:deps]
+
+    dependency = fn app ->
+      Enum.find_value(dependencies, fn
+        {^app, requirement} -> {app, requirement, []}
+        {^app, requirement, opts} -> {app, requirement, opts}
+        _other -> nil
+      end)
+    end
+
+    assert {:telemetry, "~> 1.0", telemetry_opts} = dependency.(:telemetry)
+    refute Keyword.get(telemetry_opts, :optional, false)
+
+    assert {:req, "~> 0.6.1 or ~> 0.7", req_opts} = dependency.(:req)
+    refute Keyword.get(req_opts, :optional, false)
+
+    assert {:oban, "~> 2.21", oban_opts} = dependency.(:oban)
+    assert Keyword.get(oban_opts, :optional, false)
+  end
+
   test "package metadata exposes links and release docs" do
     project = MixProject.project()
     package = project[:package]
