@@ -156,7 +156,7 @@ Plans:
 - [x] 184-11-PLAN.md — Mailbox/host cleanup, durable contracts and coherent application compile (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 184-03-PLAN.md — Development diagnostics with compile/start and host ownership boundaries (wave 4)
+- [x] 184-03-PLAN.md — Development diagnostics with compile/start and host ownership boundaries (wave 4)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 - [ ] 184-04-PLAN.md — Optional Sigra range and fail-closed validation/sensitive actions (wave 5)
@@ -217,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 4/12 | In Progress | — |
+| 184. Explicit and lean dependency graphs | 5/12 | In Progress | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.
