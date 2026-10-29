@@ -44,7 +44,7 @@ defmodule ScrypathOpsWeb.DevRouter do
     end
   end
 
-  # Enable LiveDashboard and Swoosh mailbox preview in development
+  # Enable LiveDashboard in development
   if Application.compile_env(:scrypath_ops, :dev_routes) do
     import Phoenix.LiveDashboard.Router
 
@@ -52,7 +52,6 @@ defmodule ScrypathOpsWeb.DevRouter do
       pipe_through(:browser)
 
       live_dashboard("/dashboard", metrics: ScrypathOpsWeb.Telemetry)
-      forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
   end
 end
