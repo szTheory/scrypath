@@ -160,6 +160,7 @@ if Code.ensure_loaded?(Sigra.Audit) do
       end
     end
 
+    defp sudo_status(nil), do: :stale
     defp sudo_status(_), do: :invalid
 
     defp sudo_window_seconds, do: Keyword.get(sigra_config(), :sudo_window, 300)

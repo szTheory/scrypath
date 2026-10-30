@@ -45,8 +45,7 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
       %{user_id: "user_123", sudo_at: now},
       %OperatorContext{user_id: nil, active_org_id: "org_456", sudo_at: now},
       %OperatorContext{user_id: "user_123", active_org_id: nil, sudo_at: now},
-      operator_context(sudo_at: nil),
-      operator_context(sudo_at: "not-a-datetime"),
+      %{operator_context([]) | sudo_at: "not-a-datetime"},
       operator_context(sudo_at: DateTime.utc_now() |> Map.put(:month, 13)),
       operator_context(sudo_at: DateTime.add(DateTime.utc_now(), 60, :second)),
       operator_context(impersonator: "impersonator_789")
@@ -84,6 +83,24 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
 
     assert inspect(result.redirected) =~
              "return_to=%2Fops%2Fplaybooks%2F42%3Ftab%3Drecent+%26+open"
+  end
+
+  test "an unconfirmed operator reaches confirmation without running any protected action" do
+    Application.put_env(:scrypath_ops, :sigra, sudo_confirm_path: "/account/confirm")
+    context = operator_context(sudo_at: nil)
+
+    for action <- Map.keys(Gating.__action_config__()) do
+      socket = socket(%{operator_context: context, return_to: "/ops/playbooks/42"})
+
+      result =
+        Gating.gate_sensitive_action(socket, action, fn ->
+          flunk("an unconfirmed operator must not run the protected action")
+        end)
+
+      assert result.redirected ==
+               {:live, :redirect,
+                %{kind: :push, to: "/account/confirm?return_to=%2Fops%2Fplaybooks%2F42"}}
+    end
   end
 
   test "sudo age equal to the configured window remains valid" do
