@@ -27,7 +27,14 @@ defmodule ScrypathOps.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test, "opsui.test_a11y": :test, "verify.opsui": :test]
+      preferred_envs: [
+        precommit: :test,
+        "opsui.test_a11y": :test,
+        "verify.opsui": :test,
+        "assets.setup": :dev,
+        "assets.build": :dev,
+        "assets.deploy": :dev
+      ]
     ]
   end
 
@@ -51,11 +58,12 @@ defmodule ScrypathOps.MixProject do
       {:phoenix_live_view, "~> 1.1.33"},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3", only: :dev, optional: true},
-      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.10", only: :dev, runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", only: :dev, runtime: Mix.env() == :dev},
       # Hex package avoids git-based heroicons fetch (GitHub credential helpers can block `mix deps.get` in some environments).
       {:heroicons, "~> 0.5.7", app: false},
-      {:req, "~> 0.6.1"},
+      {:req, "~> 0.6.1 or ~> 0.7"},
+      {:telemetry, "~> 1.0"},
       {:telemetry_metrics, "~> 1.0", only: :dev, optional: true},
       {:telemetry_poller, "~> 1.0", only: :dev, optional: true},
       {:gettext, "~> 1.0"},
