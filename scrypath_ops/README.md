@@ -4,7 +4,7 @@ Optional **Phoenix + LiveView** operator shell for the Scrypath repository. It l
 
 ## Prerequisites
 
-- **Elixir** `~> 1.17` and **Erlang/OTP** as described in the repo root [`AGENTS.md`](../AGENTS.md) / [`README.md`](../README.md).
+- **Elixir** `~> 1.17`. The root CI exercises specific Elixir/OTP tuples, listed in the [support and compatibility guide](../guides/support-and-compatibility.md); that evidence is not a claim that every combination or upstream support line is maintained.
 - **PostgreSQL** reachable with the credentials in `config/dev.exs` (or override with `DATABASE_URL` via `config/runtime.exs`).
 
 ## Clone and run
@@ -75,6 +75,18 @@ The host JavaScript should also handle the operator shell events:
 The e-commerce demo wires both pieces in its root layout and app JavaScript so `/admin/search/*`
 looks and behaves like the standalone `/ops` shell without loading a second LiveSocket.
 
+The host app must include and compile ScrypathOps as a dependency and serve its
+static bundle under the mount prefix. A mounted host does not need to start a
+second ScrypathOps Endpoint or Repo: the host Endpoint serves the routes and
+static files, and the router receives the host Repo. The runtime
+`:scrypath_ops, :standalone` setting controls whether the ScrypathOps
+application starts its own Repo, DNS cluster, and Endpoint; it does not control
+whether the dependency is included or compiled. Tailwind and esbuild are only
+needed in the development build path; a test or production runtime consumes
+the already-built static bundle. The [`local demo Docker
+runbook`](../docs/local-demo-docker-dx.md#asset-and-runtime-boundary) documents
+the dev-only asset wrappers and the test/production image handoff.
+
 ## OPSUI schema allowlist
 
 The `/ops` LiveViews only load schema modules listed in **`schema_allowlist`** under
@@ -113,7 +125,7 @@ Optional environment variables (read in `config/runtime.exs`, same spirit as `SC
 
 ## Production
 
-Before exposing `/ops` on a network, configure a real host or trusted-edge authentication boundary for HTTP, LiveView WebSocket, and long-poll traffic. **`OPSUI_AUTH_MODE`** is validated as a configuration value, but it does not provide authentication or protect the routes; see **`scrypath_ops/docs/SECURITY.md`** for the exact boundary and integration limits.
+Before exposing `/ops` on a network, configure a real host or trusted-edge authentication boundary for HTTP, LiveView WebSocket, and long-poll traffic. In `basic` and `proxy_headers` modes, the host owns that boundary. Explicit `sigra` mode is available only when the optional Sigra integration is present and a valid local `:sudo_confirm_path` is configured. Sensitive actions also require valid user and organization context, no active impersonation, and a current valid sudo confirmation. **`OPSUI_AUTH_MODE`** selects the integration path; it does not itself authenticate routes. See the [security boundary](docs/SECURITY.md) for details and the [support and compatibility guide](../guides/support-and-compatibility.md) for the optional-tier and dependency status.
 
 ## Learn more
 

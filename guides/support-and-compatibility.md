@@ -5,7 +5,7 @@ This guide is the single current support and readiness authority for Scrypath. U
 ## Supported baseline
 
 - Elixir: `~> 1.17`
-- OTP: 26 through 28
+- OTP: the CI-tested tuples below cover OTP 26, 27, and 28; they do not establish upstream maintenance for every OTP line
 - Search backend target for v1: Meilisearch
 - Supported write paths in v1: `:inline`, `:manual`, `:oban`
 
@@ -19,6 +19,10 @@ Use this release-backed Hex dependency snippet for adopter installs:
 
 Release-backed guidance is the default adopter path.
 main may contain unreleased changes.
+
+The source verification below describes this repository checkout. Dependency
+and support changes become Hex-package claims only after a release containing
+them is published.
 
 This guide is the normative owner for install, runtime support, readiness, and release policy. Other surfaces should route here rather than restating a full policy matrix.
 
@@ -37,7 +41,51 @@ GitHub Actions CI evidence currently exercises these explicit tuples:
 - Elixir `1.19.0` with OTP `26.2.5`
 - Elixir `1.19.0` with OTP `28.1`
 
-Compatibility is policy plus verification: the floor policy remains `~> 1.17`, and CI tuple evidence is anchored to the four combinations above. That means Scrypath publicly supports Elixir 1.17 through the current stable line this repo tests, with OTP 26 through 28 as the tested runtime range.
+Compatibility is policy plus verification: the Elixir floor remains `~> 1.17`,
+and CI exercises the four listed combinations. These are discrete tuples, not
+every combination in the Elixir and OTP ranges.
+
+As of **2026-10-30**, the official Erlang/OTP version history marks OTP 26 as
+**no longer supported** by the upstream project. Its history lists OTP 26.2.5.21
+on 2026-05-26, while the upstream policy provides security updates and patches
+for the latest three release lines. Scrypath's existing OTP 26 compatibility
+tuple remains part of its test evidence; that test result does not mean OTP 26
+still receives upstream security maintenance. See the [Erlang/OTP version
+history and support policy](https://www.erlang.org/versions?v=26.2.5.21).
+
+### Dependency and security status in this source checkout
+
+The root manifest directly declares mandatory Telemetry as `{:telemetry,
+"~> 1.0"}` and Req as `{:req, "~> 0.6.1 or ~> 0.7"}`. The Req union has two
+different bounds: `~> 0.6.1` admits 0.6.1 and later patch releases below 0.7.0;
+`~> 0.7` admits stable releases starting at 0.7.0 and below 1.0.0. It is not a
+0.7.x-only bound. The installed-package proof currently has two concrete
+witnesses, Req 0.6.3 and Req 0.7.5, resolved in separate consumers. Those
+witnesses verify those versions and toolchains; they do not test every version
+admitted by the broad 0.7 requirement. Recheck compatibility when a new stable
+minor line, JSON or transport API, or upstream toolchain floor changes.
+
+ScrypathOps keeps Sigra optional at `~> 1.5`. The source lock currently selects
+non-retired Sigra 1.7.1, whose package metadata requires Elixir `~> 1.18`.
+That is a separate optional Ops integration tier; it does not change the root
+library's Elixir 1.17 floor or establish an OTP 27 minimum. In `basic` and
+`proxy_headers` modes, the host remains responsible for authenticating HTTP,
+LiveView WebSocket, and long-poll routes. Explicit `sigra` mode requires the
+integration to be available and a valid local `:sudo_confirm_path`. Sensitive
+actions also require valid user and organization context, no active
+impersonation, and a current valid sudo confirmation. Selecting an auth mode
+does not itself authenticate routes. See the [ScrypathOps production runbook](../scrypath_ops/README.md#production), which links to its detailed security boundary.
+
+The final four source graphs were audited independently with Hex 2.5.1 on
+2026-10-30. The root, Phoenix example, and ecommerce graph audits were clean.
+The ScrypathOps audit remains affected and nonzero for two findings: high
+severity in Cloak 1.1.4's AES-CTR authentication path ([EEF-CVE-2026-95105](https://osv.dev/vulnerability/EEF-CVE-2026-95105)) and medium severity in Cloak Ecto 1.3.0's PBKDF2 iteration-count handling ([EEF-CVE-2026-94206](https://osv.dev/vulnerability/EEF-CVE-2026-94206)). No advisory was ignored and no risk acceptance is implied. Bandit 1.14.1 is selected in Ops and both example graphs; the final audit reported no Bandit finding for those graphs. That fix does not clear the Cloak findings or make the aggregate audit clean.
+
+Revisit the remaining findings when an upstream fixed release is available, a
+relevant advisory or reachable-use/configuration changes, or maintainers make
+an explicit dependency-risk policy decision. Compatibility tests, dependency
+audits, and runtime security are separate evidence; a passing result in one
+does not establish the others.
 
 ### Phoenix + Meilisearch adoption path
 
@@ -73,6 +121,10 @@ This guide names the supported modes, but it does not restate their operational 
 ## Verification command family
 
 These verification commands run from a source checkout of the Scrypath repository; they are not part of the Hex package.
+
+Other root `mix verify.*` capabilities are repository-maintainer commands, not
+Hex APIs. Their current CI roles and the exact Ops and mounted-demo proof scope
+are kept in the [contributor verification matrix](../CONTRIBUTING.md#ci).
 
 The adopter verification path is intentionally split into two depths:
 

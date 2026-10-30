@@ -4,6 +4,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @ops_manifest "scrypath_ops/mix.exs"
   @host_manifest "examples/scrypath_ecommerce/mix.exs"
   @root_manifest "mix.exs"
+  @support_guide "guides/support-and-compatibility.md"
   @ops_asset_config "scrypath_ops/config/config.exs"
   @host_asset_config "examples/scrypath_ecommerce/config/config.exs"
   @host_prod_config "examples/scrypath_ecommerce/config/prod.exs"
@@ -198,6 +199,38 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
     assert dependency_options!(@ops_manifest, :telemetry) == [],
            "#{@ops_manifest}: direct Telemetry must remain mandatory"
+  end
+
+  test "current support guidance separates admitted ranges, witnesses, tiers, and audit status" do
+    support = File.read!(@support_guide)
+    ops_readme = File.read!("scrypath_ops/README.md")
+    phoenix_readme = File.read!("examples/phoenix_meilisearch/README.md")
+
+    assert support =~ ~r/\{:telemetry,\s+"~> 1\.0"\}/
+    assert support =~ ~r/\{:req,\s+"~> 0\.6\.1 or ~> 0\.7"\}/
+    assert support =~ "`~> 0.7` admits stable releases starting at 0.7.0 and below 1.0.0"
+    assert support =~ ~r/two concrete\s+witnesses, Req 0\.6\.3 and Req 0\.7\.5/
+    assert support =~ "These are discrete tuples, not"
+    assert support =~ "As of **2026-10-30**"
+    assert support =~ "no longer supported** by the upstream project"
+    assert support =~ "does not change the root\nlibrary's Elixir 1.17 floor or establish an OTP 27 minimum"
+    assert support =~ "The root, Phoenix example, and ecommerce graph audits were clean."
+    assert support =~ "The ScrypathOps audit remains affected and nonzero"
+    assert support =~ "EEF-CVE-2026-95105"
+    assert support =~ "EEF-CVE-2026-94206"
+    assert support =~ "That fix does not clear the Cloak findings"
+    assert support =~ "Dependency\nand support changes become Hex-package claims only after a release"
+    assert support =~ "[ScrypathOps production runbook](../scrypath_ops/README.md#production)"
+    assert ops_readme =~ "[security boundary](docs/SECURITY.md)"
+    assert phoenix_readme =~ "[support and compatibility guide](../../guides/support-and-compatibility.md)"
+
+    for target <- [
+          "scrypath_ops/README.md",
+          "scrypath_ops/docs/SECURITY.md",
+          "examples/phoenix_meilisearch/README.md"
+        ] do
+      assert File.regular?(target), "current support link must resolve: #{target}"
+    end
   end
 
   test "dev asset aliases preserve the configured Mix tools and output paths" do
