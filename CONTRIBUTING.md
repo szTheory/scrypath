@@ -37,10 +37,15 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 | Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) plus the real-Postgres loader suite (`mix verify.postgres`) |
 | Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
 | Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
-| Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
+| Mounted ecommerce | `mix verify.ecommerce_mounted` | Required Docker proof for dependency/assets/runtime boundaries, mounted routing, failed-sync triage, and index swap (`make -C examples/scrypath_ecommerce verify-mounted`) |
 | Phoenix example | `mix verify.phoenix_example` / `mix verify.phoenix_example --package` | Live path-backed and package-backed consumer proof (`mix verify.adopter --live`) |
 | ScrypathOps | `mix verify.ops_ui` | Optional operator app proof |
 | Full ecommerce E2E | `mix verify.ecommerce_e2e` | Advisory Docker/browser proof (`make -C examples/scrypath_ecommerce verify-e2e`) |
+
+These `mix verify.*` entries are repository-maintainer tasks available from a
+source checkout; they are not Hex package commands or adopter APIs. For the
+runtime floor, published-package claims, and the exact tuples currently
+exercised, see the [support and compatibility guide](guides/support-and-compatibility.md).
 
 Use the normal fast suite during development:
 
@@ -211,7 +216,7 @@ Some focused Mix tasks keep historical names. Choose them by scope:
 | v1.29 closeout truth | <code>mix verify.phase108</code> | Related-data fan-out wording, planning/JTBD closeout truth, and advisory `phase105-e2e` posture. |
 | Public website/docs truth alignment | <code>mix verify.phase112</code> | README, `website/`, `guides/scope-and-reopen-policy.md`, or other public truth-copy updates that affect claim envelope, route-map depth, or reopen-policy wording. |
 
-Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**. The path-scoped **`ops-ui`** CI job invokes the same canonical command (Postgres-backed Ecto setup, no Meilisearch service).
+Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator app or its path dependency on the core library. It first runs the root `test/release/ops_dependency_boundary_test.exs` integration contract with warnings as errors, then bootstraps Hex/Rebar and runs the direct Ops suite with `CI=true` in isolated build, dependency, Mix, and Hex directories. Expect Postgres-backed Ecto tests; this capability does not start Meilisearch. Do not replace it with a direct `cd scrypath_ops && mix test`, which skips the root boundary contract and the isolated consumer setup. The path-scoped **`ops-ui`** CI job invokes the same canonical command.
 
 When you change **`scrypath_ops/docs/*.json`** saved-search fixtures, exported saved searches, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.saved_searches.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.SavedSearches.Validate`**).
 
@@ -225,11 +230,11 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
 | **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
 | **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. A Postgres 16 service with `SCRYPATH_POSTGRES_URL` in the same job runs the real-Postgres loader suite (`mix verify.postgres`). |
-| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` for mounted routing, failed-sync triage, and zero-downtime swap behavior. |
+| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` checks source dependency boundaries and the independent `asset_builder`, `runtime_test`, and `runtime_prod` targets, then verifies mounted host routing, failed-sync triage, index swap, and standalone Ops assets/routes. |
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example` followed by `mix verify.phoenix_example --package`, covering path-backed and package-backed live consumers. |
-| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` delegates to the existing ScrypathOps test orchestration. |
+| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` runs the root boundary integration contract and the isolated Postgres-backed ScrypathOps suite. |
 | **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
@@ -344,6 +349,16 @@ make -C examples/scrypath_ecommerce verify-mounted
 That command is the local/CI parity surface for `ecommerce-mounted`. It
 requires only Docker Compose, publishes no host ports, and tears down its
 uniquely named containers, network, and volumes after collecting diagnostics.
+It begins with a disposable dependency-boundary run that builds and checks the
+dev asset builder and both independent runtime targets. Those runtime receipts
+are stored outside the checkout. To keep the focused browser evidence outside
+the checkout too, set `E2E_HOST_ARTIFACT_ROOT` to a temporary directory, for
+example:
+
+```sh
+E2E_HOST_ARTIFACT_ROOT="${TMPDIR:-/tmp}/scrypath-mounted-evidence" mix verify.ecommerce_mounted
+```
+
 Set `KEEP_E2E_STACK=1` only when intentionally preserving a failed stack for
 debugging. Run the complete advisory lane with:
 

@@ -122,6 +122,10 @@ This guide names the supported modes, but it does not restate their operational 
 
 These verification commands run from a source checkout of the Scrypath repository; they are not part of the Hex package.
 
+Other root `mix verify.*` capabilities are repository-maintainer commands, not
+Hex APIs. Their current CI roles and the exact Ops and mounted-demo proof scope
+are kept in the [contributor verification matrix](../CONTRIBUTING.md#ci).
+
 The adopter verification path is intentionally split into two depths:
 
 - `mix verify.adopter` is the fast, service-free contract check for support/readiness guidance.

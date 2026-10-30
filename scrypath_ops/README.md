@@ -75,6 +75,18 @@ The host JavaScript should also handle the operator shell events:
 The e-commerce demo wires both pieces in its root layout and app JavaScript so `/admin/search/*`
 looks and behaves like the standalone `/ops` shell without loading a second LiveSocket.
 
+The host app must include and compile ScrypathOps as a dependency and serve its
+static bundle under the mount prefix. A mounted host does not need to start a
+second ScrypathOps Endpoint or Repo: the host Endpoint serves the routes and
+static files, and the router receives the host Repo. The runtime
+`:scrypath_ops, :standalone` setting controls whether the ScrypathOps
+application starts its own Repo, DNS cluster, and Endpoint; it does not control
+whether the dependency is included or compiled. Tailwind and esbuild are only
+needed in the development build path; a test or production runtime consumes
+the already-built static bundle. The [`local demo Docker
+runbook`](../docs/local-demo-docker-dx.md#asset-and-runtime-boundary) documents
+the dev-only asset wrappers and the test/production image handoff.
+
 ## OPSUI schema allowlist
 
 The `/ops` LiveViews only load schema modules listed in **`schema_allowlist`** under

@@ -60,9 +60,10 @@ make reset       # stop containers and delete this demo's volumes
 ```
 
 `make verify-mounted` is the shortest trustworthy proof for the mounted host:
-it builds the exact checkout, prepares Postgres and Meilisearch, builds both
-asset bundles, runs the focused Playwright routing/operator specs, saves
-diagnostics under `test-results/docker-focused/`, and tears everything down.
+it runs the runtime dependency-boundary proof, prepares Postgres and
+Meilisearch, then runs the focused Playwright routing, failed-sync triage, and
+index-swap operator specs and tears down its uniquely named Compose stacks. It
+also checks mounted host routes and the separate Ops standalone static routes.
 It requires only Docker Compose and publishes no host ports. `make verify-e2e`
 uses the same isolated lifecycle for the complete advisory browser and
 deterministic visual lane, with output under `test-results/docker-full/`.
@@ -86,6 +87,43 @@ make dev PGHOST=127.0.0.1
 ```
 
 Use `make up` for the image-only `MIX_ENV=test` stack that Playwright and CI use.
+
+## Asset and runtime build boundary
+
+Both the ScrypathOps and ecommerce Mix projects define `assets.setup` and
+`assets.build` for `MIX_ENV=dev` only. `assets.setup` installs the pinned
+Tailwind and esbuild wrappers; `assets.build` compiles the app and runs its
+Tailwind and esbuild profiles. Run them only for host development or in the
+Docker `asset_builder` stage. The build produces these bundles:
+
+| App | JavaScript | CSS |
+| --- | --- | --- |
+| ScrypathOps | `scrypath_ops/priv/static/assets/js/app.js` | `scrypath_ops/priv/static/assets/css/app.css` |
+| Ecommerce host | `examples/scrypath_ecommerce/priv/static/assets/js/app.js` | `examples/scrypath_ecommerce/priv/static/assets/css/app.css` |
+
+The Dockerfile builds `asset_builder` with `MIX_ENV=dev`, resolving the root,
+Ops, and ecommerce locks independently before running both apps' wrappers. The
+`runtime_test` and `runtime_prod` targets then independently resolve and compile
+their own root/Ops/ecommerce dependency graphs and copy only each app's
+`priv/static` tree from the builder. They do not install or run the asset
+wrappers. `runtime_prod` runs `mix phx.digest` separately in Ops and the host
+after compilation; `runtime_test` does not generate production manifests.
+
+The mounted host uses its own Endpoint and Repo for `/admin/search/*`; it does
+not need a second Ops server or database. The runtime-boundary proof also starts
+ScrypathOps as a separate service to check its standalone `/ops` routes and
+`/assets` bundles. The `:scrypath_ops, :standalone` runtime setting controls
+whether the Ops application starts its own Repo, DNS cluster, and Endpoint. It
+does not decide dependency inclusion or compilation. See the [support and
+compatibility guide](../../guides/support-and-compatibility.md) for the
+canonical runtime and release claims.
+
+`make verify-mounted` runs the dependency-boundary receipts under the system
+temporary directory by default. Focused browser artifacts default to
+`test-results/docker-focused/<run-id>/`; to keep the whole run outside the
+checkout, set `E2E_HOST_ARTIFACT_ROOT` to an external directory. This proof uses
+disposable, uniquely named Compose projects and does not operate the retained
+maintainer preview.
 
 For a retained feedback preview, add `-f compose.preview.yaml` after `compose.yaml`
 and `compose.dev.yaml`. This sets `DEMO_SEED_ON_START=0`, so a source restart keeps
@@ -210,6 +248,8 @@ operator confidence.
   [related data and reindexing](../../guides/related-data-and-reindexing.md).
 - For sync mode honesty, failed work, and operator wording, read
   [sync modes and visibility](../../guides/sync-modes-and-visibility.md).
+- For runtime support, exercised Elixir/OTP tuples, and release boundaries, read
+  the [support and compatibility guide](../../guides/support-and-compatibility.md).
 
 This README stays focused on running and understanding the demo. The guides are
 the source of truth for public API semantics.
