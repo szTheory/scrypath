@@ -677,47 +677,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       |> Enum.map(fn {id, _count} -> "duplicate dependency graph record: #{id}" end)
 
     row_errors =
-      Enum.flat_map(rows, fn row ->
-        graph = dependency_graph_id!(row)
-
-        cond do
-          length(row) != 11 ->
-            ["invalid dependency graph record schema: #{graph}"]
-
-          Enum.at(row, 10) == "" ->
-            ["empty raw evidence reference for dependency graph: #{graph}"]
-
-          Enum.any?(row, &(&1 == "")) ->
-            ["empty required field for dependency graph: #{graph}"]
-
-          not Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, Enum.at(row, 1)) ->
-            ["invalid source SHA for dependency graph: #{graph}"]
-
-          Enum.any?(Enum.slice(row, 2, 3), &(not Regex.match?(~r/\A[0-9a-f]{64}\z/, &1))) ->
-            ["invalid manifest/lock SHA for dependency graph: #{graph}"]
-
-          Enum.at(row, 3) != Enum.at(row, 4) ->
-            ["dependency lock changed during audit for graph: #{graph}"]
-
-          Enum.at(row, 6) != "2.5.1" ->
-            ["unexpected Hex version for dependency graph: #{graph}"]
-
-          Enum.at(row, 7) != "0" ->
-            ["dependency fetch failed for graph: #{graph}"]
-
-          Enum.at(row, 8) not in ["0", "1"] ->
-            ["invalid Hex audit exit status for graph: #{graph}"]
-
-          Enum.at(row, 9) not in ["clean", "affected"] ->
-            ["invalid dependency audit status for graph: #{graph}"]
-
-          not String.starts_with?(Enum.at(row, 10), "/private/tmp/") ->
-            ["empty raw evidence reference for dependency graph: #{graph}"]
-
-          true ->
-            []
-        end
-      end)
+      Enum.flat_map(rows, &dependency_graph_row_errors/1)
 
     source_shas = Enum.map(rows, &Enum.at(&1, 1)) |> Enum.uniq()
 
@@ -726,6 +686,87 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
     missing ++ duplicates ++ row_errors ++ source_errors
   end
+
+  defp dependency_graph_row_errors(row) do
+    graph = dependency_graph_id!(row)
+
+    [
+      graph_schema_error(row, graph),
+      graph_raw_evidence_error(row, graph),
+      graph_required_field_error(row, graph),
+      graph_source_sha_error(row, graph),
+      graph_manifest_lock_hash_error(row, graph),
+      graph_lock_stability_error(row, graph),
+      graph_hex_version_error(row, graph),
+      graph_fetch_status_error(row, graph),
+      graph_audit_exit_error(row, graph),
+      graph_audit_status_error(row, graph),
+      graph_evidence_location_error(row, graph)
+    ]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp graph_schema_error(row, graph),
+    do: if(length(row) == 11, do: nil, else: "invalid dependency graph record schema: #{graph}")
+
+  defp graph_raw_evidence_error(row, graph),
+    do:
+      if(Enum.at(row, 10) == "",
+        do: "empty raw evidence reference for dependency graph: #{graph}"
+      )
+
+  defp graph_required_field_error(row, graph),
+    do: if(Enum.any?(row, &(&1 == "")), do: "empty required field for dependency graph: #{graph}")
+
+  defp graph_source_sha_error(row, graph) do
+    valid_sha? = Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, Enum.at(row, 1) || "")
+    if valid_sha?, do: nil, else: "invalid source SHA for dependency graph: #{graph}"
+  end
+
+  defp graph_manifest_lock_hash_error(row, graph) do
+    valid_hashes? =
+      Enum.slice(row, 2, 3) |> Enum.all?(&Regex.match?(~r/\A[0-9a-f]{64}\z/, &1))
+
+    if valid_hashes?, do: nil, else: "invalid manifest/lock SHA for dependency graph: #{graph}"
+  end
+
+  defp graph_lock_stability_error(row, graph),
+    do:
+      if(Enum.at(row, 3) == Enum.at(row, 4),
+        do: nil,
+        else: "dependency lock changed during audit for graph: #{graph}"
+      )
+
+  defp graph_hex_version_error(row, graph),
+    do:
+      if(Enum.at(row, 6) == "2.5.1",
+        do: nil,
+        else: "unexpected Hex version for dependency graph: #{graph}"
+      )
+
+  defp graph_fetch_status_error(row, graph),
+    do: if(Enum.at(row, 7) == "0", do: nil, else: "dependency fetch failed for graph: #{graph}")
+
+  defp graph_audit_exit_error(row, graph),
+    do:
+      if(Enum.at(row, 8) in ["0", "1"],
+        do: nil,
+        else: "invalid Hex audit exit status for graph: #{graph}"
+      )
+
+  defp graph_audit_status_error(row, graph),
+    do:
+      if(Enum.at(row, 9) in ["clean", "affected"],
+        do: nil,
+        else: "invalid dependency audit status for graph: #{graph}"
+      )
+
+  defp graph_evidence_location_error(row, graph),
+    do:
+      if(String.starts_with?(Enum.at(row, 10) || "", "/private/tmp/"),
+        do: nil,
+        else: "empty raw evidence reference for dependency graph: #{graph}"
+      )
 
   defp direct_dependency_names!(path) do
     deps_body =
