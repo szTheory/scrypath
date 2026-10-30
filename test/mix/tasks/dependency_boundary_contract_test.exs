@@ -212,7 +212,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
   test "current support guidance separates admitted ranges, witnesses, tiers, and audit status" do
     support = File.read!(@support_guide)
-    ops_readme = File.read!("scrypath_ops/README.md")
+    ops_readme = File.read!("scrypath_ops/README.md") |> String.replace(~r/\s+/, " ")
     phoenix_readme = File.read!("examples/phoenix_meilisearch/README.md")
 
     assert support =~ ~r/\{:telemetry,\s+"~> 1\.0"\}/
@@ -237,6 +237,9 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
     assert support =~ "[ScrypathOps production runbook](../scrypath_ops/README.md#production)"
     assert ops_readme =~ "[security boundary](docs/SECURITY.md)"
+    assert ops_readme =~ "**Elixir** 1.18+ for the default standalone checkout"
+    assert ops_readme =~ "includes optional Sigra"
+    assert ops_readme =~ "root library and mounted hosts without Sigra retain Elixir 1.17"
 
     assert phoenix_readme =~
              "[support and compatibility guide](../../guides/support-and-compatibility.md)"

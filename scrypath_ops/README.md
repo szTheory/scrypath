@@ -4,7 +4,11 @@ Optional **Phoenix + LiveView** operator shell for the Scrypath repository. It l
 
 ## Prerequisites
 
-- **Elixir** `~> 1.17`. The root CI exercises specific Elixir/OTP tuples, listed in the [support and compatibility guide](../guides/support-and-compatibility.md); that evidence is not a claim that every combination or upstream support line is maintained.
+- **Elixir** 1.18+ for the default standalone checkout, which includes optional Sigra.
+  The root library and mounted hosts without Sigra retain Elixir 1.17 as their floor.
+  The root CI exercises specific Elixir/OTP tuples, listed in the
+  [support and compatibility guide](../guides/support-and-compatibility.md); that evidence
+  is not a claim that every combination or upstream support line is maintained.
 - **PostgreSQL** reachable with the credentials in `config/dev.exs` (or override with `DATABASE_URL` via `config/runtime.exs`).
 
 ## Clone and run
