@@ -3,6 +3,9 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
   @ops_manifest "scrypath_ops/mix.exs"
   @host_manifest "examples/scrypath_ecommerce/mix.exs"
+  @root_manifest "mix.exs"
+  @ops_asset_config "scrypath_ops/config/config.exs"
+  @host_asset_config "examples/scrypath_ecommerce/config/config.exs"
   @ops_config_files [
     "scrypath_ops/config/config.exs",
     "scrypath_ops/config/dev.exs",
@@ -153,6 +156,100 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     end
   end
 
+  test "asset tools and host diagnostics stay development-only" do
+    for path <- [@ops_manifest, @host_manifest], dependency <- [:esbuild, :tailwind] do
+      options = dependency_options!(path, dependency)
+
+      assert Keyword.get(options, :only) == :dev,
+             "#{path}: #{dependency} must be available only in direct development"
+    end
+
+    for dependency <- [:phoenix_live_dashboard, :telemetry_metrics, :telemetry_poller] do
+      options = dependency_options!(@host_manifest, dependency)
+
+      assert Keyword.get(options, :only) == :dev,
+             "#{@host_manifest}: #{dependency} must be development-only in the host graph"
+    end
+  end
+
+  test "direct Req and Ops Telemetry requirements match the approved public contract" do
+    for path <- [@root_manifest, @ops_manifest, @host_manifest] do
+      assert direct_dependency_requirement!(path, :req) == "~> 0.6.1 or ~> 0.7",
+             "#{path}: direct Req must admit exactly the approved requirement union"
+    end
+
+    assert direct_dependency_requirement!(@ops_manifest, :telemetry) == "~> 1.0",
+           "#{@ops_manifest}: Ops directly calls Telemetry and must declare it"
+
+    assert dependency_options!(@ops_manifest, :telemetry) == [],
+           "#{@ops_manifest}: direct Telemetry must remain mandatory"
+  end
+
+  test "dev asset aliases preserve the configured Mix tools and output paths" do
+    ops_manifest = read_ast!(@ops_manifest)
+    host_manifest = read_ast!(@host_manifest)
+
+    assert project_alias!(ops_manifest, "assets.setup") == [
+             "tailwind.install --if-missing",
+             "esbuild.install --if-missing"
+           ]
+
+    assert project_alias!(ops_manifest, "assets.build") == [
+             "compile",
+             "tailwind scrypath_ops",
+             "esbuild scrypath_ops"
+           ]
+
+    assert project_alias!(ops_manifest, "assets.deploy") == [
+             "tailwind scrypath_ops --minify",
+             "esbuild scrypath_ops --minify",
+             "phx.digest"
+           ]
+
+    assert project_alias!(host_manifest, "setup") == [
+             "deps.get",
+             "ecto.setup",
+             "assets.setup",
+             "assets.build"
+           ]
+
+    assert project_alias!(host_manifest, "assets.setup") == [
+             "tailwind.install --if-missing",
+             "esbuild.install --if-missing"
+           ]
+
+    assert project_alias!(host_manifest, "assets.build") == [
+             "compile",
+             "tailwind scrypath_ecommerce",
+             "esbuild scrypath_ecommerce"
+           ]
+
+    for {manifest, task} <- [
+          {ops_manifest, "assets.setup"},
+          {ops_manifest, "assets.build"},
+          {ops_manifest, "assets.deploy"},
+          {host_manifest, "setup"},
+          {host_manifest, "assets.setup"},
+          {host_manifest, "assets.build"}
+        ] do
+      assert preferred_env!(manifest, task) == :dev,
+             "#{task}: asset generation aliases must default to MIX_ENV=dev"
+    end
+
+    for path <- [@ops_asset_config, @host_asset_config] do
+      source = File.read!(path)
+
+      assert source =~ ~s(version: "0.25.4"), "#{path}: keep the approved esbuild authority"
+      assert source =~ ~s(version: "4.1.12"), "#{path}: keep the approved Tailwind authority"
+
+      assert source =~ "--outdir=../priv/static/assets/js",
+             "#{path}: keep the configured JavaScript output location"
+
+      assert source =~ "--output=priv/static/assets/css/app.css",
+             "#{path}: keep the configured CSS output location"
+    end
+  end
+
   test "diagnostic compilation, plugs, child startup, and dev routes share capability guards" do
     telemetry_ast = read_ast!(@telemetry_source)
     application_ast = read_ast!(@application_source)
@@ -264,6 +361,51 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       {:{}, _, [^dependency, options]} when is_list(options) -> options
       _ -> nil
     end) || flunk("#{path}: expected direct dependency #{dependency}")
+  end
+
+  defp direct_dependency_requirement!(path, dependency) do
+    deps_body = path |> read_ast!() |> find_deps_body!()
+
+    Enum.find_value(deps_body, fn
+      {^dependency, requirement} when is_binary(requirement) -> requirement
+      {:{}, _, [^dependency, requirement | _]} when is_binary(requirement) -> requirement
+      _ -> nil
+    end) || flunk("#{path}: expected direct dependency #{dependency} with a literal requirement")
+  end
+
+  defp project_alias!(ast, alias_name) do
+    aliases = ast |> project_function_body!(:aliases)
+    key = String.to_atom(alias_name)
+
+    Enum.find_value(aliases, fn
+      {^key, commands} -> commands
+      _ -> nil
+    end) || flunk("expected Mix alias #{alias_name}")
+  end
+
+  defp preferred_env!(ast, task_name) do
+    cli_options = ast |> project_function_body!(:cli)
+    preferred_envs = Keyword.fetch!(cli_options, :preferred_envs)
+    key = String.to_atom(task_name)
+
+    Enum.find_value(preferred_envs, fn
+      {^key, env} -> env
+      _ -> nil
+    end) || flunk("expected preferred environment for Mix task #{task_name}")
+  end
+
+  defp project_function_body!(ast, name) do
+    {_ast, body} =
+      Macro.prewalk(ast, nil, fn
+        {visibility, _, [{^name, _, nil}, [do: body]]} = node, nil
+        when visibility in [:def, :defp] ->
+          {node, body}
+
+        node, body ->
+          {node, body}
+      end)
+
+    if is_nil(body), do: flunk("expected project function #{name}/0"), else: body
   end
 
   defp conditional_has_calls_and_body?(ast, calls, body_predicate) do
