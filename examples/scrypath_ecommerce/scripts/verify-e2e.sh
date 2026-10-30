@@ -136,6 +136,7 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 example_dir="$(cd "$script_dir/.." && pwd)"
 cd "$example_dir"
+repo_root="$(cd "$example_dir/../.." && pwd)"
 
 sha="$(git rev-parse --short=8 HEAD 2>/dev/null || printf 'workspace')"
 safe_sha="$(printf '%s' "$sha" | tr -cd '[:alnum:]_-')"
@@ -145,7 +146,19 @@ if [[ ! "$project" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]]; then
   exit 64
 fi
 export E2E_PROJECT_NAME="$project"
-artifact_parent="$example_dir/test-results/docker-${scope}"
+if [[ -n "${E2E_HOST_ARTIFACT_ROOT:-}" ]]; then
+  artifact_parent="$E2E_HOST_ARTIFACT_ROOT"
+  mkdir -p "$artifact_parent"
+  artifact_parent="$(cd "$artifact_parent" && pwd -P)"
+  case "$artifact_parent/" in
+    "$repo_root/"*)
+      echo "E2E_HOST_ARTIFACT_ROOT must be outside the checkout so runtime receipts stay disposable." >&2
+      exit 64
+      ;;
+  esac
+else
+  artifact_parent="$example_dir/test-results/docker-${scope}"
+fi
 artifact_dir="$artifact_parent/$run_id"
 mkdir -p "$artifact_parent"
 if ! mkdir -m 700 "$artifact_dir"; then
@@ -156,7 +169,6 @@ compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
 if [[ "$scope" == "full" ]]; then
   compose+=(-f compose.phase173.yaml)
 fi
-repo_root="$(cd "$example_dir/../.." && pwd)"
 build_helper="$repo_root/scripts/ci/ecommerce_build.cjs"
 
 export E2E_SCOPE="$scope"
@@ -563,6 +575,17 @@ cleanup() {
   exit 0
 }
 trap cleanup EXIT
+
+if [[ "$scope" == "focused" ]]; then
+  echo "Running independent test/production dependency boundary proof before the mounted Compose stack..."
+  if run_verification_bounded bash "$script_dir/verify-dependency-boundaries.sh" --runtime; then
+    :
+  else
+    run_status=$?
+    echo "Independent dependency boundary proof failed (exit=$run_status)." >&2
+    exit "$run_status"
+  fi
+fi
 
 if (( prebuilt_mode )); then
   if ! run_verification_bounded node "$build_helper" verify-handoff --manifest "$E2E_PREBUILT_MANIFEST"; then

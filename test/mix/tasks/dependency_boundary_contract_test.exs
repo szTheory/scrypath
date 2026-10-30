@@ -454,6 +454,15 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
            ""
          )
        end},
+      {"wrong runtime environment",
+       fn fixture ->
+         replace_dependency_boundary_text!(
+           fixture,
+           "examples/scrypath_ecommerce/Dockerfile",
+           "ENV MIX_ENV=test ",
+           "ENV MIX_ENV=prod "
+         )
+       end},
       {"runtime wrapper installation",
        fn fixture ->
          append_dependency_boundary_text!(

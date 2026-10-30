@@ -42,12 +42,18 @@ function runPrebuiltVerifier(t, extraEnv = {}) {
   const verifierPath = path.join(scriptDirectory, "verify-e2e.sh");
   const dockerLog = path.join(root, "docker.jsonl");
   const helperLog = path.join(root, "helper.jsonl");
+  const boundaryLog = path.join(root, "boundary.log");
   const dockerPath = path.join(binDirectory, "docker");
   const gitPath = path.join(binDirectory, "git");
+  const boundaryPath = path.join(scriptDirectory, "verify-dependency-boundaries.sh");
   const manifestPath = path.join(root, "image-handoff.json");
   const overridePath = path.join(root, "image-override.json");
 
   writeFileSync(verifierPath, readFileSync(verifierSource));
+  writeFileSync(
+    boundaryPath,
+    'printf "%s\\n" "$*" >> "$FAKE_BOUNDARY_LOG"\nexit 0\n',
+  );
   writeFileSync(manifestPath, JSON.stringify({ schema_version: 1 }));
   writeFileSync(overridePath, JSON.stringify({ services: {} }));
   writeFileSync(
@@ -90,6 +96,7 @@ else process.exit(2);
       ...process.env,
       PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
       FAKE_DOCKER_LOG: dockerLog,
+      FAKE_BOUNDARY_LOG: boundaryLog,
       FAKE_HELPER_LOG: helperLog,
       E2E_RUN_ID: "prebuilt-test-run",
       E2E_PROJECT_NAME: "scrypath-e2e-prebuilt-test",
