@@ -137,7 +137,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
            "verify.ops_ui must expose its ordered command plan for invocation contract tests"
 
     [mounted_proof, hex_bootstrap, rebar_bootstrap, deps_get, direct_suite] =
-      apply(Mix.Tasks.Verify.OpsUi, :verification_commands, [root])
+      Mix.Tasks.Verify.OpsUi.verification_commands(root)
 
     assert elem(mounted_proof, 1) == [
              "test",
