@@ -23,19 +23,19 @@ progress:
 ## Current Position
 
 Phase: 184 (Explicit and lean dependency graphs) — EXECUTING
-Plan: 9 of 12 complete; next 184-07 (wave 9)
+Plan: 10 of 12 complete; next 184-09 (wave 10)
 Status: Executing Phase 184
-Last activity: 2026-10-30 — Wave 8 merged and verified: 5 properties, 1012 tests, 0 failures (103 excluded).
+Last activity: 2026-10-30 — Wave 9 merged and verified: 5 properties, 1012 tests, 0 failures (103 excluded).
 
 Progress: [█████░░░░░] 50%
 
 Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Phase 184 plan 184-07; 9/12 plans summarized, merged and checked. Refer to the plan index and summaries for current evidence.
+Next: Phase 184 plan 184-09; 10/12 plans summarized, merged and checked. Refer to the plan index and summaries for current evidence.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Execution: $gsd-execute-phase 184 is active; 9/12 plans completed across the first 8/11 waves.
+Execution: $gsd-execute-phase 184 is active; 10/12 plans completed across the first 9/11 waves.
 
 ## Evidence and boundaries
 
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-28).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; execution active, wave 9 next.
+Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; execution active, wave 10 next.
 
 ## Recent decisions
 
