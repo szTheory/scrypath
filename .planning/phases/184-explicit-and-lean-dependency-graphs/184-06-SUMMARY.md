@@ -187,3 +187,11 @@ None.
 - All eight task files exist, and the four RED/GREEN task commits are ancestors of HEAD.
 - Evaluation scope resolves this plan with four task commits on the branch.
 - The task verification commands passed as recorded above.
+
+## Post-merge integration repair — 2026-10-30
+
+The orchestrator found that the new service-backed cold consumers were untagged with an infinite test timeout. They now carry the integration tag and a ten-minute per-test deadline; `verify.ops_ui` explicitly includes integration, while the service-free core command excludes it. Disposable database cleanup is also registered with ExUnit so it runs if a test is terminated. The plan's standalone consumer verification command now includes the integration tag explicitly.
+
+The first canonical root invocation exposed two checkout-dependent harness bugs: ASDF exported a toolchain-wide `MIX_ARCHIVES` despite the fresh `MIX_HOME`, and a physical but untracked root `priv/` directory passed the archive selector. Fresh consumer and direct-suite homes now pin their own archive directory and bootstrap Hex/Rebar noninteractively; source selection requires nonempty `git ls-tree` output. No global toolchain archive or unrelated root directory was removed.
+
+Fresh verification after these fixes: invocation contracts **10 tests, 0 failures**; repaired merged core compile/fast suite **1012 tests plus 5 properties, 0 failures (103 excluded)**; Node CI-tooling suite **123 tests, 0 failures**; canonical `mix verify.ops_ui` **2 cold integration tests, 0 failures**, then **316 Ops tests plus 2 doctests, 0 failures**. Tuple: Elixir 1.19.5 / OTP 28.5. A prior canonical rerun hit a Hex package-fetch timeout; it remains in `wave8-ops-after-isolation-repair.log`. The successful run used `HEX_HTTP_TIMEOUT=120 HEX_HTTP_CONCURRENCY=1`, retained the same assertions, and is in `/private/tmp/scrypath-phase184-execution/wave8-ops-isolation-network-retry.log`. The passing merged receipt is `wave8-merged-tests-repaired.log`. Runtime/browser receipts above retain their original child source identities; final-lock and final-source acceptance remains with plans 184-07/10.

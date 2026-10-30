@@ -1,7 +1,8 @@
 defmodule Scrypath.Release.OpsDependencyBoundaryTest do
   use ExUnit.Case, async: false
 
-  @moduletag timeout: :infinity
+  @moduletag :integration
+  @moduletag timeout: 600_000
 
   @diagnostic_apps [:phoenix_live_dashboard, :telemetry_metrics, :telemetry_poller]
   @asset_apps [:esbuild, :tailwind]
@@ -42,6 +43,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
       env = isolated_env(ctx.scratch, "mounted-#{mix_env}", mix_env, ctx.source_sha)
       run_mix!("local.hex", ["--force"], consumer_root, env)
+      run_mix!("local.rebar", ["--force"], consumer_root, env)
       run_mix!("deps.get", [], consumer_root, env)
       run_mix!("compile", ["--no-optional-deps", "--warnings-as-errors"], consumer_root, env)
 
@@ -68,6 +70,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
       lock_before = sha256(File.read!(lock_path))
 
       run_mix!("local.hex", ["--force"], ops_dir, env)
+      run_mix!("local.rebar", ["--force"], ops_dir, env)
       run_mix!("deps.get", ["--check-locked"], ops_dir, env)
 
       if mix_env == "dev" do
@@ -79,6 +82,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
       run_mix!("compile", ["--warnings-as-errors"], ops_dir, env)
 
       if mix_env in ["test", "prod"] do
+        on_exit(fn -> drop_database!(database, env) end)
         run_mix!("phx.digest", [], ops_dir, env)
         run_mix!("ecto.create", ["--quiet"], ops_dir, env)
         run_mix!("ecto.migrate", ["--quiet"], ops_dir, env)
@@ -204,7 +208,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
       {"MIX_BUILD_PATH", Path.join(target, "build")},
       {"MIX_DEPS_PATH", Path.join(target, "deps")},
       {"MIX_HOME", Path.join(target, "mix")},
+      {"MIX_ARCHIVES", Path.join(target, "mix/archives")},
+      {"MIX_REBAR3", nil},
       {"HEX_HOME", Path.join(target, "hex")},
+      {"CI", "true"},
       {"MIX_QUIET", "1"},
       {"OPSUI_AUTH_MODE", "basic"},
       {"SECRET_KEY_BASE", String.duplicate("a", 64)},
@@ -234,7 +241,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
       {"MIX_BUILD_PATH", Path.join(directory, "build")},
       {"MIX_DEPS_PATH", Path.join(directory, "deps")},
       {"MIX_HOME", Path.join(directory, "mix")},
+      {"MIX_ARCHIVES", Path.join(directory, "mix/archives")},
+      {"MIX_REBAR3", nil},
       {"HEX_HOME", Path.join(directory, "hex")},
+      {"CI", "true"},
       {"MIX_QUIET", "1"},
       {"PGHOST", host},
       {"PGPORT", port},
@@ -258,10 +268,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     paths =
       ["mix.exs", "mix.lock", "lib", "priv", "scrypath_ops"]
       |> Enum.filter(fn path ->
-        {_output, status} =
+        {output, status} =
           System.cmd("git", ["ls-tree", "--name-only", "HEAD", "--", path], cd: repo)
 
-        status == 0 and File.exists?(Path.join(repo, path))
+        status == 0 and String.trim(output) != "" and File.exists?(Path.join(repo, path))
       end)
 
     {output, status} =

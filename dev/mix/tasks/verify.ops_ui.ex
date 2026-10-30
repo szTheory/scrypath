@@ -14,9 +14,9 @@ defmodule Mix.Tasks.Verify.OpsUi do
   **`scrypath_ops/mix.lock`** (mirroring the path gate described for that CI job in
   [CONTRIBUTING.md](CONTRIBUTING.md)).
 
-  The task runs **`cd scrypath_ops`**, then **`mix deps.get`**, then **`mix test`** with **`CI=true`**.
-  The shell script pipes **`printf 'n\\n'`** into **`mix deps.get`** so a workstation TTY cannot block on
-  Hex re-auth prompts—the same non-interactive shape as CI.
+  The task first runs the cold dependency-boundary integration tests from the root. It then
+  bootstraps Hex and Rebar, resolves dependencies, and runs the direct Ops suite with **`CI=true`** in
+  isolated temporary build and dependency directories.
 
   Expect Postgres-backed Ecto tests for **`scrypath_ops`**; there is **no** Meilisearch service on this path.
 
@@ -49,8 +49,10 @@ defmodule Mix.Tasks.Verify.OpsUi do
     ops_dir = Path.expand("scrypath_ops", root)
 
     [
-      {mix, ["test", @boundary_test, "--warnings-as-errors"], root, [{"MIX_ENV", "test"}]},
+      {mix, ["test", @boundary_test, "--include", "integration", "--warnings-as-errors"], root,
+       [{"MIX_ENV", "test"}]},
       {mix, ["local.hex", "--force"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "dev"}]},
+      {mix, ["local.rebar", "--force"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "dev"}]},
       {mix, ["deps.get"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "dev"}]},
       {mix, ["test"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "test"}]}
     ]
@@ -84,6 +86,8 @@ defmodule Mix.Tasks.Verify.OpsUi do
         {"MIX_BUILD_PATH", Path.join(scratch, "build")},
         {"MIX_DEPS_PATH", Path.join(scratch, "deps")},
         {"MIX_HOME", Path.join(scratch, "mix")},
+        {"MIX_ARCHIVES", Path.join(scratch, "mix/archives")},
+        {"MIX_REBAR3", nil},
         {"HEX_HOME", Path.join(scratch, "hex")}
       ]
   end
