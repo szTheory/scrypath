@@ -901,8 +901,9 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "verify.ops_ui Mix task keeps orchestration markers (Phase 53)" do
-    assert String.contains?(@verify_opsui, "cd: ops_dir")
-    assert String.contains?(@verify_opsui, "mix test")
+    assert String.contains?(@verify_opsui, "ops_dir = Path.expand(\"scrypath_ops\", root)")
+    assert String.contains?(@verify_opsui, "System.cmd(executable, args, cd: cd, env: env")
+    assert String.contains?(@verify_opsui, "[\"test\", @boundary_test")
     assert String.contains?(@verify_opsui, "ensure_no_args!")
   end
 

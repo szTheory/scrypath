@@ -127,7 +127,7 @@ defmodule Scrypath.MixProject do
       {:benchee, "~> 1.5", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.40", only: [:dev, :test], runtime: false}
     ]
   end
 
