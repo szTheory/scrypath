@@ -79,7 +79,7 @@ if Code.ensure_loaded?(Sigra.Audit) do
                 not valid_identity?(operator_context.active_org_id) ->
               deny(
                 socket,
-                "Sigra identity and organization context are required for this action."
+                "Your account or organization could not be verified. Sign in again, then retry."
               )
 
             not is_nil(operator_context.impersonator_user_id) ->
@@ -99,12 +99,15 @@ if Code.ensure_loaded?(Sigra.Audit) do
                   confirm_sudo(socket)
 
                 :invalid ->
-                  deny(socket, "A valid, current Sigra sudo confirmation is required.")
+                  deny(
+                    socket,
+                    "Your security confirmation could not be verified. Sign in again, then retry."
+                  )
               end
           end
 
         _malformed_context ->
-          deny(socket, "A valid Sigra operator context is required for this action.")
+          deny(socket, "Your session could not be verified. Sign in again, then retry.")
       end
     end
 
@@ -212,7 +215,7 @@ else
         Phoenix.LiveView.put_flash(
           socket,
           :error,
-          "The Sigra integration is unavailable; this sensitive action was blocked."
+          "The Sigra integration is unavailable; this action was blocked. Contact your administrator."
         )
       else
         fun.()
