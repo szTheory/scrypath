@@ -4,7 +4,7 @@ Optional **Phoenix + LiveView** operator shell for the Scrypath repository. It l
 
 ## Prerequisites
 
-- **Elixir** `~> 1.17` and **Erlang/OTP** as described in the repo root [`AGENTS.md`](../AGENTS.md) / [`README.md`](../README.md).
+- **Elixir** `~> 1.17`. The root CI exercises specific Elixir/OTP tuples, listed in the [support and compatibility guide](../guides/support-and-compatibility.md); that evidence is not a claim that every combination or upstream support line is maintained.
 - **PostgreSQL** reachable with the credentials in `config/dev.exs` (or override with `DATABASE_URL` via `config/runtime.exs`).
 
 ## Clone and run
@@ -113,7 +113,7 @@ Optional environment variables (read in `config/runtime.exs`, same spirit as `SC
 
 ## Production
 
-Before exposing `/ops` on a network, configure a real host or trusted-edge authentication boundary for HTTP, LiveView WebSocket, and long-poll traffic. **`OPSUI_AUTH_MODE`** is validated as a configuration value, but it does not provide authentication or protect the routes; see **`scrypath_ops/docs/SECURITY.md`** for the exact boundary and integration limits.
+Before exposing `/ops` on a network, configure a real host or trusted-edge authentication boundary for HTTP, LiveView WebSocket, and long-poll traffic. In `basic` and `proxy_headers` modes, the host owns that boundary. Explicit `sigra` mode is available only when the optional Sigra integration is present and a valid local `:sudo_confirm_path` is configured. Sensitive actions also require valid user and organization context, no active impersonation, and a current valid sudo confirmation. **`OPSUI_AUTH_MODE`** selects the integration path; it does not itself authenticate routes. See the [security boundary](docs/SECURITY.md) for details and the [support and compatibility guide](../guides/support-and-compatibility.md) for the optional-tier and dependency status.
 
 ## Learn more
 
