@@ -207,6 +207,7 @@ if [[ "$mode" == "--runtime" ]]; then
   artifact_dir="$(mktemp -d "$artifact_parent/scrypath-dependency-boundary-${safe_run_id}.XXXXXX")"
   compose_file=""
   builder_container=""
+  target_asset_container=""
   runtime_projects=()
   runtime_compose_files=()
   runtime_images=()
@@ -283,6 +284,10 @@ NODE
 
     if [[ -n "$builder_container" ]]; then
       docker rm -f "$builder_container" >/dev/null 2>&1 || status=1
+    fi
+
+    if [[ -n "$target_asset_container" ]]; then
+      docker rm -f "$target_asset_container" >>"$artifact_dir/cleanup.log" 2>&1 || status=1
     fi
 
     for index in "${!runtime_projects[@]}"; do
@@ -391,8 +396,8 @@ NODE
   builder_container=""
 
   write_target_asset_set() {
-    local image="$1" environment="$2" container asset source destination
-    container="$(docker create "$image")"
+    local image="$1" environment="$2" asset source destination
+    target_asset_container="$(docker create --label "org.scrypath.dependency-boundary.run=$run_id" "$image")"
     for asset in \
       "scrypath_ops/priv/static/assets/js/app.js" \
       "scrypath_ops/priv/static/assets/css/app.css" \
@@ -401,11 +406,12 @@ NODE
       source="/app/$asset"
       destination="$artifact_dir/targets/$environment/$asset"
       mkdir -p "$(dirname "$destination")"
-      docker cp "$container:$source" "$destination" >/dev/null
+      docker cp "$target_asset_container:$source" "$destination" >/dev/null
       [[ -s "$destination" ]] || fail "$image contains an empty static output: $asset"
       printf '%s %s\n' "$(sha256_file "$destination")" "$asset" >>"$artifact_dir/targets/$environment/assets.sha256"
     done
-    docker rm "$container" >/dev/null
+    docker rm "$target_asset_container" >/dev/null
+    target_asset_container=""
   }
 
   write_target_asset_set "$test_image" test

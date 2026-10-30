@@ -625,3 +625,107 @@ test("redirecting Ops fixture routes cannot satisfy full readiness", (t) => {
     assert.equal(result.browserInvocations, "", "a redirect must not reach the browser");
   }
 });
+
+
+function runBoundaryCopyFailure(t, target, removalFails) {
+  const root = tempDirectory(t);
+  const bin = path.join(root, "bin");
+  const artifacts = path.join(root, "artifacts");
+  const statePath = path.join(root, "boundary-state.json");
+  const callsPath = path.join(root, "boundary-calls.jsonl");
+  mkdirSync(bin, { recursive: true });
+  const docker = path.join(bin, "docker");
+  writeFileSync(docker, String.raw`#!/usr/bin/env node
+const fs = require("node:fs");
+const path = require("node:path");
+const args = process.argv.slice(2);
+fs.appendFileSync(process.env.FAKE_BOUNDARY_CALLS, JSON.stringify(args) + "\n");
+const statePath = process.env.FAKE_BOUNDARY_STATE;
+const state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, "utf8")) : { images: {}, containers: [] };
+const save = () => fs.writeFileSync(statePath, JSON.stringify(state));
+if ((args[0] === "compose" && args[1] === "version") || args[0] === "info") process.exit(0);
+if (args[0] === "build") {
+  const labels = {};
+  args.forEach((value, index) => {
+    if (value === "--label") {
+      const entry = args[index + 1];
+      const separator = entry.indexOf("=");
+      labels[entry.slice(0, separator)] = entry.slice(separator + 1);
+    }
+  });
+  state.images[args[args.indexOf("-t") + 1]] = labels;
+  save();
+  process.exit(0);
+}
+if (args[0] === "image" && args[1] === "inspect") {
+  const labels = state.images[args.at(-1)];
+  const key = Object.keys(labels).find(name => args[2].includes(name));
+  if (!key) throw new Error("unexpected image label request");
+  process.stdout.write(labels[key] + "\n");
+  process.exit(0);
+}
+if (args[0] === "image" && args[1] === "rm") process.exit(0);
+if (args[0] === "create") {
+  const id = "boundary-" + args.at(-1).split(":").at(-1);
+  state.containers.push(id);
+  save();
+  process.stdout.write(id + "\n");
+  process.exit(0);
+}
+if (args[0] === "cp") {
+  if (args[1].startsWith("boundary-" + process.env.FAKE_BOUNDARY_TARGET + ":")) process.exit(42);
+  const destination = args.at(-1);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.writeFileSync(destination, "compiled asset\n");
+  process.exit(0);
+}
+if (args[0] === "rm") {
+  const id = args.at(-1);
+  if (id === "boundary-" + process.env.FAKE_BOUNDARY_TARGET && process.env.FAKE_BOUNDARY_REMOVE_FAIL === "1") process.exit(43);
+  state.containers = state.containers.filter(value => value !== id);
+  save();
+  process.exit(0);
+}
+throw new Error("unexpected Docker operation: " + JSON.stringify(args));
+`);
+  chmodSync(docker, 0o755);
+  const result = spawnSync("bash", [dependencyBoundaryVerifier, "--runtime"], {
+    cwd: repositoryRoot,
+    env: {
+      ...process.env,
+      PATH: `${bin}${path.delimiter}${process.env.PATH}`,
+      FAKE_BOUNDARY_CALLS: callsPath,
+      FAKE_BOUNDARY_STATE: statePath,
+      FAKE_BOUNDARY_TARGET: target,
+      FAKE_BOUNDARY_REMOVE_FAIL: removalFails ? "1" : "0",
+      SCRYPATH_DEPENDENCY_BOUNDARY_ROOT: repositoryRoot,
+      SCRYPATH_DEPENDENCY_BOUNDARY_ARTIFACT_DIR: artifacts,
+    },
+    encoding: "utf8",
+    timeout: 20_000,
+    maxBuffer: 2 * 1024 * 1024,
+  });
+  assert.equal(result.error, undefined, result.error?.message);
+  const runs = readdirSync(artifacts).filter(name => name.startsWith("scrypath-dependency-boundary-"));
+  assert.equal(runs.length, 1, result.stderr || result.stdout);
+  return {
+    result,
+    state: JSON.parse(readFileSync(statePath, "utf8")),
+    calls: readFileSync(callsPath, "utf8").trim().split("\n").map(line => JSON.parse(line)),
+    receipt: JSON.parse(readFileSync(path.join(artifacts, runs[0], "runtime-receipt.json"), "utf8")),
+  };
+}
+
+for (const target of ["runtime-test", "runtime-prod"]) {
+  for (const removalFails of [false, true]) {
+    test(`runtime boundary target extraction preserves copy failure and reports ${target} cleanup ${removalFails ? "failure" : "success"}`, t => {
+      const { result, state, calls, receipt } = runBoundaryCopyFailure(t, target, removalFails);
+      const container = `boundary-${target}`;
+      assert.equal(result.status, 42, result.stderr || result.stdout);
+      assert.ok(calls.some(args => args[0] === "rm" && args.includes(container)), "the failed extraction container must remain owned by cleanup");
+      assert.equal(receipt.status, "failed");
+      assert.equal(receipt.cleanup_status, removalFails ? 1 : 0);
+      assert.deepEqual(state.containers, removalFails ? [container] : []);
+    });
+  }
+}
