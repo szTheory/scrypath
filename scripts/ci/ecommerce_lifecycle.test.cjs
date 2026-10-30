@@ -27,6 +27,24 @@ const composeE2eSource = path.join(
   repositoryRoot,
   "examples/scrypath_ecommerce/compose.e2e.yaml",
 );
+const dependencyBoundaryVerifier = path.join(
+  repositoryRoot,
+  "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh",
+);
+
+test("mounted verification runs the clean dependency boundary proof before starting Compose", () => {
+  const verifier = readFileSync(verifierSource, "utf8");
+  const boundaryProof = 'bash "$script_dir/verify-dependency-boundaries.sh" --runtime';
+
+  assert.ok(
+    verifier.includes(boundaryProof),
+    `${dependencyBoundaryVerifier} --runtime must be part of the canonical mounted verifier`,
+  );
+  assert.ok(
+    verifier.indexOf(boundaryProof) < verifier.indexOf('echo "Starting isolated Docker verifier project'),
+    "the clean target proof must run before the mounted Compose stack starts",
+  );
+});
 
 function tempDirectory(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), "scrypath-e2e-lifecycle-"));
