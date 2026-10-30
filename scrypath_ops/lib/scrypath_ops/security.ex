@@ -4,6 +4,7 @@ defmodule ScrypathOps.Security do
   alias ScrypathOps.Integrations.Sigra, as: SigraIntegration
 
   @allowed_opsui_auth_modes ~w(basic proxy_headers sigra)
+  @unsafe_confirm_path_parts ["?", "#", "\\", "/%09", "/\t", "\n", "\r"]
 
   def allowed_opsui_auth_modes, do: @allowed_opsui_auth_modes
 
@@ -46,8 +47,9 @@ defmodule ScrypathOps.Security do
   end
 
   defp valid_sudo_confirm_path?(path) when is_binary(path) do
-    path != "" and String.trim(path) == path and String.starts_with?(path, "/") and
-      not String.starts_with?(path, "//") and not String.contains?(path, ["?", "#"]) and
+    path != "" and String.valid?(path) and String.trim(path) == path and
+      String.starts_with?(path, "/") and not String.starts_with?(path, "//") and
+      not String.contains?(path, @unsafe_confirm_path_parts) and
       case URI.parse(path) do
         %URI{scheme: nil, host: nil, path: parsed_path} when is_binary(parsed_path) ->
           true

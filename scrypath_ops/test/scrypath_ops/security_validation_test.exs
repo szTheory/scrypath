@@ -56,11 +56,49 @@ defmodule ScrypathOps.SecurityValidationTest do
   end
 
   test "validate/1 rejects empty, relative, and external sigra sudo confirmation paths" do
-    for path <- ["", "sudo/confirm", "//other.example/sudo", "https://other.example/sudo"] do
+    for path <- [
+          "",
+          "sudo/confirm",
+          "//other.example/sudo",
+          "https://other.example/sudo",
+          "/sudo/\\confirm",
+          "/sudo/\nconfirm",
+          "/sudo/\rconfirm",
+          "/sudo/\tconfirm",
+          "/%09confirm"
+        ] do
       assert {:error, message} =
                Security.validate(%{auth_mode: "sigra", sigra: [sudo_confirm_path: path]})
 
       assert message =~ ":sudo_confirm_path"
+    end
+  end
+
+  test "accepted confirmation paths reach LiveView confirmation without running the action" do
+    System.put_env("OPSUI_AUTH_MODE", "sigra")
+
+    for path <- ["/sudo/confirm", "/account/confirm-step", "/team/confirm%20identity"] do
+      config = [sudo_confirm_path: path]
+      assert :ok = Security.validate(%{auth_mode: "sigra", sigra: config})
+      Application.put_env(:scrypath_ops, :sigra, config)
+
+      context = %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        sudo_at: nil
+      }
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{__changed__: %{}, operator_context: context, return_to: "/ops", flash: %{}}
+      }
+
+      result =
+        ScrypathOps.Integrations.Sigra.Gating.gate_sensitive_action(socket, :reindex, fn ->
+          flunk("confirmation must happen before the protected action")
+        end)
+
+      assert {:live, :redirect, %{to: target}} = result.redirected
+      assert target == path <> "?return_to=%2Fops"
     end
   end
 
