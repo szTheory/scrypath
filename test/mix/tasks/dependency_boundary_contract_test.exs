@@ -5,6 +5,15 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @host_manifest "examples/scrypath_ecommerce/mix.exs"
   @root_manifest "mix.exs"
   @support_guide "guides/support-and-compatibility.md"
+  @action_dispositions ".planning/phases/184-explicit-and-lean-dependency-graphs/184-ACTIONS-DISPOSITIONS.md"
+  @dependency_evidence ".planning/phases/184-explicit-and-lean-dependency-graphs/184-DEPENDENCY-EVIDENCE.md"
+  @action_pr_ids ~w(65 68 69 70 71 72 73 74 75 76)
+  @dependency_graph_ids [
+    ".",
+    "examples/phoenix_meilisearch",
+    "examples/scrypath_ecommerce",
+    "scrypath_ops"
+  ]
   @ops_asset_config "scrypath_ops/config/config.exs"
   @host_asset_config "examples/scrypath_ecommerce/config/config.exs"
   @host_prod_config "examples/scrypath_ecommerce/config/prod.exs"
@@ -213,16 +222,24 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     assert support =~ "These are discrete tuples, not"
     assert support =~ "As of **2026-10-30**"
     assert support =~ "no longer supported** by the upstream project"
-    assert support =~ "does not change the root\nlibrary's Elixir 1.17 floor or establish an OTP 27 minimum"
+
+    assert support =~
+             "does not change the root\nlibrary's Elixir 1.17 floor or establish an OTP 27 minimum"
+
     assert support =~ "The root, Phoenix example, and ecommerce graph audits were clean."
     assert support =~ "The ScrypathOps audit remains affected and nonzero"
     assert support =~ "EEF-CVE-2026-95105"
     assert support =~ "EEF-CVE-2026-94206"
     assert support =~ "That fix does not clear the Cloak findings"
-    assert support =~ "Dependency\nand support changes become Hex-package claims only after a release"
+
+    assert support =~
+             "Dependency\nand support changes become Hex-package claims only after a release"
+
     assert support =~ "[ScrypathOps production runbook](../scrypath_ops/README.md#production)"
     assert ops_readme =~ "[security boundary](docs/SECURITY.md)"
-    assert phoenix_readme =~ "[support and compatibility guide](../../guides/support-and-compatibility.md)"
+
+    assert phoenix_readme =~
+             "[support and compatibility guide](../../guides/support-and-compatibility.md)"
 
     for target <- [
           "scrypath_ops/README.md",
@@ -231,6 +248,60 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
         ] do
       assert File.regular?(target), "current support link must resolve: #{target}"
     end
+  end
+
+  test "all ten dependency proposals have source-bound complete dispositions" do
+    rows = markdown_table_rows!(@action_dispositions, "## Ten Dependabot PR dispositions")
+
+    assert Enum.map(rows, &action_pr_id!/1) == @action_pr_ids
+    assert action_disposition_errors(rows) == []
+
+    for [pr, proposal, disposition, version, source, evidence, reason, trigger] <- rows do
+      assert pr =~ ~r/\[#\d+\]/
+      assert proposal =~ "open"
+      assert disposition =~ ~r/\A(?:Incorporated|Adopted|Superseded)/
+      assert version =~ ~r/\d/
+      assert source =~ ~r/\]\(https?:\/\//
+      assert String.length(evidence) > 10
+      assert String.length(reason) > 10
+      assert String.length(trigger) > 10
+    end
+
+    assert "missing PR disposition: #76" in action_disposition_errors(Enum.drop(rows, -1))
+    assert "duplicate PR disposition: #65" in action_disposition_errors(rows ++ [hd(rows)])
+
+    empty_disposition = List.update_at(hd(rows), 2, &String.replace(&1, &1, ""))
+
+    assert "empty disposition for PR #65" in action_disposition_errors([
+             empty_disposition | tl(rows)
+           ])
+  end
+
+  test "all four dependency audit records bind stable locks and raw evidence" do
+    rows =
+      markdown_table_rows!(
+        @dependency_evidence,
+        "## Final four-graph audit receipt — Plan 184-10"
+      )
+
+    assert Enum.map(rows, &dependency_graph_id!/1) == @dependency_graph_ids
+    assert dependency_graph_record_errors(rows) == []
+    assert Enum.map(rows, &Enum.at(&1, 9)) == ["clean", "clean", "clean", "affected"]
+    assert Enum.map(rows, &Enum.at(&1, 8)) == ["0", "0", "0", "1"]
+
+    assert "missing dependency graph record: scrypath_ops" in dependency_graph_record_errors(
+             Enum.drop(rows, -1)
+           )
+
+    assert "duplicate dependency graph record: ." in dependency_graph_record_errors(
+             rows ++ [hd(rows)]
+           )
+
+    empty_receipt = List.update_at(hd(rows), 10, &String.replace(&1, &1, ""))
+
+    assert "empty raw evidence reference for dependency graph: ." in dependency_graph_record_errors(
+             [empty_receipt | tl(rows)]
+           )
   end
 
   test "dev asset aliases preserve the configured Mix tools and output paths" do
@@ -518,6 +589,142 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
       assert status != 0, "#{mutation} unexpectedly passed:\n#{output}"
     end
+  end
+
+  defp markdown_table_rows!(path, heading) do
+    lines = path |> File.read!() |> String.split("\n")
+
+    heading_index =
+      Enum.find_index(lines, &(&1 == heading)) ||
+        flunk("#{path}: expected Markdown table heading #{inspect(heading)}")
+
+    lines
+    |> Enum.drop(heading_index + 1)
+    |> Enum.drop_while(&(not String.starts_with?(String.trim(&1), "|")))
+    |> Enum.take_while(&String.starts_with?(String.trim(&1), "|"))
+    |> Enum.drop(1)
+    |> Enum.map(&markdown_table_cells!/1)
+    |> Enum.reject(fn cells -> Enum.all?(cells, &Regex.match?(~r/^:?-+:?$/, &1)) end)
+  end
+
+  defp markdown_table_cells!(line) do
+    line
+    |> String.trim()
+    |> String.trim_leading("|")
+    |> String.trim_trailing("|")
+    |> String.split("|")
+    |> Enum.map(&(String.trim(&1) |> String.trim("`")))
+  end
+
+  defp action_pr_id!([first | _]) do
+    case Regex.run(~r/\[#(\d+)\]/, first) do
+      [_, id] -> id
+      _ -> flunk("expected a linked GitHub PR number in #{inspect(first)}")
+    end
+  end
+
+  defp action_pr_id!(_row), do: flunk("expected a non-empty PR disposition row")
+
+  defp action_disposition_errors(rows) do
+    ids = Enum.map(rows, &action_pr_id!/1)
+    frequencies = Enum.frequencies(ids)
+
+    missing =
+      Enum.reject(@action_pr_ids, &(&1 in ids))
+      |> Enum.map(&"missing PR disposition: ##{&1}")
+
+    duplicates =
+      frequencies
+      |> Enum.filter(fn {_id, count} -> count > 1 end)
+      |> Enum.map(fn {id, _count} -> "duplicate PR disposition: ##{id}" end)
+
+    empty_fields =
+      Enum.flat_map(rows, fn row ->
+        id = action_pr_id!(row)
+
+        cond do
+          length(row) != 8 ->
+            ["invalid PR disposition schema: ##{id}"]
+
+          Enum.at(row, 2) == "" ->
+            ["empty disposition for PR ##{id}"]
+
+          Enum.any?(Enum.drop(row, 1), &(&1 == "")) ->
+            ["empty required disposition field for PR ##{id}"]
+
+          true ->
+            []
+        end
+      end)
+
+    missing ++ duplicates ++ empty_fields
+  end
+
+  defp dependency_graph_id!([graph | _]), do: String.trim(graph, "`")
+  defp dependency_graph_id!(_row), do: flunk("expected a non-empty dependency graph record")
+
+  defp dependency_graph_record_errors(rows) do
+    ids = Enum.map(rows, &dependency_graph_id!/1)
+    frequencies = Enum.frequencies(ids)
+
+    missing =
+      Enum.reject(@dependency_graph_ids, &(&1 in ids))
+      |> Enum.map(&"missing dependency graph record: #{&1}")
+
+    duplicates =
+      frequencies
+      |> Enum.filter(fn {_id, count} -> count > 1 end)
+      |> Enum.map(fn {id, _count} -> "duplicate dependency graph record: #{id}" end)
+
+    row_errors =
+      Enum.flat_map(rows, fn row ->
+        graph = dependency_graph_id!(row)
+
+        cond do
+          length(row) != 11 ->
+            ["invalid dependency graph record schema: #{graph}"]
+
+          Enum.at(row, 10) == "" ->
+            ["empty raw evidence reference for dependency graph: #{graph}"]
+
+          Enum.any?(row, &(&1 == "")) ->
+            ["empty required field for dependency graph: #{graph}"]
+
+          not Regex.match?(~r/\A(?:[0-9a-f]{40}|[0-9a-f]{64})\z/, Enum.at(row, 1)) ->
+            ["invalid source SHA for dependency graph: #{graph}"]
+
+          Enum.any?(Enum.slice(row, 2, 3), &(not Regex.match?(~r/\A[0-9a-f]{64}\z/, &1))) ->
+            ["invalid manifest/lock SHA for dependency graph: #{graph}"]
+
+          Enum.at(row, 3) != Enum.at(row, 4) ->
+            ["dependency lock changed during audit for graph: #{graph}"]
+
+          Enum.at(row, 6) != "2.5.1" ->
+            ["unexpected Hex version for dependency graph: #{graph}"]
+
+          Enum.at(row, 7) != "0" ->
+            ["dependency fetch failed for graph: #{graph}"]
+
+          Enum.at(row, 8) not in ["0", "1"] ->
+            ["invalid Hex audit exit status for graph: #{graph}"]
+
+          Enum.at(row, 9) not in ["clean", "affected"] ->
+            ["invalid dependency audit status for graph: #{graph}"]
+
+          not String.starts_with?(Enum.at(row, 10), "/private/tmp/") ->
+            ["empty raw evidence reference for dependency graph: #{graph}"]
+
+          true ->
+            []
+        end
+      end)
+
+    source_shas = Enum.map(rows, &Enum.at(&1, 1)) |> Enum.uniq()
+
+    source_errors =
+      if length(source_shas) == 1, do: [], else: ["dependency graphs do not share one source SHA"]
+
+    missing ++ duplicates ++ row_errors ++ source_errors
   end
 
   defp direct_dependency_names!(path) do
