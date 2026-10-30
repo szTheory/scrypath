@@ -13,6 +13,7 @@ services:
     build:
       context: ../..
       dockerfile: examples/scrypath_ecommerce/Dockerfile
+      target: runtime_test
     working_dir: /app/scrypath_ops
     command: ["sh", "/app/examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh"]
     environment:
