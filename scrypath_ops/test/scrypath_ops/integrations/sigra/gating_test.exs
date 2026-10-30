@@ -68,6 +68,24 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     assert get_flash(result, "error") =~ "Impersonation must be cleared"
   end
 
+  test "requested Sigra rejects malformed user and organization identities for every action" do
+    for action <- Map.keys(Gating.__action_config__()),
+        field <- [:user_id, :active_org_id],
+        value <- [false, true, [], %{}, :unknown, 0, -1, 1.5] do
+      context = Map.put(operator_context([]), field, value)
+      assert_denied(socket(%{operator_context: context}), action)
+    end
+  end
+
+  test "fresh confirmation supports positive integer identities" do
+    context = %{operator_context([]) | user_id: 123, active_org_id: 456}
+
+    assert :ran =
+             Gating.gate_sensitive_action(socket(%{operator_context: context}), :reindex, fn ->
+               :ran
+             end)
+  end
+
   test "stale sudo sends the operator to the confirm path with return_to" do
     context = operator_context(sudo_at: DateTime.add(DateTime.utc_now(), -600, :second))
 

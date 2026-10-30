@@ -116,7 +116,8 @@ if Code.ensure_loaded?(Sigra.Audit) do
     defp valid_identity?(value) when is_binary(value),
       do: String.valid?(value) and String.trim(value) != ""
 
-    defp valid_identity?(value), do: not is_nil(value)
+    defp valid_identity?(value) when is_integer(value), do: value > 0
+    defp valid_identity?(_value), do: false
 
     defp deny(socket, message), do: Phoenix.LiveView.put_flash(socket, :error, message)
 
