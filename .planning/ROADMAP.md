@@ -168,7 +168,7 @@ Plans:
 - [x] 184-12-PLAN.md — Isolated asset builder, independent targets and static handoff contracts (wave 7)
 
 **Wave 8** *(blocked on Wave 7 completion)*
-- [ ] 184-06-PLAN.md — Clean Ops modes, real no-Sigra callbacks and both served asset bundles (wave 8)
+- [x] 184-06-PLAN.md — Clean Ops modes, real no-Sigra callbacks and both served asset bundles (wave 8)
 
 **Wave 9** *(blocked on Wave 8 completion)*
 - [ ] 184-07-PLAN.md — Four scoped dependency resolutions and compatible security/tooling updates (wave 9)
@@ -217,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 8/12 | In Progress | — |
+| 184. Explicit and lean dependency graphs | 9/12 | In Progress | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.
