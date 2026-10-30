@@ -20,7 +20,7 @@ COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./
 # Each project resolves its own lock and compile graph into its project-local
 # deps/ and environment-specific _build/ directories. BuildKit caches only Hex
 # and Rebar downloads; neither dependency trees nor BEAM output are shared.
-RUN --mount=type=cache,target=/root/.hex \
+RUN --mount=type=cache,target=/root/.hex,sharing=locked \
     --mount=type=cache,target=/root/.cache/rebar3 \
     mix deps.get --check-locked \
  && (cd /app/scrypath_ops && mix deps.get --check-locked) \
@@ -54,7 +54,7 @@ COPY mix.exs mix.lock ./
 COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/
 COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./examples/scrypath_ecommerce/
 
-RUN --mount=type=cache,target=/root/.hex \
+RUN --mount=type=cache,target=/root/.hex,sharing=locked \
     --mount=type=cache,target=/root/.cache/rebar3 \
     mix deps.get --check-locked \
  && (cd /app/scrypath_ops && mix deps.get --check-locked) \
@@ -92,7 +92,7 @@ COPY mix.exs mix.lock ./
 COPY scrypath_ops/mix.exs scrypath_ops/mix.lock ./scrypath_ops/
 COPY examples/scrypath_ecommerce/mix.exs examples/scrypath_ecommerce/mix.lock ./examples/scrypath_ecommerce/
 
-RUN --mount=type=cache,target=/root/.hex \
+RUN --mount=type=cache,target=/root/.hex,sharing=locked \
     --mount=type=cache,target=/root/.cache/rebar3 \
     mix deps.get --check-locked \
  && (cd /app/scrypath_ops && mix deps.get --check-locked) \
