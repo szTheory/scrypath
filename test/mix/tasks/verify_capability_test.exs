@@ -136,7 +136,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
     assert function_exported?(Mix.Tasks.Verify.OpsUi, :verification_commands, 1),
            "verify.ops_ui must expose its ordered command plan for invocation contract tests"
 
-    [mounted_proof, deps_get, direct_suite] =
+    [mounted_proof, hex_bootstrap, deps_get, direct_suite] =
       apply(Mix.Tasks.Verify.OpsUi, :verification_commands, [root])
 
     assert elem(mounted_proof, 1) == [
@@ -146,6 +146,8 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
            ]
 
     assert elem(mounted_proof, 2) == root
+    assert elem(hex_bootstrap, 1) == ["local.hex", "--force"]
+    assert elem(hex_bootstrap, 2) == Path.join(root, "scrypath_ops")
     assert elem(deps_get, 1) == ["deps.get"]
     assert elem(deps_get, 2) == Path.join(root, "scrypath_ops")
     assert elem(direct_suite, 1) == ["test"]
