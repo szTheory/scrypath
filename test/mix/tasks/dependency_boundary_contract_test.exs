@@ -29,6 +29,13 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @telemetry_source "scrypath_ops/lib/scrypath_ops_web/telemetry.ex"
   @application_source "scrypath_ops/lib/scrypath_ops/application.ex"
   @endpoint_source "scrypath_ops/lib/scrypath_ops_web/endpoint.ex"
+  @static_contract_files [
+    "examples/scrypath_ecommerce/Dockerfile",
+    "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
+    "examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh",
+    "examples/scrypath_ecommerce/config/prod.exs",
+    "examples/scrypath_ecommerce/config/runtime.exs"
+  ]
 
   test "Ops and ecommerce do not directly declare Swoosh" do
     for path <- [@ops_manifest, @host_manifest] do
@@ -395,6 +402,80 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
            "#{@dev_router}: dashboard route must require both availability and dev_routes policy"
   end
 
+  test "static dependency handoff checker accepts clean output-only targets and rejects mutations" do
+    source_root = Path.expand("../../..", __DIR__)
+
+    checker =
+      Path.join(
+        source_root,
+        "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
+      )
+
+    assert File.regular?(checker),
+           "the repository must provide the static dependency boundary checker"
+
+    fixture_parent =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-dependency-boundary-#{System.unique_integer([:positive])}"
+      )
+
+    File.mkdir_p!(fixture_parent)
+    on_exit(fn -> File.rm_rf!(fixture_parent) end)
+
+    clean_fixture = dependency_boundary_fixture!(source_root, Path.join(fixture_parent, "clean"))
+    {clean_output, clean_status} = run_static_dependency_contract(clean_fixture)
+
+    assert clean_status == 0, clean_output
+    assert clean_output =~ "Static dependency boundary contract passed"
+
+    {usage_output, usage_status} =
+      run_static_dependency_contract(clean_fixture, ["--static-contract-only", "extra"])
+
+    assert usage_status == 64, usage_output
+
+    mutations = [
+      {"builder dependency transfer",
+       fn fixture ->
+         append_dependency_boundary_text!(
+           fixture,
+           "examples/scrypath_ecommerce/Dockerfile",
+           "\nCOPY --from=asset_builder /app/scrypath_ops/deps /app/scrypath_ops/deps\n"
+         )
+       end},
+      {"missing CSS output declaration",
+       fn fixture ->
+         replace_dependency_boundary_text!(
+           fixture,
+           "examples/scrypath_ecommerce/Dockerfile",
+           " && test -s /app/examples/scrypath_ecommerce/priv/static/assets/css/app.css",
+           ""
+         )
+       end},
+      {"runtime wrapper installation",
+       fn fixture ->
+         append_dependency_boundary_text!(
+           fixture,
+           "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
+           "\nmix esbuild.install --if-missing\n"
+         )
+       end}
+    ]
+
+    for {mutation, mutate_fixture} <- mutations do
+      fixture =
+        dependency_boundary_fixture!(
+          source_root,
+          Path.join(fixture_parent, String.replace(mutation, " ", "-"))
+        )
+
+      mutate_fixture.(fixture)
+      {output, status} = run_static_dependency_contract(fixture)
+
+      assert status != 0, "#{mutation} unexpectedly passed:\n#{output}"
+    end
+  end
+
   defp direct_dependency_names!(path) do
     deps_body =
       path
@@ -654,5 +735,47 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       end)
 
     found?
+  end
+
+  defp dependency_boundary_fixture!(source_root, fixture_root) do
+    Enum.each(
+      @static_contract_files ++
+        ["examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"],
+      fn path ->
+        source = Path.join(source_root, path)
+        target = Path.join(fixture_root, path)
+        File.mkdir_p!(Path.dirname(target))
+        File.cp!(source, target)
+      end
+    )
+
+    fixture_root
+  end
+
+  defp run_static_dependency_contract(fixture_root, args \\ ["--static-contract-only"]) do
+    script =
+      Path.join(
+        fixture_root,
+        "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
+      )
+
+    System.cmd("bash", [script | args],
+      cd: fixture_root,
+      env: [{"SCRYPATH_DEPENDENCY_BOUNDARY_ROOT", fixture_root}],
+      stderr_to_stdout: true
+    )
+  end
+
+  defp append_dependency_boundary_text!(fixture_root, path, addition) do
+    target = Path.join(fixture_root, path)
+    File.write!(target, File.read!(target) <> addition)
+  end
+
+  defp replace_dependency_boundary_text!(fixture_root, path, original, replacement) do
+    target = Path.join(fixture_root, path)
+    contents = File.read!(target)
+    mutated = String.replace(contents, original, replacement, global: false)
+    if mutated == contents, do: flunk("fixture mutation did not match #{path}: #{original}")
+    File.write!(target, mutated)
   end
 end
