@@ -591,6 +591,18 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     end
   end
 
+  test "parallel Docker targets serialize writers to the shared Hex registry cache" do
+    dockerfile = File.read!("examples/scrypath_ecommerce/Dockerfile")
+
+    hex_mounts =
+      dockerfile
+      |> String.split("\n")
+      |> Enum.filter(&String.contains?(&1, "--mount=type=cache,target=/root/.hex"))
+
+    assert length(hex_mounts) == 3
+    assert Enum.all?(hex_mounts, &String.contains?(&1, "sharing=locked"))
+  end
+
   defp markdown_table_rows!(path, heading) do
     lines = path |> File.read!() |> String.split("\n")
 
