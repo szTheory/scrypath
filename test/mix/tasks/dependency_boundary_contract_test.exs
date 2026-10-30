@@ -34,7 +34,9 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
     "examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh",
     "examples/scrypath_ecommerce/config/prod.exs",
-    "examples/scrypath_ecommerce/config/runtime.exs"
+    "examples/scrypath_ecommerce/config/runtime.exs",
+    "scrypath_ops/config/prod.exs",
+    "scrypath_ops/config/runtime.exs"
   ]
 
   test "Ops and ecommerce do not directly declare Swoosh" do
