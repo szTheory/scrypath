@@ -36,19 +36,31 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
        ctx do
     ops_source = Path.join(ctx.repo, "scrypath_ops")
 
-    for mix_env <- ["test", "prod"] do
-      consumer_root = Path.join(ctx.scratch, "mounted-#{mix_env}")
+    for {mix_env, metrics_only?} <- [{"test", false}, {"prod", false}, {"test", true}] do
+      case_name = "mounted-#{mix_env}-#{if metrics_only?, do: "metrics-only", else: "none"}"
+      consumer_root = Path.join(ctx.scratch, case_name)
       File.mkdir_p!(consumer_root)
-      create_consumer!(consumer_root, ops_source)
+      create_consumer!(consumer_root, ops_source, metrics_only?)
 
-      env = isolated_env(ctx.scratch, "mounted-#{mix_env}", mix_env, ctx.source_sha)
+      env =
+        isolated_env(ctx.scratch, case_name, mix_env, ctx.source_sha) ++
+          [
+            {"OPS_BOUNDARY_TELEMETRY_SOURCE",
+             Path.join(ops_source, "lib/scrypath_ops_web/telemetry.ex")}
+          ]
+
       run_mix!("local.hex", ["--force"], consumer_root, env)
       run_mix!("local.rebar", ["--force"], consumer_root, env)
       run_mix!("deps.get", [], consumer_root, env)
+
+      if metrics_only? do
+        run_mix!("deps.compile", ["telemetry_metrics"], consumer_root, env)
+      end
+
       run_mix!("compile", ["--no-optional-deps", "--warnings-as-errors"], consumer_root, env)
 
       probe = Path.join(consumer_root, "ops_dependency_probe.exs")
-      File.write!(probe, mounted_probe())
+      File.write!(probe, mounted_probe(metrics_only?))
       output = run_mix!("run", ["--no-start", probe], consumer_root, env)
 
       assert output =~ "OPS_DEPENDENCY_BOUNDARY case=mounted env=#{mix_env} result=passed"
@@ -105,7 +117,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     end
   end
 
-  defp create_consumer!(root, ops_source) do
+  defp create_consumer!(root, ops_source, metrics_only?) do
     bridge = Path.join(root, "ops_bridge")
     File.mkdir_p!(Path.join(bridge, "lib"))
     File.mkdir_p!(Path.join(root, "config"))
@@ -145,7 +157,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
         def application, do: [extra_applications: [:logger]]
 
-        defp deps, do: [{:ops_boundary_bridge, path: "ops_bridge"}]
+        defp deps do
+          [{:ops_boundary_bridge, path: "ops_bridge"}] ++
+            #{if metrics_only?, do: "[{:telemetry_metrics, \"~> 1.0\"}]", else: "[]"}
+        end
       end
       """
     )
@@ -335,11 +350,15 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     String.trim(path)
   end
 
-  defp mounted_probe do
+  defp mounted_probe(metrics_only?) do
+    present_apps = if metrics_only?, do: [:telemetry_metrics], else: []
+    present_modules = if metrics_only?, do: [Module.concat(["Telemetry", "Metrics"])], else: []
+
     ~S"""
     defmodule OpsBoundaryMountedProbe do
-      @forbidden_apps [:sigra, :phoenix_live_dashboard, :telemetry_metrics, :telemetry_poller, :esbuild, :tailwind]
+      @forbidden_apps __FORBIDDEN_APPS__
       @forbidden_modules __ABSENT_MODULES__
+      @present_modules __PRESENT_MODULES__
       @actions [:saved_search_delete, :failed_work_retry, :swap_live, :reindex, :delete_documents, :hot_apply]
 
       defmodule Backend do
@@ -365,6 +384,14 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
         lock = Mix.Dep.Lock.read("mix.lock")
         for app <- @forbidden_apps, do: assert!(not Map.has_key?(lock, app), "#{app} resolved in mounted #{Mix.env()} graph")
+        for module <- @present_modules, do: assert!(Code.ensure_loaded?(module), "missing required host capability #{inspect(module)}")
+
+        # A host may load metrics before Ops is compiled; optional capability
+        # safety must hold independently of the dependency compiler's ordering.
+        if @present_modules != [] do
+          Code.compile_file(System.fetch_env!("OPS_BOUNDARY_TELEMETRY_SOURCE"))
+        end
+
         for module <- @forbidden_modules, do: assert!(:code.which(module) == :non_existing, "#{inspect(module)} has a code path in mounted graph")
 
         {:ok, _} = Application.ensure_all_started(:scrypath_ops)
@@ -489,7 +516,12 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
     OpsBoundaryMountedProbe.run()
     """
-    |> String.replace("__ABSENT_MODULES__", inspect(@absent_modules))
+    |> String.replace(
+      "__FORBIDDEN_APPS__",
+      inspect([:sigra | @diagnostic_apps ++ @asset_apps] -- present_apps)
+    )
+    |> String.replace("__ABSENT_MODULES__", inspect(@absent_modules -- present_modules))
+    |> String.replace("__PRESENT_MODULES__", inspect(present_modules))
   end
 
   defp direct_probe do

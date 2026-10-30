@@ -1,4 +1,4 @@
-if Code.ensure_loaded?(Telemetry.Metrics) do
+if Code.ensure_loaded?(Telemetry.Metrics) and Code.ensure_loaded?(:telemetry_poller) do
   defmodule ScrypathOpsWeb.Telemetry do
     use Supervisor
     import Telemetry.Metrics

@@ -428,14 +428,15 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
              telemetry_ast,
              [
                {[:Code], :ensure_loaded?,
-                fn args -> alias_argument?(args, [:Telemetry, :Metrics]) end}
+                fn args -> alias_argument?(args, [:Telemetry, :Metrics]) end},
+               {[:Code], :ensure_loaded?, fn args -> args == [:telemetry_poller] end}
              ],
              fn
                {:defmodule, _, [{:__aliases__, _, [:ScrypathOpsWeb, :Telemetry]} | _]} -> true
                _ -> false
              end
            ),
-           "#{@telemetry_source}: module compilation must require Telemetry.Metrics"
+           "#{@telemetry_source}: diagnostics must require both metrics and the poller"
 
     assert conditional_has_calls_and_body?(
              application_ast,
