@@ -2048,10 +2048,6 @@ defmodule ScrypathOpsWeb.SearchLive do
     "Select at least one schema."
   end
 
-  defp backend_run_error?({:scrypath, _reason}), do: true
-  defp backend_run_error?({:invalid_saved_options, _message}), do: true
-  defp backend_run_error?(_reason), do: false
-
   defp format_run_error({:invalid_saved_options, message}), do: message
 
   defp format_run_error({:scrypath, reason}) do
@@ -2059,4 +2055,8 @@ defmodule ScrypathOpsWeb.SearchLive do
   end
 
   defp format_run_error(other), do: inspect(other)
+
+  defp backend_run_error?({:scrypath, _reason}), do: true
+  defp backend_run_error?({:invalid_saved_options, _message}), do: true
+  defp backend_run_error?(_reason), do: false
 end
