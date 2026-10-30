@@ -27,6 +27,31 @@ const composeE2eSource = path.join(
   repositoryRoot,
   "examples/scrypath_ecommerce/compose.e2e.yaml",
 );
+const dependencyBoundaryVerifier = path.join(
+  repositoryRoot,
+  "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh",
+);
+
+test("mounted verification runs the clean dependency boundary proof before starting Compose", () => {
+  const verifier = readFileSync(verifierSource, "utf8");
+  const boundaryProof = 'bash "$script_dir/verify-dependency-boundaries.sh" --runtime';
+
+  assert.ok(
+    verifier.includes(boundaryProof),
+    `${dependencyBoundaryVerifier} --runtime must be part of the canonical mounted verifier`,
+  );
+  assert.ok(
+    verifier.indexOf(boundaryProof) < verifier.indexOf('echo "Starting isolated Docker verifier project'),
+    "the clean target proof must run before the mounted Compose stack starts",
+  );
+});
+
+test("focused mounted verification invokes the runtime dependency proof", (t) => {
+  const result = runVerifier(t, ["focused"]);
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.deepEqual(result.boundaryCalls, ["--runtime"]);
+});
 
 function tempDirectory(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), "scrypath-e2e-lifecycle-"));
@@ -135,6 +160,11 @@ function runVerifier(t, args, extraEnv = {}) {
   mkdirSync(scriptDirectory, { recursive: true });
   const scriptPath = path.join(scriptDirectory, "verify-e2e.sh");
   writeFileSync(scriptPath, readFileSync(verifierSource));
+  const boundaryLogPath = path.join(root, "boundary.log");
+  writeFileSync(
+    path.join(scriptDirectory, "verify-dependency-boundaries.sh"),
+    'printf "%s\\n" "$*" >> "$FAKE_BOUNDARY_LOG"\nexit 0\n',
+  );
 
   const { binDirectory, logPath } = installDockerDouble(root);
   const aggregateInputPath = path.join(root, "docker-run.stdin");
@@ -151,6 +181,7 @@ function runVerifier(t, args, extraEnv = {}) {
       ...process.env,
       PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
       FAKE_DOCKER_LOG: logPath,
+      FAKE_BOUNDARY_LOG: boundaryLogPath,
       FAKE_DOCKER_STDIN_FILE: aggregateInputPath,
       FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
       E2E_RUN_ID: runId,
@@ -168,7 +199,14 @@ function runVerifier(t, args, extraEnv = {}) {
   const lifecycle = lifecyclePath && existsSync(lifecyclePath)
     ? JSON.parse(readFileSync(lifecyclePath, "utf8"))
     : null;
-  return { ...result, calls: dockerCalls(logPath), artifactDirectory, aggregateInputPath, lifecycle };
+  return {
+    ...result,
+    calls: dockerCalls(logPath),
+    boundaryCalls: existsSync(boundaryLogPath) ? readFileSync(boundaryLogPath, "utf8").trim().split("\n") : [],
+    artifactDirectory,
+    aggregateInputPath,
+    lifecycle,
+  };
 }
 
 function composeProjectCalls(calls) {

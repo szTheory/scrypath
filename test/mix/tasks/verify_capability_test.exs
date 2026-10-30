@@ -128,6 +128,32 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
     ])
   end
 
+  test "Ops verification pins the mounted dependency proof before the direct suite" do
+    root = File.cwd!()
+
+    assert {:module, Mix.Tasks.Verify.OpsUi} = Code.ensure_loaded(Mix.Tasks.Verify.OpsUi)
+
+    assert function_exported?(Mix.Tasks.Verify.OpsUi, :verification_commands, 1),
+           "verify.ops_ui must expose its ordered command plan for invocation contract tests"
+
+    [mounted_proof, hex_bootstrap, deps_get, direct_suite] =
+      apply(Mix.Tasks.Verify.OpsUi, :verification_commands, [root])
+
+    assert elem(mounted_proof, 1) == [
+             "test",
+             "test/release/ops_dependency_boundary_test.exs",
+             "--warnings-as-errors"
+           ]
+
+    assert elem(mounted_proof, 2) == root
+    assert elem(hex_bootstrap, 1) == ["local.hex", "--force"]
+    assert elem(hex_bootstrap, 2) == Path.join(root, "scrypath_ops")
+    assert elem(deps_get, 1) == ["deps.get"]
+    assert elem(deps_get, 2) == Path.join(root, "scrypath_ops")
+    assert elem(direct_suite, 1) == ["test"]
+    assert elem(direct_suite, 2) == Path.join(root, "scrypath_ops")
+  end
+
   defp recording_task_runner do
     calls_key = {__MODULE__, make_ref()}
 

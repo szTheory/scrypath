@@ -3,6 +3,8 @@ defmodule Mix.Tasks.Verify.OpsUi do
 
   @shortdoc "Runs canonical ScrypathOps verification"
 
+  @boundary_test "test/release/ops_dependency_boundary_test.exs"
+
   @moduledoc """
   Runs the `scrypath_ops` application tests the same way the path-scoped
   **`ops-ui`** GitHub Actions job does.
@@ -27,26 +29,68 @@ defmodule Mix.Tasks.Verify.OpsUi do
     Mix.Task.run("app.start")
     ensure_no_args!(args)
 
-    ops_dir = Path.expand("scrypath_ops", File.cwd!())
+    root = File.cwd!()
 
-    unless File.dir?(ops_dir) do
-      Mix.raise("verify.ops_ui: expected #{ops_dir} to exist")
+    scratch =
+      Path.join(physical_tmp_dir!(), "scrypath-ops-ui-#{System.unique_integer([:positive])}")
+
+    File.mkdir_p!(scratch)
+
+    try do
+      execute_verification!(verification_commands(root), root, scratch)
+    after
+      File.rm_rf(scratch)
     end
+  end
 
-    # CI mirrors GitHub Actions (non-interactive). `printf` answers "n" if Hex ever
-    # prompts for re-auth on a workstation TTY — same commands as `.github/workflows/ci.yml`.
-    Mix.shell().info("==> verify.ops_ui: cd scrypath_ops && mix deps.get && mix test")
+  @doc false
+  def verification_commands(root) do
+    mix = System.find_executable("mix") || "mix"
+    ops_dir = Path.expand("scrypath_ops", root)
 
-    script = "export CI=true; printf 'n\\n' | mix deps.get && mix test"
+    [
+      {mix, ["test", @boundary_test, "--warnings-as-errors"], root, [{"MIX_ENV", "test"}]},
+      {mix, ["local.hex", "--force"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "dev"}]},
+      {mix, ["deps.get"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "dev"}]},
+      {mix, ["test"], ops_dir, [{"CI", "true"}, {"MIX_ENV", "test"}]}
+    ]
+  end
 
-    {out, status} =
-      System.cmd("bash", ["-lc", script], cd: ops_dir, stderr_to_stdout: true)
+  defp execute_verification!(commands, root, scratch) do
+    ops_dir = Path.expand("scrypath_ops", root)
 
-    Mix.shell().info(out)
+    commands
+    |> Enum.with_index()
+    |> Enum.each(fn {{executable, args, cd, env}, index} ->
+      env = if cd == ops_dir, do: ops_environment(env, scratch), else: env
+      command = Enum.join([executable | args], " ")
 
-    if status != 0 do
-      Mix.raise("verify.ops_ui failed: `#{script}` (in #{ops_dir}) exited #{status}")
-    end
+      Mix.shell().info("==> verify.ops_ui: #{command} (in #{cd})")
+
+      {output, status} = System.cmd(executable, args, cd: cd, env: env, stderr_to_stdout: true)
+      Mix.shell().info(output)
+
+      if status != 0 do
+        Mix.raise(
+          "verify.ops_ui step #{index + 1} failed: `#{command}` (in #{cd}) exited #{status}"
+        )
+      end
+    end)
+  end
+
+  defp ops_environment(env, scratch) do
+    env ++
+      [
+        {"MIX_BUILD_PATH", Path.join(scratch, "build")},
+        {"MIX_DEPS_PATH", Path.join(scratch, "deps")},
+        {"MIX_HOME", Path.join(scratch, "mix")},
+        {"HEX_HOME", Path.join(scratch, "hex")}
+      ]
+  end
+
+  defp physical_tmp_dir! do
+    {path, 0} = System.cmd("pwd", ["-P"], cd: System.tmp_dir!())
+    String.trim(path)
   end
 
   defp ensure_no_args!([]), do: :ok
