@@ -6,6 +6,9 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @root_manifest "mix.exs"
   @ops_asset_config "scrypath_ops/config/config.exs"
   @host_asset_config "examples/scrypath_ecommerce/config/config.exs"
+  @host_prod_config "examples/scrypath_ecommerce/config/prod.exs"
+  @host_runtime_config "examples/scrypath_ecommerce/config/runtime.exs"
+  @host_test_config "examples/scrypath_ecommerce/config/test.exs"
   @ops_config_files [
     "scrypath_ops/config/config.exs",
     "scrypath_ops/config/dev.exs",
@@ -15,7 +18,10 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   ]
   @host_config_files [
     "examples/scrypath_ecommerce/config/config.exs",
-    "examples/scrypath_ecommerce/config/dev.exs"
+    "examples/scrypath_ecommerce/config/dev.exs",
+    @host_prod_config,
+    @host_runtime_config,
+    @host_test_config
   ]
   @mailbox_source "scrypath_ops/lib/scrypath_ops/mailer.ex"
   @mailbox_test "scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs"
@@ -250,6 +256,55 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     end
   end
 
+  test "ecommerce production configuration uses a static manifest and explicit runtime inputs" do
+    prod_ast = read_ast!(@host_prod_config)
+    runtime_ast = read_ast!(@host_runtime_config)
+    test_ast = read_ast!(@host_test_config)
+
+    assert host_production_config_valid?(prod_ast),
+           "#{@host_prod_config}: production must disable dev behavior and name its static manifest"
+
+    assert host_production_runtime_valid?(runtime_ast),
+           "#{@host_runtime_config}: production Repo and Endpoint must use explicit runtime inputs"
+
+    assert config_value?(test_ast, :scrypath_ecommerce, nil, :sandbox, true),
+           "#{@host_test_config}: normal tests must keep the SQL Sandbox enabled"
+
+    assert config_value?(runtime_ast, :scrypath_ecommerce, nil, :sandbox, false),
+           "#{@host_runtime_config}: the explicit E2E test override must remain available"
+
+    assert has_env_read?(runtime_ast, "SCRYPATH_E2E_NO_SANDBOX"),
+           "#{@host_runtime_config}: the non-sandbox override must stay limited to its test input"
+  end
+
+  test "production configuration mutations reject copied secrets, sandbox settings, and missing inputs" do
+    prod_source = File.read!(@host_prod_config)
+    runtime_source = File.read!(@host_runtime_config)
+
+    copied_secret =
+      String.replace(
+        prod_source,
+        "watchers: [],",
+        "watchers: [], secret_key_base: \"copied test secret\","
+      )
+
+    assert copied_secret != prod_source
+    refute host_production_config_valid?(Code.string_to_quoted!(copied_secret))
+
+    sandbox_config = prod_source <> "\nconfig :scrypath_ecommerce, sandbox: true\n"
+    refute host_production_config_valid?(Code.string_to_quoted!(sandbox_config))
+
+    missing_secret =
+      String.replace(
+        runtime_source,
+        "System.fetch_env!(\"SECRET_KEY_BASE\")",
+        "\"hardcoded test secret\""
+      )
+
+    assert missing_secret != runtime_source
+    refute host_production_runtime_valid?(Code.string_to_quoted!(missing_secret))
+  end
+
   test "diagnostic compilation, plugs, child startup, and dev routes share capability guards" do
     telemetry_ast = read_ast!(@telemetry_source)
     application_ast = read_ast!(@application_source)
@@ -406,6 +461,116 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       end)
 
     if is_nil(body), do: flunk("expected project function #{name}/0"), else: body
+  end
+
+  defp host_production_config_valid?(ast) do
+    endpoint_options =
+      config_options(ast, :scrypath_ecommerce, [:ScrypathEcommerceWeb, :Endpoint])
+
+    is_list(endpoint_options) and
+      Keyword.get(endpoint_options, :code_reloader) == false and
+      Keyword.get(endpoint_options, :debug_errors) == false and
+      Keyword.get(endpoint_options, :watchers) == [] and
+      Keyword.get(endpoint_options, :cache_static_manifest) == "priv/static/cache_manifest.json" and
+      not Keyword.has_key?(endpoint_options, :secret_key_base) and
+      not config_has_key?(ast, :scrypath_ecommerce, nil, :sandbox)
+  end
+
+  defp host_production_runtime_valid?(ast) do
+    case environment_branch(ast, :prod) do
+      nil ->
+        false
+
+      branch ->
+        endpoint_options =
+          config_options(branch, :scrypath_ecommerce, [:ScrypathEcommerceWeb, :Endpoint])
+
+        has_config_target?(branch, :scrypath_ecommerce, [:ScrypathEcommerce, :Repo]) and
+          is_list(endpoint_options) and
+          has_env_read?(endpoint_options, "SECRET_KEY_BASE") and
+          has_env_read?(endpoint_options, "PHX_SERVER") and
+          has_env_read?(endpoint_options, "PORT") and
+          Enum.all?(
+            ["DATABASE_URL", "PGUSER", "PGPASSWORD", "PGHOST", "PGPORT", "PGDATABASE"],
+            &has_env_read?(branch, &1)
+          ) and
+          not config_has_key?(branch, :scrypath_ecommerce, nil, :sandbox)
+    end
+  end
+
+  defp environment_branch(ast, environment) do
+    {_ast, branch} =
+      Macro.prewalk(ast, nil, fn
+        {:if, _, [condition, clauses]} = node, nil when is_list(clauses) ->
+          if config_env_condition?(condition, environment) do
+            {node, Keyword.get(clauses, :do)}
+          else
+            {node, nil}
+          end
+
+        node, branch ->
+          {node, branch}
+      end)
+
+    branch
+  end
+
+  defp config_env_condition?(condition, environment) do
+    has_node?(condition, fn
+      {:==, _, [{:config_env, _, []}, ^environment]} -> true
+      _ -> false
+    end)
+  end
+
+  defp config_options(ast, app, target) do
+    {_ast, options} =
+      Macro.prewalk(ast, nil, fn
+        {:config, _, [^app, found_options]} = node, nil
+        when is_list(found_options) and is_nil(target) ->
+          {node, found_options}
+
+        {:config, _, [^app, found_target, found_options]} = node, nil
+        when is_list(found_options) ->
+          if module_alias?(found_target, target), do: {node, found_options}, else: {node, nil}
+
+        node, options ->
+          {node, options}
+      end)
+
+    options
+  end
+
+  defp config_has_key?(ast, app, target, key) do
+    case config_options(ast, app, target) do
+      options when is_list(options) -> Keyword.has_key?(options, key)
+      _ -> false
+    end
+  end
+
+  defp config_value?(ast, app, target, key, value) do
+    case config_options(ast, app, target) do
+      options when is_list(options) -> Keyword.get(options, key) == value
+      _ -> false
+    end
+  end
+
+  defp has_config_target?(ast, app, target) do
+    has_node?(ast, fn
+      {:config, _, [^app, found_target | _]} -> module_alias?(found_target, target)
+      _ -> false
+    end)
+  end
+
+  defp module_alias?({:__aliases__, _, found_alias}, expected_alias),
+    do: found_alias == expected_alias
+
+  defp module_alias?(_ast, _expected_alias), do: false
+
+  defp has_env_read?(ast, name) do
+    has_node?(ast, fn node ->
+      remote_call?(node, [:System], :get_env, fn args -> args == [name] end) or
+        remote_call?(node, [:System], :fetch_env!, fn args -> args == [name] end)
+    end)
   end
 
   defp conditional_has_calls_and_body?(ast, calls, body_predicate) do
