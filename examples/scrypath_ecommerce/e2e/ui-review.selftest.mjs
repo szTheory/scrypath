@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
 
 test("disposable captures require a valid fixed browser clock before launching Chromium", async () => {
   const utc = "2026-10-31T12:00:00.000Z";
@@ -138,4 +138,29 @@ test("a pass cannot cite nonexistent screenshots or omit a theme/width", () => {
   assert.ok(errors.some((error) => error.includes("unknown capture")));
   assert.ok(errors.some((error) => error.includes("not every theme/width")));
   assert.ok(errors.some((error) => error.includes("artifact is missing")));
+});
+
+
+test("viewport captures use the exact document clip without changing layout", async () => {
+  const geometry = { width: 390, height: 844, dpr: 1, scale: 1, scrollX: 0, scrollY: 0, documentWidth: 390, documentHeight: 959 };
+  const original = Buffer.from("unchanged raw screenshot bytes");
+  let options;
+  const page = { evaluate: async () => ({ ...geometry }), screenshot: async value => { options = value; return original; } };
+  assert.equal(await captureViewportImage(page, { width: 390, height: 844 }), original);
+  assert.equal(options.fullPage, true, "viewport images must use the document capture path");
+  assert.deepEqual(options.clip, { x: 0, y: 0, width: 390, height: 844 });
+  assert.equal(options.animations, "disabled");
+});
+
+test("viewport document captures reject zoom, scroll and changed layout", async () => {
+  const geometry = { width: 390, height: 844, dpr: 1, scale: 1, scrollX: 0, scrollY: 0, documentWidth: 390, documentHeight: 959 };
+  for (const change of [{ width: 391 }, { height: 845 }, { dpr: 2 }, { scale: 1.25 }, { scrollX: 1 }, { scrollY: 1 }]) {
+    let shots = 0;
+    await assert.rejects(captureViewportImage({ evaluate: async () => ({ ...geometry, ...change }), screenshot: async () => { shots += 1; return Buffer.alloc(0); } }, { width: 390, height: 844 }), /viewport/i);
+    assert.equal(shots, 0);
+  }
+  let calls = 0;
+  await assert.rejects(captureViewportImage({ evaluate: async () => calls++ ? { ...geometry, documentHeight: 960 } : geometry, screenshot: async () => Buffer.alloc(0) }, { width: 390, height: 844 }), /layout/i);
+  const failure = new Error("actual screenshot failed");
+  await assert.rejects(captureViewportImage({ evaluate: async () => geometry, screenshot: async () => { throw failure; } }, { width: 390, height: 844 }), error => error === failure);
 });

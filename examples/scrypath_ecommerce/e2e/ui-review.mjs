@@ -175,6 +175,10 @@ export function reviewErrors(review, manifest, digest, currentSource) {
   return errors;
 }
 
+export async function captureViewportImage(page, viewport) {
+  return page.screenshot({ animations: "disabled" });
+}
+
 async function captureSurface(browser, surface, theme, viewport, output, options = {}) {
   const deployment = options.deployment;
   const id = `${deployment ? `${deployment}--` : ""}${surface.id}--${theme}--${viewport.width}`;
@@ -189,6 +193,7 @@ async function captureSurface(browser, surface, theme, viewport, output, options
   const page = await context.newPage();
   if (options.clock) await page.clock.setFixedTime(new Date(options.clock.utc));
   page.setDefaultTimeout(10_000);
+  const viewportImage = () => deployment ? captureViewportImage(page, viewport) : page.screenshot({ animations: "disabled" });
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   try {
@@ -234,7 +239,7 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     };
     await save("copy.json", Buffer.from(`${JSON.stringify(evidence, null, 2)}\n`));
     await page.mouse.move(0, 0);
-    await save("viewport.png", await page.screenshot({ animations: "disabled" }));
+    await save("viewport.png", await viewportImage());
     await save("full.png", await page.screenshot({ fullPage: true, animations: "disabled" }));
     const sheetControl = page.locator(".ops-sheet__panel button:visible, .ops-sheet__panel a:visible, .ops-sheet__panel input:visible, .ops-sheet__panel select:visible, .ops-sheet__panel textarea:visible").first();
     const control = await sheetControl.count()
@@ -242,11 +247,11 @@ async function captureSurface(browser, surface, theme, viewport, output, options
       : page.locator(surface.id === "storefront" ? ".storefront-search__ops-links a:visible" : "[data-phx-theme][aria-pressed='true']:visible").first();
     if (await control.count()) {
       await control.hover();
-      await save("hover.png", await page.screenshot({ animations: "disabled" }));
+      await save("hover.png", await viewportImage());
       await page.mouse.move(0, 0);
       await page.keyboard.press("Tab");
       await control.focus();
-      await save("focus.png", await page.screenshot({ animations: "disabled" }));
+      await save("focus.png", await viewportImage());
     }
     const nav = page.getByRole("button", { name: "Open navigation", exact: true });
     if (surface.id === "control-room" && viewport.width === 390) {
@@ -268,7 +273,7 @@ async function captureSurface(browser, surface, theme, viewport, output, options
       });
       if (!mobileNavigation.visible || !mobileNavigation.expanded || mobileNavigation.links.length === 0) throw new Error("Compact navigation did not open with visible links.");
       capture.mobile_navigation = mobileNavigation;
-      await save("navigation.png", await page.screenshot({ animations: "disabled" }));
+      await save("navigation.png", await viewportImage());
     }
   } catch (error) {
     capture.error = error.message;
