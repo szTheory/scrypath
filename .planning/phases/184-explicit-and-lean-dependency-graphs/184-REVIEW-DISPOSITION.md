@@ -25,18 +25,18 @@ findings:
     title: "The standalone quickstart advertises a toolchain that cannot compile its default graph"
 open: 0
 total: 5
-recorded: 2026-10-31T00:08:29.559Z
+recorded: 2026-10-31T00:27:33.347Z
 ---
 
 # Phase 184: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | fixed | 184-REVIEW-FIX.md |
-| CR-02 | critical | fixed | 184-REVIEW-FIX.md |
-| WR-01 | warning | fixed | 184-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 184-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 184-REVIEW-FIX.md |
+| CR-01 | critical | fixed | 184-REVIEW-FIX.md (not in the current review) |
+| CR-02 | critical | fixed | 184-REVIEW-FIX.md (not in the current review) |
+| WR-01 | warning | fixed | 184-REVIEW-FIX.md (not in the current review) |
+| WR-02 | warning | fixed | 184-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 184-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
