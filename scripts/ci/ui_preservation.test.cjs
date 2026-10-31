@@ -245,6 +245,13 @@ test("post-start runtime inspection resolves the web container from the verified
   assert.throws(() => preservation.containerIdForService([...containers, { service: "web", id: "other-web" }], "web"), /Expected exactly one inspected web container/);
 });
 
+test("before-runtime ownership compares complete Docker IDs", () => {
+  const fullId = "0123456789abcdef".repeat(4);
+  assert.equal(preservation.sameDockerIdSet([fullId], [fullId]), true);
+  assert.equal(preservation.sameDockerIdSet([fullId.slice(0, 12)], [fullId]), false);
+  assert.equal(preservation.sameDockerIdSet([fullId, "f".repeat(64)], [fullId]), false);
+});
+
 test("candidate transition preserves the owned state and tears down on post-start failure", async () => {
   const events = [];
   const success = await preservation.runCandidateTransition({

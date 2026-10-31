@@ -181,6 +181,10 @@ function containerIdForService(containers, service) {
   return matches[0].id;
 }
 
+function sameDockerIdSet(actual, expected) {
+  return canonicalJson([...actual].sort()) === canonicalJson([...expected].sort());
+}
+
 function createSessionAuthority(sessionPath, session) {
   if (!path.isAbsolute(sessionPath) || session.schema !== "scrypath.ui-session.v2" || !/^[a-f0-9]{16}$/.test(session.session_id || "") || session.project !== `scrypath-p185-${session.session_id}`) {
     throw new Error("Cannot create an ownership authority for an invalid phase185 session.");
@@ -885,9 +889,9 @@ function assertOwnedRuntime(authority, role) {
   if (!record?.runtime) throw new Error(`No independently recorded ${role} Docker runtime facts exist.`);
   const project = authority.resources.project;
   const sessionId = authority.session_id;
-  const ids = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
+  const ids = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
   const expectedIds = record.runtime.containers.map(({ id }) => id).sort();
-  if (canonicalJson(ids) !== canonicalJson(expectedIds)) throw new Error(`${role} Compose container IDs differ from the independent Docker capture record.`);
+  if (!sameDockerIdSet(ids, expectedIds)) throw new Error(`${role} Compose container IDs differ from the independent Docker capture record.`);
   for (const id of ids) {
     const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
     const labels = container.Config?.Labels || {};
@@ -1367,5 +1371,6 @@ module.exports = {
   sourceChangeErrors,
   stableDataIdentity,
   sourceIdentity,
+  sameDockerIdSet,
   validateSessionAuthority,
 };
