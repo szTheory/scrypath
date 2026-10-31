@@ -220,9 +220,16 @@ defmodule Mix.Tasks.UiTokensContractTest do
     on_exit(fn -> File.rm_rf!(temp) end)
     File.cp!(Path.join(@root, @token_path), json_file)
     css = File.read!(Path.join(@root, @css_path))
+
     for name <- ["light", "unrecognized"] do
-      File.write!(css_file, replace_dark_theme!(css, "name: \"dark\";", "name: \"dark\";\n  name: \"#{name}\";"))
-      assert_raise Mix.Error, ~r/exactly one name/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+      File.write!(
+        css_file,
+        replace_dark_theme!(css, "name: \"dark\";", "name: \"dark\";\n  name: \"#{name}\";")
+      )
+
+      assert_raise Mix.Error, ~r/exactly one name/, fn ->
+        Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+      end
     end
   end
 

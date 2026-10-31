@@ -727,9 +727,16 @@ defmodule Mix.Tasks.Verify.UiTokens do
   end
 
   defp theme_name!(body) do
-    case Regex.run(~r/^\s*name:\s*"(dark|light)"\s*;/m, body) do
-      [_, name] -> name
-      _ -> raise ArgumentError, "CSS theme block has a missing or unsupported name"
+    case Regex.scan(~r/^\s*name:\s*([^;{}]+);/m, body, capture: :all_but_first) do
+      [[value]] ->
+        case String.trim(value) do
+          "\"dark\"" -> "dark"
+          "\"light\"" -> "light"
+          _ -> raise ArgumentError, "CSS theme block has an unsupported name"
+        end
+
+      _ ->
+        raise ArgumentError, "CSS theme block must contain exactly one name declaration"
     end
   end
 
