@@ -216,6 +216,7 @@ function validateSessionAuthority(session, authority, sessionPath, rawSessionByt
   if (canonicalJson(session?.source) !== canonicalJson(authority?.source)) errors.push("Session source identity does not match its independent creation authority.");
   if (canonicalJson(session?.retained_inventory) !== canonicalJson(authority?.retained_inventory) || authority?.retained_inventory_sha256 !== sha256(Buffer.from(canonicalJson(authority?.retained_inventory)))) errors.push("Session retained-preview inventory does not match the independent read-only inventory.");
   const expectedPlan = resourcePlanFor(sessionPath, authority?.session_id, authority?.resources?.project, authority?.resources?.ports);
+  if (!Object.hasOwn(authority?.resources || {}, "source_bind_mounts")) delete expectedPlan.source_bind_mounts;
   if (canonicalJson(authority?.resources) !== canonicalJson(expectedPlan)) errors.push("Independent resource authority has unexpected Compose paths, volumes, services, or artifact roots.");
   if (session?.build_dir !== expectedPlan.work_dirs.before) errors.push("Session build directory is outside its independent allowlist.");
   if (session?.candidate_build_dir && session.candidate_build_dir !== expectedPlan.work_dirs.candidate) errors.push("Candidate build directory is outside its independent allowlist.");
@@ -1366,4 +1367,5 @@ module.exports = {
   sourceChangeErrors,
   stableDataIdentity,
   sourceIdentity,
+  validateSessionAuthority,
 };

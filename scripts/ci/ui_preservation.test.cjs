@@ -222,6 +222,12 @@ test("owned Docker bind mounts match the recorded read-only bootstrap or exact a
     assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", { ...actualBootstrap, RW: true }), false);
     assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", { ...actualBootstrap, Source: `${bootstrap.source}.foreign` }), false);
 
+    const legacyAuthority = structuredClone(authority);
+    delete legacyAuthority.resources.source_bind_mounts;
+    const rawSessionBytes = Buffer.from(`${JSON.stringify(session, null, 2)}\n`);
+    assert.deepEqual(preservation.validateSessionAuthority(session, legacyAuthority, sessionPath, rawSessionBytes), []);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(legacyAuthority, "postgres", actualBootstrap), true);
+
     const artifact = path.join(preservation.artifactRoot, `before-${sessionId}`);
     authority.artifact_directories.before = artifact;
     assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "browser", { Source: artifact, Destination: "/artifacts", RW: true }), true);
