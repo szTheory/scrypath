@@ -654,16 +654,20 @@ function comparePng(beforeBytes, afterBytes) {
   const before = pad(beforeBytes);
   const after = pad(afterBytes);
   const diff = new PNG({ width, height });
-  let pixels = pixelmatch(before.data, after.data, diff.data, width, height, { threshold: 0.1, diffMask: true });
-  // Geometry differences are evidence even when transparent padding blends to
-  // the same white as a page background. Mark only the generated diff image.
+  pixelmatch(before.data, after.data, diff.data, width, height, { threshold: 0, includeAA: true, diffMask: true });
+  let pixels = 0;
+  // Count exact decoded RGBA bytes, including alpha. Pixelmatch paints the
+  // generated diff; neither antialias exclusion nor color tolerance grants parity.
   for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
     const inBefore = x < beforeSize.width && y < beforeSize.height;
     const inAfter = x < afterSize.width && y < afterSize.height;
-    if (inBefore === inAfter) continue;
     const offset = (y * width + x) * 4;
-    if (diff.data[offset + 3] === 0) pixels += 1;
-    diff.data.set([255, 0, 255, 255], offset);
+    if (inBefore !== inAfter) {
+      pixels += 1; diff.data.set([255, 0, 255, 255], offset);
+    } else if (inBefore && (before.data[offset] !== after.data[offset] || before.data[offset + 1] !== after.data[offset + 1] || before.data[offset + 2] !== after.data[offset + 2] || before.data[offset + 3] !== after.data[offset + 3])) {
+      pixels += 1;
+      if (diff.data[offset + 3] === 0) diff.data.set([255, 0, 0, 255], offset);
+    }
   }
   return { pixels, total: width * height, before_dimensions: beforeSize, after_dimensions: afterSize, dimensions_changed: beforeSize.width !== afterSize.width || beforeSize.height !== afterSize.height, diff: PNG.sync.write(diff) };
 }
@@ -681,6 +685,33 @@ function withComparisonDirectory(outputDirectory, produce) {
     catch (cleanupError) { error.cleanupError = cleanupError; }
     throw error;
   }
+}
+
+function preservationPassed(report) {
+  return Array.isArray(report?.comparisons) && report.comparisons.length > 0 && report.comparisons.every((entry) => entry.differing_pixels === 0 && Number.isSafeInteger(entry.total_pixels) && entry.total_pixels > 0 && entry.copy_changed === false && entry.dimensions_changed === false);
+}
+
+function compareCapturedDirectories(before, after, output, authority, compare = compareDirectories) {
+  if (!fs.existsSync(output)) return compare(before, after, output, authority);
+  const info = fs.lstatSync(output);
+  if (info.isSymbolicLink() || !info.isDirectory() || fs.realpathSync(output) !== path.resolve(output)) throw new Error("Existing comparison output is not a regular owned directory.");
+  const temporaryRoot = fs.mkdtempSync(path.join(path.dirname(output), ".comparison-recheck-"));
+  let result;
+  let primary = null;
+  try {
+    const fresh = path.join(temporaryRoot, "comparison");
+    result = compare(before, after, fresh, authority);
+    const expected = fs.readdirSync(fresh).sort();
+    if (canonicalJson(fs.readdirSync(output).sort()) !== canonicalJson(expected)) throw new Error("Existing comparison artifact inventory differs from recomputed evidence.");
+    for (const name of expected) {
+      if (path.basename(name) !== name) throw new Error("Comparison artifact name escapes its directory.");
+      const original = readJsonBytes(path.join(output, name), MAX_ARTIFACT_BYTES);
+      const recomputed = readJsonBytes(path.join(fresh, name), MAX_ARTIFACT_BYTES);
+      if (!original.equals(recomputed)) throw new Error(`Existing comparison artifact differs from recomputed evidence: ${name}`);
+    }
+  } catch (error) { primary = error; }
+  runWithTeardown(primary, () => fs.rmSync(temporaryRoot, { recursive: true, force: true }));
+  return result;
 }
 
 function runWithTeardown(primary, teardown) {
@@ -736,7 +767,7 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
         comparisons.push({ ...dimensions, id: left.id, artifact: kind, diff: artifact, width: left.viewport.width, height: left.viewport.height, differing_pixels: pixels, total_pixels: total, ratio: pixels / total, copy_changed: beforeCopy.text !== afterCopy.text, copy_sha256_before: left.files["copy.json"].sha256, copy_sha256_after: right.files["copy.json"].sha256 });
       }
     }
-    const report = { schema: "scrypath.ui-preservation-comparison.v1", status: "pending-review", before_source: before.source, after_source: after.source, environment: before.environment, comparisons, note: "Mechanical matched comparisons only; no aesthetic approval or automatic acceptance." };
+    const report = { schema: "scrypath.ui-preservation-comparison.v1", status: "pending-review", mechanical_preservation: preservationPassed({ comparisons }) ? "pass" : "fail", before_source: before.source, after_source: after.source, environment: before.environment, comparisons, note: "Exact RGBA and geometry comparison; no aesthetic approval or automatic baseline acceptance." };
     writeJson(path.join(stagingDirectory, "comparison.json"), report);
     return report;
   });
@@ -1437,16 +1468,17 @@ function teardownSession(sessionPath) {
 
 function compareSession(sessionPath) {
   const { session, authority } = loadAuthorizedSession(sessionPath);
-  if (session.status !== "candidate-captured" || !session.candidate) throw new Error("Session has no verified before/candidate pair.");
+  if (!["candidate-captured", "compared-pending-review"].includes(session.status) || !session.candidate) throw new Error("Session has no verified before/candidate pair.");
   const beforeRecord = authority.manifests.before;
   const candidateRecord = authority.manifests.candidate;
   const beforeDirectory = beforeRecord.directory;
   const afterDirectory = candidateRecord.directory;
   const output = path.join(artifactRoot, `comparison-${session.session_id}`);
-  const report = compareDirectories(beforeDirectory, afterDirectory, output, authority);
+  const report = compareCapturedDirectories(beforeDirectory, afterDirectory, output, authority);
   session.status = "compared-pending-review";
   session.comparison = path.join(output, "comparison.json");
   persistAuthorizedSession(sessionPath, session, authority);
+  if (!preservationPassed(report)) throw new Error(`UI preservation failed; pixel, geometry or visible-copy differences are retained in ${session.comparison}.`);
   console.log(JSON.stringify({ status: session.status, comparison: session.comparison, captures_compared: report.comparisons.length }, null, 2));
 }
 
@@ -1482,6 +1514,7 @@ module.exports = {
   clockMetadataErrors,
   assertClockFixture,
   comparePng,
+  compareCapturedDirectories,
   createSessionAuthority,
   disposableProvenanceErrors,
   dockerEnvironment,

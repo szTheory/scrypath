@@ -41,6 +41,8 @@ test("preservation compare regression counts one-level single-channel pixel chan
   const after = new PNG({ width: 1, height: 1 });
   before.data.fill(255); after.data.fill(255); after.data[0] = 254;
   assert.equal(preservation.comparePng(PNG.sync.write(before), PNG.sync.write(after)).pixels, 1);
+  after.data.fill(255); after.data[3] = 254;
+  assert.equal(preservation.comparePng(PNG.sync.write(before), PNG.sync.write(after)).pixels, 1);
 });
 
 test("preservation compare regression permits verification of an already compared pair", () => {
@@ -179,6 +181,27 @@ test("comparison output is retryable after failure and never overwrites committe
     assert.equal(preservation.withComparisonDirectory(output, (staging) => { fs.writeFileSync(path.join(staging, "comparison.json"), "complete"); return "reported"; }), "reported");
     assert.equal(fs.readFileSync(path.join(output, "comparison.json"), "utf8"), "complete");
     assert.throws(() => preservation.withComparisonDirectory(output, () => assert.fail("must not run")), /Refusing to overwrite/);
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("repeated comparison recomputes and verifies existing artifacts without overwriting tampering", () => {
+  const directory = fs.mkdtempSync("/private/tmp/phase185-repeat-comparison-test-");
+  const output = path.join(directory, "comparison");
+  let invocations = 0;
+  const compare = (_before, _after, destination) => {
+    invocations += 1; fs.mkdirSync(destination);
+    fs.writeFileSync(path.join(destination, "comparison.json"), '{"fixture":"verified inputs"}\n');
+    fs.writeFileSync(path.join(destination, "difference.png"), "deterministic-generated-diff");
+    return { fixture: "verified inputs" };
+  };
+  try {
+    preservation.compareCapturedDirectories("before", "after", output, {}, compare);
+    preservation.compareCapturedDirectories("before", "after", output, {}, compare);
+    assert.equal(invocations, 2);
+    fs.writeFileSync(path.join(output, "difference.png"), "tampered");
+    assert.throws(() => preservation.compareCapturedDirectories("before", "after", output, {}, compare), /differs from recomputed evidence/);
+    assert.equal(fs.readFileSync(path.join(output, "difference.png"), "utf8"), "tampered");
+    assert.deepEqual(fs.readdirSync(directory), ["comparison"]);
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 
