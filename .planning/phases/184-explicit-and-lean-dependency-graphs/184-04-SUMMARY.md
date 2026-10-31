@@ -87,6 +87,16 @@ Each task followed RED then GREEN:
 3. **Task 2 RED: Make sensitive actions total and fail closed** — `15ee4890` (`test(184-04): add fail-closed Sigra gating tests`)
 4. **Task 2 GREEN: Make sensitive actions total and fail closed** — `da4a5b89` (`feat(184-04): fail closed sensitive Sigra actions`)
 
+
+- **Orchestrator repair:** `78313fd9b0a3c049d5e32abdb9c87fbb7d7fa946` — Post-merge namespace capability repair.
+- **Orchestrator repair:** `fcbd30bb946b782e65df0f93c0c0e7a1ea73dbdb` — fix(184-04): restore confirmation for unconfirmed operators.
+- **Orchestrator repair:** `a3bc5f5cd88c06a645cf327eddbb104706110e64` — fix(184-04): reject malformed operator identities.
+- **Orchestrator repair:** `fe0c04c454ef597bdc1aac415f69524304b649a4` — fix(184-04): validate confirmation paths for LiveView navigation.
+- **Orchestrator repair:** `57b674aeb1edc8b6308256d4d7b14fee4b439e88` — fix(184-04): explain recovery after denied operator actions.
+
+- **Orchestrator repair:** `5eb0ccd8` — Keep navigation tests inside the approved integration namespace.
+- **Orchestrator repair:** `1b98eb1a9522c1e80c4cedff10409b681dad0dde` — Assert recovery feedback through actual OnMount.
+
 ## TDD Gate Compliance
 
 - Task 1 RED evidence was accepted by the GSD classifier as `RED_EVIDENCE_OK`; the named path-validation assertion failed against the prior implementation. The receipt is at `/private/tmp/scrypath-phase184-04/task1-red-record.json`.

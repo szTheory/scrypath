@@ -4,17 +4,17 @@ milestone: v1.45
 milestone_name: Foundation and CI
 current_phase: 184
 current_phase_name: Explicit and lean dependency graphs
-status: executing
-stopped_at: Phase 184 planned and independently checked; ready to execute
-last_updated: "2026-10-29T20:17:37.246Z"
-last_activity: 2026-10-29
-last_activity_desc: Phase 184 execution started
+status: verifying
+stopped_at: Phase 184 review repairs verified narrowly; full verification and terminal evidence pending
+last_updated: "2026-10-31T00:08:26.934394+00:00"
+last_activity: 2026-10-30
+last_activity_desc: Phase 184 integrated; review repairs and closeout in progress
 state_head: fcd3921ae93e6477b7eaf42148c69692ed9a7703
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 28
-  completed_plans: 16
+  completed_plans: 28
   percent: 50
 ---
 
@@ -23,19 +23,19 @@ progress:
 ## Current Position
 
 Phase: 184 (Explicit and lean dependency graphs) — EXECUTING
-Plan: 11 of 12 complete; next 184-10 (wave 11)
-Status: Executing Phase 184
-Last activity: 2026-10-30 — Wave 10 merged and verified: 5 properties, 1013 tests, 0 failures (103 excluded).
+Plan: 12 of 12 integrated; review repairs and final verification in progress
+Status: Verifying Phase 184
+Last activity: 2026-10-30 — All execution plans integrated; code/UI review repairs have targeted verification. Full Ops/root checks and terminal closeout are in progress.
 
 Progress: [█████░░░░░] 50%
 
 Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Phase 184 plan 184-10; 11/12 plans summarized, merged and checked. Refer to the plan index and summaries for current evidence.
+Next: Finish Phase 184 review reconciliation, regression/goal verification and exact-source terminal closeout. Do not start Phase 185 without the next phase boundary decision.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Execution: $gsd-execute-phase 184 is active; 11/12 plans completed across the first 10/11 waves.
+Execution: $gsd-execute-phase 184 is active; all 12/12 plans are integrated. No phase completion claim before final machine evidence.
 
 ## Evidence and boundaries
 
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-28).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 184 dependency boundaries, optional-auth correctness and four-graph upgrade/security evidence; execution active, wave 11 next.
+Current focus: Phase 184 review repairs, complete canonical verification, and final exact-source evidence; known Ops dependency advisories remain unaccepted.
 
 ## Recent decisions
 
@@ -65,9 +65,9 @@ Current focus: Phase 184 dependency boundaries, optional-auth correctness and fo
 
 ## Session continuity
 
-Last session: 2026-10-29T20:11:58.372Z
-Stopped at: Phase 184 planned and independently checked; ready to execute
-Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md
+Last session: 2026-10-31T00:19:26.784530+00:00
+Stopped at: Phase 184 review repairs implemented; fresh review and terminal machine closeout pending
+Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-DISPOSITION.md
 
 Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
 

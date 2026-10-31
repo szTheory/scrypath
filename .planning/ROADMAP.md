@@ -177,7 +177,7 @@ Plans:
 - [x] 184-09-PLAN.md — Centralized dependency, build, optional-auth and security guidance (wave 10)
 
 **Wave 11** *(blocked on Wave 10 completion)*
-- [ ] 184-10-PLAN.md — Complete graph/PR/tuple evidence and exact final-source closeout (wave 11)
+- [x] 184-10-PLAN.md — Complete graph/PR/tuple evidence and exact final-source closeout (wave 11)
 
 ### Phase 185: Executable UI quality foundations
 
@@ -217,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 11/12 | In Progress | — |
+| 184. Explicit and lean dependency graphs | 12/12 | In Progress | — |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.

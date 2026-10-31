@@ -96,6 +96,9 @@ status: complete
 2. **Task 1 GREEN:** 2124058 — feat(184-03): scope Ops diagnostics to direct development.
 3. **Task 2 contract update:** ff1128f — test(184-03): pin compile-safe diagnostic guards.
 
+
+- **Orchestrator repair:** `bdf54f8e6480f81c6405f74155c85952875af01e` — fix(184-03): require the complete diagnostics capability.
+
 ## Files Created/Modified
 
 - scrypath_ops/mix.exs — dev-only optional diagnostic dependencies.

@@ -1,6 +1,6 @@
 # Phase 184 Plan 10 — Candidate Acceptance Record
 
-**Status: Partial; the first hosted candidate failed and a corrected candidate is prepared for a second closeout.** This record is committed before that second canonical closeout, as required. It does not mark phase acceptance, advisory risk acceptance, or pending human review as complete.
+**Status: implementation and targeted review repairs verified; final merged-branch validation is in progress.** The historical candidate records below remain intact. Current integration status is recorded separately; no security-risk acceptance or human approval is implied.
 
 ## Source and graph evidence
 
@@ -33,3 +33,11 @@ The named retained preview checkout is `/Users/jon/projects/scrypath/.claude/wor
 
 No publication, merge, PR closure, remote proposal modification, support-floor change, or security-risk acceptance is authorized by this candidate. The orchestrator owns the merged `planning/v1.45-foundation-ci` terminal closeout after phase integration and tracking writes. The retained preview checkout, services, volumes, and data remain untouched; no current rendered UI review is claimed.
 
+
+## Merged-branch integration follow-up
+
+The corrected isolated candidate passed [run 41029783634](https://github.com/szTheory/scrypath/actions/runs/41029783634): required jobs, coverage, attestation, all four compatibility tuples, Phoenix, full ecommerce E2E and Ops UI. Its immutable source/run/artifact identities remain external in `receipts/candidate-2-final.json` under the Plan 10 runtime directory. This resolves the candidate's pending-at-authoring status above; it is not terminal evidence for later source changes.
+
+All twelve plans have since been integrated. Code/UI review found bounded counterexamples and the repairs in [184-REVIEW-FIX.md](184-REVIEW-FIX.md) now have passing targeted evidence; [UI dispositions](184-UI-REVIEW-DISPOSITION.md) preserve the remaining rendered-review limit. The first post-review canonical Ops/root runs exposed two test expectations described in the repair report; both were corrected and targeted checks passed. Full canonical verification is being rechecked with a fresh owned Postgres. Final phase verification and exact-source hosted closeout follow after these reports. The two Ops Cloak findings remain unaccepted.
+
+The repaired root fast suite is green, including the namespace canary, archive dependency/public consumer checks, and repository contracts reached by that suite. New authentication/lifecycle/navigation checks pass. The remaining full Ops rerun and fresh hosted exact-source candidate remain machine work owned by the orchestrator; no human UAT is pending.

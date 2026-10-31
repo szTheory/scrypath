@@ -146,6 +146,10 @@ status: complete
 4. **Task 2 GREEN:** a3ca8c33 — feat(184-06): prove mounted assets in clean images.
 5. **Plan metadata:** this summary is committed separately after the task commits.
 
+
+- **Orchestrator repair:** `48d72204e758d8d396cb4f49027a7668d7603d68` — Post-merge isolated consumer and verifier repair.
+- **Orchestrator repair:** `b7107ea2aba0347c599b74c5b2ba57e98cd9c9c3` — fix(184-06): clean target extraction containers on failure.
+
 ## Files Created/Modified
 
 - test/release/ops_dependency_boundary_test.exs — real mounted/direct clean consumer graph and startup checks.

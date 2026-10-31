@@ -104,6 +104,9 @@ Each task was committed atomically:
 
 **Plan metadata:** this summary is committed separately after both task commits.
 
+
+- **Orchestrator repair:** `fbadaefed44274fcfb35a312b0062940f67d3cb7` — docs(184-09): correct the standalone Ops toolchain prerequisite.
+
 ## Files Created/Modified
 
 - guides/support-and-compatibility.md — Current source/release support, compatibility, dependency, and audit authority.
