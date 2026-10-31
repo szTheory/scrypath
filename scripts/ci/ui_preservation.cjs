@@ -795,7 +795,7 @@ function assertAllocatedDockerResources(authority, preserveData) {
   const recorded = new Map((authority.manifests.before?.runtime?.containers || []).map((container) => [container.service, container]));
   for (const service of authority.resources.services) {
     const name = containerNames[service];
-    const ids = run("docker", ["ps", "-aq", "--filter", `name=^/${name}$`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+    const ids = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `name=^/${name}$`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
     if (!allowedExisting.has(service)) {
       if (ids.length) throw new Error(`Disposable container name ${name} already exists before this service is authorized to run.`);
       continue;
@@ -803,7 +803,7 @@ function assertAllocatedDockerResources(authority, preserveData) {
     if (ids.length !== 1) throw new Error(`Expected the single recorded ${service} container to survive candidate replacement.`);
     const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", ids[0]], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
     const labels = container.Config?.Labels || {};
-    if (ids[0] !== recorded.get(service)?.id || container.Name?.replace(/^\//, "") !== name || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== service || labels[ownerLabel] !== sessionId) throw new Error(`Disposable ${service} container does not match its recorded owner and name.`);
+    if (!sameDockerIdSet(ids, [recorded.get(service)?.id || ""]) || container.Name?.replace(/^\//, "") !== name || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== service || labels[ownerLabel] !== sessionId) throw new Error(`Disposable ${service} container does not match its recorded owner and name.`);
   }
 }
 
