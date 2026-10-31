@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 Plan 05 stationary capture repair active; four plans integrated; UI edits held; retained-preview stop preserved.
-last_updated: "2026-10-31T21:31:51.055214+00:00"
+stopped_at: Phase 185 Plan 05 readiness diagnosis; four plans integrated; UI edits held and retained-preview stop preserved.
+last_updated: "2026-10-31T23:18:13.315512+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Failed full-raster calibration archived and exact-owned resources absent; bounded stationary capture repair active
-state_head: 90a75d3813b87de6356d23e357c6df1e0ca48ab9
+last_activity_desc: Native font capture setting verified; diagnosing non-rendered animation readiness before qualifying pre-change evidence
+state_head: d7ff54d9c942da5c05ebf298c06cecc7d6c3a99e
 progress:
   total_phases: 4
   completed_phases: 3
@@ -31,7 +31,7 @@ Progress: [████████░░] 84%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Finish bounded stationary capture sampling and independent artifact validation in the parent-owned checkout `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s` (GSD manifest `/private/tmp/phase185-glue-u80ewc0s/worktrees.json`). The earlier corrective executor ended normally, its terminal handoff was integrated, and its worktree removed; do not redispatch it. Parent source `53fa5228` completed a same-source full-raster calibration: all visible body text and 545 of 546 images matched, but one Help focus image shifted content. The failed pair remains unchanged in the external `failed-parent-focus-frame-calibration-4eb3c142c366c3e8` archive. Exact owned teardown succeeded and independent resource inventories were empty. The replacement sampler and validator must pass focused tests, source review and a fresh full calibration with zero differences plus repeated comparison and exact teardown. Then the same committed source needs a new actual pre-change capture and factual inspection before Plans 06/07/08 can start. No UI CSS/controller/template/generator edit has started. The retained preview stop persists and no user action is needed while authorized repairs continue. Latest details are in the phase `.continue-here.md`.
+Next: Resolve the current renderer-readiness failure in the parent-owned checkout `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s`, then establish actual qualified pre-change evidence before Plans 06/07/08 edit UI source. The latest source is committed and its capture tests and scoped review pass, but no full calibration or actual-before qualification has passed. Current diagnostic ownership, exact resource state and the remaining verification sequence are in [live continuity](phases/185-executable-ui-quality-foundations/.continue-here.md). Prior failed captures and all raw evidence remain preserved. No user action is needed while this approved diagnosis and fix work continues; the retained preview remains untouched and stopped by policy.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
