@@ -106,10 +106,11 @@ export function reviewErrors(review, manifest, digest, currentSource) {
   return errors;
 }
 
-async function captureSurface(browser, surface, theme, viewport, output) {
-  const id = `${surface.id}--${theme}--${viewport.width}`;
-  const capture = { id, surface: surface.id, theme, viewport, route: surface.route, checks: [], files: {} };
-  const context = await browser.newContext({ baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce" });
+async function captureSurface(browser, surface, theme, viewport, output, options = {}) {
+  const deployment = options.deployment;
+  const id = `${deployment ? `${deployment}--` : ""}${surface.id}--${theme}--${viewport.width}`;
+  const capture = { id, surface: surface.id, theme, viewport, width: viewport.width, deployment, route: surface.route, checks: [], files: {} };
+  const context = await browser.newContext({ baseURL: options.baseURL || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce" });
   await context.addInitScript((preference) => {
     if (location.origin === "null") return;
     if (preference === "system-dark") localStorage.removeItem("phx:theme");
@@ -174,6 +175,47 @@ async function captureSurface(browser, surface, theme, viewport, output) {
     capture.error = error.message;
   } finally { await context.close(); }
   return capture;
+}
+
+export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, dataIdentity, allowComposeNetwork = false }) {
+  if (!hostUrl || !standaloneUrl || !output || !dataIdentity) throw new Error("Disposable capture requires both loopback targets, an output directory, and a verified data identity.");
+  const host = new URL(hostUrl);
+  const standalone = new URL(standaloneUrl);
+  const ownedComposeTargets = allowComposeNetwork && host.protocol === "http:" && host.hostname === "web" && host.port === "4002" && host.pathname === "/" && !host.username && !host.password && !host.search && !host.hash && standalone.protocol === "http:" && standalone.hostname === "standalone_ops" && standalone.port === "4003" && standalone.pathname === "/" && !standalone.username && !standalone.password && !standalone.search && !standalone.hash;
+  if (!ownedComposeTargets) throw new Error("Disposable browser targets must use the exact owned Compose service routes; loopback retained-preview targets are not accepted.");
+  if (path.resolve(output) !== "/artifacts") throw new Error("Disposable captures must write through the helper-owned /artifacts mount.");
+  const { chromium } = await import("@playwright/test");
+  const browser = await chromium.launch();
+  const standaloneRoutes = {
+    "control-room": "/ops/",
+    "search-health": "/ops/health",
+    "failed-sync": "/ops/failed-sync",
+    "sync-drift": "/ops/sync-and-index",
+    search: "/ops/search",
+    "saved-searches": "/ops/playbooks?saved=manage",
+    help: "/ops/help"
+  };
+  const captures = [];
+  try {
+    for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
+      const capture = await captureSurface(browser, surface, theme, viewport, output, { deployment: "host", baseURL: hostUrl, dataIdentity });
+      capture.browser_version = browser.version();
+      capture.platform = `${process.platform}-${process.arch}`;
+      capture.data_identity = dataIdentity;
+      captures.push(capture);
+      console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
+    }
+    for (const surface of surfaces.filter(({ id }) => id !== "storefront")) for (const theme of themes) for (const viewport of viewports) {
+      const standaloneSurface = { ...surface, route: standaloneRoutes[surface.id] };
+      const capture = await captureSurface(browser, standaloneSurface, theme, viewport, output, { deployment: "standalone", baseURL: standaloneUrl, dataIdentity });
+      capture.browser_version = browser.version();
+      capture.platform = `${process.platform}-${process.arch}`;
+      capture.data_identity = dataIdentity;
+      captures.push(capture);
+      console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
+    }
+  } finally { await browser.close(); }
+  return { captures, browserVersion: browser.version(), dataIdentity };
 }
 
 async function captureAll() {

@@ -45,7 +45,23 @@ Use the existing deterministic browser and state fixtures in a disposable verifi
 mix verify.ecommerce_e2e
 ```
 
-Use `mix verify.ops_ui` and focused demo/LiveView proofs when their scope is affected. The full browser lane remains advisory; this pilot adds no required CI job or beauty score. `admin-light-baseline-check.mjs` checks file inventory and widths, **not pixel parity**. The legacy optional paid judge is supplemental only and cannot establish journey or whole-app coverage.
+Use `mix verify.ops_ui` and focused demo/LiveView proofs when their scope is affected. The full browser lane remains advisory; this pilot adds no required CI job or beauty score. `admin-light-baseline-check.mjs` checks file inventory and widths, **not pixel parity**.
+
+## Frozen source-pinned preservation captures
+
+The default `node e2e/ui-review.mjs` capture, `--preflight`, and `--check` commands remain attached to the named retained preview and keep their existing source, mount, main-inclusion, and loopback-port guards. Do not add an environment flag to bypass those checks.
+
+Plan 185 uses a separate, bounded disposable path. From the repository root, run:
+
+```sh
+node scripts/ci/ui_preservation.cjs capture-before --session /private/tmp/scrypath-phase185-execution/ui-session.json
+```
+
+The helper builds the existing full Compose graph from the committed checkout using the repository's image handoff, then verifies image and container source labels, app mounts, project ownership, retained-project/port/volume separation, and mounted plus standalone routes before launching the browser. Its unique project binds only to allocated loopback ports and uses project-owned Postgres and Meilisearch volumes. Source snapshots must be clean and committed. The before capture records its historical main baseline; a later candidate must independently include the current remote main.
+
+The matrix includes eight host surfaces and seven standalone Ops surfaces at light, dark, and system-dark themes and 1440, 768, and 390 pixel widths. It saves full-page and viewport images, visible copy, hover and focus states, plus compact control-room navigation. The session binds every observation to the same source, browser, platform, and database/search-state digest. Artifacts live under the ignored `ui-review-artifacts/phase185/` directory, outside Playwright cleanup.
+
+After a later source candidate is committed, use the same session with `capture-after`, then `compare`, and finally `teardown`. Pairing failures, source mismatches, missing artifacts, retained-resource reuse, or changed data/browser/platform identities are errors. The comparison reports pixel and copy differences for inspection; it remains pending and never grants design approval. Inspect the saved images and copy, record concrete findings and unknowns, and keep subjective critique separate from automated evidence.
 
 ## Record the result
 
