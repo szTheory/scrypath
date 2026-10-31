@@ -191,6 +191,96 @@ defmodule Mix.Tasks.UiTokensContractTest do
     File.rm_rf!(temp)
   end
 
+  @tag :token_review
+  test "review rejects inactive CSS themes and quoted theme lookalikes" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @token_path), json_file)
+    css = File.read!(Path.join(@root, @css_path))
+    [dark] = Regex.run(~r/@plugin\s+"[^\"]*daisyui-theme"\s*\{\s*name:\s*"dark";[^{}]*\}/s, css)
+
+    for replacement <- ["/*\n#{dark}\n*/", ".caption { content: '#{dark}'; }"] do
+      File.write!(css_file, String.replace(css, dark, replacement, global: false))
+      assert_raise Mix.Error, ~r/exactly two.*theme blocks/, fn ->
+        Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+      end
+    end
+  end
+
+  @tag :token_review
+  test "review retains CSS none as extension metadata instead of an undefined token type" do
+    tokens = read_tokens!(@root)
+    refute Map.has_key?(tokens["shadow"]["glow"], "light")
+    assert get_in(tokens, ["shadow", "glow", "$extensions", "org.scrypath", "css_literals", "light"]) == "none"
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @css_path), css_file)
+
+    for bad <- [
+          put_in(tokens, ["space", "review"], %{"$type" => "string", "$value" => "none"}),
+          put_in(tokens, ["shadow", "sm", "light"], %{"$type" => "shadow", "$value" => "none"})
+        ] do
+      assert_rejected!(bad, json_file, css_file, ~r/unsupported \$type|invalid shadow/)
+    end
+  end
+
+  @tag :token_review
+  test "review accepts standard shadow layers and validates inset" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @css_path), css_file)
+    tokens = read_tokens!(@root)
+    standard = update_in(tokens, ["shadow", "sm", "light", "$value"], fn layers ->
+      Enum.map(layers, &Map.delete(&1, "type"))
+    end)
+    File.write!(json_file, Jason.encode!(standard))
+    assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
+    inset = put_in(standard, ["shadow", "sm", "light", "$value", Access.at(0), "inset"], true)
+    File.write!(json_file, Jason.encode!(inset))
+    assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
+    bad = put_in(inset, ["shadow", "sm", "light", "$value", Access.at(0), "inset"], "yes")
+    assert_rejected!(bad, json_file, css_file, ~r/inset must be a boolean/)
+  end
+
+  @tag :token_review
+  test "review accepts finite zero and negative dimensions with explicit units" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @css_path), css_file)
+    for value <- [0, -1, 0.25] do
+      tokens = put_in(read_tokens!(@root), ["space", "review"], %{"$value" => %{"value" => value, "unit" => "px"}})
+      File.write!(json_file, Jason.encode!(tokens))
+      assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
+    end
+  end
+
+  @tag :token_review
+  test "review bounds source bytes JSON nesting token count and alias depth" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    json = File.read!(Path.join(@root, @token_path))
+    css = File.read!(Path.join(@root, @css_path))
+    File.write!(css_file, css)
+    File.write!(json_file, json <> String.duplicate(" ", 2_097_153))
+    assert_raise Mix.Error, ~r/source exceeds/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+    File.write!(json_file, json)
+    File.write!(css_file, css <> String.duplicate(" ", 2_097_153))
+    assert_raise Mix.Error, ~r/source exceeds/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+    File.write!(css_file, css)
+    nested = Enum.reduce(1..70, nil, fn _, inner -> [inner] end)
+    deep = put_in(Jason.decode!(json), ["$extensions", "org.scrypath", "nested"], nested)
+    assert_rejected!(deep, json_file, css_file, ~r/JSON nesting exceeds/)
+    many = Enum.reduce(1..4100, Jason.decode!(json), fn n, tokens ->
+      put_in(tokens, ["color", "primitive", "review-#{n}"], %{"$value" => "{color.primitive.night}"})
+    end)
+    assert_rejected!(many, json_file, css_file, ~r/token count exceeds/)
+    aliases = Enum.reduce(1..40, Jason.decode!(json), fn n, tokens ->
+      target = if n == 40, do: "night", else: "review-#{n + 1}"
+      put_in(tokens, ["color", "primitive", "review-#{n}"], %{"$value" => "{color.primitive.#{target}}"})
+    end)
+    assert_rejected!(aliases, json_file, css_file, ~r/alias depth exceeds/)
+  end
+
   test "brandbook documentation separates the warm palette from the CSS-authoritative Ops mirror" do
     readme = File.read!(Path.join(@root, "brandbook/README.md"))
     brand_css = File.read!(Path.join(@root, "brandbook/tokens/tokens.css"))
