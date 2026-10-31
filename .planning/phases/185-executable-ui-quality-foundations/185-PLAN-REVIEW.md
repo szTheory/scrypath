@@ -38,3 +38,7 @@ Application source, preview containers/data and historical receipts were not cha
 Four unclassified edge-probe rows remain explicit assumptions, and descriptorless judgment prohibitions remain flagged-unverified; neither is silently treated as a proved implementation property. The retained-preview source stop and inherited unaccepted dependency findings remain in force.
 
 Next: `$gsd-execute-phase 185`, beginning with Plan 01. This planning invocation stops at that boundary.
+
+## Execution correction approved by maintainer
+
+The required repository contract rejected Plans 08/09 for verification-backstop annotations. The maintainer approved the recommended correction: prospective `verification: test` annotations retain all 61 named obligations; actual executable receipts remain required. Automated image/copy comparison and held-out state tests gate preservation. Subjective rendered critique is nonblocking and cannot confer independent or maintainer approval. Earlier planning review did not execute the repository contract and missed this conflict. This amendment is not implementation acceptance.

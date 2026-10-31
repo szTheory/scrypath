@@ -143,3 +143,7 @@ For storefront or ScrypathOps changes, follow [examples/scrypath_ecommerce/e2e/U
 > Profile not yet configured. Run the GSD profile workflow to generate your developer profile.
 > This section is managed by GSD -- do not edit manually.
 <!-- GSD:profile-end -->
+
+## Phase 185 verification correction
+
+The maintainer approved replacing Plans 08/09 verification-backstop annotations with planned automated test obligations, preserving all 61 coverage pairs. These annotations are not passing evidence. Gate preservation on automated matched image/copy comparisons and held-out tests; keep subjective rendered critique nonblocking and explicitly scoped. Missing automated evidence and demonstrated regressions still block completion. Do not infer independent or maintainer aesthetic approval.
