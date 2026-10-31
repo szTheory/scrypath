@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 plans verified; next $gsd-execute-phase 185. Implementation not started; retained-preview source stop preserved.
-last_updated: "2026-10-31T03:30:14.306Z"
-last_activity: 2026-10-30
-last_activity_desc: Phase 185 planning verified; ten plans ready to execute
-state_head: dce16b685994aa3d6ba86cb722ed1466e5fd9b21
+stopped_at: Phase 185 Plan 01 complete; continue Wave 2 Plans 02 and 04; retained-preview source stop preserved.
+last_updated: "2026-10-31T12:59:05.622Z"
+last_activity: 2026-10-31
+last_activity_desc: Phase 185 execution started
+state_head: 73c2afc2b4837a4c3cbe517c692cb9464218a896
 progress:
   total_phases: 4
   completed_phases: 3
@@ -22,16 +22,16 @@ progress:
 
 ## Current Position
 
-Phase: 185 (Executable UI quality foundations) — READY TO EXECUTE
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-10-30 — Phase 185 planning verified; ten plans ready to execute.
+Phase: 185 (Executable UI quality foundations) — EXECUTING
+Plan: 1 of 10 complete; Wave 2 next
+Status: Executing Phase 185
+Last activity: 2026-10-31 — Phase 185 execution started
 
 Progress: [███████░░░] 74%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Phase 185 planning is complete: ten plans in six waves passed separate plan review, structural/probe checks and requirements/decision coverage. Next invocation: $gsd-execute-phase 185. Implementation has not started; the retained-preview source stop remains in force. See phases/185-executable-ui-quality-foundations/185-PLAN-REVIEW.md for planning evidence.
+Next: Execute Wave 2 Plans 02 and 04. Plan 01 contrast enforcement passed its final canonical command with actual negative subprocess witnesses; its summary records scope and limits. No phase completion is claimed. Plans 08/09 now use planned automated verification under the maintainer-approved correction, retaining all 61 obligations and nonblocking subjective critique. The retained-preview source stop remains in force.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-31).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 185 plans verified and ready to execute; implementation is unstarted, and known Ops dependency advisories remain unaccepted.
+Current focus: Phase 185 Wave 2 is next after verified Plan 01 contrast enforcement; known Ops dependency advisories remain unaccepted.
 
 ## Phase 184 source and terminal authority
 

@@ -1,7 +1,7 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.45 \u2014 Foundation and CI",
+  "milestone": "v1.45 — Foundation and CI",
   "phases": [
     {
       "number": "182",
@@ -21,13 +21,13 @@
     {
       "number": "185",
       "name": "Executable UI quality foundations",
-      "status": "planned"
+      "status": "in_progress"
     }
   ],
   "next": {
-    "command": "$gsd-execute-phase 185",
-    "label": "Execute Phase 185",
-    "reason": "Ten verified plans in six waves; implementation unstarted; retained-preview stop preserved"
+    "command": "$gsd-progress --next",
+    "label": "Advance to the next step",
+    "reason": "Phase 4 of 4 · 74% · executing"
   },
-  "updated_at": "2026-10-31T03:30:14.306Z"
+  "updated_at": "2026-10-31T12:59:05.638Z"
 }
