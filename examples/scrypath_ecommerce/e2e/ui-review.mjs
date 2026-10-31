@@ -94,6 +94,16 @@ export function previewSourceErrors(expected, mounted, mainIncluded, endpointMat
   return errors;
 }
 
+export function entryFixtureErrors(deployment, surface, text) {
+  const requirements = {
+    "host:control-room": ["3 sync jobs failed"],
+    "host:failed-sync": ["3 failed, 2 retrying", "Invalid data", "Meilisearch rejected it", "Unknown cause"],
+    "standalone:control-room": ["No search schemas configured.", "Configure the host application's schema allowlist"],
+    "standalone:failed-sync": ["No schemas configured.", "schema_allowlist in :scrypath_ops"],
+  }[`${deployment}:${surface}`] || [];
+  return requirements.filter((fragment) => !String(text || "").includes(fragment)).map((fragment) => `${deployment} ${surface} entry fixture is missing expected text: ${fragment}`);
+}
+
 async function verifyPreviewSource() {
   const container = process.env.UI_REVIEW_CONTAINER || "scrypath_ecommerce-web-1";
   const runtime = JSON.parse(runDocker(["inspect", container, "--format", '{"mounts":{{json .Mounts}},"ports":{{json .NetworkSettings.Ports}}}']));
@@ -181,6 +191,8 @@ async function captureSurface(browser, surface, theme, viewport, output, options
         theme: { requested: theme, preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
       };
     }, { deployment, surface: surface.id, theme });
+    const fixtureErrors = deployment ? entryFixtureErrors(deployment, surface.id, evidence.text) : [];
+    if (fixtureErrors.length) throw new Error(fixtureErrors.join("\n"));
     if (evidence.page_width > viewport.width + 1) capture.checks.push({ rule: "page-overflow", actual: evidence.page_width, expected: viewport.width });
     if (!evidence.headings.some(({ level }) => level === "H1")) capture.checks.push({ rule: "page-heading", message: "No visible H1." });
     if (surface.id !== "storefront") {
