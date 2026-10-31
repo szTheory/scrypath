@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, launchDisposableBrowser, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+
+const require = createRequire(import.meta.url);
+const { domStateErrors } = require("../../../scripts/ci/ui_preservation.cjs");
 
 test("disposable captures require a valid fixed browser clock before launching Chromium", async () => {
   const utc = "2026-10-31T12:00:00.000Z";
@@ -55,11 +59,240 @@ function fixture() {
   return { source, manifest, review };
 }
 
+function stableStateFixture(bodyText = "Help entry", { hover = true, focus = true } = {}) {
+  const rect = { x: 1, y: 2, width: 40, height: 24 };
+  const element = { tag: "button", role: "button", name: "Choose dark theme", href: null };
+  const anchor = {
+    rect: { x: 0, y: 0, width: 1280, height: 900 },
+    position: "static", display: "block",
+    inset: { top: "auto", right: "auto", bottom: "auto", left: "auto" },
+    margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" }
+  };
+  return {
+    schema: "scrypath.ui-capture-state.v1",
+    body_text: bodyText,
+    controls: [{ ...element, value: null, checked: null, selected: true, disabled: false, expanded: null, pressed: "true", rect }],
+    focus: {
+      element: focus ? element : null,
+      rect: focus ? rect : null,
+      focus_visible: focus,
+      outline: focus ? { style: "solid", width: "2px", color: "rgb(0, 0, 0)" } : null,
+      opacity: focus ? "1" : null
+    },
+    hover: hover ? [{ element, rect }] : [],
+    document_has_focus: true,
+    layout: { shell: anchor, shell_content: anchor, header: anchor, header_inner: anchor, main: anchor, main_inner: anchor, primary_article: anchor },
+    viewport: { inner: { width: 1280, height: 900 }, client: { width: 1280, height: 900 }, document: { width: 1280, height: 900 }, scroll: { x: 0, y: 0 }, dpr: 1, scale: 1 },
+    theme: { preference: "dark", effective: "dark", data_theme: "dark", system_dark: true }
+  };
+}
+
+function installFakeDOM({ surface = "help", theme = "system-dark", focusVisible = true, activeBody = false, focusStyle = { style: "solid", width: "2px", color: "rgb(0, 0, 0)", opacity: "1" } } = {}) {
+  const originals = new Map();
+  const remember = (key) => originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
+  class FakeElement {
+    constructor(tag, { text = "", attrs = {}, rect = { x: 0, y: 0, width: 100, height: 24 }, visible = true, focusVisible = false, ...properties } = {}) {
+      this.tagName = tag.toUpperCase();
+      this.attrs = attrs;
+      this.innerText = text;
+      this.bounds = rect;
+      this.visible = visible;
+      this.focusVisible = focusVisible;
+      this.labels = [];
+      Object.assign(this, properties);
+    }
+    getAttribute(name) { return Object.hasOwn(this.attrs, name) ? this.attrs[name] : null; }
+    getBoundingClientRect() { return this.bounds; }
+    getClientRects() { return this.visible ? [this.bounds] : []; }
+    matches(selector) { return selector === ":focus-visible" && this.focusVisible; }
+  }
+  const element = (tag, values) => new FakeElement(tag, values);
+  const root = element("html", { attrs: { "data-theme": theme === "system-dark" ? "dark" : theme === "light" || theme === "dark" ? theme : null }, rect: { x: 0, y: 0, width: 1440, height: 900 } });
+  root.dataset = theme === "system-dark" ? { themePreference: "system", themeEffective: "dark" }
+    : { themePreference: theme, themeEffective: theme };
+  root.clientWidth = 1440;
+  root.clientHeight = 900;
+  root.scrollWidth = 1440;
+  root.scrollHeight = 900;
+  const body = element("body", { text: "Scrypath interface Help entry", rect: { x: 0, y: 0, width: 1440, height: 900 } });
+  const header = element("header", { text: "Scrypath" });
+  const headerInner = element("div", { text: "Scrypath navigation" });
+  const main = element("main", { text: "Help entry" });
+  const mainInner = element("div", { text: "Help entry" });
+  const article = element("article", { text: "Help entry" });
+  const shell = element("div", { text: "Scrypath Help entry" });
+  const shellContent = element("div", { text: "Help entry" });
+  const themeButton = element("button", { text: "Dark theme", attrs: { "aria-label": "Dark theme", "aria-pressed": "true", "data-theme-selected": "true" }, focusVisible });
+  const mixedButton = element("button", { text: "Mixed state", attrs: { "aria-label": "Mixed state", "aria-pressed": "mixed" } });
+  const mixedCheckbox = element("div", { text: "Indeterminate option", attrs: { role: "checkbox", "aria-label": "Indeterminate option", "aria-checked": "mixed" } });
+  const selectedOption = element("div", { text: "Beta category", attrs: { role: "option", "aria-label": "Beta category", "aria-selected": "true" } });
+  const multi = element("select", { attrs: { "aria-label": "Categories" }, value: "alpha", multiple: true, selectedOptions: [{ value: "alpha" }, { value: "beta" }] });
+  const input = element("input", { attrs: { "aria-label": "Search" }, type: "search", value: "sample query" });
+  const link = element("a", { text: "Open details", attrs: { href: "/ops/help" } });
+  const controls = surface === "storefront" ? [input, link] : [themeButton, mixedButton, mixedCheckbox, selectedOption, multi, link];
+  const hoverTarget = surface === "storefront" ? link : themeButton;
+  const selectorMap = surface === "storefront" ? {
+    body,
+    header,
+    "header > div": headerInner,
+    main,
+    "main > div": mainInner
+  } : {
+    body,
+    ".ops-shell-frame": shell,
+    ".ops-shell-content": shellContent,
+    ".ops-header": header,
+    ".ops-header__inner": headerInner,
+    "#ops-main": main,
+    "#ops-main > div": mainInner,
+    ".ops-help-content": article,
+    "main article": article,
+    main,
+    "main > div": mainInner,
+    header,
+    "header > div": headerInner
+  };
+  const document = {
+    documentElement: root,
+    body,
+    activeElement: surface === "storefront" || activeBody ? body : themeButton,
+    hasFocus: () => true,
+    getElementById: () => null,
+    querySelector: (selector) => selectorMap[selector] || null,
+    querySelectorAll: (selector) => selector === ":hover" ? [root, body, hoverTarget]
+      : selector.startsWith("a,button,input,select,textarea,") ? controls : [],
+  };
+  const properties = {
+    Element: FakeElement,
+    document,
+    window: {
+      innerWidth: 1440, innerHeight: 900, devicePixelRatio: 1, scrollX: 0, scrollY: 0,
+      visualViewport: { scale: 1 },
+      matchMedia: () => ({ matches: theme === "system-dark" })
+    },
+    getComputedStyle: (node) => ({
+      visibility: "visible", position: "static", display: "block", top: "auto", right: "auto", bottom: "auto", left: "auto",
+      marginTop: "0px", marginRight: "0px", marginBottom: "0px", marginLeft: "0px",
+      outlineStyle: node === themeButton ? focusStyle.style : "none",
+      outlineWidth: node === themeButton ? focusStyle.width : "0px",
+      outlineColor: node === themeButton ? focusStyle.color : "rgba(0, 0, 0, 0)",
+      opacity: node === themeButton ? focusStyle.opacity : "1"
+    })
+  };
+  for (const [key, value] of Object.entries(properties)) {
+    remember(key);
+    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value });
+  }
+  const restore = () => {
+    for (const key of Object.keys(properties)) {
+      const descriptor = originals.get(key);
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+      else delete globalThis[key];
+    }
+  };
+  restore.target = surface === "storefront" ? link : themeButton;
+  return restore;
+}
+
 test("a capture is pending until all review dimensions and state evidence are supplied", () => {
   const { source, manifest } = fixture();
   const errors = reviewErrors(reviewTemplate(manifest, "capture-digest"), manifest, "capture-digest", source);
   assert.ok(errors.some((error) => error.includes("pending")));
   assert.ok(errors.some((error) => error.includes("Journey/state")));
+});
+
+test("the in-page DOM state producer emits values accepted by the capture validator", () => {
+  const wrap = (snapshot) => ({ ...snapshot, before: snapshot, after: snapshot });
+  const restoreOps = installFakeDOM({ surface: "help", theme: "system-dark" });
+  try {
+    const ops = captureUiStateInPage();
+    const opsSidecar = wrap(ops);
+    const interactionTarget = captureUiStateInPage(restoreOps.target);
+    const opsCapture = { surface: "help", theme: "system-dark", viewport: { width: 1440, height: 900 }, interaction_target: interactionTarget };
+    assert.deepEqual(domStateErrors(opsSidecar, opsCapture, "hover", "ops hover"), []);
+    assert.deepEqual(domStateErrors(opsSidecar, opsCapture, "focus", "ops focus"), []);
+    assert.deepEqual(interactionTarget, ops.focus.element, "locator identity comes from the same semantic reader as focus state");
+    assert.equal(ops.theme.preference, "system");
+    assert.equal(ops.theme.effective, "dark");
+    assert.equal(ops.theme.data_theme, "dark");
+    assert.equal(ops.controls.find(({ name }) => name === "Mixed state").pressed, "mixed");
+    assert.equal(ops.controls.find(({ name }) => name === "Indeterminate option").checked, "mixed");
+    assert.equal(ops.controls.find(({ name }) => name === "Beta category").selected, true);
+    assert.deepEqual(ops.controls.find(({ name }) => name === "Search")?.value, undefined);
+    assert.deepEqual(ops.controls.find(({ name }) => name === "Categories").value, ["alpha", "beta"]);
+    assert.deepEqual(ops.focus.element, { tag: "button", role: "button", name: "Dark theme", href: null });
+    assert.deepEqual(ops.focus.outline, { style: "solid", width: "2px", color: "rgb(0, 0, 0)" });
+    assert.equal(ops.focus.opacity, "1");
+    assert.ok(ops.layout.shell && ops.layout.primary_article);
+  } finally {
+    restoreOps();
+  }
+
+  const wrongTarget = { surface: "help", theme: "system-dark", viewport: { width: 1440, height: 900 }, interaction_target: { tag: "button", role: "button", name: "Mixed state", href: null } };
+  const goodTarget = installFakeDOM({ surface: "help", theme: "system-dark" });
+  try {
+    const focused = wrap(captureUiStateInPage());
+    assert.ok(domStateErrors(focused, wrongTarget, "focus", "wrong target").some((error) => /target|focus|control/i.test(error)));
+  } finally {
+    goodTarget();
+  }
+
+  const bodyFocus = installFakeDOM({ surface: "help", theme: "system-dark", activeBody: true });
+  try {
+    const focused = wrap(captureUiStateInPage());
+    const target = captureUiStateInPage(bodyFocus.target);
+    assert.notDeepEqual(focused.focus.element, target);
+    assert.ok(domStateErrors(focused, { ...wrongTarget, interaction_target: target }, "focus", "body focus").length > 0);
+  } finally {
+    bodyFocus();
+  }
+
+  const keyboardFocusMissing = installFakeDOM({ surface: "help", theme: "system-dark", focusVisible: false });
+  try {
+    const focused = wrap(captureUiStateInPage());
+    const target = captureUiStateInPage(keyboardFocusMissing.target);
+    assert.ok(domStateErrors(focused, { ...wrongTarget, interaction_target: target }, "focus", "non-keyboard focus").length > 0);
+  } finally {
+    keyboardFocusMissing();
+  }
+
+  const transparentFocus = installFakeDOM({
+    surface: "help", theme: "system-dark",
+    focusStyle: { style: "solid", width: "0px", color: "rgba(0, 0, 0, 0)", opacity: "0" }
+  });
+  try {
+    const focused = wrap(captureUiStateInPage());
+    const target = captureUiStateInPage(transparentFocus.target);
+    assert.ok(domStateErrors(focused, { ...wrongTarget, interaction_target: target }, "focus", "transparent focus outline").length > 0);
+  } finally {
+    transparentFocus();
+  }
+
+  const restoreLight = installFakeDOM({ surface: "help", theme: "light" });
+  try {
+    const light = { ...captureUiStateInPage(), before: null, after: null };
+    light.before = Object.fromEntries(Object.keys(light).filter((key) => key !== "before" && key !== "after").map((key) => [key, light[key]]));
+    light.after = light.before;
+    const target = captureUiStateInPage(restoreLight.target);
+    assert.deepEqual(domStateErrors(light, { surface: "help", theme: "light", viewport: { width: 1440, height: 900 }, interaction_target: target }, "viewport", "light theme"), []);
+  } finally {
+    restoreLight();
+  }
+
+  for (const theme of ["light", "dark", "system-dark"]) {
+    const restoreStorefront = installFakeDOM({ surface: "storefront", theme });
+    try {
+      const storefront = captureUiStateInPage();
+      const sidecar = wrap(storefront);
+      const target = captureUiStateInPage(restoreStorefront.target);
+      assert.deepEqual(domStateErrors(sidecar, { surface: "storefront", theme, viewport: { width: 1440, height: 900 }, interaction_target: target }, "viewport", `storefront ${theme}`), []);
+      assert.ok(Object.values(storefront.layout).some(Boolean), "storefront has a generic measured layout anchor");
+      assert.equal(storefront.theme.preference, theme === "system-dark" ? "system" : theme);
+      assert.equal(storefront.theme.effective, theme === "light" ? "light" : "dark");
+    } finally {
+      restoreStorefront();
+    }
+  }
 });
 
 test("a different preview worktree or omitted main commits cannot masquerade as latest", () => {
@@ -163,6 +396,114 @@ test("viewport document captures reject zoom, scroll and changed layout", async 
   await assert.rejects(captureViewportImage({ evaluate: async () => measurements.shift(), screenshot: async () => Buffer.alloc(0) }, { width: 390, height: 844 }), /layout/i);
   const failure = new Error("actual screenshot failed");
   await assert.rejects(captureViewportImage({ evaluate: async () => geometry, screenshot: async () => { throw failure; } }, { width: 390, height: 844 }), error => error === failure);
+});
+
+test("stable entry capture keeps all samples and selects the final consecutive exact pair", async () => {
+  const outputs = [Buffer.from("A"), Buffer.from("B"), Buffer.from("B")];
+  const saved = [];
+  let frameCount = 0;
+  const interactionTarget = stableStateFixture().focus.element;
+  const result = await captureStableImage({
+    page: {}, id: "help--dark--1280", kind: "viewport.png",
+    captureImage: async ({ timeout }) => {
+      assert.ok(Number.isFinite(timeout) && timeout > 0 && timeout <= 10_000);
+      return outputs.shift();
+    },
+    saveSample: async (sample) => { saved.push(sample); },
+    readState: async () => stableStateFixture(),
+    waitForFrames: async (_page, timeout) => { assert.ok(timeout > 0); frameCount += 1; }
+  });
+  assert.deepEqual(result.image, Buffer.from("B"));
+  assert.equal(result.stability.method, "consecutive-exact-v1");
+  assert.equal(result.stability.selected, 2);
+  assert.equal(result.stability.samples.length, 3);
+  assert.equal(frameCount, 3, "a two-frame barrier runs before every sample");
+  assert.deepEqual(saved.map(({ path }) => path), [0, 1, 2].map(index => `help--dark--1280--viewport-sample-${index}.png`));
+  assert.deepEqual(saved.map(({ state_path }) => state_path), [0, 1, 2].map(index => `help--dark--1280--viewport-sample-${index}.json`));
+  assert.ok(result.stability.samples.every(({ elapsed_ms }) => Number.isFinite(elapsed_ms) && elapsed_ms <= 10_000));
+  for (const sample of saved) {
+    const sidecar = JSON.parse(sample.state_bytes.toString("utf8"));
+    assert.deepEqual(sidecar, { ...sidecar.after, before: sidecar.before, after: sidecar.after });
+    assert.deepEqual(domStateErrors(sidecar, { surface: "help", theme: "dark", viewport: { width: 1280, height: 900 }, interaction_target: interactionTarget }, "viewport", "saved stable sample"), []);
+  }
+});
+
+test("stable capture rejects persistent image instability after the configured sample bound", async () => {
+  const outputs = ["A", "B", "A", "B", "A", "B"].map(value => Buffer.from(value));
+  const saved = [];
+  await assert.rejects(captureStableImage({
+    page: {}, id: "unstable", kind: "focus",
+    captureImage: async () => outputs.shift(),
+    saveSample: async sample => { saved.push(sample); },
+    readState: async () => stableStateFixture(),
+    waitForFrames: async () => {},
+    maxSamples: 6
+  }), error => {
+    assert.match(error.message, /did not produce two consecutive byte-equal images/);
+    assert.equal(error.captureStability.samples.length, 6);
+    assert.equal(error.captureStability.selected, null);
+    return true;
+  });
+  assert.equal(saved.length, 6);
+});
+
+test("stable capture retains and rejects a DOM change around the screenshot", async () => {
+  const saved = [];
+  let reads = 0;
+  await assert.rejects(captureStableImage({
+    page: {}, id: "changing", kind: "hover",
+    captureImage: async () => Buffer.from("sample"),
+    saveSample: async sample => { saved.push(sample); },
+    readState: async () => ++reads === 1 ? stableStateFixture() : stableStateFixture("Updated help text"),
+    waitForFrames: async () => {}
+  }), error => {
+    assert.match(error.message, /state changed around the screenshot/);
+    assert.equal(error.captureStability.samples.length, 1);
+    return true;
+  });
+  const sidecar = JSON.parse(saved[0].state_bytes.toString("utf8"));
+  assert.equal(sidecar.before.body_text, "Help entry");
+  assert.equal(sidecar.after.body_text, "Updated help text");
+});
+
+test("stable capture preserves screenshot and sample IO errors while retaining evidence when available", async () => {
+  const screenshotError = new Error("screenshot backend failed");
+  const failedArtifacts = [];
+  await assert.rejects(captureStableImage({
+    page: {}, id: "screenshot-failure", kind: "viewport",
+    captureImage: async () => { throw screenshotError; },
+    saveSample: async sample => { failedArtifacts.push(sample); },
+    readState: async () => stableStateFixture(),
+    waitForFrames: async () => {}
+  }), error => {
+    assert.equal(error, screenshotError);
+    assert.equal(error.captureStability.failed_attempt.phase, "screenshot");
+    assert.equal(error.captureStability.failed_attempt.path, null);
+    return true;
+  });
+  assert.equal(failedArtifacts.length, 1);
+  const failedSidecar = JSON.parse(failedArtifacts[0].state_bytes.toString("utf8"));
+  assert.deepEqual(failedSidecar.before, stableStateFixture());
+  assert.equal(failedSidecar.after, null);
+
+  const ioError = new Error("exclusive evidence write failed");
+  await assert.rejects(captureStableImage({
+    page: {}, id: "io-failure", kind: "viewport",
+    captureImage: async () => Buffer.from("image"),
+    saveSample: async () => { throw ioError; },
+    readState: async () => stableStateFixture(),
+    waitForFrames: async () => {}
+  }), error => error === ioError);
+});
+
+test("stable capture enforces hard sample and elapsed-time caps", async () => {
+  const options = { page: {}, id: "bounded", kind: "viewport", captureImage: async () => Buffer.from("image"), saveSample: async () => {}, readState: async () => stableStateFixture(), waitForFrames: async () => {} };
+  await assert.rejects(captureStableImage({ ...options, maxSamples: 7 }), /configured sample and time caps/);
+  await assert.rejects(captureStableImage({ ...options, maxElapsedMs: 10_001 }), /configured sample and time caps/);
+  await assert.rejects(captureStableImage({
+    ...options, maxElapsedMs: 20,
+    waitForFrames: () => new Promise(() => {})
+  }), /time budget/);
 });
 
 

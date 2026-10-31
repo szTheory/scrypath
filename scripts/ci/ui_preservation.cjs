@@ -35,6 +35,18 @@ const INDEX_PAGE_LIMIT = 1000;
 const MAX_INDEX_COUNT = 10_000;
 const MAX_DOCUMENT_COUNT = 50_000;
 const MAX_TASK_COUNT = 1000;
+const MAX_STABILITY_SAMPLES = 6;
+const MAX_STABILITY_ELAPSED_MS = 10_000;
+const STABILITY_METHOD = "consecutive-exact-v1";
+const DOM_STATE_SCHEMA = "scrypath.ui-capture-state.v1";
+const DOM_SNAPSHOT_KEYS = ["schema", "body_text", "controls", "focus", "hover", "document_has_focus", "layout", "viewport", "theme"];
+const DOM_STATE_KEYS = [...DOM_SNAPSHOT_KEYS, "before", "after"];
+const DOM_LAYOUT_KEYS = ["shell", "shell_content", "header", "header_inner", "main", "main_inner", "primary_article"];
+const DOM_RECT_KEYS = ["x", "y", "width", "height"];
+const DOM_CONTROL_KEYS = ["tag", "role", "name", "href", "value", "checked", "selected", "disabled", "expanded", "pressed", "rect"];
+const DOM_INTERACTION_TAGS = new Set(["a", "button", "input", "select", "textarea"]);
+const DOM_INTERACTION_ROLES = new Set(["button", "link", "checkbox", "radio", "option", "tab", "menuitem", "input", "select", "textarea"]);
+const DOM_OUTLINE_STYLES = new Set(["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"]);
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const canonicalize = (value) => Array.isArray(value)
@@ -603,6 +615,345 @@ function expectedCaptureMetadata() {
   return result;
 }
 
+function requiredImageKinds(capture) {
+  const kinds = ["viewport", "full", "hover", "focus"];
+  if (capture?.surface === "control-room" && capture?.width === 390) kinds.push("navigation");
+  return kinds;
+}
+
+function isPlainRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasExactKeys(value, keys) {
+  return isPlainRecord(value) && canonicalJson(Object.keys(value).sort()) === canonicalJson([...keys].sort());
+}
+
+function stabilityStructureErrors(capture) {
+  const errors = [];
+  const id = capture?.id || "unknown capture";
+  const kinds = requiredImageKinds(capture);
+  const expectedFiles = ["copy.json", ...kinds.map((kind) => `${kind}.png`)];
+  const files = capture?.files;
+  if (!isPlainRecord(files) || canonicalJson(Object.keys(files).sort()) !== canonicalJson(expectedFiles.sort())) {
+    errors.push(`Capture artifact kinds do not match the required image/copy set: ${id}.`);
+  }
+
+  const stability = capture?.stability;
+  if (!isPlainRecord(stability) || canonicalJson(Object.keys(stability).sort()) !== canonicalJson([...kinds].sort())) {
+    errors.push(`Screenshot stability proofs are missing or contain unmatched kinds: ${id}.`);
+  }
+
+  for (const kind of kinds) {
+    const proof = stability?.[kind];
+    const hasFailedAttempt = isPlainRecord(proof?.failed_attempt);
+    const proofKeys = ["method", "max_samples", "max_elapsed_ms", "samples", "selected", ...(hasFailedAttempt ? ["failed_attempt"] : [])];
+    if (!hasExactKeys(proof, proofKeys)) {
+      errors.push(`Screenshot stability contract is incomplete for ${id} (${kind}).`);
+      continue;
+    }
+    if (proof.method !== STABILITY_METHOD || proof.max_samples !== MAX_STABILITY_SAMPLES || proof.max_elapsed_ms !== MAX_STABILITY_ELAPSED_MS) {
+      errors.push(`Screenshot stability limits do not match the bounded contract for ${id} (${kind}).`);
+    }
+    if (!Array.isArray(proof.samples) || proof.samples.length > MAX_STABILITY_SAMPLES || (!hasFailedAttempt && proof.samples.length < 2)) {
+      errors.push(`Screenshot stability requires two to six successful samples for ${id} (${kind}).`);
+      continue;
+    }
+    if (hasFailedAttempt) {
+      if (!capture.error || proof.selected !== null) errors.push(`Failed stability attempt lacks a capture error or incorrectly selects a screenshot for ${id} (${kind}).`);
+    } else if (proof.selected !== proof.samples.length - 1) {
+      errors.push(`Selected screenshot is not the final stability sample for ${id} (${kind}).`);
+    }
+    let previousElapsed = -Infinity;
+    proof.samples.forEach((sample, index) => {
+      if (!hasExactKeys(sample, ["path", "sha256", "state_path", "state_sha256", "elapsed_ms"])) {
+        errors.push(`Screenshot stability sample metadata is incomplete for ${id} (${kind}) sample ${index}.`);
+        return;
+      }
+      const stem = `${id}--${kind}-sample-${index}`;
+      if (sample.path !== `${stem}.png` || sample.state_path !== `${stem}.json` || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "")) {
+        errors.push(`Screenshot stability sample path or digest is invalid for ${id} (${kind}) sample ${index}.`);
+      }
+      if (!Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < previousElapsed || sample.elapsed_ms < 0 || sample.elapsed_ms > MAX_STABILITY_ELAPSED_MS) {
+        errors.push(`Screenshot stability elapsed time is not finite, monotonic, and bounded for ${id} (${kind}) sample ${index}.`);
+      } else {
+        previousElapsed = sample.elapsed_ms;
+      }
+    });
+    if (hasFailedAttempt) {
+      const attempt = proof.failed_attempt;
+      const index = proof.samples.length;
+      const stem = `${id}--${kind}-sample-${index}`;
+      if (!hasExactKeys(attempt, ["path", "sha256", "state_path", "state_sha256", "elapsed_ms", "phase", "error"]) || (attempt.path !== null && attempt.path !== `${stem}.png`) || (attempt.path === null ? attempt.sha256 !== null : !/^[a-f0-9]{64}$/.test(attempt.sha256 || "")) || attempt.state_path !== `${stem}.json` || !/^[a-f0-9]{64}$/.test(attempt.state_sha256 || "") || !Number.isFinite(attempt.elapsed_ms) || attempt.elapsed_ms < previousElapsed || attempt.elapsed_ms < 0 || attempt.elapsed_ms > MAX_STABILITY_ELAPSED_MS || !["screenshot", "screenshot-result", "state-after", "state-after-schema"].includes(attempt.phase) || typeof attempt.error !== "string" || !attempt.error.trim()) {
+        errors.push(`Failed screenshot attempt metadata is invalid for ${id} (${kind}).`);
+      }
+    } else {
+      const selectedFile = files?.[`${kind}.png`];
+      if (!selectedFile || selectedFile.path !== `${id}--${kind}.png`) errors.push(`Selected screenshot path does not match the final stability sample for ${id} (${kind}).`);
+    }
+  }
+
+  return errors;
+}
+
+function rectErrors(rect, label, { allowZero = false } = {}) {
+  if (!hasExactKeys(rect, DOM_RECT_KEYS) || DOM_RECT_KEYS.some((key) => !Number.isFinite(rect[key]))) return [`${label} rectangle is missing finite coordinates.`];
+  if (rect.width < 0 || rect.height < 0 || (!allowZero && (rect.width === 0 || rect.height === 0))) return [`${label} rectangle has no visible area.`];
+  return [];
+}
+
+function nullableString(value) {
+  return value === null || typeof value === "string";
+}
+
+function nullableBoolean(value) {
+  return value === null || typeof value === "boolean";
+}
+
+function nullableBooleanString(value) {
+  return value === null || typeof value === "boolean" || typeof value === "string";
+}
+
+function nullableStringArray(value) {
+  return value === null || typeof value === "string" || (Array.isArray(value) && value.every((entry) => typeof entry === "string"));
+}
+
+function semanticElementErrors(value, label) {
+  if (!hasExactKeys(value, ["tag", "role", "name", "href"]) || typeof value.tag !== "string" || !value.tag || !nullableString(value.role) || !nullableString(value.name) || !nullableString(value.href)) {
+    return [`${label} semantic element is invalid.`];
+  }
+  return [];
+}
+
+function interactionTargetErrors(value, label) {
+  const errors = semanticElementErrors(value, label);
+  if (!isPlainRecord(value)) return errors;
+  if (!DOM_INTERACTION_TAGS.has(value.tag)) errors.push(`${label} must identify an allowed interactive control tag.`);
+  if (typeof value.role !== "string" || !DOM_INTERACTION_ROLES.has(value.role)) errors.push(`${label} must identify an allowed interactive control role.`);
+  if (typeof value.name !== "string" || !value.name.trim()) errors.push(`${label} must have a non-empty accessible name.`);
+  return errors;
+}
+
+function cssAlpha(value) {
+  if (typeof value !== "string") return null;
+  const token = value.trim();
+  const percent = token.endsWith("%");
+  const number = Number(percent ? token.slice(0, -1) : token);
+  const alpha = percent ? number / 100 : number;
+  return Number.isFinite(alpha) && alpha >= 0 && alpha <= 1 ? alpha : null;
+}
+
+function cssColorAlpha(value) {
+  if (typeof value !== "string") return null;
+  const text = value.trim().toLowerCase();
+  if (text === "transparent") return 0;
+  const match = /^(rgb|rgba|oklch)\((.*)\)$/.exec(text);
+  if (!match) return null;
+  const family = match[1];
+  const components = match[2].split("/").map((part) => part.trim());
+  if (components.length > 2) return null;
+  const hasAlpha = components.length === 2;
+  const alphaText = hasAlpha ? components[1] : null;
+  const channelText = components[0];
+  let channels;
+  if (channelText.includes(",")) channels = channelText.split(",").map((part) => part.trim());
+  else channels = channelText.split(/\s+/).filter(Boolean);
+  let legacyAlpha = null;
+  if ((family === "rgb" || family === "rgba") && !hasAlpha && channelText.includes(",") && channels.length === 4) legacyAlpha = channels.pop();
+  if (channels.length !== 3 || (hasAlpha && legacyAlpha !== null)) return null;
+  const channelPattern = family === "oklch"
+    ? /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:%|deg|rad|turn)?$/
+    : /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)%?$/;
+  if (channels.some((channel) => !channelPattern.test(channel))) return null;
+  const alpha = alphaText ?? legacyAlpha;
+  if (family === "rgba" && alpha === null) return null;
+  return alpha === null ? 1 : cssAlpha(alpha);
+}
+
+function outlineWidthPixels(value) {
+  if (typeof value !== "string" || !/^[-+]?(?:\d+(?:\.\d*)?|\.\d+)px$/i.test(value.trim())) return null;
+  const number = Number.parseFloat(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function focusPaintErrors(focus, label) {
+  const errors = [];
+  if (!hasExactKeys(focus?.outline, ["style", "width", "color"]) || typeof focus.outline.style !== "string" || typeof focus.outline.width !== "string" || typeof focus.outline.color !== "string") {
+    return [`${label} focus outline evidence is incomplete.`];
+  }
+  const width = outlineWidthPixels(focus.outline.width);
+  const opacity = cssAlpha(focus.opacity);
+  if (width === null || opacity === null || !DOM_OUTLINE_STYLES.has(focus.outline.style)) errors.push(`${label} focus outline width, style, or opacity is not a finite computed CSS value.`);
+  if (typeof focus.outline.color !== "string" || !focus.outline.color.trim()) errors.push(`${label} focus outline color is missing.`);
+  return errors;
+}
+
+function positiveFocusIndicatorErrors(focus, label) {
+  const errors = focusPaintErrors(focus, label);
+  if (focus?.outline?.style !== "solid") errors.push(`${label} focus-visible outline is not a solid visible indicator.`);
+  const width = outlineWidthPixels(focus?.outline?.width);
+  if (width === null || width <= 0) errors.push(`${label} focus-visible outline has no positive computed width.`);
+  const alpha = cssColorAlpha(focus?.outline?.color);
+  if (alpha === null || alpha <= 0) errors.push(`${label} focus-visible outline color is unknown or transparent.`);
+  const opacity = cssAlpha(focus?.opacity);
+  if (opacity === null || opacity <= 0) errors.push(`${label} focus-visible indicator has zero or invalid opacity.`);
+  return errors;
+}
+
+function semanticIdentity(value) {
+  if (!isPlainRecord(value)) return null;
+  return { tag: value.tag, role: value.role, name: value.name, href: value.href };
+}
+
+function snapshotErrors(state, label) {
+  const errors = [];
+  if (!hasExactKeys(state, DOM_SNAPSHOT_KEYS)) return [`${label} does not match the required DOM-state schema.`];
+  if (state.schema !== DOM_STATE_SCHEMA || typeof state.body_text !== "string" || !state.body_text.trim()) errors.push(`${label} lacks the required schema or visible body text.`);
+  if (!Array.isArray(state.controls) || state.controls.length === 0) {
+    errors.push(`${label} has no visible controls.`);
+  } else {
+    state.controls.forEach((control, index) => {
+      if (!hasExactKeys(control, DOM_CONTROL_KEYS) || typeof control.tag !== "string" || !control.tag || !nullableString(control.role) || !nullableString(control.name) || !nullableString(control.href) || !nullableStringArray(control.value) || !nullableBooleanString(control.checked) || !nullableBoolean(control.selected) || typeof control.disabled !== "boolean" || !nullableBoolean(control.expanded) || !nullableString(control.pressed)) {
+        errors.push(`${label} control ${index} does not match the required visible-control schema.`);
+      }
+      errors.push(...rectErrors(control?.rect, `${label} control ${index}`));
+    });
+  }
+
+  if (!hasExactKeys(state.focus, ["element", "rect", "focus_visible", "outline", "opacity"]) || typeof state.focus.focus_visible !== "boolean" || ((state.focus.element === null) !== (state.focus.rect === null)) || typeof state.focus.opacity !== "string") {
+    errors.push(`${label} focus state is invalid.`);
+  }
+  if (state.focus?.element !== null) errors.push(...semanticElementErrors(state.focus?.element, `${label} focus`));
+  if (state.focus && state.focus.rect !== null) errors.push(...rectErrors(state.focus.rect, `${label} focus`));
+  errors.push(...focusPaintErrors(state.focus, label));
+  if (typeof state.document_has_focus !== "boolean") errors.push(`${label} document focus flag is invalid.`);
+  if (!Array.isArray(state.hover)) {
+    errors.push(`${label} hover state is invalid.`);
+  } else {
+    state.hover.forEach((entry, index) => {
+      if (!hasExactKeys(entry, ["element", "rect"])) errors.push(`${label} hover target ${index} is invalid.`);
+      errors.push(...semanticElementErrors(entry?.element, `${label} hover target ${index}`));
+      errors.push(...rectErrors(entry?.rect, `${label} hover target ${index}`));
+    });
+  }
+
+  if (!hasExactKeys(state.layout, DOM_LAYOUT_KEYS)) {
+    errors.push(`${label} layout anchors are incomplete.`);
+  } else {
+    let anchored = false;
+    let measurable = false;
+    for (const key of DOM_LAYOUT_KEYS) {
+      const anchor = state.layout[key];
+      if (anchor === null) continue;
+      anchored = true;
+      if (!hasExactKeys(anchor, ["rect", "position", "display", "inset", "margin"]) || typeof anchor.position !== "string" || !anchor.position || typeof anchor.display !== "string" || !anchor.display) {
+        errors.push(`${label} layout anchor ${key} lacks geometry or computed style.`);
+        continue;
+      }
+      errors.push(...rectErrors(anchor.rect, `${label} layout anchor ${key}`, { allowZero: true }));
+      if (Number.isFinite(anchor.rect?.width) && Number.isFinite(anchor.rect?.height) && anchor.rect.width > 0 && anchor.rect.height > 0) measurable = true;
+      for (const field of ["inset", "margin"]) {
+        if (!hasExactKeys(anchor[field], ["top", "right", "bottom", "left"]) || ["top", "right", "bottom", "left"].some((side) => typeof anchor[field][side] !== "string" || !anchor[field][side])) {
+          errors.push(`${label} layout anchor ${key} has invalid ${field} geometry.`);
+        }
+      }
+    }
+    if (!anchored) errors.push(`${label} has no measurable layout anchor.`);
+    else if (!measurable) errors.push(`${label} has no positive-area layout anchor.`);
+  }
+
+  const viewportKeys = ["inner", "client", "document", "scroll", "dpr", "scale"];
+  if (!hasExactKeys(state.viewport, viewportKeys)) {
+    errors.push(`${label} viewport geometry is incomplete.`);
+  } else {
+    for (const field of ["inner", "client", "document"]) {
+      if (!hasExactKeys(state.viewport[field], ["width", "height"]) || !Number.isFinite(state.viewport[field].width) || !Number.isFinite(state.viewport[field].height) || state.viewport[field].width <= 0 || state.viewport[field].height <= 0) {
+        errors.push(`${label} viewport ${field} dimensions are invalid.`);
+      }
+    }
+    if (!hasExactKeys(state.viewport.scroll, ["x", "y"]) || !Number.isFinite(state.viewport.scroll.x) || !Number.isFinite(state.viewport.scroll.y) || !Number.isFinite(state.viewport.dpr) || state.viewport.dpr <= 0 || !Number.isFinite(state.viewport.scale) || state.viewport.scale <= 0) {
+      errors.push(`${label} viewport scale or scroll is invalid.`);
+    }
+  }
+
+  if (!hasExactKeys(state.theme, ["preference", "effective", "data_theme", "system_dark"]) || !(state.theme.preference === null || ["light", "dark", "system"].includes(state.theme.preference)) || !(state.theme.effective === null || ["light", "dark"].includes(state.theme.effective)) || !nullableString(state.theme.data_theme) || typeof state.theme.system_dark !== "boolean") {
+    errors.push(`${label} theme evidence is invalid.`);
+  }
+  return errors;
+}
+
+function domStateErrors(state, capture, kind, label) {
+  const errors = [];
+  if (!hasExactKeys(state, DOM_STATE_KEYS)) return [`${label} does not match the required DOM-state sidecar schema.`];
+  errors.push(...snapshotErrors(Object.fromEntries(DOM_SNAPSHOT_KEYS.map((key) => [key, state[key]])), label));
+  errors.push(...snapshotErrors(state.before, `${label} before-state`));
+  errors.push(...snapshotErrors(state.after, `${label} after-state`));
+  if (canonicalJson(Object.fromEntries(DOM_SNAPSHOT_KEYS.map((key) => [key, state[key]]))) !== canonicalJson(state.after)) errors.push(`${label} root state differs from its post-screenshot state.`);
+  if (canonicalJson(state.before) !== canonicalJson(state.after)) errors.push(`${label} DOM state changed across the screenshot.`);
+  const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
+  const expectedEffective = capture.theme === "light" ? "light" : "dark";
+  for (const snapshot of [state, state.before, state.after]) {
+    if (snapshot.theme?.preference !== expectedPreference || snapshot.theme?.effective !== expectedEffective) errors.push(`${label} theme state does not match its capture identity.`);
+    if (snapshot.viewport?.inner?.width !== capture.viewport?.width || snapshot.viewport?.inner?.height !== capture.viewport?.height) errors.push(`${label} viewport state does not match its capture identity.`);
+  }
+  const targetErrors = interactionTargetErrors(capture.interaction_target, `${label} interaction target`);
+  errors.push(...targetErrors);
+  const target = semanticIdentity(capture.interaction_target);
+  if (kind === "hover" && (!Array.isArray(state.hover) || !state.hover.some((entry) => canonicalJson(semanticIdentity(entry?.element)) === canonicalJson(target)))) errors.push(`${label} hover evidence does not include its intended interaction target.`);
+  if (kind === "focus") {
+    if (!state.focus?.element || state.focus.rect === null || canonicalJson(semanticIdentity(state.focus.element)) !== canonicalJson(target)) errors.push(`${label} focus element does not match its intended focus target.`);
+    const targetControl = Array.isArray(state.controls) ? state.controls.find((control) => canonicalJson(semanticIdentity(control)) === canonicalJson(target)) : null;
+    if (!targetControl) errors.push(`${label} intended focus target is not among the visible controls.`);
+    else if (canonicalJson(targetControl.rect) !== canonicalJson(state.focus?.rect)) errors.push(`${label} focus rectangle does not match its intended visible control.`);
+    if (state.focus?.focus_visible !== true || state.document_has_focus !== true) errors.push(`${label} lacks focus-visible evidence while the document has focus.`);
+    errors.push(...positiveFocusIndicatorErrors(state.focus, label));
+  }
+  return errors;
+}
+
+function failedDomStateErrors(state, capture, kind, label) {
+  const errors = [];
+  if (!hasExactKeys(state, DOM_STATE_KEYS)) return [`${label} does not match the required failed DOM-state sidecar schema.`];
+  const rootSnapshot = Object.fromEntries(DOM_SNAPSHOT_KEYS.map((key) => [key, state[key]]));
+  errors.push(...snapshotErrors(rootSnapshot, label));
+  errors.push(...snapshotErrors(state.before, `${label} before-state`));
+  if (state.after !== null) errors.push(`${label} must leave post-state absent for a failed attempt.`);
+  if (canonicalJson(rootSnapshot) !== canonicalJson(state.before)) errors.push(`${label} root state differs from its captured pre-state.`);
+  const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
+  const expectedEffective = capture.theme === "light" ? "light" : "dark";
+  if (state.theme?.preference !== expectedPreference || state.theme?.effective !== expectedEffective || state.before?.theme?.preference !== expectedPreference || state.before?.theme?.effective !== expectedEffective) {
+    errors.push(`${label} theme state does not match its capture identity.`);
+  }
+  return errors;
+}
+
+function captureArtifactEntries(capture) {
+  const entries = [];
+  for (const [key, artifact] of Object.entries(capture?.files || {})) {
+    entries.push({ ...artifact, type: key === "copy.json" ? "copy" : key.endsWith(".png") ? "selected-image" : "other", key, kind: key.endsWith(".png") ? key.slice(0, -4) : null });
+  }
+  for (const [kind, proof] of Object.entries(capture?.stability || {})) {
+    for (const [index, sample] of (Array.isArray(proof?.samples) ? proof.samples : []).entries()) {
+      entries.push({ path: sample?.path, sha256: sample?.sha256, type: "sample-image", kind, index });
+      entries.push({ path: sample?.state_path, sha256: sample?.state_sha256, type: "sample-state", kind, index });
+    }
+    if (isPlainRecord(proof?.failed_attempt)) {
+      const index = Array.isArray(proof.samples) ? proof.samples.length : 0;
+      const attempt = proof.failed_attempt;
+      if (attempt.path !== null) entries.push({ path: attempt.path, sha256: attempt.sha256, type: "failed-image", kind, index });
+      entries.push({ path: attempt.state_path, sha256: attempt.state_sha256, type: "failed-state", kind, index, phase: attempt.phase });
+    }
+  }
+  return entries;
+}
+
+function addArtifactBytes(totalBytes, nextBytes) {
+  if (!Number.isSafeInteger(totalBytes) || totalBytes < 0 || !Number.isSafeInteger(nextBytes) || nextBytes <= 0) throw new Error("Artifact byte accounting requires finite positive file sizes.");
+  const total = totalBytes + nextBytes;
+  if (!Number.isSafeInteger(total) || total > MAX_CAPTURE_BYTES) throw new Error("capture directory exceeds its finite total artifact bound");
+  return total;
+}
+
 function matrixErrors(manifest) {
   const errors = [];
   const expected = expectedCaptureMetadata();
@@ -621,6 +972,8 @@ function matrixErrors(manifest) {
     if (capture.error) errors.push(`Capture failed: ${capture.id}: ${capture.error}`);
     if (!capture.files?.["copy.json"] || !capture.files?.["viewport.png"] || !capture.files?.["full.png"] || !capture.files?.["hover.png"] || !capture.files?.["focus.png"]) errors.push(`Capture lacks image or copy evidence: ${capture.id}.`);
     if (capture.surface === "control-room" && capture.width === 390 && (!capture.files?.["navigation.png"] || capture.mobile_navigation?.expanded !== true || capture.mobile_navigation?.visible !== true || !capture.mobile_navigation?.links?.length)) errors.push(`Compact navigation evidence is missing or did not open: ${capture.id}.`);
+    errors.push(...interactionTargetErrors(capture.interaction_target, `${capture.id} interaction target`));
+    errors.push(...stabilityStructureErrors(capture));
     if (!capture.browser_version || !capture.platform || !capture.data_identity) errors.push(`Capture lacks browser, platform, or data identity: ${capture.id}.`);
     if (capture.browser_version !== manifest?.environment?.browser_version || capture.platform !== manifest?.environment?.platform || capture.data_identity !== manifest?.environment?.data_identity) errors.push(`Unpaired browser/platform/data identity: ${capture.id}.`);
     for (const [kind, file] of Object.entries(capture.files || {})) {
@@ -658,38 +1011,104 @@ function artifactErrors(manifest, directory) {
   try { root = artifactDirectoryRoot(directory); }
   catch (error) { errors.push(error.message); return errors; }
   let totalBytes = 0;
-  for (const capture of manifest.captures || []) for (const artifact of Object.values(capture.files || {})) {
-    try {
-      if (typeof artifact.path !== "string" || path.isAbsolute(artifact.path) || path.basename(artifact.path) !== artifact.path) throw new Error("artifact path must be a file directly inside its capture directory");
-      const file = path.resolve(root.absolute, artifact.path);
-      if (!file.startsWith(`${root.absolute}${path.sep}`)) throw new Error("artifact escapes capture directory");
-      const fileStat = fs.lstatSync(file);
-      if (fileStat.isSymbolicLink() || !fileStat.isFile()) throw new Error("artifact is not a regular file");
-      if (fileStat.size <= 0 || fileStat.size > MAX_ARTIFACT_BYTES) throw new Error("artifact size is outside finite bounds");
-      totalBytes += fileStat.size;
-      if (totalBytes > MAX_CAPTURE_BYTES) throw new Error("capture directory exceeds its finite total artifact bound");
-      if (fs.realpathSync(file).startsWith(`${root.real}${path.sep}`) !== true) throw new Error("artifact resolves outside capture directory");
-      const bytes = fs.readFileSync(file);
-      if (sha256(bytes) !== artifact.sha256) throw new Error("artifact digest mismatch");
-      if (path.extname(artifact.path) === ".png") {
-        const size = pngDimensions(bytes);
-        const expected = capture.viewport || {};
-        const dimensionsMatch = artifact.path.endsWith("--full.png")
-          ? size.width === expected.width && size.height >= expected.height
-          : size.width === expected.width && size.height === expected.height;
-        if (!dimensionsMatch) throw new Error(`${path.basename(artifact.path).split("--").at(-1)} dimensions do not match ${capture.id}`);
-      } else if (artifact.path.endsWith("--copy.json")) {
-        const copy = JSON.parse(bytes.toString("utf8"));
-        const canonical = expectedCaptureMetadata().get(capture.id);
-        const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
-        if (canonicalJson(copy.clock) !== canonicalJson(capture.clock) || copy.observed_at !== capture.clock?.utc) throw new Error(`copy observation clock does not match ${capture.id}`);
-        if (copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
-          throw new Error(`copy metadata does not match ${capture.id}`);
+  const expectedDirectoryEntries = new Set(["capture.json"]);
+  for (const capture of manifest.captures || []) {
+    const bytesByPath = new Map();
+    const stateBySample = new Map();
+    const seenPaths = new Set();
+    for (const artifact of captureArtifactEntries(capture)) {
+      try {
+        if (typeof artifact.path !== "string" || path.isAbsolute(artifact.path) || path.basename(artifact.path) !== artifact.path) throw new Error("artifact path must be a file directly inside its capture directory");
+        if (seenPaths.has(artifact.path)) throw new Error("artifact path aliases another selected or sampled artifact");
+        seenPaths.add(artifact.path);
+        if (expectedDirectoryEntries.has(artifact.path)) throw new Error("artifact path aliases a manifest or another capture artifact");
+        expectedDirectoryEntries.add(artifact.path);
+        const file = path.resolve(root.absolute, artifact.path);
+        if (!file.startsWith(`${root.absolute}${path.sep}`)) throw new Error("artifact escapes capture directory");
+        const fileStat = fs.lstatSync(file);
+        if (fileStat.isSymbolicLink() || !fileStat.isFile()) throw new Error("artifact is not a regular file");
+        if (fileStat.size <= 0 || fileStat.size > MAX_ARTIFACT_BYTES) throw new Error("artifact size is outside finite bounds");
+        totalBytes = addArtifactBytes(totalBytes, fileStat.size);
+        if (fs.realpathSync(file).startsWith(`${root.real}${path.sep}`) !== true) throw new Error("artifact resolves outside capture directory");
+        const bytes = fs.readFileSync(file);
+        if (sha256(bytes) !== artifact.sha256) throw new Error("artifact digest mismatch");
+        bytesByPath.set(artifact.path, bytes);
+
+        if (["selected-image", "sample-image", "failed-image"].includes(artifact.type)) {
+          const size = pngDimensions(bytes);
+          if (size.width * size.height > 24_000_000) throw new Error("PNG exceeds the 24,000,000-pixel artifact bound");
+          const expected = capture.viewport || {};
+          const dimensionsMatch = artifact.kind === "full"
+            ? size.width === expected.width && size.height >= expected.height
+            : size.width === expected.width && size.height === expected.height;
+          if (!dimensionsMatch) throw new Error(`${artifact.kind}.png dimensions do not match ${capture.id}`);
+        } else if (artifact.type === "copy") {
+          const copy = JSON.parse(bytes.toString("utf8"));
+          const canonical = expectedCaptureMetadata().get(capture.id);
+          const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
+          if (canonicalJson(copy.clock) !== canonicalJson(capture.clock) || copy.observed_at !== capture.clock?.utc) throw new Error(`copy observation clock does not match ${capture.id}`);
+          if (copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
+            throw new Error(`copy metadata does not match ${capture.id}`);
+          }
+        } else if (artifact.type === "sample-state") {
+          const state = JSON.parse(bytes.toString("utf8"));
+          const stateErrors = domStateErrors(state, capture, artifact.kind, `${capture.id} ${artifact.kind} sample ${artifact.index}`);
+          if (stateErrors.length) throw new Error(stateErrors.join(" "));
+          stateBySample.set(`${artifact.kind}:${artifact.index}`, state);
+        } else if (artifact.type === "failed-state") {
+          const state = JSON.parse(bytes.toString("utf8"));
+          const stateErrors = failedDomStateErrors(state, capture, artifact.kind, `${capture.id} ${artifact.kind} failed attempt`);
+          if (stateErrors.length) throw new Error(stateErrors.join(" "));
         }
-      }
-    } catch (error) { errors.push(`Missing or changed artifact ${artifact.path}: ${error.message}`); }
+      } catch (error) { errors.push(`Missing or changed artifact ${artifact.path}: ${error.message}`); }
+    }
+
+    for (const kind of requiredImageKinds(capture)) {
+      const proof = capture.stability?.[kind];
+      if (!Array.isArray(proof?.samples) || proof.samples.length < 2 || proof.samples.length > MAX_STABILITY_SAMPLES || proof.selected !== proof.samples.length - 1) continue;
+      const samples = proof.samples;
+      const sampleImages = samples.map((sample) => bytesByPath.get(sample.path));
+      const sampleStates = samples.map((_sample, index) => stateBySample.get(`${kind}:${index}`));
+      if (sampleImages.some((bytes) => !bytes) || sampleStates.some((state) => !state)) continue;
+      if (!sampleImages.at(-1).equals(sampleImages.at(-2))) errors.push(`Final two screenshot samples are not byte-identical for ${capture.id} (${kind}).`);
+      const firstState = canonicalJson(sampleStates[0]);
+      if (sampleStates.slice(1).some((state) => canonicalJson(state) !== firstState)) errors.push(`DOM state changed between screenshot samples for ${capture.id} (${kind}).`);
+      const selected = bytesByPath.get(capture.files?.[`${kind}.png`]?.path);
+      if (!selected || !selected.equals(sampleImages.at(-1))) errors.push(`Selected screenshot does not match the final stability sample for ${capture.id} (${kind}).`);
+    }
+  }
+  try {
+    for (const entry of fs.readdirSync(root.absolute)) if (!expectedDirectoryEntries.has(entry)) errors.push(`Unmatched file exists in capture directory: ${entry}.`);
+  } catch (error) {
+    errors.push(`Capture directory inventory could not be verified: ${error.message}`);
   }
   return errors;
+}
+
+function readSelectedDomState(capture, directory, kind) {
+  const proof = capture?.stability?.[kind];
+  if (!Array.isArray(proof?.samples) || proof.selected !== proof.samples.length - 1 || proof.selected < 1) throw new Error(`No final verified DOM-state sample exists for ${capture?.id} (${kind}).`);
+  const sample = proof.samples[proof.selected];
+  const expectedPath = `${capture.id}--${kind}-sample-${proof.selected}.json`;
+  if (sample?.state_path !== expectedPath || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "")) throw new Error(`Selected DOM-state sample path or digest is invalid for ${capture.id} (${kind}).`);
+  const absoluteDirectory = path.resolve(directory);
+  const file = path.resolve(absoluteDirectory, sample.state_path);
+  if (path.dirname(file) !== absoluteDirectory) throw new Error(`Selected DOM-state sample escapes ${capture.id} artifact directory.`);
+  const details = fs.lstatSync(file);
+  if (details.isSymbolicLink() || !details.isFile() || details.size <= 0 || details.size > MAX_ARTIFACT_BYTES) throw new Error(`Selected DOM-state sample is not a bounded regular file for ${capture.id} (${kind}).`);
+  if (!fs.realpathSync(file).startsWith(`${fs.realpathSync(absoluteDirectory)}${path.sep}`)) throw new Error(`Selected DOM-state sample resolves outside ${capture.id} artifact directory.`);
+  const bytes = fs.readFileSync(file);
+  if (sha256(bytes) !== sample.state_sha256) throw new Error(`Selected DOM-state sample digest changed for ${capture.id} (${kind}).`);
+  const state = JSON.parse(bytes.toString("utf8"));
+  const errors = domStateErrors(state, capture, kind, `${capture.id} selected ${kind} state`);
+  if (errors.length) throw new Error(errors.join(" "));
+  return state;
+}
+
+function selectedDomStateChanged(beforeCapture, afterCapture, beforeDirectory, afterDirectory, kind) {
+  const before = readSelectedDomState(beforeCapture, beforeDirectory, kind);
+  const after = readSelectedDomState(afterCapture, afterDirectory, kind);
+  return canonicalJson(before) !== canonicalJson(after);
 }
 
 function comparePng(beforeBytes, afterBytes) {
@@ -744,7 +1163,7 @@ function withComparisonDirectory(outputDirectory, produce) {
 }
 
 function preservationPassed(report) {
-  return Array.isArray(report?.comparisons) && report.comparisons.length > 0 && report.comparisons.every((entry) => entry.differing_pixels === 0 && Number.isSafeInteger(entry.total_pixels) && entry.total_pixels > 0 && entry.copy_changed === false && entry.dimensions_changed === false);
+  return Array.isArray(report?.comparisons) && report.comparisons.length > 0 && report.comparisons.every((entry) => entry.differing_pixels === 0 && Number.isSafeInteger(entry.total_pixels) && entry.total_pixels > 0 && entry.copy_changed === false && entry.state_changed === false && entry.dimensions_changed === false);
 }
 
 function compareCapturedDirectories(before, after, output, authority, compare = compareDirectories) {
@@ -817,11 +1236,12 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
         const leftBytes = fs.readFileSync(path.join(beforeDirectory, left.files[kind].path));
         const rightBytes = fs.readFileSync(path.join(afterDirectory, right.files[kind].path));
         const { pixels, total, diff, ...dimensions } = comparePng(leftBytes, rightBytes);
+        const stateChanged = selectedDomStateChanged(left, right, beforeDirectory, afterDirectory, kind.replace(/\.png$/, ""));
         const artifact = `${left.id}--${kind.replace(/\.png$/, "")}-diff.png`;
         fs.writeFileSync(path.join(stagingDirectory, artifact), diff, { mode: 0o600 });
         const beforeCopy = readJson(path.join(beforeDirectory, left.files["copy.json"].path));
         const afterCopy = readJson(path.join(afterDirectory, right.files["copy.json"].path));
-        comparisons.push({ ...dimensions, id: left.id, artifact: kind, diff: artifact, width: left.viewport.width, height: left.viewport.height, differing_pixels: pixels, total_pixels: total, ratio: pixels / total, copy_changed: beforeCopy.text !== afterCopy.text, copy_sha256_before: left.files["copy.json"].sha256, copy_sha256_after: right.files["copy.json"].sha256 });
+        comparisons.push({ ...dimensions, id: left.id, artifact: kind, diff: artifact, width: left.viewport.width, height: left.viewport.height, differing_pixels: pixels, total_pixels: total, ratio: pixels / total, copy_changed: beforeCopy.text !== afterCopy.text, state_changed: stateChanged, copy_sha256_before: left.files["copy.json"].sha256, copy_sha256_after: right.files["copy.json"].sha256 });
       }
     }
     const report = { schema: "scrypath.ui-preservation-comparison.v1", status: "pending-review", mechanical_preservation: preservationPassed({ comparisons }) ? "pass" : "fail", before_source: before.source, after_source: after.source, environment: before.environment, comparisons, note: "Exact RGBA and geometry comparison; no aesthetic approval or automatic baseline acceptance." };
@@ -1594,7 +2014,9 @@ if (require.main === module) main(process.argv.slice(2)).catch((error) => {
 module.exports = {
   artifactRoot,
   artifactErrors,
+  addArtifactBytes,
   candidateServerCommands,
+  captureArtifactEntries,
   captureManifestErrors,
   collectPages,
   collectTaskPages,
@@ -1607,6 +2029,7 @@ module.exports = {
   composeSourceBindMounts,
   containerIdForService,
   disposableProvenanceErrors,
+  domStateErrors,
   dockerEnvironment,
   expectedCaptureIds,
   gitEnvironment,
@@ -1619,11 +2042,14 @@ module.exports = {
   manifestDigest,
   matrixErrors,
   normalizePgDump,
+  preservationPassed,
   persistAuthorizedSession,
   recordManifestAuthority,
   runCandidateTransition,
   runWithTeardown,
   sourceChangeErrors,
+  requiredImageKinds,
+  selectedDomStateChanged,
   stableDataIdentity,
   sourceIdentity,
   withComparisonDirectory,

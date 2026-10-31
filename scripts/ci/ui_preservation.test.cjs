@@ -51,7 +51,7 @@ test("preservation compare regression permits verification of an already compare
   let comparisons = 0;
   const helper = preservationAtBoundary(() => assert.fail("No external command belongs to orchestration unit test"), false, {
     load: () => ({ session, authority }),
-    compare: () => { comparisons += 1; return { comparisons: [{ differing_pixels: 0, total_pixels: 1, copy_changed: false, dimensions_changed: false }] }; },
+    compare: () => { comparisons += 1; return { comparisons: [{ differing_pixels: 0, total_pixels: 1, copy_changed: false, state_changed: false, dimensions_changed: false }] }; },
     persist: () => {}
   });
   assert.doesNotThrow(() => helper.boundary.compareSession("/fixture-session"));
@@ -64,7 +64,7 @@ test("preservation compare regression fails its command after retaining a visibl
   let persisted = false;
   const helper = preservationAtBoundary(() => assert.fail("No external command belongs to orchestration unit test"), false, {
     load: () => ({ session, authority }),
-    compare: () => ({ comparisons: [{ differing_pixels: 1, total_pixels: 1, copy_changed: false, dimensions_changed: false }] }),
+    compare: () => ({ comparisons: [{ differing_pixels: 1, total_pixels: 1, copy_changed: false, state_changed: false, dimensions_changed: false }] }),
     persist: () => { persisted = true; }
   });
   assert.throws(() => helper.boundary.compareSession("/fixture-session"), /preservation.*failed/i);
@@ -216,11 +216,17 @@ function validManifest() {
     const width = Number(widthText);
     const files = Object.fromEntries(["copy.json", "viewport.png", "full.png", "hover.png", "focus.png"].map((kind) => [kind, { path: `${id}--${kind}`, sha256: "c".repeat(64) }]));
     if (surface === "control-room" && width === 390) files["navigation.png"] = { path: `${id}--navigation.png`, sha256: "c".repeat(64) };
+    const kinds = ["viewport", "full", "hover", "focus", ...(surface === "control-room" && width === 390 ? ["navigation"] : [])];
+    const stability = Object.fromEntries(kinds.map((kind) => [kind, {
+      method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10_000,
+      samples: [0, 1].map((index) => ({ path: `${id}--${kind}-sample-${index}.png`, sha256: "d".repeat(64), state_path: `${id}--${kind}-sample-${index}.json`, state_sha256: "e".repeat(64), elapsed_ms: index * 16 })),
+      selected: 1,
+    }]));
     const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control Room", "Search"] } : undefined;
     const route = deployment === "host"
       ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
       : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/search?saved=manage", help: "/ops/help" })[surface];
-    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, mobile_navigation, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
+    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, stability, mobile_navigation, interaction_target: { tag: "button", role: "button", name: "Continue", href: null }, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha }));
   return {
@@ -240,6 +246,84 @@ function validManifest() {
   };
 }
 
+function domSnapshotFixture(capture, kind, overrides = {}) {
+  const rect = { x: 1, y: 2, width: 120, height: 30 };
+  const element = { ...capture.interaction_target };
+  const layoutAnchor = { rect, position: "static", display: "block", inset: { top: "auto", right: "auto", bottom: "auto", left: "auto" }, margin: { top: "0px", right: "0px", bottom: "0px", left: "0px" } };
+  const effective = capture.theme === "light" ? "light" : "dark";
+  return {
+    schema: "scrypath.ui-capture-state.v1",
+    body_text: "Fixture UI content",
+    controls: [{ ...element, value: null, checked: null, selected: null, disabled: false, expanded: null, pressed: null, rect }],
+    focus: { element, rect, focus_visible: true, outline: { style: kind === "focus" ? "solid" : "none", width: kind === "focus" ? "2px" : "0px", color: "oklch(0.6 0.2 250)" }, opacity: "1" },
+    hover: kind === "hover" ? [{ element, rect }] : [],
+    document_has_focus: true,
+    layout: { shell: null, shell_content: null, header: null, header_inner: null, main: layoutAnchor, main_inner: layoutAnchor, primary_article: null },
+    viewport: { inner: { width: capture.viewport.width, height: capture.viewport.height }, client: { width: capture.viewport.width, height: capture.viewport.height }, document: { width: capture.viewport.width, height: capture.viewport.height }, scroll: { x: 0, y: 0 }, dpr: 1, scale: 1 },
+    theme: { preference: capture.theme === "system-dark" ? "system" : capture.theme, effective, data_theme: effective, system_dark: capture.theme !== "light" },
+    ...overrides,
+  };
+}
+
+function domSidecarFixture(capture, kind, overrides = {}) {
+  const before = domSnapshotFixture(capture, kind);
+  const after = structuredClone(before);
+  const root = { ...after, before, after, ...overrides };
+  return root;
+}
+
+function writeCaptureArtifacts(directory, capture, { stateText = "Fixture UI content" } = {}) {
+  fs.mkdirSync(directory, { recursive: true });
+  const png = PNG.sync.write(new PNG({ width: capture.viewport.width, height: capture.viewport.height }));
+  const canonical = {
+    clock: capture.clock,
+    observed_at: capture.clock.utc,
+    deployment: capture.deployment,
+    surface: capture.surface,
+    route: capture.route,
+    viewport_width: capture.viewport.width,
+    page_width: capture.viewport.width,
+    theme: { preference: capture.theme === "system-dark" ? "system" : capture.theme, effective: capture.theme === "light" ? "light" : "dark" },
+    text: stateText,
+  };
+  for (const [key, artifact] of Object.entries(capture.files)) {
+    const bytes = key === "copy.json" ? Buffer.from(`${JSON.stringify(canonical, null, 2)}\n`) : png;
+    fs.writeFileSync(path.join(directory, artifact.path), bytes);
+    artifact.sha256 = require("node:crypto").createHash("sha256").update(bytes).digest("hex");
+  }
+  for (const [kind, proof] of Object.entries(capture.stability)) {
+    for (const sample of proof.samples) {
+      const imageBytes = png;
+      const state = domSidecarFixture(capture, kind);
+      state.body_text = stateText;
+      state.after.body_text = stateText;
+      state.before.body_text = stateText;
+      const stateBytes = Buffer.from(`${JSON.stringify(state, null, 2)}\n`);
+      fs.writeFileSync(path.join(directory, sample.path), imageBytes);
+      fs.writeFileSync(path.join(directory, sample.state_path), stateBytes);
+      sample.sha256 = require("node:crypto").createHash("sha256").update(imageBytes).digest("hex");
+      sample.state_sha256 = require("node:crypto").createHash("sha256").update(stateBytes).digest("hex");
+    }
+  }
+  return png;
+}
+
+function artifactDigest(file) {
+  return require("node:crypto").createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+}
+
+function writeCompleteArtifactSet(directory, manifest) {
+  fs.mkdirSync(directory, { recursive: true });
+  for (const capture of manifest.captures) writeCaptureArtifacts(directory, capture);
+  fs.writeFileSync(path.join(directory, "capture.json"), "{}\n");
+}
+
+function mutateSidecarText(file, text) {
+  const state = JSON.parse(fs.readFileSync(file, "utf8"));
+  for (const snapshot of [state, state.before, state.after]) if (snapshot) snapshot.body_text = text;
+  fs.writeFileSync(file, `${JSON.stringify(state, null, 2)}\n`);
+}
+
 function expected() {
   return { source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha, retained_project: "scrypath_ecommerce", retained_port: 4002, retained_volumes: ["scrypath_ecommerce_postgres_data"] };
 }
@@ -250,6 +334,239 @@ test("frozen preservation matrix covers 72 host and 63 standalone observations",
   assert.equal(ids.filter((id) => id.startsWith("standalone--")).length, 63);
   assert.equal(ids.length, 135);
   assert.deepEqual(preservation.matrixErrors(validManifest()), []);
+});
+
+test("parent stability regression rejects entries with no screenshot stability proof", () => {
+  const manifest = validManifest();
+  delete manifest.captures[0].stability.viewport;
+  assert.ok(preservation.matrixErrors(manifest).some((error) => /stability/i.test(error)));
+});
+
+test("focus capture rejects body focus even when the body claims a large rectangle", () => {
+  const capture = validManifest().captures[0];
+  const target = { tag: "button", role: "button", name: "Continue", href: null };
+  capture.interaction_target = target;
+  const sidecar = domSidecarFixture(capture, "focus");
+  const body = { tag: "body", role: "generic", name: null, href: null };
+  for (const snapshot of [sidecar, sidecar.before, sidecar.after]) {
+    snapshot.focus.element = body;
+    snapshot.focus.rect = { x: 0, y: 0, width: capture.viewport.width, height: capture.viewport.height };
+    snapshot.focus.focus_visible = false;
+  }
+  assert.ok(preservation.domStateErrors(sidecar, capture, "focus", "body-focus regression").some((error) => /intended focus target|focus-visible evidence/i.test(error)));
+});
+
+test("focus and hover proofs bind the intended visible target and opaque computed outline", () => {
+  const capture = validManifest().captures[0];
+  const baseline = domSidecarFixture(capture, "focus");
+  assert.deepEqual(preservation.domStateErrors(baseline, capture, "focus", "valid focus proof"), []);
+  const setFocusField = (sidecar, field, value) => {
+    for (const snapshot of [sidecar, sidecar.before, sidecar.after]) snapshot.focus[field] = value;
+  };
+
+  const wrongTarget = structuredClone(baseline);
+  setFocusField(wrongTarget, "element", { tag: "button", role: "button", name: "Other action", href: null });
+  assert.ok(preservation.domStateErrors(wrongTarget, capture, "focus", "wrong focus proof").some((error) => /intended focus target/.test(error)));
+
+  const targetNotVisible = structuredClone(baseline);
+  for (const snapshot of [targetNotVisible, targetNotVisible.before, targetNotVisible.after]) snapshot.controls[0].name = "Other action";
+  assert.ok(preservation.domStateErrors(targetNotVisible, capture, "focus", "missing visible target proof").some((error) => /not among the visible controls/.test(error)));
+
+  const wrongRect = structuredClone(baseline);
+  setFocusField(wrongRect, "rect", { x: 0, y: 0, width: 1440, height: 900 });
+  assert.ok(preservation.domStateErrors(wrongRect, capture, "focus", "wrong focus rectangle proof").some((error) => /rectangle does not match/.test(error)));
+
+  const hiddenFocus = structuredClone(baseline);
+  setFocusField(hiddenFocus, "focus_visible", false);
+  assert.ok(preservation.domStateErrors(hiddenFocus, capture, "focus", "hidden focus proof").some((error) => /focus-visible evidence/.test(error)));
+
+  const unfocusedDocument = structuredClone(baseline);
+  for (const snapshot of [unfocusedDocument, unfocusedDocument.before, unfocusedDocument.after]) snapshot.document_has_focus = false;
+  assert.ok(preservation.domStateErrors(unfocusedDocument, capture, "focus", "unfocused document proof").some((error) => /focus-visible evidence/.test(error)));
+
+  const noOutline = structuredClone(baseline);
+  setFocusField(noOutline, "outline", { style: "none", width: "0px", color: "oklch(0.6 0.2 250)" });
+  assert.ok(preservation.domStateErrors(noOutline, capture, "focus", "no outline proof").some((error) => /no positive computed width/.test(error)));
+
+  const transparent = structuredClone(baseline);
+  setFocusField(transparent, "outline", { style: "solid", width: "2px", color: "rgb(0 0 0 / 0)" });
+  assert.ok(preservation.domStateErrors(transparent, capture, "focus", "transparent outline proof").some((error) => /unknown or transparent/.test(error)));
+
+  const unknownColor = structuredClone(baseline);
+  setFocusField(unknownColor, "outline", { style: "solid", width: "2px", color: "color(display-p3 1 0 0)" });
+  assert.ok(preservation.domStateErrors(unknownColor, capture, "focus", "unknown outline proof").some((error) => /unknown or transparent/.test(error)));
+
+  const rgbColor = structuredClone(baseline);
+  setFocusField(rgbColor, "outline", { style: "solid", width: "2px", color: "rgb(20 40 60 / 50%)" });
+  assert.deepEqual(preservation.domStateErrors(rgbColor, capture, "focus", "RGB outline proof"), []);
+
+  const wrongHover = domSidecarFixture(capture, "hover");
+  for (const snapshot of [wrongHover, wrongHover.before, wrongHover.after]) snapshot.hover[0].element = { ...snapshot.hover[0].element, name: "Other action" };
+  assert.ok(preservation.domStateErrors(wrongHover, capture, "hover", "wrong hover proof").some((error) => /intended interaction target/.test(error)));
+});
+
+test("stability structure binds exact sample paths, monotonic elapsed bounds, and final selection", () => {
+  const manifest = validManifest();
+  const capture = manifest.captures[0];
+  capture.stability.viewport.samples[0].path = capture.stability.viewport.samples[1].path;
+  assert.ok(preservation.matrixErrors(manifest).some((error) => /sample path or digest is invalid/.test(error)));
+
+  const elapsed = validManifest();
+  elapsed.captures[0].stability.viewport.samples[1].elapsed_ms = 10_001;
+  assert.ok(preservation.matrixErrors(elapsed).some((error) => /elapsed time.*bounded/.test(error)));
+
+  const monotonic = validManifest();
+  monotonic.captures[0].stability.viewport.samples[0].elapsed_ms = 5;
+  monotonic.captures[0].stability.viewport.samples[1].elapsed_ms = 0;
+  assert.ok(preservation.matrixErrors(monotonic).some((error) => /elapsed time.*monotonic/.test(error)));
+
+  const selection = validManifest();
+  selection.captures[0].stability.viewport.selected = 0;
+  assert.ok(preservation.matrixErrors(selection).some((error) => /final stability sample/.test(error)));
+
+  const extraKind = validManifest();
+  extraKind.captures[0].stability.extra = structuredClone(extraKind.captures[0].stability.viewport);
+  assert.ok(preservation.matrixErrors(extraKind).some((error) => /missing or contain unmatched kinds/.test(error)));
+});
+
+test("capture interaction target must be a named allowed control", () => {
+  const badTag = validManifest();
+  badTag.captures[0].interaction_target.tag = "body";
+  assert.ok(preservation.matrixErrors(badTag).some((error) => /allowed interactive control tag/.test(error)));
+
+  const unnamed = validManifest();
+  unnamed.captures[0].interaction_target.name = "  ";
+  assert.ok(preservation.matrixErrors(unnamed).some((error) => /non-empty accessible name/.test(error)));
+
+  const absent = validManifest();
+  delete absent.captures[0].interaction_target;
+  assert.ok(preservation.matrixErrors(absent).some((error) => /interaction target semantic element is invalid/.test(error)));
+});
+
+test("storefront DOM-state proof requires the actual observed theme attributes", () => {
+  const capture = validManifest().captures.find(({ id }) => id === "host--storefront--system-dark--1440");
+  const sidecar = domSidecarFixture(capture, "viewport");
+  for (const snapshot of [sidecar, sidecar.before, sidecar.after]) {
+    snapshot.theme.preference = null;
+    snapshot.theme.effective = null;
+  }
+  assert.ok(preservation.domStateErrors(sidecar, capture, "viewport", "storefront theme proof").some((error) => /theme state does not match/.test(error)));
+});
+
+test("stability proof verifies every sample, sidecar, selected PNG, and finite artifact bound", () => {
+  fs.mkdirSync(preservation.artifactRoot, { recursive: true });
+  const directory = fs.mkdtempSync(path.join(preservation.artifactRoot, "stability-proof-test-"));
+  const manifest = validManifest();
+  try {
+    writeCompleteArtifactSet(directory, manifest);
+    assert.deepEqual(preservation.artifactErrors(manifest, directory), []);
+
+    const capture = manifest.captures[0];
+    const proof = capture.stability.viewport;
+    const firstImage = path.join(directory, proof.samples[0].path);
+    const lastImage = path.join(directory, proof.samples[1].path);
+    const selectedImage = path.join(directory, capture.files["viewport.png"].path);
+    const firstState = path.join(directory, proof.samples[0].state_path);
+    const secondState = path.join(directory, proof.samples[1].state_path);
+    const originalPng = fs.readFileSync(firstImage);
+
+    const alternate = PNG.sync.read(originalPng);
+    alternate.data[0] = alternate.data[0] ^ 1;
+    const changedPng = PNG.sync.write(alternate);
+    fs.writeFileSync(lastImage, changedPng);
+    proof.samples[1].sha256 = artifactDigest(lastImage);
+    const unstableImages = preservation.artifactErrors(manifest, directory);
+    assert.ok(unstableImages.some((error) => error.includes("Final two screenshot samples are not byte-identical")));
+    assert.ok(unstableImages.some((error) => error.includes("Selected screenshot does not match the final stability sample")));
+    fs.writeFileSync(lastImage, originalPng);
+    proof.samples[1].sha256 = artifactDigest(lastImage);
+
+    fs.writeFileSync(selectedImage, changedPng);
+    capture.files["viewport.png"].sha256 = artifactDigest(selectedImage);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("Selected screenshot does not match the final stability sample")));
+    fs.writeFileSync(selectedImage, originalPng);
+    capture.files["viewport.png"].sha256 = artifactDigest(selectedImage);
+
+    mutateSidecarText(firstState, "tampered without updating the sidecar digest");
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("artifact digest mismatch")));
+    const originalState = domSidecarFixture(capture, "viewport");
+    const originalStateBytes = Buffer.from(`${JSON.stringify(originalState, null, 2)}\n`);
+    fs.writeFileSync(firstState, originalStateBytes);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+
+    mutateSidecarText(secondState, "different but internally stable sample");
+    proof.samples[1].state_sha256 = artifactDigest(secondState);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("DOM state changed between screenshot samples")));
+    fs.writeFileSync(secondState, originalStateBytes);
+    proof.samples[1].state_sha256 = artifactDigest(secondState);
+
+    const transitioned = JSON.parse(fs.readFileSync(firstState, "utf8"));
+    transitioned.after.body_text = "changed while screenshot was being taken";
+    fs.writeFileSync(firstState, `${JSON.stringify(transitioned, null, 2)}\n`);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("DOM state changed across the screenshot")));
+    fs.writeFileSync(firstState, originalStateBytes);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+
+    const geometry = JSON.parse(fs.readFileSync(firstState, "utf8"));
+    for (const snapshot of [geometry, geometry.before, geometry.after]) for (const anchor of Object.values(snapshot.layout)) if (anchor) { anchor.rect.width = 0; anchor.rect.height = 0; }
+    fs.writeFileSync(firstState, `${JSON.stringify(geometry, null, 2)}\n`);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("no positive-area layout anchor")));
+    fs.writeFileSync(firstState, originalStateBytes);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+
+    fs.unlinkSync(firstImage);
+    fs.symlinkSync(path.basename(lastImage), firstImage);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("artifact is not a regular file")));
+    fs.unlinkSync(firstImage);
+    fs.writeFileSync(firstImage, originalPng);
+    proof.samples[0].sha256 = artifactDigest(firstImage);
+
+    fs.unlinkSync(firstState);
+    fs.symlinkSync(path.basename(secondState), firstState);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("artifact is not a regular file")));
+    fs.unlinkSync(firstState);
+    fs.writeFileSync(firstState, originalStateBytes);
+    proof.samples[0].state_sha256 = artifactDigest(firstState);
+
+    const oversizedCanvasHeader = Buffer.from(originalPng.subarray(0, 24));
+    oversizedCanvasHeader.writeUInt32BE(5_000, 16);
+    oversizedCanvasHeader.writeUInt32BE(5_000, 20);
+    fs.writeFileSync(firstImage, oversizedCanvasHeader);
+    proof.samples[0].sha256 = artifactDigest(firstImage);
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("24,000,000-pixel artifact bound")));
+
+    const entries = preservation.captureArtifactEntries(capture);
+    assert.equal(entries.filter(({ type }) => type === "sample-state").length, Object.values(capture.stability).reduce((sum, item) => sum + item.samples.length, 0));
+    assert.throws(() => preservation.addArtifactBytes(2 * 1024 * 1024 * 1024 - 1, 2), /total artifact bound/);
+    assert.throws(() => preservation.addArtifactBytes(0, 0), /positive file sizes/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("paired selected DOM states are compared even when image pixels match", () => {
+  fs.mkdirSync(preservation.artifactRoot, { recursive: true });
+  const beforeDirectory = fs.mkdtempSync(path.join(preservation.artifactRoot, "state-before-test-"));
+  const afterDirectory = fs.mkdtempSync(path.join(preservation.artifactRoot, "state-after-test-"));
+  const beforeCapture = validManifest().captures[0];
+  const afterCapture = structuredClone(beforeCapture);
+  try {
+    writeCaptureArtifacts(beforeDirectory, beforeCapture);
+    writeCaptureArtifacts(afterDirectory, afterCapture);
+    const selected = afterCapture.stability.viewport.selected;
+    const sample = afterCapture.stability.viewport.samples[selected];
+    assert.deepEqual(fs.readFileSync(path.join(beforeDirectory, beforeCapture.files["viewport.png"].path)), fs.readFileSync(path.join(afterDirectory, afterCapture.files["viewport.png"].path)));
+    const file = path.join(afterDirectory, sample.state_path);
+    mutateSidecarText(file, "same pixels, changed rendered text");
+    sample.state_sha256 = artifactDigest(file);
+    assert.equal(preservation.selectedDomStateChanged(beforeCapture, afterCapture, beforeDirectory, afterDirectory, "viewport"), true);
+    assert.equal(preservation.preservationPassed({ comparisons: [{ differing_pixels: 0, total_pixels: 1, copy_changed: false, state_changed: true, dimensions_changed: false }] }), false);
+  } finally {
+    fs.rmSync(beforeDirectory, { recursive: true, force: true });
+    fs.rmSync(afterDirectory, { recursive: true, force: true });
+  }
 });
 
 test("canonical capture IDs bind route, width, and viewport metadata as one tuple", () => {
