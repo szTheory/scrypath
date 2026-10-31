@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const vm = require("node:vm");
 const { PNG } = require(path.join(__dirname, "../../examples/scrypath_ecommerce/node_modules/pngjs"));
 
 const preservation = fs.existsSync(path.join(__dirname, "ui_preservation.cjs")) ? require("./ui_preservation.cjs") : {};
@@ -12,6 +13,71 @@ const sourceSha = "a".repeat(40);
 const treeOid = "d".repeat(40);
 const treeSha = "b".repeat(64);
 const project = "scrypath-p185-0123456789abcdef";
+
+// Exercise the real private lifecycle/state functions with command/FS boundaries
+// substituted by this test loader; no Docker daemon or preview is accessed.
+function preservationAtBoundary(spawnSync, unavailablePreview = false) {
+  const filename = path.join(__dirname, "ui_preservation.cjs");
+  const boundaryFs = new Proxy(fs, { get(target, property) {
+    if (unavailablePreview && ["lstatSync", "readFileSync"].includes(property)) return (file, ...args) => {
+      if (String(file).endsWith("/.planning/UI-PREVIEW.json")) throw new Error("retained preview pointer is unavailable");
+      return target[property](file, ...args);
+    };
+    return target[property];
+  } });
+  const context = { module: { exports: {} }, __dirname, __filename: filename, process, Buffer, URL, console, require(name) {
+    if (name === "node:child_process") return { spawnSync };
+    if (name === "node:fs") return boundaryFs;
+    return require(name);
+  } };
+  vm.runInNewContext(fs.readFileSync(filename, "utf8") + "\nmodule.exports.boundary = {stackDataIdentity, teardownOwnedProject};", context, { filename });
+  return context.module.exports;
+}
+
+test("parent regression binds rendered Meilisearch task history in the actual state reader", () => {
+  function identity(status, finishedAt) {
+    const helper = preservationAtBoundary((command, args) => {
+      assert.equal(command, "docker");
+      if (args.includes("pg_dump")) return { status: 0, stdout: "INSERT INTO products VALUES (1);", stderr: "" };
+      const url = new URL(args.at(-1));
+      const payload = url.pathname === "/indexes" ? { results: [{ uid: "products", primaryKey: "id" }], offset: 0, limit: 1000, total: 1 }
+        : url.pathname.endsWith("/settings") ? {}
+          : url.pathname.endsWith("/documents") ? { results: [], offset: 0, limit: 1000, total: 0 }
+            : url.pathname === "/tasks" ? { results: [{ uid: 4, indexUid: "products", status, type: "documentAdditionOrUpdate", finishedAt }], total: 1, from: 4, next: null, limit: 1000 }
+              : assert.fail(`Unexpected state request ${url}`);
+      return { status: 0, stdout: JSON.stringify(payload), stderr: "" };
+    });
+    return helper.boundary.stackDataIdentity({ compose: [], env: {} });
+  }
+  assert.notEqual(identity("succeeded", "2026-10-31T12:00:00Z"), identity("failed", "2026-10-31T12:00:00Z"));
+  assert.notEqual(identity("succeeded", "2026-10-31T12:00:00Z"), identity("succeeded", "2026-10-31T13:00:00Z"));
+});
+
+test("parent regression reports full-page dimension changes instead of aborting", () => {
+  const { PNG } = require(path.join(__dirname, "../../examples/scrypath_ecommerce/node_modules/pngjs"));
+  const before = new PNG({ width: 2, height: 2 });
+  const after = new PNG({ width: 2, height: 3 });
+  before.data.fill(255); after.data.fill(255);
+  const result = preservation.comparePng(PNG.sync.write(before), PNG.sync.write(after));
+  assert.equal(result.total, 6);
+  assert.ok(result.pixels >= 2);
+  assert.deepEqual(result.before_dimensions, { width: 2, height: 2 });
+  assert.deepEqual(result.after_dimensions, { width: 2, height: 3 });
+});
+
+test("parent regression cleans exact disposable resources without a live retained pointer", () => {
+  const commands = [];
+  const helper = preservationAtBoundary((command, args) => {
+    assert.equal(command, "docker"); commands.push(args);
+    return { status: 0, stdout: "", stderr: "" };
+  }, true);
+  const session = { schema: "scrypath.ui-session.v2", status: "starting", session_id: "0123456789abcdef", project,
+    ports: { web: 53111, standalone: 53112 }, source: {}, retained_inventory: { project: "scrypath_ecommerce", port: 4002, volumes: [], container: "retained-web", container_id: "retained-id" } };
+  const authority = helper.createSessionAuthority("/private/tmp/phase185-test/ui-session.json", session);
+  assert.doesNotThrow(() => helper.boundary.teardownOwnedProject(authority));
+  assert.equal(commands.length, 3);
+  assert.ok(commands.every((args) => args.join(" ").includes(`label=com.docker.compose.project=${project}`)));
+});
 
 function validManifest() {
   const captures = preservation.expectedCaptureIds().map((id) => {
