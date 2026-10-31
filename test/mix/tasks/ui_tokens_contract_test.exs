@@ -215,6 +215,18 @@ defmodule Mix.Tasks.UiTokensContractTest do
   end
 
   @tag :token_review
+  test "review requires one unambiguous live theme name" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @token_path), json_file)
+    css = File.read!(Path.join(@root, @css_path))
+    for name <- ["light", "unrecognized"] do
+      File.write!(css_file, replace_dark_theme!(css, "name: \"dark\";", "name: \"dark\";\n  name: \"#{name}\";"))
+      assert_raise Mix.Error, ~r/exactly one name/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+    end
+  end
+
+  @tag :token_review
   test "review retains CSS none as extension metadata instead of an undefined token type" do
     tokens = read_tokens!(@root)
     refute Map.has_key?(tokens["shadow"]["glow"], "light")
