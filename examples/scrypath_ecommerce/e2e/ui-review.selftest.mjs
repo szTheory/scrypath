@@ -612,7 +612,8 @@ test("native-invisible finite animation does not block entry preparation on its 
   try {
     await readiness.animationObserved;
     await Promise.resolve();
-    assert.deepEqual(checkArguments, [[]], "use only native checkVisibility() default options");
+    assert.ok(checkArguments.length >= 1, "native visibility is checked during preparation");
+    assert.ok(checkArguments.every((args) => args.length === 0), "use only native checkVisibility() default options");
     assert.equal(events.includes("await-finished:hidden-scrollbar-transition"), false, "native-invisible transition remains unresolved and is not awaited");
     await preparation;
     assert.ok(events.filter((event) => event === "run-frame").length >= 2, "font and two-frame settlement still run");

@@ -361,7 +361,15 @@ export async function prepareCaptureStateInPage() {
   const finiteActiveAnimations = () => document.getAnimations().filter((animation) => {
     const timing = animation.effect?.getComputedTiming?.();
     const active = animation.pending === true || animation.playState === "pending" || animation.playState === "running";
-    return active && Number.isFinite(timing?.endTime);
+    if (!active || !Number.isFinite(timing?.endTime)) return false;
+    const target = animation.effect?.target;
+    if (!target) return true;
+    try {
+      // Only a native false opts a finite animation out; unknown targets and API failures fail closed.
+      return typeof target.checkVisibility !== "function" || target.checkVisibility() !== false;
+    } catch {
+      return true;
+    }
   });
   const settleFrames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   const maxPasses = 12;
