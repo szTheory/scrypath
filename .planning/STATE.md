@@ -4,38 +4,38 @@ milestone: v1.45
 milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
-status: executing
-stopped_at: Phase 185 Plans 01 and 04 complete; continue Wave 2 Plan 02; retained-preview source stop preserved.
-last_updated: "2026-10-31T12:59:05.622Z"
+status: awaiting_approval
+stopped_at: Phase 185 Plans 01/04 integrated; Plan 02 retained pending separate bootstrap PR 124 merge authority; retained-preview stop preserved.
+last_updated: "2026-10-31T15:14:00Z"
 last_activity: 2026-10-31
-last_activity_desc: Phase 185 execution started
-state_head: 73c2afc2b4837a4c3cbe517c692cb9464218a896
+last_activity_desc: Phase 185 bootstrap delivery boundary prepared for review
+state_head: 0d39fa8b40e3a666d36256ac9cf95b6313f9e732
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 38
-  completed_plans: 28
-  percent: 74
+  completed_plans: 30
+  percent: 79
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 185 (Executable UI quality foundations) — EXECUTING
-Plan: 2 of 10 complete (01 and 04); Wave 2 Plan 02 next
-Status: Executing Phase 185
-Last activity: 2026-10-31 — Phase 185 execution started
+Phase: 185 (Executable UI quality foundations) — BOOTSTRAP MERGE APPROVAL PENDING
+Plan: 2 of 10 integrated (01 and 04); Plan 02 retained in its isolated worktree
+Status: Awaiting explicit authority to merge only the bootstrap inventory PR
+Last activity: 2026-10-31 — Plan 02 scanner repaired; separate bootstrap delivery proved
 
-Progress: [███████░░░] 74%
+Progress: [████████░░] 79%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Execute Wave 2 Plan 02. Plan 04 paid/mock judge retirement passed Node, canonical repository and docs checks; its summary records legacy compatibility limits. Plan 01 contrast enforcement passed its final canonical command with actual negative subprocess witnesses; its summary records scope and limits. No phase completion is claimed. Plans 08/09 now use planned automated verification under the maintainer-approved correction, retaining all 61 obligations and nonblocking subjective critique. The retained-preview source stop remains in force.
+Next: Approve or decline the recommended squash merge of [data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124). The exact initial inventory must land before later reductions, otherwise the eventual squash fails the first-introduction contract. [Delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) and [.continue-here.md](phases/185-executable-ui-quality-foundations/.continue-here.md) preserve verification, worktree ownership and continuation steps. Do not redispatch Plan 02 or claim its private summary is integrated completion. No phase completion is claimed. Plans 08/09 retain all 61 planned automated obligations and nonblocking subjective critique under the maintainer-approved correction. The retained-preview source stop remains in force.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Execution: Phase 184 has 12/12 integrated plans and passed goal verification. Tracking completion precedes terminal CI by design. Final source acceptance is established only by the external terminal receipt for the committed tracking successor; no Phase 185 work is authorized by this transition.
+Execution: Phase 184 has 12/12 integrated plans and passed goal verification. Tracking completion precedes terminal CI by design. Final source acceptance is established only by the external terminal receipt for the committed tracking successor; the later explicit Phase 185 execution request authorizes the current phase work, with main merge remaining a separate boundary.
 
 ## Evidence and boundaries
 
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-31).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 185 Wave 2 Plan 02 is next after verified Plans 01 and 04; known Ops dependency advisories remain unaccepted.
+Current focus: Phase 185 Plan 02 bootstrap merge decision after verified Plans 01 and 04; dependency advisories remain unaccepted.
 
 ## Phase 184 source and terminal authority
 
@@ -64,6 +64,8 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 
 ## Blockers and concerns
 
+- Phase 185: data-only bootstrap PR #124 requires explicit main-merge authority before implementation integration and later cleanup. Current source and exact-head CI evidence are recorded in the delivery review; the phase remains incomplete. The repaired Plan 02 worktree is retained, not abandoned or safe to redispatch.
+
 - Phase 184: two Ops Cloak/Cloak Ecto findings remain affected and unaccepted. The retained preview failed current-source preflight and remains untouched; no current rendered or independent visual approval is claimed. Two judgment-tier intent annotations remain flagged-unverified/nonblocking, without simulated acceptance.
 - WR-03: baseline-only same-run rerun artifact naming is deferred in REVIEW-DISPOSITION. Fresh closeout dispatches work; future rerun support must change upload names and ci_monitor consumers together. No human risk approval is implied.
 - PR #122 merge and Hex publication remain separate pending work from the v1.44 archive boundary. The 19 inherited audit-debt items and historical deferrals remain in their archive/tracker.
@@ -72,9 +74,9 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 
 ## Session continuity
 
-Last session: 2026-10-31T03:30:14.306Z
-Stopped at: Phase 185 plans verified; next $gsd-execute-phase 185. Implementation not started; retained-preview source stop preserved.
-Resume file: .planning/phases/185-executable-ui-quality-foundations/185-01-PLAN.md
+Last session: 2026-10-31
+Stopped at: Phase 185 Plans 01/04 integrated; repaired Plan 02 held pending bootstrap PR #124 merge authority.
+Resume file: .planning/phases/185-executable-ui-quality-foundations/.continue-here.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
 

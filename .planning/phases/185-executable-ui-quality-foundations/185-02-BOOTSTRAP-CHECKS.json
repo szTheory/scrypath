@@ -1,0 +1,150 @@
+{
+  "bootstrap_pr": "https://github.com/szTheory/scrypath/pull/124",
+  "bootstrap_head": "d31e4fc422edb8ac3413556bb7c65fe8b6b01fda",
+  "base_main": "6b65f8a019ab467c11357ab59942ce67feb62735",
+  "changed_files": [
+    "scripts/ci/ui-literal-baseline.json"
+  ],
+  "draft": true,
+  "merged": false,
+  "merge_authority": "pending",
+  "workflow_run": 41213404257,
+  "jobs": [
+    {
+      "name": "core (required)",
+      "id": 124572877093,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.19.0, 26.2.5)",
+      "id": 124572877212,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "repository-contracts (required)",
+      "id": 124572877224,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "package (required)",
+      "id": 124572877225,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.19.0, 28.1)",
+      "id": 124572877227,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "deep-quality (advisory)",
+      "id": 124572877231,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "backend (required)",
+      "id": 124572877252,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "ops-ui-path",
+      "id": 124572877258,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.18.4, 27.3)",
+      "id": 124572877268,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "ecommerce-mounted (required)",
+      "id": 124572877288,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "phoenix-example (advisory)",
+      "id": 124572877301,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.17.3, 26.2.5)",
+      "id": 124572877312,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "ecommerce-e2e (advisory)",
+      "id": 124572878122,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "coverage (advisory)",
+      "id": 124572878327,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "ops-ui (path-scoped)",
+      "id": 124572916818,
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "closeout-attestation",
+      "id": 124573919179,
+      "status": "completed",
+      "conclusion": "skipped"
+    }
+  ],
+  "implementation_verification": {
+    "code_cutoff": "f62e8a9090417758a2608e436574fdb90eb61db7",
+    "node": {
+      "command": "node --test scripts/ci/ui_literal_policy.test.cjs",
+      "passed": 14,
+      "failed": 0,
+      "log": "/private/tmp/phase185-02-final-node.log"
+    },
+    "canonical": {
+      "command": "mix verify.repository_contracts",
+      "exit": 0,
+      "passed": 131,
+      "failed": 0,
+      "log": "/private/tmp/phase185-02-final-canonical.log"
+    },
+    "production": {
+      "command": "node scripts/ci/ui_literal_policy.cjs",
+      "exit": 0,
+      "occurrences": 45,
+      "log": "/private/tmp/phase185-02-final-policy.log"
+    },
+    "hosted_acceptance": false
+  },
+  "audit": {
+    "status": "failed_unaccepted",
+    "unchanged_lockfiles": true,
+    "packages": [
+      "bandit",
+      "phoenix_html",
+      "cloak",
+      "cloak_ecto"
+    ],
+    "job_url": "https://github.com/szTheory/scrypath/actions/runs/41213404257/job/124572877231",
+    "log": "/private/tmp/phase185-bootstrap-final-advisory-audit.log"
+  },
+  "limits": [
+    "Data PR hosted checks do not establish hosted scanner implementation acceptance",
+    "No phase-goal completion, independent visual review or dependency-risk acceptance",
+    "Retained-preview source stop remains in force"
+  ]
+}
