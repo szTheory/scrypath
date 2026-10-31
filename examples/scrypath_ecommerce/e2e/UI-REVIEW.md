@@ -66,6 +66,10 @@ Keep the physical implementation checkout that owns the session available throug
 Disposable observation time is explicit test infrastructure. Both app services receive the existing phase185 E2E run ID and the same read-only external clock directory. A warmup timestamp permits startup probes; after seeded state settles, the helper freezes the final timestamp and records its exact bytes in the independent authority. Actual application-clock probes must match in both apps. Chromium fixes only `Date`, keeping timers running, and uses UTC and en-US. Each entry and copy record must match that clock. The same file, time and backend state survive candidate replacement. Production builds always use system time. No source-image masking, copy normalization or timer/VM override supplies parity.
 
 
+## Current repeatability limit
+
+The source-pinned before/candidate path has been exercised end to end and preserved the same source, browser/platform, and database/search digest. Its comparison is **not** a repeatability pass: server-generated `Checked` timestamps vary between captures, and the accessibility report includes changing LiveView `data-phx-id` selectors. The existing Playwright clock controls browser time only; it does not freeze Elixir `DateTime.utc_now()` calls. Keep these copy and image differences visible. Do not mask timestamps or accessibility findings, and do not call the pair pixel/copy parity until a reviewed test-only server-clock seam and stable accessibility target are verified.
+
 ## Record the result
 
 Populate `review.json` with per-surface and per-dimension verdicts, reviewed capture IDs, concrete rationale, findings, and journey/state coverage receipts. Preserve unknown/uncovered states. A new capture starts pending and cannot silently become accepted just because checks pass. Validate the review record with:
