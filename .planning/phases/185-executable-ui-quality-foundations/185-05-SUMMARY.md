@@ -35,7 +35,8 @@ key-decisions:
   - "Disposable captures use a unique, source-pinned full Compose stack with owned volumes, loopback ports, and label-scoped teardown."
   - "Capture manifests and comparisons remain pending review; completeness and pixel differences do not grant design approval."
   - "No CSS, controller, or template changes were made in this plan."
-requirements-completed: [UIF-02, UIF-03]
+requirements-completed: []
+status: review_fixes_required
 coverage:
   - id: D1
     description: "Disposable capture orchestration independently verifies source and resource ownership, captures paired artifacts, and reports pixel/copy differences while preserving the guarded retained path."
@@ -64,6 +65,8 @@ duration: 48min
 completed: 2026-10-31
 status: complete
 ---
+
+> Parent integration note: this historical capture implementation is integrated as ancestry for its active corrective checkout. Plan 05 is incomplete: ownership/integrity/data/lifecycle and repeatable-clock proof remain pending. Old raw captures are archived unchanged. No paired preservation acceptance or human approval is claimed.
 
 # Phase 185 Plan 05: Disposable UI Preservation Summary
 
