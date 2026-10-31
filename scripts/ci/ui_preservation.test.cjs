@@ -587,3 +587,27 @@ test("retained-preview bind source maps Docker Desktop host paths through the ex
 test("new disposable evidence is rooted outside the implementation checkout", () => {
   assert.equal(preservation.artifactRoot, "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185");
 });
+
+
+test("clock publication waits for exact bytes across transient bind-mount visibility gaps", async () => {
+  const expected = "2026-10-31T19:00:00.000Z\n";
+  let reads = 0;
+  const actual = await preservation.waitForPublishedClock(() => {
+    reads += 1;
+    if (reads === 1) return "2026-10-31T18:00:00.000Z\n";
+    if (reads === 2) throw Object.assign(new Error("mount entry temporarily absent"), { code: "CLOCK_PUBLICATION_PENDING" });
+    return expected;
+  }, expected, { timeoutMs: 100, intervalMs: 1 });
+  assert.equal(actual, expected);
+  assert.equal(reads, 3);
+});
+
+test("clock publication stays bounded and preserves unrelated command failures", async () => {
+  let reads = 0;
+  await assert.rejects(preservation.waitForPublishedClock(() => { reads += 1; return "wrong bytes\n"; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), /not published within/);
+  assert.ok(reads >= 2);
+  const permission = new Error("Docker permission denied");
+  let failedReads = 0;
+  await assert.rejects(preservation.waitForPublishedClock(() => { failedReads += 1; throw permission; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), error => error === permission);
+  assert.equal(failedReads, 1);
+});

@@ -1165,6 +1165,12 @@ async function waitForRoute(baseUrl, route) {
   if (!response.ok) throw new Error(`Disposable route ${url} returned ${response.status}.`);
 }
 
+async function waitForPublishedClock(readClock, expected, options = {}) {
+  const actual = await readClock();
+  if (actual !== expected) throw new Error("Clock bytes have not reached the container.");
+  return actual;
+}
+
 function verifyStackClock(stack, authority) {
   const clock = assertClockFixture(authority);
   stack.clockMounts = [];
@@ -1580,6 +1586,7 @@ module.exports = {
   sourceIdentity,
   withComparisonDirectory,
   writeClockFixture,
+  waitForPublishedClock,
   sameDockerIdSet,
   validateSessionAuthority,
 };

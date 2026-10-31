@@ -1,0 +1,15 @@
+{
+  "command": "node --test --test-reporter=tap --test-name-pattern='clock publication waits for exact bytes across transient bind-mount visibility gaps' scripts/ci/ui_preservation.test.cjs",
+  "exitCode": 1,
+  "output": "TAP version 13\n# Subtest: clock publication waits for exact bytes across transient bind-mount visibility gaps\nnot ok 1 - clock publication waits for exact bytes across transient bind-mount visibility gaps\n  ---\n  duration_ms: 0.841625\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:592:1'\n  failureType: 'testCodeFailure'\n  error: 'Clock bytes have not reached the container.'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    Object.waitForPublishedClock (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.cjs:1170:34)\n    async TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:595:18)\n    async Test.run (node:internal/test_runner/test:1409:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 58.302083\n",
+  "targetTest": "clock publication waits for exact bytes across transient bind-mount visibility gaps",
+  "targetFile": "scripts/ci/ui_preservation.test.cjs",
+  "expected": "Wait for exact published bytes through transient old/missing mount entries",
+  "actual": "One-shot extracted clock publication check rejects warmup bytes immediately",
+  "runtimeEvidence": [
+    "/private/tmp/scrypath-phase185-execution/parent-calibration-before.log",
+    "/private/tmp/scrypath-phase185-execution/clock-mount-diagnostic-cd2bd583fb5a.json",
+    "/private/tmp/scrypath-phase185-execution/clock-mount-diagnostic-5dcfaf0baa61.json"
+  ],
+  "scope": "Actual calibration failed before capture; no before evidence accepted. One-shot publication seam extracted for a behavioral regression before bounded waiting."
+}
