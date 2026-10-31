@@ -92,15 +92,15 @@ const PAIR_RULES = [
   { fg: "base-content",       bg: "base-100",   role: "text" },
   { fg: "base-content",       bg: "base-200",   role: "text" },
   { fg: "base-content",       bg: "base-300",   role: "text" },
-  { fg: "primary-content",    bg: "primary",    role: "ui"   }, // button pairs → 3.0 threshold
+  { fg: "primary-content",    bg: "primary",    role: "text" }, // ordinary button labels require 4.5
   { fg: "primary-content",    bg: "primary-strong", role: "text" }, // selected text fills → 4.5 threshold
-  { fg: "secondary-content",  bg: "secondary",  role: "ui"   },
-  { fg: "accent-content",     bg: "accent",     role: "ui"   },
-  { fg: "neutral-content",    bg: "neutral",    role: "ui"   },
-  { fg: "info-content",       bg: "info",       role: "ui"   },
-  { fg: "success-content",    bg: "success",    role: "ui"   },
-  { fg: "warning-content",    bg: "warning",    role: "ui"   },
-  { fg: "error-content",      bg: "error",      role: "ui"   },
+  { fg: "secondary-content",  bg: "secondary",  role: "text" },
+  { fg: "accent-content",     bg: "accent",     role: "text" },
+  { fg: "neutral-content",    bg: "neutral",    role: "text" },
+  { fg: "info-content",       bg: "info",       role: "text" },
+  { fg: "success-content",    bg: "success",    role: "text" },
+  { fg: "warning-content",    bg: "warning",    role: "text" },
+  { fg: "error-content",      bg: "error",      role: "text" },
 ];
 
 // D-14: role → AA / AAA thresholds
