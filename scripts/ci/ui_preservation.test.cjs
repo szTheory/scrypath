@@ -41,7 +41,7 @@ test("parent regression binds rendered Meilisearch task history in the actual st
       if (args.includes("pg_dump")) return { status: 0, stdout: "INSERT INTO products VALUES (1);", stderr: "" };
       const url = new URL(args.at(-1));
       const payload = url.pathname === "/indexes" ? { results: [{ uid: "products", primaryKey: "id" }], offset: 0, limit: 1000, total: 1 }
-        : url.pathname.endsWith("/settings") ? {}
+        : url.pathname.endsWith("/settings") || url.pathname.endsWith("/stats") ? {}
           : url.pathname.endsWith("/documents") ? { results: [], offset: 0, limit: 1000, total: 0 }
             : url.pathname === "/tasks" ? { results: [{ uid: 4, indexUid: "products", status, type: "documentAdditionOrUpdate", finishedAt }], total: 1, from: 4, next: null, limit: 1000 }
               : assert.fail(`Unexpected state request ${url}`);
@@ -61,6 +61,7 @@ test("parent regression reports full-page dimension changes instead of aborting"
   const result = preservation.comparePng(PNG.sync.write(before), PNG.sync.write(after));
   assert.equal(result.total, 6);
   assert.ok(result.pixels >= 2);
+  assert.equal(result.dimensions_changed, true);
   assert.deepEqual(result.before_dimensions, { width: 2, height: 2 });
   assert.deepEqual(result.after_dimensions, { width: 2, height: 3 });
 });
@@ -77,6 +78,33 @@ test("parent regression cleans exact disposable resources without a live retaine
   assert.doesNotThrow(() => helper.boundary.teardownOwnedProject(authority));
   assert.equal(commands.length, 3);
   assert.ok(commands.every((args) => args.join(" ").includes(`label=com.docker.compose.project=${project}`)));
+});
+
+test("task pagination rejects truncated, looping, oversized and changed histories", () => {
+  const page = (uid, next, total = 2) => ({ results: [{ uid, status: "succeeded" }], total, from: uid, next, limit: 1000 });
+  const requested = [];
+  const result = preservation.collectTaskPages((from) => { requested.push(from); return from === null ? page(2, 1) : page(1, null); });
+  assert.deepEqual(requested, [null, 1]);
+  assert.deepEqual(result.map(({ uid }) => uid), [2, 1]);
+  for (const producer of [() => page(2, null), () => page(2, 2), () => page(2, 1, 1001), (from) => from === null ? page(2, 1) : page(1, null, 3)]) {
+    assert.throws(() => preservation.collectTaskPages(producer), /Task history/);
+  }
+  assert.deepEqual(preservation.collectTaskPages(() => ({ results: [], total: 0, from: null, next: null, limit: 1000 })), []);
+});
+
+test("comparison output is retryable after failure and never overwrites committed evidence", () => {
+  const directory = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "phase185-comparison-"));
+  const output = path.join(directory, "comparison");
+  const primary = new Error("image decoding failed");
+  try {
+    assert.throws(() => preservation.withComparisonDirectory(output, (staging) => {
+      fs.writeFileSync(path.join(staging, "partial-diff.png"), "partial"); throw primary;
+    }), (error) => error === primary);
+    assert.deepEqual(fs.readdirSync(directory), []);
+    assert.equal(preservation.withComparisonDirectory(output, (staging) => { fs.writeFileSync(path.join(staging, "comparison.json"), "complete"); return "reported"; }), "reported");
+    assert.equal(fs.readFileSync(path.join(output, "comparison.json"), "utf8"), "complete");
+    assert.throws(() => preservation.withComparisonDirectory(output, () => assert.fail("must not run")), /Refusing to overwrite/);
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 
 function validManifest() {
@@ -209,7 +237,7 @@ test("PostgreSQL dump identity ignores only a matched restrict/unrestrict transp
 });
 
 test("rendered-state identity changes for real document and settings changes", () => {
-  const state = { databases: { ecommerce: "stable-db" }, indexes: [{ uid: "products", primaryKey: "id", settings: { searchableAttributes: ["name"] }, documents: [{ id: 1, name: "Book" }] }] };
+  const state = { databases: { ecommerce: "stable-db" }, tasks: [], indexes: [{ uid: "products", primaryKey: "id", settings: { searchableAttributes: ["name"] }, documents: [{ id: 1, name: "Book" }] }] };
   const clone = () => JSON.parse(JSON.stringify(state));
   assert.equal(preservation.stableDataIdentity(state), preservation.stableDataIdentity(clone()));
   const changedRecord = clone();

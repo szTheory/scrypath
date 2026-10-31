@@ -34,6 +34,7 @@ const MAX_CAPTURE_BYTES = 2 * 1024 * 1024 * 1024;
 const INDEX_PAGE_LIMIT = 1000;
 const MAX_INDEX_COUNT = 10_000;
 const MAX_DOCUMENT_COUNT = 50_000;
+const MAX_TASK_COUNT = 1000;
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const canonicalize = (value) => Array.isArray(value)
@@ -390,8 +391,35 @@ function normalizePgDump(dump) {
 }
 
 function stableDataIdentity(state) {
-  if (!state || typeof state !== "object" || !state.databases || !Array.isArray(state.indexes)) throw new Error("Rendered-state identity requires database and search-index state.");
-  return sha256(canonicalJson({ schema: "scrypath.ui-rendered-state.v2", databases: state.databases, indexes: state.indexes }));
+  if (!state || typeof state !== "object" || !state.databases || !Array.isArray(state.indexes) || !Array.isArray(state.tasks)) throw new Error("Rendered-state identity requires database, search-index and task state.");
+  return sha256(canonicalJson({ schema: "scrypath.ui-rendered-state.v3", databases: state.databases, indexes: state.indexes, tasks: state.tasks }));
+}
+
+function collectTaskPages(fetchPage, maxItems = MAX_TASK_COUNT) {
+  if (typeof fetchPage !== "function" || !Number.isSafeInteger(maxItems) || maxItems < 1 || maxItems > MAX_TASK_COUNT) throw new Error("Task history requires a finite limit no greater than 1000.");
+  const tasks = [];
+  const seen = new Set();
+  let cursor = null;
+  let total = null;
+  for (let pageNumber = 0; pageNumber <= maxItems; pageNumber += 1) {
+    const page = fetchPage(cursor, INDEX_PAGE_LIMIT);
+    if (!Array.isArray(page?.results) || page.limit !== INDEX_PAGE_LIMIT || !Number.isSafeInteger(page.total) || page.total < 0 || page.total > maxItems) throw new Error("Task history is missing metadata or exceeds the finite history limit.");
+    if (total !== null && page.total !== total) throw new Error("Task history total changed during pagination.");
+    total = page.total;
+    if (page.results.length > INDEX_PAGE_LIMIT || tasks.length + page.results.length > total || (page.results.length && page.from !== page.results[0].uid) || (!page.results.length && page.from !== null)) throw new Error("Task history page bounds are inconsistent.");
+    if (cursor !== null && page.from !== cursor) throw new Error("Task history cursor did not advance to its promised task.");
+    for (const task of page.results) {
+      if (!Number.isSafeInteger(task.uid) || task.uid < 0 || seen.has(task.uid) || (tasks.length && task.uid >= tasks.at(-1).uid)) throw new Error("Task history contains duplicate, unordered or invalid task IDs.");
+      seen.add(task.uid); tasks.push(task);
+    }
+    if (page.next === null) {
+      if (tasks.length !== total) throw new Error("Task history was truncated before its declared total.");
+      return tasks;
+    }
+    if (!page.results.length || !Number.isSafeInteger(page.next) || page.next < 0 || page.next >= tasks.at(-1).uid || tasks.length >= total) throw new Error("Task history cursor is non-progressing or exceeds its declared total.");
+    cursor = page.next;
+  }
+  throw new Error("Task history exceeded its finite page bound.");
 }
 
 function normalizePort(value) {
@@ -566,12 +594,48 @@ function artifactErrors(manifest, directory) {
 function comparePng(beforeBytes, afterBytes) {
   const pixelmatch = require(path.join(exampleRoot, "node_modules/pixelmatch"));
   const { PNG } = require(path.join(exampleRoot, "node_modules/pngjs"));
-  const before = PNG.sync.read(beforeBytes);
-  const after = PNG.sync.read(afterBytes);
-  if (before.width !== after.width || before.height !== after.height) throw new Error("Image dimensions differ.");
-  const diff = new PNG({ width: before.width, height: before.height });
-  const pixels = pixelmatch(before.data, after.data, diff.data, before.width, before.height, { threshold: 0.1 });
-  return { pixels, total: before.width * before.height, diff: PNG.sync.write(diff) };
+  const beforeSize = pngDimensions(beforeBytes);
+  const afterSize = pngDimensions(afterBytes);
+  const width = Math.max(beforeSize.width, afterSize.width);
+  const height = Math.max(beforeSize.height, afterSize.height);
+  if (width * height > 24_000_000) throw new Error("Comparison canvas exceeds its finite pixel budget.");
+  const pad = (bytes) => {
+    const original = PNG.sync.read(bytes);
+    const canvas = new PNG({ width, height });
+    canvas.data.fill(0);
+    PNG.bitblt(original, canvas, 0, 0, original.width, original.height, 0, 0);
+    return canvas;
+  };
+  const before = pad(beforeBytes);
+  const after = pad(afterBytes);
+  const diff = new PNG({ width, height });
+  let pixels = pixelmatch(before.data, after.data, diff.data, width, height, { threshold: 0.1, diffMask: true });
+  // Geometry differences are evidence even when transparent padding blends to
+  // the same white as a page background. Mark only the generated diff image.
+  for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
+    const inBefore = x < beforeSize.width && y < beforeSize.height;
+    const inAfter = x < afterSize.width && y < afterSize.height;
+    if (inBefore === inAfter) continue;
+    const offset = (y * width + x) * 4;
+    if (diff.data[offset + 3] === 0) pixels += 1;
+    diff.data.set([255, 0, 255, 255], offset);
+  }
+  return { pixels, total: width * height, before_dimensions: beforeSize, after_dimensions: afterSize, dimensions_changed: beforeSize.width !== afterSize.width || beforeSize.height !== afterSize.height, diff: PNG.sync.write(diff) };
+}
+
+function withComparisonDirectory(outputDirectory, produce) {
+  if (fs.existsSync(outputDirectory)) throw new Error(`Refusing to overwrite existing comparison evidence: ${outputDirectory}`);
+  const temporary = fs.mkdtempSync(path.join(path.dirname(outputDirectory), ".comparison-"));
+  try {
+    const result = produce(temporary);
+    if (fs.existsSync(outputDirectory)) throw new Error(`Refusing to overwrite existing comparison evidence: ${outputDirectory}`);
+    fs.renameSync(temporary, outputDirectory);
+    return result;
+  } catch (error) {
+    try { fs.rmSync(temporary, { recursive: true, force: true }); }
+    catch (cleanupError) { error.cleanupError = cleanupError; }
+    throw error;
+  }
 }
 
 function runWithTeardown(primary, teardown) {
@@ -609,27 +673,27 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
   if (after.source.source_sha !== currentSource.source_sha || after.source.tree_oid !== currentSource.tree_oid || after.source.tree_sha256 !== currentSource.tree_sha256 || after.source.remote_main_ref !== currentSource.remote_main_ref) errors.push("Candidate source or remote-main provenance changed after its capture.");
   if (errors.length) throw new Error(`Cannot compare unverified disposable captures:\n${errors.join("\n")}`);
 
-  if (fs.existsSync(outputDirectory)) throw new Error(`Refusing to overwrite existing comparison evidence: ${outputDirectory}`);
-  fs.mkdirSync(outputDirectory, { recursive: false, mode: 0o700 });
-  const byId = new Map(after.captures.map((capture) => [capture.id, capture]));
-  const comparisons = [];
-  for (const left of before.captures) {
-    const right = byId.get(left.id);
-    for (const kind of ["viewport.png", "full.png", "hover.png", "focus.png", ...(left.files["navigation.png"] ? ["navigation.png"] : [])]) {
-      if (Boolean(left.files[kind]) !== Boolean(right.files[kind])) throw new Error(`Before/candidate image pairing differs for ${left.id} (${kind}).`);
-      const leftBytes = fs.readFileSync(path.join(beforeDirectory, left.files[kind].path));
-      const rightBytes = fs.readFileSync(path.join(afterDirectory, right.files[kind].path));
-      const { pixels, total, diff } = comparePng(leftBytes, rightBytes);
-      const artifact = `${left.id}--${kind.replace(/\.png$/, "")}-diff.png`;
-      fs.writeFileSync(path.join(outputDirectory, artifact), diff, { mode: 0o600 });
-      const beforeCopy = readJson(path.join(beforeDirectory, left.files["copy.json"].path));
-      const afterCopy = readJson(path.join(afterDirectory, right.files["copy.json"].path));
-      comparisons.push({ id: left.id, artifact: kind, diff: artifact, width: left.viewport.width, height: left.viewport.height, differing_pixels: pixels, total_pixels: total, ratio: pixels / total, copy_changed: beforeCopy.text !== afterCopy.text, copy_sha256_before: left.files["copy.json"].sha256, copy_sha256_after: right.files["copy.json"].sha256 });
+  return withComparisonDirectory(outputDirectory, (stagingDirectory) => {
+    const byId = new Map(after.captures.map((capture) => [capture.id, capture]));
+    const comparisons = [];
+    for (const left of before.captures) {
+      const right = byId.get(left.id);
+      for (const kind of ["viewport.png", "full.png", "hover.png", "focus.png", ...(left.files["navigation.png"] ? ["navigation.png"] : [])]) {
+        if (Boolean(left.files[kind]) !== Boolean(right.files[kind])) throw new Error(`Before/candidate image pairing differs for ${left.id} (${kind}).`);
+        const leftBytes = fs.readFileSync(path.join(beforeDirectory, left.files[kind].path));
+        const rightBytes = fs.readFileSync(path.join(afterDirectory, right.files[kind].path));
+        const { pixels, total, diff, ...dimensions } = comparePng(leftBytes, rightBytes);
+        const artifact = `${left.id}--${kind.replace(/\.png$/, "")}-diff.png`;
+        fs.writeFileSync(path.join(stagingDirectory, artifact), diff, { mode: 0o600 });
+        const beforeCopy = readJson(path.join(beforeDirectory, left.files["copy.json"].path));
+        const afterCopy = readJson(path.join(afterDirectory, right.files["copy.json"].path));
+        comparisons.push({ ...dimensions, id: left.id, artifact: kind, diff: artifact, width: left.viewport.width, height: left.viewport.height, differing_pixels: pixels, total_pixels: total, ratio: pixels / total, copy_changed: beforeCopy.text !== afterCopy.text, copy_sha256_before: left.files["copy.json"].sha256, copy_sha256_after: right.files["copy.json"].sha256 });
+      }
     }
-  }
-  const report = { schema: "scrypath.ui-preservation-comparison.v1", status: "pending-review", before_source: before.source, after_source: after.source, environment: before.environment, comparisons, note: "Mechanical matched comparisons only; no aesthetic approval or automatic acceptance." };
-  writeJson(path.join(outputDirectory, "comparison.json"), report);
-  return report;
+    const report = { schema: "scrypath.ui-preservation-comparison.v1", status: "pending-review", before_source: before.source, after_source: after.source, environment: before.environment, comparisons, note: "Mechanical matched comparisons only; no aesthetic approval or automatic acceptance." };
+    writeJson(path.join(stagingDirectory, "comparison.json"), report);
+    return report;
+  });
 }
 
 function verifyRetainedInventory() {
@@ -789,8 +853,6 @@ function teardownOwnedProject(authority, removeVolumes = true) {
   const sessionId = authority.session_id;
   const retained = authority.retained_inventory;
   if (project !== `scrypath-p185-${sessionId}` || project === retained.project || !/^[a-f0-9]{16}$/.test(sessionId)) throw new Error("Refusing teardown without a matching independent project/session authority.");
-  assertRetainedInventoryCurrent(authority);
-
   const containerIds = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
   const containers = containerIds.map((id) => JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 })));
   for (const container of containers) {
@@ -1023,14 +1085,17 @@ function stackDataIdentity(stack) {
     return [database, sha256(normalizePgDump(dump))];
   }));
   const indexes = collectPages((offset, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/indexes?limit=${limit}&offset=${offset}`], { env: stack.env, timeout: 30_000 })), { label: "index list", maxItems: MAX_INDEX_COUNT });
-  const indexData = indexes.map(({ uid }) => {
+  const indexData = indexes.map((index) => {
+    const { uid } = index;
     const base = `http://127.0.0.1:7700/indexes/${encodeURIComponent(uid)}`;
     const settings = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `${base}/settings`], { env: stack.env, timeout: 30_000 }));
+    const stats = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `${base}/stats`], { env: stack.env, timeout: 30_000 }));
     const docs = collectPages((offset, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `${base}/documents?limit=${limit}&offset=${offset}`], { env: stack.env, timeout: 30_000 })), { label: `documents for ${uid}`, maxItems: MAX_DOCUMENT_COUNT });
-    docs.sort((left, right) => String(left.id ?? left._id ?? "").localeCompare(String(right.id ?? right._id ?? "")));
-    return { uid, primaryKey: indexes.find((index) => index.uid === uid)?.primaryKey ?? null, settings, documents: docs };
+    docs.sort((left, right) => canonicalJson(left).localeCompare(canonicalJson(right)));
+    return { ...index, settings, stats, documents: docs };
   }).sort((left, right) => left.uid.localeCompare(right.uid));
-  return stableDataIdentity({ databases, indexes: indexData });
+  const tasks = collectTaskPages((from, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/tasks?limit=${limit}${from === null ? "" : `&from=${from}`}`], { env: stack.env, timeout: 30_000 })));
+  return stableDataIdentity({ databases, indexes: indexData, tasks });
 }
 
 async function captureBefore(sessionPath) {
@@ -1256,7 +1321,6 @@ async function captureAfter(sessionPath) {
 
 function teardownSession(sessionPath) {
   const { session, authority } = loadAuthorizedSession(sessionPath);
-  assertRetainedInventoryCurrent(authority);
   const role = authority.manifests.candidate ? "candidate" : "before";
   if (authority.manifests[role] && ["before-captured", "candidate-captured", "compared-pending-review"].includes(session.status)) assertOwnedRuntime(authority, role);
   teardownOwnedProject(authority, true);
@@ -1267,7 +1331,6 @@ function teardownSession(sessionPath) {
 function compareSession(sessionPath) {
   const { session, authority } = loadAuthorizedSession(sessionPath);
   if (session.status !== "candidate-captured" || !session.candidate) throw new Error("Session has no verified before/candidate pair.");
-  assertRetainedInventoryCurrent(authority);
   const beforeRecord = authority.manifests.before;
   const candidateRecord = authority.manifests.candidate;
   const beforeDirectory = beforeRecord.directory;
@@ -1307,6 +1370,7 @@ module.exports = {
   candidateServerCommands,
   captureManifestErrors,
   collectPages,
+  collectTaskPages,
   comparePng,
   createSessionAuthority,
   disposableProvenanceErrors,
@@ -1328,4 +1392,5 @@ module.exports = {
   sourceChangeErrors,
   stableDataIdentity,
   sourceIdentity,
+  withComparisonDirectory,
 };
