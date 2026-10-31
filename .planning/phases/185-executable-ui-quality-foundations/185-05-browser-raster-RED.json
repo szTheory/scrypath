@@ -1,0 +1,15 @@
+{
+  "command": "node --test --test-reporter=tap --test-name-pattern='disposable browser launch pins full rasterization without replacing other defaults' examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs",
+  "exitCode": 1,
+  "output": "TAP version 13\n# Subtest: disposable browser launch pins full rasterization without replacing other defaults\nnot ok 1 - disposable browser launch pins full rasterization without replacing other defaults\n  ---\n  duration_ms: 2.235333\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs:169:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    the actual launch call must pin full rasterization\n    + actual - expected\n    \n    + undefined\n    - true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (file:///Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs:175:10)\n    async Test.run (node:internal/test_runner/test:1409:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 71.429625\n",
+  "targetTest": "disposable browser launch pins full rasterization without replacing other defaults",
+  "targetFile": "examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs",
+  "expected": "Actual disposable launch requests full rasterization, retains normal defaults, and returns the exact requested profile for source-bound metadata",
+  "actual": "Existing browser launch has no full-raster control; same-source pair retains one20pixel full-page difference",
+  "runtimeEvidence": [
+    "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/failed-parent-full-page-calibration-1604b5ca81eb7308/transport-record.json",
+    "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/frame-diagnostic-storefront-no-partial-1604b5ca81eb7308/stdout.json",
+    "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/frame-diagnostic-control-no-partial-20-1604b5ca81eb7308/stdout.json"
+  ],
+  "primarySource": "https://raw.githubusercontent.com/chromium/chromium/main/content/browser/gpu/compositor_util.cc#L423"
+}

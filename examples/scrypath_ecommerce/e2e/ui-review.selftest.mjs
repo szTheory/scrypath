@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, launchDisposableBrowser, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
 
 test("disposable captures require a valid fixed browser clock before launching Chromium", async () => {
   const utc = "2026-10-31T12:00:00.000Z";
@@ -163,4 +163,17 @@ test("viewport document captures reject zoom, scroll and changed layout", async 
   await assert.rejects(captureViewportImage({ evaluate: async () => measurements.shift(), screenshot: async () => Buffer.alloc(0) }, { width: 390, height: 844 }), /layout/i);
   const failure = new Error("actual screenshot failed");
   await assert.rejects(captureViewportImage({ evaluate: async () => geometry, screenshot: async () => { throw failure; } }, { width: 390, height: 844 }), error => error === failure);
+});
+
+
+test("disposable browser launch pins full rasterization without replacing other defaults", async () => {
+  const original = {};
+  let received;
+  const result = await launchDisposableBrowser({ launch: async options => { received = structuredClone(options); return original; } });
+  assert.equal(result.browser, original);
+  assert.deepEqual(result.launchOptions, received);
+  assert.equal(received.args?.includes("--disable-partial-raster"), true, "the actual launch call must pin full rasterization");
+  assert.deepEqual(received.args, ["--disable-partial-raster"]);
+  assert.equal(received.timeout, 30_000);
+  assert.equal(Object.hasOwn(received, "ignoreDefaultArgs"), false);
 });

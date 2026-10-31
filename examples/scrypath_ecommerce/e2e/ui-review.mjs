@@ -297,6 +297,11 @@ async function captureSurface(browser, surface, theme, viewport, output, options
   return capture;
 }
 
+export async function launchDisposableBrowser(chromium) {
+  const launchOptions = { timeout: 30_000 };
+  return { browser: await chromium.launch(launchOptions), launchOptions };
+}
+
 export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, dataIdentity, clock, allowComposeNetwork = false }) {
   if (!hostUrl || !standaloneUrl || !output || !dataIdentity) throw new Error("Disposable capture requires both loopback targets, an output directory, and a verified data identity.");
   const host = new URL(hostUrl);
@@ -307,7 +312,7 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
   const clockErrors = disposableClockErrors(clock);
   if (clockErrors.length) throw new Error(clockErrors.join("\n"));
   const { chromium } = await import("@playwright/test");
-  const browser = await chromium.launch({ timeout: 30_000 });
+  const { browser, launchOptions } = await launchDisposableBrowser(chromium);
   const captures = [];
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
@@ -328,7 +333,7 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
       console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
     }
   } finally { await browser.close(); }
-  return { captures, browserVersion: browser.version(), dataIdentity };
+  return { captures, browserVersion: browser.version(), dataIdentity, browserLaunchOptions: launchOptions };
 }
 
 async function captureAll() {
