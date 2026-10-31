@@ -144,6 +144,78 @@ defmodule Mix.Tasks.UiTokensContractTest do
     File.rm_rf!(temp)
   end
 
+  test "bounded validator rejects dark-only mapping gaps and CSS value drift" do
+    json = File.read!(Path.join(@root, @token_path))
+    css = File.read!(Path.join(@root, @css_path))
+    tokens = Jason.decode!(json)
+    {json_file, css_file, temp} = fixture_paths!()
+
+    missing_dark_mapping = update_in(tokens, ["ops", "dark"], &Map.delete(&1, "ops-bg"))
+    File.write!(json_file, Jason.encode!(missing_dark_mapping, pretty: true))
+    File.write!(css_file, css)
+
+    assert_raise Mix.Error, ~r/ops\.dark: mapped CSS property set differs.*--ops-bg/, fn ->
+      Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+    end
+
+    extra_token =
+      tokens["ops"]["dark"]["ops-bg"]
+      |> put_in(["$extensions", "org.scrypath", "css", "name"], "--ops-extra")
+      |> put_in(["$extensions", "org.scrypath", "css", "expression"], "#111419")
+
+    extra_dark_mapping = put_in(tokens, ["ops", "dark", "ops-extra"], extra_token)
+    File.write!(json_file, Jason.encode!(extra_dark_mapping, pretty: true))
+
+    assert_raise Mix.Error, ~r/ops\.dark: mapped CSS property set differs.*--ops-extra/, fn ->
+      Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+    end
+
+    css_drift_cases = [
+      {"--ops-text-muted", "64%, transparent", "63%, transparent"},
+      {"--ops-text-muted", "var(--color-base-content)", "var(--color-primary)"},
+      {"--radius-selector", "0.25rem", "0.3rem"},
+      {"--depth", "--depth: 1;", "--depth: 2;"}
+    ]
+
+    for {property, old, new} <- css_drift_cases do
+      changed_css = replace_dark_theme!(css, old, new)
+      refute changed_css == css
+      File.write!(json_file, json)
+      File.write!(css_file, changed_css)
+
+      assert_raise Mix.Error, ~r/CSS expression mapping for #{Regex.escape(property)}/, fn ->
+        Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+      end
+    end
+
+    File.rm_rf!(temp)
+  end
+
+  test "brandbook documentation separates the warm palette from the CSS-authoritative Ops mirror" do
+    readme = File.read!(Path.join(@root, "brandbook/README.md"))
+    brand_css = File.read!(Path.join(@root, "brandbook/tokens/tokens.css"))
+    example = File.read!(Path.join(@root, "brandbook/tokens/daisyui-theme.example.js"))
+    ops_css = File.read!(Path.join(@root, @css_path))
+
+    assert readme =~ "warm `--sp-*`"
+    assert readme =~ "separate from the live ScrypathOps interface theme"
+    assert readme =~ "DTCG 2025.10"
+    assert readme =~ "ops.light` / `ops.dark` project mirror"
+    assert readme =~ "`mix verify.repository_contracts`"
+    assert readme =~ "This source contract does not validate rendered UI output."
+    refute readme =~ "the palette mirrors the\nlive `scrypath_ops` theme"
+    assert brand_css =~ "Separate from the live ScrypathOps interface theme."
+    assert brand_css =~ "--sp-primary:      #5B4AD1;"
+    assert brand_css =~ "--sp-copper-500:   #C17A3E;"
+
+    assert example =~ "The live Ops source of truth is scrypath_ops/assets/css/app.css."
+    assert example =~ "separate from the warm --sp-*"
+    assert example =~ "export default { light: scrypathLight, dark: scrypathDark }"
+
+    assert js_theme_values!(example, "Light") == css_theme_values!(ops_css, "light")
+    assert js_theme_values!(example, "Dark") == css_theme_values!(ops_css, "dark")
+  end
+
   @tag :contrast_child
   test "canonical repository contracts pass clean copies and reject each independent token source mutation" do
     root = copy_repository!()
@@ -374,6 +446,51 @@ defmodule Mix.Tasks.UiTokensContractTest do
   defp css_variables!(body) do
     Regex.scan(~r/(--sp-[a-z0-9-]+):\s*([^;]+);/, body, capture: :all_but_first)
     |> Map.new(fn [name, value] -> {name, String.trim(value)} end)
+  end
+
+  defp js_theme_values!(source, mode) do
+    [_, block] = Regex.run(~r/export const scrypath#{mode} = \{([^{}]*)\};/s, source)
+
+    Regex.scan(~r/^\s*("--[a-z0-9-]+"):\s*"([^"]*)",?\s*$/m, block, capture: :all_but_first)
+    |> Map.new(fn [quoted_name, value] -> {String.trim(quoted_name, "\""), value} end)
+  end
+
+  defp css_theme_values!(source, mode) do
+    blocks =
+      Regex.scan(~r/@plugin\s+"[^"]*daisyui-theme"\s*\{([^{}]*)\}/s, source,
+        capture: :all_but_first
+      )
+
+    [[body]] =
+      Enum.filter(blocks, fn [block] ->
+        Regex.run(~r/^\s*name:\s*"#{mode}"\s*;/m, block) != nil
+      end)
+
+    body
+    |> String.split("\n")
+    |> Enum.flat_map(fn line ->
+      case Regex.run(~r/^\s*(--[a-z0-9-]+):\s*([^;{}]+);\s*$/, line, capture: :all_but_first) do
+        [name, value] -> [{name, String.trim(value)}]
+        nil -> []
+      end
+    end)
+    |> Map.new()
+  end
+
+  defp replace_dark_theme!(css, old, new) do
+    pattern = ~r/@plugin\s+"[^"]*daisyui-theme"\s*\{[^{}]*\}/s
+
+    changed =
+      Regex.replace(pattern, css, fn block ->
+        if block =~ ~r/\bname:\s*"dark";/ do
+          String.replace(block, old, new, global: false)
+        else
+          block
+        end
+      end)
+
+    if changed == css, do: flunk("dark theme did not contain #{inspect(old)}")
+    changed
   end
 
   defp fixture_paths! do

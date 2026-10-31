@@ -33,8 +33,8 @@ brandbook/
     fonts/                       subset woff2 (Familjen Grotesk, Inter, IBM Plex Mono) + OFL licences + fonts.css
   tokens/
     tokens.css                   CSS custom properties (--sp-*), light + dark
-    tokens.json                  the same tokens as data
-    daisyui-theme.example.js     copy-paste mirror of the live scrypath_ops daisyUI theme
+    tokens.json                  typed DTCG brand palette plus the separate Ops theme mirror
+    daisyui-theme.example.js     copyable example of the live ScrypathOps daisyUI theme
   examples/
     components.html              component reference (both themes)
     landing-page-section.html    marketing hero built from the brand
@@ -56,8 +56,28 @@ brandbook/
        font-family: var(--sp-font-display); border-radius: var(--sp-radius-input); }
 ```
 
-Dark mode: set `<html data-theme="dark">` (or rely on `prefers-color-scheme`). The palette mirrors the
-live `scrypath_ops` theme, so `tokens/daisyui-theme.example.js` drops straight into the product.
+Dark mode: set `<html data-theme="dark">` (or rely on `prefers-color-scheme`). The warm `--sp-*`
+brand palette is separate from the live ScrypathOps interface theme; changing one does not change the
+other.
+
+## Token export and verification
+
+`tokens/tokens.css` is the presentation source for this warm brand palette. `tokens/tokens.json` is
+its typed DTCG 2025.10 export and also carries a separate `ops.light` / `ops.dark` project mirror.
+Those `ops` groups are a Scrypath convention, not a standardized DTCG mode resolver.
+
+The live Ops values are owned by
+[`scrypath_ops/assets/css/app.css`](../scrypath_ops/assets/css/app.css). Each custom property is
+mapped in the JSON under the `org.scrypath` extension with its CSS property name and exact source
+expression. The bounded repository check supports color, dimension, number, font family and weight,
+duration, cubic Bézier, shadow, and string values. It checks the complete theme property sets,
+typed values, color component and hex agreement, and the muted text color's 64% alpha and base-content
+reference. `none` remains a string token.
+
+Run `mix verify.repository_contracts` from the repository root to validate the export and detect
+independent CSS or JSON drift. This source contract does not validate rendered UI output. The
+[`daisyui-theme.example.js`](tokens/daisyui-theme.example.js) keeps a copyable JavaScript shape for
+host configuration; `app.css` remains the Ops source of truth.
 
 ## The logo, in one line
 
@@ -69,5 +89,5 @@ Full do/don't in `index.html`.
 
 - **Type** — Familjen Grotesk, Inter, IBM Plex Mono, all **SIL Open Font License 1.1**
   (`assets/fonts/OFL-*.txt`). Subset woff2 are redistributed under the OFL.
-- **Palette & tokens** mirror the live `scrypath_ops` design system.
+- **Palette & tokens** include the separate warm brand palette and typed Ops mirror; live Ops CSS is authoritative for Ops values.
 - Brand assets © the scrypath project.
