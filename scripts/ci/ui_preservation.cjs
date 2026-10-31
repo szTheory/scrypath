@@ -17,6 +17,18 @@ const themes = ["light", "dark", "system-dark"];
 const widths = [1440, 768, 390];
 const hostSurfaces = ["storefront", "control-room", "search-health", "failed-sync", "sync-drift", "search", "saved-searches", "help"];
 const standaloneSurfaces = hostSurfaces.filter((surface) => surface !== "storefront");
+const hostRoutes = {
+  storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health",
+  "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index",
+  search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help",
+};
+const standaloneRoutes = {
+  "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync",
+  "sync-drift": "/ops/sync-and-index", search: "/ops/search",
+  "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help",
+};
+const MAX_ARTIFACT_BYTES = 32 * 1024 * 1024;
+const MAX_CAPTURE_BYTES = 2 * 1024 * 1024 * 1024;
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const canonicalize = (value) => Array.isArray(value)
@@ -148,40 +160,106 @@ function expectedCaptureIds() {
   return result;
 }
 
+function expectedCaptureMetadata() {
+  const result = new Map();
+  for (const deployment of ["host", "standalone"]) {
+    const surfaces = deployment === "host" ? hostSurfaces : standaloneSurfaces;
+    const routes = deployment === "host" ? hostRoutes : standaloneRoutes;
+    for (const surface of surfaces) for (const theme of themes) for (const width of widths) {
+      result.set(`${deployment}--${surface}--${theme}--${width}`, {
+        deployment,
+        surface,
+        theme,
+        width,
+        height: width === 390 ? 844 : 900,
+        route: routes[surface],
+      });
+    }
+  }
+  return result;
+}
+
 function matrixErrors(manifest) {
   const errors = [];
-  const expected = expectedCaptureIds();
+  const expected = expectedCaptureMetadata();
   const captures = Array.isArray(manifest?.captures) ? manifest.captures : [];
   const found = new Map(captures.map((capture) => [capture.id, capture]));
   if (found.size !== captures.length) errors.push("Capture matrix contains duplicate identities.");
-  for (const id of expected) if (!found.has(id)) errors.push(`Missing paired capture: ${id}.`);
-  for (const id of found.keys()) if (!expected.includes(id)) errors.push(`Unexpected capture identity: ${id}.`);
+  for (const id of expected.keys()) if (!found.has(id)) errors.push(`Missing paired capture: ${id}.`);
+  for (const id of found.keys()) if (!expected.has(id)) errors.push(`Unexpected capture identity: ${id}.`);
   for (const capture of captures) {
+    const canonical = expected.get(capture.id);
+    if (canonical && (capture.deployment !== canonical.deployment || capture.surface !== canonical.surface || capture.theme !== canonical.theme || capture.width !== canonical.width || capture.route !== canonical.route || capture.viewport?.width !== canonical.width || capture.viewport?.height !== canonical.height)) {
+      errors.push(`Capture metadata does not match canonical identity: ${capture.id}.`);
+    }
     if (capture.error) errors.push(`Capture failed: ${capture.id}: ${capture.error}`);
     if (!capture.files?.["copy.json"] || !capture.files?.["viewport.png"] || !capture.files?.["full.png"] || !capture.files?.["hover.png"] || !capture.files?.["focus.png"]) errors.push(`Capture lacks image or copy evidence: ${capture.id}.`);
     if (capture.surface === "control-room" && capture.width === 390 && (!capture.files?.["navigation.png"] || capture.mobile_navigation?.expanded !== true || capture.mobile_navigation?.visible !== true || !capture.mobile_navigation?.links?.length)) errors.push(`Compact navigation evidence is missing or did not open: ${capture.id}.`);
     if (!capture.browser_version || !capture.platform || !capture.data_identity) errors.push(`Capture lacks browser, platform, or data identity: ${capture.id}.`);
     if (capture.browser_version !== manifest?.environment?.browser_version || capture.platform !== manifest?.environment?.platform || capture.data_identity !== manifest?.environment?.data_identity) errors.push(`Unpaired browser/platform/data identity: ${capture.id}.`);
-    if (capture.deployment === "host" && !hostSurfaces.includes(capture.surface)) errors.push(`Unknown host surface: ${capture.id}.`);
-    if (capture.deployment === "standalone" && !standaloneSurfaces.includes(capture.surface)) errors.push(`Unknown standalone surface: ${capture.id}.`);
     for (const [kind, file] of Object.entries(capture.files || {})) {
-      if (!file.path || !/^[a-f0-9]{64}$/.test(file.sha256 || "")) errors.push(`Invalid ${kind} artifact digest: ${capture.id}.`);
+      if (file.path !== `${capture.id}--${kind}` || !/^[a-f0-9]{64}$/.test(file.sha256 || "")) errors.push(`Invalid ${kind} artifact path or digest: ${capture.id}.`);
     }
-    if (capture.width && !widths.includes(capture.width)) errors.push(`Unpaired viewport width: ${capture.id}.`);
-    if (capture.theme && !themes.includes(capture.theme)) errors.push(`Unpaired theme: ${capture.id}.`);
+    if (!widths.includes(capture.width)) errors.push(`Unpaired viewport width: ${capture.id}.`);
+    if (!themes.includes(capture.theme)) errors.push(`Unpaired theme: ${capture.id}.`);
   }
   return errors;
 }
 
+function pngDimensions(bytes) {
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  if (!Buffer.isBuffer(bytes) || bytes.length < 24 || !bytes.subarray(0, 8).equals(signature) || bytes.toString("ascii", 12, 16) !== "IHDR") {
+    throw new Error("invalid PNG header");
+  }
+  const width = bytes.readUInt32BE(16);
+  const height = bytes.readUInt32BE(20);
+  if (!width || !height || width > 20_000 || height > 50_000) throw new Error("PNG dimensions are outside finite bounds");
+  return { width, height };
+}
+
+function artifactDirectoryRoot(directory) {
+  const absolute = path.resolve(directory);
+  const rootStat = fs.lstatSync(absolute);
+  if (rootStat.isSymbolicLink() || !rootStat.isDirectory()) throw new Error("Evidence directory must be a regular directory, not a symlink.");
+  const real = fs.realpathSync(absolute);
+  if (!real.startsWith(`${path.resolve(artifactRoot)}${path.sep}`)) throw new Error("Evidence directory is outside the ignored phase185 artifact root.");
+  return { absolute, real };
+}
+
 function artifactErrors(manifest, directory) {
   const errors = matrixErrors(manifest);
-  const root = path.resolve(directory);
-  if (!root.startsWith(`${path.resolve(artifactRoot)}${path.sep}`)) errors.push("Evidence directory is outside the ignored phase185 artifact root.");
+  let root;
+  try { root = artifactDirectoryRoot(directory); }
+  catch (error) { errors.push(error.message); return errors; }
+  let totalBytes = 0;
   for (const capture of manifest.captures || []) for (const artifact of Object.values(capture.files || {})) {
     try {
-      const file = path.resolve(root, artifact.path);
-      if (!file.startsWith(`${root}${path.sep}`)) throw new Error("artifact escapes capture directory");
-      if (sha256(fs.readFileSync(file)) !== artifact.sha256) throw new Error("artifact digest mismatch");
+      if (typeof artifact.path !== "string" || path.isAbsolute(artifact.path) || path.basename(artifact.path) !== artifact.path) throw new Error("artifact path must be a file directly inside its capture directory");
+      const file = path.resolve(root.absolute, artifact.path);
+      if (!file.startsWith(`${root.absolute}${path.sep}`)) throw new Error("artifact escapes capture directory");
+      const fileStat = fs.lstatSync(file);
+      if (fileStat.isSymbolicLink() || !fileStat.isFile()) throw new Error("artifact is not a regular file");
+      if (fileStat.size <= 0 || fileStat.size > MAX_ARTIFACT_BYTES) throw new Error("artifact size is outside finite bounds");
+      totalBytes += fileStat.size;
+      if (totalBytes > MAX_CAPTURE_BYTES) throw new Error("capture directory exceeds its finite total artifact bound");
+      if (fs.realpathSync(file).startsWith(`${root.real}${path.sep}`) !== true) throw new Error("artifact resolves outside capture directory");
+      const bytes = fs.readFileSync(file);
+      if (sha256(bytes) !== artifact.sha256) throw new Error("artifact digest mismatch");
+      if (path.extname(artifact.path) === ".png") {
+        const size = pngDimensions(bytes);
+        const expected = capture.viewport || {};
+        const dimensionsMatch = artifact.path.endsWith("--full.png")
+          ? size.width === expected.width && size.height >= expected.height
+          : size.width === expected.width && size.height === expected.height;
+        if (!dimensionsMatch) throw new Error(`${path.basename(artifact.path).split("--").at(-1)} dimensions do not match ${capture.id}`);
+      } else if (artifact.path.endsWith("--copy.json")) {
+        const copy = JSON.parse(bytes.toString("utf8"));
+        const canonical = expectedCaptureMetadata().get(capture.id);
+        const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
+        if (copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
+          throw new Error(`copy metadata does not match ${capture.id}`);
+        }
+      }
     } catch (error) { errors.push(`Missing or changed artifact ${artifact.path}: ${error.message}`); }
   }
   return errors;

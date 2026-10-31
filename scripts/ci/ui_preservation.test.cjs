@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const { PNG } = require(path.join(__dirname, "../../examples/scrypath_ecommerce/node_modules/pngjs"));
 
 const preservation = fs.existsSync(path.join(__dirname, "ui_preservation.cjs")) ? require("./ui_preservation.cjs") : {};
 
@@ -18,7 +19,10 @@ function validManifest() {
     const files = Object.fromEntries(["copy.json", "viewport.png", "full.png", "hover.png", "focus.png"].map((kind) => [kind, { path: `${id}--${kind}`, sha256: "c".repeat(64) }]));
     if (surface === "control-room" && width === 390) files["navigation.png"] = { path: `${id}--navigation.png`, sha256: "c".repeat(64) };
     const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control Room", "Search"] } : undefined;
-    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, files, mobile_navigation, browser_version: "chromium-123", platform: "darwin-arm64", data_identity: "state-digest" };
+    const route = deployment === "host"
+      ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
+      : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help" })[surface];
+    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, mobile_navigation, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest" };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_sha256: treeSha }));
   return {
@@ -31,7 +35,7 @@ function validManifest() {
       containers: identities.map(({ service, source_sha, tree_sha256 }) => ({ service, id: `${service}-container`, name: `${service}-container`, labels: { "org.opencontainers.image.revision": source_sha }, source_sha, tree_sha256 })),
       mounts: [], routes: { mounted: true, standalone: true },
     },
-    environment: { browser_version: "chromium-123", platform: "darwin-arm64", data_identity: "state-digest" },
+    environment: { browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest" },
     captures,
   };
 }
@@ -46,6 +50,31 @@ test("frozen preservation matrix covers 72 host and 63 standalone observations",
   assert.equal(ids.filter((id) => id.startsWith("standalone--")).length, 63);
   assert.equal(ids.length, 135);
   assert.deepEqual(preservation.matrixErrors(validManifest()), []);
+});
+
+test("canonical capture IDs bind route, width, and viewport metadata as one tuple", () => {
+  const manifest = validManifest();
+  const capture = manifest.captures.find(({ id }) => id === "host--storefront--light--1440");
+  capture.width = 768;
+  capture.viewport.width = 390;
+  capture.route = "/admin/search/";
+  assert.ok(preservation.matrixErrors(manifest).some((error) => error.includes("metadata does not match canonical identity: host--storefront--light--1440")));
+});
+
+test("viewport PNG IHDR dimensions must match the ID-bound viewport", () => {
+  const directory = path.join(__dirname, "../../examples/scrypath_ecommerce/ui-review-artifacts/phase185/test-png-dimensions");
+  const manifest = validManifest();
+  const capture = manifest.captures[0];
+  const png = PNG.sync.write(new PNG({ width: 390, height: 844 }));
+  const artifactPath = `${capture.id}--viewport.png`;
+  fs.mkdirSync(directory, { recursive: true });
+  try {
+    fs.writeFileSync(path.join(directory, artifactPath), png);
+    capture.files["viewport.png"] = { path: artifactPath, sha256: require("node:crypto").createHash("sha256").update(png).digest("hex") };
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => error.includes("viewport.png dimensions do not match host--storefront--light--1440")));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("compact navigation screenshot is required with its image filename key", () => {
@@ -93,6 +122,7 @@ test("Meilisearch index responses accept both array and paginated results shapes
   assert.deepEqual(preservation.indexResults([{ uid: "products" }]), [{ uid: "products" }]);
   assert.deepEqual(preservation.indexResults({ results: [{ uid: "products" }], offset: 0, limit: 20, total: 1 }), [{ uid: "products" }]);
   assert.throws(() => preservation.indexResults({ error: "unexpected" }), /results array/);
+  assert.throws(() => preservation.indexResults({ results: [{ uid: "products" }], offset: 0, limit: 20, total: "many" }), /finite non-negative total/);
 });
 
 test("non-loopback and retained targets are rejected independently of disposable mode", () => {

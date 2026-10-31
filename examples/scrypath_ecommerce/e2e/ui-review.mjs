@@ -125,17 +125,18 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     if (!response?.ok()) throw new Error(`Navigation returned ${response?.status() ?? "no response"}`);
     await page.waitForFunction(() => Boolean(window.liveSocket?.isConnected?.()) && Boolean(document.querySelector("[data-phx-main].phx-connected")));
     await page.evaluate(() => document.fonts.ready);
-    const evidence = await page.evaluate(() => {
+    const evidence = await page.evaluate(({ deployment, surface, theme }) => {
       const visible = (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
       const nodes = (selector) => [...document.querySelectorAll(selector)].filter(visible);
       return {
+        deployment, surface, route: `${location.pathname}${location.search}`,
         text: document.body.innerText,
         headings: nodes("h1,h2,h3,h4").map((node) => ({ level: node.tagName, text: node.innerText })),
         controls: nodes("a,button,input,select,textarea").map((node) => ({ tag: node.tagName, text: node.innerText || node.getAttribute("aria-label") || node.getAttribute("placeholder"), href: node.getAttribute("href"), disabled: node.disabled === true })),
         page_width: document.documentElement.scrollWidth, viewport_width: window.innerWidth,
-        theme: { preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
+        theme: { requested: theme, preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
       };
-    });
+    }, { deployment, surface: surface.id, theme });
     if (evidence.page_width > viewport.width + 1) capture.checks.push({ rule: "page-overflow", actual: evidence.page_width, expected: viewport.width });
     if (!evidence.headings.some(({ level }) => level === "H1")) capture.checks.push({ rule: "page-heading", message: "No visible H1." });
     if (surface.id !== "storefront") {
