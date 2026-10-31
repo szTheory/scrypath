@@ -2,7 +2,6 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const os = require("node:os");
 const { spawnSync } = require("node:child_process");
 
 const BOOTSTRAP_COMMIT = "767f368473f17fba43d7be4675c53ab65a87530c";
@@ -27,9 +26,18 @@ function fail(message) {
   throw error;
 }
 
+function gitEnvironment() {
+  const clean = { GIT_TERMINAL_PROMPT: "0", GIT_CONFIG_NOSYSTEM: "1" };
+  for (const key of ["PATH", "HOME", "USERPROFILE", "SYSTEMROOT", "COMSPEC", "TEMP", "TMP", "LANG", "LC_ALL"]) {
+    if (process.env[key]) clean[key] = process.env[key];
+  }
+  return clean;
+}
+
 function git(repo, args, options = {}) {
   const result = spawnSync("git", args, {
     cwd: repo,
+    env: gitEnvironment(),
     encoding: options.encoding === "buffer" ? undefined : "utf8",
     input: options.input,
     maxBuffer: options.maxBuffer || MAX_GIT_OUTPUT,
@@ -417,8 +425,8 @@ function scanCss(source, file, findings) {
     value = value.replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, " "));
     value = value.replace(/url\s*\([^)]*\)/gi, (match) => match.replace(/[^\n]/g, " "));
     value = value.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g, (match) => match.replace(/[^\n]/g, " "));
-    const colors = new Set(["color", "background", "background-color", "border", "border-color", "outline", "outline-color", "box-shadow", "text-decoration", "text-decoration-color", "fill", "stroke", "caret-color", "accent-color", "--color", "--ops-bg", "--ops-surface-1", "--ops-surface-2", "--ops-selection", "--ops-theme-selection", "--ops-warning-text", "--ops-error-text"]);
-    if (!isInsideRange(start, ranges) && (colors.has(property) || property.startsWith("--"))) {
+    const colorProperty = /^(?:color|background(?:-.+)?|border(?:-.+)?|outline(?:-.+)?|box-shadow|text-shadow|filter|fill|stroke|caret-color|accent-color|mask(?:-.+)?|scrollbar-color|--[\w-]+)$/.test(property);
+    if (!isInsideRange(start, ranges) && colorProperty) {
       for (const match of value.matchAll(/#[\da-fA-F]{3,8}\b/g)) {
         findings.push(makeFinding("raw-hex", file, context, match[0], source, valueStart + match.index));
       }
@@ -603,7 +611,7 @@ function isOid(value) { return typeof value === "string" && /^[0-9a-f]{40}$/i.te
 
 function maybeGit(repo, args, options = {}) {
   const result = spawnSync("git", args, {
-    cwd: repo, encoding: options.encoding === "buffer" ? undefined : "utf8",
+    cwd: repo, env: gitEnvironment(), encoding: options.encoding === "buffer" ? undefined : "utf8",
     input: options.input, maxBuffer: options.maxBuffer || MAX_GIT_OUTPUT,
     timeout: options.timeout || GIT_TIMEOUT_MS, windowsHide: true,
   });
@@ -673,13 +681,6 @@ function validateOrigin(repo) {
     return /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)(?:szTheory\/scrypath)$/i.test(normalized);
   };
   if (canonical(url)) return { url, localMirror: false };
-  // Existing canonical-contract tests clone into disposable directories and use the
-  // real checkout as their transport. Verify that mirror's configured origin first.
-  const localPath = url.startsWith("file://") ? new URL(url).pathname : url;
-  if (path.isAbsolute(localPath)) {
-    const mirrorUrl = maybeGit(localPath, ["remote", "get-url", "origin"]);
-    if (mirrorUrl && canonical(String(mirrorUrl).trim())) return { url: localPath, localMirror: true };
-  }
   fail(`origin repository identity is not szTheory/scrypath: ${url}`);
 }
 
@@ -688,6 +689,12 @@ function validateBranch(repo, branch) {
   const checked = maybeGit(repo, ["check-ref-format", "--branch", branch]);
   if (checked == null) fail(`invalid event branch: ${branch}`);
   return branch;
+}
+
+function requireCommit(repo, oid, label) {
+  if (!isOid(oid) || /^0{40}$/.test(oid)) fail(`${label} must be a nonzero full 40-character commit id`);
+  if (maybeGit(repo, ["cat-file", "-e", `${oid}^{commit}`]) == null) fail(`${label} commit is unavailable: ${oid}`);
+  return oid.toLowerCase();
 }
 
 function fetchRef(repo, remote, sourceRef, targetRef) {
@@ -709,14 +716,22 @@ function eventFromEnvironment(env) {
   return { kind: eventName, payload, env };
 }
 
-function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(process.env)) {
+function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(process.env), internalTestFixture = null) {
   const shallow = String(git(repo, ["rev-parse", "--is-shallow-repository"])).trim() === "true";
   if (shallow) fail("shallow history cannot establish the UI literal ceiling; run `git fetch --unshallow origin` and retry");
-  const remote = validateOrigin(repo);
+  // Tests may inject a local Git remote through the module API. The executable
+  // never supplies this parameter and exposes no corresponding CLI option.
+  const fixtureRemote = internalTestFixture?.trustedRemote;
+  const remote = fixtureRemote
+    ? (path.isAbsolute(fixtureRemote) ? { url: fixtureRemote, localMirror: true } : fail("test fixture remote must be an absolute local repository path"))
+    : validateOrigin(repo);
   const event = suppliedEvent || { kind: "local" };
   const kind = event.kind || "local";
   const payload = event.payload || {};
   const env = event.env || {};
+  if (env.GITHUB_REPOSITORY && env.GITHUB_REPOSITORY.toLowerCase() !== "sztheory/scrypath") {
+    fail(`event repository is not szTheory/scrypath: ${env.GITHUB_REPOSITORY}`);
+  }
   let candidateOid;
   let targetOid;
   let beforeOid = null;
@@ -726,7 +741,9 @@ function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(pro
   const fetchMain = () => fetchRef(repo, remote.url, "refs/heads/main", "refs/scrypath-ui-policy/target");
   if (kind === "local") {
     candidateOid = String(git(repo, ["rev-parse", "--verify", "HEAD"])).trim().toLowerCase();
-    targetOid = fetchMain();
+    const main = fetchMain();
+    targetOid = main === candidateOid ? commitParents(repo, candidateOid)[0] : main;
+    if (!targetOid) fail("local candidate equals main but has no first parent for comparison");
   } else if (kind === "pull_request" || kind === "pull_request_target") {
     const base = payload.pull_request?.base;
     const repoName = base?.repo?.full_name;
@@ -748,6 +765,8 @@ function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(pro
     if (!isOid(beforeOid) || /^0{40}$/.test(beforeOid)) fail("push before SHA is zero, deleted, or invalid; a deleted branch cannot reset the UI literal ceiling");
     candidateOid = candidateOid.toLowerCase();
     beforeOid = beforeOid.toLowerCase();
+    requireCommit(repo, candidateOid, "push after SHA");
+    requireCommit(repo, beforeOid, "push before SHA");
     const branchRef = env.GITHUB_REF || "";
     if (branchRef === "refs/heads/main") {
       fetchMain();
@@ -765,6 +784,7 @@ function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(pro
     candidateOid = candidateOid.toLowerCase();
     const main = fetchMain();
     if (env.GITHUB_REF !== "refs/heads/main") fail("scheduled workflow candidate is not on refs/heads/main");
+    requireCommit(repo, candidateOid, "scheduled workflow SHA");
     const ancestry = maybeGit(repo, ["merge-base", "--is-ancestor", candidateOid, main]);
     if (ancestry == null) fail(`scheduled candidate ${candidateOid} is not on fetched main ${main}`);
     targetOid = commitParents(repo, candidateOid)[0];
@@ -774,6 +794,7 @@ function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(pro
     candidateOid = env.GITHUB_SHA;
     if (!isOid(candidateOid)) fail("manual workflow SHA must be a full commit id");
     candidateOid = candidateOid.toLowerCase();
+    requireCommit(repo, candidateOid, "manual workflow SHA");
     const main = fetchMain();
     const ref = env.GITHUB_REF || "";
     if (ref === "refs/heads/main") {
@@ -793,8 +814,8 @@ function resolveTrustedComparison(repo, suppliedEvent = eventFromEnvironment(pro
   return { kind, candidateOid, candidateRef, targetOid, beforeOid, comparisons: [...comparisons], policyVersion: POLICY_VERSION };
 }
 
-function verifyHistory(repo, suppliedEvent = eventFromEnvironment(process.env)) {
-  const resolution = resolveTrustedComparison(repo, suppliedEvent);
+function verifyHistory(repo, suppliedEvent = eventFromEnvironment(process.env), internalTestFixture = null) {
+  const resolution = resolveTrustedComparison(repo, suppliedEvent, internalTestFixture);
   const candidateHistory = verifyLedgerHistory(repo, resolution.candidateOid, "candidate first-parent");
   if (!candidateHistory.introduced || !candidateHistory.latest) fail(`candidate history has no committed ledger introduction: ${resolution.candidateOid}`);
   const candidateLedgerText = blobAt(repo, resolution.candidateOid, LEDGER_PATH);
