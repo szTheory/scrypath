@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: planning
-stopped_at: Phase 184 complete, ready to plan Phase 185
-last_updated: "2026-10-31T01:35:36.952Z"
+stopped_at: Phase 185 context gathered; next $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
+last_updated: "2026-10-31T02:19:34.433Z"
 last_activity: 2026-10-30
-last_activity_desc: Phase 184 complete, transitioned to Phase 185
-state_head: 779c13312de1f2a774d39ad6928aac60d2eecfac
+last_activity_desc: Phase 185 discussion captured; UI preservation contract next
+state_head: 6b7c3410c14857bcc43f8f415b17501eff1eb2ed
 progress:
   total_phases: 4
   completed_phases: 3
@@ -25,13 +25,13 @@ progress:
 Phase: 185 — Executable UI quality foundations
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-30 — Phase 184 complete, transitioned to Phase 185
+Last activity: 2026-10-30 — Phase 185 discussion captured; UI preservation contract next.
 
-Progress: [████████████████████] 28/28 planned plans (100%); phases 3/4 (75%). Phase 185 has no plans yet.
+Progress: [████████░░] 75%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Stop at the Phase 184 boundary. Phase 185 discussion/planning requires the next phase decision; it has not started.
+Next: Phase 185 discussion is complete. Run $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation has not started; the retained-preview source stop remains in force.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
@@ -72,9 +72,9 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 
 ## Session continuity
 
-Last session: 2026-10-31T01:36:45.801090+00:00
-Stopped at: Phase 184 complete, ready to plan Phase 185
-Resume file: None
+Last session: 2026-10-31T02:18:32.885Z
+Stopped at: Phase 185 context gathered; next $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
+Resume file: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
 
