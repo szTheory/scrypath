@@ -273,7 +273,7 @@ async function reservePorts() {
 }
 
 function dockerIdentity(project, service, env) {
-  const compose = ["compose", "-p", project, "-f", env.UI_PRESERVATION_IMAGE_OVERRIDE, "-f", env.UI_PRESERVATION_COMPOSE, "ps", "-q", service];
+  const compose = [...composeFiles(project, env.UI_PRESERVATION_COMPOSE, env.UI_PRESERVATION_IMAGE_OVERRIDE), "ps", "-q", service];
   const ids = run("docker", compose, { env, timeout: 30_000 }).split(/\s+/).filter(Boolean);
   if (ids.length !== 1) throw new Error(`Expected exactly one disposable ${service} container, found ${ids.length}.`);
   const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", ids[0]], { env }));
