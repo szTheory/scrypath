@@ -103,3 +103,15 @@ The final aggregate audit ran against source commit `6838085626174c8016e9cf57aa9
 The aggregate command's complete captured streams and process result are `/private/tmp/scrypath-phase184-10-20261030T072352Z/logs/dependency-audit-final.stdout`, `logs/dependency-audit-final.stderr`, and `receipts/dependency-audit-final.exit` (1). The before/after manifest and lock fingerprints are in `receipts/audit-final-identities-before.txt` and `receipts/audit-final-identities-after.txt`; they compare equal. The independently executed Dialyzer streams and final result are `logs/dialyzer-final.stdout`, `logs/dialyzer-final.stderr`, and `receipts/dialyzer-final.exit` (0); it reported `Total errors: 0` on source `6838085626174c8016e9cf57aa9af84dccab20df`.
 
 An earlier Dialyzer attempt exited 1 before analysis because the temporary `MIX_REBAR3` path was incorrect (`:enoent`). The private path was corrected to the installed Rebar executable and the complete independent analysis then passed. The failed attempt is retained in `logs/dialyzer.stdout`, `logs/dialyzer.stderr`, and `receipts/dialyzer.exit` for audit history.
+
+
+## Post-review registry refresh — Phoenix.HTML 4.4.0
+
+The root hosted candidate exposed [CVE-2026-117645](https://cna.erlef.org/cves/CVE-2026-117645.html), published 2026-10-30 after the earlier audit. The [upstream 4.4.0 changelog](https://raw.githubusercontent.com/phoenixframework/phoenix_html/v4.4.0/CHANGELOG.md) and [official release metadata](https://hex.pm/api/packages/phoenix_html/releases/4.4.0) identify the compatible fix and Elixir `~> 1.7` requirement. The isolated Ops and ecommerce resolvers selected only Phoenix.HTML 4.3.0 → 4.4.0; no manifest change or support-floor change was needed. This supersedes those two earlier final lock identities:
+
+| Graph | New lock SHA-256 | Second fetch | Selection |
+| --- | --- | --- | --- |
+| `scrypath_ops` | `f1771d6219216b5b144f1cf3d220ee487de39da7df071c8bbdaba1b2b3a44fdf` | exit 0; unchanged bytes | Phoenix.HTML 4.4.0 |
+| `examples/scrypath_ecommerce` | `19024cdcc5be4d78f43ba990ec6b6113b8f9f58004031591d573834ba4c8817e` | exit 0; unchanged bytes | Phoenix.HTML 4.4.0 |
+
+Both other graph locks remain unchanged. Raw registry responses, independent resolver output and lock identities are external in `/private/tmp/scrypath-phase184-execution/phoenix-html-*`. Canonical Ops, repository-script tests and workflow lint passed after the refresh; hosted four-graph audit and exact-source candidate evidence are still required. The known Cloak/Cloak Ecto findings remain explicitly affected and unaccepted.

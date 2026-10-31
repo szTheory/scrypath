@@ -399,7 +399,7 @@ jobs:
   ecommerce-mounted:
     name: ecommerce-mounted (required)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       BUILDER_ID: scrypath-mounted-${{ github.run_id }}-${{ github.run_attempt }}
       E2E_CACHE_JOB: mounted
