@@ -65,7 +65,33 @@ defmodule ScrypathOps.ClockTest do
     IO.puts("PRODUCTION_SYSTEM_CLOCK")
     """
 
-    assert {output, 0} = System.cmd("elixir", ["-e", script], stderr_to_stdout: true)
+    assert {output, 0} =
+             System.cmd("elixir", ["-e", script],
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "prod"}]
+             )
+
     assert output =~ "PRODUCTION_SYSTEM_CLOCK"
+  end
+
+  test "test build keeps the fixture clock when Mix compiles it as a production dependency", %{path: path} do
+    File.write!(path, "2026-10-31T12:34:56Z\n")
+    source = Path.expand("../../lib/scrypath_ops/clock.ex", __DIR__)
+
+    script = """
+    Mix.start()
+    Mix.env(:prod)
+    Code.compile_file(#{inspect(source)})
+    Application.put_env(:scrypath_ops, :test_clock_file, #{inspect(path)})
+    IO.puts("DEPENDENCY_CLOCK=" <> DateTime.to_iso8601(ScrypathOps.Clock.utc_now()))
+    """
+
+    assert {output, 0} =
+             System.cmd("elixir", ["-e", script],
+               stderr_to_stdout: true,
+               env: [{"MIX_ENV", "test"}]
+             )
+
+    assert output =~ "DEPENDENCY_CLOCK=2026-10-31T12:34:56Z"
   end
 end
