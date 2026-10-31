@@ -157,7 +157,10 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     await page.mouse.move(0, 0);
     await save("viewport.png", await page.screenshot({ animations: "disabled" }));
     await save("full.png", await page.screenshot({ fullPage: true, animations: "disabled" }));
-    const control = page.locator(surface.id === "storefront" ? ".storefront-search__ops-links a:visible" : "[data-phx-theme][aria-pressed='true']:visible").first();
+    const sheetControl = page.locator(".ops-sheet__panel button:visible, .ops-sheet__panel a:visible, .ops-sheet__panel input:visible, .ops-sheet__panel select:visible, .ops-sheet__panel textarea:visible").first();
+    const control = await sheetControl.count()
+      ? sheetControl
+      : page.locator(surface.id === "storefront" ? ".storefront-search__ops-links a:visible" : "[data-phx-theme][aria-pressed='true']:visible").first();
     if (await control.count()) {
       await control.hover();
       await save("hover.png", await page.screenshot({ animations: "disabled" }));
