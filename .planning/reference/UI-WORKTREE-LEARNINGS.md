@@ -5,7 +5,7 @@ phase: null
 generated: "2026-10-14"
 counts:
   decisions: 3
-  lessons: 7
+  lessons: 8
   patterns: 4
   surprises: 3
 source_artifacts:
@@ -86,6 +86,12 @@ Use a disposable backend per full mutation run. Re-seeding catalog records does 
 
 **Context:** During baseline verification, accumulated test history exceeded the 1000-task bound. The guard correctly refused promotion; a fresh owned search service supported the full 168-case inventory, with the separate transition-timing recheck recorded in the results. Retained preview data stayed untouched.
 **Source:** [Baseline results](UI-BASELINE-RESULTS.md), evidence receipts.
+
+### Verify diagnostic setup before another owned build
+Two Phase 185 diagnostic attempts stopped before any browser capture: a copied expected hash omitted characters, and host/browser code both created the same directory through a shared artifact mount. These were setup failures, not behavioral RED evidence or product failures. Derive hashes from committed bytes, syntax-check the generated overlay and serialized runner, and simulate the shared-directory creation/copy protocol locally with one creator before launching the next owned stack. Keep every failed attempt and its actual status. If diagnostic machinery keeps adding failures, return to the maintained runner rather than extending the wrapper indefinitely.
+
+**Context:** The corrected driver verified both Git/worktree bytes and generated code, then used a temporary shared-path simulation to establish browser-only directory creation and hash-checked host transport. No cache, concurrency, dependency or resource-limit change supplied this improvement. Required verification and bounded retests remain included in the approved phase; an elapsed runtime is not another approval boundary.
+**Source:** [Phase 185 continuity](../phases/185-executable-ui-quality-foundations/.continue-here.md); external `font-session-diagnostic-e25fac89-2226/driver-record.json`, `font-session-diagnostic-e25fac89-r2-20261031T2235/driver-record.json`, and `font-session-diagnostic-e25fac89-r3-265a7ad66ecc/mount-protocol-simulation/simulation-record.json` under `/private/tmp/scrypath-phase185-execution/`. The current workaround still requires actual runtime proof; this lesson establishes setup efficiency only.
 
 ## Patterns
 

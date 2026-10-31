@@ -14,6 +14,9 @@
 - Summarize every risk or decision in plain language before asking; make linked documents optional detail. When the user has no strong preference, recommend a concrete path. An uninformed or indifferent response is not risk acceptance.
 - Prefer the least disruptive evidence-supported remedy. For stuck project tests, inspect attributable processes and consider targeted cleanup first; recommend a whole-machine restart only when its necessity and impact are established.
 - For lightweight delegated work in Codex, prefer GPT-6 Luna (`gpt-6-luna`) with extra-high (`xhigh`) reasoning effort for cost efficiency. Delegate only when authorized; reserve stronger-model synthesis or review for consequential tradeoffs.
+- Approval of a task or phase includes its required local builds, tests, CI, reviews, fixes and bounded retests within the approved scope and limits. Runtime length alone is not an approval gate. Do not turn each plan step or verification command into another permission request.
+- Apply an already approved compatibility policy through its concrete fields, version changes, tests and documentation without asking again for each implementation slice. Ask only for a materially new consequence outside that policy. Preserve explicit user stops, exact resource limits and specific no-retry instructions; investigate failures and resolve their cause before retrying.
+- When repeated approvals expose workflow friction, investigate the cause, implement low-risk efficiency improvements, and record the lesson in durable instructions. Prefer measured critical-path and duplicate-work reductions over adding caches, concurrency or dependencies by default.
 
 --- project-doc ---
 
