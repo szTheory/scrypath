@@ -80,14 +80,14 @@ test("parent regression cleans exact disposable resources without a live retaine
   assert.ok(commands.every((args) => args.join(" ").includes(`label=com.docker.compose.project=${project}`)));
 });
 
-test("task pagination rejects truncated, looping, oversized and changed histories", () => {
-  const page = (uid, next, total = 2) => ({ results: [{ uid, status: "succeeded" }], total, from: uid, next, limit: 1000 });
-  const requested = [];
-  const result = preservation.collectTaskPages((from) => { requested.push(from); return from === null ? page(2, 1) : page(1, null); });
-  assert.deepEqual(requested, [null, 1]);
-  assert.deepEqual(result.map(({ uid }) => uid), [2, 1]);
-  for (const producer of [() => page(2, null), () => page(2, 2), () => page(2, 1, 1001), (from) => from === null ? page(2, 1) : page(1, null, 3)]) {
-    assert.throws(() => preservation.collectTaskPages(producer), /Task history/);
+test("task history accepts one complete bounded snapshot and rejects any omitted tail", () => {
+  const complete = { results: [{ uid: 5, status: "succeeded" }, { uid: 1, status: "failed" }], total: 2, from: 5, next: null, limit: 1000 };
+  let calls = 0;
+  const result = preservation.collectTaskPages((from, limit) => { calls += 1; assert.equal(from, null); assert.equal(limit, 1000); return complete; });
+  assert.equal(calls, 1);
+  assert.deepEqual(result.map(({ uid }) => uid), [5, 1]);
+  for (const invalid of [{ ...complete, next: 0 }, { ...complete, total: 3 }, { ...complete, total: 1001 }, { ...complete, from: 6 }, { ...complete, results: [{ uid: 1 }, { uid: 1 }] }]) {
+    assert.throws(() => preservation.collectTaskPages(() => invalid), /Task history/);
   }
   assert.deepEqual(preservation.collectTaskPages(() => ({ results: [], total: 0, from: null, next: null, limit: 1000 })), []);
 });

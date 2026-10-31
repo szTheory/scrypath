@@ -442,31 +442,20 @@ function assertClockFixture(authority) {
   return authority.clock;
 }
 
-function collectTaskPages(fetchPage, maxItems = MAX_TASK_COUNT) {
-  if (typeof fetchPage !== "function" || !Number.isSafeInteger(maxItems) || maxItems < 1 || maxItems > MAX_TASK_COUNT) throw new Error("Task history requires a finite limit no greater than 1000.");
-  const tasks = [];
-  const seen = new Set();
-  let cursor = null;
-  let total = null;
-  for (let pageNumber = 0; pageNumber <= maxItems; pageNumber += 1) {
-    const page = fetchPage(cursor, INDEX_PAGE_LIMIT);
-    if (!Array.isArray(page?.results) || page.limit !== INDEX_PAGE_LIMIT || !Number.isSafeInteger(page.total) || page.total < 0 || page.total > maxItems) throw new Error("Task history is missing metadata or exceeds the finite history limit.");
-    if (total !== null && page.total !== total) throw new Error("Task history total changed during pagination.");
-    total = page.total;
-    if (page.results.length > INDEX_PAGE_LIMIT || tasks.length + page.results.length > total || (page.results.length && page.from !== page.results[0].uid) || (!page.results.length && page.from !== null)) throw new Error("Task history page bounds are inconsistent.");
-    if (cursor !== null && page.from !== cursor) throw new Error("Task history cursor did not advance to its promised task.");
-    for (const task of page.results) {
-      if (!Number.isSafeInteger(task.uid) || task.uid < 0 || seen.has(task.uid) || (tasks.length && task.uid >= tasks.at(-1).uid)) throw new Error("Task history contains duplicate, unordered or invalid task IDs.");
-      seen.add(task.uid); tasks.push(task);
-    }
-    if (page.next === null) {
-      if (tasks.length !== total) throw new Error("Task history was truncated before its declared total.");
-      return tasks;
-    }
-    if (!page.results.length || !Number.isSafeInteger(page.next) || page.next < 0 || page.next >= tasks.at(-1).uid || tasks.length >= total) throw new Error("Task history cursor is non-progressing or exceeds its declared total.");
-    cursor = page.next;
+function collectTaskPages(fetchPage) {
+  if (typeof fetchPage !== "function") throw new Error("Task history requires a bounded reader.");
+  // The UI's existing history budget is 1000 tasks. Request that whole budget
+  // once, then reject any omitted tail rather than infer cursor totals.
+  const page = fetchPage(null, MAX_TASK_COUNT);
+  if (!Array.isArray(page?.results) || page.limit !== MAX_TASK_COUNT || !Number.isSafeInteger(page.total) || page.total < 0 || page.total > MAX_TASK_COUNT) throw new Error("Task history is missing metadata or exceeds the finite history limit.");
+  if (page.next !== null || page.results.length !== page.total) throw new Error("Task history was truncated before its declared total.");
+  if ((page.results.length && page.from !== page.results[0].uid) || (!page.results.length && page.from !== null)) throw new Error("Task history start cursor is inconsistent.");
+  let previous = Infinity;
+  for (const task of page.results) {
+    if (!Number.isSafeInteger(task.uid) || task.uid < 0 || task.uid >= previous) throw new Error("Task history contains duplicate, unordered or invalid task IDs.");
+    previous = task.uid;
   }
-  throw new Error("Task history exceeded its finite page bound.");
+  return page.results;
 }
 
 function normalizePort(value) {
