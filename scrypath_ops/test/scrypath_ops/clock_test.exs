@@ -74,7 +74,9 @@ defmodule ScrypathOps.ClockTest do
     assert output =~ "PRODUCTION_SYSTEM_CLOCK"
   end
 
-  test "test build keeps the fixture clock when Mix compiles it as a production dependency", %{path: path} do
+  test "test build keeps the fixture clock when Mix compiles it as a production dependency", %{
+    path: path
+  } do
     File.write!(path, "2026-10-31T12:34:56Z\n")
     source = Path.expand("../../lib/scrypath_ops/clock.ex", __DIR__)
 
