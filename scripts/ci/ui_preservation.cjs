@@ -27,7 +27,7 @@ const hostRoutes = {
 const standaloneRoutes = {
   "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync",
   "sync-drift": "/ops/sync-and-index", search: "/ops/search",
-  "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help",
+  "saved-searches": "/ops/search?saved=manage", help: "/ops/help",
 };
 const MAX_ARTIFACT_BYTES = 32 * 1024 * 1024;
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024 * 1024;

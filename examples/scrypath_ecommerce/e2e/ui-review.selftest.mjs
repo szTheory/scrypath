@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, cleanGitEnvironment, dimensions, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, cleanGitEnvironment, dimensions, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+
+test("standalone saved-search capture follows the canonical search route", () => {
+  assert.equal(standaloneRoutes["saved-searches"], "/ops/search?saved=manage");
+});
 
 test("Playwright output cleanup preserves UI review evidence", async () => {
   const demoRoot = fileURLToPath(new URL("../", import.meta.url));
