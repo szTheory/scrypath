@@ -59,6 +59,10 @@ function isCanonicalOrigin(origin) {
   ]).has(String(origin).trim());
 }
 
+function localPathForDockerHostMount(source) {
+  return String(source).replace(/^\/host_mnt(?=\/)/, "");
+}
+
 function run(command, args, options = {}) {
   const outputEncoding = options.encoding === "buffer" ? null : (options.encoding || "utf8");
   const result = spawnSync(command, args, {
@@ -621,7 +625,7 @@ function verifyRetainedInventory() {
   if (!actualPorts.some((entry) => entry.endsWith(`:${port}`) && (entry.startsWith("127.0.0.1:") || entry.startsWith("::1:")))) throw new Error("Retained preview's actual Docker port does not match UI-PREVIEW.json.");
   const expectedCheckout = fs.realpathSync(preview.checkout);
   const appMount = (container.Mounts || []).find(({ Destination }) => Destination === "/app");
-  if (!appMount || appMount.Type !== "bind" || fs.realpathSync(appMount.Source) !== expectedCheckout) throw new Error("Retained preview's actual /app mount does not match UI-PREVIEW.json.");
+  if (!appMount || appMount.Type !== "bind" || fs.realpathSync(localPathForDockerHostMount(appMount.Source)) !== expectedCheckout) throw new Error("Retained preview's actual /app mount does not match UI-PREVIEW.json.");
   const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"])
     .split("\n").filter(Boolean);
   const volumeFacts = volumes.map((name) => {
@@ -1272,6 +1276,7 @@ module.exports = {
   gitEnvironment,
   indexResults,
   isCanonicalOrigin,
+  localPathForDockerHostMount,
   loadAuthorizedSession,
   manifestAuthorityErrors,
   manifestDigest,

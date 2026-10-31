@@ -312,6 +312,11 @@ test("Git authority drops inherited redirect variables and accepts only the cano
   assert.equal(preservation.isCanonicalOrigin("https://example.com/szTheory/scrypath.git"), false);
 });
 
+test("retained-preview bind source maps Docker Desktop host paths through the existing host-mount convention", () => {
+  assert.equal(preservation.localPathForDockerHostMount("/host_mnt/Users/jon/projects/scrypath"), "/Users/jon/projects/scrypath");
+  assert.equal(preservation.localPathForDockerHostMount("/Users/jon/projects/scrypath"), "/Users/jon/projects/scrypath");
+});
+
 test("new disposable evidence is rooted outside the implementation checkout", () => {
   assert.equal(preservation.artifactRoot, "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185");
 });
