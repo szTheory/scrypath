@@ -1,6 +1,6 @@
 ---
 phase: "184"
-status: fixed_pending_full_verification
+status: fixed_and_rechecked
 fixed: 5
 skipped: 0
 source: 1b98eb1a9522c1e80c4cedff10409b681dad0dde
@@ -53,3 +53,7 @@ The first post-review root fast run exposed a namespace-canary violation in the 
 The first canonical Ops run passed its cold consumer boundary contract and reached the complete direct suite, where one old OnMount assertion expected the technical word “Sigra” rather than the newly actionable recovery feedback. The assertion now checks the recovery instruction, while preserving the forbidden-callback check. All 20 actual OnMount/gating/path tests pass. The first raw log, exit and successful owned Postgres disposal remain in `review-fixes-full-ops-first.log`, `review-fixes-full-ops-first.exit` and `root-review-postgres-first.json`. A fresh canonical rerun will establish its full result; the earlier failure is not relabeled.
 
 The repaired merged root suite passed: 1,017 tests and five properties, zero failures (`review-fixes-root-fast-repaired.log`). The first canonical Ops boundary checks passed and its sole stale OnMount message assertion was corrected in `1b98eb1a`; all 20 actual authentication/lifecycle/navigation tests pass (`recovery-on-mount-green.log`). A fresh canonical full Ops run is in progress; its final receipt will retain owned cleanup status. The namespace relocation is committed as `5eb0ccd8`; the allowlist remains unchanged.
+
+## Canonical rerun result
+
+The fresh canonical `mix verify.ops_ui` passed: the root clean-consumer boundary contract and the direct Ops suite (320 tests plus two doctests, zero failures). Its disposable Postgres removal and absence check both succeeded. `root-review-postgres.json` records actual identity, source cutoff, exit 0, cleanup 0, and checked implementation parity across later tracking-only commits. The fresh bounded code re-review is clean; its eleven-file phase-range fallback remains explicitly recorded in REVIEW.md. All five original findings remain fixed in the disposition ledger. New-source hosted verification is the remaining machine step before goal closeout.
