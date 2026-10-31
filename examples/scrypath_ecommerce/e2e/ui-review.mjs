@@ -29,6 +29,12 @@ export const dimensions = [
 export const themes = ["light", "dark", "system-dark"];
 export const viewports = [{ width: 1440, height: 900 }, { width: 768, height: 900 }, { width: 390, height: 844 }];
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+export function disposableClockErrors(clock) {
+  if (!clock || typeof clock.utc !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(clock.utc) || !Number.isFinite(Date.parse(clock.utc)) || new Date(clock.utc).toISOString() !== clock.utc) return ["Disposable observation clock must be a canonical UTC timestamp."];
+  if (clock.sha256 !== sha256(Buffer.from(`${clock.utc}\n`)) || clock.timezone !== "UTC" || clock.locale !== "en-US" || clock.browser_mode !== "fixed-date") return ["Disposable clock digest, timezone, locale or browser mode is invalid."];
+  return [];
+}
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 
 export function cleanGitEnvironment(environment = process.env) {
@@ -164,13 +170,15 @@ async function captureSurface(browser, surface, theme, viewport, output, options
   const deployment = options.deployment;
   const id = `${deployment ? `${deployment}--` : ""}${surface.id}--${theme}--${viewport.width}`;
   const capture = { id, surface: surface.id, theme, viewport, width: viewport.width, deployment, route: surface.route, checks: [], files: {} };
-  const context = await browser.newContext({ baseURL: options.baseURL || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce" });
+  if (options.clock) capture.clock = options.clock;
+  const context = await browser.newContext({ baseURL: options.baseURL || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce", ...(options.clock ? { timezoneId: options.clock.timezone, locale: options.clock.locale } : {}) });
   await context.addInitScript((preference) => {
     if (location.origin === "null") return;
     if (preference === "system-dark") localStorage.removeItem("phx:theme");
     else localStorage.setItem("phx:theme", preference);
   }, theme);
   const page = await context.newPage();
+  if (options.clock) await page.clock.setFixedTime(new Date(options.clock.utc));
   page.setDefaultTimeout(10_000);
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -191,6 +199,11 @@ async function captureSurface(browser, surface, theme, viewport, output, options
         theme: { requested: theme, preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
       };
     }, { deployment, surface: surface.id, theme });
+    if (options.clock) {
+      evidence.clock = options.clock;
+      evidence.observed_at = await page.evaluate(() => new Date().toISOString());
+      if (evidence.observed_at !== options.clock.utc) throw new Error("Browser observation clock did not apply.");
+    }
     const fixtureErrors = deployment ? entryFixtureErrors(deployment, surface.id, evidence.text) : [];
     if (fixtureErrors.length) throw new Error(fixtureErrors.join("\n"));
     if (evidence.page_width > viewport.width + 1) capture.checks.push({ rule: "page-overflow", actual: evidence.page_width, expected: viewport.width });
@@ -254,13 +267,15 @@ async function captureSurface(browser, surface, theme, viewport, output, options
   return capture;
 }
 
-export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, dataIdentity, allowComposeNetwork = false }) {
+export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, dataIdentity, clock, allowComposeNetwork = false }) {
   if (!hostUrl || !standaloneUrl || !output || !dataIdentity) throw new Error("Disposable capture requires both loopback targets, an output directory, and a verified data identity.");
   const host = new URL(hostUrl);
   const standalone = new URL(standaloneUrl);
   const ownedComposeTargets = allowComposeNetwork && host.protocol === "http:" && host.hostname === "web" && host.port === "4002" && host.pathname === "/" && !host.username && !host.password && !host.search && !host.hash && standalone.protocol === "http:" && standalone.hostname === "standalone_ops" && standalone.port === "4003" && standalone.pathname === "/" && !standalone.username && !standalone.password && !standalone.search && !standalone.hash;
   if (!ownedComposeTargets) throw new Error("Disposable browser targets must use the exact owned Compose service routes; loopback retained-preview targets are not accepted.");
   if (path.resolve(output) !== "/artifacts") throw new Error("Disposable captures must write through the helper-owned /artifacts mount.");
+  const clockErrors = disposableClockErrors(clock);
+  if (clockErrors.length) throw new Error(clockErrors.join("\n"));
   const { chromium } = await import("@playwright/test");
   const browser = await chromium.launch({ timeout: 30_000 });
   const standaloneRoutes = {
@@ -275,7 +290,7 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
   const captures = [];
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
-      const capture = await captureSurface(browser, surface, theme, viewport, output, { deployment: "host", baseURL: hostUrl, dataIdentity });
+      const capture = await captureSurface(browser, surface, theme, viewport, output, { deployment: "host", baseURL: hostUrl, dataIdentity, clock });
       capture.browser_version = browser.version();
       capture.platform = `${process.platform}-${process.arch}`;
       capture.data_identity = dataIdentity;
@@ -284,7 +299,7 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
     }
     for (const surface of surfaces.filter(({ id }) => id !== "storefront")) for (const theme of themes) for (const viewport of viewports) {
       const standaloneSurface = { ...surface, route: standaloneRoutes[surface.id] };
-      const capture = await captureSurface(browser, standaloneSurface, theme, viewport, output, { deployment: "standalone", baseURL: standaloneUrl, dataIdentity });
+      const capture = await captureSurface(browser, standaloneSurface, theme, viewport, output, { deployment: "standalone", baseURL: standaloneUrl, dataIdentity, clock });
       capture.browser_version = browser.version();
       capture.platform = `${process.platform}-${process.arch}`;
       capture.data_identity = dataIdentity;

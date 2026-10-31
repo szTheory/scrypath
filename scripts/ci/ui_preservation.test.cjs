@@ -102,6 +102,36 @@ test("clock regression rejects a capture whose observation clock differs from it
   assert.equal(preservation.matrixErrors(manifest).some((error) => /clock/i.test(error)), true);
 });
 
+test("clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks", () => {
+  const directory = fs.mkdtempSync("/private/tmp/phase185-clock-fixture-test-");
+  const authority = { resources: { fixture_directory: directory }, clock: null };
+  const file = path.join(directory, "clock.txt");
+  try {
+    preservation.writeClockFixture(authority, "2026-10-31T11:00:00.000Z");
+    authority.clock = preservation.writeClockFixture(authority, "2026-10-31T12:00:00.000Z");
+    assert.deepEqual(preservation.assertClockFixture(authority), authority.clock);
+    assert.throws(() => preservation.writeClockFixture(authority, "2026-10-31T13:00:00.000Z"), /already frozen/);
+    fs.unlinkSync(file); fs.writeFileSync(file, "2026-10-31T13:00:00.000Z\n");
+    assert.throws(() => preservation.assertClockFixture(authority), /bytes changed/);
+    fs.writeFileSync(file, "x".repeat(129));
+    assert.throws(() => preservation.assertClockFixture(authority), /bounded regular file/);
+    fs.unlinkSync(file); fs.symlinkSync(path.join(directory, "missing"), file);
+    assert.throws(() => preservation.assertClockFixture(authority), /bounded regular file/);
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("runtime clock proof requires both app probes and all three read-only mounts", () => {
+  for (const change of [
+    (manifest) => { manifest.runtime.clock_probes.pop(); },
+    (manifest) => { manifest.runtime.clock_probes[0].utc = "2026-10-31T13:00:00.000Z"; },
+    (manifest) => { manifest.runtime.clock_mounts[0].readonly = false; },
+    (manifest) => { manifest.runtime.clock_mounts[0].destination = "/app"; }
+  ]) {
+    const manifest = validManifest(); change(manifest);
+    assert.ok(preservation.disposableProvenanceErrors(manifest, expected()).some((error) => /clock/i.test(error)));
+  }
+});
+
 test("comparison output is retryable after failure and never overwrites committed evidence", () => {
   const directory = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "phase185-comparison-"));
   const output = path.join(directory, "comparison");
@@ -118,6 +148,8 @@ test("comparison output is retryable after failure and never overwrites committe
 });
 
 function validManifest() {
+  const utc = "2026-10-31T12:00:00.000Z";
+  const clock = { utc, sha256: require("node:crypto").createHash("sha256").update(`${utc}\n`).digest("hex"), timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" };
   const captures = preservation.expectedCaptureIds().map((id) => {
     const [deployment, surface, theme, widthText] = id.split("--");
     const width = Number(widthText);
@@ -127,7 +159,7 @@ function validManifest() {
     const route = deployment === "host"
       ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
       : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help" })[surface];
-    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, mobile_navigation, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest" };
+    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, mobile_navigation, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha }));
   return {
@@ -139,8 +171,10 @@ function validManifest() {
       volumes: [`${project}-postgres`, `${project}-meili`], images: identities,
       containers: identities.map(({ service, source_sha, tree_oid, tree_sha256 }) => ({ service, id: `${service}-container`, name: `${service}-container`, source_built: true, labels: { "org.opencontainers.image.revision": source_sha, "com.docker.compose.project": project, "com.docker.compose.service": service, "com.scrypath.phase185.session": "0123456789abcdef" }, source_sha, tree_oid, tree_sha256 })),
       mounts: [], routes: { mounted: true, standalone: true },
+      clock_probes: ["web", "standalone_ops"].map((service) => ({ service, utc })),
+      clock_mounts: ["web", "standalone_ops", "browser"].map((service) => ({ service, destination: "/phase185-fixture", readonly: true, source: "/private/tmp/fixture-unit" })),
     },
-    environment: { browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest" },
+    environment: { browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock },
     captures,
   };
 }
@@ -382,6 +416,8 @@ test("production manifest validator rejects a forged manifest even with a recomp
     const manifest = validManifest();
     manifest.session_id = sessionId;
     manifest.runtime.compose_project = project;
+    authority.clock = manifest.environment.clock;
+    for (const mount of manifest.runtime.clock_mounts) mount.source = authority.resources.fixture_directory;
     manifest.capture_directory = path.join(preservation.artifactRoot, `before-${sessionId}`);
     manifest.capture_sha256 = preservation.manifestDigest(manifest);
     const manifestPath = path.join(manifest.capture_directory, "capture.json");

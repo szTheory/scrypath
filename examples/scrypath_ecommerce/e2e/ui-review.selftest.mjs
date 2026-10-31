@@ -4,7 +4,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, cleanGitEnvironment, dimensions, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+
+test("disposable captures require a valid fixed browser clock before launching Chromium", async () => {
+  const utc = "2026-10-31T12:00:00.000Z";
+  const { createHash } = await import("node:crypto");
+  const clock = { utc, sha256: createHash("sha256").update(`${utc}\n`).digest("hex"), timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" };
+  assert.deepEqual(disposableClockErrors(clock), []);
+  for (const invalid of [undefined, { ...clock, sha256: "0".repeat(64) }, { ...clock, timezone: "America/New_York" }, { ...clock, utc: "2026-10-31T99:00:00.000Z" }]) {
+    assert.ok(disposableClockErrors(invalid).length);
+    await assert.rejects(captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: "fixture", clock: invalid, allowComposeNetwork: true }), /clock/i);
+  }
+});
 
 test("Playwright output cleanup preserves UI review evidence", async () => {
   const demoRoot = fileURLToPath(new URL("../", import.meta.url));

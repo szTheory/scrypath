@@ -131,6 +131,7 @@ function resourcePlanFor(sessionPath, sessionId, project, ports) {
   return {
     project,
     ports,
+    fixture_directory: path.join(root, `fixture-${sessionId}`),
     volumes: [`${project}-postgres`, `${project}-meili`],
     volume_keys: { [`${project}-postgres`]: "postgres-data", [`${project}-meili`]: "meilisearch-data" },
     work_dirs: { before: buildDir, candidate: candidateDir },
@@ -164,6 +165,7 @@ function createSessionAuthority(sessionPath, session) {
     resources,
     artifact_directories: {},
     capture_environment: {},
+    clock: null,
     candidate_source: null,
     manifests: { before: null, candidate: null },
   };
@@ -268,6 +270,8 @@ function manifestAuthorityErrors(manifest, rawBytes, authority, role, manifestPa
   const independentlyPinnedSource = role === "before" ? authority.source : authority.candidate_source;
   if (canonicalJson(record.source) !== canonicalJson(independentlyPinnedSource) || canonicalJson(manifest.source) !== canonicalJson(independentlyPinnedSource)) errors.push(`${role} source identity differs from the independent creation record.`);
   if (canonicalJson(manifest.environment) !== canonicalJson(record.environment) || manifest.environment?.data_identity !== record.data_identity) errors.push(`${role} browser/platform/data identity differs from the independent creation record.`);
+  if (clockMetadataErrors(authority.clock).length || canonicalJson(manifest.environment?.clock) !== canonicalJson(authority.clock)) errors.push(`${role} observation clock differs from its independent fixture authority.`);
+  if (manifest.runtime?.clock_mounts?.some(({ source }) => source !== authority.resources.fixture_directory)) errors.push(`${role} clock mount source differs from the independent allocation.`);
   if (sha256(Buffer.from(canonicalJson(manifest.runtime))) !== record.runtime_sha256) errors.push(`${role} runtime ownership facts differ from the independent creation record.`);
   try {
     const tree = treeIdentity(record.source.source_sha);
@@ -314,8 +318,8 @@ function ensureArtifactRoot() {
   }
 }
 
-function removePreCaptureFiles(sessionPath, workDir, output) {
-  for (const directory of [workDir, output]) {
+function removePreCaptureFiles(sessionPath, workDir, output, fixtureDirectory) {
+  for (const directory of [workDir, output, ...(fixtureDirectory ? [fixtureDirectory] : [])]) {
     if (!directory.startsWith(`${sessionRoot}${path.sep}`)) throw new Error(`Refusing to remove a pre-capture path outside ${sessionRoot}.`);
     try {
       const info = fs.lstatSync(directory);
@@ -395,6 +399,49 @@ function stableDataIdentity(state) {
   return sha256(canonicalJson({ schema: "scrypath.ui-rendered-state.v3", databases: state.databases, indexes: state.indexes, tasks: state.tasks }));
 }
 
+function clockMetadata(utc) {
+  return { utc, sha256: sha256(Buffer.from(`${utc}\n`)), timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" };
+}
+
+function clockMetadataErrors(clock) {
+  if (!clock || typeof clock.utc !== "string" || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(clock.utc) || !Number.isFinite(Date.parse(clock.utc)) || new Date(clock.utc).toISOString() !== clock.utc) return ["Observation clock must be a canonical UTC ISO8601 timestamp."];
+  if (canonicalJson(clock) !== canonicalJson(clockMetadata(clock.utc))) return ["Observation clock digest, timezone, locale or fixed-date mode is invalid."];
+  return [];
+}
+
+function writeClockFixture(authority, utc) {
+  if (authority.clock) throw new Error("Observation clock is already frozen.");
+  const metadata = clockMetadata(utc);
+  const errors = clockMetadataErrors(metadata);
+  if (errors.length) throw new Error(errors.join("\n"));
+  const directory = authority.resources.fixture_directory;
+  const details = fs.lstatSync(directory);
+  if (details.isSymbolicLink() || !details.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory)) throw new Error("Clock fixture directory is not the independently allocated regular directory.");
+  const destination = path.join(directory, "clock.txt");
+  if (fs.existsSync(destination)) {
+    const current = fs.lstatSync(destination);
+    if (current.isSymbolicLink() || !current.isFile()) throw new Error("Clock fixture is not a regular file.");
+  }
+  const temporary = path.join(directory, `.clock-${crypto.randomBytes(8).toString("hex")}`);
+  fs.writeFileSync(temporary, `${utc}\n`, { flag: "wx", mode: 0o444 });
+  fs.renameSync(temporary, destination);
+  return metadata;
+}
+
+function assertClockFixture(authority) {
+  const errors = clockMetadataErrors(authority.clock);
+  if (errors.length) throw new Error(errors.join("\n"));
+  const directory = authority.resources.fixture_directory;
+  const directoryInfo = fs.lstatSync(directory);
+  if (directoryInfo.isSymbolicLink() || !directoryInfo.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory)) throw new Error("Clock fixture directory changed after allocation.");
+  const file = path.join(directory, "clock.txt");
+  const info = fs.lstatSync(file);
+  if (info.isSymbolicLink() || !info.isFile() || info.size > 128) throw new Error("Clock fixture must remain a bounded regular file.");
+  const bytes = fs.readFileSync(file);
+  if (bytes.toString("utf8") !== `${authority.clock.utc}\n` || sha256(bytes) !== authority.clock.sha256) throw new Error("Clock fixture bytes changed after freezing.");
+  return authority.clock;
+}
+
 function collectTaskPages(fetchPage, maxItems = MAX_TASK_COUNT) {
   if (typeof fetchPage !== "function" || !Number.isSafeInteger(maxItems) || maxItems < 1 || maxItems > MAX_TASK_COUNT) throw new Error("Task history requires a finite limit no greater than 1000.");
   const tasks = [];
@@ -431,6 +478,12 @@ function normalizePort(value) {
 
 function disposableProvenanceErrors(manifest, expected = {}) {
   const errors = [];
+  const clock = manifest?.environment?.clock;
+  errors.push(...clockMetadataErrors(clock));
+  const probes = manifest?.runtime?.clock_probes || [];
+  if (canonicalJson(probes.map(({ service }) => service).sort()) !== canonicalJson(["standalone_ops", "web"]) || probes.some(({ utc }) => !clock || Date.parse(utc) !== Date.parse(clock.utc))) errors.push("Actual mounted and standalone application clock probes are missing or mismatched.");
+  const clockMounts = manifest?.runtime?.clock_mounts || [];
+  if (canonicalJson(clockMounts.map(({ service }) => service).sort()) !== canonicalJson(["browser", "standalone_ops", "web"]) || clockMounts.some(({ destination, readonly, source }) => destination !== "/phase185-fixture" || readonly !== true || typeof source !== "string")) errors.push("Actual read-only clock mount facts are missing or mismatched.");
   if (manifest?.schema !== "scrypath.ui-disposable.v2") errors.push("Unsupported disposable manifest schema.");
   if (manifest?.mode !== "disposable") errors.push("Capture is not explicitly marked disposable.");
   if (!expected.source_sha || !expected.tree_sha256) errors.push("Independent expected source SHA and tree fingerprint are required.");
@@ -510,10 +563,12 @@ function matrixErrors(manifest) {
   const expected = expectedCaptureMetadata();
   const captures = Array.isArray(manifest?.captures) ? manifest.captures : [];
   const found = new Map(captures.map((capture) => [capture.id, capture]));
+  errors.push(...clockMetadataErrors(manifest?.environment?.clock));
   if (found.size !== captures.length) errors.push("Capture matrix contains duplicate identities.");
   for (const id of expected.keys()) if (!found.has(id)) errors.push(`Missing paired capture: ${id}.`);
   for (const id of found.keys()) if (!expected.has(id)) errors.push(`Unexpected capture identity: ${id}.`);
   for (const capture of captures) {
+    if (canonicalJson(capture.clock) !== canonicalJson(manifest?.environment?.clock)) errors.push(`Unpaired observation clock: ${capture.id}.`);
     const canonical = expected.get(capture.id);
     if (canonical && (capture.deployment !== canonical.deployment || capture.surface !== canonical.surface || capture.theme !== canonical.theme || capture.width !== canonical.width || capture.route !== canonical.route || capture.viewport?.width !== canonical.width || capture.viewport?.height !== canonical.height)) {
       errors.push(`Capture metadata does not match canonical identity: ${capture.id}.`);
@@ -582,6 +637,7 @@ function artifactErrors(manifest, directory) {
         const copy = JSON.parse(bytes.toString("utf8"));
         const canonical = expectedCaptureMetadata().get(capture.id);
         const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
+        if (canonicalJson(copy.clock) !== canonicalJson(capture.clock) || copy.observed_at !== capture.clock?.utc) throw new Error(`copy observation clock does not match ${capture.id}`);
         if (copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
           throw new Error(`copy metadata does not match ${capture.id}`);
         }
@@ -665,6 +721,7 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
   if (before.environment.browser_version !== after.environment.browser_version) errors.push("Before and candidate browser versions differ.");
   if (before.environment.platform !== after.environment.platform) errors.push("Before and candidate platforms differ.");
   if (before.environment.data_identity !== after.environment.data_identity) errors.push("Before and candidate data-state digests differ.");
+  if (canonicalJson(before.environment.clock) !== canonicalJson(after.environment.clock)) errors.push("Before and candidate observation clocks differ.");
   if (before.runtime.compose_project !== after.runtime.compose_project) errors.push("Before and candidate Compose projects differ.");
   if (before.runtime.volumes?.join("\n") !== after.runtime.volumes?.join("\n")) errors.push("Before and candidate owned volume identities differ.");
   if (before.runtime.host_ports?.join("\n") !== after.runtime.host_ports?.join("\n")) errors.push("Before and candidate loopback port identities differ.");
@@ -865,8 +922,10 @@ function teardownOwnedProject(authority, removeVolumes = true) {
     for (const mount of container.Mounts || []) {
       if (mount.Type === "volume" && (retained.volumes.includes(mount.Name) || !expectedVolumes.includes(mount.Name))) throw new Error(`Refusing teardown: container ${container.Id} mounts a retained or unallocated volume ${mount.Name}.`);
       if (mount.Type === "bind") {
-        const allowedArtifact = service === "browser" && mount.Destination === "/artifacts" && Object.values(authority.artifact_directories || {}).includes(path.resolve(mount.Source));
-        if (!allowedArtifact) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
+        const mountSource = path.resolve(localPathForDockerHostMount(mount.Source));
+        const allowedArtifact = service === "browser" && mount.Destination === "/artifacts" && Object.values(authority.artifact_directories || {}).includes(mountSource);
+        const allowedClock = ["web", "standalone_ops", "browser"].includes(service) && mount.Destination === "/phase185-fixture" && mountSource === authority.resources.fixture_directory && mount.RW === false;
+        if (!allowedArtifact && !allowedClock) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
       }
       if (!["volume", "bind", "tmpfs"].includes(mount.Type)) throw new Error(`Refusing teardown: container ${container.Id} has unsupported mount type ${mount.Type}.`);
     }
@@ -969,16 +1028,21 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  web:",
     `    ports: [\"127.0.0.1:${ports.web}:4002\"]`,
+    `    environment: {E2E_RUN_ID: \"phase185-${sessionId}\", TZ: UTC}`,
+    `    volumes: [${JSON.stringify(`${authority.resources.fixture_directory}:/phase185-fixture:ro`)}]`,
     ...(webCommand ? [`    command: ${JSON.stringify(webCommand)}`] : []),
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  standalone_ops:",
     `    ports: [\"127.0.0.1:${ports.standalone}:4003\"]`,
+    `    environment: {E2E_RUN_ID: \"phase185-${sessionId}\", TZ: UTC}`,
+    `    volumes: [${JSON.stringify(`${authority.resources.fixture_directory}:/phase185-fixture:ro`)}]`,
     ...(standaloneCommand ? [`    command: ${JSON.stringify(standaloneCommand)}`] : []),
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  browser:",
     "    entrypoint: [sleep]",
     "    command: [infinity]",
-    `    volumes: [${JSON.stringify(`${artifactDirectory}:/artifacts`)}]`,
+    "    environment: {TZ: UTC}",
+    `    volumes: [${JSON.stringify(`${artifactDirectory}:/artifacts`)}, ${JSON.stringify(`${authority.resources.fixture_directory}:/phase185-fixture:ro`)}]`,
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "volumes:",
     `  postgres-data: {name: \"${postgresVolume}\", labels: [\"${ownerLabel}=${sessionId}\"]}`,
@@ -1041,9 +1105,29 @@ async function waitForRoute(baseUrl, route) {
   if (!response.ok) throw new Error(`Disposable route ${url} returned ${response.status}.`);
 }
 
-function captureInBrowser(stack, outputDirectory, dataIdentity) {
+function verifyStackClock(stack, authority) {
+  const clock = assertClockFixture(authority);
+  stack.clockMounts = [];
+  stack.clockProbes = [];
+  for (const service of ["web", "standalone_ops", "browser"]) {
+    const { container } = dockerIdentity(authority.resources.project, service, stack.env);
+    const mount = (container.Mounts || []).find(({ Destination }) => Destination === "/phase185-fixture");
+    if (!mount || mount.Type !== "bind" || mount.RW !== false || path.resolve(localPathForDockerHostMount(mount.Source)) !== authority.resources.fixture_directory) throw new Error(`Disposable ${service} has no independently allocated read-only clock directory.`);
+    if (!(container.Config?.Env || []).includes("TZ=UTC")) throw new Error(`Disposable ${service} timezone is not pinned to UTC.`);
+    stack.clockMounts.push({ service, destination: mount.Destination, readonly: true, source: authority.resources.fixture_directory });
+    if (service === "browser") continue;
+    if (!(container.Config?.Env || []).includes(`E2E_RUN_ID=phase185-${authority.session_id}`)) throw new Error(`Disposable ${service} did not opt into the test-only observation clock.`);
+    const probe = run("docker", [...stack.compose, "exec", "-T", service, "mix", "run", "--no-start", "-e", 'IO.puts("PHASE185_CLOCK=" <> DateTime.to_iso8601(ScrypathOps.Clock.utc_now()))'], { env: stack.env, timeout: 60_000 });
+    const lines = probe.split("\n").filter((line) => line.startsWith("PHASE185_CLOCK="));
+    if (lines.length !== 1 || Date.parse(lines[0].slice("PHASE185_CLOCK=".length)) !== Date.parse(clock.utc)) throw new Error(`Disposable ${service} actual application clock differs from the fixture.`);
+    stack.clockProbes.push({ service, utc: lines[0].slice("PHASE185_CLOCK=".length) });
+  }
+  return clock;
+}
+
+function captureInBrowser(stack, outputDirectory, dataIdentity, clock) {
   const sourcePath = "/app/examples/scrypath_ecommerce/e2e/ui-review.mjs";
-  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
+  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, clock: ${JSON.stringify(clock)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
   const output = run("docker", [...stack.compose, "exec", "-T", "browser", "node", "--input-type=module", "-e", script], { env: stack.env, timeout: 1_200_000 });
   const result = JSON.parse(output);
   if (result.captures.length !== expectedCaptureIds().length) throw new Error(`Browser image captured ${result.captures.length} entries; expected ${expectedCaptureIds().length}.`);
@@ -1072,13 +1156,15 @@ function runtimeManifest(stack, source, project, ports, retained) {
       };
     }),
     mounts: stack.mounts,
+    clock_mounts: stack.clockMounts,
+    clock_probes: stack.clockProbes,
     routes: { mounted: true, standalone: true },
     main_inclusion: { local_main_ref: source.main_ref, included: source.main_included, remote_main_ref: source.remote_main_ref, remote_current: source.remote_main_current },
     handoff: stack.handoff,
   };
 }
 
-function stackDataIdentity(stack) {
+function stackDataIdentity(stack, { quiescent = false } = {}) {
   const databaseNames = ["scrypath_ecommerce_test", "scrypath_ops_phase173_test"];
   const databases = Object.fromEntries(databaseNames.map((database) => {
     const dump = run("docker", [...stack.compose, "exec", "-T", "postgres", "pg_dump", "--no-owner", "--no-privileges", "--data-only", "--column-inserts", "-U", "postgres", database], { env: stack.env, timeout: 60_000 });
@@ -1095,7 +1181,24 @@ function stackDataIdentity(stack) {
     return { ...index, settings, stats, documents: docs };
   }).sort((left, right) => left.uid.localeCompare(right.uid));
   const tasks = collectTaskPages((from, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/tasks?limit=${limit}${from === null ? "" : `&from=${from}`}`], { env: stack.env, timeout: 30_000 })));
+  if (quiescent && (tasks.some(({ status }) => ["enqueued", "processing"].includes(status)) || indexData.some(({ stats }) => stats.isIndexing === true))) {
+    const error = new Error("Disposable Meilisearch state is still processing."); error.code = "UI_STATE_BUSY"; throw error;
+  }
   return stableDataIdentity({ databases, indexes: indexData, tasks });
+}
+
+async function waitForStableData(stack) {
+  const deadline = Date.now() + 60_000;
+  let previous = null;
+  while (Date.now() < deadline) {
+    let current = null;
+    try { current = stackDataIdentity(stack, { quiescent: true }); }
+    catch (error) { if (error.code !== "UI_STATE_BUSY") throw error; }
+    if (current && current === previous) return current;
+    previous = current;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error("Disposable backend state did not settle within its bounded startup window.");
 }
 
 async function captureBefore(sessionPath) {
@@ -1117,8 +1220,14 @@ async function captureBefore(sessionPath) {
   fs.mkdirSync(output, { recursive: false, mode: 0o700 });
   let stack;
   let startupAttempted = false;
+  let fixtureCreated = false;
   let primary = null;
   try {
+    fs.mkdirSync(authority.resources.fixture_directory, { recursive: false, mode: 0o700 });
+    fixtureCreated = true;
+    // A warmup value keeps readiness probes valid. No capture uses this value;
+    // the final fixture is written and independently pinned after seeding settles.
+    writeClockFixture(authority, new Date().toISOString());
     stack = buildAndStart(project, sessionId, ports, retained, source, workDir, output, authority, {
       cleanupOnFailure: false,
       beforeStart: (markStarted) => { startupAttempted = true; markStarted(); },
@@ -1131,8 +1240,13 @@ async function captureBefore(sessionPath) {
     const before = sourceIdentity(false);
     const sourceErrors = sourceChangeErrors(source, before);
     if (sourceErrors.length) throw new Error(sourceErrors.join("\n"));
-    const dataIdentity = stackDataIdentity(stack);
-    const captures = captureInBrowser(stack, output, dataIdentity);
+    const dataIdentity = await waitForStableData(stack);
+    authority.clock = writeClockFixture(authority, new Date().toISOString());
+    writeJson(authorityPathFor(sessionPath), authority);
+    const clock = verifyStackClock(stack, authority);
+    const captures = captureInBrowser(stack, output, dataIdentity, clock);
+    assertClockFixture(authority);
+    if (stackDataIdentity(stack) !== dataIdentity) throw new Error("Before capture changed the frozen database/search state digest.");
     const afterCaptureSource = sourceIdentity(false);
     const captureSourceErrors = sourceChangeErrors(source, afterCaptureSource);
     if (captureSourceErrors.length) throw new Error(captureSourceErrors.join("\n"));
@@ -1141,7 +1255,7 @@ async function captureBefore(sessionPath) {
       generated_at: new Date().toISOString(), session_id: sessionId,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
@@ -1167,7 +1281,7 @@ async function captureBefore(sessionPath) {
     console.log(JSON.stringify({ status: session.status, before: session.before, project, ports, source }, null, 2));
   } catch (error) { primary = error; }
   if (primary && !startupAttempted) {
-    try { removePreCaptureFiles(sessionPath, workDir, output); }
+    try { removePreCaptureFiles(sessionPath, workDir, output, fixtureCreated ? authority.resources.fixture_directory : null); }
     catch (cleanupError) { primary.fileCleanupError = cleanupError; }
   }
   try {
@@ -1206,6 +1320,7 @@ async function captureAfter(sessionPath) {
   const { session, authority } = loadAuthorizedSession(sessionPath);
   if (session.status !== "before-captured") throw new Error("Session is not ready for a candidate capture.");
   const retained = assertRetainedInventoryCurrent(authority);
+  const clock = assertClockFixture(authority);
   const beforeRecord = authority.manifests.before;
   const beforeBytes = readJsonBytes(beforeRecord.manifest_path);
   const before = JSON.parse(beforeBytes.toString("utf8"));
@@ -1238,6 +1353,7 @@ async function captureAfter(sessionPath) {
         preserveData: true,
         cleanupOnFailure: false,
         beforeStart: (markStarted) => {
+          assertClockFixture(authority);
           assertOwnedRuntime(authority, "before");
           const current = stackDataIdentity(existingStackContext(authority, "before"));
           if (current !== session.data_identity) throw new Error("Frozen before database/search state changed while the candidate image was being built.");
@@ -1262,7 +1378,9 @@ async function captureAfter(sessionPath) {
     const afterStartupSource = sourceIdentity(false);
     const sourceErrors = sourceChangeErrors(source, afterStartupSource);
     if (sourceErrors.length) throw new Error(sourceErrors.join("\n"));
-    const captures = captureInBrowser(stack, output, dataIdentity);
+    verifyStackClock(stack, authority);
+    const captures = captureInBrowser(stack, output, dataIdentity, clock);
+    assertClockFixture(authority);
     const afterBrowserDataIdentity = stackDataIdentity(stack);
     if (afterBrowserDataIdentity !== dataIdentity) throw new Error("Browser capture changed the frozen database/search state digest.");
     const afterCaptureSource = sourceIdentity(false);
@@ -1273,7 +1391,7 @@ async function captureAfter(sessionPath) {
       generated_at: new Date().toISOString(), session_id: session.session_id,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
@@ -1371,6 +1489,9 @@ module.exports = {
   captureManifestErrors,
   collectPages,
   collectTaskPages,
+  clockMetadata,
+  clockMetadataErrors,
+  assertClockFixture,
   comparePng,
   createSessionAuthority,
   disposableProvenanceErrors,
@@ -1393,4 +1514,5 @@ module.exports = {
   stableDataIdentity,
   sourceIdentity,
   withComparisonDirectory,
+  writeClockFixture,
 };
