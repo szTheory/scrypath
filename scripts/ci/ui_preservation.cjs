@@ -744,7 +744,7 @@ function dockerContainerIdentity(project, service, env) {
 
 function candidateServerCommands() {
   return {
-    web: ["sh", "-c", "set -eu; cd /app/examples/scrypath_ecommerce; for asset in /app/scrypath_ops/priv/static/assets/js/app.js /app/scrypath_ops/priv/static/assets/css/app.css /app/examples/scrypath_ecommerce/priv/static/assets/js/app.js /app/examples/scrypath_ecommerce/priv/static/assets/css/app.css; do test -s \"$asset\"; done; exec env SCRYPATH_E2E_NO_SANDBOX=1 mix phx.server"],
+    web: ["sh", "-c", "set -eu; cd /app/examples/scrypath_ecommerce; for asset in /app/scrypath_ops/priv/static/assets/js/app.js /app/scrypath_ops/priv/static/assets/css/app.css /app/examples/scrypath_ecommerce/priv/static/assets/js/app.js /app/examples/scrypath_ecommerce/priv/static/assets/css/app.css; do test -s \"$$asset\"; done; exec env SCRYPATH_E2E_NO_SANDBOX=1 mix phx.server"],
     standalone_ops: ["sh", "-c", "set -eu; cd /app/scrypath_ops; test -s priv/static/assets/css/app.css; test -s priv/static/assets/js/app.js; exec env PHX_SERVER=true SCRYPATH_OPS_PORT=4003 mix phx.server"],
   };
 }
