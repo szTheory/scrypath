@@ -92,6 +92,16 @@ test("task pagination rejects truncated, looping, oversized and changed historie
   assert.deepEqual(preservation.collectTaskPages(() => ({ results: [], total: 0, from: null, next: null, limit: 1000 })), []);
 });
 
+test("clock regression rejects a capture whose observation clock differs from its environment", () => {
+  const manifest = validManifest();
+  const utc = "2026-10-31T12:00:00.000Z";
+  const clock = { utc, sha256: require("node:crypto").createHash("sha256").update(`${utc}\n`).digest("hex"), timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" };
+  manifest.environment.clock = clock;
+  for (const capture of manifest.captures) capture.clock = { ...clock };
+  manifest.captures[0].clock.utc = "2026-10-31T13:00:00.000Z";
+  assert.equal(preservation.matrixErrors(manifest).some((error) => /clock/i.test(error)), true);
+});
+
 test("comparison output is retryable after failure and never overwrites committed evidence", () => {
   const directory = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "phase185-comparison-"));
   const output = path.join(directory, "comparison");
