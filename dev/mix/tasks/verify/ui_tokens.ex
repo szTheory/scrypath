@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Verify.UiTokens do
   @max_json_depth 64
   @max_tokens 4096
   @max_alias_depth 32
-  @css_lexeme ~r/\/\*[\s\S]*?(?:\*\/|\z)|"(?:\\[\s\S]|[^"\\])*(?:"|\z)|'(?:\\[\s\S]|[^'\\])*(?:'|\z)|@plugin\b|[{};]/u
+  @css_lexeme ~r/\/\*[\s\S]*?(?:\*\/|\z)|"(?:\\[\s\S]|[^"\\])*(?:"|\z)|'(?:\\[\s\S]|[^'\\])*(?:'|\z)|\\[\s\S]|@plugin\b|[{};]/u
   @supported_types [
     "color",
     "cubicBezier",
@@ -443,6 +443,10 @@ defmodule Mix.Tasks.Verify.UiTokens do
       &validate_shadow_dimension!(layer[&1], "#{path}.#{&1}")
     )
 
+    if layer["blur"]["value"] < 0 do
+      raise ArgumentError, "#{path}: shadow blur must be non-negative"
+    end
+
     if Map.has_key?(layer, "inset") and not is_boolean(layer["inset"]) do
       raise ArgumentError, "#{path}: shadow inset must be a boolean"
     end
@@ -654,10 +658,10 @@ defmodule Mix.Tasks.Verify.UiTokens do
   # Only actual top-level at-rules can define a live theme. Comments and
   # quoted strings are lexemes, so their braces and lookalike rules are inert.
   defp active_css_theme_blocks!(css) do
-    {depth, _pending, _start, blocks} =
+    {depth, _pending, _start, blocks, _boundary} =
       Regex.scan(@css_lexeme, css, return: :index)
-      |> Enum.reduce({0, nil, nil, []}, fn [{index, size}],
-                                           {depth, pending, start, blocks} = state ->
+      |> Enum.reduce({0, nil, nil, [], 0}, fn [{index, size}],
+                                              {depth, pending, start, blocks, boundary} = state ->
         part = binary_part(css, index, size)
 
         cond do
@@ -681,27 +685,37 @@ defmodule Mix.Tasks.Verify.UiTokens do
 
           part == "@plugin" and depth == 0 ->
             remaining = binary_part(css, index, byte_size(css) - index)
+            prefix = binary_part(css, boundary, index - boundary)
 
-            case Regex.run(~r/\A@plugin\s+"\.\.\/vendor\/daisyui-theme"\s*\{/u, remaining) do
-              [header] -> {depth, index + byte_size(header) - 1, start, blocks}
+            prefix =
+              Regex.replace(@css_lexeme, prefix, fn token ->
+                if String.starts_with?(token, "/*"), do: " ", else: token
+              end)
+
+            header =
+              if String.trim(prefix) == "",
+                do: Regex.run(~r/\A@plugin\s+"\.\.\/vendor\/daisyui-theme"\s*\{/u, remaining)
+
+            case header do
+              [header] -> {depth, index + byte_size(header) - 1, start, blocks, boundary}
               nil -> state
             end
 
           part == "{" ->
             {depth + 1, nil, if(depth == 0 and pending == index, do: index + 1, else: start),
-             blocks}
+             blocks, boundary}
 
           part == "}" ->
             if depth == 0, do: raise(ArgumentError, "CSS has an unmatched closing block")
 
             if depth == 1 and is_integer(start) do
-              {0, nil, nil, [binary_part(css, start, index - start) | blocks]}
+              {0, nil, nil, [binary_part(css, start, index - start) | blocks], index + size}
             else
-              {depth - 1, nil, start, blocks}
+              {depth - 1, nil, start, blocks, if(depth == 1, do: index + size, else: boundary)}
             end
 
           part == ";" and depth == 0 ->
-            {depth, nil, start, blocks}
+            {depth, nil, start, blocks, index + size}
 
           true ->
             state

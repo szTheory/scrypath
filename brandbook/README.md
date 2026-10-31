@@ -75,7 +75,8 @@ typed values, color component and hex agreement, and the muted text color's 64% 
 reference. The CSS `none` value remains an exact string in `shadow.glow`’s namespaced
 `org.scrypath.css_literals.light` extension metadata; it is not a DTCG token type.
 The reader caps each input at 2 MiB, JSON nesting at 64, tokens at 4096, and alias chains at 32.
-It reads only active top-level theme blocks, excluding comments and quoted examples.
+It reads only active top-level theme statements, excluding comments, escaped text and quoted examples.
+Shadow blur is non-negative for CSS compatibility; offsets and spread may be signed.
 
 Run `mix verify.repository_contracts` from the repository root to validate the export and detect
 independent CSS or JSON drift. This source contract does not validate rendered UI output. The
