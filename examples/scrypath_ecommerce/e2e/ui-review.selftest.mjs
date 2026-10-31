@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
 
 test("disposable captures require a valid fixed browser clock before launching Chromium", async () => {
   const utc = "2026-10-31T12:00:00.000Z";
@@ -15,6 +15,10 @@ test("disposable captures require a valid fixed browser clock before launching C
     assert.ok(disposableClockErrors(invalid).length);
     await assert.rejects(captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: "fixture", clock: invalid, allowComposeNetwork: true }), /clock/i);
   }
+});
+
+test("standalone saved-search capture follows the canonical search route", () => {
+  assert.equal(standaloneRoutes["saved-searches"], "/ops/search?saved=manage");
 });
 
 test("Playwright output cleanup preserves UI review evidence", async () => {

@@ -27,7 +27,7 @@ const hostRoutes = {
 const standaloneRoutes = {
   "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync",
   "sync-drift": "/ops/sync-and-index", search: "/ops/search",
-  "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help",
+  "saved-searches": "/ops/search?saved=manage", help: "/ops/help",
 };
 const MAX_ARTIFACT_BYTES = 32 * 1024 * 1024;
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024 * 1024;
@@ -140,12 +140,53 @@ function resourcePlanFor(sessionPath, sessionId, project, ports) {
     services: ["postgres", "meilisearch", "web", "standalone_ops", "browser"],
     container_names: Object.fromEntries(["postgres", "meilisearch", "web", "standalone_ops", "browser"].map((service) => [service, `${project}-${service}-1`])),
     network_name: `${project}_default`,
+    source_bind_mounts: composeSourceBindMounts(),
     compose_base_files: [
       path.join(exampleRoot, "compose.yaml"),
       path.join(exampleRoot, "compose.e2e.yaml"),
       path.join(exampleRoot, "compose.phase173.yaml"),
     ],
   };
+}
+
+function composeSourceBindMounts() {
+  const source = path.join(exampleRoot, "scripts/phase173-create-database.sh");
+  const info = fs.lstatSync(source);
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error("The Phase 173 PostgreSQL bootstrap must be a regular source file.");
+  return [{
+    service: "postgres",
+    source: path.resolve(source),
+    source_sha256: sha256(fs.readFileSync(source)),
+    destination: "/docker-entrypoint-initdb.d/10-phase173-create-database.sh",
+    read_only: true,
+  }];
+}
+
+function isAuthorizedOwnedBindMount(authority, service, mount) {
+  const mountedSource = path.resolve(localPathForDockerHostMount(mount.Source || ""));
+  if (["web", "standalone_ops", "browser"].includes(service) && mount.Destination === "/phase185-fixture"
+    && mountedSource === authority.resources.fixture_directory && mount.RW === false) return true;
+  const expected = authority.resources.source_bind_mounts || composeSourceBindMounts();
+  const sourceMount = expected.find((entry) => entry.service === service && entry.destination === mount.Destination && path.resolve(entry.source) === mountedSource);
+  if (sourceMount && mount.RW === !sourceMount.read_only) {
+    if (sourceMount.source_sha256) {
+      const info = fs.lstatSync(sourceMount.source);
+      if (!info.isFile() || info.isSymbolicLink() || sha256(fs.readFileSync(sourceMount.source)) !== sourceMount.source_sha256) return false;
+    }
+    return true;
+  }
+  return service === "browser" && mount.Destination === "/artifacts" && mount.RW === true
+    && Object.values(authority.artifact_directories || {}).includes(mountedSource);
+}
+
+function containerIdForService(containers, service) {
+  const matches = containers.filter((entry) => entry.service === service && typeof entry.id === "string" && entry.id.length > 0);
+  if (matches.length !== 1) throw new Error(`Expected exactly one inspected ${service} container, found ${matches.length}.`);
+  return matches[0].id;
+}
+
+function sameDockerIdSet(actual, expected) {
+  return canonicalJson([...actual].sort()) === canonicalJson([...expected].sort());
 }
 
 function createSessionAuthority(sessionPath, session) {
@@ -184,6 +225,7 @@ function validateSessionAuthority(session, authority, sessionPath, rawSessionByt
   if (canonicalJson(session?.source) !== canonicalJson(authority?.source)) errors.push("Session source identity does not match its independent creation authority.");
   if (canonicalJson(session?.retained_inventory) !== canonicalJson(authority?.retained_inventory) || authority?.retained_inventory_sha256 !== sha256(Buffer.from(canonicalJson(authority?.retained_inventory)))) errors.push("Session retained-preview inventory does not match the independent read-only inventory.");
   const expectedPlan = resourcePlanFor(sessionPath, authority?.session_id, authority?.resources?.project, authority?.resources?.ports);
+  if (!Object.hasOwn(authority?.resources || {}, "source_bind_mounts")) delete expectedPlan.source_bind_mounts;
   if (canonicalJson(authority?.resources) !== canonicalJson(expectedPlan)) errors.push("Independent resource authority has unexpected Compose paths, volumes, services, or artifact roots.");
   if (session?.build_dir !== expectedPlan.work_dirs.before) errors.push("Session build directory is outside its independent allowlist.");
   if (session?.candidate_build_dir && session.candidate_build_dir !== expectedPlan.work_dirs.candidate) errors.push("Candidate build directory is outside its independent allowlist.");
@@ -896,7 +938,7 @@ function assertAllocatedDockerResources(authority, preserveData) {
   const recorded = new Map((authority.manifests.before?.runtime?.containers || []).map((container) => [container.service, container]));
   for (const service of authority.resources.services) {
     const name = containerNames[service];
-    const ids = run("docker", ["ps", "-aq", "--filter", `name=^/${name}$`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+    const ids = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `name=^/${name}$`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
     if (!allowedExisting.has(service)) {
       if (ids.length) throw new Error(`Disposable container name ${name} already exists before this service is authorized to run.`);
       continue;
@@ -904,7 +946,7 @@ function assertAllocatedDockerResources(authority, preserveData) {
     if (ids.length !== 1) throw new Error(`Expected the single recorded ${service} container to survive candidate replacement.`);
     const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", ids[0]], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
     const labels = container.Config?.Labels || {};
-    if (ids[0] !== recorded.get(service)?.id || container.Name?.replace(/^\//, "") !== name || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== service || labels[ownerLabel] !== sessionId) throw new Error(`Disposable ${service} container does not match its recorded owner and name.`);
+    if (!sameDockerIdSet(ids, [recorded.get(service)?.id || ""]) || container.Name?.replace(/^\//, "") !== name || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== service || labels[ownerLabel] !== sessionId) throw new Error(`Disposable ${service} container does not match its recorded owner and name.`);
   }
 }
 
@@ -930,7 +972,7 @@ function teardownOwnedProject(authority, removeVolumes = true) {
   const sessionId = authority.session_id;
   const retained = authority.retained_inventory;
   if (project !== `scrypath-p185-${sessionId}` || project === retained.project || !/^[a-f0-9]{16}$/.test(sessionId)) throw new Error("Refusing teardown without a matching independent project/session authority.");
-  const containerIds = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const containerIds = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
   const containers = containerIds.map((id) => JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 })));
   for (const container of containers) {
     const labels = container.Config?.Labels || {};
@@ -942,10 +984,7 @@ function teardownOwnedProject(authority, removeVolumes = true) {
     for (const mount of container.Mounts || []) {
       if (mount.Type === "volume" && (retained.volumes.includes(mount.Name) || !expectedVolumes.includes(mount.Name))) throw new Error(`Refusing teardown: container ${container.Id} mounts a retained or unallocated volume ${mount.Name}.`);
       if (mount.Type === "bind") {
-        const mountSource = path.resolve(localPathForDockerHostMount(mount.Source));
-        const allowedArtifact = service === "browser" && mount.Destination === "/artifacts" && Object.values(authority.artifact_directories || {}).includes(mountSource);
-        const allowedClock = ["web", "standalone_ops", "browser"].includes(service) && mount.Destination === "/phase185-fixture" && mountSource === authority.resources.fixture_directory && mount.RW === false;
-        if (!allowedArtifact && !allowedClock) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
+        if (!isAuthorizedOwnedBindMount(authority, service, mount)) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
       }
       if (!["volume", "bind", "tmpfs"].includes(mount.Type)) throw new Error(`Refusing teardown: container ${container.Id} has unsupported mount type ${mount.Type}.`);
     }
@@ -991,9 +1030,9 @@ function assertOwnedRuntime(authority, role) {
   if (!record?.runtime) throw new Error(`No independently recorded ${role} Docker runtime facts exist.`);
   const project = authority.resources.project;
   const sessionId = authority.session_id;
-  const ids = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
+  const ids = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
   const expectedIds = record.runtime.containers.map(({ id }) => id).sort();
-  if (canonicalJson(ids) !== canonicalJson(expectedIds)) throw new Error(`${role} Compose container IDs differ from the independent Docker capture record.`);
+  if (!sameDockerIdSet(ids, expectedIds)) throw new Error(`${role} Compose container IDs differ from the independent Docker capture record.`);
   for (const id of ids) {
     const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
     const labels = container.Config?.Labels || {};
@@ -1106,7 +1145,8 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
     }
     const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { env }).split("\n").filter(Boolean).sort();
     if (canonicalJson(volumes) !== canonicalJson([...authority.resources.volumes].sort())) throw new Error("Disposable Compose volumes do not match the exact independent allocation.");
-    const inspect = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", web.id], { env }));
+    const webId = containerIdForService(allContainers, "web");
+    const inspect = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", webId], { env }));
     const mounts = (inspect.Mounts || []).map(({ Type, Destination }) => ({ type: Type, destination: Destination }));
     if (mounts.some((mount) => mount.type === "bind" && mount.destination === "/app")) throw new Error("Disposable app container unexpectedly uses a source bind mount.");
     return { env, override, compose, handoff, images, containers: allContainers, volumes, mounts, artifactDirectory, runtimeImageIds: readJson(handoff).runtime_image_ids, sessionId };
@@ -1516,11 +1556,14 @@ module.exports = {
   comparePng,
   compareCapturedDirectories,
   createSessionAuthority,
+  composeSourceBindMounts,
+  containerIdForService,
   disposableProvenanceErrors,
   dockerEnvironment,
   expectedCaptureIds,
   gitEnvironment,
   indexResults,
+  isAuthorizedOwnedBindMount,
   isCanonicalOrigin,
   localPathForDockerHostMount,
   loadAuthorizedSession,
@@ -1537,4 +1580,6 @@ module.exports = {
   sourceIdentity,
   withComparisonDirectory,
   writeClockFixture,
+  sameDockerIdSet,
+  validateSessionAuthority,
 };

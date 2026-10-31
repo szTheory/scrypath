@@ -28,6 +28,15 @@ export const dimensions = [
 ];
 export const themes = ["light", "dark", "system-dark"];
 export const viewports = [{ width: 1440, height: 900 }, { width: 768, height: 900 }, { width: 390, height: 844 }];
+export const standaloneRoutes = {
+  "control-room": "/ops/",
+  "search-health": "/ops/health",
+  "failed-sync": "/ops/failed-sync",
+  "sync-drift": "/ops/sync-and-index",
+  search: "/ops/search",
+  "saved-searches": "/ops/search?saved=manage",
+  help: "/ops/help"
+};
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 export function disposableClockErrors(clock) {
@@ -278,15 +287,6 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
   if (clockErrors.length) throw new Error(clockErrors.join("\n"));
   const { chromium } = await import("@playwright/test");
   const browser = await chromium.launch({ timeout: 30_000 });
-  const standaloneRoutes = {
-    "control-room": "/ops/",
-    "search-health": "/ops/health",
-    "failed-sync": "/ops/failed-sync",
-    "sync-drift": "/ops/sync-and-index",
-    search: "/ops/search",
-    "saved-searches": "/ops/playbooks?saved=manage",
-    help: "/ops/help"
-  };
   const captures = [];
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {

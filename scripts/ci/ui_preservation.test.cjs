@@ -216,7 +216,7 @@ function validManifest() {
     const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control Room", "Search"] } : undefined;
     const route = deployment === "host"
       ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
-      : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/playbooks?saved=manage", help: "/ops/help" })[surface];
+      : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/search?saved=manage", help: "/ops/help" })[surface];
     return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, mobile_navigation, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha }));
@@ -394,6 +394,68 @@ test("teardown failures preserve the original capture failure", () => {
     assert.equal(error.cleanupError, cleanup);
     return true;
   });
+});
+
+test("owned Docker bind mounts match the recorded read-only bootstrap or exact artifact directory", () => {
+  const root = "/private/tmp/scrypath-phase185-execution";
+  const directory = fs.mkdtempSync(path.join(root, "bind-authority-test-"));
+  const sessionId = "0123456789abcdef";
+  const sessionPath = path.join(directory, "ui-session.json");
+  const session = {
+    schema: "scrypath.ui-session.v2", status: "starting", session_id: sessionId,
+    source: { source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha },
+    retained_inventory: { project: "scrypath_ecommerce", port: 4002, volumes: ["scrypath_ecommerce-data"], container: "scrypath_ecommerce-web-1" },
+    project, ports: { web: 53111, standalone: 53112 }, build_dir: path.join(directory, `build-${sessionId}`),
+  };
+  try {
+    const authority = preservation.createSessionAuthority(sessionPath, session);
+    const bootstrap = authority.resources.source_bind_mounts[0];
+    assert.equal(bootstrap.service, "postgres");
+    assert.equal(bootstrap.destination, "/docker-entrypoint-initdb.d/10-phase173-create-database.sh");
+    assert.equal(bootstrap.read_only, true);
+    const actualBootstrap = { Source: bootstrap.source, Destination: bootstrap.destination, RW: false };
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", actualBootstrap), true);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", { ...actualBootstrap, RW: true }), false);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", { ...actualBootstrap, Source: `${bootstrap.source}.foreign` }), false);
+
+    const legacyAuthority = structuredClone(authority);
+    delete legacyAuthority.resources.source_bind_mounts;
+    const rawSessionBytes = Buffer.from(`${JSON.stringify(session, null, 2)}\n`);
+    assert.deepEqual(preservation.validateSessionAuthority(session, legacyAuthority, sessionPath, rawSessionBytes), []);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(legacyAuthority, "postgres", actualBootstrap), true);
+
+    const clock = { Source: authority.resources.fixture_directory, Destination: "/phase185-fixture", RW: false };
+    for (const service of ["web", "standalone_ops", "browser"]) {
+      assert.equal(preservation.isAuthorizedOwnedBindMount(authority, service, clock), true);
+      assert.equal(preservation.isAuthorizedOwnedBindMount(authority, service, { ...clock, Source: `/host_mnt${clock.Source}` }), true);
+      assert.equal(preservation.isAuthorizedOwnedBindMount(authority, service, { ...clock, RW: true }), false);
+      assert.equal(preservation.isAuthorizedOwnedBindMount(authority, service, { ...clock, Source: `${clock.Source}-foreign` }), false);
+    }
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", clock), false);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "meilisearch", clock), false);
+
+    const artifact = path.join(preservation.artifactRoot, `before-${sessionId}`);
+    authority.artifact_directories.before = artifact;
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "browser", { Source: artifact, Destination: "/artifacts", RW: true }), true);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "browser", { Source: path.join(preservation.artifactRoot, "foreign"), Destination: "/artifacts", RW: true }), false);
+    assert.equal(preservation.isAuthorizedOwnedBindMount(authority, "postgres", { Source: artifact, Destination: "/artifacts", RW: true }), false);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("post-start runtime inspection resolves the web container from the verified service inventory", () => {
+  const containers = [{ service: "postgres", id: "pg-id" }, { service: "web", id: "web-id" }, { service: "standalone_ops", id: "ops-id" }];
+  assert.equal(preservation.containerIdForService(containers, "web"), "web-id");
+  assert.throws(() => preservation.containerIdForService(containers, "browser"), /Expected exactly one inspected browser container/);
+  assert.throws(() => preservation.containerIdForService([...containers, { service: "web", id: "other-web" }], "web"), /Expected exactly one inspected web container/);
+});
+
+test("before-runtime ownership compares complete Docker IDs", () => {
+  const fullId = "0123456789abcdef".repeat(4);
+  assert.equal(preservation.sameDockerIdSet([fullId], [fullId]), true);
+  assert.equal(preservation.sameDockerIdSet([fullId.slice(0, 12)], [fullId]), false);
+  assert.equal(preservation.sameDockerIdSet([fullId, "f".repeat(64)], [fullId]), false);
 });
 
 test("candidate transition preserves the owned state and tears down on post-start failure", async () => {
