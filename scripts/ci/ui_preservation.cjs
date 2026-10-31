@@ -29,6 +29,9 @@ const standaloneRoutes = {
 };
 const MAX_ARTIFACT_BYTES = 32 * 1024 * 1024;
 const MAX_CAPTURE_BYTES = 2 * 1024 * 1024 * 1024;
+const INDEX_PAGE_LIMIT = 1000;
+const MAX_INDEX_COUNT = 10_000;
+const MAX_DOCUMENT_COUNT = 50_000;
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const canonicalize = (value) => Array.isArray(value)
@@ -95,7 +98,57 @@ function sourceChangeErrors(start, end) {
 function indexResults(payload) {
   const results = Array.isArray(payload) ? payload : payload?.results;
   if (!Array.isArray(results)) throw new Error("Meilisearch index listing did not contain a results array.");
+  if (!Array.isArray(payload)) {
+    const { offset, limit, total } = payload;
+    if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || !Number.isSafeInteger(total) || total < 0) {
+      throw new Error("Meilisearch pagination requires a finite non-negative total, non-negative offset, and positive limit.");
+    }
+    if (results.length > limit || offset + results.length > total) throw new Error("Meilisearch page exceeds its declared finite bounds.");
+  }
   return results;
+}
+
+function collectPages(fetchPage, { label, maxItems, pageLimit = INDEX_PAGE_LIMIT }) {
+  if (typeof fetchPage !== "function" || !Number.isSafeInteger(maxItems) || maxItems < 1 || !Number.isSafeInteger(pageLimit) || pageLimit < 1 || pageLimit > INDEX_PAGE_LIMIT) {
+    throw new Error("Meilisearch pagination requires a bounded fetch function and positive finite limits.");
+  }
+  const items = [];
+  let expectedTotal = null;
+  let offset = 0;
+  const maxPages = Math.ceil(maxItems / pageLimit) + 1;
+  for (let pageNumber = 0; pageNumber < maxPages; pageNumber += 1) {
+    const payload = fetchPage(offset, pageLimit);
+    if (Array.isArray(payload)) throw new Error(`Meilisearch ${label} response omitted pagination metadata.`);
+    const page = indexResults(payload);
+    if (payload.offset !== offset || payload.limit !== pageLimit) throw new Error(`Meilisearch ${label} pagination did not match the requested offset and limit.`);
+    if (expectedTotal === null) expectedTotal = payload.total;
+    else if (payload.total !== expectedTotal) throw new Error(`Meilisearch ${label} total changed during pagination.`);
+    if (expectedTotal > maxItems) throw new Error(`Meilisearch ${label} exceeds the ${maxItems} item identity limit.`);
+    const expectedPageLength = Math.min(pageLimit, Math.max(0, expectedTotal - offset));
+    if (page.length !== expectedPageLength) throw new Error(`Meilisearch ${label} pagination made incomplete or non-progressing results.`);
+    items.push(...page);
+    offset += page.length;
+    if (offset === expectedTotal) return items;
+  }
+  throw new Error(`Meilisearch ${label} pagination exceeded its finite page bound.`);
+}
+
+function normalizePgDump(dump) {
+  if (typeof dump !== "string") throw new Error("PostgreSQL data dump must be text.");
+  const lines = dump.split("\n");
+  const restrict = lines.filter((line) => /^\\restrict [A-Za-z0-9_+/=-]+\r?$/.test(line));
+  const unrestrict = lines.filter((line) => /^\\unrestrict [A-Za-z0-9_+/=-]+\r?$/.test(line));
+  if (!restrict.length && !unrestrict.length) return dump;
+  const token = (line) => line.replace(/^\\(?:un)?restrict /, "").replace(/\r$/, "");
+  if (restrict.length !== 1 || unrestrict.length !== 1 || token(restrict[0]) !== token(unrestrict[0])) {
+    throw new Error("PostgreSQL dump contains an unmatched or repeated transport restriction nonce.");
+  }
+  return lines.filter((line) => line !== restrict[0] && line !== unrestrict[0]).join("\n");
+}
+
+function stableDataIdentity(state) {
+  if (!state || typeof state !== "object" || !state.databases || !Array.isArray(state.indexes)) throw new Error("Rendered-state identity requires database and search-index state.");
+  return sha256(canonicalJson({ schema: "scrypath.ui-rendered-state.v2", databases: state.databases, indexes: state.indexes }));
 }
 
 function normalizePort(value) {
@@ -485,27 +538,17 @@ function stackDataIdentity(stack) {
   const databaseNames = ["scrypath_ecommerce_test", "scrypath_ops_phase173_test"];
   const databases = Object.fromEntries(databaseNames.map((database) => {
     const dump = run("docker", [...stack.compose, "exec", "-T", "postgres", "pg_dump", "--no-owner", "--no-privileges", "--data-only", "--column-inserts", "-U", "postgres", database], { env: stack.env, timeout: 60_000 });
-    return [database, sha256(dump)];
+    return [database, sha256(normalizePgDump(dump))];
   }));
-  const indexPayload = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", "http://127.0.0.1:7700/indexes?limit=1000"], { env: stack.env, timeout: 30_000 }));
-  const indexes = indexResults(indexPayload);
+  const indexes = collectPages((offset, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/indexes?limit=${limit}&offset=${offset}`], { env: stack.env, timeout: 30_000 })), { label: "index list", maxItems: MAX_INDEX_COUNT });
   const indexData = indexes.map(({ uid }) => {
-    const docs = [];
-    let offset = 0;
-    let total = null;
-    while (total === null || offset < total) {
-      const payload = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/indexes/${encodeURIComponent(uid)}/documents?limit=1000&offset=${offset}`], { env: stack.env, timeout: 30_000 }));
-      const page = indexResults(payload);
-      total = Number(payload.total ?? page.length);
-      if (!page.length && offset < total) throw new Error(`Meilisearch document pagination made no progress for index ${uid}.`);
-      docs.push(...page);
-      offset += page.length;
-      if (docs.length > 50_000) throw new Error(`Meilisearch index ${uid} exceeds the 50,000 document digest limit.`);
-    }
+    const base = `http://127.0.0.1:7700/indexes/${encodeURIComponent(uid)}`;
+    const settings = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `${base}/settings`], { env: stack.env, timeout: 30_000 }));
+    const docs = collectPages((offset, limit) => JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `${base}/documents?limit=${limit}&offset=${offset}`], { env: stack.env, timeout: 30_000 })), { label: `documents for ${uid}`, maxItems: MAX_DOCUMENT_COUNT });
     docs.sort((left, right) => String(left.id ?? left._id ?? "").localeCompare(String(right.id ?? right._id ?? "")));
-    return [uid, sha256(canonicalJson(docs))];
-  }).sort(([left], [right]) => left.localeCompare(right));
-  return sha256(canonicalJson({ databases, indexes: indexData }));
+    return { uid, primaryKey: indexes.find((index) => index.uid === uid)?.primaryKey ?? null, settings, documents: docs };
+  }).sort((left, right) => left.uid.localeCompare(right.uid));
+  return stableDataIdentity({ databases, indexes: indexData });
 }
 
 async function captureBefore(sessionPath) {
@@ -703,12 +746,15 @@ if (require.main === module) main(process.argv.slice(2)).catch((error) => {
 
 module.exports = {
   artifactErrors,
+  collectPages,
   comparePng,
   disposableProvenanceErrors,
   expectedCaptureIds,
   indexResults,
   matrixErrors,
+  normalizePgDump,
   runWithTeardown,
   sourceChangeErrors,
+  stableDataIdentity,
   sourceIdentity,
 };

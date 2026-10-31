@@ -125,6 +125,34 @@ test("Meilisearch index responses accept both array and paginated results shapes
   assert.throws(() => preservation.indexResults({ results: [{ uid: "products" }], offset: 0, limit: 20, total: "many" }), /finite non-negative total/);
 });
 
+test("Meilisearch pagination has finite totals, consistent progress, and complete bounded pages", () => {
+  const records = [{ uid: "a" }, { uid: "b" }, { uid: "c" }];
+  assert.deepEqual(preservation.collectPages((offset, limit) => ({ offset, limit, total: records.length, results: records.slice(offset, offset + limit) }), { label: "indexes", maxItems: 10, pageLimit: 2 }), records);
+  assert.throws(() => preservation.collectPages(() => ({ offset: 0, limit: 2, total: 3, results: [] }), { label: "indexes", maxItems: 10, pageLimit: 2 }), /incomplete or non-progressing/);
+  assert.throws(() => preservation.collectPages(() => ({ offset: 0, limit: 2, total: 11, results: records.slice(0, 2) }), { label: "indexes", maxItems: 10, pageLimit: 2 }), /exceeds the 10 item/);
+});
+
+test("PostgreSQL dump identity ignores only a matched restrict/unrestrict transport nonce", () => {
+  const before = "SET statement_timeout = 0;\n\\restrict secretOne\nINSERT INTO products VALUES (1, 'Book');\n\\unrestrict secretOne\n";
+  const repeat = "SET statement_timeout = 0;\n\\restrict anotherNonce\nINSERT INTO products VALUES (1, 'Book');\n\\unrestrict anotherNonce\n";
+  const changedRow = "SET statement_timeout = 0;\n\\restrict anotherNonce\nINSERT INTO products VALUES (1, 'Pen');\n\\unrestrict anotherNonce\n";
+  assert.equal(preservation.normalizePgDump(before), preservation.normalizePgDump(repeat));
+  assert.notEqual(preservation.normalizePgDump(before), preservation.normalizePgDump(changedRow));
+  assert.throws(() => preservation.normalizePgDump(before.replace("unrestrict secretOne", "unrestrict wrongNonce")), /unmatched or repeated/);
+});
+
+test("rendered-state identity changes for real document and settings changes", () => {
+  const state = { databases: { ecommerce: "stable-db" }, indexes: [{ uid: "products", primaryKey: "id", settings: { searchableAttributes: ["name"] }, documents: [{ id: 1, name: "Book" }] }] };
+  const clone = () => JSON.parse(JSON.stringify(state));
+  assert.equal(preservation.stableDataIdentity(state), preservation.stableDataIdentity(clone()));
+  const changedRecord = clone();
+  changedRecord.indexes[0].documents[0].name = "Pen";
+  assert.notEqual(preservation.stableDataIdentity(state), preservation.stableDataIdentity(changedRecord));
+  const changedSettings = clone();
+  changedSettings.indexes[0].settings.searchableAttributes = ["description"];
+  assert.notEqual(preservation.stableDataIdentity(state), preservation.stableDataIdentity(changedSettings));
+});
+
 test("non-loopback and retained targets are rejected independently of disposable mode", () => {
   const manifest = validManifest();
   manifest.runtime.host_ports = ["0.0.0.0:53111->4002/tcp", "127.0.0.1:4002->4003/tcp"];
