@@ -485,6 +485,7 @@ test("candidate transition preserves the owned state and tears down on post-star
 test("candidate app commands reuse frozen databases without prepare, seed, or migrate steps", () => {
   const commands = preservation.candidateServerCommands();
   assert.deepEqual(Object.keys(commands), ["web", "standalone_ops"]);
+  assert.ok(commands.web.join(" ").includes('test -s "$$asset"'));
   for (const command of Object.values(commands).map((parts) => parts.join(" "))) {
     assert.match(command, /mix phx\.server/);
     assert.doesNotMatch(command, /e2e\.prepare|scrypath\.demo\.seed|ecto\.migrate/);
