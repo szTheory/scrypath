@@ -249,7 +249,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
     socket
     |> assign(:loads, loads)
-    |> assign(:last_refresh_at, DateTime.utc_now())
+    |> assign(:last_refresh_at, ScrypathOps.Clock.utc_now())
   end
 
   defp reload_schema(socket, mod) do
@@ -260,7 +260,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
         socket
         |> assign(:loads, List.keyreplace(loads, mod, 0, {mod, result}))
-        |> assign(:last_refresh_at, DateTime.utc_now())
+        |> assign(:last_refresh_at, ScrypathOps.Clock.utc_now())
 
       _ ->
         socket
@@ -393,7 +393,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
       prefix: oban_prefix(Keyword.get(config, :oban)),
       node: node(),
       generation: socket.assigns.context_generation,
-      created_at: DateTime.utc_now()
+      created_at: ScrypathOps.Clock.utc_now()
     }
 
     handle =
@@ -405,7 +405,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         _ -> nil
       end
 
-    Map.merge(receipt, %{handle: handle, state: :accepted, checked_at: DateTime.utc_now()})
+    Map.merge(receipt, %{handle: handle, state: :accepted, checked_at: ScrypathOps.Clock.utc_now()})
   end
 
   defp recovery_host_context(socket, schema) do

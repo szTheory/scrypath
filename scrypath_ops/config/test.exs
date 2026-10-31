@@ -45,3 +45,9 @@ config :scrypath_ops, :validate_opsui_auth_on_start, false
 config :scrypath_ops, standalone: true
 config :scrypath_ops, :phase173_fixture_source, ScrypathOps.Phase173FixtureSource
 config :scrypath_ops, :saved_search_doc_base, "https://github.com/szTheory/scrypath/blob/main/"
+
+# Opt in only for the owned disposable preservation harness. Other tests keep
+# system time; a configured but missing/invalid fixture fails closed.
+if String.starts_with?(System.get_env("E2E_RUN_ID", ""), "phase185-") do
+  config :scrypath_ops, :test_clock_file, "/phase185-fixture/clock.txt"
+end

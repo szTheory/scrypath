@@ -177,7 +177,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           {:ok, rep} ->
             socket
             |> assign(:reconcile_result, rep)
-            |> assign(:reconcile_loaded_at, DateTime.utc_now())
+            |> assign(:reconcile_loaded_at, ScrypathOps.Clock.utc_now())
             |> assign(:reconcile_generation, socket.assigns.context_generation)
             |> assign(:reconcile_error, nil)
             |> refresh_promotion_eligibility()
@@ -355,7 +355,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             socket
             |> assign(:drift_result, report)
             |> assign(:drift_error, nil)
-            |> assign(:drift_loaded_at, DateTime.utc_now())
+            |> assign(:drift_loaded_at, ScrypathOps.Clock.utc_now())
             |> assign(:drift_generation, generation)
 
           {:error, reason} ->
@@ -424,7 +424,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
        |> then(fn socket ->
          if observation_error,
            do: socket,
-           else: assign(socket, :recovery_checked_at, DateTime.utc_now())
+           else: assign(socket, :recovery_checked_at, ScrypathOps.Clock.utc_now())
        end)
        |> assign(:recovery_loading, false)}
     else
@@ -895,7 +895,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
          %{
            state: :cancelled,
            reason: :task_cancelled,
-           checked_at: DateTime.utc_now(),
+           checked_at: ScrypathOps.Clock.utc_now(),
            operation: receipt.operation,
            index: receipt.index,
            expected_ids: nil
@@ -1172,7 +1172,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, rep} ->
           socket
           |> assign(:reconcile_result, rep)
-          |> assign(:reconcile_loaded_at, DateTime.utc_now())
+          |> assign(:reconcile_loaded_at, ScrypathOps.Clock.utc_now())
           |> assign(:reconcile_generation, socket.assigns.context_generation)
           |> assign(:reconcile_error, nil)
           |> refresh_promotion_eligibility()
@@ -1203,7 +1203,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         {:ok, rep} ->
           socket
           |> assign(:drift_result, rep)
-          |> assign(:drift_loaded_at, DateTime.utc_now())
+          |> assign(:drift_loaded_at, ScrypathOps.Clock.utc_now())
           |> assign(:drift_generation, socket.assigns.context_generation)
           |> assign(:drift_error, nil)
           |> refresh_promotion_eligibility()
