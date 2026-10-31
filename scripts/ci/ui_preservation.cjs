@@ -10,6 +10,7 @@ const repositoryRoot = path.resolve(__dirname, "../..");
 const exampleRoot = path.join(repositoryRoot, "examples/scrypath_ecommerce");
 const sessionRoot = "/private/tmp/scrypath-phase185-execution";
 const artifactRoot = path.join(sessionRoot, "ui-review-artifacts", "phase185");
+const buildxConfigRoot = path.join(sessionRoot, "docker-buildx");
 const previewPath = path.join(repositoryRoot, ".planning/UI-PREVIEW.json");
 const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
@@ -48,6 +49,10 @@ function gitEnvironment(environment = process.env) {
   return clean;
 }
 
+function dockerEnvironment(environment = process.env) {
+  return { ...environment, BUILDX_CONFIG: buildxConfigRoot };
+}
+
 function isCanonicalOrigin(origin) {
   return new Set([
     "https://github.com/szTheory/scrypath",
@@ -67,7 +72,7 @@ function run(command, args, options = {}) {
   const outputEncoding = options.encoding === "buffer" ? null : (options.encoding || "utf8");
   const result = spawnSync(command, args, {
     cwd: options.cwd || repositoryRoot,
-    env: command === "git" ? gitEnvironment(options.env || process.env) : (options.env || process.env),
+    env: command === "git" ? gitEnvironment(options.env || process.env) : command === "docker" ? dockerEnvironment(options.env || process.env) : (options.env || process.env),
     encoding: outputEncoding,
     timeout: options.timeout ?? 30_000,
     maxBuffer: options.maxBuffer ?? 32 * 1024 * 1024,
@@ -305,6 +310,24 @@ function ensureArtifactRoot() {
   const info = fs.lstatSync(artifactRoot);
   if (info.isSymbolicLink() || !info.isDirectory() || fs.realpathSync(artifactRoot) !== path.resolve(artifactRoot)) {
     throw new Error(`Disposable evidence root is not a stable regular directory: ${artifactRoot}`);
+  }
+}
+
+function removePreCaptureFiles(sessionPath, workDir, output) {
+  for (const directory of [workDir, output]) {
+    if (!directory.startsWith(`${sessionRoot}${path.sep}`)) throw new Error(`Refusing to remove a pre-capture path outside ${sessionRoot}.`);
+    try {
+      const info = fs.lstatSync(directory);
+      if (info.isSymbolicLink() || !info.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory)) throw new Error(`Refusing to remove non-regular generated directory ${directory}.`);
+      fs.rmSync(directory, { recursive: true, force: false });
+    } catch (error) { if (error.code !== "ENOENT") throw error; }
+  }
+  for (const file of [sessionPath, authorityPathFor(sessionPath)]) {
+    try {
+      const info = fs.lstatSync(file);
+      if (info.isSymbolicLink() || !info.isFile()) throw new Error(`Refusing to remove non-regular generated file ${file}.`);
+      fs.unlinkSync(file);
+    } catch (error) { if (error.code !== "ENOENT") throw error; }
   }
 }
 
@@ -1031,8 +1054,10 @@ async function captureBefore(sessionPath) {
   let startupAttempted = false;
   let primary = null;
   try {
-    startupAttempted = true;
-    stack = buildAndStart(project, sessionId, ports, retained, source, workDir, output, authority);
+    stack = buildAndStart(project, sessionId, ports, retained, source, workDir, output, authority, {
+      cleanupOnFailure: false,
+      beforeStart: (markStarted) => { startupAttempted = true; markStarted(); },
+    });
     const hostUrl = `http://127.0.0.1:${ports.web}`;
     const standaloneUrl = `http://127.0.0.1:${ports.standalone}`;
     await waitForRoute(hostUrl, "/");
@@ -1076,9 +1101,22 @@ async function captureBefore(sessionPath) {
     persistAuthorizedSession(sessionPath, session, authority);
     console.log(JSON.stringify({ status: session.status, before: session.before, project, ports, source }, null, 2));
   } catch (error) { primary = error; }
-  runWithTeardown(primary, () => {
-    if (primary && startupAttempted) teardownOwnedProject(authority, true);
-  });
+  if (primary && !startupAttempted) {
+    try { removePreCaptureFiles(sessionPath, workDir, output); }
+    catch (cleanupError) { primary.fileCleanupError = cleanupError; }
+  }
+  try {
+    runWithTeardown(primary, () => {
+      if (primary && startupAttempted) teardownOwnedProject(authority, true);
+    });
+  } catch (error) {
+    if (primary && startupAttempted) {
+      session.status = "before-failed";
+      try { persistAuthorizedSession(sessionPath, session, authority); }
+      catch (sessionError) { primary.sessionError = sessionError; }
+    }
+    throw error;
+  }
 }
 
 function captureManifestErrors(manifest, rawBytes, authority, role) {
@@ -1272,6 +1310,7 @@ module.exports = {
   comparePng,
   createSessionAuthority,
   disposableProvenanceErrors,
+  dockerEnvironment,
   expectedCaptureIds,
   gitEnvironment,
   indexResults,

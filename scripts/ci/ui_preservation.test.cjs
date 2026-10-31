@@ -312,6 +312,12 @@ test("Git authority drops inherited redirect variables and accepts only the cano
   assert.equal(preservation.isCanonicalOrigin("https://example.com/szTheory/scrypath.git"), false);
 });
 
+test("Docker Buildx metadata stays under the authorized external session root", () => {
+  const environment = preservation.dockerEnvironment({ DOCKER_HOST: "unix:///var/run/docker.sock", BUILDX_CONFIG: "/Users/jon/.docker/buildx" });
+  assert.equal(environment.DOCKER_HOST, "unix:///var/run/docker.sock");
+  assert.equal(environment.BUILDX_CONFIG, "/private/tmp/scrypath-phase185-execution/docker-buildx");
+});
+
 test("retained-preview bind source maps Docker Desktop host paths through the existing host-mount convention", () => {
   assert.equal(preservation.localPathForDockerHostMount("/host_mnt/Users/jon/projects/scrypath"), "/Users/jon/projects/scrypath");
   assert.equal(preservation.localPathForDockerHostMount("/Users/jon/projects/scrypath"), "/Users/jon/projects/scrypath");
