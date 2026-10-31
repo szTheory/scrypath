@@ -144,6 +144,7 @@ Plans:
 **Plans**: 12 autonomous plans across 11 waves; execution pending.
 
 Plans:
+
 **Wave 1**
 - [x] 184-01-PLAN.md — Installed package Telemetry/Req tracer and two independent witnesses (wave 1)
 
@@ -190,7 +191,31 @@ Plans:
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
 
-**Plans**: TBD during phase planning.
+**Plans**: 10 plans across 6 execution waves.
+
+Plans:
+
+**Wave 1**
+- [ ] 185-01-PLAN.md — Required-command contrast tracer and live focus/text enforcement (wave 1)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 185-02-PLAN.md — Trusted shrink-only literal inventory, bootstrap/history and existing CI transport (wave 2)
+- [ ] 185-04-PLAN.md — Retire paid/mock judge entrypoints and reconcile current/historical evidence (wave 2)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 185-03-PLAN.md — Whole-document typed DTCG mirror and canonical CSS drift proof (wave 3)
+- [ ] 185-05-PLAN.md — Guarded disposable capture support and source-pinned pre-change evidence (wave 3)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 185-06-PLAN.md — Color-only reset and forced utility proof in both actual bundles (wave 4)
+- [ ] 185-07-PLAN.md — Standalone generator removal, local redirect and mounted/storefront preservation (wave 4)
+- [ ] 185-08-PLAN.md — All 61 held-out UI element/state preservation obligations (wave 4)
+
+**Wave 5** *(blocked on Wave 4 completion)*
+- [ ] 185-09-PLAN.md — Matched candidate image/copy proof and bounded actual inspection (wave 5)
+
+**Wave 6** *(blocked on Wave 5 completion)*
+- [ ] 185-10-PLAN.md — Changed-scope checks, review and final-source terminal closeout (wave 6)
 
 ## Verification and delivery boundaries
 
@@ -217,6 +242,6 @@ Plans:
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
-| 185. Executable UI quality foundations | 0/TBD | Not started | — |
+| 185. Executable UI quality foundations | 0/10 | Planned | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending in unstarted Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.

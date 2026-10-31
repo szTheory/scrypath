@@ -406,10 +406,10 @@ Threat pattern: malicious path/ref or malformed input must not become shell code
 |---|-------|---------|---------------|
 | A1 | New helper and fixture placement under root test/scripts/ci is the least disruptive layout. | Recommended Project Structure | Low; placement can change within delegated discretion without changing behavior/scope. [ASSUMED] |
 
-## Open Questions
+## Open Questions (RESOLVED for planning)
 
-1. No blocking product/maintainer choice remains for planning. Use root contract spine, trusted first-parent refs, bounded readers and disposable matched evidence. [VERIFIED: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md:22-64]
-2. The retained preview source/preflight stop is unresolved. Plan disposable stacks separately and do not operate the retained preview; do not proceed with retained-preview work if the stop still applies. [VERIFIED: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md:58-60; .planning/phases/185-executable-ui-quality-foundations/185-UI-SPEC.md:164-170]
+1. **RESOLVED — implementation approach:** No blocking product/maintainer choice remains for planning. Use root contract spine, trusted first-parent refs, bounded readers and disposable matched evidence. [VERIFIED: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md:22-64]
+2. **RESOLVED — planning disposition only:** The retained-preview source/preflight failure remains unresolved operationally, and its safety stop remains in force. No retained-preview work is allowed. Plan independently verified disposable stacks separately; their work and evidence do not clear the retained stop, establish current retained source, or authorize refresh, restart, reseeding or capture there. This resolves how planning proceeds under D-19, not the cause of the preview failure. [VERIFIED: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md:58-60; .planning/phases/185-executable-ui-quality-foundations/185-UI-SPEC.md:164-170]
 
 ## Sources
 
