@@ -17,7 +17,7 @@ Parent checkout `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-
 
 Behavioral RED records retain actual failures, transparent TAP adapters and invalid adapter attempts rather than relabeling discovery/format errors as acceptance. `185-05-parent-glue-RED.json` covers the three review regressions; `185-05-clock-glue-RED.json` covers clock metadata binding. Classifiers returned RED_EVIDENCE_OK before GREEN. The first native TAP classifier rejected nested diagnostics; the adapter clears only Node's inherited runner variable and explicitly asserts three-test discovery.
 
-GREEN source: `b35e70f6` (review repairs), `e056a8f3` (clock wiring), `f5ba3326` (complete bounded task snapshot). Focused Node tests passed 43/0 after the last source change; syntax and whitespace checks passed. Scoped Luna source review at e056 found no additional confirmed defects, with the known task-reader correction excluded. This source review ran no tests or Docker and grants no visual or phase acceptance.
+GREEN source: `b35e70f6` (review repairs), `e056a8f3` (clock wiring), `f5ba3326` (complete bounded task snapshot). Focused Node tests passed 43/0 after the last source change; syntax and whitespace checks passed. Scoped Luna source review at e056 found no additional confirmed defects, with the known task-reader correction excluded. The source-only Luna recheck at `f5ba3326` found no task-reader defect. Canonical `mix verify.repository_contracts` passed 145/0 on tracking cutoff `66e8dc69` (same source code as f5ba), after the last source change. Source review ran no tests or Docker and grants no visual or phase acceptance.
 
 ## Remaining work
 
