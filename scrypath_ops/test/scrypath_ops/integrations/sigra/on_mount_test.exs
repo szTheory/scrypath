@@ -66,7 +66,7 @@ defmodule ScrypathOps.Integrations.Sigra.OnMountTest do
         flunk("OnMount continuing the route must not authorize the sensitive action")
       end)
 
-    assert result.assigns.flash["error"] =~ "Sigra"
+    assert result.assigns.flash["error"] =~ "Sign in again"
   end
 
   defp restore_env(name, nil), do: System.delete_env(name)
