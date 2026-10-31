@@ -13,6 +13,7 @@ const sourceSha = "a".repeat(40);
 const treeOid = "d".repeat(40);
 const treeSha = "b".repeat(64);
 const project = "scrypath-p185-0123456789abcdef";
+const browserFontProfile = { method: "retained-cdp-fixed-font-v1", font_families: { fixed: "Liberation Mono" }, applied: "before-first-navigation", lifetime: "page-context" };
 
 // Exercise the real private lifecycle/state functions with command/FS boundaries
 // substituted by this test loader; no Docker daemon or preview is accessed.
@@ -31,7 +32,7 @@ function preservationAtBoundary(spawnSync, unavailablePreview = false, orchestra
     return require(name);
   } };
   const orchestrationIo = orchestration ? "\nloadAuthorizedSession = orchestration.load; compareDirectories = orchestration.compare; persistAuthorizedSession = orchestration.persist;" : "";
-  vm.runInNewContext(fs.readFileSync(filename, "utf8") + orchestrationIo + "\nmodule.exports.boundary = {stackDataIdentity, teardownOwnedProject, compareSession};", context, { filename });
+  vm.runInNewContext(fs.readFileSync(filename, "utf8") + orchestrationIo + "\nmodule.exports.boundary = {stackDataIdentity, teardownOwnedProject, compareSession, captureInBrowser};", context, { filename });
   return context.module.exports;
 }
 
@@ -226,7 +227,7 @@ function validManifest() {
     const route = deployment === "host"
       ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
       : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/search?saved=manage", help: "/ops/help" })[surface];
-    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, stability, mobile_navigation, interaction_target: { tag: "button", role: "button", name: "Continue", href: null }, browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
+    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, route, files, stability, mobile_navigation, interaction_target: { tag: "button", role: "button", name: "Continue", href: null }, browser_font_profile: structuredClone(browserFontProfile), browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock: { ...clock } };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_oid: treeOid, tree_sha256: treeSha }));
   return {
@@ -241,7 +242,7 @@ function validManifest() {
       clock_probes: ["web", "standalone_ops"].map((service) => ({ service, utc })),
       clock_mounts: ["web", "standalone_ops", "browser"].map((service) => ({ service, destination: "/phase185-fixture", readonly: true, source: "/private/tmp/fixture-unit" })),
     },
-    environment: { browser_version: "chromium-123", browser_launch: { timeout: 30_000, args: ["--disable-partial-raster"] }, platform: "linux-arm64", data_identity: "state-digest", clock },
+    environment: { browser_version: "chromium-123", browser_launch: { timeout: 30_000, args: ["--disable-partial-raster"] }, browser_font_profile: structuredClone(browserFontProfile), platform: "linux-arm64", data_identity: "state-digest", clock },
     captures,
   };
 }
@@ -975,4 +976,63 @@ test("captured browser launch metadata matches the actual runner request and rej
     manifest.environment.browser_launch = profile;
     assert.ok(preservation.disposableProvenanceErrors(manifest, expected()).some(error => /browser launch profile/i.test(error)));
   }
+});
+
+test("disposable font profile uses the exact acknowledged recipe at environment, entry and pair boundaries", () => {
+  const manifest = validManifest();
+  assert.deepEqual(preservation.disposableProvenanceErrors(manifest, expected()), []);
+  for (const profile of [
+    undefined,
+    { ...browserFontProfile, font_families: { fixed: "Monospace" } },
+    { ...browserFontProfile, method: "unsupported-font-method" },
+    { ...browserFontProfile, applied: "after-first-navigation" },
+    { ...browserFontProfile, lifetime: "capture-only" },
+    { ...browserFontProfile, unexpected: true },
+  ]) {
+    const invalid = validManifest();
+    invalid.environment.browser_font_profile = profile;
+    assert.ok(preservation.disposableProvenanceErrors(invalid, expected()).some((error) => /browser font profile/i.test(error)));
+  }
+
+  const missingEntry = validManifest();
+  delete missingEntry.captures[0].browser_font_profile;
+  assert.ok(preservation.matrixErrors(missingEntry).some((error) => /Unpaired browser font profile/.test(error)));
+  const changedEntry = validManifest();
+  changedEntry.captures[0].browser_font_profile.font_families.fixed = "Monospace";
+  assert.ok(preservation.matrixErrors(changedEntry).some((error) => /Unpaired browser font profile/.test(error)));
+
+  assert.deepEqual(preservation.browserFontProfilePairErrors({ browser_font_profile: browserFontProfile }, { browser_font_profile: structuredClone(browserFontProfile) }), []);
+  assert.ok(preservation.browserFontProfilePairErrors({ browser_font_profile: browserFontProfile }, { browser_font_profile: { ...browserFontProfile, font_families: { fixed: "Monospace" } } }).some((error) => /before and candidate/i.test(error)));
+});
+
+test("browser child transport returns only acknowledged fixed-font metadata and matching capture rows", () => {
+  const outputDirectory = "/private/tmp/font-profile-transport-test";
+  const childResult = {
+    captures: preservation.expectedCaptureIds().map((id) => ({ id, browser_font_profile: structuredClone(browserFontProfile) })),
+    browserVersion: "chromium-123", dataIdentity: "state-digest", platform: "linux-arm64",
+    browserLaunchOptions: { timeout: 30_000, args: ["--disable-partial-raster"] },
+    browserFontProfile: structuredClone(browserFontProfile),
+  };
+  let script;
+  const helper = preservationAtBoundary((command, args) => {
+    assert.equal(command, "docker");
+    script = args[args.indexOf("-e") + 1];
+    return { status: 0, stdout: JSON.stringify(childResult), stderr: "" };
+  });
+  const stack = { compose: ["-p", project], env: {}, artifactDirectory: outputDirectory };
+  const received = helper.boundary.captureInBrowser(stack, outputDirectory, "state-digest", { utc: "2026-10-31T12:00:00Z" });
+  assert.match(script, /browserFontProfile:\s*result\.browserFontProfile/);
+  assert.equal(JSON.stringify(received.browserFontProfile), JSON.stringify(browserFontProfile));
+  assert.equal(received.captures.every((capture) => JSON.stringify(capture.browser_font_profile) === JSON.stringify(browserFontProfile)), true);
+
+  for (const invalidProfile of [undefined, { ...browserFontProfile, font_families: { fixed: "Monospace" } }, { ...browserFontProfile, extra: true }]) {
+    const invalidChild = { ...childResult, browserFontProfile: invalidProfile };
+    const invalidHelper = preservationAtBoundary((command, args) => ({ status: 0, stdout: JSON.stringify(invalidChild), stderr: "" }));
+    assert.throws(() => invalidHelper.boundary.captureInBrowser(stack, outputDirectory, "state-digest", { utc: "2026-10-31T12:00:00Z" }), /did not acknowledge the pinned fixed-font profile/);
+  }
+
+  const mismatchedEntryChild = structuredClone(childResult);
+  mismatchedEntryChild.captures[0].browser_font_profile.font_families.fixed = "Monospace";
+  const mismatchedEntryHelper = preservationAtBoundary((command, args) => ({ status: 0, stdout: JSON.stringify(mismatchedEntryChild), stderr: "" }));
+  assert.throws(() => mismatchedEntryHelper.boundary.captureInBrowser(stack, outputDirectory, "state-digest", { utc: "2026-10-31T12:00:00Z" }), /entry lacks the acknowledged fixed-font profile/);
 });

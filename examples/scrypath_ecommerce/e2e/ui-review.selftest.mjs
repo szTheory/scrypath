@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, captureSurface, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
 
 const require = createRequire(import.meta.url);
 const { domStateErrors } = require("../../../scripts/ci/ui_preservation.cjs");
@@ -702,4 +702,232 @@ test("disposable browser launch pins full rasterization without replacing other 
   assert.deepEqual(received.args, ["--disable-partial-raster"]);
   assert.equal(received.timeout, 30_000);
   assert.equal(Object.hasOwn(received, "ignoreDefaultArgs"), false);
+});
+
+function fakeFontProfileBrowser({ failureAt = null, requireProfileBeforeNavigation = true } = {}) {
+  const events = [];
+  const failure = failureAt ? new Error(`synthetic CDP failure at ${failureAt}`) : null;
+  const navigationStop = new Error("test stopped after the first navigation boundary");
+  let profileAcknowledged = false;
+  let contextClosed = false;
+  let gotoCalled = false;
+  let detachCalls = 0;
+  let session;
+  const page = {
+    setDefaultTimeout: () => events.push("default-timeout"),
+    on: event => events.push(`listen-${event}`),
+    goto: async route => {
+      gotoCalled = true;
+      events.push(`goto-${route}`);
+      if (requireProfileBeforeNavigation) assert.equal(profileAcknowledged, true, "Page.setFontFamilies must be acknowledged before page.goto");
+      throw navigationStop;
+    }
+  };
+  const context = {
+    addInitScript: async () => { events.push("init-script"); },
+    newPage: async () => {
+      events.push("new-page");
+      if (failureAt === "new-page") throw failure;
+      return page;
+    },
+    newCDPSession: async actualPage => {
+      events.push("new-cdp-session");
+      assert.equal(actualPage, page);
+      if (failureAt === "new-cdp-session") throw failure;
+      session = {
+        send: async (method, params) => {
+          events.push(method);
+          if (method === failureAt) throw failure;
+          if (method === "Page.enable") return {};
+          assert.equal(method, "Page.setFontFamilies");
+          assert.deepEqual(params, { fontFamilies: { fixed: "Liberation Mono" } });
+          profileAcknowledged = true;
+          return {};
+        },
+        detach: async () => { detachCalls += 1; }
+      };
+      return session;
+    },
+    close: async () => { contextClosed = true; events.push("close-context"); }
+  };
+  return {
+    browser: { newContext: async () => { events.push("new-context"); return context; } },
+    context, page, events, failure, navigationStop, get contextClosed() { return contextClosed; },
+    get gotoCalled() { return gotoCalled; }, get detachCalls() { return detachCalls; }, get session() { return session; }
+  };
+}
+
+test("font profile setup waits for exact CDP acknowledgements and returns the live session separately", async () => {
+  const events = [];
+  const page = {};
+  const session = { send: async (method, params) => { events.push([method, params]); return {}; } };
+  const setup = await configureDisposableFontProfile({ newCDPSession: async actualPage => { assert.equal(actualPage, page); events.push(["newCDPSession", actualPage]); return session; } }, page);
+  const expectedProfile = {
+    method: "retained-cdp-fixed-font-v1",
+    font_families: { fixed: "Liberation Mono" },
+    applied: "before-first-navigation",
+    lifetime: "page-context"
+  };
+  assert.deepEqual(setup.profile, expectedProfile);
+  assert.equal(setup.session, session, "the live CDP session must be retained separately from serializable profile metadata");
+  assert.deepEqual(events.map(([method]) => method), ["newCDPSession", "Page.enable", "Page.setFontFamilies"]);
+  assert.deepEqual(events[2][1], { fontFamilies: { fixed: "Liberation Mono" } });
+  assert.deepEqual(JSON.parse(JSON.stringify({ browser_font_profile: setup.profile })), { browser_font_profile: expectedProfile });
+});
+
+test("disposable surface waits for font-profile acknowledgement before navigation and holds the session through context close", async () => {
+  const fake = fakeFontProfileBrowser();
+  const capture = await captureSurface(fake.browser, { id: "control-room", route: "/admin/search/" }, "light", { width: 1440, height: 900 }, "/tmp/font-profile-boundary", { deployment: "host", baseURL: "http://web:4002" });
+  const expectedProfile = {
+    method: "retained-cdp-fixed-font-v1",
+    font_families: { fixed: "Liberation Mono" },
+    applied: "before-first-navigation",
+    lifetime: "page-context"
+  };
+  assert.equal(capture.error, fake.navigationStop.message);
+  assert.deepEqual(capture.browser_font_profile, expectedProfile);
+  assert.deepEqual(fake.events, ["new-context", "init-script", "new-page", "new-cdp-session", "Page.enable", "Page.setFontFamilies", "default-timeout", "listen-pageerror", "goto-/admin/search/", "close-context"]);
+  assert.equal(fake.contextClosed, true);
+  assert.equal(fake.detachCalls, 0, "the CDP session remains attached until BrowserContext closes");
+});
+
+test("partial disposable page and CDP setup failures close context and do not publish a profile", async () => {
+  for (const failureAt of ["new-page", "Page.setFontFamilies"]) {
+    const fake = fakeFontProfileBrowser({ failureAt });
+    const capture = await captureSurface(fake.browser, { id: "control-room", route: "/admin/search/" }, "light", { width: 1440, height: 900 }, "/tmp/font-profile-failure", { deployment: "host", baseURL: "http://web:4002" });
+    assert.equal(capture.error, fake.failure.message);
+    assert.equal(Object.hasOwn(capture, "browser_font_profile"), false);
+    assert.equal(fake.gotoCalled, false);
+    assert.equal(fake.contextClosed, true, `BrowserContext must close after ${failureAt} fails`);
+    assert.equal(fake.detachCalls, 0);
+  }
+});
+
+test("retained capture path does not create a CDP font profile", async () => {
+  const fake = fakeFontProfileBrowser({ requireProfileBeforeNavigation: false });
+  const capture = await captureSurface(fake.browser, { id: "control-room", route: "/admin/search/" }, "light", { width: 1440, height: 900 }, "/tmp/font-profile-retained");
+  assert.equal(capture.error, fake.navigationStop.message);
+  assert.equal(Object.hasOwn(capture, "browser_font_profile"), false);
+  assert.equal(fake.events.includes("new-cdp-session"), false);
+  assert.equal(fake.contextClosed, true);
+});
+
+test("disposable capture matrix stops and closes after its first capture error", async () => {
+  const { chromium } = await import("@playwright/test");
+  const originalLaunch = chromium.launch;
+  const originalOwnLaunch = Object.getOwnPropertyDescriptor(chromium, "launch");
+  const navigationError = new Error("injected first navigation failure");
+  let contextCount = 0;
+  let contextCloseCount = 0;
+  let browserCloseCount = 0;
+  const browser = {
+    version: () => "stub-browser",
+    newContext: async () => {
+      contextCount += 1;
+      const page = {
+        clock: { setFixedTime: async () => {} },
+        setDefaultTimeout: () => {},
+        on: () => {},
+        goto: async () => { throw navigationError; }
+      };
+      return {
+        addInitScript: async () => {},
+        newPage: async () => page,
+        newCDPSession: async () => ({ send: async () => ({}) }),
+        close: async () => { contextCloseCount += 1; }
+      };
+    },
+    close: async () => { browserCloseCount += 1; }
+  };
+  const utc = "2026-10-31T12:00:00.000Z";
+  const { createHash } = await import("node:crypto");
+  const clock = { utc, sha256: createHash("sha256").update(`${utc}\n`).digest("hex"), timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" };
+  chromium.launch = async () => browser;
+  let outcome;
+  try {
+    outcome = await captureDisposableMatrix({
+      hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003",
+      output: "/artifacts", dataIdentity: "test-data-identity", clock, allowComposeNetwork: true
+    }).then(value => ({ value }), error => ({ error }));
+  } finally {
+    if (originalOwnLaunch) Object.defineProperty(chromium, "launch", originalOwnLaunch);
+    else delete chromium.launch;
+  }
+  assert.deepEqual({
+    rejected: Boolean(outcome.error),
+    error: outcome.error?.message ?? null,
+    new_contexts: contextCount,
+    returned_captures: outcome.value?.captures.length ?? null,
+    first_capture_error: outcome.value?.captures[0]?.error ?? null,
+    closed_contexts: contextCloseCount,
+    closed_browsers: browserCloseCount
+  }, {
+    rejected: true,
+    error: `Disposable capture host--storefront--light--1440 failed: ${navigationError.message}`,
+    new_contexts: 1,
+    returned_captures: null,
+    first_capture_error: null,
+    closed_contexts: 1,
+    closed_browsers: 1
+  }, "the matrix must stop after the first failed entry and close its page context and browser");
+});
+
+test("disposable surface acknowledges the retained native font profile before first navigation", async () => {
+  const events = [];
+  const expectedProfile = {
+    method: "retained-cdp-fixed-font-v1",
+    font_families: { fixed: "Liberation Mono" },
+    applied: "before-first-navigation",
+    lifetime: "page-context"
+  };
+  const navigationStop = new Error("test stopped after the first navigation boundary");
+  let profileAcknowledged = false;
+  let contextClosed = false;
+  let detachCalls = 0;
+  const browser = {
+    newContext: async () => {
+      events.push("new-context");
+      return {
+        addInitScript: async () => { events.push("init-script"); },
+        newPage: async () => {
+          events.push("new-page");
+          return {
+            setDefaultTimeout: () => events.push("default-timeout"),
+            on: event => events.push(`listen-${event}`),
+            goto: async route => {
+              events.push(`goto-${route}`);
+              assert.equal(profileAcknowledged, true, "Page.setFontFamilies must be acknowledged before page.goto");
+              throw navigationStop;
+            }
+          };
+        },
+        newCDPSession: async () => {
+          events.push("new-cdp-session");
+          return {
+            send: async (method, params) => {
+              events.push(method);
+              if (method === "Page.enable") return {};
+              assert.equal(method, "Page.setFontFamilies");
+              assert.deepEqual(params, { fontFamilies: { fixed: "Liberation Mono" } });
+              profileAcknowledged = true;
+              return {};
+            },
+            detach: async () => { detachCalls += 1; }
+          };
+        },
+        close: async () => { contextClosed = true; events.push("close-context"); }
+      };
+    }
+  };
+
+  const capture = await captureSurface(browser, { id: "control-room", route: "/admin/search/" }, "light", { width: 1440, height: 900 }, "/tmp/font-profile-boundary", {
+    deployment: "host",
+    baseURL: "http://web:4002"
+  });
+
+  assert.equal(capture.error, navigationStop.message);
+  assert.deepEqual(capture.browser_font_profile, expectedProfile);
+  assert.deepEqual(events, ["new-context", "init-script", "new-page", "new-cdp-session", "Page.enable", "Page.setFontFamilies", "default-timeout", "listen-pageerror", "goto-/admin/search/", "close-context"]);
+  assert.equal(contextClosed, true);
+  assert.equal(detachCalls, 0, "the CDP session stays attached until its BrowserContext closes");
 });

@@ -47,6 +47,12 @@ const DOM_CONTROL_KEYS = ["tag", "role", "name", "href", "value", "checked", "se
 const DOM_INTERACTION_TAGS = new Set(["a", "button", "input", "select", "textarea"]);
 const DOM_INTERACTION_ROLES = new Set(["button", "link", "checkbox", "radio", "option", "tab", "menuitem", "input", "select", "textarea"]);
 const DOM_OUTLINE_STYLES = new Set(["none", "hidden", "dotted", "dashed", "solid", "double", "groove", "ridge", "inset", "outset"]);
+const DISPOSABLE_BROWSER_FONT_PROFILE = Object.freeze({
+  method: "retained-cdp-fixed-font-v1",
+  font_families: Object.freeze({ fixed: "Liberation Mono" }),
+  applied: "before-first-navigation",
+  lifetime: "page-context",
+});
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
 const canonicalize = (value) => Array.isArray(value)
@@ -535,6 +541,7 @@ function normalizePort(value) {
 function disposableProvenanceErrors(manifest, expected = {}) {
   const errors = [];
   if (canonicalJson(manifest?.environment?.browser_launch) !== canonicalJson({ timeout: 30_000, args: ["--disable-partial-raster"] })) errors.push("Disposable browser launch profile is missing or does not match the pinned full-raster recipe.");
+  if (canonicalJson(manifest?.environment?.browser_font_profile) !== canonicalJson(DISPOSABLE_BROWSER_FONT_PROFILE)) errors.push("Disposable browser font profile is missing or does not match the acknowledged fixed-font recipe.");
   const clock = manifest?.environment?.clock;
   errors.push(...clockMetadataErrors(clock));
   const probes = manifest?.runtime?.clock_probes || [];
@@ -976,6 +983,7 @@ function matrixErrors(manifest) {
     errors.push(...stabilityStructureErrors(capture));
     if (!capture.browser_version || !capture.platform || !capture.data_identity) errors.push(`Capture lacks browser, platform, or data identity: ${capture.id}.`);
     if (capture.browser_version !== manifest?.environment?.browser_version || capture.platform !== manifest?.environment?.platform || capture.data_identity !== manifest?.environment?.data_identity) errors.push(`Unpaired browser/platform/data identity: ${capture.id}.`);
+    if (canonicalJson(capture.browser_font_profile) !== canonicalJson(manifest?.environment?.browser_font_profile)) errors.push(`Unpaired browser font profile: ${capture.id}.`);
     for (const [kind, file] of Object.entries(capture.files || {})) {
       if (file.path !== `${capture.id}--${kind}` || !/^[a-f0-9]{64}$/.test(file.sha256 || "")) errors.push(`Invalid ${kind} artifact path or digest: ${capture.id}.`);
     }
@@ -1219,6 +1227,7 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
   ];
   if (before.environment.browser_version !== after.environment.browser_version) errors.push("Before and candidate browser versions differ.");
   if (canonicalJson(before.environment.browser_launch) !== canonicalJson(after.environment.browser_launch)) errors.push("Before and candidate requested browser launch profiles differ.");
+  errors.push(...browserFontProfilePairErrors(before.environment, after.environment));
   if (before.environment.platform !== after.environment.platform) errors.push("Before and candidate platforms differ.");
   if (before.environment.data_identity !== after.environment.data_identity) errors.push("Before and candidate data-state digests differ.");
   if (canonicalJson(before.environment.clock) !== canonicalJson(after.environment.clock)) errors.push("Before and candidate observation clocks differ.");
@@ -1252,6 +1261,11 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
     writeJson(path.join(stagingDirectory, "comparison.json"), report);
     return report;
   });
+}
+
+function browserFontProfilePairErrors(beforeEnvironment, candidateEnvironment) {
+  if (canonicalJson(beforeEnvironment?.browser_font_profile) === canonicalJson(candidateEnvironment?.browser_font_profile)) return [];
+  return ["Before and candidate acknowledged browser font profiles differ."];
 }
 
 function verifyRetainedInventory() {
@@ -1659,10 +1673,12 @@ async function verifyStackClock(stack, authority) {
 
 function captureInBrowser(stack, outputDirectory, dataIdentity, clock) {
   const sourcePath = "/app/examples/scrypath_ecommerce/e2e/ui-review.mjs";
-  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, clock: ${JSON.stringify(clock)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch, browserLaunchOptions: result.browserLaunchOptions })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
+  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, clock: ${JSON.stringify(clock)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch, browserLaunchOptions: result.browserLaunchOptions, browserFontProfile: result.browserFontProfile })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
   const output = run("docker", [...stack.compose, "exec", "-T", "browser", "node", "--input-type=module", "-e", script], { env: stack.env, timeout: 1_200_000 });
   const result = JSON.parse(output);
+  if (canonicalJson(result.browserFontProfile) !== canonicalJson(DISPOSABLE_BROWSER_FONT_PROFILE)) throw new Error("Browser capture did not acknowledge the pinned fixed-font profile before manifest creation.");
   if (result.captures.length !== expectedCaptureIds().length) throw new Error(`Browser image captured ${result.captures.length} entries; expected ${expectedCaptureIds().length}.`);
+  if (result.captures.some((capture) => canonicalJson(capture.browser_font_profile) !== canonicalJson(result.browserFontProfile))) throw new Error("Browser capture entry lacks the acknowledged fixed-font profile.");
   if (path.resolve(outputDirectory) !== path.resolve(stack.artifactDirectory)) throw new Error("Browser artifact mount does not match the host evidence directory.");
   return result;
 }
@@ -1787,7 +1803,7 @@ async function captureBefore(sessionPath) {
       generated_at: new Date().toISOString(), session_id: sessionId,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, data_identity: captures.dataIdentity, clock },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, browser_font_profile: captures.browserFontProfile, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
@@ -1923,7 +1939,7 @@ async function captureAfter(sessionPath) {
       generated_at: new Date().toISOString(), session_id: session.session_id,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, data_identity: captures.dataIdentity, clock },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, browser_font_profile: captures.browserFontProfile, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
@@ -2019,6 +2035,7 @@ module.exports = {
   artifactRoot,
   artifactErrors,
   addArtifactBytes,
+  browserFontProfilePairErrors,
   candidateServerCommands,
   captureArtifactEntries,
   captureManifestErrors,

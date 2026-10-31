@@ -194,6 +194,29 @@ function remainingMilliseconds(deadline, now, label) {
   return Math.max(1, Math.ceil(remaining));
 }
 
+const DISPOSABLE_BROWSER_FONT_PROFILE = Object.freeze({
+  method: "retained-cdp-fixed-font-v1",
+  font_families: Object.freeze({ fixed: "Liberation Mono" }),
+  applied: "before-first-navigation",
+  lifetime: "page-context"
+});
+const DISPOSABLE_FONT_PROFILE_SETUP_MS = 10_000;
+
+export async function configureDisposableFontProfile(context, page) {
+  if (!context || typeof context.newCDPSession !== "function" || !page) throw new TypeError("Disposable font profile requires a BrowserContext and page.");
+  const deadline = performance.now() + DISPOSABLE_FONT_PROFILE_SETUP_MS;
+  const withinBudget = async (label, operation) => {
+    const timeout = deadline - performance.now();
+    if (timeout <= 0) throw new Error(`${label} exceeded its total font profile setup deadline.`);
+    return withTimeout(operation(), timeout, label);
+  };
+  const session = await withinBudget("Disposable font CDP session creation", () => context.newCDPSession(page));
+  if (!session || typeof session.send !== "function") throw new TypeError("Disposable font CDP session does not support commands.");
+  await withinBudget("Disposable Page.enable", () => session.send("Page.enable"));
+  await withinBudget("Disposable Page.setFontFamilies", () => session.send("Page.setFontFamilies", { fontFamilies: { ...DISPOSABLE_BROWSER_FONT_PROFILE.font_families } }));
+  return { profile: DISPOSABLE_BROWSER_FONT_PROFILE, session };
+}
+
 export async function captureViewportImage(page, viewport, { timeout = STABLE_CAPTURE_MAX_ELAPSED_MS } = {}) {
   if (!Number.isSafeInteger(viewport?.width) || !Number.isSafeInteger(viewport?.height) || viewport.width <= 0 || viewport.height <= 0 || viewport.width * viewport.height > 24_000_000) throw new Error("Viewport capture dimensions must be positive bounded integers.");
   if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("Viewport capture timeout must be a positive finite number.");
@@ -499,24 +522,29 @@ export async function captureStableImage({
   }
 }
 
-async function captureSurface(browser, surface, theme, viewport, output, options = {}) {
+export async function captureSurface(browser, surface, theme, viewport, output, options = {}) {
   const deployment = options.deployment;
   const id = `${deployment ? `${deployment}--` : ""}${surface.id}--${theme}--${viewport.width}`;
   const capture = { id, surface: surface.id, theme, viewport, width: viewport.width, deployment, route: surface.route, checks: [], files: {}, interaction_target: null };
   if (options.clock) capture.clock = options.clock;
-  const context = await browser.newContext({ baseURL: options.baseURL || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce", ...(options.clock ? { timezoneId: options.clock.timezone, locale: options.clock.locale } : {}) });
-  await context.addInitScript((preference) => {
-    if (location.origin === "null") return;
-    if (preference === "system-dark") localStorage.removeItem("phx:theme");
-    else localStorage.setItem("phx:theme", preference);
-  }, theme);
-  const page = await context.newPage();
-  if (options.clock) await page.clock.setFixedTime(new Date(options.clock.utc));
-  page.setDefaultTimeout(10_000);
-  const viewportImage = () => deployment ? captureViewportImage(page, viewport) : page.screenshot({ animations: "disabled" });
+  let context = null;
+  let fontProfileSetup = null;
   const pageErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
   try {
+    context = await browser.newContext({ baseURL: options.baseURL || process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002", viewport, colorScheme: theme === "light" ? "light" : "dark", reducedMotion: "reduce", ...(options.clock ? { timezoneId: options.clock.timezone, locale: options.clock.locale } : {}) });
+    await context.addInitScript((preference) => {
+      if (location.origin === "null") return;
+      if (preference === "system-dark") localStorage.removeItem("phx:theme");
+      else localStorage.setItem("phx:theme", preference);
+    }, theme);
+    const page = await context.newPage();
+    if (deployment) {
+      fontProfileSetup = await configureDisposableFontProfile(context, page);
+      capture.browser_font_profile = fontProfileSetup.profile;
+    }
+    if (options.clock) await page.clock.setFixedTime(new Date(options.clock.utc));
+    page.setDefaultTimeout(10_000);
+    page.on("pageerror", (error) => pageErrors.push(error.message));
     const response = await page.goto(surface.route);
     if (!response?.ok()) throw new Error(`Navigation returned ${response?.status() ?? "no response"}`);
     await page.waitForFunction(() => Boolean(window.liveSocket?.isConnected?.()) && Boolean(document.querySelector("[data-phx-main].phx-connected")));
@@ -630,6 +658,7 @@ async function captureSurface(browser, surface, theme, viewport, output, options
       });
       if (!mobileNavigation.visible || !mobileNavigation.expanded || mobileNavigation.links.length === 0) throw new Error("Compact navigation did not open with visible links.");
       capture.mobile_navigation = mobileNavigation;
+      await page.mouse.move(0, 0);
       await save("navigation.png", await imageFor(
         "navigation",
         ({ timeout }) => captureViewportImage(page, viewport, { timeout }),
@@ -640,7 +669,10 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     capture.error = error.capturePersistenceError
       ? `${error.message}; failed-attempt evidence persistence also failed: ${error.capturePersistenceError.message}`
       : error.message;
-  } finally { await context.close(); }
+  } finally {
+    if (context) await context.close();
+    fontProfileSetup = null;
+  }
   return capture;
 }
 
@@ -661,26 +693,30 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
   const { chromium } = await import("@playwright/test");
   const { browser, launchOptions } = await launchDisposableBrowser(chromium);
   const captures = [];
+  let browserFontProfile = null;
+  const appendCapture = (capture) => {
+    capture.browser_version = browser.version();
+    capture.platform = `${process.platform}-${process.arch}`;
+    capture.data_identity = dataIdentity;
+    captures.push(capture);
+    if (capture.error) throw new Error(`Disposable capture ${capture.id} failed: ${capture.error}`);
+    if (!capture.browser_font_profile) throw new Error(`Disposable font profile setup failed for ${capture.id}: ${capture.error || "no acknowledged profile was returned"}`);
+    if (browserFontProfile && JSON.stringify(browserFontProfile) !== JSON.stringify(capture.browser_font_profile)) throw new Error(`Disposable font profile changed during capture at ${capture.id}.`);
+    browserFontProfile = capture.browser_font_profile;
+    console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
+  };
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
       const capture = await captureSurface(browser, surface, theme, viewport, output, { deployment: "host", baseURL: hostUrl, dataIdentity, clock });
-      capture.browser_version = browser.version();
-      capture.platform = `${process.platform}-${process.arch}`;
-      capture.data_identity = dataIdentity;
-      captures.push(capture);
-      console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
+      appendCapture(capture);
     }
     for (const surface of surfaces.filter(({ id }) => id !== "storefront")) for (const theme of themes) for (const viewport of viewports) {
       const standaloneSurface = { ...surface, route: standaloneRoutes[surface.id] };
       const capture = await captureSurface(browser, standaloneSurface, theme, viewport, output, { deployment: "standalone", baseURL: standaloneUrl, dataIdentity, clock });
-      capture.browser_version = browser.version();
-      capture.platform = `${process.platform}-${process.arch}`;
-      capture.data_identity = dataIdentity;
-      captures.push(capture);
-      console.log(`${capture.id}: ${capture.error ?? `${capture.checks.length} mechanical findings`}`);
+      appendCapture(capture);
     }
   } finally { await browser.close(); }
-  return { captures, browserVersion: browser.version(), dataIdentity, browserLaunchOptions: launchOptions };
+  return { captures, browserVersion: browser.version(), dataIdentity, browserLaunchOptions: launchOptions, browserFontProfile };
 }
 
 async function captureAll() {
