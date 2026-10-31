@@ -235,7 +235,7 @@ function validManifest() {
       clock_probes: ["web", "standalone_ops"].map((service) => ({ service, utc })),
       clock_mounts: ["web", "standalone_ops", "browser"].map((service) => ({ service, destination: "/phase185-fixture", readonly: true, source: "/private/tmp/fixture-unit" })),
     },
-    environment: { browser_version: "chromium-123", platform: "linux-arm64", data_identity: "state-digest", clock },
+    environment: { browser_version: "chromium-123", browser_launch: { timeout: 30_000, args: ["--disable-partial-raster"] }, platform: "linux-arm64", data_identity: "state-digest", clock },
     captures,
   };
 }
@@ -615,4 +615,19 @@ test("clock publication stays bounded and preserves unrelated command failures",
   let failedReads = 0;
   await assert.rejects(preservation.waitForPublishedClock(() => { failedReads += 1; throw permission; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), error => error === permission);
   assert.equal(failedReads, 1);
+});
+
+
+test("captured browser launch metadata matches the actual runner request and rejects recipe drift", async () => {
+  const runner = await import("../../examples/scrypath_ecommerce/e2e/ui-review.mjs");
+  let received;
+  const { launchOptions } = await runner.launchDisposableBrowser({ launch: async options => { received = structuredClone(options); return {}; } });
+  assert.deepEqual(launchOptions, received);
+  const manifest = validManifest();
+  manifest.environment.browser_launch = received;
+  assert.deepEqual(preservation.disposableProvenanceErrors(manifest, expected()), []);
+  for (const profile of [undefined, { timeout: 30_000, args: [] }, { ...received, ignoreDefaultArgs: true }, { ...received, args: [...received.args, "--disable-web-security"] }, { ...received, timeout: 1 }]) {
+    manifest.environment.browser_launch = profile;
+    assert.ok(preservation.disposableProvenanceErrors(manifest, expected()).some(error => /browser launch profile/i.test(error)));
+  }
 });

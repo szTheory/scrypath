@@ -298,7 +298,7 @@ async function captureSurface(browser, surface, theme, viewport, output, options
 }
 
 export async function launchDisposableBrowser(chromium) {
-  const launchOptions = { timeout: 30_000 };
+  const launchOptions = { timeout: 30_000, args: ["--disable-partial-raster"] };
   return { browser: await chromium.launch(launchOptions), launchOptions };
 }
 

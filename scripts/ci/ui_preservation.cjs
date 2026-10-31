@@ -522,6 +522,7 @@ function normalizePort(value) {
 
 function disposableProvenanceErrors(manifest, expected = {}) {
   const errors = [];
+  if (canonicalJson(manifest?.environment?.browser_launch) !== canonicalJson({ timeout: 30_000, args: ["--disable-partial-raster"] })) errors.push("Disposable browser launch profile is missing or does not match the pinned full-raster recipe.");
   const clock = manifest?.environment?.clock;
   errors.push(...clockMetadataErrors(clock));
   const probes = manifest?.runtime?.clock_probes || [];
@@ -794,6 +795,7 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, au
     ...captureManifestErrors(after, afterBytes, authority, "candidate"),
   ];
   if (before.environment.browser_version !== after.environment.browser_version) errors.push("Before and candidate browser versions differ.");
+  if (canonicalJson(before.environment.browser_launch) !== canonicalJson(after.environment.browser_launch)) errors.push("Before and candidate requested browser launch profiles differ.");
   if (before.environment.platform !== after.environment.platform) errors.push("Before and candidate platforms differ.");
   if (before.environment.data_identity !== after.environment.data_identity) errors.push("Before and candidate data-state digests differ.");
   if (canonicalJson(before.environment.clock) !== canonicalJson(after.environment.clock)) errors.push("Before and candidate observation clocks differ.");
@@ -1233,7 +1235,7 @@ async function verifyStackClock(stack, authority) {
 
 function captureInBrowser(stack, outputDirectory, dataIdentity, clock) {
   const sourcePath = "/app/examples/scrypath_ecommerce/e2e/ui-review.mjs";
-  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, clock: ${JSON.stringify(clock)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
+  const script = `import(${JSON.stringify(`file://${sourcePath}`)}).then(async (ui) => { console.log = (...args) => console.error(...args); const result = await ui.captureDisposableMatrix({ hostUrl: "http://web:4002", standaloneUrl: "http://standalone_ops:4003", output: "/artifacts", dataIdentity: ${JSON.stringify(dataIdentity)}, clock: ${JSON.stringify(clock)}, allowComposeNetwork: true }); process.stdout.write(JSON.stringify({ captures: result.captures, browserVersion: result.browserVersion, dataIdentity: result.dataIdentity, platform: process.platform + "-" + process.arch, browserLaunchOptions: result.browserLaunchOptions })); }).catch((error) => { console.error(error.stack || error.message); process.exitCode = 1; });`;
   const output = run("docker", [...stack.compose, "exec", "-T", "browser", "node", "--input-type=module", "-e", script], { env: stack.env, timeout: 1_200_000 });
   const result = JSON.parse(output);
   if (result.captures.length !== expectedCaptureIds().length) throw new Error(`Browser image captured ${result.captures.length} entries; expected ${expectedCaptureIds().length}.`);
@@ -1361,7 +1363,7 @@ async function captureBefore(sessionPath) {
       generated_at: new Date().toISOString(), session_id: sessionId,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity, clock },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
@@ -1497,7 +1499,7 @@ async function captureAfter(sessionPath) {
       generated_at: new Date().toISOString(), session_id: session.session_id,
       source,
       runtime: runtimeManifest(stack, source, project, ports, retained),
-      environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity, clock },
+      environment: { platform: captures.platform, browser_version: captures.browserVersion, browser_launch: captures.browserLaunchOptions, data_identity: captures.dataIdentity, clock },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
