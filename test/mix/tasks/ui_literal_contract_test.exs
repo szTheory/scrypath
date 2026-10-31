@@ -17,7 +17,18 @@ defmodule Mix.Tasks.UiLiteralContractTest do
     assert status == 0, output
     assert output =~ "UI literal policy: PASS"
     assert output =~ "Trusted target:"
+    assert output =~ "Trusted comparisons:"
     assert output =~ "Bootstrap ledger introduction:"
+  end
+
+  @tag :contrast_child
+  test "required repository-contracts lane runs the production resolver with full history" do
+    ci = File.read!(Path.join(@root, ".github/workflows/ci.yml"))
+    [_, tail] = String.split(ci, "\n  repository-contracts:\n", parts: 2)
+    [job, _] = String.split(tail, "\n  backend:\n", parts: 2)
+
+    assert job =~ "fetch-depth: 0"
+    assert job =~ "run: node scripts/ci/ui_literal_policy.cjs"
   end
 
   @tag :contrast_child
@@ -87,7 +98,11 @@ defmodule Mix.Tasks.UiLiteralContractTest do
     assert commit_status == 0, commit_output
 
     {output, status} =
-      System.cmd(node, ["scripts/ci/ui_literal_policy.cjs"], cd: root, stderr_to_stdout: true)
+      System.cmd(node, ["scripts/ci/ui_literal_policy.cjs"],
+        cd: root,
+        stderr_to_stdout: true,
+        env: [{"GITHUB_EVENT_NAME", nil}]
+      )
 
     assert status != 0, "candidate source and ledger unexpectedly passed:\n#{output}"
     assert output =~ "candidate first-parent ledger grew or reversed"
