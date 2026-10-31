@@ -318,7 +318,7 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
     assert.equal(receipt?.eligibility.clean, true);
     assert.equal(receipt?.eligibility.class, "hosted-exact-sha");
     assert.equal(receipt?.cases.length, 15);
-    assert.equal(receipt?.visual_judge_status, "not-required");
+    assert.equal(Object.keys(receipt).some(key => key.startsWith("visual_judge_")), false);
     assert.equal(receipt?.workflow.sha, receipt?.source.event_sha);
     assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
     assert.equal(receipt?.images.application.built_id, receipt?.images.application.runtime_id);
@@ -625,19 +625,15 @@ test("synthetic untrusted reviewer metadata cannot become canonical evidence", (
     const summary = fs.readFileSync(path.join(runDir, "phase105-evidence-summary.md"), "utf8");
 
     assert.equal(receipt?.eligibility.eligible, true);
-    assert.equal(receipt?.visual_judge_status, "not-required");
-    assert.equal(receipt?.visual_judge_claims, null);
-    assert.equal(receipt?.visual_judge_findings, null);
-    assert.equal(receipt?.visual_judge_required, false);
+    assert.equal(Object.keys(receipt).some(key => key.startsWith("visual_judge_")), false);
+
     assert.equal(Object.hasOwn(receipt, "independent_reviewer_approval"), false);
     assert.equal(Object.hasOwn(receipt, "reviewer_approval"), false);
     assert.equal(receiptText.includes(marker), false);
     assert.doesNotMatch(receiptText, /independent_reviewer_approval|reviewer_approval/);
     assert.equal(summary.includes(marker), false);
     assert.doesNotMatch(summary, /independent_reviewer_approval|reviewer_approval/);
-    assert.match(summary, /- visual_judge_status: not-required/);
-    assert.match(summary, /- visual_judge_claims: unknown/);
-    assert.match(summary, /- required: false/);
+    assert.doesNotMatch(summary, /visual_judge_|Advisory Visual Judge/);
     assert.equal(evidence.validateReceipt?.({ runDir }).valid, true);
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
@@ -701,5 +697,49 @@ test("receipt validation rejects an appended synthetic independent approval in i
     assert.ok(cliResult.reasons.some((reason) => reason.code === "summary_mismatch"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+
+test("legacy judge fields remain readable without rewriting receipt bytes", () => {
+  const {runDir} = createCompleteRun();
+  try {
+    const receipt = evidence.writeEvidence({runDir});
+    Object.assign(receipt, {
+      visual_judge_status: "not-required", visual_judge_findings: null,
+      visual_judge_claims: null, visual_judge_required: false,
+      visual_judge_skipped_reason: "The paid judge is outside browser eligibility."
+    });
+    const file = path.join(runDir, "phase105-evidence.json");
+    const summaryFile = path.join(runDir, "phase105-evidence-summary.md");
+    fs.writeFileSync(file, JSON.stringify(receipt, null, 2) + "\n");
+    fs.writeFileSync(summaryFile, evidence.renderSummary(receipt));
+    const before = [fs.readFileSync(file), fs.readFileSync(summaryFile)];
+    assert.equal(evidence.validateReceipt({runDir}).valid, true);
+    assert.deepEqual([fs.readFileSync(file), fs.readFileSync(summaryFile)], before);
+    receipt.visual_judge_status = "approved";
+    fs.writeFileSync(file, JSON.stringify(receipt));
+    assert.equal(evidence.validateReceipt({runDir}).valid, false);
+  } finally { fs.rmSync(runDir, {recursive:true, force:true}); }
+});
+
+test("separate and interrupted runs cannot borrow another invocation's evidence", () => {
+  const first = createCompleteRun(), second = createCompleteRun(), interruptedRun = createCompleteRun();
+  try {
+    updateRunManifest(second.runDir, m => { m.workflow.run_id = "987654321"; });
+    evidence.writeEvidence({runDir:first.runDir});
+    evidence.writeEvidence({runDir:second.runDir});
+    fs.copyFileSync(path.join(first.runDir,"phase105-evidence.json"), path.join(second.runDir,"phase105-evidence.json"));
+    fs.copyFileSync(path.join(first.runDir,"phase105-evidence-summary.md"), path.join(second.runDir,"phase105-evidence-summary.md"));
+    assert.equal(evidence.validateReceipt({runDir:second.runDir}).valid, false);
+    assert.throws(() => evidence.writeEvidence({runDir:second.runDir}), /outputs already exist/);
+    fs.unlinkSync(path.join(interruptedRun.runDir,"ui-review-artifacts/iteration3-journeys/iteration3-proof.png"));
+    const interrupted = evidence.writeEvidence({runDir:interruptedRun.runDir});
+    assert.equal(interrupted.eligibility.eligible, false);
+    assert.equal(evidence.validateReceipt({runDir:first.runDir}).eligible, true);
+  } finally {
+    fs.rmSync(first.runDir,{recursive:true,force:true});
+    fs.rmSync(second.runDir,{recursive:true,force:true});
+    fs.rmSync(interruptedRun.runDir,{recursive:true,force:true});
   }
 });
