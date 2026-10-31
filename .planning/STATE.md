@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: planning
-stopped_at: Phase 185 context gathered; next $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
-last_updated: "2026-10-31T02:19:34.433Z"
+stopped_at: Phase 185 UI-SPEC approved; next $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
+last_updated: "2026-10-31T02:48:25.731Z"
 last_activity: 2026-10-30
-last_activity_desc: Phase 185 discussion captured; UI preservation contract next
-state_head: 6b7c3410c14857bcc43f8f415b17501eff1eb2ed
+last_activity_desc: Phase 185 UI contract approved; ready for phase planning
+state_head: d463a80a809766a2da78146e20064430fa0682ec
 progress:
   total_phases: 4
   completed_phases: 3
@@ -25,13 +25,13 @@ progress:
 Phase: 185 — Executable UI quality foundations
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-10-30 — Phase 185 discussion captured; UI preservation contract next.
+Last activity: 2026-10-30 — Phase 185 UI contract approved; ready for phase planning.
 
 Progress: [████████░░] 75%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Phase 185 discussion is complete. Run $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation has not started; the retained-preview source stop remains in force.
+Next: Phase 185 discussion and UI contract are complete. Run $gsd-plan-phase 185 using the approved 185-UI-SPEC.md. Implementation has not started; the retained-preview source stop remains in force.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-31).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 184 terminal source acceptance and the unstarted Phase 185 boundary; known Ops dependency advisories remain unaccepted.
+Current focus: Phase 185 UI contract approved and ready for planning; implementation is unstarted, and known Ops dependency advisories remain unaccepted.
 
 ## Phase 184 source and terminal authority
 
@@ -72,9 +72,9 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 
 ## Session continuity
 
-Last session: 2026-10-31T02:18:32.885Z
-Stopped at: Phase 185 context gathered; next $gsd-ui-phase 185, then $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
-Resume file: .planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md
+Last session: 2026-10-31T02:48:25.346Z
+Stopped at: Phase 185 UI-SPEC approved; next $gsd-plan-phase 185. Implementation not started; retained-preview source stop preserved.
+Resume file: .planning/phases/185-executable-ui-quality-foundations/185-UI-SPEC.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
 
