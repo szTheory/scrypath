@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // Observe the running UI without seeding, recovery actions, or a paid model call.
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { lstat, mkdir, readFile, readlink, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const demoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const reviewArtifactRoot = path.join(demoRoot, "ui-review-artifacts");
 const repoRoot = path.resolve(demoRoot, "../..");
+const MAX_GIT_OUTPUT_BYTES = 32 * 1024 * 1024;
+const MAX_SOURCE_FILE_BYTES = 64 * 1024 * 1024;
+const MAX_SOURCE_BYTES = 1024 * 1024 * 1024;
 export const surfaces = [
   { id: "storefront", route: "/", role: "ROLE-INT", jobs: ["JOB-01", "JOB-02"], purpose: "Verify tenant-scoped search and facets; reach operator help when search fails." },
   { id: "control-room", route: "/admin/search/", role: "ROLE-OPS", jobs: ["JOB-03"], purpose: "Understand the current observation and choose the next safe task." },
@@ -25,20 +28,70 @@ export const dimensions = [
 ];
 export const themes = ["light", "dark", "system-dark"];
 export const viewports = [{ width: 1440, height: 900 }, { width: 768, height: 900 }, { width: 390, height: 844 }];
+export const standaloneRoutes = {
+  "control-room": "/ops/",
+  "search-health": "/ops/health",
+  "failed-sync": "/ops/failed-sync",
+  "sync-drift": "/ops/sync-and-index",
+  search: "/ops/search",
+  "saved-searches": "/ops/search?saved=manage",
+  help: "/ops/help"
+};
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
 
+export function cleanGitEnvironment(environment = process.env) {
+  return {
+    ...Object.fromEntries(Object.entries(environment).filter(([key]) => !/^GIT_/i.test(key))),
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null"
+  };
+}
+
+export function isCanonicalOrigin(origin) {
+  return new Set([
+    "https://github.com/szTheory/scrypath", "https://github.com/szTheory/scrypath.git",
+    "ssh://git@github.com/szTheory/scrypath", "ssh://git@github.com/szTheory/scrypath.git",
+    "git@github.com:szTheory/scrypath", "git@github.com:szTheory/scrypath.git"
+  ]).has(String(origin).trim());
+}
+
+function runGit(args, { timeout = 30_000, maxBuffer = MAX_GIT_OUTPUT_BYTES } = {}) {
+  const result = spawnSync("git", args, { cwd: repoRoot, env: cleanGitEnvironment(), encoding: "utf8", timeout, maxBuffer });
+  if (result.error) throw new Error(`git ${args[0]} failed: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`git ${args.join(" ")} exited ${result.status}: ${(result.stderr || result.stdout || "").trim()}`);
+  return result.stdout;
+}
+
+function runDocker(args, { timeout = 30_000, maxBuffer = 4 * 1024 * 1024 } = {}) {
+  const result = spawnSync("docker", args, { cwd: repoRoot, env: process.env, encoding: "utf8", timeout, maxBuffer });
+  if (result.error) throw new Error(`docker ${args[0]} failed: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`docker ${args.join(" ")} exited ${result.status}: ${(result.stderr || result.stdout || "").trim()}`);
+  return result.stdout;
+}
+
 export async function sourceIdentity() {
+  const origin = runGit(["remote", "get-url", "origin"]).trim();
+  if (!isCanonicalOrigin(origin)) throw new Error(`Refusing source identity from non-canonical origin: ${origin}`);
   const paths = ["AGENTS.md", "PRODUCT.md", "DESIGN.md", ".planning/reference/OPERATOR-UI-QUALITY.md", "scrypath_ops/lib", "scrypath_ops/assets", "scrypath_ops/priv/static", "scrypath_ops/docs", "examples/scrypath_ecommerce/lib", "examples/scrypath_ecommerce/assets", "examples/scrypath_ecommerce/priv/static", "examples/scrypath_ecommerce/e2e", "examples/scrypath_ecommerce/package.json"];
-  const files = [...new Set(execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...paths], { cwd: repoRoot }).toString().split("\0").filter(Boolean))].sort();
+  const files = [...new Set(runGit(["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", ...paths]).split("\0").filter(Boolean))].sort();
   const hash = createHash("sha256");
+  let totalBytes = 0;
   for (const file of files) {
     let bytes;
-    try { bytes = await readFile(path.join(repoRoot, file)); }
+    try {
+      const absolute = path.join(repoRoot, file);
+      const details = await lstat(absolute);
+      if (!details.isFile() && !details.isSymbolicLink()) throw new Error(`Source entry is not a regular file: ${file}`);
+      if (details.size > MAX_SOURCE_FILE_BYTES) throw new Error(`Source entry exceeds its finite identity bound: ${file}`);
+      bytes = details.isSymbolicLink() ? Buffer.from(await readlink(absolute)) : await readFile(absolute);
+    }
     catch (error) { if (error.code !== "ENOENT") throw error; bytes = Buffer.from("<deleted>"); }
+    totalBytes += bytes.length;
+    if (totalBytes > MAX_SOURCE_BYTES) throw new Error("Source fingerprint exceeds its finite total byte bound.");
     hash.update(`${file}\0${bytes.length}\0`).update(bytes);
   }
-  return { head: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot }).toString().trim(), tree_sha256: hash.digest("hex") };
+  return { head: runGit(["rev-parse", "HEAD"]).trim(), tree_sha256: hash.digest("hex") };
 }
 
 export function previewSourceErrors(expected, mounted, mainIncluded, endpointMatches = true, mainCurrent = true) {
@@ -50,19 +103,29 @@ export function previewSourceErrors(expected, mounted, mainIncluded, endpointMat
   return errors;
 }
 
+export function entryFixtureErrors(deployment, surface, text) {
+  const requirements = {
+    "host:control-room": ["3 sync jobs failed"],
+    "host:failed-sync": ["3 failed, 2 retrying", "Invalid data", "Meilisearch rejected it", "Unknown cause"],
+    "standalone:control-room": ["No search schemas configured.", "Configure the host application's schema allowlist"],
+    "standalone:failed-sync": ["No schemas configured.", "schema_allowlist in :scrypath_ops"],
+  }[`${deployment}:${surface}`] || [];
+  return requirements.filter((fragment) => !String(text || "").includes(fragment)).map((fragment) => `${deployment} ${surface} entry fixture is missing expected text: ${fragment}`);
+}
+
 async function verifyPreviewSource() {
   const container = process.env.UI_REVIEW_CONTAINER || "scrypath_ecommerce-web-1";
-  const runtime = JSON.parse(execFileSync("docker", ["inspect", container, "--format", '{"mounts":{{json .Mounts}},"ports":{{json .NetworkSettings.Ports}}}'], { encoding: "utf8" }));
+  const runtime = JSON.parse(runDocker(["inspect", container, "--format", '{"mounts":{{json .Mounts}},"ports":{{json .NetworkSettings.Ports}}}']));
   const source = runtime.mounts.find((mount) => mount.Type === "bind" && mount.Destination === "/app")?.Source;
   if (!source) throw new Error(`${container} has no source bind mount at /app; runtime source is unverified.`);
   const mounted = await realpath(source.replace(/^\/host_mnt(?=\/)/, ""));
   const expected = await realpath(repoRoot);
-  const mainIncluded = execFileSync("git", ["merge-base", "origin/main", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim() === execFileSync("git", ["rev-parse", "origin/main"], { cwd: repoRoot, encoding: "utf8" }).trim();
+  const mainIncluded = runGit(["merge-base", "refs/remotes/origin/main", "HEAD"]).trim() === runGit(["rev-parse", "refs/remotes/origin/main"]).trim();
   const url = new URL(process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:4002");
   const endpointMatches = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) && Object.values(runtime.ports).flatMap((ports) => ports || []).some((binding) => binding.HostPort === (url.port || "80") && ["127.0.0.1", "::1"].includes(binding.HostIp));
   const errors = previewSourceErrors(expected, mounted, mainIncluded, endpointMatches);
   if (errors.length) throw new Error(errors.join("\n"));
-  return { container, source_match: true, mount: mounted, main_included: true, main_ref: execFileSync("git", ["rev-parse", "origin/main"], { cwd: repoRoot, encoding: "utf8" }).trim() };
+  return { container, source_match: true, mount: mounted, main_included: true, main_ref: runGit(["rev-parse", "refs/remotes/origin/main"]).trim() };
 }
 
 export function reviewTemplate(manifest, digest) {
@@ -125,17 +188,20 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     if (!response?.ok()) throw new Error(`Navigation returned ${response?.status() ?? "no response"}`);
     await page.waitForFunction(() => Boolean(window.liveSocket?.isConnected?.()) && Boolean(document.querySelector("[data-phx-main].phx-connected")));
     await page.evaluate(() => document.fonts.ready);
-    const evidence = await page.evaluate(() => {
+    const evidence = await page.evaluate(({ deployment, surface, theme }) => {
       const visible = (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
       const nodes = (selector) => [...document.querySelectorAll(selector)].filter(visible);
       return {
+        deployment, surface, route: `${location.pathname}${location.search}`,
         text: document.body.innerText,
         headings: nodes("h1,h2,h3,h4").map((node) => ({ level: node.tagName, text: node.innerText })),
         controls: nodes("a,button,input,select,textarea").map((node) => ({ tag: node.tagName, text: node.innerText || node.getAttribute("aria-label") || node.getAttribute("placeholder"), href: node.getAttribute("href"), disabled: node.disabled === true })),
         page_width: document.documentElement.scrollWidth, viewport_width: window.innerWidth,
-        theme: { preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
+        theme: { requested: theme, preference: document.documentElement.dataset.themePreference, effective: document.documentElement.dataset.themeEffective, selected: nodes("[data-phx-theme][aria-pressed='true']").map((node) => node.dataset.phxTheme) }
       };
-    });
+    }, { deployment, surface: surface.id, theme });
+    const fixtureErrors = deployment ? entryFixtureErrors(deployment, surface.id, evidence.text) : [];
+    if (fixtureErrors.length) throw new Error(fixtureErrors.join("\n"));
     if (evidence.page_width > viewport.width + 1) capture.checks.push({ rule: "page-overflow", actual: evidence.page_width, expected: viewport.width });
     if (!evidence.headings.some(({ level }) => level === "H1")) capture.checks.push({ rule: "page-heading", message: "No visible H1." });
     if (surface.id !== "storefront") {
@@ -205,16 +271,7 @@ export async function captureDisposableMatrix({ hostUrl, standaloneUrl, output, 
   if (!ownedComposeTargets) throw new Error("Disposable browser targets must use the exact owned Compose service routes; loopback retained-preview targets are not accepted.");
   if (path.resolve(output) !== "/artifacts") throw new Error("Disposable captures must write through the helper-owned /artifacts mount.");
   const { chromium } = await import("@playwright/test");
-  const browser = await chromium.launch();
-  const standaloneRoutes = {
-    "control-room": "/ops/",
-    "search-health": "/ops/health",
-    "failed-sync": "/ops/failed-sync",
-    "sync-drift": "/ops/sync-and-index",
-    search: "/ops/search",
-    "saved-searches": "/ops/playbooks?saved=manage",
-    help: "/ops/help"
-  };
+  const browser = await chromium.launch({ timeout: 30_000 });
   const captures = [];
   try {
     for (const surface of surfaces) for (const theme of themes) for (const viewport of viewports) {
@@ -267,12 +324,12 @@ async function captureAll() {
 
 async function preflight() {
   const runtime = await verifyPreviewSource();
-  const remoteMain = execFileSync("git", ["ls-remote", "--exit-code", "origin", "refs/heads/main"], { cwd: repoRoot, encoding: "utf8", timeout: 10000 }).trim().split(/\s+/)[0];
+  const remoteMain = runGit(["ls-remote", "--exit-code", "origin", "refs/heads/main"], { timeout: 15_000, maxBuffer: 1024 * 1024 }).trim().split(/\s+/)[0];
   const errors = previewSourceErrors(await realpath(repoRoot), runtime.mount, runtime.main_included, true, remoteMain === runtime.main_ref);
   if (errors.length) throw new Error(errors.join("\n"));
   const source = await sourceIdentity();
-  const branch = execFileSync("git", ["branch", "--show-current"], { cwd: repoRoot, encoding: "utf8" }).trim();
-  const pending = execFileSync("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: repoRoot, encoding: "utf8" }).split("\n").filter(Boolean);
+  const branch = runGit(["branch", "--show-current"]).trim();
+  const pending = runGit(["status", "--porcelain", "--untracked-files=all"]).split("\n").filter(Boolean);
   console.log(JSON.stringify({ checkout: repoRoot, command_cwd: process.cwd(), branch, source, runtime: { ...runtime, remote_main_current: true }, pending_work: pending }, null, 2));
 }
 
