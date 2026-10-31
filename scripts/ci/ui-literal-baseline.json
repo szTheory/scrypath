@@ -61,22 +61,22 @@
     {
       "rule": "arbitrary-value",
       "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
-      "context": "div[1] > div[1] > p[3]",
-      "value": "text-[2rem]",
-      "count": 1
-    },
-    {
-      "rule": "arbitrary-value",
-      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
-      "context": "div[1]",
+      "context": "div[2]",
       "value": "left-[40rem]",
       "count": 1
     },
     {
       "rule": "arbitrary-value",
       "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
-      "context": "div[1]",
+      "context": "div[2]",
       "value": "xl:left-[50rem]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[3] > div[1] > p[3]",
+      "value": "text-[2rem]",
       "count": 1
     },
     {
@@ -103,7 +103,7 @@
     {
       "rule": "literal-z",
       "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
-      "context": "div[1]",
+      "context": "div[2]",
       "value": "z-0",
       "count": 1
     },
@@ -252,6 +252,69 @@
       "path": "scrypath_ops/assets/css/app.css",
       "context": "@layer components > .ops-sheet__backdrop > background",
       "value": "#000",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/assets/js/app.js",
+      "context": "JS/TS styling:barColors",
+      "value": "#29d",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[1] > fill",
+      "value": "#EE7868",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[2] > fill",
+      "value": "#FF9F92",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[3] > fill",
+      "value": "#FA8372",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[4] > fill",
+      "value": "#E96856",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[5] > fill",
+      "value": "#C42652",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[6] > fill",
+      "value": "#A41C42",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[2] > svg[1] > path[7] > fill",
+      "value": "#A41C42",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[3] > div[1] > svg[1] > path[1] > fill",
+      "value": "#FD4F00",
       "count": 1
     }
   ]
