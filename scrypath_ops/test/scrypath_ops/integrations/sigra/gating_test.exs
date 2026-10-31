@@ -173,6 +173,32 @@ defmodule ScrypathOps.Integrations.Sigra.GatingTest do
     end
   end
 
+  test "accepted confirmation paths reach LiveView confirmation without running the action" do
+    for path <- ["/sudo/confirm", "/account/confirm-step", "/team/confirm%20identity"] do
+      config = [sudo_confirm_path: path]
+      assert :ok = ScrypathOps.Security.validate(%{auth_mode: "sigra", sigra: config})
+      Application.put_env(:scrypath_ops, :sigra, config)
+
+      context = %OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        sudo_at: nil
+      }
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{__changed__: %{}, operator_context: context, return_to: "/ops", flash: %{}}
+      }
+
+      result =
+        Gating.gate_sensitive_action(socket, :reindex, fn ->
+          flunk("confirmation must happen before the protected action")
+        end)
+
+      assert {:live, :redirect, %{to: target}} = result.redirected
+      assert target == path <> "?return_to=%2Fops"
+    end
+  end
+
   defp operator_context(opts) do
     scope = %{
       user: %{id: "user_123"},
