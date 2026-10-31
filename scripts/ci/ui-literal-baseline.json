@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "bootstrap_commit": "767f368473f17fba43d7be4675c53ab65a87530c",
+  "findings": [
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[1] > aria-label=Use system theme > data-phx-theme=system > data-theme-selected=false",
+      "value": "min-h-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[1] > aria-label=Use system theme > data-phx-theme=system > data-theme-selected=false",
+      "value": "min-w-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[2] > aria-label=Use light theme > data-phx-theme=light > data-theme-selected=false",
+      "value": "min-h-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[2] > aria-label=Use light theme > data-phx-theme=light > data-theme-selected=false",
+      "value": "min-w-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[3] > aria-label=Use dark theme > data-phx-theme=dark > data-theme-selected=false",
+      "value": "min-h-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/layouts.ex",
+      "context": "~H:theme_toggle > div[1] > button[3] > aria-label=Use dark theme > data-phx-theme=dark > data-theme-selected=false",
+      "value": "min-w-[var(--control-h-lg)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
+      "context": "~H:ops_checkbox_list > div[1] > label[1]",
+      "value": "min-h-[var(--control-h-sm)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
+      "context": "~H:ops_textarea > textarea[1] > data-ops-validate= > id={@id} > name={@name}",
+      "value": "min-h-[var(--control-h-textarea)]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[1] > div[1] > p[3]",
+      "value": "text-[2rem]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[1]",
+      "value": "left-[40rem]",
+      "count": 1
+    },
+    {
+      "rule": "arbitrary-value",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[1]",
+      "value": "xl:left-[50rem]",
+      "count": 1
+    },
+    {
+      "rule": "inline-style",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
+      "context": "~H:ops_loading > div[1] > span[1]",
+      "value": "[\"{\",\"loading_bar_width\",\"(\",\"n\",\",\",\"@lines\",\")\",\"}\"]",
+      "count": 1
+    },
+    {
+      "rule": "inline-style",
+      "path": "scrypath_ops/lib/scrypath_ops_web/live/search_live.ex",
+      "context": "~H:render > layouts[1] > div[1] > div[1] > div[8] > div[1] > div[1] > div[1] > id=saved-search-menu",
+      "value": "[\"display\",\":\",\"none\",\";\"]",
+      "count": 1
+    },
+    {
+      "rule": "literal-z",
+      "path": "scrypath_ops/lib/scrypath_ops_web/components/core_components.ex",
+      "context": "~H:flash > div[1] > id={@id} > role={if(@kind == :info, do: \"status\", else: \"alert\")}",
+      "value": "z-50",
+      "count": 1
+    },
+    {
+      "rule": "literal-z",
+      "path": "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex",
+      "context": "div[1]",
+      "value": "z-0",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer base > body.scrypath-demo > background",
+      "value": "#f6f7f9",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer base > body.scrypath-demo > color",
+      "value": "#1f2933",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__eyebrow > color",
+      "value": "#386641",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__facet small > color",
+      "value": "#627d98",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__facet-empty > color",
+      "value": "#52606d",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__header > background",
+      "value": "#ffffff",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__header > border-bottom",
+      "value": "#d8dee6",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__lede > color",
+      "value": "#52606d",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a > background",
+      "value": "#ffffff",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a > border",
+      "value": "#bcccdc",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a > color",
+      "value": "#243b53",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a:active > background",
+      "value": "#e8eef4",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a:focus-visible > outline",
+      "value": "#243b53",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a:hover > background",
+      "value": "#f2f5f8",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__ops-links a:hover > border-color",
+      "value": "#91a4b8",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__result p,.storefront-search__empty p > color",
+      "value": "#52606d",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__search-field input,.storefront-search__search-field select > border",
+      "value": "#bcccdc",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__search-field span,.storefront-search__facet-group h2,.storefront-search__meta dt > color",
+      "value": "#52606d",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__search-field,.storefront-search__facet-group,.storefront-search__result,.storefront-search__empty > background",
+      "value": "#ffffff",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "examples/scrypath_ecommerce/assets/css/app.css",
+      "context": "@layer components > .storefront-search__search-field,.storefront-search__facet-group,.storefront-search__result,.storefront-search__empty > border",
+      "value": "#d8dee6",
+      "count": 1
+    },
+    {
+      "rule": "raw-hex",
+      "path": "scrypath_ops/assets/css/app.css",
+      "context": "@layer components > .ops-sheet__backdrop > background",
+      "value": "#000",
+      "count": 1
+    }
+  ]
+}
