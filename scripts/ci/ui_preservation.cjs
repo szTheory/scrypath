@@ -636,7 +636,7 @@ function verifyRetainedInventory() {
   return {
     pointer_sha256: sha256(previewBytes), project, port, actual_ports: actualPorts, volumes: volumeFacts.map(({ name }) => name),
     volume_facts: volumeFacts, container: containerName, container_id: container.Id, checkout: expectedCheckout,
-    mounted_checkout: fs.realpathSync(appMount.Source), branch: preview.branch, url: preview.url,
+    mounted_checkout: fs.realpathSync(localPathForDockerHostMount(appMount.Source)), branch: preview.branch, url: preview.url,
   };
 }
 
