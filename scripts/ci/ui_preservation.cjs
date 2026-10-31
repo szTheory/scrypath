@@ -460,13 +460,26 @@ function writeClockFixture(authority, utc) {
   const details = fs.lstatSync(directory);
   if (details.isSymbolicLink() || !details.isDirectory() || fs.realpathSync(directory) !== path.resolve(directory)) throw new Error("Clock fixture directory is not the independently allocated regular directory.");
   const destination = path.join(directory, "clock.txt");
-  if (fs.existsSync(destination)) {
+  const bytes = Buffer.from(`${utc}\n`);
+  if (!fs.existsSync(destination)) {
+    // Warmup precedes startup. Keep owner write permission until the one final
+    // publication; every container receives this directory read-only.
+    fs.writeFileSync(destination, bytes, { flag: "wx", mode: 0o600 });
+  } else {
     const current = fs.lstatSync(destination);
-    if (current.isSymbolicLink() || !current.isFile()) throw new Error("Clock fixture is not a regular file.");
+    if (current.isSymbolicLink() || !current.isFile() || current.size !== bytes.length) throw new Error("Clock fixture is not a fixed-size regular file.");
+    const fd = fs.openSync(destination, fs.constants.O_RDWR | fs.constants.O_NOFOLLOW);
+    try {
+      const opened = fs.fstatSync(fd);
+      if (!opened.isFile() || opened.ino !== current.ino || opened.dev !== current.dev || opened.size !== bytes.length) throw new Error("Clock fixture changed before final publication.");
+      // Preserve the mounted inode. Atomic name replacement can leave stale
+      // negative entries in Docker Desktop's directory sharing layer.
+      if (fs.writeSync(fd, bytes, 0, bytes.length, 0) !== bytes.length) throw new Error("Clock fixture publication was incomplete.");
+      fs.fsyncSync(fd);
+    } finally {
+      try { fs.fchmodSync(fd, 0o444); } finally { fs.closeSync(fd); }
+    }
   }
-  const temporary = path.join(directory, `.clock-${crypto.randomBytes(8).toString("hex")}`);
-  fs.writeFileSync(temporary, `${utc}\n`, { flag: "wx", mode: 0o444 });
-  fs.renameSync(temporary, destination);
   return metadata;
 }
 
@@ -1166,12 +1179,29 @@ async function waitForRoute(baseUrl, route) {
 }
 
 async function waitForPublishedClock(readClock, expected, options = {}) {
-  const actual = await readClock();
-  if (actual !== expected) throw new Error("Clock bytes have not reached the container.");
-  return actual;
+  const timeoutMs = options.timeoutMs ?? 10_000;
+  const intervalMs = options.intervalMs ?? 100;
+  if (typeof readClock !== "function" || typeof expected !== "string" || !expected.length || Buffer.byteLength(expected) > 128 || !Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 10_000 || !Number.isSafeInteger(intervalMs) || intervalMs < 1 || intervalMs > 100) throw new Error("Clock publication requires a bounded reader, expected bytes and finite polling bounds.");
+  const deadline = Date.now() + timeoutMs;
+  let pending;
+  for (let attempt = 0; attempt <= Math.ceil(timeoutMs / intervalMs); attempt += 1) {
+    const readBudget = deadline - Date.now();
+    if (readBudget <= 0) break;
+    let actual;
+    try { actual = await readClock(readBudget); }
+    catch (error) {
+      if (error.code !== "CLOCK_PUBLICATION_PENDING") throw error;
+      pending = error;
+    }
+    if (actual === expected && Date.now() <= deadline) return actual;
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) break;
+    await new Promise(resolve => setTimeout(resolve, Math.min(intervalMs, remaining)));
+  }
+  throw new Error(`Clock fixture bytes were not published within ${timeoutMs}ms.`, pending ? { cause: pending } : undefined);
 }
 
-function verifyStackClock(stack, authority) {
+async function verifyStackClock(stack, authority) {
   const clock = assertClockFixture(authority);
   stack.clockMounts = [];
   stack.clockProbes = [];
@@ -1181,6 +1211,16 @@ function verifyStackClock(stack, authority) {
     if (!mount || mount.Type !== "bind" || mount.RW !== false || path.resolve(localPathForDockerHostMount(mount.Source)) !== authority.resources.fixture_directory) throw new Error(`Disposable ${service} has no independently allocated read-only clock directory.`);
     if (!(container.Config?.Env || []).includes("TZ=UTC")) throw new Error(`Disposable ${service} timezone is not pinned to UTC.`);
     stack.clockMounts.push({ service, destination: mount.Destination, readonly: true, source: authority.resources.fixture_directory });
+    // Docker Desktop can briefly hide a directory entry after an atomic host
+    // rename. Read exact bytes through every real mount before the app probe.
+    await waitForPublishedClock((remainingMs) => {
+      try {
+        return run("docker", [...stack.compose, "exec", "-T", service, "cat", "/phase185-fixture/clock.txt"], { env: stack.env, encoding: "buffer", timeout: Math.min(5_000, remainingMs), maxBuffer: 1024 }).toString("utf8");
+      } catch (error) {
+        if (error.message.includes("cat: /phase185-fixture/clock.txt: No such file or directory")) error.code = "CLOCK_PUBLICATION_PENDING";
+        throw error;
+      }
+    }, `${clock.utc}\n`);
     if (service === "browser") continue;
     if (!(container.Config?.Env || []).includes(`E2E_RUN_ID=phase185-${authority.session_id}`)) throw new Error(`Disposable ${service} did not opt into the test-only observation clock.`);
     const probe = run("docker", [...stack.compose, "exec", "-T", service, "mix", "run", "--no-start", "-e", 'IO.puts("PHASE185_CLOCK=" <> DateTime.to_iso8601(ScrypathOps.Clock.utc_now()))'], { env: stack.env, timeout: 60_000 });
@@ -1309,7 +1349,7 @@ async function captureBefore(sessionPath) {
     const dataIdentity = await waitForStableData(stack);
     authority.clock = writeClockFixture(authority, new Date().toISOString());
     writeJson(authorityPathFor(sessionPath), authority);
-    const clock = verifyStackClock(stack, authority);
+    const clock = await verifyStackClock(stack, authority);
     const captures = captureInBrowser(stack, output, dataIdentity, clock);
     assertClockFixture(authority);
     if (stackDataIdentity(stack) !== dataIdentity) throw new Error("Before capture changed the frozen database/search state digest.");
@@ -1444,7 +1484,7 @@ async function captureAfter(sessionPath) {
     const afterStartupSource = sourceIdentity(false);
     const sourceErrors = sourceChangeErrors(source, afterStartupSource);
     if (sourceErrors.length) throw new Error(sourceErrors.join("\n"));
-    verifyStackClock(stack, authority);
+    await verifyStackClock(stack, authority);
     const captures = captureInBrowser(stack, output, dataIdentity, clock);
     assertClockFixture(authority);
     const afterBrowserDataIdentity = stackDataIdentity(stack);

@@ -11,5 +11,90 @@
     "/private/tmp/scrypath-phase185-execution/clock-mount-diagnostic-cd2bd583fb5a.json",
     "/private/tmp/scrypath-phase185-execution/clock-mount-diagnostic-5dcfaf0baa61.json"
   ],
-  "scope": "Actual calibration failed before capture; no before evidence accepted. One-shot publication seam extracted for a behavioral regression before bounded waiting."
+  "scope": "Actual calibration failed before capture; no before evidence accepted. One-shot publication seam extracted for a behavioral regression before bounded waiting.",
+  "deadline_regression_initial": {
+    "command": "node --test --test-reporter=tap scripts/ci/ui_preservation.test.cjs",
+    "exitCode": 1,
+    "output": "TAP version 13\n# Subtest: clock publication stays bounded and preserves unrelated command failures\nnot ok 1 - clock publication stays bounded and preserves unrelated command failures\n  ---\n  duration_ms: 5.174459\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:605:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    The input did not match the regular expression /not published within/. Input:\n    \n    'AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\\n' +\n      '\\n' +\n      '  assert.ok(Number.isSafeInteger(remainingMs) && remainingMs > 0 && remainingMs <= 20)\\n'\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected:\n  actual:\n  error: |-\n    The expression evaluated to a falsy value:\n    \n      assert.ok(Number.isSafeInteger(remainingMs) && remainingMs > 0 && remainingMs <= 20)\n    \n  stack: |-\n    assert.rejects.preservation.waitForPublishedClock.timeoutMs (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:607:97)\n    Object.waitForPublishedClock (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.cjs:1176:26)\n    TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:607:37)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1402:25)\n    Test.start (node:internal/test_runner/test:1262:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  operator: 'rejects'\n  stack: |-\n    async TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:607:3)\n    async Test.run (node:internal/test_runner/test:1409:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 69.188375\n",
+    "targetTest": "clock publication stays bounded and preserves unrelated command failures",
+    "targetFile": "scripts/ci/ui_preservation.test.cjs",
+    "expected": "Remaining deadline supplied to actual reads",
+    "actual": "No remaining deadline supplied",
+    "classification": {
+      "verdict": "INVALID_RED",
+      "reason": "invalid_record",
+      "evidence": {
+        "command": "node --test --test-reporter=tap scripts/ci/ui_preservation.test.cjs",
+        "exit_code": 1,
+        "target_test": "clock publication stays bounded and preserves unrelated command failures",
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "failing_tests": [
+          "clock publication stays bounded and preserves unrelated command failures"
+        ],
+        "matched_test": null,
+        "format": "tap",
+        "report_errors": [
+          "Non-TAP data in report",
+          "Malformed TAP"
+        ]
+      }
+    }
+  },
+  "deadline_regression": {
+    "command": "node --test --test-reporter=tap --test-name-pattern=\"clock publication stays bounded and preserves unrelated command failures\" scripts/ci/ui_preservation.test.cjs",
+    "exitCode": 1,
+    "output": "TAP version 13\n# Subtest: clock publication stays bounded and preserves unrelated command failures\nnot ok 1 - clock publication stays bounded and preserves unrelated command failures\n  ---\n  duration_ms: 21.294958\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:605:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    every read must receive the remaining total deadline\n    \n    false !== true\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: true\n  actual: false\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:610:10)\n    async Test.run (node:internal/test_runner/test:1409:7)\n    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 95.116167\n",
+    "targetTest": "clock publication stays bounded and preserves unrelated command failures",
+    "targetFile": "scripts/ci/ui_preservation.test.cjs",
+    "expected": "Every read receives the remaining total deadline",
+    "actual": "Undefined read budgets can overrun the total publication deadline",
+    "classification": {
+      "verdict": "RED_EVIDENCE_OK",
+      "reason": "target_test_failed",
+      "evidence": {
+        "command": "node --test --test-reporter=tap --test-name-pattern=\"clock publication stays bounded and preserves unrelated command failures\" scripts/ci/ui_preservation.test.cjs",
+        "exit_code": 1,
+        "target_test": "clock publication stays bounded and preserves unrelated command failures",
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "failing_tests": [
+          "clock publication stays bounded and preserves unrelated command failures"
+        ],
+        "matched_test": "clock publication stays bounded and preserves unrelated command failures",
+        "format": "tap",
+        "report_errors": []
+      }
+    }
+  },
+  "inode_regression": {
+    "command": "node --test --test-reporter=tap --test-name-pattern=\"clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks\" scripts/ci/ui_preservation.test.cjs",
+    "exitCode": 1,
+    "output": "TAP version 13\n# Subtest: clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks\nnot ok 1 - clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks\n  ---\n  duration_ms: 22.109458\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:142:1'\n  failureType: 'testCodeFailure'\n  error: |-\n    final publication must retain the mounted clock inode\n    + actual - expected\n    \n    + 919937453\n    - 919937452\n              ^\n    \n  code: 'ERR_ASSERTION'\n  name: 'AssertionError'\n  expected: 919937452\n  actual: 919937453\n  operator: 'strictEqual'\n  stack: |-\n    TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/scripts/ci/ui_preservation.test.cjs:150:12)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1402:25)\n    Test.start (node:internal/test_runner/test:1262:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 105.131042\n",
+    "targetTest": "clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks",
+    "targetFile": "scripts/ci/ui_preservation.test.cjs",
+    "expected": "Final pre-capture clock publication retains the mounted inode",
+    "actual": "Atomic replacement changes the inode and can leave the mounted name absent",
+    "classification": {
+      "verdict": "RED_EVIDENCE_OK",
+      "reason": "target_test_failed",
+      "evidence": {
+        "command": "node --test --test-reporter=tap --test-name-pattern=\"clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks\" scripts/ci/ui_preservation.test.cjs",
+        "exit_code": 1,
+        "target_test": "clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks",
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "failing_tests": [
+          "clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks"
+        ],
+        "matched_test": "clock fixture freezes exact bytes and rejects rewriting, tampering, oversized files and symlinks",
+        "format": "tap",
+        "report_errors": []
+      }
+    }
+  },
+  "failed_wait_diagnostic": "/private/tmp/scrypath-phase185-execution/clock-mount-diagnostic-79f379f92b83.json"
 }

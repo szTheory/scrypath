@@ -145,7 +145,10 @@ test("clock fixture freezes exact bytes and rejects rewriting, tampering, oversi
   const file = path.join(directory, "clock.txt");
   try {
     preservation.writeClockFixture(authority, "2026-10-31T11:00:00.000Z");
+    const mountedInode = fs.statSync(file).ino;
     authority.clock = preservation.writeClockFixture(authority, "2026-10-31T12:00:00.000Z");
+    assert.equal(fs.statSync(file).ino, mountedInode, "final publication must retain the mounted clock inode");
+    assert.equal(fs.statSync(file).mode & 0o777, 0o444);
     assert.deepEqual(preservation.assertClockFixture(authority), authority.clock);
     assert.throws(() => preservation.writeClockFixture(authority, "2026-10-31T13:00:00.000Z"), /already frozen/);
     fs.unlinkSync(file); fs.writeFileSync(file, "2026-10-31T13:00:00.000Z\n");
@@ -604,8 +607,10 @@ test("clock publication waits for exact bytes across transient bind-mount visibi
 
 test("clock publication stays bounded and preserves unrelated command failures", async () => {
   let reads = 0;
-  await assert.rejects(preservation.waitForPublishedClock(() => { reads += 1; return "wrong bytes\n"; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), /not published within/);
+  const budgets = [];
+  await assert.rejects(preservation.waitForPublishedClock((remainingMs) => { reads += 1; budgets.push(remainingMs); return "wrong bytes\n"; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), /not published within/);
   assert.ok(reads >= 2);
+  assert.equal(budgets.every(ms => Number.isSafeInteger(ms) && ms > 0 && ms <= 20), true, "every read must receive the remaining total deadline");
   const permission = new Error("Docker permission denied");
   let failedReads = 0;
   await assert.rejects(preservation.waitForPublishedClock(() => { failedReads += 1; throw permission; }, "expected\n", { timeoutMs: 20, intervalMs: 1 }), error => error === permission);
