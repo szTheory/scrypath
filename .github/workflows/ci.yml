@@ -166,6 +166,8 @@ jobs:
       # history beyond checkout's default depth of one.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
+      - name: Verify shrink-only UI literal history
+        run: node scripts/ci/ui_literal_policy.cjs
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache

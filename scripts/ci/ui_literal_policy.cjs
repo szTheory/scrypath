@@ -857,7 +857,7 @@ function main(argv = process.argv.slice(2)) {
   try {
     const repo = String(git(process.cwd(), ["rev-parse", "--show-toplevel"])).trim();
     const result = verifyHistory(repo);
-    process.stdout.write(`UI literal policy: PASS\nPolicy version: ${result.policyVersion}\nCandidate: ${result.candidateOid}\nTrusted target: ${result.targetOid}\nBefore: ${result.beforeOid || "not applicable"}\nBootstrap ledger introduction: ${result.introduction}\nFinding occurrences: ${result.findingCount}\n`);
+    process.stdout.write(`UI literal policy: PASS\nPolicy version: ${result.policyVersion}\nCandidate: ${result.candidateOid}\nTrusted target: ${result.targetOid}\nTrusted comparisons: ${result.comparisons.join(",")}\nBefore: ${result.beforeOid || "not applicable"}\nBootstrap ledger introduction: ${result.introduction}\nFinding occurrences: ${result.findingCount}\n`);
     return 0;
   } catch (error) {
     process.stderr.write(diagnostic(error));
