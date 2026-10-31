@@ -591,7 +591,10 @@ function describeDelta(candidate, authority) {
   const extra = [];
   for (const [key, count] of candidate) {
     const allowed = authority.get(key) || 0;
-    if (count > allowed) extra.push({ finding: JSON.parse(key), actual: count, allowed });
+    if (count > allowed) {
+      const [rule, file, context, value] = JSON.parse(key);
+      extra.push({ finding: { rule, path: file, context, value }, actual: count, allowed });
+    }
   }
   return extra.slice(0, 8).map(({ finding, actual, allowed }) => `${finding.rule} ${finding.path} ${finding.value} count ${actual} exceeds ${allowed}`).join("; ");
 }
