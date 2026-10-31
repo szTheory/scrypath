@@ -1,0 +1,26 @@
+{
+  "source_sha": "3b618c254192a4929a151a21ddfe3646b464d7eb",
+  "recorded_at": "2026-10-31T17:56:24.958428+00:00",
+  "token_source_merge": "4d0f10ad",
+  "clock_source_merge": "c8f4d2d6",
+  "checks": [
+    {
+      "command": "mix verify.repository_contracts",
+      "exit_code": 0,
+      "tests": 145,
+      "failures": 0,
+      "captured_tail": "Finished in 310.2 seconds (15.0s async, 295.1s sync)\n145 tests, 0 failures"
+    },
+    {
+      "command": "mix run --no-start (require Clock, Posture and clock_test.exs)",
+      "exit_code": 0,
+      "tests": 5,
+      "failures": 0
+    }
+  ],
+  "limits": [
+    "Plan05 remains incomplete; no capture preservation acceptance or visual approval.",
+    "Ops precommit cannot start from host dependencies: root copies have lock mismatches; no host installation or database creation occurred.",
+    "Final phase verification and exact final source acceptance remain pending."
+  ]
+}

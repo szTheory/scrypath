@@ -5,7 +5,7 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 Wave 3 review fixes active; Plan 03 integrated, root gates pending, Plan 05 corrective worktree running; UI edits held; retained-preview stop preserved.
+stopped_at: Phase 185 Wave 3 review fixes active; Plan 03 root-verified, Plan 05 corrective worktree running; UI edits held; retained-preview stop preserved.
 last_updated: "2026-10-31T16:53:00.867081+00:00"
 last_activity: 2026-10-31
 last_activity_desc: Token review repaired and canonical-verified; capture provenance/data/lifecycle corrective run active
@@ -14,8 +14,8 @@ progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 38
-  completed_plans: 31
-  percent: 82
+  completed_plans: 32
+  percent: 84
 ---
 
 # Project State
@@ -23,15 +23,15 @@ progress:
 ## Current Position
 
 Phase: 185 (Executable UI quality foundations) — EXECUTING WAVE 3
-Plan: 3 of 10 integrated (01, 02 and 04); Plan 03 integrated, root gates pending; Plan 05 review fixes active
+Plan: 4 of 10 complete and integrated (01, 02, 03 and 04); Plan 05 review fixes active
 Status: Executing the authorized selected phase
 Last activity: 2026-10-31 — Approved bootstrap merge and actual root integration verified
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 84%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Continue capture review repairs in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-05-reviewfix-4hq8abiz`; GSD worker metadata is `/private/tmp/phase185-05-reviewfix-4hq8abiz/metadata.json`. Plan 03 is repaired, scoped-reviewed and private-canonical-verified on code `6f7ebe9d`, with tracking at `64979457`; it and original Plan05 ancestry are now integrated via the original wave manifest and both original worktrees removed. Root verification and corrected capture acceptance remain pending. The separate parent clock worktree is `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-clock-lbu9p8_j` (code `7718e236`); helper glue remains pending. Do not redispatch either plan. No UI CSS/controller/template/generator edits may start until capture tooling and same-state before evidence meet the contract. Original default entry captures were archived byte-for-byte; the original disposable stack was ownership-verified and torn down. The initial unseeded diagnosis was retracted after tracing existing incident seeding. Real blockers are session/provenance integrity, matrix metadata binding, raw dump nondeterminism, settings omission, candidate reseeding/failure cleanup and repeatability. The retained preview remains stopped and untouched. No user action is needed while these authorized repairs run.
+Next: Continue capture review repairs in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-05-reviewfix-4hq8abiz`; GSD worker metadata is `/private/tmp/phase185-05-reviewfix-4hq8abiz/metadata.json`. Plan 03 is repaired, scoped-reviewed and private-canonical-verified on code `6f7ebe9d`, with tracking at `64979457`; it and original Plan05 ancestry are now integrated via the original wave manifest and both original worktrees removed. Root canonical repository contracts passed 145/0 on `3b618c25`; pure clock tests passed 5/0. Corrected capture acceptance remains pending. The separate clock repair is integrated (source `7718e236`, merge `c8f4d2d6`) and its worktree removed. Parent helper-glue work is active in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s`, while the corrective executor continues independently. Do not redispatch either plan. No UI CSS/controller/template/generator edits may start until capture tooling and same-state before evidence meet the contract. Original default entry captures were archived byte-for-byte; the original disposable stack was ownership-verified and torn down. The initial unseeded diagnosis was retracted after tracing existing incident seeding. Real blockers are session/provenance integrity, matrix metadata binding, raw dump nondeterminism, settings omission, candidate reseeding/failure cleanup and repeatability. The retained preview remains stopped and untouched. No user action is needed while these authorized repairs run.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
