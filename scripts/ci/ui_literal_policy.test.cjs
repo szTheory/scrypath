@@ -122,14 +122,14 @@ test("discovers the four rules only in authored UI sources and keeps stable iden
   fs.writeFileSync(path.join(root, "scrypath_ops/test/fixtures/ignored.heex"), '<div class="z-50"></div>');
 
   const findings = scanTree(root);
-  assert.deepEqual(findings.map(({ rule, value }) => [rule, value]).sort(), [
+  assert.deepEqual(findings.map(({ rule, value }) => [rule, rule === "inline-style" ? "inline-source" : value]).sort(), [
     ["arbitrary-value", "bg-(--surface)"],
     ["arbitrary-value", "bg-[red]"],
     ["arbitrary-value", "text-[length:var(--ops-size)]"],
     ["arbitrary-value", "top-[-2px]"],
     ["arbitrary-value", "z-[var(--z-layer)]"],
-    ["inline-style", "style"],
-    ["inline-style", "style"],
+    ["inline-style", "inline-source"],
+    ["inline-style", "inline-source"],
     ["literal-z", "z-20"],
     ["literal-z", "z-30"],
     ["literal-z", "z-40"],
@@ -400,4 +400,23 @@ test("production CLI rejects a local mirror as an untrusted origin", (t) => {
   const result = runPolicy(repo);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /origin repository identity is not szTheory\/scrypath/);
+});
+
+
+test("inline style identities retain changed source values while ignoring formatting", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ui-style-value-review-"));
+  t.after(() => fs.rmSync(root, {recursive:true, force:true}));
+  const file = path.join(root, "scrypath_ops/lib/value.html.heex");
+  fs.mkdirSync(path.dirname(file), {recursive:true});
+  const identities = attribute => {
+    fs.writeFileSync(file, `<div id="proof" ${attribute}></div>`);
+    return scanTree(root).filter(f => f.rule === "inline-style").map(({rule, path, context, value}) => ({rule, path, context, value}));
+  };
+  const first = identities('style="width: 1px"');
+  assert.notDeepEqual(identities('style="width: 2px"'), first);
+  assert.deepEqual(identities('style=" width :  1px /* format only */ "'), first);
+  const dynamic = identities('style={if @active, do: "content: a b", else: ""}');
+  assert.deepEqual(identities('style={ if   @active,\n do: "content: a b", else: "" }'), dynamic);
+  assert.notDeepEqual(identities('style={if @active, do: "content: ab", else: ""}'), dynamic);
+  assert.notDeepEqual(identities('style={@different_source}'), dynamic);
 });
