@@ -4,7 +4,6 @@ defmodule Mix.Tasks.UiLiteralContractTest do
   @moduletag timeout: 300_000
   @root Path.expand("../../..", __DIR__)
 
-  @tag :contrast_child
   test "production command checks this checkout against fresh trusted history" do
     node = System.find_executable("node") || flunk("Node is required for the UI literal policy")
 
@@ -21,7 +20,6 @@ defmodule Mix.Tasks.UiLiteralContractTest do
     assert output =~ "Bootstrap ledger introduction:"
   end
 
-  @tag :contrast_child
   test "required repository-contracts lane runs the production resolver with full history" do
     ci = File.read!(Path.join(@root, ".github/workflows/ci.yml"))
     [_, tail] = String.split(ci, "\n  repository-contracts:\n", parts: 2)
@@ -35,7 +33,13 @@ defmodule Mix.Tasks.UiLiteralContractTest do
   test "canonical child fails when source and candidate ledger bless a new finding" do
     node = System.find_executable("node") || flunk("Node is required for the UI literal policy")
     git = System.find_executable("git") || flunk("Git is required for UI literal history tests")
-    temp = Path.join(System.tmp_dir!(), "scrypath-ui-literal-#{System.pid()}-#{System.unique_integer([:positive])}")
+
+    temp =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-ui-literal-#{System.pid()}-#{System.unique_integer([:positive])}"
+      )
+
     root = Path.join(temp, "repo")
     on_exit(fn -> File.rm_rf!(temp) end)
     File.mkdir_p!(temp)
@@ -52,6 +56,26 @@ defmodule Mix.Tasks.UiLiteralContractTest do
       )
 
     assert remote_status == 0, remote_output
+
+    File.cp!(
+      Path.join(@root, "test/mix/tasks/ui_literal_contract_test.exs"),
+      Path.join(root, "test/mix/tasks/ui_literal_contract_test.exs")
+    )
+
+    for directory <- ["deps", "_build"] do
+      File.cp_r!(Path.join(@root, directory), Path.join(root, directory))
+    end
+
+    helper = Path.join(root, "test/test_helper.exs")
+
+    File.write!(
+      helper,
+      String.replace(
+        File.read!(helper),
+        "ExUnit.configure(exclude: exclude)",
+        "ExUnit.configure(exclude: [:contrast_child | exclude])"
+      )
+    )
 
     source_path = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex"
     source_file = Path.join(root, source_path)
@@ -83,22 +107,32 @@ defmodule Mix.Tasks.UiLiteralContractTest do
 
     assert prepare_status == 0, prepare_output
 
-    for {key, value} <- [{"user.name", "UI literal child"}, {"user.email", "ui-literal-child@example.invalid"}] do
+    for {key, value} <- [
+          {"user.name", "UI literal child"},
+          {"user.email", "ui-literal-child@example.invalid"}
+        ] do
       {output, status} = System.cmd(git, ["config", key, value], cd: root, stderr_to_stdout: true)
       assert status == 0, output
     end
 
     {stage_output, stage_status} =
-      System.cmd(git, ["add", source_path, "scripts/ci/ui-literal-baseline.json"], cd: root, stderr_to_stdout: true)
+      System.cmd(git, ["add", source_path, "scripts/ci/ui-literal-baseline.json"],
+        cd: root,
+        stderr_to_stdout: true
+      )
 
     assert stage_status == 0, stage_output
+
     {commit_output, commit_status} =
-      System.cmd(git, ["commit", "-m", "malicious candidate blesses new literal"], cd: root, stderr_to_stdout: true)
+      System.cmd(git, ["commit", "-m", "malicious candidate blesses new literal"],
+        cd: root,
+        stderr_to_stdout: true
+      )
 
     assert commit_status == 0, commit_output
 
     {output, status} =
-      System.cmd(node, ["scripts/ci/ui_literal_policy.cjs"],
+      System.cmd("mix", ["verify.repository_contracts"],
         cd: root,
         stderr_to_stdout: true,
         env: [{"GITHUB_EVENT_NAME", nil}]

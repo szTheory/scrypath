@@ -99,7 +99,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
       System.cmd("mix", ["verify.repository_contracts"],
         cd: root,
         stderr_to_stdout: true,
-        env: [{"ERL_FLAGS", "+S 4"}]
+        env: [{"ERL_FLAGS", "+S 4"}, {"GITHUB_EVENT_NAME", nil}]
       )
 
     assert status != 0, "mutated repository command unexpectedly succeeded:\n#{output}"
@@ -184,7 +184,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
     System.cmd("mix", ["verify.repository_contracts"],
       cd: root,
       stderr_to_stdout: true,
-      env: [{"ERL_FLAGS", "+S 4"}]
+      env: [{"ERL_FLAGS", "+S 4"}, {"GITHUB_EVENT_NAME", nil}]
     )
   end
 
@@ -202,8 +202,19 @@ defmodule Mix.Tasks.UiContrastContractTest do
 
     assert status == 0, output
 
+    {remote_output, remote_status} =
+      System.cmd(
+        "git",
+        ["remote", "set-url", "origin", "https://github.com/szTheory/scrypath.git"],
+        cd: root,
+        stderr_to_stdout: true
+      )
+
+    assert remote_status == 0, remote_output
+
     for path <- [
           @test_path,
+          "test/mix/tasks/ui_literal_contract_test.exs",
           "dev/mix/tasks/verify.phase99.ex",
           "examples/scrypath_ecommerce/contrast-checker.mjs",
           "scrypath_ops/assets/css/contrast-pairs.mjs",
