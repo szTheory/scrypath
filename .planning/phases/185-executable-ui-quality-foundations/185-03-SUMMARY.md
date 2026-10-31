@@ -13,11 +13,12 @@ provides:
   - Brandbook documentation and copyable theme example aligned with their actual sources
 affects: [Phase 185 verification, brandbook consumers]
 actuals:
-  tokens: 29684
+  original_executor_reported_tokens: 29684
   tasks: 2
-  commits: 3
+  original_task_commits: 3
+  parent_repair_commits: 6
   plan_head_before: 7cc6035a6e277312b8f6237dade6d1972b87f4b9
-  plan_head_after: b3b9edb8f2b7c809fc8896dacc44470e565ab5c1
+  plan_head_after: 6f7ebe9ddac079140084b54a00ea75edec825917
 tech-stack:
   added: []
   patterns:
@@ -69,6 +70,12 @@ completed: 2026-10-31
 # Phase 185 Plan 03: Typed DTCG brand export and Ops token drift contract Summary
 
 **A complete typed DTCG export preserves the warm brand palette and validates both ScrypathOps themes against their live CSS source.**
+
+## Parent review resolution
+
+The original implementation passed its then-current tests but parent review found real gaps. Repairs are committed through `6f7ebe9ddac079140084b54a00ea75edec825917`. The exact repaired snapshot passed `mix verify.repository_contracts`: **145 tests, zero failures**, including all token tests and actual clean/CSS-only/JSON-only canonical subprocess witnesses. Log: `/private/tmp/phase185-03-parent-canonical.log`. Earlier focused checks passed at their documented intermediate snapshots; they are not substituted for this final source.
+
+The [parent review](185-03-REVIEW.md) records closed findings, current bounds, actual RED evidence and read-only agent review limits. Generic string tokens and project-only shadow-layer type fields are removed; CSS `none` remains the exact string in namespaced non-token metadata. Source theme authority is lexical and statement-bound, with exactly one recognized mode name. No CSS palette or product UI changes were made by these repairs. The worktree is ready for orchestrator integration; post-integration root checks remain separate.
 
 ## Performance
 
@@ -122,7 +129,9 @@ The plan summary is committed immediately after these task commits; its commit h
 
 ## Deviations from Plan
 
-None — the planned artifacts and verification scope were completed as written.
+Parent review repaired commented/quoted/qualified/escaped fake theme recognition, ambiguous names, standard token type/shape compatibility, finite signed dimensions, CSS-compatible blur constraints and explicit input/recursion budgets. The CSS none string is preserved as namespaced extension metadata instead of an undefined standard token type. These are correctness repairs within the typed export/source-contract intent; no user palette, runtime product flag, generator or dependency was added.
+
+The original JSON and warm CSS shadow distinction remains preserved. The UIF-05 edge classification stays unclassified; passing these bounded checks does not resolve that classifier question or establish arbitrary DTCG input support.
 
 ## User Setup Required
 
@@ -130,13 +139,15 @@ None.
 
 ## Next Phase Readiness
 
-The typed token mirror and root contract are ready for phase-level integration review. The unresolved UIF-05 edge classification remains visible for phase verification.
+The repaired typed token mirror and root contract are ready for phase-level integration review. The unresolved UIF-05 edge classification remains visible for phase verification.
 
 ---
 *Phase: 185-executable-ui-quality-foundations*
 *Completed: 2026-10-31*
 
 ## Self-Check: PASSED
+
+Parent recheck: repaired files and reachable task/repair commits exist, final canonical source passes, and the read-only agent re-review has no remaining concrete findings in the changed scope. No hosted implementation or rendered aesthetic approval is claimed.
 
 All seven declared implementation files exist; all three task commits are ancestors of this worktree HEAD; the plan-scoped commit query resolves them; and coverage classification accepts both deliverables with passing evidence.
 
