@@ -4,19 +4,24 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { dimensions, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, dimensions, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
 
 test("Playwright output cleanup preserves UI review evidence", async () => {
   const demoRoot = fileURLToPath(new URL("../", import.meta.url));
   const temporaryDemo = await mkdtemp(path.join(tmpdir(), "scrypath-ui-review-output-"));
   const reviewDirectory = path.join(temporaryDemo, path.relative(demoRoot, reviewArtifactRoot));
+  const phase185Directory = path.join(reviewDirectory, "phase185");
+  const legacyCleanupDirectory = path.join(reviewDirectory, "iteration3-journeys");
   const playwrightDirectory = path.join(temporaryDemo, "test-results");
   try {
-    await mkdir(reviewDirectory, { recursive: true });
+    await mkdir(phase185Directory, { recursive: true });
+    await mkdir(legacyCleanupDirectory, { recursive: true });
     await mkdir(playwrightDirectory, { recursive: true });
-    const evidence = path.join(reviewDirectory, "capture.json");
+    const evidence = path.join(phase185Directory, "capture.json");
     await writeFile(evidence, "preserve this review");
+    await writeFile(path.join(legacyCleanupDirectory, "old-output.json"), "legacy output");
     await rm(playwrightDirectory, { recursive: true, force: true });
+    await rm(legacyCleanupDirectory, { recursive: true, force: true });
     assert.equal(await readFile(evidence, "utf8"), "preserve this review");
   } finally {
     await rm(temporaryDemo, { recursive: true, force: true });
@@ -50,6 +55,11 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
   const { source, manifest, review } = fixture();
   manifest.runtime.source_match = false;
   assert.ok(reviewErrors(review, manifest, "capture-digest", source).some((error) => error.includes("provenance")));
+});
+
+test("disposable captures cannot target retained loopback or arbitrary network hosts", async () => {
+  await assert.rejects(captureDisposableMatrix({ hostUrl: "http://127.0.0.1:4002", standaloneUrl: "http://127.0.0.1:4003", output: "/tmp/evidence", dataIdentity: "digest" }), /retained-preview targets are not accepted/);
+  await assert.rejects(captureDisposableMatrix({ hostUrl: "http://example.com:4002", standaloneUrl: "http://standalone_ops:4003", output: "/tmp/evidence", dataIdentity: "digest", allowComposeNetwork: true }), /exact owned Compose service routes/);
 });
 
 test("reviewing reported screens alone cannot omit the rest of the inventory", () => {
