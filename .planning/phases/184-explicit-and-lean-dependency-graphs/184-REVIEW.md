@@ -79,4 +79,3 @@ Only this REVIEW.md was changed by the reviewer. Source files, other reports, an
 
 _Reviewer: gsd-code-reviewer_
 _Depth: standard_
-
