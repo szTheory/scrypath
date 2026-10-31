@@ -138,12 +138,47 @@ function resourcePlanFor(sessionPath, sessionId, project, ports) {
     services: ["postgres", "meilisearch", "web", "standalone_ops", "browser"],
     container_names: Object.fromEntries(["postgres", "meilisearch", "web", "standalone_ops", "browser"].map((service) => [service, `${project}-${service}-1`])),
     network_name: `${project}_default`,
+    source_bind_mounts: composeSourceBindMounts(),
     compose_base_files: [
       path.join(exampleRoot, "compose.yaml"),
       path.join(exampleRoot, "compose.e2e.yaml"),
       path.join(exampleRoot, "compose.phase173.yaml"),
     ],
   };
+}
+
+function composeSourceBindMounts() {
+  const source = path.join(exampleRoot, "scripts/phase173-create-database.sh");
+  const info = fs.lstatSync(source);
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error("The Phase 173 PostgreSQL bootstrap must be a regular source file.");
+  return [{
+    service: "postgres",
+    source: path.resolve(source),
+    source_sha256: sha256(fs.readFileSync(source)),
+    destination: "/docker-entrypoint-initdb.d/10-phase173-create-database.sh",
+    read_only: true,
+  }];
+}
+
+function isAuthorizedOwnedBindMount(authority, service, mount) {
+  const mountedSource = path.resolve(localPathForDockerHostMount(mount.Source || ""));
+  const expected = authority.resources.source_bind_mounts || composeSourceBindMounts();
+  const sourceMount = expected.find((entry) => entry.service === service && entry.destination === mount.Destination && path.resolve(entry.source) === mountedSource);
+  if (sourceMount && mount.RW === !sourceMount.read_only) {
+    if (sourceMount.source_sha256) {
+      const info = fs.lstatSync(sourceMount.source);
+      if (!info.isFile() || info.isSymbolicLink() || sha256(fs.readFileSync(sourceMount.source)) !== sourceMount.source_sha256) return false;
+    }
+    return true;
+  }
+  return service === "browser" && mount.Destination === "/artifacts" && mount.RW === true
+    && Object.values(authority.artifact_directories || {}).includes(mountedSource);
+}
+
+function containerIdForService(containers, service) {
+  const matches = containers.filter((entry) => entry.service === service && typeof entry.id === "string" && entry.id.length > 0);
+  if (matches.length !== 1) throw new Error(`Expected exactly one inspected ${service} container, found ${matches.length}.`);
+  return matches[0].id;
 }
 
 function createSessionAuthority(sessionPath, session) {
@@ -803,8 +838,7 @@ function teardownOwnedProject(authority, removeVolumes = true) {
     for (const mount of container.Mounts || []) {
       if (mount.Type === "volume" && (retained.volumes.includes(mount.Name) || !expectedVolumes.includes(mount.Name))) throw new Error(`Refusing teardown: container ${container.Id} mounts a retained or unallocated volume ${mount.Name}.`);
       if (mount.Type === "bind") {
-        const allowedArtifact = service === "browser" && mount.Destination === "/artifacts" && Object.values(authority.artifact_directories || {}).includes(path.resolve(mount.Source));
-        if (!allowedArtifact) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
+        if (!isAuthorizedOwnedBindMount(authority, service, mount)) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
       }
       if (!["volume", "bind", "tmpfs"].includes(mount.Type)) throw new Error(`Refusing teardown: container ${container.Id} has unsupported mount type ${mount.Type}.`);
     }
@@ -960,7 +994,8 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
     }
     const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { env }).split("\n").filter(Boolean).sort();
     if (canonicalJson(volumes) !== canonicalJson([...authority.resources.volumes].sort())) throw new Error("Disposable Compose volumes do not match the exact independent allocation.");
-    const inspect = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", web.id], { env }));
+    const webId = containerIdForService(allContainers, "web");
+    const inspect = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", webId], { env }));
     const mounts = (inspect.Mounts || []).map(({ Type, Destination }) => ({ type: Type, destination: Destination }));
     if (mounts.some((mount) => mount.type === "bind" && mount.destination === "/app")) throw new Error("Disposable app container unexpectedly uses a source bind mount.");
     return { env, override, compose, handoff, images, containers: allContainers, volumes, mounts, artifactDirectory, runtimeImageIds: readJson(handoff).runtime_image_ids, sessionId };
@@ -1309,11 +1344,14 @@ module.exports = {
   collectPages,
   comparePng,
   createSessionAuthority,
+  composeSourceBindMounts,
+  containerIdForService,
   disposableProvenanceErrors,
   dockerEnvironment,
   expectedCaptureIds,
   gitEnvironment,
   indexResults,
+  isAuthorizedOwnedBindMount,
   isCanonicalOrigin,
   localPathForDockerHostMount,
   loadAuthorizedSession,
