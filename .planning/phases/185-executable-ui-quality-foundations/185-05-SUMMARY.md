@@ -15,7 +15,8 @@ actuals:
   tasks: 2
   commits: 8
   plan_head_before: 7cc6035a6e277312b8f6237dade6d1972b87f4b9
-  plan_head_after: b029e13130575c411280ff3376f042202515f560
+  plan_head_after: 174adc54efdd349de275d4f4932649d6a9c76f7c
+  review_continuation_commits: 17
 tech-stack:
   added: []
   patterns:
@@ -61,11 +62,27 @@ coverage:
     human_judgment: true
     rationale: "The before images and copy were inspected, but rendered quality and any future before/candidate differences still require human review; this baseline is not design approval."
 duration: 48min
-completed: 2026-10-31
-status: review_fixes_required
+original_execution_completed: 2026-10-31
+status: review_fixes_partial
 ---
 
 # Phase 185 Plan 05: Disposable UI Preservation Summary
+
+## Corrective continuation — 2026-10-31
+
+**Current status: partial; WR-02 remains blocked on repeatable rendered time/accessibility metadata.** The initial plan record below is historical. Parent review found that its 135-entry inventory did not prove matched visual/copy parity. Its original "unseeded" diagnosis was retracted after tracing startup to `e2e.prepare` and `demo.seed`; host incident copy is seeded fixture data and standalone Ops' empty schema state is configured behavior.
+
+The review repairs now validate independent session and manifest authority, canonical matrix metadata, stable database/search identity, bounded source/build/artifact transport, and owner-scoped teardown. The candidate lifecycle preserves its existing database and search state. A follow-up Compose interpolation bug discovered during the required same-source run was fixed in `174adc54`.
+
+The final run used source `174adc54efdd349de275d4f4932649d6a9c76f7c` (tree `c1a9896f9c94cb2b0ead7ccc702db7b6408f56bb`, fingerprint `ea7ebba3ba711eb24668c497190b6a32d2c0e22d6ec7aa7a85a55bfa1cced004`) and current remote `main` `c1be269ec202deed8602c74683c1b9ce5e42eaa9`. Before and candidate each contain 135 observations (72 host, 63 standalone), with 546 image/copy comparisons. Both manifests report the same Chromium `148.0.7778.0`, `linux-arm64`, and data digest `36a4a7761da621792cac129e01a215820023d9106c6a67d846abfad6d2f9487d`; the digest also remained unchanged after candidate startup and browser capture. This proves the preservation path retained the tested state.
+
+The comparison remains pending. Fifty-four of 135 observation IDs have changed copy: the displayed server-side `Checked` time advances, and Axe targets include process-generated LiveView `data-phx-id` selectors. The viewport/full/hover/focus images report corresponding small changes (54 of 135 each, maximum differing-pixel ratio `0.0002401`); all six navigation images are identical. These changes are preserved without timestamp or image masking. The existing Playwright `page.clock` tests do not control server-side Elixir clock reads. See [185-05-REVIEW-FIX.md](185-05-REVIEW-FIX.md) for the exact test-only clock/selector proposal and evidence paths.
+
+The corrected session was torn down after comparison: its containers, volumes, and network are absent. The retained preview still has its recorded container ID and remains healthy on its recorded loopback port. No CSS, controller, template, generator, product API, or runtime-flag changes were made. Subjective critique remains pending; no design approval or phase completion is claimed.
+
+The corrective continuation spans 17 commits after `2f163d87`, including the review-scope note and code fixes; implementation changes end with `174adc54`. The source review's historical pre-fix RED evidence covers BL-03/BL-04, and the Compose interpolation regression has its own captured RED transcript. RED evidence is not available for every earlier repair, so the report does not claim that evidence requirement is complete.
+
+## Original plan execution (historical, before parent review)
 
 Parent review found blocking ownership/integrity/matrix/data-state/lifecycle gaps. The initial entry captures are historical observations, not accepted paired preservation evidence. They were archived unchanged; the owned old stack was verified and removed. The initial unseeded diagnosis was retracted: the existing full startup seeds incident data. This fresh corrective checkout owns tooling fixes and a qualified recapture. Read 185-05-REVIEW.md before relying on the earlier execution record below.
 
@@ -86,7 +103,7 @@ Parent review found blocking ownership/integrity/matrix/data-state/lifecycle gap
 - Inspected the final light, dark, and system-dark contact sheets and copy across all host and standalone surfaces. The runbook documents the new path and keeps all review pending.
 - Preserved the 45-entry UI literal baseline: the local full-source scan matched all 45 identities and occurrences, and the approved bootstrap commit is an ancestor of this plan branch.
 
-## Frozen Before Evidence
+## Original Frozen Before Evidence (historical; not the repaired comparison pair)
 
 - **Source:** `b029e13130575c411280ff3376f042202515f560`
 - **Tree fingerprint:** `eaef73f64e16bbff7413e4cdbc81cc7f1167ef710f67b3354c2eb424d7659ee0`
@@ -171,11 +188,11 @@ The manifest contains 135 entries: 72 host and 63 standalone. Every entry has co
 
 None. The capture used the installed Docker and browser tooling; no package or host installation was performed.
 
-## Next Phase Readiness
+## Original Next Phase Readiness (historical; superseded by parent review)
 
-The frozen baseline is ready for a later committed candidate capture using the same session, browser, platform, and synthetic data identity. The retained preview remains stopped and untouched. No design approval or before/candidate parity is claimed. The parent agent owns integration and phase-level review.
+At the end of the original plan execution, the frozen baseline was considered ready for a later committed candidate. Parent review superseded that conclusion because inventory completeness did not prove matched parity. This historical statement does not authorize downstream UI edits.
 
-## Self-Check: PASSED
+## Original Plan Self-Check (historical)
 
 - All five declared source/runbook files exist.
 - All eight task commits are ancestors of the plan branch head recorded above.
@@ -184,4 +201,4 @@ The frozen baseline is ready for a later committed candidate capture using the s
 
 ---
 *Phase: 185-executable-ui-quality-foundations*
-*Completed: 2026-10-31*
+*Original execution recorded: 2026-10-31*
