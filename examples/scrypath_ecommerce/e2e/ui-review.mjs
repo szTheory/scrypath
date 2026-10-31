@@ -170,7 +170,8 @@ async function captureSurface(browser, surface, theme, viewport, output, options
       await save("focus.png", await page.screenshot({ animations: "disabled" }));
     }
     const nav = page.getByRole("button", { name: "Open navigation", exact: true });
-    if (surface.id === "control-room" && await nav.isVisible()) {
+    if (surface.id === "control-room" && viewport.width === 390) {
+      if (!await nav.isVisible()) throw new Error("Compact navigation trigger is missing.");
       await nav.click();
       await page.waitForFunction(() => {
         const trigger = document.querySelector("[data-ops-nav-open]");
@@ -189,8 +190,6 @@ async function captureSurface(browser, surface, theme, viewport, output, options
       if (!mobileNavigation.visible || !mobileNavigation.expanded || mobileNavigation.links.length === 0) throw new Error("Compact navigation did not open with visible links.");
       capture.mobile_navigation = mobileNavigation;
       await save("navigation.png", await page.screenshot({ animations: "disabled" }));
-    } else if (surface.id === "control-room") {
-      throw new Error("Compact navigation trigger is missing.");
     }
   } catch (error) {
     capture.error = error.message;
