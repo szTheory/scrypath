@@ -258,7 +258,7 @@ function scanMarkup(source, file, findings, outerContext = "") {
       const index = attr.index;
       const valueSourceStart = attr.valueIndex + (source[attr.valueIndex] === '"' || source[attr.valueIndex] === "'" ? 1 : 0);
       if (attr.name === "style") {
-        findings.push(makeFinding("inline-style", file, currentContext, "style", source, index));
+        findings.push(makeFinding("inline-style", file, currentContext, styleIdentity(attr.value, file), source, index));
         for (const match of attr.value.matchAll(/#[\da-fA-F]{3,8}\b/g)) {
           const at = valueSourceStart + match.index;
           findings.push(makeFinding("raw-hex", file, currentContext, match[0].toLowerCase(), source, at));
@@ -280,6 +280,40 @@ function scanMarkup(source, file, findings, outerContext = "") {
     if (!selfClosing) stack.push({ tag, index: siblingIndex, nextChild: 1 });
     i = Math.min(end + 1, visible.length);
   }
+}
+
+// Keep source values in the identity. Token boundaries and quoted contents are
+// meaningful; whitespace and comments outside strings are formatting only.
+function styleIdentity(value, file) {
+  if (value.length > 8000) fail(`inline-style source exceeds the bounded reader limit: ${file}`);
+  const tokens = [];
+  const expression = value.startsWith("{");
+  const javascript = /\.[cm]?[jt]sx?$/i.test(file);
+  const word = /(?:[a-zA-Z_@-][\w@-]*|(?:\d*\.\d+|\d+)(?:[a-zA-Z%]+)?|[^\s])/y;
+  for (let i = 0; i < value.length;) {
+    if (/\s/.test(value[i])) { i += 1; continue; }
+    if (value.startsWith("/*", i)) {
+      const end = value.indexOf("*/", i + 2);
+      if (end < 0) fail(`unterminated inline-style comment: ${file}`);
+      i = end + 2; continue;
+    }
+    if (expression && ((javascript && value.startsWith("//", i)) || (!javascript && value[i] === "#"))) {
+      const end = value.indexOf("\n", i);
+      i = end < 0 ? value.length : end + 1; continue;
+    }
+    if (value[i] === '"' || value[i] === "'" || value[i] === "`") {
+      const quoted = readQuoted(value, i);
+      tokens.push(value.slice(i, quoted.end)); i = quoted.end;
+    } else {
+      word.lastIndex = i;
+      const match = word.exec(value);
+      if (!match) fail(`unsupported inline-style source: ${file}`);
+      tokens.push(match[0]); i = word.lastIndex;
+    }
+  }
+  const normalized = JSON.stringify(tokens);
+  if (normalized.length > 500) fail(`inline-style value exceeds the ledger identity limit: ${file}`);
+  return normalized;
 }
 
 function normalizeAttr(value) {
