@@ -122,6 +122,9 @@ function scanUtilityString(value, file, source, baseIndex, context, findings) {
     const tokenIndex = value.indexOf(token, searchFrom);
     searchFrom = tokenIndex + token.length;
     const base = utilityBase(token);
+    if (/\[[^\]]+\]/.test(base)) {
+      scanColorValue(base, file, source, baseIndex + tokenIndex + token.length - base.length, context, findings);
+    }
     if (/(?:^|-)\[[^\]]+\]|-(?:\([^)]*\))/.test(base)) {
       findings.push(makeFinding("arbitrary-value", file, context, token, source, baseIndex + tokenIndex));
     }
@@ -143,6 +146,14 @@ function utilityBase(token) {
     else if (token[i] === ":" && square === 0 && round === 0) lastVariant = i;
   }
   return token.slice(lastVariant + 1);
+}
+
+function scanColorValue(value, file, source, index, context, findings) {
+  // Fragment identifiers are references, including inside arbitrary utilities.
+  const visible = value.replace(/url\s*\([^)]*\)/gi, (match) => " ".repeat(match.length));
+  for (const match of visible.matchAll(/#(?:[\da-fA-F]{8}|[\da-fA-F]{6}|[\da-fA-F]{4}|[\da-fA-F]{3})\b/g)) {
+    findings.push(makeFinding("raw-hex", file, context, match[0], source, index + match.index));
+  }
 }
 
 function readQuoted(source, start) {
@@ -216,6 +227,7 @@ function stripHtmlComments(source) {
 function scanMarkup(source, file, findings, outerContext = "") {
   const visible = stripHtmlComments(source);
   const stack = [];
+  let nextRoot = 1;
   let i = 0;
   while (i < visible.length) {
     const open = visible.indexOf("<", i);
@@ -252,7 +264,7 @@ function scanMarkup(source, file, findings, outerContext = "") {
     const semanticAttrs = attrs
       .filter((attr) => /^(id|name|role|aria-label|data-[\w-]+)$/.test(attr.name))
       .map((attr) => `${attr.name}=${normalizeAttr(attr.value)}`).sort();
-    const siblingIndex = stack.length ? stack[stack.length - 1].nextChild++ : 1;
+    const siblingIndex = stack.length ? stack[stack.length - 1].nextChild++ : nextRoot++;
     const currentContext = stableContext(outerContext, ...stack.map((entry) => `${entry.tag}[${entry.index}]`), `${tag}[${siblingIndex}]`, ...semanticAttrs);
     for (const attr of attrs) {
       const index = attr.index;
@@ -261,8 +273,11 @@ function scanMarkup(source, file, findings, outerContext = "") {
         findings.push(makeFinding("inline-style", file, currentContext, styleIdentity(attr.value, file), source, index));
         for (const match of attr.value.matchAll(/#[\da-fA-F]{3,8}\b/g)) {
           const at = valueSourceStart + match.index;
-          findings.push(makeFinding("raw-hex", file, currentContext, match[0].toLowerCase(), source, at));
+          findings.push(makeFinding("raw-hex", file, currentContext, match[0], source, at));
         }
+      }
+      if (/^(?:fill|stroke|color|stop-color|flood-color|lighting-color|bgcolor)$/.test(attr.name)) {
+        scanColorValue(attr.value, file, source, valueSourceStart, stableContext(currentContext, attr.name), findings);
       }
       if (attr.name === "class" || attr.name === "classname" || attr.name === "class:list" || attr.name.startsWith("class:")) {
         const literals = [...attr.value.matchAll(/"([^"\n]*)"|'([^'\n]*)'|([^{}"'`]+)/g)];
@@ -374,18 +389,90 @@ function findQuotedEnd(source, start, delimiter) {
 }
 
 function scanJsTs(source, file, findings) {
-  const commentless = source.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " ")).replace(/(^|[^:])\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, " "));
+  const first = findings.length;
+  const commentless = maskJsComments(source);
   const contexts = [
-    /\bclassList\.(?:add|toggle|replace)\s*\(\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)/g,
+    /(?:\.\s*className\s*=|\b(?:className|class)\s*:)\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)/g,
     /\bsetAttribute\s*\(\s*["']class["']\s*,\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)/g,
   ];
   for (const regex of contexts) {
     for (const match of commentless.matchAll(regex)) {
+      if (!jsCodeAt(commentless, match.index)) continue;
       const literal = match[1];
-      scanUtilityString(literal.slice(1, -1), file, source, match.index + match[0].lastIndexOf(literal) + 1, "JS/TS class literal", findings);
+      scanUtilityString(literal.slice(1, -1), file, source, match.index + match[0].lastIndexOf(literal) + 1, stableContext("JS/TS class literal", jsEnclosingContext(commentless, match.index)), findings);
+    }
+  }
+  for (const match of commentless.matchAll(/\bclassList\.(?:add|toggle|replace)\s*\(/g)) {
+    if (!jsCodeAt(commentless, match.index)) continue;
+    const start = match.index + match[0].length;
+    const end = skipBalanced(commentless, start - 1, "(", ")") - 1;
+    for (const literal of commentless.slice(start, end).matchAll(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g)) {
+      scanUtilityString(literal[0].slice(1, -1), file, source, start + literal.index + 1, stableContext("JS/TS class literal", jsEnclosingContext(commentless, match.index)), findings);
+    }
+  }
+  // Bounded static styling APIs: color property literals and bar-color maps.
+  // Other strings (prose, selectors and fragment references) are not colors.
+  for (const match of commentless.matchAll(/\b((?:[a-zA-Z]*[Cc]olor|color|fill|stroke|background|boxShadow|textShadow))\s*[:=]\s*(["'`])([^\n]*?)\2/g)) {
+    if (!jsCodeAt(commentless, match.index)) continue;
+    scanColorValue(match[3], file, source, match.index + match[0].indexOf(match[2]) + 1, stableContext(`JS/TS styling:${match[1]}`, jsEnclosingContext(commentless, match.index)), findings);
+  }
+  for (const match of commentless.matchAll(/\bbarColors\s*:\s*\{/g)) {
+    if (!jsCodeAt(commentless, match.index)) continue;
+    const open = match.index + match[0].length - 1;
+    const end = skipBalanced(commentless, open);
+    for (const literal of commentless.slice(open + 1, end - 1).matchAll(/(?:[\w.]+|"[^"\n]*"|'[^'\n]*')\s*:\s*(["'`])([^\n]*?)\1/g)) {
+      const index = open + 1 + literal.index + literal[0].indexOf(literal[1], literal[0].indexOf(":")) + 1;
+      scanColorValue(literal[2], file, source, index, stableContext("JS/TS styling:barColors", jsEnclosingContext(commentless, match.index)), findings);
     }
   }
   scanMarkup(commentless, file, findings, "JS/TS JSX");
+  // A JSX style literal can also match a static JavaScript color property.
+  // Count source occurrences, rather than overlapping reader paths.
+  const seen = new Set();
+  for (let i = findings.length - 1; i >= first; i -= 1) {
+    const item = findings[i];
+    const key = JSON.stringify([item.rule, item.line, item.column, item.value]);
+    if (seen.has(key)) findings.splice(i, 1);
+    else seen.add(key);
+  }
+}
+
+function jsCodeAt(source, target) {
+  for (let i = 0; i < target; i += 1) {
+    if (source[i] === '"' || source[i] === "'" || source[i] === "`") {
+      const end = readQuoted(source, i).end;
+      if (end > target) return false;
+      i = end - 1;
+    }
+  }
+  return true;
+}
+
+function jsEnclosingContext(source, target) {
+  const stack = [];
+  for (let i = 0; i < target; i += 1) {
+    if (source[i] === '"' || source[i] === "'" || source[i] === "`") { i = readQuoted(source, i).end - 1; continue; }
+    if (source[i] === "{") {
+      const prefix = source.slice(Math.max(0, i - 500), i);
+      const named = /(?:function\s+([\w$]+)\s*\([^{}]*\)|([\w$]+)\s*[:=]\s*(?:async\s*)?(?:function\s*)?\([^{}]*\)\s*=>?|([\w$]+)\s*\([^{}]*\))\s*$/.exec(prefix);
+      const name = named && (named[1] || named[2] || named[3]);
+      stack.push(name && !/^(if|for|while|switch|catch|with)$/.test(name) ? `function:${name}` : "");
+    } else if (source[i] === "}") stack.pop();
+  }
+  return stack.filter(Boolean).join(" > ");
+}
+
+function maskJsComments(source) {
+  const chars = source.split("");
+  for (let i = 0; i < source.length;) {
+    if (source[i] === '"' || source[i] === "'" || source[i] === "`") { i = readQuoted(source, i).end; continue; }
+    let end;
+    if (source.startsWith("/*", i)) end = skipCssComment(source, i);
+    else if (source.startsWith("//", i)) { end = source.indexOf("\n", i); if (end < 0) end = source.length; }
+    else { i += 1; continue; }
+    for (; i < end; i += 1) if (chars[i] !== "\n") chars[i] = " ";
+  }
+  return chars.join("");
 }
 
 function skipCssComment(source, index) {
@@ -413,24 +500,40 @@ function cssTokenRanges(source, file) {
       if (source[i] === "{") depth += 1;
       else if (source[i] === "}" && --depth === 0) return i + 1;
     }
-    return source.length;
+    fail(`unterminated token authority: ${file}`);
   };
-  const theme = /@theme\s*\{/g;
-  let match;
-  while ((match = theme.exec(source))) {
-    const open = source.indexOf("{", match.index);
-    ranges.push([open, findBlockEnd(open)]);
-    theme.lastIndex = open + 1;
-  }
-  const plugin = /@plugin\s+["']\.\.\/vendor\/daisyui-theme["']\s*\{/g;
-  while ((match = plugin.exec(source))) {
-    const open = source.indexOf("{", match.index);
-    const end = findBlockEnd(open);
-    const body = source.slice(open + 1, end - 1);
-    if (/\bname\s*:\s*["'](?:light|dark)["']\s*;/.test(body)) ranges.push([open, end]);
-    plugin.lastIndex = open + 1;
+  let depth = 0;
+  for (let i = 0; i < source.length; i += 1) {
+    if (source.startsWith("/*", i)) { i = skipCssComment(source, i) - 1; continue; }
+    if (source[i] === '"' || source[i] === "'") { i = skipCssString(source, i) - 1; continue; }
+    if (depth === 0 && source[i] === "@") {
+      const header = /^(?:@theme\s*\{|@plugin\s+["']\.\.\/vendor\/daisyui-theme["']\s*\{)/.exec(source.slice(i));
+      if (header) {
+        const open = i + header[0].length - 1;
+        const end = findBlockEnd(open);
+        const body = source.slice(open + 1, end - 1);
+        if (header[0].startsWith("@theme") || namedThemeBody(body)) ranges.push([open, end]);
+        i = end - 1; continue;
+      }
+    }
+    if (source[i] === "{") depth += 1;
+    else if (source[i] === "}") depth -= 1;
   }
   return ranges;
+}
+
+function namedThemeBody(body) {
+  let start = 0;
+  for (let i = 0; i < body.length; i += 1) {
+    if (body.startsWith("/*", i)) { i = skipCssComment(body, i) - 1; continue; }
+    if (body[i] === '"' || body[i] === "'") { i = skipCssString(body, i) - 1; continue; }
+    if (body[i] === ";") {
+      const declaration = body.slice(start, i).replace(/\/\*[\s\S]*?\*\//g, " ").trim();
+      if (/^name\s*:\s*["'](?:light|dark)["']$/.test(declaration)) return true;
+      start = i + 1;
+    }
+  }
+  return false;
 }
 
 function isInsideRange(index, ranges) {

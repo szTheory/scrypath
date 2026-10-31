@@ -161,7 +161,7 @@ test("the committed bootstrap ledger is the exact pinned-source multiset", (t) =
   assert.equal(ok, true);
   assert.equal(result.policyVersion, 1);
   assert.equal(result.introduction, git(repo, ["log", "--first-parent", "--reverse", "--format=%H", "--", "scripts/ci/ui-literal-baseline.json"]).split("\n")[0]);
-  assert.equal(result.findingCount, 36);
+  assert.equal(result.findingCount, 45);
 });
 
 test("a candidate cannot bless a newly introduced finding by editing its ledger", (t) => {
@@ -440,4 +440,27 @@ test("commented and quoted theme syntax cannot create a token authority", (t) =>
     fs.writeFileSync(css, prefix+'.ordinary { color: #abcdef; }');
     assert.deepEqual(scanTree(root).filter(f=>f.rule==='raw-hex').map(f=>f.value), ['#abcdef']);
   }
+});
+
+
+test("static JS class APIs preserve every argument and enclosing function", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ui-js-class-review-"));
+  t.after(() => fs.rmSync(root, {recursive:true, force:true}));
+  const js = path.join(root, "scrypath_ops/assets/js/classes.js");
+  fs.mkdirSync(path.dirname(js), {recursive:true});
+  fs.writeFileSync(js, [
+    `const prose = 'color: "#abc"'; // classList.add("z-80")`,
+    'function first() { el.classList.add("z-10", "bg-[url(https://site/a)]"); el.classList.replace("z-20", "z-30"); }',
+    'function second() { el.className = "z-10"; const config = {className: "z-40"}; }',
+  ].join("\n"));
+  const findings = scanTree(root);
+  assert.deepEqual(findings.filter(f=>f.rule==='literal-z').map(f=>f.value).sort(), ['z-10','z-10','z-20','z-30','z-40']);
+  assert.equal(findings.filter(f=>f.rule==='raw-hex').length, 0);
+  assert.equal(findings.filter(f=>f.rule==='arbitrary-value').length, 1, 'comment-like text in strings is preserved');
+  const anchors = findings.filter(f=>f.value==='z-10').map(f=>f.context);
+  assert.equal(new Set(anchors).size, 2);
+  assert.ok(anchors.some(c=>c.includes('function:first')) && anchors.some(c=>c.includes('function:second')));
+  const identities = findingEntries(findings);
+  fs.writeFileSync(js, '\n/* formatting only */\n'+fs.readFileSync(js,'utf8').replace('function first()', 'function first ( )'));
+  assert.deepEqual(findingEntries(scanTree(root)), identities);
 });
