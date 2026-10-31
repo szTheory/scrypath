@@ -201,6 +201,7 @@ defmodule Mix.Tasks.UiTokensContractTest do
 
     for replacement <- ["/*\n#{dark}\n*/", ".caption { content: '#{dark}'; }"] do
       File.write!(css_file, String.replace(css, dark, replacement, global: false))
+
       assert_raise Mix.Error, ~r/exactly two.*theme blocks/, fn ->
         Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
       end
@@ -211,7 +212,16 @@ defmodule Mix.Tasks.UiTokensContractTest do
   test "review retains CSS none as extension metadata instead of an undefined token type" do
     tokens = read_tokens!(@root)
     refute Map.has_key?(tokens["shadow"]["glow"], "light")
-    assert get_in(tokens, ["shadow", "glow", "$extensions", "org.scrypath", "css_literals", "light"]) == "none"
+
+    assert get_in(tokens, [
+             "shadow",
+             "glow",
+             "$extensions",
+             "org.scrypath",
+             "css_literals",
+             "light"
+           ]) == "none"
+
     {json_file, css_file, temp} = fixture_paths!()
     on_exit(fn -> File.rm_rf!(temp) end)
     File.cp!(Path.join(@root, @css_path), css_file)
@@ -230,9 +240,12 @@ defmodule Mix.Tasks.UiTokensContractTest do
     on_exit(fn -> File.rm_rf!(temp) end)
     File.cp!(Path.join(@root, @css_path), css_file)
     tokens = read_tokens!(@root)
-    standard = update_in(tokens, ["shadow", "sm", "light", "$value"], fn layers ->
-      Enum.map(layers, &Map.delete(&1, "type"))
-    end)
+
+    standard =
+      update_in(tokens, ["shadow", "sm", "light", "$value"], fn layers ->
+        Enum.map(layers, &Map.delete(&1, "type"))
+      end)
+
     File.write!(json_file, Jason.encode!(standard))
     assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
     inset = put_in(standard, ["shadow", "sm", "light", "$value", Access.at(0), "inset"], true)
@@ -247,8 +260,13 @@ defmodule Mix.Tasks.UiTokensContractTest do
     {json_file, css_file, temp} = fixture_paths!()
     on_exit(fn -> File.rm_rf!(temp) end)
     File.cp!(Path.join(@root, @css_path), css_file)
+
     for value <- [0, -1, 0.25] do
-      tokens = put_in(read_tokens!(@root), ["space", "review"], %{"$value" => %{"value" => value, "unit" => "px"}})
+      tokens =
+        put_in(read_tokens!(@root), ["space", "review"], %{
+          "$value" => %{"value" => value, "unit" => "px"}
+        })
+
       File.write!(json_file, Jason.encode!(tokens))
       assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
     end
@@ -262,22 +280,41 @@ defmodule Mix.Tasks.UiTokensContractTest do
     css = File.read!(Path.join(@root, @css_path))
     File.write!(css_file, css)
     File.write!(json_file, json <> String.duplicate(" ", 2_097_153))
-    assert_raise Mix.Error, ~r/source exceeds/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+
+    assert_raise Mix.Error, ~r/source exceeds/, fn ->
+      Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+    end
+
     File.write!(json_file, json)
     File.write!(css_file, css <> String.duplicate(" ", 2_097_153))
-    assert_raise Mix.Error, ~r/source exceeds/, fn -> Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) end
+
+    assert_raise Mix.Error, ~r/source exceeds/, fn ->
+      Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+    end
+
     File.write!(css_file, css)
     nested = Enum.reduce(1..70, nil, fn _, inner -> [inner] end)
     deep = put_in(Jason.decode!(json), ["$extensions", "org.scrypath", "nested"], nested)
     assert_rejected!(deep, json_file, css_file, ~r/JSON nesting exceeds/)
-    many = Enum.reduce(1..4100, Jason.decode!(json), fn n, tokens ->
-      put_in(tokens, ["color", "primitive", "review-#{n}"], %{"$value" => "{color.primitive.night}"})
-    end)
+
+    many =
+      Enum.reduce(1..4100, Jason.decode!(json), fn n, tokens ->
+        put_in(tokens, ["color", "primitive", "review-#{n}"], %{
+          "$value" => "{color.primitive.night}"
+        })
+      end)
+
     assert_rejected!(many, json_file, css_file, ~r/token count exceeds/)
-    aliases = Enum.reduce(1..40, Jason.decode!(json), fn n, tokens ->
-      target = if n == 40, do: "night", else: "review-#{n + 1}"
-      put_in(tokens, ["color", "primitive", "review-#{n}"], %{"$value" => "{color.primitive.#{target}}"})
-    end)
+
+    aliases =
+      Enum.reduce(1..40, Jason.decode!(json), fn n, tokens ->
+        target = if n == 40, do: "night", else: "review-#{n + 1}"
+
+        put_in(tokens, ["color", "primitive", "review-#{n}"], %{
+          "$value" => "{color.primitive.#{target}}"
+        })
+      end)
+
     assert_rejected!(aliases, json_file, css_file, ~r/alias depth exceeds/)
   end
 
@@ -393,8 +430,14 @@ defmodule Mix.Tasks.UiTokensContractTest do
       assert_dimension!(token["$value"], root["--sp-radius-#{name}"])
     end
 
-    for {name, modes} <- Map.drop(tokens["shadow"], ["$type"]), {mode, token} <- modes do
-      assert_shadow!(token, @legacy_shadows[name][mode])
+    for {name, modes} <- Map.drop(tokens["shadow"], ["$type"]),
+        {mode, css} <- @legacy_shadows[name] do
+      token =
+        if css == "none",
+          do: get_in(modes, ["$extensions", "org.scrypath", "css_literals", mode]),
+          else: modes[mode]
+
+      assert_shadow!(token, css)
     end
 
     for {name, token} <- Map.drop(tokens["motion"]["duration"], ["$type"]) do
@@ -407,7 +450,7 @@ defmodule Mix.Tasks.UiTokensContractTest do
              Enum.map(String.split(curve, ","), &css_number!/1)
   end
 
-  defp assert_shadow!(%{"$value" => "none", "$type" => "string"}, "none"), do: :ok
+  defp assert_shadow!("none", "none"), do: :ok
 
   defp assert_shadow!(%{"$value" => value, "$type" => "shadow"}, css) do
     actual = if is_list(value), do: value, else: [value]
@@ -428,14 +471,15 @@ defmodule Mix.Tasks.UiTokensContractTest do
     spread = if tail == [], do: "0px", else: hd(tail)
     color = shadow_color!(color_text)
 
-    %{
+    layer = %{
       "color" => color,
       "offsetX" => shadow_dimension!(offset_x),
       "offsetY" => shadow_dimension!(offset_y),
       "blur" => shadow_dimension!(blur),
-      "spread" => shadow_dimension!(spread),
-      "type" => if(inset?, do: "innerShadow", else: "dropShadow")
+      "spread" => shadow_dimension!(spread)
     }
+
+    if inset?, do: Map.put(layer, "inset", true), else: layer
   end
 
   defp shadow_color!(css) do

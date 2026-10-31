@@ -3,6 +3,11 @@ defmodule Mix.Tasks.Verify.UiTokens do
   use Mix.Task
 
   @extension "org.scrypath"
+  @max_source_bytes 2_097_152
+  @max_json_depth 64
+  @max_tokens 4096
+  @max_alias_depth 32
+  @css_lexeme ~r/\/\*[\s\S]*?(?:\*\/|\z)|"(?:\\[\s\S]|[^"\\])*(?:"|\z)|'(?:\\[\s\S]|[^'\\])*(?:'|\z)|@plugin\b|[{};]/u
   @supported_types [
     "color",
     "cubicBezier",
@@ -11,8 +16,7 @@ defmodule Mix.Tasks.Verify.UiTokens do
     "fontFamily",
     "fontWeight",
     "number",
-    "shadow",
-    "string"
+    "shadow"
   ]
 
   @impl true
@@ -32,17 +36,69 @@ defmodule Mix.Tasks.Verify.UiTokens do
   def check!(json_path, css_path) do
     tokens =
       json_path
-      |> File.read!()
+      |> bounded_read!()
+      |> bound_json_depth!()
       |> Jason.decode!(objects: :ordered_objects)
       |> normalize_json!("$")
 
     validate_document!(tokens)
-    css_themes = css_path |> File.read!() |> parse_css_themes!()
+    css_themes = css_path |> bounded_read!() |> parse_css_themes!()
     validate_ops_mirror!(tokens, css_themes)
     :ok
   rescue
     error in [ArgumentError, Jason.DecodeError, File.Error] ->
       Mix.raise("UI token contract: #{Exception.message(error)}")
+  end
+
+  defp bounded_read!(path) do
+    File.open!(path, [:read, :binary], fn io ->
+      case IO.binread(io, @max_source_bytes + 1) do
+        :eof ->
+          ""
+
+        {:error, reason} ->
+          raise File.Error, reason: reason, action: "read", path: path
+
+        text when byte_size(text) > @max_source_bytes ->
+          raise ArgumentError, "#{path}: source exceeds #{@max_source_bytes} bytes"
+
+        text ->
+          text
+      end
+    end)
+  end
+
+  defp bound_json_depth!(text) do
+    for <<char <- text>>, reduce: {0, false, false} do
+      {depth, quoted, escaped} ->
+        cond do
+          escaped ->
+            {depth, quoted, false}
+
+          quoted and char == ?\\ ->
+            {depth, quoted, true}
+
+          char == ?" ->
+            {depth, not quoted, false}
+
+          quoted ->
+            {depth, quoted, false}
+
+          char in [?{, ?[] ->
+            if depth >= @max_json_depth,
+              do: raise(ArgumentError, "JSON nesting exceeds #{@max_json_depth}")
+
+            {depth + 1, false, false}
+
+          char in [?}, ?]] ->
+            {depth - 1, false, false}
+
+          true ->
+            {depth, false, false}
+        end
+    end
+
+    text
   end
 
   defp normalize_json!(%Jason.OrderedObject{values: pairs}, path) do
@@ -137,6 +193,9 @@ defmodule Mix.Tasks.Verify.UiTokens do
         raise ArgumentError, "$: root cannot be a token"
       end
 
+      if map_size(acc) >= @max_tokens,
+        do: raise(ArgumentError, "token count exceeds #{@max_tokens}")
+
       Map.put(acc, Enum.join(path, "."), %{type: type, value: node["$value"], metadata: node})
     else
       assert_group_metadata!(node, display_path(path))
@@ -217,6 +276,9 @@ defmodule Mix.Tasks.Verify.UiTokens do
     do: raise(ArgumentError, "#{path}: expected a typed group")
 
   defp resolve_token!(path, tokens, stack) do
+    if length(stack) >= @max_alias_depth,
+      do: raise(ArgumentError, "#{path}: alias depth exceeds #{@max_alias_depth}")
+
     if path in stack do
       raise ArgumentError, "#{path}: token reference cycle: #{Enum.join(stack ++ [path], " -> ")}"
     end
@@ -265,10 +327,6 @@ defmodule Mix.Tasks.Verify.UiTokens do
   defp validate_typed_value!("duration", value, path), do: validate_duration!(value, path)
   defp validate_typed_value!("cubicBezier", value, path), do: validate_cubic_bezier!(value, path)
   defp validate_typed_value!("shadow", value, path), do: validate_shadow!(value, path)
-  defp validate_typed_value!("string", value, _path) when is_binary(value), do: :ok
-
-  defp validate_typed_value!("string", _value, path),
-    do: raise(ArgumentError, "#{path}: string token must have a string $value")
 
   defp validate_color!(value, path) when is_map(value) do
     assert_keys!(value, ["colorSpace", "components", "hex", "alpha"], path, optional: ["alpha"])
@@ -305,8 +363,8 @@ defmodule Mix.Tasks.Verify.UiTokens do
   defp validate_dimension!(%{"value" => number, "unit" => unit} = value, path) do
     assert_keys!(value, ["value", "unit"], path)
 
-    unless finite_number?(number) and number > 0 and unit in ["px", "rem"] do
-      raise ArgumentError, "#{path}: dimension must be a positive px or rem value"
+    unless finite_number?(number) and unit in ["px", "rem"] do
+      raise ArgumentError, "#{path}: dimension must be a finite px or rem value"
     end
   end
 
@@ -371,15 +429,13 @@ defmodule Mix.Tasks.Verify.UiTokens do
 
   defp validate_shadow!(value, path) when is_map(value), do: validate_shadow_layer!(value, path)
 
-  defp validate_shadow!(value, path) when is_binary(value) do
-    unless value == "none",
-      do: raise(ArgumentError, "#{path}: only CSS none is supported as a string shadow override")
-  end
-
   defp validate_shadow!(_value, path), do: raise(ArgumentError, "#{path}: invalid shadow value")
 
   defp validate_shadow_layer!(layer, path) when is_map(layer) do
-    assert_keys!(layer, ["color", "offsetX", "offsetY", "blur", "spread", "type"], path)
+    assert_keys!(layer, ["color", "offsetX", "offsetY", "blur", "spread", "inset"], path,
+      optional: ["inset"]
+    )
+
     validate_color!(layer["color"], "#{path}.color")
 
     Enum.each(
@@ -387,8 +443,8 @@ defmodule Mix.Tasks.Verify.UiTokens do
       &validate_shadow_dimension!(layer[&1], "#{path}.#{&1}")
     )
 
-    unless layer["type"] in ["dropShadow", "innerShadow"] do
-      raise ArgumentError, "#{path}: shadow type must be dropShadow or innerShadow"
+    if Map.has_key?(layer, "inset") and not is_boolean(layer["inset"]) do
+      raise ArgumentError, "#{path}: shadow inset must be a boolean"
     end
   end
 
@@ -564,14 +620,20 @@ defmodule Mix.Tasks.Verify.UiTokens do
   end
 
   defp parse_css_themes!(css) do
-    blocks =
-      Regex.scan(~r/@plugin\s+"[^"]*daisyui-theme"\s*\{([^{}]*)\}/s, css, capture: :all_but_first)
+    blocks = active_css_theme_blocks!(css)
 
     unless length(blocks) == 2 do
       raise ArgumentError, "CSS must contain exactly two bounded daisyui-theme blocks"
     end
 
-    Enum.reduce(blocks, %{}, fn [body], themes ->
+    Enum.reduce(blocks, %{}, fn body, themes ->
+      body =
+        Regex.replace(@css_lexeme, body, fn part ->
+          if String.starts_with?(part, "/*"),
+            do: String.replace(part, ~r/[^\n]/u, " "),
+            else: part
+        end)
+
       name = theme_name!(body)
 
       if Map.has_key?(themes, name) do
@@ -587,6 +649,67 @@ defmodule Mix.Tasks.Verify.UiTokens do
 
       themes
     end)
+  end
+
+  # Only actual top-level at-rules can define a live theme. Comments and
+  # quoted strings are lexemes, so their braces and lookalike rules are inert.
+  defp active_css_theme_blocks!(css) do
+    {depth, _pending, _start, blocks} =
+      Regex.scan(@css_lexeme, css, return: :index)
+      |> Enum.reduce({0, nil, nil, []}, fn [{index, size}],
+                                           {depth, pending, start, blocks} = state ->
+        part = binary_part(css, index, size)
+
+        cond do
+          String.starts_with?(part, "/*") ->
+            unless String.ends_with?(part, "*/"),
+              do: raise(ArgumentError, "CSS has an unterminated comment")
+
+            state
+
+          String.starts_with?(part, "\"") ->
+            unless Regex.match?(~r/\A"(?:\\[\s\S]|[^"\\])*"\z/u, part),
+              do: raise(ArgumentError, "CSS has an unterminated string")
+
+            state
+
+          String.starts_with?(part, "'") ->
+            unless Regex.match?(~r/\A'(?:\\[\s\S]|[^'\\])*'\z/u, part),
+              do: raise(ArgumentError, "CSS has an unterminated string")
+
+            state
+
+          part == "@plugin" and depth == 0 ->
+            remaining = binary_part(css, index, byte_size(css) - index)
+
+            case Regex.run(~r/\A@plugin\s+"\.\.\/vendor\/daisyui-theme"\s*\{/u, remaining) do
+              [header] -> {depth, index + byte_size(header) - 1, start, blocks}
+              nil -> state
+            end
+
+          part == "{" ->
+            {depth + 1, nil, if(depth == 0 and pending == index, do: index + 1, else: start),
+             blocks}
+
+          part == "}" ->
+            if depth == 0, do: raise(ArgumentError, "CSS has an unmatched closing block")
+
+            if depth == 1 and is_integer(start) do
+              {0, nil, nil, [binary_part(css, start, index - start) | blocks]}
+            else
+              {depth - 1, nil, start, blocks}
+            end
+
+          part == ";" and depth == 0 ->
+            {depth, nil, start, blocks}
+
+          true ->
+            state
+        end
+      end)
+
+    unless depth == 0, do: raise(ArgumentError, "CSS has an unterminated block")
+    Enum.reverse(blocks)
   end
 
   defp theme_name!(body) do

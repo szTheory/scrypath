@@ -70,9 +70,12 @@ The live Ops values are owned by
 [`scrypath_ops/assets/css/app.css`](../scrypath_ops/assets/css/app.css). Each custom property is
 mapped in the JSON under the `org.scrypath` extension with its CSS property name and exact source
 expression. The bounded repository check supports color, dimension, number, font family and weight,
-duration, cubic Bézier, shadow, and string values. It checks the complete theme property sets,
+duration, cubic Bézier, and standard shadow values. It checks the complete theme property sets,
 typed values, color component and hex agreement, and the muted text color's 64% alpha and base-content
-reference. `none` remains a string token.
+reference. The CSS `none` value remains an exact string in `shadow.glow`’s namespaced
+`org.scrypath.css_literals.light` extension metadata; it is not a DTCG token type.
+The reader caps each input at 2 MiB, JSON nesting at 64, tokens at 4096, and alias chains at 32.
+It reads only active top-level theme blocks, excluding comments and quoted examples.
 
 Run `mix verify.repository_contracts` from the repository root to validate the export and detect
 independent CSS or JSON drift. This source contract does not validate rendered UI output. The
