@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phase 182 complete; Phase 183 ready for discussion)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 unstarted)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -17,12 +17,11 @@
 
 ## Current Posture
 
-**Phase 182 is complete (2026-10-27): eight plans across seven waves.**
-BROW-01–03 and CACHE-01–02 have executable coverage and real source-bound local/hosted acceptance. See the phase VERIFICATION and two acceptance records for raw identities, limits and preserved failures. No human approval, independent design pass, merge to main or Hex publication is implied.
+**Phases 182–184 are implemented and goal-verified; Phase 185 has not started.** Browser/cache, packaged maintainer-tooling boundaries and explicit/lean dependencies account for fifteen completed requirements. Phase 184's repaired-root candidate passed required jobs, coverage/attestation, four compatibility tuples and full browser E2E; actual local Ops verification passed separately. Its VERIFICATION and ACCEPTANCE records preserve the source identities, failures and limits.
 
-Continue from `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`, with `$gsd-discuss-phase 183`. The unrelated config edit and retained-preview data remain preserved. The final exact-root closeout receipt is stored outside the checkout after tracking writes.
+The final Phase 184 planning successor must pass canonical terminal closeout after all tracked writes; authority stays external at `/private/tmp/scrypath-phase184-execution/terminal-root-result.json`. These planning bytes precede that run and do not pre-assert its outcome. After its success, stop at the Phase 184 boundary. `$gsd-discuss-phase 185` is the next useful action when requested; this execution does not start it.
 
-The v1.44 archive, its 19 debt items and historical deferrals remain intact. PR #122 merge and Hex publication remain separate. Known deep-quality dependency audit debt stays in Phase 184; completion of browser/cache work does not claim all advisory jobs green. v1.45 has three remaining phases and is not complete.
+Continue in `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`. The unrelated config edit and source-stale retained preview remain preserved. Two Ops Cloak findings remain affected/unaccepted and no current rendered or independent design pass is claimed. The v1.44 archive, nineteen inherited debt items and historical deferrals remain intact. PR #122 merge and Hex publication remain separate. v1.45 has one remaining phase and is not complete.
 
 ## v1.45 Foundation and CI
 
@@ -211,7 +210,7 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Phase 182 is complete; discuss Phase 183 next.
+**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase 185 remains unstarted at the next phase boundary.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
