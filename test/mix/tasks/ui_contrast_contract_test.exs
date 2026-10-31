@@ -46,7 +46,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
     script = ~S"""
     import assert from "node:assert/strict";
     import {pathToFileURL} from "node:url";
-    const {passesAA, contrastRatioRaw} = await import(pathToFileURL(process.argv[1]));
+    const {passesAA, contrastRatioRaw} = await import(pathToFileURL(process.argv[2]));
     for (const [role, threshold] of [["text", 4.5], ["large", 3], ["ui", 3]]) {
       assert.equal(passesAA(threshold - 1e-12, role), false);
       assert.equal(passesAA(threshold, role), true);
@@ -66,6 +66,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
           "--input-type=module",
           "--eval",
           script,
+          "ui-threshold-test",
           Path.join(@root, "examples/scrypath_ecommerce/contrast-checker.mjs")
         ],
         stderr_to_stdout: true
@@ -73,6 +74,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
 
     assert status == 0, output
     assert output =~ "raw-thresholds-ok"
+    refute output =~ "Contrast check:"
   end
 
   @tag :contrast_child
