@@ -16,7 +16,7 @@ const project = "scrypath-p185-0123456789abcdef";
 
 // Exercise the real private lifecycle/state functions with command/FS boundaries
 // substituted by this test loader; no Docker daemon or preview is accessed.
-function preservationAtBoundary(spawnSync, unavailablePreview = false) {
+function preservationAtBoundary(spawnSync, unavailablePreview = false, orchestration = null) {
   const filename = path.join(__dirname, "ui_preservation.cjs");
   const boundaryFs = new Proxy(fs, { get(target, property) {
     if (unavailablePreview && ["lstatSync", "readFileSync"].includes(property)) return (file, ...args) => {
@@ -25,14 +25,49 @@ function preservationAtBoundary(spawnSync, unavailablePreview = false) {
     };
     return target[property];
   } });
-  const context = { module: { exports: {} }, __dirname, __filename: filename, process, Buffer, URL, console, require(name) {
+  const context = { module: { exports: {} }, __dirname, __filename: filename, process, Buffer, URL, console: orchestration ? { log() {} } : console, orchestration, require(name) {
     if (name === "node:child_process") return { spawnSync };
     if (name === "node:fs") return boundaryFs;
     return require(name);
   } };
-  vm.runInNewContext(fs.readFileSync(filename, "utf8") + "\nmodule.exports.boundary = {stackDataIdentity, teardownOwnedProject};", context, { filename });
+  const orchestrationIo = orchestration ? "\nloadAuthorizedSession = orchestration.load; compareDirectories = orchestration.compare; persistAuthorizedSession = orchestration.persist;" : "";
+  vm.runInNewContext(fs.readFileSync(filename, "utf8") + orchestrationIo + "\nmodule.exports.boundary = {stackDataIdentity, teardownOwnedProject, compareSession};", context, { filename });
   return context.module.exports;
 }
+
+test("preservation compare regression counts one-level single-channel pixel changes", () => {
+  const { PNG } = require(path.join(__dirname, "../../examples/scrypath_ecommerce/node_modules/pngjs"));
+  const before = new PNG({ width: 1, height: 1 });
+  const after = new PNG({ width: 1, height: 1 });
+  before.data.fill(255); after.data.fill(255); after.data[0] = 254;
+  assert.equal(preservation.comparePng(PNG.sync.write(before), PNG.sync.write(after)).pixels, 1);
+});
+
+test("preservation compare regression permits verification of an already compared pair", () => {
+  const session = { status: "compared-pending-review", candidate: "/candidate" };
+  const authority = { session_id: "repeat-unit-185", manifests: { before: { directory: "/before" }, candidate: { directory: "/candidate" } } };
+  let comparisons = 0;
+  const helper = preservationAtBoundary(() => assert.fail("No external command belongs to orchestration unit test"), false, {
+    load: () => ({ session, authority }),
+    compare: () => { comparisons += 1; return { comparisons: [{ differing_pixels: 0, total_pixels: 1, copy_changed: false, dimensions_changed: false }] }; },
+    persist: () => {}
+  });
+  assert.doesNotThrow(() => helper.boundary.compareSession("/fixture-session"));
+  assert.equal(comparisons, 1);
+});
+
+test("preservation compare regression fails its command after retaining a visible difference", () => {
+  const session = { status: "candidate-captured", candidate: "/candidate" };
+  const authority = { session_id: "difference-unit-185", manifests: { before: { directory: "/before" }, candidate: { directory: "/candidate" } } };
+  let persisted = false;
+  const helper = preservationAtBoundary(() => assert.fail("No external command belongs to orchestration unit test"), false, {
+    load: () => ({ session, authority }),
+    compare: () => ({ comparisons: [{ differing_pixels: 1, total_pixels: 1, copy_changed: false, dimensions_changed: false }] }),
+    persist: () => { persisted = true; }
+  });
+  assert.throws(() => helper.boundary.compareSession("/fixture-session"), /preservation.*failed/i);
+  assert.equal(persisted, true);
+});
 
 test("parent regression binds rendered Meilisearch task history in the actual state reader", () => {
   function identity(status, finishedAt) {
