@@ -73,6 +73,12 @@ test("source identity changes during startup or capture are rejected", () => {
   assert.ok(preservation.sourceChangeErrors({ source_sha: sourceSha, tree_sha256: treeSha }, { source_sha: "f".repeat(40), tree_sha256: treeSha }).some((error) => error.includes("Source changed")));
 });
 
+test("Meilisearch index responses accept both array and paginated results shapes", () => {
+  assert.deepEqual(preservation.indexResults([{ uid: "products" }]), [{ uid: "products" }]);
+  assert.deepEqual(preservation.indexResults({ results: [{ uid: "products" }], offset: 0, limit: 20, total: 1 }), [{ uid: "products" }]);
+  assert.throws(() => preservation.indexResults({ error: "unexpected" }), /results array/);
+});
+
 test("non-loopback and retained targets are rejected independently of disposable mode", () => {
   const manifest = validManifest();
   manifest.runtime.host_ports = ["0.0.0.0:53111->4002/tcp", "127.0.0.1:4002->4003/tcp"];

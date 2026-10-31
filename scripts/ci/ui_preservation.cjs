@@ -19,6 +19,12 @@ const hostSurfaces = ["storefront", "control-room", "search-health", "failed-syn
 const standaloneSurfaces = hostSurfaces.filter((surface) => surface !== "storefront");
 
 const sha256 = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+const canonicalize = (value) => Array.isArray(value)
+  ? value.map(canonicalize)
+  : value && typeof value === "object"
+    ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]))
+    : value;
+const canonicalJson = (value) => JSON.stringify(canonicalize(value));
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd || repositoryRoot,
@@ -72,6 +78,12 @@ function sourceChangeErrors(start, end) {
   if (!start?.source_sha || !start?.tree_sha256 || !end?.source_sha || !end?.tree_sha256) errors.push("Source identity is incomplete.");
   else if (start.source_sha !== end.source_sha || start.tree_sha256 !== end.tree_sha256) errors.push("Source changed during capture.");
   return errors;
+}
+
+function indexResults(payload) {
+  const results = Array.isArray(payload) ? payload : payload?.results;
+  if (!Array.isArray(results)) throw new Error("Meilisearch index listing did not contain a results array.");
+  return results;
 }
 
 function normalizePort(value) {
@@ -397,12 +409,25 @@ function stackDataIdentity(stack) {
     const dump = run("docker", [...stack.compose, "exec", "-T", "postgres", "pg_dump", "--no-owner", "--no-privileges", "--data-only", "--column-inserts", "-U", "postgres", database], { env: stack.env, timeout: 60_000 });
     return [database, sha256(dump)];
   }));
-  const indexes = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", "http://127.0.0.1:7700/indexes"], { env: stack.env, timeout: 30_000 }));
-  const indexStats = indexes.map(({ uid }) => {
-    const stats = run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/indexes/${encodeURIComponent(uid)}/stats`], { env: stack.env, timeout: 30_000 });
-    return [uid, JSON.parse(stats)];
+  const indexPayload = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", "http://127.0.0.1:7700/indexes?limit=1000"], { env: stack.env, timeout: 30_000 }));
+  const indexes = indexResults(indexPayload);
+  const indexData = indexes.map(({ uid }) => {
+    const docs = [];
+    let offset = 0;
+    let total = null;
+    while (total === null || offset < total) {
+      const payload = JSON.parse(run("docker", [...stack.compose, "exec", "-T", "meilisearch", "curl", "--silent", "--show-error", "--fail", `http://127.0.0.1:7700/indexes/${encodeURIComponent(uid)}/documents?limit=1000&offset=${offset}`], { env: stack.env, timeout: 30_000 }));
+      const page = indexResults(payload);
+      total = Number(payload.total ?? page.length);
+      if (!page.length && offset < total) throw new Error(`Meilisearch document pagination made no progress for index ${uid}.`);
+      docs.push(...page);
+      offset += page.length;
+      if (docs.length > 50_000) throw new Error(`Meilisearch index ${uid} exceeds the 50,000 document digest limit.`);
+    }
+    docs.sort((left, right) => String(left.id ?? left._id ?? "").localeCompare(String(right.id ?? right._id ?? "")));
+    return [uid, sha256(canonicalJson(docs))];
   }).sort(([left], [right]) => left.localeCompare(right));
-  return sha256(JSON.stringify({ databases, index_stats: indexStats }));
+  return sha256(canonicalJson({ databases, indexes: indexData }));
 }
 
 async function captureBefore(sessionPath) {
@@ -603,6 +628,7 @@ module.exports = {
   comparePng,
   disposableProvenanceErrors,
   expectedCaptureIds,
+  indexResults,
   matrixErrors,
   runWithTeardown,
   sourceChangeErrors,
