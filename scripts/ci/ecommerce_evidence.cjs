@@ -875,11 +875,6 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
     shell_wash_conclusion: shellWash.length === 0 ? "missing" : shellWash.every((item) => item.attempts.every((attempt) => attempt.status === "passed")) ? "success" : "failure",
     shell_wash_specs_total: shellWash.length,
     shell_wash_failed_specs: shellWash.filter((item) => item.attempts.some((attempt) => attempt.status !== "passed")).map((item) => item.title_path.join(" › ")),
-    visual_judge_status: "not-required",
-    visual_judge_findings: null,
-    visual_judge_claims: null,
-    visual_judge_required: false,
-    visual_judge_skipped_reason: "The paid judge is outside browser eligibility.",
     runtime_seconds: runtimeSeconds,
     flaky_signal: reconciliation.cases.some((item) => item.attempts.some((attempt) => attempt.retry > 0)),
     failure_classification: failureClassification,
@@ -909,9 +904,11 @@ function renderSummary(receipt) {
     `- light_parity_status: ${receipt.light_parity_status}`,
     `- shell_wash_conclusion: ${receipt.shell_wash_conclusion}`,
     `- shell_wash_specs_total: ${receipt.shell_wash_specs_total}`,
+    ...(isLegacyJudgeReceipt(receipt) ? [
     `- visual_judge_status: ${receipt.visual_judge_status}`,
     `- visual_judge_claims: ${receipt.visual_judge_claims ?? "unknown"}`,
-    `- visual_judge_required: ${receipt.visual_judge_required}`,
+    `- visual_judge_required: ${receipt.visual_judge_required}`
+    ] : []),
     `- runtime_seconds: ${receipt.runtime_seconds ?? "unknown"}`,
     `- flaky_signal: ${receipt.flaky_signal}`,
     `- eligibility: ${receipt.eligibility.status} (${receipt.eligibility.class})`,
@@ -947,6 +944,7 @@ function renderSummary(receipt) {
     `- conclusion: ${receipt.shell_wash_conclusion}`,
     `- specs_total: ${receipt.shell_wash_specs_total}`,
     ...(receipt.shell_wash_failed_specs.length === 0 ? ["- failed_specs: none"] : receipt.shell_wash_failed_specs.map((title) => `- failed_spec: ${title}`)),
+    ...(isLegacyJudgeReceipt(receipt) ? [
     "",
     "## Advisory Visual Judge",
     "",
@@ -955,8 +953,26 @@ function renderSummary(receipt) {
     `- claims: ${receipt.visual_judge_claims ?? "not required"}`,
     `- required: ${receipt.visual_judge_required}`,
     `- skipped_reason: ${receipt.visual_judge_skipped_reason}`
+    ] : [])
   ];
   return `${lines.join("\n")}\n`;
+}
+
+// Only the exact previously valid retired-field shape is accepted. Unknown
+// fields and synthetic approvals still fail the aggregate equality check.
+const LEGACY_JUDGE_FIELDS = Object.freeze({
+    visual_judge_status: "not-required",
+    visual_judge_findings: null,
+    visual_judge_claims: null,
+    visual_judge_required: false,
+    visual_judge_skipped_reason: "The paid judge is outside browser eligibility.",
+});
+function isLegacyJudgeReceipt(receipt) {
+  return Object.entries(LEGACY_JUDGE_FIELDS).every(([key, value]) => Object.hasOwn(receipt, key) && receipt[key] === value);
+}
+function withoutLegacyJudgeFields(receipt) {
+  if (!isLegacyJudgeReceipt(receipt)) return receipt;
+  return Object.fromEntries(Object.entries(receipt).filter(([key]) => !Object.hasOwn(LEGACY_JUDGE_FIELDS, key)));
 }
 
 function canonicalize(value) {
@@ -1024,7 +1040,7 @@ function validateReceipt({ runDir } = {}) {
   } catch (error) {
     return { valid: false, eligible: false, reasons: [errorReason("receipt_recompute_failed", error.message)] };
   }
-  const sameAggregate = JSON.stringify(canonicalize(receipt)) === JSON.stringify(canonicalize(recomputed));
+  const sameAggregate = JSON.stringify(canonicalize(withoutLegacyJudgeFields(receipt))) === JSON.stringify(canonicalize(recomputed));
   const sameSummary = summary === renderSummary(receipt);
   const valid = sameAggregate && sameSummary;
   const eligible = valid && receipt.eligibility?.eligible === true;

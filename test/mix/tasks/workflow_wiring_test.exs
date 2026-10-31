@@ -998,9 +998,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert evidence_writer =~ "light_parity_status"
       assert evidence_writer =~ "shell_wash_conclusion"
       assert evidence_writer =~ "shell_wash_visual"
-      assert evidence_writer =~ "visual_judge_status"
-      assert evidence_writer =~ "visual_judge_claims"
-      assert evidence_writer =~ "visual_judge_required: false"
+
+      [current_writer, _legacy_reader] =
+        String.split(evidence_writer, "function renderSummary", parts: 2)
+
+      refute current_writer =~ "visual_judge_"
+      assert evidence_writer =~ "withoutLegacyJudgeFields"
       refute evidence_writer =~ "ops-ui-visual-judge.json"
     end
   end
