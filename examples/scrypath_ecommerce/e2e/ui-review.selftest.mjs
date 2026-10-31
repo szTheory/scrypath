@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, captureSurface, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, captureSurface, configureDisposableFontProfile, launchDisposableBrowser, captureStableImage, captureUiStateInPage, captureViewportImage, cleanGitEnvironment, dimensions, disposableClockErrors, entryFixtureErrors, isCanonicalOrigin, prepareCaptureStateInPage, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, standaloneRoutes, surfaces, themes, viewports } from "./ui-review.mjs";
 
 const require = createRequire(import.meta.url);
 const { domStateErrors } = require("../../../scripts/ci/ui_preservation.cjs");
@@ -143,6 +143,67 @@ function installReadinessDocument(animation, events) {
         if (descriptor) Object.defineProperty(globalThis, key, descriptor);
         else delete globalThis[key];
       }
+    }
+  };
+}
+
+function installAnimationVisibilityDocument(animations, events) {
+  const originals = new Map();
+  for (const key of ["document", "requestAnimationFrame"]) originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
+  const animationObserved = deferred();
+  const document = {
+    getAnimations: () => {
+      events.push("scan-animations");
+      animationObserved.resolve();
+      return animations;
+    },
+    fonts: {
+      status: "loaded",
+      ready: Promise.resolve().then(() => events.push("fonts-ready"))
+    }
+  };
+  Object.defineProperty(globalThis, "document", { configurable: true, writable: true, value: document });
+  Object.defineProperty(globalThis, "requestAnimationFrame", {
+    configurable: true,
+    writable: true,
+    value: callback => {
+      events.push("request-frame");
+      queueMicrotask(() => {
+        events.push("run-frame");
+        callback(0);
+      });
+    }
+  });
+  return {
+    animationObserved: animationObserved.promise,
+    restore() {
+      for (const [key, descriptor] of originals) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete globalThis[key];
+      }
+    }
+  };
+}
+
+function controllableEntryAnimation({ id, target = null, events }) {
+  const finished = deferred();
+  let isFinished = false;
+  return {
+    animation: {
+      effect: { target, getComputedTiming: () => ({ endTime: 100 }) },
+      pending: false,
+      get playState() { return isFinished ? "finished" : "running"; },
+      get finished() {
+        events.push(`await-finished:${id}`);
+        return finished.promise;
+      }
+    },
+    finish() {
+      isFinished = true;
+      finished.resolve();
+    },
+    cancel(error) {
+      finished.reject(error);
     }
   };
 }
@@ -538,12 +599,84 @@ test("default entry preparation waits for active animation, fonts, and two real 
   }
 });
 
+test("native-invisible finite animation does not block entry preparation on its unresolved finished promise", async () => {
+  const events = [];
+  const checkArguments = [];
+  const hidden = controllableEntryAnimation({
+    id: "hidden-scrollbar-transition",
+    target: { checkVisibility(...args) { checkArguments.push(args); return false; } },
+    events
+  });
+  const readiness = installAnimationVisibilityDocument([hidden.animation], events);
+  const preparation = prepareCaptureStateInPage();
+  try {
+    await readiness.animationObserved;
+    await Promise.resolve();
+    assert.deepEqual(checkArguments, [[]], "use only native checkVisibility() default options");
+    assert.equal(events.includes("await-finished:hidden-scrollbar-transition"), false, "native-invisible transition remains unresolved and is not awaited");
+    await preparation;
+    assert.ok(events.filter((event) => event === "run-frame").length >= 2, "font and two-frame settlement still run");
+  } finally {
+    hidden.finish();
+    await preparation.catch(() => {});
+    readiness.restore();
+  }
+});
+
+test("visible and unknown finite entry animations remain awaited, including opacity-zero and offscreen targets", async () => {
+  const events = [];
+  let visibilityCalls = 0;
+  const offscreenOpacityZeroTarget = {
+    opacity: 0,
+    rect: { x: 5000, y: 0, width: 20, height: 20 },
+    checkVisibility(...args) {
+      visibilityCalls += 1;
+      assert.deepEqual(args, [], "default checkVisibility does not opt into opacity or viewport checks");
+      return true;
+    }
+  };
+  const targetUnavailable = {};
+  const targetThrows = { checkVisibility() { throw new Error("visibility API read failed"); } };
+  const visible = controllableEntryAnimation({ id: "visible-opacity-zero-offscreen", target: offscreenOpacityZeroTarget, events });
+  const missing = controllableEntryAnimation({ id: "missing-target", target: null, events });
+  const unavailable = controllableEntryAnimation({ id: "missing-api", target: targetUnavailable, events });
+  const throws = controllableEntryAnimation({ id: "throwing-api", target: targetThrows, events });
+  const readiness = installAnimationVisibilityDocument([visible.animation, missing.animation, unavailable.animation, throws.animation], events);
+  let settled = false;
+  const preparation = prepareCaptureStateInPage().then(() => { settled = true; });
+  try {
+    await readiness.animationObserved;
+    await Promise.resolve();
+    assert.equal(visibilityCalls, 1, "native visibility is queried only for an API-bearing target");
+    assert.deepEqual(events.filter((event) => event.startsWith("await-finished:")), [
+      "await-finished:visible-opacity-zero-offscreen",
+      "await-finished:missing-target",
+      "await-finished:missing-api",
+      "await-finished:throwing-api"
+    ], "true, missing, unavailable, and throwing visibility results all fail closed to awaiting");
+    assert.equal(settled, false, "preparation waits for all still-running animations");
+    visible.finish();
+    missing.finish();
+    unavailable.finish();
+    throws.finish();
+    await preparation;
+    assert.equal(settled, true);
+  } finally {
+    visible.finish();
+    missing.finish();
+    unavailable.finish();
+    throws.finish();
+    await preparation.catch(() => {});
+    readiness.restore();
+  }
+});
+
 test("cancelled finite entry animation fails before the first state anchor", async () => {
   const events = [];
   const animationFinished = deferred();
   const animation = {
     playState: "running", pending: true,
-    effect: { getComputedTiming: () => ({ endTime: 100 }) },
+    effect: { target: { checkVisibility: () => true }, getComputedTiming: () => ({ endTime: 100 }) },
     finished: animationFinished.promise
   };
   const readiness = installReadinessDocument(animation, events);
