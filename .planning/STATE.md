@@ -5,10 +5,10 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 Plan 05 readiness diagnosis; four plans integrated; UI edits held and retained-preview stop preserved.
+stopped_at: Phase 185 Plan 05 full same-source calibration running; four plans integrated; UI edits held and retained-preview stop preserved.
 last_updated: "2026-10-31T23:18:13.315512+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Native font capture setting verified; diagnosing non-rendered animation readiness before qualifying pre-change evidence
+last_activity_desc: Narrow rendered-animation readiness repair tested and reviewed; full same-source calibration running before pre-change qualification
 state_head: d7ff54d9c942da5c05ebf298c06cecc7d6c3a99e
 progress:
   total_phases: 4
