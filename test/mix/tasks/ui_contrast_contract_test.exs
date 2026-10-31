@@ -40,6 +40,41 @@ defmodule Mix.Tasks.UiContrastContractTest do
     assert output =~ "Contrast check: PASS"
   end
 
+  test "raw contrast thresholds classify below at and above without rounding" do
+    node = System.find_executable("node") || flunk("Node is required for UI contrast")
+
+    script = ~S"""
+    import assert from "node:assert/strict";
+    import {pathToFileURL} from "node:url";
+    const {passesAA, contrastRatioRaw} = await import(pathToFileURL(process.argv[1]));
+    for (const [role, threshold] of [["text", 4.5], ["large", 3], ["ui", 3]]) {
+      assert.equal(passesAA(threshold - 1e-12, role), false);
+      assert.equal(passesAA(threshold, role), true);
+      assert.equal(passesAA(threshold + 1e-12, role), true);
+    }
+    assert.equal(contrastRatioRaw("#000000", "#ffffff"), 21);
+    assert.equal(passesAA(contrastRatioRaw("#777777", "#ffffff"), "text"), false);
+    assert.throws(() => passesAA(NaN, "text"));
+    assert.throws(() => passesAA(4.5, "unknown"));
+    console.log("raw-thresholds-ok");
+    """
+
+    {output, status} =
+      System.cmd(
+        node,
+        [
+          "--input-type=module",
+          "--eval",
+          script,
+          Path.join(@root, "examples/scrypath_ecommerce/contrast-checker.mjs")
+        ],
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, output
+    assert output =~ "raw-thresholds-ok"
+  end
+
   @tag :contrast_child
   test "repository contracts reject a dark ordinary content label below 4.5" do
     root = copy_repository()
@@ -100,14 +135,30 @@ defmodule Mix.Tasks.UiContrastContractTest do
        )},
       {"invalid pair role", manifest,
        String.replace(original_manifest, ~s(role: "text"), ~s(role: "unknown"))},
+      {"text role laundering", manifest,
+       String.replace(original_manifest, ~s(role: "text"), ~s(role: "decorative"))},
+      {"muted alpha drift", css,
+       String.replace(
+         original_css,
+         "var(--color-base-content) 64%, transparent",
+         "var(--color-base-content) 63%, transparent"
+       )},
       {"empty pairs", manifest, "export const MUTED_PAIRS = [];"},
       {"dark focus below 3", css,
        String.replace(
          original_css,
          "outline: 2px solid var(--color-primary);",
-         "outline: 2px solid #333333;", global: false)},
+         "outline: 2px solid #333333;",
+         global: false
+       )},
       {"changed focus background", css,
        String.replace(original_css, "--ops-surface-2: #edf1f5;", "--ops-surface-2: #5b4ad1;")},
+      {"changed shell background declaration", css,
+       String.replace(
+         original_css,
+         "background-color: var(--ops-bg);",
+         "background-color: #5b4ad1;"
+       )},
       {"new unbound focus", css,
        original_css <> "\n.unbound:focus-visible { outline: 2px solid var(--color-primary); }"},
       {"broken checker launch", checker, "throw new Error('checker launch witness');"}
@@ -120,7 +171,10 @@ defmodule Mix.Tasks.UiContrastContractTest do
       File.write!(file, content)
       {output, status} = canonical(root)
       assert status != 0, "#{name} unexpectedly passed:\n#{output}"
-      assert output =~ "Contrast check: FAIL" or output =~ "contrast-checker error:" or output =~ "checker launch witness", "#{name} failed outside contrast:\n#{output}"
+
+      assert output =~ "Contrast check: FAIL" or output =~ "contrast-checker error:" or
+               output =~ "checker launch witness",
+             "#{name} failed outside contrast:\n#{output}"
     end
   end
 
@@ -133,7 +187,12 @@ defmodule Mix.Tasks.UiContrastContractTest do
   end
 
   defp copy_repository do
-    root = Path.join(System.tmp_dir!(), "scrypath-contrast-#{System.pid()}-#{System.unique_integer([:positive])}")
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-contrast-#{System.pid()}-#{System.unique_integer([:positive])}"
+      )
+
     on_exit(fn -> File.rm_rf!(root) end)
 
     {output, status} =
