@@ -5,38 +5,38 @@ titles: json
 findings:
   - id: CR-01
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "A host with metrics but no poller cannot start ScrypathOps"
   - id: CR-02
     severity: critical
-    disposition: open
+    disposition: fixed
     title: "Non-nil malformed identities authorize protected Sigra actions"
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Failed target-asset extraction leaves a container outside cleanup ownership"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Startup accepts confirmation paths that crash the recovery navigation"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The standalone quickstart advertises a toolchain that cannot compile its default graph"
-open: 5
+open: 0
 total: 5
-recorded: 2026-10-30T23:29:28.941Z
+recorded: 2026-10-31T00:08:29.559Z
 ---
 
 # Phase 184: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| CR-01 | critical | open | - |
-| CR-02 | critical | open | - |
-| WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
-| WR-03 | warning | open | - |
+| CR-01 | critical | fixed | 184-REVIEW-FIX.md |
+| CR-02 | critical | fixed | 184-REVIEW-FIX.md |
+| WR-01 | warning | fixed | 184-REVIEW-FIX.md |
+| WR-02 | warning | fixed | 184-REVIEW-FIX.md |
+| WR-03 | warning | fixed | 184-REVIEW-FIX.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
