@@ -1,7 +1,7 @@
 # Requirements: Scrypath v1.45 Foundation and CI
 
 **Defined:** 2026-10-26
-**Status:** All 21 requirements confirmed by the maintainer on 2026-10-26; four-phase roadmap approved by the maintainer on 2026-10-26; implementation has not started.
+**Status:** All 21 requirements confirmed and roadmap approved on 2026-10-26. Phases 182–184 implement and verify 15 requirements; the six Phase 185 requirements remain pending. Phase 184 final-source acceptance is recorded externally after all tracking writes.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## Scope and provenance
@@ -35,13 +35,13 @@ promoted with its storage decision already recorded in PROJECT.md.
 
 ### Explicit and lean dependency graphs
 
-- [ ] **DEP-01**: An adopter receives an explicit root dependency on `telemetry ~> 1.0`, and the existing instrumentation remains available without relying on another dependency to supply it.
-- [ ] **DEP-02**: An adopter can resolve and use Scrypath with Req matching `~> 0.6.1 or ~> 0.7`, with focused HTTP/consumer verification for both admitted version lines.
-- [ ] **DEP-03**: An operator can run ScrypathOps without Swoosh or the unused Mailer, with their configuration, references and obsolete lock entries removed.
-- [ ] **DEP-04**: An adopter can mount ScrypathOps without loading its standalone/development dashboard and telemetry polling/metrics dependencies; the supported standalone/development diagnostics and core Scrypath telemetry still work in their intended modes.
-- [ ] **DEP-05**: An adopter can compile/run ScrypathOps in test and production without installing esbuild or Tailwind as Mix dependencies; development asset build commands remain usable.
-- [ ] **DEP-06**: An adopter can use the approved compatible Sigra version range without the current patch-series restriction, with the optional integration and relevant auth behavior verified; dependency-audit results remain explicit and are not silenced to obtain a pass.
-- [ ] **DEP-07**: A maintainer receives one reconciled dependency update set across affected manifests and lockfiles, with a recorded disposition for the roadmap's referenced Dependabot changes (#65 and #68–#76), supported-stack verification and an explicit account of remaining advisories.
+- [x] **DEP-01**: An adopter receives an explicit root dependency on `telemetry ~> 1.0`, and the existing instrumentation remains available without relying on another dependency to supply it.
+- [x] **DEP-02**: An adopter can resolve and use Scrypath with Req matching `~> 0.6.1 or ~> 0.7`, with focused HTTP/consumer verification for both admitted version lines.
+- [x] **DEP-03**: An operator can run ScrypathOps without Swoosh or the unused Mailer, with their configuration, references and obsolete lock entries removed.
+- [x] **DEP-04**: An adopter can mount ScrypathOps without loading its standalone/development dashboard and telemetry polling/metrics dependencies; the supported standalone/development diagnostics and core Scrypath telemetry still work in their intended modes.
+- [x] **DEP-05**: An adopter can compile/run ScrypathOps in test and production without installing esbuild or Tailwind as Mix dependencies; development asset build commands remain usable.
+- [x] **DEP-06**: An adopter can use the approved compatible Sigra version range without the current patch-series restriction, with the optional integration and relevant auth behavior verified; dependency-audit results remain explicit and are not silenced to obtain a pass.
+- [x] **DEP-07**: A maintainer receives one reconciled dependency update set across affected manifests and lockfiles, with a recorded disposition for the roadmap's referenced Dependabot changes (#65 and #68–#76), supported-stack verification and an explicit account of remaining advisories.
 
 ### CI cache reuse
 
@@ -111,7 +111,7 @@ silently included in these requirements:
 ## Traceability
 
 The maintainer explicitly approved all requirements and the following roadmap
-assignments on 2026-10-26. Implementation has not started.
+assignments on 2026-10-26. Current implementation status follows.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
@@ -123,13 +123,13 @@ assignments on 2026-10-26. Implementation has not started.
 | PKGH-01 | Phase 183 | Complete |
 | PKGH-02 | Phase 183 | Complete |
 | PKGH-03 | Phase 183 | Complete |
-| DEP-01 | Phase 184 | Pending |
-| DEP-02 | Phase 184 | Pending |
-| DEP-03 | Phase 184 | Pending |
-| DEP-04 | Phase 184 | Pending |
-| DEP-05 | Phase 184 | Pending |
-| DEP-06 | Phase 184 | Pending |
-| DEP-07 | Phase 184 | Pending |
+| DEP-01 | Phase 184 | Complete |
+| DEP-02 | Phase 184 | Complete |
+| DEP-03 | Phase 184 | Complete |
+| DEP-04 | Phase 184 | Complete |
+| DEP-05 | Phase 184 | Complete |
+| DEP-06 | Phase 184 | Complete |
+| DEP-07 | Phase 184 | Complete |
 | UIF-01 | Phase 185 | Pending |
 | UIF-02 | Phase 185 | Pending |
 | UIF-03 | Phase 185 | Pending |
@@ -137,7 +137,7 @@ assignments on 2026-10-26. Implementation has not started.
 | UIF-05 | Phase 185 | Pending |
 | UIF-06 | Phase 185 | Pending |
 
-**Coverage:** 21 milestone requirements; 21 mapped; 0 unmapped; 0 complete.
+**Coverage:** 21 milestone requirements; 21 mapped; 0 unmapped; 15 complete; 6 pending.
 
 ---
-*Last updated: 2026-10-26 after explicit maintainer confirmation of all 21 requirements; four-phase roadmap approved; 21/21 requirements mapped exactly once.*
+*Last updated: 2026-10-31 after Phase 184 goal verification; terminal planning-source evidence remains external under the two-stage closeout rule.*

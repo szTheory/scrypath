@@ -227,3 +227,12 @@ The corrected candidate is ready for the required post-summary hosted closeout; 
 - All six task and scoped-fix commits plus the earlier pre-closeout Summary commit are reachable on this branch; the plan commit ledger resolves seven commits before this refreshed Summary commit.
 - Focused contract verification passed with 45 tests and 0 failures; corrected core and mounted ecommerce checks passed.
 - The Ops audit findings, first failed hosted candidate, stale-preview preflight, and corrected candidate's post-summary closeout boundary are recorded without claiming phase acceptance.
+
+
+## Orchestrator repaired-root closeout
+
+All twelve plans integrated before root review. Five source findings and the nil-sudo/copy issues were repaired with negative/positive behavioral evidence; bounded re-review found no remaining findings. Root candidate 501dd05a failed its mounted 20-minute deadline after runtime/browser/cleanup success but before required proof upload; the failure was retained. Commit `779c13312de1f2a774d39ad6928aac60d2eecfac` adds a bounded 30-minute mounted limit and independently resolves Ops/ecommerce Phoenix.HTML 4.4.0 for the newly published compatible security fix. Canonical Ops, repository-script tests, actionlint and prior-phase regression checks passed.
+
+Actual repaired-root run [41153254156](https://github.com/szTheory/scrypath/actions/runs/41153254156) passed every required closeout input, immutable artifact join, all compatibility tuples and full browser E2E. Fresh complete four-graph audits remain nonzero only for the unaccepted Cloak findings. The security recheck verified all implemented mitigations at that root cutoff. Actual local Ops proof remains separate from the skipped hosted path-scoped job.
+
+All final verification/phase records must precede the final planning-successor commit and canonical `terminal-root` closeout; the latter is the last required machine gate, recorded externally in `/private/tmp/scrypath-phase184-execution/terminal-root-result.json`. No future result is asserted in this pre-run summary. No user UAT, preview mutation, risk acceptance, remote proposal cleanup, merge or publication is part of this execution.

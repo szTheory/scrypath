@@ -104,3 +104,8 @@ No automated requirement is delegated to post-implementation human UAT. Current 
 | Gaps found | 6 |
 | Resolved | 6 |
 | Escalated | 0 |
+
+
+## Repaired-root confirmation — 2026-10-31
+
+The compatible Phoenix.HTML 4.4.0 update in Ops/ecommerce and bounded mounted-job timeout repair introduce no uncovered product behavior. The existing full canonical Ops cold/direct suite, all repository-script tests, workflow lint and prior-phase regressions passed after the changes. Current required package/backend/mounted/repository/core, coverage/attestation, all four compatibility tuples and full browser E2E passed in run 41153254156. Fresh four-graph audit is complete, lock-stable and unignored; only the two known Cloak findings remain actual failures. The external receipts and source joins are detailed in ACCEPTANCE and SECURITY. Terminal planning-successor closeout remains mandatory after final tracked writes; this coverage audit is not security-risk acceptance or a rendered-design approval.

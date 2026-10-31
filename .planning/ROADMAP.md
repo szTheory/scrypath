@@ -40,7 +40,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 
 - [x] **Phase 182: Reliable full browser verification and CI caches** — Contributors can exercise the full intended browser inventory in an isolated stack with reusable, safe caches. (completed 2026-10-27)
 - [x] **Phase 183: Maintainer tooling outside the Hex package** — Contributors retain verification commands while adopters receive only supported library/operator surfaces. (completed 2026-10-28)
-- [ ] **Phase 184: Explicit and lean dependency graphs** — Adopters resolve supported dependencies without unused optional-app overhead, and maintainers receive reconciled lockfiles and audit results.
+- [x] **Phase 184: Explicit and lean dependency graphs** — Adopters resolve supported dependencies without unused optional-app overhead, and maintainers receive reconciled lockfiles and audit results. (completed 2026-10-30)
 - [ ] **Phase 185: Executable UI quality foundations** — Contributors get token, contrast and drift enforcement while operators retain the current supported appearance.
 
 ## Phase Details
@@ -217,7 +217,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
-| 184. Explicit and lean dependency graphs | 12/12 | In Progress | — |
+| 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.

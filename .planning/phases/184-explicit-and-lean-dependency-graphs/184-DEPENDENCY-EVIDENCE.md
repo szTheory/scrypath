@@ -115,3 +115,6 @@ The root hosted candidate exposed [CVE-2026-117645](https://cna.erlef.org/cves/C
 | `examples/scrypath_ecommerce` | `19024cdcc5be4d78f43ba990ec6b6113b8f9f58004031591d573834ba4c8817e` | exit 0; unchanged bytes | Phoenix.HTML 4.4.0 |
 
 Both other graph locks remain unchanged. Raw registry responses, independent resolver output and lock identities are external in `/private/tmp/scrypath-phase184-execution/phoenix-html-*`. Canonical Ops, repository-script tests and workflow lint passed after the refresh; hosted four-graph audit and exact-source candidate evidence are still required. The known Cloak/Cloak Ecto findings remain explicitly affected and unaccepted.
+
+
+Fresh complete audit at repaired-root source `779c13312de1f2a774d39ad6928aac60d2eecfac` is preserved in `/private/tmp/scrypath-phase184-execution/current-root-audit.term`, `.log`, `.exit`. Root, Phoenix example and ecommerce are clean (fetch/audit exit 0); Ops fetches successfully and its audit exits 1 for only Cloak/Cloak Ecto. All before/after hashes equal the current locks, Hex is 2.5.1, and both ignore lists are empty default inputs. The hosted repaired-root audit independently reports the same residual findings in `candidate-repaired-failed.log`. Aggregate exit 1 is preserved.

@@ -16,7 +16,7 @@
     {
       "number": "184",
       "name": "Explicit and lean dependency graphs",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "number": "185",
@@ -26,8 +26,8 @@
   ],
   "next": {
     "command": "$gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 3 of 4 · 50% · executing"
+    "label": "Advance to the next step (plan phase 185)",
+    "reason": "Phase 4 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-29T20:17:37.259Z"
+  "updated_at": "2026-10-31T01:35:36.967Z"
 }

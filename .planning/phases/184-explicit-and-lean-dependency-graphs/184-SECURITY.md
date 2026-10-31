@@ -1,8 +1,8 @@
 ---
 phase: "184"
 slug: explicit-and-lean-dependency-graphs
-status: pending_terminal_evidence
-threats_open: 1
+status: secured
+threats_open: 0
 asvs_level: 1
 block_on: high
 created: "2026-10-30"
@@ -10,7 +10,7 @@ created: "2026-10-30"
 
 # Phase 184 — Security mitigation verification
 
-The security auditor checked the authored register against actual implementation, tests, and raw receipts. Twenty-one mitigations are established. The final source-freeze attestation remains an open evidence gate; this record grants no security-risk acceptance and no universal security clearance.
+The security auditor checked the authored register against actual implementation, tests, and raw receipts. All twenty-two implemented mitigations are established at the repaired-root audit cutoff. The exact final planning successor still requires its mandatory terminal rerun; this record grants no security-risk acceptance and no universal security clearance.
 
 ## Trust boundaries
 
@@ -45,7 +45,7 @@ The security auditor checked the authored register against actual implementation
 | T-184-18 | Repudiation | support and security claim boundaries | medium | mitigate | Canonical current support text and focused contracts distinguish range/witness, tuple/upstream maintenance, source/release, audit and runtime security. | closed |
 | T-184-19 | Denial of service | documented build/start commands | medium | mitigate | Runbook aliases/targets/runtime inputs match manifests, Docker/config and actual verification dispatch. | closed |
 | T-184-20 | Repudiation | four-graph advisory evidence | high | mitigate | Four-graph audit runner and omission/duplicate/wrong-source/continuation/lock-mutation contracts; inspected actual raw exits; independent Dialyzer success. | closed |
-| T-184-21 | Tampering | final-source evidence freeze | high | mitigate | Exact-SHA closeout controls exist and the corrected isolated candidate passed. Terminal attestation of the final merged branch remains pending after all tracked report/review/completion writes. | open |
+| T-184-21 | Tampering | final-source evidence freeze | high | mitigate | Repaired-root run 41153254156 attests actual source `779c13312de1f2a774d39ad6928aac60d2eecfac`, required jobs and immutable artifacts; wrapper proves unchanged HEAD. CONTRIBUTING enforces final tracking successor then a new terminal rerun with no later tracked writes. Verified as an exercised mitigation; future source is not pre-attested. | closed |
 | T-184-22 | Denial of service | mail-free route/application coherence | medium | mitigate | Mail-free router/config negative mutations, canonical repository wiring, real Ops startup and mounted runtime checks. | closed |
 
 ## Accepted risks
@@ -56,14 +56,21 @@ No accepted risks. The Ops aggregate dependency audit still exits nonzero for th
 
 The configured security auditor inspected the actual raw four-graph output/exits, independently successful Dialyzer receipt, current manifest/lock fingerprints, implementation controls and executable tests. No cold builds were repeated and no files were modified by that auditor. The successful isolated candidate is [hosted run 41029783634](https://github.com/szTheory/scrypath/actions/runs/41029783634); its immutable evidence is external at `/private/tmp/scrypath-phase184-10-20261030T072352Z/receipts/candidate-2-final.json`.
 
-## Open terminal evidence condition
+## Mandatory final acceptance condition
 
-T-184-21 remains open until canonical closeout verifies the final merged branch SHA, required jobs, coverage, attestation and immutable artifact identities after tracked writes finish. Existing candidate success is not terminal merged-branch proof. Necessary review, report reconciliation and bounded repairs continue within the selected phase; no next-phase advancement is authorized while this condition remains unresolved. The final terminal receipt must remain outside the checkout so recording it does not mutate the attested source.
+The auditor rechecked current repair controls, the fresh four-graph raw audit, current stable locks and the actual repaired-root candidate receipt. It returned SECURED with 22/22 implemented mitigations verified and no new flags. This supersedes the earlier open T-184-21 evidence finding: the actual integrated root SHA now has a successful, immutable source/run/artifact join. The result does not attest a future planning successor.
+
+This report, goal verification and phase tracking form a separately identified planning successor under CONTRIBUTING's two-stage rule. The orchestrator must commit all of them, run canonical terminal closeout at that exact new HEAD, and preserve its receipt externally before claiming phase acceptance. Any later tracked change requires a new terminal run. No next phase, merge, publication or risk acceptance follows from this mitigation verdict.
+
+Candidate receipt: `/private/tmp/scrypath-phase184-execution/candidate-root-repaired-result.json`; [run 41153254156](https://github.com/szTheory/scrypath/actions/runs/41153254156). Coverage artifact `13023504806`, digest `sha256:21bd6e9ce0dad8142b530eba49d2cbabf0e8ebd531afa91af1ec3141301303ad`; attestation artifact `13025026532`, digest `sha256:30b62993032bc0d65dcff7b4e8a5336f8a2f754918e528bf2128d7a08f75266f`. Repository, branch, event, full SHA, required-job set and unchanged completed HEAD were checked.
+
+Fresh audit at the same source: `current-root-audit.term`, `.log`, `.exit`. Every graph is complete with unchanged current lock hashes, Hex 2.5.1 and empty default ignores. Only the two known Cloak findings remain; the new Phoenix.HTML advisory was repaired with compatible 4.4.0 and is absent from both local and hosted audit findings. Canonical Ops cold/direct suite and owned Postgres cleanup passed (`phoenix-html-full-ops.log`, `phoenix-html-postgres.json`). Source re-review found no remaining findings.
 
 ## Audit trail
 
 | Date | Auditor | Total | Closed | Open |
 | --- | --- | ---: | ---: | ---: |
-| 2026-10-30 | gsd-security-auditor; read-only authored-register audit | 22 | 21 | 1 |
+| 2026-10-30 | gsd-security-auditor; initial read-only authored-register audit | 22 | 21 | 1 |
+| 2026-10-31 | gsd-security-auditor; repaired-root source/audit/artifact recheck | 22 | 22 | 0 |
 
 No approval was requested, simulated or implied. The orchestrator owns the remaining terminal evidence check. The retained UI preview safety stop and unrelated config edit remain preserved.

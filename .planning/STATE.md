@@ -2,40 +2,40 @@
 gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
-current_phase: 184
-current_phase_name: Explicit and lean dependency graphs
-status: verifying
-stopped_at: Phase 184 review repairs verified narrowly; full verification and terminal evidence pending
-last_updated: "2026-10-31T00:08:26.934394+00:00"
+current_phase: 185
+current_phase_name: Executable UI quality foundations
+status: planning
+stopped_at: Phase 184 complete, ready to plan Phase 185
+last_updated: "2026-10-31T01:35:36.952Z"
 last_activity: 2026-10-30
-last_activity_desc: Phase 184 integrated; review repairs and closeout in progress
-state_head: fcd3921ae93e6477b7eaf42148c69692ed9a7703
+last_activity_desc: Phase 184 complete, transitioned to Phase 185
+state_head: 779c13312de1f2a774d39ad6928aac60d2eecfac
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 28
   completed_plans: 28
-  percent: 50
+  percent: 75
 ---
 
 # Project State
 
 ## Current Position
 
-Phase: 184 (Explicit and lean dependency graphs) — EXECUTING
-Plan: 12 of 12 integrated; review repairs verified; hosted and goal closeout in progress
-Status: Verifying Phase 184
-Last activity: 2026-10-30 — All execution plans integrated; code/UI review repairs have targeted verification. Root/Node and full canonical Ops checks passed; bounded code re-review is clean. Fresh hosted exact-source closeout remains in progress.
+Phase: 185 — Executable UI quality foundations
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-10-30 — Phase 184 complete, transitioned to Phase 185
 
-Progress: [█████░░░░░] 50%
+Progress: [████████████████████] 28/28 planned plans (100%); phases 3/4 (75%). Phase 185 has no plans yet.
 
-Milestone: **v1.45 Foundation and CI** (2/4 phases complete).
+Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Finish Phase 184 review reconciliation, regression/goal verification and exact-source terminal closeout. Do not start Phase 185 without the next phase boundary decision.
+Next: Stop at the Phase 184 boundary. Phase 185 discussion/planning requires the next phase decision; it has not started.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
-Execution: $gsd-execute-phase 184 is active; all 12/12 plans are integrated. No phase completion claim before final machine evidence.
+Execution: Phase 184 has 12/12 integrated plans and passed goal verification. Tracking completion precedes terminal CI by design. Final source acceptance is established only by the external terminal receipt for the committed tracking successor; no Phase 185 work is authorized by this transition.
 
 ## Evidence and boundaries
 
@@ -45,31 +45,38 @@ The final root verification checks the actual merged tree and current reports. E
 
 ## Project reference
 
-See `.planning/PROJECT.md` (updated 2026-10-28).
+See `.planning/PROJECT.md` (updated 2026-10-31).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 184 review repairs, complete canonical verification, and final exact-source evidence; known Ops dependency advisories remain unaccepted.
+Current focus: Phase 184 terminal source acceptance and the unstarted Phase 185 boundary; known Ops dependency advisories remain unaccepted.
+
+## Phase 184 source and terminal authority
+
+[Goal verification](phases/184-explicit-and-lean-dependency-graphs/184-VERIFICATION.md), security mitigation recheck, coverage audit, bounded code re-review and prior-phase regressions passed. The real repaired-root candidate [run 41153254156](https://github.com/szTheory/scrypath/actions/runs/41153254156) passed required jobs, coverage/attestation, four compatibility tuples and full E2E. Actual local Ops execution passed separately from the skipped hosted selector-scoped job.
+
+Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/terminal-root-result.json` and `terminal-root-closeout.log`. The last canonical run must bind this committed source, new dispatch, all required outcomes and immutable artifacts, with unchanged HEAD. These tracked bytes precede that run; no future result is asserted here. A source change requires a replacement terminal proof.
 
 ## Recent decisions
 
-- Accept browser stability only from complete distinct case identities, first attempts, raw status, exact source/image/ref and owned disposal.
-- Honor the actual Docker import/export policy when producing observations; keep strict warm acceptance dependent on actual useful remote reuse and exports.
-- Keep compatible BEAM downloads separate from strict compiled graph/lock/toolchain identities; preserve unconditional dependency resolution and verification.
+- Declare Telemetry directly and retain independent Req consumer witnesses without raising the core support floor.
+- Keep optional Ops diagnostics/auth and builder/runtime graph boundaries executable, including partial/absent integrations and cleanup failures.
+- Repair the newly available Phoenix.HTML advisory compatibly; keep Cloak audit failures unaccepted.
+- Complete final tracking before exact-source terminal proof, preserving candidate, planning and published identities separately.
 
 ## Blockers and concerns
 
-- Phase 184: inherited deep-quality dependency audit debt remains; no blanket risk acceptance or all-advisory-green claim.
+- Phase 184: two Ops Cloak/Cloak Ecto findings remain affected and unaccepted. The retained preview failed current-source preflight and remains untouched; no current rendered or independent visual approval is claimed. Two judgment-tier intent annotations remain flagged-unverified/nonblocking, without simulated acceptance.
 - WR-03: baseline-only same-run rerun artifact naming is deferred in REVIEW-DISPOSITION. Fresh closeout dispatches work; future rerun support must change upload names and ci_monitor consumers together. No human risk approval is implied.
 - PR #122 merge and Hex publication remain separate pending work from the v1.44 archive boundary. The 19 inherited audit-debt items and historical deferrals remain in their archive/tracker.
-- Preserve the unrelated `.planning/config.json` edit. The phase completion owner released the milestone lock. Preserve retained preview data and its named checkout; this phase did not mutate or reseed it.
+- Preserve the unrelated `.planning/config.json` edit. The existing milestone-lock disposition is preserved. Preserve retained preview data and its named checkout; this phase did not mutate or reseed it.
 - v1.46–v1.47 UI engine/polish and v1.48 adopter features remain deferred. No speculative reopening or phase replay without concrete evidence.
 
 ## Session continuity
 
-Last session: 2026-10-31T00:19:26.784530+00:00
-Stopped at: Phase 184 review repairs implemented; fresh review and terminal machine closeout pending
-Resume file: .planning/phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-DISPOSITION.md
+Last session: 2026-10-31T01:36:45.801090+00:00
+Stopped at: Phase 184 complete, ready to plan Phase 185
+Resume file: None
 
-Earlier execution checkpoints remain in Git history and the plan summaries; this current position supersedes their pending-acceptance wording without rewriting historical evidence.
+Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
 
 ## Performance Metrics
 
