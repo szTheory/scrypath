@@ -305,3 +305,8 @@ The repository's `phase105-e2e` workflow is advisory today. It exists to keep
 the full browser/operator proof visible while maintainers watch runtime and
 flake behavior. See the root contributing guide for the CI lane details and
 promotion criteria.
+
+The maintained browser lane produces source-bound execution, screenshot-parity,
+contrast and artifact evidence. These checks do not confer design approval.
+Calibrated agent-run visual review remains deferred; current commands do not
+produce a paid or mock reviewer result.

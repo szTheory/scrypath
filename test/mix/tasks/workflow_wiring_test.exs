@@ -957,6 +957,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       makefile = File.read!("examples/scrypath_ecommerce/Makefile")
       refute makefile =~ "OPS_UI_LLM_JUDGE"
       refute makefile =~ "JUDGE_STATUS"
+      refute File.exists?("examples/scrypath_ecommerce/e2e/ops-ui-visual-rubric.md")
+
+      for path <- ["CONTRIBUTING.md", "examples/scrypath_ecommerce/README.md"] do
+        refute File.read!(path) =~ "test:e2e:ops-ui-visual-judge"
+      end
+
       assert makefile =~ ~s|[ "$$SHELL_STATUS" -eq 0 ] && [ "$$WASH_STATUS" -eq 0 ]|
       assert docker_runner =~ "npm run test:e2e"
       assert docker_runner =~ "npm run test:e2e:admin-light-parity"
