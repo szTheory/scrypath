@@ -24,7 +24,12 @@ defmodule ScrypathEcommerce.MixProject do
 
   def cli do
     [
-      preferred_envs: [precommit: :test]
+      preferred_envs: [
+        precommit: :test,
+        setup: :dev,
+        "assets.setup": :dev,
+        "assets.build": :dev
+      ]
     ]
   end
 
@@ -44,14 +49,13 @@ defmodule ScrypathEcommerce.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.1.33"},
       {:lazy_html, ">= 0.1.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:phoenix_live_dashboard, "~> 0.8.3", only: :dev},
+      {:esbuild, "~> 0.10", only: :dev, runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", only: :dev, runtime: Mix.env() == :dev},
       {:heroicons, "~> 0.5.7", app: false},
-      {:swoosh, "~> 1.26.3"},
-      {:req, "~> 0.6.1"},
-      {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:req, "~> 0.6.1 or ~> 0.7"},
+      {:telemetry_metrics, "~> 1.0", only: :dev},
+      {:telemetry_poller, "~> 1.0", only: :dev},
       {:jason, "~> 1.2"},
       {:bandit, "~> 1.13"}
     ]
@@ -59,9 +63,11 @@ defmodule ScrypathEcommerce.MixProject do
 
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup"],
+      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.build": ["compile", "tailwind scrypath_ecommerce", "esbuild scrypath_ecommerce"],
       "e2e.prepare": ["ecto.create --quiet", "ecto.migrate --quiet", "e2e.prepare_search"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]

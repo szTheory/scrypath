@@ -1,7 +1,10 @@
 # Local Demo Docker DX
 
 This runbook is for maintainers running Scrypath's Phoenix demo beside other
-Elixir/Phoenix library demos on the same machine.
+Elixir/Phoenix library demos on the same machine. The [support and
+compatibility guide](../guides/support-and-compatibility.md) owns runtime and
+released-package claims; this file documents the source checkout's local
+build paths.
 
 ## Gameplan
 
@@ -22,6 +25,66 @@ Elixir/Phoenix library demos on the same machine.
 `make docker-dev` is the default human path. It bind-mounts the checkout and
 stores generated `deps` / `_build` directories in Docker volumes, so HEEx, CSS,
 and LiveView edits do not rebuild dependency layers.
+
+## Asset and runtime boundary
+
+Both `scrypath_ops` and `examples/scrypath_ecommerce` define `assets.setup` and
+`assets.build` as development tools. From `examples/scrypath_ecommerce`, the
+host development commands are:
+
+```sh
+(
+  cd ../../scrypath_ops &&
+    mix deps.get &&
+    MIX_ENV=dev mix assets.setup &&
+    MIX_ENV=dev mix assets.build
+)
+mix deps.get
+MIX_ENV=dev mix assets.setup
+MIX_ENV=dev mix assets.build
+```
+
+`assets.setup` installs the app's Tailwind and esbuild wrappers;
+`assets.build` compiles the project, then runs the configured Tailwind and
+esbuild profiles. These wrappers and dependencies are development-only. The
+Docker `asset_builder` target uses `MIX_ENV=dev` and runs the same setup/build
+aliases once for each app. Its checked bundle outputs are:
+
+| App | JavaScript | CSS |
+| --- | --- | --- |
+| ScrypathOps | `scrypath_ops/priv/static/assets/js/app.js` | `scrypath_ops/priv/static/assets/css/app.css` |
+| Ecommerce host | `examples/scrypath_ecommerce/priv/static/assets/js/app.js` | `examples/scrypath_ecommerce/priv/static/assets/css/app.css` |
+
+The Dockerfile's `runtime_test` and `runtime_prod` targets each resolve the
+root, Ops, and ecommerce lockfiles independently and compile those graphs for
+their own environment. Each target copies the Ops and ecommerce `priv/static`
+trees from `asset_builder`; no builder dependency tree or BEAM output is handed
+off. Neither target runs `assets.setup`, `assets.build`, `esbuild.install`, or
+`tailwind.install`. Only `runtime_prod` runs `mix phx.digest`, separately in
+the Ops and host projects after compilation, to generate each app's
+`priv/static/cache_manifest.json`. `runtime_test` serves the prebuilt assets
+without a production digest manifest.
+
+The host's production runtime requires `SECRET_KEY_BASE` and either
+`DATABASE_URL` or all of `PGUSER`, `PGPASSWORD`, `PGHOST`, and `PGDATABASE`;
+`PGPORT` defaults to `5432`. `PHX_SERVER=true` starts Phoenix, `PORT` defaults
+to `4000`, and `PHX_HOST` is optional. A production deployment that runs
+ScrypathOps as a standalone service also requires its own `DATABASE_URL` and
+`SECRET_KEY_BASE` (with `PHX_SERVER=true` and `PORT`, default `4000`). When
+ScrypathOps is mounted in the ecommerce host, the host Endpoint and supplied
+Repo serve it; there is no separate Ops database or Endpoint requirement. The
+runtime `:scrypath_ops, :standalone` setting decides whether Ops starts its own
+Repo, DNS cluster, and Endpoint. It has no effect on dependency resolution or
+compilation. See the [ScrypathOps runbook](../scrypath_ops/README.md#mounted-host-app-assets)
+for the mounted integration boundary.
+
+`make verify-mounted` runs the disposable dependency-boundary proof before the
+focused browser checks. Its asset/runtime receipts are written outside the
+checkout by default; the browser artifacts default to
+`examples/scrypath_ecommerce/test-results/docker-focused/<run-id>/`. Set
+`E2E_HOST_ARTIFACT_ROOT` to an external directory when the browser artifacts
+also need to remain outside the checkout. These commands use unique Compose
+projects and do not operate the retained maintainer preview.
 
 ## Ports
 

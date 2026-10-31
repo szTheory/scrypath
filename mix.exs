@@ -13,6 +13,7 @@ defmodule Scrypath.MixProject do
       version: @version,
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       docs: docs(),
       package: package(),
@@ -82,6 +83,7 @@ defmodule Scrypath.MixProject do
         verify: :test,
         "verify.release_publish": :test,
         "verify.workspace_clean": :test,
+        "verify.namespace_fence": :test,
         "verify.release_parity": :test,
         "verify.no_optional_deps": :test,
         "verify.coverage": :test,
@@ -105,12 +107,18 @@ defmodule Scrypath.MixProject do
     ]
   end
 
+  # Maintainer verifiers live in dev/mix/tasks and compile only under :test.
+  # Dependencies compile in :prod, so Hex, git and path consumers never see them.
+  defp elixirc_paths(:test), do: ["lib", "dev/mix/tasks"]
+  defp elixirc_paths(_env), do: ["lib"]
+
   defp deps do
     [
       {:ecto, "~> 3.13"},
       {:nimble_options, "~> 1.1"},
       {:oban, "~> 2.21", optional: true},
-      {:req, "~> 0.6.1"},
+      {:telemetry, "~> 1.0"},
+      {:req, "~> 0.6.1 or ~> 0.7"},
       {:jason, "~> 1.4"},
       {:plug, "~> 1.19.5", only: :test},
       {:stream_data, "~> 1.3", only: :test},
@@ -119,7 +127,7 @@ defmodule Scrypath.MixProject do
       {:benchee, "~> 1.5", only: :dev, runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.37", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.40", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -185,6 +193,8 @@ defmodule Scrypath.MixProject do
       main: "readme",
       source_url: @source_url,
       source_ref: @source_ref,
+      # Verify task modules compile only under :test, so the published (:dev) docs omit them without any filter.
+      # A module filter is deliberately absent because it breaks the :test docs build (Phase 183, D-07 as amended).
       extras: [
         "README.md",
         "CONTRIBUTING.md",

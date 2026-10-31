@@ -29,7 +29,9 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       sudo_window: 300
     )
 
-    System.put_env("OPSUI_AUTH_MODE", "sigra")
+    # This router does not install the host's Sigra OnMount context; these tests
+    # exercise saved-search UI behavior under host-owned authentication instead.
+    System.put_env("OPSUI_AUTH_MODE", "basic")
 
     on_exit(fn ->
       Enum.each(previous, fn

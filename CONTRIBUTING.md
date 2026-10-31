@@ -25,6 +25,8 @@ Skim [`guides/common-mistakes.md`](guides/common-mistakes.md) when search or syn
 
 ## Canonical verification commands
 
+Repository-only `mix verify*` tasks live in `dev/mix/tasks/` and are not part of the Hex package; public operator tasks (`mix scrypath.*`) stay in `lib/mix/tasks/`. Command names and focused test paths are unchanged. Verifier tasks compile only under `MIX_ENV=test`, which `preferred_envs` selects automatically; `MIX_ENV=dev mix verify.adopter` (or `mix help verify.adopter` without `MIX_ENV=test`) reports that the task could not be found.
+
 Use capability-named commands for new work. Historical `verify.phase*` commands remain supported for their original focused proof and print/retain their original argument contracts; prefer the corresponding capability command when its scope matches.
 
 | Capability | Canonical command | Preserved proof |
@@ -35,10 +37,15 @@ Use capability-named commands for new work. Historical `verify.phase*` commands 
 | Meilisearch backend | `mix verify.backend` | Curated live backend smoke (`mix verify.meilisearch_smoke`) plus the real-Postgres loader suite (`mix verify.postgres`) |
 | Compatibility contract | `mix verify.compatibility` | Compatibility-truth contract (<code>mix verify.phase99</code>) |
 | Deep quality | `mix verify.deep_quality` | No-optional-deps, namespace, Hex audit, and Dialyzer checks |
-| Mounted ecommerce | `mix verify.ecommerce_mounted` | Docker-only mounted proof (`make -C examples/scrypath_ecommerce verify-mounted`) |
+| Mounted ecommerce | `mix verify.ecommerce_mounted` | Required Docker proof for dependency/assets/runtime boundaries, mounted routing, failed-sync triage, and index swap (`make -C examples/scrypath_ecommerce verify-mounted`) |
 | Phoenix example | `mix verify.phoenix_example` / `mix verify.phoenix_example --package` | Live path-backed and package-backed consumer proof (`mix verify.adopter --live`) |
 | ScrypathOps | `mix verify.ops_ui` | Optional operator app proof |
 | Full ecommerce E2E | `mix verify.ecommerce_e2e` | Advisory Docker/browser proof (`make -C examples/scrypath_ecommerce verify-e2e`) |
+
+These `mix verify.*` entries are repository-maintainer tasks available from a
+source checkout; they are not Hex package commands or adopter APIs. For the
+runtime floor, published-package claims, and the exact tuples currently
+exercised, see the [support and compatibility guide](guides/support-and-compatibility.md).
 
 Use the normal fast suite during development:
 
@@ -209,7 +216,7 @@ Some focused Mix tasks keep historical names. Choose them by scope:
 | v1.29 closeout truth | <code>mix verify.phase108</code> | Related-data fan-out wording, planning/JTBD closeout truth, and advisory `phase105-e2e` posture. |
 | Public website/docs truth alignment | <code>mix verify.phase112</code> | README, `website/`, `guides/scope-and-reopen-policy.md`, or other public truth-copy updates that affect claim envelope, route-map depth, or reopen-policy wording. |
 
-Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator Phoenix app or its path dependency on the core library. It runs **`cd scrypath_ops && mix deps.get && mix test`**. The path-scoped **`ops-ui`** CI job invokes the same canonical command (Postgres-backed Ecto setup, no Meilisearch service).
+Run **`mix verify.ops_ui`** from the repository root when you change the optional **`scrypath_ops`** operator app or its path dependency on the core library. It first runs the root `test/release/ops_dependency_boundary_test.exs` integration contract with warnings as errors, then bootstraps Hex/Rebar and runs the direct Ops suite with `CI=true` in isolated build, dependency, Mix, and Hex directories. Expect Postgres-backed Ecto tests; this capability does not start Meilisearch. Do not replace it with a direct `cd scrypath_ops && mix test`, which skips the root boundary contract and the isolated consumer setup. The path-scoped **`ops-ui`** CI job invokes the same canonical command.
 
 When you change **`scrypath_ops/docs/*.json`** saved-search fixtures, exported saved searches, or other flat `*.json` catalogs that ship beside **`scrypath_ops`**, also run **`cd scrypath_ops && mix scrypath_ops.saved_searches.validate PATH`** from the repository root, where **`PATH`** is the directory containing those JSON files (non-recursive; same invocation shape as the Mix task **`Mix.Tasks.ScrypathOps.SavedSearches.Validate`**).
 
@@ -223,15 +230,105 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
 | **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
 | **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. A Postgres 16 service with `SCRYPATH_POSTGRES_URL` in the same job runs the real-Postgres loader suite (`mix verify.postgres`). |
-| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` for mounted routing, failed-sync triage, and zero-downtime swap behavior. |
+| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` checks source dependency boundaries and the independent `asset_builder`, `runtime_test`, and `runtime_prod` targets, then verifies mounted host routing, failed-sync triage, index swap, and standalone Ops assets/routes. |
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example` followed by `mix verify.phoenix_example --package`, covering path-backed and package-backed live consumers. |
-| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` delegates to the existing ScrypathOps test orchestration. |
+| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` runs the root boundary integration contract and the isolated Postgres-backed ScrypathOps suite. |
 | **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
 Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`** as required merge gates. The compatibility, deep-quality, Phoenix example, optional operator app, and full E2E lanes remain advisory or path-scoped as labeled.
+
+### Exact-source cache acceptance probes
+
+Manual `ci.yml` dispatches default to `phase182_cache_mode=normal`, which keeps
+the existing jobs and commands unchanged. It runs the normal full advisory
+browser job and records a Docker warm-cache receipt from that job. Optional
+modes reuse the existing jobs:
+
+| Mode | Existing job | Evidence being exercised |
+|------|--------------|--------------------------|
+| `docker-cold` | `ecommerce-mounted` | A new per-run Buildx builder with every Bake cache import/export removed, followed by `mix verify.ecommerce_mounted`. |
+| `beam-cold` | `core` | Cache restore steps are skipped on the fresh hosted runner; `mix deps.get`, `mix compile --warnings-as-errors`, and the canonical core verifier run normally. |
+| `beam-fallback` | `core` | Run-unique primary cache keys miss; compatible Hex archive fallback is accepted only when Actions reports the matched key. Resolved build restore is disabled, then normal resolution, compilation, and core verification run. |
+| `beam-lock-change` | `core` | A separate temporary checkout receives one comment-only `mix.lock` change and a local probe-only commit. The source checkout stays unchanged. The proof binds the exact before/after lock bytes to canonical cache identities and different natural resolved keys; no forced run suffix supplies the lock-change miss. Compatible Hex fallback, the exact changed-lock miss, and normal Mix commands are recorded. |
+
+`phase182_probe_namespace` accepts a lowercase slug of up to 32 characters.
+Leave it empty to use the production cache namespace. Use a distinct slug for
+candidate experiments: Docker scopes and BEAM Actions Cache keys then stay in
+that namespace. No mode deletes caches. The normal full job remains the trusted
+production cache writer. A same-repository candidate-ref `workflow_dispatch`
+can export only to an explicitly named probe namespace; candidate refs never
+write production Docker scopes. Pull requests and untrusted repositories cannot export. A
+`docker-warm` acceptance therefore needs actual GHA import and export log lines;
+use a trusted main dispatch or an explicit probe namespace and run again after
+it has seeded that namespace.
+
+The exact-source collector dispatches `ci.yml` at the requested branch and full
+SHA, then reads that new run's attempt-specific jobs, raw logs, and immutable
+artifact bytes. Its existing `gh` identity needs workflow-dispatch permission
+for `ci.yml` at the owned candidate ref plus Actions read access to run attempts,
+jobs, logs, and artifacts. `gh auth status` and read-only access do not prove
+dispatch capability. A denied operation is an authentication/capability gate;
+use the already approved identity, without adding secrets or widening workflow
+token permissions. The collector never pushes. If a separate push is needed,
+it must use existing permission and target only the owned branch.
+
+Keep candidate evidence outside the checkout. The first invocation creates a
+session manifest bound to repository, branch, full source SHA, and your explicit
+session ID. Repeated modes (including retries of one mode) get fresh
+invocation/run-attempt directories and preserve earlier failures. Reuse a root
+only for the exact same source/ref/session; a changed SHA needs a new root.
+The workflow retains proof artifacts for seven days. Run each required cache
+mode in one session, then validate the aggregate:
+
+```sh
+repo="OWNER/REPO"
+branch="YOUR_OWNED_BRANCH"
+sha="$(git rev-parse HEAD)"
+session="phase182-$(date -u +%Y%m%dT%H%M%SZ)"
+root="/tmp/scrypath-phase182/$session"
+namespace="candidate-2026"
+
+# Seed this isolated namespace before collecting warm/fallback evidence. The
+# first run may have no import hit; run normal again so it can prove import and
+# export from the cache created by the first run.
+gh workflow run ci.yml --ref "$branch" --repo "$repo" \
+  -f phase182_cache_mode=normal -f "phase182_probe_namespace=$namespace"
+# Wait for the seed run to finish, then dispatch normal once more with the same
+# command and wait for success before collecting the acceptance receipts.
+
+for mode in docker-warm docker-cold beam-fallback beam-lock-change beam-cold; do
+  node scripts/ci/phase182_acceptance.cjs run \
+    --mode "$mode" --repo "$repo" --branch "$branch" --sha "$sha" \
+    --session-id "$session" --output-dir "$root" \
+    --probe-namespace "$namespace"
+done
+
+node scripts/ci/phase182_acceptance.cjs run \
+  --mode full --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --output-dir "$root" \
+  --probe-namespace "$namespace"
+
+node scripts/ci/phase182_acceptance.cjs validate \
+  --mode caches --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --input "$root" --probe-namespace "$namespace"
+
+node scripts/ci/phase182_acceptance.cjs validate \
+  --mode full --repo "$repo" --branch "$branch" --sha "$sha" \
+  --session-id "$session" --input "$root" --probe-namespace "$namespace"
+```
+
+`docker-warm` dispatches the default `normal` workflow input. Cache modes require
+successful canonical verifier steps and actual BuildKit or Actions Cache log
+evidence in addition to their JSON receipts. The executable tests protect the
+collector and wiring only; they do not stand in for a real hosted browser or
+cache acceptance run. Both validation commands require the session root plus
+`--repo`, `--branch`, full `--sha`, `--session-id`, and the same
+`--probe-namespace` used for collection (including its empty default); `--input` is not a receipt
+file. Run the `full` collection and validation after the cache-mode receipts for
+the exact real-acceptance sequence used by the Phase 182-08 executor.
 
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
@@ -252,6 +349,16 @@ make -C examples/scrypath_ecommerce verify-mounted
 That command is the local/CI parity surface for `ecommerce-mounted`. It
 requires only Docker Compose, publishes no host ports, and tears down its
 uniquely named containers, network, and volumes after collecting diagnostics.
+It begins with a disposable dependency-boundary run that builds and checks the
+dev asset builder and both independent runtime targets. Those runtime receipts
+are stored outside the checkout. To keep the focused browser evidence outside
+the checkout too, set `E2E_HOST_ARTIFACT_ROOT` to a temporary directory, for
+example:
+
+```sh
+E2E_HOST_ARTIFACT_ROOT="${TMPDIR:-/tmp}/scrypath-mounted-evidence" mix verify.ecommerce_mounted
+```
+
 Set `KEEP_E2E_STACK=1` only when intentionally preserving a failed stack for
 debugging. Run the complete advisory lane with:
 
@@ -259,7 +366,13 @@ debugging. Run the complete advisory lane with:
 make -C examples/scrypath_ecommerce verify-e2e
 ```
 
-`ecommerce-e2e` is advisory today (not a required merge gate). It preserves the full Phase 105 browser/operator proof on scheduled and manual runs through one Docker-owned command, including deterministic browser checks, light screenshot parity, static contrast, optional visual judgment, cleanup, and bounded artifacts.
+`ecommerce-mounted` is the required focused Docker proof. It receives a run ID and uploads only that invocation's failure bundle when a run fails. `ecommerce-e2e` is advisory today and runs on scheduled/manual triggers using the canonical `mix verify.ecommerce_e2e` command. Its full Chromium inventory and execution, light screenshot parity, static contrast, diagnostics, cleanup, and strict evidence aggregation run inside an isolated Docker project. The acceptance path does not invoke the dormant paid visual judge or require an API key.
+
+The full job has a 30-minute Actions timeout measured from its first step, before checkout, toolchain setup, dependency fetch, and image build. That step records the job start, exact event/ref/SHA/run/attempt identity, and an inner deadline. The browser verifier initially reserves 300 seconds for evidence finalization and upload; this is provisional until Phase 182-08 confirms or replaces it using the measured maximum finalization/upload time plus at least 60 seconds. The job exposes the raw `ecommerce_verify` step outcome separately from the job conclusion because `continue-on-error` makes the lane advisory. A successful advisory job conclusion alone does not establish a passing browser proof.
+
+Each invocation owns a fresh directory under `examples/scrypath_ecommerce/test-results/docker-full/<run-id>/` (or `docker-focused/<run-id>/` for mounted verification). The full job uploads only its current run directory, always attempts the upload, fails if the required directory is missing, and retains the artifact for seven days. Its outputs preserve the raw verifier outcome and the uploaded artifact ID, URL, and digest. The bundle contains source/run metadata, inventory and execution reports, HTML, retained failure traces, light-parity and contrast results, lifecycle and stage statuses, copy diagnostics, and applicable iteration 3 screenshots. A run's strict receipt is the evidence authority; readiness-only diagnostics and loose directory presence are not acceptance.
+
+Inventory equality covers the selected Playwright cases and rejects skipped or retried execution. Viewport/width checks, screenshot parity, and contrast reports cover their named checks; they do not amount to a complete rendered UX review. A real full-browser and hosted exact-SHA run is still required for the applicable Phase 182 requirements.
 
 Phase 111 freezes a dual-window evidence model for any future promotion decision:
 
@@ -281,24 +394,14 @@ For rendered UI and content review, follow [the repository UI review loop](https
 the output starts pending and includes the complete current screen inventory.
 It supplements state/functional proofs and does not add a required CI lane.
 
-Run locally:
+Run the canonical focused or full Docker verifier locally:
 
 ```sh
-mix deps.get
-cd examples/scrypath_ecommerce
-mix deps.get
-mix e2e.prepare
-npm ci
-npx playwright install --with-deps chromium
-MIX_ENV=test PHX_SERVER=true mix phx.server
-# second shell
-cd examples/scrypath_ecommerce
-npm run test:e2e
-npm run test:e2e:admin-light-parity
-make contrast
-# optional advisory review, skipped in CI unless OPS_UI_LLM_JUDGE=1 and OPENAI_API_KEY exist
-OPS_UI_LLM_JUDGE=1 OPENAI_API_KEY=... npm run test:e2e:ops-ui-visual-judge
+mix verify.ecommerce_mounted
+mix verify.ecommerce_e2e
 ```
+
+The verifier prints the unique run directory; inspect the receipt and summary from that directory rather than combining files from earlier runs. To run a readiness-only diagnostic, invoke `examples/scrypath_ecommerce/scripts/verify-e2e.sh full --readiness-only`; it does not run Playwright and is never browser acceptance. The separate `npm run test:e2e:ops-ui-visual-judge` entrypoint remains dormant legacy tooling and is not part of either canonical command.
 
 ### Promotion criteria
 

@@ -2,10 +2,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   use ExUnit.Case, async: true
 
   @ci_yml ".github/workflows/ci.yml"
+  @workflow_security_yml ".github/workflows/workflow-security.yml"
+  @website_yml ".github/workflows/website.yml"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
-  @verify_task "lib/mix/tasks/verify.ex"
+  @verify_task Scrypath.RepoTooling.task_path("verify.ex")
 
   describe "HYG-02 no blanket compiler suppression" do
     test "mix.exs sets no elixirc_options" do
@@ -15,8 +17,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "no library source changes compiler options at runtime" do
       offenders =
-        "lib/**/*.ex"
-        |> Path.wildcard()
+        ["lib/**/*.ex", "dev/**/*.ex"]
+        |> Enum.flat_map(&Path.wildcard/1)
         |> Enum.filter(&(File.read!(&1) =~ "Code.put_compiler_option"))
 
       assert offenders == [],
@@ -25,8 +27,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "no_warn_undefined is limited to Oban modules" do
       site_count =
-        "lib/**/*.ex"
-        |> Path.wildcard()
+        ["lib/**/*.ex", "dev/**/*.ex"]
+        |> Enum.flat_map(&Path.wildcard/1)
         |> Enum.map(&assert_oban_suppressions!(File.read!(&1), &1))
         |> Enum.sum()
 
@@ -156,29 +158,301 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
-  describe "INFRA-03 D-13: ci.yml action pins on Node 24 runtime" do
-    test "ci.yml pins actions/checkout v6 to immutable commits" do
+  describe "DEP-07 D-16/D-19: action pins and workflow trust boundaries" do
+    test "ci.yml pins actions/checkout v7.0.1 to its verified immutable commit" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/checkout@v4", "expected no legacy checkout@v4 pins"
-      assert yml =~ ~r|actions/checkout@[0-9a-f]{40} # v6|
+
+      assert_action_pin!(
+        yml,
+        "actions/checkout",
+        "3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "v7.0.1"
+      )
     end
 
-    test "ci.yml pins actions/cache v5 to immutable commits" do
+    test "ci.yml pins every cache component to v6.1.0's verified immutable commit" do
       yml = File.read!(@ci_yml)
       refute yml =~ "actions/cache@v4", "expected no legacy cache@v4 pins"
-      assert yml =~ ~r|actions/cache@[0-9a-f]{40} # v5|
+
+      for action <- ["actions/cache", "actions/cache/restore", "actions/cache/save"] do
+        assert_action_pin!(
+          yml,
+          action,
+          "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+          "v6.1.0"
+        )
+      end
     end
 
     test "ci.yml pins checkout in every executable job" do
-      count = Regex.scan(~r|actions/checkout@[0-9a-f]{40} # v6|, File.read!(@ci_yml)) |> length()
+      count =
+        Regex.scan(
+          ~r|actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1|,
+          File.read!(@ci_yml)
+        )
+        |> length()
 
       assert count >= 10, "expected checkout pins across the CI graph, got #{count}"
     end
 
     test "ci.yml caches each BEAM verification lane" do
-      count = Regex.scan(~r|actions/cache@[0-9a-f]{40} # v5|, File.read!(@ci_yml)) |> length()
+      count =
+        Regex.scan(
+          ~r|actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6\.1\.0|,
+          File.read!(@ci_yml)
+        )
+        |> length()
 
       assert count >= 9, "expected cache pins across BEAM jobs, got #{count}"
+    end
+
+    test "workflow-security pins dependency review v5 and keeps its PR check fail-closed" do
+      security = File.read!(@workflow_security_yml)
+      dependency_review = workflow_job_block(security, "dependency-review")
+
+      assert_action_pin!(
+        security,
+        "actions/checkout",
+        "3d3c42e5aac5ba805825da76410c181273ba90b1",
+        "v7.0.1"
+      )
+
+      assert_action_pin!(
+        security,
+        "actions/dependency-review-action",
+        "a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+        "v5.0.0"
+      )
+
+      assert dependency_review =~ "if: github.event_name == 'pull_request'"
+      assert dependency_review =~ "contents: read"
+      assert dependency_review =~ "pull-requests: read"
+      refute dependency_review =~ "continue-on-error: true"
+      refute dependency_review =~ "warn-only: true"
+    end
+
+    test "CI pin contract rejects a wrong action SHA or version comment" do
+      ci = File.read!(@ci_yml)
+      checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
+
+      wrong_sha = String.replace(ci, checkout_sha, String.duplicate("f", 40), global: false)
+      wrong_comment = String.replace(ci, "# v7.0.1", "# v7.0.0", global: false)
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_sha, "actions/checkout", checkout_sha, "v7.0.1")
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_comment, "actions/checkout", checkout_sha, "v7.0.1")
+      end
+    end
+
+    test "dependency audit remains failing while the independent quality check runs after it" do
+      ci = File.read!(@ci_yml)
+      deep_quality = workflow_job_block(ci, "deep-quality")
+      audit = workflow_step_block(deep_quality, "\n      - id: dependency_audit\n")
+
+      follow_up =
+        workflow_named_step_block(
+          deep_quality,
+          "Run deep quality checks independently of the dependency audit"
+        )
+
+      assert audit =~ "run: elixir scripts/ci/dependency_audit.exs"
+      refute audit =~ "continue-on-error: true"
+      assert follow_up =~ "!cancelled() && steps.dependency_audit.outcome != 'skipped'"
+      assert follow_up =~ "run_deep_quality_without_audit()"
+    end
+
+    test "all six affected workflows pin checkout v7.0.1 to its verified immutable commit" do
+      checkout_sha = "3d3c42e5aac5ba805825da76410c181273ba90b1"
+
+      for workflow <- [
+            @ci_yml,
+            @workflow_security_yml,
+            @website_yml,
+            @publish_hex_yml,
+            @release_please_yml,
+            @verify_published_yml
+          ] do
+        assert_action_pin!(File.read!(workflow), "actions/checkout", checkout_sha, "v7.0.1")
+      end
+    end
+
+    test "website pins Node and Pages actions to verified commits while retaining Node 22 cache inputs" do
+      website = File.read!(@website_yml)
+
+      assert_action_pin!(
+        website,
+        "actions/setup-node",
+        "949feb2413d6458794dcd2491c4babbbce0c15c1",
+        "v7.1.0"
+      )
+
+      assert_action_pin!(
+        website,
+        "actions/deploy-pages",
+        "368f82528645a54fb793d4d04e342629a3f51346",
+        "v5.0.1"
+      )
+
+      for job_name <- ["build-and-check", "deploy"] do
+        job = workflow_job_block(website, job_name)
+
+        setup_node =
+          workflow_step_with_uses_block(
+            job,
+            "actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0"
+          )
+
+        assert setup_node =~ "node-version: '22'"
+        assert setup_node =~ "cache: npm"
+        assert setup_node =~ "cache-dependency-path: website/package-lock.json"
+      end
+
+      assert length(
+               Regex.scan(
+                 ~r|actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7\.1\.0|,
+                 website
+               )
+             ) ==
+               2
+    end
+
+    test "website events, full-history checkout and Pages permissions remain scoped" do
+      website = File.read!(@website_yml)
+      build = workflow_job_block(website, "build-and-check")
+      deploy = workflow_job_block(website, "deploy")
+
+      assert website =~ "  pull_request:\n"
+      assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
+      assert deploy =~ "if: github.event_name == 'push'"
+      assert build =~ "fetch-depth: 0"
+      assert deploy =~ "fetch-depth: 0"
+      assert website =~ "permissions:\n  contents: read"
+
+      assert deploy =~
+               "permissions:\n      contents: read\n      pages: write\n      id-token: write"
+
+      refute build =~ "pages: write"
+      refute build =~ "id-token: write"
+    end
+
+    test "release workflows retain tag selection, history, permissions and credential behavior" do
+      publish = File.read!(@publish_hex_yml)
+      release = File.read!(@release_please_yml)
+      verify_release = File.read!(@verify_published_yml)
+
+      publish_job = workflow_job_block(publish, "publish-scrypath")
+      release_job = workflow_job_block(release, "release-please")
+      release_publish_job = workflow_job_block(release, "publish-hex")
+      verify_job = workflow_job_block(verify_release, "verify-latest-published-release")
+
+      assert publish_job =~ "ref: ${{ inputs.tag }}"
+      assert release_job =~ "fetch-depth: 0"
+      refute release_job =~ ~r/^\s*ref:/m
+      assert release_publish_job =~ "ref: ${{ needs.release-please.outputs.tag_name }}"
+      assert verify_job =~ "fetch-depth: 0"
+      assert publish =~ "permissions:\n  contents: read"
+      assert release =~ "permissions:\n  contents: write\n  issues: write\n  pull-requests: write"
+      assert release_publish_job =~ "permissions:\n      contents: read"
+      assert verify_release =~ "permissions:\n  contents: read\n  issues: write"
+      refute publish_job =~ "persist-credentials: false"
+      refute release_job =~ "persist-credentials: false"
+      refute release_publish_job =~ "persist-credentials: false"
+      refute verify_job =~ "persist-credentials: false"
+    end
+
+    test "website action pin contracts reject wrong SHA and version comments" do
+      website = File.read!(@website_yml)
+      setup_node_sha = "949feb2413d6458794dcd2491c4babbbce0c15c1"
+      deploy_pages_sha = "368f82528645a54fb793d4d04e342629a3f51346"
+
+      wrong_setup_sha = String.replace(website, setup_node_sha, String.duplicate("f", 40))
+      wrong_deploy_comment = String.replace(website, "# v5.0.1", "# v5.0.0")
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(wrong_setup_sha, "actions/setup-node", setup_node_sha, "v7.1.0")
+      end
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_action_pin!(
+          wrong_deploy_comment,
+          "actions/deploy-pages",
+          deploy_pages_sha,
+          "v5.0.1"
+        )
+      end
+    end
+  end
+
+  describe "CACHE-02 graph-aware BEAM cache wiring" do
+    test "path-dependent CI consumers key their graph before normal dependency resolution and verification" do
+      ci = File.read!(@ci_yml)
+
+      for {job_name, graph, profile, verify_command} <- [
+            {"ops-ui", "ops", "ops-test", "mix verify.ops_ui"},
+            {"phoenix-example", "phoenix-example", "phoenix-test", "mix verify.phoenix_example"},
+            {"ecommerce-mounted", "ecommerce", "ecommerce-test", "mix verify.ecommerce_mounted"},
+            {"ecommerce-e2e", "ecommerce", "ecommerce-test", "mix verify.ecommerce_e2e"}
+          ] do
+        job = workflow_job_block(ci, job_name)
+
+        assert job =~ "beam_cache.cjs plan --graph #{graph}"
+        assert job =~ "MIX_ENV: test"
+        assert job =~ "MIX_TARGET: host"
+        assert job =~ "BEAM_CACHE_PROFILE: #{profile}"
+
+        assert_ordered_steps(job, [
+          "beam_cache.cjs plan --graph #{graph}",
+          "actions/cache@",
+          "mix deps.get",
+          verify_command
+        ])
+      end
+    end
+
+    test "deep-quality resolves dependencies and caches PLTs separately with a strict key" do
+      deep_quality = File.read!(@ci_yml) |> workflow_job_block("deep-quality")
+
+      assert deep_quality =~ "beam_cache.cjs plan --graph root"
+      assert deep_quality =~ "MIX_ENV: test"
+      assert deep_quality =~ "MIX_TARGET: host"
+      assert deep_quality =~ "BEAM_CACHE_PROFILE: deep-quality-test"
+      assert deep_quality =~ "outputs.plt_paths"
+      assert deep_quality =~ "outputs.plt_key"
+      assert deep_quality =~ "mix deps.get"
+
+      assert deep_quality =~
+               ~r|path: \$\{\{ steps\.beam_cache\.outputs\.plt_paths \}\}\n\s+key: \$\{\{ steps\.beam_cache\.outputs\.plt_key \}\}\n\s+- run:|
+
+      assert_ordered_steps(deep_quality, [
+        "beam_cache.cjs plan --graph root",
+        "actions/cache@",
+        "mix deps.get",
+        "elixir scripts/ci/dependency_audit.exs",
+        "run_deep_quality_without_audit"
+      ])
+    end
+
+    test "Node BEAM cache and exact-source collector boundaries execute inside the wiring contract lane" do
+      {output, status} =
+        System.cmd(
+          "node",
+          [
+            "--test",
+            "--test-reporter=tap",
+            "scripts/ci/beam_cache.test.cjs",
+            "scripts/ci/phase182_acceptance.test.cjs"
+          ],
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      assert output =~ ~r/# tests [1-9]\d*/
+      assert output =~ "# fail 0"
+      assert output =~ "BEAM probe keys preserve normal keys and isolate forced fallback misses"
     end
   end
 
@@ -277,6 +551,23 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                "run: mix verify.repository_contracts"
     end
 
+    test "required repository-contracts lane runs counted browser build and behavior tests" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "repository-contracts")
+
+      assert job =~ "node --test --test-reporter=tap"
+
+      for test_file <- [
+            "scripts/ci/ecommerce_build.test.cjs",
+            "scripts/ci/ecommerce_lifecycle.test.cjs",
+            "scripts/ci/ecommerce_evidence.test.cjs",
+            "scripts/ci/ecommerce_target.test.cjs"
+          ] do
+        assert job =~ test_file,
+               "repository-contracts must execute #{test_file} outside the ExUnit suite"
+      end
+    end
+
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
       ci = File.read!(@ci_yml)
       assert ci =~ "\n  compatibility:\n"
@@ -326,9 +617,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute ci =~ "actions/cache@v4",
              "legacy actions/cache@v4 pin found — Node 20 deprecation risk"
 
-      # checkout went to @v6, cache went to @v5 — neither should sit at @v5/@v6 respectively
-      refute ci =~ "actions/checkout@v5",
-             "actions/checkout should be pinned to @v6, not @v5"
+      # Current immutable refs are v7.0.1 and v6.1.0, respectively.
+      refute ci =~ "actions/checkout@v6",
+             "actions/checkout should be pinned to v7.0.1, not v6"
     end
 
     test "UAT-06: docs/releasing.md ships §Release parity gate section to HexDocs" do
@@ -428,10 +719,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert deep_quality =~ "MIX_ENV: test"
 
       assert length(Regex.scan(~r|elixir scripts/ci/dependency_audit\.exs|, deep_quality)) == 1
-      refute deep_quality =~ "mix deps.get"
+      assert deep_quality =~ "mix deps.get"
       refute deep_quality =~ "mix verify.deep_quality"
-      assert deep_quality =~ "priv/plts"
-      assert deep_quality =~ "hashFiles('mix.lock', 'mix.exs')"
+      assert deep_quality =~ "MIX_TARGET: host"
+      assert deep_quality =~ "BEAM_CACHE_PROFILE: deep-quality-test"
+      assert deep_quality =~ "outputs.plt_paths"
+      assert deep_quality =~ "outputs.plt_key"
     end
   end
 
@@ -446,7 +739,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert ops_ui =~ "POSTGRES_PASSWORD: postgres"
       assert ops_ui =~ "ports: [5433:5432]"
       assert ops_ui =~ "pg_isready -U postgres"
-      assert ops_ui =~ ~s(env: {PGPORT: "5433"})
+
+      assert ops_ui =~ ~s|PGPORT: "5433"|
     end
 
     test "required backend job provides the real-Postgres loader lane" do
@@ -470,17 +764,189 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert contributing =~ "`ecommerce-e2e` is advisory today"
     end
 
-    test "ecommerce-e2e runs the canonical full proof and always uploads evidence" do
+    test "Phase 182 cache probes are opt-in and keep existing jobs and canonical verifiers" do
       ci = File.read!(@ci_yml)
+      [triggers, _jobs] = String.split(ci, "\njobs:\n", parts: 2)
+      core = workflow_job_block(ci, "core")
+      mounted = workflow_job_block(ci, "ecommerce-mounted")
+      full = workflow_job_block(ci, "ecommerce-e2e")
 
-      assert workflow_job_block(ci, "ecommerce-e2e") =~ "mix verify.ecommerce_e2e"
-      assert ci =~ "- name: Upload advisory E2E evidence"
-      assert ci =~ "if: always()"
-      assert ci =~ "examples/scrypath_ecommerce/test-results/docker-full"
+      assert triggers =~ "workflow_dispatch:"
+      assert triggers =~ "phase182_cache_mode:"
+      assert triggers =~ "default: normal"
+      assert triggers =~ "phase182_probe_namespace:"
+      assert triggers =~ "type: string"
+      assert triggers =~ "default: \"\""
+
+      for mode <- ["normal", "docker-cold", "beam-cold", "beam-fallback", "beam-lock-change"] do
+        assert triggers =~ "- #{mode}"
+      end
+
+      assert core =~ "phase182_acceptance.cjs validate-inputs"
+      assert core =~ "phase182_acceptance.cjs beam-plan"
+      assert core =~ "if: steps.phase182_inputs.outputs.mode != 'beam-cold'"
+
+      assert core =~
+               "uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
+
+      assert core =~ "uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"
+      assert core =~ "steps.phase182_downloads_cache.outputs.cache-matched-key"
+      assert core =~ "steps.phase182_resolved_cache.outputs.cache-matched-key"
+      assert core =~ "steps.phase182_downloads_cache.outputs.cache-hit != 'true'"
+      assert core =~ "steps.phase182_resolved_cache.outputs.cache-hit != 'true'"
+      assert core =~ "mix deps.get"
+      assert core =~ "mix compile --warnings-as-errors"
+      assert core =~ "mix verify.core --exclude integration --exclude docs_contract"
+
+      assert elem(
+               :binary.match(
+                 core,
+                 "mix verify.core --exclude integration --exclude docs_contract"
+               ),
+               0
+             ) <
+               elem(:binary.match(core, "name: Save Hex download archive cache"), 0)
+
+      assert elem(:binary.match(core, "name: Save Hex download archive cache"), 0) <
+               elem(:binary.match(core, "name: Save resolved BEAM build cache"), 0)
+
+      assert core =~ "phase182_acceptance.cjs prepare-lock"
+      assert core =~ "phase182_acceptance.cjs write-beam-proof"
+
+      assert mounted =~ "phase182_acceptance.cjs configure-docker"
+      assert mounted =~ "docker buildx inspect \"$BUILDER_ID\" --bootstrap"
+      assert mounted =~ "mix verify.ecommerce_mounted"
+
+      assert mounted =~
+               "phase182-cache-probe-docker-cold-${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert full =~
+               "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
+      assert full =~ "phase182_acceptance.cjs configure-docker"
+      assert full =~ "mix verify.ecommerce_e2e"
+
+      assert full =~
+               "phase182-cache-probe-docker-warm-${{ github.run_id }}-${{ github.run_attempt }}"
     end
 
-    test "full Docker proof retains browser, light parity, contrast, and optional visual judgment" do
+    test "mounted and full E2E bake the checked local Compose graph without pushing" do
+      ci = File.read!(@ci_yml)
+
+      for {job_name, cache_job} <- [{"ecommerce-mounted", "mounted"}, {"ecommerce-e2e", "full"}] do
+        job = workflow_job_block(ci, job_name)
+
+        assert job =~ "E2E_CACHE_JOB: #{cache_job}"
+        assert job =~ "uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069"
+        assert job =~ "version: v0.37.2"
+        assert job =~ "driver-opts: image=moby/buildkit:v0.33.1"
+        assert job =~ "uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e"
+
+        assert job =~
+                 "files: ${{ runner.temp }}/ecommerce-#{cache_job}-${{ github.run_id }}-${{ github.run_attempt }}/bake.json"
+
+        assert job =~ "load: true"
+        assert job =~ "push: false"
+        assert job =~ "ecommerce_build.cjs verify-handoff --manifest"
+        assert job =~ "ecommerce_build.cjs cache-outcome --manifest"
+      end
+    end
+
+    test "ecommerce-e2e preserves raw outcome and uploads only this run's evidence" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "ecommerce-e2e")
+
+      assert job =~ "timeout-minutes: 30"
+
+      verify = workflow_named_step_block(job, "Run advisory full E2E proof")
+      upload = workflow_named_step_block(job, "Upload advisory E2E evidence")
+      start_clock = workflow_named_step_block(job, "Record E2E job start and deadline")
+
+      checkout =
+        workflow_step_with_uses_block(
+          job,
+          "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
+        )
+
+      assert job =~ "name: ecommerce-e2e (advisory)"
+
+      assert job =~
+               "if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'"
+
+      assert job =~ "continue-on-error: true"
+      assert job =~ "timeout-minutes: 30"
+      assert job =~ "verification_outcome: ${{ steps.ecommerce_verify.outcome }}"
+      assert job =~ "artifact_id: ${{ steps.ecommerce_upload.outputs.artifact-id }}"
+      assert job =~ "artifact_url: ${{ steps.ecommerce_upload.outputs.artifact-url }}"
+      assert job =~ "artifact_digest: ${{ steps.ecommerce_upload.outputs.artifact-digest }}"
+      assert start_clock =~ "E2E_JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      assert start_clock =~ "E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))"
+      assert start_clock =~ "GITHUB_SHA"
+      assert start_clock =~ "E2E_FINALIZATION_MARGIN_SECONDS=300"
+      assert verify =~ "id: ecommerce_verify"
+      assert verify =~ "run: mix verify.ecommerce_e2e"
+      assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
+      assert verify =~ "E2E_SOURCE_MODE: hosted"
+      assert verify =~ "E2E_EVENT_SHA: ${{ steps.e2e_clock.outputs.E2E_EVENT_SHA }}"
+
+      assert verify =~
+               "E2E_WORKFLOW_RUN_ATTEMPT: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ATTEMPT }}"
+
+      assert upload =~ "id: ecommerce_upload"
+      assert upload =~ "if: always()"
+      assert upload =~ "test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}"
+      assert upload =~ "if-no-files-found: error"
+      assert upload =~ "retention-days: 7"
+      assert upload =~ "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+
+      assert :binary.match(job, "Record E2E job start and deadline") <
+               :binary.match(
+                 job,
+                 "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
+               )
+
+      assert checkout =~ "fetch-depth: 0"
+    end
+
+    test "mounted E2E failure upload is scoped to the current invocation" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "ecommerce-mounted")
+      verify = workflow_named_step_block(job, "Run mounted E2E proof")
+
+      upload = workflow_named_step_block(job, "Upload mounted E2E failure evidence")
+
+      assert job =~ "name: ecommerce-mounted (required)"
+      assert verify =~ "mix verify.ecommerce_mounted"
+      assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
+      assert upload =~ "if: failure()"
+
+      assert upload =~
+               "test-results/docker-focused/${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert upload =~ "if-no-files-found: warn"
+      assert upload =~ "retention-days: 7"
+    end
+
+    test "exactly the five established required jobs remain required" do
+      ci = File.read!(@ci_yml)
+
+      required =
+        Regex.scan(~r/^  ([a-z][a-z0-9-]+):\n    name: .*\(required\)$/m, ci)
+        |> Enum.map(fn [_, job] -> job end)
+        |> Enum.sort()
+
+      assert required == [
+               "backend",
+               "core",
+               "ecommerce-mounted",
+               "package",
+               "repository-contracts"
+             ]
+    end
+
+    test "full Docker proof retains browser, light parity, and contrast without activating the judge" do
       docker_runner = File.read!("examples/scrypath_ecommerce/docker-playwright.sh")
+      compose = File.read!("examples/scrypath_ecommerce/compose.e2e.yaml")
       package_json = File.read!("examples/scrypath_ecommerce/package.json")
 
       assert package_json =~ ~s("test:e2e": "playwright test --workers=1")
@@ -490,16 +956,20 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert docker_runner =~ "npm run test:e2e"
       assert docker_runner =~ "npm run test:e2e:admin-light-parity"
       assert docker_runner =~ "node contrast-checker.mjs"
-      assert docker_runner =~ "npm run test:e2e:ops-ui-visual-judge"
+      refute docker_runner =~ "npm run test:e2e:ops-ui-visual-judge"
+      refute compose =~ "OPS_UI_LLM_JUDGE"
+      refute compose =~ "OPENAI_API_KEY"
     end
 
     test "Docker verifier bounds collected artifacts to logs and browser reports" do
       verifier = File.read!("examples/scrypath_ecommerce/scripts/verify-e2e.sh")
 
       assert verifier =~ "test-results/docker-${scope}"
+      assert verifier =~ ~s|"/tmp/$run_id"|
+      assert verifier =~ "E2E_CONTAINER_ARTIFACT_DIR"
       assert verifier =~ "compose.log"
-      assert verifier =~ "test-results/."
-      assert verifier =~ "playwright-report/."
+      assert verifier =~ "artifact_copy_status"
+      assert verifier =~ "artifact-manifest.json"
     end
 
     test "playwright config emits structured phase105 report and forbids acceptance retries" do
@@ -514,14 +984,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     test "phase105 evidence summary includes shifted-left visual gates" do
       summary_script = File.read!("scripts/ci/phase105_evidence.sh")
+      evidence_writer = File.read!("scripts/ci/ecommerce_evidence.cjs")
 
-      assert summary_script =~ "admin-light-parity.json"
-      assert summary_script =~ "ops-ui-visual-judge.json"
-      assert summary_script =~ "light_parity_status"
-      assert summary_script =~ "shell_wash_conclusion"
-      assert summary_script =~ "shell_wash_visual"
-      assert summary_script =~ "visual_judge_status"
-      assert summary_script =~ "visual_judge_claims"
+      assert summary_script =~ "ecommerce_evidence.cjs"
+      assert summary_script =~ "write-evidence"
+      assert summary_script =~ "--run-dir"
+      assert evidence_writer =~ "admin-light-parity.json"
+      assert evidence_writer =~ "light_parity_status"
+      assert evidence_writer =~ "shell_wash_conclusion"
+      assert evidence_writer =~ "shell_wash_visual"
+      assert evidence_writer =~ "visual_judge_status"
+      assert evidence_writer =~ "visual_judge_claims"
+      assert evidence_writer =~ "visual_judge_required: false"
+      refute evidence_writer =~ "ops-ui-visual-judge.json"
     end
   end
 
@@ -538,7 +1013,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       coverage_checkout =
         workflow_step_with_uses_block(
           coverage_job,
-          "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6"
+          "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1"
         )
 
       assert length(Regex.scan(~r/^  coverage:$/m, ci)) == 1
@@ -693,5 +1168,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       {next_idx, _} -> binary_part(rest, 0, next_idx)
       :nomatch -> rest
     end
+  end
+
+  defp assert_action_pin!(workflow, action, sha, version) do
+    refs =
+      workflow
+      |> String.split("\n")
+      |> Enum.filter(&String.contains?(&1, "uses: #{action}@"))
+
+    assert refs != [], "expected at least one #{action} reference"
+
+    Enum.each(refs, fn ref ->
+      assert String.contains?(ref, "uses: #{action}@#{sha} # #{version}"),
+             "expected #{action} to use #{sha} with comment #{version}; found #{String.trim(ref)}"
+    end)
   end
 end

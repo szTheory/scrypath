@@ -43,12 +43,13 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
         ] do
       path =
         if task == "ops_ui" do
-          "lib/mix/tasks/verify.ops_ui.ex"
+          Scrypath.RepoTooling.task_path("verify.ops_ui.ex")
         else
-          "lib/mix/tasks/verify/#{task}.ex"
+          Scrypath.RepoTooling.task_path("verify/#{task}.ex")
         end
 
       assert File.exists?(path)
+      assert Mix.Task.get("verify.#{task}")
     end
   end
 
@@ -65,6 +66,34 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
 
     for task <- ["verify.core", "verify.backend", "verify.postgres" | @strict_tasks] do
       assert preferred_envs[String.to_existing_atom(task)] == :test
+    end
+  end
+
+  test "every maintainer Mix.Task has a :test preferred env and every verify key resolves" do
+    preferred_envs = Scrypath.MixProject.cli()[:preferred_envs]
+
+    {:ok, modules} = :application.get_key(:scrypath, :modules)
+
+    # Classify by the Mix.Task behaviour, not Mix.Task.task?/1: the latter also
+    # counts helper modules such as Mix.Tasks.Verify.PhoenixExample.Package.
+    maintainer_tasks =
+      for module <- modules,
+          String.starts_with?(Atom.to_string(module), "Elixir.Mix.Tasks.Verify"),
+          Code.ensure_loaded?(module),
+          Mix.Task in Keyword.get(module.module_info(:attributes), :behaviour, []) do
+        Mix.Task.task_name(module)
+      end
+
+    assert maintainer_tasks != [], "no Mix.Tasks.Verify* module declares the Mix.Task behaviour"
+
+    for name <- maintainer_tasks do
+      assert preferred_envs[String.to_atom(name)] == :test,
+             "#{name} is a maintainer task without a :test entry in mix.exs preferred_envs"
+    end
+
+    for {key, _env} <- preferred_envs, String.starts_with?(Atom.to_string(key), "verify") do
+      assert Mix.Task.get(Atom.to_string(key)),
+             "preferred_envs key #{key} does not resolve through Mix.Task.get/1"
     end
   end
 
@@ -85,7 +114,7 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
   test "standalone deep quality audits once and shares every other quality check" do
     assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_with_audit/1, [
       {:task, "verify.no_optional_deps", []},
-      {:task, "scrypath.namespace_fence", []},
+      {:task, "verify.namespace_fence", []},
       {:command, "hex.audit", []},
       {:command, "dialyzer", []}
     ])
@@ -94,9 +123,39 @@ defmodule Mix.Tasks.Verify.CapabilityTest do
   test "the internal no-audit path retains quality checks without auditing" do
     assert_deep_quality_sequence(&Mix.Tasks.Verify.Capability.run_deep_quality_without_audit/1, [
       {:task, "verify.no_optional_deps", []},
-      {:task, "scrypath.namespace_fence", []},
+      {:task, "verify.namespace_fence", []},
       {:command, "dialyzer", []}
     ])
+  end
+
+  test "Ops verification pins the mounted dependency proof before the direct suite" do
+    root = File.cwd!()
+
+    assert {:module, Mix.Tasks.Verify.OpsUi} = Code.ensure_loaded(Mix.Tasks.Verify.OpsUi)
+
+    assert function_exported?(Mix.Tasks.Verify.OpsUi, :verification_commands, 1),
+           "verify.ops_ui must expose its ordered command plan for invocation contract tests"
+
+    [mounted_proof, hex_bootstrap, rebar_bootstrap, deps_get, direct_suite] =
+      Mix.Tasks.Verify.OpsUi.verification_commands(root)
+
+    assert elem(mounted_proof, 1) == [
+             "test",
+             "test/release/ops_dependency_boundary_test.exs",
+             "--include",
+             "integration",
+             "--warnings-as-errors"
+           ]
+
+    assert elem(mounted_proof, 2) == root
+    assert elem(hex_bootstrap, 1) == ["local.hex", "--force"]
+    assert elem(hex_bootstrap, 2) == Path.join(root, "scrypath_ops")
+    assert elem(rebar_bootstrap, 1) == ["local.rebar", "--force"]
+    assert elem(rebar_bootstrap, 2) == Path.join(root, "scrypath_ops")
+    assert elem(deps_get, 1) == ["deps.get"]
+    assert elem(deps_get, 2) == Path.join(root, "scrypath_ops")
+    assert elem(direct_suite, 1) == ["test"]
+    assert elem(direct_suite, 2) == Path.join(root, "scrypath_ops")
   end
 
   defp recording_task_runner do

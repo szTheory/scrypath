@@ -25,6 +25,8 @@ When you submit evidence, include either the exact Hex package version or the ex
 
 ### Verification command family
 
+These verification commands run from a source checkout of the Scrypath repository; they are not part of the Hex package.
+
 We use two commands to verify our contracts and runtime posture:
 
 - `mix verify.adopter`: The fast, auth-free, service-free path. It verifies support and readiness contracts.

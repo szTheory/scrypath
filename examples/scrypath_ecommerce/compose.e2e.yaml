@@ -16,11 +16,22 @@ services:
     environment:
       CI: "1"
       E2E_SCOPE: ${E2E_SCOPE:-focused}
+      E2E_RUN_ID: ${E2E_RUN_ID:-local-${E2E_SCOPE:-focused}}
+      E2E_ARTIFACT_DIR: ${E2E_CONTAINER_ARTIFACT_DIR:-/tmp/${E2E_RUN_ID:-local-${E2E_SCOPE:-focused}}}
+      E2E_JOB_STARTED_AT: ${E2E_JOB_STARTED_AT:-unknown}
+      E2E_DEADLINE_EPOCH: ${E2E_DEADLINE_EPOCH:-0}
+      E2E_FINALIZATION_MARGIN_SECONDS: ${E2E_FINALIZATION_MARGIN_SECONDS:-300}
+      E2E_SOURCE_MODE: ${E2E_SOURCE_MODE:-local}
+      E2E_EVENT_NAME: ${E2E_EVENT_NAME:-local}
+      E2E_GIT_REF: ${E2E_GIT_REF:-local}
+      E2E_EVENT_SHA: ${E2E_EVENT_SHA:-unknown}
+      E2E_WORKFLOW_RUN_ID: ${E2E_WORKFLOW_RUN_ID:-local}
+      E2E_WORKFLOW_RUN_ATTEMPT: ${E2E_WORKFLOW_RUN_ATTEMPT:-1}
+      E2E_JOB_NAME: ${E2E_JOB_NAME:-local-ecommerce-e2e}
+      E2E_JOB_CONCLUSION: ${E2E_JOB_CONCLUSION:-success}
+      E2E_SOURCE_FINGERPRINT: ${E2E_SOURCE_FINGERPRINT:-}
       SCRYPATH_SOURCE_SHA: ${SCRYPATH_SOURCE_SHA:-unknown}
       PLAYWRIGHT_BASE_URL: http://web:4002
-      OPS_UI_LLM_JUDGE: ${OPS_UI_LLM_JUDGE:-0}
-      OPS_UI_LLM_JUDGE_REQUIRED: ${OPS_UI_LLM_JUDGE_REQUIRED:-0}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     depends_on:
       web:
         condition: service_healthy

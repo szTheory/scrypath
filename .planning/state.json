@@ -1,33 +1,33 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.44 \u2014 Sync correctness",
+  "milestone": "v1.45 — Foundation and CI",
   "phases": [
     {
-      "number": "178",
-      "name": "Loader-routed backfill and full-key paging",
+      "number": "182",
+      "name": "Reliable full browser verification and CI caches",
       "status": "complete"
     },
     {
-      "number": "179",
-      "name": "Bounded id lists and related-sync parity",
+      "number": "183",
+      "name": "Maintainer tooling outside the Hex package",
       "status": "complete"
     },
     {
-      "number": "180",
-      "name": "Oban worker telemetry",
+      "number": "184",
+      "name": "Explicit and lean dependency graphs",
       "status": "complete"
     },
     {
-      "number": "181",
-      "name": "Schema hook contract and no-Oban build",
-      "status": "complete"
+      "number": "185",
+      "name": "Executable UI quality foundations",
+      "status": "pending"
     }
   ],
   "next": {
-    "command": "$gsd-new-milestone",
-    "label": "Start the next milestone",
-    "reason": "v1.44 archived locally; no phase active; fresh v1.45 scope and requirements next"
+    "command": "$gsd-progress --next",
+    "label": "Advance to the next step (plan phase 185)",
+    "reason": "Phase 4 of 4 — needs a plan"
   },
-  "updated_at": "2026-10-26T19:52:11.084Z"
+  "updated_at": "2026-10-31T01:35:36.967Z"
 }
