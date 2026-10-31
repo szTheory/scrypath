@@ -453,6 +453,34 @@ test("storefront DOM-state proof requires the actual observed theme attributes",
   assert.ok(preservation.domStateErrors(sidecar, capture, "viewport", "storefront theme proof").some((error) => /theme state does not match/.test(error)));
 });
 
+test("initial viewport sample body text must match the verified copy artifact", () => {
+  fs.mkdirSync(preservation.artifactRoot, { recursive: true });
+  const directory = fs.mkdtempSync(path.join(preservation.artifactRoot, "viewport-copy-binding-test-"));
+  const manifest = validManifest();
+  try {
+    writeCompleteArtifactSet(directory, manifest);
+    for (const capture of manifest.captures) for (const kind of ["full", "hover", "focus", "navigation"]) {
+      const proof = capture.stability[kind];
+      if (!proof) continue;
+      for (const sample of proof.samples) {
+        const file = path.join(directory, sample.state_path);
+        mutateSidecarText(file, `legitimate ${kind} interaction state`);
+        sample.state_sha256 = artifactDigest(file);
+      }
+    }
+    assert.deepEqual(preservation.artifactErrors(manifest, directory), [], "full-page and interaction captures may contain state-specific text");
+    const capture = manifest.captures[0];
+    for (const sample of capture.stability.viewport.samples) {
+      const file = path.join(directory, sample.state_path);
+      mutateSidecarText(file, "settled content that differs from the entry screenshot text");
+      sample.state_sha256 = artifactDigest(file);
+    }
+    assert.ok(preservation.artifactErrors(manifest, directory).some((error) => /initial viewport body text differs from copy evidence/i.test(error)));
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test("stability proof verifies every sample, sidecar, selected PNG, and finite artifact bound", () => {
   fs.mkdirSync(preservation.artifactRoot, { recursive: true });
   const directory = fs.mkdtempSync(path.join(preservation.artifactRoot, "stability-proof-test-"));

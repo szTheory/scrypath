@@ -254,10 +254,13 @@ export function captureUiStateInPage(target) {
   const doc = document.documentElement;
   const active = document.activeElement instanceof Element ? document.activeElement : null;
   const focusStyle = active ? getComputedStyle(active) : null;
-  const hoverNodes = [...document.querySelectorAll(":hover")].filter((node) => node !== doc && node !== document.body);
-  const controls = [...document.querySelectorAll("a,button,input,select,textarea,[role='button'],[role='link'],[role='checkbox'],[role='radio'],[role='option'],[role='tab'],[role='menuitem']")]
-    .filter(visible)
-    .map((node) => {
+  const hovered = new Set(document.querySelectorAll(":hover"));
+  const controlNodes = [...document.querySelectorAll("a,button,input,select,textarea,[role='button'],[role='link'],[role='checkbox'],[role='radio'],[role='option'],[role='tab'],[role='menuitem']")].filter((node) => {
+    const bounds = rect(node);
+    return visible(node) && bounds.width > 0 && bounds.height > 0;
+  });
+  const hoverNodes = controlNodes.filter((node) => hovered.has(node));
+  const controls = controlNodes.map((node) => {
       const selectedAttribute = node.getAttribute("data-theme-selected") ?? node.getAttribute("aria-selected");
       const selected = boolAttribute(selectedAttribute) ?? (node.tagName === "OPTION" ? node.selected === true : null);
       const checked = (node.type === "checkbox" || node.type === "radio") ? node.checked === true : node.getAttribute("aria-checked");
@@ -331,19 +334,43 @@ async function waitForTwoFrames(page, timeoutMs) {
   return withTimeout(page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))), timeoutMs, "Capture frame settlement");
 }
 
+export async function prepareCaptureStateInPage() {
+  const finiteActiveAnimations = () => document.getAnimations().filter((animation) => {
+    const timing = animation.effect?.getComputedTiming?.();
+    const active = animation.pending === true || animation.playState === "pending" || animation.playState === "running";
+    return active && Number.isFinite(timing?.endTime);
+  });
+  const settleFrames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const maxPasses = 12;
+
+  for (let pass = 0; pass < maxPasses; pass += 1) {
+    const active = finiteActiveAnimations();
+    if (active.length) await Promise.all(active.map((animation) => animation.finished));
+    await document.fonts.ready;
+    await settleFrames();
+    if (document.fonts.status !== "loading" && finiteActiveAnimations().length === 0) return;
+  }
+  throw new Error("Entry-state preparation did not reach a stationary font and finite-animation state.");
+}
+
+async function preparePageCaptureState(page, timeoutMs) {
+  return page.evaluate(prepareCaptureStateInPage, timeoutMs);
+}
+
 export async function captureStableImage({
   page,
   id,
   kind,
   captureImage,
   saveSample,
+  prepareState = preparePageCaptureState,
   readState = readPageCaptureState,
   waitForFrames = waitForTwoFrames,
   now = () => performance.now(),
   maxSamples = STABLE_CAPTURE_MAX_SAMPLES,
   maxElapsedMs = STABLE_CAPTURE_MAX_ELAPSED_MS
 }) {
-  if (!page || typeof captureImage !== "function" || typeof saveSample !== "function" || typeof id !== "string" || !/^[a-z0-9-]+$/i.test(id) || typeof kind !== "string") throw new TypeError("Stable capture requires a page, safe id, kind, image callback, and sample saver.");
+  if (!page || typeof captureImage !== "function" || typeof saveSample !== "function" || typeof prepareState !== "function" || typeof id !== "string" || !/^[a-z0-9-]+$/i.test(id) || typeof kind !== "string") throw new TypeError("Stable capture requires a page, safe id, kind, image callback, sample saver, and state preparer.");
   if (!Number.isSafeInteger(maxSamples) || maxSamples < 2 || maxSamples > STABLE_CAPTURE_MAX_SAMPLES || !Number.isFinite(maxElapsedMs) || maxElapsedMs <= 0 || maxElapsedMs > STABLE_CAPTURE_MAX_ELAPSED_MS) throw new TypeError("Stable capture bounds must allow at least two samples and stay within the configured sample and time caps.");
   const kindName = kind.replace(/\.png$/i, "");
   if (!/^[a-z0-9-]+$/i.test(kindName)) throw new TypeError("Stable capture kind must be a safe image name.");
@@ -399,6 +426,10 @@ export async function captureStableImage({
   };
 
   try {
+    const prepareTimeout = remaining("Capture entry-state preparation");
+    await withTimeout(prepareState(page, prepareTimeout), prepareTimeout, "Capture entry-state preparation");
+    remaining("Capture entry-state preparation");
+
     for (let index = 0; index < maxSamples; index += 1) {
       const frameTimeout = remaining("Capture frame settlement");
       await withTimeout(waitForFrames(page, frameTimeout), frameTimeout, "Capture frame settlement");

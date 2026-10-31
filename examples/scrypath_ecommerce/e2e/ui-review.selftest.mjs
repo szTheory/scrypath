@@ -87,6 +87,66 @@ function stableStateFixture(bodyText = "Help entry", { hover = true, focus = tru
   };
 }
 
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+function installReadinessDocument(animation, events) {
+  const originals = new Map();
+  for (const key of ["document", "requestAnimationFrame"]) originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
+  const animationObserved = deferred();
+  const fontsObserved = deferred();
+  const fontsReady = deferred();
+  let frameSignal = deferred();
+  const frames = [];
+  const document = {
+    getAnimations: () => {
+      events.push("scan-animations");
+      animationObserved.resolve();
+      return animation.playState === "finished" ? [] : [animation];
+    },
+    fonts: {
+      status: "loaded",
+      get ready() {
+        events.push("await-fonts");
+        fontsObserved.resolve();
+        return fontsReady.promise;
+      }
+    }
+  };
+  Object.defineProperty(globalThis, "document", { configurable: true, writable: true, value: document });
+  Object.defineProperty(globalThis, "requestAnimationFrame", {
+    configurable: true,
+    writable: true,
+    value: callback => {
+      events.push("request-frame");
+      frames.push(callback);
+      frameSignal.resolve();
+    }
+  });
+  return {
+    animationObserved: animationObserved.promise,
+    fontsObserved: fontsObserved.promise,
+    resolveFonts: () => fontsReady.resolve(),
+    async runNextFrame() {
+      while (!frames.length) await frameSignal.promise;
+      const callback = frames.shift();
+      frameSignal = deferred();
+      events.push("run-frame");
+      callback(0);
+    },
+    restore() {
+      for (const [key, descriptor] of originals) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else delete globalThis[key];
+      }
+    }
+  };
+}
+
 function installFakeDOM({ surface = "help", theme = "system-dark", focusVisible = true, activeBody = false, focusStyle = { style: "solid", width: "2px", color: "rgb(0, 0, 0)", opacity: "1" } } = {}) {
   const originals = new Map();
   const remember = (key) => originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key));
@@ -159,7 +219,7 @@ function installFakeDOM({ surface = "help", theme = "system-dark", focusVisible 
     hasFocus: () => true,
     getElementById: () => null,
     querySelector: (selector) => selectorMap[selector] || null,
-    querySelectorAll: (selector) => selector === ":hover" ? [root, body, hoverTarget]
+    querySelectorAll: (selector) => selector === ":hover" ? [root, body, element("div", { text: body.innerText, rect: { x: 0, y: 0, width: 0, height: 0 } }), main, hoverTarget]
       : selector.startsWith("a,button,input,select,textarea,") ? controls : [],
   };
   const properties = {
@@ -206,6 +266,7 @@ test("the in-page DOM state producer emits values accepted by the capture valida
   const restoreOps = installFakeDOM({ surface: "help", theme: "system-dark" });
   try {
     const ops = captureUiStateInPage();
+    assert.equal(ops.hover.length, 1, "hover evidence describes the actual visible control, excluding non-painting wrappers and layout ancestors");
     const opsSidecar = wrap(ops);
     const interactionTarget = captureUiStateInPage(restoreOps.target);
     const opsCapture = { surface: "help", theme: "system-dark", viewport: { width: 1440, height: 900 }, interaction_target: interactionTarget };
@@ -405,6 +466,7 @@ test("stable entry capture keeps all samples and selects the final consecutive e
   const interactionTarget = stableStateFixture().focus.element;
   const result = await captureStableImage({
     page: {}, id: "help--dark--1280", kind: "viewport.png",
+    prepareState: async () => {},
     captureImage: async ({ timeout }) => {
       assert.ok(Number.isFinite(timeout) && timeout > 0 && timeout <= 10_000);
       return outputs.shift();
@@ -428,11 +490,131 @@ test("stable entry capture keeps all samples and selects the final consecutive e
   }
 });
 
+test("default entry preparation waits for active animation, fonts, and two real animation frames", async () => {
+  const events = [];
+  const animationFinished = deferred();
+  let isAnimationFinished = false;
+  const animation = {
+    get playState() { return isAnimationFinished ? "finished" : "running"; },
+    pending: false,
+    effect: { getComputedTiming: () => ({ endTime: 100 }) },
+    finished: animationFinished.promise
+  };
+  const readiness = installReadinessDocument(animation, events);
+  let reads = 0;
+  const outcome = captureStableImage({
+    page: { evaluate: (fn, argument) => fn(argument) },
+    id: "entry-barrier", kind: "viewport",
+    captureImage: async () => Buffer.from("same"),
+    saveSample: async () => {},
+    readState: async () => { events.push("read-state"); reads += 1; return stableStateFixture(); },
+    waitForFrames: async () => {}
+  }).then(value => ({ value }), error => ({ error }));
+  const surfaceOutcome = outcome.then(({ error }) => {
+    if (error) throw error;
+    throw new Error("Capture completed before the readiness event being awaited.");
+  });
+  try {
+    await Promise.race([readiness.animationObserved, surfaceOutcome]);
+    assert.equal(reads, 0, "the state anchor must wait for the finite animation");
+    isAnimationFinished = true;
+    animationFinished.resolve();
+    await Promise.race([readiness.fontsObserved, surfaceOutcome]);
+    assert.equal(reads, 0, "the state anchor must wait for document.fonts.ready");
+    readiness.resolveFonts();
+    await Promise.race([readiness.runNextFrame(), surfaceOutcome]);
+    await Promise.race([readiness.runNextFrame(), surfaceOutcome]);
+    const result = await outcome;
+    if (result.error) throw result.error;
+    assert.equal(result.value.stability.selected, 1);
+    assert.ok(events.indexOf("await-fonts") < events.indexOf("read-state"));
+    assert.equal(events.filter(event => event === "run-frame").length, 2);
+    assert.ok(events.lastIndexOf("scan-animations") < events.indexOf("read-state"));
+  } finally {
+    isAnimationFinished = true;
+    animationFinished.resolve();
+    readiness.resolveFonts();
+    readiness.restore();
+  }
+});
+
+test("cancelled finite entry animation fails before the first state anchor", async () => {
+  const events = [];
+  const animationFinished = deferred();
+  const animation = {
+    playState: "running", pending: true,
+    effect: { getComputedTiming: () => ({ endTime: 100 }) },
+    finished: animationFinished.promise
+  };
+  const readiness = installReadinessDocument(animation, events);
+  let reads = 0;
+  const cancelError = new Error("entry animation was cancelled");
+  const outcome = captureStableImage({
+    page: { evaluate: (fn, argument) => fn(argument) },
+    id: "entry-cancelled", kind: "viewport",
+    captureImage: async () => Buffer.from("same"), saveSample: async () => {},
+    readState: async () => { reads += 1; return stableStateFixture(); },
+    waitForFrames: async () => {}
+  });
+  try {
+    await readiness.animationObserved;
+    animationFinished.reject(cancelError);
+    await assert.rejects(outcome, error => error === cancelError);
+    assert.equal(reads, 0);
+  } finally {
+    readiness.restore();
+  }
+});
+
+test("stable entry capture settles readiness before its first state anchor", async () => {
+  const events = [];
+  let settled = false;
+  let releaseAnimation;
+  let announcePreparation;
+  let announceFirstRead;
+  const animationFinished = new Promise(resolve => { releaseAnimation = resolve; });
+  const preparationStarted = new Promise(resolve => { announcePreparation = resolve; });
+  const firstReadStarted = new Promise(resolve => { announceFirstRead = resolve; });
+  const outcome = captureStableImage({
+    page: {}, id: "entry-ready", kind: "viewport",
+    prepareState: async (_page, timeout) => {
+      assert.ok(Number.isFinite(timeout) && timeout > 0 && timeout <= 10_000);
+      events.push("prepare");
+      announcePreparation();
+      await animationFinished;
+      settled = true;
+      events.push("settled");
+    },
+    captureImage: async () => Buffer.from("same"),
+    saveSample: async () => {},
+    readState: async () => {
+      events.push("read");
+      announceFirstRead();
+      assert.equal(settled, true, "the first state anchor must follow natural animation completion");
+      return { schema: "scrypath.ui-capture-state.v1", body_text: "entry" };
+    },
+    waitForFrames: async () => {}
+  }).then(value => ({ value }), error => ({ error }));
+
+  const first = await Promise.race([
+    preparationStarted.then(() => "prepare"),
+    firstReadStarted.then(() => "read")
+  ]);
+  assert.equal(first, "prepare", "entry readiness must begin before the first state read");
+  assert.deepEqual(events, ["prepare"]);
+  releaseAnimation();
+  const result = await outcome;
+  if (result.error) throw result.error;
+  assert.deepEqual(events.slice(0, 2), ["prepare", "settled"]);
+  assert.equal(result.value.stability.selected, 1);
+});
+
 test("stable capture rejects persistent image instability after the configured sample bound", async () => {
   const outputs = ["A", "B", "A", "B", "A", "B"].map(value => Buffer.from(value));
   const saved = [];
   await assert.rejects(captureStableImage({
     page: {}, id: "unstable", kind: "focus",
+    prepareState: async () => {},
     captureImage: async () => outputs.shift(),
     saveSample: async sample => { saved.push(sample); },
     readState: async () => stableStateFixture(),
@@ -452,6 +634,7 @@ test("stable capture retains and rejects a DOM change around the screenshot", as
   let reads = 0;
   await assert.rejects(captureStableImage({
     page: {}, id: "changing", kind: "hover",
+    prepareState: async () => {},
     captureImage: async () => Buffer.from("sample"),
     saveSample: async sample => { saved.push(sample); },
     readState: async () => ++reads === 1 ? stableStateFixture() : stableStateFixture("Updated help text"),
@@ -471,6 +654,7 @@ test("stable capture preserves screenshot and sample IO errors while retaining e
   const failedArtifacts = [];
   await assert.rejects(captureStableImage({
     page: {}, id: "screenshot-failure", kind: "viewport",
+    prepareState: async () => {},
     captureImage: async () => { throw screenshotError; },
     saveSample: async sample => { failedArtifacts.push(sample); },
     readState: async () => stableStateFixture(),
@@ -489,6 +673,7 @@ test("stable capture preserves screenshot and sample IO errors while retaining e
   const ioError = new Error("exclusive evidence write failed");
   await assert.rejects(captureStableImage({
     page: {}, id: "io-failure", kind: "viewport",
+    prepareState: async () => {},
     captureImage: async () => Buffer.from("image"),
     saveSample: async () => { throw ioError; },
     readState: async () => stableStateFixture(),
@@ -497,7 +682,7 @@ test("stable capture preserves screenshot and sample IO errors while retaining e
 });
 
 test("stable capture enforces hard sample and elapsed-time caps", async () => {
-  const options = { page: {}, id: "bounded", kind: "viewport", captureImage: async () => Buffer.from("image"), saveSample: async () => {}, readState: async () => stableStateFixture(), waitForFrames: async () => {} };
+  const options = { page: {}, id: "bounded", kind: "viewport", captureImage: async () => Buffer.from("image"), saveSample: async () => {}, prepareState: async () => {}, readState: async () => stableStateFixture(), waitForFrames: async () => {} };
   await assert.rejects(captureStableImage({ ...options, maxSamples: 7 }), /configured sample and time caps/);
   await assert.rejects(captureStableImage({ ...options, maxElapsedMs: 10_001 }), /configured sample and time caps/);
   await assert.rejects(captureStableImage({

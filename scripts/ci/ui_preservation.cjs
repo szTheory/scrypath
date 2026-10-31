@@ -1016,6 +1016,7 @@ function artifactErrors(manifest, directory) {
     const bytesByPath = new Map();
     const stateBySample = new Map();
     const seenPaths = new Set();
+    let verifiedCopyText = null;
     for (const artifact of captureArtifactEntries(capture)) {
       try {
         if (typeof artifact.path !== "string" || path.isAbsolute(artifact.path) || path.basename(artifact.path) !== artifact.path) throw new Error("artifact path must be a file directly inside its capture directory");
@@ -1047,9 +1048,10 @@ function artifactErrors(manifest, directory) {
           const canonical = expectedCaptureMetadata().get(capture.id);
           const expectedPreference = capture.theme === "system-dark" ? "system" : capture.theme;
           if (canonicalJson(copy.clock) !== canonicalJson(capture.clock) || copy.observed_at !== capture.clock?.utc) throw new Error(`copy observation clock does not match ${capture.id}`);
-          if (copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
+          if (typeof copy.text !== "string" || !copy.text.trim() || copy.deployment !== canonical?.deployment || copy.surface !== canonical?.surface || copy.route !== canonical?.route || copy.viewport_width !== canonical?.width || !Number.isFinite(copy.page_width) || copy.page_width < 1 || copy.theme?.preference !== expectedPreference || copy.theme?.effective !== (capture.theme === "light" ? "light" : "dark")) {
             throw new Error(`copy metadata does not match ${capture.id}`);
           }
+          verifiedCopyText = copy.text;
         } else if (artifact.type === "sample-state") {
           const state = JSON.parse(bytes.toString("utf8"));
           const stateErrors = domStateErrors(state, capture, artifact.kind, `${capture.id} ${artifact.kind} sample ${artifact.index}`);
@@ -1076,6 +1078,8 @@ function artifactErrors(manifest, directory) {
       const selected = bytesByPath.get(capture.files?.[`${kind}.png`]?.path);
       if (!selected || !selected.equals(sampleImages.at(-1))) errors.push(`Selected screenshot does not match the final stability sample for ${capture.id} (${kind}).`);
     }
+    const initialViewportState = stateBySample.get("viewport:0");
+    if (verifiedCopyText !== null && initialViewportState && initialViewportState.body_text !== verifiedCopyText) errors.push(`Initial viewport body text differs from copy evidence for ${capture.id}.`);
   }
   try {
     for (const entry of fs.readdirSync(root.absolute)) if (!expectedDirectoryEntries.has(entry)) errors.push(`Unmatched file exists in capture directory: ${entry}.`);
