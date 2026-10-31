@@ -176,7 +176,22 @@ export function reviewErrors(review, manifest, digest, currentSource) {
 }
 
 export async function captureViewportImage(page, viewport) {
-  return page.screenshot({ animations: "disabled" });
+  if (!Number.isSafeInteger(viewport?.width) || !Number.isSafeInteger(viewport?.height) || viewport.width <= 0 || viewport.height <= 0 || viewport.width * viewport.height > 24_000_000) throw new Error("Viewport capture dimensions must be positive bounded integers.");
+  const geometry = () => page.evaluate(() => ({
+    width: window.innerWidth, height: window.innerHeight,
+    dpr: window.devicePixelRatio, scale: window.visualViewport?.scale ?? 1,
+    scrollX: window.scrollX, scrollY: window.scrollY,
+    documentWidth: document.documentElement.scrollWidth,
+    documentHeight: document.documentElement.scrollHeight
+  }));
+  const before = await geometry();
+  if (before.width !== viewport.width || before.height !== viewport.height || before.dpr !== 1 || before.scale !== 1 || before.scrollX !== 0 || before.scrollY !== 0) throw new Error("Viewport capture requires the exact unzoomed viewport at scroll origin.");
+  // Keep Playwright's animation/caret preparation, using Chromium's document
+  // capture route with an exact viewport clip. No viewport resize or pixel edit.
+  const image = await page.screenshot({ animations: "disabled", fullPage: true, clip: { x: 0, y: 0, width: viewport.width, height: viewport.height } });
+  const after = await geometry();
+  if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("Viewport capture changed the actual viewport or document layout.");
+  return image;
 }
 
 async function captureSurface(browser, surface, theme, viewport, output, options = {}) {
