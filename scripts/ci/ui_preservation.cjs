@@ -887,7 +887,7 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
   const buildEnv = { ...gitEnvironment(process.env), E2E_PROJECT_NAME: project, E2E_SCOPE: "full", SCRYPATH_SOURCE_SHA: source.source_sha, E2E_SOURCE_FINGERPRINT: "" };
   const buildHelper = path.join(repositoryRoot, "scripts/ci/ecommerce_build.cjs");
   run("node", [buildHelper, "prepare", "--scope", "full", "--output", buildDir], { env: buildEnv, timeout: 120_000 });
-  run("docker", ["buildx", "bake", "--file", path.join(buildDir, "bake.json")], { env: buildEnv, timeout: 1_200_000 });
+  run("docker", ["buildx", "bake", "--file", path.join(buildDir, "bake.json")], { env: buildEnv, timeout: 1_800_000 });
   const handoff = path.join(buildDir, "image-handoff.json");
   run("node", [buildHelper, "verify-handoff", "--manifest", handoff], { env: { ...buildEnv, E2E_IMAGE_OVERRIDE: path.join(buildDir, "image-override.json") }, timeout: 120_000 });
 
