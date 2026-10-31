@@ -5,11 +5,11 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 Wave 3 review fixes active; Plan 03 root-verified, Plan 05 corrective worktree running; UI edits held; retained-preview stop preserved.
-last_updated: "2026-10-31T18:11:38.369884+00:00"
+stopped_at: Phase 185 Plan 05 stationary capture repair active; four plans integrated; UI edits held; retained-preview stop preserved.
+last_updated: "2026-10-31T21:31:51.055214+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Token and clock source root-verified; capture fixer build and parent fixed-time harness verification active
-state_head: 3b618c254192a4929a151a21ddfe3646b464d7eb
+last_activity_desc: Failed full-raster calibration archived and exact-owned resources absent; bounded stationary capture repair active
+state_head: 90a75d3813b87de6356d23e357c6df1e0ca48ab9
 progress:
   total_phases: 4
   completed_phases: 3
@@ -31,7 +31,7 @@ Progress: [████████░░] 84%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Continue capture review repairs in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-05-reviewfix-4hq8abiz`; GSD worker metadata is `/private/tmp/phase185-05-reviewfix-4hq8abiz/metadata.json`. Plan 03 is repaired, scoped-reviewed and private-canonical-verified on code `6f7ebe9d`, with tracking at `64979457`; it and original Plan05 ancestry are now integrated via the original wave manifest and both original worktrees removed. Root canonical repository contracts passed 145/0 on `3b618c25`; pure clock tests passed 5/0. Corrected capture acceptance remains pending. The separate clock repair is integrated (source `7718e236`, merge `c8f4d2d6`) and its worktree removed. Parent helper-glue work is active in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s`, while the corrective executor continues independently. Do not redispatch either plan. No UI CSS/controller/template/generator edits may start until capture tooling and same-state before evidence meet the contract. Original default entry captures were archived byte-for-byte; the original disposable stack was ownership-verified and torn down. The initial unseeded diagnosis was retracted after tracing existing incident seeding. Real blockers are session/provenance integrity, matrix metadata binding, raw dump nondeterminism, settings omission, candidate reseeding/failure cleanup and repeatability. The retained preview remains stopped and untouched. No user action is needed while these authorized repairs run.
+Next: Finish bounded stationary capture sampling and independent artifact validation in the parent-owned checkout `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s` (GSD manifest `/private/tmp/phase185-glue-u80ewc0s/worktrees.json`). The earlier corrective executor ended normally, its terminal handoff was integrated, and its worktree removed; do not redispatch it. Parent source `53fa5228` completed a same-source full-raster calibration: all visible body text and 545 of 546 images matched, but one Help focus image shifted content. The failed pair remains unchanged in the external `failed-parent-focus-frame-calibration-4eb3c142c366c3e8` archive. Exact owned teardown succeeded and independent resource inventories were empty. The replacement sampler and validator must pass focused tests, source review and a fresh full calibration with zero differences plus repeated comparison and exact teardown. Then the same committed source needs a new actual pre-change capture and factual inspection before Plans 06/07/08 can start. No UI CSS/controller/template/generator edit has started. The retained preview stop persists and no user action is needed while authorized repairs continue. Latest details are in the phase `.continue-here.md`.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.

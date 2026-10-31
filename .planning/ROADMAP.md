@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; three plans integrated)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; four plans integrated)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -17,7 +17,7 @@
 
 ## Current Posture
 
-**Phases 182–184 are goal-verified; Phase 185 has three integrated plans.** Plan 01 enforces contrast through the required command; Plan 02 enforces shrink-only source literals and trusted history; Plan 04 retires the paid/mock judge. The combined root checks passed. Wave 3 token drift and disposable pre-change evidence are next.
+**Phases 182–184 are goal-verified; Phase 185 has four integrated plans.** Plan 01 enforces contrast through the required command; Plan 02 enforces shrink-only source literals and trusted history; Plan 04 retires the paid/mock judge. Plan 03 adds the source-verified typed token mirror. The combined root repository checks passed. Plan 05 capture repair and qualified disposable pre-change evidence remain in progress before UI edits.
 
 The maintainer approved and merged [data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124) before source cleanup. The shrink-only contract requires an exact first inventory, which would be lost if introduction and cleanup landed in a single squash. The [delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) contains the executable reproductions, current verification and resume pointers. Actual merged inventory parity and root integration were verified; no phase completion is claimed.
 
@@ -203,7 +203,7 @@ Plans:
 - [x] 185-04-PLAN.md — Retire paid/mock judge entrypoints and reconcile current/historical evidence (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 185-03-PLAN.md — Whole-document typed DTCG mirror and canonical CSS drift proof (wave 3)
+- [x] 185-03-PLAN.md — Whole-document typed DTCG mirror and canonical CSS drift proof (wave 3)
 - [ ] 185-05-PLAN.md — Guarded disposable capture support and source-pinned pre-change evidence (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
