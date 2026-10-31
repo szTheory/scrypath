@@ -199,7 +199,7 @@ defmodule Mix.Tasks.UiTokensContractTest do
     css = File.read!(Path.join(@root, @css_path))
     [dark] = Regex.run(~r/@plugin\s+"[^\"]*daisyui-theme"\s*\{\s*name:\s*"dark";[^{}]*\}/s, css)
 
-    for replacement <- ["/*\n#{dark}\n*/", ".caption { content: '#{dark}'; }"] do
+    for replacement <- ["/*\n#{dark}\n*/", ".caption { content: '#{dark}'; }", "junk #{dark}", "\\#{dark}", "junk\\; #{dark}"] do
       File.write!(css_file, String.replace(css, dark, replacement, global: false))
 
       assert_raise Mix.Error, ~r/exactly two.*theme blocks/, fn ->
@@ -253,6 +253,20 @@ defmodule Mix.Tasks.UiTokensContractTest do
     assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
     bad = put_in(inset, ["shadow", "sm", "light", "$value", Access.at(0), "inset"], "yes")
     assert_rejected!(bad, json_file, css_file, ~r/inset must be a boolean/)
+  end
+
+  @tag :token_review
+  test "review rejects negative shadow blur while retaining signed offsets and spread" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @css_path), css_file)
+    signed = read_tokens!(@root)
+      |> put_in(["shadow", "sm", "light", "$value", Access.at(0), "spread", "value"], -1)
+      |> put_in(["shadow", "sm", "light", "$value", Access.at(0), "offsetX", "value"], -2)
+    File.write!(json_file, Jason.encode!(signed))
+    assert Mix.Tasks.Verify.UiTokens.check!(json_file, css_file) == :ok
+    bad = put_in(signed, ["shadow", "sm", "light", "$value", Access.at(0), "blur", "value"], -1)
+    assert_rejected!(bad, json_file, css_file, ~r/shadow blur must be non-negative/)
   end
 
   @tag :token_review
