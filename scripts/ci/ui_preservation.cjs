@@ -1,14 +1,15 @@
 "use strict";
 
 const crypto = require("node:crypto");
-const { execFileSync, spawnSync } = require("node:child_process");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const exampleRoot = path.join(repositoryRoot, "examples/scrypath_ecommerce");
-const artifactRoot = path.join(exampleRoot, "ui-review-artifacts", "phase185");
+const sessionRoot = "/private/tmp/scrypath-phase185-execution";
+const artifactRoot = path.join(sessionRoot, "ui-review-artifacts", "phase185");
 const previewPath = path.join(repositoryRoot, ".planning/UI-PREVIEW.json");
 const revisionLabel = "org.opencontainers.image.revision";
 const fingerprintLabel = "org.opencontainers.image.source-fingerprint";
@@ -40,20 +41,44 @@ const canonicalize = (value) => Array.isArray(value)
     ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]))
     : value;
 const canonicalJson = (value) => JSON.stringify(canonicalize(value));
+function gitEnvironment(environment = process.env) {
+  const clean = Object.fromEntries(Object.entries(environment).filter(([key]) => !/^GIT_/i.test(key)));
+  clean.GIT_CONFIG_NOSYSTEM = "1";
+  clean.GIT_CONFIG_GLOBAL = process.platform === "win32" ? "NUL" : "/dev/null";
+  return clean;
+}
+
+function isCanonicalOrigin(origin) {
+  return new Set([
+    "https://github.com/szTheory/scrypath",
+    "https://github.com/szTheory/scrypath.git",
+    "ssh://git@github.com/szTheory/scrypath",
+    "ssh://git@github.com/szTheory/scrypath.git",
+    "git@github.com:szTheory/scrypath",
+    "git@github.com:szTheory/scrypath.git",
+  ]).has(String(origin).trim());
+}
+
 function run(command, args, options = {}) {
+  const outputEncoding = options.encoding === "buffer" ? null : (options.encoding || "utf8");
   const result = spawnSync(command, args, {
     cwd: options.cwd || repositoryRoot,
-    env: options.env || process.env,
-    encoding: "utf8",
+    env: command === "git" ? gitEnvironment(options.env || process.env) : (options.env || process.env),
+    encoding: outputEncoding,
     timeout: options.timeout ?? 30_000,
-    maxBuffer: 32 * 1024 * 1024,
+    maxBuffer: options.maxBuffer ?? 32 * 1024 * 1024,
   });
   if (result.error) throw new Error(`${command} failed: ${result.error.message}`);
   if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout || "").trim();
+    const rawDetail = result.stderr || result.stdout || "";
+    const detail = (Buffer.isBuffer(rawDetail) ? rawDetail.toString("utf8") : rawDetail).trim();
     throw new Error(`${command} ${args.join(" ")} exited ${result.status}${detail ? `: ${detail}` : ""}`);
   }
-  return result.stdout.trimEnd();
+  return options.encoding === "buffer" ? result.stdout : result.stdout.trimEnd();
+}
+
+function git(args, options = {}) {
+  return run("git", args, options);
 }
 
 function writeJson(file, value) {
@@ -64,18 +89,22 @@ function writeJson(file, value) {
 }
 
 function readJson(file) {
+  const details = fs.lstatSync(file);
+  if (details.isSymbolicLink() || !details.isFile() || details.size <= 0 || details.size > 64 * 1024 * 1024) throw new Error(`Refusing unbounded or non-regular JSON input: ${file}`);
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function sourceIdentity(checkRemote = true) {
-  const dirty = run("git", ["status", "--porcelain", "--untracked-files=all"]);
+  const origin = git(["remote", "get-url", "origin"]);
+  if (!isCanonicalOrigin(origin)) throw new Error(`Refusing source identity from non-canonical origin: ${origin}`);
+  const dirty = git(["status", "--porcelain", "--untracked-files=all"]);
   if (dirty) throw new Error(`Disposable capture requires a clean committed source snapshot:\n${dirty}`);
-  const source_sha = run("git", ["rev-parse", "HEAD"]);
-  const tree_oid = run("git", ["rev-parse", "HEAD^{tree}"]);
-  const tree = execFileSync("git", ["ls-tree", "-r", "-z", "--full-tree", "HEAD"], { cwd: repositoryRoot, encoding: "buffer" });
-  const main_ref = run("git", ["rev-parse", "origin/main"]);
-  const main_included = run("git", ["merge-base", "origin/main", "HEAD"]) === main_ref;
-  const remote = checkRemote ? run("git", ["ls-remote", "--exit-code", "origin", "refs/heads/main"], { timeout: 15_000 }) : "";
+  const source_sha = git(["rev-parse", "HEAD"]);
+  const tree_oid = git(["rev-parse", `${source_sha}^{tree}`]);
+  const tree = git(["ls-tree", "-r", "-z", "--full-tree", source_sha], { encoding: "buffer", timeout: 60_000, maxBuffer: 128 * 1024 * 1024 });
+  const main_ref = git(["rev-parse", "refs/remotes/origin/main"]);
+  const main_included = git(["merge-base", "refs/remotes/origin/main", source_sha]) === main_ref;
+  const remote = checkRemote ? git(["ls-remote", "--exit-code", "origin", "refs/heads/main"], { timeout: 15_000, maxBuffer: 1024 * 1024 }) : "";
   const remote_main_ref = checkRemote ? remote.split(/\s+/)[0] : null;
   return {
     source_sha,
@@ -86,6 +115,14 @@ function sourceIdentity(checkRemote = true) {
     remote_main_ref,
     remote_main_current: checkRemote && remote_main_ref === main_ref,
   };
+}
+
+function ensureArtifactRoot() {
+  fs.mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
+  const info = fs.lstatSync(artifactRoot);
+  if (info.isSymbolicLink() || !info.isDirectory() || fs.realpathSync(artifactRoot) !== path.resolve(artifactRoot)) {
+    throw new Error(`Disposable evidence root is not a stable regular directory: ${artifactRoot}`);
+  }
 }
 
 function sourceChangeErrors(start, end) {
@@ -445,7 +482,7 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
   if (project === retained.project || ports.web === retained.port || ports.standalone === retained.port) throw new Error("Refusing retained project or port for disposable stack.");
   const buildDir = path.join(workDir, "build");
   fs.mkdirSync(buildDir, { recursive: true, mode: 0o700 });
-  const buildEnv = { ...process.env, E2E_PROJECT_NAME: project, E2E_SCOPE: "full", SCRYPATH_SOURCE_SHA: source.source_sha, E2E_SOURCE_FINGERPRINT: "" };
+  const buildEnv = { ...gitEnvironment(process.env), E2E_PROJECT_NAME: project, E2E_SCOPE: "full", SCRYPATH_SOURCE_SHA: source.source_sha, E2E_SOURCE_FINGERPRINT: "" };
   const buildHelper = path.join(repositoryRoot, "scripts/ci/ecommerce_build.cjs");
   run("node", [buildHelper, "prepare", "--scope", "full", "--output", buildDir], { env: buildEnv, timeout: 120_000 });
   run("docker", ["buildx", "bake", "--file", path.join(buildDir, "bake.json")], { env: buildEnv, timeout: 1_200_000 });
@@ -553,6 +590,7 @@ function stackDataIdentity(stack) {
 
 async function captureBefore(sessionPath) {
   if (fs.existsSync(sessionPath)) throw new Error(`Refusing to overwrite an existing disposable session: ${sessionPath}`);
+  ensureArtifactRoot();
   const source = sourceIdentity();
   const retained = verifyRetainedInventory();
   const sessionId = crypto.randomBytes(8).toString("hex");
@@ -745,12 +783,15 @@ if (require.main === module) main(process.argv.slice(2)).catch((error) => {
 });
 
 module.exports = {
+  artifactRoot,
   artifactErrors,
   collectPages,
   comparePng,
   disposableProvenanceErrors,
   expectedCaptureIds,
+  gitEnvironment,
   indexResults,
+  isCanonicalOrigin,
   matrixErrors,
   normalizePgDump,
   runWithTeardown,

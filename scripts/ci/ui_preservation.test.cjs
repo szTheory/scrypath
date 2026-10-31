@@ -62,7 +62,7 @@ test("canonical capture IDs bind route, width, and viewport metadata as one tupl
 });
 
 test("viewport PNG IHDR dimensions must match the ID-bound viewport", () => {
-  const directory = path.join(__dirname, "../../examples/scrypath_ecommerce/ui-review-artifacts/phase185/test-png-dimensions");
+  const directory = path.join(preservation.artifactRoot, "test-png-dimensions");
   const manifest = validManifest();
   const capture = manifest.captures[0];
   const png = PNG.sync.write(new PNG({ width: 390, height: 844 }));
@@ -197,4 +197,15 @@ test("teardown failures preserve the original capture failure", () => {
     assert.equal(error.cleanupError, cleanup);
     return true;
   });
+});
+
+test("Git authority drops inherited redirect variables and accepts only the canonical repository", () => {
+  assert.deepEqual(preservation.gitEnvironment({ PATH: "/usr/bin", GIT_DIR: "/tmp/forged.git", GIT_WORK_TREE: "/tmp/forged", GIT_INDEX_FILE: "/tmp/forged.index" }), { PATH: "/usr/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null" });
+  assert.equal(preservation.isCanonicalOrigin("https://github.com/szTheory/scrypath.git"), true);
+  assert.equal(preservation.isCanonicalOrigin("git@github.com:szTheory/scrypath.git"), true);
+  assert.equal(preservation.isCanonicalOrigin("https://example.com/szTheory/scrypath.git"), false);
+});
+
+test("new disposable evidence is rooted outside the implementation checkout", () => {
+  assert.equal(preservation.artifactRoot, "/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185");
 });
