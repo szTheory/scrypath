@@ -83,15 +83,187 @@ function git(args, options = {}) {
 
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, { mode: 0o600 });
+  const temporary = `${file}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
+  fs.writeFileSync(temporary, jsonBytes(value), { flag: "wx", mode: 0o600 });
   fs.renameSync(temporary, file);
 }
 
-function readJson(file) {
+function jsonBytes(value) {
+  return Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+function readJsonBytes(file, maxBytes = 64 * 1024 * 1024) {
   const details = fs.lstatSync(file);
-  if (details.isSymbolicLink() || !details.isFile() || details.size <= 0 || details.size > 64 * 1024 * 1024) throw new Error(`Refusing unbounded or non-regular JSON input: ${file}`);
-  return JSON.parse(fs.readFileSync(file, "utf8"));
+  if (details.isSymbolicLink() || !details.isFile() || details.size <= 0 || details.size > maxBytes) throw new Error(`Refusing unbounded or non-regular JSON input: ${file}`);
+  return fs.readFileSync(file);
+}
+
+function readJson(file) {
+  return JSON.parse(readJsonBytes(file).toString("utf8"));
+}
+
+function authorityPathFor(sessionPath) {
+  return path.join(path.dirname(path.resolve(sessionPath)), "ui-session.authority.json");
+}
+
+function resourcePlanFor(sessionPath, sessionId, project, ports) {
+  const root = path.dirname(path.resolve(sessionPath));
+  const buildDir = path.join(root, `build-${sessionId}`);
+  const candidateDir = path.join(root, `candidate-${sessionId}`);
+  const buildPaths = (directory) => ({
+    build_dir: directory,
+    bake: path.join(directory, "build", "bake.json"),
+    handoff: path.join(directory, "build", "image-handoff.json"),
+    image_override: path.join(directory, "build", "image-override.json"),
+    ownership_override: path.join(directory, "compose.override.yaml"),
+    resume_override: path.join(directory, "compose.resume.override.yaml"),
+  });
+  return {
+    project,
+    ports,
+    volumes: [`${project}-postgres`, `${project}-meili`],
+    volume_keys: { [`${project}-postgres`]: "postgres-data", [`${project}-meili`]: "meilisearch-data" },
+    work_dirs: { before: buildDir, candidate: candidateDir },
+    compose_paths: { before: buildPaths(buildDir), candidate: buildPaths(candidateDir) },
+    artifact_root: path.resolve(artifactRoot),
+    services: ["postgres", "meilisearch", "web", "standalone_ops", "browser"],
+    container_names: Object.fromEntries(["postgres", "meilisearch", "web", "standalone_ops", "browser"].map((service) => [service, `${project}-${service}-1`])),
+    network_name: `${project}_default`,
+    compose_base_files: [
+      path.join(exampleRoot, "compose.yaml"),
+      path.join(exampleRoot, "compose.e2e.yaml"),
+      path.join(exampleRoot, "compose.phase173.yaml"),
+    ],
+  };
+}
+
+function createSessionAuthority(sessionPath, session) {
+  if (!path.isAbsolute(sessionPath) || session.schema !== "scrypath.ui-session.v2" || !/^[a-f0-9]{16}$/.test(session.session_id || "") || session.project !== `scrypath-p185-${session.session_id}`) {
+    throw new Error("Cannot create an ownership authority for an invalid phase185 session.");
+  }
+  const resources = resourcePlanFor(sessionPath, session.session_id, session.project, session.ports);
+  return {
+    schema: "scrypath.ui-session-authority.v1",
+    session_path: path.resolve(sessionPath),
+    session_sha256: sha256(jsonBytes(session)),
+    session_id: session.session_id,
+    status: session.status,
+    source: session.source,
+    retained_inventory: session.retained_inventory,
+    retained_inventory_sha256: sha256(Buffer.from(canonicalJson(session.retained_inventory))),
+    resources,
+    artifact_directories: {},
+    capture_environment: {},
+    candidate_source: null,
+    manifests: { before: null, candidate: null },
+  };
+}
+
+function validateSessionAuthority(session, authority, sessionPath, rawSessionBytes) {
+  const errors = [];
+  const resolvedPath = path.resolve(sessionPath);
+  if (authority?.schema !== "scrypath.ui-session-authority.v1") errors.push("Independent session ownership authority is missing or unsupported.");
+  if (authority?.session_path !== resolvedPath || authority?.session_sha256 !== sha256(rawSessionBytes)) errors.push("Editable session bytes do not match the independent creation authority.");
+  if (session?.schema !== "scrypath.ui-session.v2") errors.push("Unsupported or forged disposable session schema.");
+  if (!/^[a-f0-9]{16}$/.test(session?.session_id || "") || session?.session_id !== authority?.session_id) errors.push("Session identifier does not match its independent creation authority.");
+  if (session?.project !== `scrypath-p185-${authority?.session_id}` || session?.project !== authority?.resources?.project) errors.push("Session project does not match its independently allocated project.");
+  if (session?.status !== authority?.status) errors.push("Session status does not match its independent creation authority.");
+  if (canonicalJson(session?.ports) !== canonicalJson(authority?.resources?.ports)) errors.push("Session ports do not match their independent allocation.");
+  if (canonicalJson(session?.source) !== canonicalJson(authority?.source)) errors.push("Session source identity does not match its independent creation authority.");
+  if (canonicalJson(session?.retained_inventory) !== canonicalJson(authority?.retained_inventory) || authority?.retained_inventory_sha256 !== sha256(Buffer.from(canonicalJson(authority?.retained_inventory)))) errors.push("Session retained-preview inventory does not match the independent read-only inventory.");
+  const expectedPlan = resourcePlanFor(sessionPath, authority?.session_id, authority?.resources?.project, authority?.resources?.ports);
+  if (canonicalJson(authority?.resources) !== canonicalJson(expectedPlan)) errors.push("Independent resource authority has unexpected Compose paths, volumes, services, or artifact roots.");
+  if (session?.build_dir !== expectedPlan.work_dirs.before) errors.push("Session build directory is outside its independent allowlist.");
+  if (session?.candidate_build_dir && session.candidate_build_dir !== expectedPlan.work_dirs.candidate) errors.push("Candidate build directory is outside its independent allowlist.");
+  for (const role of ["before", "candidate"]) {
+    const pinnedSource = role === "before" ? authority?.source : authority?.candidate_source;
+    const prefix = role === "before" ? "before" : "after";
+    if (pinnedSource) {
+      const expectedDirectory = path.join(expectedPlan.artifact_root, `${prefix}-${pinnedSource.source_sha.slice(0, 12)}-${authority.session_id}`);
+      const required = role === "candidate" || session?.status !== "starting";
+      if ((required && authority?.artifact_directories?.[role] !== expectedDirectory) || (authority?.artifact_directories?.[role] && authority.artifact_directories[role] !== expectedDirectory)) errors.push(`Session ${role} artifact directory is outside its source/session-bound evidence path.`);
+    } else if (authority?.artifact_directories?.[role]) errors.push(`Session ${role} artifact directory has no independent source pin.`);
+    const sessionPathValue = session?.[role];
+    const record = authority?.manifests?.[role];
+    if (sessionPathValue && (!record || path.resolve(sessionPathValue) !== record.manifest_path)) errors.push(`Session ${role} manifest path is not independently authorized.`);
+    if (record) {
+      const expectedDirectory = authority?.artifact_directories?.[role];
+      if (record.directory !== expectedDirectory || record.manifest_path !== path.join(expectedDirectory, "capture.json") || record.directory !== path.dirname(record.manifest_path)) errors.push(`Authorized ${role} manifest directory is outside its source/session-bound evidence path.`);
+    }
+  }
+  if (session?.candidate_source && canonicalJson(session.candidate_source) !== canonicalJson(authority?.manifests?.candidate?.source)) errors.push("Candidate source identity is not bound to the independent manifest authority.");
+  if (session?.candidate_data_identity && session.candidate_data_identity !== authority?.manifests?.candidate?.data_identity) errors.push("Candidate data identity is not bound to the independent manifest authority.");
+  if (session?.data_identity && session.data_identity !== authority?.manifests?.before?.data_identity) errors.push("Frozen data identity is not bound to the independent manifest authority.");
+  return errors;
+}
+
+function loadAuthorizedSession(sessionPath) {
+  const rawSessionBytes = readJsonBytes(sessionPath, 4 * 1024 * 1024);
+  const rawAuthorityBytes = readJsonBytes(authorityPathFor(sessionPath), 4 * 1024 * 1024);
+  const session = JSON.parse(rawSessionBytes.toString("utf8"));
+  const authority = JSON.parse(rawAuthorityBytes.toString("utf8"));
+  const errors = validateSessionAuthority(session, authority, sessionPath, rawSessionBytes);
+  if (errors.length) throw new Error(`Refusing unverified disposable session:\n${errors.join("\n")}`);
+  return { session, authority };
+}
+
+function persistAuthorizedSession(sessionPath, session, authority) {
+  const bytes = jsonBytes(session);
+  const temporary = `${sessionPath}.${process.pid}.${crypto.randomBytes(6).toString("hex")}.tmp`;
+  fs.writeFileSync(temporary, bytes, { flag: "wx", mode: 0o600 });
+  fs.renameSync(temporary, sessionPath);
+  authority.session_sha256 = sha256(bytes);
+  authority.status = session.status;
+  writeJson(authorityPathFor(sessionPath), authority);
+}
+
+function manifestDigest(manifest) {
+  // SHA-256 over pretty JSON plus a newline after excluding only `capture_sha256`.
+  const unsigned = { ...manifest };
+  delete unsigned.capture_sha256;
+  return sha256(jsonBytes(unsigned));
+}
+
+function recordManifestAuthority(authority, role, manifestPath, manifest, rawBytes) {
+  if (!new Set(["before", "candidate"]).has(role)) throw new Error(`Unknown evidence role: ${role}`);
+  const independentSource = role === "before" ? authority.source : authority.candidate_source;
+  const independentEnvironment = authority.capture_environment?.[role];
+  if (!independentSource || !independentEnvironment || canonicalJson(manifest.source) !== canonicalJson(independentSource) || canonicalJson(manifest.environment) !== canonicalJson(independentEnvironment)) {
+    throw new Error(`Refusing ${role} manifest without independently captured source and browser/environment facts.`);
+  }
+  authority.manifests[role] = {
+    manifest_path: path.resolve(manifestPath),
+    directory: path.dirname(path.resolve(manifestPath)),
+    raw_sha256: sha256(rawBytes),
+    capture_sha256: manifest.capture_sha256,
+    source: independentSource,
+    environment: independentEnvironment,
+    data_identity: independentEnvironment.data_identity,
+    runtime: manifest.runtime,
+    runtime_sha256: sha256(Buffer.from(canonicalJson(manifest.runtime))),
+  };
+}
+
+function manifestAuthorityErrors(manifest, rawBytes, authority, role, manifestPath, treeIdentity = commitTreeIdentity) {
+  const errors = [];
+  const record = authority?.manifests?.[role];
+  if (!record) return [`No independent ${role} manifest authority exists.`];
+  if (path.resolve(manifestPath) !== record.manifest_path || path.resolve(manifest.capture_directory || "") !== record.directory) errors.push(`${role} manifest or artifact directory differs from the independent creation record.`);
+  if (manifest.session_id !== authority.session_id || manifest.runtime?.compose_project !== authority.resources?.project) errors.push(`${role} session or project identity differs from the independent resource authority.`);
+  const expectedPorts = [`127.0.0.1:${authority.resources.ports.web}->4002/tcp`, `127.0.0.1:${authority.resources.ports.standalone}->4003/tcp`];
+  if (canonicalJson([...(manifest.runtime?.host_ports || [])].sort()) !== canonicalJson(expectedPorts.sort())) errors.push(`${role} host ports differ from the independent allocation record.`);
+  if (canonicalJson([...(manifest.runtime?.volumes || [])].sort()) !== canonicalJson([...authority.resources.volumes].sort())) errors.push(`${role} volumes differ from the exact independent allocation record.`);
+  if (sha256(rawBytes) !== record.raw_sha256) errors.push(`${role} raw manifest bytes differ from the independent creation record.`);
+  if (manifest.capture_sha256 !== record.capture_sha256 || manifest.capture_sha256 !== manifestDigest(manifest)) errors.push(`${role} manifest checksum is invalid under the documented capture_sha256-excluded serialization.`);
+  const independentlyPinnedSource = role === "before" ? authority.source : authority.candidate_source;
+  if (canonicalJson(record.source) !== canonicalJson(independentlyPinnedSource) || canonicalJson(manifest.source) !== canonicalJson(independentlyPinnedSource)) errors.push(`${role} source identity differs from the independent creation record.`);
+  if (canonicalJson(manifest.environment) !== canonicalJson(record.environment) || manifest.environment?.data_identity !== record.data_identity) errors.push(`${role} browser/platform/data identity differs from the independent creation record.`);
+  if (sha256(Buffer.from(canonicalJson(manifest.runtime))) !== record.runtime_sha256) errors.push(`${role} runtime ownership facts differ from the independent creation record.`);
+  try {
+    const tree = treeIdentity(record.source.source_sha);
+    if (tree.tree_oid !== record.source.tree_oid || tree.tree_sha256 !== record.source.tree_sha256) errors.push(`${role} committed source tree does not match the independent Git tree identity.`);
+  } catch (error) { errors.push(`${role} committed source tree could not be independently recomputed: ${error.message}`); }
+  return errors;
 }
 
 function sourceIdentity(checkRemote = true) {
@@ -117,6 +289,13 @@ function sourceIdentity(checkRemote = true) {
   };
 }
 
+function commitTreeIdentity(sourceSha) {
+  if (typeof sourceSha !== "string" || !/^[a-f0-9]{40}$/.test(sourceSha)) throw new Error("Committed source SHA must be a full Git object ID.");
+  const tree_oid = git(["rev-parse", `${sourceSha}^{tree}`]);
+  const tree = git(["ls-tree", "-r", "-z", "--full-tree", sourceSha], { encoding: "buffer", timeout: 60_000, maxBuffer: 128 * 1024 * 1024 });
+  return { tree_oid, tree_sha256: sha256(tree) };
+}
+
 function ensureArtifactRoot() {
   fs.mkdirSync(artifactRoot, { recursive: true, mode: 0o700 });
   const info = fs.lstatSync(artifactRoot);
@@ -127,8 +306,8 @@ function ensureArtifactRoot() {
 
 function sourceChangeErrors(start, end) {
   const errors = [];
-  if (!start?.source_sha || !start?.tree_sha256 || !end?.source_sha || !end?.tree_sha256) errors.push("Source identity is incomplete.");
-  else if (start.source_sha !== end.source_sha || start.tree_sha256 !== end.tree_sha256) errors.push("Source changed during capture.");
+  if (!start?.source_sha || !start?.tree_oid || !start?.tree_sha256 || !end?.source_sha || !end?.tree_oid || !end?.tree_sha256) errors.push("Source identity is incomplete.");
+  else if (start.source_sha !== end.source_sha || start.tree_oid !== end.tree_oid || start.tree_sha256 !== end.tree_sha256) errors.push("Source changed during capture.");
   return errors;
 }
 
@@ -197,7 +376,7 @@ function normalizePort(value) {
 
 function disposableProvenanceErrors(manifest, expected = {}) {
   const errors = [];
-  if (manifest?.schema !== "scrypath.ui-disposable.v1") errors.push("Unsupported disposable manifest schema.");
+  if (manifest?.schema !== "scrypath.ui-disposable.v2") errors.push("Unsupported disposable manifest schema.");
   if (manifest?.mode !== "disposable") errors.push("Capture is not explicitly marked disposable.");
   if (!expected.source_sha || !expected.tree_sha256) errors.push("Independent expected source SHA and tree fingerprint are required.");
   if (!expected.retained_project || !Number.isInteger(expected.retained_port) || !Array.isArray(expected.retained_volumes)) errors.push("Retained project, port, and volume identities are required.");
@@ -207,7 +386,7 @@ function disposableProvenanceErrors(manifest, expected = {}) {
   if (project && expected.retained_project && project === expected.retained_project) errors.push("Disposable capture reuses the retained project.");
   if (manifest?.runtime?.owned !== true || manifest?.runtime?.isolated !== true) errors.push("Disposable stack ownership or isolation is unverified.");
   if (manifest?.runtime?.source_match !== true) errors.push("Disposable image/container source provenance is unverified.");
-  if (manifest?.source?.source_sha !== expected.source_sha || manifest?.source?.tree_sha256 !== expected.tree_sha256) errors.push("Disposable manifest source SHA or tree fingerprint does not match the independently pinned source.");
+  if (manifest?.source?.source_sha !== expected.source_sha || manifest?.source?.tree_oid !== expected.tree_oid || manifest?.source?.tree_sha256 !== expected.tree_sha256) errors.push("Disposable manifest source SHA or full Git tree identity does not match the independently pinned source.");
 
   const runtime = manifest?.runtime || {};
   for (const [kind, identities] of [["image", runtime.images], ["container", runtime.containers]]) {
@@ -216,8 +395,10 @@ function disposableProvenanceErrors(manifest, expected = {}) {
       continue;
     }
     for (const identity of identities) {
-      if (identity.source_sha !== expected.source_sha || identity.tree_sha256 !== expected.tree_sha256) errors.push(`Disposable ${kind} source labels mismatch for ${identity.service || "unknown service"}.`);
-      if (!identity.id || !identity.labels || identity.labels[revisionLabel] !== expected.source_sha) errors.push(`Disposable ${kind} is missing its independently checked source label.`);
+      const sourceBuilt = kind === "image" || identity.source_built !== false;
+      if (sourceBuilt && (identity.source_sha !== expected.source_sha || identity.tree_oid !== expected.tree_oid || identity.tree_sha256 !== expected.tree_sha256)) errors.push(`Disposable ${kind} source labels mismatch for ${identity.service || "unknown service"}.`);
+      if (sourceBuilt && (!identity.id || !identity.labels || identity.labels[revisionLabel] !== expected.source_sha)) errors.push(`Disposable ${kind} is missing its independently checked source label.`);
+      if (kind === "container" && (!identity.id || !identity.labels || !identity.labels["com.docker.compose.project"] || !identity.labels["com.docker.compose.service"] || !identity.labels[ownerLabel])) errors.push(`Disposable ${kind} ownership labels are incomplete for ${identity.service || "unknown service"}.`);
       if (kind === "container" && !identity.name) errors.push("Disposable container name identity is missing.");
       if (kind === "container" && expected.retained_container && identity.name === expected.retained_container) errors.push("Disposable capture reuses the retained container.");
     }
@@ -237,7 +418,7 @@ function disposableProvenanceErrors(manifest, expected = {}) {
   if (runtime.retained_resources_disjoint !== true) errors.push("Disposable resources have not been checked against retained resources.");
   if (runtime.mounts?.some((mount) => mount.type === "bind" && mount.destination === "/app")) errors.push("Disposable app source uses a bind mount instead of the pinned image.");
   if (!runtime.routes?.mounted || !runtime.routes?.standalone) errors.push("Mounted and standalone Ops routes are not both verified.");
-  if (manifest?.environment?.browser_version === undefined || !manifest?.environment?.platform || !manifest?.environment?.data_identity) errors.push("Browser, platform, or deterministic data identity is missing.");
+  if (typeof manifest?.environment?.browser_version !== "string" || !manifest.environment.browser_version || typeof manifest?.environment?.platform !== "string" || !manifest.environment.platform || !manifest?.environment?.data_identity) errors.push("Browser, platform, or deterministic data identity is missing.");
   return errors;
 }
 
@@ -378,27 +559,31 @@ function runWithTeardown(primary, teardown) {
   if (primary) throw primary;
 }
 
-function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, retained) {
-  const beforeBytes = fs.readFileSync(path.join(beforeDirectory, "capture.json"));
-  const afterBytes = fs.readFileSync(path.join(afterDirectory, "capture.json"));
-  const before = JSON.parse(beforeBytes);
-  const after = JSON.parse(afterBytes);
-  const expected = { retained_project: retained.project, retained_port: retained.port, retained_volumes: retained.volumes, retained_container: retained.container };
-  const errors = [...artifactErrors(before, beforeDirectory), ...artifactErrors(after, afterDirectory)];
-  errors.push(...matrixErrors(before), ...matrixErrors(after));
+function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, authority) {
+  const beforeRecord = authority.manifests.before;
+  const afterRecord = authority.manifests.candidate;
+  if (path.resolve(beforeDirectory) !== beforeRecord.directory || path.resolve(afterDirectory) !== afterRecord.directory) throw new Error("Comparison directories differ from the independent session authority.");
+  const beforeBytes = readJsonBytes(beforeRecord.manifest_path);
+  const afterBytes = readJsonBytes(afterRecord.manifest_path);
+  const before = JSON.parse(beforeBytes.toString("utf8"));
+  const after = JSON.parse(afterBytes.toString("utf8"));
+  const errors = [
+    ...captureManifestErrors(before, beforeBytes, authority, "before"),
+    ...captureManifestErrors(after, afterBytes, authority, "candidate"),
+  ];
   if (before.environment.browser_version !== after.environment.browser_version) errors.push("Before and candidate browser versions differ.");
   if (before.environment.platform !== after.environment.platform) errors.push("Before and candidate platforms differ.");
   if (before.environment.data_identity !== after.environment.data_identity) errors.push("Before and candidate data-state digests differ.");
   if (before.runtime.compose_project !== after.runtime.compose_project) errors.push("Before and candidate Compose projects differ.");
   if (before.runtime.volumes?.join("\n") !== after.runtime.volumes?.join("\n")) errors.push("Before and candidate owned volume identities differ.");
   if (before.runtime.host_ports?.join("\n") !== after.runtime.host_ports?.join("\n")) errors.push("Before and candidate loopback port identities differ.");
-  if (after.runtime.main_inclusion?.included !== true || after.runtime.main_inclusion?.remote_current !== true) errors.push("Candidate does not include current remote main provenance.");
-  if (after.source.source_sha !== run("git", ["rev-parse", "HEAD"]) || after.source.tree_sha256 !== sourceIdentity().tree_sha256) errors.push("Candidate source changed after its capture.");
-  const beforeExpected = { source_sha: before.source.source_sha, tree_sha256: before.source.tree_sha256, ...expected };
-  const afterExpected = { source_sha: after.source.source_sha, tree_sha256: after.source.tree_sha256, ...expected };
-  errors.push(...disposableProvenanceErrors(before, beforeExpected), ...disposableProvenanceErrors(after, afterExpected));
+  const currentSource = sourceIdentity();
+  if (after.runtime.main_inclusion?.included !== true || after.runtime.main_inclusion?.remote_current !== true || !currentSource.main_included || !currentSource.remote_main_current) errors.push("Candidate does not include the independently checked current canonical remote main.");
+  if (after.source.source_sha !== currentSource.source_sha || after.source.tree_oid !== currentSource.tree_oid || after.source.tree_sha256 !== currentSource.tree_sha256 || after.source.remote_main_ref !== currentSource.remote_main_ref) errors.push("Candidate source or remote-main provenance changed after its capture.");
   if (errors.length) throw new Error(`Cannot compare unverified disposable captures:\n${errors.join("\n")}`);
 
+  if (fs.existsSync(outputDirectory)) throw new Error(`Refusing to overwrite existing comparison evidence: ${outputDirectory}`);
+  fs.mkdirSync(outputDirectory, { recursive: false, mode: 0o700 });
   const byId = new Map(after.captures.map((capture) => [capture.id, capture]));
   const comparisons = [];
   for (const left of before.captures) {
@@ -409,7 +594,6 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, re
       const rightBytes = fs.readFileSync(path.join(afterDirectory, right.files[kind].path));
       const { pixels, total, diff } = comparePng(leftBytes, rightBytes);
       const artifact = `${left.id}--${kind.replace(/\.png$/, "")}-diff.png`;
-      fs.mkdirSync(outputDirectory, { recursive: true, mode: 0o700 });
       fs.writeFileSync(path.join(outputDirectory, artifact), diff, { mode: 0o600 });
       const beforeCopy = readJson(path.join(beforeDirectory, left.files["copy.json"].path));
       const afterCopy = readJson(path.join(afterDirectory, right.files["copy.json"].path));
@@ -422,12 +606,34 @@ function compareDirectories(beforeDirectory, afterDirectory, outputDirectory, re
 }
 
 function verifyRetainedInventory() {
-  const preview = readJson(previewPath);
+  const previewBytes = readJsonBytes(previewPath, 1024 * 1024);
+  const preview = JSON.parse(previewBytes.toString("utf8"));
   const project = preview.compose_project || preview.compose?.project || preview.project || "scrypath_ecommerce";
-  const port = Number(new URL(preview.url).port || 80);
+  const url = new URL(preview.url);
+  if (url.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) throw new Error("Retained preview pointer does not identify a loopback HTTP endpoint.");
+  const port = Number(url.port || 80);
+  const containerName = preview.container || preview.container_name || "scrypath_ecommerce-web-1";
+  const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", containerName], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
+  const labels = container.Config?.Labels || {};
+  if (container.State?.Running !== true || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== "web") throw new Error("Retained preview container facts do not match UI-PREVIEW.json.");
+  const bindings = container.NetworkSettings?.Ports?.["4002/tcp"] || [];
+  const actualPorts = bindings.map(({ HostIp, HostPort }) => `${HostIp}:${HostPort}`).sort();
+  if (!actualPorts.some((entry) => entry.endsWith(`:${port}`) && (entry.startsWith("127.0.0.1:") || entry.startsWith("::1:")))) throw new Error("Retained preview's actual Docker port does not match UI-PREVIEW.json.");
+  const expectedCheckout = fs.realpathSync(preview.checkout);
+  const appMount = (container.Mounts || []).find(({ Destination }) => Destination === "/app");
+  if (!appMount || appMount.Type !== "bind" || fs.realpathSync(appMount.Source) !== expectedCheckout) throw new Error("Retained preview's actual /app mount does not match UI-PREVIEW.json.");
   const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"])
     .split("\n").filter(Boolean);
-  return { project, port, volumes, container: preview.container || preview.container_name || "scrypath_ecommerce-web-1", checkout: preview.checkout, branch: preview.branch, url: preview.url };
+  const volumeFacts = volumes.map((name) => {
+    const volume = JSON.parse(run("docker", ["volume", "inspect", "--format", "{{json .}}", name], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    if (volume.Labels?.["com.docker.compose.project"] !== project) throw new Error(`Retained volume ${name} does not match its Compose project label.`);
+    return { name, project: volume.Labels["com.docker.compose.project"], compose_volume: volume.Labels["com.docker.compose.volume"] || null };
+  }).sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    pointer_sha256: sha256(previewBytes), project, port, actual_ports: actualPorts, volumes: volumeFacts.map(({ name }) => name),
+    volume_facts: volumeFacts, container: containerName, container_id: container.Id, checkout: expectedCheckout,
+    mounted_checkout: fs.realpathSync(appMount.Source), branch: preview.branch, url: preview.url,
+  };
 }
 
 function composeFiles(project, override, imageOverride) {
@@ -461,24 +667,193 @@ function dockerIdentity(project, service, env) {
   return { id: ids[0], container, image };
 }
 
-function teardownOwnedProject(project, sessionId, retained, compose, env, removeVolumes = true) {
-  const containerIds = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`]).split("\n").filter(Boolean);
-  for (const id of containerIds) {
-    const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { env }));
-    if (container.Config?.Labels?.[ownerLabel] !== sessionId) throw new Error(`Refusing teardown: container ${id} is not owned by this session.`);
-  }
-  const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { env }).split("\n").filter(Boolean);
-  for (const volume of volumes) {
-    const details = JSON.parse(run("docker", ["volume", "inspect", "--format", "{{json .}}", volume], { env }));
-    if (details.Labels?.[ownerLabel] !== sessionId || retained.volumes.includes(volume)) throw new Error(`Refusing teardown: volume ${volume} is not exclusively owned by this session.`);
-  }
-  const args = [...compose, "down"];
-  if (removeVolumes) args.push("--volumes");
-  args.push("--remove-orphans");
-  run("docker", args, { env, timeout: 60_000 });
+function dockerContainerIdentity(project, service, env) {
+  const compose = [...composeFiles(project, env.UI_PRESERVATION_COMPOSE, env.UI_PRESERVATION_IMAGE_OVERRIDE), "ps", "-q", service];
+  const ids = run("docker", compose, { env, timeout: 30_000 }).split(/\s+/).filter(Boolean);
+  if (ids.length !== 1) throw new Error(`Expected exactly one disposable ${service} container, found ${ids.length}.`);
+  const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", ids[0]], { env }));
+  return { service, id: container.Id, name: String(container.Name || "").replace(/^\//, ""), labels: container.Config?.Labels || {} };
 }
 
-function buildAndStart(project, sessionId, ports, retained, source, workDir, artifactDirectory) {
+function candidateServerCommands() {
+  return {
+    web: ["sh", "-c", "set -eu; cd /app/examples/scrypath_ecommerce; for asset in /app/scrypath_ops/priv/static/assets/js/app.js /app/scrypath_ops/priv/static/assets/css/app.css /app/examples/scrypath_ecommerce/priv/static/assets/js/app.js /app/examples/scrypath_ecommerce/priv/static/assets/css/app.css; do test -s \"$asset\"; done; exec env SCRYPATH_E2E_NO_SANDBOX=1 mix phx.server"],
+    standalone_ops: ["sh", "-c", "set -eu; cd /app/scrypath_ops; test -s priv/static/assets/css/app.css; test -s priv/static/assets/js/app.js; exec env PHX_SERVER=true SCRYPATH_OPS_PORT=4003 mix phx.server"],
+  };
+}
+
+function existingStackContext(authority, role) {
+  const paths = authority.resources.compose_paths[role];
+  if (!paths || !new Set(["before", "candidate"]).has(role)) throw new Error(`No authorized Compose resources exist for ${role}.`);
+  const env = {
+    ...gitEnvironment(process.env),
+    E2E_PROJECT_NAME: authority.resources.project,
+    E2E_SCOPE: "full",
+    E2E_IMAGE_OVERRIDE: paths.image_override,
+    UI_PRESERVATION_COMPOSE: paths.ownership_override,
+    UI_PRESERVATION_IMAGE_OVERRIDE: paths.image_override,
+  };
+  return { env, compose: composeFiles(authority.resources.project, paths.ownership_override, paths.image_override) };
+}
+
+function removeOwnedApplicationContainers(authority, role) {
+  const record = authority.manifests[role];
+  if (!record?.runtime?.containers) throw new Error(`No independently owned ${role} containers are recorded.`);
+  const services = ["web", "standalone_ops", "browser"];
+  const containers = record.runtime.containers.filter(({ service }) => services.includes(service));
+  if (containers.length !== services.length || services.some((service) => containers.filter((entry) => entry.service === service).length !== 1)) throw new Error(`The ${role} app container inventory is incomplete or ambiguous.`);
+  run("docker", ["rm", "--force", ...containers.map(({ id }) => id)], { timeout: 60_000, maxBuffer: 2 * 1024 * 1024 });
+}
+
+function assertAllocatedDockerResources(authority, preserveData) {
+  const { project, volumes: expectedVolumes, volume_keys: volumeKeys, network_name: networkName, container_names: containerNames } = authority.resources;
+  const sessionId = authority.session_id;
+  const volumeNames = run("docker", ["volume", "ls", "--format", "{{.Name}}"], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const matchingVolumes = volumeNames.filter((name) => expectedVolumes.includes(name)).sort();
+  if (preserveData ? canonicalJson(matchingVolumes) !== canonicalJson([...expectedVolumes].sort()) : matchingVolumes.length !== 0) throw new Error("Disposable volume names already exist outside the expected candidate transition.");
+  for (const name of matchingVolumes) {
+    const volume = JSON.parse(run("docker", ["volume", "inspect", "--format", "{{json .}}", name], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    if (volume.Labels?.["com.docker.compose.project"] !== project || volume.Labels?.[ownerLabel] !== sessionId || volume.Labels?.["com.docker.compose.volume"] !== volumeKeys[name]) throw new Error(`Disposable volume ${name} does not match the independently allocated project/session/name facts.`);
+  }
+
+  const networkNames = run("docker", ["network", "ls", "--format", "{{.Name}}"], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const hasNetwork = networkNames.includes(networkName);
+  if (preserveData !== hasNetwork) throw new Error("Disposable Compose network does not match the expected baseline or candidate transition.");
+  if (hasNetwork) {
+    const network = JSON.parse(run("docker", ["network", "inspect", "--format", "{{json .}}", networkName], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    if (network.Labels?.["com.docker.compose.project"] !== project || network.Labels?.[ownerLabel] !== sessionId) throw new Error("Disposable Compose network is not independently owned by this session.");
+  }
+
+  const allowedExisting = preserveData ? new Set(["postgres", "meilisearch"]) : new Set();
+  const recorded = new Map((authority.manifests.before?.runtime?.containers || []).map((container) => [container.service, container]));
+  for (const service of authority.resources.services) {
+    const name = containerNames[service];
+    const ids = run("docker", ["ps", "-aq", "--filter", `name=^/${name}$`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+    if (!allowedExisting.has(service)) {
+      if (ids.length) throw new Error(`Disposable container name ${name} already exists before this service is authorized to run.`);
+      continue;
+    }
+    if (ids.length !== 1) throw new Error(`Expected the single recorded ${service} container to survive candidate replacement.`);
+    const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", ids[0]], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
+    const labels = container.Config?.Labels || {};
+    if (ids[0] !== recorded.get(service)?.id || container.Name?.replace(/^\//, "") !== name || labels["com.docker.compose.project"] !== project || labels["com.docker.compose.service"] !== service || labels[ownerLabel] !== sessionId) throw new Error(`Disposable ${service} container does not match its recorded owner and name.`);
+  }
+}
+
+async function runCandidateTransition({ expectedDataIdentity, readBefore, replace, readAfter, teardown }) {
+  const before = await readBefore();
+  if (before !== expectedDataIdentity) throw new Error("Frozen before database/search state changed before the candidate transition.");
+  let mutationStarted = false;
+  let stack;
+  let primary = null;
+  try {
+    stack = await replace(() => { mutationStarted = true; });
+    const after = await readAfter(stack);
+    if (after !== before) throw new Error("Candidate startup changed the frozen database/search state digest.");
+  } catch (error) { primary = error; }
+  runWithTeardown(primary, () => {
+    if (primary && mutationStarted) teardown();
+  });
+  return { stack, dataIdentity: before };
+}
+
+function teardownOwnedProject(authority, removeVolumes = true) {
+  const { project, ports, services, volumes: expectedVolumes, network_name: expectedNetwork } = authority.resources;
+  const sessionId = authority.session_id;
+  const retained = authority.retained_inventory;
+  if (project !== `scrypath-p185-${sessionId}` || project === retained.project || !/^[a-f0-9]{16}$/.test(sessionId)) throw new Error("Refusing teardown without a matching independent project/session authority.");
+  assertRetainedInventoryCurrent(authority);
+
+  const containerIds = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const containers = containerIds.map((id) => JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 })));
+  for (const container of containers) {
+    const labels = container.Config?.Labels || {};
+    const service = labels["com.docker.compose.service"];
+    const expectedName = authority.resources.container_names?.[service];
+    if (container.Id === retained.container_id || container.Name?.replace(/^\//, "") === retained.container || labels["com.docker.compose.project"] !== project || labels[ownerLabel] !== sessionId || !services.includes(service) || container.Name?.replace(/^\//, "") !== expectedName) {
+      throw new Error(`Refusing teardown: Docker container ${container.Id} is not an independently authorized ${project} resource.`);
+    }
+    for (const mount of container.Mounts || []) {
+      if (mount.Type === "volume" && (retained.volumes.includes(mount.Name) || !expectedVolumes.includes(mount.Name))) throw new Error(`Refusing teardown: container ${container.Id} mounts a retained or unallocated volume ${mount.Name}.`);
+      if (mount.Type === "bind") {
+        const allowedArtifact = service === "browser" && mount.Destination === "/artifacts" && Object.values(authority.artifact_directories || {}).includes(path.resolve(mount.Source));
+        if (!allowedArtifact) throw new Error(`Refusing teardown: container ${container.Id} has an unallocated bind mount at ${mount.Destination}.`);
+      }
+      if (!["volume", "bind", "tmpfs"].includes(mount.Type)) throw new Error(`Refusing teardown: container ${container.Id} has unsupported mount type ${mount.Type}.`);
+    }
+    const expectedHostPort = service === "web" ? ports.web : service === "standalone_ops" ? ports.standalone : null;
+    for (const group of Object.values(container.NetworkSettings?.Ports || {})) for (const binding of group || []) {
+      const port = Number(binding.HostPort);
+      const host = String(binding.HostIp || "");
+      if (port === retained.port || !["127.0.0.1", "::1"].includes(host) || !expectedHostPort || host !== "127.0.0.1" || port !== expectedHostPort) throw new Error(`Refusing teardown: container ${container.Id} has a retained, non-loopback, or unallocated host port.`);
+    }
+    const attachedNetworks = Object.keys(container.NetworkSettings?.Networks || {});
+    if (attachedNetworks.some((name) => name !== expectedNetwork)) throw new Error(`Refusing teardown: container ${container.Id} is attached to an unallocated network.`);
+  }
+
+  const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
+  if (volumes.some((volume) => !expectedVolumes.includes(volume))) throw new Error("Refusing teardown: Docker returned a volume outside the exact allocation record.");
+  for (const name of volumes) {
+    const volume = JSON.parse(run("docker", ["volume", "inspect", "--format", "{{json .}}", name], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    if (retained.volumes.includes(name) || volume.Labels?.["com.docker.compose.project"] !== project || volume.Labels?.[ownerLabel] !== sessionId) throw new Error(`Refusing teardown: volume ${name} is not exclusively owned by this session.`);
+  }
+
+  const networkIds = run("docker", ["network", "ls", "-q", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const networks = networkIds.map((id) => JSON.parse(run("docker", ["network", "inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 })));
+  const ownedContainerIds = new Set(containerIds);
+  for (const network of networks) {
+    if (network.Name !== expectedNetwork || network.Labels?.["com.docker.compose.project"] !== project || network.Labels?.[ownerLabel] !== sessionId) throw new Error(`Refusing teardown: network ${network.Id} is not exclusively owned by this session.`);
+    const attached = Object.entries(network.Containers || {}).map(([id, { Name }]) => ({ name: Name, id }));
+    if (attached.some(({ id }) => !ownedContainerIds.has(id))) throw new Error(`Refusing teardown: network ${network.Id} is connected to an unallocated container.`);
+  }
+
+  if (containerIds.length) run("docker", ["rm", "--force", ...containerIds], { timeout: 60_000, maxBuffer: 2 * 1024 * 1024 });
+  if (networkIds.length) run("docker", ["network", "rm", ...networkIds], { timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });
+  if (removeVolumes && volumes.length) run("docker", ["volume", "rm", ...volumes], { timeout: 60_000, maxBuffer: 2 * 1024 * 1024 });
+}
+
+function assertRetainedInventoryCurrent(authority) {
+  const actual = verifyRetainedInventory();
+  if (canonicalJson(actual) !== canonicalJson(authority.retained_inventory)) throw new Error("Read-only retained-preview Docker facts changed since this disposable session was created.");
+  return actual;
+}
+
+function assertOwnedRuntime(authority, role) {
+  const record = authority.manifests[role];
+  if (!record?.runtime) throw new Error(`No independently recorded ${role} Docker runtime facts exist.`);
+  const project = authority.resources.project;
+  const sessionId = authority.session_id;
+  const ids = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
+  const expectedIds = record.runtime.containers.map(({ id }) => id).sort();
+  if (canonicalJson(ids) !== canonicalJson(expectedIds)) throw new Error(`${role} Compose container IDs differ from the independent Docker capture record.`);
+  for (const id of ids) {
+    const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 }));
+    const labels = container.Config?.Labels || {};
+    const expected = record.runtime.containers.find((entry) => entry.id === id);
+    if (!expected || labels["com.docker.compose.project"] !== project || labels[ownerLabel] !== sessionId || labels["com.docker.compose.service"] !== expected.service || (expected.source_built && labels[revisionLabel] !== record.source.source_sha) || container.Name?.replace(/^\//, "") !== expected.name) {
+      throw new Error(`Docker container ${id} no longer matches independently recorded ${role} ownership/source facts.`);
+    }
+  }
+  const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean).sort();
+  if (canonicalJson(volumes) !== canonicalJson([...authority.resources.volumes].sort())) throw new Error(`${role} Docker volume identities differ from the independent allocation record.`);
+  for (const name of volumes) {
+    const volume = JSON.parse(run("docker", ["volume", "inspect", "--format", "{{json .}}", name], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    if (volume.Labels?.["com.docker.compose.project"] !== project || volume.Labels?.[ownerLabel] !== sessionId || authority.retained_inventory.volumes.includes(name)) throw new Error(`Docker volume ${name} is not independently owned by this disposable session.`);
+  }
+  const networkIds = run("docker", ["network", "ls", "-q", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+  if (networkIds.length !== 1) throw new Error(`${role} Docker network inventory is not the single allocated Compose network.`);
+  const network = JSON.parse(run("docker", ["network", "inspect", "--format", "{{json .}}", networkIds[0]], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+  if (network.Name !== authority.resources.network_name || network.Labels?.["com.docker.compose.project"] !== project || network.Labels?.[ownerLabel] !== sessionId) throw new Error(`${role} Docker network ownership differs from the independent allocation record.`);
+  const actualPorts = ids.flatMap((id) => {
+    const container = JSON.parse(run("docker", ["inspect", "--format", "{{json .NetworkSettings.Ports}}", id], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }));
+    return Object.values(container || {}).flatMap((bindings) => (bindings || []).map(({ HostIp, HostPort }) => `${HostIp}:${HostPort}`));
+  }).sort();
+  const expectedPorts = [`127.0.0.1:${authority.resources.ports.web}`, `127.0.0.1:${authority.resources.ports.standalone}`].sort();
+  if (canonicalJson(actualPorts) !== canonicalJson(expectedPorts)) throw new Error(`${role} Docker host bindings differ from the independent loopback allocation.`);
+  return true;
+}
+
+function buildAndStart(project, sessionId, ports, retained, source, workDir, artifactDirectory, authority, options = {}) {
   if (project === retained.project || ports.web === retained.port || ports.standalone === retained.port) throw new Error("Refusing retained project or port for disposable stack.");
   const buildDir = path.join(workDir, "build");
   fs.mkdirSync(buildDir, { recursive: true, mode: 0o700 });
@@ -492,6 +867,9 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
   const postgresVolume = `${project}-postgres`;
   const meiliVolume = `${project}-meili`;
   const override = path.join(workDir, "compose.override.yaml");
+  const candidateCommands = options.preserveData ? candidateServerCommands() : null;
+  const webCommand = candidateCommands?.web || null;
+  const standaloneCommand = candidateCommands?.standalone_ops || null;
   fs.writeFileSync(override, [
     "services:",
     "  postgres:",
@@ -502,9 +880,11 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  web:",
     `    ports: [\"127.0.0.1:${ports.web}:4002\"]`,
+    ...(webCommand ? [`    command: ${JSON.stringify(webCommand)}`] : []),
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  standalone_ops:",
     `    ports: [\"127.0.0.1:${ports.standalone}:4003\"]`,
+    ...(standaloneCommand ? [`    command: ${JSON.stringify(standaloneCommand)}`] : []),
     `    labels: [\"${ownerLabel}=${sessionId}\"]`,
     "  browser:",
     "    entrypoint: [sleep]",
@@ -514,21 +894,30 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
     "volumes:",
     `  postgres-data: {name: \"${postgresVolume}\", labels: [\"${ownerLabel}=${sessionId}\"]}`,
     `  meilisearch-data: {name: \"${meiliVolume}\", labels: [\"${ownerLabel}=${sessionId}\"]}`,
+    "networks:",
+    `  default: {name: \"${project}_default\", labels: [\"${ownerLabel}=${sessionId}\"]}`,
     "",
   ].join("\n"), { mode: 0o600 });
   const overridePath = path.join(buildDir, "image-override.json");
   const env = { ...buildEnv, E2E_IMAGE_OVERRIDE: overridePath, UI_PRESERVATION_COMPOSE: override, UI_PRESERVATION_IMAGE_OVERRIDE: overridePath };
   run("node", [buildHelper, "verify-handoff", "--manifest", handoff], { env, timeout: 120_000 });
   const compose = composeFiles(project, override, overridePath);
+  let mutationStarted = false;
   try {
     run("docker", [...compose, "config", "--quiet"], { env, timeout: 30_000 });
-    run("docker", [...compose, "up", "-d", "--no-build", "--pull", "never", "postgres", "meilisearch", "web", "standalone_ops", "browser"], { env, timeout: 1_200_000 });
+    assertRetainedInventoryCurrent(authority);
+    if (options.beforeStart) options.beforeStart(() => { mutationStarted = true; });
+    assertAllocatedDockerResources(authority, options.preserveData === true);
+    if (!options.beforeStart) mutationStarted = true;
+    const services = options.preserveData ? ["web", "standalone_ops", "browser"] : ["postgres", "meilisearch", "web", "standalone_ops", "browser"];
+    const upArgs = [...compose, "up", "-d", ...(options.preserveData ? ["--no-deps"] : []), "--no-build", "--pull", "never", ...services];
+    run("docker", upArgs, { env, timeout: 1_200_000 });
     run("node", [buildHelper, "verify-handoff", "--manifest", handoff, "--runtime"], { env, timeout: 120_000 });
-    const web = dockerIdentity(project, "web", env);
-    const standalone = dockerIdentity(project, "standalone_ops", env);
-    const browser = dockerIdentity(project, "browser", env);
-    const images = [web, standalone, browser].map(({ image, container }, index) => {
-    const service = ["web", "standalone_ops", "browser"][index];
+    const sourceServices = ["web", "standalone_ops", "browser"];
+    const sourceStacks = sourceServices.map((service) => dockerIdentity(project, service, env));
+    const allContainers = ["postgres", "meilisearch", ...sourceServices].map((service) => dockerContainerIdentity(project, service, env));
+    const images = sourceStacks.map(({ image, container }, index) => {
+    const service = sourceServices[index];
     const labels = image.Config?.Labels || {};
     const containerLabels = container.Config?.Labels || {};
     return {
@@ -542,15 +931,17 @@ function buildAndStart(project, sessionId, ports, retained, source, workDir, art
       if (item.labels[revisionLabel] !== source.source_sha || item.container_source_sha !== source.source_sha) throw new Error(`Disposable ${item.service} image/container label mismatch.`);
       if (item.labels[fingerprintLabel] && item.labels[fingerprintLabel] !== source.dirty_fingerprint) throw new Error(`Disposable ${item.service} source fingerprint mismatch.`);
     }
-    const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { env }).split("\n").filter(Boolean);
-    if (volumes.length < 2 || volumes.some((volume) => !volume.startsWith(`${project}-`))) throw new Error("Disposable Compose volumes are incomplete or not project-owned.");
+    const volumes = run("docker", ["volume", "ls", "--filter", `label=com.docker.compose.project=${project}`, "--format", "{{.Name}}"], { env }).split("\n").filter(Boolean).sort();
+    if (canonicalJson(volumes) !== canonicalJson([...authority.resources.volumes].sort())) throw new Error("Disposable Compose volumes do not match the exact independent allocation.");
     const inspect = JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", web.id], { env }));
     const mounts = (inspect.Mounts || []).map(({ Type, Destination }) => ({ type: Type, destination: Destination }));
     if (mounts.some((mount) => mount.type === "bind" && mount.destination === "/app")) throw new Error("Disposable app container unexpectedly uses a source bind mount.");
-    return { env, override, compose, handoff, images, volumes, mounts, artifactDirectory, runtimeImageIds: readJson(handoff).runtime_image_ids };
+    return { env, override, compose, handoff, images, containers: allContainers, volumes, mounts, artifactDirectory, runtimeImageIds: readJson(handoff).runtime_image_ids, sessionId };
   } catch (error) {
-    try { teardownOwnedProject(project, sessionId, retained, compose, env, true); }
-    catch (cleanupError) { error.cleanupError = cleanupError; }
+    if (options.cleanupOnFailure !== false && mutationStarted) {
+      try { teardownOwnedProject(authority, true); }
+      catch (cleanupError) { error.cleanupError = cleanupError; }
+    }
     throw error;
   }
 }
@@ -571,6 +962,33 @@ function captureInBrowser(stack, outputDirectory, dataIdentity) {
   return result;
 }
 
+function runtimeManifest(stack, source, project, ports, retained) {
+  return {
+    compose_project: project,
+    owned: true,
+    isolated: true,
+    source_match: true,
+    retained_resources_disjoint: project !== retained.project && ![ports.web, ports.standalone].includes(retained.port) && !stack.volumes.some((volume) => retained.volumes.includes(volume)),
+    host_ports: [`127.0.0.1:${ports.web}->4002/tcp`, `127.0.0.1:${ports.standalone}->4003/tcp`],
+    volumes: stack.volumes,
+    images: stack.images.map(({ service, id, labels }) => ({ service, id, labels, source_sha: source.source_sha, tree_sha256: source.tree_sha256, tree_oid: source.tree_oid })),
+    containers: stack.containers.map((container) => {
+      const sourceBuilt = ["web", "standalone_ops", "browser"].includes(container.service);
+      return {
+        ...container,
+        source_built: sourceBuilt,
+        source_sha: sourceBuilt ? source.source_sha : null,
+        tree_sha256: sourceBuilt ? source.tree_sha256 : null,
+        tree_oid: sourceBuilt ? source.tree_oid : null,
+      };
+    }),
+    mounts: stack.mounts,
+    routes: { mounted: true, standalone: true },
+    main_inclusion: { local_main_ref: source.main_ref, included: source.main_included, remote_main_ref: source.remote_main_ref, remote_current: source.remote_main_current },
+    handoff: stack.handoff,
+  };
+}
+
 function stackDataIdentity(stack) {
   const databaseNames = ["scrypath_ecommerce_test", "scrypath_ops_phase173_test"];
   const databases = Object.fromEntries(databaseNames.map((database) => {
@@ -589,20 +1007,28 @@ function stackDataIdentity(stack) {
 }
 
 async function captureBefore(sessionPath) {
-  if (fs.existsSync(sessionPath)) throw new Error(`Refusing to overwrite an existing disposable session: ${sessionPath}`);
+  if (fs.existsSync(sessionPath) || fs.existsSync(authorityPathFor(sessionPath))) throw new Error(`Refusing to overwrite an existing disposable session or authority: ${sessionPath}`);
   ensureArtifactRoot();
   const source = sourceIdentity();
   const retained = verifyRetainedInventory();
   const sessionId = crypto.randomBytes(8).toString("hex");
   const project = `scrypath-p185-${sessionId}`;
   const ports = await reservePorts();
-  const workDir = path.join(path.dirname(sessionPath), `build-${sessionId}`);
-  fs.mkdirSync(workDir, { recursive: true, mode: 0o700 });
+  const workDir = resourcePlanFor(sessionPath, sessionId, project, ports).work_dirs.before;
   const output = path.join(artifactRoot, `before-${source.source_sha.slice(0, 12)}-${sessionId}`);
+  const session = { schema: "scrypath.ui-session.v2", status: "starting", session_id: sessionId, source, retained_inventory: retained, project, ports, build_dir: workDir };
+  const authority = createSessionAuthority(sessionPath, session);
+  authority.artifact_directories.before = output;
+  writeJson(sessionPath, session);
+  writeJson(authorityPathFor(sessionPath), authority);
+  fs.mkdirSync(workDir, { recursive: true, mode: 0o700 });
   fs.mkdirSync(output, { recursive: false, mode: 0o700 });
-  const stack = buildAndStart(project, sessionId, ports, retained, source, workDir, output);
+  let stack;
+  let startupAttempted = false;
   let primary = null;
   try {
+    startupAttempted = true;
+    stack = buildAndStart(project, sessionId, ports, retained, source, workDir, output, authority);
     const hostUrl = `http://127.0.0.1:${ports.web}`;
     const standaloneUrl = `http://127.0.0.1:${ports.standalone}`;
     await waitForRoute(hostUrl, "/");
@@ -617,73 +1043,111 @@ async function captureBefore(sessionPath) {
     const captureSourceErrors = sourceChangeErrors(source, afterCaptureSource);
     if (captureSourceErrors.length) throw new Error(captureSourceErrors.join("\n"));
     const manifest = {
-      schema: "scrypath.ui-disposable.v1", mode: "disposable", purpose: "historical-baseline",
+      schema: "scrypath.ui-disposable.v2", mode: "disposable", purpose: "historical-baseline",
       generated_at: new Date().toISOString(), session_id: sessionId,
-      source: { ...source, tree_sha256: source.tree_sha256 },
-      runtime: {
-        compose_project: project, owned: true, isolated: true, source_match: true,
-        retained_resources_disjoint: project !== retained.project && ![ports.web, ports.standalone].includes(retained.port) && !stack.volumes.some((volume) => retained.volumes.includes(volume)),
-        host_ports: [`127.0.0.1:${ports.web}->4002/tcp`, `127.0.0.1:${ports.standalone}->4003/tcp`],
-        volumes: stack.volumes, images: stack.images.map(({ service, id, labels }) => ({ service, id, labels, source_sha: source.source_sha, tree_sha256: source.tree_sha256 })),
-        containers: stack.images.map(({ service, container_id, container_name, container_source_sha }) => ({ service, id: container_id, name: container_name, labels: { [revisionLabel]: container_source_sha }, source_sha: source.source_sha, tree_sha256: source.tree_sha256 })),
-        mounts: stack.mounts, routes: { mounted: true, standalone: true },
-        main_inclusion: { local_main_ref: source.main_ref, included: source.main_included, remote_main_ref: source.remote_main_ref, remote_current: source.remote_main_current },
-        handoff: stack.handoff,
-      },
+      source,
+      runtime: runtimeManifest(stack, source, project, ports, retained),
       environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
-    const errors = disposableProvenanceErrors(manifest, { source_sha: source.source_sha, tree_sha256: source.tree_sha256, retained_project: retained.project, retained_port: retained.port, retained_volumes: retained.volumes, retained_container: retained.container });
+    const errors = disposableProvenanceErrors(manifest, { source_sha: source.source_sha, tree_oid: source.tree_oid, tree_sha256: source.tree_sha256, retained_project: retained.project, retained_port: retained.port, retained_volumes: retained.volumes, retained_container: retained.container });
     errors.push(...artifactErrors(manifest, output));
+    errors.push(...sourceChangeErrors(source, { ...source, ...commitTreeIdentity(source.source_sha) }));
     if (errors.length) throw new Error(`Disposable capture verification failed:\n${errors.join("\n")}`);
-    const bytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
-    manifest.capture_sha256 = sha256(bytes);
-    writeJson(path.join(output, "capture.json"), manifest);
-    const session = { schema: "scrypath.ui-session.v1", status: "before-captured", session_id: sessionId, source, retained_inventory: retained, project, ports, compose_files: stack.compose, compose_override: stack.override, build_dir: workDir, handoff: stack.handoff, volume_names: stack.volumes, before: path.join(output, "capture.json"), data_identity: captures.dataIdentity, browser_version: captures.browserVersion, platform: `${process.platform}-${process.arch}` };
-    writeJson(sessionPath, session);
+    manifest.capture_sha256 = manifestDigest(manifest);
+    const bytes = jsonBytes(manifest);
+    const manifestPath = path.join(output, "capture.json");
+    fs.writeFileSync(manifestPath, bytes, { flag: "wx", mode: 0o600 });
+    authority.capture_environment = { ...(authority.capture_environment || {}), before: manifest.environment };
+    recordManifestAuthority(authority, "before", manifestPath, manifest, bytes);
+    writeJson(authorityPathFor(sessionPath), authority);
+    const validationErrors = captureManifestErrors(manifest, bytes, authority, "before");
+    if (validationErrors.length) throw new Error(`Disposable capture verification failed:\n${validationErrors.join("\n")}`);
+    session.status = "before-captured";
+    session.before = manifestPath;
+    session.data_identity = captures.dataIdentity;
+    session.browser_version = captures.browserVersion;
+    session.platform = captures.platform;
+    persistAuthorizedSession(sessionPath, session, authority);
     console.log(JSON.stringify({ status: session.status, before: session.before, project, ports, source }, null, 2));
   } catch (error) { primary = error; }
   runWithTeardown(primary, () => {
-    if (primary) teardownOwnedProject(project, sessionId, retained, stack.compose, stack.env, true);
+    if (primary && startupAttempted) teardownOwnedProject(authority, true);
   });
 }
 
-function captureManifestErrors(manifest, retained) {
+function captureManifestErrors(manifest, rawBytes, authority, role) {
+  const record = authority?.manifests?.[role];
+  if (!record) return [`No independent ${role} manifest authority exists.`];
   return [
+    ...manifestAuthorityErrors(manifest, rawBytes, authority, role, record.manifest_path),
     ...disposableProvenanceErrors(manifest, {
-      source_sha: manifest.source.source_sha,
-      tree_sha256: manifest.source.tree_sha256,
-      retained_project: retained.project,
-      retained_port: retained.port,
-      retained_volumes: retained.volumes,
-      retained_container: retained.container,
+      source_sha: record.source.source_sha,
+      tree_oid: record.source.tree_oid,
+      tree_sha256: record.source.tree_sha256,
+      retained_project: authority.retained_inventory.project,
+      retained_port: authority.retained_inventory.port,
+      retained_volumes: authority.retained_inventory.volumes,
+      retained_container: authority.retained_inventory.container,
     }),
-    ...artifactErrors(manifest, manifest.capture_directory),
+    ...artifactErrors(manifest, record.directory),
   ];
 }
 
 async function captureAfter(sessionPath) {
-  const session = readJson(sessionPath);
-  if (session.schema !== "scrypath.ui-session.v1" || session.status !== "before-captured") throw new Error("Session is not ready for a candidate capture.");
-  const retained = session.retained_inventory;
-  const before = readJson(session.before);
-  const beforeErrors = captureManifestErrors(before, retained);
+  const { session, authority } = loadAuthorizedSession(sessionPath);
+  if (session.status !== "before-captured") throw new Error("Session is not ready for a candidate capture.");
+  const retained = assertRetainedInventoryCurrent(authority);
+  const beforeRecord = authority.manifests.before;
+  const beforeBytes = readJsonBytes(beforeRecord.manifest_path);
+  const before = JSON.parse(beforeBytes.toString("utf8"));
+  const beforeErrors = captureManifestErrors(before, beforeBytes, authority, "before");
   if (beforeErrors.length) throw new Error(`Frozen before evidence is invalid:\n${beforeErrors.join("\n")}`);
+  assertOwnedRuntime(authority, "before");
   const source = sourceIdentity();
   if (!source.main_included || !source.remote_main_current) throw new Error("Candidate source does not include current remote main; refresh and reconcile this worktree before candidate capture.");
-  const project = session.project;
-  const ports = session.ports;
+  authority.candidate_source = source;
+  const project = authority.resources.project;
+  const ports = authority.resources.ports;
   if (project === retained.project || ports.web === retained.port || ports.standalone === retained.port) throw new Error("Session targets a retained project or port.");
-  const workDir = path.join(path.dirname(sessionPath), `candidate-${session.session_id}`);
+  const workDir = authority.resources.work_dirs.candidate;
   fs.mkdirSync(workDir, { recursive: true, mode: 0o700 });
   const output = path.join(artifactRoot, `after-${source.source_sha.slice(0, 12)}-${session.session_id}`);
+  authority.artifact_directories.candidate = output;
+  writeJson(authorityPathFor(sessionPath), authority);
   fs.mkdirSync(output, { recursive: false, mode: 0o700 });
-  const stack = buildAndStart(project, session.session_id, ports, retained, source, workDir, output);
+  let startupAttempted = false;
+  let transitionFailureHandled = false;
+  let transitionCompleted = false;
+  let stack;
   let primary = null;
+  let transitionMutationStarted = false;
   try {
-    const dataIdentity = stackDataIdentity(stack);
-    if (dataIdentity !== session.data_identity) throw new Error("Candidate startup changed the frozen database/search state digest.");
+    const transition = await runCandidateTransition({
+      expectedDataIdentity: session.data_identity,
+      readBefore: () => stackDataIdentity(existingStackContext(authority, "before")),
+      replace: (markMutationStarted) => buildAndStart(project, session.session_id, ports, retained, source, workDir, output, authority, {
+        preserveData: true,
+        cleanupOnFailure: false,
+        beforeStart: (markStarted) => {
+          assertOwnedRuntime(authority, "before");
+          const current = stackDataIdentity(existingStackContext(authority, "before"));
+          if (current !== session.data_identity) throw new Error("Frozen before database/search state changed while the candidate image was being built.");
+          markStarted();
+          transitionMutationStarted = true;
+          startupAttempted = true;
+          markMutationStarted();
+          removeOwnedApplicationContainers(authority, "before");
+        },
+      }),
+      readAfter: (candidateStack) => stackDataIdentity(candidateStack),
+      teardown: () => teardownOwnedProject(authority, true),
+    });
+    startupAttempted = true;
+    transitionCompleted = true;
+    stack = transition.stack;
+    const dataIdentity = transition.dataIdentity;
     const hostUrl = `http://127.0.0.1:${ports.web}`;
     const standaloneUrl = `http://127.0.0.1:${ports.standalone}`;
     await waitForRoute(hostUrl, "/admin/search/");
@@ -692,72 +1156,85 @@ async function captureAfter(sessionPath) {
     const sourceErrors = sourceChangeErrors(source, afterStartupSource);
     if (sourceErrors.length) throw new Error(sourceErrors.join("\n"));
     const captures = captureInBrowser(stack, output, dataIdentity);
+    const afterBrowserDataIdentity = stackDataIdentity(stack);
+    if (afterBrowserDataIdentity !== dataIdentity) throw new Error("Browser capture changed the frozen database/search state digest.");
     const afterCaptureSource = sourceIdentity(false);
     const captureSourceErrors = sourceChangeErrors(source, afterCaptureSource);
     if (captureSourceErrors.length) throw new Error(captureSourceErrors.join("\n"));
     const manifest = {
-      schema: "scrypath.ui-disposable.v1", mode: "disposable", purpose: "candidate",
+      schema: "scrypath.ui-disposable.v2", mode: "disposable", purpose: "candidate",
       generated_at: new Date().toISOString(), session_id: session.session_id,
       source,
-      runtime: {
-        compose_project: project, owned: true, isolated: true, source_match: true,
-        retained_resources_disjoint: project !== retained.project && ![ports.web, ports.standalone].includes(retained.port) && !stack.volumes.some((volume) => retained.volumes.includes(volume)),
-        host_ports: [`127.0.0.1:${ports.web}->4002/tcp`, `127.0.0.1:${ports.standalone}->4003/tcp`],
-        volumes: stack.volumes, images: stack.images.map(({ service, id, labels }) => ({ service, id, labels, source_sha: source.source_sha, tree_sha256: source.tree_sha256 })),
-        containers: stack.images.map(({ service, container_id, container_name, container_source_sha }) => ({ service, id: container_id, name: container_name, labels: { [revisionLabel]: container_source_sha }, source_sha: source.source_sha, tree_sha256: source.tree_sha256 })),
-        mounts: stack.mounts, routes: { mounted: true, standalone: true },
-        main_inclusion: { local_main_ref: source.main_ref, included: source.main_included, remote_main_ref: source.remote_main_ref, remote_current: source.remote_main_current },
-        handoff: stack.handoff,
-      },
+      runtime: runtimeManifest(stack, source, project, ports, retained),
       environment: { platform: captures.platform, browser_version: captures.browserVersion, data_identity: captures.dataIdentity },
       capture_directory: output, captures: captures.captures,
       capture_errors: [], status: "pending-review",
     };
-    const errors = captureManifestErrors(manifest, retained);
+    const errors = disposableProvenanceErrors(manifest, { source_sha: source.source_sha, tree_oid: source.tree_oid, tree_sha256: source.tree_sha256, retained_project: retained.project, retained_port: retained.port, retained_volumes: retained.volumes, retained_container: retained.container });
+    errors.push(...artifactErrors(manifest, output));
     if (errors.length) throw new Error(`Candidate capture verification failed:\n${errors.join("\n")}`);
-    const bytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
-    manifest.capture_sha256 = sha256(bytes);
-    writeJson(path.join(output, "capture.json"), manifest);
+    manifest.capture_sha256 = manifestDigest(manifest);
+    const bytes = jsonBytes(manifest);
+    const manifestPath = path.join(output, "capture.json");
+    fs.writeFileSync(manifestPath, bytes, { flag: "wx", mode: 0o600 });
+    authority.capture_environment = { ...(authority.capture_environment || {}), candidate: manifest.environment };
+    recordManifestAuthority(authority, "candidate", manifestPath, manifest, bytes);
+    writeJson(authorityPathFor(sessionPath), authority);
+    const validationErrors = captureManifestErrors(manifest, bytes, authority, "candidate");
+    if (validationErrors.length) throw new Error(`Candidate capture verification failed:\n${validationErrors.join("\n")}`);
     session.status = "candidate-captured";
-    session.candidate = path.join(output, "capture.json");
+    session.candidate = manifestPath;
     session.candidate_source = source;
     session.candidate_data_identity = dataIdentity;
     session.candidate_build_dir = workDir;
-    session.candidate_compose_files = stack.compose;
-    session.candidate_compose_override = stack.override;
-    session.candidate_handoff = stack.handoff;
-    session.candidate_volume_names = stack.volumes;
-    writeJson(sessionPath, session);
+    session.browser_version = captures.browserVersion;
+    session.platform = captures.platform;
+    persistAuthorizedSession(sessionPath, session, authority);
     console.log(JSON.stringify({ status: session.status, candidate: session.candidate, project, ports, source }, null, 2));
-  } catch (error) { primary = error; }
-  runWithTeardown(primary, () => {});
+  } catch (error) {
+    primary = error;
+    if (transitionMutationStarted && !transitionCompleted) transitionFailureHandled = true;
+    if (!startupAttempted) {
+      try { fs.rmdirSync(output); } catch (cleanupError) { if (cleanupError.code !== "ENOENT" && cleanupError.code !== "ENOTEMPTY") primary.directoryCleanupError = cleanupError; }
+    }
+  }
+  try {
+    runWithTeardown(primary, () => {
+      if (primary && startupAttempted && !transitionFailureHandled) teardownOwnedProject(authority, true);
+    });
+  } catch (error) {
+    if (primary && startupAttempted) {
+      session.status = "candidate-failed";
+      try { persistAuthorizedSession(sessionPath, session, authority); }
+      catch (sessionError) { primary.sessionError = sessionError; }
+    }
+    throw error;
+  }
 }
 
 function teardownSession(sessionPath) {
-  const session = readJson(sessionPath);
-  if (session.schema !== "scrypath.ui-session.v1" || !/^scrypath-p185-[a-z0-9][a-z0-9-]{7,31}$/.test(session.project)) throw new Error("Refusing teardown for an unowned session.");
-  if (session.project === session.retained_inventory.project || Object.values(session.ports).includes(session.retained_inventory.port)) throw new Error("Refusing teardown of a retained project or port.");
-  const useCandidate = ["candidate-captured", "compared-pending-review"].includes(session.status);
-  const override = useCandidate ? session.candidate_compose_override : session.compose_override;
-  const buildDir = useCandidate ? session.candidate_build_dir : session.build_dir;
-  const imageOverride = path.join(buildDir, "build", "image-override.json");
-  const compose = composeFiles(session.project, override, imageOverride);
-  const env = { ...process.env, E2E_PROJECT_NAME: session.project, E2E_SCOPE: "full", E2E_IMAGE_OVERRIDE: imageOverride };
-  teardownOwnedProject(session.project, session.session_id, session.retained_inventory, compose, env, true);
+  const { session, authority } = loadAuthorizedSession(sessionPath);
+  assertRetainedInventoryCurrent(authority);
+  const role = authority.manifests.candidate ? "candidate" : "before";
+  if (authority.manifests[role] && ["before-captured", "candidate-captured", "compared-pending-review"].includes(session.status)) assertOwnedRuntime(authority, role);
+  teardownOwnedProject(authority, true);
   session.status = "torn-down";
-  writeJson(sessionPath, session);
+  persistAuthorizedSession(sessionPath, session, authority);
 }
 
 function compareSession(sessionPath) {
-  const session = readJson(sessionPath);
-  if (session.schema !== "scrypath.ui-session.v1" || session.status !== "candidate-captured" || !session.candidate) throw new Error("Session has no verified before/candidate pair.");
-  const beforeDirectory = path.dirname(session.before);
-  const afterDirectory = path.dirname(session.candidate);
+  const { session, authority } = loadAuthorizedSession(sessionPath);
+  if (session.status !== "candidate-captured" || !session.candidate) throw new Error("Session has no verified before/candidate pair.");
+  assertRetainedInventoryCurrent(authority);
+  const beforeRecord = authority.manifests.before;
+  const candidateRecord = authority.manifests.candidate;
+  const beforeDirectory = beforeRecord.directory;
+  const afterDirectory = candidateRecord.directory;
   const output = path.join(artifactRoot, `comparison-${session.session_id}`);
-  const report = compareDirectories(beforeDirectory, afterDirectory, output, session.retained_inventory);
+  const report = compareDirectories(beforeDirectory, afterDirectory, output, authority);
   session.status = "compared-pending-review";
   session.comparison = path.join(output, "comparison.json");
-  writeJson(sessionPath, session);
+  persistAuthorizedSession(sessionPath, session, authority);
   console.log(JSON.stringify({ status: session.status, comparison: session.comparison, captures_compared: report.comparisons.length }, null, 2));
 }
 
@@ -785,15 +1262,24 @@ if (require.main === module) main(process.argv.slice(2)).catch((error) => {
 module.exports = {
   artifactRoot,
   artifactErrors,
+  candidateServerCommands,
+  captureManifestErrors,
   collectPages,
   comparePng,
+  createSessionAuthority,
   disposableProvenanceErrors,
   expectedCaptureIds,
   gitEnvironment,
   indexResults,
   isCanonicalOrigin,
+  loadAuthorizedSession,
+  manifestAuthorityErrors,
+  manifestDigest,
   matrixErrors,
   normalizePgDump,
+  persistAuthorizedSession,
+  recordManifestAuthority,
+  runCandidateTransition,
   runWithTeardown,
   sourceChangeErrors,
   stableDataIdentity,
