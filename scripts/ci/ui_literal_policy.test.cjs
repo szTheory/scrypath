@@ -420,3 +420,24 @@ test("inline style identities retain changed source values while ignoring format
   assert.notDeepEqual(identities('style={if @active, do: "content: ab", else: ""}'), dynamic);
   assert.notDeepEqual(identities('style={@different_source}'), dynamic);
 });
+
+test("presentation colors and JavaScript styling literals cannot escape source discovery", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ui-color-context-review-"));
+  t.after(() => fs.rmSync(root, {recursive:true, force:true}));
+  const html = path.join(root, "scrypath_ops/lib/colors.heex");
+  const js = path.join(root, "scrypath_ops/assets/js/colors.js");
+  fs.mkdirSync(path.dirname(html), {recursive:true});fs.mkdirSync(path.dirname(js), {recursive:true});
+  fs.writeFileSync(html, '<svg><path fill="#ABCDEF" stroke="#123"/><path fill="url(#abc)"/></svg><a href="#fff" id="fff">#abc prose</a><div class="bg-[#aabbcc] [&_#def]:block bg-[url(#fed)]"></div>');
+  fs.writeFileSync(js, 'topbar.config({barColors: {0: "#29d"}, shadowColor: "#010203"});\nconst prose = "#bada55";');
+  assert.deepEqual(scanTree(root).filter(f => f.rule === "raw-hex").map(f=>f.value).sort(), ['#010203','#123','#29d','#ABCDEF','#aabbcc'].sort());
+});
+
+test("commented and quoted theme syntax cannot create a token authority", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ui-theme-authority-review-"));
+  t.after(() => fs.rmSync(root, {recursive:true, force:true}));
+  const css = path.join(root, "scrypath_ops/assets/css/app.css");fs.mkdirSync(path.dirname(css),{recursive:true});
+  for (const prefix of ['/* @theme { */\n', '.caption { content: "@theme {"; }\n']) {
+    fs.writeFileSync(css, prefix+'.ordinary { color: #abcdef; }');
+    assert.deepEqual(scanTree(root).filter(f=>f.rule==='raw-hex').map(f=>f.value), ['#abcdef']);
+  }
+});
