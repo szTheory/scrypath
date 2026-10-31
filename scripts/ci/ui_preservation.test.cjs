@@ -17,7 +17,8 @@ function validManifest() {
     const width = Number(widthText);
     const files = Object.fromEntries(["copy.json", "viewport.png", "full.png", "hover.png", "focus.png"].map((kind) => [kind, { path: `${id}--${kind}`, sha256: "c".repeat(64) }]));
     if (surface === "control-room" && width === 390) files["navigation.png"] = { path: `${id}--navigation.png`, sha256: "c".repeat(64) };
-    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, files, browser_version: "chromium-123", platform: "darwin-arm64", data_identity: "state-digest" };
+    const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control Room", "Search"] } : undefined;
+    return { id, deployment, surface, theme, width, viewport: { width, height: width === 390 ? 844 : 900 }, files, mobile_navigation, browser_version: "chromium-123", platform: "darwin-arm64", data_identity: "state-digest" };
   });
   const identities = ["web", "standalone_ops"].map((service) => ({ service, id: `${service}-image`, labels: { "org.opencontainers.image.revision": sourceSha }, source_sha: sourceSha, tree_sha256: treeSha }));
   return {
@@ -51,7 +52,14 @@ test("compact navigation screenshot is required with its image filename key", ()
   const manifest = validManifest();
   const compact = manifest.captures.find((capture) => capture.id === "host--control-room--light--390");
   delete compact.files["navigation.png"];
-  assert.ok(preservation.matrixErrors(manifest).some((error) => error.includes("Compact navigation evidence is missing: host--control-room--light--390")));
+  assert.ok(preservation.matrixErrors(manifest).some((error) => error.includes("Compact navigation evidence is missing or did not open: host--control-room--light--390")));
+});
+
+test("compact navigation evidence proves the drawer opened with visible links", () => {
+  const manifest = validManifest();
+  const compact = manifest.captures.find((capture) => capture.id === "host--control-room--light--390");
+  compact.mobile_navigation.visible = false;
+  assert.ok(preservation.matrixErrors(manifest).some((error) => error.includes("Compact navigation evidence is missing or did not open: host--control-room--light--390")));
 });
 
 test("disposable provenance rejects retained project, port, and volume even when disposable mode is selected", () => {

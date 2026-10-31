@@ -159,7 +159,7 @@ function matrixErrors(manifest) {
   for (const capture of captures) {
     if (capture.error) errors.push(`Capture failed: ${capture.id}: ${capture.error}`);
     if (!capture.files?.["copy.json"] || !capture.files?.["viewport.png"] || !capture.files?.["full.png"] || !capture.files?.["hover.png"] || !capture.files?.["focus.png"]) errors.push(`Capture lacks image or copy evidence: ${capture.id}.`);
-    if (capture.surface === "control-room" && capture.width === 390 && !capture.files?.["navigation.png"]) errors.push(`Compact navigation evidence is missing: ${capture.id}.`);
+    if (capture.surface === "control-room" && capture.width === 390 && (!capture.files?.["navigation.png"] || capture.mobile_navigation?.expanded !== true || capture.mobile_navigation?.visible !== true || !capture.mobile_navigation?.links?.length)) errors.push(`Compact navigation evidence is missing or did not open: ${capture.id}.`);
     if (!capture.browser_version || !capture.platform || !capture.data_identity) errors.push(`Capture lacks browser, platform, or data identity: ${capture.id}.`);
     if (capture.browser_version !== manifest?.environment?.browser_version || capture.platform !== manifest?.environment?.platform || capture.data_identity !== manifest?.environment?.data_identity) errors.push(`Unpaired browser/platform/data identity: ${capture.id}.`);
     if (capture.deployment === "host" && !hostSurfaces.includes(capture.surface)) errors.push(`Unknown host surface: ${capture.id}.`);

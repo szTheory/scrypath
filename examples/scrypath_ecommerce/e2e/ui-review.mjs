@@ -172,7 +172,25 @@ async function captureSurface(browser, surface, theme, viewport, output, options
     const nav = page.getByRole("button", { name: "Open navigation", exact: true });
     if (surface.id === "control-room" && await nav.isVisible()) {
       await nav.click();
+      await page.waitForFunction(() => {
+        const trigger = document.querySelector("[data-ops-nav-open]");
+        const drawer = document.querySelector("#ops-mobile-nav");
+        return trigger?.getAttribute("aria-expanded") === "true" && drawer && !drawer.hidden && drawer.classList.contains("is-open");
+      });
+      const mobileNavigation = await page.evaluate(() => {
+        const drawer = document.querySelector("#ops-mobile-nav");
+        const visible = (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden";
+        return {
+          expanded: document.querySelector("[data-ops-nav-open]")?.getAttribute("aria-expanded") === "true",
+          visible: Boolean(drawer && !drawer.hidden && visible(drawer)),
+          links: [...(drawer?.querySelectorAll("a[data-ops-nav-link]") || [])].filter(visible).map((node) => node.innerText.trim()).filter(Boolean)
+        };
+      });
+      if (!mobileNavigation.visible || !mobileNavigation.expanded || mobileNavigation.links.length === 0) throw new Error("Compact navigation did not open with visible links.");
+      capture.mobile_navigation = mobileNavigation;
       await save("navigation.png", await page.screenshot({ animations: "disabled" }));
+    } else if (surface.id === "control-room") {
+      throw new Error("Compact navigation trigger is missing.");
     }
   } catch (error) {
     capture.error = error.message;
