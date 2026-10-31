@@ -5,10 +5,10 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase 185 Plans 01/02/04 integrated and root-verified; continuing Wave 3; retained-preview stop preserved.
-last_updated: "2026-10-31T15:25:28.336241+00:00"
+stopped_at: Phase 185 Wave 3 review fixes active; Plan 03 repaired/private, Plan 05 corrective worktree running; UI edits held; retained-preview stop preserved.
+last_updated: "2026-10-31T16:53:00.867081+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Approved bootstrap merged; Plan 02 integrated and root-verified
+last_activity_desc: Token review repaired and canonical-verified; capture provenance/data/lifecycle corrective run active
 state_head: d624f30570ec56a72c0173122c0c1c68a4391486
 progress:
   total_phases: 4
@@ -23,7 +23,7 @@ progress:
 ## Current Position
 
 Phase: 185 (Executable UI quality foundations) — EXECUTING WAVE 3
-Plan: 3 of 10 integrated (01, 02 and 04); Wave 3 Plans 03 and 05 next
+Plan: 3 of 10 integrated (01, 02 and 04); Plan 03 repaired and private; Plan 05 review fixes active
 Status: Executing the authorized selected phase
 Last activity: 2026-10-31 — Approved bootstrap merge and actual root integration verified
 
@@ -31,7 +31,7 @@ Progress: [████████░░] 82%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Execute Wave 3 Plans 03 and 05. Bootstrap PR #124 was explicitly approved and squash-merged; actual main inventory parity and production enforcement passed before GSD integration. Root build, Node and canonical repository checks passed after integration. [Merge receipt](phases/185-executable-ui-quality-foundations/185-02-MERGE-INTEGRATION.json) and Plan 02 summary preserve evidence and historical limitations. No phase completion, later main merge or dependency-risk acceptance is claimed. Plans 08/09 retain all 61 planned automated obligations; subjective critique remains nonblocking. The retained-preview stop remains in force.
+Next: Continue capture review repairs in `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-05-reviewfix-4hq8abiz`; GSD worker metadata is `/private/tmp/phase185-05-reviewfix-4hq8abiz/metadata.json`. Plan 03 is repaired, scoped-reviewed and canonical-verified on code `6f7ebe9d`, with tracking at `64979457`, in its original private worktree. Do not redispatch either plan. No UI CSS/controller/template/generator edits may start until capture tooling and same-state before evidence meet the contract. Original default entry captures were archived byte-for-byte; the original disposable stack was ownership-verified and torn down. The initial unseeded diagnosis was retracted after tracing existing incident seeding. Real blockers are session/provenance integrity, matrix metadata binding, raw dump nondeterminism, settings omission, candidate reseeding/failure cleanup and repeatability. The retained preview remains stopped and untouched. No user action is needed while these authorized repairs run.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
@@ -47,7 +47,7 @@ The final root verification checks the actual merged tree and current reports. E
 
 See `.planning/PROJECT.md` (updated 2026-10-31).
 Core value: Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-Current focus: Phase 185 Wave 3 token drift and independently verified disposable before evidence; dependency advisories remain unaccepted.
+Current focus: Phase 185 Wave 3 parent-review repairs and qualified disposable before evidence; dependency advisories remain unaccepted.
 
 ## Phase 184 source and terminal authority
 
@@ -75,7 +75,7 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 ## Session continuity
 
 Last session: 2026-10-31
-Stopped at: Phase 185 Plans 01/02/04 integrated and root-verified; continuing Wave 3.
+Stopped at: Phase 185 Wave 3 review fixes active; Plan 03 private/repaired, Plan 05 corrective worker running; UI edits held.
 Resume file: .planning/phases/185-executable-ui-quality-foundations/.continue-here.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
