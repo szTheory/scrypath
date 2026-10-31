@@ -1,0 +1,32 @@
+{
+  "authorization": "Maintainer answered yes to the concrete request to squash-merge only PR124 and continue Phase185. No broader risk acceptance or later main merge authorization.",
+  "pr": "https://github.com/szTheory/scrypath/pull/124",
+  "approved_head": "d31e4fc422edb8ac3413556bb7c65fe8b6b01fda",
+  "merged_main": "c1be269ec202deed8602c74683c1b9ce5e42eaa9",
+  "main_changed_files": [
+    "scripts/ci/ui-literal-baseline.json"
+  ],
+  "inventory_parity": true,
+  "production_against_new_main": "PASS",
+  "integration_manifest": "/private/tmp/phase185-wave2-13xypspp/worktrees.json",
+  "integration_result": "/private/tmp/phase185-wave2-integration.json",
+  "worktree_status": "merged_removed",
+  "root_code_cutoff": "d624f30570ec56a72c0173122c0c1c68a4391486",
+  "root_build": {
+    "command": "MIX_ENV=test mix compile --warnings-as-errors",
+    "exit": 0
+  },
+  "node": {
+    "passed": 14,
+    "failed": 0,
+    "log": "/private/tmp/phase185-wave2-root-node.log"
+  },
+  "canonical": {
+    "passed": 131,
+    "failed": 0,
+    "log": "/private/tmp/phase185-wave2-root-canonical.log"
+  },
+  "retained_preview": "stopped_untouched",
+  "dependency_advisories": "unaccepted",
+  "phase_complete": false
+}

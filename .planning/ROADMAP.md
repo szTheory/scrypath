@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; bootstrap merge checkpoint)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; three plans integrated)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -17,9 +17,9 @@
 
 ## Current Posture
 
-**Phases 182–184 are goal-verified; Phase 185 has two integrated plans and is paused at a concrete merge boundary.** Plan 01 enforces contrast through the required command; Plan 04 retires the paid/mock judge. Plan 02's repaired scanner and immutable inventory are retained in an isolated worktree, not integrated. The remaining seven plans have not started.
+**Phases 182–184 are goal-verified; Phase 185 has three integrated plans.** Plan 01 enforces contrast through the required command; Plan 02 enforces shrink-only source literals and trusted history; Plan 04 retires the paid/mock judge. The combined root checks passed. Wave 3 token drift and disposable pre-change evidence are next.
 
-Recommend merging only [the data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124) before the later source cleanup. The shrink-only contract requires an exact first inventory, which would be lost if introduction and cleanup landed in a single squash. The [delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) contains the executable reproductions, current verification and resume pointers. Merge authority is pending; no phase completion is claimed.
+The maintainer approved and merged [data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124) before source cleanup. The shrink-only contract requires an exact first inventory, which would be lost if introduction and cleanup landed in a single squash. The [delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) contains the executable reproductions, current verification and resume pointers. Actual merged inventory parity and root integration were verified; no phase completion is claimed.
 
 Continue in `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`. Preserve the unrelated config edit and source-stale retained preview. Dependency advisories remain unaccepted; no current rendered or independent design approval is claimed. The v1.44 archive, inherited debt, PR #122 merge and Hex publication remain separate. v1.45 is incomplete.
 
@@ -191,7 +191,7 @@ Plans:
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
 
-**Plans**: 2/10 integrated (01 and 04) across 6 execution waves; Plan 02 retained pending data-only bootstrap merge authority.
+**Plans**: 3/10 integrated (01, 02 and 04) across 6 execution waves; Wave 3 is next.
 
 Plans:
 
@@ -199,7 +199,7 @@ Plans:
 - [x] 185-01-PLAN.md — Required-command contrast tracer and live focus/text enforcement (wave 1)
 
 **Wave 2** *(blocked on Wave 1 completion)*
-- [ ] 185-02-PLAN.md — Trusted shrink-only literal inventory, bootstrap/history and existing CI transport (wave 2)
+- [x] 185-02-PLAN.md — Trusted shrink-only literal inventory, bootstrap/history and existing CI transport (wave 2)
 - [x] 185-04-PLAN.md — Retire paid/mock judge entrypoints and reconcile current/historical evidence (wave 2)
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -235,13 +235,13 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase 185 is executing and held at the Plan 02 bootstrap merge boundary.
+**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase 185 is executing Wave 3 after verified Wave 2 integration.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
-| 185. Executable UI quality foundations | 2/10 | Bootstrap merge approval pending | — |
+| 185. Executable UI quality foundations | 3/10 | Executing Wave 3 | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending phase-goal verification in Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.

@@ -1,6 +1,6 @@
 # Plan 02 delivery review
 
-Status: implementation retained in its isolated worktree; integration and later waves held for bootstrap PR merge authority. Phase 185 is incomplete. Plans 01 and 04 are integrated; Plan 02 is not.
+Status: resolved after explicit maintainer approval. PR #124 squash-merged to main as `c1be269ec202deed8602c74683c1b9ce5e42eaa9`; exact inventory parity and production enforcement passed, then GSD integrated and removed the clean Plan 02 worktree. Root build/Node/canonical checks passed. Plans 01/02/04 are integrated; Phase 185 remains incomplete. The decision and pre-approval evidence below are historical. [Merge/integration receipt](185-02-MERGE-INTEGRATION.json) records the resolution.
 
 ## Decision and consequence
 
