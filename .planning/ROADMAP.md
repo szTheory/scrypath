@@ -220,4 +220,4 @@ Plans:
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
 | 185. Executable UI quality foundations | 0/TBD | Not started | — |
 
-**Coverage:** 21/21 confirmed requirements map to exactly one phase; none are complete.
+**Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending in unstarted Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.
