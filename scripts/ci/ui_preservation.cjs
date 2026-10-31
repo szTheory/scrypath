@@ -827,7 +827,7 @@ function teardownOwnedProject(authority, removeVolumes = true) {
   if (project !== `scrypath-p185-${sessionId}` || project === retained.project || !/^[a-f0-9]{16}$/.test(sessionId)) throw new Error("Refusing teardown without a matching independent project/session authority.");
   assertRetainedInventoryCurrent(authority);
 
-  const containerIds = run("docker", ["ps", "-aq", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
+  const containerIds = run("docker", ["ps", "-aq", "--no-trunc", "--filter", `label=com.docker.compose.project=${project}`], { timeout: 15_000, maxBuffer: 2 * 1024 * 1024 }).split("\n").filter(Boolean);
   const containers = containerIds.map((id) => JSON.parse(run("docker", ["inspect", "--format", "{{json .}}", id], { timeout: 15_000, maxBuffer: 4 * 1024 * 1024 })));
   for (const container of containers) {
     const labels = container.Config?.Labels || {};
