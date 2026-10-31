@@ -69,6 +69,8 @@ status: review_fixes_required
 
 # Phase 185 Plan 05: Disposable UI Preservation Summary
 
+Parent review found blocking ownership/integrity/matrix/data-state/lifecycle gaps. The initial entry captures are historical observations, not accepted paired preservation evidence. They were archived unchanged; the owned old stack was verified and removed. The initial unseeded diagnosis was retracted: the existing full startup seeds incident data. This fresh corrective checkout owns tooling fixes and a qualified recapture. Read 185-05-REVIEW.md before relying on the earlier execution record below.
+
 **Source-pinned disposable UI capture with 135 host and standalone observations, interaction evidence, and pending pixel/copy comparison**
 
 ## Performance

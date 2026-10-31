@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
-import { captureDisposableMatrix, dimensions, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
+import { captureDisposableMatrix, cleanGitEnvironment, dimensions, entryFixtureErrors, isCanonicalOrigin, previewSourceErrors, reviewArtifactRoot, reviewErrors, reviewTemplate, surfaces, themes, viewports } from "./ui-review.mjs";
 
 test("Playwright output cleanup preserves UI review evidence", async () => {
   const demoRoot = fileURLToPath(new URL("../", import.meta.url));
@@ -60,6 +60,28 @@ test("a different preview worktree or omitted main commits cannot masquerade as 
 test("disposable captures cannot target retained loopback or arbitrary network hosts", async () => {
   await assert.rejects(captureDisposableMatrix({ hostUrl: "http://127.0.0.1:4002", standaloneUrl: "http://127.0.0.1:4003", output: "/tmp/evidence", dataIdentity: "digest" }), /retained-preview targets are not accepted/);
   await assert.rejects(captureDisposableMatrix({ hostUrl: "http://example.com:4002", standaloneUrl: "http://standalone_ops:4003", output: "/tmp/evidence", dataIdentity: "digest", allowComposeNetwork: true }), /exact owned Compose service routes/);
+});
+
+test("disposable entry fixtures distinguish host incident data from standalone empty allowlists", () => {
+  const incidentSummary = "Control Room 3 sync jobs failed";
+  const incidentFailures = "3 failed, 2 retrying Product Invalid data Meilisearch rejected it Unknown cause";
+  const standaloneSummary = "No search schemas configured. Configure the host application's schema allowlist";
+  const standaloneFailures = "No schemas configured. Add allowlisted schema modules with schema_allowlist in :scrypath_ops";
+  assert.deepEqual(entryFixtureErrors("host", "control-room", incidentSummary), []);
+  assert.deepEqual(entryFixtureErrors("host", "failed-sync", incidentFailures), []);
+  assert.deepEqual(entryFixtureErrors("standalone", "control-room", standaloneSummary), []);
+  assert.deepEqual(entryFixtureErrors("standalone", "failed-sync", standaloneFailures), []);
+  assert.ok(entryFixtureErrors("host", "failed-sync", "No failures" ).length > 0);
+  assert.ok(entryFixtureErrors("standalone", "control-room", incidentSummary).length > 0);
+});
+
+test("UI review Git reads ignore inherited repository redirects and require canonical origin", () => {
+  assert.deepEqual(cleanGitEnvironment({ PATH: "/usr/bin", GIT_DIR: "/tmp/forged.git", GIT_WORK_TREE: "/tmp/forged" }), {
+    PATH: "/usr/bin", GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: "/dev/null"
+  });
+  assert.equal(isCanonicalOrigin("https://github.com/szTheory/scrypath.git"), true);
+  assert.equal(isCanonicalOrigin("git@github.com:szTheory/scrypath.git"), true);
+  assert.equal(isCanonicalOrigin("https://example.com/szTheory/scrypath.git"), false);
 });
 
 test("reviewing reported screens alone cannot omit the rest of the inventory", () => {
