@@ -944,7 +944,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
              ]
     end
 
-    test "full Docker proof retains browser, light parity, and contrast without activating the judge" do
+    test "full Docker proof retains deterministic checks after judge entrypoint retirement" do
       docker_runner = File.read!("examples/scrypath_ecommerce/docker-playwright.sh")
       compose = File.read!("examples/scrypath_ecommerce/compose.e2e.yaml")
       package_json = File.read!("examples/scrypath_ecommerce/package.json")
@@ -952,7 +952,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert package_json =~ ~s("test:e2e": "playwright test --workers=1")
       assert package_json =~ "test:e2e:admin-light-parity"
       assert package_json =~ "test:e2e:admin-shell-wash"
-      assert package_json =~ "test:e2e:ops-ui-visual-judge"
+      refute package_json =~ "test:e2e:ops-ui-visual-judge"
+      refute File.exists?("examples/scrypath_ecommerce/e2e/ops-ui-visual-judge.mjs")
+      makefile = File.read!("examples/scrypath_ecommerce/Makefile")
+      refute makefile =~ "OPS_UI_LLM_JUDGE"
+      refute makefile =~ "JUDGE_STATUS"
+      assert makefile =~ ~s|[ "$$SHELL_STATUS" -eq 0 ] && [ "$$WASH_STATUS" -eq 0 ]|
       assert docker_runner =~ "npm run test:e2e"
       assert docker_runner =~ "npm run test:e2e:admin-light-parity"
       assert docker_runner =~ "node contrast-checker.mjs"
