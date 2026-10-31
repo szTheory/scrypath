@@ -39,6 +39,13 @@ function expected() {
   return { source_sha: sourceSha, tree_sha256: treeSha, retained_project: "scrypath_ecommerce", retained_port: 4002, retained_volumes: ["scrypath_ecommerce_postgres_data"] };
 }
 
+test("frozen preservation matrix covers 72 host and 63 standalone observations", () => {
+  const ids = preservation.expectedCaptureIds();
+  assert.equal(ids.filter((id) => id.startsWith("host--")).length, 72);
+  assert.equal(ids.filter((id) => id.startsWith("standalone--")).length, 63);
+  assert.equal(ids.length, 135);
+});
+
 test("disposable provenance rejects retained project, port, and volume even when disposable mode is selected", () => {
   const manifest = validManifest();
   manifest.runtime.compose_project = "scrypath_ecommerce";
