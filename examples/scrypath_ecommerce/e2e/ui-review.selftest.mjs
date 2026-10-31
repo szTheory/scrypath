@@ -159,8 +159,8 @@ test("viewport document captures reject zoom, scroll and changed layout", async 
     await assert.rejects(captureViewportImage({ evaluate: async () => ({ ...geometry, ...change }), screenshot: async () => { shots += 1; return Buffer.alloc(0); } }, { width: 390, height: 844 }), /viewport/i);
     assert.equal(shots, 0);
   }
-  let calls = 0;
-  await assert.rejects(captureViewportImage({ evaluate: async () => calls++ ? { ...geometry, documentHeight: 960 } : geometry, screenshot: async () => Buffer.alloc(0) }, { width: 390, height: 844 }), /layout/i);
+  const measurements = [undefined, geometry, { ...geometry, documentHeight: 960 }];
+  await assert.rejects(captureViewportImage({ evaluate: async () => measurements.shift(), screenshot: async () => Buffer.alloc(0) }, { width: 390, height: 844 }), /layout/i);
   const failure = new Error("actual screenshot failed");
   await assert.rejects(captureViewportImage({ evaluate: async () => geometry, screenshot: async () => { throw failure; } }, { width: 390, height: 844 }), error => error === failure);
 });

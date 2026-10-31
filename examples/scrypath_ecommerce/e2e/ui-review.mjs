@@ -184,13 +184,14 @@ export async function captureViewportImage(page, viewport) {
     documentWidth: document.documentElement.scrollWidth,
     documentHeight: document.documentElement.scrollHeight
   }));
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const before = await geometry();
   if (before.width !== viewport.width || before.height !== viewport.height || before.dpr !== 1 || before.scale !== 1 || before.scrollX !== 0 || before.scrollY !== 0) throw new Error("Viewport capture requires the exact unzoomed viewport at scroll origin.");
   // Keep Playwright's animation/caret preparation, using Chromium's document
   // capture route with an exact viewport clip. No viewport resize or pixel edit.
   const image = await page.screenshot({ animations: "disabled", fullPage: true, clip: { x: 0, y: 0, width: viewport.width, height: viewport.height } });
   const after = await geometry();
-  if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("Viewport capture changed the actual viewport or document layout.");
+  if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error(`Viewport capture changed the actual viewport or document layout: ${JSON.stringify({ before, after })}`);
   return image;
 }
 
