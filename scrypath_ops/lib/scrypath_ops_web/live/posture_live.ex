@@ -158,7 +158,7 @@ defmodule ScrypathOpsWeb.PostureLive do
     ScrypathOps.Posture.summary(
       socket.assigns.schema_allowlist,
       socket.assigns.scrypath_opts,
-      DateTime.utc_now(),
+      ScrypathOps.Clock.utc_now(),
       Map.get(socket.assigns, :posture_summary)
     )
   end
