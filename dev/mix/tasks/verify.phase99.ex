@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Verify.Phase99 do
     "test/scrypath/no_human_gates_contract_test.exs",
     "test/mix/tasks/verify.phase99_test.exs",
     "test/mix/tasks/ui_contrast_contract_test.exs",
+    "test/mix/tasks/ui_tokens_contract_test.exs",
     "test/mix/tasks/ui_literal_contract_test.exs",
     "test/mix/tasks/dependency_boundary_contract_test.exs",
     "test/mix/tasks/workflow_wiring_test.exs",
