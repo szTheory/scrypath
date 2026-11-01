@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
@@ -226,7 +227,12 @@ function completeReceiptCases() {
     testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "one purposeful zero-match state and no duplicate per-schema empty cards" }),
     testCase({ file: "e2e/ui_iteration3.spec.ts", suiteTitle: "ui_iteration3.spec.ts", title: "Save sits by Run, validates the name and offers Save and Save as after edits" }),
     testCase({ file: "e2e/phase173_shell.spec.ts", suiteTitle: "phase173_shell.spec.ts", title: "mounted shell renders light preference" }),
-    testCase({ file: "e2e/phase173_shell.spec.ts", suiteTitle: "phase173_shell.spec.ts", title: "standalone shell renders light preference" })
+    testCase({ file: "e2e/phase173_shell.spec.ts", suiteTitle: "phase173_shell.spec.ts", title: "standalone shell renders light preference" }),
+    ...evidence.preservationCases.map(({ id, file }) => testCase({
+      file,
+      suiteTitle: path.posix.basename(file),
+      title: `${id} preserves held-out content and state`
+    }))
   ];
 }
 
@@ -282,7 +288,13 @@ function createCompleteRun() {
         required: true,
         copied: true,
         copy_status: "success"
-      }
+      },
+      ...evidence.preservationCases.map(({ id }) => ({
+        path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${id.replaceAll(" ", "-")}.png`,
+        required: true,
+        copied: true,
+        copy_status: "success"
+      }))
     ],
     allowed_skips: [],
     first_failure: null
@@ -290,9 +302,55 @@ function createCompleteRun() {
 
   fs.mkdirSync(path.join(runDir, "playwright-report"), { recursive: true });
   fs.mkdirSync(path.join(runDir, "ui-review-artifacts/iteration3-journeys"), { recursive: true });
+  fs.mkdirSync(path.join(runDir, "ui-review-artifacts/iteration3-journeys/phase185-held-out"), { recursive: true });
   fs.writeFileSync(path.join(runDir, "phase105-playwright-list.json"), JSON.stringify(playwrightReport(cases)));
   fs.writeFileSync(path.join(runDir, "phase105-playwright.json"), JSON.stringify(playwrightReport(cases, { results: true })));
-  fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${JSON.stringify({ operation: "seed" })}\n`);
+  const evidenceEvents = [{ operation: "seed" }];
+  const productTreeSha256 = evidence.productTreeIdentity(path.resolve(__dirname, "../.."));
+  const fixtureOverlaySha256 = evidence.fixtureOverlayDigest(path.resolve(__dirname, "../.."));
+  const onePixelPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
+  for (const preservationCase of evidence.preservationCases) {
+    const title = `${preservationCase.id} preserves held-out content and state`;
+    const identity = evidence.caseIdentity({
+      file: preservationCase.file,
+      project: "chromium",
+      title_path: [path.posix.basename(preservationCase.file), title]
+    });
+    const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}.png`;
+    fs.writeFileSync(path.join(runDir, imagePath), onePixelPng);
+    const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_CAPTURE`;
+    evidenceEvents.push({
+      operation: "ui_preservation_case",
+      case_id: preservationCase.id,
+      test_identity: identity.key,
+      source_sha: SOURCE_SHA,
+      product_tree_sha256: productTreeSha256,
+      fixture_overlay_sha256: fixtureOverlaySha256,
+      runtime: {
+        application_image_id: IMAGE_ID,
+        browser_image_id: IMAGE_ID,
+        effective_runtime_sha256: `sha256:${"d".repeat(64)}`
+      },
+      recipe_sha256: `sha256:${"e".repeat(64)}`,
+      state: {
+        element: preservationCase.element,
+        category: preservationCase.category,
+        route: "/",
+        theme: "light",
+        viewport: { width: 1440, height: 900 },
+        scroll: { x: 0, y: 0 },
+        focus: { name: "TEST_FIXTURE_ONLY" },
+        data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE"
+      },
+      actions: ["TEST_FIXTURE_ONLY"],
+      transport_sequence: [{ operation: "TEST_FIXTURE_ONLY", outcome: "TEST_FIXTURE_ONLY" }],
+      geometry: [{ name: "TEST_FIXTURE_ONLY", x: 0, y: 0, width: 1, height: 1 }],
+      assertions: [{ name: "TEST_FIXTURE_ONLY", status: "passed", actual: "TEST_FIXTURE_ONLY" }],
+      visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
+      image: { path: imagePath, sha256: crypto.createHash("sha256").update(onePixelPng).digest("hex") }
+    });
+  }
+  fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${evidenceEvents.map((event) => JSON.stringify(event)).join("\n")}\n`);
   fs.writeFileSync(path.join(runDir, "admin-light-parity.json"), JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }));
   fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify(tokenContrastReport()));
   fs.writeFileSync(path.join(runDir, "lifecycle.json"), JSON.stringify({ cleanup: { ...manifest.cleanup } }));
@@ -314,10 +372,11 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
   try {
     const receipt = evidence.writeEvidence?.({ runDir });
 
-    assert.equal(receipt?.eligibility.eligible, true);
+    assert.equal(receipt?.eligibility.eligible, true, JSON.stringify(receipt?.reasons));
     assert.equal(receipt?.eligibility.clean, true);
     assert.equal(receipt?.eligibility.class, "hosted-exact-sha");
-    assert.equal(receipt?.cases.length, 15);
+    assert.equal(receipt?.cases.length, 76);
+    assert.equal(receipt?.preservation?.cases.length, 61);
     assert.equal(Object.keys(receipt).some(key => key.startsWith("visual_judge_")), false);
     assert.equal(receipt?.workflow.sha, receipt?.source.event_sha);
     assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
@@ -597,7 +656,7 @@ test("full inventory requires every intended UI identity even when reports omit 
 });
 
 test("full inventory requires the exact held-out preservation case identities", () => {
-  const cases = completeReceiptCases();
+  const cases = completeReceiptCases().filter((item) => !item.title.startsWith("E1 empty "));
   const result = evidence.reconcileInventory?.({
     inventory: playwrightReport(cases),
     report: playwrightReport(cases, { results: true }),
@@ -611,9 +670,34 @@ test("full inventory requires the exact held-out preservation case identities", 
   ));
 });
 
+test("a full inventory cannot duplicate or relocate a held-out case identity", () => {
+  const cases = completeReceiptCases();
+  const target = cases.find((item) => item.title.startsWith("E1 empty "));
+  const duplicated = [...cases, { ...target, title: "E1 empty second named case" }];
+  const misplaced = cases.map((item) => item === target ? { ...item, file: "e2e/ui_content_preservation.spec.ts" } : item);
+
+  for (const inventoryCases of [duplicated, misplaced]) {
+    const result = evidence.reconcileInventory({
+      inventory: playwrightReport(inventoryCases),
+      report: playwrightReport(inventoryCases, { results: true }),
+      repoRoot: path.resolve(__dirname, "../.."),
+      requireMandatoryCases: true
+    });
+    assert.equal(result.eligible, false);
+    assert.ok(result.reasons.some((reason) =>
+      ["duplicate_preservation_case", "unexpected_preservation_case"].includes(reason.code)
+    ));
+  }
+});
+
 test("a full receipt cannot pass without actual per-case state, assertion, copy and image events", () => {
   const { runDir } = createCompleteRun();
   try {
+    const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+    fs.writeFileSync(eventsPath, `${fs.readFileSync(eventsPath, "utf8").split(/\r?\n/).filter((line) => {
+      if (!line.trim()) return false;
+      return JSON.parse(line).operation !== "ui_preservation_case";
+    }).join("\n")}\n`);
     const receipt = evidence.writeEvidence?.({ runDir });
 
     assert.equal(receipt?.eligibility.eligible, false);
@@ -622,6 +706,56 @@ test("a full receipt cannot pass without actual per-case state, assertion, copy 
     ));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("a held-out receipt rejects altered copy, duplicate cases and image bytes", () => {
+  const { runDir } = createCompleteRun();
+  const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+  try {
+    const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+    const first = events.find((event) => event.operation === "ui_preservation_case");
+    first.visible_copy[0].text += " changed";
+    events.push({ ...first });
+    fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+    fs.writeFileSync(path.join(runDir, first.image.path), Buffer.from("tampered image"));
+
+    const receipt = evidence.writeEvidence?.({ runDir });
+    assert.equal(receipt?.eligibility.eligible, false);
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "duplicate_preservation_case_receipt"));
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_preservation_copy"));
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_preservation_image"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("held-out receipts bind source, fixture, runtime, recipe, state, transport and measured geometry", () => {
+  const mutations = [
+    ["source", (event) => { event.source_sha = "b".repeat(40); }, "preservation_source_mismatch"],
+    ["tree", (event) => { event.product_tree_sha256 = `sha256:${"a".repeat(64)}`; }, "preservation_source_mismatch"],
+    ["fixture", (event) => { event.fixture_overlay_sha256 = `sha256:${"a".repeat(64)}`; }, "preservation_fixture_mismatch"],
+    ["runtime", (event) => { event.runtime.effective_runtime_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_runtime"],
+    ["recipe", (event) => { event.recipe_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_recipe"],
+    ["state", (event) => { event.state.category = "error"; }, "invalid_preservation_state"],
+    ["transport", (event) => { event.transport_sequence = []; }, "invalid_preservation_transport"],
+    ["geometry", (event) => { event.geometry = []; }, "invalid_preservation_geometry"],
+    ["assertion", (event) => { event.assertions[0].status = "failed"; }, "invalid_preservation_assertions"]
+  ];
+
+  for (const [label, mutate, expectedCode] of mutations) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+      mutate(events.find((event) => event.operation === "ui_preservation_case"));
+      fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, label);
+      assert.ok(receipt.reasons.some((reason) => reason.code === expectedCode), label);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
   }
 });
 

@@ -37,6 +37,89 @@ const ALLOWED_ARTIFACT_PREFIXES = [
   "compose/"
 ];
 const REQUIRED_STAGES = ["inventory", "browser", "light_parity", "contrast", "artifact_copy"];
+const PRESERVATION_STATE_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6"];
+const PRESERVATION_STATE_CATEGORIES = ["empty", "loading", "error", "populated", "partial", "zero-one-many"];
+const PRESERVATION_ACTION_ELEMENTS = ["E8", "E9", "E10"];
+const PRESERVATION_CONTENT_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10"];
+const PRESERVATION_OVERFLOW_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E10"];
+const PRESERVATION_FIXTURE_FILES = [
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex",
+  "examples/scrypath_ecommerce/test/support/phase173_fixture_source.ex",
+  "scrypath_ops/test/support/phase173_fixture_source.ex"
+];
+const PRESERVATION_ARTIFACT_ROOT = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
+const PRESERVATION_CASES = Object.freeze([
+  ...PRESERVATION_STATE_ELEMENTS.flatMap((element) => PRESERVATION_STATE_CATEGORIES.map((category) => ({
+    id: `${element} ${category}`,
+    file: "e2e/ui_state_preservation.spec.ts",
+    element,
+    category
+  }))),
+  ...PRESERVATION_ACTION_ELEMENTS.flatMap((element) => ["loading", "error"].map((category) => ({
+    id: `${element} ${category}`,
+    file: "e2e/ui_state_preservation.spec.ts",
+    element,
+    category
+  }))),
+  ...PRESERVATION_OVERFLOW_ELEMENTS.map((element) => ({
+    id: `${element} overflow`,
+    file: "e2e/ui_content_preservation.spec.ts",
+    element,
+    category: "overflow"
+  })),
+  ...PRESERVATION_CONTENT_ELEMENTS.map((element) => ({
+    id: `${element} long-text`,
+    file: "e2e/ui_content_preservation.spec.ts",
+    element,
+    category: "long-text"
+  }))
+]);
+const PRODUCT_SOURCE_ROOTS = [
+  "examples/scrypath_ecommerce/assets",
+  "examples/scrypath_ecommerce/config",
+  "examples/scrypath_ecommerce/lib",
+  "scrypath_ops/assets",
+  "scrypath_ops/config",
+  "scrypath_ops/lib"
+];
+
+function sourceDigest(root, files) {
+  const entries = files.slice().sort().map((relative) => {
+    const absolute = path.join(root, ...relative.split("/"));
+    const stat = fs.lstatSync(absolute);
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new TypeError(`${relative} must be a regular source file`);
+    return { path: relative, sha256: crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex") };
+  });
+  return `sha256:${crypto.createHash("sha256").update(JSON.stringify(entries)).digest("hex")}`;
+}
+
+function listRegularFiles(root, relative, excluded = new Set()) {
+  const absolute = path.join(root, ...relative.split("/"));
+  const entries = fs.readdirSync(absolute, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
+  const files = [];
+  for (const entry of entries) {
+    const child = `${relative}/${entry.name}`;
+    if (excluded.has(child)) continue;
+    if (entry.isSymbolicLink()) throw new TypeError(`${child} must not be a symlink`);
+    if (entry.isDirectory()) files.push(...listRegularFiles(root, child, excluded));
+    else if (entry.isFile()) files.push(child);
+    else throw new TypeError(`${child} is not a regular source file`);
+  }
+  return files;
+}
+
+function fixtureOverlayDigest(repoRoot = path.resolve(__dirname, "../..")) {
+  return sourceDigest(path.resolve(repoRoot), PRESERVATION_FIXTURE_FILES);
+}
+
+function productTreeIdentity(repoRoot = path.resolve(__dirname, "../..")) {
+  const root = path.resolve(repoRoot);
+  const excluded = new Set([
+    "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex"
+  ]);
+  const files = PRODUCT_SOURCE_ROOTS.flatMap((directory) => listRegularFiles(root, directory, excluded));
+  return sourceDigest(root, files);
+}
 
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -326,7 +409,155 @@ function mandatoryInventoryReasons(cases) {
       reasons.push(errorReason("missing_required_entrypoint", `Phase 173 inventory is missing the ${entrypoint} entrypoint`));
     }
   }
+  const preservationCaseCounts = new Map();
+  for (const item of cases) {
+    const fileName = path.posix.basename(item.identity.file);
+    if (fileName !== "ui_state_preservation.spec.ts" && fileName !== "ui_content_preservation.spec.ts") continue;
+    const title = item.identity.title_path.at(-1) || "";
+    const match = title.match(/^(E(?:10|[1-9])) (empty|loading|error|populated|partial|zero-one-many|overflow|long-text)\b/);
+    if (!match) continue;
+    const id = `${match[1]} ${match[2]}`;
+    const expected = PRESERVATION_CASES.find((preservationCase) => preservationCase.id === id);
+    if (!expected || expected.file !== `e2e/${fileName}`) {
+      reasons.push(errorReason("unexpected_preservation_case", `Preservation case is outside its declared suite: ${id}`, item.identity.key));
+      continue;
+    }
+    preservationCaseCounts.set(id, (preservationCaseCounts.get(id) || 0) + 1);
+    if (item.identity.project !== "chromium") {
+      reasons.push(errorReason("invalid_preservation_project", `Preservation case ${id} must run in Chromium`, item.identity.key));
+    }
+  }
+  for (const preservationCase of PRESERVATION_CASES) {
+    const count = preservationCaseCounts.get(preservationCase.id) || 0;
+    if (count === 0) {
+      reasons.push(errorReason("missing_required_case", `Full inventory is missing intended case: ${preservationCase.id}`));
+    } else if (count !== 1) {
+      reasons.push(errorReason("duplicate_preservation_case", `Full inventory contains ${count} copies of ${preservationCase.id}`));
+    }
+  }
   return reasons;
+}
+
+function preservationIdForCase(item) {
+  const fileName = path.posix.basename(item.file);
+  if (fileName !== "ui_state_preservation.spec.ts" && fileName !== "ui_content_preservation.spec.ts") return null;
+  const title = item.title_path.at(-1) || "";
+  const match = title.match(/^(E(?:10|[1-9])) (empty|loading|error|populated|partial|zero-one-many|overflow|long-text)\b/);
+  if (!match) return null;
+  const id = `${match[1]} ${match[2]}`;
+  return PRESERVATION_CASES.some((preservationCase) => preservationCase.id === id && preservationCase.file === `e2e/${fileName}`)
+    ? id
+    : null;
+}
+
+function validatePreservationEvents(events, reconciliation, context, reasons) {
+  const preservationTests = reconciliation.cases.filter((item) => preservationIdForCase(item));
+  const passedTests = new Map(preservationTests.map((item) => [preservationIdForCase(item), item]));
+  const rows = events.filter((event) => event.operation === "ui_preservation_case");
+  const rowsById = new Map();
+  const effectiveRuntimes = new Set(rows.map((event) => event.runtime?.effective_runtime_sha256).filter(Boolean));
+  const recipes = new Set(rows.map((event) => event.recipe_sha256).filter(Boolean));
+  if (effectiveRuntimes.size > 1) reasons.push(errorReason("mixed_preservation_runtime", "Held-out cases use more than one effective test runtime identity"));
+  if (recipes.size > 1) reasons.push(errorReason("mixed_preservation_recipe", "Held-out cases use more than one browser/profile/clock/data recipe"));
+  for (const event of rows) {
+    const id = typeof event.case_id === "string" ? event.case_id : "";
+    if (!PRESERVATION_CASES.some((preservationCase) => preservationCase.id === id)) {
+      reasons.push(errorReason("unexpected_preservation_case_receipt", `Unknown preservation case receipt: ${id || "(missing id)"}`));
+      continue;
+    }
+    if (rowsById.has(id)) {
+      reasons.push(errorReason("duplicate_preservation_case_receipt", `Multiple preservation receipts exist for ${id}`));
+      continue;
+    }
+    rowsById.set(id, event);
+  }
+
+  const artifactByPath = new Map(context.artifacts.map((artifact) => [artifact.path, artifact]));
+  const validated = [];
+  for (const expected of PRESERVATION_CASES) {
+    const event = rowsById.get(expected.id);
+    const testCase = passedTests.get(expected.id);
+    if (!event || !testCase) {
+      reasons.push(errorReason("missing_preservation_case_receipt", `Missing successful test or actual receipt for ${expected.id}`));
+      continue;
+    }
+    const identity = testCase;
+    if (event.test_identity !== identity.key) {
+      reasons.push(errorReason("preservation_identity_mismatch", `Receipt identity does not match the successful test for ${expected.id}`, identity.key));
+    }
+    if (event.source_sha !== context.checkoutHead || event.product_tree_sha256 !== context.productTreeSha256) {
+      reasons.push(errorReason("preservation_source_mismatch", `Receipt source identity does not match the checked out product for ${expected.id}`, identity.key));
+    }
+    if (event.fixture_overlay_sha256 !== context.fixtureOverlaySha256) {
+      reasons.push(errorReason("preservation_fixture_mismatch", `Receipt fixture overlay does not match the checked out test-only fixtures for ${expected.id}`, identity.key));
+    }
+    const runtime = event.runtime;
+    if (!isRecord(runtime) || runtime.application_image_id !== context.applicationRuntimeId || runtime.browser_image_id !== context.browserRuntimeId ||
+      !validDigest(runtime.effective_runtime_sha256) || !validDigest(event.recipe_sha256)) {
+      reasons.push(errorReason("preservation_runtime_mismatch", `Receipt runtime identity does not match the run for ${expected.id}`, identity.key));
+    }
+    const state = event.state;
+    if (!isRecord(state) || state.element !== expected.element || state.category !== expected.category ||
+      typeof state.route !== "string" || !state.route.startsWith("/") ||
+      typeof state.theme !== "string" || state.theme.trim() === "" ||
+      !isRecord(state.viewport) || !Number.isInteger(state.viewport.width) || !Number.isInteger(state.viewport.height) ||
+      !isRecord(state.scroll) || !Number.isFinite(state.scroll.x) || !Number.isFinite(state.scroll.y) ||
+      !isRecord(state.focus) || typeof state.focus.name !== "string" || state.focus.name.trim() === "" ||
+      typeof state.data_identity !== "string" || state.data_identity.trim() === "") {
+      reasons.push(errorReason("invalid_preservation_state", `Receipt lacks observed route/state/theme/viewport/scroll/focus/data identity for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.actions) || event.actions.length === 0 || event.actions.some((action) => typeof action !== "string" || action.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_actions", `Receipt lacks a concrete action sequence for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.transport_sequence) || event.transport_sequence.length === 0 || event.transport_sequence.some((step) =>
+      !isRecord(step) || typeof step.operation !== "string" || step.operation.trim() === "" ||
+      typeof step.outcome !== "string" || step.outcome.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_transport", `Receipt lacks observed request/LiveView transport outcomes for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.geometry) || event.geometry.length === 0 || event.geometry.some((item) =>
+      !isRecord(item) || typeof item.name !== "string" || item.name.trim() === "" ||
+      ![item.x, item.y, item.width, item.height].every(Number.isFinite))) {
+      reasons.push(errorReason("invalid_preservation_geometry", `Receipt lacks measured element geometry for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.assertions) || event.assertions.length === 0 || event.assertions.some((assertion) =>
+      !isRecord(assertion) || typeof assertion.name !== "string" || assertion.name.trim() === "" ||
+      assertion.status !== "passed" || typeof assertion.actual !== "string" || assertion.actual.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_assertions", `Receipt lacks passing observed assertions for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.visible_copy) || event.visible_copy.length === 0 || event.visible_copy.some((copy) =>
+      !isRecord(copy) || typeof copy.text !== "string" || copy.text.trim() === "" ||
+      typeof copy.sha256 !== "string" || crypto.createHash("sha256").update(copy.text).digest("hex") !== copy.sha256)) {
+      reasons.push(errorReason("invalid_preservation_copy", `Receipt lacks exact visible copy and matching hashes for ${expected.id}`, identity.key));
+    }
+    const image = event.image;
+    let imagePath = "";
+    try {
+      if (!isRecord(image) || typeof image.path !== "string" || typeof image.sha256 !== "string") throw new TypeError("image path and SHA-256 are required");
+      imagePath = normalizeArtifactPath(image.path);
+      if (!imagePath.startsWith(PRESERVATION_ARTIFACT_ROOT) || path.posix.extname(imagePath).toLowerCase() !== ".png") {
+        throw new TypeError("image must be a PNG in the held-out preservation artifact bundle");
+      }
+      const artifact = artifactByPath.get(imagePath);
+      if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
+        throw new TypeError("image must be declared, copied, present and hash-matched in this run");
+      }
+      const imageBytes = fs.readFileSync(resolveArtifact(context.runRoot, imagePath).path);
+      if (imageBytes.length < 8 || !imageBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+        throw new TypeError("image does not have a PNG signature");
+      }
+    } catch (error) {
+      reasons.push(errorReason("invalid_preservation_image", `${expected.id}: ${error.message}`, identity.key));
+    }
+    validated.push({ id: expected.id, test_identity: identity.key, source_sha: event.source_sha, product_tree_sha256: event.product_tree_sha256,
+      fixture_overlay_sha256: event.fixture_overlay_sha256, runtime: isRecord(runtime) ? runtime : null,
+      recipe_sha256: event.recipe_sha256, state: isRecord(state) ? state : null, actions: Array.isArray(event.actions) ? event.actions : [],
+      transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [],
+      geometry: Array.isArray(event.geometry) ? event.geometry : [],
+      assertions: Array.isArray(event.assertions) ? event.assertions : [], visible_copy: Array.isArray(event.visible_copy) ? event.visible_copy : [],
+      image: { path: imagePath, sha256: typeof image?.sha256 === "string" ? image.sha256 : null }
+    });
+  }
+  return validated.sort((left, right) => left.id.localeCompare(right.id));
 }
 
 function reconcileInventory({ inventory, report, repoRoot = process.cwd(), allowedSkips = [], requireMandatoryCases = false } = {}) {
@@ -795,6 +1026,23 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   if (stages.artifact_copy.exit_code !== 0) reasons.push(errorReason("artifact_copy_failed", "Artifact collection stage did not exit successfully"));
 
   const events = readEvents(root, reasons);
+  let productTreeSha256 = null;
+  let fixtureOverlaySha256 = null;
+  try {
+    productTreeSha256 = productTreeIdentity(process.cwd());
+    fixtureOverlaySha256 = fixtureOverlayDigest(process.cwd());
+  } catch (error) {
+    reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
+  }
+  const preservationCases = validatePreservationEvents(events, reconciliation, {
+    runRoot: root,
+    checkoutHead,
+    productTreeSha256,
+    fixtureOverlaySha256,
+    applicationRuntimeId: images.application?.runtime_id,
+    browserRuntimeId: images.browser?.runtime_id,
+    artifacts
+  }, reasons);
   const operationCounts = {};
   for (const event of events) operationCounts[event.operation] = (operationCounts[event.operation] || 0) + 1;
   const sortedOperations = Object.fromEntries(Object.entries(operationCounts).sort(([left], [right]) => left.localeCompare(right)));
@@ -854,6 +1102,12 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
     stages,
     checkers,
     cases: reconciliation.cases,
+    preservation: {
+      schema: "scrypath.ui-preservation.v1",
+      product_tree_sha256: productTreeSha256,
+      fixture_overlay_sha256: fixtureOverlaySha256,
+      cases: preservationCases
+    },
     artifacts,
     cleanup,
     first_failure: firstFailure,
@@ -1110,6 +1364,9 @@ module.exports = {
   caseIdentity,
   isAllowedArtifactPath,
   reconcileInventory,
+  preservationCases: PRESERVATION_CASES,
+  fixtureOverlayDigest,
+  productTreeIdentity,
   runReconcile,
   renderSummary,
   writeEvidence,
