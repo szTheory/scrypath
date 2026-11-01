@@ -1853,7 +1853,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp human_dt(nil, _snapshot_at), do: "—"
 
   defp human_dt(%DateTime{} = dt, snapshot_at) do
-    reference = if match?(%DateTime{}, snapshot_at), do: snapshot_at, else: ScrypathOps.Clock.utc_now()
+    reference =
+      if match?(%DateTime{}, snapshot_at), do: snapshot_at, else: ScrypathOps.Clock.utc_now()
 
     case DateTime.compare(dt, reference) do
       :gt -> "After this check · #{utc_absolute(dt)}"

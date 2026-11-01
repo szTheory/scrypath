@@ -405,7 +405,11 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
         _ -> nil
       end
 
-    Map.merge(receipt, %{handle: handle, state: :accepted, checked_at: ScrypathOps.Clock.utc_now()})
+    Map.merge(receipt, %{
+      handle: handle,
+      state: :accepted,
+      checked_at: ScrypathOps.Clock.utc_now()
+    })
   end
 
   defp recovery_host_context(socket, schema) do
