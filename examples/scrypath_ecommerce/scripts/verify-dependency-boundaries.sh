@@ -19,6 +19,7 @@ host_prod_config="$repo_root/examples/scrypath_ecommerce/config/prod.exs"
 host_runtime_config="$repo_root/examples/scrypath_ecommerce/config/runtime.exs"
 ops_prod_config="$repo_root/scrypath_ops/config/prod.exs"
 ops_runtime_config="$repo_root/scrypath_ops/config/runtime.exs"
+bundle_contract_helper="$repo_root/scripts/ci/ui_bundle_contract.cjs"
 
 fail() {
   printf 'Dependency boundary contract failed: %s\n' "$*" >&2
@@ -181,6 +182,7 @@ done
 printf 'Static dependency boundary contract passed (4 current-source assets, output-only handoff, clean runtime entrypoints).\n'
 
 if [[ "$mode" == "--runtime" ]]; then
+  [[ -f "$bundle_contract_helper" ]] || fail "bundle utility contract helper is missing: scripts/ci/ui_bundle_contract.cjs"
   command -v docker >/dev/null 2>&1 || fail "Docker CLI is required for --runtime"
   command -v curl >/dev/null 2>&1 || fail "curl is required for --runtime"
   command -v node >/dev/null 2>&1 || fail "Node.js is required for source identity checks"
@@ -420,6 +422,36 @@ NODE
     fail "runtime_test static output differs from asset_builder output"
   diff -u "$artifact_dir/builder-assets.sha256" "$artifact_dir/targets/prod/assets.sha256" ||
     fail "runtime_prod static output differs from asset_builder output"
+
+  forced_utilities='bg-red-500 text-blue-500 bg-black text-black bg-white text-white bg-primary text-base-content p-4 gap-8 text-sm font-semibold'
+  forced_build_script="set -eu
+printf '\\n@source inline(\"$forced_utilities\");\\n' >> /app/scrypath_ops/assets/css/app.css
+printf '\\n@source inline(\"$forced_utilities\");\\n' >> /app/examples/scrypath_ecommerce/assets/css/app.css
+(cd /app/scrypath_ops && mix tailwind scrypath_ops)
+(cd /app/examples/scrypath_ecommerce && mix tailwind scrypath_ecommerce)"
+  builder_container="$(docker create --label "org.scrypath.dependency-boundary.run=$run_id" \
+    "$builder_image" /bin/sh -c "$forced_build_script")"
+  [[ -n "$builder_container" ]] || fail "Docker did not return a forced-utility fixture container ID"
+  if ! docker start --attach "$builder_container" >"$artifact_dir/build-forced-ui-bundles.log" 2>&1; then
+    tail -n 100 "$artifact_dir/build-forced-ui-bundles.log" >&2
+    fail "forced-utility fixture build failed; log: $artifact_dir/build-forced-ui-bundles.log"
+  fi
+
+  forced_ops_css="$artifact_dir/forced-utilities/scrypath_ops/priv/static/assets/css/app.css"
+  forced_host_css="$artifact_dir/forced-utilities/examples/scrypath_ecommerce/priv/static/assets/css/app.css"
+  mkdir -p "$(dirname "$forced_ops_css")" "$(dirname "$forced_host_css")"
+  docker cp "$builder_container:/app/scrypath_ops/priv/static/assets/css/app.css" "$forced_ops_css" >/dev/null
+  docker cp "$builder_container:/app/examples/scrypath_ecommerce/priv/static/assets/css/app.css" "$forced_host_css" >/dev/null
+  [[ -s "$forced_ops_css" ]] || fail "standalone forced-utility output is missing or empty"
+  [[ -s "$forced_host_css" ]] || fail "host forced-utility output is missing or empty"
+  if ! node "$bundle_contract_helper" --standalone "$forced_ops_css" --host "$forced_host_css" \
+    >"$artifact_dir/forced-ui-bundle-contract.log" 2>&1; then
+    cat "$artifact_dir/forced-ui-bundle-contract.log" >&2
+    fail "forced-utility bundle assertions failed; log: $artifact_dir/forced-ui-bundle-contract.log"
+  fi
+  cat "$artifact_dir/forced-ui-bundle-contract.log"
+  docker rm "$builder_container" >/dev/null
+  builder_container=""
 
   for environment in test prod; do
     if [[ "$environment" == "test" ]]; then
@@ -666,6 +698,13 @@ ELIXIR
     curl --silent --show-error --fail --location --max-time 30 "$base_url/admin/search/health" \
       -o "$artifact_dir/targets/$environment/ops-health.html" ||
       fail "$environment mounted Ops health route did not return successfully"
+    if ! node "$bundle_contract_helper" --standalone "$forced_ops_css" --host "$forced_host_css" \
+      --mounted-html "$artifact_dir/targets/$environment/ops-health.html" \
+      >"$artifact_dir/targets/$environment/ui-bundle-contract-mounted.log" 2>&1; then
+      cat "$artifact_dir/targets/$environment/ui-bundle-contract-mounted.log" >&2
+      fail "$environment mounted Ops stylesheet composition failed; log: $artifact_dir/targets/$environment/ui-bundle-contract-mounted.log"
+    fi
+    cat "$artifact_dir/targets/$environment/ui-bundle-contract-mounted.log"
 
     check_served_asset() {
       local path="$1" expected="$2" content_kind="$3" name response headers actual url

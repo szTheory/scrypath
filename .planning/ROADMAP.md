@@ -2,7 +2,7 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; four plans integrated)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; six plans complete and integrated)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
 - ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
@@ -17,7 +17,7 @@
 
 ## Current Posture
 
-**Phases 182–184 are goal-verified; Phase 185 has four integrated plans.** Plan 01 enforces contrast through the required command; Plan 02 enforces shrink-only source literals and trusted history; Plan 04 retires the paid/mock judge. Plan 03 adds the source-verified typed token mirror. The combined root repository checks passed. Plan 05 capture repair and qualified disposable pre-change evidence remain in progress before UI edits.
+**Phases 182–184 are goal-verified; Phase 185 has six complete and integrated plans.** Contrast, literal-history enforcement, typed token mirroring, judge retirement, qualified disposable before evidence, and CSS utility/mounted-bundle proof are implemented. Route/auth source is integrated but its browser acceptance remains pending. Held-out state/receipt repairs are active before the combined candidate gate and exact rendered comparison. All six phase requirements remain pending final goal verification.
 
 The maintainer approved and merged [data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124) before source cleanup. The shrink-only contract requires an exact first inventory, which would be lost if introduction and cleanup landed in a single squash. The [delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) contains the executable reproductions, current verification and resume pointers. Actual merged inventory parity and root integration were verified; no phase completion is claimed.
 
@@ -191,7 +191,7 @@ Plans:
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
 
-**Plans**: 5/10 integrated (01–05) across6 execution waves; Wave4 is next after qualified inspected pre-change evidence.
+**Plans**: 6/10 complete and integrated (01–06) across6 execution waves;07 source is integrated pending full browser acceptance,08 source repairs active.
 
 Plans:
 
@@ -207,7 +207,7 @@ Plans:
 - [x] 185-05-PLAN.md — Guarded disposable capture support and source-pinned pre-change evidence (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 185-06-PLAN.md — Color-only reset and forced utility proof in both actual bundles (wave 4)
+- [x] 185-06-PLAN.md — Color-only reset and forced utility proof in both actual bundles (wave 4)
 - [ ] 185-07-PLAN.md — Standalone generator removal, local redirect and mounted/storefront preservation (wave 4)
 - [ ] 185-08-PLAN.md — All 61 held-out UI element/state preservation obligations (wave 4)
 
@@ -242,6 +242,6 @@ Plans:
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
-| 185. Executable UI quality foundations | 5/10 | Executing Wave4 | — |
+| 185. Executable UI quality foundations | 6/10 | Executing Wave4 | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending phase-goal verification in Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.
