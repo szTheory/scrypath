@@ -1,7 +1,7 @@
 # Requirements: Scrypath v1.45 Foundation and CI
 
 **Defined:** 2026-10-26
-**Status:** All 21 requirements confirmed and roadmap approved on 2026-10-26. Phases 182–184 implement and verify 15 requirements; the six Phase 185 requirements remain pending. Phase 184 final-source acceptance is recorded externally after all tracking writes.
+**Status:** All21 confirmed v1.45 requirements are implemented and goal-verified across Phases 182–185. Phase 185 final tracked-source acceptance is the separate external terminal receipt after all tracking writes.
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
 ## Scope and provenance
@@ -50,12 +50,12 @@ promoted with its storage decision already recorded in PROJECT.md.
 
 ### UI quality foundations for v1.46
 
-- [ ] **UIF-01**: A contributor gets a deterministic required L1 failure for newly introduced raw hex values, arbitrary-value utilities, inline `style=` or literal `z-` utilities outside explicit token authorities; the inventoried legacy baseline can only shrink and a replacement violation cannot hide behind an unchanged count.
-- [ ] **UIF-02**: An operator sees the same supported light/dark UI after Tailwind's default colour namespace is reset and required black/white entries for daisyUI are restored; spacing and typography defaults remain available, with rendered/build proof of the preserved appearance.
-- [ ] **UIF-03**: A contributor no longer carries the generator-default `home.html.heex`, with its route/reference disposition documented and supported mounted/standalone operator routes verified.
-- [ ] **UIF-04**: A contributor's existing required `repository-contracts` command runs the static contrast checker in light and dark themes and fails AA contrast violations, including relevant focus-ring/adjacent-background pairs below 3:1.
-- [ ] **UIF-05**: A contributor can inspect valid DTCG-format light/dark `ops` tokens in `brandbook/tokens/tokens.json`, and an executable drift test fails when those values diverge from the live CSS theme tokens.
-- [ ] **UIF-06**: A contributor's browser/review workflows contain no paid OpenAI visual-judge request path or mock-generated assumed pass; remaining entrypoints, environment wiring and documentation truthfully describe deterministic checks and the deferred agent-run review.
+- [x] **UIF-01**: A contributor gets a deterministic required L1 failure for newly introduced raw hex values, arbitrary-value utilities, inline `style=` or literal `z-` utilities outside explicit token authorities; the inventoried legacy baseline can only shrink and a replacement violation cannot hide behind an unchanged count.
+- [x] **UIF-02**: An operator sees the same supported light/dark UI after Tailwind's default colour namespace is reset and required black/white entries for daisyUI are restored; spacing and typography defaults remain available, with rendered/build proof of the preserved appearance.
+- [x] **UIF-03**: A contributor no longer carries the generator-default `home.html.heex`, with its route/reference disposition documented and supported mounted/standalone operator routes verified.
+- [x] **UIF-04**: A contributor's existing required `repository-contracts` command runs the static contrast checker in light and dark themes and fails AA contrast violations, including relevant focus-ring/adjacent-background pairs below 3:1.
+- [x] **UIF-05**: A contributor can inspect valid DTCG-format light/dark `ops` tokens in `brandbook/tokens/tokens.json`, and an executable drift test fails when those values diverge from the live CSS theme tokens.
+- [x] **UIF-06**: A contributor's browser/review workflows contain no paid OpenAI visual-judge request path or mock-generated assumed pass; remaining entrypoints, environment wiring and documentation truthfully describe deterministic checks and the deferred agent-run review.
 
 ## Verification and scope constraints
 
@@ -130,14 +130,17 @@ assignments on 2026-10-26. Current implementation status follows.
 | DEP-05 | Phase 184 | Complete |
 | DEP-06 | Phase 184 | Complete |
 | DEP-07 | Phase 184 | Complete |
-| UIF-01 | Phase 185 | Pending |
-| UIF-02 | Phase 185 | Pending |
-| UIF-03 | Phase 185 | Pending |
-| UIF-04 | Phase 185 | Pending |
-| UIF-05 | Phase 185 | Pending |
-| UIF-06 | Phase 185 | Pending |
+| UIF-01 | Phase 185 | Complete |
+| UIF-02 | Phase 185 | Complete |
+| UIF-03 | Phase 185 | Complete |
+| UIF-04 | Phase 185 | Complete |
+| UIF-05 | Phase 185 | Complete |
+| UIF-06 | Phase 185 | Complete |
 
-**Coverage:** 21 milestone requirements; 21 mapped; 0 unmapped; 15 complete; 6 pending.
+**Coverage:** 21 milestone requirements; 21 mapped; 0 unmapped; 21 complete; 0 pending.
 
 ---
-*Last updated: 2026-10-31 after Phase 184 goal verification; terminal planning-source evidence remains external under the two-stage closeout rule.*
+*Last updated: 2026-11-01 after Phase 185 implementation verification; final tracking-source acceptance remains external under the two-stage closeout rule.*
+
+
+Phase 185 evidence: [goal verification](phases/185-executable-ui-quality-foundations/185-VERIFICATION.md); its final-tracked-source terminal result remains external at `/private/tmp/scrypath-phase185-execution/terminal-root-result.json`. No future terminal success is asserted by this tracked source.

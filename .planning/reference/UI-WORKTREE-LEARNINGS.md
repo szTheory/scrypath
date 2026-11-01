@@ -150,3 +150,45 @@ Phase185 qualification correctly rejected unmatched review JSON and contact shee
 The maintainer/agent making a workflow change updates the matching rule and its evidence here, then reruns the affected executable guard. New mount layouts, artifact locations, startup behavior or evidence rules must trigger that review. Keep incident history dated; update operational instructions in AGENTS.md and the review runbook together. Do not create competing copies of the role/job model or claim outside-adopter evidence from this maintainer incident.
 
 These controls prevent known failure modes and expose mismatches; they do not guarantee every future design decision is good. Broader experience findings remain in the feedback ledger.
+
+### Isolate image probes from Compose lifecycle labels
+
+A container created with `docker run` inherits labels from its image. A read-only, network-isolated probe of a Compose-built image can therefore inherit a live verification project's labels. During Phase185 r9, Compose's `--abort-on-container-exit` observed the probe exit and stopped the actual browser, leaving an incomplete failed receipt despite the probe itself succeeding.
+
+Give auxiliary probes a distinct explicit Compose project/service and one-off label, and run runtime fingerprint probes after canonical stacks have finished cleanup. Use immutable image IDs. Never launch a probe with a live stack's inherited labels. Preserve the interrupted invocation and diagnose it before the bounded retry; read-only filesystem/network isolation does not establish lifecycle isolation.
+
+Evidence: `/private/tmp/scrypath-phase185-execution/heldout-before-r9-diagnosis.json`, original run log and `before-r9-runtime-precheck.json`. No retained data or source was changed, and the original failure was not recast as a pass.
+
+### Read the supervisor outcome before reporting a buffered verifier
+
+The canonical Mix capability may buffer its child command output until it returns. Empty host stdout and no running Compose containers do not establish that an image build is still running: the invocation may have already completed and cleaned up. Poll the owned supervisor/session or read its exclusive result record first, then inspect only its recorded project for stage detail. Report a browser/build outcome only from that current evidence. Phase185r11 exposed this reporting lag; its failed reset and clean teardown remain preserved.
+
+### Replay real producer inputs before repeating a long collector run
+
+When a browser run succeeds but its collector fails on a metadata-shape mismatch, preserve the original failed receipt and first reproduce the consumer against an isolated, hash-pinned copy of the actual raw inputs. Synthetic unit fixtures must model the real producer's nesting and required fields. During Phase185r13, the interaction target existed inside captured state; a synthetic top-level duplicate hid the consumer mismatch. The corrected real-input replay validated all61cases/213observations/426images before the fresh canonical r14 run.
+
+A replay is diagnostic only: it cannot replace the original failed command, rewrite that receipt or supply canonical acceptance. It can expose another consumer error before another full browser invocation. Keep the current immutable source and explicit unchanged-input reconciliation, then obtain the required fresh canonical receipt within the existing budget.
+
+Evidence: `r13-offline-collector-replay-r2-result.json`, `actual-target-shape-GREEN.log` and `accepted-before-r14.json` below `/private/tmp/scrypath-phase185-execution/`.
+
+### Verify the actual invocation before hosted dispatch
+
+Focused source tests can pass while the standard contributor command fails earlier on formatting, strict lint, workflow syntax or a default output path. For changes to verifiers or CI, run the canonical required core/repository commands and installed actionlint before dispatch, after all integration edits. Check the ordinary invocation as well as explicit external-artifact wrappers. Test doubles must clear ambient artifact-path configuration unless a case intentionally supplies it.
+
+**Evidence:** Phase185's first hosted candidate exposed an ordinary-default containment conflict, token lint/type findings and missing prebuild clock transport. A later job-level runner context was rejected before dispatch; exporting the path through the existing runner initialization step fixed it. Narrow negative tests now retain explicit/before-only containment. Strict lint, full focused token tests, type analysis, canonical core and repository checks, formatting and actionlint passed on the repaired source. Runtime length alone did not require renewed permission, and prior failed results were preserved.
+
+**Consequence:** Keep existing lean CI and dependencies. Use checks already available locally to find invocation errors before spending a hosted run; refresh source-bound runtime evidence when a harness input actually changes, and reuse actual image inspection only through complete byte/state identity.
+
+### Verify CI identity across shell-step boundaries before rebuilding
+
+A local `export` ends with its workflow step. When a prebuild and later handoff/runtime must resolve the same strict Compose source identity, publish the source SHA, product tree and fixture overlay through the existing environment file as well as exporting them locally. Reproduce the actual Compose model in separate step environments before another full build; matching one shell is insufficient. Keep identity fields strict rather than normalizing them away.
+
+**Context:** Phase185 prebuild computed the right three values but the next handoff step lost them and correctly failed. The read-only model reproduction established exactly three missing fields and identical model/recipe digests after environment-file transport. No build, browser, package or resource-limit change was needed for that diagnosis. Evidence: external `ci-step-env-model-reproduction.json` under `/private/tmp/scrypath-phase185-execution/`.
+
+### Diagnose full-lane elapsed time before changing the pipeline
+
+Separate startup cost from actual per-test durations before choosing a timing remedy. In Phase185, startup was only a few seconds while accessibility scans dominated the timeout; moving startup alone would not solve it. Compare affected real scenarios and reversed order, preserve every rule/scope/result group and frame fallback, then run one bounded current-source canonical successor. A prototype or scoped speedup does not itself establish full-lane acceptance.
+
+### Separate measured runtime fields from build identity, and inspect every caller
+
+A prebuild model cannot equal its post-inspection model when newly measured image/layer/runtime fields are treated as build configuration. Normalize only the named browser metadata values, then verify supplied values independently against actual images/runtime. Keep source, fixture, data, profile, graph, recipe and cache values strict. Review every shared-helper caller first: the global capture runner legitimately requests image-only verification without the optional browser fields. A focused real-helper positive plus missing/forged-field negatives protects both contracts. Supersede an attributable stale dispatch through the existing workflow concurrency policy rather than letting obsolete verification consume its whole lane.

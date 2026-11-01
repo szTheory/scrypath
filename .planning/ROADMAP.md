@@ -2,10 +2,10 @@
 
 ## Milestones
 
-- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–184 goal-verified; Phase 185 executing; six plans complete and integrated)
+- **v1.45 Foundation and CI** — Phases 182–185 (approved 2026-10-26; 21 confirmed requirements; Phases 182–185 goal-verified; 21 implementation requirements complete; final tracked-source acceptance external)
 - ✅ **v1.44 Sync correctness** — Phases 178–181 (4 phases, 17 plans, 45 tasks; archived locally 2026-10-26; `tech_debt` carried forward; PR #122 merge/publication pending) — [archive](milestones/v1.44-ROADMAP.md)
 - ✅ **v1.43 ScrypathOps UI refinement** — Phases 173–177 (5 phases, 21 plans; archived 2026-10-25; first shipped in `scrypath` 0.3.16) — [archive](milestones/v1.43-ROADMAP.md)
-- ✅ **v1.42 ScrypathOps operator/admin UI** — Phase172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
+- ✅ **v1.42 ScrypathOps operator/admin UI** — Phase 172 (1 phase, 8 plans; archived2026-10-04) — [archive](milestones/v1.42-ROADMAP.md)
 - ✅ **v1.41 Readiness Gate Follow-Through** — Phases 168–171 (4 phases, 19 plans; archived 2026-10-02; `tech_debt` accepted; original Phase 170 decision remains NOT READY at its cutoff; later separate readiness assessment is READY) — [archive](milestones/v1.41-ROADMAP.md)
 - ✅ **v1.40 Readiness Evidence Closure** — Phases 165–167 (archived locally 2026-09-27; no Hex release; assessment remains NOT READY) — [archive](milestones/v1.40-ROADMAP.md)
 - ✅ **v1.39 Pre-Operator UI Quality Readiness Ratchet** — Phases 162–164 (archived locally 2026-09-26) — [archive](milestones/v1.39-ROADMAP.md)
@@ -17,11 +17,11 @@
 
 ## Current Posture
 
-**Phases 182–184 are goal-verified; Phase 185 has six complete and integrated plans.** Contrast, literal-history enforcement, typed token mirroring, judge retirement, qualified disposable before evidence, and CSS utility/mounted-bundle proof are implemented. Route/auth source is integrated but its browser acceptance remains pending. Held-out state/receipt repairs are active before the combined candidate gate and exact rendered comparison. All six phase requirements remain pending final goal verification.
+All four approved v1.45 phases have implementation goal verification. Phase 185 completes all six UI-foundation requirements and all ten plans: required literal/contrast/token contracts, paid/mock retirement, both generated CSS profiles, preserved routes/auth/assets, exact source-paired UI matrices and actual bounded inspection. Candidate [run 41318243156](https://github.com/szTheory/scrypath/actions/runs/41318243156) passed all required jobs, coverage/attestation and full browser verification.
 
-The maintainer approved and merged [data-only bootstrap PR #124](https://github.com/szTheory/scrypath/pull/124) before source cleanup. The shrink-only contract requires an exact first inventory, which would be lost if introduction and cleanup landed in a single squash. The [delivery review](phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md) contains the executable reproductions, current verification and resume pointers. Actual merged inventory parity and root integration were verified; no phase completion is claimed.
+Final tracking is committed before a fresh terminal exact-source dispatch by design. The sole terminal authority is `/private/tmp/scrypath-phase185-execution/terminal-root-result.json` with unchanged HEAD and no later tracked writes; these bytes do not assert that future outcome. Stop at the Phase 185 boundary after that gate. Milestone audit/archive, merge/release and later phases are separate actions.
 
-Continue in `/Users/jon/projects/scrypath`, branch `planning/v1.45-foundation-ci`. Preserve the unrelated config edit and source-stale retained preview. Dependency advisories remain unaccepted; no current rendered or independent design approval is claimed. The v1.44 archive, inherited debt, PR #122 merge and Hex publication remain separate. v1.45 is incomplete.
+The data-only bootstrap PR #124 remains distinct from later ledger reduction; original source-bound evidence and failures are preserved. Unrelated config and the stopped retained preview remain untouched. Four classifier assumptions, three judgment prohibitions, two deferred code-review warnings, inherited UI defects and dependency advisories remain explicitly unaccepted or unverified within their recorded limits. Exact preservation is not design approval or complete accessibility certification.
 
 ## v1.45 Foundation and CI
 
@@ -40,7 +40,7 @@ the UI engine, stories, extraction and polish; v1.48 retains adopter features.
 - [x] **Phase 182: Reliable full browser verification and CI caches** — Contributors can exercise the full intended browser inventory in an isolated stack with reusable, safe caches. (completed 2026-10-27)
 - [x] **Phase 183: Maintainer tooling outside the Hex package** — Contributors retain verification commands while adopters receive only supported library/operator surfaces. (completed 2026-10-28)
 - [x] **Phase 184: Explicit and lean dependency graphs** — Adopters resolve supported dependencies without unused optional-app overhead, and maintainers receive reconciled lockfiles and audit results. (completed 2026-10-30)
-- [ ] **Phase 185: Executable UI quality foundations** — Contributors get token, contrast and drift enforcement while operators retain the current supported appearance.
+- [x] **Phase 185: Executable UI quality foundations** — Contributors get token, contrast and drift enforcement while operators retain the current supported appearance. (completed 2026-11-01)
 
 ## Phase Details
 
@@ -191,7 +191,7 @@ Plans:
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
 
-**Plans**: 6/10 complete and integrated (01–06) across6 execution waves;07 source is integrated pending full browser acceptance,08 source repairs active.
+**Plans**: 10/10 implementation plans complete across six waves; final-tracked-source terminal acceptance is external and mandatory.
 
 Plans:
 
@@ -208,14 +208,14 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [x] 185-06-PLAN.md — Color-only reset and forced utility proof in both actual bundles (wave 4)
-- [ ] 185-07-PLAN.md — Standalone generator removal, local redirect and mounted/storefront preservation (wave 4)
-- [ ] 185-08-PLAN.md — All 61 held-out UI element/state preservation obligations (wave 4)
+- [x] 185-07-PLAN.md — Standalone generator removal, local redirect and mounted/storefront preservation (wave 4)
+- [x] 185-08-PLAN.md — All 61 held-out UI element/state preservation obligations (wave 4)
 
 **Wave 5** *(blocked on Wave 4 completion)*
-- [ ] 185-09-PLAN.md — Matched candidate image/copy proof and bounded actual inspection (wave 5)
+- [x] 185-09-PLAN.md — Matched candidate image/copy proof and bounded actual inspection (wave 5)
 
 **Wave 6** *(blocked on Wave 5 completion)*
-- [ ] 185-10-PLAN.md — Changed-scope checks, review and final-source terminal closeout (wave 6)
+- [x] 185-10-PLAN.md — Changed-scope checks, review and final-source terminal closeout (wave 6)
 
 ## Verification and delivery boundaries
 
@@ -235,13 +235,13 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase185 is executing Wave4 after qualified Wave3 integration.
+**Execution Order:** 182 → 183 → 184 → 185. Phases 182–185 are goal-verified; stop after Phase 185 terminal source attestation.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
-| 185. Executable UI quality foundations | 6/10 | Executing Wave4 | — |
+| 185. Executable UI quality foundations | 10/10 | Complete | 2026-11-01 |
 
-**Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending phase-goal verification in Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.
+**Coverage:** 21/21 confirmed requirements map to exactly one phase; all 21 are implemented and goal-verified in Phases 182–185. Phase 185 final-source acceptance is external under the two-stage closeout rule.

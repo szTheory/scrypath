@@ -21,13 +21,13 @@
     {
       "number": "185",
       "name": "Executable UI quality foundations",
-      "status": "in_progress"
+      "status": "complete"
     }
   ],
   "next": {
-    "command": "$gsd-progress --next",
-    "label": "Advance to the next step",
-    "reason": "Phase 4 of 4 · 74% · executing"
+    "command": "$gsd-audit-milestone",
+    "label": "Audit the completed milestone when requested",
+    "reason": "Selected phase complete; milestone audit/archive, delivery and a new milestone remain separate boundaries."
   },
-  "updated_at": "2026-10-31T12:59:05.638Z"
+  "updated_at": "2026-11-01T15:22:49.734Z"
 }

@@ -9,7 +9,7 @@ requires:
   - phase: 185-01
     provides: canonical repository-contracts lane
 provides:
-  - retained scanner/history implementation, not yet integrated
+  - integrated scanner/history implementation with source-bound phase verification
 key-files:
   created:
     - scripts/ci/ui_literal_policy.cjs
@@ -53,7 +53,7 @@ The executor's original implementation missed inline-style values, SVG presentat
 - Actual production-checker delivery reproductions: combined introduction/reduction squash rejects; separate data-only introduction then the same cleanup squash passes. Root `185-02-DELIVERY-PROOF.json` preserves machine receipts. These synthetic Git histories prove delivery shape; they do not claim hosted implementation acceptance.
 - Accepted parent regressions: `185-02-inline-style-RED.json` and `185-02-source-context-RED.json` preserve actual scanner assertion failures before their respective repairs. Temporary TAP logs remain under `/private/tmp/phase185-*`.
 - The original Task 1 failed only an ordering assertion against already-present uncommitted implementation. It is not valid behavioral RED. The original Task 2 historical failure has no machine RED receipt. Do not retroactively call either accepted TDD evidence. Current passing tests do not repair that historical discipline limitation.
-- No hosted run has accepted this implementation. PR #124 runs checks on its data-only branch, not these scanner changes. No current visual, independent design, phase-goal or release approval is claimed.
+- At this original task cutoff, no hosted run had accepted the implementation. PR #124 tested its data-only branch. The later combined phase source is accepted by the current candidate and documented in [goal verification](185-VERIFICATION.md). No current visual, independent design, phase-goal or release approval is claimed.
 
 ## Task Commits
 
