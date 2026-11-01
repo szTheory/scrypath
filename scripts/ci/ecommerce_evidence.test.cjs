@@ -450,6 +450,7 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
           outline: rawFocus.outline, opacity: rawFocus.opacity
         },
         hover: [],
+        interaction_target: target,
         data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
         clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
       };
@@ -485,7 +486,6 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       const hoverSamples = addSampling(hoverImagePath, "hover", pngBytes, hoverSnapshot);
       return {
         theme, viewport: { width, height }, capture_profile: "fullpage-neutral-and-viewport-hover-v1", state,
-        interaction_target: target,
         geometry: [{ name: `case-target-${width}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width }, { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }],
         assertions: [{ name: `assert-${preservationCase.id}-${theme}-${width}`, status: "passed", actual: "TEST_FIXTURE_ONLY" }],
         visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
@@ -883,6 +883,8 @@ test("the before-only evidence command emits a separate held-out receipt schema"
     assert.equal(receipt.scope, "before-only");
     assert.equal(receipt.preservation.schema, "scrypath.ui-preservation-before-only.v2");
     assert.equal(receipt.preservation.cases.length, 61);
+    const firstObservation = receipt.preservation.cases[0].observations[0];
+    assert.deepEqual(firstObservation.interaction_target, firstObservation.state.interaction_target);
     assert.deepEqual(receipt.preservation.cases[0].assertions, [{ name: "actual case semantics", status: "passed", actual: "TEST_FIXTURE_ONLY" }]);
     assert.equal(fs.existsSync(path.join(runDir, "phase105-evidence.json")), false);
     const validation = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
@@ -1272,8 +1274,10 @@ test("held-out observations require a separately captured viewport-hover proof",
 test("split-hover receipts reject altered profile, state, target, image geometry and sample metadata", () => {
   const mutations = [
     ["wrong capture profile", (observation) => { observation.capture_profile = "full-page-only"; }],
-    ["non-neutral full-page hover", (observation) => { observation.state.hover = [observation.interaction_target]; }],
-    ["hover target mismatch", (observation) => { observation.interaction_target.name += " changed"; }],
+    ["non-neutral full-page hover", (observation) => { observation.state.hover = [observation.state.interaction_target]; }],
+    ["missing captured target", (observation) => { delete observation.state.interaction_target; }],
+    ["hover target mismatch", (observation) => { observation.state.interaction_target.name += " changed"; }],
+    ["contradictory duplicate target", (observation) => { observation.interaction_target = { ...observation.state.interaction_target, name: "contradictory target" }; }],
     ["hover focus identity mismatch", (observation) => { observation.hover_capture.state.focus.name += " changed"; }],
     ["hover state drift", (observation) => { observation.hover_capture.state.data_identity += " changed"; }],
     ["hover clock drift", (observation) => { observation.hover_capture.state.clock.browser_iso = "2026-10-31T12:00:01.000Z"; }],

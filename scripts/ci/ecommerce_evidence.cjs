@@ -877,8 +877,14 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
           state.clock?.clock_sha256 !== clockSha || state.clock?.browser_iso !== recipe?.browser_date?.observed || state.clock?.server_iso !== recipe?.browser_date?.observed) {
           throw new TypeError("observation state/profile must record the neutral capture, matching route, theme, viewport, scroll, focus, data identity and fixed clock");
         }
-        const interactionTarget = observation.interaction_target;
+        // The producer records the target in each captured state. A duplicate
+        // top-level field is not required, but cannot contradict that evidence.
+        const interactionTarget = state.interaction_target;
         const targetIdentity = validatePreservationInteractionTarget(interactionTarget);
+        if (observation.interaction_target !== undefined &&
+          JSON.stringify(canonicalize(preservationSemanticIdentity(observation.interaction_target))) !== JSON.stringify(canonicalize(targetIdentity))) {
+          throw new TypeError("duplicate observation target contradicts its captured state target");
+        }
         if (state.focus.name !== targetIdentity.name || state.focus.role !== targetIdentity.role || state.focus.tag !== targetIdentity.tag) {
           throw new TypeError("neutral capture focus must remain bound to its named interaction target");
         }
