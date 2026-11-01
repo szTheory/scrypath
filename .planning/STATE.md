@@ -5,10 +5,10 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase185 Plan05 actual-before qualified; five plans integrated; Wave4 next and retained-preview stop preserved.
-last_updated: "2026-11-01T00:01:15.861304+00:00"
+stopped_at: Phase185 Wave4 Plans06/07/08 running in isolated GSD worktrees; qualified actual-before stack retained and preview stop preserved.
+last_updated: "2026-11-01T00:04:18.613823+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Full calibration, repeat comparison and separate actual-before inspection/qualification passed; Wave4 implementation next
+last_activity_desc: Full calibration, repeat comparison and separate actual-before inspection/qualification passed; Wave4 Plans06/07/08 running in isolated worktrees
 state_head: d7ff54d9c942da5c05ebf298c06cecc7d6c3a99e
 progress:
   total_phases: 4
@@ -23,7 +23,7 @@ progress:
 ## Current Position
 
 Phase: 185 (Executable UI quality foundations) — EXECUTING WAVE 4
-Plan: 5 of 10 complete and integrated (01–05); Wave4 implementation next
+Plan: 5 of 10 complete and integrated (01–05); Wave4 Plans06/07/08 running in isolated worktrees
 Status: Executing the authorized selected phase
 Last activity: 2026-10-31 — Approved bootstrap merge and actual root integration verified
 
@@ -75,7 +75,7 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 ## Session continuity
 
 Last session: 2026-10-31
-Stopped at: Phase185 Plan05 qualified and integrated; Wave4 isolated implementation next; actual before stack retained.
+Stopped at: Phase185 Wave4 isolated workers06/07/08 running; qualified actual-before stack retained through09.
 Resume file: .planning/phases/185-executable-ui-quality-foundations/.continue-here.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
