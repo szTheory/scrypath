@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 scope="${1:-focused}"
 mode="${2:-}"
+preservation_mode="${E2E_PRESERVATION_MODE:-full}"
 if [[ "$#" -gt 2 ]]; then
   echo "Usage: $0 [focused|full [--readiness-only]]" >&2
   exit 64
@@ -15,6 +16,18 @@ case "$scope" in
     exit 64
     ;;
 esac
+if [[ "$preservation_mode" != "full" && "$preservation_mode" != "before-only" ]]; then
+  echo "E2E_PRESERVATION_MODE must be full or before-only." >&2
+  exit 64
+fi
+if [[ "$preservation_mode" == "before-only" && "$scope" != "full" ]]; then
+  echo "Before-only preservation mode requires full scope." >&2
+  exit 64
+fi
+if [[ "$preservation_mode" == "before-only" && "$mode" == "--readiness-only" ]]; then
+  echo "Before-only preservation mode requires actual held-out browser evidence." >&2
+  exit 64
+fi
 case "$mode" in
   "") ;;
   --readiness-only)
@@ -155,19 +168,22 @@ fi
 export E2E_PROJECT_NAME="$project"
 if [[ -n "${E2E_HOST_ARTIFACT_ROOT:-}" ]]; then
   artifact_parent="$E2E_HOST_ARTIFACT_ROOT"
-  mkdir -p "$artifact_parent"
-  artifact_parent="$(cd "$artifact_parent" && pwd -P)"
-  case "$artifact_parent/" in
-    "$repo_root/"*)
-      echo "E2E_HOST_ARTIFACT_ROOT must be outside the checkout so runtime receipts stay disposable." >&2
-      exit 64
-      ;;
-  esac
 else
-  artifact_parent="$example_dir/test-results/docker-${scope}"
+  if [[ "$preservation_mode" == "before-only" ]]; then
+    artifact_parent="${TMPDIR:-/tmp}/scrypath-phase185-before-only"
+  else
+    artifact_parent="$example_dir/test-results/docker-${scope}"
+  fi
 fi
-artifact_dir="$artifact_parent/$run_id"
 mkdir -p "$artifact_parent"
+artifact_parent="$(cd "$artifact_parent" && pwd -P)"
+case "$artifact_parent/" in
+  "$repo_root/"*)
+    echo "E2E_HOST_ARTIFACT_ROOT must be outside the checkout so runtime receipts stay disposable." >&2
+    exit 64
+    ;;
+esac
+artifact_dir="$artifact_parent/$run_id"
 if ! mkdir -m 700 "$artifact_dir"; then
   echo "Refusing to reuse existing run evidence directory: $artifact_dir" >&2
   exit 73
@@ -175,7 +191,51 @@ fi
 phase185_clock_path=""
 if [[ "$scope" == "full" ]]; then
   phase185_clock_path="${E2E_PHASE185_CLOCK_PATH:-$artifact_dir/phase185-clock.txt}"
-  phase185_clock_instant="${E2E_PHASE185_CLOCK_INSTANT:-2026-10-31T12:00:00.000Z}"
+  if [[ "$preservation_mode" == "before-only" ]]; then
+    phase185_qualification_path="${E2E_PHASE185_QUALIFICATION_PATH:-/private/tmp/scrypath-phase185-execution/185-05-qualification.json}"
+    # Pinned from the completed Plan05 qualification artifact; never derive authority from the receipt being collected.
+    phase185_qualification_sha256="sha256:d4886c0b8ef65829ea057e09f681af781f9ee0833458b8f317be03038f1e1ef2"
+    if [[ "$phase185_qualification_path" != /* || ! -f "$phase185_qualification_path" || -L "$phase185_qualification_path" ]]; then
+      echo "Before-only mode requires the regular raw Plan05 qualification at E2E_PHASE185_QUALIFICATION_PATH." >&2
+      exit 64
+    fi
+    if [[ -n "${E2E_PHASE185_QUALIFICATION_SHA256:-}" && "$E2E_PHASE185_QUALIFICATION_SHA256" != "$phase185_qualification_sha256" ]]; then
+      echo "E2E_PHASE185_QUALIFICATION_SHA256 does not match the independently pinned Plan05 qualification." >&2
+      exit 69
+    fi
+    export E2E_PHASE185_QUALIFICATION_SHA256="$phase185_qualification_sha256"
+    if [[ -n "$(git status --porcelain --untracked-files=all 2>/dev/null || true)" ]]; then
+      echo "Before-only source overlays must be committed and clean before the disposable build." >&2
+      exit 69
+    fi
+    phase185_qualification_identity="$(node -e 'const e=require(process.argv[1]); const [repoRoot,qualificationPath,productSourceSha,buildSourceSha,qualificationSha256]=process.argv.slice(2); process.stdout.write(JSON.stringify(e.validateBeforeQualification({repoRoot,qualificationPath,productSourceSha,buildSourceSha,qualificationSha256})))' \
+      "$repo_root/scripts/ci/ecommerce_evidence.cjs" "$repo_root" "$phase185_qualification_path" "7886eb10449dcb55945d1ab886e6c78752cc73cf" "$(git rev-parse HEAD)" "$E2E_PHASE185_QUALIFICATION_SHA256" 2>&1)" || {
+      echo "Before-only source/qualification verification failed: $phase185_qualification_identity" >&2
+      exit 69
+    }
+    phase185_clock_instant="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).clock_instant)' "$phase185_qualification_identity")"
+    qualified_product_source_sha="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).product_source_sha)' "$phase185_qualification_identity")"
+    if [[ -n "${E2E_PRODUCT_SOURCE_SHA:-}" && "$E2E_PRODUCT_SOURCE_SHA" != "$qualified_product_source_sha" ]]; then
+      echo "E2E_PRODUCT_SOURCE_SHA does not match the raw Plan05 qualification." >&2
+      exit 69
+    fi
+    qualified_product_tree_sha256="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).product_tree_sha256)' "$phase185_qualification_identity")"
+    qualified_fixture_overlay_sha256="$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).fixture_overlay_sha256)' "$phase185_qualification_identity")"
+    if [[ -n "${E2E_PRODUCT_TREE_SHA256:-}" && "$E2E_PRODUCT_TREE_SHA256" != "$qualified_product_tree_sha256" ]]; then
+      echo "The independently supplied product tree differs from the qualified Git object." >&2
+      exit 69
+    fi
+    if [[ -n "${E2E_FIXTURE_OVERLAY_SHA256:-}" && "$E2E_FIXTURE_OVERLAY_SHA256" != "$qualified_fixture_overlay_sha256" ]]; then
+      echo "The independently supplied fixture overlay differs from the actual test-only files." >&2
+      exit 69
+    fi
+    export E2E_PRODUCT_SOURCE_SHA="$qualified_product_source_sha"
+    export E2E_PRODUCT_TREE_SHA256="$qualified_product_tree_sha256"
+    export E2E_FIXTURE_OVERLAY_SHA256="$qualified_fixture_overlay_sha256"
+    export E2E_PHASE185_QUALIFICATION_PATH="$phase185_qualification_path"
+  else
+    phase185_clock_instant="${E2E_PHASE185_CLOCK_INSTANT:-2026-10-31T12:00:00.000Z}"
+  fi
   if [[ ! "$phase185_clock_instant" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$ ]] || ! node -e 'const d = new Date(process.argv[1]); process.exit(Number.isNaN(d.getTime()) || d.toISOString() !== process.argv[1] ? 1 : 0)' "$phase185_clock_instant"; then
     echo "E2E_PHASE185_CLOCK_INSTANT must be a valid millisecond UTC instant." >&2
     exit 64
@@ -190,6 +250,7 @@ if [[ "$scope" == "full" ]]; then
   fi
   export E2E_PHASE185_CLOCK_PATH="$phase185_clock_path"
   export E2E_PHASE185_CLOCK_INSTANT="$phase185_clock_instant"
+  export E2E_PRESERVATION_MODE="$preservation_mode"
 fi
 compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
 if [[ "$scope" == "full" ]]; then
@@ -218,12 +279,16 @@ export E2E_WORKFLOW_RUN_ATTEMPT="${E2E_WORKFLOW_RUN_ATTEMPT:-1}"
 export E2E_JOB_NAME="${E2E_JOB_NAME:-local-ecommerce-e2e}"
 export E2E_JOB_CONCLUSION="${E2E_JOB_CONCLUSION:-success}"
 if [[ "$scope" == "full" ]]; then
-  export E2E_PRODUCT_SOURCE_SHA="${E2E_PRODUCT_SOURCE_SHA:-$SCRYPATH_SOURCE_SHA}"
+  if [[ "$preservation_mode" == "full" ]]; then export E2E_PRODUCT_SOURCE_SHA="${E2E_PRODUCT_SOURCE_SHA:-$SCRYPATH_SOURCE_SHA}"; fi
   if [[ ! "$E2E_PRODUCT_SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]; then
     echo "E2E_PRODUCT_SOURCE_SHA must be an independently qualified full Git SHA." >&2
     exit 64
   fi
-  preservation_identity="$(node -e 'const e=require(process.argv[1]); console.log(JSON.stringify({tree:e.productTreeIdentity(process.argv[2]),overlay:e.fixtureOverlayDigest(process.argv[2])}))' "$repo_root/scripts/ci/ecommerce_evidence.cjs" "$repo_root")"
+  if [[ "$preservation_mode" == "full" ]]; then
+    preservation_identity="$(node -e 'const e=require(process.argv[1]); console.log(JSON.stringify({tree:e.productTreeIdentity(process.argv[2]),overlay:e.fixtureOverlayDigest(process.argv[2])}))' "$repo_root/scripts/ci/ecommerce_evidence.cjs" "$repo_root")"
+  else
+    preservation_identity="$phase185_qualification_identity"
+  fi
   actual_product_tree_sha256="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).tree)' <<<"$preservation_identity")"
   actual_fixture_overlay_sha256="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).overlay)' <<<"$preservation_identity")"
   if [[ -n "${E2E_PRODUCT_TREE_SHA256:-}" && "$E2E_PRODUCT_TREE_SHA256" != "$actual_product_tree_sha256" ]]; then
@@ -246,8 +311,8 @@ if [[ -n "$dirty_files" ]]; then
   source_fingerprint="$(node "$build_helper" fingerprint)"
 fi
 export E2E_SOURCE_FINGERPRINT="$source_fingerprint"
-printf '{"mode":"%s","checkout_head":"%s","built_source_sha":"%s","event_sha":"%s","dirty":%s,"dirty_fingerprint":"%s","job_started_at":"%s","run_id":"%s"}\n' \
-  "$E2E_SOURCE_MODE" "$SCRYPATH_SOURCE_SHA" "$SCRYPATH_SOURCE_SHA" "$E2E_EVENT_SHA" \
+printf '{"mode":"%s","preservation_mode":"%s","checkout_head":"%s","built_source_sha":"%s","product_source_sha":"%s","qualification_sha256":"%s","event_sha":"%s","dirty":%s,"dirty_fingerprint":"%s","job_started_at":"%s","run_id":"%s"}\n' \
+  "$E2E_SOURCE_MODE" "$preservation_mode" "$SCRYPATH_SOURCE_SHA" "$SCRYPATH_SOURCE_SHA" "${E2E_PRODUCT_SOURCE_SHA:-$SCRYPATH_SOURCE_SHA}" "${E2E_PHASE185_QUALIFICATION_SHA256:-}" "$E2E_EVENT_SHA" \
   "$source_dirty" "$source_fingerprint" "$job_started_at" "$run_id" >"$artifact_dir/source.json"
 
 prebuilt_mode=0
@@ -408,7 +473,9 @@ collect_artifacts() {
     artifact_copy_ended_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     artifact_copy_exit_code="$artifact_copy_status"
     if [[ "$scope" == "full" && "$mode" != "--readiness-only" && "$run_status" == "0" ]]; then
-      for required in phase105-playwright-list.json phase105-playwright.json stages.json phase105-evidence.ndjson admin-light-parity.json contrast-report.json playwright-report/index.html; do
+      required_browser_files=(phase105-playwright-list.json phase105-playwright.json stages.json phase105-evidence.ndjson playwright-report/index.html)
+      if [[ "$preservation_mode" == "full" ]]; then required_browser_files+=(admin-light-parity.json contrast-report.json); fi
+      for required in "${required_browser_files[@]}"; do
         if [[ ! -s "$artifact_dir/$required" ]]; then
           echo "Current run is missing required browser evidence: $required" >&2
           artifact_copy_status=1
@@ -450,7 +517,7 @@ write_run_metadata() {
   local copied_files="" item separator
   printf '{"scope":"%s","project":"%s","run_id":"%s","validation_status":"%s","model_digest":"sha256:%s","targets":["web","standalone_ops","browser"]}\n' \
     "$scope" "$project" "$run_id" "$compose_validation_status" "$compose_model_digest" >"$artifact_dir/compose-model.json"
-  for item in phase105-playwright-list.json phase105-inventory.json phase105-playwright.json phase105-evidence.ndjson phase105-evidence.json phase105-evidence-summary.md stages.json source.json compose-model.json admin-light-parity.json contrast-report.json lifecycle.json playwright-report/index.html; do
+  for item in phase105-playwright-list.json phase105-inventory.json phase105-playwright.json phase105-evidence.ndjson phase105-evidence.json phase185-before-only-evidence.json phase105-evidence-summary.md stages.json source.json compose-model.json admin-light-parity.json contrast-report.json lifecycle.json playwright-report/index.html; do
     if [[ -s "$artifact_dir/$item" ]]; then
       separator=,
       [[ -n "$copied_files" ]] || separator=""
@@ -473,7 +540,7 @@ aggregate_full_evidence() {
   fi
   run_finalization_bounded docker run --rm -i \
     -v "$artifact_dir:/evidence" \
-    -e E2E_SCOPE="$scope" -e E2E_RUN_ID="$run_id" -e SCRYPATH_SOURCE_SHA="$SCRYPATH_SOURCE_SHA" \
+    -e E2E_SCOPE="$scope" -e E2E_PRESERVATION_MODE="$preservation_mode" -e E2E_RUN_ID="$run_id" -e SCRYPATH_SOURCE_SHA="$SCRYPATH_SOURCE_SHA" \
     -e E2E_SOURCE_MODE="$E2E_SOURCE_MODE" -e E2E_SOURCE_DIRTY="$source_dirty" -e E2E_SOURCE_FINGERPRINT="$source_fingerprint" \
     -e E2E_EVENT_SHA="$E2E_EVENT_SHA" -e E2E_EVENT_NAME="$E2E_EVENT_NAME" -e E2E_GIT_REF="$E2E_GIT_REF" \
     -e E2E_WORKFLOW_RUN_ID="$E2E_WORKFLOW_RUN_ID" -e E2E_WORKFLOW_RUN_ATTEMPT="$E2E_WORKFLOW_RUN_ATTEMPT" \
@@ -484,6 +551,7 @@ aggregate_full_evidence() {
     -e E2E_BROWSER_SOURCE_LAYER_ID="$E2E_BROWSER_SOURCE_LAYER_ID" -e E2E_BROWSER_BASE_LAYERS_SHA256="$E2E_BROWSER_BASE_LAYERS_SHA256" \
     -e E2E_PRODUCT_SOURCE_SHA="$E2E_PRODUCT_SOURCE_SHA" -e E2E_PRODUCT_TREE_SHA256="$E2E_PRODUCT_TREE_SHA256" \
     -e E2E_FIXTURE_OVERLAY_SHA256="$E2E_FIXTURE_OVERLAY_SHA256" \
+    -e E2E_PHASE185_QUALIFICATION_SHA256="${E2E_PHASE185_QUALIFICATION_SHA256:-}" \
     -e E2E_PLAYWRIGHT_VERSION="$PLAYWRIGHT_VERSION" -e E2E_ARTIFACT_COPY_STARTED_AT="$artifact_copy_started_at" \
     -e E2E_ARTIFACT_COPY_ENDED_AT="$artifact_copy_ended_at" -e E2E_ARTIFACT_COPY_EXIT_CODE="$artifact_copy_status" \
     "$browser_image_id" bash -s <<'CONTAINER_SCRIPT'
@@ -558,7 +626,7 @@ const events = fs.readFileSync(path.join(root, "phase105-evidence.ndjson"), "utf
 const actualBrowser = events.find((event) => event.operation === "ui_preservation_case")?.clock_recipe?.browser;
 if (!actualBrowser || actualBrowser.engine !== "chromium" || actualBrowser.package !== "@playwright/test") throw new Error("The browser cases did not record the actual Chromium/Playwright versions.");
 const input = {
-  source:{mode:process.env.E2E_SOURCE_MODE,checkout_head:sourceSha,product_source_sha:process.env.E2E_PRODUCT_SOURCE_SHA,product_tree_sha256:actualProductTree,fixture_overlay_sha256:actualFixtureOverlay,built_source_sha:sourceSha,event_sha:process.env.E2E_EVENT_SHA,dirty,dirty_fingerprint:fingerprint},
+  source:{mode:process.env.E2E_SOURCE_MODE,checkout_head:sourceSha,product_source_sha:process.env.E2E_PRODUCT_SOURCE_SHA,product_tree_sha256:actualProductTree,fixture_overlay_sha256:actualFixtureOverlay,built_source_sha:sourceSha,event_sha:process.env.E2E_EVENT_SHA,dirty,dirty_fingerprint:fingerprint,...(process.env.E2E_PRESERVATION_MODE === "before-only" ? {qualification_sha256:process.env.E2E_PHASE185_QUALIFICATION_SHA256} : {})},
   images:{application:image(process.env.E2E_APPLICATION_IMAGE_ID),standalone_ops:{built_id:process.env.E2E_STANDALONE_OPS_IMAGE_ID,runtime_id:process.env.E2E_STANDALONE_OPS_IMAGE_ID},browser:image(process.env.E2E_BROWSER_IMAGE_ID)},
   compose:{scope:process.env.E2E_SCOPE,project:process.env.E2E_COMPOSE_PROJECT,targets:["browser","standalone_ops","web"],model_digest:process.env.E2E_COMPOSE_MODEL_DIGEST},
   browser:actualBrowser,
@@ -569,15 +637,51 @@ const input = {
 };
 fs.writeFileSync(path.join(root,"phase105-evidence-input.json"),`${JSON.stringify(input,null,2)}\n`);
 NODE
-node /app/scripts/ci/ecommerce_evidence.cjs write-evidence --run-dir /evidence
+if [[ "$E2E_PRESERVATION_MODE" == "before-only" ]]; then
+  node /app/scripts/ci/ecommerce_evidence.cjs write-before-only --run-dir /evidence
+else
+  node /app/scripts/ci/ecommerce_evidence.cjs write-evidence --run-dir /evidence
+fi
 CONTAINER_SCRIPT
   writer_status=$?
-  for required in phase105-evidence-input.json phase105-evidence.json phase105-evidence-summary.md; do
+  if [[ "$preservation_mode" == "before-only" ]]; then
+    required_receipt_files=(phase105-evidence-input.json phase185-before-only-evidence.json)
+  else
+    required_receipt_files=(phase105-evidence-input.json phase105-evidence.json phase105-evidence-summary.md)
+  fi
+  for required in "${required_receipt_files[@]}"; do
     if [[ ! -s "$artifact_dir/$required" ]]; then
       echo "Strict full-run evidence aggregation did not create '$required'." >&2
       return 77
     fi
   done
+  if [[ "$preservation_mode" == "before-only" ]]; then
+    if (( writer_status != 0 )); then return "$writer_status"; fi
+    if ! node "$repo_root/scripts/ci/ecommerce_evidence.cjs" validate-before-only-receipt --run-dir "$artifact_dir"; then
+      echo "Before-only receipt failed host-side recomputation against the qualified Git source and actual overlay." >&2
+      return 78
+    fi
+    if ! node - "$artifact_dir/phase105-evidence-input.json" "$artifact_dir/phase185-before-only-evidence.json" \
+      "$E2E_WORKFLOW_RUN_ID" "$SCRYPATH_SOURCE_SHA" "$E2E_PRODUCT_SOURCE_SHA" "$E2E_EVENT_SHA" "${E2E_PHASE185_QUALIFICATION_SHA256:-}" <<'BEFORE_RECEIPT_CHECK'
+const fs = require("node:fs");
+const [inputPath, receiptPath, runId, buildSha, productSha, eventSha, qualificationSha] = process.argv.slice(2);
+const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
+if (input.source?.checkout_head !== buildSha || input.source?.built_source_sha !== buildSha ||
+    input.source?.product_source_sha !== productSha || input.source?.qualification_sha256 !== qualificationSha ||
+    input.workflow?.run_id !== runId || input.workflow?.sha !== eventSha ||
+    receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v1" ||
+    receipt.source?.checkout_head !== buildSha || receipt.source?.product_source_sha !== productSha ||
+    receipt.source?.qualification_sha256 !== qualificationSha || receipt.eligibility?.eligible !== true) {
+  throw new Error("before-only receipt is ineligible or is bound to different qualified product/build/run identities");
+}
+BEFORE_RECEIPT_CHECK
+    then
+      echo "Before-only aggregate receipt binding validation failed." >&2
+      return 78
+    fi
+    return 0
+  fi
   if ! node - "$artifact_dir/phase105-evidence-input.json" "$artifact_dir/phase105-evidence.json" \
     "$artifact_dir/phase105-evidence-summary.md" "$E2E_WORKFLOW_RUN_ID" "$SCRYPATH_SOURCE_SHA" "$E2E_EVENT_SHA" <<'RECEIPT_CHECK'
 const fs = require("node:fs");

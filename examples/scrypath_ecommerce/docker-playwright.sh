@@ -3,6 +3,7 @@
 set -euo pipefail
 
 scope="${E2E_SCOPE:-focused}"
+preservation_mode="${E2E_PRESERVATION_MODE:-full}"
 base_url="${PLAYWRIGHT_BASE_URL:-http://web:4002}"
 readiness_only="${E2E_READINESS_ONLY:-0}"
 run_id="${E2E_RUN_ID:-local-${scope}}"
@@ -14,6 +15,14 @@ if [[ "$readiness_only" != "0" && "$readiness_only" != "1" ]]; then
 fi
 if [[ "$readiness_only" == "1" && "$scope" != "full" ]]; then
   echo "Readiness-only diagnostics require full scope." >&2
+  exit 64
+fi
+if [[ "$preservation_mode" != "full" && "$preservation_mode" != "before-only" ]]; then
+  echo "E2E_PRESERVATION_MODE must be full or before-only." >&2
+  exit 64
+fi
+if [[ "$preservation_mode" == "before-only" && "$scope" != "full" ]]; then
+  echo "Before-only preservation mode requires full Compose scope." >&2
   exit 64
 fi
 if [[ ! "$run_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]; then
@@ -39,7 +48,7 @@ rm -rf "$PWD/playwright-report" "$PWD/test-results/phase105-playwright.json" \
   "$PWD/test-results/admin-screenshots" "$PWD/ui-review-artifacts/iteration3-journeys"
 mkdir -p "$PWD/test-results" "$PWD/ui-review-artifacts"
 : >"$artifact_dir/phase105-evidence.ndjson"
-E2E_ARTIFACT_DIR="$artifact_dir" node -e 'const fs = require("node:fs"); const root = process.env.E2E_ARTIFACT_DIR; const initial = Object.fromEntries(["inventory", "browser", "light_parity", "contrast"].map((name) => [name, {started_at:null, ended_at:null, exit_code:null}])); fs.writeFileSync(`${root}/stages.json`, `${JSON.stringify(initial)}\n`);'
+E2E_ARTIFACT_DIR="$artifact_dir" E2E_PRESERVATION_MODE="$preservation_mode" node -e 'const fs = require("node:fs"); const root = process.env.E2E_ARTIFACT_DIR; const names = process.env.E2E_PRESERVATION_MODE === "before-only" ? ["inventory", "browser", "artifact_copy"] : ["inventory", "browser", "light_parity", "contrast", "artifact_copy"]; const initial = Object.fromEntries(names.map((name) => [name, {started_at:null, ended_at:null, exit_code:null}])); fs.writeFileSync(`${root}/stages.json`, `${JSON.stringify(initial)}\n`);'
 
 record_stage() {
   local name="$1" code="$2" started="$3" ended="$4"
@@ -241,7 +250,7 @@ case "$scope" in
     exec npx playwright test e2e/harness.spec.ts e2e/operator.spec.ts --workers=1 --retries=0
     ;;
   full)
-    echo "Running the full advisory ecommerce browser and deterministic visual lane..."
+    echo "Running the $preservation_mode ecommerce browser and deterministic visual lane..."
     if [[ ! "$run_id" =~ ^phase185- ]]; then
       echo "The full evidence lane requires the canonical phase185 fixed-clock run identity." >&2
       exit 64
@@ -258,10 +267,14 @@ case "$scope" in
     export ADMIN_LIGHT_PARITY_REPORT="$artifact_dir/admin-light-parity.json"
     export CONTRAST_REPORT_DIR="$artifact_dir/test-results/contrast"
 
-    inventory_started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    preservation_specs=()
+    if [[ "$preservation_mode" == "before-only" ]]; then
+      preservation_specs=(e2e/ui_state_preservation.spec.ts e2e/ui_content_preservation.spec.ts)
+    fi
+    inventory_args=(--config "$PWD/playwright.config.ts" --project=chromium --workers=1 --retries=0)
+    if (( ${#preservation_specs[@]} > 0 )); then inventory_args+=("${preservation_specs[@]}"); fi
     run_stage inventory "$artifact_dir/phase105-playwright-list.json" \
-      npx playwright test --config "$PWD/playwright.config.ts" --project=chromium \
-      --workers=1 --retries=0 --list --reporter=json || browser_status=$?
+      npx playwright test "${inventory_args[@]}" --list --reporter=json || browser_status=$?
     if (( browser_status == 0 )); then
       if ! cp "$artifact_dir/phase105-playwright-list.json" "$artifact_dir/phase105-inventory.json"; then browser_status=74; fi
     fi
@@ -276,8 +289,10 @@ case "$scope" in
     if (( browser_status != 0 )); then mark_stage_failure inventory "$browser_status"; fi
 
     if (( browser_status == 0 )); then
+      browser_args=(--config "$PWD/playwright.config.ts" --project=chromium --workers=1 --retries=0)
+      if (( ${#preservation_specs[@]} > 0 )); then browser_args+=("${preservation_specs[@]}"); fi
       run_stage browser "$artifact_dir/browser.log" \
-        npm run test:e2e -- --config "$PWD/playwright.config.ts" --project=chromium --workers=1 --retries=0 || browser_status=$?
+        npm run test:e2e -- "${browser_args[@]}" || browser_status=$?
       if (( browser_status == 0 )) && { [[ ! -s "$E2E_PLAYWRIGHT_REPORT" ]] || [[ ! -s "$E2E_HTML_REPORT_DIR/index.html" ]]; }; then
         echo "Full browser execution did not produce its current-run JSON and HTML reports." >&2
         browser_status=74
@@ -290,11 +305,13 @@ case "$scope" in
       cp -a "$PWD/ui-review-artifacts/iteration3-journeys" "$artifact_dir/ui-review-artifacts/"
     fi
 
-    run_stage light_parity "$artifact_dir/light-parity.log" \
-      npm run test:e2e:admin-light-parity || light_status=$?
-    run_stage contrast "$artifact_dir/contrast.log" node contrast-checker.mjs || contrast_status=$?
-    if [[ -s "$artifact_dir/test-results/contrast/contrast-report.token.json" ]]; then
-      cp "$artifact_dir/test-results/contrast/contrast-report.token.json" "$artifact_dir/contrast-report.json"
+    if [[ "$preservation_mode" == "full" ]]; then
+      run_stage light_parity "$artifact_dir/light-parity.log" \
+        npm run test:e2e:admin-light-parity || light_status=$?
+      run_stage contrast "$artifact_dir/contrast.log" node contrast-checker.mjs || contrast_status=$?
+      if [[ -s "$artifact_dir/test-results/contrast/contrast-report.token.json" ]]; then
+        cp "$artifact_dir/test-results/contrast/contrast-report.token.json" "$artifact_dir/contrast-report.json"
+      fi
     fi
 
     if (( browser_status == 0 && light_status == 0 && contrast_status == 0 )); then

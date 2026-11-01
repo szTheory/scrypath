@@ -9,9 +9,12 @@ const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 const AUTHORITY_SCHEMA = "scrypath.ui-state-pair-authority.v2";
 const QUALIFICATION_SCHEMA = "scrypath.phase185-before-qualification.v1";
 const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v2";
-const RECEIPT_NAME = "phase105-evidence.json";
+const FULL_RECEIPT_NAME = "phase105-evidence.json";
+const BEFORE_RECEIPT_NAME = "phase185-before-only-evidence.json";
 const OUTPUT_NAME = "ui-state-pairs.json";
 const PRESERVATION_PREFIX = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
+const REQUIRED_VIEWPORT_WIDTHS = [1440, 768, 390];
+const REQUIRED_THEMES = ["light", "dark", "system-dark"];
 const MAX_AUTHORITY_BYTES = 4 * 1024 * 1024;
 const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
@@ -19,12 +22,18 @@ const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const SHA = /^[a-f0-9]{40}$/;
 
 const digest = (bytes) => crypto.createHash("sha256").update(bytes).digest("hex");
+const isRecord = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const canonicalize = (value) => Array.isArray(value)
   ? value.map(canonicalize)
   : value && typeof value === "object"
     ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])]))
     : value;
 const canonicalJson = (value) => JSON.stringify(canonicalize(value));
+const commonRecipe = (recipe) => {
+  const normalized = structuredClone(recipe);
+  if (normalized?.browser_date && typeof normalized.browser_date === "object") delete normalized.browser_date.timer_elapsed_ms;
+  return normalized;
+};
 
 function fail(code, message) {
   const error = new Error(message);
@@ -148,7 +157,7 @@ function validateAuthority(authority) {
   }
   if (!DIGEST.test(expected.browser_base_layers_sha256 || "")) fail("invalid_expected_runtime", "Authority must pin the common browser base-layer digest");
   return {
-    recipeSha256: `sha256:${digest(Buffer.from(canonicalJson(recipe)))}`,
+    recipeSha256: `sha256:${digest(Buffer.from(canonicalJson(commonRecipe(recipe))))}`,
     authoritySha256: `sha256:${digest(Buffer.from(canonicalJson(authority)))}`
   };
 }
@@ -202,21 +211,26 @@ function loadAuthority(authorityPath) {
 }
 
 function loadReceiptBundle(receiptPath, side, authority) {
-  if (!path.isAbsolute(receiptPath)) fail("invalid_receipt_path", `--${side} must be an absolute path to ${RECEIPT_NAME}`);
+  const receiptName = side === "before" ? BEFORE_RECEIPT_NAME : FULL_RECEIPT_NAME;
+  if (!path.isAbsolute(receiptPath)) fail("invalid_receipt_path", `--${side} must be an absolute path to ${receiptName}`);
   const { absolute, bytes } = regularFile(receiptPath, MAX_RECEIPT_BYTES, `${side} receipt`);
-  if (path.basename(absolute) !== RECEIPT_NAME) fail("invalid_receipt_path", `--${side} must name ${RECEIPT_NAME}`);
+  if (path.basename(absolute) !== receiptName) fail("invalid_receipt_path", `--${side} must name ${receiptName}`);
   const runRoot = fs.realpathSync(path.dirname(absolute));
-  const canonicalReceipt = path.join(runRoot, RECEIPT_NAME);
-  if (path.basename(absolute) !== RECEIPT_NAME || !fs.existsSync(canonicalReceipt)) fail("invalid_receipt_path", `--${side} receipt path must resolve to ${RECEIPT_NAME} within its run directory`);
+  const canonicalReceipt = path.join(runRoot, receiptName);
+  if (path.basename(absolute) !== receiptName || !fs.existsSync(canonicalReceipt)) fail("invalid_receipt_path", `--${side} receipt path must resolve to ${receiptName} within its run directory`);
   const independentSource = authority.expected[side];
-  const validation = evidence.validateReceipt({
+  const sourceExpectation = {
+    sourceSha: independentSource.product_source_sha,
+    buildSourceSha: independentSource.build_source_sha,
+    productTreeSha256: independentSource.product_tree_sha256,
+    fixtureOverlaySha256: authority.expected.fixture_overlay_sha256,
+    ...(side === "before" ? { qualificationSha256: authority.qualification.sha256 } : {})
+  };
+  const validation = side === "before"
+    ? evidence.validateBeforeOnlyReceipt({ runDir: runRoot, expectedSource: sourceExpectation })
+    : evidence.validateReceipt({
     runDir: runRoot,
-    expectedSource: {
-      sourceSha: independentSource.product_source_sha,
-      buildSourceSha: independentSource.build_source_sha,
-      productTreeSha256: independentSource.product_tree_sha256,
-      fixtureOverlaySha256: authority.expected.fixture_overlay_sha256
-    }
+    expectedSource: sourceExpectation
   });
   if (!validation.valid || !validation.eligible) {
     fail("invalid_run_receipt", `${side} run receipt is not independently recomputable and eligible: ${validation.reasons.map((reason) => `${reason.code}: ${reason.message}`).join("; ")}`);
@@ -231,10 +245,15 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
   const expected = authority.expected[side];
   if (receipt?.eligibility?.eligible !== true) fail("ineligible_run_receipt", `${side} source receipt is not eligible`);
   if (receipt.source?.checkout_head !== expected.build_source_sha || receipt.source?.built_source_sha !== expected.build_source_sha ||
-    receipt.preservation?.product_source_sha !== expected.product_source_sha || receipt.preservation?.product_tree_sha256 !== expected.product_tree_sha256) {
+    receipt.preservation?.product_source_sha !== expected.product_source_sha || receipt.preservation?.build_source_sha !== expected.build_source_sha ||
+    receipt.preservation?.product_tree_sha256 !== expected.product_tree_sha256 ||
+    (side === "before" && receipt.source?.qualification_sha256 !== authority.qualification.sha256)) {
     fail("product_source_mismatch", `${side} receipt source OIDs do not match its independent product source, harness build source and product-tree identity`);
   }
-  if (receipt.preservation?.schema !== "scrypath.ui-preservation.v1") fail("preservation_source_mismatch", `${side} preservation receipt has an unsupported preservation schema`);
+  const expectedSchema = side === "before" ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1";
+  if (receipt.scope !== (side === "before" ? "before-only" : "full") || receipt.preservation?.schema !== expectedSchema) {
+    fail("preservation_source_mismatch", `${side} receipt has the wrong execution scope or preservation schema`);
+  }
   if (receipt.preservation?.fixture_overlay_sha256 !== authority.expected.fixture_overlay_sha256) {
     fail("fixture_overlay_mismatch", `${side} run does not use the independently expected test-only fixture overlay`);
   }
@@ -257,6 +276,7 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
     fail("incomplete_preservation_pair", `${side} receipt is missing or adds a held-out case identity`);
   }
   const artifacts = new Map((Array.isArray(receipt.artifacts) ? receipt.artifacts : []).map((artifact) => [artifact.path, artifact]));
+  const seenImagePaths = new Set();
   for (const required of evidence.preservationCases) {
     const item = byId.get(required.id);
     if (item.product_source_sha !== expected.product_source_sha || item.build_source_sha !== expected.build_source_sha || item.product_tree_sha256 !== expected.product_tree_sha256 ||
@@ -267,22 +287,45 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
       item.runtime?.application_image_id !== expected.application_image_id || item.runtime?.standalone_ops_image_id !== expected.standalone_ops_image_id ||
       item.runtime?.browser_image_id !== expected.browser_image_id || item.runtime?.browser_source_layer_id !== expected.browser_source_layer_id ||
       item.runtime?.browser_base_layers_sha256 !== expected.browser_base_layers_sha256 ||
-      canonicalJson(item.clock_recipe) !== canonicalJson(authority.expected.recipe) ||
+      canonicalJson(commonRecipe(item.clock_recipe)) !== canonicalJson(commonRecipe(authority.expected.recipe)) ||
+      !Number.isFinite(item.clock_recipe?.browser_date?.timer_elapsed_ms) || item.clock_recipe.browser_date.timer_elapsed_ms <= 20 ||
       `sha256:${digest(Buffer.from(canonicalJson(item.data_recipe)))}` !== authority.expected.recipe.data_recipe_sha256) {
       fail("case_runtime_or_recipe_mismatch", `${side} case ${required.id} does not match its independently inspected build and common fixed browser recipe`);
     }
-    if (item.state?.element !== required.element || item.state?.category !== required.category || typeof item.test_identity !== "string" || item.test_identity.trim() === "") {
-      fail("invalid_case_state", `${side} case ${required.id} has an invalid state or test identity`);
+    if (typeof item.test_identity !== "string" || item.test_identity.trim() === "") fail("invalid_case_state", `${side} case ${required.id} has no successful test identity`);
+    const matrix = required.category === "overflow" || required.category === "long-text"
+      ? REQUIRED_THEMES.flatMap((theme) => REQUIRED_VIEWPORT_WIDTHS.map((width) => `${theme}|${width}`))
+      : null;
+    if (!Array.isArray(item.observations) || (matrix && item.observations.length !== matrix.length) || (!matrix && item.observations.length !== 1)) {
+      fail("invalid_case_observation", `${side} case ${required.id} has an incomplete theme × viewport observation set`);
     }
-    const widths = required.category === "overflow" ? [1440, 768, 390] : [1440];
-    if (!Array.isArray(item.images) || item.images.length !== widths.length ||
-      widths.some((width) => !item.images.some((image) => image?.viewport?.width === width)) ||
-      item.images.some((image) => {
-        const artifact = artifacts.get(image?.path);
-        return !artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success";
-      })) {
-      fail("invalid_case_artifact", `${side} case ${required.id} must have a copied, raw image for every required viewport`);
+    const byObservation = new Map();
+    for (const observation of item.observations) {
+      const key = `${observation?.theme}|${observation?.viewport?.width}`;
+      if (!REQUIRED_THEMES.includes(observation?.theme) || !REQUIRED_VIEWPORT_WIDTHS.includes(observation?.viewport?.width) || byObservation.has(key) || (matrix && !matrix.includes(key))) {
+        fail("invalid_case_observation", `${side} case ${required.id} has an invalid or duplicate theme × viewport observation`);
+      }
+      const state = observation.state;
+      const expectedColorScheme = observation.theme === "light" ? "light" : "dark";
+      const image = observation.image;
+      const documentGeometry = observation.geometry?.find((entry) => entry?.name === `document-${observation.viewport.width}` && entry.viewport_width === observation.viewport.width);
+      if (state?.element !== required.element || state?.category !== required.category || state?.theme !== observation.theme || state?.color_scheme !== expectedColorScheme ||
+        canonicalJson(state?.viewport) !== canonicalJson(observation.viewport) || !state?.focus?.name || !documentGeometry ||
+        !Array.isArray(observation.visible_copy) || observation.visible_copy.length === 0 ||
+        !isRecord(image) || image.viewport?.width !== observation.viewport.width || image.viewport?.height !== observation.viewport.height ||
+        image.full_page_raster?.width !== observation.viewport.width || image.full_page_raster?.height !== documentGeometry?.height || image.capture !== "full-page-real-product-state") {
+        fail("invalid_case_observation", `${side} case ${required.id} observation ${key} lacks matching state, focus, copy, geometry or raster metadata`);
+      }
+      const artifact = artifacts.get(image.path);
+      if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
+        fail("invalid_case_artifact", `${side} case ${required.id} observation ${key} must have a copied raw image artifact`);
+      }
+      if (seenImagePaths.has(image.path)) fail("reused_case_artifact", `${side} receipt reuses a raw image artifact path across cases or observations`);
+      seenImagePaths.add(image.path);
+      byObservation.set(key, observation);
     }
+    if (matrix && matrix.some((key) => !byObservation.has(key))) fail("invalid_case_observation", `${side} case ${required.id} is missing a required theme × viewport observation`);
+    byId.set(required.id, { ...item, observations: byObservation });
   }
   return byId;
 }
@@ -305,14 +348,18 @@ function readBundledPng(bundle, item) {
   const bytes = fs.readFileSync(current);
   if (digest(bytes) !== item.sha256) fail("case_image_hash_mismatch", `Case ${item.id} PNG does not match its raw SHA-256 receipt`);
   try {
-    PNG.sync.read(bytes);
+    const decoded = PNG.sync.read(bytes);
+    if (decoded.width !== item.full_page_raster?.width || decoded.height !== item.full_page_raster?.height || decoded.width !== item.viewport?.width) {
+      fail("case_image_dimensions_mismatch", `Case ${item.id} decoded raster dimensions do not match its observed viewport and full-page geometry`);
+    }
   } catch (error) {
+    if (error.code) throw error;
     fail("invalid_case_png", `Case ${item.id} artifact is not a readable PNG: ${error.message}`);
   }
   return bytes;
 }
 
-function comparePngExact(beforeBytes, candidateBytes) {
+function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null) {
   let before;
   let candidate;
   try {
@@ -320,6 +367,12 @@ function comparePngExact(beforeBytes, candidateBytes) {
     candidate = PNG.sync.read(candidateBytes);
   } catch (error) {
     fail("invalid_pair_png", `A paired raw artifact cannot be decoded as PNG: ${error.message}`);
+  }
+  if (beforeMetadata && (before.width !== beforeMetadata.full_page_raster?.width || before.height !== beforeMetadata.full_page_raster?.height || before.width !== beforeMetadata.viewport?.width)) {
+    fail("before_image_dimensions_mismatch", "Before decoded PNG dimensions do not match its actual capture geometry");
+  }
+  if (candidateMetadata && (candidate.width !== candidateMetadata.full_page_raster?.width || candidate.height !== candidateMetadata.full_page_raster?.height || candidate.width !== candidateMetadata.viewport?.width)) {
+    fail("candidate_image_dimensions_mismatch", "Candidate decoded PNG dimensions do not match its actual capture geometry");
   }
   return {
     equal: before.width === candidate.width && before.height === candidate.height && before.data.equals(candidate.data),
@@ -344,19 +397,27 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
     const left = beforeCases.get(id);
     const right = candidateCases.get(id);
     const required = evidence.preservationCases.find((item) => item.id === id);
-    const widths = required.category === "overflow" ? [1440, 768, 390] : [1440];
-    const viewportComparisons = widths.map((width) => {
-      const leftImage = left.images.find((image) => image.viewport.width === width);
-      const rightImage = right.images.find((image) => image.viewport.width === width);
-      return { width, before_sha256: leftImage.sha256, candidate_sha256: rightImage.sha256,
-        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate)) };
+    const observationKeys = [...left.observations.keys()].sort();
+    if (canonicalJson(observationKeys) !== canonicalJson([...right.observations.keys()].sort())) fail("unmatched_observations", `Before and candidate observation keys differ for ${id}`);
+    const viewportComparisons = observationKeys.map((key) => {
+      const leftObservation = left.observations.get(key);
+      const rightObservation = right.observations.get(key);
+      const leftImage = leftObservation.image;
+      const rightImage = rightObservation.image;
+      return { key, theme: leftObservation.theme, width: leftObservation.viewport.width,
+        before_sha256: leftImage.sha256, candidate_sha256: rightImage.sha256,
+        state_equal: canonicalJson(leftObservation.state) === canonicalJson(rightObservation.state),
+        geometry_equal: canonicalJson(leftObservation.geometry) === canonicalJson(rightObservation.geometry),
+        visible_copy_equal: canonicalJson(leftObservation.visible_copy) === canonicalJson(rightObservation.visible_copy),
+        assertions_equal: canonicalJson(leftObservation.assertions) === canonicalJson(rightObservation.assertions),
+        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate), leftImage, rightImage) };
     });
     const pixelsEqual = viewportComparisons.every((entry) => entry.pixels.equal);
-    const stateEqual = canonicalJson(left.state) === canonicalJson(right.state);
+    const stateEqual = viewportComparisons.every((entry) => entry.state_equal);
     const actionEqual = canonicalJson(left.actions) === canonicalJson(right.actions) && canonicalJson(left.transport_sequence) === canonicalJson(right.transport_sequence);
-    const geometryEqual = canonicalJson(left.geometry) === canonicalJson(right.geometry);
-    const copyEqual = canonicalJson(left.visible_copy) === canonicalJson(right.visible_copy);
-    const assertionsEqual = canonicalJson(left.assertions) === canonicalJson(right.assertions);
+    const geometryEqual = viewportComparisons.every((entry) => entry.geometry_equal);
+    const copyEqual = viewportComparisons.every((entry) => entry.visible_copy_equal);
+    const assertionsEqual = viewportComparisons.every((entry) => entry.assertions_equal);
     const identityEqual = left.test_identity === right.test_identity;
     const passed = pixelsEqual && stateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
     if (!passed) mismatches.push({ id, pixels: pixelsEqual, state: stateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });

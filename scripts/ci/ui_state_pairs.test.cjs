@@ -29,6 +29,7 @@ const BASE = `sha256:${"6".repeat(64)}`;
 const BEFORE_SOURCE_LAYER = `sha256:${"5".repeat(64)}`;
 const CANDIDATE_SOURCE_LAYER = `sha256:${"a".repeat(64)}`;
 const CLOCK = `sha256:${"4".repeat(64)}`;
+const REQUIRED_THEMES_FOR_TEST = ["light", "dark", "system-dark"];
 
 function digest(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -67,7 +68,9 @@ const recipe = {
   clock_sha256: CLOCK,
   data_recipe_sha256: dataRecipeSha
 };
-const recipeSha = `sha256:${digest(Buffer.from(JSON.stringify(canonical(recipe))))}`;
+const sharedRecipe = structuredClone(recipe);
+delete sharedRecipe.browser_date.timer_elapsed_ms;
+const recipeSha = `sha256:${digest(Buffer.from(JSON.stringify(canonical(sharedRecipe))))}`;
 
 function authority() {
   return {
@@ -104,13 +107,13 @@ function authority() {
   };
 }
 
-function png(color = 20) {
-  const image = new PNG({ width: 1, height: 1 });
-  image.data.set([color, 30, 40, 255]);
+function png(width = 1440, height = 900, color = 20) {
+  const image = new PNG({ width, height });
+  for (let pixel = 0; pixel < image.data.length; pixel += 4) image.data.set([color, 30, 40, 255], pixel);
   return PNG.sync.write(image);
 }
 
-function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageBytes = png(), mutateCase } = {}) {
+function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, mutateCase } = {}) {
   const beforeSide = sourceSha === BEFORE_SHA;
   buildSha ??= beforeSide ? BEFORE_BUILD_SHA : CANDIDATE_BUILD_SHA;
   productTreeSha ??= beforeSide ? BEFORE_TREE : CANDIDATE_TREE;
@@ -118,19 +121,48 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
   opsImageId ??= beforeSide ? OPS_BEFORE : OPS_CANDIDATE;
   browserImageId ??= beforeSide ? BROWSER : BROWSER_CANDIDATE;
   sourceLayerId ??= beforeSide ? BEFORE_SOURCE_LAYER : CANDIDATE_SOURCE_LAYER;
+  const imageBytesByDimensions = new Map();
   const cases = evidence.preservationCases.map((entry) => {
-    const state = {
-      element: entry.element,
-      category: entry.category,
-      route: entry.element === "E1" ? "/" : "/admin/search/search",
-      theme: "light",
-      viewport: { width: 1440, height: 900 },
-      scroll: { x: 0, y: 0 },
-      focus: { name: `control-${entry.id}` },
-      data_identity: `data-${entry.id}`
-    };
-    const widths = entry.category === "overflow" ? [1440, 768, 390] : [1440];
-    const images = widths.map((width) => ({ path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-")}-${width}.png`, sha256: digest(imageBytes), viewport: { width, height: width === 390 ? 844 : 900 }, capture: "full-page-real-product-state" }));
+    const matrix = entry.category === "overflow" || entry.category === "long-text"
+      ? ["light", "dark", "system-dark"].flatMap((theme) => [1440, 768, 390].map((width) => ({ theme, width })))
+      : [{ theme: "light", width: 1440 }];
+    const observations = matrix.map(({ theme, width }) => {
+      const height = 1;
+      const imageKey = `${width}x${height}`;
+      if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, png(width, height, imageColor));
+      const imageBytes = imageBytesByDimensions.get(imageKey);
+      const image = {
+        path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-")}-${theme}-${width}.png`,
+        sha256: digest(imageBytes),
+        viewport: { width, height },
+        full_page_raster: { width, height },
+        capture: "full-page-real-product-state"
+      };
+      const copy = `Visible ${entry.id} ${theme} ${width}`;
+      return {
+        theme,
+        viewport: { width, height },
+        state: {
+          element: entry.element,
+          category: entry.category,
+          route: entry.element === "E1" ? "/" : "/admin/search/search",
+          theme,
+          color_scheme: theme === "light" ? "light" : "dark",
+          viewport: { width, height },
+          scroll: { x: 0, y: 0 },
+          focus: { name: `control-${entry.id}-${theme}-${width}` },
+          data_identity: `data-${entry.id}`,
+          clock: { browser_iso: recipe.browser_date.observed, server_iso: recipe.browser_date.observed, clock_sha256: CLOCK }
+        },
+        geometry: [
+          { name: `element-${entry.element}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width },
+          { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }
+        ],
+        assertions: [{ name: `assert-${entry.id}-${theme}-${width}`, status: "passed", actual: `observed-${entry.id}` }],
+        visible_copy: [{ text: copy, sha256: digest(Buffer.from(copy)) }],
+        image
+      };
+    });
     const item = {
       id: entry.id,
       test_identity: JSON.stringify([entry.file, "chromium", [path.posix.basename(entry.file), `${entry.id} held-out assertion`], "shared"]),
@@ -142,30 +174,29 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
       runtime: { application_image_id: appImageId, standalone_ops_image_id: opsImageId, browser_image_id: browserImageId, browser_source_layer_id: sourceLayerId, browser_base_layers_sha256: BASE, effective_runtime_sha256: RUNTIME },
       clock_recipe: recipe,
       data_recipe: structuredClone(dataRecipe),
-      state,
       actions: ["navigate", "observe"],
       transport_sequence: [{ operation: "liveview-connected", outcome: "connected" }],
-      geometry: [{ name: `element-${entry.element}`, x: 0, y: 0, width: 100, height: 20 }],
-      assertions: [{ name: `assert-${entry.id}`, status: "passed", actual: `observed-${entry.id}` }],
-      visible_copy: [{ text: `Visible ${entry.id}`, sha256: digest(Buffer.from(`Visible ${entry.id}`)) }],
-      images
+      observations
     };
     return mutateCase?.(item) || item;
   });
   return {
     eligibility: { eligible: true },
-    source: { checkout_head: buildSha, built_source_sha: buildSha, product_source_sha: sourceSha },
+    scope: beforeSide ? "before-only" : "full",
+    source: { checkout_head: buildSha, built_source_sha: buildSha, product_source_sha: sourceSha,
+      ...(beforeSide ? { qualification_sha256: authority().qualification.sha256 } : {}) },
     images: { application: { runtime_id: appImageId }, standalone_ops: { runtime_id: opsImageId }, browser: { runtime_id: browserImageId } },
     browser: structuredClone(browser),
-    artifacts: cases.flatMap((item) => item.images.map((image) => ({ path: image.path, sha256: image.sha256, present: true, copied: true, copy_status: "success" }))),
+    artifacts: cases.flatMap((item) => item.observations.map(({ image }) => ({ path: image.path, sha256: image.sha256, present: true, copied: true, copy_status: "success" }))),
     preservation: {
-      schema: "scrypath.ui-preservation.v1",
+      schema: beforeSide ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1",
       product_source_sha: sourceSha,
+      build_source_sha: buildSha,
       product_tree_sha256: productTreeSha,
       fixture_overlay_sha256: FIXTURE,
       cases
     },
-    imageBytes
+    imageBytesByDimensions
   };
 }
 
@@ -176,7 +207,7 @@ function compare(before = runReceipt({ sourceSha: BEFORE_SHA, buildSha: BEFORE_B
     authority: expectedAuthority,
     before,
     candidate,
-    readImage: (_side, _item, receipt) => receipt.imageBytes
+    readImage: (_side, item, receipt) => receipt.imageBytesByDimensions.get(`${item.viewport.width}x${item.viewport.height}`)
   });
 }
 
@@ -186,8 +217,10 @@ test("source-paired comparator requires exact matched state receipt pairs", () =
 
   assert.equal(report.passed, true);
   assert.equal(report.comparisons.length, 61);
-  assert.equal(report.comparisons.reduce((sum, item) => sum + item.viewport_comparisons.length, 0), 79);
-  assert.ok(report.comparisons.filter((item) => item.id.endsWith("overflow")).every((item) => item.viewport_comparisons.map((viewport) => viewport.width).join(",") === "1440,768,390"));
+  assert.equal(report.comparisons.reduce((sum, item) => sum + item.viewport_comparisons.length, 0), 213);
+  assert.ok(report.comparisons.filter((item) => item.id.endsWith("overflow") || item.id.endsWith("long-text")).every((item) =>
+    item.viewport_comparisons.length === 9 && REQUIRED_THEMES_FOR_TEST.every((theme) => [1440, 768, 390].every((width) => item.viewport_comparisons.some((observation) => observation.theme === theme && observation.width === width)))
+  ));
   assert.equal(report.aesthetic_approval, "not-provided");
 });
 
@@ -222,10 +255,10 @@ test("a source pair rejects independently mismatched source, fixture, runtime an
 
 test("a source pair fails exact pixels, geometry, state, copy and semantic assertions", () => {
   const changes = [
-    (item) => { item.geometry[0].width += 1; },
-    (item) => { item.state.focus.name = "different focus"; },
-    (item) => { item.visible_copy[0].text = "different visible copy"; },
-    (item) => { item.assertions[0].actual = "different assertion"; }
+    (item) => { item.observations[0].geometry[0].width += 1; },
+    (item) => { item.observations[0].state.focus.name = "different focus"; },
+    (item) => { item.observations[0].visible_copy[0].text = "different visible copy"; },
+    (item) => { item.observations[0].assertions[0].actual = "different assertion"; }
   ];
   for (const mutate of changes) {
     const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, mutateCase: mutate });
@@ -233,8 +266,57 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
     assert.equal(report.passed, false);
   }
 
-  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageBytes: png(21) });
+  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 21 });
   assert.equal(compare(undefined, pixelChanged).passed, false);
+});
+
+test("real timer elapsed samples may differ while the shared fixed-clock recipe remains exact", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  before.preservation.cases[0].clock_recipe.browser_date.timer_elapsed_ms = 83;
+
+  const report = compare(before);
+  assert.equal(report.passed, true);
+});
+
+test("the declared viewport and full-page raster dimensions must match decoded PNG bytes", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  before.imageBytesByDimensions.set("1440x1", png(1, 1));
+
+  assert.throws(() => compare(before), /raster|dimension|viewport/i);
+});
+
+test("raw image artifact paths cannot be reused across distinct preservation cases", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  before.preservation.cases[1].observations[0].image.path = before.preservation.cases[0].observations[0].image.path;
+
+  assert.throws(() => compare(before), /reus|unique|artifact path/i);
+});
+
+test("overflow and long-text cases require every light, dark and system-dark viewport observation", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const overflow = before.preservation.cases.find((item) => item.id === "E1 overflow");
+  overflow.observations = [
+    { theme: "light", viewport: { width: 1440, height: 900 } },
+    { theme: "dark", viewport: { width: 1440, height: 900 } },
+    { theme: "system-dark", viewport: { width: 1440, height: 900 } }
+  ];
+
+  assert.throws(() => compare(before), /observation|viewport|theme/i);
+});
+
+test("before-only and candidate full-run receipt filenames cannot be cross-used", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-scope-"));
+  try {
+    const beforePath = path.join(directory, "phase185-before-only-evidence.json");
+    const candidatePath = path.join(directory, "phase105-evidence.json");
+    fs.writeFileSync(beforePath, JSON.stringify({ schema_version: 1 }));
+    fs.writeFileSync(candidatePath, JSON.stringify({ schema_version: 1 }));
+
+    assert.throws(() => pairs.loadReceiptBundle(beforePath, "candidate", authority()), /candidate.*phase105-evidence/i);
+    assert.throws(() => pairs.loadReceiptBundle(candidatePath, "before", authority()), /before.*phase185-before-only-evidence/i);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("the fixed CLI accepts only the documented argv order", () => {
@@ -307,7 +389,7 @@ test("authority loads only when its qualification bytes match the supplied diges
 test("receipt loading requires a complete recomputable evidence bundle", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-receipt-"));
   try {
-    const receiptPath = path.join(directory, "phase105-evidence.json");
+    const receiptPath = path.join(directory, "phase185-before-only-evidence.json");
     fs.writeFileSync(receiptPath, JSON.stringify({ schema_version: 1 }));
     assert.throws(() => pairs.loadReceiptBundle(receiptPath, "before", authority()), /not independently recomputable and eligible/);
   } finally {
@@ -323,7 +405,7 @@ test("run PNG loading verifies path containment, raw hashes and decoded image by
     fs.mkdirSync(path.dirname(absolute), { recursive: true });
     const bytes = png();
     fs.writeFileSync(absolute, bytes);
-    const item = { id: "E1 empty", path: relative, sha256: digest(bytes) };
+    const item = { id: "E1 empty", path: relative, sha256: digest(bytes), viewport: { width: 1440, height: 900 }, full_page_raster: { width: 1440, height: 900 } };
 
     assert.deepEqual(pairs.readBundledPng({ runRoot: directory }, item), bytes);
     assert.throws(() => pairs.readBundledPng({ runRoot: directory }, { ...item, sha256: "1".repeat(64) }), /raw SHA-256/);

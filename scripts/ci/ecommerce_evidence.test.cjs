@@ -7,6 +7,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
 let evidence = {};
 try {
@@ -240,21 +241,69 @@ function stage(startedAt, endedAt, exitCode = 0) {
   return { started_at: startedAt, ended_at: endedAt, exit_code: exitCode };
 }
 
-function createCompleteRun() {
+const QUALIFICATION_SHA256 = `sha256:${"d".repeat(64)}`;
+
+function createQualifiedSourceRepo({ separateOverlayCommit = false } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-qualified-source-"));
+  const git = (...args) => {
+    const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+  const writeFiles = (files, label) => {
+    for (const relative of files) {
+      const absolute = path.join(root, relative);
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(absolute, `${label}:${relative}\n`);
+    }
+  };
+  const addRepoContent = () => git("add", "--", ...["examples", "scrypath_ops", "scripts"].filter((directory) => fs.existsSync(path.join(root, directory))));
+
+  try {
+    git("init", "-q");
+    git("config", "user.name", "Scrypath Test");
+    git("config", "user.email", "scrypath-test@example.invalid");
+    writeFiles(evidence.productSourceRoots.map((directory) => `${directory}/identity.txt`), "product");
+    if (!separateOverlayCommit) writeFiles(evidence.preservationFixtureFiles, "overlay");
+    addRepoContent();
+    git("commit", "-qm", separateOverlayCommit ? "qualified product source" : "qualified product and harness source");
+    const productSha = git("rev-parse", "HEAD");
+    if (separateOverlayCommit) {
+      writeFiles(evidence.preservationFixtureFiles, "overlay");
+      addRepoContent();
+      git("commit", "-qm", "test-only harness overlay");
+    }
+    const buildSha = git("rev-parse", "HEAD");
+    return {
+      root,
+      productSha,
+      buildSha,
+      productTreeSha256: evidence.productTreeIdentity(root, productSha),
+      fixtureOverlaySha256: evidence.fixtureOverlayDigest(root, buildSha)
+    };
+  } catch (error) {
+    fs.rmSync(root, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSourceSha = sourceSha, productTreeSha256, fixtureOverlaySha256, qualificationSha256 = QUALIFICATION_SHA256 } = {}) {
   const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-evidence-run-"));
-  const cases = completeReceiptCases();
-  const image = { built_id: IMAGE_ID, runtime_id: IMAGE_ID, source_sha: SOURCE_SHA };
+  const allCases = completeReceiptCases();
+  const cases = beforeOnly ? allCases.filter((item) => /ui_(state|content)_preservation/.test(item.file)) : allCases;
+  const image = { built_id: IMAGE_ID, runtime_id: IMAGE_ID, source_sha: buildSourceSha };
   const manifest = {
     schema_version: 1,
     source: {
       mode: "hosted",
-      checkout_head: SOURCE_SHA,
-      product_source_sha: SOURCE_SHA,
+      checkout_head: buildSourceSha,
+      product_source_sha: sourceSha,
       product_tree_sha256: null,
       fixture_overlay_sha256: null,
       dirty: false,
-      event_sha: SOURCE_SHA,
-      built_source_sha: SOURCE_SHA
+      event_sha: buildSourceSha,
+      built_source_sha: buildSourceSha,
+      ...(beforeOnly ? { qualification_sha256: qualificationSha256 } : {})
     },
     images: { application: { ...image }, standalone_ops: { built_id: IMAGE_ID, runtime_id: IMAGE_ID }, browser: { ...image } },
     compose: {
@@ -267,7 +316,7 @@ function createCompleteRun() {
     workflow: {
       event: "workflow_dispatch",
       ref: "refs/heads/worktree-agent-p182-03",
-      sha: SOURCE_SHA,
+      sha: buildSourceSha,
       run_id: "123456789",
       run_attempt: 1,
       job_name: "phase105-e2e",
@@ -304,15 +353,15 @@ function createCompleteRun() {
   fs.writeFileSync(path.join(runDir, "phase105-playwright-list.json"), JSON.stringify(playwrightReport(cases)));
   fs.writeFileSync(path.join(runDir, "phase105-playwright.json"), JSON.stringify(playwrightReport(cases, { results: true })));
   const evidenceEvents = [{ operation: "seed" }];
-  const productTreeSha256 = evidence.productTreeIdentity(path.resolve(__dirname, "../.."));
-  const fixtureOverlaySha256 = evidence.fixtureOverlayDigest(path.resolve(__dirname, "../.."));
-  manifest.source.product_tree_sha256 = productTreeSha256;
-  manifest.source.fixture_overlay_sha256 = fixtureOverlaySha256;
+  const repositoryRoot = path.resolve(__dirname, "../..");
+  const productTreeSha = productTreeSha256 || evidence.productTreeIdentity(repositoryRoot);
+  const fixtureOverlaySha = fixtureOverlaySha256 || evidence.fixtureOverlayDigest(repositoryRoot);
+  manifest.source.product_tree_sha256 = productTreeSha;
+  manifest.source.fixture_overlay_sha256 = fixtureOverlaySha;
   const clockBytes = Buffer.from("2026-10-31T12:00:00.000Z", "utf8");
   const clockSha = `sha256:${crypto.createHash("sha256").update(clockBytes).digest("hex")}`;
   const clockPath = "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt";
   fs.writeFileSync(path.join(runDir, clockPath), clockBytes);
-  const onePixelPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
   const canonicalize = (value) => Array.isArray(value) ? value.map(canonicalize) : value && typeof value === "object"
     ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])])) : value;
   const hashJson = (value) => `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(value))).digest("hex")}`;
@@ -324,7 +373,9 @@ function createCompleteRun() {
   const profileSha = hashJson(profileRecipe);
   const dataRecipeSha = hashJson(dataRecipe);
   const clockRecipe = { ...profileRecipe, browser_date: { fixed: true, timers_running: true, timer_elapsed_ms: 40, observed: "2026-10-31T12:00:00.000Z" }, clock_sha256: clockSha, profile_sha256: profileSha, data_recipe_sha256: dataRecipeSha };
-  const recipeSha = hashJson(clockRecipe);
+  const sharedRecipe = structuredClone(clockRecipe);
+  delete sharedRecipe.browser_date.timer_elapsed_ms;
+  const recipeSha = hashJson(sharedRecipe);
   const runtime = {
     application_image_id: IMAGE_ID,
     standalone_ops_image_id: IMAGE_ID,
@@ -341,45 +392,54 @@ function createCompleteRun() {
       project: "chromium",
       title_path: [path.posix.basename(preservationCase.file), title]
     });
-    const widths = preservationCase.category === "overflow" ? [1440, 768, 390] : [1440];
-    const images = widths.map((width) => {
-      const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}-${width}.png`;
-      fs.writeFileSync(path.join(runDir, imagePath), onePixelPng);
+    const matrix = preservationCase.category === "overflow" || preservationCase.category === "long-text"
+      ? ["light", "dark", "system-dark"].flatMap((theme) => [1440, 768, 390].map((width) => ({ theme, width })))
+      : [{ theme: "light", width: 1440 }];
+    const observations = matrix.map(({ theme, width }) => {
+      const height = 1;
+      const image = new PNG({ width, height });
+      for (let pixel = 0; pixel < image.data.length; pixel += 4) image.data.set([30, 40, 50, 255], pixel);
+      const pngBytes = PNG.sync.write(image);
+      const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}-${theme}-${width}.png`;
+      fs.writeFileSync(path.join(runDir, imagePath), pngBytes);
       imageArtifacts.push({ path: imagePath, required: true, copied: true, copy_status: "success" });
-      return { path: imagePath, sha256: crypto.createHash("sha256").update(onePixelPng).digest("hex"), viewport: { width, height: width === 390 ? 844 : 900 }, capture: "full-page-real-product-state" };
+      const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_${theme}_${width}_CAPTURE`;
+      const state = {
+        element: preservationCase.element,
+        category: preservationCase.category,
+        route: "/",
+        theme,
+        color_scheme: theme === "light" ? "light" : "dark",
+        viewport: { width, height },
+        scroll: { x: 0, y: 0 },
+        focus: { name: `TEST_FIXTURE_ONLY_${theme}_${width}` },
+        data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
+        clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
+      };
+      return {
+        theme, viewport: { width, height }, state,
+        geometry: [{ name: `case-target-${width}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width }, { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }],
+        assertions: [{ name: `assert-${preservationCase.id}-${theme}-${width}`, status: "passed", actual: "TEST_FIXTURE_ONLY" }],
+        visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
+        image: { path: imagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, full_page_raster: { width, height }, capture: "full-page-real-product-state" }
+      };
     });
-    const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_CAPTURE`;
     evidenceEvents.push({
       operation: "ui_preservation_case",
       case_id: preservationCase.id,
       test_identity: identity.key,
-      product_source_sha: SOURCE_SHA,
-      build_source_sha: SOURCE_SHA,
-      product_tree_sha256: productTreeSha256,
-      fixture_overlay_sha256: fixtureOverlaySha256,
+      product_source_sha: sourceSha,
+      build_source_sha: buildSourceSha,
+      product_tree_sha256: productTreeSha,
+      fixture_overlay_sha256: fixtureOverlaySha,
       runtime,
       recipe_sha256: recipeSha,
       clock_recipe: clockRecipe,
       data_recipe: dataRecipe,
-      state: {
-        element: preservationCase.element,
-        category: preservationCase.category,
-        route: "/",
-        theme: "light",
-        color_scheme: "light",
-        viewport: { width: 1440, height: 900 },
-        scroll: { x: 0, y: 0 },
-        focus: { name: "TEST_FIXTURE_ONLY" },
-        data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
-        clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
-      },
       clock_artifact: { path: clockPath, sha256: crypto.createHash("sha256").update(clockBytes).digest("hex") },
       actions: ["TEST_FIXTURE_ONLY"],
       transport_sequence: [{ operation: "TEST_FIXTURE_ONLY", outcome: "TEST_FIXTURE_ONLY" }],
-      geometry: [{ name: "TEST_FIXTURE_ONLY", x: 0, y: 0, width: 1, height: 1 }],
-      assertions: [{ name: "TEST_FIXTURE_ONLY", status: "passed", actual: "TEST_FIXTURE_ONLY" }],
-      visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
-      images
+      observations
     });
   }
   manifest.artifacts.push(...imageArtifacts);
@@ -451,24 +511,219 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
 });
 
 test("independent pair authority can revalidate a source-bound bundle after checkout changes", () => {
-  const { runDir } = createCompleteRun();
+  const source = createQualifiedSourceRepo();
+  const expectedSource = {
+    sourceSha: source.productSha,
+    buildSourceSha: source.buildSha,
+    productTreeSha256: source.productTreeSha256,
+    fixtureOverlaySha256: source.fixtureOverlaySha256
+  };
+  const { runDir } = createCompleteRun({
+    sourceSha: source.productSha,
+    buildSourceSha: source.buildSha,
+    productTreeSha256: source.productTreeSha256,
+    fixtureOverlaySha256: source.fixtureOverlaySha256
+  });
   try {
-    const written = evidence.writeEvidence({ runDir });
-    const expectedSource = {
-      sourceSha: written.source.checkout_head,
-      buildSourceSha: written.source.checkout_head,
-      productTreeSha256: written.preservation.product_tree_sha256,
-      fixtureOverlaySha256: written.preservation.fixture_overlay_sha256
-    };
-    const verified = evidence.validateReceipt({ runDir, expectedSource });
-    const wrongSource = evidence.validateReceipt({ runDir, expectedSource: { ...expectedSource, sourceSha: "b".repeat(40) } });
+    const written = evidence.writeEvidence({ runDir, expectedSource, repoRoot: source.root });
+    fs.writeFileSync(path.join(source.root, evidence.productSourceRoots[0], "identity.txt"), "comparator checkout drift\n");
+    const verified = evidence.validateReceipt({ runDir, expectedSource, repoRoot: source.root });
+    const wrongSource = evidence.validateReceipt({ runDir, expectedSource: { ...expectedSource, sourceSha: "b".repeat(40) }, repoRoot: source.root });
 
+    assert.equal(written.eligibility.eligible, true, JSON.stringify(written.reasons));
     assert.equal(verified.valid, true);
     assert.equal(verified.eligible, true);
     assert.equal(wrongSource.valid, false);
     assert.ok(wrongSource.reasons.some((reason) => reason.code === "receipt_mismatch"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+    fs.rmSync(source.root, { recursive: true, force: true });
+  }
+});
+
+test("product tree identity can be recomputed from a pinned Git object after the worktree changes", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-product-tree-object-"));
+  const productRoots = [
+    "examples/scrypath_ecommerce/assets",
+    "examples/scrypath_ecommerce/config",
+    "examples/scrypath_ecommerce/lib",
+    "scrypath_ops/assets",
+    "scrypath_ops/config",
+    "scrypath_ops/lib"
+  ];
+  const git = (...args) => {
+    const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+
+  try {
+    for (const directory of productRoots) {
+      const absolute = path.join(root, directory, "identity.txt");
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(absolute, `qualified:${directory}\n`);
+    }
+    git("init", "-q");
+    git("config", "user.name", "Scrypath Test");
+    git("config", "user.email", "scrypath-test@example.invalid");
+    git("add", "--", "examples", "scrypath_ops");
+    git("commit", "-qm", "qualified product tree");
+    const qualifiedCommit = git("rev-parse", "HEAD");
+    const qualifiedTree = evidence.productTreeIdentity(root);
+
+    fs.writeFileSync(path.join(root, productRoots[0], "identity.txt"), "candidate worktree contents\n");
+    assert.notEqual(evidence.productTreeIdentity(root), qualifiedTree);
+    assert.equal(evidence.productTreeIdentity(root, qualifiedCommit), qualifiedTree);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("historical test-overlay digest is replayed from its Git tree, independent of the comparator checkout", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-fixture-tree-object-"));
+  const productRoots = [
+    "examples/scrypath_ecommerce/assets",
+    "examples/scrypath_ecommerce/config",
+    "examples/scrypath_ecommerce/lib",
+    "scrypath_ops/assets",
+    "scrypath_ops/config",
+    "scrypath_ops/lib"
+  ];
+  const git = (...args) => {
+    const result = spawnSync("git", ["-C", root, ...args], { encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+
+  try {
+    for (const directory of productRoots) {
+      const absolute = path.join(root, directory, "identity.txt");
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(absolute, `product:${directory}\n`);
+    }
+    for (const relative of evidence.preservationFixtureFiles) {
+      const absolute = path.join(root, relative);
+      fs.mkdirSync(path.dirname(absolute), { recursive: true });
+      fs.writeFileSync(absolute, `qualified-overlay:${relative}\n`);
+    }
+    git("init", "-q");
+    git("config", "user.name", "Scrypath Test");
+    git("config", "user.email", "scrypath-test@example.invalid");
+    git("add", "--", "examples", "scrypath_ops", "scripts");
+    git("commit", "-qm", "qualified product source");
+    const productSha = git("rev-parse", "HEAD");
+    const firstFixture = path.join(root, evidence.preservationFixtureFiles[0]);
+    fs.writeFileSync(firstFixture, "committed test-only overlay\n");
+    git("add", "--", evidence.preservationFixtureFiles[0]);
+    git("commit", "-qm", "test-only harness overlay");
+    const buildSha = git("rev-parse", "HEAD");
+    const qualifiedOverlay = evidence.fixtureOverlayDigest(root, buildSha);
+
+    fs.writeFileSync(path.join(root, evidence.preservationFixtureFiles[1]), "candidate comparator checkout\n");
+    const currentOverlay = evidence.fixtureOverlayDigest(root);
+    assert.notEqual(currentOverlay, qualifiedOverlay);
+    const replayed = evidence.validateSourceOverlay(root, productSha, buildSha);
+    assert.equal(replayed.productTreeSha256, evidence.productTreeIdentity(root, productSha));
+    assert.equal(replayed.fixtureOverlaySha256, qualifiedOverlay);
+    assert.deepEqual(replayed.changedFiles, [evidence.preservationFixtureFiles[0]]);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("before source qualification requires independently pinned raw bytes, capture, clock and Git overlay", () => {
+  const source = createQualifiedSourceRepo({ separateOverlayCommit: true });
+  const evidenceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-before-qualification-"));
+  const capturePath = path.join(evidenceRoot, "actual-before", "capture.json");
+  const clockBytes = Buffer.from("2026-10-31T23:31:05.798Z", "utf8");
+  const clockSha = crypto.createHash("sha256").update(clockBytes).digest("hex");
+  const capture = {
+    source: { source_sha: source.productSha },
+    environment: {
+      browser_launch: { args: ["--disable-partial-raster"] },
+      browser_font_profile: { method: "retained-cdp-fixed-font-v1", font_families: { fixed: "Liberation Mono" }, applied: "before-first-navigation", lifetime: "page-context" },
+      clock: { utc: "2026-10-31T23:31:05.798Z", sha256: clockSha, timezone: "UTC", locale: "en-US", browser_mode: "fixed-date" }
+    }
+  };
+  fs.mkdirSync(path.dirname(capturePath), { recursive: true });
+  const captureBytes = Buffer.from(JSON.stringify(capture));
+  fs.writeFileSync(capturePath, captureBytes);
+  const captureSha = crypto.createHash("sha256").update(captureBytes).digest("hex");
+  const qualification = {
+    schema: "scrypath.phase185-before-qualification.v1",
+    status: "qualified",
+    source_sha: source.productSha,
+    actual_before_sha256: captureSha,
+    pinned_files: [{ path: capturePath, sha256: captureSha }],
+    browser_runtime_equivalence: {
+      source_sha: source.productSha,
+      actual_image_id: `sha256:${"a".repeat(64)}`,
+      rootfs_layers_equal: true,
+      effective_config_equal: true
+    }
+  };
+  const qualificationPath = path.join(evidenceRoot, "185-05-qualification.json");
+  const qualificationBytes = Buffer.from(JSON.stringify(qualification));
+  fs.writeFileSync(qualificationPath, qualificationBytes);
+  const qualificationSha256 = `sha256:${crypto.createHash("sha256").update(qualificationBytes).digest("hex")}`;
+  try {
+    const validated = evidence.validateBeforeQualification({
+      repoRoot: source.root,
+      qualificationPath,
+      productSourceSha: source.productSha,
+      buildSourceSha: source.buildSha,
+      qualificationSha256
+    });
+    assert.equal(validated.product_tree_sha256, source.productTreeSha256);
+    assert.equal(validated.fixture_overlay_sha256, source.fixtureOverlaySha256);
+    assert.equal(validated.qualification_sha256, qualificationSha256);
+    assert.equal(validated.clock_instant, capture.environment.clock.utc);
+
+    fs.writeFileSync(qualificationPath, Buffer.from(JSON.stringify({ ...qualification, status: "unqualified" })));
+    assert.throws(() => evidence.validateBeforeQualification({
+      repoRoot: source.root,
+      qualificationPath,
+      productSourceSha: source.productSha,
+      buildSourceSha: source.buildSha,
+      qualificationSha256
+    }), /independent qualification digest pin/i);
+  } finally {
+    fs.rmSync(evidenceRoot, { recursive: true, force: true });
+    fs.rmSync(source.root, { recursive: true, force: true });
+  }
+});
+
+test("the before-only evidence command emits a separate held-out receipt schema", () => {
+  const source = createQualifiedSourceRepo({ separateOverlayCommit: true });
+  const expectedSource = {
+    sourceSha: source.productSha,
+    buildSourceSha: source.buildSha,
+    productTreeSha256: source.productTreeSha256,
+    fixtureOverlaySha256: source.fixtureOverlaySha256,
+    qualificationSha256: QUALIFICATION_SHA256
+  };
+  const { runDir } = createCompleteRun({
+    beforeOnly: true,
+    sourceSha: source.productSha,
+    buildSourceSha: source.buildSha,
+    productTreeSha256: expectedSource.productTreeSha256,
+    fixtureOverlaySha256: expectedSource.fixtureOverlaySha256
+  });
+  try {
+    const written = evidence.writeBeforeOnlyEvidence({ runDir, expectedSource, repoRoot: source.root });
+    assert.equal(written.eligibility.eligible, true, JSON.stringify(written.reasons));
+
+    const beforePath = path.join(runDir, "phase185-before-only-evidence.json");
+    const receipt = JSON.parse(fs.readFileSync(beforePath, "utf8"));
+    assert.equal(receipt.scope, "before-only");
+    assert.equal(receipt.preservation.schema, "scrypath.ui-preservation-before-only.v1");
+    assert.equal(receipt.preservation.cases.length, 61);
+    assert.equal(fs.existsSync(path.join(runDir, "phase105-evidence.json")), false);
+    const validation = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
+    assert.equal(validation.valid, true, JSON.stringify(validation.reasons));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+    fs.rmSync(source.root, { recursive: true, force: true });
   }
 });
 
@@ -770,16 +1025,15 @@ test("a held-out receipt rejects altered copy, duplicate cases and image bytes",
   try {
     const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
     const first = events.find((event) => event.operation === "ui_preservation_case");
-    first.visible_copy[0].text += " changed";
+    first.observations[0].visible_copy[0].text += " changed";
     events.push({ ...first });
     fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
-    fs.writeFileSync(path.join(runDir, first.images[0].path), Buffer.from("tampered image"));
+    fs.writeFileSync(path.join(runDir, first.observations[0].image.path), Buffer.from("tampered image"));
 
     const receipt = evidence.writeEvidence?.({ runDir });
     assert.equal(receipt?.eligibility.eligible, false);
     assert.ok(receipt?.reasons.some((reason) => reason.code === "duplicate_preservation_case_receipt"));
-    assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_preservation_copy"));
-    assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_preservation_image"));
+    assert.ok(receipt?.reasons.some((reason) => reason.code === "invalid_preservation_observation"));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
   }
@@ -792,10 +1046,10 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
     ["fixture", (event) => { event.fixture_overlay_sha256 = `sha256:${"a".repeat(64)}`; }, "preservation_fixture_mismatch"],
     ["runtime", (event) => { event.runtime.effective_runtime_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_runtime"],
     ["recipe", (event) => { event.recipe_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_recipe"],
-    ["state", (event) => { event.state.category = "error"; }, "invalid_preservation_state"],
+    ["state", (event) => { event.observations[0].state.category = "error"; }, "invalid_preservation_observation"],
     ["transport", (event) => { event.transport_sequence = []; }, "invalid_preservation_transport"],
-    ["geometry", (event) => { event.geometry = []; }, "invalid_preservation_geometry"],
-    ["assertion", (event) => { event.assertions[0].status = "failed"; }, "invalid_preservation_assertions"]
+    ["geometry", (event) => { event.observations[0].geometry = []; }, "invalid_preservation_observation"],
+    ["assertion", (event) => { event.observations[0].assertions[0].status = "failed"; }, "invalid_preservation_observation"]
   ];
 
   for (const [label, mutate, expectedCode] of mutations) {
@@ -814,10 +1068,10 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
   }
 });
 
-test("held-out receipts reject a missing required viewport, mismatched clock, stopped timer or altered clock artifact", () => {
+test("held-out receipts reject missing observations, mismatched clock, stopped timer or altered clock artifact", () => {
   const mutations = [
-    ["missing overflow viewport", (event) => { event.images.pop(); }, "missing_preservation_viewport"],
-    ["browser clock differs from server", (event) => { event.state.clock.browser_iso = "2026-10-31T12:00:01.000Z"; }, "invalid_preservation_clock_recipe"],
+    ["missing overflow viewport", (event) => { event.observations.pop(); }, "incomplete_preservation_observations"],
+    ["browser clock differs from server", (event) => { event.observations[0].state.clock.browser_iso = "2026-10-31T12:00:01.000Z"; }, "invalid_preservation_observation"],
     ["timer witness absent", (event) => { event.clock_recipe.browser_date.timers_running = false; event.recipe_sha256 = `sha256:${"a".repeat(64)}`; }, "invalid_preservation_clock_recipe"],
     ["clock artifact digest altered", (event) => { event.clock_artifact.sha256 = "a".repeat(64); }, "invalid_preservation_clock_artifact"]
   ];
@@ -837,6 +1091,32 @@ test("held-out receipts reject a missing required viewport, mismatched clock, st
     } finally {
       fs.rmSync(runDir, { recursive: true, force: true });
     }
+  }
+});
+
+test("a small decoded image cannot claim a real 1440px full-page capture", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+    const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+    const first = events.find((event) => event.operation === "ui_preservation_case");
+    const image = first.observations[0].image;
+    const tiny = new PNG({ width: 1, height: 1 });
+    tiny.data.set([1, 2, 3, 255]);
+    const bytes = PNG.sync.write(tiny);
+    fs.writeFileSync(path.join(runDir, image.path), bytes);
+    image.sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
+    const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "phase105-evidence-input.json"), "utf8"));
+    const artifact = manifest.artifacts.find((item) => item.path === image.path);
+    artifact.sha256 = image.sha256;
+    fs.writeFileSync(path.join(runDir, "phase105-evidence-input.json"), JSON.stringify(manifest));
+    fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+
+    const receipt = evidence.writeEvidence({ runDir });
+    assert.equal(receipt.eligibility.eligible, false);
+    assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /decoded full-page raster/.test(reason.message)));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
   }
 });
 

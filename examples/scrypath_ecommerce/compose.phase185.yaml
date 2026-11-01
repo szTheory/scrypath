@@ -5,17 +5,23 @@ services:
   web:
     environment:
       E2E_RUN_ID: ${E2E_RUN_ID:-}
+      E2E_PRESERVATION_MODE: ${E2E_PRESERVATION_MODE:-full}
+      E2E_PHASE185_CLOCK_PATH: /phase185-fixture/clock.txt
     volumes:
       - ${E2E_PHASE185_CLOCK_PATH:-/tmp/phase185-clock.txt}:/phase185-fixture/clock.txt:ro
 
   standalone_ops:
     environment:
       E2E_RUN_ID: ${E2E_RUN_ID:-}
+      E2E_PRESERVATION_MODE: ${E2E_PRESERVATION_MODE:-full}
+      E2E_PHASE185_CLOCK_PATH: /phase185-fixture/clock.txt
     volumes:
       - ${E2E_PHASE185_CLOCK_PATH:-/tmp/phase185-clock.txt}:/phase185-fixture/clock.txt:ro
 
   browser:
     environment:
+      E2E_PRESERVATION_MODE: ${E2E_PRESERVATION_MODE:-full}
+      E2E_PHASE185_CLOCK_PATH: /phase185-fixture/clock.txt
       E2E_PRODUCT_SOURCE_SHA: ${E2E_PRODUCT_SOURCE_SHA:-}
       E2E_PRODUCT_TREE_SHA256: ${E2E_PRODUCT_TREE_SHA256:-}
       E2E_FIXTURE_OVERLAY_SHA256: ${E2E_FIXTURE_OVERLAY_SHA256:-}
