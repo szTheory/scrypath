@@ -885,6 +885,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert start_clock =~ "E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))"
       assert start_clock =~ "GITHUB_SHA"
       assert start_clock =~ "E2E_FINALIZATION_MARGIN_SECONDS=300"
+
       assert job =~
                "E2E_PHASE185_CLOCK_PATH: ${{ runner.temp }}/phase185-clock-${{ github.run_id }}-${{ github.run_attempt }}.txt"
 
