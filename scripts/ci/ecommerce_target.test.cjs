@@ -131,3 +131,47 @@ test("full Docker verification refuses budgets over 900 seconds before invoking 
 test("full readiness-only verification refuses budgets over 900 seconds before invoking Docker", () => {
   assertFullBudgetRefusedBeforeDocker("readiness", ["full", "--readiness-only"]);
 });
+
+test("runtime inspection preserves an expired execution status before parsing Compose output", () => {
+  const source = readFileSync(verifierPath, "utf8");
+  const inspection = source.slice(source.indexOf("inspect_phase185_full_images() {"), source.indexOf("\nrecord_lifecycle() {"));
+  const result = spawnSync("bash", ["-c", `
+set -u
+${inspection}
+inspect_full_image() { printf 'sha256:%064d' 0; }
+run_execution_bounded() { return 124; }
+compose=(docker compose)
+artifact_dir="$(mktemp -d)"
+project=owned-expired
+inspect_phase185_full_images
+status=$?
+rm -rf "$artifact_dir"
+exit "$status"
+`], { encoding: "utf8" });
+  assert.equal(result.status, 124, result.stderr);
+  assert.doesNotMatch(result.stderr, /SyntaxError|Unexpected end of JSON/);
+});
+
+test("aggregation without complete runtime identity fails explicitly without invoking Docker", () => {
+  const source = readFileSync(verifierPath, "utf8");
+  const aggregation = source.slice(source.indexOf("aggregate_full_evidence() {"), source.indexOf("\ncleanup() {"));
+  const result = spawnSync("bash", ["-c", `
+set -u
+${aggregation}
+original_exit_status=124
+artifact_copy_status=0
+cleanup_status=0
+browser_image_id="sha256:$(printf '%064d' 0)"
+artifact_dir=/unused
+scope=full preservation_mode=full run_id=owned-expired SCRYPATH_SOURCE_SHA=unused
+E2E_SOURCE_MODE=local source_dirty=false source_fingerprint=unused
+E2E_EVENT_SHA=unused E2E_EVENT_NAME=local E2E_GIT_REF=unused
+E2E_WORKFLOW_RUN_ID=local E2E_WORKFLOW_RUN_ATTEMPT=1 E2E_JOB_NAME=local
+project=owned-expired compose_model_digest=unused application_image_id=unused standalone_image_id=unused
+run_finalization_bounded() { echo unexpected-docker >&2; return 99; }
+aggregate_full_evidence
+`], { encoding: "utf8" });
+  assert.equal(result.status, 76, result.stderr);
+  assert.match(result.stderr, /complete.*runtime identity/i);
+  assert.doesNotMatch(result.stderr, /unbound variable|unexpected-docker/);
+});

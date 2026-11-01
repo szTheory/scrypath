@@ -379,12 +379,13 @@ inspect_full_image() {
 }
 
 inspect_phase185_full_images() {
-  local browser_ref runtime_json
+  local browser_ref runtime_json browser_model
   application_image_id="$(inspect_full_image web)" || return $?
   standalone_image_id="$(inspect_full_image standalone_ops)" || return $?
   browser_image_id="$(inspect_full_image browser)" || return $?
   mkdir -p "$artifact_dir/compose"
-  browser_ref="$(run_execution_bounded "${compose[@]}" config --format json | node -e 'const fs=require("node:fs");const m=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(m.services?.browser?.image || process.argv[1])' "$project-browser")" || return $?
+  browser_model="$(run_execution_bounded "${compose[@]}" config --format json)" || return $?
+  browser_ref="$(printf '%s' "$browser_model" | node -e 'const fs=require("node:fs");const m=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(m.services?.browser?.image || process.argv[1])' "$project-browser")" || return $?
   run_execution_bounded docker image inspect "$browser_ref" >"$artifact_dir/compose/browser-image-inspection.json" || return $?
   runtime_json="$(run_execution_bounded node "$build_helper" phase185-runtime --inspection "$artifact_dir/compose/browser-image-inspection.json")" || return $?
   printf '%s\n' "$runtime_json" >"$artifact_dir/compose/phase185-runtime.json"
@@ -536,6 +537,12 @@ aggregate_full_evidence() {
   if (( original_exit_status != 0 || artifact_copy_status != 0 || cleanup_status != 0 )); then conclusion="failure"; fi
   if [[ ! "$browser_image_id" =~ ^sha256:[a-f0-9]{64}$ ]]; then
     echo "Strict evidence aggregation requires the immutable browser image for this run." >&2
+    return 76
+  fi
+  if [[ ! "${E2E_EFFECTIVE_RUNTIME_SHA256:-}" =~ ^sha256:[a-f0-9]{64}$ ||
+        ! "${E2E_BROWSER_SOURCE_LAYER_ID:-}" =~ ^sha256:[a-f0-9]{64}$ ||
+        ! "${E2E_BROWSER_BASE_LAYERS_SHA256:-}" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+    echo "Strict evidence aggregation requires complete browser runtime identity for this run." >&2
     return 76
   fi
   run_finalization_bounded docker run --rm -i \
