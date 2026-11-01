@@ -81,7 +81,11 @@ defmodule Mix.Tasks.UiLiteralContractTest do
     source_file = Path.join(root, source_path)
     source = File.read!(source_file)
     assert length(String.split(source, "</body>")) == 2
-    File.write!(source_file, String.replace(source, "</body>", "<div class=\"z-60\"></div>\n  </body>", global: false))
+
+    File.write!(
+      source_file,
+      String.replace(source, "</body>", "<div class=\"z-60\"></div>\n  </body>", global: false)
+    )
 
     prepare_ledger = ~S"""
     const fs = require("node:fs");

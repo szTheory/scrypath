@@ -97,6 +97,7 @@ defmodule Scrypath.MixProject do
         "verify.phoenix_example": :test,
         "verify.ops_ui": :test,
         "verify.ecommerce_e2e": :test,
+        "verify.ui_tokens": :test,
         "scrypath.index.contract_drift": :test,
         "scrypath.settings.diff": :test,
         "scrypath.settings.read": :test,
