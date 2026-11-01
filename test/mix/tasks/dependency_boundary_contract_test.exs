@@ -5,8 +5,8 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @host_manifest "examples/scrypath_ecommerce/mix.exs"
   @root_manifest "mix.exs"
   @support_guide "guides/support-and-compatibility.md"
-  @action_dispositions ".planning/phases/184-explicit-and-lean-dependency-graphs/184-ACTIONS-DISPOSITIONS.md"
-  @dependency_evidence ".planning/phases/184-explicit-and-lean-dependency-graphs/184-DEPENDENCY-EVIDENCE.md"
+  @action_dispositions ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-ACTIONS-DISPOSITIONS.md"
+  @dependency_evidence ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-DEPENDENCY-EVIDENCE.md"
   @action_pr_ids ~w(65 68 69 70 71 72 73 74 75 76)
   @dependency_graph_ids [
     ".",

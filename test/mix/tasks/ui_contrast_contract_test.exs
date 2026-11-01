@@ -233,9 +233,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
           "test/mix/tasks/ui_literal_contract_test.exs",
           "dev/mix/tasks/verify.phase99.ex",
           "examples/scrypath_ecommerce/contrast-checker.mjs",
-          "scrypath_ops/assets/css/contrast-pairs.mjs",
-          ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
-          ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md"
+          "scrypath_ops/assets/css/contrast-pairs.mjs"
         ] do
       File.cp!(Path.join(@root, path), Path.join(root, path))
     end

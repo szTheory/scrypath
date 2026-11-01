@@ -91,7 +91,7 @@ Use a disposable backend per full mutation run. Re-seeding catalog records does 
 Two Phase 185 diagnostic attempts stopped before any browser capture: a copied expected hash omitted characters, and host/browser code both created the same directory through a shared artifact mount. These were setup failures, not behavioral RED evidence or product failures. Derive hashes from committed bytes, syntax-check the generated overlay and serialized runner, and simulate the shared-directory creation/copy protocol locally with one creator before launching the next owned stack. Keep every failed attempt and its actual status. If diagnostic machinery keeps adding failures, return to the maintained runner rather than extending the wrapper indefinitely.
 
 **Context:** The corrected driver verified both Git/worktree bytes and generated code, then used a temporary shared-path simulation to establish browser-only directory creation and hash-checked host transport. No cache, concurrency, dependency or resource-limit change supplied this improvement. Required verification and bounded retests remain included in the approved phase; an elapsed runtime is not another approval boundary.
-**Source:** [Phase 185 continuity](../phases/185-executable-ui-quality-foundations/.continue-here.md); external `font-session-diagnostic-e25fac89-2226/driver-record.json`, `font-session-diagnostic-e25fac89-r2-20261031T2235/driver-record.json`, and `font-session-diagnostic-e25fac89-r3-265a7ad66ecc/mount-protocol-simulation/simulation-record.json` under `/private/tmp/scrypath-phase185-execution/`. The current workaround still requires actual runtime proof; this lesson establishes setup efficiency only.
+**Source:** [Phase 185 continuity](../milestones/v1.45-phases/185-executable-ui-quality-foundations/.continue-here.md); external `font-session-diagnostic-e25fac89-2226/driver-record.json`, `font-session-diagnostic-e25fac89-r2-20261031T2235/driver-record.json`, and `font-session-diagnostic-e25fac89-r3-265a7ad66ecc/mount-protocol-simulation/simulation-record.json` under `/private/tmp/scrypath-phase185-execution/`. The current workaround still requires actual runtime proof; this lesson establishes setup efficiency only.
 
 ## Patterns
 
@@ -143,7 +143,7 @@ The initial review guide placement and relative link failed the package allowlis
 Phase185 qualification correctly rejected unmatched review JSON and contact sheets placed alongside raw screenshots. Keep immutable captures and their exact manifest directory untouched; write observation records and derivatives in a sibling under the ignored evidence root. If placement must be repaired, move only task-added review files byte-identically, preserve original observer records, and record explicit original/new paths and hashes in a transport manifest. Do not loosen the raw-directory validator or recapture solely to repair review bookkeeping.
 
 **When to use:** Disposable source-paired captures and their factual inspection records.
-**Source:** [Phase185 qualified baseline](../phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md), evidence placement correction and pinned transport record.
+**Source:** [Phase185 qualified baseline](../milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md), evidence placement correction and pinned transport record.
 
 ## Keeping these lessons useful
 

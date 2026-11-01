@@ -1,0 +1,885 @@
+{
+  "version": "v1.45",
+  "source_before_archive": "d5ce0435d229e256e89f4a8ff2fd499a963e4b57",
+  "phase_file_count": 175,
+  "plan_summary_count": 38,
+  "planned_task_blocks": 79,
+  "cli_partial_task_extraction": 45,
+  "files": [
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md",
+      "sha256": "6392938e528167ec789f4d02f0b193c1082658bc8f0ba39d864a3843e4483e57"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-01-SUMMARY.md",
+      "sha256": "e3aaf26ea3ce9326ebfb651206317d7622b966a8da3b7db3f1bca1d11a5d2a5e"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-02-PLAN.md",
+      "sha256": "79844b2a60fafceec871edb4d35e6f8171ec8916af3432b473884e90ec869567"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-02-SUMMARY.md",
+      "sha256": "233e8d86d066ce58dfe046a4a44ad7857253f450ceaf973250cb7e673178ee2a"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-03-PLAN.md",
+      "sha256": "a35685974438220d74b25287f773286442cca11d80c6d8a4e677b3f01d4747ea"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-03-SUMMARY.md",
+      "sha256": "5c4e9ad7c8d4d2e30c6334296aa07bb4436322054db30cb3756373f8c38c94b0"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md",
+      "sha256": "d660ffcc48822d361147b29f35e566d9a191a8e1dd8154631bafb66f0a5a4282"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-04-SUMMARY.md",
+      "sha256": "7a0bec8e996e2ad15dbc53b8f8ca502601c13d7d30f3e374b592591779a501bd"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-05-PLAN.md",
+      "sha256": "b670d93cb90134d742b75e738f0d6977760062cd2b8b3a32f37d8c5d8f779887"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-05-SUMMARY.md",
+      "sha256": "82e291c0f0c582eb32368d00139676ec8ece8495822928721dd2232f800faf7e"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-06-PLAN.md",
+      "sha256": "56a505ad8ce0a1d1a9e82f0403d66fa5d197cae702707ac7c1013a9d59e19d37"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-06-SUMMARY.md",
+      "sha256": "10be41f8b6f8262b86f6d9168163080659861debcd806637180b00478bc1841e"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md",
+      "sha256": "5caca1e2e4429d271f42911374abf06c3aa5f33ad345f826188c2c365ddf501c"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-07-SUMMARY.md",
+      "sha256": "c88c68d68bfdfc46e247e502cb067f3c5fc991556e6b00bca29c71fe0e741558"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md",
+      "sha256": "664d3c719fde062b8b577c85f2ae65dbab29997586f0ed79e08d320325e54bab"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md",
+      "sha256": "4a9d8ca5e7f354ee02afd6ddb850eaa8cf6ba08934b372f9a3c490d88fecb6bf"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-ACCEPTANCE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-ACCEPTANCE.md",
+      "sha256": "c9a51bfbf6049d54c61fb8ca5e08b78b92dcfbbf4e0307161c6da77ebd6e1733"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-CACHE-ACCEPTANCE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-CACHE-ACCEPTANCE.md",
+      "sha256": "13a916eaea25d4c6c4236e73d679b070fb9c5c4ba73a288a3af946415cd50a6f"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-CONTEXT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-CONTEXT.md",
+      "sha256": "789da6e918bbfdc9595a140f55846c6b5e1052dbf583d59bb4d4c40c31f6145f"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-DISCUSSION-LOG.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-DISCUSSION-LOG.md",
+      "sha256": "b7575bd29851af4f912179bb6054c1170cb9bc0ecf9e1bff8a5529d35f99d2e8"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-PATTERNS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-PATTERNS.md",
+      "sha256": "22986e12be7604300b564e0e7a3819c8378f0df374002241a7dde45fa7928fed"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-RESEARCH.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-RESEARCH.md",
+      "sha256": "4eb183e73a9d5a1f333c351ceb5cbedaf9f8f45e846d7cc856b05e1ec3d0f7bd"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW-DISPOSITION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW-DISPOSITION.md",
+      "sha256": "77d1b65c78672b24610d47f4043d5f51184221762c1e13b618f5c80b36c9c95b"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW-REPAIR.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW-REPAIR.md",
+      "sha256": "d3680e4486245754a857912b241e2ed7737d8a5929ac421c5ff7ddc33b503e8d"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-REVIEW.md",
+      "sha256": "008e9c7d9af109cfc88c8ac3ec2177ece4d3845619f62215602869474b304d86"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-SECURITY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-SECURITY.md",
+      "sha256": "bcb69cb5aef20a689ae731d9845f36743e975df4964c1f8f4d7dbc494c318036"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-SOURCE-AUDIT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-SOURCE-AUDIT.md",
+      "sha256": "3f22886a4457667ef0344ed0f6e8a218f82a933fe541569a0ea995398444bf74"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-UI-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-UI-REVIEW.md",
+      "sha256": "0332061ac6cae91b4f3b041bb95b944addf11a5f882f5d824b1da1876e42478f"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-VALIDATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-VALIDATION.md",
+      "sha256": "0006673e11dd7b0c41339416ad607a63f294f20a818a335858d998e80f2c4c36"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-VERIFICATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/182-VERIFICATION.md",
+      "sha256": "8c62b33cd818ba2021ffd8de378ae4d0d4dedab5f243ffc1351c40c302ab2723"
+    },
+    {
+      "original_path": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/COVERAGE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/182-reliable-full-browser-verification-and-ci-caches/COVERAGE.md",
+      "sha256": "efb94ca35b60aa7b91562f7af742c330c0d4591c29b14339b2b32f8bc84edcb9"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-01-PLAN.md",
+      "sha256": "7b4cb855ad0a9bbcb9b8fde8b2e4060802c29192e20dfe4deb13bc535841c9a6"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-01-SUMMARY.md",
+      "sha256": "6bf8221cd6e2ea61105f034e949397aefefae4a56177e5d231f00573b0b13bce"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-02-PLAN.md",
+      "sha256": "be457c89c9c44cca065f88201d62e324d9ce4c0f7f30242a37183bb948e1e2e1"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md",
+      "sha256": "a943c5851f3131af8823be8f166a7943fc2ab5047c037d00cecb8fae31cd0fa2"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-03-PLAN.md",
+      "sha256": "a0b4091819b970e268f04f81095862005cd87067e750b17ce4f60302af963bd2"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-03-SUMMARY.md",
+      "sha256": "e946b97e9edd1ed960fab901f3e6c74dd6b6b123a6af6589dd2cc5f226f61b70"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-04-PLAN.md",
+      "sha256": "ef06a22c059da0036e91ea482637cf9b644d56caedddda193002da7c2c8120d1"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md",
+      "sha256": "63b7b9bd4b219744eda829c063cebb1926c7819edc0bf66d9cc602f95a406239"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md",
+      "sha256": "c057e0f2369540bed5a4d09da6eb5888b4ae26736b09fa9a4163887b460129a2"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md",
+      "sha256": "0f5dfaf6d68aa28cdd684fb12ece03556e8397b483b90d1a6f84ff20819f0c7b"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-06-PLAN.md",
+      "sha256": "699400675feb8c514ad776c983107426b51522a677d5f21bd3d1e1b68b25b12f"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md",
+      "sha256": "e3bf4c17929a38b26bcd71e215b45055145c536f50a6262a27ea08efd65a8141"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-07-PLAN.md",
+      "sha256": "0a042a12feedba016e2ea9852066f7b44a0a1028956cd6a1713d83df4a17f68e"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md",
+      "sha256": "dcbf1b03aaaadd13bd49c535fe64f3da475b98163292aa79d582131977a079d1"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md",
+      "sha256": "5fae69426298c7d9c1aa11bf08871713d46fb03a6df46cd59de6f146c0e0c10b"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md",
+      "sha256": "d14e75a4ed8146f0f813aad232d2db702ff4c90f3f184f2fbcf6029d9fe5871e"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-ACCEPTANCE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-ACCEPTANCE.md",
+      "sha256": "cf2a239da5673fae14e262ea5b9020e45c98b4c067849a1d588d68764a421e6e"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-CONTEXT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-CONTEXT.md",
+      "sha256": "9b2cecafac5d664951fbcb8279b2833ff04dee4163e1a988cff02dd03293bde9"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-DISCUSSION-LOG.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-DISCUSSION-LOG.md",
+      "sha256": "9b0c203a9d1ad4b045eeb32b1fe4f1271fdf0b1243e48a9c5b10ee636196e2c8"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-PATTERNS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-PATTERNS.md",
+      "sha256": "22fb33560993f6fd10d795a4f0d3323c281a63f0d8db8e7bf7a72dd52d37f946"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-RESEARCH.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-RESEARCH.md",
+      "sha256": "3c59587fb3fe5b166e36a775251f6bb2152f1c898a349182c84c6d510a21be49"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-REVIEW-DISPOSITION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-REVIEW-DISPOSITION.md",
+      "sha256": "e6e0c1298206038bfee505854f086e8fb383faa5879d0c4dd8ed7c88b2e6ece7"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-REVIEW.md",
+      "sha256": "3f440140a23d118e7de2f1482a1e1424f2de35c929f65429213beac4b6f06e85"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-SECURITY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-SECURITY.md",
+      "sha256": "d9a40d21471ca2b91bb23c123378561a72417dd967ec8ed9b9169ba8a41d55d0"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VALIDATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-VALIDATION.md",
+      "sha256": "15e54044ad720f374c3c2702856ea214143522f5a6fcacef22f8265f79cfaf88"
+    },
+    {
+      "original_path": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VERIFICATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/183-maintainer-tooling-outside-the-hex-package/183-VERIFICATION.md",
+      "sha256": "ca273c2c05e1f07c8a9ca70add36534897eb10c35e55b3a09611a0a46ce99893"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md",
+      "sha256": "9210f5d321e7ff9dcc0bf267981f95db5aac331bbeeac52ccac6a769d1a4174e"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md",
+      "sha256": "a46eeeb34d800cd2913a6f5a52e386c48814f4abde2f3485f6097518b19aad05"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-02-PLAN.md",
+      "sha256": "9c28c225111881cff950381d264976ddc0d670a5454dd832192870097ed16f93"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-02-SUMMARY.md",
+      "sha256": "553bc22330287f637039652a1906217b625eb48f9b506ebeb991591652ed6c4c"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-03-PLAN.md",
+      "sha256": "e3acfc80808aa9390f35ee4f4fc84d1139df31ab6ee6bd3f9ecf4db36005f6a0"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-03-SUMMARY.md",
+      "sha256": "37acff8489062e312395cb98e4437b3168ca8c7a01a3054beef4bdb6233ad162"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-04-PLAN.md",
+      "sha256": "75cd884b1d9a3060a9e774cc2279f5b1369b432d5351479f02b529d4b0b5944d"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-04-SUMMARY.md",
+      "sha256": "1238894d6fed739f7e68be16bbb2f469c2a452578b64b3b0037b163b83592224"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-05-PLAN.md",
+      "sha256": "02621b34f5bd50028960accb9af63ff974e2074abddc2cb626ca3fd565c63c3d"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md",
+      "sha256": "a0db561403927f63615a19356f141831eb7ed7d34555e73306c91b3ee07b62e7"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+      "sha256": "adf73ef74c66d3db4a480715d35d0d6ee8b4e673e6158ab734421df9212466b1"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+      "sha256": "566b8f53db0d417dcf8c4b6fdc84616fa16c31fdefcc82534602bb718ff5f63d"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+      "sha256": "5c22e8fe7c12fb79946d6687f4991fe18a78e97a251878df782bc4a24cd20ca0"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+      "sha256": "8503185280d2b1e52942d6a4955e716c7e6985927b6488d42b191df687f7cce9"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-08-PLAN.md",
+      "sha256": "cd906630ce5ddbc33c6427e95abcc1abf13bfa07bfc627df2774007457011ae0"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-08-SUMMARY.md",
+      "sha256": "db615c3cea136779a22f54a5e060c02917426e9d38ed95382f2276b1040b84bc"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+      "sha256": "f80e9cd2d766b9ee308a983d1ecbb5c5b37b9ae2374dd1b0e8a61f42f2dcb98d"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+      "sha256": "6e1fc2f2d48e8e42326c05dedf2d8fb710d3f3542c6f1aa6aec3e27c0cf81747"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md",
+      "sha256": "5ff05f61bc29bdaabbe4c961ec3e20ec353411a8f730d5b91e1dbb31e5a59552"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md",
+      "sha256": "372a653effc342585669b7ec54374be4a60c6fb11d0c329cda1dbcb047bd2e3b"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-11-PLAN.md",
+      "sha256": "2282caefa2435a82b257ca292429a739d587bd6d7bbf68023f14a01d8f3cbcf9"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-11-SUMMARY.md",
+      "sha256": "8cb8a04c11d41073fd4c6626d23c48991e6c220d717a51e11638d111468123cd"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-12-PLAN.md",
+      "sha256": "e385ca374dc7a667612fe3ad80e1dddea9a873d82a965bff9e9d4183ca0257e3"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-12-SUMMARY.md",
+      "sha256": "d614867dc5ba8b19d96a3d6a59d902a3cee865535d5855f617633b8ec7027a7b"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-ACCEPTANCE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-ACCEPTANCE.md",
+      "sha256": "4edb57d14994901c5f2ac1b859c9cc1b0f96a2c960eb6ac3aa8951aecd0635b1"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-ACTIONS-DISPOSITIONS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-ACTIONS-DISPOSITIONS.md",
+      "sha256": "d66188a8532c8bd1039c6739b643b030cec5e5d47fb0ae242cae962544a572b8"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-CONTEXT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-CONTEXT.md",
+      "sha256": "080e5ad711783abc210e22a309197400921c537199209990e19a170b9f3c988d"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-DEPENDENCY-EVIDENCE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-DEPENDENCY-EVIDENCE.md",
+      "sha256": "ee2762f8f6fb64af19e4b6aa9275a3329a4ee7be0b1747538277911e59e1cd0a"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-DISCUSSION-LOG.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-DISCUSSION-LOG.md",
+      "sha256": "c2b5d7f61647dd733a7ed927c0356fbc5d8a43ede4c490b7f149bc10a6f9c5ab"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-PATTERNS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-PATTERNS.md",
+      "sha256": "03f61cd03a887aadda221152d624df14f1be927a1862c887e6752d8c291b5a4c"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-RECOMMENDATIONS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-RECOMMENDATIONS.md",
+      "sha256": "e4ede73ecc725b5961ee313f678b05e501961564526530f68169dd51457b8516"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-REGRESSION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-REGRESSION.md",
+      "sha256": "551ea98821e9ffff960fe0a73d42cebb0a730c1ad3519226fc7d27fc2020897f"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-RESEARCH.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-RESEARCH.md",
+      "sha256": "2b7ca3412b477aa892ca376ee42dd8c1d860df16ea2222bc37185c40a12556cf"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-DISPOSITION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-DISPOSITION.md",
+      "sha256": "a8ad80c432302313821f2eb4b1461351d74d68c4bf743569193b30f8cfb84815"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-FIX.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-REVIEW-FIX.md",
+      "sha256": "dcc4e9e3d5b53e1ffb0016a6771092b8395a4e8179346dfd8700042caa4327b0"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-REVIEW.md",
+      "sha256": "f618f15da77c198847854da690b0e6b075559902e379bb716222dfa9bf20afb3"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-SECURITY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-SECURITY.md",
+      "sha256": "8c84aa2893d05c021c620ca2910cb9514d84393a228bcf8335b6c7cff4bb153f"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-UI-REVIEW-DISPOSITION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-UI-REVIEW-DISPOSITION.md",
+      "sha256": "0a3ee950c16e208ec56bbdcf20920f23bd9215f116324db202e8127d3e2f8439"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-UI-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-UI-REVIEW.md",
+      "sha256": "c8f0b02b4621b3bf82d1d907ff317cf24d6455e797baa9c5cc12208fbd707651"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-VALIDATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-VALIDATION.md",
+      "sha256": "a3f6c046f31fc442dc7bb9f7ae18cafb05de50adc114fafd26b3b666dda87ac3"
+    },
+    {
+      "original_path": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-VERIFICATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/184-explicit-and-lean-dependency-graphs/184-VERIFICATION.md",
+      "sha256": "cac3aec5a664192f4f257cb434d676b1af1686ef876be0629219be30448e1a8a"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-01-02-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-01-02-RED.json",
+      "sha256": "7b57ee767204d636ba7e05f6beb4e47a60852e92f0f90dab381a674790e8b271"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-01-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-01-PLAN.md",
+      "sha256": "6c157f29884859e34e8e41f70fc29c72ec076d715ff521a226b228f45848e1ab"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-01-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-01-RED.json",
+      "sha256": "c9e01fcc1f5cad23e4a5761b81383ded110329b41e5129662d99fc24660d6a94"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-01-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-01-SUMMARY.md",
+      "sha256": "defc587f1f223af956fe67bd5459bba0fff61b141df251ce4e0d4f865f8fede5"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-BOOTSTRAP-CHECKS.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-BOOTSTRAP-CHECKS.json",
+      "sha256": "542b7cb5a094af77bc9a01a3527fdd04c228800e0edc90631991c75f7eb711f6"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-DELIVERY-PROOF.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-DELIVERY-PROOF.json",
+      "sha256": "1cee18d4a8cf8d20ed8bd7c54b2d211cbb208a995ea80a1381ef8fdabd673eb7"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-DELIVERY-REVIEW.md",
+      "sha256": "b75f1056de5a23817008055c03cab6df438f86e9a45504a60763255c5fdd2d7a"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-MERGE-INTEGRATION.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-MERGE-INTEGRATION.json",
+      "sha256": "ba28c16e82e10c0b49de2818302fe3c0bd69ed8c27b0e6a61af0af2fd0c005b5"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-PLAN.md",
+      "sha256": "c730ec8691ed23348840180be49efa503923712c1ae0b34acafd14d20bee37a3"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md",
+      "sha256": "09c010a14acae92ccc22c63225cf4763518d165880af25fe68e4896039e1f482"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-inline-style-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-inline-style-RED.json",
+      "sha256": "c30cc4139e91ae8f0a4bb4749bb7a16fe33a832667d9e9440736269b2ee05f6a"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-02-source-context-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-02-source-context-RED.json",
+      "sha256": "974e1380432e040584f8d638d093b4f8037f5ff4c7e54f896894d7caf590ceea"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-INTEGRATION.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-INTEGRATION.json",
+      "sha256": "a11cf152ae533f648ac00894d4192909eac690d3c50b55450653b0c6a852a823"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-PLAN.md",
+      "sha256": "2f5e489b85ebe1e7c88da43caf16406163f7e97f22914227a07e5c210dd7ec5a"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-REVIEW.md",
+      "sha256": "b3790d4915975cc0a28bddbf3d562e6d778d2e6ecfe1c89013c59acbfe604fc7"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-SUMMARY.md",
+      "sha256": "f48600e3bff42017669c219dc92e0fc060dfa53a785b17e52a6e232df525ca32"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-authority-blur-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-authority-blur-RED.json",
+      "sha256": "5a46c5a17ea7c5b55179006c77f96eb4fdce21fa7bf7150969c636f19d788431"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-mode-name-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-mode-name-RED.json",
+      "sha256": "4a16ff235a61de0767406126e815a3cfc9deead7c0a1c906da912d583c281610"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-03-parent-review-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-03-parent-review-RED.json",
+      "sha256": "9cb0da5c916b68ad7144f9e6bd7f0d86bf713e16f34f4aa5c069618c36feab00"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-04-01-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-04-01-RED.json",
+      "sha256": "c39c25043b358341568f91159b37a6656914ed62509c9b9850fc5b4acf193cf7"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-04-02-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-04-02-RED.json",
+      "sha256": "182fbc681786b9acf02031f38bc7aa0287cb3f0b0aaef21a1ccf1d94513b27e5"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-04-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-04-PLAN.md",
+      "sha256": "eb897dc6b83552695d12286b98c95fa3c3fbd705488c145ed9ce1fcda7e6eb9c"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-04-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-04-SUMMARY.md",
+      "sha256": "8f2adbc9cd08453f1983e6144bda557a55322762f98cb5af654418fe816824e0"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-CLOCK.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-CLOCK.md",
+      "sha256": "597b8daa5645c7e3116c83adc767ce879f2102d4c149430883e0a43773a93136"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-PARENT-GLUE.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-PARENT-GLUE.md",
+      "sha256": "d68549703f38e7189df6568b64874487a8ef86a2af1e3d22625a428fb524d1f8"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-PLAN.md",
+      "sha256": "bb3ac31a43a0f8925cccd750307df1ffb897de487a90a4d2af42c5ab7110fdd0"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-REVIEW-FIX.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-REVIEW-FIX.md",
+      "sha256": "fa822c036cb295efde9ee300fc35fbd9b66cf0a22e9adc4e55dd31f2ab13283b"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-REVIEW.md",
+      "sha256": "8afa0e10cf70cc380f46606807a48c7222769ad51709571748fb1b3e5817827f"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md",
+      "sha256": "1d9a69b6bddea8232ebe7bd740a3422df5db812ac667147dff4a081d797871e6"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-browser-raster-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-browser-raster-RED.json",
+      "sha256": "65f8ed46f86816abc11cf3bda88e809571477131e88c18fa29f387fd21148482"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-capture-failfast-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-capture-failfast-RED.json",
+      "sha256": "e1390ede683601caae87e110b90c8b82d9195bde9f71e514364ac436a9c2ce12"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-clock-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-clock-RED.json",
+      "sha256": "6b08392fdab497f477c87d272ba89c00df96caa115ba53864c2e895f104c83e6"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-clock-dependency-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-clock-dependency-RED.json",
+      "sha256": "03b4356bb413d6c75ab9c9ef69ddd2b45bdea79ebccb96a89f0448e8534d7791"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-clock-glue-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-clock-glue-RED.json",
+      "sha256": "f900633598c68549978c86f6614528e3cd142bb420f8daf896543b89eb7508a1"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-clock-publication-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-clock-publication-RED.json",
+      "sha256": "b2b1cf8af5249cc54d973e1b1fe20e6ac504fc6cef71a8737d70d73abee64841"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-compare-command-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-compare-command-RED.json",
+      "sha256": "f1dba922984f2b4733e7fad34c8f1fd84ade33f74cec62c840c080f820990555"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-entry-copy-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-entry-copy-RED.json",
+      "sha256": "30753ff8bb25e5b8db509a921abe5eefb4f7ac332e720bc37e2874da557355ee"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-entry-readiness-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-entry-readiness-RED.json",
+      "sha256": "3b23f3dea6c751e5312555641359fbaacc61175570691980532af2e9ef57a167"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-fixed-font-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-fixed-font-RED.json",
+      "sha256": "b183d039eee0818f4a6019ae9e7670eeab88529a8baaa68455ebc6eef75119d7"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-fixed-font-validator-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-fixed-font-validator-RED.json",
+      "sha256": "9d859f6a4a4856cd12317bdb872ea6fe007e57eac752959bb799ae8da22c6c13"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-focus-target-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-focus-target-RED.json",
+      "sha256": "bc0627c98e246688356379b57d7d240bf7307f76a40fc3da4dfef3d7e418b99d"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-hover-wrapper-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-hover-wrapper-RED.json",
+      "sha256": "f35ffd946ac7c65c59a950eef6d7e1ea6e38d7fd1a446c459309332c6fb88b9d"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-native-visibility-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-native-visibility-RED.json",
+      "sha256": "d338a038baa8b00a5d912d7c5d3cf305517c0af4871bf3896cd42e69758a27b6"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-parent-glue-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-parent-glue-RED.json",
+      "sha256": "109277cfaab41f5c3514ef830405f2c26e380d8f38d17ba277a6c7ee29b7b638"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-stability-validator-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-stability-validator-RED.json",
+      "sha256": "ef0490ff30ae75687671e85c79ae196a3f91fe109aca5805a4c1915c14e396ac"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-stable-frame-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-stable-frame-RED.json",
+      "sha256": "6dd84aa8da8a9f398917950d38b15ae4b946c9f8c8a6aa7b3e8c56f8620880d5"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-05-viewport-capture-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-05-viewport-capture-RED.json",
+      "sha256": "654a8dd117126c73453e8d66db4cce84262b77a4b02df2ace36a2d82679010f0"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-06-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-06-PLAN.md",
+      "sha256": "1be2fc9fb1d8b4c5bfef47b78ac0ea1e6bcf7f1fde5347b5cc9ae79474ac962c"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-06-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-06-SUMMARY.md",
+      "sha256": "f93af3218185075cb26bb9246c3f9e57e421273ee64d9319f73c2cf86c4be524"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-07-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-07-PLAN.md",
+      "sha256": "888b06734711c1f0719559ec81eabc023a7ca453db165bbaba8d2b46d951721f"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-07-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-07-SUMMARY.md",
+      "sha256": "d0ae720dfac9161be442009da5490fea9d37672ff6c97734e80b9c9a543b44f6"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
+      "sha256": "6063b4184a89548e2c32d5ad22ab23447e17db2a2179a3494624e7c97fe29956"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-08-PREP.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-08-PREP.md",
+      "sha256": "d62026ec8e4cb257576bfb106f2d49b96acf31daba6d73fb3181788ecc9f55ca"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-08-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-08-SUMMARY.md",
+      "sha256": "eed6702d3f78259f655b7bd1f46588c4e457d0c96c0d76a7f8a3295641839f72"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-08-budget-cap-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-08-budget-cap-RED.json",
+      "sha256": "a1f70ce932b8822887b5acb38245f09a747e78dcb980420da7fa7bdba3e06c57"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-08-raw-bundle-RED.json",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-08-raw-bundle-RED.json",
+      "sha256": "ff9a427e5daf135beabf9afa8074f0439dbed14d8a1ee34940e5204816f67710"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+      "sha256": "d38708ce49a1e8b6f8a9022fb586130b6d4f9fc124b8041140b2052b3ecae8b0"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-09-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-09-SUMMARY.md",
+      "sha256": "883f682b33774e36d9a4ba4505f8bab3b83a6ada2bb32fb6126b8e439e1aab1e"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-10-PLAN.md",
+      "sha256": "42d41cbec333c7a0d4219b21ff4376653f421b6611c623f0cf95cce88243ec78"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md",
+      "sha256": "ba5b998ffcf99181d4252e07798d7c16a4bfc73ef22786dd7bbb19091b25369a"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-CONTEXT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-CONTEXT.md",
+      "sha256": "b81e123c445d2d33892307ed6bb55c4b8ac6ac2d4e88a775b1c0ad78abf5f3e2"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-DISCUSSION-LOG.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-DISCUSSION-LOG.md",
+      "sha256": "8a5f03d9cccb90a8be7237139839a20fe0068da9a2ea4aaa5f65132bb67af1ca"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-EXECUTION-HISTORY-2026-10-31.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-EXECUTION-HISTORY-2026-10-31.md",
+      "sha256": "a848f6e200c65951585ef94d2c6a46c7df636d5ca8b0cef508bbd7b7917fb027"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-EXECUTION-HISTORY-2026-11-01.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-EXECUTION-HISTORY-2026-11-01.md",
+      "sha256": "df2e4b2277a0afb117d89dec3dc30a6987d7a694135e5fa8cb60ec08e71e0eb3"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-PATTERNS.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-PATTERNS.md",
+      "sha256": "f6693d07e916c55b5a5b3e4a273a43adb7943db04b0293621d45f526baf323cd"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-PLAN-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-PLAN-REVIEW.md",
+      "sha256": "ccb19301258e047b685f841a0ca0d24e42b5ea79f687454c369df2cc8967b7b9"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-RESEARCH.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-RESEARCH.md",
+      "sha256": "46a86a75b4d524b07e49ab30d19603254856e7486fee5d44e111bdd4a422c2a2"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-RESOURCE-POLICY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-RESOURCE-POLICY.md",
+      "sha256": "0b4b58f0521a4c67a01f427b63cd8a4dd7244f4e7f1bc9438019b65b70d275a8"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-REVIEW-DISPOSITION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-REVIEW-DISPOSITION.md",
+      "sha256": "89af5b7325c4fde423d78220e8076474b8547e0895ade3c3a203b623e33a2d6e"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-REVIEW.md",
+      "sha256": "b3d432a46dc29985bdf3892c6bb1375b66f2ab06cc0eaff30f06150134b3876d"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-SECURITY.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-SECURITY.md",
+      "sha256": "5b175b428e042e83eafa1accb35a8a553dec4cac10c62cc437a8f0f9dfbadfef"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-SOURCE-AUDIT.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-SOURCE-AUDIT.md",
+      "sha256": "3fcec08aa8eb5dbe08eb47d67b8cbc7aaab8077f2c846915059d71bc2f89e132"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-UI-PRESERVATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-UI-PRESERVATION.md",
+      "sha256": "77828dc163b2a382e41f477f7b2cee318a344bfca9cdb96bd9d70d40487850f1"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-UI-REVIEW.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-UI-REVIEW.md",
+      "sha256": "f916f84072f1ec8c626b3d6baa329bec3020b0249e8b028167a66f51f764b3b1"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-UI-SPEC.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-UI-SPEC.md",
+      "sha256": "01b258534a3a6c8516d4a692bc0e20a2d2272d58a7f02e71203058c3e0af6a84"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-VALIDATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-VALIDATION.md",
+      "sha256": "a99a80639e62782b726427b6fbabcd65f006f2af2fd50b3dab95b8b5dc625bd4"
+    },
+    {
+      "original_path": ".planning/phases/185-executable-ui-quality-foundations/185-VERIFICATION.md",
+      "archived_path": ".planning/milestones/v1.45-phases/185-executable-ui-quality-foundations/185-VERIFICATION.md",
+      "sha256": "0d40ff2c3f53fe5b1487f23d4813acebd5dec75521c3f6ef07526ee2a77c8581"
+    }
+  ]
+}

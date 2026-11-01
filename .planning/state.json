@@ -1,33 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.45 — Foundation and CI",
-  "phases": [
-    {
-      "number": "182",
-      "name": "Reliable full browser verification and CI caches",
-      "status": "complete"
-    },
-    {
-      "number": "183",
-      "name": "Maintainer tooling outside the Hex package",
-      "status": "complete"
-    },
-    {
-      "number": "184",
-      "name": "Explicit and lean dependency graphs",
-      "status": "complete"
-    },
-    {
-      "number": "185",
-      "name": "Executable UI quality foundations",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v1.45 \u2014 Foundation and CI",
+  "phases": [],
   "next": {
-    "command": "$gsd-audit-milestone",
-    "label": "Audit the completed milestone when requested",
-    "reason": "Selected phase complete; milestone audit/archive, delivery and a new milestone remain separate boundaries."
+    "command": "$gsd-new-milestone v1.46",
+    "label": "Select and confirm the next milestone",
+    "reason": "v1.45 is archived locally; no active phase. Complete terminal source acceptance before a new milestone boundary."
   },
-  "updated_at": "2026-11-01T15:22:49.734Z"
+  "updated_at": "2026-11-01T17:09:22Z"
 }

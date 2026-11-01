@@ -2,14 +2,13 @@
 gsd_state_version: "1.0"
 milestone: v1.45
 milestone_name: Foundation and CI
-current_phase: 185
-current_phase_name: Executable UI quality foundations
-status: completed
-stopped_at: Phase 185 implementation verified; final tracking committed before external terminal exact-source acceptance; stop at selected phase boundary.
-last_updated: "2026-11-01T15:22:49.854159+00:00"
+current_phase: null
+current_phase_name: null
+status: Awaiting next milestone
+stopped_at: v1.45 qualified archive prepared; terminal exact-source machine gate follows all tracked writes.
+last_updated: "2026-11-01T17:09:22Z"
 last_activity: 2026-11-01
-last_activity_desc: Phase 185 implementation verification and final tracking transition; final source authority is external.
-state_head: fa42d99ee3ad5290ea7d8ab089ba076c5e25558c
+last_activity_desc: v1.45 qualified local archive; final-source acceptance is external.
 progress:
   total_phases: 4
   completed_phases: 4
@@ -20,35 +19,48 @@ progress:
 
 # Project State
 
+## Project Reference
+
+See [PROJECT](PROJECT.md), updated 2026-11-01.
+
+**Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
+**Current focus:** Awaiting next milestone; no phase is active.
+
 ## Current Position
 
-Phase: 185 (Executable UI quality foundations)
-Plan: 10 of 10 complete
-Status: All phases complete; final tracked-source acceptance is external.
-Last activity: 2026-11-01 — implementation verification and final tracking.
+Phase: —
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-01 — v1.45 qualified local archive; terminal source acceptance is external.
 
-Phase 185 has10/10 implementation plans and all six UIF requirements goal-verified. All21 approved v1.45 requirements have implementation evidence across Phases 182–185. Final tracked-source terminal attestation is the mandatory remaining outer gate; its future result is not asserted in these bytes. After that gate, stop at the selected phase boundary. Milestone audit/archive, merge/release and later work require a separate action.
+All 21 approved requirements have completion evidence across Phases 182–185 and 38 plans. [Roadmap archive](milestones/v1.45-ROADMAP.md), [requirements](milestones/v1.45-REQUIREMENTS.md), [audit](milestones/v1.45-MILESTONE-AUDIT.md), and [closeout](milestones/v1.45-CLOSEOUT.md) retain scope, evidence, debt and override limits. The root roadmap is now a shipped-milestone index, not an active phase roadmap.
 
-## Actual implementation evidence
+## Closeout authority
 
-[Goal verification](phases/185-executable-ui-quality-foundations/185-VERIFICATION.md), [validation](phases/185-executable-ui-quality-foundations/185-VALIDATION.md), [security](phases/185-executable-ui-quality-foundations/185-SECURITY.md), [code review](phases/185-executable-ui-quality-foundations/185-REVIEW.md), [preservation](phases/185-executable-ui-quality-foundations/185-UI-PRESERVATION.md), and [UI critique](phases/185-executable-ui-quality-foundations/185-UI-REVIEW.md) preserve actual source/evidence identities and limitations.
+The maintainer selected qualified closeout on 2026-11-01, explicitly carrying the audit debt and stale historical Phase 182–184 verification projections. Original reports and source-bound receipts remain unchanged. This authorization is not a fresh phase pass, dependency-risk acceptance, design approval, merge/publication or v1.46 activation.
 
-Canonical local core/repository and full254 proof passed. Qualified R15/R4 exact state pairs cover61cases/213observations/426selected images, with byte-unchanged repeat and complete actual inspection reconciliation. The original global135entry/546image matrix, repeat, actual image/copy inspection and teardown passed at its original source. No masks/tolerances, approval or source relabeling are inferred. Product and executed browser/capture/runtime inputs remain unchanged. Six fixture overlay hashes differ: two prebuilt metadata helper/test files and four outer serial runner/evidence files. Exact original image-identity replay and unchanged original pair recomputation preserve old proof identities; current-source serial execution has its own full receipt. Accessibility test consumers changed outside that preservation overlay and are separately covered by the current-source full hosted receipt; the old local full receipt remains historical for that delta.
-
-Candidate [41318243156](https://github.com/szTheory/scrypath/actions/runs/41318243156) at `fa42d99ee3ad5290ea7d8ab089ba076c5e25558c` passed all five required jobs, coverage, immutable attestation and full browser verification after diagnosed source/CI repairs. Canonical Ops/precommit/package/mounted evidence and prior-phase182–184 regressions are retained with explicit input/source bridges; a skipped hosted Ops selector is not an execution claim. Failed attempts and abandoned diagnostic TAPs remain distinct.
-
-## Final source authority
-
-All final tracked reports and transition bookkeeping precede terminal dispatch. The orchestrator must exclusively pin final committed HEAD in `/private/tmp/scrypath-phase185-execution/terminal-root-sha.txt`, run a fresh canonical closeout for that exact source and preserve `terminal-root-result.json` externally. Required jobs, coverage/attestation, immutable artifact digests, unchanged HEAD and unchanged tracked phase bytes are mandatory. Make no tracked write afterward; a correction needs a new source commit and replacement terminal receipt. These tracked bytes cannot certify a future external event.
+All final tracked reports and archive bookkeeping precede terminal dispatch. Pin final committed HEAD in `/private/tmp/scrypath-v145-closeout/final-sha.txt`; preserve the canonical result, artifacts and unchanged-tree check externally. The five required jobs, coverage and immutable closeout attestation must pass. No tracked write follows success; any correction needs a new commit and replacement terminal receipt. These pre-dispatch bytes cannot certify the future external result.
 
 ## Preserved boundaries and concerns
 
-- Retained preview stays stopped and untouched; disposable proof does not clear its source-staleness stop or accept its data/design.
-- Four classifier assumptions and three descriptorless judgment prohibitions stay flagged/unverified and nonblocking under the approved executable/no-UAT policy. Two bounded code-review warnings remain deferred; inherited clipping/feedback/guidance defects are preserved, with no design or independent approval.
-- Prior Phase 184 same-run rerun artifact naming remains deferred; fresh dispatches are the verified path. The19 inherited audit-debt items and historical deferrals remain in their archive/tracker, with PR #122 delivery separate.
-- Inherited dependency advisories remain unaccepted. No merge, release, risk acceptance, new phase or milestone archival is authorized by this closeout.
-- Unrelated `.planning/config.json` bytes remain preserved and excluded from commits. The manifest-owned clean global worktree was removed only after zero owned Docker resources, with its source retained under a Git evidence ref. The retained UI worktree is unchanged.
+- Audit remains `tech_debt`; every recorded code/documentation/UI/timing item and remaining v1.44 debt carries forward. Cloak/Cloak Ecto findings remain affected and unaccepted.
+- Original 61 held-out pairs and global matrix preserve their actual source/runtime/image/copy identities. Flagged assumptions/judgments and inherited clipping, guidance/feedback/reconnect defects remain; no independent or aesthetic approval is inferred.
+- Fresh dispatches remain the verified path; same-run artifact-name rerun collisions remain deferred.
+- Retained preview stays stopped and untouched with its source-staleness stop intact. No data/design acceptance is inferred.
+- Unrelated `.planning/config.json` bytes and historical quick tasks remain preserved and outside owned commits/archive.
+- PR #122/#123 delivery and Hex publication remain separate. No phase replay or next milestone starts automatically.
+
+## Deferred Items
+
+No new artifact acknowledgment was made. Two prior v1.44 acknowledgments remain suppressed; their unresolved meanings are retained below and in the [prior audit](milestones/v1.44-MILESTONE-AUDIT.md#closeout-disposition--2026-10-26).
+
+| Category | Item | Status | Deferred At | Milestone |
+|----------|------|--------|-------------|-----------|
+| verification_gaps | Archived Phase 124 owner gate | human_needed; prior acknowledgment retained | 2026-10-26 | v1.44 |
+| deferred_items | Archived Phase 173 shell-contract note | deferred; prior acknowledgment retained | 2026-10-26 | v1.44 |
+
+Three additional phase-freshness overrides (182–184) were explicitly authorized for this closeout; no audit suppression markers or original report statuses were rewritten.
 
 ## Session Continuity
 
-Last session: 2026-11-01. Acting next: orchestrator completes the already authorized external terminal gate, then reports its result without tracked writes. No user action is needed for routine phase closeout. The next useful separate action after phase acceptance is a v1.45 milestone audit; it is not started automatically.
+Acting next: the current agent finishes the approved candidate/final-source machine closeout and local tag, then reports the external result without tracked writes. No user action is needed for routine verification. After terminal acceptance, the user selects the next milestone with `$gsd-new-milestone v1.46`; no implementation is authorized by this cursor.
