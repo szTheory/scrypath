@@ -242,9 +242,9 @@ if [[ "$scope" == "full" ]]; then
   fi
   if [[ ! -e "$phase185_clock_path" ]]; then
     mkdir -p "$(dirname "$phase185_clock_path")"
-    printf '%s' "$phase185_clock_instant" >"$phase185_clock_path"
+    printf '%s\n' "$phase185_clock_instant" >"$phase185_clock_path"
   fi
-  if [[ ! -f "$phase185_clock_path" || -L "$phase185_clock_path" ]] || ! cmp -s <(printf '%s' "$phase185_clock_instant") "$phase185_clock_path"; then
+  if [[ ! -f "$phase185_clock_path" || -L "$phase185_clock_path" ]] || ! cmp -s <(printf '%s\n' "$phase185_clock_instant") "$phase185_clock_path"; then
     echo "Phase185 full verification requires exact immutable clock bytes matching E2E_PHASE185_CLOCK_INSTANT." >&2
     exit 64
   fi

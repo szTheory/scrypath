@@ -841,7 +841,7 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
       const artifact = artifactByPath.get(event.clock_artifact.path);
       if (!artifact?.present || artifact.sha256 !== event.clock_artifact.sha256 || artifact.copied !== true || artifact.copy_status !== "success" || `sha256:${event.clock_artifact.sha256}` !== clockSha) throw new TypeError("fixed-clock artifact bytes do not match the observed clock digest");
       const bytes = fs.readFileSync(resolveArtifact(context.runRoot, event.clock_artifact.path).path);
-      const instant = bytes.toString("utf8");
+      const { instant } = parsePhase185ClockFixture(bytes);
       if (instant !== recipe?.browser_date?.observed || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(instant)) throw new TypeError("actual server/browser clock does not match the preserved immutable fixture bytes");
       clockArtifact = { path: event.clock_artifact.path, sha256: event.clock_artifact.sha256 };
     } catch (error) {
@@ -1109,6 +1109,14 @@ function validSha(value) {
 
 function validDigest(value) {
   return typeof value === "string" && /^sha256:[a-f0-9]{64}$/i.test(value);
+}
+
+function parsePhase185ClockFixture(bytes) {
+  if (!Buffer.isBuffer(bytes) || bytes.length === 0 || bytes.length > 128) throw new TypeError("Clock fixture must contain at most128 bytes of a single UTC instant");
+  const raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  const instant = raw.endsWith("\n") ? raw.slice(0, -1) : raw;
+  if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(instant) || Number.isNaN(Date.parse(instant)) || new Date(instant).toISOString() !== instant) throw new TypeError("Clock fixture must be one millisecond UTC instant with at most one final LF");
+  return { instant, sha256: `sha256:${crypto.createHash("sha256").update(bytes).digest("hex")}` };
 }
 
 function commonRecipe(recipe) {
@@ -1820,6 +1828,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  parsePhase185ClockFixture,
   caseIdentity,
   isAllowedArtifactPath,
   reconcileInventory,

@@ -40,6 +40,7 @@ const evidencePath = process.env.PHASE105_EVIDENCE_PATH || "";
 const fixturePath = "/phase185-fixture/clock.txt";
 const fonts = Object.freeze({ method: "retained-cdp-fixed-font-v1", fixed_font_family: "Liberation Mono", applied: "before-first-navigation", lifetime: "page-context" });
 const packageRequire = createRequire(path.join(process.cwd(), "package.json"));
+const parsePhase185ClockFixture = packageRequire("../../scripts/ci/ecommerce_evidence.cjs").parsePhase185ClockFixture as (bytes: Buffer) => { instant: string; sha256: string };
 const playwrightPackageVersion = packageRequire("@playwright/test/package.json").version as string;
 
 function canonicalize(value: unknown): unknown {
@@ -88,11 +89,7 @@ async function setTheme(context: BrowserContext, theme: typeof THEMES[number]): 
 }
 
 async function fixedClock(): Promise<{ instant: string; sha256: string }> {
-  const bytes = await readFile(fixturePath);
-  if (bytes.length === 0 || bytes.toString("utf8").trim() !== bytes.toString("utf8")) throw new Error("Phase185 clock fixture must be a non-empty single-line UTC instant without surrounding whitespace.");
-  const instant = bytes.toString("utf8");
-  if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(instant) || Number.isNaN(Date.parse(instant))) throw new Error("Phase185 clock fixture is not the pinned millisecond UTC format.");
-  return { instant, sha256: `sha256:${digest(bytes)}` };
+  return parsePhase185ClockFixture(await readFile(fixturePath));
 }
 
 async function verifyFixedDateLeavesTimersRunning(page: Page, instant: string): Promise<{ fired: boolean; elapsed_ms: number; observed_date: string }> {

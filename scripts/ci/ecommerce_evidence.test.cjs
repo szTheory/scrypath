@@ -496,6 +496,16 @@ test("ordinary full rejects loose preservation PNGs without its bounded raw bund
   } finally { fs.rmSync(fixture.runDir, { recursive: true, force: true }); }
 });
 
+test("the qualified clock LF is preserved in its raw hash without changing its instant", () => {
+  const instant = "2026-10-31T23:41:34.668Z";
+  const qualified = evidence.parsePhase185ClockFixture(Buffer.from(instant + "\n"));
+  const bare = evidence.parsePhase185ClockFixture(Buffer.from(instant));
+  assert.equal(qualified.instant, instant);
+  assert.equal(qualified.sha256, "sha256:a70b88e442ba2660851dc837ba119e2408f3c905f49aec3738e328d1f15a4b2c");
+  assert.notEqual(qualified.sha256, bare.sha256, "raw fixture bytes remain part of authority");
+  for (const invalid of [" " + instant, instant + " ", instant + "\n\n", instant + "\r\n", "2026-02-31T23:41:34.668Z"]) assert.throws(() => evidence.parsePhase185ClockFixture(Buffer.from(invalid)));
+});
+
 test("one aggregate binds exact source, reports, checkers, artifacts and derived summary", () => {
   const { runDir } = createCompleteRun();
   try {
