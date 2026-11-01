@@ -2,6 +2,8 @@
 
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
+const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const evidence = require("./ecommerce_evidence.cjs");
@@ -34,7 +36,23 @@ function canonical(value) {
 }
 
 const browser = { engine: "chromium", version: "140.0.0.0", package: "@playwright/test", package_version: "1.54.2" };
-const recipe = { browser, profile_sha256: PROFILE, clock_sha256: CLOCK, data_recipe_sha256: DATA };
+const recipe = {
+  browser,
+  launch_args: ["--disable-partial-raster"],
+  locale: "en-US",
+  timezone: "UTC",
+  device_scale_factor: 1,
+  browser_date: { fixed: true, timers_running: true },
+  font_profile: {
+    method: "retained-cdp-fixed-font-v1",
+    fixed_font_family: "Liberation Mono",
+    applied: "before-first-navigation",
+    lifetime: "page-context"
+  },
+  profile_sha256: PROFILE,
+  clock_sha256: CLOCK,
+  data_recipe_sha256: DATA
+};
 const recipeSha = `sha256:${digest(Buffer.from(JSON.stringify(canonical(recipe))))}`;
 
 function authority() {
@@ -47,7 +65,7 @@ function authority() {
         schema: "scrypath.phase185-before-qualification.v1",
         status: "qualified",
         source_sha: BEFORE_SHA,
-        browser_runtime_equivalence: { rootfs_layers_equal: true, effective_config_equal: true }
+        browser_runtime_equivalence: { rootfs_layers_equal: true, effective_config_equal: true, source_sha: BEFORE_SHA, actual_image_id: BROWSER }
       }
     },
     expected: {
@@ -56,7 +74,7 @@ function authority() {
       fixture_overlay_sha256: FIXTURE,
       effective_runtime_sha256: RUNTIME,
       browser_image_id: BROWSER,
-      recipe
+      recipe: structuredClone(recipe)
     }
   };
 }
@@ -102,7 +120,8 @@ function runReceipt({ sourceSha, productTreeSha, appImageId, imageBytes = png(),
     eligibility: { eligible: true },
     source: { checkout_head: sourceSha },
     images: { application: { runtime_id: appImageId }, browser: { runtime_id: BROWSER } },
-    browser,
+    browser: structuredClone(browser),
+    artifacts: cases.map((item) => ({ path: item.image.path, sha256: item.image.sha256, present: true, copied: true, copy_status: "success" })),
     preservation: {
       schema: "scrypath.ui-preservation.v1",
       product_tree_sha256: productTreeSha,
@@ -120,7 +139,7 @@ function compare(before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BE
     authority: expectedAuthority,
     before,
     candidate,
-    readImage: (receipt) => receipt.imageBytes
+    readImage: (_side, _item, receipt) => receipt.imageBytes
   });
 }
 
@@ -157,6 +176,9 @@ test("a source pair rejects independently mismatched source, fixture, runtime an
     mutate(candidate);
     assert.throws(() => compare(undefined, candidate), /source|fixture|runtime|recipe|browser/i);
   }
+  const unqualifiedRecipe = authority();
+  unqualifiedRecipe.expected.recipe.font_profile.fixed_font_family = "Monospace";
+  assert.throws(() => compare(undefined, undefined, unqualifiedRecipe), /qualified raster|font profile/);
 });
 
 test("a source pair fails exact pixels, geometry, state, copy and semantic assertions", () => {
@@ -174,4 +196,87 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
 
   const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageBytes: png(21) });
   assert.equal(compare(undefined, pixelChanged).passed, false);
+});
+
+test("the fixed CLI accepts only the documented argv order", () => {
+  assert.deepEqual(pairs.parseArgs([
+    "compare", "--authority", "/tmp/authority.json", "--before", "/tmp/before/phase105-evidence.json",
+    "--candidate", "/tmp/candidate/phase105-evidence.json", "--output", "/tmp/pair"
+  ]), {
+    authorityPath: "/tmp/authority.json",
+    beforePath: "/tmp/before/phase105-evidence.json",
+    candidatePath: "/tmp/candidate/phase105-evidence.json",
+    outputDirectory: "/tmp/pair"
+  });
+  assert.throws(() => pairs.parseArgs(["compare", "--before", "/tmp/before.json"]), /Usage/);
+});
+
+test("authority loads only when its qualification bytes match the supplied digest", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-authority-"));
+  try {
+    const value = authority();
+    const qualificationPath = path.join(directory, "qualification.json");
+    const qualificationBytes = Buffer.from(`${JSON.stringify(value.qualification.record, null, 2)}\n`);
+    fs.writeFileSync(qualificationPath, qualificationBytes);
+    value.qualification.path = qualificationPath;
+    value.qualification.sha256 = `sha256:${digest(qualificationBytes)}`;
+    const authorityPath = path.join(directory, "authority.json");
+    fs.writeFileSync(authorityPath, JSON.stringify(value));
+
+    const loaded = pairs.loadAuthority(authorityPath);
+    assert.equal(loaded.authority.expected.before.source_sha, BEFORE_SHA);
+    assert.throws(() => pairs.loadAuthority(authorityPath.replace("authority.json", "missing.json")), /ENOENT/);
+
+    value.qualification.sha256 = `sha256:${"9".repeat(64)}`;
+    fs.writeFileSync(authorityPath, JSON.stringify(value));
+    assert.throws(() => pairs.loadAuthority(authorityPath), /qualification file does not match/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("receipt loading requires a complete recomputable evidence bundle", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-receipt-"));
+  try {
+    const receiptPath = path.join(directory, "phase105-evidence.json");
+    fs.writeFileSync(receiptPath, JSON.stringify({ schema_version: 1 }));
+    assert.throws(() => pairs.loadReceiptBundle(receiptPath, "before", authority()), /not independently recomputable and eligible/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("run PNG loading verifies path containment, raw hashes and decoded image bytes", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-png-"));
+  try {
+    const relative = "ui-review-artifacts/iteration3-journeys/phase185-held-out/E1-empty.png";
+    const absolute = path.join(directory, relative);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    const bytes = png();
+    fs.writeFileSync(absolute, bytes);
+    const item = { id: "E1 empty", image: { path: relative, sha256: digest(bytes) } };
+
+    assert.deepEqual(pairs.readBundledPng({ runRoot: directory }, item), bytes);
+    assert.throws(() => pairs.readBundledPng({ runRoot: directory }, { ...item, image: { ...item.image, sha256: `sha256:${"1".repeat(64)}` } }), /raw SHA-256/);
+    assert.throws(() => pairs.readBundledPng({ runRoot: directory }, { ...item, image: { ...item.image, path: "../outside.png" } }), /outside the held-out PNG bundle/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("pair output is atomic, deterministic and never overwritten by different bytes", () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-output-"));
+  try {
+    const outputDirectory = path.join(directory, "comparison");
+    const report = { schema: "scrypath.ui-state-pair-comparison.v1", status: "exact-match", cases_compared: 61 };
+    const outputPath = pairs.writeOutput(outputDirectory, report);
+    const original = fs.readFileSync(outputPath);
+
+    assert.equal(pairs.writeOutput(outputDirectory, report), outputPath);
+    assert.deepEqual(fs.readFileSync(outputPath), original);
+    assert.throws(() => pairs.writeOutput(outputDirectory, { ...report, status: "mismatch" }), /refusing to overwrite/);
+    assert.deepEqual(fs.readFileSync(outputPath), original);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
