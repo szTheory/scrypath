@@ -73,7 +73,7 @@ function routeFor(element: ElementId): string {
 function scenarioFor(element: ElementId, category: Category): "all_green" | "degraded" | "incident" | "empty" | "e2e_search_catalog" | "phase185_partial_catalog" | "phase185_one_failed" | null {
   // An empty search result still needs a configured tenant and searchable catalog.
   // The generic empty seed instead renders the distinct missing-setup state.
-  if (element === "E1") return category === "partial" ? "phase185_partial_catalog" : "e2e_search_catalog";
+  if (element === "E1") return category === "partial" ? "phase185_partial_catalog" : category === "error" ? "degraded" : "all_green";
   if (element === "E2") return category === "zero-one-many" ? null : category === "empty" ? "empty" : category === "partial" || category === "error" || category === "long-text" ? "incident" : "all_green";
   if (element === "E3" || element === "E7") return null;
   if (element === "E4") return category === "zero-one-many" ? null : category === "empty" ? "empty" : category === "populated" || category === "partial" || category === "error" || category === "long-text" ? "incident" : "all_green";
@@ -144,7 +144,7 @@ async function initializeData(element: ElementId, category: Category, request: P
     const name = savedSearchName(element, category);
     const count = category === "empty" ? 0 : category === "zero-one-many" ? 3 : 1;
     for (let index = 0; index < count; index += 1) {
-      await putSavedSearch(request, `${name}-${index + 1}`, { mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: index === 1 ? "quantum" : "scanner", opts: { page: { size: 10 } } });
+      await putSavedSearch(request, count === 1 ? name : `${name}-${index + 1}`, { mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: index === 1 ? "quantum" : "scanner", opts: { page: { size: 10 } } });
     }
     identity += `:saved-searches:${count}:${name}`;
   }
@@ -297,10 +297,13 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
   if (element === "E1") {
     const searchInput = page.getByLabel("Search products");
     const initialQuery = await searchInput.inputValue();
+    await expect(page.getByTestId("storefront-result")).toHaveCount(3);
     const unfilteredCount = await page.getByTestId("storefront-result").count();
     const category = page.getByRole("checkbox", { name: "Smartphones" });
+    const categoryValue = await category.getAttribute("value");
     await category.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => url.searchParams.get("category_id") === categoryValue);
+    await expect(page.getByTestId("storefront-result")).toHaveCount(2);
     locator = page.locator("[data-testid='storefront-results']");
     const filteredRoute = page.url();
     assertions.push(await assertObserved("storefront selected-category filter narrows the actual unqueried catalog and stays in the route", JSON.stringify({ initialQuery, unfilteredCount, filteredRoute }), (value) => {
@@ -344,7 +347,8 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     const facetCount = Number((await backendRejected.locator("xpath=..").locator(".ops-filter-chip__count").innerText()).trim());
     expect(facetCount, "the backend_rejected facet has exactly one known fixture row").toBe(1);
     await backendRejected.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => (url.searchParams.get("cause") || "").split(",").includes("backend_rejected"));
+    await expect(page.getByTestId("failed-sync-row")).toHaveCount(1);
     const narrowed = await page.getByTestId("failed-sync-row").count();
     const selectedCause = await causeFilters.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).map((node) => (node as HTMLInputElement).value).join(","));
     const filteredText = await page.locator("main").innerText();
@@ -384,7 +388,8 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     await expect(unknownCause).toBeVisible();
     const unknownFacetCount = Number((await unknownCause.locator("xpath=..").locator(".ops-filter-chip__count").innerText()).trim());
     await unknownCause.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => (url.searchParams.get("cause") || "").split(",").includes("unknown"));
+    await expect(page.getByTestId("failed-sync-row")).toHaveCount(1);
     const unknownOnly = page.getByTestId("failed-sync-row");
     const unknownOnlyCount = await unknownOnly.count();
     const unknownOnlyText = await unknownOnly.first().innerText();
@@ -442,9 +447,10 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
   if (element === "E1") {
     const input = page.getByLabel("Search products");
     const counts: number[] = [];
-    for (const query of ["phase185-no-matching-product", "Quantum CyberPhone X", "quantum"]) {
+    for (const [query, expectedCount] of [["phase185-no-matching-product", 0], ["Quantum CyberPhone X", 1], ["quantum", 2]] as const) {
       await input.fill(query);
-      await waitForLiveConnected(page);
+      await expect(page).toHaveURL((url) => url.searchParams.get("q") === query);
+      await expect(page.getByTestId("storefront-result")).toHaveCount(expectedCount);
       const count = await page.getByTestId("storefront-result").count();
       counts.push(count);
       transport.push({ operation: "storefront-live-search", outcome: `query=${query}; visible_results=${count}` });
@@ -495,8 +501,10 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     await waitForLiveConnected(page);
     const many = await page.getByTestId("failed-sync-row").count();
     const oneCause = page.locator("input[name='cause[]']").first();
+    const causeValue = await oneCause.getAttribute("value");
     await oneCause.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => (url.searchParams.get("cause") || "").split(",").includes(causeValue || "missing-cause"));
+    await expect(page.getByTestId("failed-sync-row")).toHaveCount(1);
     const one = await page.getByTestId("failed-sync-row").count();
     transport.push({ operation: "failed-work-filter", outcome: `incident_rows=${many}; checked_cause_rows=${one}` });
     await page.goto("/admin/search/failed-sync?schema=Elixir.NotAllowlisted");
@@ -628,6 +636,24 @@ async function assertPendingState(page: Page, element: ElementId, target: Locato
 }
 
 async function assertTransportError(page: Page, element: ElementId, assertions: Assertion[], transport: Transport[]): Promise<Locator> {
+  if (element === "E1") {
+    // The storefront has no Ops socket-error flash. Exercise its existing
+    // backend-unavailable UI using the real degraded settings fixture instead.
+    const unavailable = page.getByTestId("storefront-search-unavailable");
+    await expect(unavailable).toBeVisible();
+    await expect(unavailable).toContainText("Search could not be completed. Check Search health before treating this as an empty catalog.");
+    const recovery = unavailable.getByRole("link", { name: "Open Search health", exact: true });
+    await expect(recovery).toHaveAttribute("href", "/admin/search/health");
+    const results = page.getByTestId("storefront-results");
+    const text = await results.innerText();
+    const tenant = (await results.locator("h2").first().innerText()).trim();
+    assertions.push(await assertObserved("storefront distinguishes actual unavailable search from empty results and retains its tenant context", JSON.stringify({ tenant, text, recoveryVisible: await recovery.isVisible() }), (value) => {
+      const result = JSON.parse(String(value));
+      return Boolean(result.tenant) && result.tenant !== "No tenant seeded" && result.text.includes("Results unavailable") && result.text.includes("Search unavailable") && !result.text.includes("No matching results yet") && result.recoveryVisible;
+    }));
+    transport.push({ operation: "storefront-backend-search", outcome: "existing degraded settings seed; actual Search unavailable and explicit Search health recovery rendered; not a socket-flash or empty-catalog claim" });
+    return recovery;
+  }
   if (element === "E10") {
     const row = page.locator(".ops-saved-search-row").first();
     const name = (await row.locator(".ops-saved-search-row__name").innerText()).trim();
@@ -653,7 +679,8 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     await waitForLiveConnected(page);
     await page.locator("#search-health-refresh").click();
     const alert = page.getByTestId("posture-row").filter({ hasText: "Phase173FixtureSchema" }).first();
-    await expect(alert).toBeVisible();
+    await expect(alert).toContainText("phase173_backend_unavailable");
+    await expect(alert).toContainText("Search health could not be checked");
     const text = (await alert.innerText()).trim();
     const recovery = page.getByRole("button", { name: "Refresh search health", exact: true });
     assertions.push(await assertObserved("real health refresh failure names the backend error and keeps the explicit retry action", JSON.stringify({ text, recoveryVisible: await recovery.isVisible(), recoveryEnabled: await recovery.isEnabled() }), (value) => {
@@ -663,11 +690,20 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     transport.push({ operation: "health-refresh", outcome: `actual Phase173FixtureSource task-history error phase173_backend_unavailable; enabled recovery action Refresh search health; row=${text}` });
     return recovery;
   }
-  const main = page.locator("[data-phx-main]");
+  const main = page.locator("main");
   const priorHeading = (await primaryHeading(page, element)).innerText();
   const priorHeadingText = (await priorHeading).trim();
   const priorText = await main.innerText();
-  await page.evaluate(() => (window as Window & { liveSocket?: { disconnect: () => void } }).liveSocket?.disconnect());
+  await page.evaluate(() => {
+    const live = (window as Window & { liveSocket?: { socket?: { conn?: WebSocket } } }).liveSocket;
+    if (!live?.socket?.conn || live.socket.conn.readyState !== WebSocket.OPEN) throw new Error("The real LiveView WebSocket must be open before the transport failure.");
+  });
+  await page.context().setOffline(true);
+  await page.evaluate(() => {
+    const conn = (window as Window & { liveSocket?: { socket?: { conn?: WebSocket } } }).liveSocket?.socket?.conn;
+    if (conn?.readyState === WebSocket.OPEN) conn.close();
+  });
+  await expect(page.locator("[data-phx-main]")).toHaveClass(/phx-client-error/);
   await expect(page.locator("#client-error")).toBeVisible({ timeout: 10_000 });
   const errorText = (await page.locator("#client-error").innerText()).trim();
   assertions.push(await assertObserved("LiveView transport failure names the actual connectivity cause and recovery state", errorText, (value) => String(value).includes("We can't find the internet") && String(value).includes("Attempting to reconnect")));
@@ -683,9 +719,12 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
   if (element === "E3" || element === "E7") {
     await page.goto("/admin/search/phase173/health?scenario=long");
     await waitForLiveConnected(page);
-    locator = page.getByTestId("posture-row");
-    const text = await locator.allInnerTexts();
-    assertions.push(await assertObserved("health keeps the actual long schema identifiers in the rendered rows", text.join("\n"), (value) => String(value).includes("IntentionallyLongName") || String(value).includes("IntentionallyLong")));
+    const rows = page.getByTestId("posture-row");
+    const longSchema = "ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays";
+    locator = rows.filter({ hasText: longSchema });
+    await expect(locator).toHaveCount(1);
+    const text = await rows.allInnerTexts();
+    assertions.push(await assertObserved("health keeps the actual long schema identifiers in the rendered rows", text.join("\n"), (value) => String(value).includes(longSchema)));
   } else if (element === "E2") {
     await page.goto("/admin/search");
     await waitForLiveConnected(page);
@@ -695,8 +734,10 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
   } else if (element === "E4") {
     await page.goto("/admin/search/failed-sync");
     await waitForLiveConnected(page);
-    locator = page.getByTestId("failed-sync-reason");
-    const reasons = await locator.allInnerTexts();
+    const reasonRows = page.getByTestId("failed-sync-reason");
+    locator = reasonRows.filter({ hasText: "invalid_state: index is processing a settings update and rejected the batch" });
+    await expect(locator).toHaveCount(1);
+    const reasons = await reasonRows.allInnerTexts();
     assertions.push(await assertObserved("failed-work details keep an exact backend cause available", reasons.join("\n"), (value) => String(value).includes("invalid_state: index is processing a settings update and rejected the batch")));
   } else if (element === "E5" || element === "E10") {
     await page.goto("/admin/search/search?saved=manage");
@@ -730,6 +771,7 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
     const query = `${"phase185-long-query-".repeat(8)}🔬東京`;
     locator = element === "E1" ? page.getByLabel("Search products") : page.getByLabel("Search text");
     await locator.fill(query);
+    if (element === "E1") await expect(page).toHaveURL((url) => url.searchParams.get("q") === query);
     await expect(locator).not.toHaveClass(/phx-change-loading/, { timeout: 20_000 });
     await waitForLiveConnected(page);
     assertions.push(await assertObserved("long exact query remains available in the actual search control", await locator.inputValue(), (value) => value === query));
@@ -862,6 +904,7 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     const candidates = [
       ...(preferredInteractionTarget ? [preferredInteractionTarget] : []),
       target,
+      page.locator("[role='dialog'][aria-modal='true']:visible").last().locator("button:not([disabled]):visible, a[href]:visible, input:not([disabled]):visible, select:not([disabled]):visible, textarea:not([disabled]):visible").first(),
       page.locator("main a[href]:visible, main button:not([disabled]):visible").first(),
       page.locator("main input:not([disabled]):visible, main select:not([disabled]):visible, main textarea:not([disabled]):visible").first(),
       page.locator("button:not([disabled]):visible").first()
@@ -871,6 +914,7 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     for (const candidate of candidates) {
       if (await candidate.count() === 0) continue;
       if (!(await candidate.isVisible().catch(() => false)) || !(await candidate.isEnabled().catch(() => false))) continue;
+      if (await candidate.evaluate((node) => Boolean(node.closest("[inert]")))) continue;
       const identity = await candidate.evaluate(captureUiStateInPage) as typeof interactionIdentity;
       if (identity && ["a", "button", "input", "select", "textarea"].includes(identity.tag) && typeof identity.name === "string" && identity.name.trim()) {
         interaction = candidate;
@@ -879,8 +923,8 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
       }
     }
     if (!interaction || !interactionIdentity) throw new Error(`${element} ${category} has no visible, named real product control for keyboard and hover evidence.`);
-    await interaction.hover();
-    await interaction.focus();
+    await interaction.hover({ timeout: 5_000 });
+    await interaction.focus({ timeout: 5_000 });
     await page.keyboard.press("Tab");
     await page.keyboard.press("Shift+Tab");
     await expect(interaction).toBeFocused();
@@ -1142,7 +1186,8 @@ export async function runPreservationCase(args: {
       observations.push(...capture.observations);
       allAssertions.push(...assertions);
       transports.push(...transport);
-      if (category === "error" && element !== "E3" && element !== "E10") {
+      if (category === "error" && element !== "E1" && element !== "E3" && element !== "E10") {
+        await context.setOffline(false);
         await page.evaluate(() => (window as Window & { liveSocket?: { connect: () => void } }).liveSocket?.connect());
         await waitForLiveConnected(page);
       }

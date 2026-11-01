@@ -8,7 +8,9 @@ const test = base.extend<{ preservationBrowser: Browser }>({
   }, { scope: "worker" }]
 });
 
-test.describe.configure({ mode: "serial" });
+// Each case resets its owned data. One worker preserves execution order, while
+// default mode lets later independent cases report their own failures.
+test.describe.configure({ mode: "default" });
 
 for (const element of STATE_ELEMENTS) {
   for (const category of STATE_CATEGORIES) {
