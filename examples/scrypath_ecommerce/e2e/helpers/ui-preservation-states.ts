@@ -575,7 +575,7 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     const oneNames = await choices.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).map((node) => (node as HTMLInputElement).value));
     await submit.click();
     await waitForLiveConnected(page);
-    await expect(page.locator("#search-outcome")).toHaveText(/^\d+ results? shown$/, { timeout: 20_000 });
+    await expect(page.locator("#search-outcome")).toHaveText(/^\s*\d+ results? shown\s*$/, { timeout: 20_000 });
     const oneResultCount = await page.locator(".ops-search-hit").count();
     const oneSubmittedSchemas = JSON.parse((await page.locator("#search-run-attribution").getAttribute("data-schemas")) || "[]") as string[];
     await productChoice.check();
@@ -585,7 +585,7 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     const manyNames = await choices.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).map((node) => (node as HTMLInputElement).value));
     await submit.click();
     await waitForLiveConnected(page);
-    await expect(page.locator("#search-outcome")).toHaveText(/^\d+ results? shown$/, { timeout: 20_000 });
+    await expect(page.locator("#search-outcome")).toHaveText(/^\s*\d+ results? shown\s*$/, { timeout: 20_000 });
     const manyResultCount = await page.locator(".ops-search-hit").count();
     const manySubmittedSchemas = JSON.parse((await page.locator("#search-run-attribution").getAttribute("data-schemas")) || "[]") as string[];
     const multiCopy = await page.locator("#ops-search-playground-form").innerText();
