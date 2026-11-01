@@ -156,7 +156,7 @@ fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 example_dir="$(cd "$script_dir/.." && pwd)"
 cd "$example_dir"
-repo_root="$(cd "$example_dir/../.." && pwd)"
+repo_root="$(cd "$example_dir/../.." && pwd -P)"
 
 sha="$(git rev-parse --short=8 HEAD 2>/dev/null || printf 'workspace')"
 safe_sha="$(printf '%s' "$sha" | tr -cd '[:alnum:]_-')"
@@ -166,7 +166,9 @@ if [[ ! "$project" =~ ^[a-z0-9][a-z0-9_-]{0,62}$ ]]; then
   exit 64
 fi
 export E2E_PROJECT_NAME="$project"
+explicit_host_artifact_root=0
 if [[ -n "${E2E_HOST_ARTIFACT_ROOT:-}" ]]; then
+  explicit_host_artifact_root=1
   artifact_parent="$E2E_HOST_ARTIFACT_ROOT"
 else
   if [[ "$preservation_mode" == "before-only" ]]; then
@@ -177,12 +179,14 @@ else
 fi
 mkdir -p "$artifact_parent"
 artifact_parent="$(cd "$artifact_parent" && pwd -P)"
-case "$artifact_parent/" in
-  "$repo_root/"*)
-    echo "E2E_HOST_ARTIFACT_ROOT must be outside the checkout so runtime receipts stay disposable." >&2
-    exit 64
-    ;;
-esac
+if [[ "$explicit_host_artifact_root" == "1" || "$preservation_mode" == "before-only" ]]; then
+  case "$artifact_parent/" in
+    "$repo_root/"*)
+      echo "E2E_HOST_ARTIFACT_ROOT must be outside the checkout so runtime receipts stay disposable." >&2
+      exit 64
+      ;;
+  esac
+fi
 artifact_dir="$artifact_parent/$run_id"
 if ! mkdir -m 700 "$artifact_dir"; then
   echo "Refusing to reuse existing run evidence directory: $artifact_dir" >&2

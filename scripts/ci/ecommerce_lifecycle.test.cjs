@@ -54,6 +54,47 @@ test("focused mounted verification invokes the runtime dependency proof", (t) =>
   assert.deepEqual(result.boundaryCalls, ["--runtime"]);
 });
 
+test("an explicit artifact root inside the checkout is refused before Compose setup", (t) => {
+  const result = runVerifier(t, ["focused"], {
+    E2E_HOST_ARTIFACT_ROOT: ({ exampleDirectory }) => path.join(exampleDirectory, "test-results", "unsafe-explicit-root"),
+  });
+
+  assert.equal(result.status, 64, result.stderr);
+  assert.match(result.stderr, /E2E_HOST_ARTIFACT_ROOT must be outside the checkout/i);
+  assert.deepEqual(result.calls.map((call) => call.slice(0, 2)), [["compose", "version"]]);
+});
+
+test("before-only default artifacts stay outside the checkout before qualification checks", (t) => {
+  const result = runVerifier(t, ["full"], {
+    E2E_PRESERVATION_MODE: "before-only",
+    E2E_PHASE185_QUALIFICATION_PATH: ({ root }) => path.join(root, "missing-qualification.json"),
+    TMPDIR: ({ root }) => {
+      const externalTemp = `${root}-external-temp`;
+      mkdirSync(externalTemp, { recursive: true });
+      t.after(() => rmSync(externalTemp, { recursive: true, force: true }));
+      return externalTemp;
+    },
+  });
+
+  assert.equal(result.status, 64, result.stderr);
+  assert.match(result.stderr, /Before-only mode requires the regular raw Plan05 qualification/i);
+  assert.ok(result.artifactDirectory, "the default before-only artifact directory must be created");
+  assert.ok(!result.artifactDirectory.startsWith(`${result.checkoutRoot}${path.sep}`));
+  assert.deepEqual(result.calls.map((call) => call.slice(0, 2)), [["compose", "version"]]);
+});
+
+test("before-only mode refuses a TMPDIR inside the checkout", (t) => {
+  const result = runVerifier(t, ["full"], {
+    E2E_PRESERVATION_MODE: "before-only",
+    E2E_PHASE185_QUALIFICATION_PATH: ({ root }) => path.join(root, "missing-qualification.json"),
+    TMPDIR: ({ exampleDirectory }) => exampleDirectory,
+  });
+
+  assert.equal(result.status, 64, result.stderr);
+  assert.match(result.stderr, /E2E_HOST_ARTIFACT_ROOT must be outside the checkout/i);
+  assert.deepEqual(result.calls.map((call) => call.slice(0, 2)), [["compose", "version"]]);
+});
+
 function tempDirectory(t) {
   const directory = mkdtempSync(path.join(os.tmpdir(), "scrypath-e2e-lifecycle-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -253,6 +294,12 @@ function runVerifier(t, args, extraEnv = {}) {
   const runId = args[0] === "full" && !requestedRunId.startsWith("phase185-")
     ? `phase185-${requestedRunId}`
     : requestedRunId;
+  const resolvedExtraEnv = Object.fromEntries(
+    Object.entries(extraEnv).map(([key, value]) => [
+      key,
+      typeof value === "function" ? value({ root, exampleDirectory }) : value,
+    ]),
+  );
   const clockInstant = "2026-10-31T12:00:00.000Z";
   const boundaryLogPath = path.join(root, "boundary.log");
   writeFileSync(
@@ -267,27 +314,39 @@ function runVerifier(t, args, extraEnv = {}) {
     mkdirSync(previousDirectory, { recursive: true });
     writeFileSync(path.join(previousDirectory, "stale-sentinel.txt"), "must not be copied\n");
   }
+  const childEnv = { ...process.env };
+  // The fixture must exercise the verifier's own defaults unless a test opts in
+  // to an explicit host artifact root. In particular, a maintainer's exported
+  // path must not redirect synthetic lifecycle output into the real checkout.
+  delete childEnv.E2E_HOST_ARTIFACT_ROOT;
+  Object.assign(childEnv, {
+    PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
+    FAKE_DOCKER_LOG: logPath,
+    FAKE_BOUNDARY_LOG: boundaryLogPath,
+    FAKE_DOCKER_STDIN_FILE: aggregateInputPath,
+    FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
+    E2E_RUN_ID: runId,
+    E2E_PHASE185_CLOCK_INSTANT: clockInstant,
+    ...resolvedExtraEnv,
+  });
+  const artifactParent = resolvedExtraEnv.E2E_HOST_ARTIFACT_ROOT
+    ? path.resolve(exampleDirectory, resolvedExtraEnv.E2E_HOST_ARTIFACT_ROOT)
+    : resolvedExtraEnv.E2E_PRESERVATION_MODE === "before-only"
+      ? path.resolve(
+          exampleDirectory,
+          resolvedExtraEnv.TMPDIR || process.env.TMPDIR || "/tmp",
+          "scrypath-phase185-before-only",
+        )
+      : path.join(exampleDirectory, "test-results", `docker-${args[0]}`);
   const result = spawnSync("bash", [scriptPath, ...args], {
     cwd: exampleDirectory,
     encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${binDirectory}${path.delimiter}${process.env.PATH}`,
-      FAKE_DOCKER_LOG: logPath,
-      FAKE_BOUNDARY_LOG: boundaryLogPath,
-      FAKE_DOCKER_STDIN_FILE: aggregateInputPath,
-      FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
-      E2E_RUN_ID: runId,
-      E2E_PHASE185_CLOCK_INSTANT: clockInstant,
-      ...extraEnv,
-    },
+    env: childEnv,
   });
-  const artifactRoot = path.join(exampleDirectory, "test-results");
-  const runRoot = path.join(artifactRoot, `docker-${args[0]}`);
-  const artifactDirectory = existsSync(path.join(runRoot, runId))
-    ? path.join(runRoot, runId)
-    : existsSync(runRoot)
-      ? readdirSync(runRoot).map((name) => path.join(runRoot, name)).find((candidate) => path.basename(candidate) !== "previous-run") || null
+  const artifactDirectory = existsSync(path.join(artifactParent, runId))
+    ? path.join(artifactParent, runId)
+    : existsSync(artifactParent)
+      ? readdirSync(artifactParent).map((name) => path.join(artifactParent, name)).find((candidate) => path.basename(candidate) !== "previous-run") || null
       : null;
   const lifecyclePath = artifactDirectory && path.join(artifactDirectory, "lifecycle.json");
   const lifecycle = lifecyclePath && existsSync(lifecyclePath)
@@ -298,6 +357,7 @@ function runVerifier(t, args, extraEnv = {}) {
     calls: dockerCalls(logPath),
     boundaryCalls: existsSync(boundaryLogPath) ? readFileSync(boundaryLogPath, "utf8").trim().split("\n") : [],
     artifactDirectory,
+    checkoutRoot: root,
     aggregateInputPath,
     lifecycle,
   };
