@@ -117,6 +117,8 @@ When `.planning/STATE.md` says `Awaiting next milestone`, the root `.planning/RO
 
 Approved phase verification includes the Git metadata and Docker access its canonical commands need. For a known fetch-dependent gate such as `mix verify.repository_contracts`, use the tool's `require_escalated` permission on the first invocation; a sandbox run that cannot write its worktree `FETCH_HEAD` only repeats the full suite without valid trusted-history evidence. Use the same first-run access for canonical Docker builds that write Buildx metadata. Keep Buildx metadata in the task's external writable directory when the existing runner supports `BUILDX_CONFIG`. Do not ask the user again for these already authorized verification steps, weaken the gate, or treat permission failures as behavioral RED.
 
+Some repository contracts build a clean Git snapshot. Before rerunning one after a fix, check whether it reads committed HEAD or the working tree. Run the affected focused check, checkpoint the owned fix when that check is green, then run the snapshot-based gate against that commit. An uncommitted fix cannot repair a clean-copy test of the previous commit; avoid spending another full run on the same stale input.
+
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
