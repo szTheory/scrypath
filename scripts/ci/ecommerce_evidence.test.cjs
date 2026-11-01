@@ -596,6 +596,35 @@ test("full inventory requires every intended UI identity even when reports omit 
   }
 });
 
+test("full inventory requires the exact held-out preservation case identities", () => {
+  const cases = completeReceiptCases();
+  const result = evidence.reconcileInventory?.({
+    inventory: playwrightReport(cases),
+    report: playwrightReport(cases, { results: true }),
+    repoRoot: path.resolve(__dirname, "../.."),
+    requireMandatoryCases: true
+  });
+
+  assert.equal(result?.eligible, false);
+  assert.ok(result?.reasons.some((reason) =>
+    reason.code === "missing_required_case" && reason.message.includes("E1 empty")
+  ));
+});
+
+test("a full receipt cannot pass without actual per-case state, assertion, copy and image events", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const receipt = evidence.writeEvidence?.({ runDir });
+
+    assert.equal(receipt?.eligibility.eligible, false);
+    assert.ok(receipt?.reasons.some((reason) =>
+      reason.code === "missing_preservation_case_receipt"
+    ));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
 test("synthetic untrusted reviewer metadata cannot become canonical evidence", () => {
   const { runDir } = createCompleteRun();
   const marker = "TEST_FIXTURE_ONLY_NOT_A_REAL_REVIEW_OR_APPROVAL";
