@@ -555,7 +555,29 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       ci = File.read!(@ci_yml)
       job = workflow_job_block(ci, "repository-contracts")
 
+      install =
+        workflow_named_step_block(
+          job,
+          "Install locked demo dependencies for PNG evidence validation"
+        )
+
+      browser_contracts =
+        workflow_named_step_block(
+          job,
+          "Verify browser build, lifecycle, evidence, and target behavior"
+        )
+
+      assert install =~
+               "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce"
+
+      assert :binary.match(job, "Install locked demo dependencies for PNG evidence validation") <
+               :binary.match(
+                 job,
+                 "Verify browser build, lifecycle, evidence, and target behavior"
+               )
+
       assert job =~ "node --test --test-reporter=tap"
+      assert browser_contracts =~ "scripts/ci/ecommerce_evidence.test.cjs"
 
       for test_file <- [
             "scripts/ci/ecommerce_build.test.cjs",
@@ -890,9 +912,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
                ~s|echo "E2E_PHASE185_CLOCK_PATH=$RUNNER_TEMP/phase185-clock-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.txt" >> "$GITHUB_ENV"|
 
       assert prepare =~ "ecommerce_build.cjs prepare --scope full"
+      assert prepare =~ "E2E_PRODUCT_SOURCE_SHA=\"$SCRYPATH_SOURCE_SHA\""
+      assert prepare =~ "productTreeIdentity(process.cwd())"
+      assert prepare =~ "fixtureOverlayDigest(process.cwd())"
+
+      assert prepare =~
+               "export E2E_PRODUCT_SOURCE_SHA E2E_PRODUCT_TREE_SHA256 E2E_FIXTURE_OVERLAY_SHA256"
+
+      assert verifier_script =~ "productTreeIdentity(process.argv[2])"
+      assert verifier_script =~ "fixtureOverlayDigest(process.argv[2])"
+
       assert verify =~ "id: ecommerce_verify"
       assert verify =~ "run: mix verify.ecommerce_e2e"
-      assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
+      assert verify =~ "E2E_RUN_ID: phase185-${{ github.run_id }}-${{ github.run_attempt }}"
       assert verify =~ "E2E_SOURCE_MODE: hosted"
       assert verify =~ "E2E_EVENT_SHA: ${{ steps.e2e_clock.outputs.E2E_EVENT_SHA }}"
 
@@ -907,7 +939,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert upload =~ "id: ecommerce_upload"
       assert upload =~ "if: always()"
-      assert upload =~ "test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert upload =~
+               "test-results/docker-full/phase185-${{ github.run_id }}-${{ github.run_attempt }}"
+
+      assert upload =~
+               "name: ecommerce-e2e-evidence-${{ github.run_id }}-${{ github.run_attempt }}"
+
       assert upload =~ "if-no-files-found: error"
       assert upload =~ "retention-days: 7"
       assert upload =~ "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"

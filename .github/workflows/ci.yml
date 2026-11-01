@@ -183,6 +183,8 @@ jobs:
           key: ${{ steps.beam_cache.outputs.resolved_key }}
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
       - run: mix deps.get
+      - name: Install locked demo dependencies for PNG evidence validation
+        run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce
       - name: Verify browser build, lifecycle, evidence, and target behavior
         run: |
           node --test --test-reporter=tap \
@@ -711,6 +713,10 @@ jobs:
           PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.full_docker_namespace }}
         run: |
           output_dir="$RUNNER_TEMP/ecommerce-full-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          E2E_PRODUCT_SOURCE_SHA="$SCRYPATH_SOURCE_SHA"
+          E2E_PRODUCT_TREE_SHA256="$(node -e 'const e = require("./scripts/ci/ecommerce_evidence.cjs"); process.stdout.write(e.productTreeIdentity(process.cwd()))')"
+          E2E_FIXTURE_OVERLAY_SHA256="$(node -e 'const e = require("./scripts/ci/ecommerce_evidence.cjs"); process.stdout.write(e.fixtureOverlayDigest(process.cwd()))')"
+          export E2E_PRODUCT_SOURCE_SHA E2E_PRODUCT_TREE_SHA256 E2E_FIXTURE_OVERLAY_SHA256
           node scripts/ci/ecommerce_build.cjs prepare --scope full --output "$output_dir"
           {
             echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
@@ -760,7 +766,7 @@ jobs:
         env:
           PHASE182_CACHE_MODE: ${{ steps.phase182_inputs.outputs.full_docker_mode }}
           PHASE182_PROBE_NAMESPACE: ${{ steps.phase182_inputs.outputs.full_docker_namespace }}
-          E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          E2E_RUN_ID: phase185-${{ github.run_id }}-${{ github.run_attempt }}
           E2E_JOB_STARTED_AT: ${{ steps.e2e_clock.outputs.E2E_JOB_STARTED_AT }}
           E2E_DEADLINE_EPOCH: ${{ steps.e2e_clock.outputs.E2E_DEADLINE_EPOCH }}
           E2E_FINALIZATION_MARGIN_SECONDS: ${{ steps.e2e_clock.outputs.E2E_FINALIZATION_MARGIN_SECONDS }}
@@ -800,7 +806,7 @@ jobs:
         with:
           name: ecommerce-e2e-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            examples/scrypath_ecommerce/test-results/docker-full/${{ github.run_id }}-${{ github.run_attempt }}
+            examples/scrypath_ecommerce/test-results/docker-full/phase185-${{ github.run_id }}-${{ github.run_attempt }}
             ${{ runner.temp }}/ecommerce-full-${{ github.run_id }}-${{ github.run_attempt }}/image-handoff.json
           if-no-files-found: error
           retention-days: 7
