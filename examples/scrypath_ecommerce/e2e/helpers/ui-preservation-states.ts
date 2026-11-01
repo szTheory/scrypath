@@ -71,7 +71,9 @@ function routeFor(element: ElementId): string {
 }
 
 function scenarioFor(element: ElementId, category: Category): "all_green" | "degraded" | "incident" | "empty" | "e2e_search_catalog" | "phase185_partial_catalog" | "phase185_one_failed" | null {
-  if (element === "E1") return category === "empty" ? "empty" : category === "partial" ? "phase185_partial_catalog" : "e2e_search_catalog";
+  // An empty search result still needs a configured tenant and searchable catalog.
+  // The generic empty seed instead renders the distinct missing-setup state.
+  if (element === "E1") return category === "partial" ? "phase185_partial_catalog" : "e2e_search_catalog";
   if (element === "E2") return category === "zero-one-many" ? null : category === "empty" ? "empty" : category === "partial" || category === "error" || category === "long-text" ? "incident" : "all_green";
   if (element === "E3" || element === "E7") return null;
   if (element === "E4") return category === "zero-one-many" ? null : category === "empty" ? "empty" : category === "populated" || category === "partial" || category === "error" || category === "long-text" ? "incident" : "all_green";
@@ -211,6 +213,8 @@ async function assertEmpty(page: Page, element: ElementId, assertions: Assertion
     await page.getByLabel("Search products").fill("phase185-no-matching-product");
     await waitForLiveConnected(page);
     locator = page.locator("[data-testid='storefront-results']");
+    await expect(locator).toContainText("No matching results yet");
+    await expect(locator).toContainText("Adjust the query or filters");
     const text = await locator.innerText();
     assertions.push(await assertObserved("storefront keeps the real no-match next step", text, (value) => String(value).includes("No matching results yet") && String(value).includes("Adjust the query or filters")));
   } else if (element === "E6") {
@@ -858,8 +862,9 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     const candidates = [
       ...(preferredInteractionTarget ? [preferredInteractionTarget] : []),
       target,
-      page.locator("main a[href]:visible, main button:not([disabled]):visible, a[href]:visible, button:not([disabled]):visible").first(),
-      page.locator("main input:not([disabled]):visible, main select:not([disabled]):visible, main textarea:not([disabled]):visible").first()
+      page.locator("main a[href]:visible, main button:not([disabled]):visible").first(),
+      page.locator("main input:not([disabled]):visible, main select:not([disabled]):visible, main textarea:not([disabled]):visible").first(),
+      page.locator("button:not([disabled]):visible").first()
     ];
     let interaction: Locator | null = null;
     let interactionIdentity: { tag: string; role: string | null; name: string | null; href: string | null } | null = null;
