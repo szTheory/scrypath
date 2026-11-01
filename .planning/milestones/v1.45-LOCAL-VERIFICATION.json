@@ -1,0 +1,42 @@
+{
+  "source": "6003d64f7431847a4a32521a3d6c192e19c10be4",
+  "toolchain": {
+    "elixir": "1.19.5",
+    "otp": "28.5"
+  },
+  "core_result": "Standard Maturity Gate: PASSED; 5 properties, 1041 tests, zero failures; isolated no-Oban compile passed",
+  "repository_result": "146 tests, zero failures; includes canonical clone-based negative checks",
+  "checks": [
+    {
+      "name": "core",
+      "sha": "6003d64f7431847a4a32521a3d6c192e19c10be4",
+      "started_at": "2026-11-01T17:14:14.234934+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-11-01T17:20:33.629095+00:00",
+      "command": "mix verify.core --exclude integration --exclude docs_contract",
+      "log_path": "/private/tmp/scrypath-v145-closeout/core.log",
+      "log_sha256": "dd40fc36193c201a0a9a998ac552cfc2125fe9d0e92cfe0e41589010e7acc94a"
+    },
+    {
+      "name": "repository",
+      "sha": "6003d64f7431847a4a32521a3d6c192e19c10be4",
+      "started_at": "2026-11-01T17:20:33.630006+00:00",
+      "exit_code": 0,
+      "finished_at": "2026-11-01T17:25:16.343130+00:00",
+      "command": "mix verify.repository_contracts",
+      "log_path": "/private/tmp/scrypath-v145-closeout/repository.log",
+      "log_sha256": "e3307f43b364edc9c1d9bcce3232b62ead4189e458849421caee628dc416c950"
+    }
+  ],
+  "archive_structural_check": {
+    "requirements": 21,
+    "traceability_rows": 21,
+    "phase_files_unchanged": 175,
+    "active_requirements_removed": true,
+    "no_active_v145_phase_dirs": true,
+    "config_unchanged": true,
+    "archive_navigation": "no unresolved local links",
+    "scope": "archive structural checks; no future CI result"
+  },
+  "review": "Inline review of the two test-only archival changes: evidence readers point to the exact moved records; removed plan-copy inputs are unused by the contrast/literal consumers. Assertions and production inputs are unchanged. No independent review is claimed."
+}

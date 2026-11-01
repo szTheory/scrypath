@@ -35,11 +35,15 @@ Last activity: 2026-11-01 — v1.45 qualified local archive; terminal source acc
 
 All 21 approved requirements have completion evidence across Phases 182–185 and 38 plans. [Roadmap archive](milestones/v1.45-ROADMAP.md), [requirements](milestones/v1.45-REQUIREMENTS.md), [audit](milestones/v1.45-MILESTONE-AUDIT.md), and [closeout](milestones/v1.45-CLOSEOUT.md) retain scope, evidence, debt and override limits. The root roadmap is now a shipped-milestone index, not an active phase roadmap.
 
+## Candidate and local evidence
+
+Fresh canonical local core and repository gates passed at committed archive source `6003d64f7431847a4a32521a3d6c192e19c10be4`; [local record](milestones/v1.45-LOCAL-VERIFICATION.json) pins commands/log hashes. Candidate [run 41329869930](https://github.com/szTheory/scrypath/actions/runs/41329869930) passed all required jobs, coverage, attestation and full-browser proof at its separate pre-archive source. The strict collector verified the actual attestation archive digest; [receipt](milestones/v1.45-CANDIDATE-RECEIPT.json) and [facts](milestones/v1.45-CANDIDATE-FACTS.json) retain source/run/artifact and advisory limits. Deep-quality still reports the two unaccepted Cloak findings. Final archive-source acceptance remains the separate external event below.
+
 ## Closeout authority
 
 The maintainer selected qualified closeout on 2026-11-01, explicitly carrying the audit debt and stale historical Phase 182–184 verification projections. Original reports and source-bound receipts remain unchanged. This authorization is not a fresh phase pass, dependency-risk acceptance, design approval, merge/publication or v1.46 activation.
 
-All final tracked reports and archive bookkeeping precede terminal dispatch. Pin final committed HEAD in `/private/tmp/scrypath-v145-closeout/final-sha.txt`; preserve the canonical result, artifacts and unchanged-tree check externally. The five required jobs, coverage and immutable closeout attestation must pass. No tracked write follows success; any correction needs a new commit and replacement terminal receipt. These pre-dispatch bytes cannot certify the future external result.
+All final tracked reports and archive bookkeeping precede terminal dispatch. Pin final committed HEAD in `/private/tmp/scrypath-v145-closeout/final-sha.txt`; preserve the canonical result, artifacts and unchanged-tree check externally. The five required jobs, coverage and immutable closeout attestation must pass. No tracked write follows success; any correction needs a new commit and replacement terminal receipt. These pre-dispatch bytes cannot certify the future external result. On resume, read external `final-result.json`, `final-stdout.json`, `final-readiness.json` and `final-integrity.json` before deciding whether any gate remains. A successful exact-source result plus unchanged-source checks closes this action; do not replay it merely because the frozen tracker predates the event.
 
 ## Preserved boundaries and concerns
 
