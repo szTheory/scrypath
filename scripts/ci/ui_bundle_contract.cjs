@@ -3,14 +3,14 @@
 const fs = require("node:fs");
 
 const requiredUtilities = [
-  ["bg-black", /background-color:\s*var\(--color-black\)/],
-  ["text-black", /color:\s*var\(--color-black\)/],
-  ["bg-white", /background-color:\s*var\(--color-white\)/],
-  ["text-white", /color:\s*var\(--color-white\)/],
-  ["p-4", /padding:\s*calc\(var\(--spacing\)\s*\*\s*4\)/],
-  ["gap-8", /gap:\s*calc\(var\(--spacing\)\s*\*\s*8\)/],
-  ["text-sm", /font-size:\s*var\(--text-sm\)/],
-  ["font-semibold", /font-weight:\s*var\(--font-weight-semibold\)/],
+  ["bg-black", "background-color", /^var\(--color-black\)$/],
+  ["text-black", "color", /^var\(--color-black\)$/],
+  ["bg-white", "background-color", /^var\(--color-white\)$/],
+  ["text-white", "color", /^var\(--color-white\)$/],
+  ["p-4", "padding", /^calc\(var\(--spacing\)\s*\*\s*4\)$/],
+  ["gap-8", "gap", /^calc\(var\(--spacing\)\s*\*\s*8\)$/],
+  ["text-sm", "font-size", /^var\(--text-sm\)$/],
+  ["font-semibold", "font-weight", /^var\(--font-weight-semibold\)$/],
 ];
 
 function selectorsFor(css, utility) {
@@ -19,13 +19,34 @@ function selectorsFor(css, utility) {
   return [...css.matchAll(expression)].map((match) => match[1]);
 }
 
-function assertUtility(css, utility, declaration, label) {
+function propertyValuesFor(body, expectedProperty) {
+  const values = [];
+  for (const declaration of body.split(";")) {
+    const separator = declaration.indexOf(":");
+    if (separator < 0) continue;
+    const property = declaration.slice(0, separator).trim().toLowerCase();
+    if (property === expectedProperty) values.push(declaration.slice(separator + 1).trim());
+  }
+  return values;
+}
+
+function assertUtility(css, utility, property, expectedValue, label) {
   const rules = selectorsFor(css, utility);
   if (rules.length === 0) {
     throw new Error(`${label} is missing forced utility .${utility}`);
   }
-  if (declaration && !rules.some((body) => declaration.test(body))) {
-    throw new Error(`${label} .${utility} does not retain its expected declaration`);
+
+  // These generated utility rules have flat declarations. Require every exact
+  // selector occurrence to contain only the expected value for this property,
+  // so duplicate or later conflicting rules cannot mask a bad effective value.
+  if (property && expectedValue) {
+    const hasInvalidRule = rules.some((body) => {
+      const values = propertyValuesFor(body, property);
+      return values.length === 0 || values.some((value) => !expectedValue.test(value));
+    });
+    if (hasInvalidRule) {
+      throw new Error(`${label} .${utility} does not retain its expected ${property} declaration`);
+    }
   }
 }
 
@@ -40,13 +61,13 @@ function assertOutput(css, label, { semantic = false } = {}) {
     }
   }
 
-  for (const [utility, declaration] of requiredUtilities) {
-    assertUtility(css, utility, declaration, label);
+  for (const [utility, property, expectedValue] of requiredUtilities) {
+    assertUtility(css, utility, property, expectedValue, label);
   }
 
   if (semantic) {
-    assertUtility(css, "bg-primary", /background-color:\s*var\(--color-primary\)/, label);
-    assertUtility(css, "text-base-content", /color:\s*var\(--color-base-content\)/, label);
+    assertUtility(css, "bg-primary", "background-color", /^var\(--color-primary\)$/, label);
+    assertUtility(css, "text-base-content", "color", /^var\(--color-base-content\)$/, label);
   }
 }
 

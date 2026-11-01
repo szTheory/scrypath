@@ -145,6 +145,39 @@ test("black, white, spacing, typography, semantic utilities, and both outputs ar
   assert.throws(() => assertBundles({ standaloneCss: undefined, hostCss: goodHost }), /standalone Ops.*missing or empty/);
 });
 
+test("utility declarations reject a trailing wrong value in the same rule", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  const wrongTrailingValue = goodOps.replace(
+    ".bg-black{background-color:var(--color-black)}",
+    ".bg-black{background-color:var(--color-black);background-color:red}",
+  );
+  assert.throws(() => assertBundles({ standaloneCss: wrongTrailingValue, hostCss: goodHost }), /standalone Ops.*bg-black/);
+});
+
+test("utility declarations reject a later conflicting matching rule", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  const laterOverride = `${goodOps}.bg-black{background-color:red}`;
+  assert.throws(() => assertBundles({ standaloneCss: laterOverride, hostCss: goodHost }), /standalone Ops.*bg-black/);
+});
+
+test("utility declarations reject an empty matching rule", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  assert.throws(() => assertBundles({ standaloneCss: `${goodOps}.bg-black{}`, hostCss: goodHost }), /standalone Ops.*bg-black/);
+});
+
+test("utility declarations match exact property names", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  const wrongProperty = goodOps.replace(
+    ".text-black{color:var(--color-black)}",
+    ".text-black{background-color:var(--color-black)}",
+  );
+  assert.throws(() => assertBundles({ standaloneCss: wrongProperty, hostCss: goodHost }), /standalone Ops.*text-black/);
+});
+
 test("mounted stylesheet contract requires host CSS before independent Ops CSS", () => {
   try {
     assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app-2959271c8c6231d40aa9bebd2ddb9552.css?vsn=d"><link rel="stylesheet" href="/admin/search/assets/css/app.css?v=abc">');
