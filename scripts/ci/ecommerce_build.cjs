@@ -54,6 +54,54 @@ function digest(value) {
   return `sha256:${crypto.createHash("sha256").update(value).digest("hex")}`;
 }
 
+function phase185RuntimeIdentity({ inspectionPath, repoRoot = repositoryRoot } = {}) {
+  if (typeof inspectionPath !== "string" || !path.isAbsolute(inspectionPath)) throw new Error("phase185 runtime identity requires an absolute Docker image inspection path");
+  const inspection = JSON.parse(fs.readFileSync(inspectionPath, "utf8"));
+  if (!Array.isArray(inspection) || inspection.length !== 1) throw new Error("Docker image inspection must contain exactly one built browser image");
+  const image = inspection[0];
+  const layers = image?.RootFS?.Layers;
+  if (!Array.isArray(layers) || layers.length < 2 || layers.some((layer) => typeof layer !== "string" || !/^sha256:[a-f0-9]{64}$/.test(layer))) {
+    throw new Error("Browser image must expose immutable rootfs layers including its repository source-copy layer");
+  }
+  const dockerfilePath = path.join(repoRoot, "examples/scrypath_ecommerce/Dockerfile.e2e");
+  const dockerfile = fs.readFileSync(dockerfilePath, "utf8");
+  const instructions = dockerfile.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  const sourceCopyIndex = instructions.lastIndexOf("COPY . .");
+  if (sourceCopyIndex < 0 || instructions.slice(sourceCopyIndex + 1).some((line) => /^(COPY|ADD|RUN)\s/i.test(line))) {
+    throw new Error("Dockerfile.e2e must keep COPY . . as the final filesystem-changing instruction before runtime metadata");
+  }
+  const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, "examples/scrypath_ecommerce/package.json"), "utf8"));
+  const packageLockBytes = fs.readFileSync(path.join(repoRoot, "examples/scrypath_ecommerce/package-lock.json"));
+  const packageLock = JSON.parse(packageLockBytes.toString("utf8"));
+  const packageJsonBytes = fs.readFileSync(path.join(repoRoot, "examples/scrypath_ecommerce/package.json"));
+  const packageVersion = packageLock.packages?.["node_modules/@playwright/test"]?.version;
+  if (typeof packageVersion !== "string" || !/^\d+\.\d+\.\d+$/.test(packageVersion)) throw new Error("@playwright/test must have an exact package version");
+  const labels = { ...(image.Config?.Labels || {}) };
+  for (const key of ["com.docker.compose.project", "com.docker.compose.service", "com.docker.compose.version", revisionLabel, fingerprintLabel]) delete labels[key];
+  const config = { ...(image.Config || {}), Labels: labels };
+  const runtime = {
+    rootfs_base_layers: layers.slice(0, -1),
+    config,
+    architecture: image.Architecture,
+    os: image.Os,
+    docker_version: image.DockerVersion,
+    dockerfile_e2e_sha256: digest(dockerfile),
+    package_json_sha256: digest(packageJsonBytes),
+    package_lock_sha256: digest(packageLockBytes),
+    playwright_package_version: packageVersion,
+    capture_launch_args: ["--disable-partial-raster"],
+    source_copy_layer_position: "last-rootfs-layer-verified-by-Dockerfile.e2e"
+  };
+  return {
+    browser_image_id: image.Id,
+    browser_source_layer_id: layers.at(-1),
+    browser_base_layers_sha256: digest(canonicalJson(layers.slice(0, -1))),
+    effective_runtime_sha256: digest(canonicalJson(runtime)),
+    playwright_package_version: packageVersion,
+    runtime
+  };
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd || repositoryRoot,
@@ -108,7 +156,7 @@ function composeArgs(scope, project, withOverride = false, overridePath = "") {
   validateScope(scope);
   validateProject(project);
   const args = ["compose", "-p", project, "-f", path.join(exampleRoot, "compose.yaml"), "-f", path.join(exampleRoot, "compose.e2e.yaml")];
-  if (scope === "full") args.push("-f", path.join(exampleRoot, "compose.phase173.yaml"));
+  if (scope === "full") args.push("-f", path.join(exampleRoot, "compose.phase173.yaml"), "-f", path.join(exampleRoot, "compose.phase185.yaml"));
   if (withOverride) args.push("-f", overridePath);
   return args;
 }
@@ -494,6 +542,10 @@ function main(argv) {
     return;
   }
   const options = parseOptions(args);
+  if (command === "phase185-runtime") {
+    process.stdout.write(`${JSON.stringify(phase185RuntimeIdentity({ inspectionPath: options.inspection }))}\n`);
+    return;
+  }
   if (command === "prepare") {
     const result = prepareBuild({ scope: options.scope, output: options.output });
     process.stdout.write(`${JSON.stringify(result.manifest)}\n`);
@@ -513,7 +565,7 @@ function main(argv) {
     process.stdout.write(`${JSON.stringify(manifest)}\n`);
     return;
   }
-  throw new Error("usage: ecommerce_build.cjs fingerprint | prepare --scope focused|full --output DIR | verify-handoff --manifest FILE [--runtime] | cache-outcome --manifest FILE --bake-outcome success|failure --handoff-outcome success|failure|skipped");
+  throw new Error("usage: ecommerce_build.cjs fingerprint | phase185-runtime --inspection FILE | prepare --scope focused|full --output DIR | verify-handoff --manifest FILE [--runtime] | cache-outcome --manifest FILE --bake-outcome success|failure --handoff-outcome success|failure|skipped");
 }
 
 if (require.main === module) {
@@ -527,6 +579,7 @@ if (require.main === module) {
 
 module.exports = {
   applyCacheProbeToBake,
+  phase185RuntimeIdentity,
   cacheProbeFor,
   cacheScopeFor,
   prepareBuild,

@@ -1,0 +1,31 @@
+# Fixed-clock test lane for held-out UI preservation receipts. This override is
+# selected only by the canonical full verifier and mounts one external fixture
+# read-only into both applications and the disposable browser.
+services:
+  web:
+    environment:
+      E2E_RUN_ID: ${E2E_RUN_ID:-}
+    volumes:
+      - ${E2E_PHASE185_CLOCK_PATH:-/tmp/phase185-clock.txt}:/phase185-fixture/clock.txt:ro
+
+  standalone_ops:
+    environment:
+      E2E_RUN_ID: ${E2E_RUN_ID:-}
+    volumes:
+      - ${E2E_PHASE185_CLOCK_PATH:-/tmp/phase185-clock.txt}:/phase185-fixture/clock.txt:ro
+
+  browser:
+    environment:
+      E2E_PRODUCT_SOURCE_SHA: ${E2E_PRODUCT_SOURCE_SHA:-}
+      E2E_PRODUCT_TREE_SHA256: ${E2E_PRODUCT_TREE_SHA256:-}
+      E2E_FIXTURE_OVERLAY_SHA256: ${E2E_FIXTURE_OVERLAY_SHA256:-}
+      E2E_EFFECTIVE_RUNTIME_SHA256: ${E2E_EFFECTIVE_RUNTIME_SHA256:-}
+      E2E_APPLICATION_IMAGE_ID: ${E2E_APPLICATION_IMAGE_ID:-}
+      E2E_STANDALONE_OPS_IMAGE_ID: ${E2E_STANDALONE_OPS_IMAGE_ID:-}
+      E2E_BROWSER_IMAGE_ID: ${E2E_BROWSER_IMAGE_ID:-}
+      E2E_BROWSER_SOURCE_LAYER_ID: ${E2E_BROWSER_SOURCE_LAYER_ID:-}
+      E2E_BROWSER_BASE_LAYERS_SHA256: ${E2E_BROWSER_BASE_LAYERS_SHA256:-}
+      E2E_BROWSER_PROFILE_SHA256: ${E2E_BROWSER_PROFILE_SHA256:-}
+      E2E_DATA_RECIPE_SHA256: ${E2E_DATA_RECIPE_SHA256:-}
+    volumes:
+      - ${E2E_PHASE185_CLOCK_PATH:?E2E_PHASE185_CLOCK_PATH is required}:/phase185-fixture/clock.txt:ro

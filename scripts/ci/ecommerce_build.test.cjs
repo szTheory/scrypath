@@ -14,7 +14,7 @@ const {
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const { prepareBuild, verifyHandoff, recordCacheOutcome } = require("./ecommerce_build.cjs");
+const { prepareBuild, verifyHandoff, recordCacheOutcome, phase185RuntimeIdentity } = require("./ecommerce_build.cjs");
 const { configureDockerBake } = require("./phase182_acceptance.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
@@ -341,6 +341,25 @@ test("prepare derives focused and full local tags and keeps separate recipe scop
   assert.ok(Object.values(bake.target).every((target) => !target.push));
   assert.ok(Object.values(bake.target).every((target) => !target["cache-from"] && !target["cache-to"]));
   assert.ok(Object.entries(full.manifest.tags).every(([service, tag]) => tag === `${full.project}-${service}`));
+});
+
+test("Phase185 runtime identity binds the exact browser base/config/lock and only permits the verified final source-copy layer to vary", (t) => {
+  const directory = makeTempDirectory(t);
+  const inspectionPath = path.join(directory, "browser-inspection.json");
+  const base = {
+    Id: `sha256:${"a".repeat(64)}`,
+    RootFS: { Layers: [`sha256:${"b".repeat(64)}`, `sha256:${"c".repeat(64)}`] },
+    Config: { Env: ["PATH=/usr/bin"], Cmd: ["bash", "./docker-playwright.sh"], Labels: { "org.opencontainers.image.revision": "before" } },
+    Architecture: "amd64", Os: "linux", DockerVersion: "27.0.0"
+  };
+  writeFileSync(inspectionPath, JSON.stringify([base]));
+  const first = phase185RuntimeIdentity({ inspectionPath });
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, Id: `sha256:${"d".repeat(64)}`, RootFS: { Layers: [base.RootFS.Layers[0], `sha256:${"e".repeat(64)}`] } }]));
+  const changedSource = phase185RuntimeIdentity({ inspectionPath });
+  assert.equal(first.browser_source_layer_id, base.RootFS.Layers[1]);
+  assert.equal(changedSource.effective_runtime_sha256, first.effective_runtime_sha256);
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, RootFS: { Layers: [`sha256:${"f".repeat(64)}`, base.RootFS.Layers[1]] } }]));
+  assert.notEqual(phase185RuntimeIdentity({ inspectionPath }).effective_runtime_sha256, first.effective_runtime_sha256);
 });
 
 test("trusted full CI prepares bounded version-2 cache exporters", (t) => {

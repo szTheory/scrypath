@@ -242,10 +242,15 @@ case "$scope" in
     ;;
   full)
     echo "Running the full advisory ecommerce browser and deterministic visual lane..."
+    if [[ ! "$run_id" =~ ^phase185- ]]; then
+      echo "The full evidence lane requires the canonical phase185 fixed-clock run identity." >&2
+      exit 64
+    fi
     browser_status=0
     light_status=0
     contrast_status=0
     export E2E_ARTIFACT_DIR="$artifact_dir"
+    export PHASE105_EVIDENCE_PATH="$artifact_dir/phase105-evidence.ndjson"
     export E2E_PLAYWRIGHT_REPORT="$artifact_dir/phase105-playwright.json"
     export E2E_HTML_REPORT_DIR="$artifact_dir/playwright-report"
     export E2E_PLAYWRIGHT_OUTPUT_DIR="$artifact_dir/test-results"

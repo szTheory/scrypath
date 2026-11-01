@@ -37,6 +37,7 @@ if [[ ! "$docker_timeout" =~ ^[1-9][0-9]*$ || ! "$finalize_timeout" =~ ^[1-9][0-
 fi
 
 run_id="${E2E_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM}${RANDOM}}"
+if [[ "$scope" == "full" && ! "$run_id" =~ ^phase185- ]]; then run_id="phase185-$run_id"; fi
 if [[ ! "$run_id" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]; then
   echo "E2E_RUN_ID must contain only letters, digits, dot, underscore or dash." >&2
   exit 64
@@ -165,9 +166,28 @@ if ! mkdir -m 700 "$artifact_dir"; then
   echo "Refusing to reuse existing run evidence directory: $artifact_dir" >&2
   exit 73
 fi
+phase185_clock_path=""
+if [[ "$scope" == "full" ]]; then
+  phase185_clock_path="${E2E_PHASE185_CLOCK_PATH:-$artifact_dir/phase185-clock.txt}"
+  phase185_clock_instant="${E2E_PHASE185_CLOCK_INSTANT:-2026-10-31T12:00:00.000Z}"
+  if [[ ! "$phase185_clock_instant" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}Z$ ]] || ! node -e 'const d = new Date(process.argv[1]); process.exit(Number.isNaN(d.getTime()) || d.toISOString() !== process.argv[1] ? 1 : 0)' "$phase185_clock_instant"; then
+    echo "E2E_PHASE185_CLOCK_INSTANT must be a valid millisecond UTC instant." >&2
+    exit 64
+  fi
+  if [[ ! -e "$phase185_clock_path" ]]; then
+    mkdir -p "$(dirname "$phase185_clock_path")"
+    printf '%s' "$phase185_clock_instant" >"$phase185_clock_path"
+  fi
+  if [[ ! -f "$phase185_clock_path" || -L "$phase185_clock_path" ]] || ! cmp -s <(printf '%s' "$phase185_clock_instant") "$phase185_clock_path"; then
+    echo "Phase185 full verification requires exact immutable clock bytes matching E2E_PHASE185_CLOCK_INSTANT." >&2
+    exit 64
+  fi
+  export E2E_PHASE185_CLOCK_PATH="$phase185_clock_path"
+  export E2E_PHASE185_CLOCK_INSTANT="$phase185_clock_instant"
+fi
 compose=(docker compose -p "$project" -f compose.yaml -f compose.e2e.yaml)
 if [[ "$scope" == "full" ]]; then
-  compose+=(-f compose.phase173.yaml)
+  compose+=(-f compose.phase173.yaml -f compose.phase185.yaml)
 fi
 build_helper="$repo_root/scripts/ci/ecommerce_build.cjs"
 
@@ -191,6 +211,26 @@ export E2E_WORKFLOW_RUN_ID="${E2E_WORKFLOW_RUN_ID:-$run_id}"
 export E2E_WORKFLOW_RUN_ATTEMPT="${E2E_WORKFLOW_RUN_ATTEMPT:-1}"
 export E2E_JOB_NAME="${E2E_JOB_NAME:-local-ecommerce-e2e}"
 export E2E_JOB_CONCLUSION="${E2E_JOB_CONCLUSION:-success}"
+if [[ "$scope" == "full" ]]; then
+  export E2E_PRODUCT_SOURCE_SHA="${E2E_PRODUCT_SOURCE_SHA:-$SCRYPATH_SOURCE_SHA}"
+  if [[ ! "$E2E_PRODUCT_SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+    echo "E2E_PRODUCT_SOURCE_SHA must be an independently qualified full Git SHA." >&2
+    exit 64
+  fi
+  preservation_identity="$(node -e 'const e=require(process.argv[1]); console.log(JSON.stringify({tree:e.productTreeIdentity(process.argv[2]),overlay:e.fixtureOverlayDigest(process.argv[2])}))' "$repo_root/scripts/ci/ecommerce_evidence.cjs" "$repo_root")"
+  actual_product_tree_sha256="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).tree)' <<<"$preservation_identity")"
+  actual_fixture_overlay_sha256="$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).overlay)' <<<"$preservation_identity")"
+  if [[ -n "${E2E_PRODUCT_TREE_SHA256:-}" && "$E2E_PRODUCT_TREE_SHA256" != "$actual_product_tree_sha256" ]]; then
+    echo "The disposable product tree differs from the independently pinned qualified product tree." >&2
+    exit 69
+  fi
+  if [[ -n "${E2E_FIXTURE_OVERLAY_SHA256:-}" && "$E2E_FIXTURE_OVERLAY_SHA256" != "$actual_fixture_overlay_sha256" ]]; then
+    echo "The test-only fixture overlay differs from the independently pinned common overlay." >&2
+    exit 69
+  fi
+  export E2E_PRODUCT_TREE_SHA256="$actual_product_tree_sha256"
+  export E2E_FIXTURE_OVERLAY_SHA256="$actual_fixture_overlay_sha256"
+fi
 
 dirty_files="$(git status --porcelain --untracked-files=all 2>/dev/null || true)"
 source_dirty=false
@@ -236,6 +276,9 @@ owned_volumes_count=0
 browser_image_id=""
 application_image_id=""
 standalone_image_id=""
+expected_browser_image_id=""
+expected_application_image_id=""
+expected_standalone_image_id=""
 compose_model_digest=""
 compose_validation_status="not_run"
 artifact_copy_started_at=""
@@ -249,6 +292,51 @@ resource_count() {
   else
     printf '%s\n' "$resources" | awk 'NF { count++ } END { print count + 0 }'
   fi
+}
+
+inspect_full_image() {
+  local service="$1" model image_ref image_id
+  model="$(run_execution_bounded "${compose[@]}" config --format json)" || return $?
+  image_ref="$(printf '%s' "$model" | node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync(0,"utf8")); process.stdout.write(m.services?.[process.argv[1]]?.image || "")' "$service")"
+  if [[ -z "$image_ref" ]]; then image_ref="$project-$service"; fi
+  image_id="$(run_execution_bounded docker image inspect --format '{{.Id}}' "$image_ref")" || return $?
+  if [[ ! "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+    echo "Built image for '$service' has no immutable Docker image ID." >&2
+    return 69
+  fi
+  printf '%s' "$image_id"
+}
+
+inspect_phase185_full_images() {
+  local browser_ref runtime_json
+  application_image_id="$(inspect_full_image web)" || return $?
+  standalone_image_id="$(inspect_full_image standalone_ops)" || return $?
+  browser_image_id="$(inspect_full_image browser)" || return $?
+  mkdir -p "$artifact_dir/compose"
+  browser_ref="$(run_execution_bounded "${compose[@]}" config --format json | node -e 'const fs=require("node:fs");const m=JSON.parse(fs.readFileSync(0,"utf8"));process.stdout.write(m.services?.browser?.image || process.argv[1])' "$project-browser")" || return $?
+  run_execution_bounded docker image inspect "$browser_ref" >"$artifact_dir/compose/browser-image-inspection.json" || return $?
+  runtime_json="$(run_execution_bounded node "$build_helper" phase185-runtime --inspection "$artifact_dir/compose/browser-image-inspection.json")" || return $?
+  printf '%s\n' "$runtime_json" >"$artifact_dir/compose/phase185-runtime.json"
+  local inspected_browser
+  inspected_browser="$(printf '%s' "$runtime_json" | node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).browser_image_id || "")')"
+  if [[ "$inspected_browser" != "$browser_image_id" ]]; then
+    echo "Browser image inspection changed during identity capture." >&2
+    return 69
+  fi
+  export E2E_APPLICATION_IMAGE_ID="$application_image_id"
+  export E2E_STANDALONE_OPS_IMAGE_ID="$standalone_image_id"
+  export E2E_BROWSER_IMAGE_ID="$browser_image_id"
+  expected_application_image_id="$application_image_id"
+  expected_standalone_image_id="$standalone_image_id"
+  expected_browser_image_id="$browser_image_id"
+  export E2E_EFFECTIVE_RUNTIME_SHA256="$(printf '%s' "$runtime_json" | node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).effective_runtime_sha256 || "")')"
+  export E2E_BROWSER_SOURCE_LAYER_ID="$(printf '%s' "$runtime_json" | node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).browser_source_layer_id || "")')"
+  export E2E_BROWSER_BASE_LAYERS_SHA256="$(printf '%s' "$runtime_json" | node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(0,"utf8")).browser_base_layers_sha256 || "")')"
+  [[ "$E2E_EFFECTIVE_RUNTIME_SHA256" =~ ^sha256:[a-f0-9]{64}$ && "$E2E_BROWSER_SOURCE_LAYER_ID" =~ ^sha256:[a-f0-9]{64}$ && "$E2E_BROWSER_BASE_LAYERS_SHA256" =~ ^sha256:[a-f0-9]{64}$ ]] || return 69
+  local final_model
+  final_model="$(run_execution_bounded "${compose[@]}" config)" || return $?
+  compose_model_digest="$(printf '%s' "$final_model" | hash_stdin)"
+  return 0
 }
 
 record_lifecycle() {
@@ -285,6 +373,9 @@ collect_artifacts() {
     if (( browser_lookup_status != 0 )) || [[ ! "$browser_image_id" =~ ^sha256:[a-f0-9]{64}$ ]]; then
       echo "Could not identify the immutable browser image used by this run." >&2
       artifact_copy_status=1
+    elif [[ -n "$expected_browser_image_id" && "$browser_image_id" != "$expected_browser_image_id" ]]; then
+      echo "The running browser image differs from the image whose runtime identity was measured." >&2
+      artifact_copy_status=1
     fi
     for service in web standalone_ops; do
       local service_id service_image service_status
@@ -293,7 +384,13 @@ collect_artifacts() {
       if (( service_status == 0 )) && [[ -n "$service_id" ]]; then
         service_image="$(run_finalization_bounded docker inspect --format '{{.Image}}' "$service_id" 2>>"$artifact_dir/finalization.log")"
         service_status=$?
-        if [[ "$service" == "web" ]]; then application_image_id="$service_image"; else standalone_image_id="$service_image"; fi
+        if [[ "$service" == "web" ]]; then
+          application_image_id="$service_image"
+          [[ -z "$expected_application_image_id" || "$application_image_id" == "$expected_application_image_id" ]] || artifact_copy_status=1
+        else
+          standalone_image_id="$service_image"
+          [[ -z "$expected_standalone_image_id" || "$standalone_image_id" == "$expected_standalone_image_id" ]] || artifact_copy_status=1
+        fi
       fi
     done
     artifact_copy_started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -377,6 +474,10 @@ aggregate_full_evidence() {
     -e E2E_JOB_NAME="$E2E_JOB_NAME" -e E2E_JOB_CONCLUSION="$conclusion" \
     -e E2E_COMPOSE_PROJECT="$project" -e E2E_COMPOSE_MODEL_DIGEST="sha256:$compose_model_digest" \
     -e E2E_BROWSER_IMAGE_ID="$browser_image_id" -e E2E_APPLICATION_IMAGE_ID="$application_image_id" \
+    -e E2E_STANDALONE_OPS_IMAGE_ID="$standalone_image_id" -e E2E_EFFECTIVE_RUNTIME_SHA256="$E2E_EFFECTIVE_RUNTIME_SHA256" \
+    -e E2E_BROWSER_SOURCE_LAYER_ID="$E2E_BROWSER_SOURCE_LAYER_ID" -e E2E_BROWSER_BASE_LAYERS_SHA256="$E2E_BROWSER_BASE_LAYERS_SHA256" \
+    -e E2E_PRODUCT_SOURCE_SHA="$E2E_PRODUCT_SOURCE_SHA" -e E2E_PRODUCT_TREE_SHA256="$E2E_PRODUCT_TREE_SHA256" \
+    -e E2E_FIXTURE_OVERLAY_SHA256="$E2E_FIXTURE_OVERLAY_SHA256" \
     -e E2E_PLAYWRIGHT_VERSION="$PLAYWRIGHT_VERSION" -e E2E_ARTIFACT_COPY_STARTED_AT="$artifact_copy_started_at" \
     -e E2E_ARTIFACT_COPY_ENDED_AT="$artifact_copy_ended_at" -e E2E_ARTIFACT_COPY_EXIT_CODE="$artifact_copy_status" \
     "$browser_image_id" bash -s <<'CONTAINER_SCRIPT'
@@ -435,11 +536,26 @@ const dirty = process.env.E2E_SOURCE_DIRTY === "true";
 const sourceSha = process.env.SCRYPATH_SOURCE_SHA;
 const fingerprint = dirty ? process.env.E2E_SOURCE_FINGERPRINT : null;
 const image = (id) => ({built_id:id,runtime_id:id,source_sha:sourceSha,source_fingerprint:fingerprint});
+const evidenceAuthority = require("/app/scripts/ci/ecommerce_evidence.cjs");
+const actualProductTree = evidenceAuthority.productTreeIdentity("/app");
+const actualFixtureOverlay = evidenceAuthority.fixtureOverlayDigest("/app");
+if (actualProductTree !== process.env.E2E_PRODUCT_TREE_SHA256 || actualFixtureOverlay !== process.env.E2E_FIXTURE_OVERLAY_SHA256) {
+  throw new Error("The built repository product tree or test-only overlay differs from the host-pinned identity.");
+}
+const buildAuthority = require("/app/scripts/ci/ecommerce_build.cjs");
+const measuredRuntime = buildAuthority.phase185RuntimeIdentity({ inspectionPath: path.join(root, "compose/browser-image-inspection.json"), repoRoot: "/app" });
+if (measuredRuntime.browser_image_id !== process.env.E2E_BROWSER_IMAGE_ID || measuredRuntime.effective_runtime_sha256 !== process.env.E2E_EFFECTIVE_RUNTIME_SHA256 ||
+    measuredRuntime.browser_source_layer_id !== process.env.E2E_BROWSER_SOURCE_LAYER_ID || measuredRuntime.browser_base_layers_sha256 !== process.env.E2E_BROWSER_BASE_LAYERS_SHA256) {
+  throw new Error("Built browser runtime inspection differs from the actual run identities recorded by the host.");
+}
+const events = fs.readFileSync(path.join(root, "phase105-evidence.ndjson"), "utf8").split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+const actualBrowser = events.find((event) => event.operation === "ui_preservation_case")?.clock_recipe?.browser;
+if (!actualBrowser || actualBrowser.engine !== "chromium" || actualBrowser.package !== "@playwright/test") throw new Error("The browser cases did not record the actual Chromium/Playwright versions.");
 const input = {
-  source:{mode:process.env.E2E_SOURCE_MODE,checkout_head:sourceSha,built_source_sha:sourceSha,event_sha:process.env.E2E_EVENT_SHA,dirty,dirty_fingerprint:fingerprint},
-  images:{application:image(process.env.E2E_APPLICATION_IMAGE_ID),browser:image(process.env.E2E_BROWSER_IMAGE_ID)},
+  source:{mode:process.env.E2E_SOURCE_MODE,checkout_head:sourceSha,product_source_sha:process.env.E2E_PRODUCT_SOURCE_SHA,product_tree_sha256:actualProductTree,fixture_overlay_sha256:actualFixtureOverlay,built_source_sha:sourceSha,event_sha:process.env.E2E_EVENT_SHA,dirty,dirty_fingerprint:fingerprint},
+  images:{application:image(process.env.E2E_APPLICATION_IMAGE_ID),standalone_ops:{built_id:process.env.E2E_STANDALONE_OPS_IMAGE_ID,runtime_id:process.env.E2E_STANDALONE_OPS_IMAGE_ID},browser:image(process.env.E2E_BROWSER_IMAGE_ID)},
   compose:{scope:process.env.E2E_SCOPE,project:process.env.E2E_COMPOSE_PROJECT,targets:["browser","standalone_ops","web"],model_digest:process.env.E2E_COMPOSE_MODEL_DIGEST},
-  browser:{engine:"chromium",version:process.env.E2E_PLAYWRIGHT_VERSION,package:"@playwright/test",package_version:require("@playwright/test/package.json").version},
+  browser:actualBrowser,
   workflow:{event:process.env.E2E_EVENT_NAME,ref:process.env.E2E_GIT_REF,sha:process.env.E2E_EVENT_SHA,run_id:process.env.E2E_WORKFLOW_RUN_ID,run_attempt:Number(process.env.E2E_WORKFLOW_RUN_ATTEMPT),job_name:process.env.E2E_JOB_NAME,job_conclusion:process.env.E2E_JOB_CONCLUSION},
   stages,checkers:{light_parity:{path:"admin-light-parity.json",status:status("admin-light-parity.json")},contrast:{path:"contrast-report.json",status:contrastPassed?"pass":"fail"}},
   cleanup:{status:lifecycle.cleanup?.status,project:lifecycle.cleanup?.project,containers:lifecycle.cleanup?.containers,networks:lifecycle.cleanup?.networks,volumes:lifecycle.cleanup?.volumes},
@@ -609,6 +725,7 @@ echo "Starting isolated Docker verifier project '$project'..."
 if [[ "$mode" == "--readiness-only" ]]; then
   readiness_started=1
   run_verification_bounded "${compose[@]}" build web standalone_ops browser || run_status=$?
+  if (( run_status == 0 )); then inspect_phase185_full_images || run_status=$?; fi
   if (( run_status == 0 )); then
     run_verification_bounded "${compose[@]}" run --rm -T -e E2E_READINESS_ONLY=1 browser || run_status=$?
   fi
@@ -617,7 +734,16 @@ else
   if (( prebuilt_mode )); then
     run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
     if (( run_status == 0 )); then
-      run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+      if [[ "$scope" == "full" ]]; then inspect_phase185_full_images || run_status=$?; fi
+      if (( run_status == 0 )); then
+        run_verification_bounded "${compose[@]}" up --no-build --pull never --abort-on-container-exit --exit-code-from browser browser || run_status=$?
+      fi
+    fi
+  elif [[ "$scope" == "full" ]]; then
+    run_verification_bounded "${compose[@]}" build web standalone_ops browser || run_status=$?
+    if (( run_status == 0 )); then inspect_phase185_full_images || run_status=$?; fi
+    if (( run_status == 0 )); then
+      run_verification_bounded "${compose[@]}" up --no-build --abort-on-container-exit --exit-code-from browser browser || run_status=$?
     fi
   else
     run_verification_bounded "${compose[@]}" up --build --abort-on-container-exit --exit-code-from browser browser || run_status=$?

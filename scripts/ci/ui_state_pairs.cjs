@@ -6,9 +6,9 @@ const path = require("node:path");
 const evidence = require("./ecommerce_evidence.cjs");
 const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
-const AUTHORITY_SCHEMA = "scrypath.ui-state-pair-authority.v1";
+const AUTHORITY_SCHEMA = "scrypath.ui-state-pair-authority.v2";
 const QUALIFICATION_SCHEMA = "scrypath.phase185-before-qualification.v1";
-const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v1";
+const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v2";
 const RECEIPT_NAME = "phase105-evidence.json";
 const OUTPUT_NAME = "ui-state-pairs.json";
 const PRESERVATION_PREFIX = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
@@ -65,12 +65,27 @@ function validateQualificationRecord(authority) {
   if (!record || record.schema !== QUALIFICATION_SCHEMA || record.status !== "qualified") {
     fail("unqualified_before_source", "Plan05 qualification record is absent or is not qualified");
   }
-  if (record.source_sha !== expected?.before?.source_sha || !record.browser_runtime_equivalence?.rootfs_layers_equal ||
+  if (record.source_sha !== expected?.before?.product_source_sha || !record.browser_runtime_equivalence?.rootfs_layers_equal ||
     !record.browser_runtime_equivalence?.effective_config_equal || record.browser_runtime_equivalence.source_sha !== record.source_sha) {
     fail("qualification_mismatch", "Plan05 qualification does not bind the expected pre-UI source and equivalent browser runtime");
   }
-  if (record.browser_runtime_equivalence.actual_image_id !== expected?.browser_image_id) {
-    fail("qualification_browser_mismatch", "Expected browser image is not the qualified Plan05 runtime image");
+  const environment = qualification.environment;
+  const recipe = expected?.recipe;
+  if (!environment || !recipe || environment.browser_version !== recipe.browser?.version ||
+    JSON.stringify(environment.browser_launch?.args) !== JSON.stringify(recipe.launch_args) ||
+    environment.clock?.utc !== recipe.browser_date?.observed ||
+    `sha256:${environment.clock?.sha256}` !== recipe.clock_sha256 ||
+    environment.clock?.timezone !== recipe.timezone || environment.clock?.locale !== recipe.locale ||
+    environment.clock?.browser_mode !== "fixed-date" ||
+    canonicalJson({ ...environment.browser_font_profile, font_families: { fixed: environment.browser_font_profile?.font_families?.fixed } }) !==
+      canonicalJson({ method: recipe.font_profile?.method, font_families: { fixed: recipe.font_profile?.fixed_font_family }, applied: recipe.font_profile?.applied, lifetime: recipe.font_profile?.lifetime })) {
+    fail("qualification_environment_mismatch", "Capture recipe does not match the independently pinned qualified before environment, clock, launch args and retained font profile");
+  }
+  if (qualification.browser_runtime?.browser_image_id !== record.browser_runtime_equivalence.actual_image_id ||
+    qualification.browser_runtime?.effective_runtime_sha256 !== expected.before.effective_runtime_sha256 ||
+    qualification.browser_runtime?.browser_base_layers_sha256 !== expected.browser_base_layers_sha256 ||
+    qualification.browser_runtime?.playwright_package_version !== recipe.browser?.package_version) {
+    fail("qualification_runtime_mismatch", "New browser builds must retain the qualified executable browser, lock, Dockerfile and immutable base layers");
   }
 }
 
@@ -80,17 +95,21 @@ function validateAuthority(authority) {
   const expected = authority.expected;
   for (const side of ["before", "candidate"]) {
     const source = expected?.[side];
-    if (!source || !SHA.test(source.source_sha || "") || !DIGEST.test(source.product_tree_sha256 || "") || !DIGEST.test(source.application_image_id || "")) {
-      fail("invalid_expected_source", `Authority must supply independent ${side} source, product-tree and application-image identities`);
+    if (!source || !SHA.test(source.product_source_sha || "") || !SHA.test(source.build_source_sha || "") ||
+      !DIGEST.test(source.product_tree_sha256 || "") || !DIGEST.test(source.application_image_id || "") ||
+      !DIGEST.test(source.standalone_ops_image_id || "") || !DIGEST.test(source.browser_image_id || "") ||
+      !DIGEST.test(source.browser_source_layer_id || "") || !DIGEST.test(source.browser_base_layers_sha256 || "") ||
+      !DIGEST.test(source.effective_runtime_sha256 || "") || !DIGEST.test(source.fixture_overlay_sha256 || "")) {
+      fail("invalid_expected_source", `Authority must supply independently observed ${side} product/build, tree, app and browser build identities`);
     }
   }
-  if (expected.before.source_sha === expected.candidate.source_sha || expected.before.product_tree_sha256 === expected.candidate.product_tree_sha256) {
+  if (expected.before.product_source_sha === expected.candidate.product_source_sha || expected.before.product_tree_sha256 === expected.candidate.product_tree_sha256) {
     fail("unpaired_sources", "Before and candidate product sources must be independently identified as different revisions and trees");
   }
   for (const [label, value] of [
     ["fixture overlay", expected.fixture_overlay_sha256],
     ["effective runtime", expected.effective_runtime_sha256],
-    ["browser image", expected.browser_image_id]
+    ["browser base layers", expected.browser_base_layers_sha256]
   ]) {
     if (!DIGEST.test(value || "")) fail("invalid_expected_identity", `Authority ${label} must be a full SHA-256 digest`);
   }
@@ -115,6 +134,19 @@ function validateAuthority(authority) {
   ]) {
     if (!DIGEST.test(value || "")) fail("invalid_capture_recipe", `Authority ${label} must have a pinned SHA-256 digest`);
   }
+  if (!Number.isFinite(recipe.browser_date.timer_elapsed_ms) || recipe.browser_date.timer_elapsed_ms <= 20) {
+    fail("invalid_capture_recipe", "Authority must carry an observed fixed Date with running real timers");
+  }
+  const profileRecipe = Object.fromEntries(Object.entries(recipe).filter(([key]) => !["browser_date", "clock_sha256", "profile_sha256", "data_recipe_sha256"].includes(key)));
+  if (`sha256:${digest(Buffer.from(canonicalJson(profileRecipe)))}` !== recipe.profile_sha256) {
+    fail("invalid_capture_recipe", "Authority browser/profile digest does not match its exact launch, locale, DPR and font settings");
+  }
+  for (const side of [expected.before, expected.candidate]) {
+    if (side.effective_runtime_sha256 !== expected.effective_runtime_sha256 || side.browser_base_layers_sha256 !== expected.browser_base_layers_sha256 || side.fixture_overlay_sha256 !== expected.fixture_overlay_sha256) {
+      fail("invalid_expected_runtime", "Each source build must independently match the common audited base runtime and fixture overlay");
+    }
+  }
+  if (!DIGEST.test(expected.browser_base_layers_sha256 || "")) fail("invalid_expected_runtime", "Authority must pin the common browser base-layer digest");
   return {
     recipeSha256: `sha256:${digest(Buffer.from(canonicalJson(recipe)))}`,
     authoritySha256: `sha256:${digest(Buffer.from(canonicalJson(authority)))}`
@@ -133,7 +165,38 @@ function loadAuthority(authorityPath) {
   const qualificationSha = `sha256:${digest(qualificationFile.bytes)}`;
   if (qualificationSha !== authority.qualification.sha256) fail("qualification_hash_mismatch", "Plan05 qualification file does not match the independently pinned hash");
   const record = parseJsonBytes(qualificationFile.bytes, "Plan05 qualification");
-  const normalized = { ...authority, qualification: { ...authority.qualification, path: qualificationFile.absolute, record } };
+  const pinned = new Map((Array.isArray(record.pinned_files) ? record.pinned_files : []).map((item) => [item.path, item.sha256]));
+  const loadPinned = (filePath, label) => {
+    if (typeof filePath !== "string" || !path.isAbsolute(filePath) || !/^[a-f0-9]{64}$/.test(pinned.get(filePath) || "")) {
+      fail("qualification_pin_missing", `Plan05 qualification does not independently pin ${label}`);
+    }
+    const file = regularFile(filePath, MAX_AUTHORITY_BYTES, label);
+    if (digest(file.bytes) !== pinned.get(filePath)) fail("qualification_pin_mismatch", `Plan05 pinned ${label} bytes have changed`);
+    let value;
+    try { value = JSON.parse(file.bytes.toString("utf8")); }
+    catch (error) { fail("invalid_qualification_metadata", `${label} is invalid JSON: ${error.message}`); }
+    if (!value || typeof value !== "object") fail("invalid_qualification_metadata", `${label} must contain a JSON object or inspection array`);
+    return { file, value };
+  };
+  const capture = loadPinned(authority.qualification.capture_path, "qualified before capture metadata");
+  const inspection = loadPinned(authority.qualification.browser_inspection_path, "qualified browser image inspection");
+  let inspectionValue;
+  try { inspectionValue = JSON.parse(inspection.file.bytes.toString("utf8")); }
+  catch (error) { fail("invalid_qualification_inspection", `Qualified browser image inspection is invalid JSON: ${error.message}`); }
+  if (Array.isArray(capture.value) || digest(capture.file.bytes) !== record.actual_before_sha256 || capture.value.source?.source_sha !== record.source_sha ||
+    !capture.value.environment || !Array.isArray(inspectionValue) || inspectionValue.length !== 1) {
+    fail("qualification_pin_mismatch", "Pinned before capture or browser inspection does not match the qualification record");
+  }
+  const inspectedImage = inspectionValue[0];
+  if (inspectedImage?.Id !== record.browser_runtime_equivalence.actual_image_id ||
+    inspectedImage?.Config?.Labels?.["org.opencontainers.image.revision"] !== record.source_sha) {
+    fail("qualification_browser_mismatch", "Pinned qualified browser inspection is not the actual image built from the qualified product source");
+  }
+  const buildAuthority = require("./ecommerce_build.cjs");
+  const qualifiedRuntime = buildAuthority.phase185RuntimeIdentity({ inspectionPath: inspection.file.absolute, repoRoot: path.resolve(__dirname, "../..") });
+  const normalized = { ...authority, qualification: { ...authority.qualification, path: qualificationFile.absolute, record,
+    environment: capture.value.environment,
+    browser_runtime: qualifiedRuntime } };
   validateAuthority(normalized);
   return { authority: normalized, authoritySha256: `sha256:${digest(bytes)}`, path: absolute };
 }
@@ -149,7 +212,8 @@ function loadReceiptBundle(receiptPath, side, authority) {
   const validation = evidence.validateReceipt({
     runDir: runRoot,
     expectedSource: {
-      sourceSha: independentSource.source_sha,
+      sourceSha: independentSource.product_source_sha,
+      buildSourceSha: independentSource.build_source_sha,
       productTreeSha256: independentSource.product_tree_sha256,
       fixtureOverlaySha256: authority.expected.fixture_overlay_sha256
     }
@@ -166,17 +230,19 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
   const receipt = bundle.receipt;
   const expected = authority.expected[side];
   if (receipt?.eligibility?.eligible !== true) fail("ineligible_run_receipt", `${side} source receipt is not eligible`);
-  if (receipt.source?.checkout_head !== expected.source_sha || receipt.preservation?.product_tree_sha256 !== expected.product_tree_sha256) {
-    fail("product_source_mismatch", `${side} receipt does not match the independently expected product OID/source-tree identity`);
+  if (receipt.source?.checkout_head !== expected.build_source_sha || receipt.source?.built_source_sha !== expected.build_source_sha ||
+    receipt.preservation?.product_source_sha !== expected.product_source_sha || receipt.preservation?.product_tree_sha256 !== expected.product_tree_sha256) {
+    fail("product_source_mismatch", `${side} receipt source OIDs do not match its independent product source, harness build source and product-tree identity`);
   }
   if (receipt.preservation?.schema !== "scrypath.ui-preservation.v1") fail("preservation_source_mismatch", `${side} preservation receipt has an unsupported preservation schema`);
   if (receipt.preservation?.fixture_overlay_sha256 !== authority.expected.fixture_overlay_sha256) {
     fail("fixture_overlay_mismatch", `${side} run does not use the independently expected test-only fixture overlay`);
   }
   if (receipt.images?.application?.runtime_id !== expected.application_image_id ||
-    receipt.images?.browser?.runtime_id !== authority.expected.browser_image_id ||
+    receipt.images?.standalone_ops?.runtime_id !== expected.standalone_ops_image_id ||
+    receipt.images?.browser?.runtime_id !== expected.browser_image_id ||
     canonicalJson(receipt.browser) !== canonicalJson(authority.expected.recipe.browser)) {
-    fail("runtime_or_browser_mismatch", `${side} run does not match the independently expected application and qualified browser runtime`);
+    fail("runtime_or_browser_mismatch", `${side} run does not match its own independently inspected app, standalone and browser image IDs or the qualified executable browser`);
   }
   const cases = receipt.preservation.cases;
   const expectedIds = requiredCaseIds();
@@ -193,27 +259,36 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
   const artifacts = new Map((Array.isArray(receipt.artifacts) ? receipt.artifacts : []).map((artifact) => [artifact.path, artifact]));
   for (const required of evidence.preservationCases) {
     const item = byId.get(required.id);
-    if (item.source_sha !== expected.source_sha || item.product_tree_sha256 !== expected.product_tree_sha256 ||
+    if (item.product_source_sha !== expected.product_source_sha || item.build_source_sha !== expected.build_source_sha || item.product_tree_sha256 !== expected.product_tree_sha256 ||
       item.fixture_overlay_sha256 !== authority.expected.fixture_overlay_sha256) {
       fail("case_source_mismatch", `${side} case ${required.id} is not bound to its expected source and fixture identities`);
     }
-    if (item.recipe_sha256 !== recipeSha256 || item.runtime?.effective_runtime_sha256 !== authority.expected.effective_runtime_sha256 ||
-      item.runtime?.application_image_id !== expected.application_image_id || item.runtime?.browser_image_id !== authority.expected.browser_image_id) {
-      fail("case_runtime_or_recipe_mismatch", `${side} case ${required.id} does not match the independently qualified runtime and capture recipe (recipe=${item.recipe_sha256}, app=${item.runtime?.application_image_id}, browser=${item.runtime?.browser_image_id}, effective=${item.runtime?.effective_runtime_sha256})`);
+    if (item.recipe_sha256 !== recipeSha256 || item.runtime?.effective_runtime_sha256 !== expected.effective_runtime_sha256 ||
+      item.runtime?.application_image_id !== expected.application_image_id || item.runtime?.standalone_ops_image_id !== expected.standalone_ops_image_id ||
+      item.runtime?.browser_image_id !== expected.browser_image_id || item.runtime?.browser_source_layer_id !== expected.browser_source_layer_id ||
+      item.runtime?.browser_base_layers_sha256 !== expected.browser_base_layers_sha256 ||
+      canonicalJson(item.clock_recipe) !== canonicalJson(authority.expected.recipe) ||
+      `sha256:${digest(Buffer.from(canonicalJson(item.data_recipe)))}` !== authority.expected.recipe.data_recipe_sha256) {
+      fail("case_runtime_or_recipe_mismatch", `${side} case ${required.id} does not match its independently inspected build and common fixed browser recipe`);
     }
     if (item.state?.element !== required.element || item.state?.category !== required.category || typeof item.test_identity !== "string" || item.test_identity.trim() === "") {
       fail("invalid_case_state", `${side} case ${required.id} has an invalid state or test identity`);
     }
-    const artifact = artifacts.get(item.image?.path);
-    if (!artifact?.present || artifact.sha256 !== item.image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
-      fail("invalid_case_artifact", `${side} case ${required.id} image is not a verified artifact in its run bundle`);
+    const widths = required.category === "overflow" ? [1440, 768, 390] : [1440];
+    if (!Array.isArray(item.images) || item.images.length !== widths.length ||
+      widths.some((width) => !item.images.some((image) => image?.viewport?.width === width)) ||
+      item.images.some((image) => {
+        const artifact = artifacts.get(image?.path);
+        return !artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success";
+      })) {
+      fail("invalid_case_artifact", `${side} case ${required.id} must have a copied, raw image for every required viewport`);
     }
   }
   return byId;
 }
 
 function readBundledPng(bundle, item) {
-  const relative = item.image?.path;
+  const relative = item.path;
   if (typeof relative !== "string" || !relative.startsWith(PRESERVATION_PREFIX) || relative.includes("\\") ||
     relative.split("/").some((part) => part === "" || part === "." || part === ".." || part.startsWith(".")) ||
     path.posix.extname(relative).toLowerCase() !== ".png") {
@@ -228,7 +303,7 @@ function readBundledPng(bundle, item) {
   const stat = fs.statSync(current);
   if (!stat.isFile() || stat.size <= 0 || stat.size > MAX_IMAGE_BYTES) fail("invalid_case_artifact", `Case ${item.id} PNG exceeds the bounded image limit`);
   const bytes = fs.readFileSync(current);
-  if (digest(bytes) !== item.image.sha256) fail("case_image_hash_mismatch", `Case ${item.id} PNG does not match its raw SHA-256 receipt`);
+  if (digest(bytes) !== item.sha256) fail("case_image_hash_mismatch", `Case ${item.id} PNG does not match its raw SHA-256 receipt`);
   try {
     PNG.sync.read(bytes);
   } catch (error) {
@@ -268,23 +343,28 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
   for (const id of requiredCaseIds()) {
     const left = beforeCases.get(id);
     const right = candidateCases.get(id);
-    const beforeBytes = readImage("before", left, before);
-    const candidateBytes = readImage("candidate", right, candidate);
-    const pixels = comparePngExact(beforeBytes, candidateBytes);
+    const required = evidence.preservationCases.find((item) => item.id === id);
+    const widths = required.category === "overflow" ? [1440, 768, 390] : [1440];
+    const viewportComparisons = widths.map((width) => {
+      const leftImage = left.images.find((image) => image.viewport.width === width);
+      const rightImage = right.images.find((image) => image.viewport.width === width);
+      return { width, before_sha256: leftImage.sha256, candidate_sha256: rightImage.sha256,
+        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate)) };
+    });
+    const pixelsEqual = viewportComparisons.every((entry) => entry.pixels.equal);
     const stateEqual = canonicalJson(left.state) === canonicalJson(right.state);
     const actionEqual = canonicalJson(left.actions) === canonicalJson(right.actions) && canonicalJson(left.transport_sequence) === canonicalJson(right.transport_sequence);
     const geometryEqual = canonicalJson(left.geometry) === canonicalJson(right.geometry);
     const copyEqual = canonicalJson(left.visible_copy) === canonicalJson(right.visible_copy);
     const assertionsEqual = canonicalJson(left.assertions) === canonicalJson(right.assertions);
     const identityEqual = left.test_identity === right.test_identity;
-    const passed = pixels.equal && stateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
-    if (!passed) mismatches.push({ id, pixels: pixels.equal, state: stateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });
+    const passed = pixelsEqual && stateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
+    if (!passed) mismatches.push({ id, pixels: pixelsEqual, state: stateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });
     comparisons.push({
       id,
       test_identity: left.test_identity,
-      before_image_sha256: left.image.sha256,
-      candidate_image_sha256: right.image.sha256,
-      pixels,
+      viewport_comparisons: viewportComparisons,
+      pixels_equal: pixelsEqual,
       state_equal: stateEqual,
       actions_and_transport_equal: actionEqual,
       geometry_equal: geometryEqual,
@@ -301,7 +381,7 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
     candidate_source: authority.expected.candidate,
     fixture_overlay_sha256: authority.expected.fixture_overlay_sha256,
     effective_runtime_sha256: authority.expected.effective_runtime_sha256,
-    browser_image_id: authority.expected.browser_image_id,
+    browser_runtime_builds: { before: authority.expected.before.browser_image_id, candidate: authority.expected.candidate.browser_image_id },
     recipe_sha256: recipeSha256,
     qualified_recipe: authority.expected.recipe,
     cases_compared: comparisons.length,
