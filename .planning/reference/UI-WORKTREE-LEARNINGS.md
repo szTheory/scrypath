@@ -139,6 +139,12 @@ The initial review guide placement and relative link failed the package allowlis
 **Impact:** The guide lives beside the demo runner; packaged CONTRIBUTING links to its repository page. Keep optional-app tooling outside the core artifact unless intentionally changing that contract.
 **Source:** [PR #102](https://github.com/szTheory/scrypath/pull/102); [reconciliation report](UI-WORKTREE-RECONCILIATION.md), CI repair.
 
+### Inspection derivatives do not belong inside strict raw capture directories
+Phase185 qualification correctly rejected unmatched review JSON and contact sheets placed alongside raw screenshots. Keep immutable captures and their exact manifest directory untouched; write observation records and derivatives in a sibling under the ignored evidence root. If placement must be repaired, move only task-added review files byte-identically, preserve original observer records, and record explicit original/new paths and hashes in a transport manifest. Do not loosen the raw-directory validator or recapture solely to repair review bookkeeping.
+
+**When to use:** Disposable source-paired captures and their factual inspection records.
+**Source:** [Phase185 qualified baseline](../phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md), evidence placement correction and pinned transport record.
+
 ## Keeping these lessons useful
 
 The maintainer/agent making a workflow change updates the matching rule and its evidence here, then reruns the affected executable guard. New mount layouts, artifact locations, startup behavior or evidence rules must trigger that review. Keep incident history dated; update operational instructions in AGENTS.md and the review runbook together. Do not create competing copies of the role/job model or claim outside-adopter evidence from this maintainer incident.
