@@ -170,7 +170,12 @@ test("the committed bootstrap ledger is the exact pinned-source multiset", (t) =
   assert.equal(ok, true);
   assert.equal(result.policyVersion, 1);
   assert.equal(result.introduction, git(repo, ["log", "--first-parent", "--reverse", "--format=%H", "--", "scripts/ci/ui-literal-baseline.json"]).split("\n")[0]);
-  assert.equal(result.findingCount, 45);
+  const introductionLedger = JSON.parse(git(repo, ["show", `${result.introduction}:scripts/ci/ui-literal-baseline.json`]));
+  assert.equal(introductionLedger.bootstrap_commit, BOOTSTRAP);
+  assert.equal(introductionLedger.findings.reduce((total, item) => total + item.count, 0), 45,
+    "the immutable introduction retains the original 45 pinned findings");
+  assert.equal(result.findingCount, scanTree(repo).length,
+    "current findings follow actual source cleanup while bootstrap history stays pinned");
 });
 
 test("a candidate cannot bless a newly introduced finding by editing its ledger", (t) => {
