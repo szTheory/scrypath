@@ -148,7 +148,7 @@ async function initializeData(element: ElementId, category: Category, request: P
     }
     identity += `:saved-searches:${count}:${name}`;
   }
-  if (element === "E2" && category === "zero-one-many") identity += ":scenario-sequence=all_green,degraded,phase185_one_failed,incident;failed-counts=0,0,1,5;final=incident";
+  if (element === "E2" && category === "zero-one-many") identity += ":scenario-sequence=all_green,degraded,phase185_one_failed,incident;terminal-failed-counts=0,0,1,3;incident-retrying=2;final=incident";
   if (element === "E3" && category === "zero-one-many") identity += ":scenario-sequence=empty,healthy,partial;final=partial";
   if (element === "E4" && category === "zero-one-many") identity += ":scenario-sequence=incident;filtered-cause;unavailable-schema;final=zero-rows";
   if (element === "E6" && category === "zero-one-many") identity += ":selection-sequence=zero-selected,Product-selected,two-allowlisted";
@@ -236,7 +236,12 @@ async function assertEmpty(page: Page, element: ElementId, assertions: Assertion
     await waitForLiveConnected(page);
     locator = page.locator("main");
     const text = await locator.innerText();
-    assertions.push(await assertObserved("Search health renders the empty allowlist next step without a healthy verdict", text, (value) => String(value).includes("No search schemas configured") && String(value).includes("Configure the host application's schema allowlist to inspect search health") && !String(value).includes("Healthy")));
+    const emptyHeading = page.getByRole("heading", { name: "No search schemas configured", exact: true });
+    await expect(emptyHeading).toBeVisible();
+    assertions.push(await assertObserved("Search health renders the empty allowlist next step without a healthy result row", JSON.stringify({ text, rows: await page.getByTestId("posture-row").count() }), (value) => {
+      const result = JSON.parse(String(value));
+      return result.rows === 0 && result.text.includes("No search schemas configured") && result.text.includes("Configure the host application's schema allowlist to inspect search health");
+    }));
   } else if (element === "E4") {
     locator = page.locator("main");
     const text = await locator.innerText();
@@ -256,7 +261,8 @@ async function assertPopulated(page: Page, element: ElementId, assertions: Asser
   let locator: Locator;
   if (element === "E1") {
     await page.getByLabel("Search products").fill("quantum");
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => url.searchParams.get("q") === "quantum");
+    await expect(page.getByTestId("storefront-result")).toHaveCount(2);
     locator = page.locator("[data-testid='storefront-results']");
     const rows = await page.getByTestId("storefront-result").count();
     assertions.push(await assertObserved("storefront returns the seeded quantum products", rows, (value) => value >= 2));
@@ -327,7 +333,7 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     locator = page.locator("[data-testid='control-room-affected-scope']");
     assertions.push(await assertObserved("Control Room identifies affected schema scope", await locator.isVisible(), (value) => value === true));
     const fullText = await page.locator("[data-testid='control-room-verdict']").innerText();
-    assertions.push(await assertObserved("Control Room keeps the exact failed-job and affected-schema evidence without a healthy verdict", `${fullText};${await locator.innerText()}`, (value) => String(value).includes("5 sync jobs failed") && String(value).includes("ScrypathEcommerce.Catalog.Product") && !String(value).includes("No sync failures found")));
+    assertions.push(await assertObserved("Control Room keeps the exact terminal-failed-job and affected-schema evidence without a healthy verdict", `${fullText};${await locator.innerText()}`, (value) => String(value).includes("3 sync jobs failed") && String(value).includes("ScrypathEcommerce.Catalog.Product") && !String(value).includes("No sync failures found")));
   } else if (element === "E3" || element === "E7") {
     await page.goto("/admin/search/phase173/health?scenario=partial");
     await waitForLiveConnected(page);
@@ -335,7 +341,7 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     const partialText = await page.locator("main").innerText();
     assertions.push(await assertObserved("phase173 test source preserves one available row and one explicitly unknown row", JSON.stringify({ rowCount: await page.getByTestId("posture-row").count(), partialText }), (value) => {
       const result = JSON.parse(String(value));
-      return result.rowCount === 2 && result.partialText.includes("Phase173FixtureSchema") && result.partialText.includes("Phase173PartialSchema") && result.partialText.includes("phase173_backend_unavailable");
+      return result.rowCount === 2 && result.partialText.includes("ScrypathEcommerce.Catalog.Product") && result.partialText.includes("Phase173PartialSchema") && result.partialText.includes("phase173_backend_unavailable");
     }));
     assertions.push(await assertObserved("unknown backend observation stays scoped to its schema and does not erase the available row", await locator.innerText(), (value) => String(value).includes("Search health could not be checked") && String(value).includes("phase173_backend_unavailable")));
   } else if (element === "E4") {
@@ -382,7 +388,7 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
       const result = JSON.parse(String(value));
       const unknown = result.unknownRows[0];
       const exhausted = result.exhaustedRows[0];
-      return result.total === 5 && result.retryableRows === 3 && result.unknownRows.length === 1 && unknown.text.includes("Unknown cause.") && unknown.guidance.includes("Unknown cause. Read the error, then retry.") && unknown.retry === true && result.backendRows.length === 1 && result.backendRows[0].retry === false && result.exhaustedRows.length === 1 && exhausted.retry === false && exhausted.ineligibleCopy.includes("can't be retried here");
+      return result.total === 5 && result.retryableRows === 3 && result.unknownRows.length === 1 && unknown.text.includes("Unknown cause.") && unknown.guidance.includes("Unknown cause. This will retry automatically.") && unknown.retry === true && result.backendRows.length === 1 && result.backendRows[0].retry === false && result.exhaustedRows.length === 1 && exhausted.retry === false && exhausted.ineligibleCopy.includes("can't be retried here");
     }));
     const unknownCause = page.locator("input[name='cause[]'][value='unknown']");
     await expect(unknownCause).toBeVisible();
@@ -397,7 +403,7 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     const unknownRoute = new URL(page.url()).pathname + new URL(page.url()).search;
     assertions.push(await assertObserved("unknown cause filtering preserves its explicit route scope and recovery copy while other known rows stay outside that subset", JSON.stringify({ unknownFacetCount, unknownOnlyCount, unknownOnlyText, unknownSummary, unknownRoute }), (value) => {
       const result = JSON.parse(String(value));
-      return result.unknownFacetCount === 1 && result.unknownOnlyCount === 1 && result.unknownOnlyText.includes("Unknown cause. Read the error, then retry.") && result.unknownOnlyText.includes("unclassified delete failure from upstream") && result.unknownOnlyText.includes("Retry") && result.unknownSummary.includes("4 more hidden by filters.") && result.unknownSummary.includes("Clear filters") && result.unknownRoute.includes("cause=unknown");
+      return result.unknownFacetCount === 1 && result.unknownOnlyCount === 1 && result.unknownOnlyText.includes("Unknown cause. This will retry automatically.") && result.unknownOnlyText.includes("unclassified delete failure from upstream") && result.unknownOnlyText.includes("Retry") && result.unknownSummary.includes("4 more hidden by filters.") && result.unknownSummary.includes("Clear filters") && result.unknownRoute.includes("cause=unknown");
     }));
     transport.push({ operation: "failed-work-unknown-cause-filter", outcome: `incident_rows=${fullRows.length}; unknown_facet=${unknownFacetCount}; visible_unknown_rows=${unknownOnlyCount}; eligible_retry_rows=3; route=${unknownRoute}` });
     locator = unknownOnly.first();
@@ -409,7 +415,7 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     const hit = locator.locator(".ops-search-hit");
     await expect(hit).toContainText("Partial result with unavailable description");
     await expect(hit).toContainText("Description");
-    await expect(hit.locator(".ops-value-null")).toContainText("null");
+    await expect(hit.locator(".ops-hit-preview dt[title='description']").locator("xpath=..").locator(".ops-value-null")).toHaveText("null");
     await hit.getByText("Raw hit payload", { exact: true }).click();
     const rawPayload = await hit.locator("pre").innerText();
     assertions.push(await assertObserved("the actual shared ResultUi component retains available hit fields and renders a null description explicitly", await hit.innerText(), (value) => String(value).includes("Partial result with unavailable description") && String(value).includes("partial-result-42") && String(value).includes("Description") && String(value).includes("null")));
@@ -421,10 +427,10 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     assertions.push(await assertObserved("saved-search list preserves a selected subset and exact names", await rows.count(), (value) => value > 0));
     assertions.push(await assertObserved("saved-search names remain visible", await rows.first().locator(".ops-saved-search-row__name").innerText(), (value) => String(value).startsWith("phase185-heldout-")));
   } else {
-    locator = page.locator("#sync-schema-select");
+    locator = page.locator("#sync-and-index-schema-form .ops-schema-picker");
     await expect(locator).toBeVisible();
     assertions.push(await assertObserved("settings preserves the actual selected-schema control", await locator.isVisible(), (value) => value === true));
-    const choices = page.locator("#sync-schema-select input[type=radio]");
+    const choices = page.locator("#sync-and-index-schema-form input[type=radio]");
     assertions.push(await assertObserved("settings offers the configured schema allowlist as real radio choices", await choices.count(), (value) => value > 1));
     assertions.push(await assertObserved("settings has exactly one selected allowlisted schema", await choices.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).length), (value) => value === 1));
     if (element === "E6") {
@@ -447,10 +453,13 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
   if (element === "E1") {
     const input = page.getByLabel("Search products");
     const counts: number[] = [];
-    for (const [query, expectedCount] of [["phase185-no-matching-product", 0], ["Quantum CyberPhone X", 1], ["quantum", 2]] as const) {
+    // Meilisearch can drop the final one-letter X and return both CyberPhones.
+    // The seeded laptop has a distinct name and exercises an actual one-hit query.
+    for (const [query, expectedCount] of [["phase185-no-matching-product", 0], ["Nebula Ultrabook", 1], ["quantum", 2]] as const) {
       await input.fill(query);
       await expect(page).toHaveURL((url) => url.searchParams.get("q") === query);
       await expect(page.getByTestId("storefront-result")).toHaveCount(expectedCount);
+      if (expectedCount === 1) await expect(page.getByTestId("storefront-result")).toContainText("Nebula Ultrabook");
       const count = await page.getByTestId("storefront-result").count();
       counts.push(count);
       transport.push({ operation: "storefront-live-search", outcome: `query=${query}; visible_results=${count}` });
@@ -471,13 +480,13 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
       observations.push({ scenario, text });
       transport.push({ operation: "control-room-operational-read", outcome: `seed=${scenario}; verdict=${text}` });
     }
-    actions.push("seed and read actual Control Room outcomes in order: zero failures, drifted settings with no failed jobs, one failed job, five failed jobs; leave incident visible");
+    actions.push("seed and read actual Control Room outcomes in order: zero failures, drifted settings with no failed jobs, one terminal-failed job, three terminal-failed jobs plus two retrying jobs; leave incident visible");
     assertions.push(await assertObserved("Control Room preserves exact zero, one and many failed-job counts while the drifted-settings seed remains a zero-failure observation", observations.map(({ scenario, text }) => `${scenario}:${text}`).join("\n"), (value) => {
       const rows = String(value).split("\n");
       const driftOnly = rows.find((row) => row.startsWith("degraded:")) || "";
       const oneFailed = rows.find((row) => row.startsWith("phase185_one_failed:")) || "";
       const manyFailed = rows.find((row) => row.startsWith("incident:")) || "";
-      return rows.length === 4 && rows[0].includes("all_green:") && rows[0].includes("No sync failures found") && driftOnly.includes("No sync failures found") && !/\b\d+ sync jobs failed\b/.test(driftOnly) && /\b1 sync job failed\b/.test(oneFailed) && /\b5 sync jobs failed\b/.test(manyFailed);
+      return rows.length === 4 && rows[0].includes("all_green:") && rows[0].includes("No sync failures found") && driftOnly.includes("No sync failures found") && !/\b\d+ sync jobs failed\b/.test(driftOnly) && /\b1 sync job failed\b/.test(oneFailed) && /\b3 sync jobs failed\b/.test(manyFailed);
     }));
     assertions.push(await assertObserved("Control Room still exposes its health and settings entry actions", await page.getByTestId("control-room-secondary-intents").isVisible(), (value) => value === true));
     return page.locator("main");
@@ -546,9 +555,9 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     await waitForLiveConnected(page);
     const submit = page.getByRole("button", { name: "Run search", exact: true });
     await submit.click();
-    await waitForLiveConnected(page);
+    await expect(page.getByRole("alert")).toContainText("Select at least one schema.");
     const zeroSelected = await choices.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).length);
-    const zeroCopy = (await page.getByRole("alert").innerText()).trim();
+    const zeroCopy = (await page.getByRole("alert").locator("p").first().innerText()).trim();
     assertions.push(await assertObserved("actual multi-schema Search route explains the zero-selected task-specific next step", `${zeroSelected};${zeroCopy}`, (value) => String(value) === "0;Select at least one schema."));
 
     const productChoice = page.locator("#ops-search-playground-form input[name='schemas[]'][value='ScrypathEcommerce.Catalog.Product']");
@@ -598,18 +607,22 @@ async function assertActionLoading(page: Page, element: ElementId): Promise<{ ta
     await expect(target).toHaveClass(/phx-click-loading/, { timeout: 1_200 });
     transport.push({ operation: "liveview-navigation", outcome: `in-flight with configured transport latency; prior Help DOM retained; route=${priorRoute}` });
   } else if (element === "E9") {
-    target = page.getByRole("button", { name: "Run search", exact: true });
+    target = page.locator("#ops-search-playground-form button[type=submit]");
     await page.getByLabel("Search text").fill("quantum");
     await expect(target).toBeEnabled();
     await target.click();
-    await expect(target).toHaveClass(/phx-click-loading/, { timeout: 1_200 });
-    transport.push({ operation: "search-submit", outcome: "liveview action issued; current form retained during request" });
+    await expect(page.locator("#ops-search-playground-form")).toHaveClass(/phx-submit-loading/, { timeout: 1_200 });
+    await expect(target).toHaveText("Running…");
+    await expect(page.getByLabel("Search text")).toHaveValue("quantum");
+    priorText = await page.locator("[data-phx-main]").innerText();
+    transport.push({ operation: "search-submit", outcome: "real form submit remains pending; native phx-disable-with changes Run search to Running…; query retained and actual pending DOM pinned for every sample" });
   } else {
     const confirmation = page.locator("#saved-search-delete-input");
     const row = page.locator(".ops-saved-search-row").first();
     const name = (await row.locator(".ops-saved-search-row__name").innerText()).trim();
     await row.getByRole("button", { name: `Delete ${name}` }).click();
-    await expect(page.getByRole("dialog", { name: "Delete saved search" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Manage saved searches" })).toBeVisible();
+    await expect(confirmation).toBeVisible();
     await confirmation.fill(name);
     priorText = await page.locator("[data-phx-main]").innerText();
     target = page.locator("#saved-search-delete-form").getByRole("button", { name: "Delete", exact: true });
@@ -618,7 +631,7 @@ async function assertActionLoading(page: Page, element: ElementId): Promise<{ ta
   }
   await page.waitForTimeout(80);
   const loadingClass = element === "E1" ? "phx-change-loading" : "phx-click-loading";
-  if (element === "E10") await expect(page.locator("#saved-search-delete-form")).toHaveClass(/phx-submit-loading/, { timeout: 1_200 });
+  if (element === "E10" || element === "E9") await expect(page.locator(element === "E10" ? "#saved-search-delete-form" : "#ops-search-playground-form")).toHaveClass(/phx-submit-loading/, { timeout: 1_200 });
   else await expect(target).toHaveClass(new RegExp(loadingClass), { timeout: 1_200 });
   return { target, transport, priorRoute, priorText };
 }
@@ -626,9 +639,9 @@ async function assertActionLoading(page: Page, element: ElementId): Promise<{ ta
 async function assertPendingState(page: Page, element: ElementId, target: Locator, priorRoute: string, priorText: string): Promise<string> {
   const route = new URL(page.url()).pathname + new URL(page.url()).search;
   const currentText = await page.locator("[data-phx-main]").innerText();
-  const busyLocator = element === "E10" ? page.locator("#saved-search-delete-form") : target;
+  const busyLocator = element === "E10" ? page.locator("#saved-search-delete-form") : element === "E9" ? page.locator("#ops-search-playground-form") : target;
   const busyClass = await busyLocator.getAttribute("class") || "";
-  const expectedClass = element === "E1" ? "phx-change-loading" : element === "E10" ? "phx-submit-loading" : "phx-click-loading";
+  const expectedClass = element === "E1" ? "phx-change-loading" : element === "E10" || element === "E9" ? "phx-submit-loading" : "phx-click-loading";
   if (route !== priorRoute || currentText !== priorText || !busyClass.split(/\s+/).includes(expectedClass)) {
     throw new Error(`${element} left its actual in-flight state before the screenshot: ${JSON.stringify({ route, priorRoute, currentText, priorText, busyClass, expectedClass })}`);
   }
@@ -658,13 +671,16 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     const row = page.locator(".ops-saved-search-row").first();
     const name = (await row.locator(".ops-saved-search-row__name").innerText()).trim();
     await row.getByRole("button", { name: `Delete ${name}` }).click();
-    const dialog = page.getByRole("dialog", { name: "Delete saved search" });
+    const dialog = page.getByRole("dialog", { name: "Manage saved searches" });
     const input = page.locator("#saved-search-delete-input");
+    await expect(input).toBeVisible();
     await input.fill(name.toLowerCase() === name ? `${name}-wrong` : name.toLowerCase());
-    await dialog.getByRole("button", { name: "Delete saved search", exact: true }).click();
-    const alert = page.getByRole("alert");
+    const confirmationForm = page.locator("#saved-search-delete-form");
+    await confirmationForm.getByRole("button", { name: "Delete", exact: true }).click();
+    const alert = confirmationForm.getByRole("alert");
+    await expect(alert).toContainText("Type the name exactly as shown to confirm.");
     const text = (await alert.innerText()).trim();
-    assertions.push(await assertObserved("protected deletion names the exact validation cause and the recovery action", text, (value) => String(value).includes("Type the name exactly as shown to confirm.") && String(value).includes(name)));
+    assertions.push(await assertObserved("protected deletion names the exact validation cause and retains the named confirmation context", `${text};${await confirmationForm.innerText()}`, (value) => String(value).includes("Type the name exactly as shown to confirm.") && String(value).includes(name)));
     assertions.push(await assertObserved("protected deletion retains the saved row", await page.locator(".ops-saved-search-row").count(), (value) => value > 0));
     await expect(input).toBeFocused();
     assertions.push(await assertObserved("protected deletion keeps the real recovery dialog open with the confirmation input focused", JSON.stringify({ dialogVisible: await dialog.isVisible(), focused: await input.evaluate((node) => document.activeElement === node), exactName: name }), (value) => {
@@ -678,7 +694,7 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     await page.goto("/admin/search/phase173/health?scenario=refresh-failure");
     await waitForLiveConnected(page);
     await page.locator("#search-health-refresh").click();
-    const alert = page.getByTestId("posture-row").filter({ hasText: "Phase173FixtureSchema" }).first();
+    const alert = page.getByTestId("posture-row").filter({ hasText: "ScrypathEcommerce.Catalog.Product" }).first();
     await expect(alert).toContainText("phase173_backend_unavailable");
     await expect(alert).toContainText("Search health could not be checked");
     const text = (await alert.innerText()).trim();
@@ -730,7 +746,7 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
     await waitForLiveConnected(page);
     locator = page.getByTestId("control-room-verdict");
     const text = await locator.innerText();
-    assertions.push(await assertObserved("Control Room retains the exact schema identifier and failed-job count in its operational evidence", text, (value) => String(value).includes("ScrypathEcommerce.Catalog.Product") && String(value).includes("5 sync jobs failed")));
+    assertions.push(await assertObserved("Control Room retains the exact schema identifier and terminal-failed-job count in its operational evidence", text, (value) => String(value).includes("ScrypathEcommerce.Catalog.Product") && String(value).includes("3 sync jobs failed")));
   } else if (element === "E4") {
     await page.goto("/admin/search/failed-sync");
     await waitForLiveConnected(page);
@@ -749,15 +765,16 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
     const text = await locator.innerText();
     assertions.push(await assertObserved("Help preserves its exact saved-search instructions", text, (value) => String(value).length > 80 && String(value).includes("not the results")));
   } else if (element === "E6") {
-    locator = page.locator("#sync-schema-select");
+    locator = page.locator("#sync-and-index-schema-form .ops-schema-picker");
     const schemaChoice = page.getByRole("radio", { name: /ScrypathEcommerce\.Catalog\.Product/ });
     const alternateChoice = page.getByRole("radio", { name: /ScrypathEcommerce\.Catalog\.Variant/ });
     if (await alternateChoice.count() !== 1) throw new Error("The actual Sync and index route did not render its canonical Variant schema radio choice.");
     if (await schemaChoice.count() !== 1) throw new Error("The actual Sync and index route did not render its canonical Product schema radio choice.");
     await alternateChoice.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => /ScrypathEcommerce\.Catalog\.Variant$/.test(url.searchParams.get("schema") || ""));
     await schemaChoice.check();
-    await waitForLiveConnected(page);
+    await expect(page).toHaveURL((url) => /ScrypathEcommerce\.Catalog\.Product$/.test(url.searchParams.get("schema") || ""));
+    await expect(page.locator("#index-settings-status")).toContainText("Meilisearch settings match the schema.");
     await expect(schemaChoice).toBeChecked();
     await expect(alternateChoice).not.toBeChecked();
     actions.push("change the actual Sync and index schema radio from Variant to Product through its LiveView handler");
@@ -905,8 +922,7 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
       ...(preferredInteractionTarget ? [preferredInteractionTarget] : []),
       target,
       page.locator("[role='dialog'][aria-modal='true']:visible").last().locator("button:not([disabled]):visible, a[href]:visible, input:not([disabled]):visible, select:not([disabled]):visible, textarea:not([disabled]):visible").first(),
-      page.locator("main a[href]:visible, main button:not([disabled]):visible").first(),
-      page.locator("main input:not([disabled]):visible, main select:not([disabled]):visible, main textarea:not([disabled]):visible").first(),
+      ...await page.locator("main a[href]:visible, main button:not([disabled]):visible, main input:not([disabled]):visible, main select:not([disabled]):visible, main textarea:not([disabled]):visible").all(),
       page.locator("button:not([disabled]):visible").first()
     ];
     let interaction: Locator | null = null;
@@ -917,6 +933,8 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
       if (await candidate.evaluate((node) => Boolean(node.closest("[inert]")))) continue;
       const identity = await candidate.evaluate(captureUiStateInPage) as typeof interactionIdentity;
       if (identity && ["a", "button", "input", "select", "textarea"].includes(identity.tag) && typeof identity.name === "string" && identity.name.trim()) {
+        try { await candidate.hover({ trial: true, timeout: 1_000 }); }
+        catch { continue; }
         interaction = candidate;
         interactionIdentity = identity;
         break;
@@ -927,7 +945,23 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     await interaction.focus({ timeout: 5_000 });
     await page.keyboard.press("Tab");
     await page.keyboard.press("Shift+Tab");
+    // Keyboard focus can scroll the control away from the original pointer.
+    // Re-establish actual hover at its final position before recording both.
+    await interaction.hover({ timeout: 5_000 });
     await expect(interaction).toBeFocused();
+    if (element === "E10" && category === "long-text") {
+      // The r5 sidecar records a 20px horizontal shift of the sheet's contents
+      // across its first screenshot after tabbing through this long form.
+      // Establish its actual local scroll origin before measuring any evidence.
+      const localScroll = await page.locator(".ops-sheet__panel").evaluate((node) => {
+        const before = node.scrollLeft;
+        node.scrollTo({ left: 0, top: node.scrollTop, behavior: "instant" });
+        return { before, after: node.scrollLeft, scroll_width: node.scrollWidth, client_width: node.clientWidth };
+      });
+      expect(localScroll.after, "long confirmation sheet starts at its actual horizontal origin").toBe(0);
+      observationAssertions.push({ name: "long confirmation retains its existing local overflow with the sheet at horizontal origin", status: "passed", actual: JSON.stringify(localScroll) });
+    }
+    Object.assign(observed, await page.evaluate(() => ({ scrollX, scrollY })));
     const domState = await page.evaluate(captureUiStateInPage) as Record<string, any>;
     const focus = domState.focus;
     if (JSON.stringify(focus.element) !== JSON.stringify(interactionIdentity) || focus.focus_visible !== true || domState.document_has_focus !== true || !domState.hover.some((entry: any) => JSON.stringify(entry.element) === JSON.stringify(interactionIdentity))) {
@@ -1108,7 +1142,7 @@ export async function runPreservationCase(args: {
           transport.push(...pending.transport);
           pendingCheck = () => assertPendingState(page, element, target, pending.priorRoute, pending.priorText).then(() => undefined);
           const pendingObservation = await assertPendingState(page, element, target, pending.priorRoute, pending.priorText);
-          assertions.push(await assertObserved(`${element} retains its exact route and prior visible content while the actual busy marker is active`, pendingObservation, (value) => {
+          assertions.push(await assertObserved(`${element} keeps its existing route and exact observed pending content while the actual busy marker is active`, pendingObservation, (value) => {
             const state = JSON.parse(String(value));
             return state.route === state.prior_route && state.current_text === state.prior_text && state.busy_class.includes("phx-");
           }));
@@ -1117,9 +1151,9 @@ export async function runPreservationCase(args: {
           const priorRoute = new URL(page.url()).pathname + new URL(page.url()).search;
           const priorText = await page.locator("[data-phx-main]").innerText();
           await page.evaluate(() => (window as Window & { liveSocket?: { enableLatencySim: (ms: number) => void } }).liveSocket?.enableLatencySim(1400));
-          const action = element === "E1" ? page.getByLabel("Search products") : element === "E2" ? page.locator("#control-room-refresh") : element === "E3" ? page.locator("#search-health-refresh") : element === "E4" ? page.locator("#failed-sync-refresh") : element === "E5" ? page.getByRole("button", { name: /Load .+/ }).first() : page.locator("#sync-and-index-refresh");
+          const action = element === "E1" ? page.getByLabel("Search products") : element === "E2" ? page.locator("#control-room-refresh") : element === "E3" ? page.locator("#search-health-refresh") : element === "E4" ? page.locator("#failed-sync-refresh") : element === "E5" ? page.getByRole("button", { name: /^Rename phase185-heldout-/ }).first() : page.locator("#sync-and-index-refresh");
           target = action;
-          if (element === "E1") await action.fill("quantum"); else await action.click();
+          if (element === "E1") await action.fill("quantum"); else await action.click({ timeout: 5_000 });
           const loadingClass = element === "E1" ? /phx-change-loading/ : /phx-click-loading/;
           await expect(action).toHaveClass(loadingClass, { timeout: 1_200 });
           pendingCheck = () => assertPendingState(page, element, action, priorRoute, priorText).then(() => undefined);
