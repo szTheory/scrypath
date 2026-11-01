@@ -71,6 +71,15 @@ function writeLedger(repo, findings) {
   fs.writeFileSync(path.join(repo, "scripts/ci/ui-literal-baseline.json"), `${JSON.stringify(ledger, null, 2)}\n`);
 }
 
+function insertLiteralZSentinel(repo) {
+  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/components/layouts/root.html.heex";
+  const sourceFile = path.join(repo, sourcePath);
+  const source = fs.readFileSync(sourceFile, "utf8");
+  assert.equal(source.split("</body>").length - 1, 1, "maintained root layout has one closing body tag");
+  fs.writeFileSync(sourceFile, source.replace("</body>", '<div class="z-60"></div>\n  </body>'));
+  return sourcePath;
+}
+
 function commit(repo, message, files) {
   git(repo, ["add", ...files]);
   git(repo, ["commit", "-m", message]);
@@ -161,13 +170,17 @@ test("the committed bootstrap ledger is the exact pinned-source multiset", (t) =
   assert.equal(ok, true);
   assert.equal(result.policyVersion, 1);
   assert.equal(result.introduction, git(repo, ["log", "--first-parent", "--reverse", "--format=%H", "--", "scripts/ci/ui-literal-baseline.json"]).split("\n")[0]);
-  assert.equal(result.findingCount, 45);
+  const introductionLedger = JSON.parse(git(repo, ["show", `${result.introduction}:scripts/ci/ui-literal-baseline.json`]));
+  assert.equal(introductionLedger.bootstrap_commit, BOOTSTRAP);
+  assert.equal(introductionLedger.findings.reduce((total, item) => total + item.count, 0), 45,
+    "the immutable introduction retains the original 45 pinned findings");
+  assert.equal(result.findingCount, scanTree(repo).length,
+    "current findings follow actual source cleanup while bootstrap history stays pinned");
 });
 
 test("a candidate cannot bless a newly introduced finding by editing its ledger", (t) => {
   const repo = cloneRepo(t);
-  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex";
-  fs.appendFileSync(path.join(repo, sourcePath), '\n<div class="z-60"></div>\n');
+  const sourcePath = insertLiteralZSentinel(repo);
   writeLedger(repo, scanTree(repo));
   commit(repo, "candidate adds a violation and matching ledger row", [sourcePath, "scripts/ci/ui-literal-baseline.json"]);
 
@@ -381,9 +394,8 @@ test("shallow and missing trusted histories fail with explicit diagnostics", (t)
 test("a side-branch merge cannot hide a first-parent ledger increase", (t) => {
   const repo = cloneRepo(t);
   const originalBranch = git(repo, ["branch", "--show-current"]);
-  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex";
+  const sourcePath = insertLiteralZSentinel(repo);
   git(repo, ["switch", "-c", "side-with-new-literal"]);
-  fs.appendFileSync(path.join(repo, sourcePath), '\n<div class="z-60"></div>\n');
   writeLedger(repo, scanTree(repo));
   commit(repo, "side branch adds matching literal", [sourcePath, "scripts/ci/ui-literal-baseline.json"]);
   git(repo, ["switch", originalBranch]);

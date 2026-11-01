@@ -35,6 +35,12 @@ if [[ ! "$docker_timeout" =~ ^[1-9][0-9]*$ || ! "$finalize_timeout" =~ ^[1-9][0-
   echo "E2E Docker timeouts must be positive whole seconds." >&2
   exit 64
 fi
+if [[ "$scope" == "full" ]]; then
+  if (( ${#docker_timeout} > 3 )) || { (( ${#docker_timeout} == 3 )) && (( docker_timeout > 900 )); }; then
+    echo "E2E_DOCKER_TIMEOUT_SECONDS must not exceed 900 seconds for full verification." >&2
+    exit 64
+  fi
+fi
 
 run_id="${E2E_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$$-${RANDOM}${RANDOM}}"
 if [[ "$scope" == "full" && ! "$run_id" =~ ^phase185- ]]; then run_id="phase185-$run_id"; fi
