@@ -77,9 +77,11 @@ defmodule Mix.Tasks.UiLiteralContractTest do
       )
     )
 
-    source_path = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex"
+    source_path = "scrypath_ops/lib/scrypath_ops_web/components/layouts/root.html.heex"
     source_file = Path.join(root, source_path)
-    File.write!(source_file, File.read!(source_file) <> "\n<div class=\"z-60\"></div>\n")
+    source = File.read!(source_file)
+    assert length(String.split(source, "</body>")) == 2
+    File.write!(source_file, String.replace(source, "</body>", "<div class=\"z-60\"></div>\n  </body>", global: false))
 
     prepare_ledger = ~S"""
     const fs = require("node:fs");

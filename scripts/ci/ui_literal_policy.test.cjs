@@ -71,6 +71,15 @@ function writeLedger(repo, findings) {
   fs.writeFileSync(path.join(repo, "scripts/ci/ui-literal-baseline.json"), `${JSON.stringify(ledger, null, 2)}\n`);
 }
 
+function insertLiteralZSentinel(repo) {
+  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/components/layouts/root.html.heex";
+  const sourceFile = path.join(repo, sourcePath);
+  const source = fs.readFileSync(sourceFile, "utf8");
+  assert.equal(source.split("</body>").length - 1, 1, "maintained root layout has one closing body tag");
+  fs.writeFileSync(sourceFile, source.replace("</body>", '<div class="z-60"></div>\n  </body>'));
+  return sourcePath;
+}
+
 function commit(repo, message, files) {
   git(repo, ["add", ...files]);
   git(repo, ["commit", "-m", message]);
@@ -166,8 +175,7 @@ test("the committed bootstrap ledger is the exact pinned-source multiset", (t) =
 
 test("a candidate cannot bless a newly introduced finding by editing its ledger", (t) => {
   const repo = cloneRepo(t);
-  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex";
-  fs.appendFileSync(path.join(repo, sourcePath), '\n<div class="z-60"></div>\n');
+  const sourcePath = insertLiteralZSentinel(repo);
   writeLedger(repo, scanTree(repo));
   commit(repo, "candidate adds a violation and matching ledger row", [sourcePath, "scripts/ci/ui-literal-baseline.json"]);
 
@@ -381,9 +389,8 @@ test("shallow and missing trusted histories fail with explicit diagnostics", (t)
 test("a side-branch merge cannot hide a first-parent ledger increase", (t) => {
   const repo = cloneRepo(t);
   const originalBranch = git(repo, ["branch", "--show-current"]);
-  const sourcePath = "scrypath_ops/lib/scrypath_ops_web/controllers/page_html/home.html.heex";
+  const sourcePath = insertLiteralZSentinel(repo);
   git(repo, ["switch", "-c", "side-with-new-literal"]);
-  fs.appendFileSync(path.join(repo, sourcePath), '\n<div class="z-60"></div>\n');
   writeLedger(repo, scanTree(repo));
   commit(repo, "side branch adds matching literal", [sourcePath, "scripts/ci/ui-literal-baseline.json"]);
   git(repo, ["switch", originalBranch]);
