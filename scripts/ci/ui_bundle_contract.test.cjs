@@ -13,6 +13,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { randomUUID } = require("node:crypto");
 const { test } = require("node:test");
+const { assertBundles, assertMountedStylesheetOrder } = require("./ui_bundle_contract.cjs");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
 const representativeUtilities = [
@@ -94,10 +95,68 @@ function extractBundle(container, source, destination) {
   return readFileSync(destination, "utf8");
 }
 
-function assertInitialContract(css, label) {
-  assert.equal(/\.bg-red-500\s*\{/.test(css), false, `${label} still contains the forced default red palette utility`);
-  assert.equal(/\.text-blue-500\s*\{/.test(css), false, `${label} still contains the forced default blue palette utility`);
+function fixtureCss({ palette = false, utilities = true, semantic = false } = {}) {
+  return [
+    palette && ".bg-red-500{background-color:var(--color-red-500)}.text-blue-500{color:var(--color-blue-500)}",
+    utilities && [
+      ".bg-black{background-color:var(--color-black)}",
+      ".text-black{color:var(--color-black)}",
+      ".bg-white{background-color:var(--color-white)}",
+      ".text-white{color:var(--color-white)}",
+      ".p-4{padding:calc(var(--spacing)*4)}",
+      ".gap-8{gap:calc(var(--spacing)*8)}",
+      ".text-sm{font-size:var(--text-sm)}",
+      ".font-semibold{font-weight:var(--font-weight-semibold)}",
+    ].join(""),
+    semantic && ".bg-primary{background-color:var(--color-primary)}.text-base-content{color:var(--color-base-content)}",
+  ].filter(Boolean).join("");
 }
+
+test("forced default palette utilities are rejected independently in either output", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  assert.doesNotThrow(() => assertBundles({ standaloneCss: goodOps, hostCss: goodHost }));
+  assert.throws(() => assertBundles({ standaloneCss: fixtureCss({ palette: true, semantic: true }), hostCss: goodHost }), /standalone Ops.*default palette/);
+  assert.throws(() => assertBundles({ standaloneCss: goodOps, hostCss: fixtureCss({ palette: true }) }), /mounted host.*default palette/);
+});
+
+test("black, white, spacing, typography, semantic utilities, and both outputs are required", () => {
+  const goodOps = fixtureCss({ semantic: true });
+  const goodHost = fixtureCss();
+  const missing = [
+    ["black", (css) => css.replace(".bg-black{background-color:var(--color-black)}", "")],
+    ["white", (css) => css.replace(".text-white{color:var(--color-white)}", "")],
+    ["spacing", () => fixtureCss({ utilities: false })],
+    ["typography", (css) => css.replace(".font-semibold{font-weight:var(--font-weight-semibold)}", "")],
+  ];
+  for (const [output, standalone] of [["standalone Ops", true], ["mounted host", false]]) {
+    for (const [label, remove] of missing) {
+      const current = standalone ? goodOps : goodHost;
+      const invalid = remove(current);
+      assert.throws(
+        () => assertBundles({ standaloneCss: standalone ? invalid : goodOps, hostCss: standalone ? goodHost : invalid }),
+        new RegExp(output),
+        `${output} must reject missing ${label}`,
+      );
+    }
+  }
+  assert.throws(() => assertBundles({ standaloneCss: goodOps.replace(".text-base-content{color:var(--color-base-content)}", ""), hostCss: goodHost }), /standalone Ops.*text-base-content/);
+  assert.throws(() => assertBundles({ standaloneCss: goodOps, hostCss: "" }), /mounted host.*missing or empty/);
+  assert.throws(() => assertBundles({ standaloneCss: undefined, hostCss: goodHost }), /standalone Ops.*missing or empty/);
+});
+
+test("mounted stylesheet contract requires host CSS before independent Ops CSS", () => {
+  assert.doesNotThrow(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/admin/search/assets/css/app.css?v=abc">'));
+  assert.throws(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/admin/search/assets/css/app.css"><link rel="stylesheet" href="/assets/css/app.css">'), /host CSS before Ops CSS/);
+  assert.throws(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app.css">'), /missing the independently served Ops stylesheet/);
+});
+
+test("CLI fails closed for a missing output file", (t) => {
+  const absent = path.join(os.tmpdir(), `scrypath-missing-bundle-${randomUUID()}.css`);
+  const result = spawnSync(process.execPath, [path.join(__dirname, "ui_bundle_contract.cjs"), "--standalone", absent, "--host", absent], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /standalone Ops output file is missing/);
+});
 
 test("both configured Tailwind profiles remove forced default palette utilities", { timeout: 20 * 60 * 1000 }, (t) => {
   const runId = randomUUID().replaceAll("-", "");
@@ -136,9 +195,7 @@ test("both configured Tailwind profiles remove forced default palette utilities"
       assert.ok(css.length > 0, `${label} output must not be empty`);
       outputs.push([label, css]);
     }
-    for (const [label, css] of outputs) {
-      assertInitialContract(css, label);
-    }
+    assertBundles({ standaloneCss: outputs[0][1], hostCss: outputs[1][1] });
   } finally {
     if (container) {
       const removed = runDocker(["rm", "--force", container]);
