@@ -1,9 +1,13 @@
 "use strict";
 
 const fs = require("node:fs");
+const rawBundle = require("./ui_preservation_bundle.cjs");
 const crypto = require("node:crypto");
 const path = require("node:path");
+const { execFileSync } = require("node:child_process");
+const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
+const REPOSITORY_ROOT = path.resolve(__dirname, "../..");
 const MAX_CASES = 50000;
 const MAX_SUITE_DEPTH = 100;
 const MAX_REPORT_ERRORS = 100;
@@ -13,8 +17,11 @@ const MAX_NDJSON_BYTES = 16 * 1024 * 1024;
 const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024;
 const MAX_TOTAL_ARTIFACT_BYTES = 256 * 1024 * 1024;
 const MAX_ARTIFACTS = 256;
+const MAX_IMAGE_DIMENSION = 16384;
+const MAX_IMAGE_PIXELS = 20000000;
 const RECEIPT_NAME = "phase105-evidence.json";
 const SUMMARY_NAME = "phase105-evidence-summary.md";
+const BEFORE_ONLY_RECEIPT_NAME = "phase185-before-only-evidence.json";
 const INPUT_NAME = "phase105-evidence-input.json";
 const INVENTORY_NAME = "phase105-playwright-list.json";
 const PLAYWRIGHT_NAME = "phase105-playwright.json";
@@ -29,6 +36,14 @@ const REQUIRED_ARTIFACT_PATHS = [
   "lifecycle.json",
   "playwright-report/index.html"
 ];
+const BEFORE_ONLY_REQUIRED_ARTIFACT_PATHS = [
+  INPUT_NAME,
+  INVENTORY_NAME,
+  PLAYWRIGHT_NAME,
+  EVENTS_NAME,
+  "lifecycle.json",
+  "playwright-report/index.html"
+];
 const ALLOWED_ARTIFACT_PREFIXES = [
   "playwright-report/",
   "test-results/",
@@ -37,6 +52,236 @@ const ALLOWED_ARTIFACT_PREFIXES = [
   "compose/"
 ];
 const REQUIRED_STAGES = ["inventory", "browser", "light_parity", "contrast", "artifact_copy"];
+const PRESERVATION_STATE_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6"];
+const PRESERVATION_STATE_CATEGORIES = ["empty", "loading", "error", "populated", "partial", "zero-one-many"];
+const PRESERVATION_ACTION_ELEMENTS = ["E8", "E9", "E10"];
+const PRESERVATION_CONTENT_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10"];
+const PRESERVATION_OVERFLOW_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E10"];
+const PRODUCT_SOURCE_EXCLUDED_FILES = new Set([
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex",
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex"
+]);
+const PRESERVATION_FIXTURE_FILES = [
+  "examples/scrypath_ecommerce/e2e/ui_state_preservation.spec.ts",
+  "examples/scrypath_ecommerce/e2e/ui_content_preservation.spec.ts",
+  "examples/scrypath_ecommerce/e2e/helpers/e2e.ts",
+  "examples/scrypath_ecommerce/e2e/helpers/ui-preservation-states.ts",
+  "examples/scrypath_ecommerce/e2e/ui-review.mjs",
+  "examples/scrypath_ecommerce/e2e/helpers/theme-grid.ts",
+  "examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs",
+  "examples/scrypath_ecommerce/playwright.config.ts",
+  "examples/scrypath_ecommerce/package.json",
+  "examples/scrypath_ecommerce/package-lock.json",
+  "examples/scrypath_ecommerce/Dockerfile.e2e",
+  "examples/scrypath_ecommerce/compose.phase173.yaml",
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex",
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex",
+  "examples/scrypath_ecommerce/test/support/phase173_fixture_source.ex",
+  "scrypath_ops/test/support/phase173_fixture_source.ex",
+  "examples/scrypath_ecommerce/compose.phase185.yaml",
+  "examples/scrypath_ecommerce/compose.e2e.yaml",
+  "examples/scrypath_ecommerce/scripts/verify-e2e.sh",
+  "examples/scrypath_ecommerce/docker-playwright.sh",
+  "scripts/ci/ecommerce_evidence.cjs",
+  "scripts/ci/ecommerce_evidence.test.cjs",
+  "scripts/ci/ui_state_pairs.cjs",
+  "scripts/ci/ui_state_pairs.test.cjs",
+  "scripts/ci/ui_preservation_bundle.cjs",
+  "scripts/ci/ui_preservation_bundle.test.cjs",
+  "scripts/ci/ecommerce_build.cjs",
+  "scripts/ci/ecommerce_build.test.cjs"
+];
+const PRESERVATION_ARTIFACT_ROOT = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
+const PRESERVATION_VIEWPORT_WIDTHS = [1440, 768, 390];
+const PRESERVATION_THEMES = ["light", "dark", "system-dark"];
+const PRESERVATION_CASES = Object.freeze([
+  ...PRESERVATION_STATE_ELEMENTS.flatMap((element) => PRESERVATION_STATE_CATEGORIES.map((category) => ({
+    id: `${element} ${category}`,
+    file: "e2e/ui_state_preservation.spec.ts",
+    element,
+    category
+  }))),
+  ...PRESERVATION_ACTION_ELEMENTS.flatMap((element) => ["loading", "error"].map((category) => ({
+    id: `${element} ${category}`,
+    file: "e2e/ui_state_preservation.spec.ts",
+    element,
+    category
+  }))),
+  ...PRESERVATION_OVERFLOW_ELEMENTS.map((element) => ({
+    id: `${element} overflow`,
+    file: "e2e/ui_content_preservation.spec.ts",
+    element,
+    category: "overflow"
+  })),
+  ...PRESERVATION_CONTENT_ELEMENTS.map((element) => ({
+    id: `${element} long-text`,
+    file: "e2e/ui_content_preservation.spec.ts",
+    element,
+    category: "long-text"
+  }))
+]);
+const PRODUCT_SOURCE_ROOTS = [
+  "examples/scrypath_ecommerce/assets",
+  "examples/scrypath_ecommerce/config",
+  "examples/scrypath_ecommerce/lib",
+  "scrypath_ops/assets",
+  "scrypath_ops/config",
+  "scrypath_ops/lib"
+];
+
+function sourceDigest(root, files) {
+  const entries = files.slice().sort((left, right) => left.localeCompare(right)).map((relative) => {
+    const absolute = path.join(root, ...relative.split("/"));
+    const stat = fs.lstatSync(absolute);
+    if (!stat.isFile() || stat.isSymbolicLink()) throw new TypeError(`${relative} must be a regular source file`);
+    return { path: relative, sha256: crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex") };
+  });
+  return `sha256:${crypto.createHash("sha256").update(JSON.stringify(entries)).digest("hex")}`;
+}
+
+function listRegularFiles(root, relative, excluded = new Set()) {
+  const absolute = path.join(root, ...relative.split("/"));
+  const entries = fs.readdirSync(absolute, { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
+  const files = [];
+  for (const entry of entries) {
+    const child = `${relative}/${entry.name}`;
+    if (excluded.has(child)) continue;
+    if (entry.isSymbolicLink()) throw new TypeError(`${child} must not be a symlink`);
+    if (entry.isDirectory()) files.push(...listRegularFiles(root, child, excluded));
+    else if (entry.isFile()) files.push(child);
+    else throw new TypeError(`${child} is not a regular source file`);
+  }
+  return files;
+}
+
+function gitObjectEntries(repoRoot, sourceSha, directories, excluded = new Set()) {
+  const root = path.resolve(repoRoot);
+  if (!/^[a-f0-9]{40}$/.test(sourceSha || "")) throw new TypeError("source revision must be a full Git commit SHA");
+  const resolved = execFileSync("git", ["-C", root, "rev-parse", "--verify", `${sourceSha}^{commit}`], { encoding: "utf8" }).trim();
+  if (resolved !== sourceSha) throw new TypeError("source revision did not resolve to the exact pinned Git commit");
+  const listing = execFileSync("git", ["-C", root, "ls-tree", "-r", "-z", "--full-tree", sourceSha, "--", ...directories], { encoding: "buffer" });
+  const rows = [];
+  for (const record of listing.toString("utf8").split("\0").filter(Boolean)) {
+    const tab = record.indexOf("\t");
+    if (tab < 0) throw new TypeError("Git tree entry is malformed");
+    const [mode, type, oid] = record.slice(0, tab).split(" ");
+    const relative = record.slice(tab + 1);
+    if (excluded.has(relative)) continue;
+    if (type !== "blob" || !["100644", "100755"].includes(mode) || !/^[a-f0-9]{40}$/.test(oid || "")) {
+      throw new TypeError(`${relative} is not a regular file in the pinned source tree`);
+    }
+    const bytes = execFileSync("git", ["-C", root, "cat-file", "blob", oid], { encoding: "buffer" });
+    rows.push({ path: relative, sha256: crypto.createHash("sha256").update(bytes).digest("hex") });
+  }
+  return rows.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function sourceDigestFromGit(repoRoot, sourceSha, directories, excluded = new Set(), expectedFiles = null) {
+  const entries = gitObjectEntries(repoRoot, sourceSha, directories, excluded);
+  if (entries.length === 0) throw new TypeError("pinned Git source tree contains no files in the requested roots");
+  if (expectedFiles && (entries.length !== expectedFiles.length || expectedFiles.some((relative) => !entries.some((entry) => entry.path === relative)))) {
+    throw new TypeError("pinned Git source is missing one or more declared test-overlay files");
+  }
+  return `sha256:${crypto.createHash("sha256").update(JSON.stringify(entries)).digest("hex")}`;
+}
+
+function fixtureOverlayDigest(repoRoot = path.resolve(__dirname, "../.."), sourceSha = null) {
+  const root = path.resolve(repoRoot);
+  if (sourceSha) return sourceDigestFromGit(root, sourceSha, PRESERVATION_FIXTURE_FILES, new Set(), PRESERVATION_FIXTURE_FILES);
+  return sourceDigest(root, PRESERVATION_FIXTURE_FILES);
+}
+
+function productTreeIdentity(repoRoot = path.resolve(__dirname, "../.."), sourceSha = null) {
+  const root = path.resolve(repoRoot);
+  if (sourceSha) return sourceDigestFromGit(root, sourceSha, PRODUCT_SOURCE_ROOTS, PRODUCT_SOURCE_EXCLUDED_FILES);
+  const files = PRODUCT_SOURCE_ROOTS.flatMap((directory) => listRegularFiles(root, directory, PRODUCT_SOURCE_EXCLUDED_FILES));
+  return sourceDigest(root, files);
+}
+
+function validateSourceOverlay(repoRoot, productSourceSha, buildSourceSha, { requireCurrentHead = false, validateWorkingOverlay = false } = {}) {
+  const root = path.resolve(repoRoot);
+  const productTreeSha256 = productTreeIdentity(root, productSourceSha);
+  const buildProductTreeSha256 = productTreeIdentity(root, buildSourceSha);
+  if (productTreeSha256 !== buildProductTreeSha256) {
+    throw new TypeError("test-only build overlay changes the independently qualified product source tree");
+  }
+  const head = execFileSync("git", ["-C", root, "rev-parse", "--verify", "HEAD^{commit}"], { encoding: "utf8" }).trim();
+  if (requireCurrentHead && head !== buildSourceSha) throw new TypeError("actual build source OID does not match the checked out build commit");
+  const changed = execFileSync("git", ["-C", root, "diff", "--name-only", "-z", productSourceSha, buildSourceSha, "--"], { encoding: "buffer" })
+    .toString("utf8").split("\0").filter(Boolean);
+  const declared = new Set(PRESERVATION_FIXTURE_FILES);
+  const workingChanges = validateWorkingOverlay
+    ? execFileSync("git", ["-C", root, "diff", "--name-only", "-z", productSourceSha, "--"], { encoding: "buffer" }).toString("utf8").split("\0").filter(Boolean)
+    : [];
+  const untracked = validateWorkingOverlay
+    ? execFileSync("git", ["-C", root, "ls-files", "--others", "--exclude-standard", "-z"], { encoding: "buffer" }).toString("utf8").split("\0").filter(Boolean)
+    : [];
+  const actualOverlayChanges = [...new Set([...changed, ...workingChanges, ...untracked])].sort();
+  const unexpected = actualOverlayChanges.filter((relative) => !declared.has(relative));
+  if (unexpected.length > 0) {
+    throw new TypeError(`build overlay changes files outside the declared test-only fixture set: ${unexpected.slice(0, 5).join(", ")}`);
+  }
+  const committedFixtureOverlaySha256 = fixtureOverlayDigest(root, buildSourceSha);
+  const workingFixtureOverlaySha256 = validateWorkingOverlay ? fixtureOverlayDigest(root) : committedFixtureOverlaySha256;
+  if (validateWorkingOverlay && workingFixtureOverlaySha256 !== committedFixtureOverlaySha256) {
+    throw new TypeError("working test-only fixture bytes do not match the actual overlay build Git object");
+  }
+  const fixtureOverlaySha256 = workingFixtureOverlaySha256;
+  return { productTreeSha256, fixtureOverlaySha256, changedFiles: actualOverlayChanges };
+}
+
+function validateBeforeQualification({ repoRoot, qualificationPath, productSourceSha, buildSourceSha, qualificationSha256 } = {}) {
+  if (!path.isAbsolute(qualificationPath || "") || !validSha(productSourceSha) || !validSha(buildSourceSha) || !validDigest(qualificationSha256)) {
+    throw new TypeError("before qualification requires absolute raw evidence and independently pinned product/build OIDs and qualification digest");
+  }
+  const qualificationStat = fs.lstatSync(qualificationPath);
+  if (qualificationStat.isSymbolicLink() || !qualificationStat.isFile() || qualificationStat.size <= 0 || qualificationStat.size > MAX_JSON_BYTES) {
+    throw new TypeError("pinned before qualification must be a bounded regular file without symlinks");
+  }
+  const qualificationBytes = fs.readFileSync(qualificationPath);
+  const actualQualificationSha256 = `sha256:${crypto.createHash("sha256").update(qualificationBytes).digest("hex")}`;
+  if (actualQualificationSha256 !== qualificationSha256) throw new TypeError("raw before qualification bytes do not match the independent qualification digest pin");
+  const qualification = JSON.parse(qualificationBytes.toString("utf8"));
+  const runtime = qualification.browser_runtime_equivalence;
+  if (qualification.schema !== "scrypath.phase185-before-qualification.v1" || qualification.status !== "qualified" ||
+    qualification.source_sha !== productSourceSha || runtime?.source_sha !== productSourceSha || runtime?.rootfs_layers_equal !== true ||
+    runtime?.effective_config_equal !== true || !/^sha256:[a-f0-9]{64}$/.test(runtime?.actual_image_id || "") ||
+    !/^[a-f0-9]{64}$/.test(qualification.actual_before_sha256 || "")) {
+    throw new TypeError("raw qualification is not the independently pinned, qualified Plan05 before product and browser runtime");
+  }
+  const capturePin = (qualification.pinned_files || []).find((item) => item?.sha256 === qualification.actual_before_sha256 && path.basename(item.path || "") === "capture.json");
+  if (!capturePin || !path.isAbsolute(capturePin.path)) throw new TypeError("raw qualification does not pin its actual before capture manifest");
+  const captureStat = fs.lstatSync(capturePin.path);
+  if (captureStat.isSymbolicLink() || !captureStat.isFile()) throw new TypeError("qualified before capture must be a regular file without symlinks");
+  const captureBytes = fs.readFileSync(capturePin.path);
+  if (crypto.createHash("sha256").update(captureBytes).digest("hex") !== qualification.actual_before_sha256) {
+    throw new TypeError("qualified before capture bytes do not match the raw qualification digest");
+  }
+  const capture = JSON.parse(captureBytes.toString("utf8"));
+  const environment = capture.environment;
+  const clock = environment?.clock;
+  const font = environment?.browser_font_profile;
+  const date = new Date(clock?.utc || "");
+  if (capture.source?.source_sha !== productSourceSha || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(clock?.utc || "") ||
+    Number.isNaN(date.getTime()) || date.toISOString() !== clock.utc || !/^[a-f0-9]{64}$/.test(clock?.sha256 || "") ||
+    clock.timezone !== "UTC" || clock.locale !== "en-US" || clock.browser_mode !== "fixed-date" ||
+    !(environment.browser_launch?.args || []).includes("--disable-partial-raster") ||
+    font?.method !== "retained-cdp-fixed-font-v1" || font?.font_families?.fixed !== "Liberation Mono" ||
+    font?.applied !== "before-first-navigation" || font?.lifetime !== "page-context") {
+    throw new TypeError("pinned before capture does not establish the qualified fixed-clock, raster and retained-font recipe");
+  }
+  const overlay = validateSourceOverlay(repoRoot, productSourceSha, buildSourceSha, { requireCurrentHead: true, validateWorkingOverlay: true });
+  return {
+    product_source_sha: productSourceSha,
+    build_source_sha: buildSourceSha,
+    tree: overlay.productTreeSha256,
+    overlay: overlay.fixtureOverlaySha256,
+    product_tree_sha256: overlay.productTreeSha256,
+    fixture_overlay_sha256: overlay.fixtureOverlaySha256,
+    qualification_sha256: actualQualificationSha256,
+    clock_instant: clock.utc
+  };
+}
 
 function isRecord(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -305,31 +550,316 @@ const REQUIRED_UI_CASES = [
   ]
 ];
 
-function mandatoryInventoryReasons(cases) {
+function mandatoryInventoryReasons(cases, { preservationOnly = false } = {}) {
   const reasons = [];
-  const requiredFiles = ["ui_followup.spec.ts", "ui_iteration3.spec.ts", "phase173_shell.spec.ts"];
-  for (const basename of requiredFiles) {
-    if (!cases.some((item) => path.posix.basename(item.identity.file) === basename)) {
-      reasons.push(errorReason("missing_required_suite", `Full inventory is missing ${basename}`));
+  if (!preservationOnly) {
+    const requiredFiles = ["ui_followup.spec.ts", "ui_iteration3.spec.ts", "phase173_shell.spec.ts"];
+    for (const basename of requiredFiles) {
+      if (!cases.some((item) => path.posix.basename(item.identity.file) === basename)) {
+        reasons.push(errorReason("missing_required_suite", `Full inventory is missing ${basename}`));
+      }
+    }
+    const actualKeys = new Set(cases.map((item) => item.identity.key));
+    for (const [file, title] of REQUIRED_UI_CASES) {
+      const expected = caseIdentity({ file: `e2e/${file}`, project: "chromium", title_path: [file, title] });
+      if (!actualKeys.has(expected.key)) {
+        reasons.push(errorReason("missing_required_case", `Full inventory is missing intended case: ${title}`, expected.key));
+      }
+    }
+    const phase173 = cases.filter((item) => path.posix.basename(item.identity.file) === "phase173_shell.spec.ts");
+    for (const entrypoint of ["mounted", "standalone"]) {
+      if (!phase173.some((item) => item.identity.entrypoint === entrypoint)) {
+        reasons.push(errorReason("missing_required_entrypoint", `Phase 173 inventory is missing the ${entrypoint} entrypoint`));
+      }
     }
   }
-  const actualKeys = new Set(cases.map((item) => item.identity.key));
-  for (const [file, title] of REQUIRED_UI_CASES) {
-    const expected = caseIdentity({ file: `e2e/${file}`, project: "chromium", title_path: [file, title] });
-    if (!actualKeys.has(expected.key)) {
-      reasons.push(errorReason("missing_required_case", `Full inventory is missing intended case: ${title}`, expected.key));
+  const preservationCaseCounts = new Map();
+  for (const item of cases) {
+    const fileName = path.posix.basename(item.identity.file);
+    if (fileName !== "ui_state_preservation.spec.ts" && fileName !== "ui_content_preservation.spec.ts") continue;
+    const title = item.identity.title_path.at(-1) || "";
+    const match = title.match(/^(E(?:10|[1-9])) (empty|loading|error|populated|partial|zero-one-many|overflow|long-text)\b/);
+    if (!match) continue;
+    const id = `${match[1]} ${match[2]}`;
+    const expected = PRESERVATION_CASES.find((preservationCase) => preservationCase.id === id);
+    if (!expected || expected.file !== `e2e/${fileName}`) {
+      reasons.push(errorReason("unexpected_preservation_case", `Preservation case is outside its declared suite: ${id}`, item.identity.key));
+      continue;
+    }
+    preservationCaseCounts.set(id, (preservationCaseCounts.get(id) || 0) + 1);
+    if (item.identity.project !== "chromium") {
+      reasons.push(errorReason("invalid_preservation_project", `Preservation case ${id} must run in Chromium`, item.identity.key));
     }
   }
-  const phase173 = cases.filter((item) => path.posix.basename(item.identity.file) === "phase173_shell.spec.ts");
-  for (const entrypoint of ["mounted", "standalone"]) {
-    if (!phase173.some((item) => item.identity.entrypoint === entrypoint)) {
-      reasons.push(errorReason("missing_required_entrypoint", `Phase 173 inventory is missing the ${entrypoint} entrypoint`));
+  for (const preservationCase of PRESERVATION_CASES) {
+    const count = preservationCaseCounts.get(preservationCase.id) || 0;
+    if (count === 0) {
+      reasons.push(errorReason("missing_required_case", `Full inventory is missing intended case: ${preservationCase.id}`));
+    } else if (count !== 1) {
+      reasons.push(errorReason("duplicate_preservation_case", `Full inventory contains ${count} copies of ${preservationCase.id}`));
     }
   }
   return reasons;
 }
 
-function reconcileInventory({ inventory, report, repoRoot = process.cwd(), allowedSkips = [], requireMandatoryCases = false } = {}) {
+function preservationIdForCase(item) {
+  const fileName = path.posix.basename(item.file);
+  if (fileName !== "ui_state_preservation.spec.ts" && fileName !== "ui_content_preservation.spec.ts") return null;
+  const title = item.title_path.at(-1) || "";
+  const match = title.match(/^(E(?:10|[1-9])) (empty|loading|error|populated|partial|zero-one-many|overflow|long-text)\b/);
+  if (!match) return null;
+  const id = `${match[1]} ${match[2]}`;
+  return PRESERVATION_CASES.some((preservationCase) => preservationCase.id === id && preservationCase.file === `e2e/${fileName}`)
+    ? id
+    : null;
+}
+
+function loadPreservationRawBundle(runRoot, artifacts, reasons) {
+  const artifact = artifacts.find((item) => item.path === rawBundle.BUNDLE_PATH);
+  const empty = { metadata: null, members: new Map(), artifacts: new Map() };
+  if (!artifact?.present || !artifact.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
+    reasons.push(errorReason("missing_preservation_bundle", "All raw held-out PNGs must be copied in the bounded, hash-verified raw bundle"));
+    return empty;
+  }
+  try {
+    const members = rawBundle.loadRunBundle(runRoot, artifact.sha256);
+    const entries = [...members].map(([path, bytes]) => ({ path, sha256: rawBundle.sha256(bytes), size_bytes: bytes.length })).sort((a, b) => a.path.localeCompare(b.path));
+    return {
+      metadata: { path: rawBundle.BUNDLE_PATH, sha256: artifact.sha256, size_bytes: artifact.size_bytes, members: entries },
+      members,
+      artifacts: new Map(entries.map((entry) => [entry.path, { ...entry, present: true, copied: true, copy_status: "success", storage: "raw-bundle-member" }]))
+    };
+  } catch (error) {
+    reasons.push(errorReason("invalid_preservation_bundle", error.message));
+    return empty;
+  }
+}
+
+function validatePreservationEvents(events, reconciliation, context, reasons) {
+  const preservationTests = reconciliation.cases.filter((item) => preservationIdForCase(item));
+  const passedTests = new Map(preservationTests.map((item) => [preservationIdForCase(item), item]));
+  const rows = events.filter((event) => event.operation === "ui_preservation_case");
+  const rowsById = new Map();
+  const effectiveRuntimes = new Set(rows.map((event) => event.runtime?.effective_runtime_sha256).filter(Boolean));
+  const recipes = new Set(rows.map((event) => event.recipe_sha256).filter(Boolean));
+  if (effectiveRuntimes.size > 1) reasons.push(errorReason("mixed_preservation_runtime", "Held-out cases use more than one effective test runtime identity"));
+  if (recipes.size > 1) reasons.push(errorReason("mixed_preservation_recipe", "Held-out cases use more than one browser/profile/clock/data recipe"));
+  for (const event of rows) {
+    const id = typeof event.case_id === "string" ? event.case_id : "";
+    if (!PRESERVATION_CASES.some((preservationCase) => preservationCase.id === id)) {
+      reasons.push(errorReason("unexpected_preservation_case_receipt", `Unknown preservation case receipt: ${id || "(missing id)"}`));
+      continue;
+    }
+    if (rowsById.has(id)) {
+      reasons.push(errorReason("duplicate_preservation_case_receipt", `Multiple preservation receipts exist for ${id}`));
+      continue;
+    }
+    rowsById.set(id, event);
+  }
+
+  const artifactByPath = new Map(context.artifacts.map((artifact) => [artifact.path, artifact]));
+  const seenObservationPaths = new Set();
+  const decodedDimensions = new Map();
+  const validated = [];
+  for (const expected of PRESERVATION_CASES) {
+    const event = rowsById.get(expected.id);
+    const testCase = passedTests.get(expected.id);
+    if (!event || !testCase) {
+      reasons.push(errorReason("missing_preservation_case_receipt", `Missing successful test or actual receipt for ${expected.id}`));
+      continue;
+    }
+    const identity = testCase;
+    if (identity.attempts?.length !== 1 || identity.attempts[0]?.retry !== 0 || identity.attempts[0]?.status !== "passed" ||
+      identity.expected_status !== "passed" || identity.outcome !== "passed") {
+      reasons.push(errorReason("preservation_test_not_single_clean_pass", `Held-out case ${expected.id} must have exactly one successful first attempt`, identity.key));
+    }
+    if (event.test_identity !== identity.key) reasons.push(errorReason("preservation_identity_mismatch", `Receipt identity does not match the successful test for ${expected.id}`, identity.key));
+    if (event.product_source_sha !== context.productSourceSha || event.build_source_sha !== context.checkoutHead || event.product_tree_sha256 !== context.productTreeSha256) {
+      reasons.push(errorReason("preservation_source_mismatch", `Receipt product/build/tree identities do not match the independently checked run source for ${expected.id}`, identity.key));
+    }
+    if (event.fixture_overlay_sha256 !== context.fixtureOverlaySha256) reasons.push(errorReason("preservation_fixture_mismatch", `Receipt fixture overlay does not match the checked out test-only fixtures for ${expected.id}`, identity.key));
+    const runtime = event.runtime;
+    if (!isRecord(runtime) || runtime.application_image_id !== context.applicationRuntimeId || runtime.standalone_ops_image_id !== context.standaloneOpsRuntimeId || runtime.browser_image_id !== context.browserRuntimeId ||
+      !validDigest(runtime.effective_runtime_sha256) || !validDigest(runtime.browser_source_layer_id) || !validDigest(runtime.browser_base_layers_sha256) || !validDigest(event.recipe_sha256)) {
+      reasons.push(errorReason("preservation_runtime_mismatch", `Receipt runtime identity does not match the run for ${expected.id}`, identity.key));
+    }
+    const recipe = event.clock_recipe;
+    const clockSha = recipe?.clock_sha256;
+    const profile = recipe?.font_profile;
+    const profileRecipe = isRecord(recipe) ? Object.fromEntries(Object.entries(recipe).filter(([key]) => !["browser_date", "clock_sha256", "profile_sha256", "data_recipe_sha256"].includes(key))) : null;
+    const sharedRecipe = commonRecipe(recipe);
+    const dataRecipeSha = isRecord(event.data_recipe) ? `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(event.data_recipe))).digest("hex")}` : "";
+    if (!isRecord(recipe) || recipe.browser?.engine !== "chromium" || recipe.browser?.package !== "@playwright/test" ||
+      !/^\d+\.\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)?$/.test(recipe.browser?.version || "") ||
+      !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(recipe.browser?.package_version || "") ||
+      !Array.isArray(recipe.launch_args) || !recipe.launch_args.includes("--disable-partial-raster") ||
+      recipe.locale !== "en-US" || recipe.timezone !== "UTC" || recipe.device_scale_factor !== 1 ||
+      recipe.browser_date?.fixed !== true || recipe.browser_date?.timers_running !== true ||
+      !Number.isFinite(recipe.browser_date?.timer_elapsed_ms) || recipe.browser_date.timer_elapsed_ms <= 20 ||
+      !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(recipe.browser_date?.observed || "") ||
+      !isRecord(profile) || profile.method !== "retained-cdp-fixed-font-v1" || profile.fixed_font_family !== "Liberation Mono" ||
+      profile.applied !== "before-first-navigation" || profile.lifetime !== "page-context" ||
+      !validDigest(recipe.profile_sha256) || !validDigest(recipe.data_recipe_sha256) || !validDigest(clockSha) ||
+      `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(profileRecipe))).digest("hex")}` !== recipe.profile_sha256 ||
+      dataRecipeSha !== recipe.data_recipe_sha256 ||
+      `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(sharedRecipe))).digest("hex")}` !== event.recipe_sha256) {
+      reasons.push(errorReason("invalid_preservation_clock_recipe", `Receipt lacks an observed fixed-clock recipe and genuine per-run timer sample for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.actions) || event.actions.length === 0 || event.actions.some((action) => typeof action !== "string" || action.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_actions", `Receipt lacks a concrete action sequence for ${expected.id}`, identity.key));
+    }
+    if (!Array.isArray(event.transport_sequence) || event.transport_sequence.length === 0 || event.transport_sequence.some((step) =>
+      !isRecord(step) || typeof step.operation !== "string" || step.operation.trim() === "" || typeof step.outcome !== "string" || step.outcome.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_transport", `Receipt lacks observed request/LiveView transport outcomes for ${expected.id}`, identity.key));
+    }
+
+    const expectedMatrix = expected.category === "overflow" || expected.category === "long-text"
+      ? PRESERVATION_THEMES.flatMap((theme) => PRESERVATION_VIEWPORT_WIDTHS.map((width) => `${theme}|${width}`))
+      : null;
+    const observations = [];
+    const observationIds = new Set();
+    if (!Array.isArray(event.observations)) {
+      reasons.push(errorReason("missing_preservation_observations", `${expected.id} must carry explicit themed viewport observations`, identity.key));
+    } else if (expectedMatrix && event.observations.length !== expectedMatrix.length) {
+      reasons.push(errorReason("incomplete_preservation_observations", `${expected.id} requires all ${expectedMatrix.length} theme × viewport observations`, identity.key));
+    } else if (!expectedMatrix && event.observations.length !== 1) {
+      reasons.push(errorReason("invalid_preservation_observation_count", `${expected.id} must have exactly one explicitly declared theme and viewport observation`, identity.key));
+    }
+    for (const observation of Array.isArray(event.observations) ? event.observations : []) {
+      try {
+        if (!isRecord(observation) || !PRESERVATION_THEMES.includes(observation.theme) || !isRecord(observation.viewport) ||
+          !PRESERVATION_VIEWPORT_WIDTHS.includes(observation.viewport.width) || observation.viewport.height !== (observation.viewport.width === 390 ? 844 : 900)) {
+          throw new TypeError("observation must declare an approved theme and viewport");
+        }
+        const key = `${observation.theme}|${observation.viewport.width}`;
+        if (observationIds.has(key)) throw new TypeError(`duplicate observation ${key}`);
+        observationIds.add(key);
+        if (expectedMatrix && !expectedMatrix.includes(key)) throw new TypeError(`unexpected observation ${key}`);
+        const state = observation.state;
+        if (!isRecord(state) || state.element !== expected.element || state.category !== expected.category || typeof state.route !== "string" || !state.route.startsWith("/") ||
+          state.theme !== observation.theme || state.color_scheme !== (observation.theme === "light" ? "light" : "dark") ||
+          !isRecord(state.viewport) || state.viewport.width !== observation.viewport.width || state.viewport.height !== observation.viewport.height ||
+          !isRecord(state.scroll) || !Number.isFinite(state.scroll.x) || !Number.isFinite(state.scroll.y) ||
+          !isRecord(state.focus) || typeof state.focus.name !== "string" || state.focus.name.trim() === "" ||
+          typeof state.data_identity !== "string" || state.data_identity.trim() === "" ||
+          state.clock?.clock_sha256 !== clockSha || state.clock?.browser_iso !== recipe?.browser_date?.observed || state.clock?.server_iso !== recipe?.browser_date?.observed) {
+          throw new TypeError("observation state must record matching route, theme, viewport, scroll, focus, data identity and fixed clock");
+        }
+        if (!Array.isArray(observation.geometry) || observation.geometry.length === 0 || observation.geometry.some((item) =>
+          !isRecord(item) || typeof item.name !== "string" || item.name.trim() === "" || ![item.x, item.y, item.width, item.height].every(Number.isFinite))) {
+          throw new TypeError("observation lacks measured element and document geometry");
+        }
+        const documentGeometry = observation.geometry.find((item) => item.name === `document-${observation.viewport.width}` && item.viewport_width === observation.viewport.width);
+        if (!documentGeometry || documentGeometry.width < observation.viewport.width || documentGeometry.height < observation.viewport.height) {
+          throw new TypeError("observation does not report full-page document dimensions for its viewport");
+        }
+        if (!Array.isArray(observation.assertions) || observation.assertions.length === 0 || observation.assertions.some((assertion) =>
+          !isRecord(assertion) || typeof assertion.name !== "string" || assertion.name.trim() === "" || assertion.status !== "passed" || typeof assertion.actual !== "string" || assertion.actual.trim() === "")) {
+          throw new TypeError("observation lacks passing semantic and geometry assertions");
+        }
+        if (!Array.isArray(observation.visible_copy) || observation.visible_copy.length === 0 || observation.visible_copy.some((copy) =>
+          !isRecord(copy) || typeof copy.text !== "string" || copy.text.trim() === "" || typeof copy.sha256 !== "string" || crypto.createHash("sha256").update(copy.text).digest("hex") !== copy.sha256)) {
+          throw new TypeError("observation lacks exact visible copy and matching hashes");
+        }
+        const image = observation.image;
+        if (!isRecord(image) || typeof image.path !== "string" || !/^[a-f0-9]{64}$/.test(image.sha256 || "")) throw new TypeError("observation image path and SHA-256 are required");
+        const imagePath = normalizeArtifactPath(image.path);
+        if (!imagePath.startsWith(PRESERVATION_ARTIFACT_ROOT) || path.posix.extname(imagePath).toLowerCase() !== ".png") throw new TypeError("image must be a PNG in the held-out preservation artifact bundle");
+        if (seenObservationPaths.has(imagePath)) throw new TypeError("raw image artifact paths must be globally unique across every case and observation");
+        seenObservationPaths.add(imagePath);
+        if (image.capture !== "full-page-real-product-state" || !isRecord(image.viewport) || image.viewport.width !== observation.viewport.width || image.viewport.height !== observation.viewport.height ||
+          !isRecord(image.full_page_raster) || !Number.isInteger(image.full_page_raster.width) || !Number.isInteger(image.full_page_raster.height)) {
+          throw new TypeError("image metadata must bind the declared viewport and actual full-page raster geometry");
+        }
+        const artifact = context.rawBundle.artifacts.get(imagePath);
+        if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") throw new TypeError("image must be declared, copied, present and hash-matched in this run");
+        const imageBytes = context.rawBundle.members.get(imagePath);
+        const priorDimensions = decodedDimensions.get(image.sha256);
+        if (priorDimensions && !priorDimensions.bytes.equals(imageBytes)) throw new TypeError("Equal raw image hashes have different bytes");
+        const raster = priorDimensions?.dimensions || pngDimensions(imageBytes, `${expected.id} ${key}`);
+        if (!priorDimensions) decodedDimensions.set(image.sha256, { bytes: imageBytes, dimensions: raster });
+        const dpr = recipe.device_scale_factor;
+        const expectedRaster = { width: observation.viewport.width * dpr, height: documentGeometry.height * dpr };
+        if (image.full_page_raster.width !== raster.width || image.full_page_raster.height !== raster.height ||
+          raster.width !== expectedRaster.width || raster.height !== expectedRaster.height) {
+          throw new TypeError(`decoded full-page raster ${raster.width}x${raster.height} does not match viewport/document geometry ${expectedRaster.width}x${expectedRaster.height}`);
+        }
+        const sampling = observation.capture_sampling;
+        if (!isRecord(sampling) || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 || !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) throw new TypeError("raw capture lacks the bounded first-consecutive stationary sample proof");
+        for (let index = 0; index < sampling.samples.length; index++) {
+          const sample = sampling.samples[index];
+          const previous = sampling.samples[index - 1];
+          if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") || !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 || (previous && sample.elapsed_ms < previous.elapsed_ms)) throw new TypeError("raw capture sample hashes/timing are invalid");
+          for (const [samplePath, expectedHash, kind] of [[sample.path, sample.sha256, "png"], [sample.state_path, sample.state_sha256, "json"]]) {
+            rawBundle.memberPath(samplePath);
+            if (!samplePath.endsWith(`.${kind}`) || seenObservationPaths.has(samplePath)) throw new TypeError("raw sample paths are reused or have the wrong media type");
+            seenObservationPaths.add(samplePath);
+            const rawArtifact = context.rawBundle.artifacts.get(samplePath);
+            const sampleBytes = context.rawBundle.members.get(samplePath);
+            if (!rawArtifact?.present || rawArtifact.sha256 !== expectedHash || !Buffer.isBuffer(sampleBytes) || rawBundle.sha256(sampleBytes) !== expectedHash) throw new TypeError("raw sample PNG/state bytes are absent or do not match the observed hashes");
+            if (kind === "png") {
+              const prior = decodedDimensions.get(expectedHash);
+              if (prior && !prior.bytes.equals(sampleBytes)) throw new TypeError("Equal raw sample hashes have different bytes");
+              const dimensions = prior?.dimensions || pngDimensions(sampleBytes, `${expected.id} raw sample`);
+              if (!prior) decodedDimensions.set(expectedHash, { bytes: sampleBytes, dimensions });
+              if (dimensions.width !== raster.width || dimensions.height !== raster.height) throw new TypeError("raw sample raster dimensions differ from the observation geometry");
+            } else {
+              const snapshot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sampleBytes));
+              if (!isRecord(snapshot) || snapshot.schema !== "scrypath.ui-capture-state.v1" || !isRecord(snapshot.before) || !isRecord(snapshot.after)) throw new TypeError("raw sample state is not an actual before/after capture snapshot");
+              const rootSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([name]) => !["before", "after"].includes(name)));
+              const beforeJson = JSON.stringify(canonicalize(snapshot.before));
+              const afterJson = JSON.stringify(canonicalize(snapshot.after));
+              if (beforeJson !== afterJson || JSON.stringify(canonicalize(rootSnapshot)) !== afterJson || crypto.createHash("sha256").update(afterJson).digest("hex") !== state.dom_state_sha256) throw new TypeError("raw before/after sample state differs from the actual observation DOM-state identity");
+              if (snapshot.after.viewport?.width !== observation.viewport.width || snapshot.after.viewport?.height !== observation.viewport.height) throw new TypeError("raw sample state viewport differs from the actual observation");
+            }
+          }
+          if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
+        }
+        const selectedSample = sampling.samples[sampling.selected];
+        const previousSample = sampling.samples[sampling.selected - 1];
+        if (selectedSample.sha256 !== image.sha256 || previousSample.sha256 !== image.sha256 || selectedSample.state_sha256 !== previousSample.state_sha256) throw new TypeError("selected raw PNG is not the first consecutive exact image/state sample pair");
+        observations.push({
+          theme: observation.theme,
+          viewport: { width: observation.viewport.width, height: observation.viewport.height },
+          state,
+          geometry: observation.geometry,
+          assertions: observation.assertions,
+          capture_sampling: sampling,
+          visible_copy: observation.visible_copy,
+          image: { path: imagePath, sha256: image.sha256, viewport: image.viewport, full_page_raster: raster, capture: image.capture }
+        });
+      } catch (error) {
+        reasons.push(errorReason("invalid_preservation_observation", `${expected.id}: ${error.message}`, identity.key));
+      }
+    }
+    if (expectedMatrix && expectedMatrix.some((key) => !observationIds.has(key))) {
+      reasons.push(errorReason("missing_preservation_observation", `${expected.id} does not cover every light/dark/system-dark × 1440/768/390 observation`, identity.key));
+    }
+    let clockArtifact = null;
+    try {
+      if (!isRecord(event.clock_artifact) || typeof event.clock_artifact.path !== "string" || event.clock_artifact.path !== "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt" || !/^[a-f0-9]{64}$/.test(event.clock_artifact.sha256 || "")) throw new TypeError("the immutable fixed-clock bytes must be a declared run artifact");
+      const artifact = artifactByPath.get(event.clock_artifact.path);
+      if (!artifact?.present || artifact.sha256 !== event.clock_artifact.sha256 || artifact.copied !== true || artifact.copy_status !== "success" || `sha256:${event.clock_artifact.sha256}` !== clockSha) throw new TypeError("fixed-clock artifact bytes do not match the observed clock digest");
+      const bytes = fs.readFileSync(resolveArtifact(context.runRoot, event.clock_artifact.path).path);
+      const instant = bytes.toString("utf8");
+      if (instant !== recipe?.browser_date?.observed || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(instant)) throw new TypeError("actual server/browser clock does not match the preserved immutable fixture bytes");
+      clockArtifact = { path: event.clock_artifact.path, sha256: event.clock_artifact.sha256 };
+    } catch (error) {
+      reasons.push(errorReason("invalid_preservation_clock_artifact", `${expected.id}: ${error.message}`, identity.key));
+    }
+    validated.push({ id: expected.id, test_identity: identity.key, product_source_sha: event.product_source_sha, build_source_sha: event.build_source_sha, product_tree_sha256: event.product_tree_sha256,
+      fixture_overlay_sha256: event.fixture_overlay_sha256, runtime: isRecord(runtime) ? runtime : null,
+      recipe_sha256: event.recipe_sha256, clock_recipe: isRecord(recipe) ? recipe : null, data_recipe: isRecord(event.data_recipe) ? event.data_recipe : null, clock_artifact: clockArtifact,
+      actions: Array.isArray(event.actions) ? event.actions : [], transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [], observations
+    });
+  }
+  if (context.rawBundle.members.size !== seenObservationPaths.size || [...context.rawBundle.members.keys()].some((name) => !seenObservationPaths.has(name))) {
+    reasons.push(errorReason("unexpected_preservation_bundle_member", "The bounded bundle must contain exactly the observed raw case images"));
+  }
+  return validated.sort((left, right) => left.id.localeCompare(right.id));
+}
+
+function reconcileInventory({ inventory, report, repoRoot = process.cwd(), allowedSkips = [], requireMandatoryCases = false, preservationOnly = false } = {}) {
   const inventoryResult = parsePlaywrightCases(inventory, { repoRoot, label: "inventory" });
   const reportResult = parsePlaywrightCases(report, { repoRoot, includeAttempts: true, label: "report" });
   const reasons = [...inventoryResult.reasons, ...reportResult.reasons];
@@ -385,7 +915,7 @@ function reconcileInventory({ inventory, report, repoRoot = process.cwd(), allow
     });
   }
 
-  if (requireMandatoryCases) reasons.push(...mandatoryInventoryReasons(inventoryResult.cases));
+  if (requireMandatoryCases) reasons.push(...mandatoryInventoryReasons(inventoryResult.cases, { preservationOnly }));
   const uniqueReasons = new Map();
   for (const reason of reasons) {
     const key = `${reason.code}:${reason.identity || ""}:${reason.message}`;
@@ -447,7 +977,7 @@ function normalizeArtifactPath(value, { allowOutputs = false } = {}) {
   const clean = path.posix.normalize(normalized);
   if (
     !REQUIRED_ARTIFACT_PATHS.includes(clean) &&
-    !(allowOutputs && (clean === RECEIPT_NAME || clean === SUMMARY_NAME)) &&
+    !(allowOutputs && (clean === RECEIPT_NAME || clean === SUMMARY_NAME || clean === BEFORE_ONLY_RECEIPT_NAME)) &&
     !ALLOWED_ARTIFACT_PREFIXES.some((prefix) => clean.startsWith(prefix))
   ) {
     throw new TypeError("artifact path is outside the evidence allowlist");
@@ -581,6 +1111,28 @@ function validDigest(value) {
   return typeof value === "string" && /^sha256:[a-f0-9]{64}$/i.test(value);
 }
 
+function commonRecipe(recipe) {
+  if (!isRecord(recipe)) return null;
+  const normalized = structuredClone(recipe);
+  if (isRecord(normalized.browser_date)) delete normalized.browser_date.timer_elapsed_ms;
+  return normalized;
+}
+
+function pngDimensions(bytes, label = "PNG") {
+  if (!Buffer.isBuffer(bytes) || bytes.length < 24 || !bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
+    throw new TypeError(`${label} does not have a complete PNG header`);
+  }
+  const width = bytes.readUInt32BE(16);
+  const height = bytes.readUInt32BE(20);
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 ||
+    width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION || width * height > MAX_IMAGE_PIXELS) {
+    throw new RangeError(`${label} dimensions exceed the bounded image policy`);
+  }
+  const decoded = PNG.sync.read(bytes);
+  if (decoded.width !== width || decoded.height !== height) throw new TypeError(`${label} decoded dimensions disagree with its PNG header`);
+  return { width, height };
+}
+
 function normalizeStage(name, stage, reasons) {
   if (!isRecord(stage)) {
     reasons.push(errorReason("missing_stage", `Required ${name} stage is missing`));
@@ -599,14 +1151,16 @@ function normalizeStage(name, stage, reasons) {
   return { started_at: startedAt, ended_at: endedAt, exit_code: exitCode };
 }
 
-function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
+function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expectedSource = null, scope = "full", repoRoot = REPOSITORY_ROOT, verifyGitObjects = true } = {}) {
+  if (scope !== "full" && scope !== "before-only") throw new TypeError("evidence scope must be full or before-only");
+  const beforeOnly = scope === "before-only";
   const reasons = [];
   const root = resolveRunRoot(runDir);
   const input = readJsonArtifact(root, INPUT_NAME, reasons);
   const inventory = readJsonArtifact(root, INVENTORY_NAME, reasons);
   const report = readJsonArtifact(root, PLAYWRIGHT_NAME, reasons);
-  const lightParity = readJsonArtifact(root, "admin-light-parity.json", reasons);
-  const contrast = readJsonArtifact(root, "contrast-report.json", reasons);
+  const lightParity = readJsonArtifact(root, "admin-light-parity.json", reasons, { required: !beforeOnly });
+  const contrast = readJsonArtifact(root, "contrast-report.json", reasons, { required: !beforeOnly });
   const lifecycle = readJsonArtifact(root, "lifecycle.json", reasons);
   const manifest = input || {};
   const sourceInput = isRecord(manifest.source) ? manifest.source : {};
@@ -621,6 +1175,15 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   const sourceMode = sourceInput.mode === "hosted" || sourceInput.mode === "local" ? sourceInput.mode : "unknown";
   if (sourceMode === "unknown") reasons.push(errorReason("invalid_source_mode", "source.mode must be hosted or local"));
   const checkoutHead = requiredString(sourceInput, "checkout_head", "source", reasons);
+  const productSourceSha = requiredString(sourceInput, "product_source_sha", "source", reasons);
+  const qualificationSha256 = typeof sourceInput.qualification_sha256 === "string" ? sourceInput.qualification_sha256 : null;
+  if (expectedSource && (expectedSource.sourceSha !== productSourceSha || expectedSource.buildSourceSha !== checkoutHead ||
+      (beforeOnly && expectedSource.qualificationSha256 !== qualificationSha256))) {
+    reasons.push(errorReason("expected_source_mismatch", "Run product and build source SHAs do not match the independent pair authority"));
+  }
+  if (beforeOnly && !validDigest(qualificationSha256)) {
+    reasons.push(errorReason("invalid_before_qualification_digest", "Before-only evidence must retain the independently pinned raw Plan05 qualification digest"));
+  }
   const builtSourceSha = requiredString(sourceInput, "built_source_sha", "source", reasons);
   const eventSha = typeof sourceInput.event_sha === "string" && sourceInput.event_sha.trim() ? sourceInput.event_sha.trim() : null;
   const dirty = sourceInput.dirty;
@@ -630,7 +1193,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   if (sourceMode === "hosted") {
     if (!validSha(eventSha)) reasons.push(errorReason("invalid_event_sha", "hosted source.event_sha must be a full Git SHA"));
     if (dirty !== false) reasons.push(errorReason("hosted_source_dirty", "hosted proof requires a clean checkout"));
-    if (eventSha !== checkoutHead || eventSha !== builtSourceSha || workflowInput.sha !== eventSha) {
+    if ((!beforeOnly && (eventSha !== checkoutHead || eventSha !== builtSourceSha || eventSha !== productSourceSha)) || eventSha !== checkoutHead || eventSha !== builtSourceSha || workflowInput.sha !== eventSha) {
       reasons.push(errorReason("source_sha_mismatch", "checkout, event, built source and workflow SHA must match"));
     }
   } else if (dirty === true) {
@@ -640,6 +1203,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   } else if (sourceMode === "local" && checkoutHead !== builtSourceSha) {
     reasons.push(errorReason("source_sha_mismatch", "clean local checkout and built source SHA must match"));
   }
+  if (!validSha(productSourceSha)) reasons.push(errorReason("invalid_product_source_sha", "source.product_source_sha must be a full Git SHA"));
 
   const imageKinds = ["application", "browser"];
   const images = {};
@@ -666,12 +1230,19 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
       source_fingerprint: typeof image.source_fingerprint === "string" ? image.source_fingerprint : null
     };
   }
+  const standaloneOpsInput = isRecord(imageInput.standalone_ops) ? imageInput.standalone_ops : {};
+  const standaloneOpsBuiltId = requiredString(standaloneOpsInput, "built_id", "images.standalone_ops", reasons);
+  const standaloneOpsRuntimeId = requiredString(standaloneOpsInput, "runtime_id", "images.standalone_ops", reasons);
+  if (!validDigest(standaloneOpsBuiltId) || !validDigest(standaloneOpsRuntimeId) || standaloneOpsBuiltId !== standaloneOpsRuntimeId) {
+    reasons.push(errorReason("invalid_image_id", "standalone_ops built/runtime IDs must be the same immutable sha256 digest"));
+  }
+  images.standalone_ops = { built_id: standaloneOpsBuiltId, runtime_id: standaloneOpsRuntimeId };
 
   const composeScope = requiredString(composeInput, "scope", "compose", reasons);
   const composeProject = requiredString(composeInput, "project", "compose", reasons);
   const targets = Array.isArray(composeInput.targets) ? composeInput.targets.filter((target) => typeof target === "string") : [];
   const modelDigest = requiredString(composeInput, "model_digest", "compose", reasons);
-  if (composeScope !== "full") reasons.push(errorReason("wrong_compose_scope", "Clean browser proof requires full Compose scope"));
+  if (composeScope !== "full") reasons.push(errorReason("wrong_compose_scope", "Browser proof requires full Compose scope"));
   if (!targets.includes("web") || !targets.includes("standalone_ops")) {
     reasons.push(errorReason("missing_compose_target", "Full proof requires web and standalone_ops targets"));
   }
@@ -699,14 +1270,16 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   if (!Number.isInteger(workflow.run_attempt) || workflow.run_attempt < 1) reasons.push(errorReason("invalid_workflow_attempt", "workflow.run_attempt must be a positive integer"));
   if (workflow.job_conclusion !== "success") reasons.push(errorReason("workflow_failed", `workflow job conclusion is ${workflow.job_conclusion}`));
 
+  const stageNames = beforeOnly ? ["inventory", "browser", "artifact_copy"] : REQUIRED_STAGES;
   const stages = {};
-  for (const name of REQUIRED_STAGES) stages[name] = normalizeStage(name, stageInput[name], reasons);
+  for (const name of stageNames) stages[name] = normalizeStage(name, stageInput[name], reasons);
 
   const checkers = {};
   for (const [name, file, checker] of [
     ["light_parity", "admin-light-parity.json", lightParity],
     ["contrast", "contrast-report.json", contrast]
   ]) {
+    if (beforeOnly) continue;
     const inputChecker = isRecord(checkerInput[name]) ? checkerInput[name] : {};
     const declaredPath = typeof inputChecker.path === "string" ? inputChecker.path : "";
     const contrastResult = name === "contrast" ? inspectContrastReport(checker, stages.contrast?.exit_code) : null;
@@ -748,11 +1321,15 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   const reconciliation = reconcileInventory({
     inventory,
     report,
-    repoRoot: process.cwd(),
+    repoRoot: REPOSITORY_ROOT,
     allowedSkips: Array.isArray(manifest.allowed_skips) ? manifest.allowed_skips : [],
-    requireMandatoryCases: true
+    requireMandatoryCases: true,
+    preservationOnly: beforeOnly
   });
   reasons.push(...reconciliation.reasons);
+  if (beforeOnly && reconciliation.case_count !== PRESERVATION_CASES.length) {
+    reasons.push(errorReason("before_only_scope_mismatch", `Before-only receipt must contain only the ${PRESERVATION_CASES.length} held-out preservation cases`));
+  }
 
   const declaredArtifacts = Array.isArray(manifest.artifacts) ? manifest.artifacts : [];
   if (!Array.isArray(manifest.artifacts)) reasons.push(errorReason("malformed_artifact_manifest", "input artifacts must be an array"));
@@ -776,12 +1353,13 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
     if (screenshots.length === 0) reasons.push(errorReason("missing_required_screenshot", "Iteration 3 cases require their run-owned journey screenshots"));
   }
 
-  const artifactPaths = new Set([...REQUIRED_ARTIFACT_PATHS, ...declaredByPath.keys()]);
+  const requiredArtifactPaths = beforeOnly ? BEFORE_ONLY_REQUIRED_ARTIFACT_PATHS : REQUIRED_ARTIFACT_PATHS;
+  const artifactPaths = new Set([...requiredArtifactPaths, ...declaredByPath.keys()]);
   const artifacts = [];
   let totalArtifactBytes = 0;
   for (const artifactPath of [...artifactPaths].sort()) {
     const declared = declaredByPath.get(artifactPath);
-    const required = REQUIRED_ARTIFACT_PATHS.includes(artifactPath) || declared?.required === true;
+    const required = requiredArtifactPaths.includes(artifactPath) || declared?.required === true;
     const row = hashArtifact(root, artifactPath, reasons, {
       required,
       copied: declared ? declared.copied === true : true,
@@ -795,6 +1373,56 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   if (stages.artifact_copy.exit_code !== 0) reasons.push(errorReason("artifact_copy_failed", "Artifact collection stage did not exit successfully"));
 
   const events = readEvents(root, reasons);
+  const actualBrowserRecipe = events.find((event) => event.operation === "ui_preservation_case")?.clock_recipe?.browser;
+  if (!isRecord(actualBrowserRecipe) || actualBrowserRecipe.engine !== "chromium" || actualBrowserRecipe.package !== "@playwright/test" ||
+    !/^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:[-+][0-9A-Za-z.-]+)?$/.test(actualBrowserRecipe.version || "") ||
+    actualBrowserRecipe.package_version !== packageVersion) {
+    reasons.push(errorReason("actual_browser_profile_missing", "Actual Chromium and installed Playwright versions must be observed by held-out browser cases"));
+  }
+  let productTreeSha256 = null;
+  let fixtureOverlaySha256 = null;
+  try {
+    if (expectedSource) {
+      const sourceRoot = path.resolve(repoRoot);
+      const gitAvailable = (() => {
+        try { execFileSync("git", ["-C", sourceRoot, "rev-parse", "--git-dir"], { stdio: "ignore" }); return true; }
+        catch { return false; }
+      })();
+      if (verifyGitObjects && !gitAvailable) throw new TypeError("Pinned source replay requires the independently available Git objects");
+      if (verifyGitObjects && gitAvailable) {
+        const overlay = validateSourceOverlay(sourceRoot, expectedSource.sourceSha, expectedSource.buildSourceSha);
+        productTreeSha256 = overlay.productTreeSha256;
+        fixtureOverlaySha256 = overlay.fixtureOverlaySha256;
+      } else {
+        productTreeSha256 = productTreeIdentity(sourceRoot);
+        fixtureOverlaySha256 = fixtureOverlayDigest(sourceRoot);
+      }
+    } else {
+      productTreeSha256 = productTreeIdentity(REPOSITORY_ROOT);
+      fixtureOverlaySha256 = fixtureOverlayDigest(REPOSITORY_ROOT);
+    }
+  } catch (error) {
+    reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
+  }
+  if (expectedSource && (!validDigest(expectedSource.productTreeSha256) || !validDigest(expectedSource.fixtureOverlaySha256))) {
+    reasons.push(errorReason("invalid_expected_preservation_identity", "Independent pair authority requires full product-tree and fixture-overlay SHA-256 digests"));
+  }
+  if (expectedSource && (expectedSource.productTreeSha256 !== productTreeSha256 || expectedSource.fixtureOverlaySha256 !== fixtureOverlaySha256)) {
+    reasons.push(errorReason("expected_preservation_identity_mismatch", "Run product tree or test-only fixture overlay differs from the independent pair authority"));
+  }
+  const preservationBundle = loadPreservationRawBundle(root, artifacts, reasons);
+  const preservationCases = validatePreservationEvents(events, reconciliation, {
+    runRoot: root,
+    checkoutHead,
+    productSourceSha,
+    productTreeSha256,
+    fixtureOverlaySha256,
+    applicationRuntimeId: images.application?.runtime_id,
+    standaloneOpsRuntimeId: images.standalone_ops?.runtime_id,
+    browserRuntimeId: images.browser?.runtime_id,
+    rawBundle: preservationBundle,
+    artifacts
+  }, reasons);
   const operationCounts = {};
   for (const event of events) operationCounts[event.operation] = (operationCounts[event.operation] || 0) + 1;
   const sortedOperations = Object.fromEntries(Object.entries(operationCounts).sort(([left], [right]) => left.localeCompare(right)));
@@ -826,13 +1454,17 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   const source = {
     mode: sourceMode,
     checkout_head: checkoutHead,
+    product_source_sha: productSourceSha,
     dirty: typeof dirty === "boolean" ? dirty : null,
     event_sha: eventSha,
     built_source_sha: builtSourceSha,
-    dirty_fingerprint: typeof sourceInput.dirty_fingerprint === "string" ? sourceInput.dirty_fingerprint : null
+    dirty_fingerprint: typeof sourceInput.dirty_fingerprint === "string" ? sourceInput.dirty_fingerprint : null,
+    ...(beforeOnly ? { qualification_sha256: qualificationSha256 } : {})
   };
   const compose = { scope: composeScope, project: composeProject, targets: [...new Set(targets)].sort(), model_digest: modelDigest };
-  const browser = { engine: browserEngine, version: browserVersion, package: packageName, package_version: packageVersion };
+  const browser = isRecord(actualBrowserRecipe)
+    ? { engine: actualBrowserRecipe.engine, version: actualBrowserRecipe.version, package: actualBrowserRecipe.package, package_version: actualBrowserRecipe.package_version }
+    : { engine: browserEngine, version: browserVersion, package: packageName, package_version: packageVersion };
   const runtimeStarted = Object.values(stages).map((stage) => Date.parse(stage.started_at || "")).filter(Number.isFinite);
   const runtimeEnded = Object.values(stages).map((stage) => Date.parse(stage.ended_at || "")).filter(Number.isFinite);
   const runtimeSeconds = runtimeStarted.length && runtimeEnded.length
@@ -846,6 +1478,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   return {
     schema_version: 1,
     authority: "scripts/ci/ecommerce_evidence.cjs",
+    scope,
     source,
     images,
     compose,
@@ -854,6 +1487,15 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
     stages,
     checkers,
     cases: reconciliation.cases,
+    preservation: {
+      schema: beforeOnly ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1",
+      product_source_sha: productSourceSha,
+      build_source_sha: checkoutHead,
+      product_tree_sha256: productTreeSha256,
+      fixture_overlay_sha256: fixtureOverlaySha256,
+      raw_bundle: preservationBundle.metadata,
+      cases: preservationCases
+    },
     artifacts,
     cleanup,
     first_failure: firstFailure,
@@ -866,12 +1508,12 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
     job_name: workflow.job_name,
     conclusion: workflow.job_conclusion,
     browser_conclusion: stages.browser.exit_code === 0 ? "success" : "failure",
-    light_parity_conclusion: stages.light_parity.exit_code === 0 ? "success" : "failure",
-    contrast_conclusion: stages.contrast.exit_code === 0 ? "success" : "failure",
-    light_parity_status: checkers.light_parity.status,
-    light_parity_width_mismatches: checkers.light_parity.width_mismatches,
-    light_parity_missing: checkers.light_parity.missing,
-    light_parity_extra: checkers.light_parity.extra,
+    light_parity_conclusion: stages.light_parity?.exit_code === 0 ? "success" : beforeOnly ? "not-run" : "failure",
+    contrast_conclusion: stages.contrast?.exit_code === 0 ? "success" : beforeOnly ? "not-run" : "failure",
+    light_parity_status: checkers.light_parity?.status ?? "not-run",
+    light_parity_width_mismatches: checkers.light_parity?.width_mismatches ?? null,
+    light_parity_missing: checkers.light_parity?.missing ?? null,
+    light_parity_extra: checkers.light_parity?.extra ?? null,
     shell_wash_conclusion: shellWash.length === 0 ? "missing" : shellWash.every((item) => item.attempts.every((attempt) => attempt.status === "passed")) ? "success" : "failure",
     shell_wash_specs_total: shellWash.length,
     shell_wash_failed_specs: shellWash.filter((item) => item.attempts.some((attempt) => attempt.status !== "passed")).map((item) => item.title_path.join(" › ")),
@@ -993,10 +1635,10 @@ function writeAtomic(root, fileName, contents) {
   }
 }
 
-function writeEvidence({ runDir, now } = {}) {
+function writeEvidence({ runDir, now, expectedSource = null, repoRoot = REPOSITORY_ROOT, verifyGitObjects = true } = {}) {
   const root = resolveRunRoot(runDir);
   const generatedAt = now instanceof Date ? now.toISOString() : typeof now === "string" ? now : new Date().toISOString();
-  const receipt = buildReceipt(root, { generatedAt });
+  const receipt = buildReceipt(root, { generatedAt, expectedSource, repoRoot, verifyGitObjects });
   const jsonPath = path.join(root, RECEIPT_NAME);
   const summaryPath = path.join(root, SUMMARY_NAME);
   if (fs.existsSync(jsonPath) || fs.existsSync(summaryPath)) {
@@ -1014,7 +1656,67 @@ function writeEvidence({ runDir, now } = {}) {
   return receipt;
 }
 
-function validateReceipt({ runDir } = {}) {
+function beforeOnlySourceFromEnvironment(environment = process.env) {
+  const expectedSource = {
+    sourceSha: environment.E2E_PRODUCT_SOURCE_SHA,
+    buildSourceSha: environment.SCRYPATH_SOURCE_SHA,
+    productTreeSha256: environment.E2E_PRODUCT_TREE_SHA256,
+    fixtureOverlaySha256: environment.E2E_FIXTURE_OVERLAY_SHA256,
+    qualificationSha256: environment.E2E_PHASE185_QUALIFICATION_SHA256
+  };
+  if (!validSha(expectedSource.sourceSha) || !validSha(expectedSource.buildSourceSha) ||
+    !validDigest(expectedSource.productTreeSha256) || !validDigest(expectedSource.fixtureOverlaySha256) || !validDigest(expectedSource.qualificationSha256)) {
+    throw new TypeError("before-only collection requires independently pinned product/build Git OIDs and product/fixture tree digests");
+  }
+  return expectedSource;
+}
+
+function buildBeforeOnlyReceipt({ runDir, expectedSource, repoRoot = REPOSITORY_ROOT, generatedAt = new Date().toISOString(), verifyGitObjects = true } = {}) {
+  const pinned = expectedSource || beforeOnlySourceFromEnvironment();
+  return buildReceipt(runDir, { generatedAt, expectedSource: pinned, scope: "before-only", repoRoot, verifyGitObjects });
+}
+
+function writeBeforeOnlyEvidence({ runDir, expectedSource, repoRoot = REPOSITORY_ROOT, now } = {}) {
+  const root = resolveRunRoot(runDir);
+  if (fs.existsSync(path.join(root, RECEIPT_NAME)) || fs.existsSync(path.join(root, SUMMARY_NAME)) || fs.existsSync(path.join(root, BEFORE_ONLY_RECEIPT_NAME))) {
+    throw new Error("before-only collection requires a fresh run directory and cannot reuse a full receipt");
+  }
+  const generatedAt = now instanceof Date ? now.toISOString() : typeof now === "string" ? now : new Date().toISOString();
+  const receipt = buildBeforeOnlyReceipt({ runDir: root, expectedSource, repoRoot, generatedAt, verifyGitObjects: false });
+  writeAtomic(root, BEFORE_ONLY_RECEIPT_NAME, `${JSON.stringify(receipt, null, 2)}\n`);
+  return receipt;
+}
+
+function validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot = REPOSITORY_ROOT } = {}) {
+  let root;
+  let receipt;
+  try {
+    root = resolveRunRoot(runDir);
+    const receiptFile = resolveArtifact(root, BEFORE_ONLY_RECEIPT_NAME, { allowOutputs: true });
+    if (receiptFile.stat.size > MAX_JSON_BYTES) throw new RangeError("before-only receipt exceeds the parsing size limit");
+    receipt = JSON.parse(fs.readFileSync(receiptFile.path, "utf8"));
+    if (!isRecord(receipt) || receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v1" || typeof receipt.generated_at_utc !== "string") {
+      throw new TypeError("before-only receipt schema is invalid or belongs to the full-run scope");
+    }
+  } catch (error) {
+    return { valid: false, eligible: false, reasons: [errorReason("invalid_before_only_receipt", error.message)] };
+  }
+  let recomputed;
+  try {
+    recomputed = buildBeforeOnlyReceipt({ runDir: root, expectedSource: expectedSource || beforeOnlySourceFromEnvironment(), repoRoot, generatedAt: receipt.generated_at_utc, verifyGitObjects: true });
+  } catch (error) {
+    return { valid: false, eligible: false, reasons: [errorReason("before_only_receipt_recompute_failed", error.message)] };
+  }
+  const sameAggregate = JSON.stringify(canonicalize(receipt)) === JSON.stringify(canonicalize(recomputed));
+  const valid = sameAggregate;
+  const eligible = valid && receipt.eligibility?.eligible === true;
+  const reasons = [];
+  if (!sameAggregate) reasons.push(errorReason("before_only_receipt_mismatch", "Stored before-only receipt does not match its scoped inputs, source objects and artifacts"));
+  if (receipt.eligibility?.eligible !== true) reasons.push(...(Array.isArray(receipt.reasons) ? receipt.reasons : [errorReason("ineligible_before_only_receipt", "Stored before-only receipt is not eligible")]));
+  return { valid, eligible, reasons: normalizeReasons(reasons), receipt };
+}
+
+function validateReceipt({ runDir, expectedSource = null, repoRoot = REPOSITORY_ROOT, verifyGitObjects = true } = {}) {
   let root;
   let receipt;
   try {
@@ -1036,7 +1738,8 @@ function validateReceipt({ runDir } = {}) {
   }
   let recomputed;
   try {
-    recomputed = buildReceipt(root, { generatedAt: receipt.generated_at_utc });
+    if (receipt.scope !== "full" || receipt.preservation?.schema !== "scrypath.ui-preservation.v1") throw new TypeError("stored receipt is not a canonical full-run receipt");
+    recomputed = buildReceipt(root, { generatedAt: receipt.generated_at_utc, expectedSource, repoRoot, verifyGitObjects });
   } catch (error) {
     return { valid: false, eligible: false, reasons: [errorReason("receipt_recompute_failed", error.message)] };
   }
@@ -1073,7 +1776,7 @@ function runReconcile(runDir) {
   } catch (error) {
     return { eligible: false, cases: [], case_count: 0, reasons: [errorReason("unreadable_run_report", error.message)] };
   }
-  return reconcileInventory({ inventory, report, repoRoot: process.cwd(), requireMandatoryCases: true });
+  return reconcileInventory({ inventory, report, repoRoot: REPOSITORY_ROOT, requireMandatoryCases: true });
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -1089,8 +1792,18 @@ function main(argv = process.argv.slice(2)) {
     process.stdout.write(`${JSON.stringify({ eligibility: receipt.eligibility, reasons: receipt.reasons, files: [RECEIPT_NAME, SUMMARY_NAME] }, null, 2)}\n`);
     return receipt.eligibility.eligible ? 0 : 1;
   }
+  if (command === "write-before-only") {
+    const receipt = writeBeforeOnlyEvidence({ runDir, expectedSource: beforeOnlySourceFromEnvironment() });
+    process.stdout.write(`${JSON.stringify({ scope: receipt.scope, eligibility: receipt.eligibility, reasons: receipt.reasons, files: [BEFORE_ONLY_RECEIPT_NAME] }, null, 2)}\n`);
+    return receipt.eligibility.eligible ? 0 : 1;
+  }
   if (command === "validate-receipt") {
     const result = validateReceipt({ runDir });
+    process.stdout.write(`${JSON.stringify({ valid: result.valid, eligible: result.eligible, reasons: result.reasons }, null, 2)}\n`);
+    return result.valid && result.eligible ? 0 : 1;
+  }
+  if (command === "validate-before-only-receipt") {
+    const result = validateBeforeOnlyReceipt({ runDir, expectedSource: beforeOnlySourceFromEnvironment() });
     process.stdout.write(`${JSON.stringify({ valid: result.valid, eligible: result.eligible, reasons: result.reasons }, null, 2)}\n`);
     return result.valid && result.eligible ? 0 : 1;
   }
@@ -1110,8 +1823,17 @@ module.exports = {
   caseIdentity,
   isAllowedArtifactPath,
   reconcileInventory,
+  preservationCases: PRESERVATION_CASES,
+  fixtureOverlayDigest,
+  productTreeIdentity,
+  productSourceRoots: PRODUCT_SOURCE_ROOTS,
+  preservationFixtureFiles: PRESERVATION_FIXTURE_FILES,
+  validateSourceOverlay,
+  validateBeforeQualification,
   runReconcile,
   renderSummary,
   writeEvidence,
-  validateReceipt
+  writeBeforeOnlyEvidence,
+  validateReceipt,
+  validateBeforeOnlyReceipt
 };

@@ -30,6 +30,10 @@ type SeedResult = {
   scenario?: string;
   failed_count?: number;
   drift?: boolean;
+  missing_field_product_id?: number;
+  missing_field_product_name?: string;
+  reset_tables?: string[];
+  identity_state?: Record<string, { next_id: number; is_called: boolean }>;
 };
 
 /**
@@ -46,7 +50,10 @@ export type SeedScenario =
   | "degraded"
   | "incident"
   | "empty"
-  | "e2e_search_catalog";
+  | "e2e_search_catalog"
+  | "phase185_partial_catalog"
+  | "phase185_one_failed"
+  | "phase185_case_reset";
 
 type DrainResult = {
   success: number;
@@ -159,7 +166,12 @@ export async function seedScenario(
     scenario,
     tenant_id: result.tenant_id,
     category_keys: Object.keys(result.categories),
-    product_keys: Object.keys(result.products)
+    product_keys: Object.keys(result.products),
+    missing_field_product_id: result.missing_field_product_id ?? null,
+    missing_field_product_name: result.missing_field_product_name ?? null,
+    failed_count: result.failed_count ?? null,
+    reset_tables: result.reset_tables ?? null,
+    identity_state: result.identity_state ?? null
   });
 
   return result;
