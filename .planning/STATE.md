@@ -5,17 +5,17 @@ milestone_name: Foundation and CI
 current_phase: 185
 current_phase_name: Executable UI quality foundations
 status: executing
-stopped_at: Phase185 Wave4 Plans06/07/08 running in isolated GSD worktrees; qualified actual-before stack retained and preview stop preserved.
-last_updated: "2026-11-01T00:04:18.613823+00:00"
+stopped_at: Phase185 plans01–06 complete/integrated;07 source integrated pending combined full verification;08 source repairs active; qualified before stack retained.
+last_updated: "2026-11-01T01:50:32.525037+00:00"
 last_activity: 2026-10-31
-last_activity_desc: Full calibration, repeat comparison and separate actual-before inspection/qualification passed; Wave4 Plans06/07/08 running in isolated worktrees
-state_head: d7ff54d9c942da5c05ebf298c06cecc7d6c3a99e
+last_activity_desc: CSS utility plan integrated after final mounted proof; route source integrated pending combined full gate; preservation semantic/evidence repairs active
+state_head: 7c1333049eb13cf5d6366f0f63c771d178546e80
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 38
-  completed_plans: 33
-  percent: 87
+  completed_plans: 34
+  percent: 89
 ---
 
 # Project State
@@ -23,15 +23,15 @@ progress:
 ## Current Position
 
 Phase: 185 (Executable UI quality foundations) — EXECUTING WAVE 4
-Plan: 5 of 10 complete and integrated (01–05); Wave4 Plans06/07/08 running in isolated worktrees
+Plan: 6 of 10 complete and integrated (01–06);07 source integrated pending combined full verification;08 source repairs active
 Status: Executing the authorized selected phase
 Last activity: 2026-10-31 — Approved bootstrap merge and actual root integration verified
 
-Progress: [████████░░] 87%
+Progress: [████████░░] 89%
 
 Milestone: **v1.45 Foundation and CI** (3/4 phases goal-verified; 15/21 requirements complete).
 Phase 182: **complete, 8/8 plans**; BROW-01–03 and CACHE-01–02 verified.
-Next: Execute Plans06/07/08 in GSD-owned isolated worktrees after the qualification guard confirms root integration. Actual before sessiond1d0a2fcc5743af9 and its physical owner remain retained through09. Complete source, runtime and observation authority is pinned at `/private/tmp/scrypath-phase185-execution/185-05-qualification.json`; all135 observations/546 images and visible copy were factually inspected, without design or held-out-state approval. The retained preview remains untouched and stopped by policy. No user action is needed.
+Next: Finish08 source repairs, review and integrate the candidate, then execute the distinct before-only61 collector and the combined full candidate gate within approved bounds. Actual before sessiond1d0a2fcc5743af9 and its physical owner remain retained through09. Complete source, runtime and observation authority is pinned at `/private/tmp/scrypath-phase185-execution/185-05-qualification.json`; all135 observations/546 images and visible copy were factually inspected, without design or held-out-state approval. The retained preview remains untouched and stopped by policy. No user action is needed.
 
 Working directory: `/Users/jon/projects/scrypath`.
 Branch: `planning/v1.45-foundation-ci`.
@@ -75,7 +75,7 @@ Final tracking successor authority: `/private/tmp/scrypath-phase184-execution/te
 ## Session continuity
 
 Last session: 2026-10-31
-Stopped at: Phase185 Wave4 isolated workers06/07/08 running; qualified actual-before stack retained through09.
+Stopped at: Phase185 plans01–06 complete/integrated;07 source integrated but browser acceptance pending;08 CJS and helper repairs active.
 Resume file: .planning/phases/185-executable-ui-quality-foundations/.continue-here.md
 
 Earlier execution checkpoints remain in Git history and plan summaries. Current tracked records describe the pre-terminal planning successor; only its external receipt establishes final machine acceptance. The completion path scanner reports command snippets, intentionally deleted mail files and a shortened capability path as missing; actual source checks establish their disposition, so these are not new implementation gaps.
