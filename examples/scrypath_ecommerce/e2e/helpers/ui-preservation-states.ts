@@ -144,7 +144,7 @@ async function initializeData(element: ElementId, category: Category, request: P
     const name = savedSearchName(element, category);
     const count = category === "empty" ? 0 : category === "zero-one-many" ? 3 : 1;
     for (let index = 0; index < count; index += 1) {
-      await putSavedSearch(request, count === 1 ? name : `${name}-${index + 1}`, { mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: index === 1 ? "quantum" : "scanner", opts: { page: { size: 10 } } });
+      await putSavedSearch(request, count === 1 ? name : `${name}-${index + 1}`, { playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: index === 1 ? "quantum" : "scanner", opts: { page: { size: 10 } } });
     }
     identity += `:saved-searches:${count}:${name}`;
   }
@@ -205,6 +205,8 @@ async function enterPage(page: Page, element: ElementId, assertions: Assertion[]
 async function prepareSavedManager(page: Page, element: ElementId): Promise<void> {
   if (element !== "E5" && element !== "E10") return;
   await expect(page.getByRole("dialog", { name: "Manage saved searches" })).toBeVisible();
+  await expect(page.getByText("This saved search can't be read. Delete it, or import a corrected file.", { exact: true })).toHaveCount(0);
+  for (const load of await page.getByRole("button", { name: /^Load phase185-heldout-/ }).all()) await expect(load).toBeEnabled();
 }
 
 async function assertEmpty(page: Page, element: ElementId, assertions: Assertion[]): Promise<Locator> {
@@ -538,9 +540,10 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     const counts: number[] = [];
     for (const count of [0, 1, 3]) {
       await deleteSavedSearches(request, { prefix: "phase185-heldout-" });
-      for (let index = 0; index < count; index += 1) await putSavedSearch(request, `${name}-${index + 1}`, { mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "quantum", opts: { page: { size: 10 } } });
+      for (let index = 0; index < count; index += 1) await putSavedSearch(request, `${name}-${index + 1}`, { playbook_format: 1, mode: "search", schema: "ScrypathEcommerce.Catalog.Product", q: "quantum", opts: { page: { size: 10 } } });
       await page.goto("/admin/search/search?saved=manage");
       await waitForLiveConnected(page);
+      await prepareSavedManager(page, element);
       const actualCount = await page.locator(".ops-saved-search-row").count();
       counts.push(actualCount);
       transport.push({ operation: "saved-search-list-read", outcome: `seeded_records=${count}; rendered_rows=${actualCount}` });
