@@ -859,8 +859,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert job =~ "timeout-minutes: 30"
 
       verify = workflow_named_step_block(job, "Run advisory full E2E proof")
+      prepare = workflow_named_step_block(job, "Prepare checked full Compose images")
       upload = workflow_named_step_block(job, "Upload advisory E2E evidence")
       start_clock = workflow_named_step_block(job, "Record E2E job start and deadline")
+      verifier_script = File.read!("examples/scrypath_ecommerce/scripts/verify-e2e.sh")
 
       checkout =
         workflow_step_with_uses_block(
@@ -883,6 +885,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert start_clock =~ "E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))"
       assert start_clock =~ "GITHUB_SHA"
       assert start_clock =~ "E2E_FINALIZATION_MARGIN_SECONDS=300"
+      assert job =~
+               "E2E_PHASE185_CLOCK_PATH: ${{ runner.temp }}/phase185-clock-${{ github.run_id }}-${{ github.run_attempt }}.txt"
+
+      assert prepare =~ "ecommerce_build.cjs prepare --scope full"
       assert verify =~ "id: ecommerce_verify"
       assert verify =~ "run: mix verify.ecommerce_e2e"
       assert verify =~ "E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}"
@@ -891,6 +897,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert verify =~
                "E2E_WORKFLOW_RUN_ATTEMPT: ${{ steps.e2e_clock.outputs.E2E_WORKFLOW_RUN_ATTEMPT }}"
+
+      assert verifier_script =~
+               ~s|phase185_clock_path="${E2E_PHASE185_CLOCK_PATH:-$artifact_dir/phase185-clock.txt}"|
+
+      assert verifier_script =~ "Phase185 full verification requires exact immutable clock bytes"
+      assert verifier_script =~ "export E2E_PHASE185_CLOCK_PATH=\"$phase185_clock_path\""
 
       assert upload =~ "id: ecommerce_upload"
       assert upload =~ "if: always()"
