@@ -866,10 +866,11 @@ if [[ "$mode" == "--readiness-only" ]]; then
 elif [[ "$scope" == "full" && "$preservation_mode" == "full" ]]; then
   serial_full_mode=1
   readiness_started=1
-  if (( prebuilt_mode )); then
-    run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
-  else
+  if (( ! prebuilt_mode )); then
     run_verification_bounded "${compose[@]}" build web standalone_ops browser || run_status=$?
+  fi
+  if (( run_status == 0 )); then
+    run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
   fi
   if (( run_status == 0 )); then inspect_phase185_full_images || run_status=$?; fi
   if (( run_status == 0 )); then
