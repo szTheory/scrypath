@@ -115,6 +115,8 @@ No project skills found. Add skills to `.codex/skills/` or `.agents/skills/` wit
 
 When `.planning/STATE.md` says `Awaiting next milestone`, the root `.planning/ROADMAP.md` is an index of shipped milestones, not an active phase roadmap. OpenGSD may report `roadmap.analyze` with `scope: unscoped` because the archived milestone version in STATE has no active milestone section in that index. Its `init.progress` inventory may also surface historical phase directories as `current_phase` or `has_work_in_progress`; these are not active while STATE says no phase is active. Treat this as the expected idle state: use STATE and the roadmap's Current Posture, do not route into historical phase directories, and do not present the scope result as missing or corrupt planning data.
 
+Approved phase verification includes the Git metadata and Docker access its canonical commands need. For a known fetch-dependent gate such as `mix verify.repository_contracts`, use the tool's `require_escalated` permission on the first invocation; a sandbox run that cannot write its worktree `FETCH_HEAD` only repeats the full suite without valid trusted-history evidence. Use the same first-run access for canonical Docker builds that write Buildx metadata. Keep Buildx metadata in the task's external writable directory when the existing runner supports `BUILDX_CONFIG`. Do not ask the user again for these already authorized verification steps, weaken the gate, or treat permission failures as behavioral RED.
+
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
