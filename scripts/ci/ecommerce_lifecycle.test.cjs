@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
 const {
   chmodSync,
+  copyFileSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -59,6 +60,47 @@ function tempDirectory(t) {
   return directory;
 }
 
+function installVerifierFixtureRepo(root) {
+  const exampleDirectory = path.join(root, "examples", "scrypath_ecommerce");
+  const scriptsDirectory = path.join(exampleDirectory, "scripts");
+  const ciDirectory = path.join(root, "scripts", "ci");
+  mkdirSync(scriptsDirectory, { recursive: true });
+  mkdirSync(ciDirectory, { recursive: true });
+  copyFileSync(verifierSource, path.join(scriptsDirectory, "verify-e2e.sh"));
+  copyFileSync(dependencyBoundaryVerifier, path.join(scriptsDirectory, "verify-dependency-boundaries.sh"));
+  for (const name of ["docker-playwright.sh", "contrast-checker.mjs", "compose.yaml", "compose.e2e.yaml", "compose.phase173.yaml", "compose.phase185.yaml", "Dockerfile.e2e", "package.json", "package-lock.json"]) {
+    copyFileSync(path.join(path.dirname(browserSource), name), path.join(exampleDirectory, name));
+  }
+  const cssDirectory = path.join(root, "scrypath_ops", "assets", "css");
+  mkdirSync(cssDirectory, { recursive: true });
+  for (const name of ["app.css", "contrast-pairs.mjs"]) {
+    copyFileSync(path.join(repositoryRoot, "scrypath_ops", "assets", "css", name), path.join(cssDirectory, name));
+  }
+  copyFileSync(path.join(repositoryRoot, "scripts", "ci", "ecommerce_build.cjs"), path.join(ciDirectory, "ecommerce_build.cjs"));
+
+  // TEST DOUBLE ONLY: the lifecycle unit tests exercise orchestration and cleanup,
+  // not product-tree qualification or acceptance evidence. The fake Docker writer
+  // below emits synthetic envelopes; it never calls this module as an authority.
+  writeFileSync(
+    path.join(ciDirectory, "ecommerce_evidence.cjs"),
+    `"use strict";
+const crypto = require("node:crypto");
+const digest = (value) => "sha256:" + crypto.createHash("sha256").update(value).digest("hex");
+module.exports = {
+  productTreeIdentity(root) {
+    if (!require("node:fs").statSync(root).isDirectory()) throw new Error("test fixture root is unavailable");
+    return digest("lifecycle-test-product-tree");
+  },
+  fixtureOverlayDigest(root) {
+    if (!require("node:fs").statSync(root).isDirectory()) throw new Error("test fixture root is unavailable");
+    return digest("lifecycle-test-fixture-overlay");
+  },
+};
+`,
+  );
+  return exampleDirectory;
+}
+
 function installDockerDouble(root) {
   const binDirectory = path.join(root, "bin");
   mkdirSync(binDirectory, { recursive: true });
@@ -69,14 +111,52 @@ function installDockerDouble(root) {
     dockerPath,
     `#!/usr/bin/env node
 const fs = require("node:fs");
+const crypto = require("node:crypto");
 const args = process.argv.slice(2);
+const imageIds = {
+  web: "sha256:" + "1".repeat(64),
+  standalone_ops: "sha256:" + "2".repeat(64),
+  browser: "sha256:" + "3".repeat(64),
+};
+const serviceForRef = (value) => Object.keys(imageIds).find((service) => value.endsWith("-" + service)) || "browser";
+const projectIndex = args.indexOf("-p");
+const project = projectIndex >= 0 ? args[projectIndex + 1] : "scrypath-test";
+const composeModel = {
+  services: Object.fromEntries(Object.keys(imageIds).map((service) => [service, {
+    image: project + "-" + service,
+    volumes: [process.env.E2E_PHASE185_CLOCK_PATH + ":/phase185-fixture/clock.txt:ro"],
+  }])),
+};
+const emptyWorkdirLayer = "sha256:" + crypto.createHash("sha256").update(Buffer.alloc(1024)).digest("hex");
+const browserInspection = [{
+  Id: imageIds.browser,
+  Architecture: "arm64",
+  Os: "linux",
+  DockerVersion: "test-double",
+  RootFS: { Type: "layers", Layers: ["sha256:" + "a".repeat(64), "sha256:" + "d".repeat(64), "sha256:" + "b".repeat(64), emptyWorkdirLayer] },
+  Config: {
+    WorkingDir: "/app/examples/scrypath_ecommerce",
+    Cmd: ["bash", "./docker-playwright.sh"],
+    Env: ["PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"],
+    Labels: {
+      "com.docker.compose.project": project,
+      "com.docker.compose.service": "browser",
+      "com.docker.compose.version": "test-double",
+      "org.opencontainers.image.revision": process.env.SCRYPATH_SOURCE_SHA,
+    },
+  },
+}];
 fs.appendFileSync(process.env.FAKE_DOCKER_LOG, JSON.stringify(args) + "\\n");
 if (process.env.FAKE_DOCKER_CONFIG_FAIL === "1" && args[0] === "compose" && args.includes("config")) process.exit(18);
 if (args[0] === "compose" && args.includes("up") && process.env.FAKE_DOCKER_UP_FAIL) process.exit(Number(process.env.FAKE_DOCKER_UP_FAIL));
 if (args[0] === "compose" && args.includes("run") && process.env.FAKE_DOCKER_RUN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_RUN_FAIL));
 if (args[0] === "compose" && args.includes("down") && process.env.FAKE_DOCKER_DOWN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_DOWN_FAIL));
+if (args[0] === "compose" && args.includes("config")) {
+  if (args.includes("--format") && args[args.indexOf("--format") + 1] === "json") process.stdout.write(JSON.stringify(composeModel) + "\\n");
+  else if (!args.includes("--quiet")) process.stdout.write("services:\\n  web: {}\\n  standalone_ops: {}\\n  browser: {}\\n");
+}
 if (args[0] === "compose" && args.includes("logs")) process.stdout.write("fake compose diagnostics\\n");
-if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1" && process.env.FAKE_DOCKER_CONFIG_FAIL !== "1") process.stdout.write("browser-container\\n");
+if (args[0] === "compose" && args.includes("ps") && process.env.FAKE_BROWSER_CONTAINER === "1" && process.env.FAKE_DOCKER_CONFIG_FAIL !== "1") process.stdout.write(args.at(-1) + "-container\\n");
 if (args[0] === "cp" && process.env.FAKE_DOCKER_CP_FAIL === "1") process.exit(42);
 if (args[0] === "cp") {
   const destination = args.at(-1);
@@ -97,8 +177,20 @@ if (args[0] === "cp") {
     summary:{aa_fail:0,aaa_advisory:1,total:1},
     findings:contrastFindings
   }));
+  const clockArtifact = destination + "/ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt";
+  fs.mkdirSync(require("node:path").dirname(clockArtifact), { recursive: true });
+  fs.writeFileSync(clockArtifact, process.env.E2E_PHASE185_CLOCK_INSTANT + "\\n");
 }
-if (args[0] === "inspect") process.stdout.write("sha256:" + "a".repeat(64) + "\\n");
+if (args[0] === "image" && args[1] === "inspect") {
+  const service = serviceForRef(args.at(-1));
+  if (args.includes("--format")) process.stdout.write(imageIds[service] + "\\n");
+  else process.stdout.write(JSON.stringify(browserInspection) + "\\n");
+}
+if (args[0] === "inspect" && args.includes("--format")) {
+  const container = args.at(-1);
+  const service = container.replace(/-container$/, "");
+  process.stdout.write((imageIds[service] || imageIds.browser) + "\\n");
+}
 if (args[0] === "run") {
   const input = fs.readFileSync(0, "utf8");
   fs.writeFileSync(process.env.FAKE_DOCKER_STDIN_FILE, input);
@@ -155,20 +247,21 @@ function dockerCalls(logPath) {
 
 function runVerifier(t, args, extraEnv = {}) {
   const root = tempDirectory(t);
-  const exampleDirectory = path.join(root, "example");
-  const scriptDirectory = path.join(exampleDirectory, "scripts");
-  mkdirSync(scriptDirectory, { recursive: true });
-  const scriptPath = path.join(scriptDirectory, "verify-e2e.sh");
-  writeFileSync(scriptPath, readFileSync(verifierSource));
+  const exampleDirectory = installVerifierFixtureRepo(root);
+  const scriptPath = path.join(exampleDirectory, "scripts", "verify-e2e.sh");
+  const requestedRunId = extraEnv.E2E_RUN_ID || "lifecycle-test-run";
+  const runId = args[0] === "full" && !requestedRunId.startsWith("phase185-")
+    ? `phase185-${requestedRunId}`
+    : requestedRunId;
+  const clockInstant = "2026-10-31T12:00:00.000Z";
   const boundaryLogPath = path.join(root, "boundary.log");
   writeFileSync(
-    path.join(scriptDirectory, "verify-dependency-boundaries.sh"),
+    path.join(exampleDirectory, "scripts", "verify-dependency-boundaries.sh"),
     'printf "%s\\n" "$*" >> "$FAKE_BOUNDARY_LOG"\nexit 0\n',
   );
 
   const { binDirectory, logPath } = installDockerDouble(root);
   const aggregateInputPath = path.join(root, "docker-run.stdin");
-  const runId = extraEnv.E2E_RUN_ID || "lifecycle-test-run";
   if (extraEnv.FAKE_PREVIOUS_CAPTURE === "1") {
     const previousDirectory = path.join(exampleDirectory, "test-results", `docker-${args[0]}`, "previous-run");
     mkdirSync(previousDirectory, { recursive: true });
@@ -185,6 +278,7 @@ function runVerifier(t, args, extraEnv = {}) {
       FAKE_DOCKER_STDIN_FILE: aggregateInputPath,
       FAKE_BROWSER_CONTAINER: args.includes("--readiness-only") ? "0" : "1",
       E2E_RUN_ID: runId,
+      E2E_PHASE185_CLOCK_INSTANT: clockInstant,
       ...extraEnv,
     },
   });
@@ -230,6 +324,7 @@ function installBrowserDoubles(root) {
   const npmPath = path.join(binDirectory, "npm");
   const npxPath = path.join(binDirectory, "npx");
   const sleepPath = path.join(binDirectory, "sleep");
+  const nodePath = path.join(binDirectory, "node");
 
   const playwrightJson = JSON.stringify({
     config: { rootDir: "." },
@@ -293,17 +388,38 @@ if (args.includes("--list") && process.env.FAKE_BROWSER_NOOP !== "1") process.st
 `,
   );
   writeFileSync(sleepPath, "#!/bin/sh\nexit 0\n");
-  for (const command of [curlPath, npmPath, npxPath, sleepPath]) chmodSync(command, 0o755);
+  // TEST DOUBLE ONLY: the launcher normally packs actual raw browser captures.
+  // Lifecycle tests use synthetic Playwright output, so intercept only that
+  // container-only pack command and delegate every other Node invocation.
+  const nodeExecutable = process.execPath.replace(/'/g, "'\\''");
+  const nodeShim = [
+    "#!/bin/sh",
+    'if [ "$1" = "/app/scripts/ci/ui_preservation_bundle.cjs" ] && [ "$2" = "pack" ]; then',
+    "  printf '%s\\n' 'test-double skipped raw capture packing' >>\"$FAKE_BROWSER_LOG\"",
+    "  exit 0",
+    "fi",
+    "exec '" + nodeExecutable + "' \"$@\"",
+    "",
+  ].join("\n");
+  writeFileSync(
+    nodePath,
+    nodeShim,
+  );
+  for (const command of [curlPath, npmPath, npxPath, sleepPath, nodePath]) chmodSync(command, 0o755);
   return { binDirectory, curlLog, browserLog };
 }
 
 function runBrowser(t, extraEnv = {}) {
   const root = tempDirectory(t);
+  const exampleDirectory = installVerifierFixtureRepo(root);
   const { binDirectory, curlLog, browserLog } = installBrowserDoubles(root);
-  const runId = extraEnv.E2E_RUN_ID || "browser-test-run";
+  const runId = extraEnv.E2E_RUN_ID || "phase185-browser-test-run";
+  const clockInstant = "2026-10-31T12:00:00.000Z";
+  const clockFixturePath = path.join(root, "phase185-clock.txt");
+  writeFileSync(clockFixturePath, `${clockInstant}\n`);
   const artifactDirectory = path.join(root, "owned-evidence", runId);
-  const result = spawnSync("bash", [browserSource], {
-    cwd: path.dirname(browserSource),
+  const result = spawnSync("bash", [path.join(exampleDirectory, "docker-playwright.sh")], {
+    cwd: exampleDirectory,
     encoding: "utf8",
     env: {
       ...process.env,
@@ -312,9 +428,11 @@ function runBrowser(t, extraEnv = {}) {
       FAKE_BROWSER_LOG: browserLog,
       E2E_SCOPE: "full",
       E2E_READINESS_ONLY: "1",
-      E2E_READINESS_TIMEOUT_SECONDS: "5",
+      E2E_READINESS_TIMEOUT_SECONDS: "30",
       E2E_CURL_TIMEOUT_SECONDS: "1",
       E2E_RUN_ID: runId,
+      E2E_PHASE185_CLOCK_PATH: clockFixturePath,
+      E2E_PHASE185_CLOCK_INSTANT: clockInstant,
       E2E_ARTIFACT_DIR: artifactDirectory,
       E2E_PLAYWRIGHT_REPORT: path.join(artifactDirectory, "phase105-playwright.json"),
       E2E_HTML_REPORT_DIR: path.join(artifactDirectory, "playwright-report"),
@@ -358,6 +476,10 @@ test("full readiness diagnostic uses the full overlay without claiming browser a
   assert.ok(
     calls.every((call) => composeFiles(call).includes("compose.phase173.yaml")),
     "every full-scope Compose operation must include the Phase 173 overlay",
+  );
+  assert.ok(
+    calls.every((call) => composeFiles(call).includes("compose.phase185.yaml")),
+    "every full-scope Compose operation must include the fixed-clock overlay",
   );
   const projects = new Set(calls.map((call) => call[call.indexOf("-p") + 1]));
   assert.equal(projects.size, 1, "config, execution, diagnostics and teardown share one project");
@@ -403,7 +525,7 @@ test("full browser execution starts only after both Ops fixture routes respond",
   assert.equal(result.status, 0, result.stderr);
   const mountedIndex = result.stdout.indexOf("Mounted Ops fixture route is ready");
   const standaloneIndex = result.stdout.indexOf("Standalone Ops fixture route is ready");
-  const browserIndex = result.stdout.indexOf("Running the full advisory ecommerce browser");
+  const browserIndex = result.stdout.indexOf("Running the full ecommerce browser");
   assert.ok(mountedIndex >= 0 && standaloneIndex >= 0, "both route checks must complete");
   assert.ok(browserIndex > mountedIndex && browserIndex > standaloneIndex, "browser execution must follow both route checks");
   assert.match(result.browserInvocations, /npx playwright test .*--list .*--reporter=json/);
@@ -437,8 +559,8 @@ test("full browser execution rejects missing current-run JSON or HTML reports", 
 test("full browser deadline records timeout without replacing the raw test status", (t) => {
   const result = runBrowser(t, {
     E2E_READINESS_ONLY: "0",
-    E2E_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 2),
-    FAKE_NPM_DELAY_MS: "10000",
+    E2E_DEADLINE_EPOCH: String(Math.floor(Date.now() / 1000) + 12),
+    FAKE_NPM_DELAY_MS: "20000",
   });
   assert.equal(result.status, 124, result.stderr);
   const stages = JSON.parse(readFileSync(path.join(result.artifactDirectory, "stages.json"), "utf8"));
@@ -452,9 +574,19 @@ test("verifier creates a fresh per-run bundle and excludes a previous capture se
     FAKE_PREVIOUS_CAPTURE: "1",
   });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(path.basename(result.artifactDirectory), "run-unique-18204");
+  assert.equal(path.basename(result.artifactDirectory), "phase185-run-unique-18204");
   assert.equal(path.basename(path.dirname(result.artifactDirectory)), "docker-full");
-  assert.equal(result.lifecycle.run_id, "run-unique-18204");
+  assert.equal(result.lifecycle.run_id, "phase185-run-unique-18204");
+  assert.equal(
+    readFileSync(path.join(result.artifactDirectory, "phase185-clock.txt"), "utf8"),
+    "2026-10-31T12:00:00.000Z\n",
+    "the verifier must materialize exact fixed-clock bytes for the readonly Compose mount",
+  );
+  assert.equal(
+    readFileSync(path.join(result.artifactDirectory, "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt"), "utf8"),
+    "2026-10-31T12:00:00.000Z\n",
+    "the synthetic browser copy must preserve the fixed-clock artifact bytes",
+  );
   for (const file of ["source.json", "compose-model.json", "stages.json", "artifact-manifest.json", "phase105-inventory.json", "phase105-evidence-input.json", "phase105-evidence.json", "phase105-evidence-summary.md"]) {
     assert.ok(existsSync(path.join(result.artifactDirectory, file)), `owned bundle is missing ${file}`);
   }
@@ -464,18 +596,18 @@ test("verifier creates a fresh per-run bundle and excludes a previous capture se
   const receipt = JSON.parse(readFileSync(path.join(result.artifactDirectory, "phase105-evidence.json"), "utf8"));
   const summary = readFileSync(path.join(result.artifactDirectory, "phase105-evidence-summary.md"), "utf8");
   assert.equal(receiptInput.source.checkout_head, "deadbeef00000000000000000000000000000000");
-  assert.equal(receipt.run_id, "run-unique-18204");
+  assert.equal(receipt.run_id, "phase185-run-unique-18204");
   assert.equal(receipt.eligibility.eligible, true);
-  assert.match(summary, /- run_id: run-unique-18204/);
+  assert.match(summary, /- run_id: phase185-run-unique-18204/);
   const manifest = JSON.parse(readFileSync(path.join(result.artifactDirectory, "artifact-manifest.json"), "utf8"));
-  assert.equal(manifest.source, "/tmp/run-unique-18204");
+  assert.equal(manifest.source, "/tmp/phase185-run-unique-18204");
   assert.deepEqual(manifest.allowlist, [
-    "/tmp/run-unique-18204/phase105-playwright-list.json",
-    "/tmp/run-unique-18204/phase105-playwright.json",
-    "/tmp/run-unique-18204/phase105-evidence.ndjson",
-    "/tmp/run-unique-18204/playwright-report/",
-    "/tmp/run-unique-18204/test-results/",
-    "/tmp/run-unique-18204/ui-review-artifacts/iteration3-journeys/",
+    "/tmp/phase185-run-unique-18204/phase105-playwright-list.json",
+    "/tmp/phase185-run-unique-18204/phase105-playwright.json",
+    "/tmp/phase185-run-unique-18204/phase105-evidence.ndjson",
+    "/tmp/phase185-run-unique-18204/playwright-report/",
+    "/tmp/phase185-run-unique-18204/test-results/",
+    "/tmp/phase185-run-unique-18204/ui-review-artifacts/iteration3-journeys/",
   ]);
   assert.ok(Array.isArray(manifest.copied_files));
   const downIndex = result.calls.findIndex((call) => call.includes("down"));
@@ -506,6 +638,7 @@ test("Compose browser evidence directory ends with the exact run ID", () => {
 
 test("full readiness fails when either Ops fixture route stays unavailable", (t) => {
   const result = runBrowser(t, {
+    E2E_READINESS_TIMEOUT_SECONDS: "5",
     FAKE_CURL_FAIL_URL: "http://standalone_ops:4003/ops/phase173/health",
   });
   assert.notEqual(result.status, 0, "missing standalone readiness must fail");
