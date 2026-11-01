@@ -790,6 +790,29 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
           const sample = sampling.samples[index];
           const previous = sampling.samples[index - 1];
           if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") || !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 || (previous && sample.elapsed_ms < previous.elapsed_ms)) throw new TypeError("raw capture sample hashes/timing are invalid");
+          for (const [samplePath, expectedHash, kind] of [[sample.path, sample.sha256, "png"], [sample.state_path, sample.state_sha256, "json"]]) {
+            rawBundle.memberPath(samplePath);
+            if (!samplePath.endsWith(`.${kind}`) || seenObservationPaths.has(samplePath)) throw new TypeError("raw sample paths are reused or have the wrong media type");
+            seenObservationPaths.add(samplePath);
+            const rawArtifact = context.rawBundle.artifacts.get(samplePath);
+            const sampleBytes = context.rawBundle.members.get(samplePath);
+            if (!rawArtifact?.present || rawArtifact.sha256 !== expectedHash || !Buffer.isBuffer(sampleBytes) || rawBundle.sha256(sampleBytes) !== expectedHash) throw new TypeError("raw sample PNG/state bytes are absent or do not match the observed hashes");
+            if (kind === "png") {
+              const prior = decodedDimensions.get(expectedHash);
+              if (prior && !prior.bytes.equals(sampleBytes)) throw new TypeError("Equal raw sample hashes have different bytes");
+              const dimensions = prior?.dimensions || pngDimensions(sampleBytes, `${expected.id} raw sample`);
+              if (!prior) decodedDimensions.set(expectedHash, { bytes: sampleBytes, dimensions });
+              if (dimensions.width !== raster.width || dimensions.height !== raster.height) throw new TypeError("raw sample raster dimensions differ from the observation geometry");
+            } else {
+              const snapshot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sampleBytes));
+              if (!isRecord(snapshot) || snapshot.schema !== "scrypath.ui-capture-state.v1" || !isRecord(snapshot.before) || !isRecord(snapshot.after)) throw new TypeError("raw sample state is not an actual before/after capture snapshot");
+              const rootSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([name]) => !["before", "after"].includes(name)));
+              const beforeJson = JSON.stringify(canonicalize(snapshot.before));
+              const afterJson = JSON.stringify(canonicalize(snapshot.after));
+              if (beforeJson !== afterJson || JSON.stringify(canonicalize(rootSnapshot)) !== afterJson || crypto.createHash("sha256").update(afterJson).digest("hex") !== state.dom_state_sha256) throw new TypeError("raw before/after sample state differs from the actual observation DOM-state identity");
+              if (snapshot.after.viewport?.width !== observation.viewport.width || snapshot.after.viewport?.height !== observation.viewport.height) throw new TypeError("raw sample state viewport differs from the actual observation");
+            }
+          }
           if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
         }
         const selectedSample = sampling.samples[sampling.selected];

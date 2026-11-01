@@ -973,6 +973,25 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     if (bytes.length < 24 || !bytes.subarray(0, 8).equals(pngSignature)) throw new Error(`${element} ${category} capture is not a raw PNG with a complete IHDR.`);
     const fullPageRaster = { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
     if (fullPageRaster.width !== width || fullPageRaster.height !== observed.documentHeight) throw new Error(`${element} ${category} raw full-page PNG dimensions differ from measured viewport/document geometry: ${JSON.stringify({ fullPageRaster, observed })}`);
+    if (stabilitySamples.length !== captureSampling.samples.length) throw new Error(`${element} ${category} stationary capture did not retain every successful raw sample and state sidecar.`);
+    const sampleBytesByPath = new Map(stabilitySamples.map((sample) => [sample.path, sample]));
+    const verifiedSamples = captureSampling.samples.map((sample: Record<string, any>) => {
+      const raw = sampleBytesByPath.get(sample.path);
+      if (!raw || raw.state_path !== sample.state_path || digest(raw.bytes) !== sample.sha256 || digest(raw.state_bytes) !== sample.state_sha256) {
+        throw new Error(`${element} ${category} stationary sample bytes do not match their capture proof: ${JSON.stringify(sample)}`);
+      }
+      const sampleImagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.path}`;
+      const sampleStatePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.state_path}`;
+      const sampleImageAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleImagePath);
+      const sampleStateAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleStatePath);
+      return { proof: { ...sample, path: sampleImagePath, state_path: sampleStatePath }, raw, sampleImageAbsolute, sampleStateAbsolute };
+    });
+    for (const { raw, sampleImageAbsolute, sampleStateAbsolute } of verifiedSamples) {
+      await mkdir(path.dirname(sampleImageAbsolute), { recursive: true });
+      await writeFile(sampleImageAbsolute, raw.bytes, { flag: "wx" });
+      await writeFile(sampleStateAbsolute, raw.state_bytes, { flag: "wx" });
+    }
+    captureSampling = { ...captureSampling, samples: verifiedSamples.map(({ proof }) => proof) };
     const relative = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${captureId}.png`;
     const absolute = path.join(artifactRoot, "phase185-raw-staging", relative);
     await mkdir(path.dirname(absolute), { recursive: true });
@@ -985,7 +1004,7 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
       }),
       { name: "actual product theme preference and effective theme match the requested recipe", status: "passed", actual: JSON.stringify({ theme, ...observedTheme, color_scheme: observedProfile.color_scheme }) }
     ];
-    observations.push({ theme, viewport: { width, height }, state: observationState, geometry, assertions: receiptAssertions, visible_copy: visibleCopy, transport_sequence: transport.map((step) => ({ ...step })), capture_sampling: captureSampling, image, images: [image] });
+    observations.push({ theme, viewport: { width, height }, state: observationState, geometry, assertions: receiptAssertions, visible_copy: visibleCopy, transport_sequence: transport.map((step) => ({ ...step })), capture_sampling: captureSampling, image });
   }
   return { common, observations };
 }

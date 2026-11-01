@@ -421,12 +421,24 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
         data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
         clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
       };
+      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copyText, viewport: { width, height }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
+      state.dom_state_sha256 = crypto.createHash("sha256").update(JSON.stringify(canonicalize(snapshot))).digest("hex");
+      const stateBytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }, null, 2) + "\n");
+      const stateHash = crypto.createHash("sha256").update(stateBytes).digest("hex");
+      const samples = [0, 1].map((index) => {
+        const samplePath = imagePath.replace(/\.png$/, `-sample-${index}.png`);
+        const statePath = imagePath.replace(/\.png$/, `-sample-${index}.json`);
+        fs.writeFileSync(path.join(runDir, samplePath), pngBytes);
+        fs.writeFileSync(path.join(runDir, statePath), stateBytes);
+        imageArtifacts.push(...[samplePath, statePath].map((path) => ({ path, required: true, copied: true, copy_status: "success" })));
+        return { path: samplePath, state_path: statePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), state_sha256: stateHash, elapsed_ms: 10 + index };
+      });
       return {
         theme, viewport: { width, height }, state,
         geometry: [{ name: `case-target-${width}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width }, { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }],
         assertions: [{ name: `assert-${preservationCase.id}-${theme}-${width}`, status: "passed", actual: "TEST_FIXTURE_ONLY" }],
         visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
-        capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples: [0, 1].map((index) => ({ path: `test-sample-${index}.png`, state_path: `test-sample-${index}.json`, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), state_sha256: "a".repeat(64), elapsed_ms: 10 + index })) },
+        capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples },
         image: { path: imagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, full_page_raster: { width, height }, capture: "full-page-real-product-state" }
       };
     });
@@ -448,7 +460,10 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       observations
     });
   }
-  if (looseImages) manifest.artifacts.push(...imageArtifacts);
+  if (looseImages) {
+    const selectedPaths = new Set(evidenceEvents.filter((event) => event.operation === "ui_preservation_case").flatMap((event) => event.observations.map((observation) => observation.image.path)));
+    manifest.artifacts.push(...imageArtifacts.filter((artifact) => selectedPaths.has(artifact.path)));
+  }
   else {
     const members = imageArtifacts.map(({ path: relative }) => ({ path: relative, bytes: fs.readFileSync(path.join(runDir, relative)) }));
     rawBundle.writeExclusive(path.join(runDir, rawBundle.BUNDLE_PATH), members);
@@ -1146,6 +1161,43 @@ test("a small decoded image cannot claim a real 1440px full-page capture", () =>
     assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /decoded full-page raster/.test(reason.message)));
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("stationary capture claims require actual raw sample PNGs and DOM-bound state bytes", () => {
+  for (const attack of ["missing-state", "forged-state", "different-selected-image"]) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+      const observation = events.find((event) => event.operation === "ui_preservation_case").observations[0];
+      const bundlePath = path.join(runDir, rawBundle.BUNDLE_PATH);
+      const members = rawBundle.decodeBundle(fs.readFileSync(bundlePath));
+      if (attack === "missing-state") members.delete(observation.capture_sampling.samples[0].state_path);
+      if (attack === "forged-state") {
+        const snapshot = JSON.parse(members.get(observation.capture_sampling.samples[0].state_path));
+        snapshot.body_text = snapshot.before.body_text = snapshot.after.body_text = "FORGED STATE NOT OBSERVED BY THE BROWSER";
+        const bytes = Buffer.from(JSON.stringify(snapshot, null, 2) + "\n");
+        for (const sample of observation.capture_sampling.samples) {
+          members.set(sample.state_path, bytes);
+          sample.state_sha256 = rawBundle.sha256(bytes);
+        }
+      }
+      if (attack === "different-selected-image") {
+        const changed = PNG.sync.read(members.get(observation.image.path));
+        changed.data[0] ^= 1;
+        const bytes = PNG.sync.write(changed);
+        for (const sample of observation.capture_sampling.samples) {
+          members.set(sample.path, bytes);
+          sample.sha256 = rawBundle.sha256(bytes);
+        }
+      }
+      fs.writeFileSync(bundlePath, rawBundle.encodeBundle([...members].map(([path, bytes]) => ({ path, bytes }))));
+      fs.writeFileSync(eventsPath, events.map((event) => JSON.stringify(event)).join("\n") + "\n");
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, attack);
+      assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /raw sample|observation DOM|selected raw PNG/.test(reason.message)), attack);
+    } finally { fs.rmSync(runDir, { recursive: true, force: true }); }
   }
 });
 

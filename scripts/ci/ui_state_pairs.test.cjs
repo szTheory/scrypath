@@ -123,6 +123,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
   browserImageId ??= beforeSide ? BROWSER : BROWSER_CANDIDATE;
   sourceLayerId ??= beforeSide ? BEFORE_SOURCE_LAYER : CANDIDATE_SOURCE_LAYER;
   const imageBytesByDimensions = new Map();
+  const sampledEntries = [];
   const cases = evidence.preservationCases.map((entry) => {
     const matrix = entry.category === "overflow" || entry.category === "long-text"
       ? ["light", "dark", "system-dark"].flatMap((theme) => [1440, 768, 390].map((width) => ({ theme, width })))
@@ -140,6 +141,14 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
         capture: "full-page-real-product-state"
       };
       const copy = `Visible ${entry.id} ${theme} ${width}`;
+      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copy, viewport: { width, height }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
+      const snapshotBytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }, null, 2) + "\n");
+      const samples = [0, 1].map((index) => {
+        const samplePath = image.path.replace(/\.png$/, `-sample-${index}.png`);
+        const statePath = image.path.replace(/\.png$/, `-sample-${index}.json`);
+        sampledEntries.push({ path: samplePath, bytes: imageBytes }, { path: statePath, bytes: snapshotBytes });
+        return { path: samplePath, state_path: statePath, sha256: digest(imageBytes), state_sha256: digest(snapshotBytes), elapsed_ms: 10 + index };
+      });
       return {
         theme,
         viewport: { width, height },
@@ -153,6 +162,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
           scroll: { x: 0, y: 0 },
           focus: { name: `control-${entry.id}-${theme}-${width}` },
           data_identity: `data-${entry.id}`,
+          dom_state_sha256: digest(Buffer.from(JSON.stringify(canonical(snapshot)))),
           clock: { browser_iso: recipe.browser_date.observed, server_iso: recipe.browser_date.observed, clock_sha256: CLOCK }
         },
         geometry: [
@@ -161,6 +171,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
         ],
         assertions: [{ name: `assert-${entry.id}-${theme}-${width}`, status: "passed", actual: `observed-${entry.id}` }],
         visible_copy: [{ text: copy, sha256: digest(Buffer.from(copy)) }],
+        capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples },
         image
       };
     });
@@ -182,6 +193,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     return mutateCase?.(item) || item;
   });
   const rawEntries = cases.flatMap((item) => item.observations.map(({ image }) => ({ path: image.path, bytes: imageBytesByDimensions.get(`${image.full_page_raster.width}x${image.full_page_raster.height}`) })));
+  rawEntries.push(...sampledEntries);
   const packed = rawBundle.encodeBundle(rawEntries);
   const rawMetadata = { path: rawBundle.BUNDLE_PATH, sha256: digest(packed), size_bytes: packed.length, members: rawEntries.map((item) => ({ path: item.path, sha256: digest(item.bytes), size_bytes: item.bytes.length })) };
   return {

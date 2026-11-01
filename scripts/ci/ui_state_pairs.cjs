@@ -335,6 +335,15 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
       }
       if (seenImagePaths.has(image.path)) fail("reused_case_artifact", `${side} receipt reuses a raw image artifact path across cases or observations`);
       seenImagePaths.add(image.path);
+      const sampling = observation.capture_sampling;
+      if (!sampling || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 || !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) fail("invalid_case_sampling", `${side} case ${required.id} lacks bounded raw sample proof`);
+      for (const sample of sampling.samples) for (const [memberPath, expectedHash, media] of [[sample.path, sample.sha256, ".png"], [sample.state_path, sample.state_sha256, ".json"]]) {
+        try { rawBundle.memberPath(memberPath); } catch (error) { fail("invalid_case_sampling", error.message); }
+        const member = artifacts.get(memberPath);
+        if (!memberPath.endsWith(media) || seenImagePaths.has(memberPath) || !member?.present || member.sha256 !== expectedHash) fail("invalid_case_sampling", `${side} case ${required.id} has absent, reused or altered raw sample evidence`);
+        seenImagePaths.add(memberPath);
+      }
+
       byObservation.set(key, observation);
     }
     if (matrix && matrix.some((key) => !byObservation.has(key))) fail("invalid_case_observation", `${side} case ${required.id} is missing a required theme × viewport observation`);
