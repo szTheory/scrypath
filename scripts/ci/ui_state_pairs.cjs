@@ -9,11 +9,13 @@ const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
 const AUTHORITY_SCHEMA = "scrypath.ui-state-pair-authority.v2";
 const QUALIFICATION_SCHEMA = "scrypath.phase185-before-qualification.v1";
-const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v2";
+const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v3";
 const FULL_RECEIPT_NAME = "phase105-evidence.json";
 const BEFORE_RECEIPT_NAME = "phase185-before-only-evidence.json";
 const OUTPUT_NAME = "ui-state-pairs.json";
 const PRESERVATION_PREFIX = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
+const HOVER_CAPTURE_PROFILE = "fullpage-neutral-and-viewport-hover-v1";
+const HOVER_IMAGE_CAPTURE = "viewport-real-product-hover";
 const REQUIRED_VIEWPORT_WIDTHS = [1440, 768, 390];
 const REQUIRED_THEMES = ["light", "dark", "system-dark"];
 const MAX_AUTHORITY_BYTES = 4 * 1024 * 1024;
@@ -242,6 +244,125 @@ function loadReceiptBundle(receiptPath, side, authority) {
   return { receipt, runRoot, rawMembers, receiptSha256: `sha256:${digest(bytes)}`, side, authority };
 }
 
+function validInteractionTarget(target) {
+  return isRecord(target) && typeof target.tag === "string" && target.tag.trim() !== "" &&
+    (target.role === null || typeof target.role === "string") && typeof target.name === "string" && target.name.trim() !== "" &&
+    (target.href === null || typeof target.href === "string");
+}
+
+function validStateAssertions(assertions) {
+  return Array.isArray(assertions) && assertions.length > 0 && assertions.every((assertion) =>
+    isRecord(assertion) && typeof assertion.name === "string" && assertion.name.trim() !== "" &&
+    assertion.status === "passed" && typeof assertion.actual === "string" && assertion.actual.trim() !== "");
+}
+
+function hasExactKeys(value, keys) {
+  return isRecord(value) && canonicalJson(Object.keys(value).sort()) === canonicalJson([...keys].sort());
+}
+
+function validateObservationState(state, required, observation, label, { neutralHover = false } = {}) {
+  if (!isRecord(state) || state.element !== required.element || state.category !== required.category ||
+    typeof state.route !== "string" || !state.route.startsWith("/") || state.theme !== observation.theme ||
+    state.color_scheme !== (observation.theme === "light" ? "light" : "dark") ||
+    canonicalJson(state.viewport) !== canonicalJson(observation.viewport) ||
+    !isRecord(state.scroll) || !Number.isFinite(state.scroll.x) || !Number.isFinite(state.scroll.y) ||
+    !isRecord(state.focus) || typeof state.focus.name !== "string" || state.focus.name.trim() === "" ||
+    state.focus.focus_visible !== true || state.focus.document_has_focus !== true ||
+    !validInteractionTarget(state.interaction_target) || state.focus.name !== state.interaction_target.name ||
+    !validInteractionTarget(observation.interaction_target) || canonicalJson(observation.interaction_target) !== canonicalJson(state.interaction_target) ||
+    (state.focus.role ?? null) !== (state.interaction_target.role ?? null) || (state.focus.tag ?? null) !== state.interaction_target.tag ||
+    typeof state.data_identity !== "string" || state.data_identity.trim() === "" ||
+    !isRecord(state.clock) || typeof state.clock.browser_iso !== "string" || typeof state.clock.server_iso !== "string" ||
+    !/^sha256:[a-f0-9]{64}$/.test(state.clock.clock_sha256 || "") ||
+    !/^[a-f0-9]{64}$/.test(state.dom_state_sha256 || "") || !Array.isArray(state.hover)) {
+    fail("invalid_case_hover_state", `${label} lacks normalized route, viewport, scroll, focus, target, data, clock, DOM hash or actual hover state`);
+  }
+  if (neutralHover && state.hover.length !== 0) fail("invalid_case_neutral_state", `${label} primary full-page state must have an empty actual hover array`);
+  if (!neutralHover && (!state.hover.length || !state.hover.some((entry) =>
+    isRecord(entry) && canonicalJson(entry.element) === canonicalJson(state.interaction_target) &&
+    isRecord(entry.rect) && [entry.rect.x, entry.rect.y, entry.rect.width, entry.rect.height].every(Number.isFinite) &&
+    entry.rect.width > 0 && entry.rect.height > 0))) {
+    fail("invalid_case_hover_state", `${label} actual hover array must contain its named interaction target and positive rectangle`);
+  }
+}
+
+function validateCaptureSampling(sampling, image, artifacts, seenImagePaths, label) {
+  if (!sampling || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 ||
+    !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) {
+    fail("invalid_case_sampling", `${label} lacks its own bounded consecutive raw sample proof`);
+  }
+  for (let index = 0; index < sampling.samples.length; index += 1) {
+    const sample = sampling.samples[index];
+    const previous = sampling.samples[index - 1];
+    if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") ||
+      !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 ||
+      (previous && sample.elapsed_ms < previous.elapsed_ms)) {
+      fail("invalid_case_sampling", `${label} has malformed hashes or out-of-bound sample timing`);
+    }
+    for (const [memberPath, expectedHash, media] of [[sample.path, sample.sha256, ".png"], [sample.state_path, sample.state_sha256, ".json"]]) {
+      try { rawBundle.memberPath(memberPath); } catch (error) { fail("invalid_case_sampling", error.message); }
+      const member = artifacts.get(memberPath);
+      if (!memberPath.endsWith(media) || seenImagePaths.has(memberPath) || !member?.present || member.sha256 !== expectedHash) {
+        fail("invalid_case_sampling", `${label} has an absent, reused or altered raw sample member`);
+      }
+      seenImagePaths.add(memberPath);
+    }
+    if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) {
+      fail("invalid_case_sampling", `${label} continued after an earlier consecutive exact image/state sample pair`);
+    }
+  }
+  const selected = sampling.samples[sampling.selected];
+  const previous = sampling.samples[sampling.selected - 1];
+  if (selected.sha256 !== image.sha256 || previous.sha256 !== image.sha256 || selected.state_sha256 !== previous.state_sha256) {
+    fail("invalid_case_sampling", `${label} selected image is not its first consecutive exact image/state pair`);
+  }
+}
+
+function validateHoverCapture(observation, required, artifacts, seenImagePaths, key) {
+  if (observation.capture_profile !== HOVER_CAPTURE_PROFILE || !Array.isArray(observation.state?.hover) || observation.state.hover.length !== 0) {
+    fail("invalid_case_hover_profile", `Observation ${required.id} ${key} must identify the neutral full-page/real hover profile and empty primary hover state`);
+  }
+  const hover = observation.hover_capture;
+  if (!hasExactKeys(hover, ["state", "image", "capture_sampling", "assertions"]) || !isRecord(hover.state) ||
+    !hasExactKeys(hover.image, ["path", "sha256", "viewport", "viewport_raster", "capture"]) ||
+    !Array.isArray(hover.assertions) || !validStateAssertions(hover.assertions) ||
+    !hover.capture_sampling) {
+    fail("invalid_case_hover_capture", `Observation ${required.id} ${key} lacks its separate hover state, image, assertions or sample proof`);
+  }
+  validateObservationState(hover.state, required, observation, `Hover ${required.id} ${key}`);
+  const primaryState = observation.state;
+  const sharedKeys = ["element", "category", "route", "theme", "color_scheme", "viewport", "scroll", "interaction_target", "data_identity", "clock"];
+  const focusIdentity = (state) => ({
+    name: state.focus.name,
+    role: state.focus.role,
+    tag: state.focus.tag,
+    focus_visible: state.focus.focus_visible,
+    document_has_focus: state.focus.document_has_focus
+  });
+  if (canonicalJson(Object.keys(primaryState).sort()) !== canonicalJson(Object.keys(hover.state).sort()) ||
+    sharedKeys.some((field) => canonicalJson(primaryState[field]) !== canonicalJson(hover.state[field])) ||
+    canonicalJson(focusIdentity(primaryState)) !== canonicalJson(focusIdentity(hover.state)) ||
+    primaryState.dom_state_sha256 === hover.state.dom_state_sha256) {
+    fail("invalid_case_hover_state", `Hover ${required.id} ${key} must preserve the primary route/data/clock/focus/scroll identity while recording a distinct DOM hover state`);
+  }
+  const image = hover.image;
+  if (typeof image.path !== "string" || !image.path.endsWith(".png") || !/^[a-f0-9]{64}$/.test(image.sha256 || "") ||
+    image.path !== observation.image?.path?.replace(/\.png$/, "--hover.png") ||
+    canonicalJson(image.viewport) !== canonicalJson(observation.viewport) ||
+    image.viewport_raster?.width !== observation.viewport.width || image.viewport_raster?.height !== observation.viewport.height ||
+    image.capture !== HOVER_IMAGE_CAPTURE) {
+    fail("invalid_case_hover_image", `Hover ${required.id} ${key} must be a raw viewport-sized real-product hover PNG at the observation viewport`);
+  }
+  try { rawBundle.memberPath(image.path); } catch (error) { fail("invalid_case_hover_image", error.message); }
+  const artifact = artifacts.get(image.path);
+  if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
+    fail("invalid_case_hover_artifact", `Hover ${required.id} ${key} image must be copied and hash-matched in the raw bundle`);
+  }
+  if (seenImagePaths.has(image.path)) fail("reused_case_artifact", `Receipt reuses a raw hover image artifact path for ${required.id} ${key}`);
+  seenImagePaths.add(image.path);
+  validateCaptureSampling(hover.capture_sampling, image, artifacts, seenImagePaths, `Hover ${required.id} ${key}`);
+}
+
 function validateReceiptSide(bundle, side, authority, recipeSha256) {
   const receipt = bundle.receipt;
   const expected = authority.expected[side];
@@ -252,7 +373,7 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
     (side === "before" && receipt.source?.qualification_sha256 !== authority.qualification.sha256)) {
     fail("product_source_mismatch", `${side} receipt source OIDs do not match its independent product source, harness build source and product-tree identity`);
   }
-  const expectedSchema = side === "before" ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1";
+  const expectedSchema = side === "before" ? "scrypath.ui-preservation-before-only.v2" : "scrypath.ui-preservation.v2";
   if (receipt.scope !== (side === "before" ? "before-only" : "full") || receipt.preservation?.schema !== expectedSchema) {
     fail("preservation_source_mismatch", `${side} receipt has the wrong execution scope or preservation schema`);
   }
@@ -330,24 +451,22 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
       if (state?.element !== required.element || state?.category !== required.category || state?.theme !== observation.theme || state?.color_scheme !== expectedColorScheme ||
         observation.viewport?.height !== (observation.viewport?.width === 390 ? 844 : 900) || canonicalJson(state?.viewport) !== canonicalJson(observation.viewport) || !state?.focus?.name || !documentGeometry ||
         !Array.isArray(observation.visible_copy) || observation.visible_copy.length === 0 ||
-        !isRecord(image) || image.viewport?.width !== observation.viewport.width || image.viewport?.height !== observation.viewport.height ||
+        !isRecord(image) || typeof image.path !== "string" || !image.path.endsWith(".png") || !/^[a-f0-9]{64}$/.test(image.sha256 || "") ||
+        image.viewport?.width !== observation.viewport.width || image.viewport?.height !== observation.viewport.height ||
         image.full_page_raster?.width !== observation.viewport.width || image.full_page_raster?.height !== documentGeometry?.height || image.capture !== "full-page-real-product-state") {
         fail("invalid_case_observation", `${side} case ${required.id} observation ${key} lacks matching state, focus, copy, geometry or raster metadata`);
       }
+      try { rawBundle.memberPath(image.path); } catch (error) { fail("invalid_case_artifact", error.message); }
+      validateObservationState(state, required, observation, `${side} ${required.id} ${key}`, { neutralHover: true });
+      if (observation.capture_profile !== HOVER_CAPTURE_PROFILE) fail("invalid_case_hover_profile", `${side} case ${required.id} observation ${key} lacks the required neutral-full-page plus viewport-hover profile`);
       const artifact = artifacts.get(image.path);
       if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
         fail("invalid_case_artifact", `${side} case ${required.id} observation ${key} must have a copied raw image artifact`);
       }
       if (seenImagePaths.has(image.path)) fail("reused_case_artifact", `${side} receipt reuses a raw image artifact path across cases or observations`);
       seenImagePaths.add(image.path);
-      const sampling = observation.capture_sampling;
-      if (!sampling || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 || !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) fail("invalid_case_sampling", `${side} case ${required.id} lacks bounded raw sample proof`);
-      for (const sample of sampling.samples) for (const [memberPath, expectedHash, media] of [[sample.path, sample.sha256, ".png"], [sample.state_path, sample.state_sha256, ".json"]]) {
-        try { rawBundle.memberPath(memberPath); } catch (error) { fail("invalid_case_sampling", error.message); }
-        const member = artifacts.get(memberPath);
-        if (!memberPath.endsWith(media) || seenImagePaths.has(memberPath) || !member?.present || member.sha256 !== expectedHash) fail("invalid_case_sampling", `${side} case ${required.id} has absent, reused or altered raw sample evidence`);
-        seenImagePaths.add(memberPath);
-      }
+      validateCaptureSampling(observation.capture_sampling, image, artifacts, seenImagePaths, `${side} full-page ${required.id} ${key}`);
+      validateHoverCapture(observation, required, artifacts, seenImagePaths, key);
 
       byObservation.set(key, observation);
     }
@@ -371,8 +490,12 @@ function readBundledPng(bundle, item) {
   if (digest(bytes) !== item.sha256) fail("case_image_hash_mismatch", `Case ${item.id} PNG does not match its raw SHA-256 receipt`);
   try {
     const decoded = PNG.sync.read(bytes);
-    if (decoded.width !== item.full_page_raster?.width || decoded.height !== item.full_page_raster?.height || decoded.width !== item.viewport?.width) {
-      fail("case_image_dimensions_mismatch", `Case ${item.id} decoded raster dimensions do not match its observed viewport and full-page geometry`);
+    const raster = item.capture === HOVER_IMAGE_CAPTURE ? item.viewport_raster : item.full_page_raster;
+    if (item.capture === HOVER_IMAGE_CAPTURE && (!isRecord(raster) || item.viewport?.width !== raster.width || item.viewport?.height !== raster.height)) {
+      fail("case_image_dimensions_mismatch", `Case ${item.id} explicit viewport-hover raster must match its actual viewport`);
+    }
+    if (decoded.width !== raster?.width || decoded.height !== raster?.height || decoded.width !== item.viewport?.width) {
+      fail("case_image_dimensions_mismatch", `Case ${item.id} decoded raster dimensions do not match its observed viewport and capture geometry`);
     }
   } catch (error) {
     if (error.code) throw error;
@@ -395,10 +518,13 @@ function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, can
   } catch (error) {
     fail("invalid_pair_png", `A paired raw artifact cannot be decoded as PNG: ${error.message}`);
   }
-  if (beforeMetadata && (before.width !== beforeMetadata.full_page_raster?.width || before.height !== beforeMetadata.full_page_raster?.height || before.width !== beforeMetadata.viewport?.width)) {
+  const expectedRaster = (metadata) => metadata?.capture === HOVER_IMAGE_CAPTURE ? metadata.viewport_raster : metadata?.full_page_raster;
+  const beforeRaster = expectedRaster(beforeMetadata);
+  const candidateRaster = expectedRaster(candidateMetadata);
+  if (beforeMetadata && (before.width !== beforeRaster?.width || before.height !== beforeRaster?.height || before.width !== beforeMetadata.viewport?.width)) {
     fail("before_image_dimensions_mismatch", "Before decoded PNG dimensions do not match its actual capture geometry");
   }
-  if (candidateMetadata && (candidate.width !== candidateMetadata.full_page_raster?.width || candidate.height !== candidateMetadata.full_page_raster?.height || candidate.width !== candidateMetadata.viewport?.width)) {
+  if (candidateMetadata && (candidate.width !== candidateRaster?.width || candidate.height !== candidateRaster?.height || candidate.width !== candidateMetadata.viewport?.width)) {
     fail("candidate_image_dimensions_mismatch", "Candidate decoded PNG dimensions do not match its actual capture geometry");
   }
   return {
@@ -432,30 +558,51 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
       const rightObservation = right.observations.get(key);
       const leftImage = leftObservation.image;
       const rightImage = rightObservation.image;
-      return { key, theme: leftObservation.theme, width: leftObservation.viewport.width,
+      const leftHoverCapture = leftObservation.hover_capture;
+      const rightHoverCapture = rightObservation.hover_capture;
+      const readVerifiedImage = (side, image, bundle) => {
+        const bytes = readImage(side, { id, ...image }, bundle);
+        if (!Buffer.isBuffer(bytes) || digest(bytes) !== image.sha256) fail("case_image_hash_mismatch", `${side} ${id} image bytes do not match their raw SHA-256 receipt`);
+        return bytes;
+      };
+      const fullPagePixels = comparePngExact(readVerifiedImage("before", leftImage, before), readVerifiedImage("candidate", rightImage, candidate), leftImage, rightImage, identicalDimensions);
+      const hoverPixels = comparePngExact(readVerifiedImage("before", leftHoverCapture.image, before), readVerifiedImage("candidate", rightHoverCapture.image, candidate), leftHoverCapture.image, rightHoverCapture.image, identicalDimensions);
+      return { key, theme: leftObservation.theme, width: leftObservation.viewport.width, capture_profile: leftObservation.capture_profile,
         before_sha256: leftImage.sha256, candidate_sha256: rightImage.sha256,
+        before_hover_sha256: leftHoverCapture.image.sha256, candidate_hover_sha256: rightHoverCapture.image.sha256,
         state_equal: canonicalJson(leftObservation.state) === canonicalJson(rightObservation.state),
+        hover_state_equal: canonicalJson(leftHoverCapture.state) === canonicalJson(rightHoverCapture.state),
         geometry_equal: canonicalJson(leftObservation.geometry) === canonicalJson(rightObservation.geometry),
         visible_copy_equal: canonicalJson(leftObservation.visible_copy) === canonicalJson(rightObservation.visible_copy),
         assertions_equal: canonicalJson(leftObservation.assertions) === canonicalJson(rightObservation.assertions),
-        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate), leftImage, rightImage, identicalDimensions) };
+        hover_assertions_equal: canonicalJson(leftHoverCapture.assertions) === canonicalJson(rightHoverCapture.assertions),
+        full_page_pixels: fullPagePixels,
+        hover_pixels: hoverPixels,
+        pixels: fullPagePixels,
+        pixels_equal: fullPagePixels.equal && hoverPixels.equal };
     });
-    const pixelsEqual = viewportComparisons.every((entry) => entry.pixels.equal);
+    const fullPagePixelsEqual = viewportComparisons.every((entry) => entry.full_page_pixels.equal);
+    const hoverPixelsEqual = viewportComparisons.every((entry) => entry.hover_pixels.equal);
+    const pixelsEqual = fullPagePixelsEqual && hoverPixelsEqual;
     const stateEqual = viewportComparisons.every((entry) => entry.state_equal);
+    const hoverStateEqual = viewportComparisons.every((entry) => entry.hover_state_equal);
     const actionEqual = canonicalJson(left.actions) === canonicalJson(right.actions) && canonicalJson(left.transport_sequence) === canonicalJson(right.transport_sequence);
     const geometryEqual = viewportComparisons.every((entry) => entry.geometry_equal);
     const copyEqual = viewportComparisons.every((entry) => entry.visible_copy_equal);
     const caseAssertionsEqual = canonicalJson(left.assertions) === canonicalJson(right.assertions);
-    const assertionsEqual = caseAssertionsEqual && viewportComparisons.every((entry) => entry.assertions_equal);
+    const assertionsEqual = caseAssertionsEqual && viewportComparisons.every((entry) => entry.assertions_equal && entry.hover_assertions_equal);
     const identityEqual = left.test_identity === right.test_identity;
-    const passed = pixelsEqual && stateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
-    if (!passed) mismatches.push({ id, pixels: pixelsEqual, state: stateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });
+    const passed = pixelsEqual && stateEqual && hoverStateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
+    if (!passed) mismatches.push({ id, pixels: pixelsEqual, full_page_pixels: fullPagePixelsEqual, hover_pixels: hoverPixelsEqual, state: stateEqual, hover_state: hoverStateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });
     comparisons.push({
       id,
       test_identity: left.test_identity,
       viewport_comparisons: viewportComparisons,
       pixels_equal: pixelsEqual,
+      full_page_pixels_equal: fullPagePixelsEqual,
+      hover_pixels_equal: hoverPixelsEqual,
       state_equal: stateEqual,
+      hover_state_equal: hoverStateEqual,
       actions_and_transport_equal: actionEqual,
       geometry_equal: geometryEqual,
       visible_copy_equal: copyEqual,

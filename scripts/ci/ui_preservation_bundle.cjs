@@ -12,6 +12,8 @@ const SCHEMA = "scrypath.ui-preservation-raw-bundle.v2";
 const PREFIX = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
 const BUNDLE_PATH = "ui-review-artifacts/iteration3-journeys/phase185-held-out.bundle.json.gz";
 const STAGING_PATH = "phase185-raw-staging";
+// The original aggregate budget is shared by full-page and hover proof. Adding
+// another capture kind does not grant more members, compressed or expanded bytes.
 const MAX_LOGICAL_MEMBERS = 213 * (2 * 6 + 1);
 const LIMITS = Object.freeze({ compressed: 64 * 1024 * 1024, expanded: 256 * 1024 * 1024, members: MAX_LOGICAL_MEMBERS });
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -244,7 +246,7 @@ function addExpected(expected, descriptor, type) {
   expected.set(name, descriptor.sha256);
 }
 
-function addObservationMembers(expected, observation) {
+function addObservationMembers(expected, observation, allowHover = true) {
   if (!observation || typeof observation !== "object" || Array.isArray(observation)) throw new Error("Invalid raw preservation observation");
   if (observation.image != null) addExpected(expected, observation.image, "png");
   if (observation.images != null) {
@@ -262,6 +264,10 @@ function addObservationMembers(expected, observation) {
       addExpected(expected, { path: sample.path, sha256: sample.sha256 }, "png");
       addExpected(expected, { path: sample.state_path, sha256: sample.state_sha256 }, "json");
     }
+  }
+  if (observation.hover_capture != null) {
+    if (!allowHover) throw new Error("Raw preservation hover proof must not be recursively nested");
+    addObservationMembers(expected, observation.hover_capture, false);
   }
 }
 

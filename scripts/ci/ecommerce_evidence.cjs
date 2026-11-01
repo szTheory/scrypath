@@ -634,6 +634,129 @@ function loadPreservationRawBundle(runRoot, artifacts, reasons) {
   }
 }
 
+function preservationSemanticIdentity(value) {
+  if (!isRecord(value)) return null;
+  return { tag: value.tag, role: value.role, name: value.name, href: value.href };
+}
+
+function validatePreservationInteractionTarget(target) {
+  const identity = preservationSemanticIdentity(target);
+  const supportedTags = new Set(["a", "button", "input", "select", "textarea"]);
+  const supportedRoles = new Set(["button", "link", "checkbox", "radio", "option", "tab", "menuitem"]);
+  if (!identity || typeof identity.tag !== "string" || identity.tag.trim() === "" ||
+    typeof identity.role !== "string" || identity.role.trim() === "" ||
+    typeof identity.name !== "string" || identity.name.trim() === "" ||
+    !(identity.href === null || typeof identity.href === "string") ||
+    (!supportedTags.has(identity.tag) && !supportedRoles.has(identity.role))) {
+    throw new TypeError("hover proof must identify a real, named interactive target");
+  }
+  return identity;
+}
+
+function validatePreservationSampleProof({ sampling, imagePath, sampleKind, imageSha, imageRaster, state, viewport, documentGeometry, dpr, interactionTarget, expectHover, seenPaths, rawBundleState, decodedDimensions, label }) {
+  if (!isRecord(sampling) || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 ||
+    !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) {
+    throw new TypeError("raw capture lacks the bounded first-consecutive stationary sample proof");
+  }
+  if (!(["held-out", "hover"].includes(sampleKind)) || (sampleKind === "hover") !== expectHover) throw new TypeError("raw capture sample path kind does not match its capture state");
+  const captureId = imagePath.replace(/(?:--hover)?\.png$/i, "");
+  const targetIdentity = interactionTarget ? validatePreservationInteractionTarget(interactionTarget) : null;
+  const actualSnapshots = [];
+  for (let index = 0; index < sampling.samples.length; index += 1) {
+    const sample = sampling.samples[index];
+    const previous = sampling.samples[index - 1];
+    if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") ||
+      !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 || (previous && sample.elapsed_ms < previous.elapsed_ms)) {
+      throw new TypeError("raw capture sample hashes/timing are invalid");
+    }
+    const sampleStem = `${captureId}--${sampleKind === "hover" ? "hover" : "held-out"}-sample-${index}`;
+    const expectedImagePath = `${sampleStem}.png`;
+    const expectedStatePath = `${sampleStem}.json`;
+    if (sample.path !== expectedImagePath || sample.state_path !== expectedStatePath) throw new TypeError("raw capture sample paths must be the canonical image-bound PNG/JSON pair");
+    let afterSnapshot = null;
+    for (const [samplePath, expectedHash, kind] of [[sample.path, sample.sha256, "png"], [sample.state_path, sample.state_sha256, "json"]]) {
+      rawBundle.memberPath(samplePath);
+      if (!samplePath.endsWith(`.${kind}`) || seenPaths.has(samplePath)) throw new TypeError("raw sample paths are reused or have the wrong media type");
+      seenPaths.add(samplePath);
+      const rawArtifact = rawBundleState.artifacts.get(samplePath);
+      const sampleBytes = rawBundleState.members.get(samplePath);
+      if (!rawArtifact?.present || rawArtifact.sha256 !== expectedHash || !Buffer.isBuffer(sampleBytes) || rawBundle.sha256(sampleBytes) !== expectedHash) {
+        throw new TypeError("raw sample PNG/state bytes are absent or do not match the observed hashes");
+      }
+      if (kind === "png") {
+        const prior = decodedDimensions.get(expectedHash);
+        if (prior && !prior.bytes.equals(sampleBytes)) throw new TypeError("Equal raw sample hashes have different bytes");
+        const dimensions = prior?.dimensions || pngDimensions(sampleBytes, `${label} raw sample`);
+        if (!prior) decodedDimensions.set(expectedHash, { bytes: sampleBytes, dimensions });
+        if (dimensions.width !== imageRaster.width || dimensions.height !== imageRaster.height) throw new TypeError("raw sample raster dimensions differ from the observation geometry");
+      } else {
+        const snapshot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sampleBytes));
+        if (!isRecord(snapshot) || snapshot.schema !== "scrypath.ui-capture-state.v1" || !isRecord(snapshot.before) || !isRecord(snapshot.after)) {
+          throw new TypeError("raw sample state is not an actual before/after capture snapshot");
+        }
+        const rootSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([name]) => !["before", "after"].includes(name)));
+        const beforeJson = JSON.stringify(canonicalize(snapshot.before));
+        const afterJson = JSON.stringify(canonicalize(snapshot.after));
+        if (beforeJson !== afterJson || JSON.stringify(canonicalize(rootSnapshot)) !== afterJson ||
+          crypto.createHash("sha256").update(afterJson).digest("hex") !== state.dom_state_sha256) {
+          throw new TypeError("raw before/after sample state differs from the actual observation DOM-state identity");
+        }
+        const rawViewport = snapshot.after.viewport;
+        if (rawViewport?.inner?.width !== viewport.width || rawViewport?.inner?.height !== viewport.height ||
+          rawViewport?.document?.width !== documentGeometry.width || rawViewport?.document?.height !== documentGeometry.height ||
+          rawViewport?.scroll?.x !== state.scroll.x || rawViewport?.scroll?.y !== state.scroll.y || rawViewport?.dpr !== dpr || rawViewport?.scale !== 1 ||
+          !isRecord(rawViewport.client) || !Number.isFinite(rawViewport.client.width) || !Number.isFinite(rawViewport.client.height) ||
+          rawViewport.client.width <= 0 || rawViewport.client.width > viewport.width || rawViewport.client.height <= 0 || rawViewport.client.height > viewport.height) {
+          throw new TypeError("raw sample state viewport, document, scroll or DPR differs from the actual observation");
+        }
+        if (!Array.isArray(snapshot.after.hover) || !Array.isArray(state.hover) ||
+          JSON.stringify(canonicalize(snapshot.after.hover)) !== JSON.stringify(canonicalize(state.hover))) {
+          throw new TypeError("raw sample hover state differs from the normalized observation hover state");
+        }
+        if (expectHover === false && snapshot.after.hover.length !== 0) throw new TypeError("the full-page neutral capture must have no hovered controls");
+        const rawFocus = snapshot.after.focus;
+        if (targetIdentity) {
+          const focusIdentity = preservationSemanticIdentity(rawFocus?.element);
+          const focusedControl = Array.isArray(snapshot.after.controls)
+            ? snapshot.after.controls.find((control) => JSON.stringify(canonicalize(preservationSemanticIdentity(control))) === JSON.stringify(canonicalize(targetIdentity)))
+            : null;
+          if (JSON.stringify(canonicalize(focusIdentity)) !== JSON.stringify(canonicalize(targetIdentity)) || rawFocus?.focus_visible !== true ||
+            snapshot.after.document_has_focus !== true || !focusedControl ||
+            JSON.stringify(canonicalize(focusedControl.rect)) !== JSON.stringify(canonicalize(rawFocus.rect)) ||
+            !isRecord(rawFocus.rect) || ![rawFocus.rect.x, rawFocus.rect.y, rawFocus.rect.width, rawFocus.rect.height].every(Number.isFinite) ||
+            rawFocus.rect.width <= 0 || rawFocus.rect.height <= 0 || state.focus?.name !== targetIdentity.name ||
+            state.focus?.role !== targetIdentity.role || state.focus?.tag !== targetIdentity.tag || state.focus?.focus_visible !== true ||
+            state.focus?.document_has_focus !== true || !isRecord(rawFocus.outline) ||
+            JSON.stringify(canonicalize(state.focus.outline)) !== JSON.stringify(canonicalize(rawFocus.outline)) || state.focus.opacity !== rawFocus.opacity) {
+            throw new TypeError("raw capture must bind the named target, focus-visible state, document focus and actual focus style");
+          }
+        }
+        if (expectHover === true) {
+          const hoveredTarget = snapshot.after.hover.some((entry) => {
+            const bounds = entry?.rect;
+            return isRecord(entry) && isRecord(bounds) && [bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite) &&
+              bounds.width > 0 && bounds.height > 0 && bounds.x < viewport.width && bounds.y < viewport.height &&
+              bounds.x + bounds.width > 0 && bounds.y + bounds.height > 0 &&
+              JSON.stringify(canonicalize(preservationSemanticIdentity(entry.element))) === JSON.stringify(canonicalize(targetIdentity));
+          });
+          if (!hoveredTarget) throw new TypeError("raw hover proof does not show the named target under the pointer");
+        }
+        afterSnapshot = snapshot.after;
+      }
+    }
+    actualSnapshots.push(afterSnapshot);
+    if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) {
+      throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
+    }
+  }
+  const selectedSample = sampling.samples[sampling.selected];
+  const previousSample = sampling.samples[sampling.selected - 1];
+  if (selectedSample.sha256 !== imageSha || previousSample.sha256 !== imageSha || selectedSample.state_sha256 !== previousSample.state_sha256) {
+    throw new TypeError("selected raw PNG is not the first consecutive exact image/state sample pair");
+  }
+  return actualSnapshots[sampling.selected];
+}
+
 function validatePreservationEvents(events, reconciliation, context, reasons) {
   const preservationTests = reconciliation.cases.filter((item) => preservationIdForCase(item));
   const passedTests = new Map(preservationTests.map((item) => [preservationIdForCase(item), item]));
@@ -742,14 +865,22 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
         observationIds.add(key);
         if (expectedMatrix && !expectedMatrix.includes(key)) throw new TypeError(`unexpected observation ${key}`);
         const state = observation.state;
-        if (!isRecord(state) || state.element !== expected.element || state.category !== expected.category || typeof state.route !== "string" || !state.route.startsWith("/") ||
+        if (observation.capture_profile !== "fullpage-neutral-and-viewport-hover-v1" ||
+          !isRecord(state) || state.element !== expected.element || state.category !== expected.category || typeof state.route !== "string" || !state.route.startsWith("/") ||
           state.theme !== observation.theme || state.color_scheme !== (observation.theme === "light" ? "light" : "dark") ||
           !isRecord(state.viewport) || state.viewport.width !== observation.viewport.width || state.viewport.height !== observation.viewport.height ||
           !isRecord(state.scroll) || !Number.isFinite(state.scroll.x) || !Number.isFinite(state.scroll.y) ||
           !isRecord(state.focus) || typeof state.focus.name !== "string" || state.focus.name.trim() === "" ||
+          state.focus.focus_visible !== true || state.focus.document_has_focus !== true ||
+          !Array.isArray(state.hover) || state.hover.length !== 0 ||
           typeof state.data_identity !== "string" || state.data_identity.trim() === "" ||
           state.clock?.clock_sha256 !== clockSha || state.clock?.browser_iso !== recipe?.browser_date?.observed || state.clock?.server_iso !== recipe?.browser_date?.observed) {
-          throw new TypeError("observation state must record matching route, theme, viewport, scroll, focus, data identity and fixed clock");
+          throw new TypeError("observation state/profile must record the neutral capture, matching route, theme, viewport, scroll, focus, data identity and fixed clock");
+        }
+        const interactionTarget = observation.interaction_target;
+        const targetIdentity = validatePreservationInteractionTarget(interactionTarget);
+        if (state.focus.name !== targetIdentity.name || state.focus.role !== targetIdentity.role || state.focus.tag !== targetIdentity.tag) {
+          throw new TypeError("neutral capture focus must remain bound to its named interaction target");
         }
         if (!Array.isArray(observation.geometry) || observation.geometry.length === 0 || observation.geometry.some((item) =>
           !isRecord(item) || typeof item.name !== "string" || item.name.trim() === "" || ![item.x, item.y, item.width, item.height].every(Number.isFinite))) {
@@ -791,53 +922,102 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
           throw new TypeError(`decoded full-page raster ${raster.width}x${raster.height} does not match viewport/document geometry ${expectedRaster.width}x${expectedRaster.height}`);
         }
         const sampling = observation.capture_sampling;
-        if (!isRecord(sampling) || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 || !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) throw new TypeError("raw capture lacks the bounded first-consecutive stationary sample proof");
-        for (let index = 0; index < sampling.samples.length; index++) {
-          const sample = sampling.samples[index];
-          const previous = sampling.samples[index - 1];
-          if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") || !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 || (previous && sample.elapsed_ms < previous.elapsed_ms)) throw new TypeError("raw capture sample hashes/timing are invalid");
-          for (const [samplePath, expectedHash, kind] of [[sample.path, sample.sha256, "png"], [sample.state_path, sample.state_sha256, "json"]]) {
-            rawBundle.memberPath(samplePath);
-            if (!samplePath.endsWith(`.${kind}`) || seenObservationPaths.has(samplePath)) throw new TypeError("raw sample paths are reused or have the wrong media type");
-            seenObservationPaths.add(samplePath);
-            const rawArtifact = context.rawBundle.artifacts.get(samplePath);
-            const sampleBytes = context.rawBundle.members.get(samplePath);
-            if (!rawArtifact?.present || rawArtifact.sha256 !== expectedHash || !Buffer.isBuffer(sampleBytes) || rawBundle.sha256(sampleBytes) !== expectedHash) throw new TypeError("raw sample PNG/state bytes are absent or do not match the observed hashes");
-            if (kind === "png") {
-              const prior = decodedDimensions.get(expectedHash);
-              if (prior && !prior.bytes.equals(sampleBytes)) throw new TypeError("Equal raw sample hashes have different bytes");
-              const dimensions = prior?.dimensions || pngDimensions(sampleBytes, `${expected.id} raw sample`);
-              if (!prior) decodedDimensions.set(expectedHash, { bytes: sampleBytes, dimensions });
-              if (dimensions.width !== raster.width || dimensions.height !== raster.height) throw new TypeError("raw sample raster dimensions differ from the observation geometry");
-            } else {
-              const snapshot = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(sampleBytes));
-              if (!isRecord(snapshot) || snapshot.schema !== "scrypath.ui-capture-state.v1" || !isRecord(snapshot.before) || !isRecord(snapshot.after)) throw new TypeError("raw sample state is not an actual before/after capture snapshot");
-              const rootSnapshot = Object.fromEntries(Object.entries(snapshot).filter(([name]) => !["before", "after"].includes(name)));
-              const beforeJson = JSON.stringify(canonicalize(snapshot.before));
-              const afterJson = JSON.stringify(canonicalize(snapshot.after));
-              if (beforeJson !== afterJson || JSON.stringify(canonicalize(rootSnapshot)) !== afterJson || crypto.createHash("sha256").update(afterJson).digest("hex") !== state.dom_state_sha256) throw new TypeError("raw before/after sample state differs from the actual observation DOM-state identity");
-              const rawViewport = snapshot.after.viewport;
-              if (rawViewport?.inner?.width !== observation.viewport.width || rawViewport?.inner?.height !== observation.viewport.height ||
-                rawViewport?.document?.width !== documentGeometry.width || rawViewport?.document?.height !== documentGeometry.height ||
-                rawViewport?.scroll?.x !== state.scroll.x || rawViewport?.scroll?.y !== state.scroll.y || rawViewport?.dpr !== dpr) {
-                throw new TypeError("raw sample state viewport, document, scroll or DPR differs from the actual observation");
-              }
-            }
-          }
-          if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
+        const primarySnapshot = validatePreservationSampleProof({
+          sampling, imagePath, sampleKind: "held-out", imageSha: image.sha256, imageRaster: raster, state, viewport: observation.viewport,
+          documentGeometry, dpr, interactionTarget, expectHover: false, seenPaths: seenObservationPaths,
+          rawBundleState: context.rawBundle, decodedDimensions, label: `${expected.id} ${key} full-page`
+        });
+
+        const hoverCapture = observation.hover_capture;
+        if (!isRecord(hoverCapture) || !isRecord(hoverCapture.state) || !isRecord(hoverCapture.image) ||
+          !Array.isArray(hoverCapture.assertions) || hoverCapture.assertions.length === 0 || hoverCapture.assertions.some((assertion) =>
+            !isRecord(assertion) || typeof assertion.name !== "string" || assertion.name.trim() === "" || assertion.status !== "passed" ||
+            typeof assertion.actual !== "string" || assertion.actual.trim() === "")) {
+          throw new TypeError("observation lacks passing assertions and a separate viewport-hover state/image/sample proof");
         }
-        const selectedSample = sampling.samples[sampling.selected];
-        const previousSample = sampling.samples[sampling.selected - 1];
-        if (selectedSample.sha256 !== image.sha256 || previousSample.sha256 !== image.sha256 || selectedSample.state_sha256 !== previousSample.state_sha256) throw new TypeError("selected raw PNG is not the first consecutive exact image/state sample pair");
+        const hoverState = hoverCapture.state;
+        const crossShotStateIdentity = (value) => ({
+          ...Object.fromEntries(Object.entries(value).filter(([name]) => !["hover", "dom_state_sha256", "focus"].includes(name))),
+          focus: Object.fromEntries(["name", "role", "tag", "focus_visible", "document_has_focus"].map((name) => [name, value.focus?.[name]]))
+        });
+        if (JSON.stringify(canonicalize(crossShotStateIdentity(hoverState))) !== JSON.stringify(canonicalize(crossShotStateIdentity(state))) ||
+          !Array.isArray(hoverState.hover) || hoverState.hover.length === 0 || !/^[a-f0-9]{64}$/.test(hoverState.dom_state_sha256 || "")) {
+          throw new TypeError("hover state must preserve route, theme, viewport, scroll, data, clock and focused-control identity while retaining its own style");
+        }
+        const hoverImage = hoverCapture.image;
+        if (typeof hoverImage.path !== "string" || !/^[a-f0-9]{64}$/.test(hoverImage.sha256 || "") ||
+          hoverImage.path !== imagePath.replace(/\.png$/, "--hover.png")) {
+          throw new TypeError("hover image must use the canonical viewport-hover capture path and SHA-256");
+        }
+        const hoverImagePath = normalizeArtifactPath(hoverImage.path);
+        if (!hoverImagePath.startsWith(PRESERVATION_ARTIFACT_ROOT) || seenObservationPaths.has(hoverImagePath) ||
+          hoverImage.capture !== "viewport-real-product-hover" ||
+          JSON.stringify(canonicalize(hoverImage.viewport)) !== JSON.stringify(canonicalize(observation.viewport)) ||
+          !isRecord(hoverImage.viewport_raster) || hoverImage.viewport_raster.width !== observation.viewport.width ||
+          hoverImage.viewport_raster.height !== observation.viewport.height) {
+          throw new TypeError("hover image must be a unique exact viewport raster in the held-out preservation bundle");
+        }
+        seenObservationPaths.add(hoverImagePath);
+        const hoverArtifact = context.rawBundle.artifacts.get(hoverImagePath);
+        if (!hoverArtifact?.present || hoverArtifact.sha256 !== hoverImage.sha256 || hoverArtifact.copied !== true || hoverArtifact.copy_status !== "success") {
+          throw new TypeError("hover image must be declared, copied, present and hash-matched in this run");
+        }
+        const hoverImageBytes = context.rawBundle.members.get(hoverImagePath);
+        if (!Buffer.isBuffer(hoverImageBytes)) throw new TypeError("hover image raw bytes are absent from the bounded bundle");
+        const priorHoverDimensions = decodedDimensions.get(hoverImage.sha256);
+        if (priorHoverDimensions && !priorHoverDimensions.bytes.equals(hoverImageBytes)) throw new TypeError("Equal raw hover image hashes have different bytes");
+        const hoverRaster = priorHoverDimensions?.dimensions || pngDimensions(hoverImageBytes, `${expected.id} ${key} hover`);
+        if (!priorHoverDimensions) decodedDimensions.set(hoverImage.sha256, { bytes: hoverImageBytes, dimensions: hoverRaster });
+        if (hoverRaster.width !== observation.viewport.width || hoverRaster.height !== observation.viewport.height ||
+          hoverImage.viewport_raster.width !== hoverRaster.width || hoverImage.viewport_raster.height !== hoverRaster.height) {
+          throw new TypeError("decoded hover image must be exactly the unscaled current viewport raster");
+        }
+        const hoverSnapshot = validatePreservationSampleProof({
+          sampling: hoverCapture.capture_sampling, imagePath: hoverImagePath, sampleKind: "hover", imageSha: hoverImage.sha256,
+          imageRaster: hoverRaster, state: hoverState, viewport: observation.viewport, documentGeometry, dpr,
+          interactionTarget, expectHover: true, seenPaths: seenObservationPaths,
+          rawBundleState: context.rawBundle, decodedDimensions, label: `${expected.id} ${key} hover`
+        });
+        const rawCrossShotIdentity = (value) => {
+          const focusedControl = value.controls.find((control) =>
+            JSON.stringify(canonicalize(preservationSemanticIdentity(control))) === JSON.stringify(canonicalize(targetIdentity)));
+          return {
+            schema: value.schema,
+            viewport: value.viewport,
+            theme: value.theme,
+            document_has_focus: value.document_has_focus,
+            focus: { element: preservationSemanticIdentity(value.focus?.element), focus_visible: value.focus?.focus_visible },
+            focused_control: focusedControl ? {
+              ...preservationSemanticIdentity(focusedControl),
+              value: focusedControl.value,
+              checked: focusedControl.checked,
+              selected: focusedControl.selected,
+              disabled: focusedControl.disabled,
+              expanded: focusedControl.expanded,
+              pressed: focusedControl.pressed
+            } : null
+          };
+        };
+        if (JSON.stringify(canonicalize(rawCrossShotIdentity(primarySnapshot))) !== JSON.stringify(canonicalize(rawCrossShotIdentity(hoverSnapshot)))) {
+          throw new TypeError("viewport-hover raw state differs from the neutral capture in shared viewport, theme or focused-control identity");
+        }
         observations.push({
           theme: observation.theme,
           viewport: { width: observation.viewport.width, height: observation.viewport.height },
+          capture_profile: observation.capture_profile,
           state,
+          interaction_target: targetIdentity,
           geometry: observation.geometry,
           assertions: observation.assertions,
           capture_sampling: sampling,
           visible_copy: observation.visible_copy,
-          image: { path: imagePath, sha256: image.sha256, viewport: image.viewport, full_page_raster: raster, capture: image.capture }
+          image: { path: imagePath, sha256: image.sha256, viewport: image.viewport, full_page_raster: raster, capture: image.capture },
+          hover_capture: {
+            state: hoverState,
+            image: { path: hoverImagePath, sha256: hoverImage.sha256, viewport: hoverImage.viewport, viewport_raster: hoverRaster, capture: hoverImage.capture },
+            capture_sampling: hoverCapture.capture_sampling,
+            assertions: hoverCapture.assertions
+          }
         });
       } catch (error) {
         reasons.push(errorReason("invalid_preservation_observation", `${expected.id}: ${error.message}`, identity.key));
@@ -1512,7 +1692,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
     checkers,
     cases: reconciliation.cases,
     preservation: {
-      schema: beforeOnly ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1",
+      schema: beforeOnly ? "scrypath.ui-preservation-before-only.v2" : "scrypath.ui-preservation.v2",
       product_source_sha: productSourceSha,
       build_source_sha: checkoutHead,
       product_tree_sha256: productTreeSha256,
@@ -1719,7 +1899,7 @@ function validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot = REPOSITO
     const receiptFile = resolveArtifact(root, BEFORE_ONLY_RECEIPT_NAME, { allowOutputs: true });
     if (receiptFile.stat.size > MAX_JSON_BYTES) throw new RangeError("before-only receipt exceeds the parsing size limit");
     receipt = JSON.parse(fs.readFileSync(receiptFile.path, "utf8"));
-    if (!isRecord(receipt) || receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v1" || typeof receipt.generated_at_utc !== "string") {
+    if (!isRecord(receipt) || receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v2" || typeof receipt.generated_at_utc !== "string") {
       throw new TypeError("before-only receipt schema is invalid or belongs to the full-run scope");
     }
   } catch (error) {
@@ -1762,7 +1942,7 @@ function validateReceipt({ runDir, expectedSource = null, repoRoot = REPOSITORY_
   }
   let recomputed;
   try {
-    if (receipt.scope !== "full" || receipt.preservation?.schema !== "scrypath.ui-preservation.v1") throw new TypeError("stored receipt is not a canonical full-run receipt");
+    if (receipt.scope !== "full" || receipt.preservation?.schema !== "scrypath.ui-preservation.v2") throw new TypeError("stored receipt is not a canonical full-run receipt");
     recomputed = buildReceipt(root, { generatedAt: receipt.generated_at_utc, expectedSource, repoRoot, verifyGitObjects });
   } catch (error) {
     return { valid: false, eligible: false, reasons: [errorReason("receipt_recompute_failed", error.message)] };

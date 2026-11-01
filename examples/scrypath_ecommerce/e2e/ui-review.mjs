@@ -241,6 +241,38 @@ export async function captureViewportImage(page, viewport, { timeout = STABLE_CA
   return image;
 }
 
+export async function captureViewportImageAtCurrentScroll(page, viewport, { timeout = STABLE_CAPTURE_MAX_ELAPSED_MS } = {}) {
+  if (!Number.isSafeInteger(viewport?.width) || !Number.isSafeInteger(viewport?.height) || viewport.width <= 0 || viewport.height <= 0 || viewport.width * viewport.height > 24_000_000) throw new Error("Viewport capture dimensions must be positive bounded integers.");
+  if (!Number.isFinite(timeout) || timeout <= 0) throw new Error("Viewport capture timeout must be a positive finite number.");
+  const deadline = performance.now() + timeout;
+  const boundedEvaluate = (evaluate, label) => withTimeout(evaluate(), remainingMilliseconds(deadline, () => performance.now(), label), label);
+  const geometry = () => page.evaluate(() => ({
+    width: window.innerWidth, height: window.innerHeight,
+    dpr: window.devicePixelRatio, scale: window.visualViewport?.scale ?? 1,
+    scrollX: window.scrollX, scrollY: window.scrollY,
+    documentWidth: document.documentElement.scrollWidth,
+    documentHeight: document.documentElement.scrollHeight
+  }));
+  await boundedEvaluate(() => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))), "Viewport frame settlement");
+  const before = await boundedEvaluate(geometry, "Viewport geometry read");
+  if (before.width !== viewport.width || before.height !== viewport.height || before.dpr !== 1 || before.scale !== 1 ||
+      !Number.isFinite(before.scrollX) || !Number.isFinite(before.scrollY) || before.scrollX < 0 || before.scrollY < 0 ||
+      before.scrollX + viewport.width > before.documentWidth || before.scrollY + viewport.height > before.documentHeight) {
+    throw new Error("Viewport capture requires the exact unzoomed viewport and an in-document current scroll position.");
+  }
+  // Capture Chromium's actual viewport at the current scroll offset. Keeping
+  // fullPage false avoids routing a viewport image through beyond-viewport capture.
+  const screenshotTimeout = remainingMilliseconds(deadline, () => performance.now(), "Viewport screenshot");
+  const image = await withTimeout(page.screenshot({
+    animations: "disabled",
+    fullPage: false,
+    timeout: screenshotTimeout
+  }), screenshotTimeout, "Viewport screenshot");
+  const after = await boundedEvaluate(geometry, "Viewport geometry read");
+  if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error(`Viewport capture changed the actual viewport or document layout: ${JSON.stringify({ before, after })}`);
+  return image;
+}
+
 export function captureUiStateInPage(target) {
   const rect = (node) => {
     if (!node || typeof node.getBoundingClientRect !== "function") return null;

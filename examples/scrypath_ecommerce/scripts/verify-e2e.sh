@@ -677,7 +677,7 @@ const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
 if (input.source?.checkout_head !== buildSha || input.source?.built_source_sha !== buildSha ||
     input.source?.product_source_sha !== productSha || input.source?.qualification_sha256 !== qualificationSha ||
     input.workflow?.run_id !== runId || input.workflow?.sha !== eventSha ||
-    receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v1" ||
+    receipt.scope !== "before-only" || receipt.preservation?.schema !== "scrypath.ui-preservation-before-only.v2" ||
     receipt.source?.checkout_head !== buildSha || receipt.source?.product_source_sha !== productSha ||
     receipt.source?.qualification_sha256 !== qualificationSha || receipt.eligibility?.eligible !== true) {
   throw new Error("before-only receipt is ineligible or is bound to different qualified product/build/run identities");

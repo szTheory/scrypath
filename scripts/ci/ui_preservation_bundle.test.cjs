@@ -46,6 +46,52 @@ function sampleRun(t, failure = null) {
   return { directory, selected, samples };
 }
 
+function splitHoverRun(t) {
+  const fixture = sampleRun(t);
+  const eventsPath = path.join(fixture.directory, "phase105-evidence.ndjson");
+  const event = JSON.parse(fs.readFileSync(eventsPath, "utf8"));
+  const image = { path: `${bundle.PREFIX}selected--hover.png`, sha256: bundle.sha256(png) };
+  const samples = [0, 1].map((index) => ({
+    path: `${bundle.PREFIX}hover-sample-${index}.png`, sha256: bundle.sha256(png),
+    state_path: `${bundle.PREFIX}hover-sample-${index}.json`, state_sha256: bundle.sha256(state)
+  }));
+  const write = (relative, bytes) => fs.writeFileSync(path.join(fixture.directory, bundle.STAGING_PATH, relative), bytes);
+  write(image.path, png);
+  for (const sample of samples) { write(sample.path, png); write(sample.state_path, state); }
+  event.observations[0].hover_capture = { image, capture_sampling: { samples } };
+  fs.writeFileSync(eventsPath, `${JSON.stringify(event)}\n`);
+  return { ...fixture, event, eventsPath, image, hoverSamples: samples };
+}
+
+test("run packaging preserves both full-page and separately observed hover proof", (t) => {
+  const { directory, image, hoverSamples } = splitHoverRun(t);
+  const receipt = bundle.packRun(directory);
+  const members = bundle.loadRunBundle(directory, receipt.sha256);
+  assert.equal(members.size, 18);
+  assert.deepEqual(members.get(image.path), png);
+  for (const sample of hoverSamples) {
+    assert.deepEqual(members.get(sample.path), png);
+    assert.deepEqual(members.get(sample.state_path), state);
+  }
+  assert.equal(bundle.LIMITS.members, 2769);
+  assert.equal(bundle.LIMITS.expanded, 256 * 1024 * 1024);
+  assert.equal(bundle.LIMITS.compressed, 64 * 1024 * 1024);
+});
+
+test("hover proof cannot hide missing, altered, reused or recursively nested raw members", (t) => {
+  for (const failure of ["missing", "altered", "reused", "nested"]) {
+    const fixture = splitHoverRun(t);
+    const hover = fixture.event.observations[0].hover_capture;
+    if (failure === "missing") fs.unlinkSync(path.join(fixture.directory, bundle.STAGING_PATH, fixture.hoverSamples[0].state_path));
+    if (failure === "altered") hover.capture_sampling.samples[0].sha256 = "0".repeat(64);
+    if (failure === "reused") hover.image = fixture.event.observations[0].image;
+    if (failure === "nested") hover.hover_capture = {};
+    fs.writeFileSync(fixture.eventsPath, `${JSON.stringify(fixture.event)}\n`);
+    assert.throws(() => bundle.packRun(fixture.directory), undefined, failure);
+    assert.equal(fs.existsSync(path.join(fixture.directory, bundle.BUNDLE_PATH)), false);
+  }
+});
+
 test("packaging preserves every raw byte and hash while deduplicating equal payloads", () => {
   const input = [
     ...entries,

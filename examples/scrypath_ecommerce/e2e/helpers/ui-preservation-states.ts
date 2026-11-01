@@ -927,16 +927,14 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     runtime,
     clock_artifact: { path: clockArtifact, sha256: digest(clockBytes) }
   };
-  const { captureStableImage, captureUiStateInPage } = await import("../ui-review.mjs");
+  const { captureStableImage, captureUiStateInPage, captureViewportImageAtCurrentScroll } = await import("../ui-review.mjs");
   const copyNodes = ["main", "#client-error", "[data-testid='storefront-results']", "[data-testid='control-room-verdict']", "[data-testid='posture-row']", "[data-testid='failed-sync-row']", ".ops-saved-search-row", "#saved-searches", "#search-form", "#sync-pipeline-status", "#index-settings-status"];
   const observations: Record<string, unknown>[] = [];
   for (const width of widths) {
     const height = width === 390 ? 844 : 900;
     await page.setViewportSize({ width, height });
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
-    const observed = await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY, documentWidth: document.documentElement.scrollWidth, documentHeight: document.documentElement.scrollHeight }));
     const observationAssertions: Assertion[] = [];
-    observationAssertions.push(await assertObserved(`document has no viewport-wide horizontal overflow at ${width}px`, observed.documentWidth, (value) => value <= width));
 
     const candidates = [
       ...(preferredInteractionTarget ? [preferredInteractionTarget] : []),
@@ -981,130 +979,288 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
       expect(localScroll.after, "long confirmation sheet starts at its actual horizontal origin").toBe(0);
       observationAssertions.push({ name: "long confirmation retains its existing local overflow with the sheet at horizontal origin", status: "passed", actual: JSON.stringify(localScroll) });
     }
-    Object.assign(observed, await page.evaluate(() => ({ scrollX, scrollY })));
-    const domState = await page.evaluate(captureUiStateInPage) as Record<string, any>;
-    const focus = domState.focus;
-    if (JSON.stringify(focus.element) !== JSON.stringify(interactionIdentity) || focus.focus_visible !== true || domState.document_has_focus !== true || !domState.hover.some((entry: any) => JSON.stringify(entry.element) === JSON.stringify(interactionIdentity))) {
-      throw new Error(`${element} ${category} lacks actual keyboard focus-visible and hover state for its named control: ${JSON.stringify({ focus, hover: domState.hover, interactionIdentity })}`);
+    const hoverSetupState = await page.evaluate(captureUiStateInPage) as Record<string, any>;
+    const focus = hoverSetupState.focus;
+    if (JSON.stringify(focus.element) !== JSON.stringify(interactionIdentity) || focus.focus_visible !== true || hoverSetupState.document_has_focus !== true || !hoverSetupState.hover.some((entry: any) => JSON.stringify(entry.element) === JSON.stringify(interactionIdentity))) {
+      throw new Error(`${element} ${category} lacks actual keyboard focus-visible and hover state for its named control: ${JSON.stringify({ focus, hover: hoverSetupState.hover, interactionIdentity })}`);
     }
     const focusRect = focus.rect;
     if (!focusRect || focusRect.width <= 0 || focusRect.height <= 0) throw new Error(`${element} ${category} focus target has no positive visible rectangle.`);
-    observationAssertions.push(await assertObserved("actual named product control has keyboard focus-visible and pointer-hover state", JSON.stringify({ interactionIdentity, focus, document_has_focus: domState.document_has_focus, hover: domState.hover }), (value) => {
-      const result = JSON.parse(String(value));
-      return result.focus.element.name === result.interactionIdentity.name && result.focus.focus_visible && result.document_has_focus && result.hover.some((entry: any) => entry.element.name === result.interactionIdentity.name);
-    }));
 
-    const geometry: Record<string, number | string>[] = [];
-    const box = await target.boundingBox();
-    if (box) geometry.push({ name: `case-target-${width}`, x: box.x, y: box.y, width: box.width, height: box.height, viewport_width: width });
-    const interactionBox = await interaction.boundingBox();
-    if (interactionBox) geometry.push({ name: `interaction-target-${width}`, x: interactionBox.x, y: interactionBox.y, width: interactionBox.width, height: interactionBox.height, viewport_width: width });
-    for (const [name, selector] of [["shell", ".ops-shell-frame"], ["shell-content", ".ops-shell-content"], ["header", ".ops-header"], ["main", "main"]] as const) {
-      const anchor = page.locator(selector).first();
-      const anchorBox = await anchor.count() ? await anchor.boundingBox().catch(() => null) : null;
-      if (anchorBox) geometry.push({ name: `${name}-${width}`, x: anchorBox.x, y: anchorBox.y, width: anchorBox.width, height: anchorBox.height, viewport_width: width });
-    }
-    geometry.push({ name: `document-${width}`, x: 0, y: 0, width: observed.documentWidth, height: observed.documentHeight, viewport_width: width });
-    const visibleCopy: { text: string; sha256: string }[] = [];
-    for (const selector of copyNodes) {
-      const node = page.locator(selector).first();
-      if (await node.count() && await node.isVisible().catch(() => false)) {
-        const text = (await node.innerText().catch(() => "")).trim();
-        if (text) visibleCopy.push({ text, sha256: digest(text) });
+    const captureId = `${safe(element)}-${safe(category)}-${safe(theme)}-${width}`;
+    type StabilitySample = { path: string; bytes: Buffer | null; state_path: string; state_bytes: Buffer };
+    const persistFailedSamples = async (samples: StabilitySample[], error: unknown) => {
+      const failureRoot = path.join(artifactRoot, "test-results", "phase185-capture-failures", `${safe(element)}-${safe(category)}-${width}-attempt-${testInfo.retry}`);
+      const persistenceErrors: string[] = [];
+      for (const sample of samples) {
+        try {
+          if (sample.bytes) {
+            const imagePath = path.join(failureRoot, sample.path);
+            await mkdir(path.dirname(imagePath), { recursive: true });
+            await writeFile(imagePath, sample.bytes, { flag: "wx" });
+          }
+          const statePath = path.join(failureRoot, sample.state_path);
+          await mkdir(path.dirname(statePath), { recursive: true });
+          await writeFile(statePath, sample.state_bytes, { flag: "wx" });
+        } catch (persistenceError) {
+          persistenceErrors.push(persistenceError instanceof Error ? persistenceError.message : String(persistenceError));
+        }
       }
-    }
-    if (visibleCopy.length === 0) throw new Error(`${element} ${category} has no actual visible product copy for ${theme} at ${width}px.`);
-    const focusName = focus.element?.name || "";
-    const route = new URL(page.url()).pathname + new URL(page.url()).search;
-    const observationState = {
-      element, category, route, theme, color_scheme: observedProfile.color_scheme,
-      viewport: { width: observed.width, height: observed.height },
-      scroll: { x: observed.scrollX, y: observed.scrollY },
-      focus: { name: focusName, role: focus.element?.role ?? null, tag: focus.element?.tag ?? null, focus_visible: focus.focus_visible, outline: focus.outline, opacity: focus.opacity, document_has_focus: domState.document_has_focus },
+      if (persistenceErrors.length && error && typeof error === "object") {
+        (error as Error & { capturePersistenceError?: string }).capturePersistenceError = persistenceErrors.join("; ");
+      }
+    };
+    const captureStable = async (kind: string, captureImage: ({ timeout }: { timeout: number }) => Promise<Buffer>) => {
+      const samples: StabilitySample[] = [];
+      try {
+        const stable = await captureStableImage({
+          page,
+          id: captureId,
+          kind,
+          captureImage,
+          saveSample: async ({ path: samplePath, bytes: sampleBytes, state_path: statePath, state_bytes: stateBytes }) => {
+            samples.push({ path: samplePath, bytes: sampleBytes ?? null, state_path: statePath, state_bytes: stateBytes });
+          }
+        });
+        const stabilityVerified = stable.stability.method === "consecutive-exact-v1" &&
+          stable.stability.max_samples === 6 && stable.stability.max_elapsed_ms === 10_000 &&
+          stable.stability.samples.length >= 2 && stable.stability.samples.length <= 6 &&
+          stable.stability.selected === stable.stability.samples.length - 1;
+        if (!stabilityVerified) throw new Error(`${element} ${category} capture returned proof outside the strict stationary image contract: ${JSON.stringify(stable.stability)}`);
+        return { stable, samples };
+      } catch (error) {
+        await persistFailedSamples(samples, error);
+        throw error;
+      }
+    };
+    const sampleDocument = (sample: StabilitySample) => JSON.parse(sample.state_bytes.toString("utf8")) as { before: Record<string, any> | null; after: Record<string, any> | null };
+    const verifyAndStageSamples = async (samples: StabilitySample[], sampling: Record<string, any>, kind: string) => {
+      if (samples.length !== sampling.samples.length) throw new Error(`${element} ${category} ${kind} capture did not retain every successful raw sample and state sidecar.`);
+      const sampleBytesByPath = new Map(samples.map((sample) => [sample.path, sample]));
+      const verified = sampling.samples.map((sample: Record<string, any>) => {
+        const raw = sampleBytesByPath.get(sample.path);
+        if (!raw?.bytes || raw.state_path !== sample.state_path || digest(raw.bytes) !== sample.sha256 || digest(raw.state_bytes) !== sample.state_sha256) {
+          throw new Error(`${element} ${category} ${kind} sample bytes do not match their capture proof: ${JSON.stringify(sample)}`);
+        }
+        const sampleImagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.path}`;
+        const sampleStatePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.state_path}`;
+        const sampleImageAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleImagePath);
+        const sampleStateAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleStatePath);
+        return { proof: { ...sample, path: sampleImagePath, state_path: sampleStatePath }, raw, sampleImageAbsolute, sampleStateAbsolute };
+      });
+      for (const { raw, sampleImageAbsolute, sampleStateAbsolute } of verified) {
+        await mkdir(path.dirname(sampleImageAbsolute), { recursive: true });
+        await writeFile(sampleImageAbsolute, raw.bytes!, { flag: "wx" });
+        await writeFile(sampleStateAbsolute, raw.state_bytes, { flag: "wx" });
+      }
+      return { ...sampling, samples: verified.map(({ proof }) => proof) };
+    };
+    const makeObservationState = (snapshot: Record<string, any>) => ({
+      element, category, route: new URL(page.url()).pathname + new URL(page.url()).search,
+      theme, color_scheme: observedProfile.color_scheme,
+      viewport: { width: snapshot.viewport.inner.width, height: snapshot.viewport.inner.height },
+      scroll: { x: snapshot.viewport.scroll.x, y: snapshot.viewport.scroll.y },
+      focus: {
+        name: snapshot.focus.element?.name || "",
+        role: snapshot.focus.element?.role ?? null,
+        tag: snapshot.focus.element?.tag ?? null,
+        focus_visible: snapshot.focus.focus_visible,
+        outline: snapshot.focus.outline,
+        opacity: snapshot.focus.opacity,
+        document_has_focus: snapshot.document_has_focus
+      },
+      hover: snapshot.hover,
       interaction_target: interactionIdentity,
       data_identity: dataIdentity,
       clock: { browser_iso: clockRecipe.browser_date.observed, server_iso: clock.instant, clock_sha256: clock.sha256 },
-      dom_state_sha256: digest(JSON.stringify(canonicalize(domState)))
-    };
-    if (!focusName.trim()) throw new Error(`${element} ${category} focus evidence has no actual accessible name.`);
+      dom_state_sha256: digest(JSON.stringify(canonicalize(snapshot)))
+    });
 
-    const stabilitySamples: { path: string; bytes: Buffer; state_path: string; state_bytes: Buffer }[] = [];
-    let captureSampling: Record<string, any> | undefined;
-    let bytes: Buffer;
-    const captureId = `${safe(element)}-${safe(category)}-${safe(theme)}-${width}`;
+    const { stable: hoverStable, samples: hoverSamples } = await captureStable("hover", async ({ timeout }) => {
+      await pendingCheck?.();
+      const image = await captureViewportImageAtCurrentScroll(page, { width, height }, { timeout });
+      await pendingCheck?.();
+      return image;
+    });
+    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    let hoverDomState!: Record<string, any>;
+    let hoverImageBytes!: Buffer;
+    let hoverViewportRaster!: { width: number; height: number };
+    let hoverCaptureSampling!: Record<string, any>;
+    let hoverImage!: Record<string, any>;
+    let hoverCaptureAssertions!: Assertion[];
     try {
-      const stable = await captureStableImage({
-        page,
-        id: captureId,
-        kind: "held-out",
-        captureImage: async ({ timeout }) => {
-          await pendingCheck?.();
-          const image = await page.screenshot({ fullPage: true, animations: "disabled", timeout });
-          await pendingCheck?.();
-          return image;
-        },
-        saveSample: async ({ path: samplePath, bytes: sampleBytes, state_path: statePath, state_bytes: stateBytes }) => {
-          if (sampleBytes) stabilitySamples.push({ path: samplePath, bytes: sampleBytes, state_path: statePath, state_bytes: stateBytes });
-        }
-      });
-      bytes = stable.image;
-      captureSampling = stable.stability;
-      const stabilityVerified = stable.stability.method === "consecutive-exact-v1" &&
-        stable.stability.max_samples === 6 && stable.stability.max_elapsed_ms === 10_000 &&
-        stable.stability.samples.length >= 2 && stable.stability.samples.length <= 6 &&
-        stable.stability.selected === stable.stability.samples.length - 1;
-      if (!stabilityVerified) throw new Error(`${element} ${category} capture returned proof outside the strict stationary image contract: ${JSON.stringify(stable.stability)}`);
-      assertions.push({ name: `held-out state and raw image are stationary at ${width}px`, status: "passed", actual: JSON.stringify({ method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10_000, verified: true }) });
-    } catch (error) {
-      const failureRoot = path.join(artifactRoot, "test-results", "phase185-capture-failures", `${safe(element)}-${safe(category)}-${width}-attempt-${testInfo.retry}`);
-      for (const sample of stabilitySamples) {
-        const imagePath = path.join(failureRoot, sample.path);
-        const statePath = path.join(failureRoot, sample.state_path);
-        await mkdir(path.dirname(imagePath), { recursive: true });
-        await writeFile(imagePath, sample.bytes, { flag: "wx" });
-        await writeFile(statePath, sample.state_bytes, { flag: "wx" });
+      const hoverSampleProof = hoverStable.stability.samples[hoverStable.stability.selected];
+      const selectedHoverSample = hoverSamples.find((sample) => sample.path === hoverSampleProof.path);
+      if (!selectedHoverSample?.bytes || !selectedHoverSample.bytes.equals(hoverStable.image)) throw new Error(`${element} ${category} hover capture lacks its selected raw image and state sample.`);
+      const hoverSampleState = sampleDocument(selectedHoverSample);
+      if (!hoverSampleState.before || !hoverSampleState.after || JSON.stringify(canonicalize(hoverSampleState.before)) !== JSON.stringify(canonicalize(hoverSampleState.after))) {
+        throw new Error(`${element} ${category} actual hover state changed during its stationary viewport screenshot capture.`);
       }
+      hoverDomState = hoverSampleState.after;
+      if (JSON.stringify(hoverDomState.focus.element) !== JSON.stringify(interactionIdentity) || hoverDomState.focus.focus_visible !== true || hoverDomState.document_has_focus !== true || !hoverDomState.hover.some((entry: any) => JSON.stringify(entry.element) === JSON.stringify(interactionIdentity))) {
+        throw new Error(`${element} ${category} raw hover capture does not prove the named control stayed focused and hovered: ${JSON.stringify({ focus: hoverDomState.focus, hover: hoverDomState.hover, interactionIdentity })}`);
+      }
+      const capturedFocusRect = hoverDomState.focus.rect;
+      if (!capturedFocusRect || capturedFocusRect.width <= 0 || capturedFocusRect.height <= 0) throw new Error(`${element} ${category} raw hover capture has no positive focused-control rectangle.`);
+      const hoverAfterCapture = await page.evaluate(captureUiStateInPage) as Record<string, any>;
+      if (JSON.stringify(canonicalize(hoverDomState)) !== JSON.stringify(canonicalize(hoverAfterCapture))) throw new Error(`${element} ${category} DOM state changed after the raw hover screenshot capture.`);
+      hoverImageBytes = hoverStable.image;
+      if (hoverImageBytes.length < 24 || !hoverImageBytes.subarray(0, 8).equals(pngSignature)) throw new Error(`${element} ${category} hover capture is not a raw PNG with a complete IHDR.`);
+      hoverViewportRaster = { width: hoverImageBytes.readUInt32BE(16), height: hoverImageBytes.readUInt32BE(20) };
+      if (hoverViewportRaster.width !== width || hoverViewportRaster.height !== height) throw new Error(`${element} ${category} raw hover PNG raster differs from its exact viewport: ${JSON.stringify({ hoverViewportRaster, viewport: { width, height } })}`);
+      hoverCaptureSampling = await verifyAndStageSamples(hoverSamples, hoverStable.stability, "hover");
+      const hoverRelative = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${captureId}--hover.png`;
+      await mkdir(path.dirname(path.join(artifactRoot, "phase185-raw-staging", hoverRelative)), { recursive: true });
+      await writeFile(path.join(artifactRoot, "phase185-raw-staging", hoverRelative), hoverImageBytes, { flag: "wx" });
+      hoverImage = { path: hoverRelative, sha256: digest(hoverImageBytes), viewport: { width, height }, viewport_raster: hoverViewportRaster, capture: "viewport-real-product-hover" };
+      hoverCaptureAssertions = [
+        await assertObserved("actual named product control has keyboard focus-visible and pointer-hover state", JSON.stringify({ interactionIdentity, focus: hoverDomState.focus, document_has_focus: hoverDomState.document_has_focus, hover: hoverDomState.hover }), (value) => {
+          const result = JSON.parse(String(value));
+          return result.focus.element.name === result.interactionIdentity.name && result.focus.focus_visible && result.document_has_focus && result.hover.some((entry: any) => entry.element.name === result.interactionIdentity.name);
+        }),
+        { name: `hover state and raw viewport image are stationary at ${width}px`, status: "passed", actual: JSON.stringify({ method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10_000, verified: true }) },
+        await assertObserved("raw hover PNG raster exactly matches the actual viewport", JSON.stringify({ hoverViewportRaster, viewport: { width, height } }), (value) => {
+          const result = JSON.parse(String(value));
+          return result.hoverViewportRaster.width === result.viewport.width && result.hoverViewportRaster.height === result.viewport.height;
+        })
+      ];
+    } catch (error) {
+      await persistFailedSamples(hoverSamples, error);
       throw error;
     }
-    const afterCapture = await page.evaluate(captureUiStateInPage) as Record<string, any>;
-    if (JSON.stringify(canonicalize(domState)) !== JSON.stringify(canonicalize(afterCapture))) throw new Error(`${element} ${category} DOM state changed after the stationary raw screenshot capture.`);
-    if (!captureSampling) throw new Error(`${element} ${category} stationary raw screenshot is missing its per-run sample proof.`);
-    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-    if (bytes.length < 24 || !bytes.subarray(0, 8).equals(pngSignature)) throw new Error(`${element} ${category} capture is not a raw PNG with a complete IHDR.`);
-    const fullPageRaster = { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
-    if (fullPageRaster.width !== width || fullPageRaster.height !== observed.documentHeight) throw new Error(`${element} ${category} raw full-page PNG dimensions differ from measured viewport/document geometry: ${JSON.stringify({ fullPageRaster, observed })}`);
-    if (stabilitySamples.length !== captureSampling.samples.length) throw new Error(`${element} ${category} stationary capture did not retain every successful raw sample and state sidecar.`);
-    const sampleBytesByPath = new Map(stabilitySamples.map((sample) => [sample.path, sample]));
-    const verifiedSamples = captureSampling.samples.map((sample: Record<string, any>) => {
-      const raw = sampleBytesByPath.get(sample.path);
-      if (!raw || raw.state_path !== sample.state_path || digest(raw.bytes) !== sample.sha256 || digest(raw.state_bytes) !== sample.state_sha256) {
-        throw new Error(`${element} ${category} stationary sample bytes do not match their capture proof: ${JSON.stringify(sample)}`);
-      }
-      const sampleImagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.path}`;
-      const sampleStatePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${sample.state_path}`;
-      const sampleImageAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleImagePath);
-      const sampleStateAbsolute = path.join(artifactRoot, "phase185-raw-staging", sampleStatePath);
-      return { proof: { ...sample, path: sampleImagePath, state_path: sampleStatePath }, raw, sampleImageAbsolute, sampleStateAbsolute };
-    });
-    for (const { raw, sampleImageAbsolute, sampleStateAbsolute } of verifiedSamples) {
-      await mkdir(path.dirname(sampleImageAbsolute), { recursive: true });
-      await writeFile(sampleImageAbsolute, raw.bytes, { flag: "wx" });
-      await writeFile(sampleStateAbsolute, raw.state_bytes, { flag: "wx" });
+    assertions.push({ name: `hover state and raw viewport image are stationary at ${width}px`, status: "passed", actual: JSON.stringify({ method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10_000, verified: true }) });
+
+    await page.mouse.move(0, 0);
+    const neutralSetupState = await page.evaluate(captureUiStateInPage) as Record<string, any>;
+    if (neutralSetupState.hover.length !== 0 || JSON.stringify(neutralSetupState.focus.element) !== JSON.stringify(interactionIdentity) || neutralSetupState.focus.focus_visible !== true || neutralSetupState.document_has_focus !== true) {
+      throw new Error(`${element} ${category} full-page capture requires an empty hover state while retaining the named keyboard focus: ${JSON.stringify({ focus: neutralSetupState.focus, hover: neutralSetupState.hover, interactionIdentity })}`);
     }
-    captureSampling = { ...captureSampling, samples: verifiedSamples.map(({ proof }) => proof) };
-    const relative = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${captureId}.png`;
-    const absolute = path.join(artifactRoot, "phase185-raw-staging", relative);
-    await mkdir(path.dirname(absolute), { recursive: true });
-    await writeFile(absolute, bytes, { flag: "wx" });
-    const image = { path: relative, sha256: digest(bytes), viewport: { width, height }, full_page_raster: fullPageRaster, capture: "full-page-real-product-state" };
+
+    const { stable, samples: stabilitySamples } = await captureStable("held-out", async ({ timeout }) => {
+      await pendingCheck?.();
+      const image = await page.screenshot({ fullPage: true, animations: "disabled", timeout });
+      await pendingCheck?.();
+      return image;
+    });
+    const bytes = stable.image;
+    const captureSampling = stable.stability;
+    const fullPageStabilityAssertion = { name: `held-out state and raw image are stationary at ${width}px`, status: "passed", actual: JSON.stringify({ method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10_000, verified: true }) } as const;
+    assertions.push(fullPageStabilityAssertion);
+    observationAssertions.push(fullPageStabilityAssertion);
+    let domState!: Record<string, any>;
+    let neutralFocus!: Record<string, any>;
+    let neutralObservationState!: Record<string, any>;
+    let hoverObservationState!: Record<string, any>;
+    let geometry: Record<string, number | string>[] = [];
+    let visibleCopy: { text: string; sha256: string }[] = [];
+    let focusName = "";
+    let fullPageRaster!: { width: number; height: number };
+    let stagedCaptureSampling!: Record<string, any>;
+    let image!: Record<string, any>;
+    try {
+      const fullPageSampleProof = captureSampling.samples[captureSampling.selected];
+      const selectedFullPageSample = stabilitySamples.find((sample) => sample.path === fullPageSampleProof.path);
+      if (!selectedFullPageSample?.bytes || !selectedFullPageSample.bytes.equals(bytes)) throw new Error(`${element} ${category} full-page capture lacks its selected raw image and state sample.`);
+      const fullPageSampleState = sampleDocument(selectedFullPageSample);
+      if (!fullPageSampleState.before || !fullPageSampleState.after || JSON.stringify(canonicalize(fullPageSampleState.before)) !== JSON.stringify(canonicalize(fullPageSampleState.after))) {
+        throw new Error(`${element} ${category} neutral full-page state changed during its stationary screenshot capture.`);
+      }
+      domState = fullPageSampleState.after;
+      neutralFocus = domState.focus;
+      if (domState.hover.length !== 0 || JSON.stringify(neutralFocus.element) !== JSON.stringify(interactionIdentity) || neutralFocus.focus_visible !== true || domState.document_has_focus !== true) {
+        throw new Error(`${element} ${category} selected full-page state lacks neutral pointer hover or the named keyboard focus: ${JSON.stringify({ focus: neutralFocus, hover: domState.hover, interactionIdentity })}`);
+      }
+      const afterCapture = await page.evaluate(captureUiStateInPage) as Record<string, any>;
+      if (JSON.stringify(canonicalize(domState)) !== JSON.stringify(canonicalize(afterCapture))) throw new Error(`${element} ${category} DOM state changed after the stationary raw screenshot capture.`);
+
+      const focusedControlIdentity = (snapshot: Record<string, any>) => ({
+        tag: snapshot.focus.element?.tag ?? null,
+        role: snapshot.focus.element?.role ?? null,
+        name: snapshot.focus.element?.name ?? null
+      });
+      const comparableState = (snapshot: Record<string, any>) => ({
+        schema: snapshot.schema,
+        viewport: snapshot.viewport,
+        theme: snapshot.theme,
+        document_has_focus: snapshot.document_has_focus,
+        focus: {
+          element: focusedControlIdentity(snapshot),
+          focus_visible: snapshot.focus.focus_visible
+        }
+      });
+      const neutralIdentity = JSON.stringify(canonicalize(comparableState(domState)));
+      const hoverIdentity = JSON.stringify(canonicalize(comparableState(hoverDomState)));
+      if (neutralIdentity !== hoverIdentity) throw new Error(`${element} ${category} neutral and hover snapshots differ in logical control identity, focus visibility, viewport, document geometry, scroll, or theme.`);
+      hoverCaptureAssertions.push(await assertObserved("neutral full-page and actual-hover snapshots retain the same logical control, focus visibility, viewport, document geometry, scroll, and theme", JSON.stringify({
+        neutral_identity_sha256: digest(neutralIdentity), hover_identity_sha256: digest(hoverIdentity),
+        neutral_hover: domState.hover, actual_hover: hoverDomState.hover,
+        neutral_body_text_sha256: digest(domState.body_text), actual_hover_body_text_sha256: digest(hoverDomState.body_text)
+      }), (value) => {
+        const result = JSON.parse(String(value));
+        return result.neutral_identity_sha256 === result.hover_identity_sha256 && result.neutral_hover.length === 0 && result.actual_hover.some((entry: any) => JSON.stringify(entry.element) === JSON.stringify(interactionIdentity));
+      }));
+
+      neutralObservationState = makeObservationState(domState);
+      hoverObservationState = makeObservationState(hoverDomState);
+      observationAssertions.push(await assertObserved("primary full-page state has no pointer hover and retains the actual keyboard focus-visible control", JSON.stringify({ focus: neutralFocus, document_has_focus: domState.document_has_focus, hover: domState.hover }), (value) => {
+        const result = JSON.parse(String(value));
+        return result.focus.element.name === interactionIdentity.name && result.focus.focus_visible && result.document_has_focus && Array.isArray(result.hover) && result.hover.length === 0;
+      }));
+      observationAssertions.push(await assertObserved(`document has no viewport-wide horizontal overflow at ${width}px`, domState.viewport.document.width, (value) => Number(value) <= width));
+
+      if (domState.viewport.inner.width !== width || domState.viewport.inner.height !== height) throw new Error(`${element} ${category} selected full-page state reports a different viewport than its recipe: ${JSON.stringify(domState.viewport.inner)}`);
+      if (bytes.length < 24 || !bytes.subarray(0, 8).equals(pngSignature)) throw new Error(`${element} ${category} capture is not a raw PNG with a complete IHDR.`);
+      fullPageRaster = { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+      if (fullPageRaster.width !== width || fullPageRaster.height !== domState.viewport.document.height) throw new Error(`${element} ${category} raw full-page PNG dimensions differ from measured viewport/document geometry: ${JSON.stringify({ fullPageRaster, viewport: domState.viewport })}`);
+      geometry = [];
+      const box = await target.boundingBox();
+      if (box) geometry.push({ name: `case-target-${width}`, x: box.x, y: box.y, width: box.width, height: box.height, viewport_width: width });
+      const interactionBox = await interaction.boundingBox();
+      if (interactionBox) geometry.push({ name: `interaction-target-${width}`, x: interactionBox.x, y: interactionBox.y, width: interactionBox.width, height: interactionBox.height, viewport_width: width });
+      for (const [name, selector] of [["shell", ".ops-shell-frame"], ["shell-content", ".ops-shell-content"], ["header", ".ops-header"], ["main", "main"]] as const) {
+        const anchor = page.locator(selector).first();
+        const anchorBox = await anchor.count() ? await anchor.boundingBox().catch(() => null) : null;
+        if (anchorBox) geometry.push({ name: `${name}-${width}`, x: anchorBox.x, y: anchorBox.y, width: anchorBox.width, height: anchorBox.height, viewport_width: width });
+      }
+      geometry.push({ name: `document-${width}`, x: 0, y: 0, width: domState.viewport.document.width, height: domState.viewport.document.height, viewport_width: width });
+      visibleCopy = [];
+      for (const selector of copyNodes) {
+        const node = page.locator(selector).first();
+        if (await node.count() && await node.isVisible().catch(() => false)) {
+          const text = (await node.innerText().catch(() => "")).trim();
+          if (text) visibleCopy.push({ text, sha256: digest(text) });
+        }
+      }
+      if (visibleCopy.length === 0) throw new Error(`${element} ${category} has no actual visible product copy for ${theme} at ${width}px.`);
+      focusName = neutralFocus.element?.name || "";
+      if (!focusName.trim()) throw new Error(`${element} ${category} focus evidence has no actual accessible name.`);
+
+      stagedCaptureSampling = await verifyAndStageSamples(stabilitySamples, captureSampling, "full-page");
+      const relative = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${captureId}.png`;
+      const absolute = path.join(artifactRoot, "phase185-raw-staging", relative);
+      await mkdir(path.dirname(absolute), { recursive: true });
+      await writeFile(absolute, bytes, { flag: "wx" });
+      image = { path: relative, sha256: digest(bytes), viewport: { width, height }, full_page_raster: fullPageRaster, capture: "full-page-real-product-state" };
+    } catch (error) {
+      await persistFailedSamples(stabilitySamples, error);
+      throw error;
+    }
     const receiptAssertions = [...observationAssertions,
-      await assertObserved("raw full-page PNG raster exactly matches actual viewport and measured document dimensions", JSON.stringify({ fullPageRaster, document: { width: observed.documentWidth, height: observed.documentHeight }, viewport: { width, height } }), (value) => {
+      await assertObserved("raw full-page PNG raster exactly matches actual viewport and measured document dimensions", JSON.stringify({ fullPageRaster, document: { width: domState.viewport.document.width, height: domState.viewport.document.height }, viewport: { width, height } }), (value) => {
         const result = JSON.parse(String(value));
         return result.fullPageRaster.width === result.viewport.width && result.fullPageRaster.height === result.document.height;
       }),
       { name: "actual product theme preference and effective theme match the requested recipe", status: "passed", actual: JSON.stringify({ theme, ...observedTheme, color_scheme: observedProfile.color_scheme }) }
     ];
-    observations.push({ theme, viewport: { width, height }, state: observationState, geometry, assertions: receiptAssertions, visible_copy: visibleCopy, transport_sequence: transport.map((step) => ({ ...step })), capture_sampling: captureSampling, image });
+    observations.push({
+      theme, viewport: { width, height }, capture_profile: "fullpage-neutral-and-viewport-hover-v1",
+      state: neutralObservationState, geometry, assertions: receiptAssertions, visible_copy: visibleCopy,
+      transport_sequence: transport.map((step) => ({ ...step })), capture_sampling: stagedCaptureSampling, image,
+      hover_capture: {
+        state: hoverObservationState, image: hoverImage, capture_sampling: hoverCaptureSampling, assertions: hoverCaptureAssertions
+      }
+    });
   }
   return { common, observations };
 }

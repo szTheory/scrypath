@@ -423,7 +423,20 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-").toLowerCase()}-${theme}-${width}.png`;
       fs.writeFileSync(path.join(runDir, imagePath), pngBytes);
       imageArtifacts.push({ path: imagePath, required: true, copied: true, copy_status: "success" });
+      const hoverImagePath = imagePath.replace(/\.png$/, "--hover.png");
+      fs.writeFileSync(path.join(runDir, hoverImagePath), pngBytes);
+      imageArtifacts.push({ path: hoverImagePath, required: true, copied: true, copy_status: "success" });
       const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_${theme}_${width}_CAPTURE`;
+      const target = { tag: "button", role: "button", name: `TEST_FIXTURE_ONLY_TARGET_${theme}_${width}`, href: null };
+      const targetRect = { x: 0, y: 0, width: 100, height: 20 };
+      const rawFocus = {
+        element: target,
+        rect: targetRect,
+        focus_visible: true,
+        outline: { style: "solid", width: "2px", color: "rgb(0, 0, 0)" },
+        opacity: "1"
+      };
+      const rawControl = { ...target, value: null, checked: null, selected: null, disabled: false, expanded: null, pressed: null, rect: targetRect };
       const state = {
         element: preservationCase.element,
         category: preservationCase.category,
@@ -432,29 +445,58 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
         color_scheme: theme === "light" ? "light" : "dark",
         viewport: { width, height },
         scroll: { x: 0, y: 0 },
-        focus: { name: `TEST_FIXTURE_ONLY_${theme}_${width}` },
+        focus: {
+          name: target.name, role: target.role, tag: target.tag, focus_visible: true, document_has_focus: true,
+          outline: rawFocus.outline, opacity: rawFocus.opacity
+        },
+        hover: [],
         data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
         clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
       };
-      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copyText, viewport: { inner: { width, height }, client: { width, height }, document: { width, height }, scroll: { x: 0, y: 0 }, dpr: 1, scale: 1 }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
+      const snapshot = {
+        schema: "scrypath.ui-capture-state.v1",
+        body_text: copyText,
+        controls: [rawControl],
+        focus: rawFocus,
+        hover: [],
+        document_has_focus: true,
+        viewport: { inner: { width, height }, client: { width, height }, document: { width, height }, scroll: { x: 0, y: 0 }, dpr: 1, scale: 1 },
+        fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE"
+      };
       state.dom_state_sha256 = crypto.createHash("sha256").update(JSON.stringify(canonicalize(snapshot))).digest("hex");
-      const stateBytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }, null, 2) + "\n");
-      const stateHash = crypto.createHash("sha256").update(stateBytes).digest("hex");
-      const samples = [0, 1].map((index) => {
-        const samplePath = imagePath.replace(/\.png$/, `-sample-${index}.png`);
-        const statePath = imagePath.replace(/\.png$/, `-sample-${index}.json`);
-        fs.writeFileSync(path.join(runDir, samplePath), pngBytes);
-        fs.writeFileSync(path.join(runDir, statePath), stateBytes);
-        imageArtifacts.push(...[samplePath, statePath].map((path) => ({ path, required: true, copied: true, copy_status: "success" })));
-        return { path: samplePath, state_path: statePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), state_sha256: stateHash, elapsed_ms: 10 + index };
-      });
+      const addSampling = (capturePath, sampleKind, imageBytes, actualSnapshot) => {
+        const stateBytes = Buffer.from(JSON.stringify({ ...actualSnapshot, before: actualSnapshot, after: actualSnapshot }, null, 2) + "\n");
+        const stateHash = crypto.createHash("sha256").update(stateBytes).digest("hex");
+        const captureId = capturePath.replace(/(?:--hover)?\.png$/, "");
+        return [0, 1].map((index) => {
+          const sampleStem = `${captureId}--${sampleKind}-sample-${index}`;
+          const samplePath = `${sampleStem}.png`;
+          const statePath = `${sampleStem}.json`;
+          fs.writeFileSync(path.join(runDir, samplePath), imageBytes);
+          fs.writeFileSync(path.join(runDir, statePath), stateBytes);
+          imageArtifacts.push(...[samplePath, statePath].map((path) => ({ path, required: true, copied: true, copy_status: "success" })));
+          return { path: samplePath, state_path: statePath, sha256: crypto.createHash("sha256").update(imageBytes).digest("hex"), state_sha256: stateHash, elapsed_ms: 10 + index };
+        });
+      };
+      const samples = addSampling(imagePath, "held-out", pngBytes, snapshot);
+      const hoverSnapshot = { ...snapshot, hover: [{ element: target, rect: targetRect }] };
+      const hoverState = { ...state, hover: hoverSnapshot.hover };
+      hoverState.dom_state_sha256 = crypto.createHash("sha256").update(JSON.stringify(canonicalize(hoverSnapshot))).digest("hex");
+      const hoverSamples = addSampling(hoverImagePath, "hover", pngBytes, hoverSnapshot);
       return {
-        theme, viewport: { width, height }, state,
+        theme, viewport: { width, height }, capture_profile: "fullpage-neutral-and-viewport-hover-v1", state,
+        interaction_target: target,
         geometry: [{ name: `case-target-${width}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width }, { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }],
         assertions: [{ name: `assert-${preservationCase.id}-${theme}-${width}`, status: "passed", actual: "TEST_FIXTURE_ONLY" }],
         visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
         capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples },
-        image: { path: imagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, full_page_raster: { width, height }, capture: "full-page-real-product-state" }
+        image: { path: imagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, full_page_raster: { width, height }, capture: "full-page-real-product-state" },
+        hover_capture: {
+          state: hoverState,
+          image: { path: hoverImagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, viewport_raster: { width, height }, capture: "viewport-real-product-hover" },
+          capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples: hoverSamples },
+          assertions: [{ name: "hover target, focus and geometry", status: "passed", actual: "TEST_FIXTURE_ONLY" }]
+        }
       };
     });
     evidenceEvents.push({
@@ -477,7 +519,7 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
     });
   }
   if (looseImages) {
-    const selectedPaths = new Set(evidenceEvents.filter((event) => event.operation === "ui_preservation_case").flatMap((event) => event.observations.map((observation) => observation.image.path)));
+    const selectedPaths = new Set(evidenceEvents.filter((event) => event.operation === "ui_preservation_case").flatMap((event) => event.observations.flatMap((observation) => [observation.image.path, observation.hover_capture.image.path])));
     manifest.artifacts.push(...imageArtifacts.filter((artifact) => selectedPaths.has(artifact.path)));
   }
   else {
@@ -500,6 +542,55 @@ function updateRunManifest(runDir, update) {
   const manifest = JSON.parse(fs.readFileSync(file, "utf8"));
   update(manifest);
   fs.writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+function canonicalizeFixture(value) {
+  return Array.isArray(value) ? value.map(canonicalizeFixture) : value && typeof value === "object"
+    ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalizeFixture(value[key])])) : value;
+}
+
+function hashFixtureJson(value) {
+  return crypto.createHash("sha256").update(JSON.stringify(canonicalizeFixture(value))).digest("hex");
+}
+
+function rewritePreservationBundle(runDir, members) {
+  const packed = rawBundle.encodeBundle([...members].map(([relative, bytes]) => ({ path: relative, bytes })));
+  fs.writeFileSync(path.join(runDir, rawBundle.BUNDLE_PATH), packed);
+  updateRunManifest(runDir, (manifest) => {
+    const artifact = manifest.artifacts.find((item) => item.path === rawBundle.BUNDLE_PATH);
+    artifact.sha256 = rawBundle.sha256(packed);
+    artifact.size_bytes = packed.length;
+  });
+}
+
+function mutateHoverCaptureSnapshot(runDir, events, event, mutate) {
+  const observation = event.observations[0];
+  const hover = observation.hover_capture;
+  const bundlePath = path.join(runDir, rawBundle.BUNDLE_PATH);
+  const members = rawBundle.decodeBundle(fs.readFileSync(bundlePath));
+  for (const sample of hover.capture_sampling.samples) {
+    const snapshot = JSON.parse(members.get(sample.state_path).toString("utf8"));
+    const after = structuredClone(snapshot.after);
+    mutate(after);
+    const bytes = Buffer.from(`${JSON.stringify({ ...after, before: after, after }, null, 2)}\n`);
+    members.set(sample.state_path, bytes);
+    sample.state_sha256 = rawBundle.sha256(bytes);
+    hover.state.dom_state_sha256 = hashFixtureJson(after);
+    hover.state.hover = structuredClone(after.hover);
+    hover.state.focus = {
+      ...hover.state.focus,
+      name: after.focus.element.name,
+      role: after.focus.element.role,
+      tag: after.focus.element.tag,
+      focus_visible: after.focus.focus_visible,
+      document_has_focus: after.document_has_focus,
+      outline: structuredClone(after.focus.outline),
+      opacity: after.focus.opacity
+    };
+  }
+  rewritePreservationBundle(runDir, members);
+  const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+  fs.writeFileSync(eventsPath, `${events.map((item) => JSON.stringify(item)).join("\n")}\n`);
 }
 
 test("ordinary full rejects loose preservation PNGs without its bounded raw bundle", () => {
@@ -532,6 +623,15 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
     assert.equal(receipt?.eligibility.class, "hosted-exact-sha");
     assert.equal(receipt?.cases.length, 76);
     assert.equal(receipt?.preservation?.cases.length, 61);
+    assert.equal(receipt?.preservation?.schema, "scrypath.ui-preservation.v2");
+    const firstObservation = receipt?.preservation?.cases[0]?.observations[0];
+    assert.equal(firstObservation?.capture_profile, "fullpage-neutral-and-viewport-hover-v1");
+    assert.deepEqual(firstObservation?.state.hover, []);
+    assert.equal(firstObservation?.hover_capture?.image.capture, "viewport-real-product-hover");
+    assert.equal(firstObservation?.hover_capture?.image.viewport_raster.width, firstObservation?.viewport.width);
+    assert.equal(firstObservation?.hover_capture?.image.viewport_raster.height, firstObservation?.viewport.height);
+    assert.ok(receipt?.preservation?.raw_bundle.members.some((member) => member.path === firstObservation?.hover_capture.image.path));
+    assert.ok(firstObservation?.hover_capture.capture_sampling.samples.length >= 2);
     assert.equal(Object.keys(receipt).some(key => key.startsWith("visual_judge_")), false);
     assert.equal(receipt?.workflow.sha, receipt?.source.event_sha);
     assert.equal(receipt?.source.event_sha, receipt?.source.checkout_head);
@@ -781,12 +881,17 @@ test("the before-only evidence command emits a separate held-out receipt schema"
     const beforePath = path.join(runDir, "phase185-before-only-evidence.json");
     const receipt = JSON.parse(fs.readFileSync(beforePath, "utf8"));
     assert.equal(receipt.scope, "before-only");
-    assert.equal(receipt.preservation.schema, "scrypath.ui-preservation-before-only.v1");
+    assert.equal(receipt.preservation.schema, "scrypath.ui-preservation-before-only.v2");
     assert.equal(receipt.preservation.cases.length, 61);
     assert.deepEqual(receipt.preservation.cases[0].assertions, [{ name: "actual case semantics", status: "passed", actual: "TEST_FIXTURE_ONLY" }]);
     assert.equal(fs.existsSync(path.join(runDir, "phase105-evidence.json")), false);
     const validation = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
     assert.equal(validation.valid, true, JSON.stringify(validation.reasons));
+    receipt.preservation.schema = "scrypath.ui-preservation-before-only.v1";
+    fs.writeFileSync(beforePath, `${JSON.stringify(receipt, null, 2)}\n`);
+    const legacySchema = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
+    assert.equal(legacySchema.valid, false);
+    assert.ok(legacySchema.reasons.some((reason) => reason.code === "invalid_before_only_receipt"));
     const malformedRun = createCompleteRun({ beforeOnly: true, sourceSha: source.productSha, buildSourceSha: source.buildSha,
       productTreeSha256: expectedSource.productTreeSha256, fixtureOverlaySha256: expectedSource.fixtureOverlaySha256 });
     try {
@@ -1144,6 +1249,122 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
     } finally {
       fs.rmSync(runDir, { recursive: true, force: true });
     }
+  }
+});
+
+test("held-out observations require a separately captured viewport-hover proof", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+    const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+    const first = events.find((event) => event.operation === "ui_preservation_case");
+    delete first.observations[0].hover_capture;
+    fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+
+    const receipt = evidence.writeEvidence({ runDir });
+    assert.equal(receipt.eligibility.eligible, false);
+    assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /hover/i.test(reason.message)));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("split-hover receipts reject altered profile, state, target, image geometry and sample metadata", () => {
+  const mutations = [
+    ["wrong capture profile", (observation) => { observation.capture_profile = "full-page-only"; }],
+    ["non-neutral full-page hover", (observation) => { observation.state.hover = [observation.interaction_target]; }],
+    ["hover target mismatch", (observation) => { observation.interaction_target.name += " changed"; }],
+    ["hover focus identity mismatch", (observation) => { observation.hover_capture.state.focus.name += " changed"; }],
+    ["hover state drift", (observation) => { observation.hover_capture.state.data_identity += " changed"; }],
+    ["hover clock drift", (observation) => { observation.hover_capture.state.clock.browser_iso = "2026-10-31T12:00:01.000Z"; }],
+    ["wrong viewport raster", (observation) => { observation.hover_capture.image.viewport_raster.width += 1; }],
+    ["wrong hover capture kind", (observation) => { observation.hover_capture.image.capture = "full-page-real-product-state"; }],
+    ["altered hover image digest", (observation) => { observation.hover_capture.image.sha256 = "0".repeat(64); }],
+    ["altered sample digest", (observation) => { observation.hover_capture.capture_sampling.samples[0].sha256 = "0".repeat(64); }],
+    ["unbounded hover sampling", (observation) => { observation.hover_capture.capture_sampling.max_elapsed_ms = 10001; }],
+    ["noncanonical sample path", (observation) => { observation.hover_capture.capture_sampling.samples[0].path = observation.image.path; }]
+  ];
+  for (const [label, mutate] of mutations) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+      mutate(events.find((event) => event.operation === "ui_preservation_case").observations[0]);
+      fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, label);
+      assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation"), label);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("hover proofs reject hash-consistent raw samples with a different target or viewport", () => {
+  const mutations = [
+    ["raw hover target", (snapshot) => { snapshot.hover[0].element.name = "TEST_FIXTURE_ONLY_WRONG_TARGET"; }, /under the pointer/],
+    ["raw viewport geometry", (snapshot) => { snapshot.viewport.document.height += 1; }, /raw sample state viewport/]
+  ];
+  for (const [label, mutate, expectedMessage] of mutations) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+      const event = events.find((item) => item.operation === "ui_preservation_case");
+      mutateHoverCaptureSnapshot(runDir, events, event, mutate);
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, label);
+      assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && expectedMessage.test(reason.message)), label);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("hover capture preserves legitimate hover-specific focus styling and geometry", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+    const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+    const event = events.find((item) => item.operation === "ui_preservation_case");
+    mutateHoverCaptureSnapshot(runDir, events, event, (snapshot) => {
+      snapshot.body_text += "\nTEST_FIXTURE_ONLY hover hint";
+      snapshot.focus.outline = { style: "solid", width: "3px", color: "rgb(1, 2, 3)" };
+      snapshot.focus.opacity = "0.85";
+      snapshot.focus.rect = { x: 1, y: 0, width: 101, height: 20 };
+      snapshot.controls[0].rect = structuredClone(snapshot.focus.rect);
+      snapshot.hover[0].rect = structuredClone(snapshot.focus.rect);
+    });
+
+    const receipt = evidence.writeEvidence({ runDir });
+    assert.equal(receipt.eligibility.eligible, true, JSON.stringify(receipt.reasons));
+    const first = receipt.preservation.cases[0].observations[0];
+    assert.equal(first.state.focus.outline.width, "2px");
+    assert.equal(first.hover_capture.state.focus.outline.width, "3px");
+    assert.equal(first.hover_capture.state.focus.opacity, "0.85");
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
+test("hover proof rejects a changed bundled PNG even when the bundle itself is rehashed", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const bundlePath = path.join(runDir, rawBundle.BUNDLE_PATH);
+    const members = rawBundle.decodeBundle(fs.readFileSync(bundlePath));
+    const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+    const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+    const observation = events.find((event) => event.operation === "ui_preservation_case").observations[0];
+    const changed = PNG.sync.read(members.get(observation.hover_capture.image.path));
+    changed.data[0] ^= 1;
+    members.set(observation.hover_capture.image.path, PNG.sync.write(changed));
+    rewritePreservationBundle(runDir, members);
+
+    const receipt = evidence.writeEvidence({ runDir });
+    assert.equal(receipt.eligibility.eligible, false);
+    assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /hover image/.test(reason.message)));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
   }
 });
 

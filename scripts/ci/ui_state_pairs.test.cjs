@@ -114,7 +114,7 @@ function png(width = 1440, height = 900, color = 20) {
   return PNG.sync.write(image);
 }
 
-function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, mutateCase } = {}) {
+function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, mutateCase } = {}) {
   const beforeSide = sourceSha === BEFORE_SHA;
   buildSha ??= beforeSide ? BEFORE_BUILD_SHA : CANDIDATE_BUILD_SHA;
   productTreeSha ??= beforeSide ? BEFORE_TREE : CANDIDATE_TREE;
@@ -123,6 +123,8 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
   browserImageId ??= beforeSide ? BROWSER : BROWSER_CANDIDATE;
   sourceLayerId ??= beforeSide ? BEFORE_SOURCE_LAYER : CANDIDATE_SOURCE_LAYER;
   const imageBytesByDimensions = new Map();
+  const hoverImageBytesByDimensions = new Map();
+  const hoverImageBytesByPath = new Map();
   const sampledEntries = [];
   const cases = evidence.preservationCases.map((entry) => {
     const matrix = entry.category === "overflow" || entry.category === "long-text"
@@ -141,38 +143,66 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
         capture: "full-page-real-product-state"
       };
       const copy = `Visible ${entry.id} ${theme} ${width}`;
-      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copy, viewport: { width, height }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
-      const snapshotBytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }, null, 2) + "\n");
-      const samples = [0, 1].map((index) => {
-        const samplePath = image.path.replace(/\.png$/, `-sample-${index}.png`);
-        const statePath = image.path.replace(/\.png$/, `-sample-${index}.json`);
-        sampledEntries.push({ path: samplePath, bytes: imageBytes }, { path: statePath, bytes: snapshotBytes });
-        return { path: samplePath, state_path: statePath, sha256: digest(imageBytes), state_sha256: digest(snapshotBytes), elapsed_ms: 10 + index };
-      });
+      const interactionTarget = { tag: "button", role: "button", name: `control-${entry.id}-${theme}-${width}`, href: null };
+      const focus = { name: interactionTarget.name, role: interactionTarget.role, tag: interactionTarget.tag, focus_visible: true, outline: { style: "solid", width: "2px", color: "rgb(0, 0, 0)" }, opacity: "1", document_has_focus: true };
+      const primaryDomState = { schema: "scrypath.ui-capture-state.v1", body_text: copy, viewport: { width, height }, scroll: { x: 0, y: 0 }, focus, hover: [] };
+      const hoverFocus = { ...focus, outline: { ...focus.outline, color: "rgb(20, 30, 40)" }, opacity: "0.95" };
+      const hoverDomState = { ...primaryDomState, focus: hoverFocus, hover: [{ element: interactionTarget, rect: { x: 20, y: 30, width: 120, height: 32 } }] };
+      const stateHash = (value) => digest(Buffer.from(JSON.stringify(canonical(value))));
+      const primaryState = {
+        element: entry.element,
+        category: entry.category,
+        route: entry.element === "E1" ? "/" : "/admin/search/search",
+        theme,
+        color_scheme: theme === "light" ? "light" : "dark",
+        viewport: { width, height },
+        scroll: { x: 0, y: 0 },
+        focus,
+        interaction_target: interactionTarget,
+        hover: [],
+        data_identity: `data-${entry.id}`,
+        dom_state_sha256: stateHash(primaryDomState),
+        clock: { browser_iso: recipe.browser_date.observed, server_iso: recipe.browser_date.observed, clock_sha256: CLOCK }
+      };
+      const hoverState = { ...primaryState, focus: hoverFocus, hover: hoverDomState.hover, dom_state_sha256: stateHash(hoverDomState) };
+      const samplingFor = (captureImage, bytes, domState) => {
+        const snapshotBytes = Buffer.from(JSON.stringify({ ...domState, before: domState, after: domState }, null, 2) + "\n");
+        const samples = [0, 1].map((index) => {
+          const samplePath = captureImage.path.replace(/\.png$/, `-sample-${index}.png`);
+          const statePath = captureImage.path.replace(/\.png$/, `-sample-${index}.json`);
+          sampledEntries.push({ path: samplePath, bytes }, { path: statePath, bytes: snapshotBytes });
+          return { path: samplePath, state_path: statePath, sha256: digest(bytes), state_sha256: digest(snapshotBytes), elapsed_ms: 10 + index };
+        });
+        return { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples };
+      };
+      const primarySampling = samplingFor(image, imageBytes, primaryDomState);
+      if (!hoverImageBytesByDimensions.has(imageKey)) hoverImageBytesByDimensions.set(imageKey, png(width, height, hoverImageColor));
+      const hoverImageBytes = hoverImageBytesByDimensions.get(imageKey);
+      const hoverImage = {
+        path: image.path.replace(/\.png$/, "--hover.png"),
+        sha256: digest(hoverImageBytes),
+        viewport: { width, height },
+        viewport_raster: { width, height },
+        capture: "viewport-real-product-hover"
+      };
+      hoverImageBytesByPath.set(hoverImage.path, hoverImageBytes);
+      const hoverSampling = samplingFor(hoverImage, hoverImageBytes, hoverDomState);
+      const hoverAssertions = [{ name: "actual named control has pointer hover", status: "passed", actual: JSON.stringify({ interaction_target: interactionTarget, hover: hoverState.hover }) }];
       return {
         theme,
         viewport: { width, height },
-        state: {
-          element: entry.element,
-          category: entry.category,
-          route: entry.element === "E1" ? "/" : "/admin/search/search",
-          theme,
-          color_scheme: theme === "light" ? "light" : "dark",
-          viewport: { width, height },
-          scroll: { x: 0, y: 0 },
-          focus: { name: `control-${entry.id}-${theme}-${width}` },
-          data_identity: `data-${entry.id}`,
-          dom_state_sha256: digest(Buffer.from(JSON.stringify(canonical(snapshot)))),
-          clock: { browser_iso: recipe.browser_date.observed, server_iso: recipe.browser_date.observed, clock_sha256: CLOCK }
-        },
+        capture_profile: "fullpage-neutral-and-viewport-hover-v1",
+        state: primaryState,
+        interaction_target: interactionTarget,
         geometry: [
           { name: `element-${entry.element}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width },
           { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }
         ],
         assertions: [{ name: `assert-${entry.id}-${theme}-${width}`, status: "passed", actual: `observed-${entry.id}` }],
         visible_copy: [{ text: copy, sha256: digest(Buffer.from(copy)) }],
-        capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples },
-        image
+        capture_sampling: primarySampling,
+        image,
+        hover_capture: { state: hoverState, image: hoverImage, capture_sampling: hoverSampling, assertions: hoverAssertions }
       };
     });
     const item = {
@@ -193,7 +223,10 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     };
     return mutateCase?.(item) || item;
   });
-  const rawEntries = cases.flatMap((item) => item.observations.map(({ image }) => ({ path: image.path, bytes: imageBytesByDimensions.get(`${image.full_page_raster.width}x${image.full_page_raster.height}`) })));
+  const rawEntries = cases.flatMap((item) => item.observations.flatMap(({ image, hover_capture: hoverCapture }) => [
+    { path: image.path, bytes: imageBytesByDimensions.get(`${image.full_page_raster.width}x${image.full_page_raster.height}`) },
+    { path: hoverCapture.image.path, bytes: hoverImageBytesByPath.get(hoverCapture.image.path) }
+  ]));
   rawEntries.push(...sampledEntries);
   const packed = rawBundle.encodeBundle(rawEntries);
   const rawMetadata = { path: rawBundle.BUNDLE_PATH, sha256: digest(packed), size_bytes: packed.length, members: rawEntries.map((item) => ({ path: item.path, sha256: digest(item.bytes), size_bytes: item.bytes.length })) };
@@ -206,7 +239,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     browser: structuredClone(browser),
     artifacts: [{ path: rawBundle.BUNDLE_PATH, sha256: rawMetadata.sha256, size_bytes: packed.length, present: true, copied: true, copy_status: "success" }],
     preservation: {
-      schema: beforeSide ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1",
+      schema: beforeSide ? "scrypath.ui-preservation-before-only.v2" : "scrypath.ui-preservation.v2",
       product_source_sha: sourceSha,
       build_source_sha: buildSha,
       product_tree_sha256: productTreeSha,
@@ -214,7 +247,8 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
       raw_bundle: rawMetadata,
       cases
     },
-    imageBytesByDimensions
+    imageBytesByDimensions,
+    hoverImageBytesByPath
   };
 }
 
@@ -225,7 +259,9 @@ function compare(before = runReceipt({ sourceSha: BEFORE_SHA, buildSha: BEFORE_B
     authority: expectedAuthority,
     before,
     candidate,
-    readImage: (_side, item, receipt) => receipt.imageBytesByDimensions.get(`${item.viewport.width}x${item.viewport.height}`)
+    readImage: (_side, item, receipt) => item.capture === "viewport-real-product-hover"
+      ? receipt.hoverImageBytesByPath.get(item.path)
+      : receipt.imageBytesByDimensions.get(`${item.viewport.width}x${item.viewport.height}`)
   });
 }
 
@@ -236,10 +272,106 @@ test("source-paired comparator requires exact matched state receipt pairs", () =
   assert.equal(report.passed, true);
   assert.equal(report.comparisons.length, 61);
   assert.equal(report.comparisons.reduce((sum, item) => sum + item.viewport_comparisons.length, 0), 213);
+  assert.equal(report.schema, "scrypath.ui-state-pair-comparison.v3");
   assert.ok(report.comparisons.filter((item) => item.id.endsWith("overflow") || item.id.endsWith("long-text")).every((item) =>
     item.viewport_comparisons.length === 9 && REQUIRED_THEMES_FOR_TEST.every((theme) => [1440, 768, 390].every((width) => item.viewport_comparisons.some((observation) => observation.theme === theme && observation.width === width)))
   ));
   assert.equal(report.aesthetic_approval, "not-provided");
+});
+
+test("source-paired comparator reports the separate real viewport-hover raster", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE });
+  const primary = before.preservation.cases[0].observations[0];
+  assert.notDeepEqual(primary.state.focus, primary.hover_capture.state.focus);
+  const report = compare(before, candidate);
+  const observation = report.comparisons[0].viewport_comparisons[0];
+
+  assert.equal(observation.hover_pixels.equal, true);
+  assert.equal(report.comparisons[0].hover_pixels_equal, true);
+});
+
+test("a source pair requires independent neutral and hover captures with bounded raw inventories", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE });
+  const observation = candidate.preservation.cases[0].observations[0];
+  const expectedHover = observation.hover_capture;
+  const candidateSchema = candidate.preservation.schema;
+  candidate.preservation.schema = "scrypath.ui-preservation.v1";
+  assert.throws(() => compare(before, candidate), /execution scope or preservation schema/i, "old single-capture receipt schema is not compatible");
+  candidate.preservation.schema = candidateSchema;
+  const checks = [
+    ["missing hover capture", () => { delete observation.hover_capture; }, () => { observation.hover_capture = expectedHover; }],
+    ["unknown capture profile", () => { observation.capture_profile = "single-image-v1"; }, () => { observation.capture_profile = "fullpage-neutral-and-viewport-hover-v1"; }],
+    ["non-neutral primary state", () => { observation.state.hover = expectedHover.state.hover; }, () => { observation.state.hover = []; }],
+    ["hover state for a different route", () => { expectedHover.state.route = "/admin/other"; }, () => { expectedHover.state.route = observation.state.route; }],
+    ["hover image with an unsupported capture kind", () => { expectedHover.image.capture = "full-page-real-product-state"; }, () => { expectedHover.image.capture = "viewport-real-product-hover"; }],
+    ["incorrect hover viewport raster", () => { expectedHover.image.viewport_raster.width += 1; }, () => { expectedHover.image.viewport_raster.width -= 1; }],
+    ["unbounded hover sample proof", () => { expectedHover.capture_sampling.selected = 0; }, () => { expectedHover.capture_sampling.selected = 1; }]
+  ];
+  for (const [label, mutate, restore] of checks) {
+    mutate();
+    assert.throws(() => compare(before, candidate), /hover|sampling|capture|raster/i, label);
+    restore();
+  }
+
+  const members = candidate.preservation.raw_bundle.members;
+  candidate.preservation.raw_bundle.members = members.filter((member) => member.path !== expectedHover.image.path);
+  assert.throws(() => compare(before, candidate), /hover|artifact|bundle/i, "missing hover image bundle member");
+  candidate.preservation.raw_bundle.members = members;
+  const imageMember = members.find((member) => member.path === expectedHover.image.path);
+  const originalMemberHash = imageMember.sha256;
+  imageMember.sha256 = "0".repeat(64);
+  assert.throws(() => compare(before, candidate), /hover|artifact|hash/i, "altered hover image member hash");
+  imageMember.sha256 = originalMemberHash;
+});
+
+test("hover state and assertions participate in the exact source-pair result", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE });
+  const observation = candidate.preservation.cases[0].observations[0];
+  observation.hover_capture.state.hover[0].rect.x += 1;
+  observation.hover_capture.assertions[0].actual = "the actual pointer target and viewport were observed";
+
+  const report = compare(before, candidate);
+  const result = report.comparisons[0].viewport_comparisons[0];
+  assert.equal(result.state_equal, true);
+  assert.equal(result.hover_state_equal, false);
+  assert.equal(result.assertions_equal, true);
+  assert.equal(result.hover_assertions_equal, false);
+  assert.equal(result.full_page_pixels.equal, true);
+  assert.equal(result.hover_pixels.equal, true);
+  assert.equal(report.comparisons[0].passed, false);
+  assert.equal(report.passed, false);
+});
+
+test("exact PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
+  const hoverBefore = png(12, 8, 20);
+  const hoverCandidate = png(12, 8, 21);
+  const metadata = {
+    viewport: { width: 12, height: 8 },
+    viewport_raster: { width: 12, height: 8 },
+    capture: "viewport-real-product-hover"
+  };
+  const pixels = pairs.comparePngExact(hoverBefore, hoverCandidate, metadata, metadata);
+  assert.equal(pixels.equal, false);
+  assert.equal(pixels.before_width, 12);
+  assert.equal(pixels.before_height, 8);
+  assert.throws(() => pairs.comparePngExact(hoverBefore, hoverCandidate, {
+    ...metadata, capture: "unsupported", full_page_raster: { width: 12, height: 9 }
+  }, metadata), /dimensions/i);
+});
+
+test("a hover-only raster change fails while the neutral full-page raster still matches", () => {
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 20, hoverImageColor: 21 });
+  const report = compare(undefined, candidate);
+  const result = report.comparisons[0];
+
+  assert.equal(result.full_page_pixels_equal, true);
+  assert.equal(result.hover_pixels_equal, false);
+  assert.equal(result.pixels_equal, false);
+  assert.equal(result.passed, false);
+  assert.equal(report.passed, false);
 });
 
 test("a source pair rejects missing, extra or duplicate preservation receipts", () => {
@@ -274,7 +406,16 @@ test("a source pair rejects independently mismatched source, fixture, runtime an
 test("a source pair fails exact pixels, geometry, state, copy and semantic assertions", () => {
   const changes = [
     (item) => { item.observations[0].geometry[0].width += 1; },
-    (item) => { item.observations[0].state.focus.name = "different focus"; },
+    (item) => {
+      const observation = item.observations[0];
+      const target = { ...observation.state.interaction_target, name: "different focus" };
+      observation.state.focus.name = target.name;
+      observation.state.interaction_target = target;
+      observation.hover_capture.state.focus.name = target.name;
+      observation.hover_capture.state.interaction_target = target;
+      observation.hover_capture.state.hover[0].element = target;
+      observation.interaction_target = target;
+    },
     (item) => { item.observations[0].visible_copy[0].text = "different visible copy"; },
     (item) => { item.observations[0].assertions[0].actual = "different assertion"; },
     (item) => { item.assertions[0].actual = "0,1,4"; }
@@ -299,7 +440,16 @@ test("real timer elapsed samples may differ while the shared fixed-clock recipe 
 
 test("the declared viewport and full-page raster dimensions must match decoded PNG bytes", () => {
   const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
-  before.imageBytesByDimensions.set("1440x900", png(1, 1));
+  const bytes = png(1, 1);
+  const image = before.preservation.cases[0].observations[0].image;
+  const sampling = before.preservation.cases[0].observations[0].capture_sampling;
+  const sha = digest(bytes);
+  before.imageBytesByDimensions.set("1440x900", bytes);
+  image.sha256 = sha;
+  for (const sample of sampling.samples) sample.sha256 = sha;
+  for (const member of before.preservation.raw_bundle.members) {
+    if (member.path === image.path || sampling.samples.some((sample) => sample.path === member.path)) member.sha256 = sha;
+  }
 
   assert.throws(() => compare(before), /raster|dimension|viewport/i);
 });
@@ -430,6 +580,15 @@ test("run PNG loading verifies path containment, raw hashes and decoded image by
     assert.deepEqual(pairs.readBundledPng({ runRoot: directory, rawMembers }, item), bytes);
     assert.throws(() => pairs.readBundledPng({ runRoot: directory, rawMembers }, { ...item, sha256: "1".repeat(64) }), /raw SHA-256/);
     assert.throws(() => pairs.readBundledPng({ runRoot: directory, rawMembers }, { ...item, path: "../outside.png" }), /outside the held-out PNG bundle/);
+
+    const hoverRelative = "ui-review-artifacts/iteration3-journeys/phase185-held-out/e1-empty-hover.png";
+    const hoverAbsolute = path.join(directory, hoverRelative);
+    const hoverBytes = png(1440, 900, 21);
+    fs.writeFileSync(hoverAbsolute, hoverBytes);
+    rawMembers.set(hoverRelative, hoverBytes);
+    const hoverItem = { id: "E1 empty", path: hoverRelative, sha256: digest(hoverBytes), capture: "viewport-real-product-hover", viewport: { width: 1440, height: 900 }, viewport_raster: { width: 1440, height: 900 } };
+    assert.deepEqual(pairs.readBundledPng({ runRoot: directory, rawMembers }, hoverItem), hoverBytes);
+    assert.throws(() => pairs.readBundledPng({ runRoot: directory, rawMembers }, { ...hoverItem, capture: "unknown", full_page_raster: { width: 1440, height: 899 } }), /dimensions/i);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
@@ -439,7 +598,7 @@ test("pair output is atomic, deterministic and never overwritten by different by
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-output-"));
   try {
     const outputDirectory = path.join(directory, "comparison");
-    const report = { schema: "scrypath.ui-state-pair-comparison.v2", status: "exact-match", cases_compared: 61 };
+    const report = { schema: "scrypath.ui-state-pair-comparison.v3", status: "exact-match", cases_compared: 61 };
     const outputPath = pairs.writeOutput(outputDirectory, report);
     const original = fs.readFileSync(outputPath);
 
