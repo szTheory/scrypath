@@ -343,23 +343,35 @@ test("prepare derives focused and full local tags and keeps separate recipe scop
   assert.ok(Object.entries(full.manifest.tags).every(([service, tag]) => tag === `${full.project}-${service}`));
 });
 
-test("Phase185 runtime identity binds the exact browser base/config/lock and only permits the verified final source-copy layer to vary", (t) => {
+test("Phase185 runtime identity separates source COPY from the actual trailing empty WORKDIR layer", (t) => {
   const directory = makeTempDirectory(t);
   const inspectionPath = path.join(directory, "browser-inspection.json");
   const base = {
     Id: `sha256:${"a".repeat(64)}`,
-    RootFS: { Layers: [`sha256:${"b".repeat(64)}`, `sha256:${"c".repeat(64)}`] },
-    Config: { Env: ["PATH=/usr/bin"], Cmd: ["bash", "./docker-playwright.sh"], Labels: { "org.opencontainers.image.revision": "before" } },
+    RootFS: { Layers: [`sha256:${"b".repeat(64)}`, `sha256:${"c".repeat(64)}`, "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"] },
+    Config: { Env: ["PATH=/usr/bin"], WorkingDir: "/app/examples/scrypath_ecommerce", Cmd: ["bash", "./docker-playwright.sh"], Labels: { "org.opencontainers.image.revision": "before" } },
     Architecture: "amd64", Os: "linux", DockerVersion: "27.0.0"
   };
   writeFileSync(inspectionPath, JSON.stringify([base]));
   const first = phase185RuntimeIdentity({ inspectionPath });
-  writeFileSync(inspectionPath, JSON.stringify([{ ...base, Id: `sha256:${"d".repeat(64)}`, RootFS: { Layers: [base.RootFS.Layers[0], `sha256:${"e".repeat(64)}`] } }]));
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, Id: `sha256:${"d".repeat(64)}`, RootFS: { Layers: [base.RootFS.Layers[0], `sha256:${"e".repeat(64)}`, base.RootFS.Layers[2]] } }]));
   const changedSource = phase185RuntimeIdentity({ inspectionPath });
   assert.equal(first.browser_source_layer_id, base.RootFS.Layers[1]);
   assert.equal(changedSource.effective_runtime_sha256, first.effective_runtime_sha256);
-  writeFileSync(inspectionPath, JSON.stringify([{ ...base, RootFS: { Layers: [`sha256:${"f".repeat(64)}`, base.RootFS.Layers[1]] } }]));
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, RootFS: { Layers: [`sha256:${"f".repeat(64)}`, base.RootFS.Layers[1], base.RootFS.Layers[2]] } }]));
   assert.notEqual(phase185RuntimeIdentity({ inspectionPath }).effective_runtime_sha256, first.effective_runtime_sha256);
+  assert.deepEqual(first.runtime.rootfs_base_layers, [base.RootFS.Layers[0], base.RootFS.Layers[2]]);
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, RootFS: { Layers: [base.RootFS.Layers[0], base.RootFS.Layers[1], `sha256:${"f".repeat(64)}`] } }]));
+  assert.throws(() => phase185RuntimeIdentity({ inspectionPath }), /empty WORKDIR layer/);
+  writeFileSync(inspectionPath, JSON.stringify([{ ...base, RootFS: { Layers: base.RootFS.Layers.slice(0, 2) } }]));
+  assert.throws(() => phase185RuntimeIdentity({ inspectionPath }), /source-copy and trailing WORKDIR/);
+  writeFileSync(inspectionPath, JSON.stringify([base]));
+  const fixtureRoot = path.join(directory, "source");
+  const fixtureExample = path.join(fixtureRoot, "examples/scrypath_ecommerce");
+  mkdirSync(fixtureExample, { recursive: true });
+  const dockerfile = readFileSync(path.join(repositoryRoot, "examples/scrypath_ecommerce/Dockerfile.e2e"), "utf8");
+  writeFileSync(path.join(fixtureExample, "Dockerfile.e2e"), dockerfile.replace('WORKDIR /app/examples/scrypath_ecommerce\nCMD', 'WORKDIR /unexpected\nCMD'));
+  assert.throws(() => phase185RuntimeIdentity({ inspectionPath, repoRoot: fixtureRoot }), /verified existing WORKDIR/);
 });
 
 test("trusted full CI prepares bounded version-2 cache exporters", (t) => {

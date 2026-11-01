@@ -668,8 +668,10 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
       continue;
     }
     const identity = testCase;
+    // Playwright JSON reports a successful expected test as "expected";
+    // retain "passed" for previously supported normalized report inputs.
     if (identity.attempts?.length !== 1 || identity.attempts[0]?.retry !== 0 || identity.attempts[0]?.status !== "passed" ||
-      identity.expected_status !== "passed" || identity.outcome !== "passed") {
+      identity.expected_status !== "passed" || !["expected", "passed"].includes(identity.outcome)) {
       reasons.push(errorReason("preservation_test_not_single_clean_pass", `Held-out case ${expected.id} must have exactly one successful first attempt`, identity.key));
     }
     if (event.test_identity !== identity.key) reasons.push(errorReason("preservation_identity_mismatch", `Receipt identity does not match the successful test for ${expected.id}`, identity.key));
@@ -809,7 +811,12 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
               const beforeJson = JSON.stringify(canonicalize(snapshot.before));
               const afterJson = JSON.stringify(canonicalize(snapshot.after));
               if (beforeJson !== afterJson || JSON.stringify(canonicalize(rootSnapshot)) !== afterJson || crypto.createHash("sha256").update(afterJson).digest("hex") !== state.dom_state_sha256) throw new TypeError("raw before/after sample state differs from the actual observation DOM-state identity");
-              if (snapshot.after.viewport?.width !== observation.viewport.width || snapshot.after.viewport?.height !== observation.viewport.height) throw new TypeError("raw sample state viewport differs from the actual observation");
+              const rawViewport = snapshot.after.viewport;
+              if (rawViewport?.inner?.width !== observation.viewport.width || rawViewport?.inner?.height !== observation.viewport.height ||
+                rawViewport?.document?.width !== documentGeometry.width || rawViewport?.document?.height !== documentGeometry.height ||
+                rawViewport?.scroll?.x !== state.scroll.x || rawViewport?.scroll?.y !== state.scroll.y || rawViewport?.dpr !== dpr) {
+                throw new TypeError("raw sample state viewport, document, scroll or DPR differs from the actual observation");
+              }
             }
           }
           if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
@@ -1012,6 +1019,7 @@ function readJsonArtifact(root, relative, reasons, { required = true } = {}) {
     if (!isRecord(value)) throw new TypeError("JSON artifact root must be an object");
     return value;
   } catch (error) {
+    if (error.code === "ENOENT" && !required) return null;
     const code = error.code === "ENOENT" && required ? "missing_required_artifact" : "malformed_json_artifact";
     reasons.push(errorReason(code, `${relative}: ${error.message}`));
     return null;

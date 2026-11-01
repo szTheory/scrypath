@@ -43,7 +43,7 @@ function playwrightReport(cases, { results = false, errors = [] } = {}) {
       title: item.suiteTitle || "e2e", suites: [],
       specs: [{ title: item.title, file: item.file, tests: [{
         projectName: item.project, expectedStatus: item.expectedStatus,
-        ...(results ? { status: item.status || "passed", results: item.results || [{ retry: 0, status: item.status || "passed", duration: 1 }] } : {})
+        ...(results ? { status: item.status || "expected", results: item.results || [{ retry: 0, status: item.status || "passed", duration: 1 }] } : {})
       }] }]
     }))
   };
@@ -436,7 +436,7 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
         data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
         clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
       };
-      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copyText, viewport: { width, height }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
+      const snapshot = { schema: "scrypath.ui-capture-state.v1", body_text: copyText, viewport: { inner: { width, height }, client: { width, height }, document: { width, height }, scroll: { x: 0, y: 0 }, dpr: 1, scale: 1 }, fixture_marker: "SYNTHETIC_TEST_NOT_A_REAL_CAPTURE" };
       state.dom_state_sha256 = crypto.createHash("sha256").update(JSON.stringify(canonicalize(snapshot))).digest("hex");
       const stateBytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }, null, 2) + "\n");
       const stateHash = crypto.createHash("sha256").update(stateBytes).digest("hex");
@@ -771,6 +771,9 @@ test("the before-only evidence command emits a separate held-out receipt schema"
     fixtureOverlaySha256: expectedSource.fixtureOverlaySha256
   });
   try {
+    // The actual before-only browser lane does not run candidate checkers.
+    fs.rmSync(path.join(runDir, "admin-light-parity.json"));
+    fs.rmSync(path.join(runDir, "contrast-report.json"));
     const written = evidence.writeBeforeOnlyEvidence({ runDir, expectedSource, repoRoot: source.root });
     assert.equal(written.eligibility.eligible, true, JSON.stringify(written.reasons));
 
@@ -782,6 +785,14 @@ test("the before-only evidence command emits a separate held-out receipt schema"
     assert.equal(fs.existsSync(path.join(runDir, "phase105-evidence.json")), false);
     const validation = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
     assert.equal(validation.valid, true, JSON.stringify(validation.reasons));
+    const malformedRun = createCompleteRun({ beforeOnly: true, sourceSha: source.productSha, buildSourceSha: source.buildSha,
+      productTreeSha256: expectedSource.productTreeSha256, fixtureOverlaySha256: expectedSource.fixtureOverlaySha256 });
+    try {
+      fs.writeFileSync(path.join(malformedRun.runDir, "contrast-report.json"), "{malformed optional artifact");
+      const malformed = evidence.writeBeforeOnlyEvidence({ runDir: malformedRun.runDir, expectedSource, repoRoot: source.root });
+      assert.equal(malformed.eligibility.eligible, false);
+      assert.ok(malformed.reasons.some((reason) => reason.code === "malformed_json_artifact"));
+    } finally { fs.rmSync(malformedRun.runDir, { recursive: true, force: true }); }
   } finally {
     fs.rmSync(runDir, { recursive: true, force: true });
     fs.rmSync(source.root, { recursive: true, force: true });
@@ -1132,6 +1143,22 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
   }
 });
 
+test("held-out expected outcomes cannot hide flaky, unexpected, skipped or unknown report status", () => {
+  for (const outcome of ["flaky", "unexpected", "skipped", "invented"]) {
+    const { runDir } = createCompleteRun();
+    try {
+      const reportPath = path.join(runDir, "phase105-playwright.json");
+      const report = JSON.parse(fs.readFileSync(reportPath));
+      const spec = report.suites.flatMap((suite) => suite.specs).find((item) => item.file.endsWith("ui_state_preservation.spec.ts"));
+      spec.tests[0].status = outcome;
+      fs.writeFileSync(reportPath, JSON.stringify(report));
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, outcome);
+      assert.ok(receipt.reasons.some((reason) => reason.code === "preservation_test_not_single_clean_pass"), outcome);
+    } finally { fs.rmSync(runDir, { recursive: true, force: true }); }
+  }
+});
+
 test("held-out receipts reject missing observations, mismatched clock, stopped timer or altered clock artifact", () => {
   const mutations = [
     ["missing overflow viewport", (event) => { event.observations.pop(); }, "incomplete_preservation_observations"],
@@ -1222,6 +1249,38 @@ test("stationary capture claims require actual raw sample PNGs and DOM-bound sta
       const receipt = evidence.writeEvidence({ runDir });
       assert.equal(receipt.eligibility.eligible, false, attack);
       assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /raw sample|observation DOM|selected raw PNG/.test(reason.message)), attack);
+    } finally { fs.rmSync(runDir, { recursive: true, force: true }); }
+  }
+});
+
+test("raw browser viewport geometry cannot be replaced by hash-consistent invented metadata", () => {
+  for (const attack of ["flattened", "inner", "document", "scroll", "dpr"]) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map(JSON.parse);
+      const observation = events.find((event) => event.operation === "ui_preservation_case").observations[0];
+      const bundlePath = path.join(runDir, rawBundle.BUNDLE_PATH);
+      const members = rawBundle.decodeBundle(fs.readFileSync(bundlePath));
+      const snapshot = JSON.parse(members.get(observation.capture_sampling.samples[0].state_path)).after;
+      if (attack === "flattened") snapshot.viewport = { ...observation.viewport };
+      if (attack === "inner") snapshot.viewport.inner.width += 1;
+      if (attack === "document") snapshot.viewport.document.height += 1;
+      if (attack === "scroll") snapshot.viewport.scroll.y += 1;
+      if (attack === "dpr") snapshot.viewport.dpr = 2;
+      const canonical = (value) => Array.isArray(value) ? value.map(canonical) : value && typeof value === "object"
+        ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonical(value[key])])) : value;
+      observation.state.dom_state_sha256 = rawBundle.sha256(Buffer.from(JSON.stringify(canonical(snapshot))));
+      const bytes = Buffer.from(JSON.stringify({ ...snapshot, before: snapshot, after: snapshot }) + "\n");
+      for (const sample of observation.capture_sampling.samples) {
+        members.set(sample.state_path, bytes);
+        sample.state_sha256 = rawBundle.sha256(bytes);
+      }
+      fs.writeFileSync(bundlePath, rawBundle.encodeBundle([...members].map(([path, bytes]) => ({ path, bytes }))));
+      fs.writeFileSync(eventsPath, events.map((event) => JSON.stringify(event)).join("\n") + "\n");
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, attack);
+      assert.ok(receipt.reasons.some((reason) => reason.code === "invalid_preservation_observation" && /raw sample state viewport/.test(reason.message)), attack);
     } finally { fs.rmSync(runDir, { recursive: true, force: true }); }
   }
 });

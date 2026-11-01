@@ -3,6 +3,9 @@
 # toolchain are required.
 services:
   web:
+    build:
+      labels:
+        org.opencontainers.image.revision: ${SCRYPATH_SOURCE_SHA:-unknown}
     ports: !reset []
     command: ["sh", "./docker-e2e-entrypoint.sh"]
     init: true
@@ -13,6 +16,8 @@ services:
       dockerfile: examples/scrypath_ecommerce/Dockerfile.e2e
       args:
         PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.60.0}
+      labels:
+        org.opencontainers.image.revision: ${SCRYPATH_SOURCE_SHA:-unknown}
     environment:
       CI: "1"
       E2E_SCOPE: ${E2E_SCOPE:-focused}

@@ -60,16 +60,29 @@ function phase185RuntimeIdentity({ inspectionPath, repoRoot = repositoryRoot } =
   if (!Array.isArray(inspection) || inspection.length !== 1) throw new Error("Docker image inspection must contain exactly one built browser image");
   const image = inspection[0];
   const layers = image?.RootFS?.Layers;
-  if (!Array.isArray(layers) || layers.length < 2 || layers.some((layer) => typeof layer !== "string" || !/^sha256:[a-f0-9]{64}$/.test(layer))) {
-    throw new Error("Browser image must expose immutable rootfs layers including its repository source-copy layer");
+  if (!Array.isArray(layers) || layers.length < 3 || layers.some((layer) => typeof layer !== "string" || !/^sha256:[a-f0-9]{64}$/.test(layer))) {
+    throw new Error("Browser image must expose immutable rootfs layers including source-copy and trailing WORKDIR layers");
   }
   const dockerfilePath = path.join(repoRoot, "examples/scrypath_ecommerce/Dockerfile.e2e");
   const dockerfile = fs.readFileSync(dockerfilePath, "utf8");
   const instructions = dockerfile.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
   const sourceCopyIndex = instructions.lastIndexOf("COPY . .");
-  if (sourceCopyIndex < 0 || instructions.slice(sourceCopyIndex + 1).some((line) => /^(COPY|ADD|RUN)\s/i.test(line))) {
-    throw new Error("Dockerfile.e2e must keep COPY . . as the final filesystem-changing instruction before runtime metadata");
+  const captureWorkdir = "/app/examples/scrypath_ecommerce";
+  const tail = instructions.slice(sourceCopyIndex + 1);
+  if (sourceCopyIndex < 0 || tail.length !== 2 || tail[0] !== `WORKDIR ${captureWorkdir}` ||
+    tail[1] !== 'CMD ["bash", "./docker-playwright.sh"]' ||
+    !instructions.slice(0, sourceCopyIndex).includes(`WORKDIR ${captureWorkdir}`) ||
+    image.Config?.WorkingDir !== captureWorkdir) {
+    throw new Error("Dockerfile.e2e source COPY must be followed only by the verified existing WORKDIR and capture CMD");
   }
+  // BuildKit records the final WORKDIR as an empty filesystem layer even when
+  // the directory already exists. The preceding layer is the repository COPY.
+  // Bind the empty suffix as runtime; exclude only that one source COPY layer.
+  const emptyWorkdirLayer = `sha256:${crypto.createHash("sha256").update(Buffer.alloc(1024)).digest("hex")}`;
+  if (layers.at(-1) !== emptyWorkdirLayer || layers.at(-2) === emptyWorkdirLayer) {
+    throw new Error("Browser image must end with a nonempty source COPY and the verified empty WORKDIR layer");
+  }
+  const baseLayers = [...layers.slice(0, -2), layers.at(-1)];
   const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, "examples/scrypath_ecommerce/package.json"), "utf8"));
   const packageLockBytes = fs.readFileSync(path.join(repoRoot, "examples/scrypath_ecommerce/package-lock.json"));
   const packageLock = JSON.parse(packageLockBytes.toString("utf8"));
@@ -80,7 +93,7 @@ function phase185RuntimeIdentity({ inspectionPath, repoRoot = repositoryRoot } =
   for (const key of ["com.docker.compose.project", "com.docker.compose.service", "com.docker.compose.version", revisionLabel, fingerprintLabel]) delete labels[key];
   const config = { ...(image.Config || {}), Labels: labels };
   const runtime = {
-    rootfs_base_layers: layers.slice(0, -1),
+    rootfs_base_layers: baseLayers,
     config,
     architecture: image.Architecture,
     os: image.Os,
@@ -90,12 +103,12 @@ function phase185RuntimeIdentity({ inspectionPath, repoRoot = repositoryRoot } =
     package_lock_sha256: digest(packageLockBytes),
     playwright_package_version: packageVersion,
     capture_launch_args: ["--disable-partial-raster"],
-    source_copy_layer_position: "last-rootfs-layer-verified-by-Dockerfile.e2e"
+    source_copy_layer_position: "penultimate-rootfs-layer-before-verified-empty-existing-workdir"
   };
   return {
     browser_image_id: image.Id,
-    browser_source_layer_id: layers.at(-1),
-    browser_base_layers_sha256: digest(canonicalJson(layers.slice(0, -1))),
+    browser_source_layer_id: layers.at(-2),
+    browser_base_layers_sha256: digest(canonicalJson(baseLayers)),
     effective_runtime_sha256: digest(canonicalJson(runtime)),
     playwright_package_version: packageVersion,
     runtime

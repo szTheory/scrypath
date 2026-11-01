@@ -357,8 +357,8 @@ test("authority loads only when its qualification bytes match the supplied diges
     const inspectionPath = path.join(directory, "browser-inspection.json");
     const inspection = [{
       Id: value.qualification.browser_runtime.browser_image_id,
-      RootFS: { Layers: ["sha256:1111111111111111111111111111111111111111111111111111111111111111", "sha256:2222222222222222222222222222222222222222222222222222222222222222"] },
-      Config: { Labels: { "org.opencontainers.image.revision": BEFORE_SHA } },
+      RootFS: { Layers: ["sha256:1111111111111111111111111111111111111111111111111111111111111111", "sha256:2222222222222222222222222222222222222222222222222222222222222222", "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"] },
+      Config: { WorkingDir: "/app/examples/scrypath_ecommerce", Labels: { "org.opencontainers.image.revision": BEFORE_SHA } },
       Architecture: "arm64", Os: "linux", DockerVersion: "27.0.0"
     }];
     fs.writeFileSync(inspectionPath, JSON.stringify(inspection));
