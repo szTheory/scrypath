@@ -66,8 +66,8 @@ function assertMountedStylesheetOrder(html) {
       const href = tag.match(/\bhref\s*=\s*(["'])(.*?)\1/i);
       return href?.[2] ?? "";
     });
-  const hostIndex = stylesheets.findIndex((href) => href === "/assets/css/app.css" || href.startsWith("/assets/css/app.css?"));
-  const opsIndex = stylesheets.findIndex((href) => href === "/admin/search/assets/css/app.css" || href.startsWith("/admin/search/assets/css/app.css?"));
+  const hostIndex = stylesheets.findIndex((href) => /^\/assets\/css\/app(?:-[a-f0-9]{8,64})?\.css(?:\?.*)?$/i.test(href));
+  const opsIndex = stylesheets.findIndex((href) => /^\/admin\/search\/assets\/css\/app(?:-[a-f0-9]{8,64})?\.css(?:\?.*)?$/i.test(href));
 
   if (hostIndex < 0) throw new Error("mounted Ops response is missing the host stylesheet");
   if (opsIndex < 0) throw new Error("mounted Ops response is missing the independently served Ops stylesheet");
