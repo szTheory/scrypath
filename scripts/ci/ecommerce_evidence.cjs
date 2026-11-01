@@ -44,9 +44,22 @@ const PRESERVATION_ACTION_ELEMENTS = ["E8", "E9", "E10"];
 const PRESERVATION_CONTENT_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10"];
 const PRESERVATION_OVERFLOW_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E10"];
 const PRESERVATION_FIXTURE_FILES = [
+  "examples/scrypath_ecommerce/e2e/ui_state_preservation.spec.ts",
+  "examples/scrypath_ecommerce/e2e/ui_content_preservation.spec.ts",
+  "examples/scrypath_ecommerce/e2e/helpers/ui-preservation-states.ts",
   "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex",
   "examples/scrypath_ecommerce/test/support/phase173_fixture_source.ex",
-  "scrypath_ops/test/support/phase173_fixture_source.ex"
+  "scrypath_ops/test/support/phase173_fixture_source.ex",
+  "examples/scrypath_ecommerce/compose.phase185.yaml",
+  "examples/scrypath_ecommerce/compose.e2e.yaml",
+  "examples/scrypath_ecommerce/scripts/verify-e2e.sh",
+  "examples/scrypath_ecommerce/docker-playwright.sh",
+  "scripts/ci/ecommerce_evidence.cjs",
+  "scripts/ci/ecommerce_evidence.test.cjs",
+  "scripts/ci/ui_state_pairs.cjs",
+  "scripts/ci/ui_state_pairs.test.cjs",
+  "scripts/ci/ecommerce_build.cjs",
+  "scripts/ci/ecommerce_build.test.cjs"
 ];
 const PRESERVATION_ARTIFACT_ROOT = "ui-review-artifacts/iteration3-journeys/phase185-held-out/";
 const PRESERVATION_CASES = Object.freeze([
@@ -483,24 +496,51 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
       continue;
     }
     const identity = testCase;
+    if (identity.attempts?.length !== 1 || identity.attempts[0]?.retry !== 0 || identity.attempts[0]?.status !== "passed" ||
+      identity.expected_status !== "passed" || identity.outcome !== "passed") {
+      reasons.push(errorReason("preservation_test_not_single_clean_pass", `Held-out case ${expected.id} must have exactly one successful first attempt`, identity.key));
+    }
     if (event.test_identity !== identity.key) {
       reasons.push(errorReason("preservation_identity_mismatch", `Receipt identity does not match the successful test for ${expected.id}`, identity.key));
     }
-    if (event.source_sha !== context.checkoutHead || event.product_tree_sha256 !== context.productTreeSha256) {
-      reasons.push(errorReason("preservation_source_mismatch", `Receipt source identity does not match the checked out product for ${expected.id}`, identity.key));
+    if (event.product_source_sha !== context.productSourceSha || event.build_source_sha !== context.checkoutHead || event.product_tree_sha256 !== context.productTreeSha256) {
+      reasons.push(errorReason("preservation_source_mismatch", `Receipt product/build/tree identities do not match the independently checked run source for ${expected.id}`, identity.key));
     }
     if (event.fixture_overlay_sha256 !== context.fixtureOverlaySha256) {
       reasons.push(errorReason("preservation_fixture_mismatch", `Receipt fixture overlay does not match the checked out test-only fixtures for ${expected.id}`, identity.key));
     }
     const runtime = event.runtime;
-    if (!isRecord(runtime) || runtime.application_image_id !== context.applicationRuntimeId || runtime.browser_image_id !== context.browserRuntimeId ||
-      !validDigest(runtime.effective_runtime_sha256) || !validDigest(event.recipe_sha256)) {
+    if (!isRecord(runtime) || runtime.application_image_id !== context.applicationRuntimeId || runtime.standalone_ops_image_id !== context.standaloneOpsRuntimeId || runtime.browser_image_id !== context.browserRuntimeId ||
+      !validDigest(runtime.effective_runtime_sha256) || !validDigest(runtime.browser_source_layer_id) || !validDigest(runtime.browser_base_layers_sha256) || !validDigest(event.recipe_sha256)) {
       reasons.push(errorReason("preservation_runtime_mismatch", `Receipt runtime identity does not match the run for ${expected.id}`, identity.key));
     }
     const state = event.state;
+    const recipe = event.clock_recipe;
+    const clockSha = recipe?.clock_sha256;
+    const profile = recipe?.font_profile;
+    const profileRecipe = isRecord(recipe) ? Object.fromEntries(Object.entries(recipe).filter(([key]) => !["browser_date", "clock_sha256", "profile_sha256", "data_recipe_sha256"].includes(key))) : null;
+    const dataRecipeSha = isRecord(event.data_recipe) ? `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(event.data_recipe))).digest("hex")}` : "";
+    if (!isRecord(recipe) || recipe.browser?.engine !== "chromium" || recipe.browser?.package !== "@playwright/test" ||
+      !/^\d+\.\d+\.\d+(?:\.\d+)?(?:[-+][0-9A-Za-z.-]+)?$/.test(recipe.browser?.version || "") ||
+      !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(recipe.browser?.package_version || "") ||
+      !Array.isArray(recipe.launch_args) || !recipe.launch_args.includes("--disable-partial-raster") ||
+      recipe.locale !== "en-US" || recipe.timezone !== "UTC" || recipe.device_scale_factor !== 1 ||
+      recipe.browser_date?.fixed !== true || recipe.browser_date?.timers_running !== true ||
+      !Number.isFinite(recipe.browser_date?.timer_elapsed_ms) || recipe.browser_date.timer_elapsed_ms <= 20 ||
+      recipe.browser_date?.observed !== state?.clock?.browser_iso || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(recipe.browser_date?.observed || "") ||
+      !isRecord(profile) || profile.method !== "retained-cdp-fixed-font-v1" || profile.fixed_font_family !== "Liberation Mono" ||
+      profile.applied !== "before-first-navigation" || profile.lifetime !== "page-context" ||
+      !validDigest(recipe.profile_sha256) || !validDigest(recipe.data_recipe_sha256) || !validDigest(clockSha) ||
+      `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(profileRecipe))).digest("hex")}` !== recipe.profile_sha256 ||
+      dataRecipeSha !== recipe.data_recipe_sha256 ||
+      `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(recipe))).digest("hex")}` !== event.recipe_sha256 ||
+      state?.clock?.clock_sha256 !== clockSha || state?.clock?.server_iso !== recipe.browser_date?.observed) {
+      reasons.push(errorReason("invalid_preservation_clock_recipe", `Receipt lacks an observed browser/server fixed-clock and common browser/profile recipe for ${expected.id}`, identity.key));
+    }
     if (!isRecord(state) || state.element !== expected.element || state.category !== expected.category ||
       typeof state.route !== "string" || !state.route.startsWith("/") ||
       typeof state.theme !== "string" || state.theme.trim() === "" ||
+      !["light", "dark"].includes(state.color_scheme) ||
       !isRecord(state.viewport) || !Number.isInteger(state.viewport.width) || !Number.isInteger(state.viewport.height) ||
       !isRecord(state.scroll) || !Number.isFinite(state.scroll.x) || !Number.isFinite(state.scroll.y) ||
       !isRecord(state.focus) || typeof state.focus.name !== "string" || state.focus.name.trim() === "" ||
@@ -530,32 +570,50 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
       typeof copy.sha256 !== "string" || crypto.createHash("sha256").update(copy.text).digest("hex") !== copy.sha256)) {
       reasons.push(errorReason("invalid_preservation_copy", `Receipt lacks exact visible copy and matching hashes for ${expected.id}`, identity.key));
     }
-    const image = event.image;
-    let imagePath = "";
-    try {
-      if (!isRecord(image) || typeof image.path !== "string" || typeof image.sha256 !== "string") throw new TypeError("image path and SHA-256 are required");
-      imagePath = normalizeArtifactPath(image.path);
-      if (!imagePath.startsWith(PRESERVATION_ARTIFACT_ROOT) || path.posix.extname(imagePath).toLowerCase() !== ".png") {
-        throw new TypeError("image must be a PNG in the held-out preservation artifact bundle");
-      }
-      const artifact = artifactByPath.get(imagePath);
-      if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
-        throw new TypeError("image must be declared, copied, present and hash-matched in this run");
-      }
-      const imageBytes = fs.readFileSync(resolveArtifact(context.runRoot, imagePath).path);
-      if (imageBytes.length < 8 || !imageBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) {
-        throw new TypeError("image does not have a PNG signature");
-      }
-    } catch (error) {
-      reasons.push(errorReason("invalid_preservation_image", `${expected.id}: ${error.message}`, identity.key));
+    const expectedWidths = expected.category === "overflow" ? [1440, 768, 390] : [1440];
+    const images = [];
+    const seenPaths = new Set();
+    if (!Array.isArray(event.images) || event.images.length !== expectedWidths.length) {
+      reasons.push(errorReason("invalid_preservation_image_count", `${expected.id} must contain ${expectedWidths.length} actual viewport image(s)`, identity.key));
     }
-    validated.push({ id: expected.id, test_identity: identity.key, source_sha: event.source_sha, product_tree_sha256: event.product_tree_sha256,
+    for (const image of Array.isArray(event.images) ? event.images : []) {
+      try {
+        if (!isRecord(image) || typeof image.path !== "string" || !/^[a-f0-9]{64}$/.test(image.sha256 || "")) throw new TypeError("image path and SHA-256 are required");
+        const imagePath = normalizeArtifactPath(image.path);
+        if (!imagePath.startsWith(PRESERVATION_ARTIFACT_ROOT) || path.posix.extname(imagePath).toLowerCase() !== ".png") throw new TypeError("image must be a PNG in the held-out preservation artifact bundle");
+        if (seenPaths.has(imagePath)) throw new TypeError("each viewport must reference a distinct raw image artifact");
+        seenPaths.add(imagePath);
+        if (!isRecord(image.viewport) || !expectedWidths.includes(image.viewport.width) || !Number.isInteger(image.viewport.height) || image.viewport.height < 1 || image.capture !== "full-page-real-product-state") throw new TypeError("image viewport/capture metadata is invalid");
+        const artifact = artifactByPath.get(imagePath);
+        if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") throw new TypeError("image must be declared, copied, present and hash-matched in this run");
+        const imageBytes = fs.readFileSync(resolveArtifact(context.runRoot, imagePath).path);
+        if (imageBytes.length < 8 || !imageBytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) throw new TypeError("image does not have a PNG signature");
+        images.push({ path: imagePath, sha256: image.sha256, viewport: image.viewport, capture: image.capture });
+      } catch (error) {
+        reasons.push(errorReason("invalid_preservation_image", `${expected.id}: ${error.message}`, identity.key));
+      }
+    }
+    for (const width of expectedWidths) if (!images.some((image) => image.viewport.width === width)) reasons.push(errorReason("missing_preservation_viewport", `${expected.id} has no raw image for required ${width}px viewport`, identity.key));
+    let clockArtifact = null;
+    try {
+      if (!isRecord(event.clock_artifact) || typeof event.clock_artifact.path !== "string" || event.clock_artifact.path !== "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt" || !/^[a-f0-9]{64}$/.test(event.clock_artifact.sha256 || "")) throw new TypeError("the immutable fixed-clock bytes must be a declared run artifact");
+      const artifact = artifactByPath.get(event.clock_artifact.path);
+      if (!artifact?.present || artifact.sha256 !== event.clock_artifact.sha256 || artifact.copied !== true || artifact.copy_status !== "success" || `sha256:${event.clock_artifact.sha256}` !== state?.clock?.clock_sha256) throw new TypeError("fixed-clock artifact bytes do not match the observed clock digest");
+      const bytes = fs.readFileSync(resolveArtifact(context.runRoot, event.clock_artifact.path).path);
+      const instant = bytes.toString("utf8");
+      if (instant !== state?.clock?.server_iso || instant !== state?.clock?.browser_iso || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(instant)) throw new TypeError("actual server/browser clock does not match the preserved immutable fixture bytes");
+      clockArtifact = { path: event.clock_artifact.path, sha256: event.clock_artifact.sha256 };
+    } catch (error) {
+      reasons.push(errorReason("invalid_preservation_clock_artifact", `${expected.id}: ${error.message}`, identity.key));
+    }
+    validated.push({ id: expected.id, test_identity: identity.key, product_source_sha: event.product_source_sha, build_source_sha: event.build_source_sha, product_tree_sha256: event.product_tree_sha256,
       fixture_overlay_sha256: event.fixture_overlay_sha256, runtime: isRecord(runtime) ? runtime : null,
-      recipe_sha256: event.recipe_sha256, state: isRecord(state) ? state : null, actions: Array.isArray(event.actions) ? event.actions : [],
+      recipe_sha256: event.recipe_sha256, clock_recipe: isRecord(recipe) ? recipe : null, data_recipe: isRecord(event.data_recipe) ? event.data_recipe : null, clock_artifact: clockArtifact,
+      state: isRecord(state) ? state : null, actions: Array.isArray(event.actions) ? event.actions : [],
       transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [],
       geometry: Array.isArray(event.geometry) ? event.geometry : [],
       assertions: Array.isArray(event.assertions) ? event.assertions : [], visible_copy: Array.isArray(event.visible_copy) ? event.visible_copy : [],
-      image: { path: imagePath, sha256: typeof image?.sha256 === "string" ? image.sha256 : null }
+      images
     });
   }
   return validated.sort((left, right) => left.id.localeCompare(right.id));
@@ -853,8 +911,9 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   const sourceMode = sourceInput.mode === "hosted" || sourceInput.mode === "local" ? sourceInput.mode : "unknown";
   if (sourceMode === "unknown") reasons.push(errorReason("invalid_source_mode", "source.mode must be hosted or local"));
   const checkoutHead = requiredString(sourceInput, "checkout_head", "source", reasons);
-  if (expectedSource && expectedSource.sourceSha !== checkoutHead) {
-    reasons.push(errorReason("expected_source_mismatch", "Run source SHA does not match the independent pair authority"));
+  const productSourceSha = requiredString(sourceInput, "product_source_sha", "source", reasons);
+  if (expectedSource && (expectedSource.sourceSha !== productSourceSha || expectedSource.buildSourceSha !== checkoutHead)) {
+    reasons.push(errorReason("expected_source_mismatch", "Run product and build source SHAs do not match the independent pair authority"));
   }
   const builtSourceSha = requiredString(sourceInput, "built_source_sha", "source", reasons);
   const eventSha = typeof sourceInput.event_sha === "string" && sourceInput.event_sha.trim() ? sourceInput.event_sha.trim() : null;
@@ -865,7 +924,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   if (sourceMode === "hosted") {
     if (!validSha(eventSha)) reasons.push(errorReason("invalid_event_sha", "hosted source.event_sha must be a full Git SHA"));
     if (dirty !== false) reasons.push(errorReason("hosted_source_dirty", "hosted proof requires a clean checkout"));
-    if (eventSha !== checkoutHead || eventSha !== builtSourceSha || workflowInput.sha !== eventSha) {
+    if (eventSha !== checkoutHead || eventSha !== builtSourceSha || eventSha !== productSourceSha || workflowInput.sha !== eventSha) {
       reasons.push(errorReason("source_sha_mismatch", "checkout, event, built source and workflow SHA must match"));
     }
   } else if (dirty === true) {
@@ -875,6 +934,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   } else if (sourceMode === "local" && checkoutHead !== builtSourceSha) {
     reasons.push(errorReason("source_sha_mismatch", "clean local checkout and built source SHA must match"));
   }
+  if (!validSha(productSourceSha)) reasons.push(errorReason("invalid_product_source_sha", "source.product_source_sha must be a full Git SHA"));
 
   const imageKinds = ["application", "browser"];
   const images = {};
@@ -901,6 +961,13 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
       source_fingerprint: typeof image.source_fingerprint === "string" ? image.source_fingerprint : null
     };
   }
+  const standaloneOpsInput = isRecord(imageInput.standalone_ops) ? imageInput.standalone_ops : {};
+  const standaloneOpsBuiltId = requiredString(standaloneOpsInput, "built_id", "images.standalone_ops", reasons);
+  const standaloneOpsRuntimeId = requiredString(standaloneOpsInput, "runtime_id", "images.standalone_ops", reasons);
+  if (!validDigest(standaloneOpsBuiltId) || !validDigest(standaloneOpsRuntimeId) || standaloneOpsBuiltId !== standaloneOpsRuntimeId) {
+    reasons.push(errorReason("invalid_image_id", "standalone_ops built/runtime IDs must be the same immutable sha256 digest"));
+  }
+  images.standalone_ops = { built_id: standaloneOpsBuiltId, runtime_id: standaloneOpsRuntimeId };
 
   const composeScope = requiredString(composeInput, "scope", "compose", reasons);
   const composeProject = requiredString(composeInput, "project", "compose", reasons);
@@ -1030,26 +1097,34 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   if (stages.artifact_copy.exit_code !== 0) reasons.push(errorReason("artifact_copy_failed", "Artifact collection stage did not exit successfully"));
 
   const events = readEvents(root, reasons);
-  let productTreeSha256 = expectedSource?.productTreeSha256 || null;
-  let fixtureOverlaySha256 = expectedSource?.fixtureOverlaySha256 || null;
-  if (expectedSource) {
-    if (!validDigest(productTreeSha256) || !validDigest(fixtureOverlaySha256)) {
-      reasons.push(errorReason("invalid_expected_preservation_identity", "Independent pair authority requires full product-tree and fixture-overlay SHA-256 digests"));
-    }
-  } else {
-    try {
-      productTreeSha256 = productTreeIdentity(REPOSITORY_ROOT);
-      fixtureOverlaySha256 = fixtureOverlayDigest(REPOSITORY_ROOT);
-    } catch (error) {
-      reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
-    }
+  const actualBrowserRecipe = events.find((event) => event.operation === "ui_preservation_case")?.clock_recipe?.browser;
+  if (!isRecord(actualBrowserRecipe) || actualBrowserRecipe.engine !== "chromium" || actualBrowserRecipe.package !== "@playwright/test" ||
+    !/^[0-9]+\.[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:[-+][0-9A-Za-z.-]+)?$/.test(actualBrowserRecipe.version || "") ||
+    actualBrowserRecipe.package_version !== packageVersion) {
+    reasons.push(errorReason("actual_browser_profile_missing", "Actual Chromium and installed Playwright versions must be observed by held-out browser cases"));
+  }
+  let productTreeSha256 = null;
+  let fixtureOverlaySha256 = null;
+  try {
+    productTreeSha256 = productTreeIdentity(REPOSITORY_ROOT);
+    fixtureOverlaySha256 = fixtureOverlayDigest(REPOSITORY_ROOT);
+  } catch (error) {
+    reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
+  }
+  if (expectedSource && (!validDigest(expectedSource.productTreeSha256) || !validDigest(expectedSource.fixtureOverlaySha256))) {
+    reasons.push(errorReason("invalid_expected_preservation_identity", "Independent pair authority requires full product-tree and fixture-overlay SHA-256 digests"));
+  }
+  if (expectedSource && (expectedSource.productTreeSha256 !== productTreeSha256 || expectedSource.fixtureOverlaySha256 !== fixtureOverlaySha256)) {
+    reasons.push(errorReason("expected_preservation_identity_mismatch", "Run product tree or test-only fixture overlay differs from the independent pair authority"));
   }
   const preservationCases = validatePreservationEvents(events, reconciliation, {
     runRoot: root,
     checkoutHead,
+    productSourceSha,
     productTreeSha256,
     fixtureOverlaySha256,
     applicationRuntimeId: images.application?.runtime_id,
+    standaloneOpsRuntimeId: images.standalone_ops?.runtime_id,
     browserRuntimeId: images.browser?.runtime_id,
     artifacts
   }, reasons);
@@ -1084,13 +1159,16 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   const source = {
     mode: sourceMode,
     checkout_head: checkoutHead,
+    product_source_sha: productSourceSha,
     dirty: typeof dirty === "boolean" ? dirty : null,
     event_sha: eventSha,
     built_source_sha: builtSourceSha,
     dirty_fingerprint: typeof sourceInput.dirty_fingerprint === "string" ? sourceInput.dirty_fingerprint : null
   };
   const compose = { scope: composeScope, project: composeProject, targets: [...new Set(targets)].sort(), model_digest: modelDigest };
-  const browser = { engine: browserEngine, version: browserVersion, package: packageName, package_version: packageVersion };
+  const browser = isRecord(actualBrowserRecipe)
+    ? { engine: actualBrowserRecipe.engine, version: actualBrowserRecipe.version, package: actualBrowserRecipe.package, package_version: actualBrowserRecipe.package_version }
+    : { engine: browserEngine, version: browserVersion, package: packageName, package_version: packageVersion };
   const runtimeStarted = Object.values(stages).map((stage) => Date.parse(stage.started_at || "")).filter(Number.isFinite);
   const runtimeEnded = Object.values(stages).map((stage) => Date.parse(stage.ended_at || "")).filter(Number.isFinite);
   const runtimeSeconds = runtimeStarted.length && runtimeEnded.length

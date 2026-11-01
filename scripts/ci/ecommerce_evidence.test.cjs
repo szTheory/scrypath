@@ -249,11 +249,14 @@ function createCompleteRun() {
     source: {
       mode: "hosted",
       checkout_head: SOURCE_SHA,
+      product_source_sha: SOURCE_SHA,
+      product_tree_sha256: null,
+      fixture_overlay_sha256: null,
       dirty: false,
       event_sha: SOURCE_SHA,
       built_source_sha: SOURCE_SHA
     },
-    images: { application: { ...image }, browser: { ...image } },
+    images: { application: { ...image }, standalone_ops: { built_id: IMAGE_ID, runtime_id: IMAGE_ID }, browser: { ...image } },
     compose: {
       scope: "full",
       project: "scrypath_ecommerce_verify_phase182",
@@ -289,12 +292,7 @@ function createCompleteRun() {
         copied: true,
         copy_status: "success"
       },
-      ...evidence.preservationCases.map(({ id }) => ({
-        path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${id.replaceAll(" ", "-")}.png`,
-        required: true,
-        copied: true,
-        copy_status: "success"
-      }))
+      { path: "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt", required: true, copied: true, copy_status: "success" }
     ],
     allowed_skips: [],
     first_failure: null
@@ -308,7 +306,34 @@ function createCompleteRun() {
   const evidenceEvents = [{ operation: "seed" }];
   const productTreeSha256 = evidence.productTreeIdentity(path.resolve(__dirname, "../.."));
   const fixtureOverlaySha256 = evidence.fixtureOverlayDigest(path.resolve(__dirname, "../.."));
+  manifest.source.product_tree_sha256 = productTreeSha256;
+  manifest.source.fixture_overlay_sha256 = fixtureOverlaySha256;
+  const clockBytes = Buffer.from("2026-10-31T12:00:00.000Z", "utf8");
+  const clockSha = `sha256:${crypto.createHash("sha256").update(clockBytes).digest("hex")}`;
+  const clockPath = "ui-review-artifacts/iteration3-journeys/phase185-held-out/phase185-clock.txt";
+  fs.writeFileSync(path.join(runDir, clockPath), clockBytes);
   const onePixelPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=", "base64");
+  const canonicalize = (value) => Array.isArray(value) ? value.map(canonicalize) : value && typeof value === "object"
+    ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, canonicalize(value[key])])) : value;
+  const hashJson = (value) => `sha256:${crypto.createHash("sha256").update(JSON.stringify(canonicalize(value))).digest("hex")}`;
+  const browserRecipe = { engine: "chromium", version: "140.0.0.0", package: "@playwright/test", package_version: "1.54.2" };
+  const fontProfile = { method: "retained-cdp-fixed-font-v1", fixed_font_family: "Liberation Mono", applied: "before-first-navigation", lifetime: "page-context" };
+  const profileSetup = { method: "retained-cdp-fixed-font-v1", font_families: { fixed: "Liberation Mono" }, applied: "before-first-navigation", lifetime: "page-context" };
+  const dataRecipe = { protocol: "phase185-heldout-deterministic-data-v1", seed_endpoint: "/dev/e2e/seed", operational_scenarios: ["all_green", "degraded", "incident", "empty"], saved_search_prefix: "phase185-heldout-", clock_sha256: clockSha };
+  const profileRecipe = { browser: browserRecipe, launch_args: ["--disable-partial-raster"], locale: "en-US", timezone: "UTC", device_scale_factor: 1, font_profile: fontProfile, font_profile_setup: profileSetup };
+  const profileSha = hashJson(profileRecipe);
+  const dataRecipeSha = hashJson(dataRecipe);
+  const clockRecipe = { ...profileRecipe, browser_date: { fixed: true, timers_running: true, timer_elapsed_ms: 40, observed: "2026-10-31T12:00:00.000Z" }, clock_sha256: clockSha, profile_sha256: profileSha, data_recipe_sha256: dataRecipeSha };
+  const recipeSha = hashJson(clockRecipe);
+  const runtime = {
+    application_image_id: IMAGE_ID,
+    standalone_ops_image_id: IMAGE_ID,
+    browser_image_id: IMAGE_ID,
+    effective_runtime_sha256: `sha256:${"d".repeat(64)}`,
+    browser_source_layer_id: `sha256:${"1".repeat(64)}`,
+    browser_base_layers_sha256: `sha256:${"2".repeat(64)}`
+  };
+  const imageArtifacts = [];
   for (const preservationCase of evidence.preservationCases) {
     const title = `${preservationCase.id} preserves held-out content and state`;
     const identity = evidence.caseIdentity({
@@ -316,40 +341,48 @@ function createCompleteRun() {
       project: "chromium",
       title_path: [path.posix.basename(preservationCase.file), title]
     });
-    const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}.png`;
-    fs.writeFileSync(path.join(runDir, imagePath), onePixelPng);
+    const widths = preservationCase.category === "overflow" ? [1440, 768, 390] : [1440];
+    const images = widths.map((width) => {
+      const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}-${width}.png`;
+      fs.writeFileSync(path.join(runDir, imagePath), onePixelPng);
+      imageArtifacts.push({ path: imagePath, required: true, copied: true, copy_status: "success" });
+      return { path: imagePath, sha256: crypto.createHash("sha256").update(onePixelPng).digest("hex"), viewport: { width, height: width === 390 ? 844 : 900 }, capture: "full-page-real-product-state" };
+    });
     const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_CAPTURE`;
     evidenceEvents.push({
       operation: "ui_preservation_case",
       case_id: preservationCase.id,
       test_identity: identity.key,
-      source_sha: SOURCE_SHA,
+      product_source_sha: SOURCE_SHA,
+      build_source_sha: SOURCE_SHA,
       product_tree_sha256: productTreeSha256,
       fixture_overlay_sha256: fixtureOverlaySha256,
-      runtime: {
-        application_image_id: IMAGE_ID,
-        browser_image_id: IMAGE_ID,
-        effective_runtime_sha256: `sha256:${"d".repeat(64)}`
-      },
-      recipe_sha256: `sha256:${"e".repeat(64)}`,
+      runtime,
+      recipe_sha256: recipeSha,
+      clock_recipe: clockRecipe,
+      data_recipe: dataRecipe,
       state: {
         element: preservationCase.element,
         category: preservationCase.category,
         route: "/",
         theme: "light",
+        color_scheme: "light",
         viewport: { width: 1440, height: 900 },
         scroll: { x: 0, y: 0 },
         focus: { name: "TEST_FIXTURE_ONLY" },
-        data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE"
+        data_identity: "TEST_FIXTURE_ONLY_NOT_A_REAL_CAPTURE",
+        clock: { browser_iso: "2026-10-31T12:00:00.000Z", server_iso: "2026-10-31T12:00:00.000Z", clock_sha256: clockSha }
       },
+      clock_artifact: { path: clockPath, sha256: crypto.createHash("sha256").update(clockBytes).digest("hex") },
       actions: ["TEST_FIXTURE_ONLY"],
       transport_sequence: [{ operation: "TEST_FIXTURE_ONLY", outcome: "TEST_FIXTURE_ONLY" }],
       geometry: [{ name: "TEST_FIXTURE_ONLY", x: 0, y: 0, width: 1, height: 1 }],
       assertions: [{ name: "TEST_FIXTURE_ONLY", status: "passed", actual: "TEST_FIXTURE_ONLY" }],
       visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
-      image: { path: imagePath, sha256: crypto.createHash("sha256").update(onePixelPng).digest("hex") }
+      images
     });
   }
+  manifest.artifacts.push(...imageArtifacts);
   fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${evidenceEvents.map((event) => JSON.stringify(event)).join("\n")}\n`);
   fs.writeFileSync(path.join(runDir, "admin-light-parity.json"), JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }));
   fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify(tokenContrastReport()));
@@ -423,6 +456,7 @@ test("independent pair authority can revalidate a source-bound bundle after chec
     const written = evidence.writeEvidence({ runDir });
     const expectedSource = {
       sourceSha: written.source.checkout_head,
+      buildSourceSha: written.source.checkout_head,
       productTreeSha256: written.preservation.product_tree_sha256,
       fixtureOverlaySha256: written.preservation.fixture_overlay_sha256
     };
@@ -739,7 +773,7 @@ test("a held-out receipt rejects altered copy, duplicate cases and image bytes",
     first.visible_copy[0].text += " changed";
     events.push({ ...first });
     fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
-    fs.writeFileSync(path.join(runDir, first.image.path), Buffer.from("tampered image"));
+    fs.writeFileSync(path.join(runDir, first.images[0].path), Buffer.from("tampered image"));
 
     const receipt = evidence.writeEvidence?.({ runDir });
     assert.equal(receipt?.eligibility.eligible, false);
@@ -753,7 +787,7 @@ test("a held-out receipt rejects altered copy, duplicate cases and image bytes",
 
 test("held-out receipts bind source, fixture, runtime, recipe, state, transport and measured geometry", () => {
   const mutations = [
-    ["source", (event) => { event.source_sha = "b".repeat(40); }, "preservation_source_mismatch"],
+    ["product source", (event) => { event.product_source_sha = "b".repeat(40); }, "preservation_source_mismatch"],
     ["tree", (event) => { event.product_tree_sha256 = `sha256:${"a".repeat(64)}`; }, "preservation_source_mismatch"],
     ["fixture", (event) => { event.fixture_overlay_sha256 = `sha256:${"a".repeat(64)}`; }, "preservation_fixture_mismatch"],
     ["runtime", (event) => { event.runtime.effective_runtime_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_runtime"],
@@ -770,6 +804,32 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
       const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
       const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
       mutate(events.find((event) => event.operation === "ui_preservation_case"));
+      fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
+      const receipt = evidence.writeEvidence({ runDir });
+      assert.equal(receipt.eligibility.eligible, false, label);
+      assert.ok(receipt.reasons.some((reason) => reason.code === expectedCode), label);
+    } finally {
+      fs.rmSync(runDir, { recursive: true, force: true });
+    }
+  }
+});
+
+test("held-out receipts reject a missing required viewport, mismatched clock, stopped timer or altered clock artifact", () => {
+  const mutations = [
+    ["missing overflow viewport", (event) => { event.images.pop(); }, "missing_preservation_viewport"],
+    ["browser clock differs from server", (event) => { event.state.clock.browser_iso = "2026-10-31T12:00:01.000Z"; }, "invalid_preservation_clock_recipe"],
+    ["timer witness absent", (event) => { event.clock_recipe.browser_date.timers_running = false; event.recipe_sha256 = `sha256:${"a".repeat(64)}`; }, "invalid_preservation_clock_recipe"],
+    ["clock artifact digest altered", (event) => { event.clock_artifact.sha256 = "a".repeat(64); }, "invalid_preservation_clock_artifact"]
+  ];
+  for (const [label, mutate, expectedCode] of mutations) {
+    const { runDir } = createCompleteRun();
+    try {
+      const eventsPath = path.join(runDir, "phase105-evidence.ndjson");
+      const events = fs.readFileSync(eventsPath, "utf8").trim().split(/\r?\n/).map((line) => JSON.parse(line));
+      const target = label === "missing overflow viewport"
+        ? events.find((event) => event.operation === "ui_preservation_case" && event.case_id.endsWith("overflow"))
+        : events.find((event) => event.operation === "ui_preservation_case");
+      mutate(target);
       fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
       const receipt = evidence.writeEvidence({ runDir });
       assert.equal(receipt.eligibility.eligible, false, label);
