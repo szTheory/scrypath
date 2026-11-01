@@ -12,6 +12,10 @@ const verificationTargetPath = pathToFileURL(
   path.resolve(__dirname, "../../examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs"),
 ).href;
 const verificationTarget = import(verificationTargetPath);
+const axeScanPath = pathToFileURL(
+  path.resolve(__dirname, "../../examples/scrypath_ecommerce/e2e/helpers/axe-scan.mjs"),
+).href;
+const axeScan = import(axeScanPath);
 
 const followupSource = path.resolve(
   __dirname,
@@ -174,4 +178,173 @@ aggregate_full_evidence
   assert.equal(result.status, 76, result.stderr);
   assert.match(result.stderr, /complete.*runtime identity/i);
   assert.doesNotMatch(result.stderr, /unbound variable|unexpected-docker/);
+});
+
+function fakeFramePage({ frames = 1, iframeCount = 0, duringIframeCount } = {}) {
+  const { EventEmitter } = require("node:events");
+  const page = new EventEmitter();
+  const mainFrame = {};
+  page.frames = () => [mainFrame, ...Array.from({ length: frames - 1 }, () => ({}))];
+  page.mainFrame = () => mainFrame;
+  page.locator = (selector) => {
+    assert.equal(selector, "iframe, frame");
+    return {
+      count: async () => {
+        if (duringIframeCount) await duringIframeCount(page);
+        return iframeCount;
+      },
+    };
+  };
+  return page;
+}
+
+test("frame-free Axe scan may use legacy mode and returns the scan result", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage();
+  const calls = [];
+
+  const result = await scanWithFrameSafeLegacy(page, async (legacyMode) => {
+    calls.push(legacyMode);
+    return { violations: [] };
+  });
+
+  assert.deepEqual(calls, [true]);
+  assert.deepEqual(result, { violations: [] });
+  assert.equal(page.listenerCount("frameattached"), 0);
+  assert.equal(page.listenerCount("framedetached"), 0);
+});
+
+test("missing Playwright frame APIs keep the normal Axe path", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const calls = [];
+  const result = await scanWithFrameSafeLegacy({}, async (legacyMode) => {
+    calls.push(legacyMode);
+    return "modern result";
+  });
+  assert.deepEqual(calls, [false]);
+  assert.equal(result, "modern result");
+});
+
+test("existing DOM or nested frames keep Axe on its modern path", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  for (const page of [fakeFramePage({ iframeCount: 1 }), fakeFramePage({ frames: 3 })]) {
+    const calls = [];
+    await scanWithFrameSafeLegacy(page, async (legacyMode) => calls.push(legacyMode));
+    assert.deepEqual(calls, [false]);
+    assert.equal(page.listenerCount("frameattached"), 0);
+    assert.equal(page.listenerCount("framedetached"), 0);
+  }
+});
+
+test("frame attach-detach during initial DOM check prevents legacy mode", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage({
+    duringIframeCount: async (target) => {
+      target.emit("frameattached", {});
+      target.emit("framedetached", {});
+    },
+  });
+  const calls = [];
+
+  await scanWithFrameSafeLegacy(page, async (legacyMode) => calls.push(legacyMode));
+
+  assert.deepEqual(calls, [false]);
+});
+
+test("frame event during legacy scan discards its result and reruns modern", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage();
+  const calls = [];
+
+  const result = await scanWithFrameSafeLegacy(page, async (legacyMode) => {
+    calls.push(["AA", legacyMode]);
+    if (legacyMode) page.emit("frameattached", {});
+    calls.push(["AAA", legacyMode]);
+    return { mode: legacyMode };
+  });
+
+  assert.deepEqual(calls, [["AA", true], ["AAA", true], ["AA", false], ["AAA", false]]);
+  assert.deepEqual(result, { mode: false });
+});
+
+test("legacy failure retries the complete scan in modern mode", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage();
+  const calls = [];
+  const legacyError = new Error("legacy scan failed");
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args);
+
+  let result;
+  try {
+    result = await scanWithFrameSafeLegacy(page, async (legacyMode) => {
+      calls.push(legacyMode);
+      if (legacyMode) throw legacyError;
+      return { mode: legacyMode };
+    });
+  } finally {
+    console.warn = originalWarn;
+  }
+  assert.deepEqual(calls, [true, false]);
+  assert.deepEqual(result, { mode: false });
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0][0], /legacy scan failed.*modern frame scanner/i);
+  assert.equal(warnings[0][1], legacyError);
+
+  const stablePage = fakeFramePage();
+  const stableError = new Error("actual Axe failure");
+  const originalStableWarn = console.warn;
+  console.warn = () => {};
+  let recoverable;
+  try {
+    recoverable = await scanWithFrameSafeLegacy(stablePage, async (legacyMode) => {
+      if (legacyMode) throw stableError;
+      return { mode: "modern" };
+    });
+  } finally {
+    console.warn = originalStableWarn;
+  }
+  assert.deepEqual(recoverable, { mode: "modern" });
+  assert.equal(stablePage.listenerCount("frameattached"), 0);
+  assert.equal(stablePage.listenerCount("framedetached"), 0);
+});
+
+test("modern error remains authoritative when both legacy and modern scans fail", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage();
+  const calls = [];
+  const legacyError = new Error("legacy scan failed");
+  const modernError = new Error("modern scan failed");
+  const originalWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    await assert.rejects(
+      scanWithFrameSafeLegacy(page, async (legacyMode) => {
+        calls.push(legacyMode);
+        throw legacyMode ? legacyError : modernError;
+      }),
+      (error) => error === modernError,
+    );
+  } finally {
+    console.warn = originalWarn;
+  }
+
+  assert.deepEqual(calls, [true, false]);
+  assert.equal(page.listenerCount("frameattached"), 0);
+  assert.equal(page.listenerCount("framedetached"), 0);
+});
+
+test("modern fallback errors propagate and frame listeners are cleaned up", async () => {
+  const { scanWithFrameSafeLegacy } = await axeScan;
+  const page = fakeFramePage({ iframeCount: 1 });
+  const requiredError = new Error("required modern scan failed");
+
+  await assert.rejects(
+    scanWithFrameSafeLegacy(page, async () => { throw requiredError; }),
+    (error) => error === requiredError,
+  );
+  assert.equal(page.listenerCount("frameattached"), 0);
+  assert.equal(page.listenerCount("framedetached"), 0);
 });

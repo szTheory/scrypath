@@ -1,5 +1,6 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Locator, type Page, type TestInfo } from "@playwright/test";
+import { scanWithFrameSafeLegacy } from "./axe-scan.mjs";
 
 export async function assertOperatorGeometry(
   page: Page,
@@ -105,10 +106,14 @@ export async function scanNonContrastA11y(
   testInfo: TestInfo,
   label: string
 ): Promise<void> {
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .disableRules(["color-contrast"])
-    .analyze();
+  const results = await scanWithFrameSafeLegacy(page, async (legacyMode: boolean) => {
+    const builder = new AxeBuilder({ page });
+    if (legacyMode && typeof builder.setLegacyMode === "function") builder.setLegacyMode();
+    return builder
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .disableRules(["color-contrast"])
+      .analyze();
+  });
   const report = {
     label,
     source_sha: process.env.SCRYPATH_SOURCE_SHA || process.env.GITHUB_SHA || "unknown",
