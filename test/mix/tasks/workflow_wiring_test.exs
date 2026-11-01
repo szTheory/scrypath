@@ -886,8 +886,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert start_clock =~ "GITHUB_SHA"
       assert start_clock =~ "E2E_FINALIZATION_MARGIN_SECONDS=300"
 
-      assert job =~
-               "E2E_PHASE185_CLOCK_PATH: ${{ runner.temp }}/phase185-clock-${{ github.run_id }}-${{ github.run_attempt }}.txt"
+      assert start_clock =~
+               ~s|echo "E2E_PHASE185_CLOCK_PATH=$RUNNER_TEMP/phase185-clock-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.txt" >> "$GITHUB_ENV"|
 
       assert prepare =~ "ecommerce_build.cjs prepare --scope full"
       assert verify =~ "id: ecommerce_verify"

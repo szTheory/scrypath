@@ -641,8 +641,6 @@ jobs:
       E2E_EVENT_NAME: ${{ github.event_name }}
       E2E_PROJECT_NAME: scrypath-e2e-${{ github.run_id }}-${{ github.run_attempt }}-full
       E2E_SCOPE: full
-      # Keep the prebuild model and verifier handoff on one path; the verifier creates the clock bytes.
-      E2E_PHASE185_CLOCK_PATH: ${{ runner.temp }}/phase185-clock-${{ github.run_id }}-${{ github.run_attempt }}.txt
       SCRYPATH_SOURCE_SHA: ${{ github.sha }}
       MIX_ENV: test
       MIX_TARGET: host
@@ -661,6 +659,8 @@ jobs:
           E2E_JOB_STARTED_EPOCH=$(date -u +%s)
           E2E_DEADLINE_EPOCH=$((E2E_JOB_STARTED_EPOCH + 1800))
           E2E_FINALIZATION_MARGIN_SECONDS=300
+          # Share one runner-local path across prebuild and verification; the verifier creates the clock bytes.
+          echo "E2E_PHASE185_CLOCK_PATH=$RUNNER_TEMP/phase185-clock-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.txt" >> "$GITHUB_ENV"
           {
             echo "E2E_JOB_STARTED_AT=$E2E_JOB_STARTED_AT"
             echo "E2E_JOB_STARTED_EPOCH=$E2E_JOB_STARTED_EPOCH"
