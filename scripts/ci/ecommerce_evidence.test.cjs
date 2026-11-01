@@ -17,6 +17,21 @@ try {
   if (error.code !== "MODULE_NOT_FOUND") throw error;
 }
 
+test("evidence metadata loads without installing browser PNG dependencies", () => {
+  const modulePath = path.join(__dirname, "ecommerce_evidence.cjs");
+  const result = spawnSync(process.execPath, ["-e", `
+    const Module = require('node:module');
+    const load = Module._load;
+    Module._load = function(request, ...args) {
+      if (request.includes('node_modules/pngjs')) throw new Error('browser dependencies unavailable');
+      return load.call(this, request, ...args);
+    };
+    const evidence = require(process.argv[1]);
+    if (evidence.preservationCases.length !== 61) process.exit(2);
+  `, modulePath], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+});
+
 function testCase({ file = "e2e/example.spec.ts", project = "chromium", title, expectedStatus = "passed", suiteTitle }) {
   return { file, project, title, expectedStatus, suiteTitle };
 }

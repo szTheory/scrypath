@@ -5,7 +5,6 @@ const rawBundle = require("./ui_preservation_bundle.cjs");
 const crypto = require("node:crypto");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
-const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
 const REPOSITORY_ROOT = path.resolve(__dirname, "../..");
 const MAX_CASES = 50000;
@@ -1136,6 +1135,9 @@ function pngDimensions(bytes, label = "PNG") {
     width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION || width * height > MAX_IMAGE_PIXELS) {
     throw new RangeError(`${label} dimensions exceed the bounded image policy`);
   }
+  // Metadata and historical receipt tools also run in clean, Node-free
+  // consumer copies. Only actual image validation needs the browser package.
+  const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
   const decoded = PNG.sync.read(bytes);
   if (decoded.width !== width || decoded.height !== height) throw new TypeError(`${label} decoded dimensions disagree with its PNG header`);
   return { width, height };
