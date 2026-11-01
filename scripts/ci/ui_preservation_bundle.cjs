@@ -54,7 +54,6 @@ function decodeBundle(bytes, limits = LIMITS) {
 function encodeBundle(entries, limits = LIMITS) {
   if (!Array.isArray(entries) || entries.length === 0 || entries.length > limits.members) throw new Error("Invalid raw PNG bundle member count");
   const names = new Set();
-  const serialized = [];
   let total = 0;
   for (const { path: name, bytes } of entries) {
     memberPath(name);
@@ -63,8 +62,9 @@ function encodeBundle(entries, limits = LIMITS) {
     names.add(name);
     total += bytes.length;
     if (total > limits.expanded) throw new Error("Raw PNG bundle exceeds expanded byte bound");
-    serialized.push({ path: name, sha256: sha256(bytes), size_bytes: bytes.length, bytes_base64: bytes.toString("base64") });
   }
+  assertSerializedBound(entries.map(({ path, bytes }) => ({ path, size_bytes: bytes.length })), limits);
+  const serialized = entries.map(({ path, bytes }) => ({ path, sha256: sha256(bytes), size_bytes: bytes.length, bytes_base64: bytes.toString("base64") }));
   serialized.sort((a, b) => a.path.localeCompare(b.path));
   const json = Buffer.from(JSON.stringify({ schema: SCHEMA, entries: serialized }));
   if (json.length > limits.expanded) throw new Error("Raw PNG bundle exceeds expanded byte bound");
@@ -72,6 +72,15 @@ function encodeBundle(entries, limits = LIMITS) {
   const decoded = decodeBundle(packed, limits);
   for (const entry of entries) if (!decoded.get(entry.path).equals(entry.bytes)) throw new Error("Raw PNG packaging roundtrip differs");
   return packed;
+}
+
+function assertSerializedBound(entries, limits = LIMITS) {
+  let size = Buffer.byteLength(JSON.stringify({ schema: SCHEMA, entries: [] }));
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index];
+    size += Buffer.byteLength(JSON.stringify({ path: entry.path, sha256: "0".repeat(64), size_bytes: entry.size_bytes, bytes_base64: "" })) + Math.ceil(entry.size_bytes / 3) * 4 + (index ? 1 : 0);
+    if (size > limits.expanded) throw new Error("Raw PNG bundle exceeds expanded byte bound before reading/encoding members");
+  }
 }
 
 function writeExclusive(target, entries) {
@@ -132,20 +141,43 @@ function packRun(runRoot) {
   }
   if (!expected.size || expected.size > LIMITS.members) throw new Error("No bounded raw PNG event inventory");
   const staging = path.join(root, STAGING_PATH);
-  const files = [];
-  function walk(directory, relative = "") {
+  function directoryEntries(directory, limit, visit) {
     const stat = fs.lstatSync(directory);
     if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error("Raw PNG staging directories must not be symlinks");
-    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-      const name = path.posix.join(relative, entry.name);
-      if (entry.isSymbolicLink()) throw new Error("Raw PNG staging must not contain symlinks");
-      if (entry.isDirectory()) walk(path.join(directory, entry.name), name);
-      else if (entry.isFile()) files.push(memberPath(name));
-      else throw new Error("Raw PNG staging must contain regular files only");
-    }
+    const dir = fs.opendirSync(directory);
+    let count = 0;
+    try {
+      let entry;
+      while ((entry = dir.readSync()) !== null) {
+        if (++count > limit) throw new Error("Raw PNG staging exceeds its expected entry bound");
+        visit(entry);
+      }
+    } finally { dir.closeSync(); }
+    return count;
   }
-  walk(staging);
-  if (files.length !== expected.size || files.some((name) => !expected.has(name))) throw new Error("Staged raw PNGs differ from the observed event inventory");
+  let directory = staging;
+  for (const component of PREFIX.split("/").filter(Boolean)) {
+    const count = directoryEntries(directory, 1, (entry) => {
+      if (entry.name !== component || !entry.isDirectory() || entry.isSymbolicLink()) throw new Error("Unexpected raw PNG staging directory");
+    });
+    if (count !== 1) throw new Error("Missing raw PNG staging directory");
+    directory = path.join(directory, component);
+  }
+  const files = [];
+  directoryEntries(directory, expected.size, (entry) => {
+    if (!entry.isFile() || entry.isSymbolicLink()) throw new Error("Raw PNG staging must contain regular files only");
+    const name = memberPath(`${PREFIX}${entry.name}`);
+    if (!expected.has(name)) throw new Error("Unobserved raw PNG staging member");
+    files.push(name);
+  });
+  if (files.length !== expected.size) throw new Error("Staged raw PNGs differ from the observed event inventory");
+  const metadata = files.map((name) => {
+    const stat = fs.lstatSync(path.join(staging, name));
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > LIMITS.compressed) throw new Error("Raw bundle input must be a bounded regular file");
+    return { path: name, size_bytes: stat.size };
+  });
+  // Bound the complete serialized allocation before reading any PNG body.
+  assertSerializedBound(metadata);
   const entries = files.map((name) => {
     const bytes = readRegular(path.join(staging, name), LIMITS.compressed);
     if (sha256(bytes) !== expected.get(name)) throw new Error("Staged raw PNG hash differs from its observed receipt");

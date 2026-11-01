@@ -74,7 +74,7 @@ test("run packaging joins real staged bytes to observed paths and hashes", (t) =
 });
 
 test("run packaging rejects unobserved, missing, tampered and symlinked staging", (t) => {
-  for (const failure of ["extra", "missing", "tampered", "symlink", "reused"]) {
+  for (const failure of ["extra", "missing", "tampered", "symlink", "reused", "empty-directory"]) {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), "p185-pack-negative-"));
     t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
     const imagePath = path.join(directory, bundle.STAGING_PATH, name);
@@ -87,10 +87,30 @@ test("run packaging rejects unobserved, missing, tampered and symlinked staging"
     if (failure === "tampered") fs.writeFileSync(imagePath, "changed");
     if (failure === "symlink") { fs.unlinkSync(imagePath); fs.symlinkSync(__filename, imagePath); }
     if (failure === "reused") observations.push({ images: [image] });
+    if (failure === "empty-directory") fs.mkdirSync(path.join(path.dirname(imagePath), "unobserved-empty"));
     fs.writeFileSync(path.join(directory, "phase105-evidence.ndjson"), `${JSON.stringify({ operation: "ui_preservation_case", observations })}\n`);
     assert.throws(() => bundle.packRun(directory), undefined, failure);
     assert.equal(fs.existsSync(path.join(directory, bundle.BUNDLE_PATH)), false);
   }
+});
+
+test("aggregate staged size is rejected before any member body/hash is read", (t) => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "p185-pack-size-"));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const images = [];
+  for (let index = 0; index < 5; index++) {
+    const name = `${bundle.PREFIX}oversized-${index}.png`;
+    const file = path.join(directory, bundle.STAGING_PATH, name);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const fd = fs.openSync(file, "wx");
+    fs.writeSync(fd, png.subarray(0, 8));
+    fs.ftruncateSync(fd, 64 * 1024 * 1024);
+    fs.closeSync(fd);
+    images.push({ path: name, sha256: "0".repeat(64) });
+  }
+  fs.writeFileSync(path.join(directory, "phase105-evidence.ndjson"), JSON.stringify({ operation: "ui_preservation_case", observations: [{ images }] }) + "\n");
+  assert.throws(() => bundle.packRun(directory), /expanded byte bound before reading/);
+  assert.equal(fs.existsSync(path.join(directory, bundle.BUNDLE_PATH)), false);
 });
 
 test("bundle readers reject a symlinked artifact parent", (t) => {
