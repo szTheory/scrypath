@@ -103,6 +103,44 @@ defmodule Mix.Tasks.UiTokensContractTest do
     File.rm_rf!(temp)
   end
 
+  test "bounded validator rejects malformed token nodes and unknown token properties" do
+    {json_file, css_file, temp} = fixture_paths!()
+    on_exit(fn -> File.rm_rf!(temp) end)
+    File.cp!(Path.join(@root, @css_path), css_file)
+    tokens = read_tokens!(@root)
+
+    malformed_node = put_in(tokens, ["space", "review"], "not a token or group")
+
+    assert_rejected!(
+      malformed_node,
+      json_file,
+      css_file,
+      ~r/group or token must be an object/
+    )
+
+    unknown_property =
+      put_in(tokens, ["space", "review"], %{
+        "$value" => %{"value" => 12, "unit" => "px"},
+        "unexpected" => true
+      })
+
+    assert_rejected!(
+      unknown_property,
+      json_file,
+      css_file,
+      ~r/unsupported properties.*unexpected/
+    )
+
+    json = File.read!(Path.join(@root, @token_path))
+    oversized_number = String.replace(json, "0.047058823529411764", "1e999", global: false)
+    refute oversized_number == json
+    File.write!(json_file, oversized_number)
+
+    assert_raise Mix.Error, fn ->
+      Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
+    end
+  end
+
   test "bounded validator rejects CSS key, expression, and typed-value drift" do
     json = File.read!(Path.join(@root, @token_path))
     css = File.read!(Path.join(@root, @css_path))
@@ -423,6 +461,14 @@ defmodule Mix.Tasks.UiTokensContractTest do
     root = css |> css_block!(":root") |> css_variables!()
     dark = css |> css_block!(~s|[data-theme="dark"]|) |> css_variables!()
 
+    assert_brand_colors!(tokens, root, dark)
+    assert_brand_fonts!(tokens, root)
+    assert_brand_scales!(tokens, root)
+    assert_brand_shadows!(tokens)
+    assert_brand_motion!(tokens, root)
+  end
+
+  defp assert_brand_colors!(tokens, root, dark) do
     for {name, token} <- tokens["color"]["primitive"] do
       assert brand_color!(tokens, "color.primitive.#{name}") ==
                String.downcase(root["--sp-#{name}"])
@@ -441,7 +487,9 @@ defmodule Mix.Tasks.UiTokensContractTest do
       assert brand_color!(tokens, "color.status.#{name}") == String.downcase(root["--sp-#{name}"])
       assert token["$type"] == "color"
     end
+  end
 
+  defp assert_brand_fonts!(tokens, root) do
     for {name, token} <- Map.drop(tokens["font"]["family"], ["$type"]) do
       css_family =
         root["--sp-font-#{name}"]
@@ -463,7 +511,9 @@ defmodule Mix.Tasks.UiTokensContractTest do
              {name, token["$value"]}
            end) ==
              %{"regular" => 400, "medium" => 500, "semibold" => 600, "bold" => 700}
+  end
 
+  defp assert_brand_scales!(tokens, root) do
     for {name, token} <- Map.drop(tokens["space"], ["$type"]) do
       assert_dimension!(token["$value"], root["--sp-#{name}"])
     end
@@ -471,7 +521,9 @@ defmodule Mix.Tasks.UiTokensContractTest do
     for {name, token} <- Map.drop(tokens["radius"], ["$type"]) do
       assert_dimension!(token["$value"], root["--sp-radius-#{name}"])
     end
+  end
 
+  defp assert_brand_shadows!(tokens) do
     for {name, modes} <- Map.drop(tokens["shadow"], ["$type"]),
         {mode, css} <- @legacy_shadows[name] do
       token =
@@ -481,7 +533,9 @@ defmodule Mix.Tasks.UiTokensContractTest do
 
       assert_shadow!(token, css)
     end
+  end
 
+  defp assert_brand_motion!(tokens, root) do
     for {name, token} <- Map.drop(tokens["motion"]["duration"], ["$type"]) do
       assert_duration!(token["$value"], root["--sp-dur-#{name}"])
     end

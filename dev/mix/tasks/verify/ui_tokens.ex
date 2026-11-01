@@ -70,36 +70,28 @@ defmodule Mix.Tasks.Verify.UiTokens do
 
   defp bound_json_depth!(text) do
     for <<char <- text>>, reduce: {0, false, false} do
-      {depth, quoted, escaped} ->
-        cond do
-          escaped ->
-            {depth, quoted, false}
-
-          quoted and char == ?\\ ->
-            {depth, quoted, true}
-
-          char == ?" ->
-            {depth, not quoted, false}
-
-          quoted ->
-            {depth, quoted, false}
-
-          char in [?{, ?[] ->
-            if depth >= @max_json_depth,
-              do: raise(ArgumentError, "JSON nesting exceeds #{@max_json_depth}")
-
-            {depth + 1, false, false}
-
-          char in [?}, ?]] ->
-            {depth - 1, false, false}
-
-          true ->
-            {depth, false, false}
-        end
+      state -> advance_json_depth!(state, char)
     end
 
     text
   end
+
+  defp advance_json_depth!({depth, quoted, true}, _char), do: {depth, quoted, false}
+  defp advance_json_depth!({depth, true, false}, ?\\), do: {depth, true, true}
+  defp advance_json_depth!({depth, quoted, false}, ?"), do: {depth, not quoted, false}
+  defp advance_json_depth!({depth, true, false}, _char), do: {depth, true, false}
+
+  defp advance_json_depth!({depth, false, false}, char) when char in [?{, ?[] do
+    if depth >= @max_json_depth,
+      do: raise(ArgumentError, "JSON nesting exceeds #{@max_json_depth}")
+
+    {depth + 1, false, false}
+  end
+
+  defp advance_json_depth!({depth, false, false}, char) when char in [?}, ?]],
+    do: {depth - 1, false, false}
+
+  defp advance_json_depth!({depth, false, false}, _char), do: {depth, false, false}
 
   defp normalize_json!(%Jason.OrderedObject{values: pairs}, path) do
     keys = Enum.map(pairs, &elem(&1, 0))
@@ -276,37 +268,45 @@ defmodule Mix.Tasks.Verify.UiTokens do
     do: raise(ArgumentError, "#{path}: expected a typed group")
 
   defp resolve_token!(path, tokens, stack) do
+    validate_alias_chain!(path, stack)
+    resolve_token_value!(path, tokens[path], tokens, stack)
+  end
+
+  defp validate_alias_chain!(path, stack) do
     if length(stack) >= @max_alias_depth,
       do: raise(ArgumentError, "#{path}: alias depth exceeds #{@max_alias_depth}")
 
     if path in stack do
       raise ArgumentError, "#{path}: token reference cycle: #{Enum.join(stack ++ [path], " -> ")}"
     end
+  end
 
-    case tokens[path] do
+  defp resolve_token_value!(path, nil, _tokens, _stack),
+    do: raise(ArgumentError, "#{path}: unresolved token reference")
+
+  defp resolve_token_value!(path, %{value: value, type: type}, tokens, stack) do
+    case value do
+      <<"{", reference::binary-size(byte_size(value) - 2), "}">> ->
+        resolve_token_reference!(path, reference, type, tokens, stack)
+
+      value ->
+        value
+    end
+  end
+
+  defp resolve_token_reference!(path, reference, type, tokens, stack) do
+    target = resolve_path!(reference, path)
+
+    case tokens[target] do
       nil ->
-        raise ArgumentError, "#{path}: unresolved token reference"
+        raise ArgumentError, "#{path}: unresolved token reference #{inspect(reference)}"
 
-      %{value: value, type: type} ->
-        case value do
-          <<"{", reference::binary-size(byte_size(value) - 2), "}">> ->
-            target = resolve_path!(reference, path)
+      %{type: ^type} ->
+        resolve_token!(target, tokens, stack ++ [path])
 
-            case tokens[target] do
-              nil ->
-                raise ArgumentError, "#{path}: unresolved token reference #{inspect(reference)}"
-
-              %{type: ^type} ->
-                resolve_token!(target, tokens, stack ++ [path])
-
-              %{type: target_type} ->
-                raise ArgumentError,
-                      "#{path}: #{type} reference cannot target #{target_type} token #{target}"
-            end
-
-          value ->
-            value
-        end
+      %{type: target_type} ->
+        raise ArgumentError,
+              "#{path}: #{type} reference cannot target #{target_type} token #{target}"
     end
   end
 
@@ -581,24 +581,7 @@ defmodule Mix.Tasks.Verify.UiTokens do
            expression
          ) do
       [_, reference_name, percent] ->
-        expected_reference = "{ops.#{theme}.#{String.trim_leading(reference_name, "--")}}"
-        reference = extension["reference"]
-
-        unless reference == expected_reference do
-          raise ArgumentError, "#{path}: muted color must map to #{expected_reference}"
-        end
-
-        target_path = String.slice(expected_reference, 1, byte_size(expected_reference) - 2)
-        target = resolve_token!(target_path, tokens, [])
-        expected_alpha = parse_number!(percent, path) / 100
-
-        unless is_map(target) and is_map(value) and value["colorSpace"] == target["colorSpace"] and
-                 close_components?(value["components"], target["components"]) and
-                 String.downcase(value["hex"]) == String.downcase(target["hex"]) and
-                 value["alpha"] == expected_alpha do
-          raise ArgumentError,
-                "#{path}: typed muted color must preserve the referenced color at alpha #{expected_alpha}"
-        end
+        compare_muted_color!(reference_name, percent, value, extension, theme, tokens, path)
 
       _ ->
         raise ArgumentError, "#{path}: unsupported color-mix expression"
@@ -620,6 +603,26 @@ defmodule Mix.Tasks.Verify.UiTokens do
 
         unless value == expected,
           do: raise(ArgumentError, "#{path}: typed number does not match CSS #{expression}")
+    end
+  end
+
+  defp compare_muted_color!(reference_name, percent, value, extension, theme, tokens, path) do
+    expected_reference = "{ops.#{theme}.#{String.trim_leading(reference_name, "--")}}"
+
+    unless extension["reference"] == expected_reference do
+      raise ArgumentError, "#{path}: muted color must map to #{expected_reference}"
+    end
+
+    target_path = String.slice(expected_reference, 1, byte_size(expected_reference) - 2)
+    target = resolve_token!(target_path, tokens, [])
+    expected_alpha = parse_number!(percent, path) / 100
+
+    unless is_map(target) and is_map(value) and value["colorSpace"] == target["colorSpace"] and
+             close_components?(value["components"], target["components"]) and
+             String.downcase(value["hex"]) == String.downcase(target["hex"]) and
+             value["alpha"] == expected_alpha do
+      raise ArgumentError,
+            "#{path}: typed muted color must preserve the referenced color at alpha #{expected_alpha}"
     end
   end
 
@@ -660,71 +663,105 @@ defmodule Mix.Tasks.Verify.UiTokens do
   defp active_css_theme_blocks!(css) do
     {depth, _pending, _start, blocks, _boundary} =
       Regex.scan(@css_lexeme, css, return: :index)
-      |> Enum.reduce({0, nil, nil, [], 0}, fn [{index, size}],
-                                              {depth, pending, start, blocks, boundary} = state ->
-        part = binary_part(css, index, size)
-
-        cond do
-          String.starts_with?(part, "/*") ->
-            unless String.ends_with?(part, "*/"),
-              do: raise(ArgumentError, "CSS has an unterminated comment")
-
-            state
-
-          String.starts_with?(part, "\"") ->
-            unless Regex.match?(~r/\A"(?:\\[\s\S]|[^"\\])*"\z/u, part),
-              do: raise(ArgumentError, "CSS has an unterminated string")
-
-            state
-
-          String.starts_with?(part, "'") ->
-            unless Regex.match?(~r/\A'(?:\\[\s\S]|[^'\\])*'\z/u, part),
-              do: raise(ArgumentError, "CSS has an unterminated string")
-
-            state
-
-          part == "@plugin" and depth == 0 ->
-            remaining = binary_part(css, index, byte_size(css) - index)
-            prefix = binary_part(css, boundary, index - boundary)
-
-            prefix =
-              Regex.replace(@css_lexeme, prefix, fn token ->
-                if String.starts_with?(token, "/*"), do: " ", else: token
-              end)
-
-            header =
-              if String.trim(prefix) == "",
-                do: Regex.run(~r/\A@plugin\s+"\.\.\/vendor\/daisyui-theme"\s*\{/u, remaining)
-
-            case header do
-              [header] -> {depth, index + byte_size(header) - 1, start, blocks, boundary}
-              nil -> state
-            end
-
-          part == "{" ->
-            {depth + 1, nil, if(depth == 0 and pending == index, do: index + 1, else: start),
-             blocks, boundary}
-
-          part == "}" ->
-            if depth == 0, do: raise(ArgumentError, "CSS has an unmatched closing block")
-
-            if depth == 1 and is_integer(start) do
-              {0, nil, nil, [binary_part(css, start, index - start) | blocks], index + size}
-            else
-              {depth - 1, nil, start, blocks, if(depth == 1, do: index + size, else: boundary)}
-            end
-
-          part == ";" and depth == 0 ->
-            {depth, nil, start, blocks, index + size}
-
-          true ->
-            state
-        end
+      |> Enum.reduce({0, nil, nil, [], 0}, fn [{index, size}], state ->
+        advance_css_lexeme!(css, index, size, state)
       end)
 
     unless depth == 0, do: raise(ArgumentError, "CSS has an unterminated block")
     Enum.reverse(blocks)
   end
+
+  defp advance_css_lexeme!(
+         css,
+         index,
+         size,
+         {_depth, _pending, _start, _blocks, _boundary} = state
+       ) do
+    part = binary_part(css, index, size)
+
+    cond do
+      String.starts_with?(part, "/*") ->
+        validate_css_comment!(part)
+        state
+
+      String.starts_with?(part, ["\"", "'"]) ->
+        validate_css_string!(part)
+        state
+
+      true ->
+        advance_css_structure_token!(css, index, size, part, state)
+    end
+  end
+
+  defp advance_css_structure_token!(
+         css,
+         index,
+         size,
+         part,
+         {depth, _pending, _start, _blocks, _boundary} = state
+       ) do
+    cond do
+      part == "@plugin" and depth == 0 -> start_theme_block(css, index, state)
+      part == "{" -> open_css_block(index, state)
+      part == "}" -> close_css_block(css, index, size, state)
+      part == ";" and depth == 0 -> advance_css_boundary(index, size, state)
+      true -> state
+    end
+  end
+
+  defp validate_css_comment!(part) do
+    unless String.ends_with?(part, "*/"),
+      do: raise(ArgumentError, "CSS has an unterminated comment")
+  end
+
+  defp validate_css_string!(part) do
+    pattern =
+      if String.starts_with?(part, "\""),
+        do: ~r/\A"(?:\\[\s\S]|[^"\\])*"\z/u,
+        else: ~r/\A'(?:\\[\s\S]|[^'\\])*'\z/u
+
+    unless Regex.match?(pattern, part), do: raise(ArgumentError, "CSS has an unterminated string")
+  end
+
+  defp start_theme_block(css, index, {depth, _pending, start, blocks, boundary} = state) do
+    remaining = binary_part(css, index, byte_size(css) - index)
+    prefix = binary_part(css, boundary, index - boundary)
+
+    prefix =
+      Regex.replace(@css_lexeme, prefix, fn token ->
+        if String.starts_with?(token, "/*"), do: " ", else: token
+      end)
+
+    if String.trim(prefix) == "" do
+      case Regex.run(~r/\A@plugin\s+"\.\.\/vendor\/daisyui-theme"\s*\{/u, remaining) do
+        [header] -> {depth, index + byte_size(header) - 1, start, blocks, boundary}
+        nil -> state
+      end
+    else
+      state
+    end
+  end
+
+  defp open_css_block(index, {depth, pending, start, blocks, boundary}) do
+    start = if depth == 0 and pending == index, do: index + 1, else: start
+    {depth + 1, nil, start, blocks, boundary}
+  end
+
+  defp close_css_block(_css, _index, _size, {0, _pending, _start, _blocks, _boundary}),
+    do: raise(ArgumentError, "CSS has an unmatched closing block")
+
+  defp close_css_block(css, index, size, {1, _pending, start, blocks, _boundary})
+       when is_integer(start) do
+    {0, nil, nil, [binary_part(css, start, index - start) | blocks], index + size}
+  end
+
+  defp close_css_block(_css, index, size, {depth, _pending, start, blocks, boundary}) do
+    boundary = if depth == 1, do: index + size, else: boundary
+    {depth - 1, nil, start, blocks, boundary}
+  end
+
+  defp advance_css_boundary(index, size, {depth, _pending, start, blocks, _boundary}),
+    do: {depth, nil, start, blocks, index + size}
 
   defp theme_name!(body) do
     case Regex.scan(~r/^\s*name:\s*([^;{}]+);/m, body, capture: :all_but_first) do
@@ -831,9 +868,6 @@ defmodule Mix.Tasks.Verify.UiTokens do
     if extra != [], do: raise(ArgumentError, "#{path}: unsupported properties #{inspect(extra)}")
   end
 
-  defp assert_subset_keys!(_map, _allowed, path),
-    do: raise(ArgumentError, "#{path}: expected an object")
-
   defp assert_group_metadata!(map, path) when is_map(map) do
     unknown =
       map
@@ -846,12 +880,10 @@ defmodule Mix.Tasks.Verify.UiTokens do
       do: raise(ArgumentError, "#{path}: unsupported group properties #{inspect(unknown)}")
   end
 
-  defp assert_group_metadata!(_map, path), do: raise(ArgumentError, "#{path}: expected an object")
-
   defp alias?(value), do: Regex.match?(~r/^\{[^{}]+\}$/, value)
   defp unit_interval?(value), do: finite_number?(value) and value >= 0 and value <= 1
   defp finite_number?(value) when is_integer(value), do: true
-  defp finite_number?(value) when is_float(value), do: value == value and abs(value) < 1.0e308
+  defp finite_number?(value) when is_float(value), do: abs(value) < 1.0e308
   defp finite_number?(_value), do: false
 
   defp parse_number!(value, path) do
