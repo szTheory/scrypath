@@ -146,6 +146,11 @@ test("black, white, spacing, typography, semantic utilities, and both outputs ar
 });
 
 test("mounted stylesheet contract requires host CSS before independent Ops CSS", () => {
+  try {
+    assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app-2959271c8c6231d40aa9bebd2ddb9552.css?vsn=d"><link rel="stylesheet" href="/admin/search/assets/css/app.css?v=abc">');
+  } catch {
+    throw new Error("digest-named host stylesheet must match the mounted stylesheet contract");
+  }
   assert.doesNotThrow(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app.css"><link rel="stylesheet" href="/admin/search/assets/css/app.css?v=abc">'));
   assert.throws(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/admin/search/assets/css/app.css"><link rel="stylesheet" href="/assets/css/app.css">'), /host CSS before Ops CSS/);
   assert.throws(() => assertMountedStylesheetOrder('<link rel="stylesheet" href="/assets/css/app.css">'), /missing the independently served Ops stylesheet/);
@@ -156,6 +161,30 @@ test("CLI fails closed for a missing output file", (t) => {
   const result = spawnSync(process.execPath, [path.join(__dirname, "ui_bundle_contract.cjs"), "--standalone", absent, "--host", absent], { encoding: "utf8" });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /standalone Ops output file is missing/);
+});
+
+test("CLI rejects a bad standalone or host artifact independently", (t) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), `scrypath-ui-bundle-cli-${randomUUID()}-`));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const standalone = path.join(root, "standalone.css");
+  const host = path.join(root, "host.css");
+  const helper = path.join(__dirname, "ui_bundle_contract.cjs");
+
+  writeFileSync(standalone, fixtureCss({ semantic: true }));
+  writeFileSync(host, fixtureCss());
+  let result = spawnSync(process.execPath, [helper, "--standalone", standalone, "--host", host], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+
+  writeFileSync(standalone, fixtureCss({ palette: true, semantic: true }));
+  result = spawnSync(process.execPath, [helper, "--standalone", standalone, "--host", host], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /standalone Ops.*default palette/);
+
+  writeFileSync(standalone, fixtureCss({ semantic: true }));
+  writeFileSync(host, fixtureCss({ palette: true }));
+  result = spawnSync(process.execPath, [helper, "--standalone", standalone, "--host", host], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /mounted host.*default palette/);
 });
 
 test("both configured Tailwind profiles remove forced default palette utilities", { timeout: 20 * 60 * 1000 }, (t) => {
