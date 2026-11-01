@@ -517,7 +517,10 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
       if (container.Image !== manifest.image_ids[service]) throw new Error(`runtime image ID mismatch: ${service}`);
       runtimeIds[service] = container.Image;
     }
-    if (scope === "full") {
+    // The global capture runner requests image-only runtime verification. If a
+    // caller supplies any measured browser provenance, require the entire set;
+    // the canonical full verifier supplies all six after image inspection.
+    if (scope === "full" && [...measuredRuntimeComposeEnvironment].some((key) => Object.hasOwn(env, key))) {
       const browserImage = inspectJson(runCommand, "image", resolved.tags.browser, env);
       if (browserImage.Id !== manifest.image_ids.browser) throw new Error("runtime browser image tag mismatch");
       const measured = phase185RuntimeIdentityFromInspection([browserImage]);

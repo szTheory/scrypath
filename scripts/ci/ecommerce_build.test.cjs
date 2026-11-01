@@ -620,6 +620,12 @@ test("verify-handoff ignores run-scoped Compose environment values but retains s
 test("full runtime handoff accepts measured identities and rejects forged provenance", (t) => {
   const fixture = prepareFixture(t, "full");
   const loaded = verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run });
+  // The disposable global capture runner uses the image-only handoff contract
+  // without supplying the canonical full lane's measured browser metadata.
+  assert.equal(
+    verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }).handoff_status,
+    "runtime_verified",
+  );
   const inspectionPath = path.join(makeTempDirectory(t), "browser-inspection.json");
   const browserImage = JSON.parse(fixture.docker.run("docker", ["image", "inspect", loaded.tags.browser]));
   writeFileSync(inspectionPath, JSON.stringify([browserImage]));
