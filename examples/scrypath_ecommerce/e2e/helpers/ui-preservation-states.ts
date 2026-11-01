@@ -298,7 +298,7 @@ async function assertPopulated(page: Page, element: ElementId, assertions: Asser
   return locator;
 }
 
-async function assertPartial(page: Page, element: ElementId, assertions: Assertion[]): Promise<Locator> {
+async function assertPartial(page: Page, element: ElementId, assertions: Assertion[], transport: Transport[]): Promise<Locator> {
   let locator: Locator;
   if (element === "E1") {
     const searchInput = page.getByLabel("Search products");
@@ -341,9 +341,9 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     const partialText = await page.locator("main").innerText();
     assertions.push(await assertObserved("phase173 test source preserves one available row and one explicitly unknown row", JSON.stringify({ rowCount: await page.getByTestId("posture-row").count(), partialText }), (value) => {
       const result = JSON.parse(String(value));
-      return result.rowCount === 2 && result.partialText.includes("ScrypathEcommerce.Catalog.Product") && result.partialText.includes("Phase173PartialSchema") && result.partialText.includes("phase173_backend_unavailable");
+      return result.rowCount === 2 && result.partialText.includes("ScrypathEcommerce.Catalog.Product") && result.partialText.includes("Phase173PartialSchema") && result.partialText.includes("A configured search health source could not be read. Refresh health to try again.") && result.partialText.includes("No pending or failed tasks.");
     }));
-    assertions.push(await assertObserved("unknown backend observation stays scoped to its schema and does not erase the available row", await locator.innerText(), (value) => String(value).includes("Search health could not be checked") && String(value).includes("phase173_backend_unavailable")));
+    assertions.push(await assertObserved("unknown backend observation stays scoped to its schema and does not erase the available row", await locator.innerText(), (value) => String(value).includes("Phase173PartialSchema") && String(value).includes("Search health could not be checked") && String(value).includes("Refresh health to try again.")));
   } else if (element === "E4") {
     locator = page.getByTestId("failed-sync-row").first();
     const baseline = await page.getByTestId("failed-sync-row").count();
@@ -440,9 +440,13 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
       const text = await status.innerText();
       const differenceRows = page.locator(".ops-settings-diff tbody tr");
       const differences = await differenceRows.allInnerTexts();
-      assertions.push(await assertObserved("settings preserves the exact seeded filterableAttributes drift and declared/live values", JSON.stringify({ text, differenceCount: differences.length, differences }), (value) => {
+      const tenantDrift = differenceRows.filter({ hasText: "tenant_id" });
+      await expect(tenantDrift).toHaveCount(1);
+      const declared = (await tenantDrift.locator("[data-label='Declared in schema']").innerText()).trim();
+      const live = (await tenantDrift.locator("[data-label='Live in Meilisearch']").innerText()).trim();
+      assertions.push(await assertObserved("settings preserves the exact seeded tenant filtering drift and declared/live values", JSON.stringify({ text, differenceCount: differences.length, differences, declared, live }), (value) => {
         const result = JSON.parse(String(value));
-        return result.text.includes("Meilisearch settings differ from the schema") && result.text.includes("Nothing was changed") && result.text.includes("Apply the schema's settings") && result.differenceCount > 0 && result.differences.join("\n").includes("filterableAttributes") && result.differences.join("\n").includes("tenant_id");
+        return result.text.includes("Meilisearch settings differ from the schema") && result.text.includes("Nothing was changed") && result.text.includes("Apply the schema's settings") && result.differenceCount === 1 && result.differences.join("\n").includes("Filterable attributes") && result.differences.join("\n").includes("tenant_id") && result.declared === "Filterable" && result.live === "Not enabled for filtering";
       }));
     }
   }
@@ -481,12 +485,12 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
       transport.push({ operation: "control-room-operational-read", outcome: `seed=${scenario}; verdict=${text}` });
     }
     actions.push("seed and read actual Control Room outcomes in order: zero failures, drifted settings with no failed jobs, one terminal-failed job, three terminal-failed jobs plus two retrying jobs; leave incident visible");
-    assertions.push(await assertObserved("Control Room preserves exact zero, one and many failed-job counts while the drifted-settings seed remains a zero-failure observation", observations.map(({ scenario, text }) => `${scenario}:${text}`).join("\n"), (value) => {
-      const rows = String(value).split("\n");
-      const driftOnly = rows.find((row) => row.startsWith("degraded:")) || "";
-      const oneFailed = rows.find((row) => row.startsWith("phase185_one_failed:")) || "";
-      const manyFailed = rows.find((row) => row.startsWith("incident:")) || "";
-      return rows.length === 4 && rows[0].includes("all_green:") && rows[0].includes("No sync failures found") && driftOnly.includes("No sync failures found") && !/\b\d+ sync jobs failed\b/.test(driftOnly) && /\b1 sync job failed\b/.test(oneFailed) && /\b3 sync jobs failed\b/.test(manyFailed);
+    assertions.push(await assertObserved("Control Room preserves exact zero, one and many failed-job counts while the drifted-settings seed remains a zero-failure observation", JSON.stringify(observations), (value) => {
+      const rows = JSON.parse(String(value)) as typeof observations;
+      const driftOnly = rows.find((row) => row.scenario === "degraded")?.text || "";
+      const oneFailed = rows.find((row) => row.scenario === "phase185_one_failed")?.text || "";
+      const manyFailed = rows.find((row) => row.scenario === "incident")?.text || "";
+      return rows.length === 4 && rows[0].scenario === "all_green" && rows[0].text.includes("No sync failures found") && driftOnly.includes("No sync failures found") && !/\b\d+ sync jobs failed\b/.test(driftOnly) && /\b1 sync job failed\b/.test(oneFailed) && /\b3 sync jobs failed\b/.test(manyFailed);
     }));
     assertions.push(await assertObserved("Control Room still exposes its health and settings entry actions", await page.getByTestId("control-room-secondary-intents").isVisible(), (value) => value === true));
     return page.locator("main");
@@ -557,7 +561,7 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
     await submit.click();
     await expect(page.getByRole("alert")).toContainText("Select at least one schema.");
     const zeroSelected = await choices.evaluateAll((nodes) => nodes.filter((node) => (node as HTMLInputElement).checked).length);
-    const zeroCopy = (await page.getByRole("alert").locator("p").first().innerText()).trim();
+    const zeroCopy = (await page.getByRole("alert").getByText("Select at least one schema.", { exact: true }).innerText()).trim();
     assertions.push(await assertObserved("actual multi-schema Search route explains the zero-selected task-specific next step", `${zeroSelected};${zeroCopy}`, (value) => String(value) === "0;Select at least one schema."));
 
     const productChoice = page.locator("#ops-search-playground-form input[name='schemas[]'][value='ScrypathEcommerce.Catalog.Product']");
@@ -695,13 +699,13 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     await waitForLiveConnected(page);
     await page.locator("#search-health-refresh").click();
     const alert = page.getByTestId("posture-row").filter({ hasText: "ScrypathEcommerce.Catalog.Product" }).first();
-    await expect(alert).toContainText("phase173_backend_unavailable");
+    await expect(alert).toContainText("A configured search health source could not be read. Refresh health to try again.");
     await expect(alert).toContainText("Search health could not be checked");
     const text = (await alert.innerText()).trim();
     const recovery = page.getByRole("button", { name: "Refresh search health", exact: true });
-    assertions.push(await assertObserved("real health refresh failure names the backend error and keeps the explicit retry action", JSON.stringify({ text, recoveryVisible: await recovery.isVisible(), recoveryEnabled: await recovery.isEnabled() }), (value) => {
+    assertions.push(await assertObserved("real health refresh failure explains the unavailable source, retains prior evidence and keeps the explicit retry action", JSON.stringify({ text, recoveryVisible: await recovery.isVisible(), recoveryEnabled: await recovery.isEnabled() }), (value) => {
       const result = JSON.parse(String(value));
-      return result.text.includes("phase173_backend_unavailable") && result.text.includes("Search health could not be checked") && result.recoveryVisible && result.recoveryEnabled;
+      return result.text.includes("A configured search health source could not be read.") && result.text.includes("Refresh health to try again.") && result.text.includes("Search health could not be checked") && result.text.includes("Current observation is unavailable; this source-local evidence is retained from check 2026-10-06T17:18:42.318Z.") && result.recoveryVisible && result.recoveryEnabled;
     }));
     transport.push({ operation: "health-refresh", outcome: `actual Phase173FixtureSource task-history error phase173_backend_unavailable; enabled recovery action Refresh search health; row=${text}` });
     return recovery;
@@ -1133,7 +1137,7 @@ export async function runPreservationCase(args: {
       let target: Locator = heading;
       if (category === "empty") target = await assertEmpty(page, element, assertions);
       else if (category === "populated") target = await assertPopulated(page, element, assertions);
-      else if (category === "partial") target = await assertPartial(page, element, assertions);
+      else if (category === "partial") target = await assertPartial(page, element, assertions, transport);
       else if (category === "zero-one-many") target = await assertZeroOneMany(page, element, assertions, request, actions, transport);
       else if (category === "loading") {
         if (element === "E8" || element === "E9" || element === "E10") {
