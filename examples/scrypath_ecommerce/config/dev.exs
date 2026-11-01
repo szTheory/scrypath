@@ -84,7 +84,7 @@ config :scrypath_ecommerce, ScrypathEcommerceWeb.Endpoint,
     ]
   ]
 
-# Enable dev routes for dashboard and mailbox
+# Enable development routes for the dashboard
 config :scrypath_ecommerce, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs

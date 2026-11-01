@@ -48,6 +48,7 @@ import {
   type ViewportName
 } from "./helpers/theme-grid";
 import { AxeBuilder } from "@axe-core/playwright";
+import { scanWithFrameSafeLegacy } from "./helpers/axe-scan.mjs";
 
 const contrastReportDir = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
 
@@ -311,46 +312,54 @@ async function axeCheck(
       await assertSystemDarkInvariants(page);
     }
 
-    // D-04: AA gate pass — color-contrast rule only; gate on violations[] NEVER on incomplete[]
-    const aaResults = await new AxeBuilder({ page })
-      .withRules(["color-contrast"])
-      .analyze();
+    // Guard the AA+AAA pair as one operation so a frame change between passes
+    // discards both results and repeats both through AxeBuilder's normal path.
+    const { aaResults, aaaResults } = await scanWithFrameSafeLegacy(page, async (legacyMode: boolean) => {
+      // D-04: AA gate pass — color-contrast rule only; gate on violations[] NEVER on incomplete[]
+      const aaBuilder = new AxeBuilder({ page });
+      if (legacyMode && typeof aaBuilder.setLegacyMode === "function") aaBuilder.setLegacyMode();
+      const aaResults = await aaBuilder.withRules(["color-contrast"]).analyze();
 
-    // D-20: AAA advisory pass — scoped to body selectors; NEVER affects exit code.
-    // CR-03: axe-core throws `No elements found for include in page Context` when the
-    // ENTIRE include set resolves to zero elements (e.g. empty-state screens with none of
-    // the BODY_SELECTORS present). Guard it so the advisory pass can never propagate a
-    // throw out of axeCheck and fail the gate. Two layers of protection:
-    //   (1) only add includes that actually match on this page, and skip the pass
-    //       entirely when nothing matches (no body text to advise on);
-    //   (2) wrap analyze() in try/catch as a belt-and-braces — any AAA error is swallowed
-    //       and treated as zero advisory findings (D-20: advisory NEVER gates).
-    let aaaResults: {
-      violations: Array<{
-        id: string;
-        impact: string | null;
-        nodes: Array<{
-          target: string[];
-          any: Array<{ data?: { fgColor?: string; bgColor?: string; contrastRatio?: number } }>;
+      // D-20: AAA advisory pass — scoped to body selectors; NEVER affects exit code.
+      // CR-03: axe-core throws `No elements found for include in page Context` when the
+      // ENTIRE include set resolves to zero elements (e.g. empty-state screens with none of
+      // the BODY_SELECTORS present). Guard it so the advisory pass can never propagate a
+      // throw out of axeCheck and fail the gate. Two layers of protection:
+      //   (1) only add includes that actually match on this page, and skip the pass
+      //       entirely when nothing matches (no body text to advise on);
+      //   (2) wrap analyze() in try/catch as a belt-and-braces — any AAA error is swallowed
+      //       and treated as zero advisory findings (D-20: advisory NEVER gates).
+      let aaaResults: {
+        violations: Array<{
+          id: string;
+          impact: string | null;
+          nodes: Array<{
+            target: string[];
+            any: Array<{ data?: { fgColor?: string; bgColor?: string; contrastRatio?: number } }>;
+          }>;
         }>;
-      }>;
-    } = { violations: [] };
-    try {
-      const aaaBuilder = new AxeBuilder({ page }).withRules(["color-contrast-enhanced"]);
-      let includedAny = false;
-      for (const sel of BODY_SELECTORS) {
-        if ((await page.locator(sel).count()) > 0) {
-          aaaBuilder.include(sel);
-          includedAny = true;
+      } = { violations: [] };
+      try {
+        const aaaBuilder = new AxeBuilder({ page });
+        if (legacyMode && typeof aaaBuilder.setLegacyMode === "function") aaaBuilder.setLegacyMode();
+        aaaBuilder.withRules(["color-contrast-enhanced"]);
+        let includedAny = false;
+        for (const sel of BODY_SELECTORS) {
+          if ((await page.locator(sel).count()) > 0) {
+            aaaBuilder.include(sel);
+            includedAny = true;
+          }
         }
+        if (includedAny) {
+          aaaResults = await aaaBuilder.analyze();
+        }
+      } catch (err) {
+        // D-20: AAA is advisory — never let it affect the gate.
+        console.warn(`AAA advisory pass skipped (${(err as Error).message})`);
       }
-      if (includedAny) {
-        aaaResults = await aaaBuilder.analyze();
-      }
-    } catch (err) {
-      // D-20: AAA is advisory — never let it affect the gate.
-      console.warn(`AAA advisory pass skipped (${(err as Error).message})`);
-    }
+
+      return { aaResults, aaaResults };
+    });
 
     // Accumulate into unified report (D-17/D-18)
     appendFindings(findings, { capture, mode, viewport, aaResults, aaaResults });

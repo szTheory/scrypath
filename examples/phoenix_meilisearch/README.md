@@ -10,8 +10,13 @@ The live proof covers inline sync, Oban sync, related-data fan-out with inline s
 
 ## Prerequisites
 
-- Elixir **1.17+** and Erlang/OTP as in the parent project
+- Elixir `~> 1.17`; the exact CI-tested Elixir/OTP tuples are listed in the [support and compatibility guide](../../guides/support-and-compatibility.md)
 - Docker with Compose v2
+
+The guide is the canonical source for runtime support and distinguishes this
+repository's current verification from claims included in a published Hex
+release. The runnable example and its local path dependency are repository
+source-checkout workflows.
 
 ## Stack (Docker)
 

@@ -1,0 +1,15 @@
+{
+  "schema": "scrypath.phase185.red-evidence.v1",
+  "baseline_commit": "3e89e62d0d93050445c91d379b5275b44ea4f778",
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern=in-page DOM state producer",
+    "examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs"
+  ],
+  "cwd": "/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s",
+  "exit_code": 1,
+  "assertion": "Only visible hovered controls belong in control hover evidence; actual display-contents wrapper and layout ancestor must not be reported as control targets.",
+  "output": "\u2716 the in-page DOM state producer emits values accepted by the capture validator (1.433834ms)\n\u2139 tests 1\n\u2139 suites 0\n\u2139 pass 0\n\u2139 fail 1\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 51.989125\n\n\u2716 failing tests:\n\ntest at examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs:204:1\n\u2716 the in-page DOM state producer emits values accepted by the capture validator (1.433834ms)\n  AssertionError [ERR_ASSERTION]: hover evidence describes the actual visible control, excluding non-painting wrappers and layout ancestors\n  \n  3 !== 1\n  \n      at TestContext.<anonymous> (file:///Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs:209:12)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.start (node:internal/test_runner/test:1262:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 3,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+  "log_sha256": "e5f3b1065862f2ae4ee013fa268a20fe63f0c4ecb56d776ad7c11757dd104e5e"
+}

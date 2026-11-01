@@ -1,0 +1,3090 @@
+{
+  "schema": "scrypath.milestone-audit-evidence.v1",
+  "milestone": "v1.45",
+  "audited": "2026-11-01T16:54:28.686502+00:00",
+  "audit_head_sha": "01f0a1aa0f7681026944e7237cc35beffc771bb3",
+  "requirements": [
+    {
+      "id": "BROW-01",
+      "description": "A contributor can run the canonical full Docker E2E command and exercise mounted and standalone Ops scenarios in the same isolated, health-checked stack; full scope includes `compose.phase173.yaml`, while focused verification retains its existing service scope and teardown contract.",
+      "phase": 182,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| BROW-01 | 01, 04, 08 | Canonical full Docker stack exercises mounted and standalone Ops with health, isolation, cleanup and unchanged focused scope. | \u2713 SATISFIED | E1/E2, lifecycle and workflow wiring tests. |",
+      "claimed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "BROW-02",
+      "description": "A contributor can execute every intended `ui_followup.spec.ts` and `ui_iteration3.spec.ts` case against Docker's `web:4002`; their guards continue to reject the retained local preview, and the collected case inventory explains counts and any intentional skips.",
+      "phase": 182,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| BROW-02 | 02, 03, 04, 08 | Intended follow-up/iteration-3 Docker cases run, preview guard holds, inventory explains identities/skips. | \u2713 SATISFIED | 13 actual cases pass in E1/E2; target and inventory tests. |",
+      "claimed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "BROW-03",
+      "description": "A maintainer can obtain a successful full scheduled/manual `ecommerce-e2e` run at the changed source SHA within a 30-minute job budget, with complete bounded artifacts and no unexplained skips or retries counted as clean passes; stale expectations are reconciled with current behavior using executable assertions.",
+      "phase": 182,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| BROW-03 | 01\u201304, 07\u201308 | Exact-source full hosted run finishes within 30 minutes with complete artifacts and honest current assertions. | \u2713 SATISFIED | E1/E2; local full proof; strict raw-status/artifact collector. |",
+      "claimed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "CACHE-01",
+      "description": "A contributor's Docker verification builds can reuse GitHub Actions buildx caches on subsequent runs and still build successfully when the cache is missing.",
+      "phase": 182,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| CACHE-01 | 05, 07\u201308 | Real Buildx GHA cache warm restore/export and cold success. | \u2713 SATISFIED | E3 actual five-mode receipts; E4 current-source warm Docker receipt. |",
+      "claimed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "CACHE-02",
+      "description": "A contributor's BEAM dependency/build jobs can use safe `restore-keys` fallbacks with environment/version-aware keys, while lockfile changes invalidate the appropriate cache and cold-cache runs remain valid.",
+      "phase": 182,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| CACHE-02 | 06\u201308 | Safe BEAM download fallback, lock invalidation and cold success. | \u2713 SATISFIED | E3 actual fallback/changed-lock/cold runs; E5 exact input parity. |",
+      "claimed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md",
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "PKGH-01",
+      "description": "An adopter receives no repository-only `verify.*` task source or verification support modules in the Hex archive or compiled dependency; the complete inventoried maintainer task tree lives under `dev/mix/tasks` outside the package allowlist.",
+      "phase": 183,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| PKGH-01 | 183-01, 183-04, 183-05, 183-06, 183-08 | No repository-only verify task source or support modules in archive or compiled dependency; inventory under `dev/mix/tasks` | SATISFIED | Truth 1 |",
+      "claimed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "PKGH-02",
+      "description": "A contributor can invoke the documented canonical and historical verification commands from the source checkout in their intended environments after the move, while an unpacked package compiles without requiring the absent development tree.",
+      "phase": 183,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| PKGH-02 | 183-01, 183-02, 183-03, 183-04, 183-05, 183-07, 183-08 | Documented canonical and historical verification commands work from a checkout; unpacked package compiles without the dev tree | SATISFIED | Truth 2 |",
+      "claimed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "PKGH-03",
+      "description": "A maintainer can run the package/parity gate and prove the actual unpacked archive excludes maintainer tooling while retaining supported public operator tasks and consumer behavior; adding a repository-only task to packaged source fails the gate.",
+      "phase": 183,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| PKGH-03 | 183-05, 183-06, 183-08 | Package/parity gate proves actual unpacked archive excludes tooling, retains public tasks, fails on leaks | SATISFIED | Truth 3 |",
+      "claimed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-PLAN.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md",
+        ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-01",
+      "description": "An adopter receives an explicit root dependency on `telemetry ~> 1.0`, and the existing instrumentation remains available without relying on another dependency to supply it.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-01 | 01, 07, 09, 10 | Explicit mandatory root Telemetry and instrumentation | \u2713 SATISFIED | Exact source and actual archive metadata/mutation, installed consumer spans, core telemetry proof |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-02",
+      "description": "An adopter can resolve and use Scrypath with Req matching `~> 0.6.1 or ~> 0.7`, with focused HTTP/consumer verification for both admitted version lines.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-02 | 01, 07, 09, 10 | Approved Req union and focused proof for both lines | \u2713 SATISFIED | Independent 0.6.3/0.7.5 public HTTP/normalization/error/span witnesses; actual versions/locks; broad-range limits documented |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-03",
+      "description": "An operator can run ScrypathOps without Swoosh or the unused Mailer, with their configuration, references and obsolete lock entries removed.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-03 | 02, 06, 07, 10, 11 | Remove unused Swoosh/Mailer source/config/references/locks | \u2713 SATISFIED | Full mail AST/deletion/mutation contract, clean independent locks and actual application startup/compile |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-04",
+      "description": "An adopter can mount ScrypathOps without loading its standalone/development dashboard and telemetry polling/metrics dependencies; the supported standalone/development diagnostics and core Scrypath telemetry still work in their intended modes.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-04 | 03, 05, 06, 09, 10 | Mounted diagnostic exclusion with intended dev/core behavior | \u2713 SATISFIED | Dev-only optional tuples, complete compile/start guards, real clean/metrics-only mode probes, ownership and core telemetry assertions |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-05",
+      "description": "An adopter can compile/run ScrypathOps in test and production without installing esbuild or Tailwind as Mix dependencies; development asset build commands remain usable.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-05 | 05, 06, 09, 10, 12 | Test/prod tool-free Ops with usable dev generation | \u2713 SATISFIED | Real maintained builder, independent target graph/app/path checks, current-source handoff and served-byte equality |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-06",
+      "description": "An adopter can use the approved compatible Sigra version range without the current patch-series restriction, with the optional integration and relevant auth behavior verified; dependency-audit results remain explicit and are not silenced to obtain a pass.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-06 | 04, 06, 07, 09, 10 | Relax compatible optional Sigra, verify auth, retain audit failures | \u2713 SATISFIED | Exact optional range/stable lock; present/absent startup, total invalid-context denial, sudo/identity behavior; raw nonzero audit unignored |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "DEP-07",
+      "description": "A maintainer receives one reconciled dependency update set across affected manifests and lockfiles, with a recorded disposition for the roadmap's referenced Dependabot changes (#65 and #68\u2013#76), supported-stack verification and an explicit account of remaining advisories.",
+      "phase": 184,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| DEP-07 | 07, 08, 09, 10 | Reconciled graphs/proposals/support and remaining advisories | \u2713 SATISFIED | Four current stable locks, complete ten-proposal union, immutable Actions/trust contracts, supported tuple and real candidate evidence; mandatory terminal successor condition remains |",
+      "claimed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md",
+        ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-01",
+      "description": "A contributor gets a deterministic required L1 failure for newly introduced raw hex values, arbitrary-value utilities, inline `style=` or literal `z-` utilities outside explicit token authorities; the inventoried legacy baseline can only shrink and a replacement violation cannot hide behind an unchanged count.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-01 / criterion1 | Bounded authored-source scanner; exact rule/path/context/value multiplicities; equality with current findings plus independently fetched target and every prior candidate ledger. Real Git mutations reject growth, same-count swaps, duplicates, moved paths, resets, missing history, source symlink/Gitlink omission and oversized ledger. Bootstrap precedes generator ledger reduction. Required canonical repository tests execute it. | VERIFIED |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-02-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-07-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-02",
+      "description": "An operator sees the same supported light/dark UI after Tailwind's default colour namespace is reset and required black/white entries for daisyUI are restored; spacing and typography defaults remain available, with rendered/build proof of the preserved appearance.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-02 / criterion2 | Both actual CSS profiles reset only the default color namespace and restore black/white. Forced generated outputs prove omitted default palette utilities, retained type/spacing and Ops semantics. Real mounted test/prod assets and host-first/Ops-second stylesheets pass. Qualified original global135/546 and refreshed held-out61/213/426 exact comparisons preserve observed appearance/state/copy. | VERIFIED within recorded surfaces and fixtures |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-05-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-06-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-06-SUMMARY.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-03",
+      "description": "A contributor no longer carries the generator-default `home.html.heex`, with its route/reference disposition documented and supported mounted/standalone operator routes verified.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-03 / criterion2 | Generator home template and view are absent; standalone root executes fixed same-host302 `/ops`. Four actual browser route cases exercise storefront, standalone and mounted operator routes, caller-owned auth negatives/valid identity and assets requested by real layouts. Ledger reduction is committed after bootstrap. | VERIFIED |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-05-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-07-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-04",
+      "description": "A contributor's existing required `repository-contracts` command runs the static contrast checker in light and dark themes and fails AA contrast violations, including relevant focus-ring/adjacent-background pairs below 3:1.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-04 / criterion3 | Required canonical repository contracts invoke actual dependency-free light/dark contrast checker. Unrounded4.5 text and3 focus/UI thresholds, live outline/inset adjacency binding, dark-only text/focus failures, malformed and stale bindings have executable canonical negative witnesses. | VERIFIED; bounded contrast, not complete WCAG |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-01-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-01-SUMMARY.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-05",
+      "description": "A contributor can inspect valid DTCG-format light/dark `ops` tokens in `brandbook/tokens/tokens.json`, and an executable drift test fails when those values diverge from the live CSS theme tokens.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-05 / criterion4 | Actual bounded whole-document DTCG validator checks token/group schema, exact per-theme key sets, typed values, aliases/depth, alpha/reference semantics and complete live Ops CSS mirror while preserving brand palette. Independent CSS-only and JSON-only drift fail the canonical command. | VERIFIED |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-03-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-03-SUMMARY.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    },
+    {
+      "id": "UIF-06",
+      "description": "A contributor's browser/review workflows contain no paid OpenAI visual-judge request path or mock-generated assumed pass; remaining entrypoints, environment wiring and documentation truthfully describe deterministic checks and the deferred agent-run review.",
+      "phase": 185,
+      "tracking_status": "Complete",
+      "checked": true,
+      "verification_status": "passed",
+      "verification_requirement_row": "| UIF-06 / criterion5 | Paid judge executable, npm/Make selector and status paths, model/key/report wiring and active documentation were removed/reconciled. Current producer/consumer contracts and historical receipt compatibility pass. Raw review remains pending rather than mock-generated acceptance. | VERIFIED |",
+      "claimed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-04-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md"
+      ],
+      "completed_by_plans": [
+        ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md"
+      ],
+      "final_status": "satisfied"
+    }
+  ],
+  "phases": {
+    "182": {
+      "directory": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches",
+      "verification": ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-VERIFICATION.md",
+      "status": "passed",
+      "validation": {
+        "phase": "182",
+        "slug": "reliable-full-browser-verification-and-ci-caches",
+        "status": "validated",
+        "current_browser_source_sha": "1c72637038f2c225d56e2311678b05f912b014f3",
+        "retained_cache_source_sha": "0b7fe128d94dd8ac25e923a481f3d8d66ce4e1a8",
+        "nyquist_compliant": true,
+        "wave_0_complete": true,
+        "created": "2026-10-26"
+      },
+      "plans": 8,
+      "summaries": 8
+    },
+    "183": {
+      "directory": ".planning/phases/183-maintainer-tooling-outside-the-hex-package",
+      "verification": ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VERIFICATION.md",
+      "status": "passed",
+      "validation": {
+        "phase": "183",
+        "slug": "maintainer-tooling-outside-the-hex-package",
+        "status": "validated",
+        "nyquist_compliant": true,
+        "wave_0_complete": true,
+        "created": "2026-10-27"
+      },
+      "plans": 8,
+      "summaries": 8
+    },
+    "184": {
+      "directory": ".planning/phases/184-explicit-and-lean-dependency-graphs",
+      "verification": ".planning/phases/184-explicit-and-lean-dependency-graphs/184-VERIFICATION.md",
+      "status": "passed",
+      "validation": {
+        "phase": "184",
+        "slug": "explicit-and-lean-dependency-graphs",
+        "status": "validated",
+        "nyquist_compliant": true,
+        "wave_0_complete": true,
+        "created": "2026-10-29"
+      },
+      "plans": 12,
+      "summaries": 12
+    },
+    "185": {
+      "directory": ".planning/phases/185-executable-ui-quality-foundations",
+      "verification": ".planning/phases/185-executable-ui-quality-foundations/185-VERIFICATION.md",
+      "status": "passed",
+      "validation": {
+        "phase": "185",
+        "slug": "executable-ui-quality-foundations",
+        "status": "validated",
+        "nyquist_compliant": true,
+        "wave_0_complete": true,
+        "created": "2026-10-30",
+        "updated": "2026-11-01"
+      },
+      "plans": 10,
+      "summaries": 10
+    }
+  },
+  "summary_requirements_completed": {
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-SUMMARY.md": [],
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md": [
+      "BROW-01",
+      "BROW-02",
+      "BROW-03",
+      "CACHE-01",
+      "CACHE-02"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-SUMMARY.md": [],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-02"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-SUMMARY.md": [
+      "PKGH-02"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-02"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-02",
+      "PKGH-03"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-03"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-02"
+    ],
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md": [
+      "PKGH-01",
+      "PKGH-02",
+      "PKGH-03"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md": [
+      "DEP-01",
+      "DEP-02"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-SUMMARY.md": [
+      "DEP-03"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-SUMMARY.md": [
+      "DEP-04"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-SUMMARY.md": [
+      "DEP-06"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md": [
+      "DEP-04",
+      "DEP-05"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md": [
+      "DEP-03",
+      "DEP-04",
+      "DEP-05",
+      "DEP-06"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md": [
+      "DEP-01",
+      "DEP-02",
+      "DEP-03",
+      "DEP-06",
+      "DEP-07"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-SUMMARY.md": [
+      "DEP-07"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md": [
+      "DEP-01",
+      "DEP-02",
+      "DEP-04",
+      "DEP-05",
+      "DEP-06",
+      "DEP-07"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md": [
+      "DEP-01",
+      "DEP-02",
+      "DEP-03",
+      "DEP-04",
+      "DEP-05",
+      "DEP-06",
+      "DEP-07"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-SUMMARY.md": [
+      "DEP-03"
+    ],
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-SUMMARY.md": [
+      "DEP-05"
+    ],
+    ".planning/phases/185-executable-ui-quality-foundations/185-01-SUMMARY.md": [
+      "UIF-04"
+    ],
+    ".planning/phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md": [
+      "UIF-01"
+    ],
+    ".planning/phases/185-executable-ui-quality-foundations/185-03-SUMMARY.md": [
+      "UIF-05"
+    ],
+    ".planning/phases/185-executable-ui-quality-foundations/185-04-SUMMARY.md": [],
+    ".planning/phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md": [],
+    ".planning/phases/185-executable-ui-quality-foundations/185-06-SUMMARY.md": [
+      "UIF-02"
+    ],
+    ".planning/phases/185-executable-ui-quality-foundations/185-07-SUMMARY.md": [],
+    ".planning/phases/185-executable-ui-quality-foundations/185-08-SUMMARY.md": [],
+    ".planning/phases/185-executable-ui-quality-foundations/185-09-SUMMARY.md": [],
+    ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md": [
+      "UIF-01",
+      "UIF-02",
+      "UIF-03",
+      "UIF-04",
+      "UIF-05",
+      "UIF-06"
+    ]
+  },
+  "input_sha256": {
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-VERIFICATION.md": "8c62b33cd818ba2021ffd8de378ae4d0d4dedab5f243ffc1351c40c302ab2723",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-VALIDATION.md": "0006673e11dd7b0c41339416ad607a63f294f20a818a335858d998e80f2c4c36",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-PLAN.md": "6392938e528167ec789f4d02f0b193c1082658bc8f0ba39d864a3843e4483e57",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-PLAN.md": "79844b2a60fafceec871edb4d35e6f8171ec8916af3432b473884e90ec869567",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-PLAN.md": "a35685974438220d74b25287f773286442cca11d80c6d8a4e677b3f01d4747ea",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-PLAN.md": "d660ffcc48822d361147b29f35e566d9a191a8e1dd8154631bafb66f0a5a4282",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-PLAN.md": "b670d93cb90134d742b75e738f0d6977760062cd2b8b3a32f37d8c5d8f779887",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-PLAN.md": "56a505ad8ce0a1d1a9e82f0403d66fa5d197cae702707ac7c1013a9d59e19d37",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-PLAN.md": "5caca1e2e4429d271f42911374abf06c3aa5f33ad345f826188c2c365ddf501c",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-PLAN.md": "664d3c719fde062b8b577c85f2ae65dbab29997586f0ed79e08d320325e54bab",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-01-SUMMARY.md": "e3aaf26ea3ce9326ebfb651206317d7622b966a8da3b7db3f1bca1d11a5d2a5e",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-02-SUMMARY.md": "233e8d86d066ce58dfe046a4a44ad7857253f450ceaf973250cb7e673178ee2a",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-03-SUMMARY.md": "5c4e9ad7c8d4d2e30c6334296aa07bb4436322054db30cb3756373f8c38c94b0",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-04-SUMMARY.md": "7a0bec8e996e2ad15dbc53b8f8ca502601c13d7d30f3e374b592591779a501bd",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-05-SUMMARY.md": "82e291c0f0c582eb32368d00139676ec8ece8495822928721dd2232f800faf7e",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-06-SUMMARY.md": "10be41f8b6f8262b86f6d9168163080659861debcd806637180b00478bc1841e",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-07-SUMMARY.md": "c88c68d68bfdfc46e247e502cb067f3c5fc991556e6b00bca29c71fe0e741558",
+    ".planning/phases/182-reliable-full-browser-verification-and-ci-caches/182-08-SUMMARY.md": "4a9d8ca5e7f354ee02afd6ddb850eaa8cf6ba08934b372f9a3c490d88fecb6bf",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VERIFICATION.md": "ca273c2c05e1f07c8a9ca70add36534897eb10c35e55b3a09611a0a46ce99893",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VALIDATION.md": "15e54044ad720f374c3c2702856ea214143522f5a6fcacef22f8265f79cfaf88",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-PLAN.md": "7b4cb855ad0a9bbcb9b8fde8b2e4060802c29192e20dfe4deb13bc535841c9a6",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-PLAN.md": "be457c89c9c44cca065f88201d62e324d9ce4c0f7f30242a37183bb948e1e2e1",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-PLAN.md": "a0b4091819b970e268f04f81095862005cd87067e750b17ce4f60302af963bd2",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-PLAN.md": "ef06a22c059da0036e91ea482637cf9b644d56caedddda193002da7c2c8120d1",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-PLAN.md": "c057e0f2369540bed5a4d09da6eb5888b4ae26736b09fa9a4163887b460129a2",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-PLAN.md": "699400675feb8c514ad776c983107426b51522a677d5f21bd3d1e1b68b25b12f",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-PLAN.md": "0a042a12feedba016e2ea9852066f7b44a0a1028956cd6a1713d83df4a17f68e",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-PLAN.md": "5fae69426298c7d9c1aa11bf08871713d46fb03a6df46cd59de6f146c0e0c10b",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-01-SUMMARY.md": "6bf8221cd6e2ea61105f034e949397aefefae4a56177e5d231f00573b0b13bce",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-02-SUMMARY.md": "a943c5851f3131af8823be8f166a7943fc2ab5047c037d00cecb8fae31cd0fa2",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-03-SUMMARY.md": "e946b97e9edd1ed960fab901f3e6c74dd6b6b123a6af6589dd2cc5f226f61b70",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-04-SUMMARY.md": "63b7b9bd4b219744eda829c063cebb1926c7819edc0bf66d9cc602f95a406239",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-05-SUMMARY.md": "0f5dfaf6d68aa28cdd684fb12ece03556e8397b483b90d1a6f84ff20819f0c7b",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-06-SUMMARY.md": "e3bf4c17929a38b26bcd71e215b45055145c536f50a6262a27ea08efd65a8141",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-07-SUMMARY.md": "dcbf1b03aaaadd13bd49c535fe64f3da475b98163292aa79d582131977a079d1",
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-08-SUMMARY.md": "d14e75a4ed8146f0f813aad232d2db702ff4c90f3f184f2fbcf6029d9fe5871e",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-VERIFICATION.md": "cac3aec5a664192f4f257cb434d676b1af1686ef876be0629219be30448e1a8a",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-VALIDATION.md": "a3f6c046f31fc442dc7bb9f7ae18cafb05de50adc114fafd26b3b666dda87ac3",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-PLAN.md": "9210f5d321e7ff9dcc0bf267981f95db5aac331bbeeac52ccac6a769d1a4174e",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-PLAN.md": "9c28c225111881cff950381d264976ddc0d670a5454dd832192870097ed16f93",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-PLAN.md": "e3acfc80808aa9390f35ee4f4fc84d1139df31ab6ee6bd3f9ecf4db36005f6a0",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-PLAN.md": "75cd884b1d9a3060a9e774cc2279f5b1369b432d5351479f02b529d4b0b5944d",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-PLAN.md": "02621b34f5bd50028960accb9af63ff974e2074abddc2cb626ca3fd565c63c3d",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-PLAN.md": "adf73ef74c66d3db4a480715d35d0d6ee8b4e673e6158ab734421df9212466b1",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-PLAN.md": "5c22e8fe7c12fb79946d6687f4991fe18a78e97a251878df782bc4a24cd20ca0",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-PLAN.md": "cd906630ce5ddbc33c6427e95abcc1abf13bfa07bfc627df2774007457011ae0",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-PLAN.md": "f80e9cd2d766b9ee308a983d1ecbb5c5b37b9ae2374dd1b0e8a61f42f2dcb98d",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-PLAN.md": "5ff05f61bc29bdaabbe4c961ec3e20ec353411a8f730d5b91e1dbb31e5a59552",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-PLAN.md": "2282caefa2435a82b257ca292429a739d587bd6d7bbf68023f14a01d8f3cbcf9",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-PLAN.md": "e385ca374dc7a667612fe3ad80e1dddea9a873d82a965bff9e9d4183ca0257e3",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-01-SUMMARY.md": "a46eeeb34d800cd2913a6f5a52e386c48814f4abde2f3485f6097518b19aad05",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-02-SUMMARY.md": "553bc22330287f637039652a1906217b625eb48f9b506ebeb991591652ed6c4c",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-03-SUMMARY.md": "37acff8489062e312395cb98e4437b3168ca8c7a01a3054beef4bdb6233ad162",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-04-SUMMARY.md": "1238894d6fed739f7e68be16bbb2f469c2a452578b64b3b0037b163b83592224",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-05-SUMMARY.md": "a0db561403927f63615a19356f141831eb7ed7d34555e73306c91b3ee07b62e7",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-06-SUMMARY.md": "566b8f53db0d417dcf8c4b6fdc84616fa16c31fdefcc82534602bb718ff5f63d",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-07-SUMMARY.md": "8503185280d2b1e52942d6a4955e716c7e6985927b6488d42b191df687f7cce9",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-08-SUMMARY.md": "db615c3cea136779a22f54a5e060c02917426e9d38ed95382f2276b1040b84bc",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-09-SUMMARY.md": "6e1fc2f2d48e8e42326c05dedf2d8fb710d3f3542c6f1aa6aec3e27c0cf81747",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-10-SUMMARY.md": "372a653effc342585669b7ec54374be4a60c6fb11d0c329cda1dbcb047bd2e3b",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-11-SUMMARY.md": "8cb8a04c11d41073fd4c6626d23c48991e6c220d717a51e11638d111468123cd",
+    ".planning/phases/184-explicit-and-lean-dependency-graphs/184-12-SUMMARY.md": "d614867dc5ba8b19d96a3d6a59d902a3cee865535d5855f617633b8ec7027a7b",
+    ".planning/phases/185-executable-ui-quality-foundations/185-VERIFICATION.md": "0d40ff2c3f53fe5b1487f23d4813acebd5dec75521c3f6ef07526ee2a77c8581",
+    ".planning/phases/185-executable-ui-quality-foundations/185-VALIDATION.md": "a99a80639e62782b726427b6fbabcd65f006f2af2fd50b3dab95b8b5dc625bd4",
+    ".planning/phases/185-executable-ui-quality-foundations/185-01-PLAN.md": "6c157f29884859e34e8e41f70fc29c72ec076d715ff521a226b228f45848e1ab",
+    ".planning/phases/185-executable-ui-quality-foundations/185-02-PLAN.md": "c730ec8691ed23348840180be49efa503923712c1ae0b34acafd14d20bee37a3",
+    ".planning/phases/185-executable-ui-quality-foundations/185-03-PLAN.md": "2f5e489b85ebe1e7c88da43caf16406163f7e97f22914227a07e5c210dd7ec5a",
+    ".planning/phases/185-executable-ui-quality-foundations/185-04-PLAN.md": "eb897dc6b83552695d12286b98c95fa3c3fbd705488c145ed9ce1fcda7e6eb9c",
+    ".planning/phases/185-executable-ui-quality-foundations/185-05-PLAN.md": "bb3ac31a43a0f8925cccd750307df1ffb897de487a90a4d2af42c5ab7110fdd0",
+    ".planning/phases/185-executable-ui-quality-foundations/185-06-PLAN.md": "1be2fc9fb1d8b4c5bfef47b78ac0ea1e6bcf7f1fde5347b5cc9ae79474ac962c",
+    ".planning/phases/185-executable-ui-quality-foundations/185-07-PLAN.md": "888b06734711c1f0719559ec81eabc023a7ca453db165bbaba8d2b46d951721f",
+    ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md": "6063b4184a89548e2c32d5ad22ab23447e17db2a2179a3494624e7c97fe29956",
+    ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md": "d38708ce49a1e8b6f8a9022fb586130b6d4f9fc124b8041140b2052b3ecae8b0",
+    ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md": "42d41cbec333c7a0d4219b21ff4376653f421b6611c623f0cf95cce88243ec78",
+    ".planning/phases/185-executable-ui-quality-foundations/185-01-SUMMARY.md": "defc587f1f223af956fe67bd5459bba0fff61b141df251ce4e0d4f865f8fede5",
+    ".planning/phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md": "09c010a14acae92ccc22c63225cf4763518d165880af25fe68e4896039e1f482",
+    ".planning/phases/185-executable-ui-quality-foundations/185-03-SUMMARY.md": "f48600e3bff42017669c219dc92e0fc060dfa53a785b17e52a6e232df525ca32",
+    ".planning/phases/185-executable-ui-quality-foundations/185-04-SUMMARY.md": "8f2adbc9cd08453f1983e6144bda557a55322762f98cb5af654418fe816824e0",
+    ".planning/phases/185-executable-ui-quality-foundations/185-05-SUMMARY.md": "1d9a69b6bddea8232ebe7bd740a3422df5db812ac667147dff4a081d797871e6",
+    ".planning/phases/185-executable-ui-quality-foundations/185-06-SUMMARY.md": "f93af3218185075cb26bb9246c3f9e57e421273ee64d9319f73c2cf86c4be524",
+    ".planning/phases/185-executable-ui-quality-foundations/185-07-SUMMARY.md": "d0ae720dfac9161be442009da5490fea9d37672ff6c97734e80b9c9a543b44f6",
+    ".planning/phases/185-executable-ui-quality-foundations/185-08-SUMMARY.md": "eed6702d3f78259f655b7bd1f46588c4e457d0c96c0d76a7f8a3295641839f72",
+    ".planning/phases/185-executable-ui-quality-foundations/185-09-SUMMARY.md": "883f682b33774e36d9a4ba4505f8bab3b83a6ada2bb32fb6126b8e439e1aab1e",
+    ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md": "ba5b998ffcf99181d4252e07798d7c16a4bfc73ef22786dd7bbb19091b25369a",
+    ".planning/REQUIREMENTS.md": "4df87267c98c279597f3430ff438ecfc27aea802b18c5d5f47a9216b2388ebed",
+    ".planning/ROADMAP.md": "a910526785594d0bb53e13d4e0777664ac90669cc2426b1a0acc5a6d1b44803c",
+    ".planning/STATE.md": "c6ae9d6fa9682d09bf655b4fe0f9570ecfdb84313d3932ef4b3740dac563ff6a",
+    "CONTRIBUTING.md": "720a090fe304ec598315bc0965cb074c3b2c0b2c134cd4fd265a6677ea541079",
+    "test/release/package_contents_test.exs": "62a8d08224b4c45d2132316a6b08b05d84448f9d67cbd1297ae8eb27fd187680",
+    "dev/mix/tasks/verify.phase11.ex": "171a03e4f82a4a05e3ad9464c3afb4e2a399f74e1e408e7706eb8573a6eacd85"
+  },
+  "terminal_phase185": {
+    "schema": "scrypath.phase185-exact-source-closeout-command.v1",
+    "stage": "terminal",
+    "cwd": "/Users/jon/projects/scrypath",
+    "command": [
+      "node",
+      "scripts/ci_monitor.cjs",
+      "closeout",
+      "--push",
+      "--branch",
+      "planning/v1.45-foundation-ci",
+      "--sha",
+      "db572eb132bd8098cf96d762eb967fa66d636bed"
+    ],
+    "source_before": "db572eb132bd8098cf96d762eb967fa66d636bed",
+    "branch": "planning/v1.45-foundation-ci",
+    "started_at": "2026-11-01T15:28:08.578501+00:00",
+    "log": "/private/tmp/scrypath-phase185-execution/terminal-root-closeout.log",
+    "pid": 66440,
+    "exit_code": 0,
+    "elapsed_seconds": 1429.312511920929,
+    "finished_at": "2026-11-01T15:51:57.891136+00:00",
+    "source_after": "db572eb132bd8098cf96d762eb967fa66d636bed",
+    "log_sha256": "eee9c37d85f121b4ee8cb1f09732eea36384fc2b32e99ba7132a39b5c1e44ae0",
+    "source_stable": true,
+    "hosted_receipt": {
+      "authority": "github-actions-exact-sha",
+      "repository": "szTheory/scrypath",
+      "workflow": "ci.yml",
+      "run_id": 41321377478,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/41321377478",
+      "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed",
+      "event": "workflow_dispatch",
+      "jobs": [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)",
+        "coverage (advisory)",
+        "closeout-attestation"
+      ],
+      "coverage_artifact": {
+        "id": 13089850224,
+        "digest": "sha256:e32fd577d8491778f2ce666f1ea037b6d189940dc675b0cfd2cafb2a0dee0a20",
+        "expires_at": "2026-11-08T15:33:25Z"
+      },
+      "closeout_artifact": {
+        "id": 13089679871,
+        "digest": "sha256:e1e956d271ad2d2845fb4c5f6dcba36ebfe2b6b58c24b0db8c65360deff06f98",
+        "expires_at": "2026-11-08T15:48:13Z"
+      }
+    }
+  },
+  "terminal_phase184": {
+    "branch": "planning/v1.45-foundation-ci",
+    "source_sha": "767f368473f17fba43d7be4675c53ab65a87530c",
+    "started_at": "2026-10-31T01:37:42.790769+00:00",
+    "command": [
+      "node",
+      "scripts/ci_monitor.cjs",
+      "closeout",
+      "--push",
+      "--branch",
+      "planning/v1.45-foundation-ci",
+      "--sha",
+      "767f368473f17fba43d7be4675c53ab65a87530c",
+      "--repo",
+      "szTheory/scrypath"
+    ],
+    "destination": "https://github.com/szTheory/scrypath.git",
+    "exit_code": 0,
+    "completed_head": "767f368473f17fba43d7be4675c53ab65a87530c",
+    "head_unchanged": true,
+    "log": "/private/tmp/scrypath-phase184-execution/terminal-root-closeout.log",
+    "receipt": {
+      "authority": "github-actions-exact-sha",
+      "repository": "szTheory/scrypath",
+      "workflow": "ci.yml",
+      "run_id": 41156258144,
+      "run_url": "https://github.com/szTheory/scrypath/actions/runs/41156258144",
+      "head_sha": "767f368473f17fba43d7be4675c53ab65a87530c",
+      "event": "workflow_dispatch",
+      "jobs": [
+        "core (required)",
+        "package (required)",
+        "repository-contracts (required)",
+        "backend (required)",
+        "ecommerce-mounted (required)",
+        "coverage (advisory)",
+        "closeout-attestation"
+      ],
+      "coverage_artifact": {
+        "id": 13024149566,
+        "digest": "sha256:fbcd5da5c96c9222473b680937cf7612d5148f08e874525b615f61253728db72",
+        "expires_at": "2026-11-07T01:39:30Z"
+      },
+      "closeout_artifact": {
+        "id": 13025513001,
+        "digest": "sha256:6503907ee1fb48c4d583bb08e4eefea913d2f665baef34495a1af1b52b13390e",
+        "expires_at": "2026-11-07T01:57:18Z"
+      }
+    }
+  },
+  "github_terminal_run": {
+    "conclusion": "success",
+    "databaseId": 41321377478,
+    "event": "workflow_dispatch",
+    "headSha": "db572eb132bd8098cf96d762eb967fa66d636bed",
+    "jobs": [
+      {
+        "completedAt": "2026-11-01T15:30:09Z",
+        "conclusion": "success",
+        "databaseId": 124892151912,
+        "name": "package (required)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:16Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:20Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:25Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:30:06Z",
+            "conclusion": "success",
+            "name": "Run mix verify.package",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:30:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 14,
+            "startedAt": "2026-11-01T15:30:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:30:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 15,
+            "startedAt": "2026-11-01T15:30:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:30:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-11-01T15:30:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:30:07Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-01T15:30:07Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892151912"
+      },
+      {
+        "completedAt": "2026-11-01T15:29:21Z",
+        "conclusion": "success",
+        "databaseId": 124892152045,
+        "name": "phoenix-example (advisory)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Initialize containers",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:34Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:34Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph phoenix-example --output \"$RUNNER_TEMP/beam-cache-phoenix.json\"",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:35Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:36Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:35Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:37Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:48Z",
+            "conclusion": "success",
+            "name": "Run mix verify.phoenix_example",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:18Z",
+            "conclusion": "success",
+            "name": "Run mix verify.phoenix_example --package",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 17,
+            "startedAt": "2026-11-01T15:29:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 18,
+            "startedAt": "2026-11-01T15:29:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 19,
+            "startedAt": "2026-11-01T15:29:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:18Z",
+            "conclusion": "success",
+            "name": "Stop containers",
+            "number": 20,
+            "startedAt": "2026-11-01T15:29:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:29:19Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-11-01T15:29:18Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152045"
+      },
+      {
+        "completedAt": "2026-11-01T15:41:14Z",
+        "conclusion": "success",
+        "databaseId": 124892152074,
+        "name": "repository-contracts (required)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Verify shrink-only UI literal history",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:32Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:33Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:34Z",
+            "conclusion": "success",
+            "name": "Install locked demo dependencies for PNG evidence validation",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:38:11Z",
+            "conclusion": "success",
+            "name": "Verify browser build, lifecycle, evidence, and target behavior",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:41:09Z",
+            "conclusion": "success",
+            "name": "Run mix verify.repository_contracts",
+            "number": 11,
+            "startedAt": "2026-11-01T15:38:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:41:09Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 20,
+            "startedAt": "2026-11-01T15:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:41:09Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 21,
+            "startedAt": "2026-11-01T15:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:41:09Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 22,
+            "startedAt": "2026-11-01T15:41:09Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:41:09Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-01T15:41:09Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152074"
+      },
+      {
+        "completedAt": "2026-11-01T15:29:01Z",
+        "conclusion": "success",
+        "databaseId": 124892152093,
+        "name": "backend (required)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:38Z",
+            "conclusion": "success",
+            "name": "Initialize containers",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:40Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:46Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:47Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:46Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:47Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:48Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:49Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:49Z",
+            "conclusion": "success",
+            "name": "Wait for Meilisearch",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:57Z",
+            "conclusion": "success",
+            "name": "Run mix verify.backend",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:57Z",
+            "conclusion": "skipped",
+            "name": "Backend failure diagnostics",
+            "number": 11,
+            "startedAt": "2026-11-01T15:28:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:57Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 19,
+            "startedAt": "2026-11-01T15:28:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:57Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 20,
+            "startedAt": "2026-11-01T15:28:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:58Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 21,
+            "startedAt": "2026-11-01T15:28:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:59Z",
+            "conclusion": "success",
+            "name": "Stop containers",
+            "number": 22,
+            "startedAt": "2026-11-01T15:28:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:59Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-01T15:28:59Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152093"
+      },
+      {
+        "completedAt": "2026-11-01T15:51:53Z",
+        "conclusion": "success",
+        "databaseId": 124892152133,
+        "name": "ecommerce-e2e (advisory)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:20Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:20Z",
+            "conclusion": "success",
+            "name": "Record E2E job start and deadline",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:23Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:23Z",
+            "conclusion": "success",
+            "name": "Verify checked-out source SHA",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:23Z",
+            "conclusion": "success",
+            "name": "Validate Phase 182 cache probe inputs",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph ecommerce --output \"$RUNNER_TEMP/beam-cache-ecommerce.json\"",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:33Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:34Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:37Z",
+            "conclusion": "success",
+            "name": "Prepare checked full Compose images",
+            "number": 11,
+            "startedAt": "2026-11-01T15:28:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:37Z",
+            "conclusion": "success",
+            "name": "Configure scoped full Docker cache namespace",
+            "number": 12,
+            "startedAt": "2026-11-01T15:28:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:45Z",
+            "conclusion": "success",
+            "name": "Set up pinned Buildx for full Compose images",
+            "number": 13,
+            "startedAt": "2026-11-01T15:28:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:20Z",
+            "conclusion": "success",
+            "name": "Bake and load checked full images",
+            "number": 14,
+            "startedAt": "2026-11-01T15:28:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:21Z",
+            "conclusion": "success",
+            "name": "Verify full image handoff",
+            "number": 15,
+            "startedAt": "2026-11-01T15:35:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:21Z",
+            "conclusion": "success",
+            "name": "Record full cache interaction outcome",
+            "number": 16,
+            "startedAt": "2026-11-01T15:35:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:21Z",
+            "conclusion": "skipped",
+            "name": "Warn when full Bake needs cache fallback",
+            "number": 17,
+            "startedAt": "2026-11-01T15:35:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:27Z",
+            "conclusion": "success",
+            "name": "Run advisory full E2E proof",
+            "number": 18,
+            "startedAt": "2026-11-01T15:35:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:27Z",
+            "conclusion": "success",
+            "name": "Write Phase 182 Docker warm-cache proof",
+            "number": 19,
+            "startedAt": "2026-11-01T15:51:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:28Z",
+            "conclusion": "success",
+            "name": "Upload Phase 182 Docker warm-cache proof",
+            "number": 20,
+            "startedAt": "2026-11-01T15:51:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:38Z",
+            "conclusion": "success",
+            "name": "Upload advisory E2E evidence",
+            "number": 21,
+            "startedAt": "2026-11-01T15:51:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:41Z",
+            "conclusion": "success",
+            "name": "Post Bake and load checked full images",
+            "number": 38,
+            "startedAt": "2026-11-01T15:51:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:49Z",
+            "conclusion": "success",
+            "name": "Post Set up pinned Buildx for full Compose images",
+            "number": 39,
+            "startedAt": "2026-11-01T15:51:41Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:50Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 40,
+            "startedAt": "2026-11-01T15:51:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:50Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 41,
+            "startedAt": "2026-11-01T15:51:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:50Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 42,
+            "startedAt": "2026-11-01T15:51:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:51:50Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 43,
+            "startedAt": "2026-11-01T15:51:50Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152133"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:31Z",
+        "conclusion": "success",
+        "databaseId": 124892152140,
+        "name": "core (required)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Validate Phase 182 cache probe inputs",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "skipped",
+            "name": "Prepare isolated comment-only lock probe checkout",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/phase182_acceptance.cjs beam-plan --graph root --root \"$PHASE182_BEAM_ROOT\" --output \"$PHASE182_BEAM_PLAN\" --output-github \"$GITHUB_OUTPUT\"",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Restore Hex download archive cache",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Restore resolved BEAM build cache",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "skipped",
+            "name": "Run mix compile --warnings-as-errors",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "success",
+            "name": "Run mix verify.core --exclude integration --exclude docs_contract",
+            "number": 11,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "skipped",
+            "name": "Save Hex download archive cache",
+            "number": 12,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "skipped",
+            "name": "Save resolved BEAM build cache",
+            "number": 13,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "skipped",
+            "name": "Write Phase 182 BEAM cache proof",
+            "number": 14,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "skipped",
+            "name": "Upload Phase 182 BEAM cache proof",
+            "number": 15,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 30,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:28Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 31,
+            "startedAt": "2026-11-01T15:33:28Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152140"
+      },
+      {
+        "completedAt": "2026-11-01T15:28:23Z",
+        "conclusion": "success",
+        "databaseId": 124892152142,
+        "name": "ops-ui-path",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run if [[ \"$GITHUB_EVENT_NAME\" == push && \"$GITHUB_REF\" == refs/heads/main ]]; then echo run=true >> \"$GITHUB_OUTPUT\"; exit 0; fi",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152142"
+      },
+      {
+        "completedAt": "2026-11-01T15:32:39Z",
+        "conclusion": "failure",
+        "databaseId": 124892152180,
+        "name": "deep-quality (advisory)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run mix local.hex 2.5.1 --force",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:33Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:50Z",
+            "conclusion": "failure",
+            "name": "Run elixir scripts/ci/dependency_audit.exs",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:36Z",
+            "conclusion": "success",
+            "name": "Run deep quality checks independently of the dependency audit",
+            "number": 11,
+            "startedAt": "2026-11-01T15:28:50Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:36Z",
+            "conclusion": "skipped",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 19,
+            "startedAt": "2026-11-01T15:32:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:36Z",
+            "conclusion": "skipped",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 20,
+            "startedAt": "2026-11-01T15:32:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:36Z",
+            "conclusion": "skipped",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 21,
+            "startedAt": "2026-11-01T15:32:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:36Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 22,
+            "startedAt": "2026-11-01T15:32:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:32:37Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "startedAt": "2026-11-01T15:32:36Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152180"
+      },
+      {
+        "completedAt": "2026-11-01T15:48:09Z",
+        "conclusion": "success",
+        "databaseId": 124892152214,
+        "name": "ecommerce-mounted (required)",
+        "startedAt": "2026-11-01T15:28:16Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Validate Phase 182 cache probe inputs",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph ecommerce --output \"$RUNNER_TEMP/beam-cache-ecommerce.json\"",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Prepare checked mounted Compose images",
+            "number": 9,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:32Z",
+            "conclusion": "success",
+            "name": "Configure scoped mounted Docker cache probe",
+            "number": 10,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:32Z",
+            "conclusion": "skipped",
+            "name": "Record pre-probe Buildx builders",
+            "number": 11,
+            "startedAt": "2026-11-01T15:28:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:37Z",
+            "conclusion": "success",
+            "name": "Set up pinned Buildx for mounted Compose images",
+            "number": 12,
+            "startedAt": "2026-11-01T15:28:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:37Z",
+            "conclusion": "skipped",
+            "name": "Inspect newly created mounted Buildx builder",
+            "number": 13,
+            "startedAt": "2026-11-01T15:28:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:25Z",
+            "conclusion": "success",
+            "name": "Bake and load checked mounted images",
+            "number": 14,
+            "startedAt": "2026-11-01T15:28:37Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:25Z",
+            "conclusion": "success",
+            "name": "Verify mounted image handoff",
+            "number": 15,
+            "startedAt": "2026-11-01T15:35:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:25Z",
+            "conclusion": "success",
+            "name": "Record mounted cache interaction outcome",
+            "number": 16,
+            "startedAt": "2026-11-01T15:35:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:35:25Z",
+            "conclusion": "skipped",
+            "name": "Warn when mounted Bake needs cache fallback",
+            "number": 17,
+            "startedAt": "2026-11-01T15:35:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:47:56Z",
+            "conclusion": "success",
+            "name": "Run mounted E2E proof",
+            "number": 18,
+            "startedAt": "2026-11-01T15:35:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:47:56Z",
+            "conclusion": "skipped",
+            "name": "Write Phase 182 Docker cold-cache proof",
+            "number": 19,
+            "startedAt": "2026-11-01T15:47:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:47:56Z",
+            "conclusion": "skipped",
+            "name": "Upload Phase 182 Docker cold-cache proof",
+            "number": 20,
+            "startedAt": "2026-11-01T15:47:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:47:56Z",
+            "conclusion": "skipped",
+            "name": "Upload mounted E2E failure evidence",
+            "number": 21,
+            "startedAt": "2026-11-01T15:47:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:47:58Z",
+            "conclusion": "success",
+            "name": "Post Bake and load checked mounted images",
+            "number": 38,
+            "startedAt": "2026-11-01T15:47:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:07Z",
+            "conclusion": "success",
+            "name": "Post Set up pinned Buildx for mounted Compose images",
+            "number": 39,
+            "startedAt": "2026-11-01T15:47:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 40,
+            "startedAt": "2026-11-01T15:48:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 41,
+            "startedAt": "2026-11-01T15:48:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:07Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 42,
+            "startedAt": "2026-11-01T15:48:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:07Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 43,
+            "startedAt": "2026-11-01T15:48:07Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152214"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:29Z",
+        "conclusion": "success",
+        "databaseId": 124892152305,
+        "name": "coverage (advisory)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:18Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:17Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:21Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:26Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:21Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:25Z",
+            "conclusion": "success",
+            "name": "Run informational coverage",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:27Z",
+            "conclusion": "success",
+            "name": "Upload informational coverage report",
+            "number": 9,
+            "startedAt": "2026-11-01T15:33:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:27Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 16,
+            "startedAt": "2026-11-01T15:33:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:27Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 17,
+            "startedAt": "2026-11-01T15:33:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:27Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 18,
+            "startedAt": "2026-11-01T15:33:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:27Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-01T15:33:27Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152305"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:48Z",
+        "conclusion": "success",
+        "databaseId": 124892152307,
+        "name": "compatibility (advisory) (1.19.0, 26.2.5)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:33Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:34Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Run mix verify.compatibility",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 14,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 15,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:44Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:44Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-01T15:33:44Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152307"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:21Z",
+        "conclusion": "success",
+        "databaseId": 124892152312,
+        "name": "compatibility (advisory) (1.19.0, 28.1)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:29Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:18Z",
+            "conclusion": "success",
+            "name": "Run mix verify.compatibility",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 14,
+            "startedAt": "2026-11-01T15:33:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 15,
+            "startedAt": "2026-11-01T15:33:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:18Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-11-01T15:33:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:18Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-01T15:33:18Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152312"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:47Z",
+        "conclusion": "success",
+        "databaseId": 124892152320,
+        "name": "compatibility (advisory) (1.18.4, 27.3)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:19Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:22Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:22Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:28Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:32Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:33Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Run mix verify.compatibility",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:33Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 14,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 15,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:43Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-01T15:33:43Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152320"
+      },
+      {
+        "completedAt": "2026-11-01T15:33:09Z",
+        "conclusion": "success",
+        "databaseId": 124892152332,
+        "name": "compatibility (advisory) (1.17.3, 26.2.5)",
+        "startedAt": "2026-11-01T15:28:17Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:28:20Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:28:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:23Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-11-01T15:28:20Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:27Z",
+            "conclusion": "success",
+            "name": "Run erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124",
+            "number": 3,
+            "startedAt": "2026-11-01T15:28:23Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run node scripts/ci/beam_cache.cjs plan --graph root --output \"$RUNNER_TEMP/beam-cache-root.json\"",
+            "number": 4,
+            "startedAt": "2026-11-01T15:28:27Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:30Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 5,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:31Z",
+            "conclusion": "success",
+            "name": "Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 6,
+            "startedAt": "2026-11-01T15:28:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:28:32Z",
+            "conclusion": "success",
+            "name": "Run mix deps.get",
+            "number": 7,
+            "startedAt": "2026-11-01T15:28:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:02Z",
+            "conclusion": "success",
+            "name": "Run mix verify.compatibility",
+            "number": 8,
+            "startedAt": "2026-11-01T15:28:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:04Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 14,
+            "startedAt": "2026-11-01T15:33:02Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:06Z",
+            "conclusion": "success",
+            "name": "Post Run actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+            "number": 15,
+            "startedAt": "2026-11-01T15:33:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:06Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-11-01T15:33:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:33:06Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-01T15:33:06Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892152332"
+      },
+      {
+        "completedAt": "2026-11-01T15:28:23Z",
+        "conclusion": "skipped",
+        "databaseId": 124892191735,
+        "name": "ops-ui (path-scoped)",
+        "startedAt": "2026-11-01T15:28:24Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124892191735"
+      },
+      {
+        "completedAt": "2026-11-01T15:48:14Z",
+        "conclusion": "success",
+        "databaseId": 124897148712,
+        "name": "closeout-attestation",
+        "startedAt": "2026-11-01T15:48:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-01T15:48:12Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-01T15:48:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:12Z",
+            "conclusion": "success",
+            "name": "Verify exact-SHA closeout inputs",
+            "number": 2,
+            "startedAt": "2026-11-01T15:48:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:13Z",
+            "conclusion": "success",
+            "name": "Upload exact-SHA closeout attestation",
+            "number": 3,
+            "startedAt": "2026-11-01T15:48:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-01T15:48:13Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 4,
+            "startedAt": "2026-11-01T15:48:13Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478/job/124897148712"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/szTheory/scrypath/actions/runs/41321377478"
+  },
+  "github_terminal_artifacts": {
+    "total_count": 6,
+    "artifacts": [
+      {
+        "id": 13090815402,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA5MDgxNTQwMg==",
+        "name": "ecommerce-e2e-evidence-41321377478-1",
+        "size_in_bytes": 211254495,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13090815402",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13090815402/zip",
+        "expired": false,
+        "digest": "sha256:7f29aff20beb950eaab6d72859c21d3a137ee5d68ae08b61003f8b97f94287f1",
+        "created_at": "2026-11-01T15:51:38Z",
+        "updated_at": "2026-11-01T15:51:38Z",
+        "expires_at": "2026-11-08T15:51:29Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      },
+      {
+        "id": 13090386511,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA5MDM4NjUxMQ==",
+        "name": "szTheory~scrypath~A6ECL5+2.dockerbuild",
+        "size_in_bytes": 280691,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13090386511",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13090386511/zip",
+        "expired": false,
+        "digest": "sha256:c7ab1f5e2f7db55a99f23f454de07511dc39e6a7436b88c03da7c05ea0d6dea5",
+        "created_at": "2026-11-01T15:51:41Z",
+        "updated_at": "2026-11-01T15:51:41Z",
+        "expires_at": "2027-01-30T15:28:14Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      },
+      {
+        "id": 13089946937,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA4OTk0NjkzNw==",
+        "name": "szTheory~scrypath~D3IPSJ+1.dockerbuild",
+        "size_in_bytes": 174990,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089946937",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089946937/zip",
+        "expired": false,
+        "digest": "sha256:b4ca00a9fcb6d3caff25373b5634d2636d8b0df8def2995c073dfaedb441c70d",
+        "created_at": "2026-11-01T15:47:57Z",
+        "updated_at": "2026-11-01T15:47:57Z",
+        "expires_at": "2027-01-30T15:28:14Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      },
+      {
+        "id": 13089850224,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA4OTg1MDIyNA==",
+        "name": "coverage-report-db572eb132bd8098cf96d762eb967fa66d636bed",
+        "size_in_bytes": 643419,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089850224",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089850224/zip",
+        "expired": false,
+        "digest": "sha256:e32fd577d8491778f2ce666f1ea037b6d189940dc675b0cfd2cafb2a0dee0a20",
+        "created_at": "2026-11-01T15:33:26Z",
+        "updated_at": "2026-11-01T15:33:26Z",
+        "expires_at": "2026-11-08T15:33:25Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      },
+      {
+        "id": 13089824008,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA4OTgyNDAwOA==",
+        "name": "phase182-cache-probe-docker-warm-41321377478-1",
+        "size_in_bytes": 945,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089824008",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089824008/zip",
+        "expired": false,
+        "digest": "sha256:ae5c90ec3ba9dc5ebcfaf89c7b175f5ea3915f51c5993665c3d1529812cf2371",
+        "created_at": "2026-11-01T15:51:28Z",
+        "updated_at": "2026-11-01T15:51:28Z",
+        "expires_at": "2026-11-08T15:51:27Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      },
+      {
+        "id": 13089679871,
+        "node_id": "MDg6QXJ0aWZhY3QxMzA4OTY3OTg3MQ==",
+        "name": "closeout-attestation-db572eb132bd8098cf96d762eb967fa66d636bed",
+        "size_in_bytes": 554,
+        "url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089679871",
+        "archive_download_url": "https://api.github.com/repos/szTheory/scrypath/actions/artifacts/13089679871/zip",
+        "expired": false,
+        "digest": "sha256:e1e956d271ad2d2845fb4c5f6dcba36ebfe2b6b58c24b0db8c65360deff06f98",
+        "created_at": "2026-11-01T15:48:13Z",
+        "updated_at": "2026-11-01T15:48:13Z",
+        "expires_at": "2026-11-08T15:48:13Z",
+        "workflow_run": {
+          "id": 41321377478,
+          "repository_id": 1211932882,
+          "head_repository_id": 1211932882,
+          "head_branch": "planning/v1.45-foundation-ci",
+          "head_sha": "db572eb132bd8098cf96d762eb967fa66d636bed"
+        }
+      }
+    ]
+  },
+  "full_browser_acceptance": {
+    "schema": "scrypath.phase185-current-full-acceptance.v1",
+    "accepted": true,
+    "at": "2026-11-01T15:19:19.620309+00:00",
+    "source": "fa42d99ee3ad5290ea7d8ab089ba076c5e25558c",
+    "run_id": 41318243156,
+    "run_url": "https://github.com/szTheory/scrypath/actions/runs/41318243156",
+    "archive": "/private/tmp/scrypath-phase185-execution/candidate-r10-full-artifact.zip",
+    "archive_sha256": "sha256:7a1b14a434221408c276b04ca96e8d9906551d2906deb4a9271897b2b307e594",
+    "artifact_id": 13089615290,
+    "receipt_path": "/private/tmp/scrypath-phase185-execution/candidate-r10-full-run/phase105-evidence.json",
+    "receipt_sha256": "de6cf96607359f64c8f6d958dbda576461c710a4302a27e74527f8c43f19dee4",
+    "validation_path": "/private/tmp/scrypath-phase185-execution/candidate-r10-full-canonical-validation.json",
+    "validation_sha256": "8e432b5dd8c31434c1543adceb2f5b7f22582beca8f6a219eab4ec194a2193fb",
+    "browser_stage_seconds": 927.0,
+    "hosted_job_seconds": 1474.0,
+    "browser_operation_cap_seconds": 900,
+    "hosted_job_cap_seconds": 1800,
+    "cases": 254,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "retried": 0,
+    "cleanup": {
+      "status": "clean",
+      "project": "scrypath-e2e-41318243156-1-full",
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0
+    },
+    "browser_stage": {
+      "started_at": "2026-11-01T15:00:17Z",
+      "ended_at": "2026-11-01T15:15:44Z",
+      "exit_code": 0
+    },
+    "serial_execution": {
+      "protocol": "serial-two-group-v1",
+      "cases": 254,
+      "parts": [
+        {
+          "group": "ordinary",
+          "run_id": "phase185-41318243156-1",
+          "source_sha": "fa42d99ee3ad5290ea7d8ab089ba076c5e25558c",
+          "image_ids": [
+            "sha256:e79ac721326021b305ef700aca09bd666a048675ed0176662b036abcbde3feae",
+            "sha256:e79ac721326021b305ef700aca09bd666a048675ed0176662b036abcbde3feae",
+            "sha256:d2278d57c9d8824eed2ee1c26713f7adf45e42241d00e18f9f829d6e496adb04"
+          ],
+          "started_at": "2026-11-01T15:00:12.977Z",
+          "ended_at": "2026-11-01T15:08:49.211Z",
+          "exit_code": 0,
+          "operation_cap_seconds": 900,
+          "report": "partitions/ordinary/phase105-playwright.json",
+          "report_sha256": "sha256:ab2cf1cc0987541de883dd63fea7233d50f3e3c8222ac0feeeb775393553df78"
+        },
+        {
+          "group": "preservation",
+          "run_id": "phase185-41318243156-1",
+          "source_sha": "fa42d99ee3ad5290ea7d8ab089ba076c5e25558c",
+          "image_ids": [
+            "sha256:e79ac721326021b305ef700aca09bd666a048675ed0176662b036abcbde3feae",
+            "sha256:e79ac721326021b305ef700aca09bd666a048675ed0176662b036abcbde3feae",
+            "sha256:d2278d57c9d8824eed2ee1c26713f7adf45e42241d00e18f9f829d6e496adb04"
+          ],
+          "started_at": "2026-11-01T15:08:50.172Z",
+          "ended_at": "2026-11-01T15:15:47.767Z",
+          "exit_code": 0,
+          "operation_cap_seconds": 900,
+          "report": "partitions/preservation/phase105-playwright.json",
+          "report_sha256": "sha256:40952f580c3af4c7843ec6d99f138beab5cd4c7e80298f00ad076437a8b1dfc5"
+        }
+      ],
+      "run_id": "phase185-41318243156-1",
+      "source_sha": "fa42d99ee3ad5290ea7d8ab089ba076c5e25558c"
+    },
+    "original_pair_scope": "Original R15/R4 source-pair and global proof identities preserved. Current full receipt covers the changed accessibility consumers; no source relabeling or new aesthetic/independent approval."
+  },
+  "fresh_full_validation": {
+    "command": [
+      "node",
+      "scripts/ci/ecommerce_evidence.cjs",
+      "validate-receipt",
+      "--run-dir",
+      "/private/tmp/scrypath-phase185-execution/candidate-r10-full-run"
+    ],
+    "exit_code": 0,
+    "result": {
+      "valid": true,
+      "eligible": true,
+      "reasons": []
+    }
+  },
+  "full_proof_hashes_rechecked": true,
+  "implementation_to_terminal_changed_files": [
+    ".planning/PROJECT.md",
+    ".planning/REQUIREMENTS.md",
+    ".planning/ROADMAP.md",
+    ".planning/STATE.md",
+    ".planning/phases/185-executable-ui-quality-foundations/.continue-here.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-02-SUMMARY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-07-SUMMARY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-08-PLAN.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-08-SUMMARY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-09-PLAN.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-09-SUMMARY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-10-PLAN.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-10-SUMMARY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-EXECUTION-HISTORY-2026-11-01.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-RESOURCE-POLICY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-REVIEW-DISPOSITION.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-REVIEW.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-SECURITY.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-SOURCE-AUDIT.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-UI-PRESERVATION.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-UI-REVIEW.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-VALIDATION.md",
+    ".planning/phases/185-executable-ui-quality-foundations/185-VERIFICATION.md",
+    ".planning/reference/UI-WORKTREE-LEARNINGS.md",
+    ".planning/state.json"
+  ],
+  "frozen_phase_tracking_matches": true,
+  "unrelated_config_preserved_sha256": "b809d7495b19eb50883ca6c1cb34de1bf1439e952145d6e1d3d9fab1246b6ecc",
+  "limits": [
+    "No new suite/build/browser/Docker/CI dispatch.",
+    "Terminal hosted proof binds db572; it does not certify current HEAD after new test-only validation work.",
+    "Retained candidate full proof canonically recomputed; no terminal full ZIP download/recomputation.",
+    "No current dependency advisory refresh or security-risk acceptance.",
+    "Phase183 validation metadata was reconciled with maintainer authorization; validate-phase was not invoked and no tests were changed."
+  ],
+  "terminal_dependency_audit_lines_historical": [
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4589416Z dependency-audit graph=. status=clean source_sha=db572eb132bd8098cf96d762eb967fa66d636bed lock_sha_before=40535db1c56fdd39c3ec55327c29b6044fe6becb1626289a2973a5d8878f96b3 lock_sha_after=40535db1c56fdd39c3ec55327c29b6044fe6becb1626289a2973a5d8878f96b3 hex=2.5.1 fetch_status=ok fetch_ms=1352 audit_status=ok audit_ms=2011 ignore_advisories_source=default ignore_advisories_values=[] ignore_retirements_source=default ignore_retirements_values=[]",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4615015Z dependency-audit graph=examples/phoenix_meilisearch status=clean source_sha=db572eb132bd8098cf96d762eb967fa66d636bed lock_sha_before=61844005edac11b96e952ab06d08fce5dcc8ac5392d50d4ee76b5c2dfea74980 lock_sha_after=61844005edac11b96e952ab06d08fce5dcc8ac5392d50d4ee76b5c2dfea74980 hex=2.5.1 fetch_status=ok fetch_ms=1903 audit_status=ok audit_ms=2142 ignore_advisories_source=default ignore_advisories_values=[] ignore_retirements_source=default ignore_retirements_values=[]",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4647417Z dependency-audit graph=examples/scrypath_ecommerce status=clean source_sha=db572eb132bd8098cf96d762eb967fa66d636bed lock_sha_before=19024cdcc5be4d78f43ba990ec6b6113b8f9f58004031591d573834ba4c8817e lock_sha_after=19024cdcc5be4d78f43ba990ec6b6113b8f9f58004031591d573834ba4c8817e hex=2.5.1 fetch_status=ok fetch_ms=2262 audit_status=ok audit_ms=2177 ignore_advisories_source=default ignore_advisories_values=[] ignore_retirements_source=default ignore_retirements_values=[]",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4694716Z dependency-audit graph=scrypath_ops status=affected source_sha=db572eb132bd8098cf96d762eb967fa66d636bed lock_sha_before=f1771d6219216b5b144f1cf3d220ee487de39da7df071c8bbdaba1b2b3a44fdf lock_sha_after=f1771d6219216b5b144f1cf3d220ee487de39da7df071c8bbdaba1b2b3a44fdf hex=2.5.1 fetch_status=ok fetch_ms=2289 audit_status=failed audit_ms=2236 ignore_advisories_source=default ignore_advisories_values=[] ignore_retirements_source=default ignore_retirements_values=[]",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4763795Z   cloak 1.1.4 - EEF-CVE-2026-95105 (HIGH)",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4765465Z   cloak_ecto 1.3.0 - EEF-CVE-2026-94206 (MEDIUM)",
+    "deep-quality (advisory)\tRun elixir scripts/ci/dependency_audit.exs\t2026-11-01T15:28:50.4779707Z ##[error]Process completed with exit code 1."
+  ],
+  "terminal_to_audit_changed_files": [
+    ".planning/phases/183-maintainer-tooling-outside-the-hex-package/183-VALIDATION.md",
+    "test/release/package_contents_test.exs"
+  ],
+  "phase183_validation_refresh": {
+    "all_behavior_rows_durable": true,
+    "remaining_behavior_gaps": 0,
+    "frontmatter_compliant": true,
+    "body_claims_compliant": true,
+    "metadata_conflict": false,
+    "test_source_sha256": "62a8d08224b4c45d2132316a6b08b05d84448f9d67cbd1297ae8eb27fd187680",
+    "retained_logs": {
+      "/private/tmp/scrypath-phase183-validation-20261101/package.log": {
+        "sha256": "7c5f76de24bc6cddb94962ff185e85643dd87c709f6c2016e4c522eb40635ca0",
+        "result_lines": [
+          "110 tests, 0 failures"
+        ]
+      },
+      "/private/tmp/scrypath-phase183-validation-20261101/fast-failed-retest.log": {
+        "sha256": "764268707f288edf1e33a689f691d4e9dca13cf3c4fb639f4a79bfe00af42cd8",
+        "result_lines": [
+          "1 test, 0 failures"
+        ]
+      },
+      "/private/tmp/scrypath-phase183-validation-20261101/ui-literal-focused.log": {
+        "sha256": "7d3dec3687c45b2e2ee5ca6d6616f7cb94ffbd42f623983e0e3025dcc2e0449b",
+        "result_lines": [
+          "3 tests, 0 failures"
+        ]
+      },
+      "/private/tmp/scrypath-phase183-validation-20261101/hidden-documented-verifier.log": {
+        "sha256": "3d389aa8e5bc981a2d4cbd32aa192ec7fbb148792085afb21deda10e0cfd660c",
+        "result_lines": [
+          "     verifier documentation visibility changed; inspect added/removed hidden modules",
+          "2 tests, 1 failure (22 excluded)"
+        ]
+      },
+      "/private/tmp/scrypath-phase183-validation-20261101/path-consumer-leak.log": {
+        "sha256": "1863b944ae783fe8a355ea098a0c91e38310ed3abbbbd6746216d783ec1995b7",
+        "result_lines": [
+          "     code:  assert beams == expected",
+          "1 test, 1 failure (23 excluded)"
+        ]
+      }
+    },
+    "full_fast_suite_green_claim": false,
+    "sole_failed_test_focused_retest_passed": true,
+    "metadata_reconciliation": {
+      "at": "2026-11-01T17:00:18.804954+00:00",
+      "authorized_by": "Maintainer approved following the audit recommendations and requested next command after clearing context.",
+      "previous_frontmatter_compliant": false,
+      "current_frontmatter_compliant": true,
+      "test_or_implementation_change": false,
+      "new_suite_or_hosted_execution_claim": false
+    }
+  },
+  "previous_audit_backup": "/private/tmp/scrypath-v145-audit-refresh-20261101",
+  "integration": {
+    "method": "typed gsd-integration-checker read-only source audit",
+    "requirements_wired": 21,
+    "requirements_total": 21,
+    "flows_wired": 6,
+    "flows_total": 6,
+    "fixture_routes_consumed": 14,
+    "blockers": [],
+    "source_input_sha": "01f0a1aa0f7681026944e7237cc35beffc771bb3"
+  },
+  "metadata_reconciled": "2026-11-01T17:00:18.804954+00:00",
+  "nyquist": {
+    "compliant_phases": [
+      182,
+      183,
+      184,
+      185
+    ],
+    "partial_phases": [],
+    "not_validated_phases": [],
+    "missing_phases": [],
+    "overall": "compliant",
+    "metadata_conflicts": []
+  }
+}

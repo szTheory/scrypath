@@ -332,7 +332,8 @@ test.describe("admin path motion — DARKMOTION-01", () => {
         // Picking a saved search from the toolbar menu fills the form and runs it; the
         // Manage sheet then marks that row as loaded. Need two saved searches to move A->B.
         await page.locator("#saved-search-picker-button").click();
-        const items = page.locator("#saved-search-menu .ops-saved-search-menu__item");
+        const menu = page.locator("#saved-search-menu");
+        const items = menu.locator(".ops-saved-search-menu__item");
         const count = await items.count();
         test.skip(count < 2, "needs >= 2 catalog saved searches to exercise A->B selection");
         const names = [
@@ -340,6 +341,11 @@ test.describe("admin path motion — DARKMOTION-01", () => {
           (await items.nth(1).locator(".ops-saved-search-menu__name").textContent())!.trim()
         ];
         await page.keyboard.press("Escape");
+        await expect(menu).toBeHidden();
+        await expect(page.locator("#saved-search-picker-button")).toHaveAttribute(
+          "aria-expanded",
+          "false"
+        );
 
         for (const [index, name] of names.entries()) {
           await pickSavedSearch(page, name);

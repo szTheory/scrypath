@@ -57,6 +57,18 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   @product_schema "Elixir.ScrypathEcommerce.Catalog.Product"
 
+  # This reset is deliberately limited to tables already owned by the E2E fixtures plus
+  # ScrypathOps saved searches. Keep the fully-qualified table names literal: this route
+  # is only available in dev/test and additionally requires the disposable Phase 185 run id.
+  @phase185_reset_identity_tables ~w(
+    public.tenants
+    public.categories
+    public.products
+    public.variants
+    public.oban_jobs
+    public.scrypath_ops_saved_searches
+  )
+
   # Failed-sync reason-class fixtures for the `incident` scenario. Error strings are matched
   # verbatim by Scrypath.Operator.FailedWork's reason-class classifier — a typo silently
   # degrades a row to :unknown, so keep the signal substrings intact. Mirrors the Mix-task
@@ -164,6 +176,27 @@ defmodule ScrypathEcommerceWeb.E2EController do
 
   def seed(conn, %{"scenario" => scenario}) do
     case scenario do
+      "phase185_case_reset" ->
+        if phase185_run?() do
+          %{identities: identities, search: search} = reset_phase185_case_state!()
+
+          json(conn, %{
+            scenario: scenario,
+            tenant_id: nil,
+            categories: %{},
+            products: %{},
+            failed_count: 0,
+            drift: false,
+            reset_tables: @phase185_reset_identity_tables,
+            identity_state: identities,
+            search_reset: search
+          })
+        else
+          conn
+          |> put_status(:forbidden)
+          |> json(%{error: "phase185_case_reset requires a disposable Phase185 run id"})
+        end
+
       "e2e_search_catalog" ->
         # The e2e lane runs against a persistent (non-sandbox) DB + shared global
         # Meilisearch index, so reset prior catalog/queue/index state before seeding —
@@ -188,6 +221,63 @@ defmodule ScrypathEcommerceWeb.E2EController do
           tenant_id: data.tenant.id,
           categories: categories_by_name,
           products: products_by_name
+        })
+
+      "phase185_partial_catalog" ->
+        reset_state!()
+        prepare_indexes!()
+
+        data = CatalogFixtures.scenario_e2e_search_catalog()
+        missing_product = hd(data.products)
+
+        {:ok, missing_product} =
+          missing_product
+          |> Product.changeset(%{description: nil})
+          |> Repo.update(tenant_id: data.tenant.id)
+
+        products =
+          Enum.map(data.products, fn product ->
+            if product.id == missing_product.id, do: missing_product, else: product
+          end)
+
+        sync_products!(products)
+
+        categories_by_name =
+          Map.new(data.categories, fn category -> {category.name, category.id} end)
+
+        products_by_name = Map.new(products, fn product -> {product.name, product.id} end)
+
+        json(conn, %{
+          scenario: scenario,
+          tenant_id: data.tenant.id,
+          categories: categories_by_name,
+          products: products_by_name,
+          failed_count: 0,
+          drift: false,
+          missing_field_product_id: missing_product.id,
+          missing_field_product_name: missing_product.name
+        })
+
+      "phase185_one_failed" ->
+        reset_state!()
+        prepare_indexes!()
+
+        data = CatalogFixtures.scenario_e2e_search_catalog()
+        sync_products!(data.products)
+        failed_count = inject_failed_sync_classes!(data, 1)
+
+        categories_by_name =
+          Map.new(data.categories, fn category -> {category.name, category.id} end)
+
+        products_by_name = Map.new(data.products, fn product -> {product.name, product.id} end)
+
+        json(conn, %{
+          scenario: scenario,
+          tenant_id: data.tenant.id,
+          categories: categories_by_name,
+          products: products_by_name,
+          failed_count: failed_count,
+          drift: false
         })
 
       _ ->
@@ -530,6 +620,119 @@ defmodule ScrypathEcommerceWeb.E2EController do
     Repo.delete_all(Job, skip_tenant_id: true)
   end
 
+  defp reset_phase185_case_state! do
+    reset_state!()
+    Repo.delete_all(SavedSearch, skip_tenant_id: true)
+    search = reset_phase185_search_state!()
+
+    identities =
+      Map.new(@phase185_reset_identity_tables, fn table ->
+        %Postgrex.Result{rows: [[1]]} =
+          Repo.query!(
+            "SELECT setval(pg_get_serial_sequence($1, 'id')::regclass, 1, false)",
+            [table]
+          )
+
+        {table, %{next_id: 1, is_called: false}}
+      end)
+
+    %{identities: identities, search: search}
+  end
+
+  # Only the guarded disposable Phase185 reset uses this cleanup. Ordinary
+  # operational fixtures and real operator task history keep their semantics.
+  defp reset_phase185_search_state! do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    backend = Scrypath.Config.fetch_backend!(config)
+
+    indexes =
+      for schema <- [Product, Variant] do
+        live = backend.index_name(schema, config)
+        target = IndexManagement.target_index_name(schema, config)
+
+        for {index, suffix} <- [{live, "/documents"}, {target, ""}] do
+          case Client.get_settings(index, config) do
+            {:ok, _} ->
+              phase185_delete_and_wait!(
+                "/indexes/#{URI.encode(index, &URI.char_unreserved?/1)}#{suffix}",
+                [],
+                config
+              )
+
+            {:error, {:http_error, 404, _}} ->
+              :ok
+
+            {:error, reason} ->
+              raise ArgumentError, "inspect disposable index #{index} failed: #{inspect(reason)}"
+          end
+        end
+
+        %{schema: inspect(schema), live_index: live, target_index: target}
+      end
+
+    targets = Enum.map_join(indexes, ",", & &1.target_index)
+
+    phase185_delete_and_wait!(
+      "/tasks",
+      [indexUids: targets, statuses: "succeeded,failed,canceled"],
+      config
+    )
+
+    case Client.tasks([index_uids: Enum.map(indexes, & &1.target_index), limit: 1], config) do
+      {:ok, %{"results" => [], "next" => nil}} ->
+        :ok
+
+      other ->
+        raise ArgumentError, "disposable target task history did not reset: #{inspect(other)}"
+    end
+
+    %{
+      protocol: "phase185-search-reset-v1",
+      indexes: indexes,
+      live_documents: "empty",
+      targets: "absent",
+      target_tasks: "empty",
+      target_task_history: %{
+        indexes: "declared-targets-only",
+        statuses: ["succeeded", "failed", "canceled"]
+      }
+    }
+  end
+
+  defp phase185_delete_and_wait!(path, params, config) do
+    options =
+      config
+      |> Keyword.get(:req_options, [])
+      |> Keyword.delete(:base_url)
+      |> Keyword.update(:headers, [], fn headers ->
+        Enum.reject(headers, fn {name, _} ->
+          String.downcase(to_string(name)) == "x-meili-api-key"
+        end)
+      end)
+      |> Keyword.put(:base_url, Scrypath.Config.fetch_meilisearch_url!(config))
+
+    request = Req.new(options)
+
+    request =
+      case Scrypath.Config.meilisearch_api_key(config) do
+        nil -> request
+        key -> Req.Request.put_header(request, "x-meili-api-key", key)
+      end
+
+    with {:ok, %Req.Response{status: status, body: body}} when status in 200..299 <-
+           Req.delete(request, url: path, params: params),
+         {:ok, task} <- TaskPayload.normalize(body) do
+      wait_task!({:ok, %{task: task}}, config, "reset disposable search state #{path}")
+    else
+      other ->
+        raise ArgumentError, "reset disposable search state #{path} failed: #{inspect(other)}"
+    end
+  end
+
+  defp phase185_run? do
+    String.starts_with?(System.get_env("E2E_RUN_ID", ""), "phase185-")
+  end
+
   defp clear_search_indexes! do
     config = Scrypath.Config.resolve!(sync_mode: :manual)
     backend = Scrypath.Config.fetch_backend!(config)
@@ -700,7 +903,10 @@ defmodule ScrypathEcommerceWeb.E2EController do
   # error text so each row classifies into its intended class via FailedWork. Retryable
   # rows are parked far in the future so the running queue never executes (and re-states)
   # them. Idempotent: clears prior demo_seed_* rows first.
-  defp inject_failed_sync_classes!(data) do
+  defp inject_failed_sync_classes!(data, count \\ length(@failed_sync_specs))
+
+  defp inject_failed_sync_classes!(data, count)
+       when is_integer(count) and count > 0 and count <= length(@failed_sync_specs) do
     tenant_id = data.tenant.id
     category_id = data.categories |> List.first() |> Map.fetch!(:id)
     product_id = data.products |> List.first() |> Map.fetch!(:id)
@@ -712,10 +918,11 @@ defmodule ScrypathEcommerceWeb.E2EController do
     )
     |> Repo.delete_all(skip_tenant_id: true)
 
-    now = DateTime.utc_now()
+    now = ScrypathOps.Clock.utc_now()
     far_future = DateTime.add(now, 3650 * 24 * 60 * 60, :second)
 
     @failed_sync_specs
+    |> Enum.take(count)
     |> Enum.with_index()
     |> Enum.each(fn {spec, idx} ->
       attempted_at = DateTime.add(now, -idx * 137, :second)
@@ -731,7 +938,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
       )
     end)
 
-    length(@failed_sync_specs)
+    count
   end
 
   defp insert_failed_job!(

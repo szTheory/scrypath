@@ -1,3 +1,25 @@
+# Working preferences
+
+## Communication and workflow preferences
+
+- Speak to the user as a software engineer and colleague. Use plain, direct language. Keep necessary technical terms and explain unfamiliar workflow language through its practical consequence.
+- End with the actual outcome, what remains broken or blocked, and the next useful action. Usually one short paragraph or at most three short bullets is enough. State clearly when no user action is needed.
+- Keep hashes, internal task and threat IDs, exhaustive test counts, audit history, and workflow metadata in linked artifacts unless they are needed for a real decision or explicitly requested. Say what the checks establish in ordinary language.
+- Give progress updates when there is new information. When a required update interval arrives during a long wait, use one brief factual line; do not repeat the whole plan or invent progress.
+- Ask for user input only when the answer changes scope, authority, risk, cost, an irreversible action, or a required phase/milestone boundary. Explain the concrete choice and why it matters. Continue routine authorized work and bookkeeping without asking for acknowledgments or exact phrases.
+- Preserve an existing safety stop automatically when its cause remains unresolved. A confirmation merely to keep work stopped is unnecessary. Removing redundant confirmation does not authorize live tests, accept risk, renew a budget/window, or start another phase.
+- Record explicit user corrections in durable instructions. Apply these preferences to OpenGSD planning, execution, reviews, progress updates, and final summaries. Keep detailed evidence available without making the user translate process records into takeaways.
+- When authorized work remains and no user action is needed, keep working. Carry planning through implementation, tests and review within the selected phase; stop for a real decision or phase/milestone boundary. Removing an unnecessary confirmation is not a reason to leave the task idle.
+- At every pause or handoff, state in chat what is happening, the concrete blocker and consequence, your recommended next step, and exactly who acts next. Explicitly say when waiting for the user versus continuing work.
+- Summarize every risk or decision in plain language before asking; make linked documents optional detail. When the user has no strong preference, recommend a concrete path. An uninformed or indifferent response is not risk acceptance.
+- Prefer the least disruptive evidence-supported remedy. For stuck project tests, inspect attributable processes and consider targeted cleanup first; recommend a whole-machine restart only when its necessity and impact are established.
+- For lightweight delegated work in Codex, prefer GPT-6 Luna (`gpt-6-luna`) with extra-high (`xhigh`) reasoning effort for cost efficiency. Delegate only when authorized; reserve stronger-model synthesis or review for consequential tradeoffs.
+- Approval of a task or phase includes its required local builds, tests, CI, reviews, fixes and bounded retests within the approved scope and limits. Runtime length alone is not an approval gate. Do not turn each plan step or verification command into another permission request.
+- Apply an already approved compatibility policy through its concrete fields, version changes, tests and documentation without asking again for each implementation slice. Ask only for a materially new consequence outside that policy. Preserve explicit user stops, exact resource limits and specific no-retry instructions; investigate failures and resolve their cause before retrying.
+- When repeated approvals expose workflow friction, investigate the cause, implement low-risk efficiency improvements, and record the lesson in durable instructions. Prefer measured critical-path and duplicate-work reductions over adding caches, concurrency or dependencies by default.
+
+--- project-doc ---
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
@@ -93,6 +115,10 @@ No project skills found. Add skills to `.codex/skills/` or `.agents/skills/` wit
 
 When `.planning/STATE.md` says `Awaiting next milestone`, the root `.planning/ROADMAP.md` is an index of shipped milestones, not an active phase roadmap. OpenGSD may report `roadmap.analyze` with `scope: unscoped` because the archived milestone version in STATE has no active milestone section in that index. Its `init.progress` inventory may also surface historical phase directories as `current_phase` or `has_work_in_progress`; these are not active while STATE says no phase is active. Treat this as the expected idle state: use STATE and the roadmap's Current Posture, do not route into historical phase directories, and do not present the scope result as missing or corrupt planning data.
 
+Approved phase verification includes the Git metadata and Docker access its canonical commands need. For a known fetch-dependent gate such as `mix verify.repository_contracts`, use the tool's `require_escalated` permission on the first invocation; a sandbox run that cannot write its worktree `FETCH_HEAD` only repeats the full suite without valid trusted-history evidence. Use the same first-run access for canonical Docker builds that write Buildx metadata. Keep Buildx metadata in the task's external writable directory when the existing runner supports `BUILDX_CONFIG`. Do not ask the user again for these already authorized verification steps, weaken the gate, or treat permission failures as behavioral RED.
+
+Some repository contracts build a clean Git snapshot. Before rerunning one after a fix, check whether it reads committed HEAD or the working tree. Run the affected focused check, checkpoint the owned fix when that check is green, then run the snapshot-based gate against that commit. An uncommitted fix cannot repair a clean-copy test of the previous commit; avoid spending another full run on the same stale input.
+
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
@@ -125,3 +151,7 @@ For storefront or ScrypathOps changes, follow [examples/scrypath_ecommerce/e2e/U
 > Profile not yet configured. Run the GSD profile workflow to generate your developer profile.
 > This section is managed by GSD -- do not edit manually.
 <!-- GSD:profile-end -->
+
+## Phase 185 verification correction
+
+The maintainer approved replacing Plans 08/09 verification-backstop annotations with planned automated test obligations, preserving all 61 coverage pairs. These annotations are not passing evidence. Gate preservation on automated matched image/copy comparisons and held-out tests; keep subjective rendered critique nonblocking and explicitly scoped. Missing automated evidence and demonstrated regressions still block completion. Do not infer independent or maintainer aesthetic approval.

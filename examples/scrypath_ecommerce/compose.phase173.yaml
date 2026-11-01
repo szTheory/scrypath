@@ -13,6 +13,9 @@ services:
     build:
       context: ../..
       dockerfile: examples/scrypath_ecommerce/Dockerfile
+      target: runtime_test
+      labels:
+        org.opencontainers.image.revision: ${SCRYPATH_SOURCE_SHA:-unknown}
     working_dir: /app/scrypath_ops
     command: ["sh", "/app/examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh"]
     environment:

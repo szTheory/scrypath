@@ -191,6 +191,32 @@ defmodule Scrypath.Repository.DependencyAuditTest do
     assert Enum.count(Process.get(calls_key), &match?({:audit, _}, &1)) == 4
   end
 
+  test "an invalid source SHA fails closed while all dependency graphs continue" do
+    root = fixture_repo()
+    calls_key = {__MODULE__, make_ref()}
+
+    runner =
+      command_runner(root, calls_key, fn
+        "git", ["rev-parse", "HEAD"], _opts -> {"not-a-full-source-sha\n", 0}
+        _, _, _ -> :default
+      end)
+
+    result =
+      Audit.run(
+        root: root,
+        tracked_file_reader: tracked_reader(Audit.inventory()),
+        command_runner: runner,
+        clock: clock()
+      )
+
+    assert result.status == :failed
+    assert Enum.any?(result.errors, &String.contains?(&1, "invalid source SHA"))
+    assert Enum.all?(result.graphs, &is_nil(&1.source_sha))
+    assert Enum.all?(result.graphs, &(&1.status == :incomplete))
+    assert Enum.count(Process.get(calls_key), &match?({:fetch, _}, &1)) == 4
+    assert Enum.count(Process.get(calls_key), &match?({:audit, _}, &1)) == 4
+  end
+
   test "missing manifests or locks produce explicit rows without blocking other graphs" do
     for missing_file <- ["mix.exs", "mix.lock"] do
       root = fixture_repo()

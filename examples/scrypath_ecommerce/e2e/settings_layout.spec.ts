@@ -2,6 +2,7 @@ import {expect, test} from "@playwright/test";
 import {mkdir} from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import {waitForLiveConnected} from "./helpers/e2e";
+import {scanWithFrameSafeLegacy} from "./helpers/axe-scan.mjs";
 
 // Read-only: safe against the retained preview; never seed or change index settings.
 const artifacts = "ui-review-artifacts/settings-layout-followup";
@@ -67,7 +68,11 @@ for (const theme of ["light", "dark"]) {
         expect(await differences.evaluate(el => getComputedStyle(el).backgroundImage)).toBe("none");
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-      const accessibility = await new AxeBuilder({page}).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+      const accessibility = await scanWithFrameSafeLegacy(page, async (legacyMode: boolean) => {
+        const builder = new AxeBuilder({page});
+        if (legacyMode && typeof builder.setLegacyMode === "function") builder.setLegacyMode();
+        return builder.withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+      });
       expect(accessibility.violations).toEqual([]);
       await section.screenshot({path: `${artifacts}/loaded-${theme}-${width}.png`});
     });

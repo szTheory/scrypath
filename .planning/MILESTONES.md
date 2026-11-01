@@ -1,5 +1,35 @@
 # Milestones
 
+## v1.45 Foundation and CI (Archived locally: 2026-11-01; merge/publication separate)
+
+**Delivered on branch:** Reliable full browser/cache verification, unpackaged maintainer tooling, lean explicit dependency/runtime graphs and executable UI quality foundations preserving supported visible behavior.
+
+**Phases completed:** 182–185; 4 phases, 38 plans, all 21 requirements. **Task accounting:** 79 planned task blocks; summary formats are inconsistent, so the CLI's 45 is an incomplete extraction rather than the milestone task total. No complete measured actual-task total is claimed.
+
+**Key accomplishments:**
+
+- Complete mounted/standalone browser inventory with source-bound raw outcomes, bounded artifacts and owned cleanup.
+- Safe graph/toolchain/lock-aware BEAM reuse and checked Docker build handoff with real warm/cold/fallback/lock-change evidence at their original sources.
+- Test-only maintainer tooling outside Hex, proven through actual archives, installed/path consumers and durable rejecting mutations.
+- Explicit Telemetry and approved Req/Sigra admission, lean diagnostics/mail/assets dependencies, independent static-build/runtime graphs and reconciled proposal/advisory evidence.
+- Required literal/contrast/focus/token drift checks, both real CSS bundles, preserved routes/caller ownership, exact 61-case held-out and global image/copy/state proof, and retired paid/mock review paths.
+
+**Audit:** `tech_debt`; requirements 21/21, phases 4/4 at original report cutoffs, integration 21/21 and flows 6/6; all four Nyquist records compliant. All recorded debt and residual v1.44 debt carry forward explicitly. Cloak/Cloak Ecto remain affected/unaccepted; deep-quality failure is not hidden.
+
+**Closeout type:** `override_closeout`, authorized by the maintainer on 2026-11-01 for stale historical phase reports 182–184 and documented debt, subject to fresh candidate/final-source CI. Reports were not refreshed or relabeled. Known artifact acknowledgment overrides: 0 newly acknowledged, 2 carried forward from a prior close (see STATE Deferred Items). Three historical phase-freshness overrides are additional and distinct. Quick tasks remain untouched.
+
+**Verification:** Fresh local core and repository gates pass at the committed archive/test-path source; [local evidence](milestones/v1.45-LOCAL-VERIFICATION.json) pins logs and commands. Candidate [run 41329869930](https://github.com/szTheory/scrypath/actions/runs/41329869930) passed the five required jobs, coverage, immutable attestation and full-browser proof at its own pre-archive SHA. The downloaded attestation digest matches GitHub. All archive/tracking writes precede final committed-source machine acceptance. The required five jobs, coverage and immutable attestation must pass through the canonical command. Candidate and terminal receipts remain outside the checkout; these tracked bytes cannot assert a later terminal outcome. See [closeout](milestones/v1.45-CLOSEOUT.md).
+
+**Stats at audit cutoff:** `v1.44..d5ce0435`, 551 execution/tracking commits, 396 files changed, 60,829 insertions / 2,040 deletions including planning, 2026-10-26–2026-11-01. Tracked source at that cutoff: 81,987 Elixir lines (.ex/.exs), 31,839 JavaScript lines (.js/.cjs), 10,743 CSS lines. Later archive/test-path bookkeeping is separate.
+
+**Delivery limits:** No merged-main, published-package, independent-review, broad accessibility or design approval. Original receipts keep their actual identities. Retained preview and its source-staleness stop are unchanged; unrelated config is excluded.
+
+**Archives:** [roadmap](milestones/v1.45-ROADMAP.md), [requirements](milestones/v1.45-REQUIREMENTS.md), [audit](milestones/v1.45-MILESTONE-AUDIT.md), and `milestones/v1.45-phases/`.
+
+**What's next:** After terminal acceptance, `$gsd-new-milestone v1.46` selects/confirms the next rolling-roadmap scope. No successor phase starts automatically.
+
+---
+
 ## v1.44 Sync correctness (Archived locally: 2026-10-26; merge/publication pending)
 
 **Delivered on branch:** Consistent loader-backed sync and complete full-key

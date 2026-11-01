@@ -39,12 +39,38 @@ defmodule ScrypathOps.SecurityValidationTest do
     assert :ok == Security.validate!()
   end
 
-  test "validate!/0 raises when sigra sudo_confirm_path is missing" do
+  test "validate!/0 explains when sigra sudo_confirm_path is missing" do
     System.put_env("OPSUI_AUTH_MODE", "sigra")
     Application.put_env(:scrypath_ops, :sigra, [])
 
-    assert_raise RuntimeError, ~r/OPSUI_AUTH_MODE=sigra requires :sudo_confirm_path/, fn ->
-      Security.validate!()
+    error =
+      assert_raise RuntimeError, fn ->
+        Security.validate!()
+      end
+
+    message = Exception.message(error)
+    assert message =~ "OPSUI_AUTH_MODE=sigra requires a valid :sudo_confirm_path"
+    assert message =~ "scrypath_ops/README.md"
+    assert message =~ "guides/support-and-compatibility.md"
+    refute message =~ "guides/integrations/sigra.md"
+  end
+
+  test "validate/1 rejects empty, relative, and external sigra sudo confirmation paths" do
+    for path <- [
+          "",
+          "sudo/confirm",
+          "//other.example/sudo",
+          "https://other.example/sudo",
+          "/sudo/\\confirm",
+          "/sudo/\nconfirm",
+          "/sudo/\rconfirm",
+          "/sudo/\tconfirm",
+          "/%09confirm"
+        ] do
+      assert {:error, message} =
+               Security.validate(%{auth_mode: "sigra", sigra: [sudo_confirm_path: path]})
+
+      assert message =~ ":sudo_confirm_path"
     end
   end
 

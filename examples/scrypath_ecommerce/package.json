@@ -17,8 +17,7 @@
     "test:e2e:admin-screens": "playwright test e2e/admin_screenshots.spec.ts",
     "test:e2e:admin-matrix": "playwright test e2e/admin_screenshot_matrix.spec.ts",
     "test:e2e:admin-contrast": "playwright test e2e/admin_contrast_matrix.spec.ts",
-    "test:e2e:admin-light-parity": "node e2e/admin-light-baseline-check.mjs",
-    "test:e2e:ops-ui-visual-judge": "node e2e/ops-ui-visual-judge.mjs"
+    "test:e2e:admin-light-parity": "node e2e/admin-light-baseline-check.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

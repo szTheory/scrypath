@@ -92,15 +92,15 @@ const PAIR_RULES = [
   { fg: "base-content",       bg: "base-100",   role: "text" },
   { fg: "base-content",       bg: "base-200",   role: "text" },
   { fg: "base-content",       bg: "base-300",   role: "text" },
-  { fg: "primary-content",    bg: "primary",    role: "ui"   }, // button pairs → 3.0 threshold
+  { fg: "primary-content",    bg: "primary",    role: "text" }, // ordinary button labels require 4.5
   { fg: "primary-content",    bg: "primary-strong", role: "text" }, // selected text fills → 4.5 threshold
-  { fg: "secondary-content",  bg: "secondary",  role: "ui"   },
-  { fg: "accent-content",     bg: "accent",     role: "ui"   },
-  { fg: "neutral-content",    bg: "neutral",    role: "ui"   },
-  { fg: "info-content",       bg: "info",       role: "ui"   },
-  { fg: "success-content",    bg: "success",    role: "ui"   },
-  { fg: "warning-content",    bg: "warning",    role: "ui"   },
-  { fg: "error-content",      bg: "error",      role: "ui"   },
+  { fg: "secondary-content",  bg: "secondary",  role: "text" },
+  { fg: "accent-content",     bg: "accent",     role: "text" },
+  { fg: "neutral-content",    bg: "neutral",    role: "text" },
+  { fg: "info-content",       bg: "info",       role: "text" },
+  { fg: "success-content",    bg: "success",    role: "text" },
+  { fg: "warning-content",    bg: "warning",    role: "text" },
+  { fg: "error-content",      bg: "error",      role: "text" },
 ];
 
 // D-14: role → AA / AAA thresholds
@@ -112,24 +112,144 @@ const THRESHOLDS = {
 
 // ─── CSS PARSE (D-10) ─────────────────────────────────────────────────────────
 
-// Parse the two daisyUI theme blocks from app.css.
-// Returns { dark: { "base-100": "#141923", ... }, light: { ... } }
-// Regex: /@plugin[^{]*daisyui-theme[^{]*\{([^}]+)\}/g extracts each theme block body.
-// T-128-03: text ONLY — regex extraction of hex values; NO eval() or CSS execution.
+// Locate top-level daisyUI theme at-rules lexically. Quoted declaration values
+// and comments are inert here, even when they contain plugin-like text/braces.
+function cssCommentEnd(source, start) {
+  const close = source.indexOf("*/", start + 2);
+  return close < 0 ? source.length : close + 2;
+}
+
+function cssStringEnd(source, start) {
+  const quote = source[start];
+  for (let i = start + 1; i < source.length; i += 1) {
+    if (source[i] === "\\") { i += 1; continue; }
+    if (source[i] === quote) return i + 1;
+  }
+  return source.length;
+}
+
+function skipCssTrivia(source, start) {
+  let i = start;
+  while (i < source.length) {
+    if (/\s/.test(source[i])) { i += 1; continue; }
+    if (source.startsWith("/*", i)) { i = cssCommentEnd(source, i); continue; }
+    break;
+  }
+  return i;
+}
+
+function onlyCssTrivia(source, start, end) {
+  return skipCssTrivia(source.slice(0, end), start) === end;
+}
+
+function readCssString(source, start) {
+  const quote = source[start];
+  let value = "";
+  for (let i = start + 1; i < source.length; i += 1) {
+    if (source[i] === "\\") {
+      if (i + 1 < source.length) value += source[++i];
+      continue;
+    }
+    if (source[i] === quote) return { value, end: i + 1 };
+    value += source[i];
+  }
+  return null;
+}
+
+function cssBlockEnd(source, open) {
+  let depth = 1;
+  for (let i = open + 1; i < source.length; i += 1) {
+    if (source.startsWith("/*", i)) { i = cssCommentEnd(source, i) - 1; continue; }
+    if (source[i] === "\"" || source[i] === "'") { i = cssStringEnd(source, i) - 1; continue; }
+    if (source[i] === "{") depth += 1;
+    else if (source[i] === "}" && --depth === 0) return i;
+  }
+  throw new Error("Unterminated daisyUI theme block");
+}
+
+function stripCssComments(source) {
+  let result = "";
+  for (let i = 0; i < source.length;) {
+    if (source.startsWith("/*", i)) {
+      const end = cssCommentEnd(source, i);
+      result += source.slice(i, end).replace(/[^\n]/g, " ");
+      i = end;
+    } else if (source[i] === "\"" || source[i] === "'") {
+      const end = cssStringEnd(source, i);
+      result += source.slice(i, end);
+      i = end;
+    } else {
+      result += source[i++];
+    }
+  }
+  return result;
+}
+
+function cssDeclarations(body) {
+  const declarations = [];
+  let start = 0;
+  for (let i = 0; i < body.length; i += 1) {
+    if (body.startsWith("/*", i)) { i = cssCommentEnd(body, i) - 1; continue; }
+    if (body[i] === "\"" || body[i] === "'") { i = cssStringEnd(body, i) - 1; continue; }
+    if (body[i] === ";") {
+      declarations.push(stripCssComments(body.slice(start, i)).trim());
+      start = i + 1;
+    }
+  }
+  declarations.push(stripCssComments(body.slice(start)).trim());
+  return declarations.filter(Boolean);
+}
+
+function themePluginBodies(cssText) {
+  const bodies = [];
+  let depth = 0;
+  let statementStart = 0;
+  for (let i = 0; i < cssText.length;) {
+    if (cssText.startsWith("/*", i)) { i = cssCommentEnd(cssText, i); continue; }
+    if (cssText[i] === "\"" || cssText[i] === "'") { i = cssStringEnd(cssText, i); continue; }
+
+    if (depth === 0 && cssText.startsWith("@plugin", i) && onlyCssTrivia(cssText, statementStart, i)) {
+      const afterKeyword = i + "@plugin".length;
+      if (afterKeyword === cssText.length || !/[\w-]/.test(cssText[afterKeyword])) {
+        const pathStart = skipCssTrivia(cssText, afterKeyword);
+        const pluginPath = cssText[pathStart] === "\"" || cssText[pathStart] === "'"
+          ? readCssString(cssText, pathStart)
+          : null;
+        if (pluginPath && pluginPath.value.includes("daisyui-theme")) {
+          const open = skipCssTrivia(cssText, pluginPath.end);
+          if (cssText[open] === "{") {
+            const close = cssBlockEnd(cssText, open);
+            bodies.push(cssText.slice(open + 1, close));
+            i = close + 1;
+            statementStart = i;
+            continue;
+          }
+        }
+      }
+    }
+
+    if (cssText[i] === "{") depth += 1;
+    else if (cssText[i] === "}") {
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) statementStart = i + 1;
+    } else if (cssText[i] === ";" && depth === 0) statementStart = i + 1;
+    i += 1;
+  }
+  return bodies;
+}
+
 function parseThemeBlocks(cssText) {
   const blocks = {};
-  const blockRe = /@plugin[^{]*daisyui-theme[^{]*\{([^}]+)\}/g;
-  let m;
-  while ((m = blockRe.exec(cssText)) !== null) {
-    const body = m[1];
-    const nameMatch = body.match(/name:\s*"([^"]+)"/);
+  for (const body of themePluginBodies(cssText)) {
+    const declarations = cssDeclarations(body);
+    const nameMatch = declarations.map((declaration) => /^name:\s*"([^"]+)"$/.exec(declaration)).find(Boolean);
     if (!nameMatch) continue;
     const name = nameMatch[1];
+    if (blocks[name]) throw new Error(`Duplicate theme ${name}`);
     blocks[name] = {};
-    const tokenRe = /--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g;
-    let t;
-    while ((t = tokenRe.exec(body)) !== null) {
-      blocks[name][t[1]] = t[2];
+    for (const declaration of declarations) {
+      const token = /^--color-([\w-]+):\s*(#[0-9a-fA-F]{6})$/.exec(declaration);
+      if (token) blocks[name][token[1]] = token[2];
     }
   }
   return blocks;
@@ -634,7 +754,7 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
       );
     }
 
-    const mismatched = alphas.find((alpha) => Math.abs(alpha - pair.alpha) > 0.01);
+    const mismatched = alphas.find((alpha) => alpha !== pair.alpha);
     if (mismatched !== undefined) {
       throw new Error(
         `D-15 Guard 2: named muted token --${pair.css_var} alpha mismatch!\n` +
@@ -729,7 +849,7 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // Check each found (selector, alpha) pair is in the manifest
   for (const { selector, alpha, lineNumber } of found) {
     const inManifest = mutedPairs.some(
-      (pair) => pair.selector === selector && Math.abs(pair.alpha - alpha) <= 0.01
+      (pair) => pair.selector === selector && pair.alpha === alpha
     );
     if (!inManifest) {
       throw new Error(
@@ -748,7 +868,7 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
       (pair) =>
         pair.selector === selector &&
         pair.css_var === css_var &&
-        Math.abs(pair.alpha - alpha) <= 0.01
+        pair.alpha === alpha
     );
     if (!inManifest) {
       throw new Error(
@@ -764,7 +884,7 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   }
 
   // WR-02: reverse lockstep — every non-decorative manifest entry must correspond to an
-  // actual `color: color-mix(...)` occurrence found in app.css (within 0.01 alpha
+  // actual `color: color-mix(...)` occurrence found in app.css (at the exact alpha
   // tolerance). This catches stale/renamed/removed manifest entries that no longer match
   // any CSS rule, which the forward (css→manifest) scan above cannot detect.
   for (const pair of mutedPairs) {
@@ -774,10 +894,10 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
           (f) =>
             f.selector === pair.selector &&
             f.css_var === pair.css_var &&
-            Math.abs(f.alpha - pair.alpha) <= 0.01
+            f.alpha === pair.alpha
         )
       : found.some(
-          (f) => f.selector === pair.selector && Math.abs(f.alpha - pair.alpha) <= 0.01
+          (f) => f.selector === pair.selector && f.alpha === pair.alpha
         );
     if (!hasCssHit) {
       throw new Error(
@@ -797,12 +917,18 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
 
 // ─── PAIR EVALUATION ──────────────────────────────────────────────────────────
 
+function passesAA(raw, role) {
+  if (!THRESHOLDS[role] || !Number.isFinite(raw) || raw < 1 || raw > 21) throw new Error("Invalid contrast ratio or role");
+  return raw >= THRESHOLDS[role].aa;
+}
+
 // Evaluate a single pair and return a finding object (D-18 schema)
 function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
-  const thresholds = THRESHOLDS[role] || THRESHOLDS.text;
+  const thresholds = THRESHOLDS[role];
+  if (!thresholds) throw new Error(`Invalid contrast role ${role}`);
   // WR-01: compare the UN-ROUNDED ratio against the threshold; round only for display.
   const raw = contrastRatioRaw(fg, bg);
-  const passAA = raw >= thresholds.aa;
+  const passAA = passesAA(raw, role);
   const passAAA = raw >= thresholds.aaa;
   const actual = Math.round(raw * 100) / 100; // display value only
 
@@ -824,6 +950,7 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
     fg,
     bg,
     actual_ratio: actual,
+    raw_ratio: raw,
     required_ratio: thresholds.aa,
     aaa_required: thresholds.aaa,
     pass_aa: passAA,
@@ -841,6 +968,102 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
 
 // ─── MAIN FUNCTION ────────────────────────────────────────────────────────────
 
+// Bounded source reader: declarations are data, never evaluated as code.
+function readThemeProperties(css) {
+  const themes = {};
+  for (const body of themePluginBodies(css)) {
+    const declarations = cssDeclarations(body);
+    const name = declarations.map((declaration) => /^name:\s*"(light|dark)"$/.exec(declaration)?.[1]).find(Boolean);
+    if (!name || themes[name]) throw new Error("Missing, duplicate or unsupported theme name");
+    const props = {};
+    for (const declaration of declarations) {
+      const entry = declaration.match(/^(--[\w-]+)\s*:\s*(.+)$/);
+      if (!entry) continue;
+      const key = entry[1].slice(2);
+      if (Object.hasOwn(props, key)) throw new Error(`Duplicate ${name} token ${key}`);
+      props[key] = entry[2].trim();
+    }
+    for (const [key, value] of Object.entries(props)) {
+      if (key.startsWith("color-") && !/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`Unsupported ${name} color ${key}: ${value}`);
+    }
+    themes[name] = props;
+  }
+  if (Object.keys(themes).sort().join(",") !== "dark,light") throw new Error("Both light and dark themes are required");
+  return themes;
+}
+
+function colorValue(expression, properties, background, seen = []) {
+  if (typeof expression !== "string") throw new Error(`Missing required color ${seen.join(" -> ")}`);
+  if (/^#[0-9a-f]{6}$/i.test(expression)) return expression;
+  const reference = expression.match(/^var\(--([\w-]+)\)$/);
+  if (reference) {
+    const key = reference[1];
+    if (seen.includes(key) || seen.length >= 16) throw new Error(`Cyclic color reference ${key}`);
+    return colorValue(properties[key], properties, background, [...seen, key]);
+  }
+  const alpha = expression.match(/^color-mix\(in (?:oklch|srgb),\s*var\(--([\w-]+)\)\s*(\d+(?:\.\d+)?)%,\s*transparent\)$/);
+  if (alpha && background && Number(alpha[2]) <= 100) {
+    return compositeAlpha(colorValue(`var(--${alpha[1]})`, properties, background, seen), Number(alpha[2]) / 100, background);
+  }
+  throw new Error(`Unsupported or unresolved color: ${expression}`);
+}
+
+function sourceRules(css) {
+  return [...css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(match => {
+    const declarations = {};
+    for (const text of match[2].split(";")) {
+      const entry = text.match(/^\s*([\w-]+)\s*:\s*(.*?)\s*$/s);
+      if (!entry) continue;
+      if (Object.hasOwn(declarations, entry[1]) && /^(?:outline(?:-[\w-]+)?|box-shadow|background(?:-color)?)$/.test(entry[1])) throw new Error(`Duplicate declaration ${entry[1]} in ${match[1].trim()}`);
+      declarations[entry[1]] = entry[2].replace(/\s+/g, " ");
+    }
+    return { selector: match[1].trim().replace(/\s+/g, " "), declarations };
+  });
+}
+
+function evaluateLiveBindings(css, themes, focusBindings, surfaceBindings) {
+  if (!Array.isArray(focusBindings) || !focusBindings.length || !Array.isArray(surfaceBindings) || !surfaceBindings.length) throw new Error("Required focus/surface bindings are empty");
+  const rules = sourceRules(css);
+  const actual = rules.filter(r => r.selector.includes(":focus") && Object.keys(r.declarations).some(k => /^(?:outline(?:-color|-width|-style)?|box-shadow)$/.test(k)));
+  const expected = new Map(focusBindings.map(b => [b.selector, b]));
+  if (expected.size !== focusBindings.length || actual.length !== expected.size || new Set(actual.map(r => r.selector)).size !== actual.length) throw new Error("Stale or duplicate focus binding inventory");
+  for (const rule of actual) {
+    const binding = expected.get(rule.selector);
+    if (!binding) throw new Error(`Unbound focus declaration ${rule.selector}`);
+    const d = rule.declarations;
+    const suppressedSelectors = [".ops-cmdk__input:focus", ".ops-sheet__panel:focus", ".ops-sheet__header h2:focus"];
+    if (Boolean(binding.suppressed) !== suppressedSelectors.includes(rule.selector)) throw new Error(`Invalid focus role ${rule.selector}`);
+    if (binding.suppressed) {
+      if (d.outline !== "none" || d["box-shadow"]) throw new Error(`Changed focus suppression ${rule.selector}`);
+    } else if (d.outline !== "2px solid var(--color-primary)" || d["outline-offset"] !== binding.offset || d["box-shadow"] || d["outline-color"] || d["outline-style"] || d["outline-width"]) {
+      throw new Error(`Stale focus binding ${rule.selector}: ${JSON.stringify(d)}`);
+    }
+  }
+  for (const binding of surfaceBindings) {
+    const matching = rules.filter(r => r.selector === binding.selector && (r.declarations.background || r.declarations["background-color"]));
+    const property = binding.property || "background";
+    const otherProperty = property === "background" ? "background-color" : "background";
+    if (matching.length !== 1 || matching[0].declarations[property] !== (binding.expression || `var(--${binding.background})`) || matching[0].declarations[otherProperty]) throw new Error(`Stale focus background binding ${binding.selector}`);
+  }
+  const findings = [];
+  // Opaque shell floors and actual resting/selected/menu fills. Each theme's
+  // live token values are resolved; the muted floor is not applied to base-300,
+  // where the theme toggle uses full base-content, not muted text.
+  const surfaces = ["ops-bg", "ops-surface-1", "ops-surface-2", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
+  for (const [theme, properties] of Object.entries(themes)) {
+    for (const surface of [...surfaces, "color-base-300"]) {
+      const bg = colorValue(`var(--${surface})`, properties);
+      for (const binding of focusBindings.filter(b => !b.suppressed)) {
+        findings.push(evaluatePair({fg: colorValue("var(--color-primary)", properties), bg, role: "ui", selector: binding.selector, theme, tokenPair: `focus/${surface}`}));
+      }
+      for (const foreground of ["color-base-content", ...(surfaces.includes(surface) ? ["ops-text-muted", "ops-warning-text", "ops-error-text"] : [])]) {
+        findings.push(evaluatePair({fg: colorValue(`var(--${foreground})`, properties, bg), bg, role: "text", selector: null, theme, tokenPair: `${foreground}/${surface}`}));
+      }
+    }
+  }
+  return findings.filter(f => f.severity !== "pass");
+}
+
 async function main() {
   // Load app.css
   let cssText;
@@ -852,14 +1075,25 @@ async function main() {
 
   // Load contrast-pairs.mjs manifest (D-11)
   let mutedPairs;
+  let focusBindings;
+  let surfaceBindings;
   try {
     const manifest = await import(PAIRS_PATH);
     mutedPairs = manifest.MUTED_PAIRS;
+    focusBindings = manifest.FOCUS_BINDINGS;
+    surfaceBindings = manifest.SURFACE_BINDINGS;
     if (!Array.isArray(mutedPairs)) {
       throw new Error("MUTED_PAIRS export is not an array");
     }
   } catch (err) {
     throw new Error(`Could not load contrast-pairs.mjs at ${PAIRS_PATH}: ${err.message}`);
+  }
+
+  const properties = readThemeProperties(cssText);
+  if (new Set(mutedPairs.map(p => p.selector)).size !== mutedPairs.length) throw new Error("Duplicate muted pair selector");
+  if (!mutedPairs.length) throw new Error("Required muted pairs are empty");
+  for (const pair of mutedPairs) {
+    if (pair.fg_token !== "base-content" || (pair.selector === ".ops-trail__sep" ? pair.role !== "decorative" : pair.role !== "text") || !["text", "large", "ui", "decorative"].includes(pair.role) || !Number.isFinite(pair.alpha) || pair.alpha < 0 || pair.alpha > 1 || typeof pair.selector !== "string") throw new Error("Malformed muted pair role/alpha/selector");
   }
 
   // (a) Parse theme blocks
@@ -874,7 +1108,7 @@ async function main() {
   assertNoUntrackedMutedTokens(cssText, mutedPairs);
 
   // (c) + (d) Evaluate pairs for both themes
-  const findings = [];
+  const findings = evaluateLiveBindings(cssText, properties, focusBindings, surfaceBindings);
 
   for (const [theme, tokens] of Object.entries(blocks)) {
     // (c) Evaluate PAIR_RULES (semantic token pairs)
@@ -882,8 +1116,7 @@ async function main() {
       const fgHex = tokens[rule.fg];
       const bgHex = tokens[rule.bg];
       if (!fgHex || !bgHex) {
-        console.warn(`Warning: token ${rule.fg} or ${rule.bg} not found in theme "${theme}" — skipping`);
-        continue;
+        throw new Error(`Missing required token ${rule.fg}/${rule.bg} in ${theme}`);
       }
       const finding = evaluatePair({
         fg: fgHex,
@@ -906,10 +1139,7 @@ async function main() {
       const fgTokenHex = tokens[pair.fg_token];
       const bgTokenHex = tokens[pair.bg_token];
       if (!fgTokenHex || !bgTokenHex) {
-        console.warn(
-          `Warning: token ${pair.fg_token} or ${pair.bg_token} not found in theme "${theme}" — skipping ${pair.selector}`
-        );
-        continue;
+        throw new Error(`Missing required muted token ${pair.fg_token}/${pair.bg_token} in ${theme}`);
       }
 
       // Composite the alpha in sRGB (D-12)
@@ -993,7 +1223,11 @@ async function main() {
   process.exit(report.summary.aa_fail > 0 ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error("contrast-checker error:", err.message);
-  process.exit(2);
-});
+export { contrastRatioRaw, evaluatePair, passesAA, readThemeProperties };
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error("contrast-checker error:", err.message);
+    process.exit(2);
+  });
+}
