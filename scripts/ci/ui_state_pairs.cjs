@@ -2,6 +2,7 @@
 
 const crypto = require("node:crypto");
 const fs = require("node:fs");
+const rawBundle = require("./ui_preservation_bundle.cjs");
 const path = require("node:path");
 const evidence = require("./ecommerce_evidence.cjs");
 const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
@@ -237,7 +238,8 @@ function loadReceiptBundle(receiptPath, side, authority) {
   }
   const receipt = parseJsonBytes(bytes, `${side} receipt`);
   if (canonicalJson(receipt) !== canonicalJson(validation.receipt)) fail("receipt_read_mismatch", `${side} receipt bytes changed after validation`);
-  return { receipt, runRoot, receiptSha256: `sha256:${digest(bytes)}`, side, authority };
+  const rawMembers = rawBundle.loadRunBundle(runRoot, receipt.preservation.raw_bundle.sha256);
+  return { receipt, runRoot, rawMembers, receiptSha256: `sha256:${digest(bytes)}`, side, authority };
 }
 
 function validateReceiptSide(bundle, side, authority, recipeSha256) {
@@ -276,6 +278,17 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
     fail("incomplete_preservation_pair", `${side} receipt is missing or adds a held-out case identity`);
   }
   const artifacts = new Map((Array.isArray(receipt.artifacts) ? receipt.artifacts : []).map((artifact) => [artifact.path, artifact]));
+  const raw = receipt.preservation?.raw_bundle;
+  const packedArtifact = artifacts.get(rawBundle.BUNDLE_PATH);
+  if (raw?.path !== rawBundle.BUNDLE_PATH || !packedArtifact?.present || packedArtifact.sha256 !== raw.sha256 || packedArtifact.copied !== true || packedArtifact.copy_status !== "success" || !Array.isArray(raw.members) || raw.members.length > rawBundle.LIMITS.members) fail("invalid_case_bundle", `${side} receipt lacks its hash-bound bounded raw PNG bundle`);
+  const memberPaths = new Set();
+  for (const member of raw.members) {
+    try { rawBundle.memberPath(member.path); } catch (error) { fail("invalid_case_bundle", error.message); }
+    if (memberPaths.has(member.path) || !/^[a-f0-9]{64}$/.test(member.sha256 || "") || !Number.isSafeInteger(member.size_bytes) || member.size_bytes < 1 || member.size_bytes > MAX_IMAGE_BYTES) fail("invalid_case_bundle", "Raw bundle member metadata is malformed or duplicated");
+    memberPaths.add(member.path);
+    artifacts.set(member.path, { ...member, present: true, copied: true, copy_status: "success", storage: "raw-bundle-member" });
+  }
+
   const seenImagePaths = new Set();
   for (const required of evidence.preservationCases) {
     const item = byId.get(required.id);
@@ -310,7 +323,7 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
       const image = observation.image;
       const documentGeometry = observation.geometry?.find((entry) => entry?.name === `document-${observation.viewport.width}` && entry.viewport_width === observation.viewport.width);
       if (state?.element !== required.element || state?.category !== required.category || state?.theme !== observation.theme || state?.color_scheme !== expectedColorScheme ||
-        canonicalJson(state?.viewport) !== canonicalJson(observation.viewport) || !state?.focus?.name || !documentGeometry ||
+        observation.viewport?.height !== (observation.viewport?.width === 390 ? 844 : 900) || canonicalJson(state?.viewport) !== canonicalJson(observation.viewport) || !state?.focus?.name || !documentGeometry ||
         !Array.isArray(observation.visible_copy) || observation.visible_copy.length === 0 ||
         !isRecord(image) || image.viewport?.width !== observation.viewport.width || image.viewport?.height !== observation.viewport.height ||
         image.full_page_raster?.width !== observation.viewport.width || image.full_page_raster?.height !== documentGeometry?.height || image.capture !== "full-page-real-product-state") {
@@ -327,6 +340,7 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
     if (matrix && matrix.some((key) => !byObservation.has(key))) fail("invalid_case_observation", `${side} case ${required.id} is missing a required theme × viewport observation`);
     byId.set(required.id, { ...item, observations: byObservation });
   }
+  if (seenImagePaths.size !== memberPaths.size || [...memberPaths].some((name) => !seenImagePaths.has(name))) fail("invalid_case_bundle", "Raw PNG bundle has members outside its exact case observation inventory");
   return byId;
 }
 
@@ -337,15 +351,9 @@ function readBundledPng(bundle, item) {
     path.posix.extname(relative).toLowerCase() !== ".png") {
     fail("invalid_case_artifact", `Case ${item.id} image path is outside the held-out PNG bundle`);
   }
-  let current = bundle.runRoot;
-  for (const segment of relative.split("/")) {
-    current = path.join(current, segment);
-    const stat = fs.lstatSync(current);
-    if (stat.isSymbolicLink()) fail("unsafe_case_artifact", `Case ${item.id} image path contains a symbolic link`);
-  }
-  const stat = fs.statSync(current);
-  if (!stat.isFile() || stat.size <= 0 || stat.size > MAX_IMAGE_BYTES) fail("invalid_case_artifact", `Case ${item.id} PNG exceeds the bounded image limit`);
-  const bytes = fs.readFileSync(current);
+  const members = bundle.rawMembers || rawBundle.loadRunBundle(bundle.runRoot, bundle.receipt?.preservation?.raw_bundle?.sha256);
+  const bytes = members.get(relative);
+  if (!Buffer.isBuffer(bytes) || bytes.length <= 0 || bytes.length > MAX_IMAGE_BYTES) fail("invalid_case_artifact", `Case ${item.id} PNG is absent or exceeds its bounded image limit`);
   if (digest(bytes) !== item.sha256) fail("case_image_hash_mismatch", `Case ${item.id} PNG does not match its raw SHA-256 receipt`);
   try {
     const decoded = PNG.sync.read(bytes);
@@ -359,12 +367,17 @@ function readBundledPng(bundle, item) {
   return bytes;
 }
 
-function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null) {
+function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null, identicalDimensions = null) {
   let before;
   let candidate;
+  const sameRawBytes = beforeBytes.equals(candidateBytes);
   try {
-    before = PNG.sync.read(beforeBytes);
-    candidate = PNG.sync.read(candidateBytes);
+    const key = sameRawBytes && identicalDimensions ? digest(beforeBytes) : null;
+    const prior = key ? identicalDimensions.get(key) : null;
+    if (prior && !prior.bytes.equals(beforeBytes)) throw new Error("Equal raw image hashes have different bytes");
+    before = prior?.dimensions || PNG.sync.read(beforeBytes);
+    candidate = sameRawBytes ? before : PNG.sync.read(candidateBytes);
+    if (key && !prior) identicalDimensions.set(key, { bytes: beforeBytes, dimensions: { width: before.width, height: before.height } });
   } catch (error) {
     fail("invalid_pair_png", `A paired raw artifact cannot be decoded as PNG: ${error.message}`);
   }
@@ -375,7 +388,7 @@ function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, can
     fail("candidate_image_dimensions_mismatch", "Candidate decoded PNG dimensions do not match its actual capture geometry");
   }
   return {
-    equal: before.width === candidate.width && before.height === candidate.height && before.data.equals(candidate.data),
+    equal: before.width === candidate.width && before.height === candidate.height && (sameRawBytes || before.data.equals(candidate.data)),
     before_width: before.width,
     before_height: before.height,
     candidate_width: candidate.width,
@@ -392,6 +405,7 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
   const beforeCases = validateReceiptSide(beforeBundle, "before", authority, recipeSha256);
   const candidateCases = validateReceiptSide(candidateBundle, "candidate", authority, recipeSha256);
   const comparisons = [];
+  const identicalDimensions = new Map();
   const mismatches = [];
   for (const id of requiredCaseIds()) {
     const left = beforeCases.get(id);
@@ -410,7 +424,7 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
         geometry_equal: canonicalJson(leftObservation.geometry) === canonicalJson(rightObservation.geometry),
         visible_copy_equal: canonicalJson(leftObservation.visible_copy) === canonicalJson(rightObservation.visible_copy),
         assertions_equal: canonicalJson(leftObservation.assertions) === canonicalJson(rightObservation.assertions),
-        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate), leftImage, rightImage) };
+        pixels: comparePngExact(readImage("before", { id, ...leftImage }, before), readImage("candidate", { id, ...rightImage }, candidate), leftImage, rightImage, identicalDimensions) };
     });
     const pixelsEqual = viewportComparisons.every((entry) => entry.pixels.equal);
     const stateEqual = viewportComparisons.every((entry) => entry.state_equal);

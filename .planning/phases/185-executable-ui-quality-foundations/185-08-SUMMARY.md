@@ -1,165 +1,62 @@
 ---
 phase: 185-executable-ui-quality-foundations
 plan: "08"
-subsystem: ui-testing
-tags: [playwright, ui-evidence, exact-pixels, source-pairing]
-
-requires:
-  - phase: 185-05
-    provides:
-      - Qualified browser image and entry-state capture recipe for the pre-UI source.
-provides:
-  - Strict full-run validator contract for 61 exact held-out UI state identities and their same-source evidence artifacts.
-  - Source-pair comparator that checks independent source, fixture, runtime, recipe, image, geometry, copy, and assertion identities.
-affects: [185-09, ui-preservation-evidence]
-
-actuals:
-  tokens: 16227
-  tasks: 0
-  commits: 5
-plan_head_before: 19e26118a59ceb3217e052458ab2e6ebd5f7aedf
-plan_head_after: 56acda005d56a35a158e29bf7d8dddf061018daf
-
-tech-stack:
-  added: []
-  patterns:
-    - Contract tests use synthetic fixtures only to test evidence validation; they do not count as product receipts.
-    - Paired image comparison recomputes both validated bundles against independently supplied source authority.
-
-key-files:
-  created:
-    - scripts/ci/ui_state_pairs.cjs
-    - scripts/ci/ui_state_pairs.test.cjs
-  modified:
-    - scripts/ci/ecommerce_evidence.cjs
-    - scripts/ci/ecommerce_evidence.test.cjs
-
-key-decisions:
-  - "Keep ordinary same-source receipt validation separate from historical before-source comparison."
-  - "Treat synthetic unit fixtures as validator tests only; missing browser executions remain blocking evidence gaps."
-  - "Do not represent the shared health fixture screen as proof of storefront, Control Room, search, or settings behavior."
-
+subsystem: ui-preservation
+status: source_ready_full_verification_pending
+requirements: ["UIF-02", "UIF-03"]
 requirements-completed: []
-requirements-declared: ["UIF-02", "UIF-03"]
-
 coverage:
   - id: D1
-    description: "The full-run evidence contract rejects incomplete, duplicate, relocated, or tampered 61-case same-source receipt claims."
+    description: All 61 named state/content cases are discovered; actual browser outcomes and before-side receipt remain pending.
     verification:
-      - kind: unit
-        ref: scripts/ci/ecommerce_evidence.test.cjs#full inventory requires the exact held-out preservation case identities
+      - kind: other
+        ref: /private/tmp/scrypath-phase185-execution/08-parent-final-inventory.log
         status: pass
-      - kind: unit
-        ref: scripts/ci/ecommerce_evidence.test.cjs#held-out receipts bind source, fixture, runtime, recipe, state, transport and measured geometry
-        status: pass
+      - kind: automated_ui
+        ref: parent-owned distinct before-only collector and integrated candidate FULL gate
+        status: unknown
     human_judgment: false
   - id: D2
-    description: "The source-pair comparator's unit-tested contract requires complete, exact 61-case bundles and exact pixel, state, geometry, copy, and assertion matches."
+    description: Source/clock/runtime/artifact validators reject incomplete and altered synthetic evidence under the new schema.
     verification:
       - kind: unit
-        ref: scripts/ci/ui_state_pairs.test.cjs#source-paired comparator requires exact matched state receipt pairs
-        status: pass
-      - kind: unit
-        ref: scripts/ci/ui_state_pairs.test.cjs#pair output is atomic, deterministic and never overwritten by different bytes
+        ref: /private/tmp/scrypath-phase185-execution/08-parent-source-closure-controlled-GREEN.log
         status: pass
     human_judgment: false
   - id: D3
-    description: "Actual held-out product-state executions and pre-UI source-paired before receipts for all 61 obligations."
+    description: Exact source-paired UI preservation requires actual qualified before and integrated candidate bundles; no actual pair exists yet.
     verification:
-      - kind: e2e
-        ref: "mix verify.ecommerce_e2e (900-second bound; timed out with strict aggregation failure and missing held-out cases/artifacts)"
-        status: fail
-      - kind: e2e
-        ref: "Playwright list: e2e/ui_state_preservation.spec.ts and e2e/ui_content_preservation.spec.ts (both report no tests found)"
-        status: fail
-    human_judgment: true
-    rationale: "The missing evidence is an automated implementation and execution gap. Human visual critique cannot substitute for the required held-out assertions or actual source-paired receipts; verification must keep this deliverable blocked."
-
-duration: "At least 23 min from the first task commit through the final verifier result; earlier inspection and RED work were not timed."
-completed: 2026-10-31
-status: halted
+      - kind: automated_ui
+        ref: Plan09 parent-owned real source pair
+        status: unknown
+    human_judgment: false
 ---
 
-# Phase 185 Plan 08: Held-Out UI Evidence Contracts Summary
+# Plan08 source handoff: actual browser proof pending
 
-**The 61-case receipt validator and exact source-pair comparator are implemented and unit-tested, but the held-out product tests and actual before receipts were not produced.**
+The owned source implements 61 exact named cases, deterministic dev/test fixture scenarios, per-theme/viewport observations, and a bounded raw-image evidence bundle. Discovery and focused source checks pass. No actual held-out browser run, historical before collector, candidate FULL acceptance, or actual pair comparison is claimed.
 
-## Performance
+## Source and boundaries
 
-- **Duration:** At least 23 min from first task commit through the final verifier result; earlier inspection and RED work were not timed.
-- **Started:** 2026-10-31T20:13:18-04:00 (first task commit; inspection preceded it)
-- **Completed:** 2026-11-01T00:36:04Z
-- **Tasks:** 0/3 met their complete plan acceptance criteria; implementation portions for Tasks 02 and 03 were committed.
-- **Files modified:** 4
+- Existing real storefront, Control Room, health, failed work, settings, saved-search and Help routes provide the assertions. The E5 partial-field case identifies its narrower existing shared ResultUi component boundary explicitly; it is not whole-screen or backend parity.
+- The existing dev/test-only seed endpoint adds partial-record, one-failed-job and per-case reset scenarios. The reset additionally requires the server Phase185 run prefix, clears only six named fixture tables and their id sequences, and binds the response into the data identity. Existing seed behavior and production router gating remain intact. Fixture failed-job timestamps use the existing internal Clock; production Clock behavior is unchanged.
+- Nineteen overflow/long-text cases each require all nine light/dark/system-dark × 1440/768/390 observations; the other42 cases each declare one actual observation. The helper records visible copy, geometry, semantic state, real pending/failed transport, focus and exact raw PNGs. Measured timer/sampling data remains truthful per-run proof rather than a false cross-run performance-equality requirement.
+- Raw PNG bytes are staged unchanged and packaged into one exclusive gzip/JSON bundle with verified per-member hashes. Existing 64MiB artifact/256MiB expanded bounds and 256 manifest-artifact count remain. The validator rejects tiny/mismatched rasters, missing observations, reused paths, unobserved bundle members, tampered bytes and malformed sample proof. Decoding groups already byte-identical inputs within one validation; differing PNG encodings still receive exact decoded RGBA comparison, with no masks or tolerance.
+- The before-only61 schema is distinct from ordinary FULL. Product source, actual overlay build, exact per-side images and independently pinned common runtime/fixture/clock recipe remain separate. Historical validation reads committed Git objects and fails when required objects are unavailable. The overlay digest includes the transitive shared browser harness, lockfile and recipe inputs.
 
-## Accomplishments
+## Verification performed
 
-- The ordinary run validator now requires each canonical held-out identity exactly once and validates per-case state, assertions, exact visible copy, image bytes, and separate product, fixture, runtime, and recipe identities.
-- The independent comparator validates both receipt bundles against supplied authority, compares exact decoded PNG pixels and all matched state evidence, and writes deterministic output without overwriting a differing prior result.
-- Unit suites cover missing, duplicate, relocated, and tampered cases and artifacts, plus source, fixture, runtime, recipe, pixels, geometry, copy, output, and authority mismatches.
+- Final focused evidence/pair/bundle/target suites:67 passed, zero failed/skipped; actual log `/private/tmp/scrypath-phase185-execution/08-parent-source-closure-controlled-GREEN.log`.
+- Real-node discovery:61 cases in2 files, `/private/tmp/scrypath-phase185-execution/08-parent-final-inventory.log`. Discovery parses tests; it is not TypeScript typechecking or UI execution. No typecheck script/package was added.
+- Both changed Elixir fixture files pass the installed-toolchain formatting check; shell syntax, JavaScript syntax and scoped diff checks pass.
+- Actual missing-bundle behavioral RED is retained in `185-08-raw-bundle-RED.json`, with unmodified reports outside the checkout. A controlled replay against the exact prior validator bytes was machine-classified RED_EVIDENCE_OK before restoring the fix and rerunning GREEN. The earlier non-exported-function setup failure remains explicitly invalid and separate. No RED commit or historical report rewriting is claimed.
+- Raw packaging feasibility checked213 existing baseline PNGs,20MB raw/19MB packed, exact original-byte roundtrip. This is packaging evidence only and cannot satisfy any held-out state obligation.
+- Source-only delta review and bundler review records live under `/private/tmp/scrypath-phase185-execution/`; reviews are in-thread and do not imply independent or aesthetic approval. The final combined delta review is pending.
 
-These are code-contract results only. Unit tests use synthetic receipts and do not establish that any product route was exercised or that a real paired comparison passed.
+## Earlier failures and scope reconciliation
 
-## Task Commits
+The initial missing-spec/timeout attempts and HALTED summary remain preserved in Git history and `wave/08-incomplete-reconciliation`; they are not accepted or rewritten. Later source continuations added the missing tests and repaired source/runtime trust defects. Parent intervention stopped one idle committed checkpoint for review before any further runtime attempt. Plan06 is independently complete/integrated; Plan07 source is integrated with browser acceptance pending. There is no renewed stop on their already-authorized source work.
 
-1. **Task 02 RED:** `58e859cf` — require complete held-out preservation receipts.
-2. **Task 02 implementation:** `c88578af` — enforce held-out UI evidence receipts.
-3. **Task 03 RED:** `d0167af7` — require exact held-out source pairs.
-4. **Task 03 implementation:** `56acda00` — compare source-paired UI state receipts.
-5. **Task 03 correction:** `10c9138e` — revalidate historical source-paired receipts.
+## Next action
 
-The five task commits are measured from `plan_head_before` through `plan_head_after`; the plan-summary commit follows this summary.
-
-## Files Created/Modified
-
-- `scripts/ci/ecommerce_evidence.cjs` — requires the 61 exact case identities and validates actual per-case state, assertion, copy, image, and source-bound evidence.
-- `scripts/ci/ecommerce_evidence.test.cjs` — exercises the contract with synthetic fixtures and tampering cases.
-- `scripts/ci/ui_state_pairs.cjs` — independently validates and exactly compares two source-pinned receipt bundles.
-- `scripts/ci/ui_state_pairs.test.cjs` — checks comparator and output behavior with synthetic bundles.
-
-No E2E specs, fixture helper, or fixture-source extensions were created.
-
-## Decisions Made
-
-- Kept same-source validation independent from the historical source-pair comparator so ordinary E2E runs do not depend on the old baseline.
-- Preserved the boundary between test-only health fixtures and actual storefront, Control Room, search, settings, saved-search, navigation, and shared-control behavior.
-- Marked no requirements complete because the actual required product tests and receipts remain missing; the plan declares UIF-02 and UIF-03.
-
-## Deviations from Plan
-
-### Auto-fixed Issues
-
-**1. [Rule 1 - Bug] Revalidate historical source-paired receipts against independent source expectations**
-
-- **Found during:** Task 03.
-- **Issue:** A historical receipt must be verifiable after the current checkout's product source has advanced; validating only against the current source would either reject a legitimate archived source or trust its self-declared identity.
-- **Fix:** Added an independent expected-source input and recompute the archived bundle against that authority before comparing it.
-- **Files modified:** `scripts/ci/ecommerce_evidence.cjs`, `scripts/ci/ecommerce_evidence.test.cjs`.
-- **Verification:** `node --test scripts/ci/ecommerce_evidence.test.cjs` passed; commit `10c9138e`.
-
-**Total deviations:** 1 auto-fixed (Rule 1).
-**Impact:** The fix closes a source-verification gap in the planned comparator; no package, production UI behavior, or aesthetic approval was added.
-
-## Issues Encountered
-
-- The named state and content Playwright specs are absent. Both `npm --prefix examples/scrypath_ecommerce run test:e2e:list -- e2e/ui_state_preservation.spec.ts` and the equivalent `ui_content_preservation.spec.ts` command exited 1 with “No tests found” and zero discovered tests.
-- The preparation map states that the existing Phase173 fixture source provides health observations rendered on the test-only Posture screen. The shared fixture LiveView does not exercise the actual storefront, Control Room, search, settings, saved-search, Help, navigation, or shared-control routes, and those routes do not have the listed held-out tests or per-case browser receipt emitter. Treating the component/health fixture screen as product-state evidence would violate the plan's trust boundary.
-- The plan's bounded `mix verify.ecommerce_e2e` command was attempted with the prescribed toolchain. The initial sandboxed attempt could not write Docker Buildx activity state; the isolated verifier cleaned up. The same command was retried with host permission. It reached strict full-run aggregation but exceeded the 900-second command bound (exit 124); aggregation reported the held-out cases and required evidence artifacts missing (strict aggregate exit 78). A read-only check found no leftover containers for the timed-out verifier project. No actual held-out receipts were produced, and the command was not retried.
-- Plan05 qualification identifies the pre-UI source as `7886eb10449dcb55945d1ab886e6c78752cc73cf` and the qualified browser image as `sha256:8be4cc26927d7c2520ebc6708ec6f5e1ee0789a1750b2513ca02ff6c4fa66272` in `/private/tmp/scrypath-phase185-execution/185-05-qualification.json`. This qualifies the capture environment, not held-out states. No Plan08 fixture-overlay digest, effective runtime digest, per-case before bundle, or before/after pair exists.
-- The evidence contract suite passed 31/31 tests; the comparator syntax check passed and its suite passed 9/9 tests. These synthetic unit results do not replace the failed E2E acceptance criteria.
-
-## User Setup Required
-
-None.
-
-## Next Phase Readiness
-
-**Plan 185-08 is halted and its declared UIF requirements remain incomplete.** The parent/orchestrator should keep the existing stop on Plans 06/07 source changes until real before-side held-out receipts are generated. The next executor needs to implement the test-only route/data support and named Playwright specs within the plan's declared files, run all 61 actual cases in a disposable source-pinned baseline stack with a committed harness overlay, and record its product, overlay, runtime, browser-recipe, and per-case artifact identities. Plan09 can then provide the integrated candidate bundle and invoke the comparator. Do not use the retained preview or parent-owned capture session.
-
-## Self-Check: PASSED
-
-All four listed files exist; all five listed task commits were verified as ancestors of `plan_head_after`; and the worktree was clean before this summary was written. This checks summary consistency only and does not indicate that the plan's held-out acceptance criteria passed.
-
----
-*Phase: 185-executable-ui-quality-foundations*
-*Completed: 2026-10-31 (halted with held-out evidence incomplete)*
+Parent reviews the final source, integrates the candidate, runs the separately identified qualified before-only61 collector and the ordinary integrated candidate FULL gate within the existing limits, then compares the real bundles in09. Actual61 outcomes, exact source-pair images/copy/state and final hosted phase proof remain required. Requirements stay incomplete; missing automated evidence is not human judgment or UAT. The retained preview and original parent capture stack are untouched. No user action is needed for the current source work.

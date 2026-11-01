@@ -1,0 +1,21 @@
+{
+  "command": "node --test --test-reporter=tap --test-name-pattern='ordinary full rejects loose preservation PNGs' scripts/ci/ecommerce_evidence.test.cjs",
+  "exitCode": 1,
+  "output": "TAP version 13\n# Subtest: ordinary full rejects loose preservation PNGs without its bounded raw bundle\nnot ok 1 - ordinary full rejects loose preservation PNGs without its bounded raw bundle\n  ---\n  duration_ms: 2504.176791\n  type: 'test'\n  location: '/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-08-1zmhv7id/scripts/ci/ecommerce_evidence.test.cjs:474:1'\n  failureType: 'testCodeFailure'\n  error: 'MISSING_PRESERVATION_BUNDLE_WAS_ACCEPTED: loose per-case PNGs cannot replace the bounded raw bundle'\n  code: 'ERR_TEST_FAILURE'\n  stack: |-\n    TestContext.<anonymous> (/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-08-1zmhv7id/scripts/ci/ecommerce_evidence.test.cjs:479:13)\n    Test.runInAsyncScope (node:async_hooks:226:14)\n    Test.run (node:internal/test_runner/test:1402:25)\n    Test.start (node:internal/test_runner/test:1262:17)\n    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)\n    process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n  ...\n1..1\n# tests 1\n# suites 0\n# pass 0\n# fail 1\n# cancelled 0\n# skipped 0\n# todo 0\n# duration_ms 2782.60375\n",
+  "targetTest": "ordinary full rejects loose preservation PNGs without its bounded raw bundle",
+  "targetFile": "scripts/ci/ecommerce_evidence.test.cjs",
+  "expected": "Loose PNGs without the bounded raw bundle make the ordinary full receipt ineligible with missing_preservation_bundle.",
+  "actual": "The target test failed because the existing validator accepted loose per-case PNGs as eligible.",
+  "reportFormat": "tap",
+  "source_commit_at_red": "014375036c29ab9ac8e5f1bc69808449862d0cca",
+  "source_file_sha256_at_red": "1e7729126675783e24e28780ef68c871b25cc878ec8ac33af8e8d46e53bef24d",
+  "test_provenance": "Controlled reproduction against exact prior committed validator bytes, using current target-test overlay; classification required before restoring the fix and running GREEN.",
+  "report_path": "/private/tmp/scrypath-phase185-execution/08-raw-bundle-controlled-RED.tap",
+  "report_sha256": "7cef20c773b73ea872a252ed5735a1efd9977e9b76782a1a259e6ee0ee9316c7",
+  "invalid_initial_attempt": {
+    "report": "/private/tmp/scrypath-phase185-execution/08-raw-bundle-contract-RED.tap",
+    "reason": "Called a non-exported buildReceipt function; setup failure, not behavioral RED."
+  },
+  "earlier_behavior_report": "/private/tmp/scrypath-phase185-execution/08-raw-bundle-contract-behavior-RED.tap",
+  "test_file_sha256_at_controlled_red": "cb9b2af89c6fb5a9cd4e2e30b0207f1656e0ef3430d7418596af6e8cc8424c3a"
+}

@@ -8,6 +8,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
+const rawBundle = require("./ui_preservation_bundle.cjs");
 
 let evidence = {};
 try {
@@ -194,6 +195,12 @@ test("malformed and zero-case CLI reports exit nonzero", () => {
   }
 });
 
+const UNIT_TEST_PNGS = new Map([1440, 768, 390].map((width) => {
+  const image = new PNG({ width, height: width === 390 ? 844 : 900 });
+  for (let pixel = 0; pixel < image.data.length; pixel += 4) image.data.set([30, 40, 50, 255], pixel);
+  return [width, PNG.sync.write(image)];
+}));
+
 const SOURCE_SHA = "a".repeat(40);
 const IMAGE_ID = `sha256:${"b".repeat(64)}`;
 
@@ -287,7 +294,7 @@ function createQualifiedSourceRepo({ separateOverlayCommit = false } = {}) {
   }
 }
 
-function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSourceSha = sourceSha, productTreeSha256, fixtureOverlaySha256, qualificationSha256 = QUALIFICATION_SHA256 } = {}) {
+function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSourceSha = sourceSha, productTreeSha256, fixtureOverlaySha256, qualificationSha256 = QUALIFICATION_SHA256, looseImages = false } = {}) {
   const runDir = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-evidence-run-"));
   const allCases = completeReceiptCases();
   const cases = beforeOnly ? allCases.filter((item) => /ui_(state|content)_preservation/.test(item.file)) : allCases;
@@ -396,11 +403,9 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       ? ["light", "dark", "system-dark"].flatMap((theme) => [1440, 768, 390].map((width) => ({ theme, width })))
       : [{ theme: "light", width: 1440 }];
     const observations = matrix.map(({ theme, width }) => {
-      const height = 1;
-      const image = new PNG({ width, height });
-      for (let pixel = 0; pixel < image.data.length; pixel += 4) image.data.set([30, 40, 50, 255], pixel);
-      const pngBytes = PNG.sync.write(image);
-      const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-")}-${theme}-${width}.png`;
+      const height = width === 390 ? 844 : 900;
+      const pngBytes = UNIT_TEST_PNGS.get(width);
+      const imagePath = `ui-review-artifacts/iteration3-journeys/phase185-held-out/${preservationCase.id.replaceAll(" ", "-").toLowerCase()}-${theme}-${width}.png`;
       fs.writeFileSync(path.join(runDir, imagePath), pngBytes);
       imageArtifacts.push({ path: imagePath, required: true, copied: true, copy_status: "success" });
       const copyText = `TEST_FIXTURE_ONLY_NOT_A_REAL_${preservationCase.id.replaceAll(" ", "_")}_${theme}_${width}_CAPTURE`;
@@ -421,6 +426,7 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
         geometry: [{ name: `case-target-${width}`, x: 0, y: 0, width: 100, height: 20, viewport_width: width }, { name: `document-${width}`, x: 0, y: 0, width, height, viewport_width: width }],
         assertions: [{ name: `assert-${preservationCase.id}-${theme}-${width}`, status: "passed", actual: "TEST_FIXTURE_ONLY" }],
         visible_copy: [{ text: copyText, sha256: crypto.createHash("sha256").update(copyText).digest("hex") }],
+        capture_sampling: { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples: [0, 1].map((index) => ({ path: `test-sample-${index}.png`, state_path: `test-sample-${index}.json`, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), state_sha256: "a".repeat(64), elapsed_ms: 10 + index })) },
         image: { path: imagePath, sha256: crypto.createHash("sha256").update(pngBytes).digest("hex"), viewport: { width, height }, full_page_raster: { width, height }, capture: "full-page-real-product-state" }
       };
     });
@@ -442,7 +448,12 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       observations
     });
   }
-  manifest.artifacts.push(...imageArtifacts);
+  if (looseImages) manifest.artifacts.push(...imageArtifacts);
+  else {
+    const members = imageArtifacts.map(({ path: relative }) => ({ path: relative, bytes: fs.readFileSync(path.join(runDir, relative)) }));
+    rawBundle.writeExclusive(path.join(runDir, rawBundle.BUNDLE_PATH), members);
+    manifest.artifacts.push({ path: rawBundle.BUNDLE_PATH, required: true, copied: true, copy_status: "success" });
+  }
   fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), `${evidenceEvents.map((event) => JSON.stringify(event)).join("\n")}\n`);
   fs.writeFileSync(path.join(runDir, "admin-light-parity.json"), JSON.stringify({ status: "pass", missing: [], extra: [], width_mismatches: [] }));
   fs.writeFileSync(path.join(runDir, "contrast-report.json"), JSON.stringify(tokenContrastReport()));
@@ -459,6 +470,16 @@ function updateRunManifest(runDir, update) {
   update(manifest);
   fs.writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`);
 }
+
+test("ordinary full rejects loose preservation PNGs without its bounded raw bundle", () => {
+  const fixture = createCompleteRun({ looseImages: true });
+  try {
+    const receipt = evidence.writeEvidence({ runDir: fixture.runDir });
+    if (receipt.eligibility.eligible !== false || !receipt.reasons.some((reason) => reason.code === "missing_preservation_bundle")) {
+      throw new Error("MISSING_PRESERVATION_BUNDLE_WAS_ACCEPTED: loose per-case PNGs cannot replace the bounded raw bundle");
+    }
+  } finally { fs.rmSync(fixture.runDir, { recursive: true, force: true }); }
+});
 
 test("one aggregate binds exact source, reports, checkers, artifacts and derived summary", () => {
   const { runDir } = createCompleteRun();
@@ -1049,6 +1070,9 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
     ["state", (event) => { event.observations[0].state.category = "error"; }, "invalid_preservation_observation"],
     ["transport", (event) => { event.transport_sequence = []; }, "invalid_preservation_transport"],
     ["geometry", (event) => { event.observations[0].geometry = []; }, "invalid_preservation_observation"],
+    ["sampling missing", (event) => { delete event.observations[0].capture_sampling; }, "invalid_preservation_observation"],
+    ["sampling unbounded", (event) => { event.observations[0].capture_sampling.max_samples = 7; }, "invalid_preservation_observation"],
+    ["sampling not exact", (event) => { event.observations[0].capture_sampling.samples[0].sha256 = "0".repeat(64); }, "invalid_preservation_observation"],
     ["assertion", (event) => { event.observations[0].assertions[0].status = "failed"; }, "invalid_preservation_observation"]
   ];
 
@@ -1107,8 +1131,13 @@ test("a small decoded image cannot claim a real 1440px full-page capture", () =>
     fs.writeFileSync(path.join(runDir, image.path), bytes);
     image.sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
     const manifest = JSON.parse(fs.readFileSync(path.join(runDir, "phase105-evidence-input.json"), "utf8"));
-    const artifact = manifest.artifacts.find((item) => item.path === image.path);
-    artifact.sha256 = image.sha256;
+    const bundlePath = path.join(runDir, rawBundle.BUNDLE_PATH);
+    const members = rawBundle.decodeBundle(fs.readFileSync(bundlePath));
+    members.set(image.path, bytes);
+    // This deliberately constructs a newly hash-consistent bad bundle, so the
+    // geometry guard rather than the archive hash must reject the tiny PNG.
+    const packed = rawBundle.encodeBundle([...members].map(([path, bytes]) => ({ path, bytes })));
+    fs.writeFileSync(bundlePath, packed);
     fs.writeFileSync(path.join(runDir, "phase105-evidence-input.json"), JSON.stringify(manifest));
     fs.writeFileSync(eventsPath, `${events.map((event) => JSON.stringify(event)).join("\n")}\n`);
 

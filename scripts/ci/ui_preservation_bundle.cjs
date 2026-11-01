@@ -132,7 +132,7 @@ function packRun(runRoot) {
   const expected = new Map();
   for (const record of records) {
     const observations = Array.isArray(record.observations) ? record.observations : [record];
-    for (const observation of observations) for (const image of observation.images || []) {
+    for (const observation of observations) for (const image of observation.images || (observation.image ? [observation.image] : [])) {
       const name = memberPath(image.path);
       if (expected.has(name)) throw new Error("Raw PNG path reused by distinct observations");
       if (!/^[a-f0-9]{64}$/.test(image.sha256 || "")) throw new Error("Raw PNG event needs its actual SHA-256");

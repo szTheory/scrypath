@@ -300,6 +300,11 @@ case "$scope" in
       fi
     fi
 
+    if (( browser_status == 0 )); then
+      node /app/scripts/ci/ui_preservation_bundle.cjs pack --run-dir "$artifact_dir" || browser_status=$?
+      if (( browser_status != 0 )); then mark_stage_failure browser "$browser_status"; fi
+    fi
+
     if [[ -d "$PWD/ui-review-artifacts/iteration3-journeys" ]]; then
       mkdir -p "$artifact_dir/ui-review-artifacts"
       cp -a "$PWD/ui-review-artifacts/iteration3-journeys" "$artifact_dir/ui-review-artifacts/"

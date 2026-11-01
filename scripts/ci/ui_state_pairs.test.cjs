@@ -3,6 +3,7 @@
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const fs = require("node:fs");
+const rawBundle = require("./ui_preservation_bundle.cjs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
@@ -127,12 +128,12 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
       ? ["light", "dark", "system-dark"].flatMap((theme) => [1440, 768, 390].map((width) => ({ theme, width })))
       : [{ theme: "light", width: 1440 }];
     const observations = matrix.map(({ theme, width }) => {
-      const height = 1;
+      const height = width === 390 ? 844 : 900;
       const imageKey = `${width}x${height}`;
       if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, png(width, height, imageColor));
       const imageBytes = imageBytesByDimensions.get(imageKey);
       const image = {
-        path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-")}-${theme}-${width}.png`,
+        path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-").toLowerCase()}-${theme}-${width}.png`,
         sha256: digest(imageBytes),
         viewport: { width, height },
         full_page_raster: { width, height },
@@ -180,6 +181,9 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     };
     return mutateCase?.(item) || item;
   });
+  const rawEntries = cases.flatMap((item) => item.observations.map(({ image }) => ({ path: image.path, bytes: imageBytesByDimensions.get(`${image.full_page_raster.width}x${image.full_page_raster.height}`) })));
+  const packed = rawBundle.encodeBundle(rawEntries);
+  const rawMetadata = { path: rawBundle.BUNDLE_PATH, sha256: digest(packed), size_bytes: packed.length, members: rawEntries.map((item) => ({ path: item.path, sha256: digest(item.bytes), size_bytes: item.bytes.length })) };
   return {
     eligibility: { eligible: true },
     scope: beforeSide ? "before-only" : "full",
@@ -187,13 +191,14 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
       ...(beforeSide ? { qualification_sha256: authority().qualification.sha256 } : {}) },
     images: { application: { runtime_id: appImageId }, standalone_ops: { runtime_id: opsImageId }, browser: { runtime_id: browserImageId } },
     browser: structuredClone(browser),
-    artifacts: cases.flatMap((item) => item.observations.map(({ image }) => ({ path: image.path, sha256: image.sha256, present: true, copied: true, copy_status: "success" }))),
+    artifacts: [{ path: rawBundle.BUNDLE_PATH, sha256: rawMetadata.sha256, size_bytes: packed.length, present: true, copied: true, copy_status: "success" }],
     preservation: {
       schema: beforeSide ? "scrypath.ui-preservation-before-only.v1" : "scrypath.ui-preservation.v1",
       product_source_sha: sourceSha,
       build_source_sha: buildSha,
       product_tree_sha256: productTreeSha,
       fixture_overlay_sha256: FIXTURE,
+      raw_bundle: rawMetadata,
       cases
     },
     imageBytesByDimensions
@@ -280,7 +285,7 @@ test("real timer elapsed samples may differ while the shared fixed-clock recipe 
 
 test("the declared viewport and full-page raster dimensions must match decoded PNG bytes", () => {
   const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
-  before.imageBytesByDimensions.set("1440x1", png(1, 1));
+  before.imageBytesByDimensions.set("1440x900", png(1, 1));
 
   assert.throws(() => compare(before), /raster|dimension|viewport/i);
 });
@@ -400,16 +405,17 @@ test("receipt loading requires a complete recomputable evidence bundle", () => {
 test("run PNG loading verifies path containment, raw hashes and decoded image bytes", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-png-"));
   try {
-    const relative = "ui-review-artifacts/iteration3-journeys/phase185-held-out/E1-empty.png";
+    const relative = "ui-review-artifacts/iteration3-journeys/phase185-held-out/e1-empty.png";
     const absolute = path.join(directory, relative);
     fs.mkdirSync(path.dirname(absolute), { recursive: true });
-    const bytes = png();
+    const bytes = png(1440, 900);
     fs.writeFileSync(absolute, bytes);
+    const rawMembers = new Map([[relative, bytes]]);
     const item = { id: "E1 empty", path: relative, sha256: digest(bytes), viewport: { width: 1440, height: 900 }, full_page_raster: { width: 1440, height: 900 } };
 
-    assert.deepEqual(pairs.readBundledPng({ runRoot: directory }, item), bytes);
-    assert.throws(() => pairs.readBundledPng({ runRoot: directory }, { ...item, sha256: "1".repeat(64) }), /raw SHA-256/);
-    assert.throws(() => pairs.readBundledPng({ runRoot: directory }, { ...item, path: "../outside.png" }), /outside the held-out PNG bundle/);
+    assert.deepEqual(pairs.readBundledPng({ runRoot: directory, rawMembers }, item), bytes);
+    assert.throws(() => pairs.readBundledPng({ runRoot: directory, rawMembers }, { ...item, sha256: "1".repeat(64) }), /raw SHA-256/);
+    assert.throws(() => pairs.readBundledPng({ runRoot: directory, rawMembers }, { ...item, path: "../outside.png" }), /outside the held-out PNG bundle/);
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }

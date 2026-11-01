@@ -1,6 +1,7 @@
 "use strict";
 
 const fs = require("node:fs");
+const rawBundle = require("./ui_preservation_bundle.cjs");
 const crypto = require("node:crypto");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
@@ -57,14 +58,22 @@ const PRESERVATION_ACTION_ELEMENTS = ["E8", "E9", "E10"];
 const PRESERVATION_CONTENT_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10"];
 const PRESERVATION_OVERFLOW_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E10"];
 const PRODUCT_SOURCE_EXCLUDED_FILES = new Set([
-  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex",
-  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex"
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex",
+  "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex"
 ]);
 const PRESERVATION_FIXTURE_FILES = [
   "examples/scrypath_ecommerce/e2e/ui_state_preservation.spec.ts",
   "examples/scrypath_ecommerce/e2e/ui_content_preservation.spec.ts",
   "examples/scrypath_ecommerce/e2e/helpers/e2e.ts",
   "examples/scrypath_ecommerce/e2e/helpers/ui-preservation-states.ts",
+  "examples/scrypath_ecommerce/e2e/ui-review.mjs",
+  "examples/scrypath_ecommerce/e2e/helpers/theme-grid.ts",
+  "examples/scrypath_ecommerce/e2e/helpers/verification-target.mjs",
+  "examples/scrypath_ecommerce/playwright.config.ts",
+  "examples/scrypath_ecommerce/package.json",
+  "examples/scrypath_ecommerce/package-lock.json",
+  "examples/scrypath_ecommerce/Dockerfile.e2e",
+  "examples/scrypath_ecommerce/compose.phase173.yaml",
   "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/controllers/e2e_controller.ex",
   "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/live/e2e_ui_fixture_live.ex",
   "examples/scrypath_ecommerce/test/support/phase173_fixture_source.ex",
@@ -77,6 +86,8 @@ const PRESERVATION_FIXTURE_FILES = [
   "scripts/ci/ecommerce_evidence.test.cjs",
   "scripts/ci/ui_state_pairs.cjs",
   "scripts/ci/ui_state_pairs.test.cjs",
+  "scripts/ci/ui_preservation_bundle.cjs",
+  "scripts/ci/ui_preservation_bundle.test.cjs",
   "scripts/ci/ecommerce_build.cjs",
   "scripts/ci/ecommerce_build.test.cjs"
 ];
@@ -603,6 +614,27 @@ function preservationIdForCase(item) {
     : null;
 }
 
+function loadPreservationRawBundle(runRoot, artifacts, reasons) {
+  const artifact = artifacts.find((item) => item.path === rawBundle.BUNDLE_PATH);
+  const empty = { metadata: null, members: new Map(), artifacts: new Map() };
+  if (!artifact?.present || !artifact.sha256 || artifact.copied !== true || artifact.copy_status !== "success") {
+    reasons.push(errorReason("missing_preservation_bundle", "All raw held-out PNGs must be copied in the bounded, hash-verified raw bundle"));
+    return empty;
+  }
+  try {
+    const members = rawBundle.loadRunBundle(runRoot, artifact.sha256);
+    const entries = [...members].map(([path, bytes]) => ({ path, sha256: rawBundle.sha256(bytes), size_bytes: bytes.length })).sort((a, b) => a.path.localeCompare(b.path));
+    return {
+      metadata: { path: rawBundle.BUNDLE_PATH, sha256: artifact.sha256, size_bytes: artifact.size_bytes, members: entries },
+      members,
+      artifacts: new Map(entries.map((entry) => [entry.path, { ...entry, present: true, copied: true, copy_status: "success", storage: "raw-bundle-member" }]))
+    };
+  } catch (error) {
+    reasons.push(errorReason("invalid_preservation_bundle", error.message));
+    return empty;
+  }
+}
+
 function validatePreservationEvents(events, reconciliation, context, reasons) {
   const preservationTests = reconciliation.cases.filter((item) => preservationIdForCase(item));
   const passedTests = new Map(preservationTests.map((item) => [preservationIdForCase(item), item]));
@@ -627,6 +659,7 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
 
   const artifactByPath = new Map(context.artifacts.map((artifact) => [artifact.path, artifact]));
   const seenObservationPaths = new Set();
+  const decodedDimensions = new Map();
   const validated = [];
   for (const expected of PRESERVATION_CASES) {
     const event = rowsById.get(expected.id);
@@ -695,7 +728,7 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
     for (const observation of Array.isArray(event.observations) ? event.observations : []) {
       try {
         if (!isRecord(observation) || !PRESERVATION_THEMES.includes(observation.theme) || !isRecord(observation.viewport) ||
-          !PRESERVATION_VIEWPORT_WIDTHS.includes(observation.viewport.width) || !Number.isInteger(observation.viewport.height) || observation.viewport.height < 1) {
+          !PRESERVATION_VIEWPORT_WIDTHS.includes(observation.viewport.width) || observation.viewport.height !== (observation.viewport.width === 390 ? 844 : 900)) {
           throw new TypeError("observation must declare an approved theme and viewport");
         }
         const key = `${observation.theme}|${observation.viewport.width}`;
@@ -738,22 +771,37 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
           !isRecord(image.full_page_raster) || !Number.isInteger(image.full_page_raster.width) || !Number.isInteger(image.full_page_raster.height)) {
           throw new TypeError("image metadata must bind the declared viewport and actual full-page raster geometry");
         }
-        const artifact = artifactByPath.get(imagePath);
+        const artifact = context.rawBundle.artifacts.get(imagePath);
         if (!artifact?.present || artifact.sha256 !== image.sha256 || artifact.copied !== true || artifact.copy_status !== "success") throw new TypeError("image must be declared, copied, present and hash-matched in this run");
-        const imageBytes = fs.readFileSync(resolveArtifact(context.runRoot, imagePath).path);
-        const raster = pngDimensions(imageBytes, `${expected.id} ${key}`);
+        const imageBytes = context.rawBundle.members.get(imagePath);
+        const priorDimensions = decodedDimensions.get(image.sha256);
+        if (priorDimensions && !priorDimensions.bytes.equals(imageBytes)) throw new TypeError("Equal raw image hashes have different bytes");
+        const raster = priorDimensions?.dimensions || pngDimensions(imageBytes, `${expected.id} ${key}`);
+        if (!priorDimensions) decodedDimensions.set(image.sha256, { bytes: imageBytes, dimensions: raster });
         const dpr = recipe.device_scale_factor;
         const expectedRaster = { width: observation.viewport.width * dpr, height: documentGeometry.height * dpr };
         if (image.full_page_raster.width !== raster.width || image.full_page_raster.height !== raster.height ||
           raster.width !== expectedRaster.width || raster.height !== expectedRaster.height) {
           throw new TypeError(`decoded full-page raster ${raster.width}x${raster.height} does not match viewport/document geometry ${expectedRaster.width}x${expectedRaster.height}`);
         }
+        const sampling = observation.capture_sampling;
+        if (!isRecord(sampling) || sampling.method !== "consecutive-exact-v1" || sampling.max_samples !== 6 || sampling.max_elapsed_ms !== 10000 || !Array.isArray(sampling.samples) || sampling.samples.length < 2 || sampling.samples.length > 6 || sampling.selected !== sampling.samples.length - 1) throw new TypeError("raw capture lacks the bounded first-consecutive stationary sample proof");
+        for (let index = 0; index < sampling.samples.length; index++) {
+          const sample = sampling.samples[index];
+          const previous = sampling.samples[index - 1];
+          if (!isRecord(sample) || !/^[a-f0-9]{64}$/.test(sample.sha256 || "") || !/^[a-f0-9]{64}$/.test(sample.state_sha256 || "") || !Number.isFinite(sample.elapsed_ms) || sample.elapsed_ms < 0 || sample.elapsed_ms > 10000 || (previous && sample.elapsed_ms < previous.elapsed_ms)) throw new TypeError("raw capture sample hashes/timing are invalid");
+          if (index > 0 && index < sampling.selected && sample.sha256 === previous.sha256 && sample.state_sha256 === previous.state_sha256) throw new TypeError("raw capture continued beyond an earlier consecutive exact sample pair");
+        }
+        const selectedSample = sampling.samples[sampling.selected];
+        const previousSample = sampling.samples[sampling.selected - 1];
+        if (selectedSample.sha256 !== image.sha256 || previousSample.sha256 !== image.sha256 || selectedSample.state_sha256 !== previousSample.state_sha256) throw new TypeError("selected raw PNG is not the first consecutive exact image/state sample pair");
         observations.push({
           theme: observation.theme,
           viewport: { width: observation.viewport.width, height: observation.viewport.height },
           state,
           geometry: observation.geometry,
           assertions: observation.assertions,
+          capture_sampling: sampling,
           visible_copy: observation.visible_copy,
           image: { path: imagePath, sha256: image.sha256, viewport: image.viewport, full_page_raster: raster, capture: image.capture }
         });
@@ -781,6 +829,9 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
       recipe_sha256: event.recipe_sha256, clock_recipe: isRecord(recipe) ? recipe : null, data_recipe: isRecord(event.data_recipe) ? event.data_recipe : null, clock_artifact: clockArtifact,
       actions: Array.isArray(event.actions) ? event.actions : [], transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [], observations
     });
+  }
+  if (context.rawBundle.members.size !== seenObservationPaths.size || [...context.rawBundle.members.keys()].some((name) => !seenObservationPaths.has(name))) {
+    reasons.push(errorReason("unexpected_preservation_bundle_member", "The bounded bundle must contain exactly the observed raw case images"));
   }
   return validated.sort((left, right) => left.id.localeCompare(right.id));
 }
@@ -1314,6 +1365,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
         try { execFileSync("git", ["-C", sourceRoot, "rev-parse", "--git-dir"], { stdio: "ignore" }); return true; }
         catch { return false; }
       })();
+      if (verifyGitObjects && !gitAvailable) throw new TypeError("Pinned source replay requires the independently available Git objects");
       if (verifyGitObjects && gitAvailable) {
         const overlay = validateSourceOverlay(sourceRoot, expectedSource.sourceSha, expectedSource.buildSourceSha);
         productTreeSha256 = overlay.productTreeSha256;
@@ -1335,6 +1387,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   if (expectedSource && (expectedSource.productTreeSha256 !== productTreeSha256 || expectedSource.fixtureOverlaySha256 !== fixtureOverlaySha256)) {
     reasons.push(errorReason("expected_preservation_identity_mismatch", "Run product tree or test-only fixture overlay differs from the independent pair authority"));
   }
+  const preservationBundle = loadPreservationRawBundle(root, artifacts, reasons);
   const preservationCases = validatePreservationEvents(events, reconciliation, {
     runRoot: root,
     checkoutHead,
@@ -1344,6 +1397,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
     applicationRuntimeId: images.application?.runtime_id,
     standaloneOpsRuntimeId: images.standalone_ops?.runtime_id,
     browserRuntimeId: images.browser?.runtime_id,
+    rawBundle: preservationBundle,
     artifacts
   }, reasons);
   const operationCounts = {};
@@ -1416,6 +1470,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
       build_source_sha: checkoutHead,
       product_tree_sha256: productTreeSha256,
       fixture_overlay_sha256: fixtureOverlaySha256,
+      raw_bundle: preservationBundle.metadata,
       cases: preservationCases
     },
     artifacts,
