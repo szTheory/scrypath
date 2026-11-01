@@ -112,25 +112,144 @@ const THRESHOLDS = {
 
 // ─── CSS PARSE (D-10) ─────────────────────────────────────────────────────────
 
-// Parse the two daisyUI theme blocks from app.css.
-// Returns { dark: { "base-100": "#141923", ... }, light: { ... } }
-// Regex: /@plugin[^{]*daisyui-theme[^{]*\{([^}]+)\}/g extracts each theme block body.
-// T-128-03: text ONLY — regex extraction of hex values; NO eval() or CSS execution.
+// Locate top-level daisyUI theme at-rules lexically. Quoted declaration values
+// and comments are inert here, even when they contain plugin-like text/braces.
+function cssCommentEnd(source, start) {
+  const close = source.indexOf("*/", start + 2);
+  return close < 0 ? source.length : close + 2;
+}
+
+function cssStringEnd(source, start) {
+  const quote = source[start];
+  for (let i = start + 1; i < source.length; i += 1) {
+    if (source[i] === "\\") { i += 1; continue; }
+    if (source[i] === quote) return i + 1;
+  }
+  return source.length;
+}
+
+function skipCssTrivia(source, start) {
+  let i = start;
+  while (i < source.length) {
+    if (/\s/.test(source[i])) { i += 1; continue; }
+    if (source.startsWith("/*", i)) { i = cssCommentEnd(source, i); continue; }
+    break;
+  }
+  return i;
+}
+
+function onlyCssTrivia(source, start, end) {
+  return skipCssTrivia(source.slice(0, end), start) === end;
+}
+
+function readCssString(source, start) {
+  const quote = source[start];
+  let value = "";
+  for (let i = start + 1; i < source.length; i += 1) {
+    if (source[i] === "\\") {
+      if (i + 1 < source.length) value += source[++i];
+      continue;
+    }
+    if (source[i] === quote) return { value, end: i + 1 };
+    value += source[i];
+  }
+  return null;
+}
+
+function cssBlockEnd(source, open) {
+  let depth = 1;
+  for (let i = open + 1; i < source.length; i += 1) {
+    if (source.startsWith("/*", i)) { i = cssCommentEnd(source, i) - 1; continue; }
+    if (source[i] === "\"" || source[i] === "'") { i = cssStringEnd(source, i) - 1; continue; }
+    if (source[i] === "{") depth += 1;
+    else if (source[i] === "}" && --depth === 0) return i;
+  }
+  throw new Error("Unterminated daisyUI theme block");
+}
+
+function stripCssComments(source) {
+  let result = "";
+  for (let i = 0; i < source.length;) {
+    if (source.startsWith("/*", i)) {
+      const end = cssCommentEnd(source, i);
+      result += source.slice(i, end).replace(/[^\n]/g, " ");
+      i = end;
+    } else if (source[i] === "\"" || source[i] === "'") {
+      const end = cssStringEnd(source, i);
+      result += source.slice(i, end);
+      i = end;
+    } else {
+      result += source[i++];
+    }
+  }
+  return result;
+}
+
+function cssDeclarations(body) {
+  const declarations = [];
+  let start = 0;
+  for (let i = 0; i < body.length; i += 1) {
+    if (body.startsWith("/*", i)) { i = cssCommentEnd(body, i) - 1; continue; }
+    if (body[i] === "\"" || body[i] === "'") { i = cssStringEnd(body, i) - 1; continue; }
+    if (body[i] === ";") {
+      declarations.push(stripCssComments(body.slice(start, i)).trim());
+      start = i + 1;
+    }
+  }
+  declarations.push(stripCssComments(body.slice(start)).trim());
+  return declarations.filter(Boolean);
+}
+
+function themePluginBodies(cssText) {
+  const bodies = [];
+  let depth = 0;
+  let statementStart = 0;
+  for (let i = 0; i < cssText.length;) {
+    if (cssText.startsWith("/*", i)) { i = cssCommentEnd(cssText, i); continue; }
+    if (cssText[i] === "\"" || cssText[i] === "'") { i = cssStringEnd(cssText, i); continue; }
+
+    if (depth === 0 && cssText.startsWith("@plugin", i) && onlyCssTrivia(cssText, statementStart, i)) {
+      const afterKeyword = i + "@plugin".length;
+      if (afterKeyword === cssText.length || !/[\w-]/.test(cssText[afterKeyword])) {
+        const pathStart = skipCssTrivia(cssText, afterKeyword);
+        const pluginPath = cssText[pathStart] === "\"" || cssText[pathStart] === "'"
+          ? readCssString(cssText, pathStart)
+          : null;
+        if (pluginPath && pluginPath.value.includes("daisyui-theme")) {
+          const open = skipCssTrivia(cssText, pluginPath.end);
+          if (cssText[open] === "{") {
+            const close = cssBlockEnd(cssText, open);
+            bodies.push(cssText.slice(open + 1, close));
+            i = close + 1;
+            statementStart = i;
+            continue;
+          }
+        }
+      }
+    }
+
+    if (cssText[i] === "{") depth += 1;
+    else if (cssText[i] === "}") {
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) statementStart = i + 1;
+    } else if (cssText[i] === ";" && depth === 0) statementStart = i + 1;
+    i += 1;
+  }
+  return bodies;
+}
+
 function parseThemeBlocks(cssText) {
   const blocks = {};
-  const blockRe = /@plugin[^{]*daisyui-theme[^{]*\{([^}]+)\}/g;
-  let m;
-  while ((m = blockRe.exec(cssText)) !== null) {
-    const body = m[1];
-    const nameMatch = body.match(/name:\s*"([^"]+)"/);
+  for (const body of themePluginBodies(cssText)) {
+    const declarations = cssDeclarations(body);
+    const nameMatch = declarations.map((declaration) => /^name:\s*"([^"]+)"$/.exec(declaration)).find(Boolean);
     if (!nameMatch) continue;
     const name = nameMatch[1];
     if (blocks[name]) throw new Error(`Duplicate theme ${name}`);
     blocks[name] = {};
-    const tokenRe = /--color-([\w-]+):\s*(#[0-9a-fA-F]{6})/g;
-    let t;
-    while ((t = tokenRe.exec(body)) !== null) {
-      blocks[name][t[1]] = t[2];
+    for (const declaration of declarations) {
+      const token = /^--color-([\w-]+):\s*(#[0-9a-fA-F]{6})$/.exec(declaration);
+      if (token) blocks[name][token[1]] = token[2];
     }
   }
   return blocks;
@@ -852,12 +971,13 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
 // Bounded source reader: declarations are data, never evaluated as code.
 function readThemeProperties(css) {
   const themes = {};
-  for (const match of css.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/@plugin[^{}]*daisyui-theme[^{}]*\{([^{}]*)\}/g)) {
-    const name = match[1].match(/(?:^|;)\s*name:\s*"(light|dark)"\s*;/)?.[1];
+  for (const body of themePluginBodies(css)) {
+    const declarations = cssDeclarations(body);
+    const name = declarations.map((declaration) => /^name:\s*"(light|dark)"$/.exec(declaration)?.[1]).find(Boolean);
     if (!name || themes[name]) throw new Error("Missing, duplicate or unsupported theme name");
     const props = {};
-    for (const declaration of match[1].split(";")) {
-      const entry = declaration.trim().match(/^(--[\w-]+)\s*:\s*(.+)$/);
+    for (const declaration of declarations) {
+      const entry = declaration.match(/^(--[\w-]+)\s*:\s*(.+)$/);
       if (!entry) continue;
       const key = entry[1].slice(2);
       if (Object.hasOwn(props, key)) throw new Error(`Duplicate ${name} token ${key}`);

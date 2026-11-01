@@ -56,17 +56,57 @@ function normalizedPath(value) {
   return value.split(path.sep).join("/");
 }
 
+function isExcludedSourcePath(file) {
+  return /(^|\/)(vendor|priv\/static|test|tests|fixture|fixtures|docs?)(\/|$)/i.test(normalizedPath(file));
+}
+
+function isUnderSourceRoot(file) {
+  const normalized = normalizedPath(file);
+  return SOURCE_ROOTS.some((root) => normalized === root || normalized.startsWith(`${root}/`));
+}
+
+function mayContainGovernedSource(file) {
+  const normalized = normalizedPath(file);
+  if (isExcludedSourcePath(normalized)) return false;
+  return isUnderSourceRoot(normalized) || SOURCE_ROOTS.some((root) => root.startsWith(`${normalized}/`));
+}
+
+function isGovernedSourcePath(file) {
+  return isUnderSourceRoot(file) && !isExcludedSourcePath(file);
+}
+
 function isSourcePath(file) {
   const normalized = normalizedPath(file);
-  if (!SOURCE_ROOTS.some((root) => normalized === root || normalized.startsWith(`${root}/`))) return false;
-  if (/(^|\/)(vendor|priv\/static|test|tests|fixture|fixtures|docs?)(\/|$)/i.test(normalized)) return false;
+  if (!isGovernedSourcePath(normalized)) return false;
   return SOURCE_EXTENSIONS.has(path.extname(normalized).toLowerCase());
 }
 
 function discoverFiles(root) {
   const result = [];
+  const assertNoSymlinkComponents = (relative) => {
+    let current = root;
+    let prefix = "";
+    for (const segment of relative.split(path.sep)) {
+      current = path.join(current, segment);
+      prefix = prefix ? path.join(prefix, segment) : segment;
+      let stat;
+      try {
+        stat = fs.lstatSync(current);
+      } catch (error) {
+        if (error.code === "ENOENT") return false;
+        throw error;
+      }
+      if (stat.isSymbolicLink()) {
+        if (mayContainGovernedSource(prefix)) fail(`source symlink is forbidden: ${normalizedPath(prefix)}`);
+        return false;
+      }
+      if (!stat.isDirectory()) return false;
+    }
+    return true;
+  };
   const visit = (relative) => {
     const absolute = path.join(root, relative);
+    if (!assertNoSymlinkComponents(relative)) return;
     let entries;
     try {
       entries = fs.readdirSync(absolute, { withFileTypes: true });
@@ -78,12 +118,12 @@ function discoverFiles(root) {
     for (const entry of entries) {
       if (entry.name === ".git" || entry.name === "node_modules" || entry.name === "vendor" || entry.name === "priv") continue;
       const child = path.join(relative, entry.name);
-      const full = path.join(root, child);
-      if (entry.isSymbolicLink()) continue;
+      if (entry.isSymbolicLink()) {
+        if (isGovernedSourcePath(child)) fail(`source symlink is forbidden: ${normalizedPath(child)}`);
+        continue;
+      }
       if (entry.isDirectory()) visit(child);
       else if (entry.isFile() && isSourcePath(child)) {
-        const stat = fs.statSync(full);
-        if (stat.size > MAX_FILE_BYTES) fail(`source file exceeds ${MAX_FILE_BYTES} bytes: ${normalizedPath(child)}`);
         result.push(normalizedPath(child));
         if (result.length > MAX_FILES) fail(`source discovery exceeds ${MAX_FILES} files`);
       }
@@ -609,9 +649,17 @@ function compareText(left, right) { return left < right ? -1 : left > right ? 1 
 
 function scanTree(root) {
   const absoluteRoot = path.resolve(root);
+  const rootStat = fs.lstatSync(absoluteRoot);
+  if (rootStat.isSymbolicLink()) fail("repository root symlink is forbidden during source scan");
+  if (!rootStat.isDirectory()) fail("source scan root is not a directory");
   const findings = [];
   for (const file of discoverFiles(absoluteRoot)) {
-    const source = fs.readFileSync(path.join(absoluteRoot, file), "utf8");
+    const source = readBoundedUtf8(
+      path.join(absoluteRoot, file),
+      `source file ${file}`,
+      MAX_FILE_BYTES,
+      `source file exceeds ${MAX_FILE_BYTES} bytes: ${file}`
+    );
     scanFile(source, file, findings);
   }
   return sortFindings(findings);
@@ -620,13 +668,22 @@ function scanTree(root) {
 function scanTreeAtCommit(repo, oid) {
   if (!isOid(oid)) fail(`invalid commit object id: ${oid}`);
   const listing = git(repo, ["ls-tree", "-rz", "--full-tree", oid], { maxBuffer: MAX_GIT_OUTPUT });
-  const entries = String(listing).split("\0").filter(Boolean).map((entry) => {
+  const treeEntries = String(listing).split("\0").filter(Boolean).map((entry) => {
     const separator = entry.indexOf("\t");
     if (separator < 0) fail("git ls-tree returned a malformed tree entry");
     const header = entry.slice(0, separator).split(" ");
     const file = entry.slice(separator + 1);
     return { mode: header[0], type: header[1], oid: header[2], file };
-  }).filter((entry) => entry.type === "blob" && isSourcePath(entry.file));
+  });
+  for (const entry of treeEntries) {
+    if (entry.mode === "120000" && mayContainGovernedSource(entry.file)) {
+      fail(`source symlink is forbidden in Git tree: ${entry.file}`);
+    }
+    if (entry.mode === "160000" && entry.type === "commit" && mayContainGovernedSource(entry.file)) {
+      fail(`source Gitlink is forbidden in Git tree: ${entry.file}`);
+    }
+  }
+  const entries = treeEntries.filter((entry) => entry.type === "blob" && entry.mode !== "120000" && isSourcePath(entry.file));
   if (entries.length > MAX_FILES) fail(`Git tree source count exceeds ${MAX_FILES}`);
   const findings = [];
   for (const entry of entries) if (!isOid(entry.oid)) fail(`invalid blob object id for ${entry.file}`);
@@ -714,10 +771,36 @@ function serializeLedger(map) {
 
 function ledgerFromRoot(root) {
   const file = path.join(root, LEDGER_PATH);
-  try { return parseLedgerText(fs.readFileSync(file, "utf8"), LEDGER_PATH); }
+  try { return parseLedgerText(readBoundedUtf8(file, LEDGER_PATH, MAX_FILE_BYTES), LEDGER_PATH); }
   catch (error) {
     if (error.code === "ENOENT") fail(`required ledger is missing: ${LEDGER_PATH}`);
     throw error;
+  }
+}
+
+function readBoundedUtf8(file, label, maxBytes, sizeError = `${label} exceeds ${maxBytes} bytes`) {
+  let descriptor;
+  try {
+    const noFollow = fs.constants.O_NOFOLLOW || 0;
+    descriptor = fs.openSync(file, fs.constants.O_RDONLY | noFollow);
+    const stat = fs.fstatSync(descriptor);
+    if (!stat.isFile()) fail(`${label} must be a regular file`);
+    if (stat.size > maxBytes) fail(sizeError);
+    const chunk = Buffer.allocUnsafe(Math.min(64 * 1024, maxBytes + 1));
+    const chunks = [];
+    let length = 0;
+    while (length <= maxBytes) {
+      const readLength = Math.min(chunk.length, maxBytes + 1 - length);
+      if (readLength === 0) break;
+      const count = fs.readSync(descriptor, chunk, 0, readLength, null);
+      if (count === 0) break;
+      chunks.push(Buffer.from(chunk.subarray(0, count)));
+      length += count;
+    }
+    if (length > maxBytes) fail(sizeError);
+    return Buffer.concat(chunks, length).toString("utf8");
+  } finally {
+    if (descriptor !== undefined) fs.closeSync(descriptor);
   }
 }
 
@@ -1004,4 +1087,4 @@ function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) process.exitCode = main();
 
-module.exports = { scanTree, resolveTrustedComparison, verifyHistory };
+module.exports = { scanTree, scanTreeAtCommit, resolveTrustedComparison, verifyHistory };

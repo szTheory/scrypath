@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { scanTree, resolveTrustedComparison, verifyHistory } = require("./ui_literal_policy.cjs");
+const { scanTree, scanTreeAtCommit, resolveTrustedComparison, verifyHistory } = require("./ui_literal_policy.cjs");
 
 const REPO = path.resolve(__dirname, "../..");
 const BOOTSTRAP = "767f368473f17fba43d7be4675c53ab65a87530c";
@@ -162,6 +162,80 @@ test("discovers the four rules only in authored UI sources and keeps stable iden
   fs.writeFileSync(stylesheet, `/* harmless comment */\n${fs.readFileSync(stylesheet, "utf8").replace(/\n/g, "\n\n")}`);
   const moved = scanTree(root).map(({ rule, path: file, context, value }) => [rule, file, context, value]);
   assert.deepEqual(moved, identities, "comments and line movement do not change finding identity");
+});
+
+test("refuses governed source symlinks without following them or scanning link text", (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ui-literal-symlink-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const outside = path.join(root, "outside.css");
+  const authored = path.join(root, "scrypath_ops/assets/css/linked.css");
+  fs.mkdirSync(path.dirname(authored), { recursive: true });
+  fs.writeFileSync(outside, ".hidden { color: #abcdef; }\n");
+  fs.symlinkSync(path.relative(path.dirname(authored), outside), authored);
+
+  assert.throws(() => scanTree(root), /source symlink.*scrypath_ops\/assets\/css\/linked\.css/);
+
+  const vendor = path.join(root, "scrypath_ops/assets/vendor");
+  fs.mkdirSync(vendor, { recursive: true });
+  fs.symlinkSync(path.relative(vendor, outside), path.join(vendor, "ignored.css"));
+  fs.unlinkSync(authored);
+  assert.deepEqual(scanTree(root), [], "explicitly excluded vendor roots remain outside the scan");
+
+  const linkedRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ui-literal-root-symlink-"));
+  t.after(() => fs.rmSync(linkedRoot, { recursive: true, force: true }));
+  const linkedAssets = path.join(linkedRoot, "scrypath_ops/assets");
+  const externalAssets = path.join(linkedRoot, "external-assets");
+  fs.mkdirSync(path.dirname(linkedAssets), { recursive: true });
+  fs.mkdirSync(externalAssets, { recursive: true });
+  fs.writeFileSync(path.join(externalAssets, "hidden.css"), ".hidden { color: #abcdef; }\n");
+  fs.symlinkSync(path.relative(path.dirname(linkedAssets), externalAssets), linkedAssets);
+  assert.throws(() => scanTree(linkedRoot), /source symlink.*scrypath_ops\/assets/);
+});
+
+test("Git history rejects mode-120000 entries in governed source paths", (t) => {
+  const repo = cloneRepo(t);
+  const outside = path.join(path.dirname(repo), "outside.css");
+  const link = path.join(repo, "scrypath_ops/assets/css/linked.css");
+  fs.writeFileSync(outside, ".hidden { color: #abcdef; }\n");
+  fs.symlinkSync(path.relative(path.dirname(link), outside), link);
+  git(repo, ["add", "scrypath_ops/assets/css/linked.css"]);
+  git(repo, ["commit", "-m", "add source symlink witness"]);
+
+  const result = policyResult(repo);
+  assert.equal(result.ok, false, "a source symlink cannot disappear from either history or working-tree scans");
+  assert.match(result.error, /source symlink.*scrypath_ops\/assets\/css\/linked\.css/);
+});
+
+test("Git tree scanning rejects an ancestor symlink that hides authored roots", (t) => {
+  const repo = cloneRepo(t);
+  const moved = path.join(path.dirname(repo), "scrypath_ops-moved");
+  fs.renameSync(path.join(repo, "scrypath_ops"), moved);
+  fs.symlinkSync(path.relative(repo, moved), path.join(repo, "scrypath_ops"));
+  git(repo, ["add", "-A"]);
+  git(repo, ["commit", "-m", "replace authored root with symlink"]);
+
+  const head = git(repo, ["rev-parse", "HEAD"]);
+  assert.throws(() => scanTreeAtCommit(repo, head), /source symlink is forbidden in Git tree: scrypath_ops/);
+});
+
+test("Git tree scanning rejects a Gitlink at a governed ancestor", (t) => {
+  const repo = cloneRepo(t);
+  const linkedCommit = git(repo, ["rev-parse", "HEAD"]);
+  git(repo, ["rm", "-r", "--cached", "scrypath_ops"]);
+  git(repo, ["update-index", "--add", "--cacheinfo", `160000,${linkedCommit},scrypath_ops`]);
+  git(repo, ["commit", "-m", "replace authored root with gitlink"]);
+
+  const head = git(repo, ["rev-parse", "HEAD"]);
+  assert.throws(() => scanTreeAtCommit(repo, head), /source Gitlink is forbidden in Git tree: scrypath_ops/);
+});
+
+test("oversized working-tree ledgers fail the existing byte bound before JSON parsing", (t) => {
+  const repo = cloneRepo(t);
+  fs.writeFileSync(path.join(repo, "scripts/ci/ui-literal-baseline.json"), Buffer.alloc(2 * 1024 * 1024 + 1, 0x20));
+
+  const result = policyResult(repo);
+  assert.equal(result.ok, false);
+  assert.match(result.error, /scripts\/ci\/ui-literal-baseline\.json exceeds 2097152 bytes/);
 });
 
 test("the committed bootstrap ledger is the exact pinned-source multiset", (t) => {

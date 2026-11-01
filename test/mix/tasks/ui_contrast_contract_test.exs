@@ -118,6 +118,21 @@ defmodule Mix.Tasks.UiContrastContractTest do
     original_manifest = File.read!(manifest)
     original_checker = File.read!(checker)
 
+    dark_theme_match =
+      Regex.run(
+        ~r/@plugin "\.\.\/vendor\/daisyui-theme" \{\s*name: "dark";[\s\S]*?\n\}/,
+        original_css
+      )
+
+    assert dark_theme_match,
+           "maintained CSS has one dark theme block for the quoted-decoy witness"
+
+    quoted_dark_theme = dark_theme_match |> hd() |> String.replace(~r/\s+/, " ")
+
+    quoted_theme_decoy =
+      String.replace(original_css, hd(dark_theme_match), "", global: false) <>
+        "\n.quoted-theme-decoy::before { content: '#{quoted_dark_theme}'; }\n"
+
     cases = [
       {"missing dark theme", css,
        Regex.replace(
@@ -125,6 +140,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
          original_css,
          ""
        )},
+      {"quoted dark theme decoy", css, quoted_theme_decoy},
       {"duplicate theme", css,
        original_css <> hd(Regex.run(~r/@plugin[^{}]*daisyui-theme[^{}]*\{[^}]+\}/, original_css))},
       {"missing required token", css,
