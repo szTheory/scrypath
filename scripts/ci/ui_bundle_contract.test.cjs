@@ -1,9 +1,11 @@
 const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 const {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
+  readdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -218,6 +220,77 @@ test("CLI rejects a bad standalone or host artifact independently", (t) => {
   result = spawnSync(process.execPath, [helper, "--standalone", standalone, "--host", host], { encoding: "utf8" });
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /mounted host.*default palette/);
+});
+
+test("TERM and INT during the first image build leave failed incomplete receipts and run cleanup", { timeout: 30_000 }, async (t) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), `scrypath-boundary-interrupt-${randomUUID()}-`));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const fakeBin = path.join(root, "bin");
+  const dockerLog = path.join(root, "fake-docker.log");
+  mkdirSync(fakeBin, { recursive: true });
+
+  const fakeDocker = [
+    "#!/usr/bin/env bash",
+    "set -eu",
+    'printf \'%s\\n\' "$*" >> "$FAKE_DOCKER_LOG"',
+    'if [[ "$1" == "compose" && "$2" == "version" ]]; then printf \'Docker Compose version v2\\n\'; exit 0; fi',
+    'if [[ "$1" == "info" ]]; then exit 0; fi',
+    'if [[ "$1" == "image" && "$2" == "ls" ]]; then printf \'sha256:fake-partial-image\\n\'; exit 0; fi',
+    'if [[ "$1" == "build" && " $* " == *" --target asset_builder "* ]]; then',
+    '  : > "$FAKE_DOCKER_BUILD_STARTED"',
+    '  kill -"$FAKE_DOCKER_SIGNAL" "$PPID"',
+    "  exit 0",
+    "fi",
+    "exit 0",
+    "",
+  ].join("\n");
+  const dockerPath = path.join(fakeBin, "docker");
+  writeFileSync(dockerPath, fakeDocker);
+  chmodSync(dockerPath, 0o755);
+
+  const checker = path.join(repositoryRoot, "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh");
+  for (const { signal, exitCode } of [{ signal: "TERM", exitCode: 143 }, { signal: "INT", exitCode: 130 }]) {
+    const artifactRoot = path.join(root, `artifacts-${signal}`);
+    const buildStarted = path.join(root, `first-build-${signal}-started`);
+    mkdirSync(artifactRoot, { recursive: true });
+    const child = spawn("bash", [checker, "--runtime"], {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        PATH: `${fakeBin}${path.delimiter}${process.env.PATH}`,
+        SCRYPATH_DEPENDENCY_BOUNDARY_ARTIFACT_DIR: artifactRoot,
+        FAKE_DOCKER_LOG: dockerLog,
+        FAKE_DOCKER_BUILD_STARTED: buildStarted,
+        FAKE_DOCKER_SIGNAL: signal,
+      },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8").on("data", (chunk) => { stdout += chunk; });
+    child.stderr.setEncoding("utf8").on("data", (chunk) => { stderr += chunk; });
+    const result = await new Promise((resolve, reject) => {
+      child.once("error", reject);
+      child.once("close", (code, childSignal) => resolve({ code, signal: childSignal }));
+    });
+
+    assert.ok(existsSync(buildStarted), `${signal} must interrupt the real checker during its first build`);
+    assert.equal(result.code, exitCode, `${signal} must produce an explicit nonzero exit after cleanup; signal=${result.signal}\nstdout=${stdout}\nstderr=${stderr}`);
+    const runDirectory = readdirSync(artifactRoot).find((entry) => entry.startsWith("scrypath-dependency-boundary-"));
+    assert.ok(runDirectory, `runtime artifact directory was not created; stdout=${stdout}\nstderr=${stderr}`);
+    const receiptPath = path.join(artifactRoot, runDirectory, "runtime-receipt.json");
+    assert.ok(existsSync(receiptPath), "EXIT cleanup must persist a receipt after interruption");
+    const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+    assert.equal(receipt.status, "failed", "an interrupted incomplete proof must never be receipted as passed");
+    assert.deepEqual(receipt.runtime.environments, [], "the first build cannot claim a runtime environment");
+    assert.deepEqual(receipt.images.immutable_ids, [], "the first build cannot claim runtime image identities");
+    assert.equal(receipt.cleanup_status, 0, "the owned cleanup trap must complete after interruption");
+    assert.match(stdout, /DEPENDENCY_BOUNDARY case=cleanup status=passed/, "the cleanup trap must run after interruption");
+  }
+  const dockerCommands = readFileSync(dockerLog, "utf8");
+  assert.equal((dockerCommands.match(/--target asset_builder/g) || []).length, 2, "both signals must interrupt the expected first build");
+  assert.equal((dockerCommands.match(/image ls --quiet scrypath_dependency_boundary_[^ ]+:asset-builder/g) || []).length, 2, "cleanup must query each unique interrupted image tag");
+  assert.equal((dockerCommands.match(/image rm -f scrypath_dependency_boundary_[^ ]+:asset-builder/g) || []).length, 2, "cleanup must remove image tags that may have been created as interrupted builds returned");
 });
 
 test("static dependency boundary mode does not require the runtime bundle helper", (t) => {

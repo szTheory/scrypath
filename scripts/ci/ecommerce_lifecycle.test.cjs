@@ -797,7 +797,15 @@ if (args[0] === "image" && args[1] === "inspect") {
   process.stdout.write(labels[key] + "\n");
   process.exit(0);
 }
-if (args[0] === "image" && args[1] === "rm") process.exit(0);
+if (args[0] === "image" && args[1] === "ls") {
+  if (state.images[args.at(-1)]) process.stdout.write("sha256:FAKE_BOUNDARY_IMAGE_FOR_TEST_ONLY\\n");
+  process.exit(0);
+}
+if (args[0] === "image" && args[1] === "rm") {
+  delete state.images[args.at(-1)];
+  save();
+  process.exit(0);
+}
 if (args[0] === "create") {
   const id = "boundary-" + args.at(-1).split(":").at(-1);
   state.containers.push(id);
@@ -859,6 +867,10 @@ for (const target of ["runtime-test", "runtime-prod"]) {
       assert.equal(receipt.status, "failed");
       assert.equal(receipt.cleanup_status, removalFails ? 1 : 0);
       assert.deepEqual(state.containers, removalFails ? [container] : []);
+      const builtTags = calls.filter(args => args[0] === "build").map(args => args[args.indexOf("-t") + 1]);
+      const queriedTags = calls.filter(args => args[0] === "image" && args[1] === "ls").map(args => args.at(-1));
+      assert.deepEqual(queriedTags.sort(), builtTags.sort(), "cleanup queries only the image tags created by this fixture run");
+      assert.deepEqual(state.images, {}, "all owned image tags are removed even when extraction or container removal fails");
     });
   }
 }

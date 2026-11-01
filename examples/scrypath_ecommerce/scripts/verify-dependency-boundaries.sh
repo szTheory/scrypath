@@ -217,6 +217,24 @@ if [[ "$mode" == "--runtime" ]]; then
   runtime_envs=()
   runtime_host_ports=()
   runtime_cleanup_status=0
+  runtime_proof_complete=0
+
+  runtime_completion_error() {
+    if [[ "$runtime_proof_complete" != 1 ]]; then
+      printf 'runtime proof did not reach its completion marker\n' >&2
+      return 1
+    fi
+    if [[ "${runtime_envs[*]}" != "test prod" || "${#runtime_image_ids[@]}" != 2 ]] ||
+      [[ -z "${runtime_image_ids[0]:-}" || -z "${runtime_image_ids[1]:-}" ]]; then
+      printf 'runtime proof is missing one or both verified environment/image identities\n' >&2
+      return 1
+    fi
+    if [[ "${#runtime_projects[@]}" != 2 || "${#runtime_compose_files[@]}" != 2 || "${#runtime_host_ports[@]}" != 4 ]]; then
+      printf 'runtime proof is missing owned project or served-port evidence for both environments\n' >&2
+      return 1
+    fi
+    return 0
+  }
 
   sha256_file() {
     if command -v sha256sum >/dev/null 2>&1; then
@@ -280,9 +298,13 @@ NODE
 
   cleanup_runtime_proof() {
     local original_status="$?"
-    local index project file leftover status=0 tag
-    trap - EXIT
+    local index project file leftover image_ids status=0 tag
+    trap - EXIT TERM INT
     set +e
+
+    if (( original_status == 0 )) && ! runtime_completion_error; then
+      original_status=76
+    fi
 
     if [[ -n "$builder_container" ]]; then
       docker rm -f "$builder_container" >/dev/null 2>&1 || status=1
@@ -312,7 +334,13 @@ NODE
     done
 
     for tag in "${runtime_images[@]}"; do
-      docker image rm -f "$tag" >>"$artifact_dir/cleanup.log" 2>&1 || status=1
+      if image_ids="$(docker image ls --quiet "$tag" 2>>"$artifact_dir/cleanup.log")"; then
+        if [[ -n "$image_ids" ]]; then
+          docker image rm -f "$tag" >>"$artifact_dir/cleanup.log" 2>&1 || status=1
+        fi
+      else
+        status=1
+      fi
     done
 
     runtime_cleanup_status="$status"
@@ -339,15 +367,17 @@ NODE
   prod_image="${project_prefix}:runtime-prod"
 
   trap cleanup_runtime_proof EXIT
+  trap 'exit 143' TERM
+  trap 'exit 130' INT
   printf 'DEPENDENCY_BOUNDARY case=source run=%s sha=%s fingerprint=%s dockerfile=%s artifacts=%s\n' \
     "$run_id" "$source_sha" "$source_fingerprint" "$recipe_sha" "$artifact_dir"
   printf 'DEPENDENCY_BOUNDARY case=build target=asset_builder mode=cache\n'
+  runtime_images+=("$builder_image")
   if ! docker build --file "$dockerfile" --target asset_builder "${label_args[@]}" -t "$builder_image" "$repo_root" \
     >"$artifact_dir/build-asset-builder.log" 2>&1; then
     tail -n 100 "$artifact_dir/build-asset-builder.log" >&2
     fail "asset_builder image build failed; log: $artifact_dir/build-asset-builder.log"
   fi
-  runtime_images+=("$builder_image")
 
   test_build_cache_args=()
   # Keep the acceptance path cold by default; local retries may reuse verified BuildKit layers.
@@ -357,20 +387,20 @@ NODE
   test_build_mode="cold"
   [[ "${SCRYPATH_DEPENDENCY_BOUNDARY_COLD:-1}" == "0" ]] && test_build_mode="cached"
   printf 'DEPENDENCY_BOUNDARY case=build target=runtime_test mode=%s\n' "$test_build_mode"
+  runtime_images+=("$test_image")
   if ! docker build "${test_build_cache_args[@]}" --file "$dockerfile" --target runtime_test "${label_args[@]}" -t "$test_image" "$repo_root" \
     >"$artifact_dir/build-runtime-test.log" 2>&1; then
     tail -n 100 "$artifact_dir/build-runtime-test.log" >&2
     fail "runtime_test image build failed; log: $artifact_dir/build-runtime-test.log"
   fi
-  runtime_images+=("$test_image")
 
   printf 'DEPENDENCY_BOUNDARY case=build target=runtime_prod mode=independent\n'
+  runtime_images+=("$prod_image")
   if ! docker build --file "$dockerfile" --target runtime_prod "${label_args[@]}" -t "$prod_image" "$repo_root" \
     >"$artifact_dir/build-runtime-prod.log" 2>&1; then
     tail -n 100 "$artifact_dir/build-runtime-prod.log" >&2
     fail "runtime_prod image build failed; log: $artifact_dir/build-runtime-prod.log"
   fi
-  runtime_images+=("$prod_image")
 
   for image in "$builder_image" "$test_image" "$prod_image"; do
     source_label="$(docker image inspect --format='{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$image")"
@@ -770,5 +800,7 @@ ELIXIR
 
   [[ "$(node "$helper" fingerprint)" == "$source_fingerprint" ]] ||
     fail "checkout source fingerprint changed while the runtime proof was running"
+  runtime_proof_complete=1
+  runtime_completion_error || fail "runtime dependency boundary proof is incomplete"
   printf 'Runtime dependency boundary proof passed (test/prod graphs, owned cleanup, and four served assets per target).\n'
 fi
