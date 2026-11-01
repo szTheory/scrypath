@@ -191,7 +191,7 @@ Plans:
 4. Valid DTCG Ops light/dark tokens match the live CSS themes, and changing either side to diverge fails the drift test. (UIF-05)
 5. The old judge entrypoints, environment wiring and docs offer no paid OpenAI request or mock assumed-pass path; they truthfully identify the remaining deterministic checks and deferred agent-run review. (UIF-06)
 
-**Plans**: 3/10 integrated (01, 02 and 04) across 6 execution waves; Wave 3 is next.
+**Plans**: 5/10 integrated (01–05) across6 execution waves; Wave4 is next after qualified inspected pre-change evidence.
 
 Plans:
 
@@ -204,7 +204,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [x] 185-03-PLAN.md — Whole-document typed DTCG mirror and canonical CSS drift proof (wave 3)
-- [ ] 185-05-PLAN.md — Guarded disposable capture support and source-pinned pre-change evidence (wave 3)
+- [x] 185-05-PLAN.md — Guarded disposable capture support and source-pinned pre-change evidence (wave 3)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [ ] 185-06-PLAN.md — Color-only reset and forced utility proof in both actual bundles (wave 4)
@@ -235,13 +235,13 @@ Plans:
 
 ## Progress
 
-**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase 185 is executing Wave 3 after verified Wave 2 integration.
+**Execution Order:** 182 → 183 → 184 → 185. Phases 182–184 are goal-verified; Phase185 is executing Wave4 after qualified Wave3 integration.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 182. Reliable full browser verification and CI caches | 8/8 | Complete    | 2026-10-27 |
 | 183. Maintainer tooling outside the Hex package | 8/8 | Complete    | 2026-10-28 |
 | 184. Explicit and lean dependency graphs | 12/12 | Complete    | 2026-10-30 |
-| 185. Executable UI quality foundations | 3/10 | Executing Wave 3 | — |
+| 185. Executable UI quality foundations | 5/10 | Executing Wave4 | — |
 
 **Coverage:** 21/21 confirmed requirements map to exactly one phase; 15 are implemented and goal-verified in Phases 182–184, with 6 pending phase-goal verification in Phase 185. Phase 184 final-source acceptance is external under the two-stage closeout rule.

@@ -2,205 +2,76 @@
 phase: 185-executable-ui-quality-foundations
 plan: "05"
 subsystem: ui
-tags: [playwright, docker, provenance, image-comparison, accessibility]
+tags: [playwright, docker, provenance, exact-preservation]
 requires:
   - phase: 185-02
-    provides: ["pinned UI literal baseline and committed bootstrap history"]
+    provides: [pinned literal baseline and bootstrap history]
 provides:
-  - "Source-pinned disposable UI capture, verification, teardown, and pixel/copy comparison"
-  - "Frozen pre-change matrix for 72 host and 63 standalone operator observations"
-affects: ["185-06", "185-07", "185-08", "185-09"]
-actuals:
-  tokens: 16234
-  tasks: 2
-  commits: 8
-  plan_head_before: 7cc6035a6e277312b8f6237dade6d1972b87f4b9
-  plan_head_after: 174adc54efdd349de275d4f4932649d6a9c76f7c
-  review_continuation_commits: 17
+  - Independent disposable capture, resource and manifest authority
+  - Complete same-source exact calibration with repeat verification
+  - Qualified inspected pre-change matrix retained through Plan09
+affects: [185-06, 185-07, 185-08, 185-09]
 tech-stack:
   added: []
-  patterns:
-    - "Separate retained-preview provenance from owner-labeled disposable Compose provenance"
-    - "Bind each capture to committed source, image/container labels, browser, platform, and synthetic data identity"
-    - "Keep automated image/copy comparisons pending for review"
-key-files:
-  created:
-    - scripts/ci/ui_preservation.cjs
-    - scripts/ci/ui_preservation.test.cjs
-  modified:
-    - examples/scrypath_ecommerce/e2e/ui-review.mjs
-    - examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs
-    - examples/scrypath_ecommerce/e2e/UI-REVIEW.md
-key-decisions:
-  - "Retained preview capture and preflight continue to require their existing source, mount, main, and loopback checks."
-  - "Disposable captures use a unique, source-pinned full Compose stack with owned volumes, loopback ports, and label-scoped teardown."
-  - "Capture manifests and comparisons remain pending review; completeness and pixel differences do not grant design approval."
-  - "No CSS, controller, or template changes were made in this plan."
 requirements-completed: []
+status: complete
+qualification_source: 7886eb10449dcb55945d1ab886e6c78752cc73cf
 coverage:
   - id: D1
-    description: "Disposable capture orchestration independently verifies source and resource ownership, captures paired artifacts, and reports pixel/copy differences while preserving the guarded retained path."
+    description: Independent bounded capture ownership, source, clock, data and artifact verification; strict pixel/copy/state comparison
     requirement: UIF-02
     verification:
       - kind: unit
-        ref: "node --test scripts/ci/ui_preservation.test.cjs examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs"
+        ref: /private/tmp/scrypath-phase185-execution/parent-visibility-candidate-GREEN.log
         status: pass
-      - kind: other
-        ref: "node --check scripts/ci/ui_preservation.cjs; node --check examples/scrypath_ecommerce/e2e/ui-review.mjs; git diff --check"
+      - kind: e2e
+        ref: /private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/qualified-calibration-592d012f53ec7555/transport-record.json
         status: pass
     human_judgment: false
   - id: D2
-    description: "A source-pinned 135-entry pre-change matrix contains viewport, full-page, hover, focus, copy, and verified compact-navigation evidence for host and standalone surfaces."
+    description: Actual complete before matrix inspected and qualified before UI source changes
     requirement: UIF-03
     verification:
       - kind: e2e
-        ref: "node scripts/ci/ui_preservation.cjs capture-before --session /private/tmp/scrypath-phase185-execution/ui-session.json"
+        ref: /private/tmp/scrypath-phase185-execution/185-05-qualification.json
         status: pass
       - kind: other
-        ref: "artifactErrors(capture.json, capture_directory) returned no errors; all 135 captures and six open-drawer states are source/browser/platform/data-bound"
+        ref: /private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/inspection-before-7886eb10449d-d1d0a2fcc5743af9/actual-before-inspection-qualified-input.json
         status: pass
     human_judgment: false
-    rationale: "Factual capture integrity and paired preservation require executable evidence. Subjective design critique is nonblocking and does not supply approval. The historical capture remains unaccepted pending corrective proof."
-duration: 48min
-original_execution_completed: 2026-10-31
-status: review_fixes_required
+actuals:
+  tasks: 2
+completed: 2026-10-31T23:59:50.067942+00:00
 ---
 
-> Parent integration note: the terminal corrective handoff is integrated. Its ownership/integrity/data/lifecycle repairs and historical capture evidence remain distinct from the parent fixed-clock/task-state/strict-comparison repairs. Plan05 is incomplete pending actual parent calibration and a new frozen before session. Old raw captures are archived unchanged. No paired preservation acceptance or human approval is claimed.
+# Phase185 Plan05: qualified disposable preservation foundation
 
-# Phase 185 Plan 05: Disposable UI Preservation Summary
+Both planned tasks are complete. Requirements-completed remains empty because this plan establishes prerequisites for the later namespace/route changes and their actual candidate proof; it does not establish either entire requirement or phase completion. Plans06–10 remain pending.
 
-## Corrective continuation — 2026-10-31
+The clean physical capture owner is `/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s`, source `7886eb10449dcb55945d1ab886e6c78752cc73cf`. It is deliberately retained through Plan09 under `/private/tmp/phase185-glue-u80ewc0s/worktrees.json`, using the documented custom cross-wave integration/retention deviation. Its absolute bootstrap/Compose paths and original Git object remain live authority. Do not run ordinary Wave3 cleanup on it. No CSS/controller/template/generator reduction has started.
 
-**Current status: partial; WR-02 remains blocked on repeatable rendered time/accessibility metadata.** The initial plan record below is historical. Parent review found that its 135-entry inventory did not prove matched visual/copy parity. Its original "unseeded" diagnosis was retracted after tracing startup to `e2e.prepare` and `demo.seed`; host incident copy is seeded fixture data and standalone Ops' empty schema state is configured behavior.
+The helper independently verifies canonical Git/source, committed tree, unique project/ports, full container/image IDs, mounts, volumes/networks, fixed fixture clock and complete database/search data. Candidate startup preserves the original backend state without prepare/seed/migrate. Retained preview provenance remains separate; its unresolved safety stop and existing data remain untouched. No package, lockfile, browser or font installation was added.
 
-The review repairs now validate independent session and manifest authority, canonical matrix metadata, stable database/search identity, bounded source/build/artifact transport, and owner-scoped teardown. The candidate lifecycle preserves its existing database and search state. A follow-up Compose interpolation bug discovered during the required same-source run was fixed in `174adc54`.
+## Actual executable evidence
 
-The final run used source `174adc54efdd349de275d4f4932649d6a9c76f7c` (tree `c1a9896f9c94cb2b0ead7ccc702db7b6408f56bb`, fingerprint `ea7ebba3ba711eb24668c497190b6a32d2c0e22d6ec7aa7a85a55bfa1cced004`) and current remote `main` `c1be269ec202deed8602c74683c1b9ce5e42eaa9`. Before and candidate each contain 135 observations (72 host, 63 standalone), with 546 image/copy comparisons. Both manifests report the same Chromium `148.0.7778.0`, `linux-arm64`, and data digest `36a4a7761da621792cac129e01a215820023d9106c6a67d846abfad6d2f9487d`; the digest also remained unchanged after candidate startup and browser capture. This proves the preservation path retained the tested state.
+The final scoped combined Node suites passed85 tests with zero failures in `/private/tmp/scrypath-phase185-execution/parent-visibility-candidate-GREEN.log`; its hash/result record verifies the tested source. Scoped source-only review found no confirmed defect and ran no Docker/tests. The root integrated index also freshly passed85/0 in `/private/tmp/scrypath-phase185-execution/root-qualified-owner-integration-node.log` before its merge commit. This is scoped integration evidence, not final-root acceptance. The original TDD and later factual RED records are committed; [PARENT-GLUE](185-05-PARENT-GLUE.md), [CLOCK](185-05-CLOCK.md) and the earlier review records retain detailed repairs and limitations. Earlier missing RED history is not reconstructed or claimed retroactively.
 
-The comparison remains pending. Fifty-four of 135 observation IDs have changed copy: the displayed server-side `Checked` time advances, and Axe targets include process-generated LiveView `data-phx-id` selectors. The viewport/full/hover/focus images report corresponding small changes (54 of 135 each, maximum differing-pixel ratio `0.0002401`); all six navigation images are identical. These changes are preserved without timestamp or image masking. The existing Playwright `page.clock` tests do not control server-side Elixir clock reads. See [185-05-REVIEW-FIX.md](185-05-REVIEW-FIX.md) for the exact test-only clock/selector proposal and evidence paths.
+Full same-source calibration session592d012f53ec7555 passed capture-before and capture-after with135 entries each. Exact comparison and independent repeated recomputation both exited0. Every one of546 image comparisons has zero differing pixels, positive compared area, unchanged copy, dimensions and actual DOM state. Exact-owned teardown exited0; an independent Docker inventory found no containers, volumes or networks remaining. Immutable archive and command receipts are under `/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/qualified-calibration-592d012f53ec7555/`. All earlier failed raw captures remain failed and preserved unchanged.
 
-The corrected session was torn down after comparison: its containers, volumes, and network are absent. The retained preview still has its recorded container ID and remains healthy on its recorded loopback port. No CSS, controller, template, generator, product API, or runtime-flag changes were made. Subjective critique remains pending; no design approval or phase completion is claimed.
+On that SAME unchanged source, separate actual session`d1d0a2fcc5743af9` passed its complete135-entry before capture (72host plus63standalone), with546 viewport/full/hover/focus/navigation images and135 visible-copy records. Its candidate slot is unused. The stack, database/search content and fixed clock remain retained for Plan09. Actual manifest: `/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/before-7886eb10449d-d1d0a2fcc5743af9/capture.json`. Qualification: `/private/tmp/scrypath-phase185-execution/185-05-qualification.json`.
 
-The corrective continuation spans 17 commits after `2f163d87`, including the review-scope note and code fixes; implementation changes end with `174adc54`. The source review's historical pre-fix RED evidence covers BL-03/BL-04, and the Compose interpolation regression has its own captured RED transcript. RED evidence is not available for every earlier repair, so the report does not claim that evidence requirement is complete.
+Three identified in-thread observers inspected all assigned images across every surface/theme/width and verified all copy hashes; their disjoint45-entry records join to135 entries/546 images/135 copy files. Parent independently viewed two raw images. Every observer is recorded with independent_review:false; no aesthetic approval, human UAT, broader journey completion or61held-out-state proof is supplied by this inspection.
 
-## Original plan execution (historical, before parent review)
+## Evidence placement and browser identity corrections
 
-Parent review found blocking ownership/integrity/matrix/data-state/lifecycle gaps. The initial entry captures are historical observations, not accepted paired preservation evidence. They were archived unchanged; the owned old stack was verified and removed. The initial unseeded diagnosis was retracted: the existing full startup seeds incident data. This fresh corrective checkout owns tooling fixes and a qualified recapture. Read 185-05-REVIEW.md before relying on the earlier execution record below.
+Qualification first rejected task-added inspection files inside the strict raw-capture directory. Only those review records/derivatives were relocated byte-identically to the sibling `/private/tmp/scrypath-phase185-execution/ui-review-artifacts/phase185/inspection-before-7886eb10449d-d1d0a2fcc5743af9/`. Its transport record preserves original paths and hashes; original observer records were not rewritten. Raw capture files and the strict unmatched-file validator were unchanged. The qualified combined inspection resolves that explicit transport and pins all evidence. Future review derivatives belong beside capture directories, never inside them.
 
-**Source-pinned disposable UI capture with 135 host and standalone observations, interaction evidence, and pending pixel/copy comparison**
+The fresh session's Docker image ID differed solely because Compose embeds its unique project label in image configuration. Independent immutable image inspection proved identical ordered filesystem layers/platform and all effective configuration; only exact project labels, owned tags, tag timestamps and resulting IDs differ. A scoped guard binds both original IDs to the manifests and each project/source/service, then deep-compares every remaining inspect field. Fresh Docker reads match the pinned raw inspect records. The real pair passed and10 runtime/ownership mutations were rejected; source-only review confirmed this condition for the pinned linux/arm64 pair. Both truthful IDs and proof bytes remain pinned under `/private/tmp/scrypath-phase185-execution/browser-image-identity-diagnostic-d1d0/`; no product source change or recapture supplied equivalence.
 
-## Performance
+Inspection derivative generation was also measured: a single-thread/lower-compression copy completed the scoped benchmark in2.35s with decoded pixel difference0. Only attributable slow derivative processes were stopped; partial derivatives and all original captures remain preserved. This affects inspection copies only, not accepted pixels or the capture recipe.
 
-- **Duration:** 48 min, measured from the first task commit through the final baseline capture
-- **Started:** 2026-10-31T15:32:35Z (first task commit)
-- **Completed:** 2026-10-31T16:20:27Z
-- **Tasks:** 2
-- **Files modified:** 5
+## Baseline observations and remaining scope
 
-## Accomplishments
+The storefront shows Quiet Branch Supply with Results unavailable/Search unavailable and explicit guidance, not healthy/populated/successful-empty results. Standalone Ops has a configured-empty schema allowlist. Host Ops shows synthetic incident data. Inspection recorded clipped saved-search descriptions and setup-state guidance suggesting Refresh while that control is disabled. These are observed pre-change issues, not phase regressions or permission to change product copy.
 
-- Added an owned disposable capture path with independent source/tree, image/container, project, port, volume, mount, route, browser, platform, and data-state checks. Retained preview guards remain on the default path.
-- Captured 72 host and 63 standalone observations across three themes and widths, including viewport/full-page, hover/focus, visible copy, and six mobile navigation states. The final manifest has no missing artifacts, capture errors, or mechanical findings.
-- Inspected the final light, dark, and system-dark contact sheets and copy across all host and standalone surfaces. The runbook documents the new path and keeps all review pending.
-- Preserved the 45-entry UI literal baseline: the local full-source scan matched all 45 identities and occurrences, and the approved bootstrap commit is an ancestor of this plan branch.
-
-## Original Frozen Before Evidence (historical; not the repaired comparison pair)
-
-- **Source:** `b029e13130575c411280ff3376f042202515f560`
-- **Tree fingerprint:** `eaef73f64e16bbff7413e4cdbc81cc7f1167ef710f67b3354c2eb424d7659ee0`
-- **Main baseline:** local and remote `main` both resolved to `c1be269ec202deed8602c74683c1b9ce5e42eaa9`; the captured source includes that ref.
-- **Browser/platform:** Chromium `148.0.7778.0`, `linux-arm64`
-- **Synthetic database/search identity:** `054d265ab715e34cab47ce1d9a74a9154181bc4f3fc4500d4366ed43e330bd90`
-- **Evidence manifest:** [capture.json](../../../examples/scrypath_ecommerce/ui-review-artifacts/phase185/before-b029e1313057-68f11bdc451747c7/capture.json)
-- **Session:** `/private/tmp/scrypath-phase185-execution/ui-session.json` (`before-captured`)
-- **Artifacts:** `examples/scrypath_ecommerce/ui-review-artifacts/phase185/before-b029e1313057-68f11bdc451747c7/`
-
-The manifest contains 135 entries: 72 host and 63 standalone. Every entry has copy plus viewport, full-page, hover, and focus evidence; the six 390px Control Room captures also prove the navigation drawer opened with visible links. The session remains available for a later candidate capture. Its disposable stack is separate from the retained preview.
-
-## Task Commits
-
-1. **Task 1 RED:** `bebc01ca` — `test(185-05): reject retained resources in disposable provenance`
-2. **Task 1 implementation:** `cc7885d4` — `feat(185-05): add source-pinned disposable UI capture`
-3. **Task 2 matrix gate:** `cb1bc3e4` — `test(185-05): require complete frozen UI matrix`
-4. **Task 2 Compose identity fix:** `54e7350b` — `fix(185-05): inspect services with full disposable Compose model`
-5. **Task 2 Meilisearch digest fix:** `98ce59db` — `fix(185-05): hash paginated Meilisearch state`
-6. **Task 2 capture interaction fix:** `6ac1d24d` — `fix(185-05): capture compact nav and modal interactions`
-7. **Task 2 navigation state proof:** `a5ea026b` — `fix(185-05): verify compact navigation capture state`
-8. **Task 2 mobile viewport scope:** `b029e131` — `fix(185-05): scope navigation proof to mobile width`
-
-**Plan metadata:** committed with this summary.
-
-## TDD Gate Compliance
-
-- The retained-resource test failed on its intended assertion before implementation. `gsd-tools.cjs check tdd-red-evidence` returned `RED_EVIDENCE_OK`; the exact TAP output and evidence record are preserved at `examples/scrypath_ecommerce/ui-review-artifacts/phase185/185-05-red.tap` and `185-05-red-evidence.json`.
-- The `test(185-05)` RED commit precedes the `feat(185-05)` GREEN commit. The final combined self-tests passed 19 tests; the focused preservation suite passed 11 tests.
-
-## Files Created/Modified
-
-- `scripts/ci/ui_preservation.cjs` — disposable stack lifecycle, provenance validation, artifact checks, and paired image/copy comparison.
-- `scripts/ci/ui_preservation.test.cjs` — ownership, mismatch, matrix, interaction-state, teardown, and image-comparison tests.
-- `examples/scrypath_ecommerce/e2e/ui-review.mjs` — explicit disposable adapter; it verifies compact drawer state and targets hover/focus within an open sheet.
-- `examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs` — retained-path and pending-review regressions.
-- `examples/scrypath_ecommerce/e2e/UI-REVIEW.md` — disposable capture instructions and pending review requirements.
-
-## Observations for Downstream Review
-
-- The host storefront’s captured entry state says “Results unavailable” and “Search unavailable” (for example, `host--storefront--light--390`).
-- The standalone Ops surfaces show the configured empty state “No search schemas configured” (for example, `standalone--control-room--light--390`). Those captures preserve a configuration-empty state rather than the host fixture’s populated operator state.
-- Host Ops shows the seeded sync-failure and retry states. These are synthetic observations. No browser errors or capture-time mechanical findings were recorded; that does not establish aesthetic acceptance or future parity.
-
-## Deviations from Plan
-
-### Auto-fixed Issues
-
-**1. [Rule 1 - Bug] Inspect services with the complete Compose graph**
-- **Found during:** Task 2
-- **Issue:** Container identity lookup omitted the base Compose files and could not resolve the owned services.
-- **Fix:** Reused the full documented Compose graph for service inspection and teardown.
-- **Files modified:** `scripts/ci/ui_preservation.cjs`
-- **Verification:** The final source-pinned capture identified and validated the complete stack.
-- **Committed in:** `54e7350b`
-
-**2. [Rule 1 - Bug] Hash paginated Meilisearch state**
-- **Found during:** Task 2
-- **Issue:** The helper assumed index and document responses were arrays, while this Meilisearch version returns paginated `results` objects.
-- **Fix:** Accept both response shapes, page through all documents, and hash the canonical document contents.
-- **Files modified:** `scripts/ci/ui_preservation.cjs`, `scripts/ci/ui_preservation.test.cjs`
-- **Verification:** Response-shape tests and the final data identity capture passed.
-- **Committed in:** `98ce59db`
-
-**3. [Rule 1 - Bug] Capture modal interactions and prove mobile navigation state**
-- **Found during:** Task 2 visual inspection
-- **Issue:** The navigation artifact key did not match the validator, an open saved-search sheet intercepted the underlying theme control, and the first mobile navigation screenshot did not prove that the drawer had opened. An initial state check also applied to desktop widths where that trigger is hidden.
-- **Fix:** Align the `navigation.png` key, target a control inside an open sheet, wait for the drawer’s expanded/open state and visible links, and limit that check to 390px captures.
-- **Files modified:** `examples/scrypath_ecommerce/e2e/ui-review.mjs`, `scripts/ci/ui_preservation.cjs`, `scripts/ci/ui_preservation.test.cjs`
-- **Verification:** The final capture contains six verified mobile drawer states and passes artifact validation.
-- **Committed in:** `6ac1d24d`, `a5ea026b`, `b029e131`
-
-**Total deviations:** 3 auto-fixed (Rule 1 bugs). **Impact:** All fixes support the planned capture contract; no new dependencies or product UI changes were added.
-
-## Issues Encountered
-
-- The first Docker Buildx attempt could not write its user-level metadata in the sandbox. The approved elevated retry completed the build; no install or lockfile change was made.
-- The canonical UI literal policy command attempted a remote Git fetch and failed because it could not write the worktree-specific `FETCH_HEAD`. This was not treated as passing evidence. A direct local scan matched the entire 45-entry baseline, and the approved bootstrap commit ancestry check passed.
-- Earlier disposable captures failed their new runtime checks. Their owned containers and volumes were cleaned up, and their artifacts were preserved. Only the final `b029e131` capture is the frozen baseline.
-
-## User Setup Required
-
-None. The capture used the installed Docker and browser tooling; no package or host installation was performed.
-
-## Original Next Phase Readiness (historical; superseded by parent review)
-
-At the end of the original plan execution, the frozen baseline was considered ready for a later committed candidate. Parent review superseded that conclusion because inventory completeness did not prove matched parity. This historical statement does not authorize downstream UI edits.
-
-## Original Plan Self-Check (historical)
-
-- All five declared source/runbook files exist.
-- All eight task commits are ancestors of the plan branch head recorded above.
-- The final capture manifest passed artifact validation with 135 entries and six open-drawer states.
-- Plan verification commands passed; no `STATE.md`, `ROADMAP.md`, or `REQUIREMENTS.md` changes were made.
-
----
-*Phase: 185-executable-ui-quality-foundations*
-*Original execution recorded: 2026-10-31*
+Executed query/recovery/saved-search journeys and the61 E/category obligations remain unverified until Plans08/09. All four flagged edge assumptions still require explicit disposition. Subjective critique stays nonblocking; unexplained candidate pixel/copy/state changes and missing automated evidence remain blocking. Candidate preservation, integrated-root checks/review and final exact-source hosted attestation remain Plans09/10 work. No later main merge, release, inherited advisory acceptance or next phase is authorized.

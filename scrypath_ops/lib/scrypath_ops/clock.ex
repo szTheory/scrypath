@@ -1,9 +1,10 @@
 defmodule ScrypathOps.Clock do
   @moduledoc false
 
-  # This fixture seam is compiled only in test builds. Production observations
-  # always use system time, even if test configuration is accidentally supplied.
-  if Mix.env() == :test do
+  # Mix compiles a mounted dependency in :prod even inside a test build. Use
+  # the top-level build profile, falling back to Mix for direct task invocation.
+  # MIX_ENV=prod builds always use system time, regardless of runtime config.
+  if System.get_env("MIX_ENV", Atom.to_string(Mix.env())) == "test" do
     def utc_now do
       case Application.fetch_env(:scrypath_ops, :test_clock_file) do
         :error -> DateTime.utc_now()
