@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const crypto = require("node:crypto");
 const path = require("node:path");
 
+const REPOSITORY_ROOT = path.resolve(__dirname, "../..");
 const MAX_CASES = 50000;
 const MAX_SUITE_DEPTH = 100;
 const MAX_REPORT_ERRORS = 100;
@@ -830,7 +831,7 @@ function normalizeStage(name, stage, reasons) {
   return { started_at: startedAt, ended_at: endedAt, exit_code: exitCode };
 }
 
-function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
+function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expectedSource = null } = {}) {
   const reasons = [];
   const root = resolveRunRoot(runDir);
   const input = readJsonArtifact(root, INPUT_NAME, reasons);
@@ -852,6 +853,9 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   const sourceMode = sourceInput.mode === "hosted" || sourceInput.mode === "local" ? sourceInput.mode : "unknown";
   if (sourceMode === "unknown") reasons.push(errorReason("invalid_source_mode", "source.mode must be hosted or local"));
   const checkoutHead = requiredString(sourceInput, "checkout_head", "source", reasons);
+  if (expectedSource && expectedSource.sourceSha !== checkoutHead) {
+    reasons.push(errorReason("expected_source_mismatch", "Run source SHA does not match the independent pair authority"));
+  }
   const builtSourceSha = requiredString(sourceInput, "built_source_sha", "source", reasons);
   const eventSha = typeof sourceInput.event_sha === "string" && sourceInput.event_sha.trim() ? sourceInput.event_sha.trim() : null;
   const dirty = sourceInput.dirty;
@@ -979,7 +983,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   const reconciliation = reconcileInventory({
     inventory,
     report,
-    repoRoot: process.cwd(),
+    repoRoot: REPOSITORY_ROOT,
     allowedSkips: Array.isArray(manifest.allowed_skips) ? manifest.allowed_skips : [],
     requireMandatoryCases: true
   });
@@ -1026,13 +1030,19 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString() } = {}) {
   if (stages.artifact_copy.exit_code !== 0) reasons.push(errorReason("artifact_copy_failed", "Artifact collection stage did not exit successfully"));
 
   const events = readEvents(root, reasons);
-  let productTreeSha256 = null;
-  let fixtureOverlaySha256 = null;
-  try {
-    productTreeSha256 = productTreeIdentity(process.cwd());
-    fixtureOverlaySha256 = fixtureOverlayDigest(process.cwd());
-  } catch (error) {
-    reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
+  let productTreeSha256 = expectedSource?.productTreeSha256 || null;
+  let fixtureOverlaySha256 = expectedSource?.fixtureOverlaySha256 || null;
+  if (expectedSource) {
+    if (!validDigest(productTreeSha256) || !validDigest(fixtureOverlaySha256)) {
+      reasons.push(errorReason("invalid_expected_preservation_identity", "Independent pair authority requires full product-tree and fixture-overlay SHA-256 digests"));
+    }
+  } else {
+    try {
+      productTreeSha256 = productTreeIdentity(REPOSITORY_ROOT);
+      fixtureOverlaySha256 = fixtureOverlayDigest(REPOSITORY_ROOT);
+    } catch (error) {
+      reasons.push(errorReason("preservation_source_identity_unavailable", error.message));
+    }
   }
   const preservationCases = validatePreservationEvents(events, reconciliation, {
     runRoot: root,
@@ -1268,7 +1278,7 @@ function writeEvidence({ runDir, now } = {}) {
   return receipt;
 }
 
-function validateReceipt({ runDir } = {}) {
+function validateReceipt({ runDir, expectedSource = null } = {}) {
   let root;
   let receipt;
   try {
@@ -1290,7 +1300,7 @@ function validateReceipt({ runDir } = {}) {
   }
   let recomputed;
   try {
-    recomputed = buildReceipt(root, { generatedAt: receipt.generated_at_utc });
+    recomputed = buildReceipt(root, { generatedAt: receipt.generated_at_utc, expectedSource });
   } catch (error) {
     return { valid: false, eligible: false, reasons: [errorReason("receipt_recompute_failed", error.message)] };
   }
@@ -1327,7 +1337,7 @@ function runReconcile(runDir) {
   } catch (error) {
     return { eligible: false, cases: [], case_count: 0, reasons: [errorReason("unreadable_run_report", error.message)] };
   }
-  return reconcileInventory({ inventory, report, repoRoot: process.cwd(), requireMandatoryCases: true });
+  return reconcileInventory({ inventory, report, repoRoot: REPOSITORY_ROOT, requireMandatoryCases: true });
 }
 
 function main(argv = process.argv.slice(2)) {

@@ -417,6 +417,27 @@ test("one aggregate binds exact source, reports, checkers, artifacts and derived
   }
 });
 
+test("independent pair authority can revalidate a source-bound bundle after checkout changes", () => {
+  const { runDir } = createCompleteRun();
+  try {
+    const written = evidence.writeEvidence({ runDir });
+    const expectedSource = {
+      sourceSha: written.source.checkout_head,
+      productTreeSha256: written.preservation.product_tree_sha256,
+      fixtureOverlaySha256: written.preservation.fixture_overlay_sha256
+    };
+    const verified = evidence.validateReceipt({ runDir, expectedSource });
+    const wrongSource = evidence.validateReceipt({ runDir, expectedSource: { ...expectedSource, sourceSha: "b".repeat(40) } });
+
+    assert.equal(verified.valid, true);
+    assert.equal(verified.eligible, true);
+    assert.equal(wrongSource.valid, false);
+    assert.ok(wrongSource.reasons.some((reason) => reason.code === "receipt_mismatch"));
+  } finally {
+    fs.rmSync(runDir, { recursive: true, force: true });
+  }
+});
+
 test("contrast eligibility follows the token report schema, consistent counts, zero AA failures, and raw stage result", () => {
   const cases = [
     {
