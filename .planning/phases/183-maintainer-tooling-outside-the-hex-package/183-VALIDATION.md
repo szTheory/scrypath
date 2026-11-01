@@ -2,9 +2,9 @@
 phase: "183"
 slug: "maintainer-tooling-outside-the-hex-package"
 # status lifecycle: draft (seeded by plan-phase) → validated (set by validate-phase §6)
-# audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: true) (#2117)
+# audit-milestone §5.5 distinguishes NOT-VALIDATED (draft) from PARTIAL (validated + nyquist_compliant: false) (#2117)
 status: validated
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: true
 created: "2026-10-27"
 ---
@@ -98,6 +98,8 @@ All phase behaviors in the map have automated verification. Both former one-shot
 - [x] `nyquist_compliant: true` set in frontmatter — all 14 behavior rows have durable checks; both former gaps resolved
 
 **Validation:** compliant on 2026-11-01 — 14 durable behavior rows, no remaining one-shot-only gaps. The maintainer selected “Fix both gaps”; this is automated validation, not a new product/design approval. The 2026-10-28 partial audit remains below as history.
+
+The maintainer authorized the milestone audit's recommended metadata reconciliation on 2026-11-01. The frontmatter now matches this sign-off and the retained positive/negative test evidence below. This correction changes no test or implementation and makes no new suite or hosted-execution claim.
 
 
 ## Re-audit Evidence — 2026-11-01
