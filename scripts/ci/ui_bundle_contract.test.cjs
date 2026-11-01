@@ -130,9 +130,13 @@ test("both configured Tailwind profiles remove forced default palette utilities"
       ["standalone", "/app/scrypath_ops/priv/static/assets/css/app.css", "standalone.css"],
       ["mounted host", "/app/examples/scrypath_ecommerce/priv/static/assets/css/app.css", "host.css"],
     ];
+    const outputs = [];
     for (const [label, source, filename] of bundles) {
       const css = extractBundle(container, source, path.join(artifacts, filename));
       assert.ok(css.length > 0, `${label} output must not be empty`);
+      outputs.push([label, css]);
+    }
+    for (const [label, css] of outputs) {
       assertInitialContract(css, label);
     }
   } finally {
