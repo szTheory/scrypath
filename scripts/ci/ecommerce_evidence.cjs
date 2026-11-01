@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const rawBundle = require("./ui_preservation_bundle.cjs");
 const crypto = require("node:crypto");
 const path = require("node:path");
-const { execFileSync } = require("node:child_process");
+const { execFileSync, spawnSync } = require("node:child_process");
 
 const REPOSITORY_ROOT = path.resolve(__dirname, "../..");
 const MAX_CASES = 50000;
@@ -48,7 +48,9 @@ const ALLOWED_ARTIFACT_PREFIXES = [
   "test-results/",
   "ui-review-artifacts/iteration3-journeys/",
   "logs/",
-  "compose/"
+  "compose/",
+  "partitions/",
+  "blob-report/"
 ];
 const REQUIRED_STAGES = ["inventory", "browser", "light_parity", "contrast", "artifact_copy"];
 const PRESERVATION_STATE_ELEMENTS = ["E1", "E2", "E3", "E4", "E5", "E6"];
@@ -1135,6 +1137,178 @@ function reconcileInventory({ inventory, report, repoRoot = process.cwd(), allow
   };
 }
 
+const FULL_PARTITIONS = ["ordinary", "preservation"];
+const PRESERVATION_FILES = new Set([
+  "examples/scrypath_ecommerce/e2e/ui_state_preservation.spec.ts",
+  "examples/scrypath_ecommerce/e2e/ui_content_preservation.spec.ts"
+]);
+
+function partitionInventory(inventory, group, repoRoot = REPOSITORY_ROOT) {
+  if (!FULL_PARTITIONS.includes(group)) throw new Error("unknown full-run partition");
+  const parsed = parsePlaywrightCases(inventory, { repoRoot, label: "inventory" });
+  const reasons = [...parsed.reasons];
+  addDuplicateReasons(parsed.cases, "inventory", reasons);
+  if (reasons.length || !parsed.cases.length) throw new Error("partitioning requires a nonempty valid unfiltered inventory");
+  const selected = parsed.cases.filter(({ identity }) => PRESERVATION_FILES.has(identity.file) === (group === "preservation"));
+  if (!selected.length) throw new Error(`full-run partition is empty: ${group}`);
+  return { cases: selected, files: [...new Set(selected.map(({ identity }) => identity.file))].sort() };
+}
+
+function auditPartitionReports({ inventory, reports, repoRoot = REPOSITORY_ROOT }) {
+  if (!Array.isArray(reports) || reports.length !== 2) throw new Error("exactly two serial partition reports are required");
+  const inventories = parsePlaywrightCases(inventory, { repoRoot, label: "inventory" });
+  const expected = new Set(inventories.cases.map(({ identity }) => identity.key));
+  const seen = new Set();
+  const parts = FULL_PARTITIONS.map((group) => {
+    const matches = reports.filter((item) => item.group === group);
+    if (matches.length !== 1 || matches[0].exit_code !== 0) throw new Error(`partition did not exit successfully: ${group}`);
+    const config = matches[0].report?.config;
+    if (config?.workers !== 1 || config.fullyParallel !== false || config.shard !== null ||
+      !Array.isArray(config.projects) || config.projects.length !== 1 || config.projects[0].name !== "chromium" ||
+      config.projects[0].retries !== 0 || config.projects[0].repeatEach !== 1) throw new Error("partition changed the single-worker Chromium/no-retry policy");
+    const planned = partitionInventory(inventory, group, repoRoot);
+    const wanted = new Set(planned.cases.map(({ identity }) => identity.key));
+    const parsed = parsePlaywrightCases(matches[0].report, { repoRoot, includeAttempts: true, label: "report" });
+    if (parsed.reasons.length || parsed.cases.length !== wanted.size) throw new Error(`partition report count/shape mismatch: ${group}`);
+    for (const item of parsed.cases) {
+      if (!wanted.has(item.identity.key) || seen.has(item.identity.key)) throw new Error("partition reports overlap or contain an unexpected identity");
+      if (item.expected_status !== "passed" || item.outcome !== "expected" || item.attempts.length !== 1 || item.attempts[0].retry !== 0 || item.attempts[0].status !== "passed") throw new Error("partition contains a failed, skipped, expected-failure or retried case");
+      seen.add(item.identity.key);
+    }
+    return { group, cases: wanted.size, files: planned.files };
+  });
+  if (seen.size !== expected.size || [...expected].some((key) => !seen.has(key))) throw new Error("partition union does not equal the complete inventory");
+  return { protocol: "serial-two-group-v1", cases: seen.size, parts };
+}
+
+function partitionRoot(runDir, group) {
+  if (!FULL_PARTITIONS.includes(group)) throw new Error("unknown full-run partition");
+  return path.join(`${runDir}.parts`, group, path.basename(runDir));
+}
+
+function runFullPartition(runDir, group) {
+  if (path.basename(runDir) !== process.env.E2E_RUN_ID || !/^phase185-[A-Za-z0-9._-]+$/.test(process.env.E2E_RUN_ID || "")) throw new Error("partition needs the canonical owned run identity");
+  const directory = partitionRoot(runDir, group);
+  if (fs.existsSync(directory)) throw new Error("partition directory already exists");
+  const started = new Date();
+  const result = spawnSync("bash", [path.join(REPOSITORY_ROOT, "examples/scrypath_ecommerce/docker-playwright.sh")], {
+    cwd: path.join(REPOSITORY_ROOT, "examples/scrypath_ecommerce"),
+    env: { ...process.env, E2E_ARTIFACT_DIR: directory, E2E_FULL_PARTITION: group },
+    stdio: "inherit", timeout: 880000
+  });
+  const code = result.error?.code === "ETIMEDOUT" ? 124 : (result.status ?? 1);
+  if (fs.existsSync(directory)) {
+    const metadata = { group, run_id: process.env.E2E_RUN_ID, source_sha: process.env.SCRYPATH_SOURCE_SHA,
+      image_ids: [process.env.E2E_APPLICATION_IMAGE_ID, process.env.E2E_STANDALONE_OPS_IMAGE_ID, process.env.E2E_BROWSER_IMAGE_ID],
+      started_at: started.toISOString(), ended_at: new Date().toISOString(), exit_code: code, operation_cap_seconds: 900 };
+    fs.writeFileSync(path.join(directory, "partition-run.json"), `${JSON.stringify(metadata, null, 2)}\n`, { flag: "wx" });
+  }
+  return code;
+}
+
+function assembleFullPartitions(runDir) {
+  if (fs.existsSync(runDir) || path.basename(runDir) !== process.env.E2E_RUN_ID) throw new Error("aggregate needs a fresh owned run directory");
+  const read = (directory, name) => {
+    const file = path.join(directory, name), stat = fs.lstatSync(file);
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_JSON_BYTES) throw new Error("invalid partition metadata file");
+    return JSON.parse(fs.readFileSync(file, "utf8"));
+  };
+  const rows = FULL_PARTITIONS.map((group) => {
+    const directory = partitionRoot(runDir, group), metadata = read(directory, "partition-run.json");
+    if (metadata.group !== group || metadata.run_id !== process.env.E2E_RUN_ID || metadata.source_sha !== process.env.SCRYPATH_SOURCE_SHA ||
+      JSON.stringify(metadata.image_ids) !== JSON.stringify([process.env.E2E_APPLICATION_IMAGE_ID, process.env.E2E_STANDALONE_OPS_IMAGE_ID, process.env.E2E_BROWSER_IMAGE_ID]) ||
+      metadata.exit_code !== 0 || metadata.operation_cap_seconds !== 900 || Date.parse(metadata.ended_at) - Date.parse(metadata.started_at) > 900000 || !(Date.parse(metadata.ended_at) >= Date.parse(metadata.started_at))) throw new Error("partition run/source/image/deadline mismatch");
+    return { group, directory, metadata, inventory: read(directory, INVENTORY_NAME), report: read(directory, PLAYWRIGHT_NAME), stages: read(directory, "stages.json") };
+  });
+  const keySet = (inventory) => parsePlaywrightCases(inventory, { repoRoot: REPOSITORY_ROOT }).cases.map(({ identity }) => identity.key).sort();
+  if (JSON.stringify(keySet(rows[0].inventory)) !== JSON.stringify(keySet(rows[1].inventory))) throw new Error("partition discovery inventories disagree");
+  if (Date.parse(rows[0].metadata.ended_at) > Date.parse(rows[1].metadata.started_at)) throw new Error("partitions were not serial");
+  const audit = auditPartitionReports({ inventory: rows[0].inventory, reports: rows.map((row) => ({ ...row, exit_code: row.metadata.exit_code })) });
+  fs.mkdirSync(runDir, { mode: 0o700 });
+  fs.mkdirSync(path.join(runDir, "blob-report"));
+  const move = (source, destination) => {
+    const stat = fs.lstatSync(source);
+    if (stat.isSymbolicLink()) throw new Error("partition artifacts must not be links");
+    if (stat.isDirectory()) {
+      fs.mkdirSync(destination, { recursive: true });
+      for (const name of fs.readdirSync(source)) if (!name.startsWith(".")) move(path.join(source, name), path.join(destination, name));
+    } else {
+      if (!stat.isFile() || fs.existsSync(destination)) throw new Error("partition artifact collision or nonregular file");
+      fs.mkdirSync(path.dirname(destination), { recursive: true }); fs.renameSync(source, destination);
+    }
+  };
+  for (const row of rows) {
+    const destination = path.join(runDir, "partitions", row.group); fs.mkdirSync(destination, { recursive: true });
+    for (const name of [INVENTORY_NAME, PLAYWRIGHT_NAME, "stages.json", "partition-run.json", "phase105-evidence.ndjson", "browser.log"]) fs.copyFileSync(path.join(row.directory, name), path.join(destination, name));
+    if (fs.lstatSync(path.join(row.directory, "blob-report/report.zip")).size > MAX_ARTIFACT_BYTES) throw new Error("partition blob report exceeds the artifact bound");
+    move(path.join(row.directory, "blob-report/report.zip"), path.join(runDir, "blob-report", `${row.group}.zip`));
+    for (const name of ["test-results", "ui-review-artifacts", "phase185-raw-staging"]) if (fs.existsSync(path.join(row.directory, name))) move(path.join(row.directory, name), path.join(runDir, name));
+  }
+  fs.copyFileSync(path.join(rows[0].directory, INVENTORY_NAME), path.join(runDir, INVENTORY_NAME));
+  fs.copyFileSync(path.join(runDir, INVENTORY_NAME), path.join(runDir, "phase105-inventory.json"));
+  fs.writeFileSync(path.join(runDir, "phase105-evidence.ndjson"), rows.map((row) => fs.readFileSync(path.join(row.directory, "phase105-evidence.ndjson"), "utf8")).join(""));
+  fs.writeFileSync(path.join(runDir, "browser.log"), rows.map((row) => fs.readFileSync(path.join(row.directory, "browser.log"), "utf8")).join("\n"));
+  const merged = spawnSync("npx", ["playwright", "merge-reports", "--reporter=list,json,html", path.join(runDir, "blob-report")], {
+    cwd: path.join(REPOSITORY_ROOT, "examples/scrypath_ecommerce"), stdio: "inherit", timeout: 120000,
+    env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_FILE: path.join(runDir, PLAYWRIGHT_NAME), PLAYWRIGHT_HTML_OUTPUT_DIR: path.join(runDir, "playwright-report"), PLAYWRIGHT_HTML_OPEN: "never" }
+  });
+  if (merged.status !== 0) throw new Error("partition report merge failed");
+  const reconciliation = reconcileInventory({ inventory: rows[0].inventory, report: read(runDir, PLAYWRIGHT_NAME), repoRoot: REPOSITORY_ROOT });
+  if (!reconciliation.eligible || reconciliation.case_count !== audit.cases) throw new Error("merged report differs from the complete disjoint partition union");
+  const stages = { inventory: rows[0].stages.inventory, browser: { started_at: rows[0].stages.browser.started_at, ended_at: rows[1].stages.browser.ended_at, exit_code: 0 }, light_parity: { started_at: null, ended_at: null, exit_code: null }, contrast: { started_at: null, ended_at: null, exit_code: null }, artifact_copy: { started_at: null, ended_at: null, exit_code: null } };
+  fs.writeFileSync(path.join(runDir, "stages.json"), `${JSON.stringify(stages, null, 2)}\n`);
+  const receipt = { ...audit, run_id: process.env.E2E_RUN_ID, source_sha: process.env.SCRYPATH_SOURCE_SHA, parts: rows.map((row) => ({ ...row.metadata, report: `partitions/${row.group}/${PLAYWRIGHT_NAME}`, report_sha256: `sha256:${crypto.createHash("sha256").update(fs.readFileSync(path.join(runDir, "partitions", row.group, PLAYWRIGHT_NAME))).digest("hex")}` })) };
+  validateFullPartitionEvidence(runDir, receipt, rows[0].inventory, read(runDir, PLAYWRIGHT_NAME), process.env.SCRYPATH_SOURCE_SHA, rows[0].metadata.image_ids, process.env.E2E_RUN_ID);
+  fs.writeFileSync(path.join(runDir, "partitions/manifest.json"), `${JSON.stringify(receipt, null, 2)}\n`);
+  return receipt;
+}
+
+function finishPartitionChecks(runDir) {
+  const stagesFile = path.join(runDir, "stages.json");
+  const stages = readJson(stagesFile);
+  const environment = { ...process.env, E2E_ARTIFACT_DIR: runDir, PHASE105_EVIDENCE_PATH: path.join(runDir, EVENTS_NAME), ADMIN_SCREENSHOT_DIR: path.join(runDir, "test-results/admin-screenshots"), ADMIN_LIGHT_PARITY_REPORT: path.join(runDir, "admin-light-parity.json"), CONTRAST_REPORT_DIR: path.join(runDir, "test-results/contrast") };
+  let first = 0;
+  for (const [name, command, args] of [["light_parity", "npm", ["run", "test:e2e:admin-light-parity"]], ["contrast", "node", ["contrast-checker.mjs"]]]) {
+    const started_at = new Date().toISOString();
+    const log = fs.openSync(path.join(runDir, `${name}.log`), "wx");
+    let result;
+    try { result = spawnSync(command, args, { cwd: path.join(REPOSITORY_ROOT, "examples/scrypath_ecommerce"), env: environment, stdio: ["ignore", log, log], timeout: 120000 }); }
+    finally { fs.closeSync(log); }
+    const exit_code = result.error?.code === "ETIMEDOUT" ? 124 : (result.status ?? 1);
+    stages[name] = { started_at, ended_at: new Date().toISOString(), exit_code };
+    fs.writeFileSync(stagesFile, `${JSON.stringify(stages, null, 2)}\n`);
+    fs.appendFileSync(path.join(runDir, EVENTS_NAME), `${JSON.stringify({ operation: name, ...stages[name] })}\n`);
+    if (!first && exit_code) first = exit_code;
+  }
+  const token = path.join(runDir, "test-results/contrast/contrast-report.token.json");
+  if (fs.existsSync(token)) fs.copyFileSync(token, path.join(runDir, "contrast-report.json"));
+  return first;
+}
+
+function validateFullPartitionEvidence(root, manifest, inventory, report, sourceSha, imageIds, runId) {
+  root = fs.realpathSync(root);
+  if (manifest.protocol !== "serial-two-group-v1" || manifest.source_sha !== sourceSha || manifest.run_id !== runId || !Array.isArray(manifest.parts) || manifest.parts.length !== 2) throw new Error("serial partition source/run/protocol mismatch");
+  const rows = FULL_PARTITIONS.map((group, index) => {
+    const row = manifest.parts[index];
+    if (row.group !== group || row.exit_code !== 0 || row.operation_cap_seconds !== 900 || row.source_sha !== sourceSha || row.run_id !== runId ||
+      JSON.stringify(row.image_ids) !== JSON.stringify(imageIds) || !Number.isFinite(Date.parse(row.started_at)) || !Number.isFinite(Date.parse(row.ended_at)) ||
+      Date.parse(row.ended_at) < Date.parse(row.started_at) || Date.parse(row.ended_at) - Date.parse(row.started_at) > 900000) throw new Error("serial partition status/source/image/deadline mismatch");
+    if (index && Date.parse(manifest.parts[index - 1].ended_at) > Date.parse(row.started_at)) throw new Error("partition execution overlaps");
+    const relative = `partitions/${group}/${PLAYWRIGHT_NAME}`;
+    if (row.report !== relative) throw new Error("partition report locator mismatch");
+    const file = resolveArtifact(root, relative);
+    if (file.stat.size > MAX_JSON_BYTES || `sha256:${crypto.createHash("sha256").update(fs.readFileSync(file.path)).digest("hex")}` !== row.report_sha256) throw new Error("partition report digest mismatch");
+    return { group, exit_code: row.exit_code, report: readJson(file.path) };
+  });
+  const audit = auditPartitionReports({ inventory, reports: rows });
+  if (audit.cases !== manifest.cases) throw new Error("partition declared case count mismatch");
+  const raw = rows.flatMap((row) => parsePlaywrightCases(row.report, { includeAttempts: true, repoRoot: REPOSITORY_ROOT }).cases);
+  const merged = parsePlaywrightCases(report, { includeAttempts: true, repoRoot: REPOSITORY_ROOT }).cases;
+  const canonical = (cases) => JSON.stringify(cases.sort((a, b) => a.identity.key.localeCompare(b.identity.key)));
+  if (canonical(raw) !== canonical(merged)) throw new Error("merged outcomes differ from raw partition reports");
+  return manifest;
+}
+
 function normalizeReasons(reasons) {
   const unique = new Map();
   for (const reason of reasons) {
@@ -1640,6 +1814,15 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
   if (manifest.first_failure !== null && manifest.first_failure !== undefined) {
     reasons.push(errorReason("original_run_failure", "The verifier recorded an original failure; later evidence collection cannot replace it"));
   }
+  let execution = null;
+  if (manifest.execution !== undefined || fs.existsSync(path.join(root, "partitions/manifest.json"))) {
+    try {
+      if (beforeOnly || manifest.execution?.protocol !== "serial-two-group-v1" || manifest.execution?.path !== "partitions/manifest.json") throw new Error("serial partition declaration is missing or invalid");
+      const partManifest = readJsonArtifact(root, "partitions/manifest.json", reasons);
+      execution = validateFullPartitionEvidence(root, partManifest, inventory, report, checkoutHead,
+        [images.application?.runtime_id, images.standalone_ops?.runtime_id, images.browser?.runtime_id], lifecycle.run_id);
+    } catch (error) { reasons.push(errorReason("invalid_serial_partition_evidence", error.message)); }
+  }
   const normalizedReasons = normalizeReasons(reasons);
   let firstFailure = manifest.first_failure ?? null;
   if (firstFailure === null) {
@@ -1695,6 +1878,7 @@ function buildReceipt(runDir, { generatedAt = new Date().toISOString(), expected
     browser,
     workflow,
     stages,
+    ...(execution ? { execution } : {}),
     checkers,
     cases: reconciliation.cases,
     preservation: {
@@ -1992,6 +2176,19 @@ function runReconcile(runDir) {
 function main(argv = process.argv.slice(2)) {
   const [command] = argv;
   const runDir = parseRunDir(argv);
+  if (command === "partition-files") {
+    const group = argv[argv.indexOf("--group") + 1];
+    const file = path.join(runDir, INVENTORY_NAME);
+    if (fs.lstatSync(file).size > MAX_JSON_BYTES) throw new Error("partition inventory is too large");
+    const files = partitionInventory(readJson(file), group).files;
+    for (const file of files) {
+      if (!/^examples\/scrypath_ecommerce\/e2e\/[A-Za-z0-9_./-]+\.spec\.ts$/.test(file)) throw new Error("unsupported test source path in partition inventory");
+      process.stdout.write(`^${path.resolve(REPOSITORY_ROOT, file).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$\n`);
+    }
+    return 0;
+  }
+  if (command === "partition-run") return runFullPartition(runDir, argv[argv.indexOf("--group") + 1]);
+  if (command === "assemble-partitions") { assembleFullPartitions(runDir); return finishPartitionChecks(runDir); }
   if (command === "reconcile") {
     const result = runReconcile(runDir);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
@@ -2030,6 +2227,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assembleFullPartitions,
+  partitionInventory,
+  auditPartitionReports,
+  validateFullPartitionEvidence,
   parsePhase185ClockFixture,
   caseIdentity,
   isAllowedArtifactPath,

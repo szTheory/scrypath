@@ -192,6 +192,8 @@ if (process.env.FAKE_DOCKER_CONFIG_FAIL === "1" && args[0] === "compose" && args
 if (args[0] === "compose" && args.includes("up") && process.env.FAKE_DOCKER_UP_FAIL) process.exit(Number(process.env.FAKE_DOCKER_UP_FAIL));
 if (args[0] === "compose" && args.includes("run") && process.env.FAKE_DOCKER_RUN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_RUN_FAIL));
 if (args[0] === "compose" && args.includes("down") && process.env.FAKE_DOCKER_DOWN_FAIL) process.exit(Number(process.env.FAKE_DOCKER_DOWN_FAIL));
+if (args[0] === "compose" && args.includes("run") && args.includes("-d")) process.stdout.write("4".repeat(64) + "\\n");
+if (args[0] === "exec" && process.env.FAKE_DOCKER_EXEC_FAIL && (!process.env.FAKE_DOCKER_EXEC_GROUP || args.includes(process.env.FAKE_DOCKER_EXEC_GROUP))) process.exit(Number(process.env.FAKE_DOCKER_EXEC_FAIL));
 if (args[0] === "compose" && args.includes("config")) {
   if (args.includes("--format") && args[args.indexOf("--format") + 1] === "json") process.stdout.write(JSON.stringify(composeModel) + "\\n");
   else if (!args.includes("--quiet")) process.stdout.write("services:\\n  web: {}\\n  standalone_ops: {}\\n  browser: {}\\n");
@@ -934,3 +936,25 @@ for (const target of ["runtime-test", "runtime-prod"]) {
     });
   }
 }
+
+
+test("full browser partitions run serially before assembly and retain the owned idle container", t => {
+  const result=runVerifier(t,["full"]);
+  assert.equal(result.status,0,result.stderr);
+  const executions=result.calls.filter(c=>c[0]==="exec");
+  assert.deepEqual(executions.map(c=>c.includes("partition-run") ? c.at(-1) : "assemble"),["ordinary","preservation","assemble"]);
+  assert.ok(executions.every(c=>c[2]==="4".repeat(64)));
+  assert.ok(result.calls.some(c=>c.includes("up")&&c.includes("--wait")&&c.at(-1)==="standalone_ops"));
+  assert.ok(result.calls.some(c=>c.includes("run")&&c.includes("--entrypoint")&&c.at(-1)==="infinity"));
+});
+for(const group of ["ordinary","preservation","assemble-partitions"]) test(`failed ${group} partition operation stops further execution and preserves its failure`, t=>{
+  const result=runVerifier(t,["full"],{FAKE_DOCKER_EXEC_FAIL:"37",FAKE_DOCKER_EXEC_GROUP:group});
+  assert.equal(result.status,37,result.stderr);
+  const executions=result.calls.filter(c=>c[0]==="exec");
+  assert.equal(executions.length,{ordinary:1,preservation:2,"assemble-partitions":3}[group]);
+  const stop=result.calls.findIndex(c=>c[0]==="stop"),copy=result.calls.findIndex(c=>c[0]==="cp"),down=result.calls.findIndex(c=>c.includes("down"));
+  assert.ok(stop>=0&&copy>stop&&down>copy);
+  assert.ok(result.calls.some(c=>c[0]==="cp"&&c[1].includes(".parts/.")));
+  assert.equal(result.lifecycle.original_exit_status,37);
+  assert.equal(result.lifecycle.cleanup.status,"clean");
+});

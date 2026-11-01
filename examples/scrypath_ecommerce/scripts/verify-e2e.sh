@@ -338,6 +338,8 @@ if [[ -n "${E2E_PREBUILT_MANIFEST:-}" || -n "${E2E_IMAGE_OVERRIDE:-}" ]]; then
 fi
 
 run_status=0
+serial_full_mode=0
+partition_browser_id=""
 artifact_copy_status=0
 cleanup_status=0
 cleanup_state="pending"
@@ -474,6 +476,11 @@ collect_artifacts() {
       "$artifact_dir" >>"$artifact_dir/finalization.log" 2>&1; then
       echo "Could not copy the run-owned browser evidence directory." >&2
       artifact_copy_status=1
+    fi
+    if (( serial_full_mode && run_status != 0 )) && [[ -n "$partition_browser_id" ]]; then
+      mkdir -p "$artifact_dir/logs/partitions"
+      run_finalization_bounded docker cp "$browser_id:${E2E_CONTAINER_ARTIFACT_DIR}.parts/." \
+        "$artifact_dir/logs/partitions" >>"$artifact_dir/finalization.log" 2>&1 || artifact_copy_status=1
     fi
     artifact_copy_ended_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     artifact_copy_exit_code="$artifact_copy_status"
@@ -642,6 +649,7 @@ const input = {
   compose:{scope:process.env.E2E_SCOPE,project:process.env.E2E_COMPOSE_PROJECT,targets:["browser","standalone_ops","web"],model_digest:process.env.E2E_COMPOSE_MODEL_DIGEST},
   browser:actualBrowser,
   workflow:{event:process.env.E2E_EVENT_NAME,ref:process.env.E2E_GIT_REF,sha:process.env.E2E_EVENT_SHA,run_id:process.env.E2E_WORKFLOW_RUN_ID,run_attempt:Number(process.env.E2E_WORKFLOW_RUN_ATTEMPT),job_name:process.env.E2E_JOB_NAME,job_conclusion:process.env.E2E_JOB_CONCLUSION},
+  ...(fs.existsSync(path.join(root,"partitions/manifest.json")) ? {execution:{protocol:"serial-two-group-v1",path:"partitions/manifest.json"}} : {}),
   stages,checkers:{light_parity:{path:"admin-light-parity.json",status:status("admin-light-parity.json")},contrast:{path:"contrast-report.json",status:contrastPassed?"pass":"fail"}},
   cleanup:{status:lifecycle.cleanup?.status,project:lifecycle.cleanup?.project,containers:lifecycle.cleanup?.containers,networks:lifecycle.cleanup?.networks,volumes:lifecycle.cleanup?.volumes},
   allowed_skips:[],artifacts,first_failure:failed?{stage:failed[0],exit_code:failed[1].exit_code}:Number(lifecycle.original_exit_status)===0?null:{stage:"verifier",exit_code:Number(lifecycle.original_exit_status)||1}
@@ -732,6 +740,11 @@ cleanup() {
   trap - EXIT
   set +e
 
+  if (( serial_full_mode && original_exit_status != 0 )) && [[ -n "$partition_browser_id" ]]; then
+    # A killed docker-exec client can leave its remote child running. Stop only
+    # this run's owned browser before copying immutable failure diagnostics.
+    run_finalization_bounded docker stop --time 10 "$partition_browser_id" >>"$artifact_dir/finalization.log" 2>&1 || cleanup_status=1
+  fi
   collect_artifacts
 
   if [[ "${KEEP_E2E_STACK:-0}" == "1" ]]; then
@@ -849,6 +862,33 @@ if [[ "$mode" == "--readiness-only" ]]; then
   if (( run_status == 0 )); then inspect_phase185_full_images || run_status=$?; fi
   if (( run_status == 0 )); then
     run_verification_bounded "${compose[@]}" run --rm -T -e E2E_READINESS_ONLY=1 browser || run_status=$?
+  fi
+elif [[ "$scope" == "full" && "$preservation_mode" == "full" ]]; then
+  serial_full_mode=1
+  readiness_started=1
+  if (( prebuilt_mode )); then
+    run_verification_bounded "${compose[@]}" pull postgres meilisearch || run_status=$?
+  else
+    run_verification_bounded "${compose[@]}" build web standalone_ops browser || run_status=$?
+  fi
+  if (( run_status == 0 )); then inspect_phase185_full_images || run_status=$?; fi
+  if (( run_status == 0 )); then
+    run_verification_bounded "${compose[@]}" up -d --no-build --pull never --wait --wait-timeout 300 web standalone_ops || run_status=$?
+  fi
+  if (( run_status == 0 )); then
+    partition_browser_id="$(run_verification_bounded "${compose[@]}" run -d --no-deps --name "${project}-browser" --entrypoint sleep browser infinity)" || run_status=$?
+    if [[ ! "$partition_browser_id" =~ ^[a-f0-9]{64}$ ]]; then run_status=69; fi
+  fi
+  for partition in ordinary preservation; do
+    if (( run_status == 0 )); then
+      echo "Running serial full-suite partition: $partition"
+      run_verification_bounded docker exec -i "$partition_browser_id" node /app/scripts/ci/ecommerce_evidence.cjs \
+        partition-run --run-dir "$E2E_CONTAINER_ARTIFACT_DIR" --group "$partition" || run_status=$?
+    fi
+  done
+  if (( run_status == 0 )); then
+    run_verification_bounded docker exec -i "$partition_browser_id" node /app/scripts/ci/ecommerce_evidence.cjs \
+      assemble-partitions --run-dir "$E2E_CONTAINER_ARTIFACT_DIR" || run_status=$?
   fi
 else
   [[ "$scope" != "full" ]] || readiness_started=1

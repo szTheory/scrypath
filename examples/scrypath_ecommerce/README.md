@@ -67,6 +67,11 @@ also checks mounted host routes and the separate Ops standalone static routes.
 It requires only Docker Compose and publishes no host ports. `make verify-e2e`
 uses the same isolated lifecycle for the complete advisory browser and
 deterministic visual lane, with output under `test-results/docker-full/`.
+The full lane discovers all Chromium tests, then runs ordinary and preservation
+files in two sequential batches in one owned browser container. Each batch uses
+one worker and no retries; its disjoint report is retained alongside a merged
+JSON/HTML report. Acceptance requires their complete union, matching source and
+images, passing visual checks, and clean teardown within the existing limits.
 
 Both commands use unique Compose project names, so parallel worktrees and
 already-running services do not collide. Set `KEEP_E2E_STACK=1` only when you

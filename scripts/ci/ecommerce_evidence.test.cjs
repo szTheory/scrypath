@@ -1661,3 +1661,47 @@ test("separate and interrupted runs cannot borrow another invocation's evidence"
     fs.rmSync(interruptedRun.runDir,{recursive:true,force:true});
   }
 });
+
+
+test("serial full partitions prove an exact disjoint union and reject altered execution", () => {
+  const items = [testCase({file:"e2e/operator.spec.ts", title:"ordinary"}), testCase({file:"e2e/ui_state_preservation.spec.ts", title:"state"}), testCase({file:"e2e/ui_content_preservation.spec.ts", title:"content"})];
+  const inventory = playwrightReport(items);
+  const reports = [
+    {group:"ordinary", exit_code:0, report:playwrightReport(items.slice(0,1), {results:true})},
+    {group:"preservation", exit_code:0, report:playwrightReport(items.slice(1), {results:true})}
+  ];
+  for (const row of reports) Object.assign(row.report.config,{workers:1,fullyParallel:false,shard:null,projects:[{name:"chromium",retries:0,repeatEach:1}]});
+  // The fixture helper's default outcome is deliberately set to real Playwright's outcome.
+  for (const row of reports) for (const suite of row.report.suites) suite.specs[0].tests[0].status = "expected";
+  assert.equal(evidence.auditPartitionReports({inventory,reports}).cases,3);
+  assert.equal(evidence.partitionInventory(inventory,"preservation").files.length,2);
+  assert.throws(() => evidence.partitionInventory(inventory,"unknown"));
+  assert.throws(() => evidence.partitionInventory(playwrightReport([items[0],items[0]]),"ordinary"));
+  for (const mutate of [
+    (r)=>r[0].report.config.workers=2,
+    (r)=>r[0].report.config.projects[0].retries=1,
+    (r)=>r[0].report.config.shard={current:1,total:2},
+    (r)=>r.pop(),
+    (r)=>r[0].exit_code=124,
+    (r)=>r[1].group="ordinary",
+    (r)=>r[1].report.suites.pop(),
+    (r)=>r[1].report.suites.push(r[0].report.suites[0]),
+    (r)=>r[0].report.errors.push({message:"interrupted"}),
+    (r)=>r[0].report.suites[0].specs[0].tests[0].results.push({retry:1,status:"passed",duration:1}),
+    (r)=>r[0].report.suites[0].specs[0].tests[0].results[0].status="skipped"
+  ]) { const changed=structuredClone(reports); mutate(changed); assert.throws(()=>evidence.auditPartitionReports({inventory,reports:changed})); }
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),"ecommerce-partitions-"));
+  try {
+    const source="a".repeat(40), images=[1,2,3].map(n=>"sha256:"+String(n).repeat(64)), run="phase185-partition-unit";
+    const manifest={protocol:"serial-two-group-v1",source_sha:source,run_id:run,cases:3,parts:reports.map((row,index)=>{
+      const relative=`partitions/${row.group}/phase105-playwright.json`, bytes=Buffer.from(JSON.stringify(row.report));
+      fs.mkdirSync(path.dirname(path.join(directory,relative)),{recursive:true});fs.writeFileSync(path.join(directory,relative),bytes);
+      return {group:row.group,exit_code:0,operation_cap_seconds:900,source_sha:source,run_id:run,image_ids:images,started_at:`2026-11-01T14:0${index*2}:00.000Z`,ended_at:`2026-11-01T14:0${index*2+1}:00.000Z`,report:relative,report_sha256:"sha256:"+crypto.createHash("sha256").update(bytes).digest("hex")};
+    })};
+    const merged={...reports[0].report,suites:reports.flatMap(r=>r.report.suites)};
+    const check=(m=manifest,r=merged)=>evidence.validateFullPartitionEvidence(directory,m,inventory,r,source,images,run);
+    assert.equal(check().cases,3);
+    for(const mutate of [m=>m.cases++,m=>m.source_sha="b".repeat(40),m=>m.parts[0].image_ids[0]="sha256:"+"f".repeat(64),m=>m.parts[0].operation_cap_seconds=901,m=>m.parts[1].started_at=m.parts[0].started_at,m=>m.parts[0].ended_at="2026-11-01T14:16:00.000Z",m=>m.parts[0].report_sha256="sha256:"+"0".repeat(64)]) {const changed=structuredClone(manifest);mutate(changed);assert.throws(()=>check(changed));}
+    const altered=structuredClone(merged);altered.suites[0].specs[0].tests[0].results[0].duration=2;assert.throws(()=>check(manifest,altered));
+  } finally {fs.rmSync(directory,{recursive:true,force:true});}
+});

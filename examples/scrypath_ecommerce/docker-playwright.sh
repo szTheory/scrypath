@@ -8,6 +8,11 @@ base_url="${PLAYWRIGHT_BASE_URL:-http://web:4002}"
 readiness_only="${E2E_READINESS_ONLY:-0}"
 run_id="${E2E_RUN_ID:-local-${scope}}"
 artifact_dir="${E2E_ARTIFACT_DIR:-/tmp/${run_id}}"
+full_partition="${E2E_FULL_PARTITION:-}"
+if [[ -n "$full_partition" && ( "$scope" != "full" || "$preservation_mode" != "full" || ( "$full_partition" != "ordinary" && "$full_partition" != "preservation" ) ) ]]; then
+  echo "Full partition must be ordinary or preservation in the canonical full mode." >&2
+  exit 64
+fi
 
 if [[ "$readiness_only" != "0" && "$readiness_only" != "1" ]]; then
   echo "E2E_READINESS_ONLY must be 0 or 1." >&2
@@ -291,6 +296,15 @@ case "$scope" in
     if (( browser_status == 0 )); then
       browser_args=(--config "$PWD/playwright.config.ts" --project=chromium --workers=1 --retries=0)
       if (( ${#preservation_specs[@]} > 0 )); then browser_args+=("${preservation_specs[@]}"); fi
+      if [[ -n "$full_partition" ]]; then
+        node /app/scripts/ci/ecommerce_evidence.cjs partition-files --run-dir "$artifact_dir" --group "$full_partition" >"$artifact_dir/partition-files.txt" || exit $?
+        while IFS= read -r selected_file; do browser_args+=("$selected_file"); done <"$artifact_dir/partition-files.txt"
+        export PLAYWRIGHT_JSON_OUTPUT_FILE="$E2E_PLAYWRIGHT_REPORT"
+        export PLAYWRIGHT_HTML_OUTPUT_DIR="$E2E_HTML_REPORT_DIR"
+        export PLAYWRIGHT_HTML_OPEN=never
+        export PLAYWRIGHT_BLOB_OUTPUT_FILE="$artifact_dir/blob-report/report.zip"
+        browser_args+=("--reporter=list,json,html,blob")
+      fi
       run_stage browser "$artifact_dir/browser.log" \
         npm run test:e2e -- "${browser_args[@]}" || browser_status=$?
       if (( browser_status == 0 )) && { [[ ! -s "$E2E_PLAYWRIGHT_REPORT" ]] || [[ ! -s "$E2E_HTML_REPORT_DIR/index.html" ]]; }; then
@@ -300,7 +314,7 @@ case "$scope" in
       fi
     fi
 
-    if (( browser_status == 0 )); then
+    if (( browser_status == 0 )) && [[ "$full_partition" != "ordinary" ]]; then
       node /app/scripts/ci/ui_preservation_bundle.cjs pack --run-dir "$artifact_dir" || browser_status=$?
       if (( browser_status != 0 )); then mark_stage_failure browser "$browser_status"; fi
     fi
@@ -310,7 +324,7 @@ case "$scope" in
       cp -a "$PWD/ui-review-artifacts/iteration3-journeys" "$artifact_dir/ui-review-artifacts/"
     fi
 
-    if [[ "$preservation_mode" == "full" ]]; then
+    if [[ "$preservation_mode" == "full" && -z "$full_partition" ]]; then
       run_stage light_parity "$artifact_dir/light-parity.log" \
         npm run test:e2e:admin-light-parity || light_status=$?
       run_stage contrast "$artifact_dir/contrast.log" node contrast-checker.mjs || contrast_status=$?
