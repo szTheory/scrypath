@@ -719,7 +719,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
         key -> Req.Request.put_header(request, "x-meili-api-key", key)
       end
 
-    with {:ok, %Req.Response{status: 202, body: body}} <-
+    with {:ok, %Req.Response{status: status, body: body}} when status in 200..299 <-
            Req.delete(request, url: path, params: params),
          {:ok, task} <- TaskPayload.normalize(body) do
       wait_task!({:ok, %{task: task}}, config, "reset disposable search state #{path}")
