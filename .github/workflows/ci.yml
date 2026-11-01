@@ -721,6 +721,9 @@ jobs:
           {
             echo "E2E_PREBUILT_MANIFEST=$output_dir/image-handoff.json"
             echo "E2E_IMAGE_OVERRIDE=$output_dir/image-override.json"
+            echo "E2E_PRODUCT_SOURCE_SHA=$E2E_PRODUCT_SOURCE_SHA"
+            echo "E2E_PRODUCT_TREE_SHA256=$E2E_PRODUCT_TREE_SHA256"
+            echo "E2E_FIXTURE_OVERLAY_SHA256=$E2E_FIXTURE_OVERLAY_SHA256"
           } >> "$GITHUB_ENV"
       - name: Configure scoped full Docker cache namespace
         env:

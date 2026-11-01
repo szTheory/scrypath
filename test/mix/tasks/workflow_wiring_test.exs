@@ -919,6 +919,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert prepare =~
                "export E2E_PRODUCT_SOURCE_SHA E2E_PRODUCT_TREE_SHA256 E2E_FIXTURE_OVERLAY_SHA256"
 
+      for variable <- [
+            "E2E_PRODUCT_SOURCE_SHA",
+            "E2E_PRODUCT_TREE_SHA256",
+            "E2E_FIXTURE_OVERLAY_SHA256"
+          ] do
+        assert prepare =~ ~s|echo "#{variable}=$#{variable}"|
+      end
+
       assert verifier_script =~ "productTreeIdentity(process.argv[2])"
       assert verifier_script =~ "fixtureOverlayDigest(process.argv[2])"
 
