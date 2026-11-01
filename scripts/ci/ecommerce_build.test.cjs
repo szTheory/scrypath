@@ -140,6 +140,12 @@ function composeGraph(scope, project, changeModel = false, env = process.env) {
   };
   if (scope === "full") {
     services.standalone_ops = { build: { context: repositoryRoot, dockerfile: "examples/scrypath_ecommerce/Dockerfile", target: "ops" } };
+    services.browser.environment = Object.fromEntries([
+      "E2E_APPLICATION_IMAGE_ID", "E2E_STANDALONE_OPS_IMAGE_ID", "E2E_BROWSER_IMAGE_ID",
+      "E2E_EFFECTIVE_RUNTIME_SHA256", "E2E_BROWSER_SOURCE_LAYER_ID", "E2E_BROWSER_BASE_LAYERS_SHA256",
+      "E2E_PRODUCT_SOURCE_SHA", "E2E_PRODUCT_TREE_SHA256", "E2E_FIXTURE_OVERLAY_SHA256",
+      "E2E_BROWSER_PROFILE_SHA256", "E2E_DATA_RECIPE_SHA256",
+    ].map((key) => [key, env[key] || ""]));
   }
   if (changeModel) services.web.build.target = "changed";
   const target = Object.fromEntries(Object.entries(services).map(([name, service]) => [name, {
@@ -173,9 +179,11 @@ function buildDriver(scope, project, options = {}) {
       const service = tag.slice(`${project}-`.length);
       const source = state.manifest || options.manifest;
       return JSON.stringify({
-        Id: `sha256:${service.padEnd(64, "a").slice(0, 64)}`,
+        Id: state.tagIdMismatch === service ? `sha256:${"f".repeat(64)}` : `sha256:${service.padEnd(64, "a").slice(0, 64)}`,
         RepoTags: [`docker.io/library/${tag}:latest`],
-        Config: { Labels: {
+        RootFS: { Layers: [`sha256:${"b".repeat(64)}`, `sha256:${"c".repeat(64)}`, "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"] },
+        Architecture: "amd64", Os: "linux", DockerVersion: "27.0.0",
+        Config: { WorkingDir: "/app/examples/scrypath_ecommerce", Cmd: ["bash", "./docker-playwright.sh"], Labels: {
           "org.opencontainers.image.revision": state.revisionMismatch === service ? "sha256:wrong-source" : source?.source_sha || execFileSync("git", ["rev-parse", "HEAD"], { cwd: repositoryRoot, encoding: "utf8" }).trim(),
           ...(source?.source_fingerprint ? { "org.opencontainers.image.source-fingerprint": source.source_fingerprint } : {}),
         } },
@@ -606,6 +614,55 @@ test("verify-handoff ignores run-scoped Compose environment values but retains s
   assert.throws(
     () => verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run }),
     /Compose model or recipe digest mismatch/,
+  );
+});
+
+test("full runtime handoff accepts measured identities and rejects forged provenance", (t) => {
+  const fixture = prepareFixture(t, "full");
+  const loaded = verifyHandoff({ manifestPath: fixture.manifestPath, env: fixture.env, runCommand: fixture.docker.run });
+  const inspectionPath = path.join(makeTempDirectory(t), "browser-inspection.json");
+  const browserImage = JSON.parse(fixture.docker.run("docker", ["image", "inspect", loaded.tags.browser]));
+  writeFileSync(inspectionPath, JSON.stringify([browserImage]));
+  const measured = phase185RuntimeIdentity({ inspectionPath });
+  const derived = {
+    E2E_APPLICATION_IMAGE_ID: loaded.image_ids.web,
+    E2E_STANDALONE_OPS_IMAGE_ID: loaded.image_ids.standalone_ops,
+    E2E_BROWSER_IMAGE_ID: loaded.image_ids.browser,
+    E2E_EFFECTIVE_RUNTIME_SHA256: measured.effective_runtime_sha256,
+    E2E_BROWSER_SOURCE_LAYER_ID: measured.browser_source_layer_id,
+    E2E_BROWSER_BASE_LAYERS_SHA256: measured.browser_base_layers_sha256,
+  };
+  Object.assign(fixture.env, derived);
+
+  assert.equal(
+    verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }).handoff_status,
+    "runtime_verified",
+  );
+  for (const [key, value] of Object.entries(derived)) {
+    fixture.env[key] = `sha256:${"f".repeat(64)}`;
+    assert.throws(
+      () => verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }),
+      new RegExp(`runtime provenance mismatch: ${key}`),
+    );
+    delete fixture.env[key];
+    assert.throws(
+      () => verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }),
+      new RegExp(`runtime provenance mismatch: ${key}`),
+    );
+    fixture.env[key] = value;
+  }
+  for (const key of ["E2E_PRODUCT_SOURCE_SHA", "E2E_PRODUCT_TREE_SHA256", "E2E_FIXTURE_OVERLAY_SHA256", "E2E_BROWSER_PROFILE_SHA256", "E2E_DATA_RECIPE_SHA256"]) {
+    fixture.env[key] = "changed";
+    assert.throws(
+      () => verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }),
+      /Compose model or recipe digest mismatch/,
+    );
+    delete fixture.env[key];
+  }
+  fixture.docker.state.tagIdMismatch = "browser";
+  assert.throws(
+    () => verifyHandoff({ manifestPath: fixture.manifestPath, runtime: true, env: fixture.env, runCommand: fixture.docker.run }),
+    /runtime browser image tag mismatch/,
   );
 });
 

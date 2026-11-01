@@ -24,6 +24,17 @@ const runScopedComposeEnvironment = new Set([
   "E2E_WORKFLOW_RUN_ID",
   "SCRYPATH_SOURCE_SHA",
 ]);
+// These values cannot exist until the built images have been inspected. They
+// describe the observed run, rather than the prebuild recipe; full runtime
+// handoff checks each value independently against the inspected images below.
+const measuredRuntimeComposeEnvironment = new Set([
+  "E2E_APPLICATION_IMAGE_ID",
+  "E2E_STANDALONE_OPS_IMAGE_ID",
+  "E2E_BROWSER_IMAGE_ID",
+  "E2E_EFFECTIVE_RUNTIME_SHA256",
+  "E2E_BROWSER_SOURCE_LAYER_ID",
+  "E2E_BROWSER_BASE_LAYERS_SHA256",
+]);
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);
@@ -41,10 +52,15 @@ function canonicalJson(value) {
 
 function composeModelForDigest(model) {
   const stableModel = structuredClone(model);
-  for (const service of Object.values(stableModel.services || {})) {
+  for (const [name, service] of Object.entries(stableModel.services || {})) {
     if (!service.environment || Array.isArray(service.environment)) continue;
     for (const key of runScopedComposeEnvironment) {
       if (Object.hasOwn(service.environment, key)) service.environment[key] = "<phase182-run-scoped>";
+    }
+    if (name === "browser") {
+      for (const key of measuredRuntimeComposeEnvironment) {
+        if (Object.hasOwn(service.environment, key)) service.environment[key] = "<phase185-measured-runtime>";
+      }
     }
   }
   return stableModel;
@@ -57,6 +73,10 @@ function digest(value) {
 function phase185RuntimeIdentity({ inspectionPath, repoRoot = repositoryRoot } = {}) {
   if (typeof inspectionPath !== "string" || !path.isAbsolute(inspectionPath)) throw new Error("phase185 runtime identity requires an absolute Docker image inspection path");
   const inspection = JSON.parse(fs.readFileSync(inspectionPath, "utf8"));
+  return phase185RuntimeIdentityFromInspection(inspection, repoRoot);
+}
+
+function phase185RuntimeIdentityFromInspection(inspection, repoRoot = repositoryRoot) {
   if (!Array.isArray(inspection) || inspection.length !== 1) throw new Error("Docker image inspection must contain exactly one built browser image");
   const image = inspection[0];
   const layers = image?.RootFS?.Layers;
@@ -496,6 +516,22 @@ function verifyHandoff({ manifestPath, runtime = false, env = process.env, runCo
       const container = inspectJson(runCommand, "container", containers[0], env);
       if (container.Image !== manifest.image_ids[service]) throw new Error(`runtime image ID mismatch: ${service}`);
       runtimeIds[service] = container.Image;
+    }
+    if (scope === "full") {
+      const browserImage = inspectJson(runCommand, "image", resolved.tags.browser, env);
+      if (browserImage.Id !== manifest.image_ids.browser) throw new Error("runtime browser image tag mismatch");
+      const measured = phase185RuntimeIdentityFromInspection([browserImage]);
+      const expected = {
+        E2E_APPLICATION_IMAGE_ID: runtimeIds.web,
+        E2E_STANDALONE_OPS_IMAGE_ID: runtimeIds.standalone_ops,
+        E2E_BROWSER_IMAGE_ID: runtimeIds.browser,
+        E2E_EFFECTIVE_RUNTIME_SHA256: measured.effective_runtime_sha256,
+        E2E_BROWSER_SOURCE_LAYER_ID: measured.browser_source_layer_id,
+        E2E_BROWSER_BASE_LAYERS_SHA256: measured.browser_base_layers_sha256,
+      };
+      for (const [key, value] of Object.entries(expected)) {
+        if (env[key] !== value) throw new Error(`runtime provenance mismatch: ${key}`);
+      }
     }
     manifest.runtime_image_ids = runtimeIds;
     manifest.handoff_status = "runtime_verified";
