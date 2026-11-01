@@ -197,6 +197,63 @@ defmodule Scrypath.Release.PackageContentsTest do
   end
 
   describe "tooling boundary" do
+    test "documented verifiers do not become hidden from mix help" do
+      verifiers =
+        "{lib,dev}/**/*.ex"
+        |> Path.wildcard()
+        |> Enum.map(&{&1, File.read!(&1)})
+        |> PackageContract.collect_task_modules()
+        |> Enum.map(&elem(&1, 1))
+        |> Enum.filter(&String.starts_with?(Atom.to_string(&1), "Elixir.Mix.Tasks.Verify"))
+
+      assert length(verifiers) >= 53, "the verifier documentation scan went vacuous"
+
+      hidden =
+        Enum.filter(verifiers, fn module ->
+          assert {:docs_v1, _, _, _, moduledoc, _, _} = Code.fetch_docs(module)
+          moduledoc == :hidden
+        end)
+
+      # These 27 modules were already hidden before Phase 183. Pin identities,
+      # not just a count: hiding a documented task must not be offset by unhiding another.
+      phase183_hidden = [
+        Mix.Tasks.Verify.Capability,
+        Mix.Tasks.Verify.Phase14,
+        Mix.Tasks.Verify.Phase20,
+        Mix.Tasks.Verify.Phase22,
+        Mix.Tasks.Verify.Phase26,
+        Mix.Tasks.Verify.Phase28,
+        Mix.Tasks.Verify.Phase36,
+        Mix.Tasks.Verify.Phase37,
+        Mix.Tasks.Verify.Phase38,
+        Mix.Tasks.Verify.Phase41,
+        Mix.Tasks.Verify.Phase43,
+        Mix.Tasks.Verify.Phase82,
+        Mix.Tasks.Verify.Phase83,
+        Mix.Tasks.Verify.Phase84,
+        Mix.Tasks.Verify.Phase85,
+        Mix.Tasks.Verify.Phase91,
+        Mix.Tasks.Verify.Phase94,
+        Mix.Tasks.Verify.Phase96,
+        Mix.Tasks.Verify.Phase97,
+        Mix.Tasks.Verify.Phase98,
+        Mix.Tasks.Verify.Phase99,
+        Mix.Tasks.Verify.Phase106,
+        Mix.Tasks.Verify.Phase107,
+        Mix.Tasks.Verify.Phase108,
+        Mix.Tasks.Verify.Phase112,
+        Mix.Tasks.Verify.PhoenixExample.LockGraph,
+        Mix.Tasks.Verify.PhoenixExample.Package
+      ]
+
+      # Phase 185 subsequently added this private validator. Keep that addition
+      # explicit rather than rewriting Phase 183's historical count of 27.
+      later_hidden = [Mix.Tasks.Verify.UiTokens]
+
+      assert Enum.sort(hidden) == Enum.sort(phase183_hidden ++ later_hidden),
+             "verifier documentation visibility changed; inspect added/removed hidden modules"
+    end
+
     test "maintainer verifiers live outside lib and outside the Hex package" do
       project = MixProject.project()
 
@@ -357,6 +414,70 @@ defmodule Scrypath.Release.PackageContentsTest do
       compile_archive!(archive, "test", build)
 
       assert_public_task_beams!(build)
+    end
+  end
+
+  describe "path-dependency consumer" do
+    setup :tmp_workspace
+
+    @tag timeout: 180_000
+    test "the Phoenix example compiles cold without maintainer task beams", %{tmp: tmp} do
+      # Preserve the real ../.. dependency relationship in a disposable checkout.
+      # Unlike an archive consumer, its dependency includes the complete dev tree.
+      src = copy_packaged_files!(tmp)
+      File.cp_r!("dev", Path.join(src, "dev"))
+      File.cp!("mix.lock", Path.join(src, "mix.lock"))
+      example = "examples/phoenix_meilisearch"
+      consumer = Path.join(src, example)
+      File.mkdir_p!(consumer)
+
+      for entry <- ~w(mix.exs mix.lock lib config priv) do
+        File.cp_r!(Path.join(example, entry), Path.join(consumer, entry))
+      end
+
+      assert File.read!(Path.join(consumer, "mix.exs")) =~ ~s|{:scrypath, path: "../.."}|
+      lock = File.read!(Path.join(consumer, "mix.lock"))
+      build = Path.join(tmp, "path_build")
+      refute File.exists?(build), "the path consumer must start with a cold build"
+
+      env = [
+        {"MIX_ENV", "dev"},
+        {"MIX_BUILD_PATH", build},
+        {"MIX_DEPS_PATH", Path.join(tmp, "path_deps")},
+        {"HEX_HOME", Path.join(tmp, "path_hex")}
+      ]
+
+      for args <- [["deps.get", "--check-locked"], ["deps.compile"]] do
+        {output, status} =
+          System.cmd("mix", args, cd: consumer, stderr_to_stdout: true, env: env)
+
+        assert status == 0, "path consumer mix #{Enum.join(args, " ")} failed:\n#{output}"
+      end
+
+      {output, status} =
+        System.cmd("mix", ["compile", "--warnings-as-errors"],
+          cd: consumer,
+          stderr_to_stdout: true,
+          env: env
+        )
+
+      assert status == 0, "path consumer compile failed:\n#{output}"
+      assert output =~ "Generated scrypath_demo app", "the Phoenix example did not compile"
+      assert File.read!(Path.join(consumer, "mix.lock")) == lock
+      assert File.read!(Path.join(example, "mix.lock")) == lock
+      assert_public_task_beams!(build)
+
+      {:ok, [{:application, :scrypath, app_spec}]} =
+        :file.consult(String.to_charlist(Path.join(build, "lib/scrypath/ebin/scrypath.app")))
+
+      tasks =
+        app_spec
+        |> Keyword.fetch!(:modules)
+        |> Enum.filter(&String.starts_with?(Atom.to_string(&1), "Elixir.Mix.Tasks."))
+        |> Enum.map(&Mix.Task.task_name/1)
+        |> Enum.sort()
+
+      assert tasks == PackageContract.public_tasks()
     end
   end
 
