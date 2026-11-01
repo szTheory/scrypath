@@ -471,6 +471,7 @@ function createCompleteRun({ beforeOnly = false, sourceSha = SOURCE_SHA, buildSo
       data_recipe: dataRecipe,
       clock_artifact: { path: clockPath, sha256: crypto.createHash("sha256").update(clockBytes).digest("hex") },
       actions: ["TEST_FIXTURE_ONLY"],
+      assertions: [{ name: "actual case semantics", status: "passed", actual: "TEST_FIXTURE_ONLY" }],
       transport_sequence: [{ operation: "TEST_FIXTURE_ONLY", outcome: "TEST_FIXTURE_ONLY" }],
       observations
     });
@@ -782,6 +783,7 @@ test("the before-only evidence command emits a separate held-out receipt schema"
     assert.equal(receipt.scope, "before-only");
     assert.equal(receipt.preservation.schema, "scrypath.ui-preservation-before-only.v1");
     assert.equal(receipt.preservation.cases.length, 61);
+    assert.deepEqual(receipt.preservation.cases[0].assertions, [{ name: "actual case semantics", status: "passed", actual: "TEST_FIXTURE_ONLY" }]);
     assert.equal(fs.existsSync(path.join(runDir, "phase105-evidence.json")), false);
     const validation = evidence.validateBeforeOnlyReceipt({ runDir, expectedSource, repoRoot: source.root });
     assert.equal(validation.valid, true, JSON.stringify(validation.reasons));
@@ -1120,6 +1122,8 @@ test("held-out receipts bind source, fixture, runtime, recipe, state, transport 
     ["recipe", (event) => { event.recipe_sha256 = `sha256:${"a".repeat(64)}`; }, "mixed_preservation_recipe"],
     ["state", (event) => { event.observations[0].state.category = "error"; }, "invalid_preservation_observation"],
     ["transport", (event) => { event.transport_sequence = []; }, "invalid_preservation_transport"],
+    ["case assertions missing", (event) => { delete event.assertions; }, "invalid_preservation_case_assertions"],
+    ["case assertion failed", (event) => { event.assertions[0].status = "failed"; }, "invalid_preservation_case_assertions"],
     ["geometry", (event) => { event.observations[0].geometry = []; }, "invalid_preservation_observation"],
     ["sampling missing", (event) => { delete event.observations[0].capture_sampling; }, "invalid_preservation_observation"],
     ["sampling unbounded", (event) => { event.observations[0].capture_sampling.max_samples = 7; }, "invalid_preservation_observation"],

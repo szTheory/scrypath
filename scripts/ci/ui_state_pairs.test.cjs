@@ -187,6 +187,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
       clock_recipe: recipe,
       data_recipe: structuredClone(dataRecipe),
       actions: ["navigate", "observe"],
+      assertions: [{ name: "exact case semantics", status: "passed", actual: "0,1,5" }],
       transport_sequence: [{ operation: "liveview-connected", outcome: "connected" }],
       observations
     };
@@ -275,7 +276,8 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
     (item) => { item.observations[0].geometry[0].width += 1; },
     (item) => { item.observations[0].state.focus.name = "different focus"; },
     (item) => { item.observations[0].visible_copy[0].text = "different visible copy"; },
-    (item) => { item.observations[0].assertions[0].actual = "different assertion"; }
+    (item) => { item.observations[0].assertions[0].actual = "different assertion"; },
+    (item) => { item.assertions[0].actual = "0,1,4"; }
   ];
   for (const mutate of changes) {
     const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, mutateCase: mutate });

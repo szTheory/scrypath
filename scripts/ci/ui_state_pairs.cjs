@@ -306,6 +306,11 @@ function validateReceiptSide(bundle, side, authority, recipeSha256) {
       fail("case_runtime_or_recipe_mismatch", `${side} case ${required.id} does not match its independently inspected build and common fixed browser recipe`);
     }
     if (typeof item.test_identity !== "string" || item.test_identity.trim() === "") fail("invalid_case_state", `${side} case ${required.id} has no successful test identity`);
+    if (!Array.isArray(item.assertions) || item.assertions.length === 0 || item.assertions.some((assertion) =>
+      !isRecord(assertion) || typeof assertion.name !== "string" || assertion.name.trim() === "" ||
+      assertion.status !== "passed" || typeof assertion.actual !== "string" || assertion.actual.trim() === "")) {
+      fail("invalid_case_assertions", `${side} case ${required.id} lacks passing observed case semantics`);
+    }
     const matrix = required.category === "overflow" || required.category === "long-text"
       ? REQUIRED_THEMES.flatMap((theme) => REQUIRED_VIEWPORT_WIDTHS.map((width) => `${theme}|${width}`))
       : null;
@@ -440,7 +445,8 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
     const actionEqual = canonicalJson(left.actions) === canonicalJson(right.actions) && canonicalJson(left.transport_sequence) === canonicalJson(right.transport_sequence);
     const geometryEqual = viewportComparisons.every((entry) => entry.geometry_equal);
     const copyEqual = viewportComparisons.every((entry) => entry.visible_copy_equal);
-    const assertionsEqual = viewportComparisons.every((entry) => entry.assertions_equal);
+    const caseAssertionsEqual = canonicalJson(left.assertions) === canonicalJson(right.assertions);
+    const assertionsEqual = caseAssertionsEqual && viewportComparisons.every((entry) => entry.assertions_equal);
     const identityEqual = left.test_identity === right.test_identity;
     const passed = pixelsEqual && stateEqual && actionEqual && geometryEqual && copyEqual && assertionsEqual && identityEqual;
     if (!passed) mismatches.push({ id, pixels: pixelsEqual, state: stateEqual, actions_and_transport: actionEqual, geometry: geometryEqual, visible_copy: copyEqual, assertions: assertionsEqual, test_identity: identityEqual });
@@ -454,6 +460,7 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
       geometry_equal: geometryEqual,
       visible_copy_equal: copyEqual,
       assertions_equal: assertionsEqual,
+      case_assertions_equal: caseAssertionsEqual,
       test_identity_equal: identityEqual,
       passed
     });

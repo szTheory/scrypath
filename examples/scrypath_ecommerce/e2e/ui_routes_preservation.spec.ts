@@ -126,7 +126,6 @@ test("host, mounted Ops, and standalone Ops CSS and JavaScript assets are served
     { base: hostBaseUrl, path: "/assets/css/app.css", type: "text/css" },
     { base: hostBaseUrl, path: "/assets/js/app.js", type: "javascript" },
     { base: hostBaseUrl, path: "/admin/search/assets/css/app.css", type: "text/css" },
-    { base: hostBaseUrl, path: "/admin/search/assets/js/app.js", type: "javascript" },
     { base: standaloneBaseUrl, path: "/ops/assets/css/app.css", type: "text/css" },
     { base: standaloneBaseUrl, path: "/ops/assets/js/app.js", type: "javascript" }
   ];
@@ -140,4 +139,11 @@ test("host, mounted Ops, and standalone Ops CSS and JavaScript assets are served
     expect(response.headers()["content-type"], asset.path).toContain(asset.type);
     expect((await response.body()).byteLength, asset.path).toBeGreaterThan(0);
   }
+
+  // The mounted layout loads the host JavaScript above. Its forwarded Ops
+  // JavaScript route retains the browser pipeline's non-XHR CSRF protection.
+  const protectedScript = await request.get(new URL("/admin/search/assets/js/app.js", hostBaseUrl).toString(), {
+    maxRedirects: 0
+  });
+  expect(protectedScript.status(), "mounted JavaScript keeps cross-origin protection").toBe(403);
 });

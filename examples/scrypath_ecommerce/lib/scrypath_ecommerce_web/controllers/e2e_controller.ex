@@ -178,7 +178,7 @@ defmodule ScrypathEcommerceWeb.E2EController do
     case scenario do
       "phase185_case_reset" ->
         if phase185_run?() do
-          identities = reset_phase185_case_state!()
+          %{identities: identities, search: search} = reset_phase185_case_state!()
 
           json(conn, %{
             scenario: scenario,
@@ -188,7 +188,8 @@ defmodule ScrypathEcommerceWeb.E2EController do
             failed_count: 0,
             drift: false,
             reset_tables: @phase185_reset_identity_tables,
-            identity_state: identities
+            identity_state: identities,
+            search_reset: search
           })
         else
           conn
@@ -622,16 +623,110 @@ defmodule ScrypathEcommerceWeb.E2EController do
   defp reset_phase185_case_state! do
     reset_state!()
     Repo.delete_all(SavedSearch, skip_tenant_id: true)
+    search = reset_phase185_search_state!()
 
-    Map.new(@phase185_reset_identity_tables, fn table ->
-      %Postgrex.Result{rows: [[1]]} =
-        Repo.query!(
-          "SELECT setval(pg_get_serial_sequence($1, 'id')::regclass, 1, false)",
-          [table]
-        )
+    identities =
+      Map.new(@phase185_reset_identity_tables, fn table ->
+        %Postgrex.Result{rows: [[1]]} =
+          Repo.query!(
+            "SELECT setval(pg_get_serial_sequence($1, 'id')::regclass, 1, false)",
+            [table]
+          )
 
-      {table, %{next_id: 1, is_called: false}}
-    end)
+        {table, %{next_id: 1, is_called: false}}
+      end)
+
+    %{identities: identities, search: search}
+  end
+
+  # Only the guarded disposable Phase185 reset uses this cleanup. Ordinary
+  # operational fixtures and real operator task history keep their semantics.
+  defp reset_phase185_search_state! do
+    config = Scrypath.Config.resolve!(sync_mode: :manual)
+    backend = Scrypath.Config.fetch_backend!(config)
+
+    indexes =
+      for schema <- [Product, Variant] do
+        live = backend.index_name(schema, config)
+        target = IndexManagement.target_index_name(schema, config)
+
+        for {index, suffix} <- [{live, "/documents"}, {target, ""}] do
+          case Client.get_settings(index, config) do
+            {:ok, _} ->
+              phase185_delete_and_wait!(
+                "/indexes/#{URI.encode(index, &URI.char_unreserved?/1)}#{suffix}",
+                [],
+                config
+              )
+
+            {:error, {:http_error, 404, _}} ->
+              :ok
+
+            {:error, reason} ->
+              raise ArgumentError, "inspect disposable index #{index} failed: #{inspect(reason)}"
+          end
+        end
+
+        %{schema: inspect(schema), live_index: live, target_index: target}
+      end
+
+    targets = Enum.map_join(indexes, ",", & &1.target_index)
+
+    phase185_delete_and_wait!(
+      "/tasks",
+      [indexUids: targets, statuses: "succeeded,failed,canceled"],
+      config
+    )
+
+    case Client.tasks([index_uids: Enum.map(indexes, & &1.target_index), limit: 1], config) do
+      {:ok, %{"results" => [], "next" => nil}} ->
+        :ok
+
+      other ->
+        raise ArgumentError, "disposable target task history did not reset: #{inspect(other)}"
+    end
+
+    %{
+      protocol: "phase185-search-reset-v1",
+      indexes: indexes,
+      live_documents: "empty",
+      targets: "absent",
+      target_tasks: "empty",
+      target_task_history: %{
+        indexes: "declared-targets-only",
+        statuses: ["succeeded", "failed", "canceled"]
+      }
+    }
+  end
+
+  defp phase185_delete_and_wait!(path, params, config) do
+    options =
+      config
+      |> Keyword.get(:req_options, [])
+      |> Keyword.delete(:base_url)
+      |> Keyword.update(:headers, [], fn headers ->
+        Enum.reject(headers, fn {name, _} ->
+          String.downcase(to_string(name)) == "x-meili-api-key"
+        end)
+      end)
+      |> Keyword.put(:base_url, Scrypath.Config.fetch_meilisearch_url!(config))
+
+    request = Req.new(options)
+
+    request =
+      case Scrypath.Config.meilisearch_api_key(config) do
+        nil -> request
+        key -> Req.Request.put_header(request, "x-meili-api-key", key)
+      end
+
+    with {:ok, %Req.Response{status: 202, body: body}} <-
+           Req.delete(request, url: path, params: params),
+         {:ok, task} <- TaskPayload.normalize(body) do
+      wait_task!({:ok, %{task: task}}, config, "reset disposable search state #{path}")
+    else
+      other ->
+        raise ArgumentError, "reset disposable search state #{path} failed: #{inspect(other)}"
+    end
   end
 
   defp phase185_run? do

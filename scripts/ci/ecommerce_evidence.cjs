@@ -709,6 +709,11 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
     if (!Array.isArray(event.actions) || event.actions.length === 0 || event.actions.some((action) => typeof action !== "string" || action.trim() === "")) {
       reasons.push(errorReason("invalid_preservation_actions", `Receipt lacks a concrete action sequence for ${expected.id}`, identity.key));
     }
+    if (!Array.isArray(event.assertions) || event.assertions.length === 0 || event.assertions.some((assertion) =>
+      !isRecord(assertion) || typeof assertion.name !== "string" || assertion.name.trim() === "" ||
+      assertion.status !== "passed" || typeof assertion.actual !== "string" || assertion.actual.trim() === "")) {
+      reasons.push(errorReason("invalid_preservation_case_assertions", `Receipt lacks passing observed case semantics for ${expected.id}`, identity.key));
+    }
     if (!Array.isArray(event.transport_sequence) || event.transport_sequence.length === 0 || event.transport_sequence.some((step) =>
       !isRecord(step) || typeof step.operation !== "string" || step.operation.trim() === "" || typeof step.outcome !== "string" || step.outcome.trim() === "")) {
       reasons.push(errorReason("invalid_preservation_transport", `Receipt lacks observed request/LiveView transport outcomes for ${expected.id}`, identity.key));
@@ -856,7 +861,8 @@ function validatePreservationEvents(events, reconciliation, context, reasons) {
     validated.push({ id: expected.id, test_identity: identity.key, product_source_sha: event.product_source_sha, build_source_sha: event.build_source_sha, product_tree_sha256: event.product_tree_sha256,
       fixture_overlay_sha256: event.fixture_overlay_sha256, runtime: isRecord(runtime) ? runtime : null,
       recipe_sha256: event.recipe_sha256, clock_recipe: isRecord(recipe) ? recipe : null, data_recipe: isRecord(event.data_recipe) ? event.data_recipe : null, clock_artifact: clockArtifact,
-      actions: Array.isArray(event.actions) ? event.actions : [], transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [], observations
+      actions: Array.isArray(event.actions) ? event.actions : [], assertions: Array.isArray(event.assertions) ? event.assertions : [],
+      transport_sequence: Array.isArray(event.transport_sequence) ? event.transport_sequence : [], observations
     });
   }
   if (context.rawBundle.members.size !== seenObservationPaths.size || [...context.rawBundle.members.keys()].some((name) => !seenObservationPaths.has(name))) {

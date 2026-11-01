@@ -25,6 +25,15 @@ const PHASE185_RESET_TABLES = [
   "public.oban_jobs",
   "public.scrypath_ops_saved_searches"
 ] as const;
+const PHASE185_SEARCH_RESET = {
+  protocol: "phase185-search-reset-v1",
+  indexes: [
+    { schema: "ScrypathEcommerce.Catalog.Product", live_index: "ecommerce__product", target_index: "ecommerce__product__reindex" },
+    { schema: "ScrypathEcommerce.Catalog.Variant", live_index: "ecommerce__variant", target_index: "ecommerce__variant__reindex" }
+  ],
+  live_documents: "empty", targets: "absent", target_tasks: "empty",
+  target_task_history: { indexes: "declared-targets-only", statuses: ["succeeded", "failed", "canceled"] }
+} as const;
 
 type ElementId = typeof CONTENT_ELEMENTS[number];
 type Category = typeof STATE_CATEGORIES[number] | "overflow" | "long-text";
@@ -130,8 +139,11 @@ async function initializeData(element: ElementId, category: Category, request: P
       PHASE185_RESET_TABLES.some((table) => resetIdentities[table]?.next_id !== 1 || resetIdentities[table]?.is_called !== false)) {
     throw new Error(`Phase185 case reset did not confirm every identity sequence starts at next id 1: ${JSON.stringify(resetIdentities)}`);
   }
+  if (JSON.stringify(canonicalize(reset.search_reset)) !== JSON.stringify(canonicalize(PHASE185_SEARCH_RESET))) {
+    throw new Error(`Phase185 case reset did not confirm its exact disposable search reset: ${JSON.stringify(reset.search_reset)}`);
+  }
   const scenario = scenarioFor(element, category);
-  let identity = `phase185:${element}:${category}:case-reset=phase185-case-reset-v1:tables=${PHASE185_RESET_TABLES.join(",")}:identity=next-id-1,is-called-false`;
+  let identity = `phase185:${element}:${category}:case-reset=phase185-case-reset-v2:tables=${PHASE185_RESET_TABLES.join(",")}:identity=next-id-1,is-called-false:search-reset=phase185-search-reset-v1`;
   if (scenario) {
     const seed = await seedScenario(request, scenario);
     identity += `:${scenario}:${seed.tenant_id ?? "none"}:${Object.keys(seed.products).sort().join(",")}`;
@@ -879,10 +891,11 @@ async function captureActualState(page: Page, testInfo: TestInfo, element: Eleme
     operational_scenarios: ["all_green", "degraded", "incident", "empty", "phase185_partial_catalog", "phase185_one_failed"],
     saved_search_prefix: "phase185-heldout-",
     case_reset: {
-      protocol: "phase185-case-reset-v1",
+      protocol: "phase185-case-reset-v2",
       scenario: "phase185_case_reset",
       tables: [...PHASE185_RESET_TABLES],
-      identities: { next_id: 1, is_called: false }
+      identities: { next_id: 1, is_called: false },
+      search: PHASE185_SEARCH_RESET
     },
     clock_sha256: clock.sha256
   };

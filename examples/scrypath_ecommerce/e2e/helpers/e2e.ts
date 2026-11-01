@@ -34,6 +34,14 @@ type SeedResult = {
   missing_field_product_name?: string;
   reset_tables?: string[];
   identity_state?: Record<string, { next_id: number; is_called: boolean }>;
+  search_reset?: {
+    protocol: string;
+    indexes: { schema: string; live_index: string; target_index: string }[];
+    live_documents: string;
+    targets: string;
+    target_tasks: string;
+    target_task_history: { indexes: string; statuses: string[] };
+  };
 };
 
 /**
@@ -171,7 +179,8 @@ export async function seedScenario(
     missing_field_product_name: result.missing_field_product_name ?? null,
     failed_count: result.failed_count ?? null,
     reset_tables: result.reset_tables ?? null,
-    identity_state: result.identity_state ?? null
+    identity_state: result.identity_state ?? null,
+    search_reset: result.search_reset ?? null
   });
 
   return result;
