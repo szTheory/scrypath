@@ -187,6 +187,38 @@ test("CLI rejects a bad standalone or host artifact independently", (t) => {
   assert.match(result.stderr, /mounted host.*default palette/);
 });
 
+test("static dependency boundary mode does not require the runtime bundle helper", (t) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), `scrypath-static-boundary-${randomUUID()}-`));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const relativeFiles = [
+    "examples/scrypath_ecommerce/Dockerfile",
+    "examples/scrypath_ecommerce/docker-e2e-entrypoint.sh",
+    "examples/scrypath_ecommerce/scripts/phase173-standalone-entrypoint.sh",
+    "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh",
+    "examples/scrypath_ecommerce/config/prod.exs",
+    "examples/scrypath_ecommerce/config/runtime.exs",
+    "scrypath_ops/config/prod.exs",
+    "scrypath_ops/config/runtime.exs",
+  ];
+
+  for (const relative of relativeFiles) {
+    const destination = path.join(root, relative);
+    mkdirSync(path.dirname(destination), { recursive: true });
+    cpSync(path.join(repositoryRoot, relative), destination);
+  }
+
+  const checker = path.join(root, "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh");
+  const result = spawnSync("bash", [checker, "--static-contract-only"], {
+    cwd: root,
+    encoding: "utf8",
+    env: { ...process.env, SCRYPATH_DEPENDENCY_BOUNDARY_ROOT: root },
+  });
+  if (result.status !== 0) {
+    throw new Error(`${result.stdout}${result.stderr}`);
+  }
+  assert.match(result.stdout, /Static dependency boundary contract passed/);
+});
+
 test("both configured Tailwind profiles remove forced default palette utilities", { timeout: 20 * 60 * 1000 }, (t) => {
   const runId = randomUUID().replaceAll("-", "");
   const image = `scrypath-ui-bundle-contract-${process.pid}-${runId}`;
