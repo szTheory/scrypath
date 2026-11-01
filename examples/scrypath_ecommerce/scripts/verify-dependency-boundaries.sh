@@ -33,8 +33,7 @@ for required_file in \
   "$host_prod_config" \
   "$host_runtime_config" \
   "$ops_prod_config" \
-  "$ops_runtime_config" \
-  "$bundle_contract_helper"; do
+  "$ops_runtime_config"; do
   [[ -f "$required_file" ]] || fail "required source is missing: ${required_file#"$repo_root/"}"
 done
 
@@ -183,6 +182,7 @@ done
 printf 'Static dependency boundary contract passed (4 current-source assets, output-only handoff, clean runtime entrypoints).\n'
 
 if [[ "$mode" == "--runtime" ]]; then
+  [[ -f "$bundle_contract_helper" ]] || fail "bundle utility contract helper is missing: scripts/ci/ui_bundle_contract.cjs"
   command -v docker >/dev/null 2>&1 || fail "Docker CLI is required for --runtime"
   command -v curl >/dev/null 2>&1 || fail "curl is required for --runtime"
   command -v node >/dev/null 2>&1 || fail "Node.js is required for source identity checks"
