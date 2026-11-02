@@ -131,6 +131,10 @@ Agents should default to the repo's **green-main release train** posture:
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
+## Docker resource cleanup
+
+For Docker-backed work, use task-scoped resource names or labels and clean up temporary containers, images, networks, and owned build cache when the task finishes or fails. Remove per-iteration and candidate images as soon as their comparison is complete; do not leave unbounded snapshots behind. Before handing off, check `docker system df` and confirm task-scoped resources are gone. Never prune another project's resources or volumes without a clear task-specific reason; volumes may contain data and must be reviewed separately.
+
 ## Worktree continuity
 
 Read [.planning/reference/UI-WORKTREE-LEARNINGS.md](.planning/reference/UI-WORKTREE-LEARNINGS.md) before a worktree handoff or retained-preview work. Dirty edits belong to their checkout: inventory intended source changes and checkpoint them in an owned commit or a scoped patch before branching, then verify their disposition in the destination. Preserve unrelated edits; never transfer an older file wholesale over newer behavior without reconciliation. Use an explicit absolute working directory for edits and commands. After a squash merge, verify the actual merged ref and relevant file-tree parity before calling the preview latest; commit SHA differences alone do not prove missing work.
