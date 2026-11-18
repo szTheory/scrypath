@@ -234,11 +234,11 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example` followed by `mix verify.phoenix_example --package`, covering path-backed and package-backed live consumers. |
-| **`ops-ui-path` / `ops-ui`** | Path-scoped optional-app proof. `mix verify.ops_ui` runs the root boundary integration contract and the isolated Postgres-backed ScrypathOps suite. |
+| **`ops-ui-path` / `ops-ui`** | Required merge gate that runs only when a change can affect the optional app, the core library, brand or fixture inputs, or CI scripts, and reports success when skipped. `mix verify.ops_ui` runs the root boundary integration contract and the isolated Postgres-backed ScrypathOps suite. |
 | **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
-Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, and **`ecommerce-mounted`** as required merge gates. The compatibility, deep-quality, Phoenix example, optional operator app, and full E2E lanes remain advisory or path-scoped as labeled.
+Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, **`ecommerce-mounted`**, and **`ops-ui (path-scoped)`** as required merge gates. The compatibility, deep-quality, Phoenix example, and full E2E lanes remain advisory as labeled.
 
 ### Exact-source cache acceptance probes
 

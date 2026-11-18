@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify-latest-published-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       published: ${{ steps.resolve-version.outputs.published }}
       version: ${{ steps.resolve-version.outputs.version }}

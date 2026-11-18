@@ -18,7 +18,7 @@ permissions:
 jobs:
   publish-scrypath:
     name: Publish scrypath recovery
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
 

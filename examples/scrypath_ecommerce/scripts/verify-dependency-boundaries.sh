@@ -90,7 +90,7 @@ done
 
 [[ "$(awk '$1 == "FROM" { stage = $NF } END { print stage }' "$dockerfile")" == runtime_test ]] ||
   fail "runtime_test must remain the default final Docker stage"
-grep -Fq 'FROM hexpm/elixir:1.19.0-erlang-28.1-debian-bookworm-20260518 AS beam_base' "$dockerfile" ||
+grep -Fq 'FROM hexpm/elixir:1.19.0-erlang-28.1-debian-bookworm-20260518@sha256:4b697de76f1f050bcb33a7ab188ee25139e320403494a4569316e1ba6524ef47 AS beam_base' "$dockerfile" ||
   fail "beam_base must retain the supported Elixir/OTP base image"
 
 asset_stage="$(docker_stage asset_builder)" || fail "asset_builder stage is missing"

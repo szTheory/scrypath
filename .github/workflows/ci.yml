@@ -33,7 +33,7 @@ concurrency:
 jobs:
   core:
     name: core (required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
       # UAT-09 asserts a release-history subject from the root test suite.
@@ -136,7 +136,7 @@ jobs:
 
   package:
     name: package (required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -159,7 +159,7 @@ jobs:
 
   repository-contracts:
     name: repository-contracts (required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
       # UAT-09 checks a release-history subject, so the contract suite requires
@@ -198,7 +198,7 @@ jobs:
 
   backend:
     name: backend (required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       meilisearch:
         image: getmeili/meilisearch:v1.15
@@ -254,7 +254,7 @@ jobs:
 
   compatibility:
     name: compatibility (advisory)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     strategy:
@@ -288,7 +288,7 @@ jobs:
 
   deep-quality:
     name: deep-quality (advisory)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: deep-quality-test}
     steps:
@@ -321,7 +321,7 @@ jobs:
 
   phoenix-example:
     name: phoenix-example (advisory)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     services:
       postgres:
@@ -354,7 +354,7 @@ jobs:
       - run: mix verify.phoenix_example --package
 
   ops-ui-path:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs: {run: "${{ steps.check.outputs.run }}"}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -363,13 +363,14 @@ jobs:
         run: |
           if [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main ]]; then echo run=true >> "$GITHUB_OUTPUT"; exit 0; fi
           if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then git fetch origin "$GITHUB_BASE_REF" --depth=1; fi
-          if [[ "$GITHUB_EVENT_NAME" == pull_request ]] && git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep -qE '^(scrypath_ops/|lib/|dev/|mix\.exs|mix\.lock)'; then echo run=true >> "$GITHUB_OUTPUT"; else echo run=false >> "$GITHUB_OUTPUT"; fi
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]] && git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" | grep -qE '^(scrypath_ops/|lib/|dev/|config/|priv/|brand/|brandbook/|language/|fixtures/|scripts/ci/|test/release/|mix\.exs|mix\.lock|\.github/workflows/ci\.yml)'; then echo run=true >> "$GITHUB_OUTPUT"; else echo run=false >> "$GITHUB_OUTPUT"; fi
 
   ops-ui:
     name: ops-ui (path-scoped)
     needs: ops-ui-path
-    if: needs.ops-ui-path.outputs.run == 'true'
-    runs-on: ubuntu-latest
+    # Required check: a skipped job reports success. Run (fail closed) if the path job did not succeed.
+    if: ${{ !cancelled() && (needs.ops-ui-path.result != 'success' || needs.ops-ui-path.outputs.run == 'true') }}
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16-alpine
@@ -402,7 +403,7 @@ jobs:
 
   ecommerce-mounted:
     name: ecommerce-mounted (required)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
       BUILDER_ID: scrypath-mounted-${{ github.run_id }}-${{ github.run_attempt }}
@@ -542,7 +543,7 @@ jobs:
   coverage:
     name: coverage (advisory)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: coverage-test}
     outputs:
@@ -586,7 +587,7 @@ jobs:
     name: closeout-attestation
     if: ${{ always() && github.event_name == 'workflow_dispatch' }}
     needs: [core, package, repository-contracts, backend, ecommerce-mounted, coverage]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Verify exact-SHA closeout inputs
         env:
@@ -634,7 +635,7 @@ jobs:
   ecommerce-e2e:
     name: ecommerce-e2e (advisory)
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     timeout-minutes: 30
     env:
