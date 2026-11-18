@@ -20,7 +20,7 @@
     "test:e2e:admin-light-parity": "node e2e/admin-light-baseline-check.mjs"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.3",
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.54.2",
     "pixelmatch": "^5.3.0",
     "pngjs": "^7.0.0"
