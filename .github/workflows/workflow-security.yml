@@ -2,40 +2,34 @@ name: Workflow Security
 
 on:
   pull_request:
-    paths: [".github/**"]
+    paths: [".github/**", "scripts/ci/check_action_pins.sh"]
   push:
     branches: [main]
-    paths: [".github/**"]
+    paths: [".github/**", "scripts/ci/check_action_pins.sh"]
 
 permissions:
   contents: read
 
 jobs:
   actionlint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
 
   action-pins:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Require immutable action pins
-        run: |
-          while IFS= read -r action_ref; do
-            if [[ ! "$action_ref" =~ @[0-9a-f]{40}$ ]]; then
-              echo "Unpinned action reference: $action_ref" >&2
-              exit 1
-            fi
-          done < <(sed -nE 's/^[[:space:]]*-[[:space:]]*uses:[[:space:]]*([^[:space:]#]+).*$/\1/p' .github/workflows/*.yml)
+        run: bash scripts/ci/check_action_pins.sh .github/workflows/*.yml
 
   dependency-review:
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
       pull-requests: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0

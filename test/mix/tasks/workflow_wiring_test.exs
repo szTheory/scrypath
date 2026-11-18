@@ -1159,6 +1159,59 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "CI hygiene (runner pin, token scope, action pins, ops-ui gate)" do
+    @workflow_files Path.wildcard(".github/workflows/*.yml")
+    @pin_script "scripts/ci/check_action_pins.sh"
+
+    test "no workflow floats on ubuntu-latest" do
+      offenders = for f <- @workflow_files, File.read!(f) =~ "ubuntu-latest", do: f
+      assert offenders == [], "pin runs-on to a named image: #{inspect(offenders)}"
+    end
+
+    test "every workflow declares a top-level permissions block" do
+      for f <- @workflow_files do
+        assert File.read!(f) =~ ~r/^permissions:\n  [a-z-]+: (read|write)/m,
+               "#{f} must declare top-level permissions"
+      end
+    end
+
+    test "action pin script rejects an unpinned uses line under a named step" do
+      tmp = Path.join(System.tmp_dir!(), "pins-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
+      bad = Path.join(tmp, "bad.yml")
+      sha = String.duplicate("a", 40)
+
+      File.write!(bad, "steps:\n  - name: x\n    uses: actions/checkout@v4\n")
+      assert {out, 1} = System.cmd("bash", [@pin_script, bad], stderr_to_stdout: true)
+      assert out =~ "Unpinned action reference: actions/checkout@v4"
+
+      File.write!(bad, "steps:\n  - name: x\n    uses: actions/checkout@#{sha} # v7\n")
+      assert {_, 0} = System.cmd("bash", [@pin_script, bad], stderr_to_stdout: true)
+
+      assert {_, 0} =
+               System.cmd("bash", [@pin_script | @workflow_files], stderr_to_stdout: true)
+    end
+
+    test "ops-ui is a required context that reports instead of being path-filtered" do
+      ci = File.read!(@ci_yml)
+      ops_ui = workflow_job_block(ci, "ops-ui")
+
+      # Required contexts must report on every PR: no workflow-level path filter in ci.yml.
+      on_block = ci |> String.split("\npermissions:") |> hd()
+      refute on_block =~ ~r/^\s+paths(-ignore)?:/m
+      assert ops_ui =~ "name: ops-ui (path-scoped)"
+      assert ops_ui =~ "needs.ops-ui-path.result != 'success'"
+
+      path_job = workflow_job_block(ci, "ops-ui-path")
+
+      for dir <- ~w(scrypath_ops/ lib/ dev/ brand/ language/ fixtures/ scripts/ci/ test/release/) do
+        assert path_job =~ dir, "ops-ui path gate must cover #{dir}"
+      end
+    end
+  end
+
   defp assert_oban_suppressions!(source, path) do
     {_ast, {sites, tokens}} =
       source
