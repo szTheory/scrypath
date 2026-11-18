@@ -121,7 +121,7 @@ defmodule Scrypath.MixProject do
       {:telemetry, "~> 1.0"},
       {:req, "~> 0.6.1 or ~> 0.7"},
       {:jason, "~> 1.4"},
-      {:plug, "~> 1.19.5", only: :test},
+      {:plug, "~> 1.20.4", only: :test},
       {:stream_data, "~> 1.3", only: :test},
       {:ecto_sqlite3, "~> 0.22", only: :test, runtime: false},
       {:postgrex, "~> 0.22", only: :test, runtime: false},
