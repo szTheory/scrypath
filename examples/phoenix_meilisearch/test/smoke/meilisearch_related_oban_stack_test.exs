@@ -65,12 +65,14 @@ defmodule ScrypathDemo.Smoke.MeilisearchRelatedObanStackTest do
     # Rename the author via the Blog context (oban fan-out path).
     # fan-out :oban enqueues Scrypath.Sync.RelatedWorker (not the UpsertWorker used
     # by sync_record). Under `config :scrypath_demo, Oban, testing: :inline` the
-    # RelatedWorker job runs in-process.
+    # RelatedWorker job runs in-process. `repo:` lets the worker reload the Author
+    # by id (the demo sets no `:scrypath` repo default).
     sync_opts = [
       backend: Scrypath.Meilisearch,
       sync_mode: :oban,
       oban: ScrypathDemo.Oban,
       oban_queue: :scrypath,
+      repo: ScrypathDemo.Repo,
       index_prefix: prefix,
       meilisearch_url: url
     ]

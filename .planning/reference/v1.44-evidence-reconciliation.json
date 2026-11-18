@@ -1,0 +1,278 @@
+{
+  "milestone": "v1.44",
+  "source_sha": "433c8343f92df761398eac07c4c92298e4b9b160",
+  "kind": "planning-only successor reconciliation",
+  "summary_updates": [
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-01-SUMMARY.md",
+      "requirements": "[TEST-06]",
+      "prior_sha256": "9860b67b5b2fe8c1a8a7068d718f40d3e6fbb18dbcc37138008bc87216e5a7b0",
+      "updated_sha256": "b1c3395a26a8ac8071276ab4b07ed1e605a7922c9cf1ca30568cef015e326e84"
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-02-SUMMARY.md",
+      "requirements": "[TEST-06]",
+      "prior_sha256": "00e477e139b80fdb95197bb8da9301a28f9be49d5a865fc4711e8e33823b9eb2",
+      "updated_sha256": "6506456fdd1307cbd8ac2d5048064b6c33b496e000de5b151eff20ac11af4e50"
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-03-SUMMARY.md",
+      "requirements": "[PAGE-01, PAGE-02, LOAD-03]",
+      "prior_sha256": "97854660c45ea2b73f47644f4f60b491b0d44344636341dcb08036112fe628bd",
+      "updated_sha256": "9e4cab699798959091cef418b6b2796e348e4b8c05d47fcea2cc462e9ceb9ff4"
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-04-SUMMARY.md",
+      "requirements": "[LOAD-01, LOAD-02, LOAD-03]",
+      "prior_sha256": "c6b81c781ec302fe5f08db01e98ba4e428574e611e930e2d8bbf8e2f15ff6d6d",
+      "updated_sha256": "8362b2815200b313ba1ee7f0dd6ad23df8db4971e79edf4f23394f981aeb94c1"
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-05-SUMMARY.md",
+      "requirements": "[LOAD-01, LOAD-02, PAGE-02, TEST-06]",
+      "prior_sha256": "60f2d69d62075618b85a902638a5ea06b25312759aeb3cf58c2c6c18928d0992",
+      "updated_sha256": "44e42c23f5b29970ccbefad05e0459a0a8718083d46c2376fab2ee706fc199db"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-SUMMARY.md",
+      "requirements": "[PAGE-03, FAN-01]",
+      "prior_sha256": "c9554e5a5ef7add561c4ab06afd4ce833fd203b2617634904b39eed83d685417",
+      "updated_sha256": "ad080e3be6aa787cc2bf3c864b13830da3ea3c43b752264584fd32703860f9ce"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-SUMMARY.md",
+      "requirements": "[PAGE-03]",
+      "prior_sha256": "594d73a06bac8bbef8b0010186232033669869a0435dcee59c1f1fc248c9181a",
+      "updated_sha256": "bee0624d77bf87ee72184f25ddc1f235e8cd84d233d22d89df57071e0b9a44b6"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-SUMMARY.md",
+      "requirements": "[PAGE-03, FAN-02]",
+      "prior_sha256": "8d8f78c6496d9773ccfe3c0c7aeb22bec60432e5e223f2834882824c643bf654",
+      "updated_sha256": "b98b96389546e5cb5ea32c56bf787e49e43d993b6c1d099b8aff17e153503e5a"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-SUMMARY.md",
+      "requirements": "[FAN-03, PAGE-03]",
+      "prior_sha256": "db3921cc47a3a43bf5c15c9457ebb4a226818aad64ff49bd5eefa6eb053f0bf5",
+      "updated_sha256": "b0a0b6f06a6b284cd1457dc7a606137ff967a1b8a0ec81b17a390bed3086d2a9"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-SUMMARY.md",
+      "requirements": "[FAN-01, FAN-02, FAN-03, PAGE-03]",
+      "prior_sha256": "a1a35d93d13b63310b7e24a2679473667c3d2944891668ccafd36d2d12e9ab1e",
+      "updated_sha256": "835241ebaafb1cb47614532f51e427f9efec866c67083d39897b0797617c3ebe"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md",
+      "requirements": "[FAN-01, PAGE-03, FAN-02, FAN-03]",
+      "prior_sha256": "7b1255bc4092d416c3cc2f140b0308f1d2caf9163c9ed420418ce2ab007260ce",
+      "updated_sha256": "c1ff9c91598fadf171686c9114625962c1b9da06d07f40694b5b5e2ad9fcd528"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-SUMMARY.md",
+      "requirements": "[FAN-01]",
+      "prior_sha256": "0117e4a9ed2e273077b1277cf79578607a3db93d6d5b87b87b445954e237ce7a",
+      "updated_sha256": "3903e65067c6ecf89bfee55500036d7aa1873fe61c925ce05aead7edbd7587da"
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-01-SUMMARY.md",
+      "requirements": "[OBS-01, OBS-02]",
+      "prior_sha256": "6c980c3a67684228f3ff679fadf59005f3bb82ec1030bf701d01254bbb3e7bb3",
+      "updated_sha256": "fb25c23e74fecf2b651cc287e3722b5c9d0a5427c200d96073e3dba9a6e85f98"
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-02-SUMMARY.md",
+      "requirements": "[OBS-03]",
+      "prior_sha256": "7203fd4573158aad78adba46e9d1487966bdb46dcb5d1ad42d03510a757c23d5",
+      "updated_sha256": "91ed80a0504b6f04d432076af595359a78841cfaf2e58a3ce555b931c3301d93"
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-03-SUMMARY.md",
+      "requirements": "[OBS-03]",
+      "prior_sha256": "c7f375c5f9e2408e22696462811024a1b02b502aaf9b13a0a7fde0289573dc93",
+      "updated_sha256": "855ff5f2a3a5c8b57ae97b04e9de07af818fe3043c6a1bcf74bc502265e3e8c3"
+    }
+  ],
+  "summaries": [
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-01-SUMMARY.md",
+      "requirements_completed": [
+        "TEST-06"
+      ]
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-02-SUMMARY.md",
+      "requirements_completed": [
+        "TEST-06"
+      ]
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-03-SUMMARY.md",
+      "requirements_completed": [
+        "PAGE-01",
+        "PAGE-02",
+        "LOAD-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-04-SUMMARY.md",
+      "requirements_completed": [
+        "LOAD-01",
+        "LOAD-02",
+        "LOAD-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-05-SUMMARY.md",
+      "requirements_completed": [
+        "LOAD-01",
+        "LOAD-02",
+        "PAGE-02",
+        "TEST-06"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-01-SUMMARY.md",
+      "requirements_completed": [
+        "PAGE-03",
+        "FAN-01"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-02-SUMMARY.md",
+      "requirements_completed": [
+        "PAGE-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-03-SUMMARY.md",
+      "requirements_completed": [
+        "PAGE-03",
+        "FAN-02"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-04-SUMMARY.md",
+      "requirements_completed": [
+        "FAN-03",
+        "PAGE-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-05-SUMMARY.md",
+      "requirements_completed": [
+        "FAN-01",
+        "FAN-02",
+        "FAN-03",
+        "PAGE-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-06-SUMMARY.md",
+      "requirements_completed": [
+        "FAN-01",
+        "PAGE-03",
+        "FAN-02",
+        "FAN-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-07-SUMMARY.md",
+      "requirements_completed": [
+        "FAN-01"
+      ]
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-01-SUMMARY.md",
+      "requirements_completed": [
+        "OBS-01",
+        "OBS-02"
+      ]
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-02-SUMMARY.md",
+      "requirements_completed": [
+        "OBS-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-03-SUMMARY.md",
+      "requirements_completed": [
+        "OBS-03"
+      ]
+    },
+    {
+      "path": ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-01-SUMMARY.md",
+      "requirements_completed": [
+        "HYG-02"
+      ]
+    },
+    {
+      "path": ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-02-SUMMARY.md",
+      "requirements_completed": [
+        "HYG-01"
+      ]
+    }
+  ],
+  "requirements_count": 15,
+  "summary_count": 17,
+  "phase_verifications": [
+    {
+      "path": ".planning/phases/178-loader-routed-backfill-and-full-key-paging/178-VERIFICATION.md",
+      "sha256": "b335e8aba455350c30def0db4175bf6b0d993d0081fcfcc7f16c5c95984e3cb8"
+    },
+    {
+      "path": ".planning/phases/179-bounded-id-lists-and-related-sync-parity/179-VERIFICATION.md",
+      "sha256": "1f53f19b794e2592c840e8b9130e49cabc52a51188063cd2ce03fb05c2445484"
+    },
+    {
+      "path": ".planning/phases/180-oban-worker-telemetry/180-VERIFICATION.md",
+      "sha256": "da8839323d40a39b4e9adf12ac8fe668abcd54880d5bd3ca02b0b51f72e10b78"
+    },
+    {
+      "path": ".planning/phases/181-schema-hook-contract-and-no-oban-build/181-VERIFICATION.md",
+      "sha256": "6fbf044ce9f40ca9464ba96d46b14cefd58b8fdffba3568a828266f0c8a196ac"
+    }
+  ],
+  "log_receipts": [
+    {
+      "kind": "core",
+      "job_id": 121736431698,
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40369591304/job/121736431698",
+      "downloaded_text_sha256": "435fc7f4ce6bcc4f76c86f9f42f767b98d5fb7e6efe7130bc688160bfca5e7b8",
+      "local_cache": "/private/tmp/scrypath-v1.44-audit-core.log",
+      "normalization": "ANSI color sequences removed; hashes identify normalized downloaded text, not a GitHub artifact digest"
+    },
+    {
+      "kind": "backend",
+      "job_id": 121736431228,
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40369591304/job/121736431228",
+      "downloaded_text_sha256": "32a21400c3bb3ff56c5e22a11c062177fc677f35b48fd38d4ed925768dcd7546",
+      "local_cache": "/private/tmp/scrypath-v1.44-audit-backend.log",
+      "normalization": "ANSI color sequences removed; hashes identify normalized downloaded text, not a GitHub artifact digest"
+    },
+    {
+      "kind": "e2e",
+      "job_id": 121736431802,
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40369591304/job/121736431802",
+      "downloaded_text_sha256": "60331c90bf9e0793545f645c46780bb6596aeb80ea742d7f31e51883fa6355ae",
+      "local_cache": "/private/tmp/scrypath-v1.44-audit-e2e.log",
+      "normalization": "ANSI color sequences removed; hashes identify normalized downloaded text, not a GitHub artifact digest"
+    },
+    {
+      "kind": "deep",
+      "job_id": 121736431669,
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40369591304/job/121736431669",
+      "downloaded_text_sha256": "f890634686b46acfcfe436e4e626f8cfe617d8a452825e21ee5db581510e0190",
+      "local_cache": "/private/tmp/scrypath-v1.44-audit-deep.log",
+      "normalization": "ANSI color sequences removed; hashes identify normalized downloaded text, not a GitHub artifact digest"
+    }
+  ],
+  "limits": [
+    "Completion lists restored from each completed plan declaration, summary implementation/evidence and passed phase verification; no source behavior changed.",
+    "178-04 frontmatter scalars were quoted to repair malformed YAML; all 17 summaries now parse through GSD.",
+    "Existing covered-file fingerprints are historical phase-source snapshots and are not recomputed or claimed current after this metadata repair.",
+    "Phase 180 remains Nyquist PARTIAL; discovery did not run validate-phase or override its false flag."
+  ]
+}

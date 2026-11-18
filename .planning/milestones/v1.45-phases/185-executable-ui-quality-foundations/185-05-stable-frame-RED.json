@@ -1,0 +1,26 @@
+{
+  "schema": "scrypath.phase185.stable-frame-red.v1",
+  "result": "RED",
+  "exercise": "existing captureViewportImage one-shot implementation with a successful screenshot adapter",
+  "assertion_failure": "expected at least two captured samples, observed 1",
+  "screenshot_calls": 1,
+  "expected_minimum_samples": 2,
+  "returned_image_sha256": "b67ee1da6900d491291035e4d8d94bcfba390bad48482e820da5300872fc244d",
+  "stability_metadata_present": false,
+  "timestamp": "2026-10-31T21:30:21.257Z",
+  "baseline_source_sha": "53fa522884706bff9f71fb229f579fa5f2e8e096",
+  "red_probe": {
+    "result": "RED",
+    "script_path": "/private/tmp/scrypath-phase185-execution/stable-frame-red-runner.mjs",
+    "command": [
+      "/Users/jon/.asdf/installs/nodejs/26.10.0/bin/node",
+      "--input-type=module",
+      "-e",
+      "\nimport assert from 'node:assert/strict';\nimport { createHash } from 'node:crypto';\nimport { pathToFileURL } from 'node:url';\nconst { captureViewportImage } = await import(pathToFileURL(\"/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce/e2e/ui-review.mjs\"));\nconst geometry = { width: 390, height: 844, dpr: 1, scale: 1, scrollX: 0, scrollY: 0, documentWidth: 390, documentHeight: 959 };\nlet screenshotCalls = 0;\nconst page = { evaluate: async () => ({ ...geometry }), screenshot: async () => { screenshotCalls += 1; return Buffer.from('single-one-shot-image'); } };\nconst image = await captureViewportImage(page, { width: 390, height: 844 });\nconsole.log(JSON.stringify({ screenshotCalls, returnedImageSha256: createHash('sha256').update(image).digest('hex') }));\nassert.ok(screenshotCalls >= 2, 'expected two consecutive exact screenshot samples from the one-shot capture path');\n"
+    ],
+    "cwd": "/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s",
+    "raw_output": "{\"screenshotCalls\":1,\"returnedImageSha256\":\"b67ee1da6900d491291035e4d8d94bcfba390bad48482e820da5300872fc244d\"}\nnode:internal/modules/run_main:111\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: expected two consecutive exact screenshot samples from the one-shot capture path\n    at file:///Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/[eval1]:11:8 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v26.10.0\n",
+    "process_exit_code": 1,
+    "termination_signal": null
+  }
+}

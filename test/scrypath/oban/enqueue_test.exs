@@ -5,6 +5,12 @@ defmodule Scrypath.Oban.EnqueueTest do
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task
 
+  defmodule CustomIdWithoutLoader do
+    use Scrypath, fields: [:title]
+
+    def search_document_id(record), do: "post:#{record.id}"
+  end
+
   defmodule RecordingBackend do
     @behaviour Scrypath.Backend
 
@@ -48,6 +54,159 @@ defmodule Scrypath.Oban.EnqueueTest do
     def insert(changeset) do
       job = Ecto.Changeset.apply_changes(changeset)
       {:ok, %{job | id: 902, state: "retryable"}}
+    end
+  end
+
+  defmodule CountingOban do
+    def insert(changeset) do
+      send(self(), {:inserted, changeset})
+      job = Ecto.Changeset.apply_changes(changeset)
+
+      {:ok, %{job | id: System.unique_integer([:positive]), state: "available"}}
+    end
+  end
+
+  defmodule FailingSecondOban do
+    def insert(changeset) do
+      count = Process.get(:failing_second_oban_count, 0) + 1
+      Process.put(:failing_second_oban_count, count)
+      send(self(), {:inserted, changeset})
+
+      if count == 2 do
+        {:error, :boom}
+      else
+        job = Ecto.Changeset.apply_changes(changeset)
+        {:ok, %{job | id: System.unique_integer([:positive]), state: "available"}}
+      end
+    end
+  end
+
+  defp oban_opts(oban) do
+    [
+      backend: RecordingBackend,
+      sync_mode: :oban,
+      repo: FakeRepo,
+      oban: oban,
+      oban_queue: :search_sync
+    ]
+  end
+
+  defp inserted_id_lists do
+    Stream.repeatedly(fn ->
+      receive do
+        {:inserted, changeset} -> Ecto.Changeset.get_field(changeset, :args)["document_ids"]
+      after
+        0 -> nil
+      end
+    end)
+    |> Enum.take_while(&(&1 != nil))
+  end
+
+  test "a custom document id without search_records/2 raises before inserting an upsert" do
+    assert_raise ArgumentError, ~r/defines search_document_id\/1.*Define search_records\/2/, fn ->
+      Scrypath.sync_record(
+        CustomIdWithoutLoader,
+        %{id: 7, title: "Queued"},
+        oban_opts(RecordingOban)
+      )
+    end
+
+    refute_received {:oban_insert, _job}
+  end
+
+  describe "chunked enqueue (D-04)" do
+    test "2,500 records under sync_mode: :oban enqueue three bounded jobs and one result" do
+      records = Enum.map(2500..1//-1, &%SearchablePost{id: &1, title: "T#{&1}", body: "B"})
+
+      assert {:ok, result} =
+               Scrypath.sync_records(SearchablePost, records, oban_opts(CountingOban))
+
+      id_lists = inserted_id_lists()
+      assert length(id_lists) == 3
+      assert Enum.all?(id_lists, &(length(&1) <= 1000))
+      assert Enum.all?(id_lists, &(&1 == Enum.sort_by(&1, fn id -> to_string(id) end)))
+      all_ids = Enum.concat(id_lists)
+      assert length(all_ids) == 2500
+      assert Enum.sort(all_ids) == Enum.to_list(1..2500)
+
+      assert result.document_count == 2500
+      assert result.status == :accepted
+      assert length(result.tasks) == 3
+      assert result.job == List.last(result.tasks)
+      assert Enum.all?(result.tasks, &(&1.conflict? == false))
+      assert Enum.uniq_by(result.tasks, & &1.id) |> length() == 3
+    end
+
+    test "2,500 ids under delete_documents enqueue three delete jobs and one result" do
+      ids = Enum.to_list(1..2500)
+
+      assert {:ok, result} =
+               Scrypath.delete_documents(SearchablePost, ids, oban_opts(CountingOban))
+
+      id_lists = inserted_id_lists()
+      assert length(id_lists) == 3
+      assert Enum.all?(id_lists, &(length(&1) <= 1000))
+      assert Enum.sort(Enum.concat(id_lists)) == ids
+
+      assert result.document_count == 2500
+      assert length(result.tasks) == 3
+      assert Enum.all?(result.tasks, &(&1.worker == "Scrypath.Oban.DeleteWorker"))
+      assert result.job == List.last(result.tasks)
+    end
+
+    test "a failed chunk insert returns the bare error and stops later inserts" do
+      ids = Enum.to_list(1..2500)
+
+      assert {:error, :boom} =
+               Scrypath.Oban.Enqueue.enqueue_upsert(
+                 SearchablePost,
+                 ids,
+                 oban_opts(FailingSecondOban)
+               )
+
+      assert length(inserted_id_lists()) == 2
+    end
+
+    test "every chunk job carries the shared unique policy" do
+      assert Scrypath.Oban.Enqueue.unique_opts() ==
+               [period: :infinity, states: [:available, :scheduled, :retryable]]
+
+      assert {:ok, _result} =
+               Scrypath.Oban.Enqueue.enqueue_upsert(
+                 SearchablePost,
+                 Enum.to_list(1..1500),
+                 oban_opts(CountingOban)
+               )
+
+      changesets =
+        for _ <- 1..2 do
+          assert_received {:inserted, changeset}
+          changeset
+        end
+
+      for changeset <- changesets do
+        unique = Ecto.Changeset.get_field(changeset, :unique)
+        assert unique[:states] == [:available, :scheduled, :retryable]
+        assert unique[:period] == :infinity
+      end
+    end
+
+    test "a single chunk inserts once and keeps today's map plus one task" do
+      records = [%SearchablePost{id: 2, title: "T", body: "B"}, %SearchablePost{id: 1}]
+
+      assert {:ok, result} =
+               Scrypath.sync_records(SearchablePost, records, oban_opts(CountingOban))
+
+      assert [[1, 2]] = inserted_id_lists()
+      assert result.document_ids == [1, 2]
+      assert result.document_count == 2
+      assert result.mode == :oban
+      assert result.status == :accepted
+      assert result.index =~ ~r/_searchable_post$/
+      assert result.oban == %{queue: :search_sync, max_attempts: 8, name: CountingOban}
+      assert result.job.conflict? == false
+      assert result.job.worker == "Scrypath.Oban.UpsertWorker"
+      assert result.tasks == [result.job]
     end
   end
 
@@ -130,6 +289,74 @@ defmodule Scrypath.Oban.EnqueueTest do
     assert job.args["document_count"] == 2
     assert job.args["document_ids"] == ["post:7", "post:8"]
     refute Map.has_key?(job.args, "documents")
+  end
+
+  test "enqueue dedupes ids in the form the job stores them (IN-01)" do
+    assert {:ok, %Result{} = result} =
+             Scrypath.Oban.Enqueue.enqueue_delete(SearchablePost, [:a, "a", 1, "1", :b],
+               backend: RecordingBackend,
+               sync_mode: :oban,
+               oban: RecordingOban,
+               oban_queue: :search_sync
+             )
+
+    assert_received {:oban_insert, job}
+    assert job.args["document_ids"] == [1, "1", "a", "b"]
+    assert job.args["document_count"] == 4
+    assert result.document_ids == [1, "1", "a", "b"]
+    assert result.document_count == 4
+  end
+
+  describe "ids the worker would cancel are rejected at enqueue (WR-06)" do
+    test "sync_records/3 raises for a struct with id: nil and inserts nothing" do
+      posts = [%SearchablePost{id: 1, title: "Saved"}, %SearchablePost{id: nil, title: "New"}]
+
+      assert_raise ArgumentError, ~r/document ids must be integers or strings, got nil/, fn ->
+        Scrypath.sync_records(SearchablePost, posts, oban_opts(RecordingOban))
+      end
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "delete_record/3 on a struct with id: nil is a noop, never an accepted job" do
+      # List.wrap(nil) leaves no id, so there is nothing to delete and nothing to enqueue.
+      assert {:ok, %{status: :noop, document_count: 0}} =
+               Scrypath.delete_record(
+                 SearchablePost,
+                 %SearchablePost{id: nil},
+                 oban_opts(RecordingOban)
+               )
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "delete_documents/3 raises for nil, float and boolean ids" do
+      for bad <- [nil, 1.5, true] do
+        assert_raise ArgumentError, ~r/must be integers or strings/, fn ->
+          Scrypath.delete_documents(SearchablePost, [1, bad], oban_opts(RecordingOban))
+        end
+      end
+
+      refute_received {:oban_insert, _job}
+    end
+
+    test "the Ecto.Multi helper rejects the same ids" do
+      assert_raise ArgumentError, ~r/got nil/, fn ->
+        Scrypath.Oban.enqueue_delete(
+          Ecto.Multi.new(),
+          :delete,
+          SearchablePost,
+          [nil],
+          oban_opts(RecordingOban)
+        )
+      end
+    end
+
+    test "every id enqueue accepts decodes in the worker" do
+      ids = Scrypath.Oban.Payload.serialize_ids!([1, "a", :b])
+      assert ids == [1, "a", "b"]
+      assert Enum.all?(ids, &Scrypath.Oban.JobArgs.document_id?/1)
+    end
   end
 
   test "enqueue helpers keep retryable queue state distinct from backend lifecycle" do

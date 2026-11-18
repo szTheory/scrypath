@@ -1,0 +1,105 @@
+{
+  "authority": "github-actions-exact-sha",
+  "repository": "szTheory/scrypath",
+  "pull_request": 122,
+  "source_sha": "cd3eb07f037b73e8c1f4e0d579513f18ec17f50e",
+  "run_id": 40368375825,
+  "run_url": "https://github.com/szTheory/scrypath/actions/runs/40368375825",
+  "event": "pull_request",
+  "required_jobs": [
+    {
+      "id": 121732150512,
+      "name": "package (required)",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732150512"
+    },
+    {
+      "id": 121732150974,
+      "name": "repository-contracts (required)",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732150974"
+    },
+    {
+      "id": 121732151292,
+      "name": "core (required)",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732151292"
+    },
+    {
+      "id": 121732151394,
+      "name": "ecommerce-mounted (required)",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732151394"
+    },
+    {
+      "id": 121732151437,
+      "name": "backend (required)",
+      "conclusion": "success",
+      "url": "https://github.com/szTheory/scrypath/actions/runs/40368375825/job/121732151437"
+    }
+  ],
+  "additional_checks": [
+    {
+      "name": "ops-ui-path",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.18.4, 27.3)",
+      "conclusion": "success"
+    },
+    {
+      "name": "phoenix-example (advisory)",
+      "conclusion": "success"
+    },
+    {
+      "name": "deep-quality (advisory)",
+      "conclusion": "failure"
+    },
+    {
+      "name": "compatibility (advisory) (1.19.0, 26.2.5)",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.19.0, 28.1)",
+      "conclusion": "success"
+    },
+    {
+      "name": "compatibility (advisory) (1.17.3, 26.2.5)",
+      "conclusion": "success"
+    },
+    {
+      "name": "ecommerce-e2e (advisory)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "coverage (advisory)",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "ops-ui (path-scoped)",
+      "conclusion": "success"
+    },
+    {
+      "name": "closeout-attestation",
+      "conclusion": "skipped"
+    }
+  ],
+  "proof": {
+    "core": "953 tests, 5 properties, 0 failures; optional dependencies absent from isolated build: oban",
+    "package": "81 tests, 0 failures",
+    "postgres": "1 property, 15 tests, 0 failures",
+    "mounted": "4 passed"
+  },
+  "review": {
+    "decision": "skip additional review",
+    "provenance": "Maintainer response during gsd-ship, 2026-10-26: solo open-source development; CI is the acceptance gate.",
+    "independent_review_claimed": false
+  },
+  "limits": [
+    "This is a PR candidate receipt, not a milestone closeout attestation or merged-main receipt.",
+    "The final shipping-record commit requires its own exact-SHA checks; retain that output outside the source checkout.",
+    "deep-quality (advisory) failed the dependency audit with Bandit, Cloak and Cloak Ecto findings.",
+    "Coverage and ecommerce-e2e were skipped in this PR run.",
+    "No merge or release performed."
+  ]
+}

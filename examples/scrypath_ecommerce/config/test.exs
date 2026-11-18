@@ -44,3 +44,9 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Opt in only for the owned disposable preservation harness. Other tests keep
+# system time; a configured but missing/invalid fixture fails closed.
+if String.starts_with?(System.get_env("E2E_RUN_ID", ""), "phase185-") do
+  config :scrypath_ops, :test_clock_file, "/phase185-fixture/clock.txt"
+end

@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Verify.PhoenixExample.PackageTest do
   end
 
   test "package proof module provides an explicit local artifact command" do
-    source = File.read!("lib/mix/tasks/verify/phoenix_example/package.ex")
+    source = Scrypath.RepoTooling.task_source!("verify/phoenix_example/package.ex")
     assert source =~ ~s|"hex.build", "--unpack", "--output"|
     assert source =~ "SCRYPATH_EXAMPLE_INTEGRATION"
     assert source =~ "MIX_HOME"

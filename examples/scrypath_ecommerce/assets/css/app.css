@@ -3,6 +3,12 @@
 @source "../../lib/scrypath_ecommerce_web";
 @source "../../deps/scrypath_ops/lib/scrypath_ops_web";
 
+@theme {
+  --color-*: initial;
+  --color-black: #000;
+  --color-white: #fff;
+}
+
 @layer base {
   body.scrypath-demo {
     margin: 0;

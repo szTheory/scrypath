@@ -25,8 +25,8 @@ defmodule ScrypathDemo.Blog.Author do
   end
 
   # Owning-side fan_outs: declaration consumed by Scrypath.sync_related/3 (D-02).
-  # The resolver MFA points at the Blog context and must handle BOTH arities
-  # (inline -> Author records, oban -> author IDs).
+  # The resolver MFA points at the Blog context and receives Author records in
+  # every sync mode (the Oban job reloads them by id when it runs).
   def __scrypath__(:fan_outs) do
     [
       posts: [

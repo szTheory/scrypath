@@ -53,7 +53,8 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await expect(page.getByRole("heading", { name: "Failed sync work", exact: true })).toBeVisible();
   const failedRow = page.getByTestId("failed-sync-row").first();
   await expect(failedRow).toBeVisible();
-  await expect(failedRow.getByText(/unknown_module.*NotARealBackend/)).toBeVisible();
+  await expect(failedRow).toHaveAttribute("data-state", "failed");
+  await expect(failedRow.getByText(/unknown_backend.*NotARealBackend/)).toBeVisible();
   await failedRow.getByText("More details", { exact: true }).click();
   await expect(failedRow.locator("details")).toHaveAttribute("open", "");
   await expect(failedRow.locator("details dl")).toBeVisible();
@@ -63,7 +64,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   await waitForLiveConnected(page);
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match|differ)/).first()).toBeVisible();
   await capture(page, testInfo, "03-sync-drift-loaded");
 
   await page.goto("/admin/search/search");

@@ -13,23 +13,31 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
   ]
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    partial? = params["scenario"] == "partial"
+
     {:ok,
      assign(socket,
        hit_fixture: %{
-         "name" => "Travel scanner",
+         "name" =>
+           if(partial?, do: "Partial result with unavailable description", else: "Travel scanner"),
          "description" =>
-           "A compact scanner with a readable description, useful for judging a search match.",
-         "id" => "custom-key-42",
+           if(partial?,
+             do: nil,
+             else:
+               "A compact scanner with a readable description, useful for judging a search match."
+           ),
+         "id" => if(partial?, do: "partial-result-42", else: "custom-key-42"),
          "available" => false,
          "inventory_count" => 0,
-         "note" => nil,
+         "note" => if(partial?, do: "supplier note remains available", else: nil),
          "options" => %{"colors" => ["Slate", "Copper"], "portable" => true},
          "price_cents" => 1299
        },
        schemas: @schemas,
        selected: hd(@schemas),
-       page_title: "Component boundaries"
+       page_title: if(partial?, do: "Result field observations", else: "Component boundaries"),
+       fixture_state: if(partial?, do: "partial-component", else: "complete-component")
      )}
   end
 
@@ -68,7 +76,7 @@ defmodule ScrypathEcommerceWeb.E2EUIFixtureLive do
           <.ops_code_block>{String.duplicate("long_backend_identifier_", 30)}</.ops_code_block>
         </.ops_disclosure>
       </.ops_panel>
-      <section id="typed-result-fixture" aria-label="Example returned hit" class="mt-6">
+      <section id="typed-result-fixture" aria-label="Example returned hit" data-testid="result-hit-fixture" data-fixture-state={@fixture_state} class="mt-6">
         <.ops_heading>Example returned hit</.ops_heading>
         <.result_hit hit={@hit_fixture} position={1} />
       </section>

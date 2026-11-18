@@ -1,38 +1,12 @@
 {
   "contract": "1.0.0",
   "flavor": "core",
-  "milestone": "v1.43 — ScrypathOps UI refinement",
-  "phases": [
-    {
-      "number": "173",
-      "name": "Shared Visual Foundation and Operational Time",
-      "status": "complete"
-    },
-    {
-      "number": "174",
-      "name": "Recovery Entry and Diagnosis",
-      "status": "complete"
-    },
-    {
-      "number": "175",
-      "name": "Repair and Verification",
-      "status": "complete"
-    },
-    {
-      "number": "176",
-      "name": "Search and Playbooks",
-      "status": "complete"
-    },
-    {
-      "number": "177",
-      "name": "Shared Patterns and Delivery Proof",
-      "status": "complete"
-    }
-  ],
+  "milestone": "v1.45 \u2014 Foundation and CI",
+  "phases": [],
   "next": {
-    "command": "/gsd:secure-phase 177",
-    "label": "Re-audit Phase 177 security",
-    "reason": "All plans are complete, but T-177-05 remains blocking until exact-source and merged-main closeout evidence is recorded."
+    "command": "$gsd-new-milestone v1.46",
+    "label": "Select and confirm the next milestone",
+    "reason": "v1.45 is archived locally; no active phase. Complete terminal source acceptance before a new milestone boundary."
   },
-  "updated_at": "2026-10-13T02:51:09.000Z"
+  "updated_at": "2026-11-01T17:09:22Z"
 }

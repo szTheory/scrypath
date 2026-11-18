@@ -1,0 +1,41 @@
+{
+  "combined_squash": {
+    "synthetic": true,
+    "introductionFirst": false,
+    "bootstrapCommit": null,
+    "sourceHead": "f62e8a9090417758a2608e436574fdb90eb61db7",
+    "candidate": "70e55f4923d307ec5fc7dd08edb1120a0b93e7a4",
+    "firstParent": "0d39fa8b40e3a666d36256ac9cf95b6313f9e732",
+    "initialOccurrences": 45,
+    "squashedOccurrences": 44,
+    "status": 1,
+    "output": "UI literal policy: FAIL\ncandidate first-parent first ledger at 70e55f4923d307ec5fc7dd08edb1120a0b93e7a4 does not exactly match pinned bootstrap inventory\n",
+    "conclusion": "A squash containing ledger introduction plus a valid reduction fails the production first-introduction rule."
+  },
+  "separate_introduction": {
+    "synthetic": true,
+    "introductionFirst": true,
+    "bootstrapCommit": "a08ec24285cfc309078c68bad2a31817c9aa6584",
+    "sourceHead": "f62e8a9090417758a2608e436574fdb90eb61db7",
+    "candidate": "5f1ab51b119d9f1c5f0b168e3dc4b054991c4632",
+    "firstParent": "a08ec24285cfc309078c68bad2a31817c9aa6584",
+    "initialOccurrences": 45,
+    "squashedOccurrences": 44,
+    "status": 0,
+    "output": "UI literal policy: PASS\nPolicy version: 1\nCandidate: 5f1ab51b119d9f1c5f0b168e3dc4b054991c4632\nTrusted target: 6b65f8a019ab467c11357ab59942ce67feb62735\nTrusted comparisons: 6b65f8a019ab467c11357ab59942ce67feb62735\nBefore: not applicable\nBootstrap ledger introduction: a08ec24285cfc309078c68bad2a31817c9aa6584\nFinding occurrences: 44\n",
+    "conclusion": "A separate data-only introduction followed by a feature squash with reduction passes."
+  },
+  "inventory": {
+    "bootstrap": "767f368473f17fba43d7be4675c53ab65a87530c",
+    "target": "6b65f8a019ab467c11357ab59942ce67feb62735",
+    "identities": 45,
+    "occurrences": 45,
+    "mainMatchesBootstrap": true,
+    "scannedRoots": [
+      "scrypath_ops/lib",
+      "scrypath_ops/assets",
+      "examples/scrypath_ecommerce/lib",
+      "examples/scrypath_ecommerce/assets"
+    ]
+  }
+}

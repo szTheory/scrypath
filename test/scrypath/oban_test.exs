@@ -117,6 +117,49 @@ defmodule Scrypath.ObanTest do
     refute Map.has_key?(changeset.changes.args, "documents")
   end
 
+  # A unique insert inside the caller's transaction could collapse into a pending job that
+  # runs before the commit and reads stale rows, so the Multi helpers insert without unique:.
+  test "Multi helper jobs are inserted without the unique policy" do
+    Multi.new()
+    |> Scrypath.Oban.enqueue_upsert(
+      :search_sync,
+      SearchablePost,
+      [%SearchablePost{id: 7, title: "Queued", body: "Body"}],
+      backend: RecordingBackend,
+      sync_mode: :oban,
+      repo: Scrypath.TestSupport.FakeRepo,
+      oban: NamedOban,
+      oban_queue: :search_sync
+    )
+    |> Scrypath.Oban.enqueue_delete(
+      :search_delete,
+      SearchablePost,
+      ["post:9"],
+      backend: RecordingBackend,
+      sync_mode: :oban,
+      oban: NamedOban,
+      oban_queue: :search_sync
+    )
+
+    assert_received {:named_oban_insert, :search_sync, upsert_changeset, []}
+    assert_received {:named_oban_insert, :search_delete, delete_changeset, []}
+    refute Map.has_key?(upsert_changeset.changes, :unique)
+    refute Map.has_key?(delete_changeset.changes, :unique)
+  end
+
+  test "the direct enqueue changesets keep the shared unique policy" do
+    changeset =
+      Scrypath.Oban.Enqueue.upsert_job_changeset(SearchablePost, [7],
+        backend: RecordingBackend,
+        sync_mode: :oban,
+        repo: Scrypath.TestSupport.FakeRepo,
+        oban: NamedOban,
+        oban_queue: :search_sync
+      )
+
+    assert %{unique: %{}} = changeset.changes
+  end
+
   test "Oban integration sources compile without Oban on the code path" do
     script = """
     Code.put_compiler_option(:ignore_module_conflict, true)

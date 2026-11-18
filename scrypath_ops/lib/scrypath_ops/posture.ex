@@ -53,7 +53,7 @@ defmodule ScrypathOps.Posture do
   """
   @spec summary([module()], keyword()) :: t()
   def summary(allowlist, opts) do
-    summary(allowlist, opts, DateTime.utc_now(), nil)
+    summary(allowlist, opts, ScrypathOps.Clock.utc_now(), nil)
   end
 
   @doc false

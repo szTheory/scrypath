@@ -593,3 +593,32 @@ export const MUTED_PAIRS = [
     note: "breadcrumb separator — decorative, not readable text"
   }
 ];
+
+// Exact live indicator declarations. Suppressions are explicit inventory entries;
+// they do not claim a visible indicator. Global outlines sit outside the control;
+// the menu item is inset and is also checked against its focused fill.
+export const FOCUS_BINDINGS = [
+  { selector: ":focus-visible", offset: "2px" },
+  { selector: ".ops-command-hint:focus-visible", offset: "2px" },
+  { selector: ".ops-schema-picker__option:has(input:focus-visible)", offset: "2px" },
+  { selector: ".ops-cmdk__input:focus", suppressed: true },
+  { selector: ".ops-saved-search-menu__item:focus-visible", offset: "-2px" },
+  { selector: ".ops-sheet__panel:focus", suppressed: true },
+  { selector: ".ops-sheet__header h2:focus", suppressed: true },
+  { selector: ".ops-sheet__header h2:focus-visible", offset: "2px" },
+  { selector: ".ops-filter-chip:has(input:focus-visible)", offset: "2px" },
+];
+
+export const SURFACE_BINDINGS = [
+  { selector: ".ops-shell", property: "background-color", background: "ops-bg" },
+  { selector: ".ops-header", background: "ops-surface-1" },
+  { selector: ".ops-panel", background: "ops-surface-1" },
+  { selector: ".ops-sidebar", expression: "color-mix(in oklch, var(--color-base-100) 97%, transparent)" },
+  { selector: ".ops-command-hint", expression: "color-mix(in oklch, var(--ops-surface-2) 56%, transparent)" },
+  { selector: "body", background: "color-base-200" },
+  { selector: ".ops-filter-chip--selected", background: "ops-selection" },
+  { selector: ".ops-theme-toggle__button[data-theme-selected=\"true\"]", background: "ops-theme-selection" },
+  { selector: ".ops-saved-search-menu", background: "color-base-100" },
+  { selector: ".ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible", background: "ops-surface-2" },
+  { selector: ".ops-sheet__panel", background: "color-base-100" },
+];

@@ -1,6 +1,17 @@
 defmodule Scrypath.Oban do
   @moduledoc """
   Narrow Oban helpers for composing Scrypath sync jobs into `Ecto.Multi`.
+
+  `enqueue_upsert/5` and `enqueue_delete/5` add one job per `Ecto.Multi` step, whatever the
+  number of records or ids. Unlike `Scrypath.sync_records/3` under `sync_mode: :oban`, they do
+  not split the ids into several jobs; the worker bounds each backend write to at most 1000
+  documents or ids.
+
+  These helpers insert the job inside your transaction, and they insert it without the shared
+  `unique:` policy: the job only becomes visible when your transaction commits, so it always
+  reads committed rows and never collapses into a pending job that could run before your
+  commit. The cost is that an identical pending job may run twice, which is harmless because
+  upserts and deletes are keyed by id.
   """
   @compile {:no_warn_undefined, Oban}
 
@@ -19,7 +30,7 @@ defmodule Scrypath.Oban do
       |> Config.ensure_oban_ready!()
 
     document_ids = Identity.document_ids(schema_module, records)
-    changeset = Enqueue.upsert_job_changeset(schema_module, document_ids, config)
+    changeset = Enqueue.upsert_job_changeset(schema_module, document_ids, config, unique: false)
 
     insert_multi_job(Config.oban_module(config), multi, name, changeset)
   end
@@ -32,7 +43,7 @@ defmodule Scrypath.Oban do
       |> Config.resolve!()
       |> Config.ensure_oban_ready!()
 
-    changeset = Enqueue.delete_job_changeset(schema_module, document_ids, config)
+    changeset = Enqueue.delete_job_changeset(schema_module, document_ids, config, unique: false)
 
     insert_multi_job(Config.oban_module(config), multi, name, changeset)
   end

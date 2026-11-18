@@ -17,8 +17,9 @@ defmodule ScrypathOps.SecurityTest do
 
   test "validate rejects sigra without sudo_confirm_path" do
     assert {:error, message} = Security.validate(%{auth_mode: "sigra", sigra: []})
-    assert message =~ "OPSUI_AUTH_MODE=sigra requires :sudo_confirm_path"
-    assert message =~ "guides/integrations/sigra.md"
+    assert message =~ "OPSUI_AUTH_MODE=sigra requires a valid :sudo_confirm_path"
+    assert message =~ "scrypath_ops/README.md"
+    assert message =~ "guides/support-and-compatibility.md"
   end
 
   test "validate rejects unsupported auth modes" do

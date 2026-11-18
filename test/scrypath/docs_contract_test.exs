@@ -14,24 +14,24 @@ defmodule Scrypath.DocsContractTest do
   @release_docs File.read!("docs/releasing.md")
   @operator_support_docs File.read!("docs/operator-support.md")
   @search_backend_sre_docs File.read!("docs/search-backend-sre.md")
-  @verify_phase11 File.read!("lib/mix/tasks/verify.phase11.ex")
-  @verify_phase14 File.read!("lib/mix/tasks/verify.phase14.ex")
-  @verify_phase20 File.read!("lib/mix/tasks/verify.phase20.ex")
-  @verify_phase26 File.read!("lib/mix/tasks/verify.phase26.ex")
-  @verify_phase28 File.read!("lib/mix/tasks/verify.phase28.ex")
-  @verify_phase36 File.read!("lib/mix/tasks/verify.phase36.ex")
-  @verify_phase37 File.read!("lib/mix/tasks/verify.phase37.ex")
-  @verify_phase38 File.read!("lib/mix/tasks/verify.phase38.ex")
-  @verify_phase41 File.read!("lib/mix/tasks/verify.phase41.ex")
-  @verify_phase43 File.read!("lib/mix/tasks/verify.phase43.ex")
-  @verify_phase82 File.read!("lib/mix/tasks/verify.phase82.ex")
-  @verify_phase83 File.read!("lib/mix/tasks/verify.phase83.ex")
-  @verify_phase84 File.read!("lib/mix/tasks/verify.phase84.ex")
-  @verify_phase85 File.read!("lib/mix/tasks/verify.phase85.ex")
-  @verify_phase91 File.read!("lib/mix/tasks/verify.phase91.ex")
-  @verify_phase96 File.read!("lib/mix/tasks/verify.phase96.ex")
-  @verify_opsui File.read!("lib/mix/tasks/verify.ops_ui.ex")
-  @verify_release_publish File.read!("lib/mix/tasks/verify.release_publish.ex")
+  @verify_phase11 Scrypath.RepoTooling.task_source!("verify.phase11.ex")
+  @verify_phase14 Scrypath.RepoTooling.task_source!("verify.phase14.ex")
+  @verify_phase20 Scrypath.RepoTooling.task_source!("verify.phase20.ex")
+  @verify_phase26 Scrypath.RepoTooling.task_source!("verify.phase26.ex")
+  @verify_phase28 Scrypath.RepoTooling.task_source!("verify.phase28.ex")
+  @verify_phase36 Scrypath.RepoTooling.task_source!("verify.phase36.ex")
+  @verify_phase37 Scrypath.RepoTooling.task_source!("verify.phase37.ex")
+  @verify_phase38 Scrypath.RepoTooling.task_source!("verify.phase38.ex")
+  @verify_phase41 Scrypath.RepoTooling.task_source!("verify.phase41.ex")
+  @verify_phase43 Scrypath.RepoTooling.task_source!("verify.phase43.ex")
+  @verify_phase82 Scrypath.RepoTooling.task_source!("verify.phase82.ex")
+  @verify_phase83 Scrypath.RepoTooling.task_source!("verify.phase83.ex")
+  @verify_phase84 Scrypath.RepoTooling.task_source!("verify.phase84.ex")
+  @verify_phase85 Scrypath.RepoTooling.task_source!("verify.phase85.ex")
+  @verify_phase91 Scrypath.RepoTooling.task_source!("verify.phase91.ex")
+  @verify_phase96 Scrypath.RepoTooling.task_source!("verify.phase96.ex")
+  @verify_opsui Scrypath.RepoTooling.task_source!("verify.ops_ui.ex")
+  @verify_release_publish Scrypath.RepoTooling.task_source!("verify.release_publish.ex")
   @guide_paths [
     "guides/common-mistakes.md",
     "guides/drift-recovery.md",
@@ -56,14 +56,15 @@ defmodule Scrypath.DocsContractTest do
     "guides/relevance-tuning.md",
     "guides/per-query-tuning-pipeline.md",
     "guides/related-data-and-reindexing.md",
-    "guides/multitenancy.md"
+    "guides/multitenancy.md",
+    "guides/telemetry.md"
   ]
   @guides Enum.into(@guide_paths, %{}, fn path -> {path, File.read!(path)} end)
   @per_query_tuning_pipeline File.read!("guides/per-query-tuning-pipeline.md")
   @multitenancy_guide File.read!("guides/multitenancy.md")
   @request_edge_guide File.read!("guides/request-edge-search.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
-  @verify_adopter File.read!("lib/mix/tasks/verify.adopter.ex")
+  @verify_adopter Scrypath.RepoTooling.task_source!("verify.adopter.ex")
   @phase97_contract_statements File.read!(
                                  ".planning/milestones/v1.27-phases/97-canonical-contract-freeze-and-scope-guard/97-CONTRACT-STATEMENTS.md"
                                )
@@ -93,6 +94,7 @@ defmodule Scrypath.DocsContractTest do
   test "published markdown avoids internal planning and task artifact strings" do
     patterns = [
       {~r/\bFACET-\d{2}\b/, "FACET-NN requirement-style IDs"},
+      {~r/\bOBS-\d{2}\b/, "OBS-NN requirement-style IDs"},
       {~r/\bTUNE-\d{2}\b/, "TUNE-NN requirement-style IDs"},
       {~r/\bMULTI-\d{2}\b/, "MULTI-NN requirement-style IDs"},
       {~r/\bADPT-\d{2}\b/, "ADPT-NN requirement-style IDs"},
@@ -666,8 +668,9 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "search backend SRE doc keeps telemetry table and anti-alert-fatigue posture" do
+  test "search backend SRE doc links the telemetry guide and keeps anti-alert-fatigue posture" do
     assert_contains_all(@search_backend_sre_docs, [
+      "../guides/telemetry.md",
       "[:scrypath, :search]",
       "[:scrypath, :meilisearch, :request]",
       "[:scrypath, :operator, :failed_work, :observed]",
@@ -898,8 +901,9 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "verify.ops_ui Mix task keeps orchestration markers (Phase 53)" do
-    assert String.contains?(@verify_opsui, "cd: ops_dir")
-    assert String.contains?(@verify_opsui, "mix test")
+    assert String.contains?(@verify_opsui, "ops_dir = Path.expand(\"scrypath_ops\", root)")
+    assert String.contains?(@verify_opsui, "System.cmd(executable, args, cd: cd, env: env")
+    assert String.contains?(@verify_opsui, "[\"test\", @boundary_test")
     assert String.contains?(@verify_opsui, "ensure_no_args!")
   end
 
@@ -943,6 +947,7 @@ defmodule Scrypath.DocsContractTest do
   test "verify.phase11 keeps the release gate auth-free and complete" do
     assert_contains_all(@verify_phase11, [
       "test/release/package_metadata_test.exs",
+      "test/release/package_contents_test.exs",
       "test/release/consumer_smoke_test.exs",
       "test/scrypath/docs_contract_test.exs",
       "mix verify.release_publish"

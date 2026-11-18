@@ -4,6 +4,14 @@
 #   docker compose up -d
 #   SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.meilisearch_smoke
 #   docker compose down
+#
+# Local Postgres for the real-database loader/backfill cases (:postgres tag).
+# Host port 5434 (5433 is taken by the phoenix example). The harness drops and
+# recreates only the scrypath_test<MIX_TEST_PARTITION> database.
+#
+#   docker compose up -d --wait postgres
+#   SCRYPATH_POSTGRES_URL=postgres://postgres:postgres@127.0.0.1:5434 mix verify.postgres
+#   docker compose down
 services:
   meilisearch:
     image: getmeili/meilisearch:v1.15
@@ -11,3 +19,16 @@ services:
       - "7700:7700"
     environment:
       MEILI_NO_ANALYTICS: "true"
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

@@ -147,6 +147,20 @@ defmodule Scrypath.OptionsTest do
     assert config[:sync_mode] == :manual
   end
 
+  test "validate_backfill_options!/1 accepts the internal fresh-target flag as a boolean" do
+    base = [backend: FakeBackend, repo: Scrypath.TestRepo, batch_size: 100]
+
+    assert Scrypath.Options.validate_backfill_options!(base)[:_scrypath_fresh_target] == false
+
+    assert Scrypath.Options.validate_backfill_options!(base ++ [_scrypath_fresh_target: true])[
+             :_scrypath_fresh_target
+           ] == true
+
+    assert_raise ArgumentError, ~r/_scrypath_fresh_target/, fn ->
+      Scrypath.Options.validate_backfill_options!(base ++ [_scrypath_fresh_target: "yes"])
+    end
+  end
+
   test "bulk workflow validators reject impossible values before execution" do
     assert_raise ArgumentError, ~r/repo/, fn ->
       Scrypath.Options.validate_backfill_options!(

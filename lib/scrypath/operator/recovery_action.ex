@@ -9,6 +9,7 @@ defmodule Scrypath.Operator.RecoveryAction do
 
   alias Scrypath.Backfill
   alias Scrypath.Oban.Enqueue
+  alias Scrypath.Oban.JobArgs
   alias Scrypath.Sync
   alias Scrypath.Reindex
 
@@ -103,6 +104,12 @@ defmodule Scrypath.Operator.RecoveryAction do
 
       action.operation in [:upsert, :delete] and not is_list(Map.get(payload, "document_ids")) ->
         {:error, {:missing_retry_input, :document_ids}}
+
+      # A job stored by 0.3.17, an older build or by hand can hold nil, float or boolean
+      # ids. Enqueue raises on those, so reject them here and keep the error-tuple contract.
+      action.operation in [:upsert, :delete] and
+          not Enum.all?(Map.get(payload, "document_ids"), &JobArgs.document_id?/1) ->
+        {:error, {:invalid_retry_input, :document_ids}}
 
       true ->
         :ok

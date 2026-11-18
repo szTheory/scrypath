@@ -12,6 +12,7 @@
  *     npm run test:e2e:admin-shell -- --reporter=line
  */
 import { AxeBuilder } from "@axe-core/playwright";
+import { scanWithFrameSafeLegacy } from "./helpers/axe-scan.mjs";
 import {
   expect,
   test,
@@ -111,18 +112,21 @@ async function expectNoColorContrastViolations(
   selectors: string[],
   label: string
 ): Promise<void> {
-  const builder = new AxeBuilder({ page }).withRules(["color-contrast"]);
-  let includedAny = false;
+  const results = await scanWithFrameSafeLegacy(page, async (legacyMode: boolean) => {
+    const builder = new AxeBuilder({ page });
+    if (legacyMode && typeof builder.setLegacyMode === "function") builder.setLegacyMode();
+    let includedAny = false;
 
-  for (const selector of selectors) {
-    if ((await page.locator(selector).count()) > 0) {
-      builder.include(selector);
-      includedAny = true;
+    for (const selector of selectors) {
+      if ((await page.locator(selector).count()) > 0) {
+        builder.include(selector);
+        includedAny = true;
+      }
     }
-  }
 
-  expect(includedAny, `${label}: at least one selector should be present`).toBe(true);
-  const results = await builder.analyze();
+    expect(includedAny, `${label}: at least one selector should be present`).toBe(true);
+    return builder.withRules(["color-contrast"]).analyze();
+  });
   expect(results.violations, `${label}: axe color-contrast violations`).toEqual([]);
 }
 

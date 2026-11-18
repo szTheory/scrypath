@@ -8,7 +8,7 @@ defmodule Scrypath.Phase99ContractTest do
   @intake_guide File.read!("guides/outside-adopter-intake.md")
   @evidence_template File.read!(".github/ISSUE_TEMPLATE/outside-adopter-evidence.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
-  @verify_adopter_source File.read!("lib/mix/tasks/verify.adopter.ex")
+  @verify_adopter_source Scrypath.RepoTooling.task_source!("verify.adopter.ex")
   @mix_exs File.read!("mix.exs")
   @ci_workflow File.read!(".github/workflows/ci.yml")
   @compatibility_floor_elixir "1.17.3"

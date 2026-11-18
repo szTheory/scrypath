@@ -1,5 +1,86 @@
 # Milestones
 
+## v1.45 Foundation and CI (Archived locally: 2026-11-01; merge/publication separate)
+
+**Delivered on branch:** Reliable full browser/cache verification, unpackaged maintainer tooling, lean explicit dependency/runtime graphs and executable UI quality foundations preserving supported visible behavior.
+
+**Phases completed:** 182–185; 4 phases, 38 plans, all 21 requirements. **Task accounting:** 79 planned task blocks; summary formats are inconsistent, so the CLI's 45 is an incomplete extraction rather than the milestone task total. No complete measured actual-task total is claimed.
+
+**Key accomplishments:**
+
+- Complete mounted/standalone browser inventory with source-bound raw outcomes, bounded artifacts and owned cleanup.
+- Safe graph/toolchain/lock-aware BEAM reuse and checked Docker build handoff with real warm/cold/fallback/lock-change evidence at their original sources.
+- Test-only maintainer tooling outside Hex, proven through actual archives, installed/path consumers and durable rejecting mutations.
+- Explicit Telemetry and approved Req/Sigra admission, lean diagnostics/mail/assets dependencies, independent static-build/runtime graphs and reconciled proposal/advisory evidence.
+- Required literal/contrast/focus/token drift checks, both real CSS bundles, preserved routes/caller ownership, exact 61-case held-out and global image/copy/state proof, and retired paid/mock review paths.
+
+**Audit:** `tech_debt`; requirements 21/21, phases 4/4 at original report cutoffs, integration 21/21 and flows 6/6; all four Nyquist records compliant. All recorded debt and residual v1.44 debt carry forward explicitly. Cloak/Cloak Ecto remain affected/unaccepted; deep-quality failure is not hidden.
+
+**Closeout type:** `override_closeout`, authorized by the maintainer on 2026-11-01 for stale historical phase reports 182–184 and documented debt, subject to fresh candidate/final-source CI. Reports were not refreshed or relabeled. Known artifact acknowledgment overrides: 0 newly acknowledged, 2 carried forward from a prior close (see STATE Deferred Items). Three historical phase-freshness overrides are additional and distinct. Quick tasks remain untouched.
+
+**Verification:** Fresh local core and repository gates pass at the committed archive/test-path source; [local evidence](milestones/v1.45-LOCAL-VERIFICATION.json) pins logs and commands. Candidate [run 41329869930](https://github.com/szTheory/scrypath/actions/runs/41329869930) passed the five required jobs, coverage, immutable attestation and full-browser proof at its own pre-archive SHA. The downloaded attestation digest matches GitHub. All archive/tracking writes precede final committed-source machine acceptance. The required five jobs, coverage and immutable attestation must pass through the canonical command. Candidate and terminal receipts remain outside the checkout; these tracked bytes cannot assert a later terminal outcome. See [closeout](milestones/v1.45-CLOSEOUT.md).
+
+**Stats at audit cutoff:** `v1.44..d5ce0435`, 551 execution/tracking commits, 396 files changed, 60,829 insertions / 2,040 deletions including planning, 2026-10-26–2026-11-01. Tracked source at that cutoff: 81,987 Elixir lines (.ex/.exs), 31,839 JavaScript lines (.js/.cjs), 10,743 CSS lines. Later archive/test-path bookkeeping is separate.
+
+**Delivery limits:** No merged-main, published-package, independent-review, broad accessibility or design approval. Original receipts keep their actual identities. Retained preview and its source-staleness stop are unchanged; unrelated config is excluded.
+
+**Archives:** [roadmap](milestones/v1.45-ROADMAP.md), [requirements](milestones/v1.45-REQUIREMENTS.md), [audit](milestones/v1.45-MILESTONE-AUDIT.md), and `milestones/v1.45-phases/`.
+
+**What's next:** After terminal acceptance, `$gsd-new-milestone v1.46` selects/confirms the next rolling-roadmap scope. No successor phase starts automatically.
+
+---
+
+## v1.44 Sync correctness (Archived locally: 2026-10-26; merge/publication pending)
+
+**Delivered on branch:** Consistent loader-backed sync and complete full-key
+paging, bounded work, safe related jobs, observable workers and compiler-checked
+optional hooks.
+
+**Phases completed:** 178–181; 4 phases, 17 plans, **45 tasks**, 15 requirements.
+The CLI reported zero tasks/accomplishments because it did not recognize the
+summary shape; task blocks and summary actuals independently agree on 45.
+
+**Key accomplishments:**
+
+- Shared-loader backfill/reindex with preload and custom-loader parity.
+- Lexicographic composite-key paging and full cursor reporting, proven on SQLite/Postgres.
+- Fixed-size load/write/job chunks with combined task results and reindex waits.
+- Loaded related resolvers, shared queue uniqueness and safe malformed-job cancellation.
+- Stable worker spans, counted missing-ID removals and one enforced telemetry catalog.
+- Documented optional schema callbacks and an actual isolated no-Oban absence proof.
+
+**Audit:** `tech_debt`; 15/15 requirements, 4/4 phases, 8/8 integration paths,
+7/7 library flows; all four Nyquist records compliant. The 19 recorded debt
+items are carried forward, with no blanket security-risk acceptance.
+
+**Closeout type:** override_closeout for historical artifact deferrals only;
+Phases 178–180 were actually reverified, not overridden. Known verification
+overrides: **2 newly acknowledged, 0 carried forward by the CLI from a prior
+close** (Phase 124 owner gate and Phase 173 shell note; see STATE Deferred Items).
+Their older narrative deferrals remain historical. Quick tasks are untouched.
+
+**Verification:** fresh core 953 tests + 5 properties, targeted 405 + 1, real
+Postgres 15 + 1, zero failures; actual no-Oban absence proof. Final archive
+source is checked after all tracking commits; its receipt stays external to
+the tested tree. Existing candidate run 40369591304 at `433c8343` is retained
+with its original source identity. No new independent review is claimed.
+
+**Stats:** `fcb9b638..f718c4a9`, 201 execution/tracking commits, 158 files changed,
+21,251 insertions / 841 deletions (includes planning), 2026-10-25–2026-10-26.
+Later closeout bookkeeping is separate.
+
+**Delivery limits:** PR #122 remains open; no merged-main or Hex publication
+evidence is claimed. Dependency advisory failures and the full-browser lane's
+20 failures remain visible. The local planning tag follows terminal checks.
+
+**Archives:** `milestones/v1.44-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md` and
+`milestones/v1.44-phases/`.
+
+**What's next:** `$gsd-new-milestone` for v1.45 foundation/CI, after this
+closeout; no phase replay or automatic successor activation.
+
+---
+
 ## v1.43 ScrypathOps UI refinement (Shipped: 2026-10-25)
 
 **Delivered:** A calmer, consistent six-surface operator workspace across inspect → recover → verify: neutral light/dark/System foundation, local status cues, truthful operational time and copy, a clear failed-work action hierarchy, separated repair and promotion evidence, and clearer Search and Playbooks.

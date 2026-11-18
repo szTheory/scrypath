@@ -14,21 +14,20 @@ done
 
 cd /app/examples/scrypath_ecommerce
 
+echo "Checking the prebuilt storefront and mounted Ops assets..."
+for asset in \
+  /app/scrypath_ops/priv/static/assets/js/app.js \
+  /app/scrypath_ops/priv/static/assets/css/app.css \
+  /app/examples/scrypath_ecommerce/priv/static/assets/js/app.js \
+  /app/examples/scrypath_ecommerce/priv/static/assets/css/app.css; do
+  if [ ! -s "$asset" ]; then
+    echo "Required prebuilt asset is missing or empty: $asset" >&2
+    exit 1
+  fi
+done
+
 echo "Preparing the deterministic database and search indexes..."
 PHX_SERVER=false mix e2e.prepare
-
-echo "Building ecommerce assets..."
-mix esbuild.install --if-missing
-mix tailwind.install --if-missing
-mix esbuild scrypath_ecommerce
-mix tailwind scrypath_ecommerce
-
-echo "Building mounted ScrypathOps assets..."
-(
-  cd /app/scrypath_ops
-  mix assets.setup
-  mix assets.build
-)
 
 echo "Seeding deterministic ecommerce/operator scenarios..."
 PHX_SERVER=false mix scrypath.demo.seed

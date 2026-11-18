@@ -2,6 +2,84 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.45 — Foundation and CI
+
+**Archived locally:** 2026-11-01; merge/publication separate.
+**Phases:** 4 | **Plans:** 38 | **Planned task blocks:** 79 | **Requirements:** 21
+
+### What Was Built
+
+Full mounted/standalone browser coverage and safe caches; actual package/consumer tooling isolation; explicit lean dependency and independent asset/runtime graphs; deterministic literal, contrast/focus and typed-token checks; exact source-paired preservation and paid/mock judge retirement.
+
+### What Worked
+
+- Raw source/run/attempt/artifact joins separate real browser acceptance from advisory job conclusions and selectors.
+- Durable package/path/documentation mutation regressions replaced one-shot obligations.
+- Exact matched image/copy/state comparisons and held-out cases enforce preservation while subjective critique stays explicitly bounded/nonblocking.
+- Real-input replay and cross-step environment reproduction diagnosed collector/handoff failures before another expensive run.
+
+### What Was Inefficient
+
+- CI prerequisites, artifact containment and cross-step identity defects caused repeated builds and hosted runs.
+- Synthetic metadata shapes initially missed real producer nesting; accessibility runtime dominated full-lane timing.
+- Inconsistent summaries caused incomplete archive task extraction (CLI 45 versus 79 planned blocks).
+- Three historical reports became stale after later phases; this closeout uses the maintainer's explicit qualified override rather than pretending they were refreshed.
+- Tests held active-phase paths that needed reconciliation when the archive moved their evidence; unused plan-copy inputs added avoidable coupling.
+
+### Patterns Established
+
+Keep phase report bytes/source identities frozen; make archive navigation and test consumers relocation-safe; prepare all final tracked records before terminal CI; keep receipts externally and tag the exact accepted final source. Obtain destination-specific push approval once if automatic review requires it.
+
+### Key Lessons
+
+Measure the actual slow stage, replay real producer inputs before a long collector rerun, check every caller of a shared identity helper, and checkpoint fixes before snapshot-based contracts. Preserve dependency risk and inherited UI defects without turning scope closure into risk/design acceptance.
+
+### Cost Observations
+
+Model-cost/session totals were not collected. The execution records document expensive calibration/build/browser work, but no model-cost percentage or complete duration estimate is inferred.
+
+## Milestone: v1.44 — Sync correctness
+
+**Archived locally:** 2026-10-26; merge/publication pending.
+**Phases:** 4 | **Plans:** 17 | **Tasks:** 45
+
+### What Was Built
+
+Shared-loader indexing parity, full-key keyset paging, bounded work, safe
+related-sync jobs, stable worker telemetry and optional hook/no-Oban contracts.
+
+### What Worked
+
+- Shared SQLite/Postgres cases exercise the same paging/loading contracts.
+- Real Oban Lite tests prove duplicate collapse and transaction behavior.
+- Required core verifies actual optional-dependency absence.
+- Reverification restored current fingerprints without replaying implementation.
+
+### What Was Inefficient
+
+- Missing summary completion metadata and later report edits caused stale projections.
+- The archive parser returned zero tasks despite 45 explicit task blocks.
+- A legacy status stopped the global artifact scan before current scope could be read.
+- Advisory browser coverage and required mounted coverage were initially conflated.
+- Cached Ops dependency mismatches prevented a local historical-note test run.
+
+### Patterns Established
+
+Keep source-bound receipts immutable, distinguish selectors from executed jobs,
+retain original report bodies, and use CLI acknowledgments for unresolved
+historical artifacts rather than silently calling them fixed.
+
+### Key Lessons
+
+Validate plan/summary counts before archive; resolve verification freshness
+before moving phase directories; keep all final tracking edits before terminal
+attestation; disclose deferred risk without claiming broad security readiness.
+
+### Cost Observations
+
+Model-cost and session totals were not collected. Verification report generation
+was the longest closeout step; do not infer cost percentages from role routing.
+
 ## Milestone: v1.41 — Readiness Gate Follow-Through
 
 **Archived:** 2026-10-02 (planning milestone; Scrypath 0.3.14 was published during the milestone)
@@ -632,6 +710,10 @@ Unknown observation stays unknown; original failure history remains evidence. Ca
 No paid visual judge or added CI lane. Focused local runs invalidated only affected checks; hosted full browser104/104 took5.9 minutes. Model/session spend was not measured and is not estimated here.
 
 ## Cross-Milestone Trends
+
+- v1.45: real-input replay, source-bound preservation, relocation-safe contract consumers, and explicit qualified archive/final-source boundaries.
+
+- v1.44: verify canonical status and archive counts before relocation; distinguish path-selector success from executed test proof; keep final tracking before exact-source attestation.
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|

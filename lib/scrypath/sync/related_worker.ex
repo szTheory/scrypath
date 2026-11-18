@@ -4,94 +4,86 @@ if Code.ensure_loaded?(Oban.Worker) and Code.ensure_loaded?(Oban.Job) do
 
     use Oban.Worker, queue: :scrypath, max_attempts: 8
 
-    alias Scrypath.Config
+    alias Scrypath.Chunks
+    alias Scrypath.Loader
+    alias Scrypath.Oban.JobArgs
+    alias Scrypath.Telemetry
 
     @impl Oban.Worker
     def perform(%Oban.Job{args: args}) do
-      %{"document_ids" => document_ids, "opts" => opts_map} = args
-
-      with {:ok, schema_module} <- resolve_schema(args),
-           {:ok, fan_out_key} <- resolve_fan_out(schema_module, args) do
-        opts =
-          opts_map
-          |> Enum.map(fn
-            {"backend", v} when is_binary(v) -> {:backend, String.to_existing_atom(v)}
-            {"otp_app", v} when is_binary(v) -> {:otp_app, String.to_existing_atom(v)}
-            {"repo", v} when is_binary(v) -> {:repo, String.to_existing_atom(v)}
-            {k, v} -> {String.to_existing_atom(k), v}
-          end)
-          |> Keyword.put(:fan_out, fan_out_key)
-          |> Keyword.put(:sync_mode, :inline)
-
-        config = Config.resolve!(opts)
-
-        fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
-
-        fan_out_config =
-          Keyword.get(fan_outs, fan_out_key) ||
-            raise ArgumentError,
-                  "fan_out #{inspect(fan_out_key)} is not configured on #{inspect(schema_module)}"
-
-        metadata =
-          Scrypath.Telemetry.common_metadata(schema_module, config,
-            fan_out: fan_out_key,
-            document_count: length(document_ids)
-          )
-
-        sync_result =
-          Scrypath.Telemetry.span([:scrypath, :sync, :related, :resolve], metadata, fn ->
-            target_module = Keyword.fetch!(fan_out_config, :target)
-            {mod, fun, mfa_args} = Keyword.fetch!(fan_out_config, :resolver)
-
-            resolved_records = apply(mod, fun, [document_ids] ++ mfa_args)
-
-            result = Scrypath.Sync.sync_records(target_module, resolved_records, opts)
-
-            {result, Scrypath.Telemetry.stop_metadata(result)}
-          end)
-
-        case sync_result do
-          :ok ->
-            :ok
-
-          {:ok, _result} ->
-            :ok
-
-          {:error, {:http_error, status, body}} when status in 400..499 ->
-            {:cancel, "HTTP #{status}: #{inspect(body)}"}
-
-          {:error, reason} ->
-            {:error, reason}
-        end
+      with {:ok, job} <- JobArgs.decode_related(args),
+           opts = job.opts ++ [fan_out: job.fan_out, sync_mode: :inline],
+           {:ok, config} <- JobArgs.resolve_config(opts) do
+        run(job, opts, config)
       else
-        {:error, reason} when reason in [:invalid_schema, :invalid_fan_out] ->
+        {:error, tag} -> {:cancel, {:invalid_job, tag}}
+      end
+    end
+
+    # Resolvers receive the trigger records as they are now, never bare ids: a retried or
+    # delayed job must not fan out from rows that were deleted or soft-deleted since.
+    defp run(%{schema: schema_module, document_ids: document_ids} = job, opts, config) do
+      case Loader.load(schema_module, document_ids, config) do
+        {:ok, records, missing} ->
+          job
+          |> resolve(records, missing, opts, config)
+          |> job_result()
+
+        {:error, reason} when reason in [:repo_required, :search_records_required] ->
           {:cancel, {:invalid_job, reason}}
+
+        # search_records/2 returned something other than a list: an app bug that no retry
+        # fixes. The tag names the problem without the returned value.
+        {:error, {:invalid_search_records, _returned}} ->
+          {:cancel, {:invalid_job, :invalid_search_records}}
+
+        # An id the key's Ecto type cannot cast ("abc" for an integer key): no retry fixes it.
+        {:error, {:invalid_arg, _key} = tag} ->
+          {:cancel, {:invalid_job, tag}}
+
+        {:error, reason} ->
+          {:error, reason}
       end
     end
 
-    defp resolve_schema(%{"schema" => name}) when is_binary(name) do
-      {:ok, String.to_existing_atom(name)}
-    rescue
-      ArgumentError -> {:error, :invalid_schema}
+    defp resolve(job, records, missing, opts, config) do
+      metadata =
+        Telemetry.common_metadata(job.schema, config,
+          fan_out: job.fan_out,
+          # Distinct, like the inline path (which dedupes triggers) and the worker spans.
+          document_count: Chunks.distinct_count(job.document_ids)
+        )
+
+      Telemetry.span([:scrypath, :sync, :related, :resolve], metadata, fn ->
+        result = sync_resolved(job.fan_out_config, records, opts)
+        {result, Telemetry.stop_metadata(result, missing_count: length(missing))}
+      end)
     end
 
-    defp resolve_schema(_args), do: {:error, :invalid_schema}
-
-    defp resolve_fan_out(schema_module, %{"fan_out" => fan_out_string})
-         when is_binary(fan_out_string) do
-      fan_out_key = String.to_existing_atom(fan_out_string)
-      fan_outs = Scrypath.Schema.Metadata.fan_outs(schema_module)
-
-      if Keyword.has_key?(fan_outs, fan_out_key) do
-        {:ok, fan_out_key}
-      else
-        {:error, :invalid_fan_out}
-      end
-    rescue
-      ArgumentError -> {:error, :invalid_fan_out}
+    # No trigger still exists, so there is nothing to fan out from. Returning :ok keeps
+    # Oban from retrying work that can never succeed.
+    defp sync_resolved(_fan_out_config, [], _opts) do
+      {:ok, %{mode: :inline, status: :noop, document_ids: [], document_count: 0}}
     end
 
-    defp resolve_fan_out(_schema_module, _args), do: {:error, :invalid_fan_out}
+    defp sync_resolved(fan_out_config, records, opts) do
+      target_module = Keyword.fetch!(fan_out_config, :target)
+      {mod, fun, mfa_args} = Keyword.fetch!(fan_out_config, :resolver)
+
+      resolved_records = apply(mod, fun, [records | mfa_args])
+
+      Scrypath.Sync.sync_records(target_module, resolved_records, opts)
+    end
+
+    defp job_result(:ok), do: :ok
+    defp job_result({:ok, _result}), do: :ok
+
+    # The body is dropped: backend text can echo document content, and Oban persists the
+    # cancel reason in its errors column. The status alone is the pattern-matchable tag.
+    defp job_result({:error, {:http_error, status, _body}}) when status in 400..499,
+      do: {:cancel, {:http_error, status}}
+
+    defp job_result({:error, reason}), do: {:error, reason}
   end
 else
   defmodule Scrypath.Sync.RelatedWorker do

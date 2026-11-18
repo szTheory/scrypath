@@ -24,7 +24,7 @@ defmodule Mix.Tasks.Verify.Phase112Test do
     end
 
     test "source defines focused phase112 checks" do
-      source = File.read!("lib/mix/tasks/verify.phase112.ex")
+      source = Scrypath.RepoTooling.task_source!("verify.phase112.ex")
 
       assert source =~ ~S|"test/scrypath/phase112_contract_test.exs"|
       assert source =~ ~S|"test/mix/tasks/verify.phase112_test.exs"|

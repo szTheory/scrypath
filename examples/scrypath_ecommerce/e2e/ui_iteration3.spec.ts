@@ -1,10 +1,12 @@
 import {expect, test} from "@playwright/test";
 import {seedScenario, waitForLiveConnected} from "./helpers/e2e";
 import {mkdir} from "node:fs/promises";
+import {guardVerificationTarget} from "./helpers/verification-target.mjs";
 const artifacts = "ui-review-artifacts/iteration3-journeys";
 test.beforeEach(async ({baseURL}) => {
-  test.skip(!baseURL || new URL(baseURL).port === "4002", "Use the owned disposable stack.");
-  await mkdir(artifacts, {recursive: true});
+  await guardVerificationTarget(baseURL, reason => test.skip(true, reason), async () => {
+    await mkdir(artifacts, {recursive: true});
+  });
 });
 
 test("limits validate on blur, correct inline and preserve the previous run on invalid submission", async ({page, request}) => {

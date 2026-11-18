@@ -1,0 +1,24 @@
+{
+  "schema": "scrypath.phase185-parent-docker-timeout-cap-red.v1",
+  "worktree": "/Users/jon/projects/scrypath",
+  "head_before_red_commit": "dcdb201564e11e0b25b3e14eb3fc6f58fa4d88db",
+  "command": "node --test scripts/ci/ecommerce_target.test.cjs",
+  "process_exit_code": 1,
+  "raw_output_path": "/private/tmp/scrypath-phase185-execution/parent-docker-budget-cap-RED.log",
+  "raw_output_sha256": "bf0236141c4dd6728983afecaf0e811a652f1479bb66858f6f859319ace3e6fc",
+  "raw_output": "\u2714 verification target accepts Docker and explicitly isolated local hosts (5.394125ms)\n\u2714 verification target refuses the retained preview and missing or malformed URLs (0.933459ms)\n\u2714 verification target refusal callback runs before any guarded mutation (0.235917ms)\n\u2714 follow-up and iteration-3 suites guard before setup and retain all selected cases (0.643292ms)\n\u2714 all loopback spellings refuse the retained preview before mutation (0.935166ms)\n\u2716 full Docker verification refuses budgets over 900 seconds before invoking Docker (1087.45075ms)\n\u2716 full readiness-only verification refuses budgets over 900 seconds before invoking Docker (847.129333ms)\n\u2139 tests 7\n\u2139 suites 0\n\u2139 pass 5\n\u2139 fail 2\n\u2139 cancelled 0\n\u2139 skipped 0\n\u2139 todo 0\n\u2139 duration_ms 1993.751834\n\n\u2716 failing tests:\n\ntest at scripts/ci/ecommerce_target.test.cjs:127:1\n\u2716 full Docker verification refuses budgets over 900 seconds before invoking Docker (1087.45075ms)\n  AssertionError [ERR_ASSERTION]: full invoked Docker before rejecting its budget\n  \n  true !== false\n  \n      at assertFullBudgetRefusedBeforeDocker (/Users/jon/projects/scrypath/scripts/ci/ecommerce_target.test.cjs:119:12)\n      at TestContext.<anonymous> (/Users/jon/projects/scrypath/scripts/ci/ecommerce_target.test.cjs:128:3)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n      at Test.postRun (node:internal/test_runner/test:1542:19)\n      at Test.run (node:internal/test_runner/test:1467:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n\ntest at scripts/ci/ecommerce_target.test.cjs:131:1\n\u2716 full readiness-only verification refuses budgets over 900 seconds before invoking Docker (847.129333ms)\n  AssertionError [ERR_ASSERTION]: readiness invoked Docker before rejecting its budget\n  \n  true !== false\n  \n      at assertFullBudgetRefusedBeforeDocker (/Users/jon/projects/scrypath/scripts/ci/ecommerce_target.test.cjs:119:12)\n      at TestContext.<anonymous> (/Users/jon/projects/scrypath/scripts/ci/ecommerce_target.test.cjs:132:3)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n      at Test.postRun (node:internal/test_runner/test:1542:19)\n      at Test.run (node:internal/test_runner/test:1467:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: true,\n    expected: false,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+  "source_files": {
+    "scripts/ci/ecommerce_target.test.cjs": "b168836e8e184a51dccac62903e6084d211b890e132347d62e00f4010a1ac6ad",
+    "examples/scrypath_ecommerce/scripts/verify-e2e.sh": "df1de93f61b107723c887b80303417b13b9fc367e50f3413a12ba19cced0d395"
+  },
+  "red_summary": {
+    "full": "The fake Docker executable was invoked before budget rejection; test failed on that assertion.",
+    "readiness_only": "The fake Docker executable was invoked before budget rejection; test failed on that assertion.",
+    "real_docker_invoked": false,
+    "docker_resources_created": false
+  },
+  "supporting_checks": {
+    "bash_n": "pass",
+    "git_diff_check": "pass"
+  }
+}

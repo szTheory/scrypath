@@ -9,6 +9,7 @@ defmodule Scrypath.Reindex do
   alias Scrypath.Options
   alias Scrypath.Operations.Result
   alias Scrypath.Operations.Task, as: OperationTask
+  alias Scrypath.Schema.Metadata
 
   @meilisearch_default_ranking_rules [:words, :typo, :proximity, :attribute, :sort, :exactness]
 
@@ -32,8 +33,12 @@ defmodule Scrypath.Reindex do
       |> Keyword.put(:target_index, target_index)
       |> Keyword.put(:_scrypath_schema, schema_module)
 
+    # The target index is keyed by the document id field the documents carry,
+    # not the first Ecto key column (composite keys would collapse rows).
+    document_id = Metadata.document_id(schema_module)
+
     with {:ok, create_result} <-
-           meilisearch.create_index(schema_module, primary_key(schema_module), workflow_config),
+           meilisearch.create_index(schema_module, document_id, workflow_config),
          {:ok, _create_result} <- maybe_wait_for_result_task(create_result, workflow_config),
          {:ok, settings_result} <-
            meilisearch.apply_settings(schema_module, target_index, workflow_config),
@@ -45,6 +50,8 @@ defmodule Scrypath.Reindex do
              workflow_config
              |> backfill_config()
              |> Keyword.put(:index_name, target_index)
+             # The target was just created, so nothing omitted is in it to delete.
+             |> Keyword.put(:_scrypath_fresh_target, true)
            ),
          {:ok, _backfill_result} <-
            maybe_wait_for_backfill_tasks(backfill_result, workflow_config),
@@ -56,6 +63,7 @@ defmodule Scrypath.Reindex do
          settings_applied: true,
          batches: Map.fetch!(backfill_result, :batches),
          documents: Map.fetch!(backfill_result, :documents),
+         omitted: Map.get(backfill_result, :omitted, 0),
          cutover: cutover
        }}
     end
@@ -191,7 +199,7 @@ defmodule Scrypath.Reindex do
        when is_list(batch_results) do
     batch_results
     |> Enum.reduce_while({:ok, []}, fn batch_result, {:ok, acc} ->
-      case maybe_wait_for_result_task(batch_result, config) do
+      case maybe_wait_for_batch_tasks(batch_result, config) do
         {:ok, waited_batch_result} -> {:cont, {:ok, [waited_batch_result | acc]}}
         {:error, reason} -> {:halt, {:error, reason}}
       end
@@ -206,6 +214,54 @@ defmodule Scrypath.Reindex do
   end
 
   defp maybe_wait_for_backfill_tasks(result, _config), do: {:ok, result}
+
+  # A backfill page is written in several chunks (D-02), each with its own task.
+  # Every chunk task must succeed before cutover, so waiting only on the last one
+  # could swap in an index missing an earlier chunk's documents. Delete chunk tasks
+  # are waited on too. A reindex target is fresh, so backfill submits no deletes
+  # today, but cutover must never depend on that.
+  defp maybe_wait_for_batch_tasks(batch_result, config)
+       when is_map(batch_result) and not is_struct(batch_result) do
+    tasks = Map.get(batch_result, :tasks, [])
+    delete_tasks = Map.get(batch_result, :delete_tasks, [])
+
+    if tasks == [] and delete_tasks == [] do
+      maybe_wait_for_result_task(batch_result, config)
+    else
+      with {:ok, waited_tasks} <- wait_for_each_task(tasks, config),
+           {:ok, waited_delete_tasks} <- wait_for_each_task(delete_tasks, config) do
+        {:ok,
+         batch_result
+         |> put_waited(:task, :tasks, waited_tasks)
+         |> put_waited(:delete_task, :delete_tasks, waited_delete_tasks)}
+      end
+    end
+  end
+
+  defp maybe_wait_for_batch_tasks(batch_result, config),
+    do: maybe_wait_for_result_task(batch_result, config)
+
+  defp wait_for_each_task(tasks, config) do
+    tasks
+    |> Enum.reduce_while({:ok, []}, fn task, {:ok, acc} ->
+      case maybe_wait_for_result_task(%{task: task}, config) do
+        {:ok, %{task: waited_task}} -> {:cont, {:ok, [waited_task | acc]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+    |> case do
+      {:ok, waited_tasks} -> {:ok, Enum.reverse(waited_tasks)}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp put_waited(batch_result, _last_key, _list_key, []), do: batch_result
+
+  defp put_waited(batch_result, last_key, list_key, waited_tasks) do
+    batch_result
+    |> Map.put(last_key, List.last(waited_tasks))
+    |> Map.put(list_key, waited_tasks)
+  end
 
   defp followable_task(%Result{task: %OperationTask{} = task}), do: task
   defp followable_task(%{task: %OperationTask{} = task}), do: task
@@ -239,12 +295,5 @@ defmodule Scrypath.Reindex do
 
   defp backfill_config(config) do
     Keyword.take(config, @backfill_pass_through_keys)
-  end
-
-  defp primary_key(schema_module) do
-    case schema_module.__schema__(:primary_key) do
-      [field | _rest] -> field
-      [] -> Scrypath.Schema.Metadata.document_id(schema_module)
-    end
   end
 end

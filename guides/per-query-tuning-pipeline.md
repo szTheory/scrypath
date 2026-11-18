@@ -84,15 +84,7 @@ Stable contracts are **tags and tuple shapes**, not human strings.
 
 ## Telemetry catalog
 
-Telemetry is a **public observability contract** for event names and documented metadata keys. **Additive** metadata in minor releases is acceptable; **renaming or removing** events or documented keys is **breaking**.
-
-| Event | Span / execute | Documented metadata (non-exhaustive) | When |
-| --- | --- | --- | --- |
-| `[:scrypath, :search]` | Span | Module, config-derived fields via `Telemetry.common_metadata/3`, optional `search_scope`, `scoped_facet` for facet-scoped searches | Around single-index `search/3` work |
-| `[:scrypath, :search_many]` | Span | `schema_count`, `raw_entry_count`, stop metadata from results | Around multi-search orchestration |
-| `[:scrypath, :search_many, :partial]` | Execute | Per-schema failure summaries where applicable | When some indexes fail but the API returns partial success |
-
-Refer to the public search API docs for the emit points as the code evolves.
+The [Telemetry](telemetry.md) guide is the catalog of every Scrypath event and documented metadata key, including `[:scrypath, :search]`, `[:scrypath, :search_many]`, and `[:scrypath, :search_many, :partial]`. Event names and documented keys are a public contract there.
 
 ## Federation and search_many
 

@@ -165,6 +165,17 @@ defmodule Scrypath do
   * **`:status` `:completed`** — the `:inline` path finished, including waiting for a terminal Meilisearch
     task when `sync_mode: :inline` and the backend returned a task handle.
 
+  The map also carries **`:tasks`**: one task (or, under `:oban`, one queued job) per chunk of at
+  most 1000 ids, in order; `:task` (or `:job`) is the last entry. Under `:manual`, check every entry in
+  `:tasks`, because a successful last task does not prove earlier chunks succeeded. Chunks run in
+  order and the call stops at the first failed chunk, returning its `{:error, reason}`; chunks already
+  sent stay applied. See [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md).
+
+  **`:document_ids`** lists each id once, sorted by its string form (`[2, 10]` is reported as
+  `[10, 2]`), for any number of ids. It does not follow the order of your input, so do not zip it
+  with the records or ids you passed. **`:document_count`** is the number of distinct ids, and the
+  sync telemetry span reports the same count on start and stop.
+
   Pitfalls when the database write “succeeded” but search lags: [guides/common-mistakes.md](guides/common-mistakes.md).
 
   Tagged `{:error, reason}` tuples may include `{:timeout, _}`, `{:task_failed, _}`,
@@ -190,6 +201,11 @@ defmodule Scrypath do
   change fans out to target search documents.
 
   Returns `{:ok, Scrypath.Operations.Result.t()}` describing the applied synchronization work.
+
+  The fan-out resolver receives a list of loaded owning-schema records in every sync mode.
+  Under `sync_mode: :oban` the job carries document ids and the worker reloads the current
+  records when it runs, skipping owners that no longer exist; see
+  [guides/related-data-and-reindexing.md](guides/related-data-and-reindexing.md).
   """
   @spec sync_related(module(), struct() | [struct()], keyword()) ::
           {:ok, term()} | {:error, term()}
@@ -372,6 +388,82 @@ defmodule Scrypath do
     Scrypath.Search.search_many!(entries, opts)
   end
 
+  @doc """
+  Rebuilds documents in the live index from the database, one batch at a time.
+
+  Backfill pages the schema's table, or the rows selected by the caller's
+  **`:query`**, in primary-key order. It builds each batch's documents through
+  the same loader that Oban sync uses, so declared **`preload:`** associations
+  are loaded and a schema's **`search_records/2`** decides which rows in the
+  batch are searchable.
+
+  **`:batch_size`** sets the page size only. Each page is written to the backend
+  in chunks of at most 1000 documents (and its removals in chunks of at most
+  1000 ids), so `batch_size: 5000` makes five upsert calls per page. If a chunk
+  fails, backfill stops and returns `{:error, reason}`. Later chunks and later
+  pages are not sent.
+
+  ## Result
+
+  On success, backfill returns **`{:ok, result}`** where `result` is a map with:
+
+    * **`index`** - the index the documents were written to
+    * **`batches`** - the number of batches visited
+    * **`documents`** - the number of documents upserted across all batches
+    * **`removed`** - the number of document ids submitted for deletion across
+      all batches (see "Removed documents")
+    * **`mode`** - the `sync_mode` the backfill ran with
+    * **`batch_results`** - one map per batch, in paging order
+
+  Each **`batch_results`** entry has:
+
+    * **`index`** - the index the batch was written to
+    * **`documents`** - the number of documents upserted for the batch
+    * **`removed`** - the number of ids from the batch submitted for deletion
+    * **`last_primary_key`** - the primary key of the last row in the batch
+      (see "Cursor shape")
+    * **`tasks`** - every upsert chunk task for the batch, in order; `task` is
+      the last of them. Always a list, and `[]` when the batch upserted nothing
+    * **`task`** - the backend task for the batch's last upsert chunk; absent
+      when the batch had no documents to upsert, for example when every row was
+      omitted
+    * **`delete_tasks`** - every delete chunk task for the ids counted in
+      `removed`, in order; `delete_task` is the last of them. Always a list, and
+      `[]` when the batch submitted no delete
+    * **`delete_task`** - the backend task for the batch's last delete chunk;
+      present only when the batch submitted a delete
+
+  ## Batch tasks
+
+  Both writes are accepted asynchronously by the backend. Backfill does not wait
+  on **`task`** or **`delete_task`** in any `sync_mode`, so `documents` and
+  `removed` count what was submitted, not what the backend has applied. A
+  caller that needs the removals applied before continuing must follow
+  **`delete_task`** as well as **`task`**.
+
+  A batch written in several chunks has one task per chunk: more than 1000
+  upserted documents or more than 1000 removed ids per page. A caller following
+  a batch must follow every entry in **`tasks`** and **`delete_tasks`**, not
+  only **`task`** and **`delete_task`**. `Scrypath.reindex/2` waits on every
+  `tasks` and `delete_tasks` entry of every batch before cutover, and stops
+  without swapping indexes if any of them fails.
+
+  ## Cursor shape
+
+  **`last_primary_key`** is the scalar key value for a single-column primary
+  key, for example `7`. For a composite primary key it is a keyword list in
+  primary-key order, for example `[org_id: 1, id: 7]`. Backfill pages on the
+  full key, so every row in scope is visited exactly once.
+
+  ## Removed documents
+
+  For a schema that defines **`search_records/2`**, ids from a visited batch
+  that the function does not return are deleted from the index and counted in
+  **`removed`**. Only ids from rows the backfill visited are deleted. Documents
+  for rows outside the visited scope, including rows deleted outside Scrypath,
+  are never touched; use `reconcile_sync/2` for drift recovery. Schemas without
+  `search_records/2` index every visited row, so `removed` stays `0`.
+  """
   @spec backfill(module(), keyword()) :: {:ok, map()} | {:error, term()}
   def backfill(schema_module, opts \\ []) do
     Scrypath.Backfill.run(schema_module, opts)

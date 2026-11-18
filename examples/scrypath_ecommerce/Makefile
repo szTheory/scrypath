@@ -181,7 +181,7 @@ verify-path-motion: ## One-command path-motion proof: boot test stack, run spec,
 	  $(COMPOSE) down; \
 	  exit $$STATUS
 
-verify-shell-wash: ## One-command shell chrome/wash proof; optional LLM judge via OPS_UI_LLM_JUDGE=1
+verify-shell-wash: ## One-command shell chrome/wash proof
 	@echo "Booting containerized test stack on http://127.0.0.1:$(WEB_PORT) (Playwright/CI shape)..."
 	$(COMPOSE) up --build -d
 	@echo "Waiting for app readiness on :$(WEB_PORT)..."
@@ -202,20 +202,8 @@ verify-shell-wash: ## One-command shell chrome/wash proof; optional LLM judge vi
 	  else \
 	    WASH_STATUS=1; \
 	  fi; \
-	  JUDGE_STATUS=0; \
-	  if [ "$${OPS_UI_LLM_JUDGE:-0}" = "1" ] || [ "$${OPS_UI_LLM_JUDGE_REQUIRED:-0}" = "1" ]; then \
-	    echo "Capturing admin matrix for adversarial visual judge..."; \
-	    ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-$(ADMIN_SCREENSHOT_DIR)} PLAYWRIGHT_BASE_URL=http://127.0.0.1:$(WEB_PORT) npm run test:e2e:admin-matrix -- --retries=1; \
-	    MATRIX_STATUS=$$?; \
-	    if [ "$$MATRIX_STATUS" -eq 0 ]; then \
-	      ADMIN_SCREENSHOT_DIR=$${ADMIN_SCREENSHOT_DIR:-$(ADMIN_SCREENSHOT_DIR)} npm run test:e2e:ops-ui-visual-judge; \
-	      JUDGE_STATUS=$$?; \
-	    else \
-	      JUDGE_STATUS=$$MATRIX_STATUS; \
-	    fi; \
-	  fi; \
 	  $(COMPOSE) down; \
-	  if [ "$$SHELL_STATUS" -eq 0 ] && [ "$$WASH_STATUS" -eq 0 ] && [ "$$JUDGE_STATUS" -eq 0 ]; then exit 0; fi; \
+	  if [ "$$SHELL_STATUS" -eq 0 ] && [ "$$WASH_STATUS" -eq 0 ]; then exit 0; fi; \
 	  exit 1
 
 logs: ## Tail infra logs

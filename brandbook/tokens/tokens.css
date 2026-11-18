@@ -1,7 +1,8 @@
 /* ============================================================================
-   scrypath design tokens — CSS custom properties (light + dark)
-   Single source mirrored from the live scrypath_ops theme. Prefix: --sp-*
-   Pair with assets/fonts/fonts.css for the brand type. Toggle dark via
+   scrypath warm brand tokens — CSS custom properties (light + dark)
+   Separate from the live ScrypathOps interface theme. Prefix: --sp-*
+   This CSS owns the brand presentation values. Pair with assets/fonts/fonts.css.
+   Toggle dark via
    <html data-theme="dark"> (or the prefers-color-scheme block below).
    ============================================================================ */
 

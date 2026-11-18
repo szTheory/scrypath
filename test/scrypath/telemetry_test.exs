@@ -104,6 +104,28 @@ defmodule Scrypath.TelemetryTest do
     refute Map.has_key?(upsert_stop.metadata, :request_id)
   end
 
+  test "sync span start and stop report the same deduped document_count (WR-05)" do
+    post = fn id -> %SearchablePost{id: id, title: "T#{id}", body: "B"} end
+    opts = [backend: RecordingBackend, sync_mode: :manual]
+
+    events =
+      capture_events([[:scrypath, :sync, :upsert], [:scrypath, :sync, :delete]], fn ->
+        assert {:ok, %{document_ids: [10, 2], document_count: 2}} =
+                 Scrypath.sync_records(SearchablePost, [post.(2), post.(10), post.(2)], opts)
+
+        assert {:ok, %{document_ids: [10, 2], document_count: 2}} =
+                 Scrypath.delete_documents(SearchablePost, [2, 10, 2], opts)
+      end)
+
+    for kind <- [:upsert, :delete] do
+      start = find_event(events, [:scrypath, :sync, kind, :start])
+      stop = find_event(events, [:scrypath, :sync, kind, :stop])
+
+      assert start.metadata.document_count == 2
+      assert stop.metadata.document_count == 2
+    end
+  end
+
   test "search execution and hydration emit separate workflow spans without backend-specific detail" do
     FakeRepo.put_records([
       %QueryablePost{id: 1, title: "First"},
@@ -323,6 +345,30 @@ defmodule Scrypath.TelemetryTest do
 
     assert architecture =~
              "backend-native task detail remains namespaced under `Scrypath.Meilisearch.*`"
+  end
+
+  describe "job_stop_metadata/1" do
+    alias Scrypath.Telemetry
+
+    for {label, result, expected} <- [
+          {":ok", :ok, %{outcome: :ok}},
+          {"an atom error", {:error, :timeout}, %{outcome: :error, error_kind: :timeout}},
+          {"an HTTP error with a body", {:error, {:http_error, 503, "body"}},
+           %{outcome: :error, error_kind: :http}},
+          {"a bare cancel tag", {:cancel, {:invalid_job, :invalid_search_records}},
+           %{outcome: :cancel, cancel_reason: :invalid_search_records}},
+          {"a tuple cancel tag", {:cancel, {:invalid_job, {:invalid_arg, "document_ids"}}},
+           %{outcome: :cancel, cancel_reason: :invalid_arg}},
+          {"free-text cancel", {:cancel, "free text"}, %{outcome: :cancel, cancel_reason: :other}}
+        ] do
+      test "maps #{label}" do
+        metadata = Telemetry.job_stop_metadata(unquote(Macro.escape(result)))
+
+        assert metadata == unquote(Macro.escape(expected))
+        refute Map.has_key?(metadata, :document_count)
+        refute Map.has_key?(metadata, :result_kind)
+      end
+    end
   end
 
   defp capture_events(prefixes, fun) do

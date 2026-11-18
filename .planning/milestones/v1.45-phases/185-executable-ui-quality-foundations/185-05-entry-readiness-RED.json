@@ -1,0 +1,11 @@
+{
+  "schema": "scrypath.phase185.entry-readiness-red.v1",
+  "command": "node --test --test-name-pattern='stable entry capture settles readiness' e2e/ui-review.selftest.mjs",
+  "working_directory": "/Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce",
+  "script_path": "e2e/ui-review.selftest.mjs",
+  "process_exit_code": 1,
+  "baseline_ui_review_mjs_sha256": "3fe90d45253f98a6ea646a162e454b0921ed63f180886690a32bdf16b42c4dcd",
+  "red_selftest_sha256": "ecd5a16bdd7ac7b086caf495f2a9bda235118f03187ef23a2938cfbb42ccdd1a",
+  "assertion": "entry readiness must begin before the first state read",
+  "raw_output": "✖ stable entry capture settles readiness before its first state anchor (2.148458ms)\nℹ tests 1\nℹ suites 0\nℹ pass 0\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 52.033792\n\n✖ failing tests:\n\ntest at e2e/ui-review.selftest.mjs:432:1\n✖ stable entry capture settles readiness before its first state anchor (2.148458ms)\n  AssertionError [ERR_ASSERTION]: entry readiness must begin before the first state read\n  \n  'read' !== 'prepare'\n  \n      at TestContext.<anonymous> (file:///Users/jon/projects/scrypath/.claude/worktrees/agent-p185-glue-u80ewc0s/examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs:466:10)\n      at async Test.run (node:internal/test_runner/test:1409:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: 'read',\n    expected: 'prepare',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+}
