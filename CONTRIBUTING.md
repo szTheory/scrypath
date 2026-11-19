@@ -222,6 +222,8 @@ When you change **`scrypath_ops/docs/*.json`** saved-search fixtures, exported s
 
 ## CI
 
+Every CI or release run is also a chance to spot cheap speed and cost wins (cache keys, duplicated work, path filters, cold-cache time) without weakening what the checks prove; see "Phase workflow defaults" in [AGENTS.md](AGENTS.md).
+
 GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs these jobs:
 
 | Job | Purpose |

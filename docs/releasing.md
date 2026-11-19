@@ -76,6 +76,8 @@ The workflow uses GitHub's built-in `GITHUB_TOKEN` for Release Please. Keep `HEX
 
 ## Local CI Reproduction
 
+When a release or CI run finishes, note any cheap speed or cost win (cache keys, duplicated work, cold-cache time) that would not weaken the gate; see "Phase workflow defaults" in `AGENTS.md`.
+
 For a deterministic local reproduction of the always-on release contract gate, run the Docker smoke wrapper:
 
 ```bash
