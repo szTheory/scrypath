@@ -241,7 +241,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | Panels around individual actions or native disclosures | Action groups provide spacing; buttons carry their own affordance. Disclosures remain unframed. Group rows with headings, spacing, or separators. |
 | Repeated “Operator workspace” page eyebrow | The actual page heading provides orientation. |
 
-Search health diagnostic groups share their schema's surface with a single divider where useful, rather than another boxed card. Keep full identifiers and last-success evidence readable. Schema choices use the same radio treatment at all current allowlist counts; revisit only when real list size demonstrates a need for another control. One schema is read-only context when it is the resolved selection; an unresolved scope remains unselected and offers an explicit valid choice, including with one allowed schema. Never make the first option look selected when the server rejected the URL scope. Keep any genuine danger styling and confirmation on the action itself, not on a surrounding decorative panel.
+Search health diagnostic groups share their schema's surface with a single divider where useful, rather than another boxed card. Keep full identifiers and last-success evidence readable. Schema choices use the same radio treatment at all current allowlist counts; revisit only when real list size demonstrates a need for another control. One schema is read-only context when it is the resolved selection; an unresolved scope remains unselected and offers an explicit valid choice, including with one allowed schema. Never make the first option look selected when the server rejected the URL scope. Keep the confirmation on the action itself (a destructive confirm is the dialog's one Plum button, named by its consequence), not on a surrounding decorative panel.
 
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
 The type floor is 12px: `--text-ops-xs` and `--text-ops-sm` are both 0.75rem and nothing
@@ -262,8 +262,8 @@ Shared `.ops-btn` actions use neutral surface-2 hover and a stronger transient n
 Elevation ladder: `surface` (1px, resting) → `mid` (subtle hover / interactive state) →
 `raised` (10px, the element lifts off the page) → `overlay` (24px, modals/flash). Use
 `mid` for hover/selected feedback, `raised` only for a genuine lift (intent-card hover).
-`focus` is **reserved** — prefer the global `:focus-visible` outline (see Focus below);
-the box-shadow ring is only an escape hatch for inset focus inside overflow-clipped boxes.
+There is no focus shadow token (retired in Phase 187): focus is an outline (see Focus below), and
+inside an overflow-clipped box the outline is drawn inward instead.
 
 **Dark-only augmentation:** `--shadow-ops-panel-dark` is a dark-only supplement declared in
 the D-10 dual-path blocks; it is **not** declared in light. Light panels continue to use
@@ -276,7 +276,7 @@ all — the absence is the mechanism that keeps light panels unchanged.
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `.ops-flash`, `.ops-intent-card` |
+| `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `.ops-flash > .alert`, `.ops-intent-card` |
 
 **Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
 seated into the surface, not floating above it); the `0 1px 3px` retains the subtle downward
@@ -286,8 +286,9 @@ dark seated depth without visible shadow lift.
 **Glow and copper are retired.** `--shadow-ops-glow`, `--shadow-ops-glow-copper` and the copper
 vocabulary (`.ops-copper-eyebrow`, `.ops-copper-badge`, `.ops-copper-node`, `.ops-copper-node--fill`)
 are on the retired list above. They stay declared, wired to no template, only until the shape and
-motion pass removes their remaining consumers (the active nav item, route and path nodes, and the
-active saved search item); no new rule may use them. `--color-secondary` is a quiet neutral: it is
+motion pass removes their remaining consumers (route and path nodes, and the active saved search
+item's dark rule); no new rule may use them. The active nav item lost its glow to the Selection
+Signature (below). `--color-secondary` is a quiet neutral: it is
 never an accent and never a status tone.
 
 ## Focus
@@ -296,6 +297,33 @@ One ring for the whole shell: the global `:focus-visible { outline: 2px solid pr
 outline-offset: 2px }` in `@layer base`. Do **not** add per-element `focus-visible:ring-*`
 utilities — an `outline` is not clipped by `overflow-x-auto` (e.g. `.ops-table`) where a
 box-shadow ring is, and double-drawing outline + ring reads as muddy.
+
+Inside `.ops-table-scroll` the same ring is drawn inward (`outline-offset: -2px`), so the
+scroller's overflow cannot cut it; the contrast manifest binds that selector and offset.
+
+**Header height and scroll padding.** `--ops-header-h` is the sticky header's height: 4rem, and 7rem
+at 640px and below where the header wraps to two rows. `html:has(.ops-shell)` sets
+`scroll-padding-top: calc(var(--ops-header-h) + 1rem)`, so a focused or anchored element is scrolled
+below the header, never under it. The rule is scoped by `:has(.ops-shell)` so it never reaches a host
+page. `ui-tokens.test.mjs` ("live scroll padding clears the sticky header") enforces it.
+
+## Buttons, row actions, selection and overlays — Phase 187
+
+- **One Plum button per scope.** A scope is a page or one open dialog or sheet. Every other button is
+  the outline default (Panel fill, Ink text, opaque Control Edge border; hover and press are
+  `--ops-sunken`, never `--ops-selected`). There is no danger variant and no error button class: a
+  destructive confirm is the dialog's one Plum button, named by its consequence, with Cancel focused.
+  Plum buttons underline their label on hover and keep their fill.
+- **Row actions** (`.ops-text-action`) are underlined Ink text, 14px 600, with a 40px target and a 2px
+  underline on hover. They share one computed style; nothing else may override it. Prose links are
+  Plum (Orchid in dark) and underlined at rest.
+- **Selection Signature.** Every selected or current element has the `--ops-selected` fill and a 2px
+  `border-inline-start` in `--color-primary`. The 2px is reserved at rest (transparent, or the control
+  edge on a bordered chip) so selecting never moves layout. One shared rule at the end of `app.css`
+  lists the selectors.
+- **Overlays.** `.modal-box`, `.ops-sheet__panel`, `.ops-cmdk__panel`, `.ops-mobile-nav__panel` and
+  `.ops-flash > .alert` are `--color-base-100` with a 1px Control Edge border and `--shadow-ops-overlay`.
+  Every backdrop is one scrim, `color-mix(in oklch, var(--color-black) 50%, transparent)`.
 
 ## Shell chrome — Phase 135
 
@@ -364,7 +392,8 @@ a failed row is `:error`, a retrying or unverified row is `:warning`, anything e
 (`:info/:success/:warning/:error/:partial/:running/:neutral`) — `ops_notice`, `ops_status`,
 `ops_badge`, `ops_metric`, `ops_verdict`. An attr named **`variant`** or
 **`tone`** carries a *presentation* axis, not status — e.g. `ops_action_group`'s
-`:default/:advanced/:danger` or `ops_button`'s `:primary/:ghost/...`. Don't conflate them.
+`:default/:secondary/:advanced` or `ops_button`'s `:primary/:ghost/...`. There is no danger value
+anywhere (Phase 187). Don't conflate them.
 
 ## Z-index — `--z-index-ops-*` → `z-ops-*`
 
