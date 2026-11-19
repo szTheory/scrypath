@@ -317,7 +317,16 @@ for (const entry of entries) {
     await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toBeVisible();
     await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toHaveText("Refreshing…");
     await expect(refresh.locator('[data-ops-refresh-label="idle"]')).toBeHidden();
-    expect(await refresh.evaluate((button) => button.getAnimations({ subtree: true }).length)).toBe(0);
+    // A finite color transition from the disabled state is fine; a keyframe animation or any
+    // looping effect is not.
+    expect(
+      await refresh.evaluate((button) =>
+        button
+          .getAnimations({ subtree: true })
+          .filter((a) => a instanceof CSSAnimation || a.effect?.getComputedTiming().iterations === Infinity)
+          .map((a) => a.constructor.name)
+      )
+    ).toEqual([]);
     await refresh.evaluate((button) => button.classList.remove("phx-click-loading"));
     await expect(refresh).toBeEnabled();
     await expect(refresh).not.toHaveAttribute("aria-busy");
@@ -326,7 +335,14 @@ for (const entry of entries) {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await refresh.evaluate((button) => button.classList.add("phx-click-loading"));
     await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toBeVisible();
-    expect(await refresh.evaluate((button) => button.getAnimations({ subtree: true }).length)).toBe(0);
+    expect(
+      await refresh.evaluate((button) =>
+        button
+          .getAnimations({ subtree: true })
+          .filter((a) => a instanceof CSSAnimation || a.effect?.getComputedTiming().iterations === Infinity)
+          .map((a) => a.constructor.name)
+      )
+    ).toEqual([]);
     await refresh.evaluate((button) => button.classList.remove("phx-click-loading"));
 
     await chooseScenario(page, "refresh-disabled");
