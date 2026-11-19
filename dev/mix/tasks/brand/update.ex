@@ -1,11 +1,11 @@
 defmodule Mix.Tasks.Brand.Update do
-  @moduledoc false
+  @moduledoc """
+  The only module that touches the network for the brand archive. Without
+  arguments it re-downloads the archive and compares it with the pin (read
+  only). With a source and the full expected-values set it refreshes the
+  committed assets and the pin. Nothing here runs in CI.
+  """
   use Mix.Task
-
-  # The only module that touches the network for the brand archive (v1.46 D6).
-  # Without arguments it re-downloads the archive and compares it with the pin
-  # (read only). With a source and the full expected-values set it refreshes the
-  # committed assets and the pin. Nothing here runs in CI.
 
   @shortdoc "Re-checks or refreshes the pinned brand assets from the brand archive"
 

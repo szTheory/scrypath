@@ -1,10 +1,13 @@
 defmodule Mix.Tasks.Verify.Brand do
-  @moduledoc false
+  # A real moduledoc (not `false`): the tooling-boundary test in
+  # test/release/package_contents_test.exs pins which Verify* modules are hidden
+  # from `mix help`, and this verifier is meant to stay discoverable.
+  @moduledoc """
+  Offline, merge-blocking check that the committed brand assets are exactly the
+  pinned ones. It never touches the network; the online re-download check lives
+  only in the brand update task.
+  """
   use Mix.Task
-
-  # Offline, merge-blocking check that the committed brand assets are exactly the
-  # pinned ones (v1.46 D6). It never touches the network; the online re-download
-  # check lives only in `mix brand.update`.
 
   @shortdoc "Verifies the committed brand assets against brand/brand.pin.json (offline)"
 
