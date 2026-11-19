@@ -9,9 +9,11 @@
  *   P-17b  a sentinel element on a host route computes the same style in all six combinations of OS
  *          scheme and stored theme preference, and again after visiting an ops route and coming back
  *   P-17c  a host `--color-primary` rule added after the ops stylesheet wins on `.btn-primary`, in
- *          light, in an explicit dark theme and in System dark. The System dark case below uses the
- *          dark-scheme form of the override; a plain `:root` rule also wins there (a one-off probe on
- *          the final stack, recorded in 187-CAPTURE-INVENTORY.md)
+ *          light, in an explicit dark theme and in System dark. System dark is proved twice: with
+ *          the plain `:root { --color-primary: ... }` rule the README tells hosts to write, and
+ *          with the dark-scheme form of the override. The guarantee is for unlayered rules: the
+ *          daisyUI theme variables live in `@layer base`, so a Tailwind `@theme` override (the
+ *          lower `theme` layer) loses to them whatever the load order
  *   P-17d  with `Content-Security-Policy: font-src 'self'` on the ops document both fonts still load
  *          and no `securitypolicyviolation` fires; a planted `font-src 'none'` makes the same probe
  *          fail, so the probe can see a break
@@ -198,11 +200,14 @@ test.describe("ops host contract", () => {
   });
 
   test("P-17c a host accent override added after the ops stylesheet wins on the primary button", async ({ browser }) => {
-    const override = { light: ":root{--color-primary:#123456}", dark: ":root{--color-primary:#123456}", system: "@media (prefers-color-scheme: dark){:root:not([data-theme]){--color-primary:#123456}}" };
+    // `plain` is the rule the README tells hosts to write; `darkScheme` is the dark-scheme form of the same override.
+    const plain = ":root{--color-primary:#123456}";
+    const darkScheme = "@media (prefers-color-scheme: dark){:root:not([data-theme]){--color-primary:#123456}}";
     const cases: Array<{ name: string; combination: Combination; css: string }> = [
-      { name: "light", combination: { scheme: "light", preference: null }, css: override.light },
-      { name: "explicit dark", combination: { scheme: "light", preference: "dark" }, css: override.dark },
-      { name: "System dark", combination: { scheme: "dark", preference: null }, css: override.system }
+      { name: "light", combination: { scheme: "light", preference: null }, css: plain },
+      { name: "explicit dark", combination: { scheme: "light", preference: "dark" }, css: plain },
+      { name: "System dark", combination: { scheme: "dark", preference: null }, css: darkScheme },
+      { name: "System dark, plain :root rule", combination: { scheme: "dark", preference: null }, css: plain }
     ];
     for (const { name, combination, css } of cases) {
       const { context, page } = await newPage(browser, combination);

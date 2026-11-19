@@ -125,8 +125,10 @@ should check once:
 - **Override the accent through the daisyUI variables.** A plain `:root { --color-primary: ... }`
   rule that loads after the ops stylesheet wins in light, in an explicit dark theme and in System
   dark, and Plum controls such as `.btn-primary` take the new value. Put the variable under your
-  own dark selector only if you want a different accent in dark. Variable names are stable; the
-  values behind them may change in a later release.
+  own dark selector only if you want a different accent in dark. This holds for unlayered rules
+  (or rules in `@layer base` or a later layer): the daisyUI theme variables live in `@layer base`,
+  so a Tailwind `@theme { --color-primary: ... }` override lands in the lower `theme` layer and
+  loses. Variable names are stable; the values behind them may change in a later release.
 - **Contrast is yours once you override.** The operator palette is checked for contrast in its own
   light and dark themes. A host color that replaces a variable is not checked, so keep text at
   4.5:1 and borders and focus rings at 3:1 against their surface.
