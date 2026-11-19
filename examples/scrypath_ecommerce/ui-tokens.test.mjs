@@ -18,12 +18,16 @@
 // hex values (hash, percent-encoded, 0x and quoted bare forms), rgb or rgba
 // triplets (integer, decimal or percent channels), color(srgb ...) and the retired
 // brand directory string of the old identity. UTF-16 files are decoded, never
-// skipped; a text file with an unreadable encoding fails the scan. A path-level,
-// shrink-only allowlist with phase tags covers the
-// files that still hold old values; a stale or missing entry fails. Six planted
-// failures and the accept cases run through the same scan on a temp git tree.
-// The guard never contains a retired value: the deny set is stored without its
-// leading hash and the directory string is joined at runtime.
+// skipped; a text file with an unreadable encoding fails the scan. A shrink-only
+// allowlist with phase tags covers the files that still hold old values. It is
+// path-level, but each entry also carries max_hits, the number of retired-value
+// occurrences in the files it covers: more than that fails (a listed file cannot
+// gain a retired value), fewer fails until the ceiling is lowered, and a test-owned
+// HITS_CEILING must equal the sum, so any change to the counts is a two-file edit.
+// Prefix entries (whole directories) must be retire-last. A stale or missing entry
+// fails. Planted failures and the accept cases run through the same scan on a temp
+// git tree. The guard never contains a retired value: the deny set is stored
+// without its leading hash and the directory string is joined at runtime.
 //
 // Gate budget (v1.46): this is gate 2 (token parity plus the retired-identity
 // deny-list, one mechanism). Deletion trigger: ScrypathOps stops carrying its own
@@ -32,7 +36,8 @@
 // It runs through the ExUnit wrapper in test/mix/tasks/ui_contrast_contract_test.exs,
 // so it rides the existing core and repository-contracts jobs with no new CI step.
 //
-// Raising a ceiling below is a visible source edit; that is the second key.
+// Raising a ceiling below, or an entry's max_hits together with HITS_CEILING, is a visible
+// source edit; that is the second key.
 
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -56,11 +61,16 @@ const PENDING_CEILING = 38;
 const HEX_OUTSIDE_CEILING = 34;
 // Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
 // retired value landed in a new file, which is the thing this guard exists to stop.
+// Growth inside a listed file is stopped by each entry's max_hits (see HITS_CEILING).
 const ALLOWLIST_CEILING = 22;
+// The sum of every entry's max_hits in the allowlist file. Each entry's max_hits must equal
+// the live count, so a retired value added to a listed file needs a max_hits edit there and
+// this edit here: the second key. A drop in hits needs both edits too.
+const HITS_CEILING = 485;
 // The checks take these as a parameter so the planted and accept cases can use
 // their own limits and never depend on how far the live ceilings have shrunk.
-const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING };
-const NO_LIMITS = { pending: Infinity, hexOutside: Infinity, allowlist: Infinity };
+const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING, hits: HITS_CEILING };
+const NO_LIMITS = { pending: Infinity, hexOutside: Infinity, allowlist: Infinity, hits: Infinity };
 
 const MODES = ["light", "dark"];
 const DISPOSITIONS = new Set(["adopt", "derive", "keep-platform", "retire", "local"]);
@@ -746,22 +756,31 @@ function srgbChannel(token) {
   return token.endsWith("%") ? Math.round(Number.parseFloat(token) * 2.55) : Math.round(Number.parseFloat(token) * 255);
 }
 
+/** The distinct denied values in a text and how many times any of them occurs. */
 function scanText(text, deny) {
-  const found = new Set();
+  const values = new Set();
+  let count = 0;
+  const note = (value) => {
+    values.add(value);
+    count += 1;
+  };
   for (const pattern of [HEX_PATTERN, QUOTED_HEX_PATTERN]) {
     for (const match of text.matchAll(pattern)) {
       const hex = match[1].toLowerCase();
-      if (deny.hexes.has(hex)) found.add(`#${hex}`);
+      if (deny.hexes.has(hex)) note(`#${hex}`);
     }
   }
   for (const [pattern, channel] of [[RGB_PATTERN, rgbChannel], [SRGB_PATTERN, srgbChannel]]) {
     for (const match of text.matchAll(pattern)) {
       const triplet = [match[1], match[2], match[3]].map(channel).join(",");
-      if (deny.triplets.has(triplet)) found.add(`rgb(${triplet})`);
+      if (deny.triplets.has(triplet)) note(`rgb(${triplet})`);
     }
   }
-  if (text.toLowerCase().includes(deny.directory)) found.add(deny.directory);
-  return found;
+  const lowered = text.toLowerCase();
+  for (let at = lowered.indexOf(deny.directory); at !== -1; at = lowered.indexOf(deny.directory, at + deny.directory.length)) {
+    note(deny.directory);
+  }
+  return { values, count };
 }
 
 /** The first bytes of a file, for the encoding check. */
@@ -848,7 +867,7 @@ function scanFiles(root, files, deny) {
       throw new Error(`${relativePath} is ${stat.size} bytes, over the ${MAX_SCAN_BYTES} byte scan limit`);
     }
     const found = scanText(decodeFile(fs.readFileSync(absolute), encoding), deny);
-    if (found.size > 0) hits.set(relativePath, found);
+    if (found.count > 0) hits.set(relativePath, found);
   }
   return hits;
 }
@@ -863,7 +882,12 @@ function entryTarget(entry) {
 
 /**
  * Failures for the allowlist against a scan. Messages start with a category:
- * "unlisted" (a hit nobody listed) or "allowlist" (the list itself is wrong).
+ * "unlisted" (a retired value nobody listed, in a new file or in more places than an
+ * entry allows) or "allowlist" (the list itself is wrong or out of date).
+ *
+ * Each entry carries `max_hits`, the number of retired-value occurrences in the files it
+ * covers. More than that is unlisted growth; fewer means the ceiling must be lowered, so a
+ * file already on the list can neither gain a retired value nor keep unused room for one.
  */
 function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
   const failures = [];
@@ -887,6 +911,9 @@ function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
     if (seen.has(target)) failures.push(`allowlist entry ${target} is listed twice`);
     seen.add(target);
     if (!ALLOWLIST_TAGS.has(entry.tag)) failures.push(`allowlist entry ${target} has unknown tag ${String(entry.tag)}`);
+    if (hasPrefix && entry.tag !== "retire-last") {
+      failures.push(`allowlist prefix entry ${target} covers a whole directory and must be tagged retire-last`);
+    }
     if (typeof entry.reason !== "string" || entry.reason.trim() === "") {
       failures.push(`allowlist entry ${target} needs a reason`);
     } else if (entry.tag === "retire-last" && !entry.reason.includes("owner: ")) {
@@ -900,15 +927,32 @@ function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
 
   for (const [relativePath, found] of hits) {
     if (!usable.some((entry) => entryMatches(entry, relativePath))) {
-      failures.push(`unlisted retired identity value in ${relativePath}: ${[...found].sort().join(" ")}`);
+      failures.push(`unlisted retired identity value in ${relativePath}: ${[...found.values].sort().join(" ")}`);
     }
   }
   for (const entry of usable) {
+    const target = entryTarget(entry);
     const covered = files.filter((file) => entryMatches(entry, file));
+    const total = covered.reduce((sum, file) => sum + (hits.get(file)?.count ?? 0), 0);
     if (covered.length === 0) {
-      failures.push(`allowlist entry ${entryTarget(entry)} names a missing path`);
-    } else if (!covered.some((file) => hits.has(file))) {
-      failures.push(`stale allowlist entry ${entryTarget(entry)}: no file it covers holds a retired value any more`);
+      failures.push(`allowlist entry ${target} names a missing path`);
+    } else if (total === 0) {
+      failures.push(`stale allowlist entry ${target}: no file it covers holds a retired value any more`);
+    } else if (!Number.isInteger(entry.max_hits) || entry.max_hits < 1) {
+      failures.push(`allowlist entry ${target} needs max_hits, a positive integer (the files it covers hold ${total})`);
+    } else if (total > entry.max_hits) {
+      failures.push(`unlisted retired identity values in allowlisted entry ${target}: ${total} found, max_hits is ${entry.max_hits} (remove the new values; do not raise the ceiling)`);
+    } else if (total < entry.max_hits) {
+      failures.push(`allowlist entry ${target} holds ${total} retired values, under its max_hits ${entry.max_hits}: lower max_hits to ${total}`);
+    }
+  }
+
+  const ceiling = usable.reduce((sum, entry) => sum + (Number.isInteger(entry.max_hits) ? entry.max_hits : 0), 0);
+  if (Number.isFinite(limits.hits)) {
+    if (ceiling > limits.hits) {
+      failures.push(`allowlist max_hits add up to ${ceiling}, over HITS_CEILING ${limits.hits} (shrink-only)`);
+    } else if (ceiling < limits.hits) {
+      failures.push(`allowlist max_hits add up to ${ceiling}, under HITS_CEILING ${limits.hits}: lower HITS_CEILING to ${ceiling}`);
     }
   }
   return failures;
@@ -986,7 +1030,7 @@ function scanTree(dir, entries = []) {
 const retired = `#${DENY_HEX[0]}`;
 const retiredTriplet = hexTriplet(DENY_HEX[5]).split(",");
 const brandPanel = () => resolveBrandHex(readJson(BRAND_TOKENS), "color.light.panel");
-const entry = (target, tag = "p187") => ({ path: target, tag, reason: "planted fixture entry" });
+const entry = (target, tag = "p187", maxHits = 1) => ({ path: target, tag, reason: "planted fixture entry", max_hits: maxHits });
 
 test("planted retired hex fails", () => {
   const dir = makeTree({ "src/theme.css": `a { color: ${retired}; }\n` });
@@ -1119,6 +1163,63 @@ test("accept allowlisted file with hits", () => {
     "src/legacy.css": `a { color: ${retired}; }\n`,
     [`${RETIRED_DIR}tokens/x.css`]: `a { color: ${retired}; }\n`,
   });
-  const entries = [entry("src/legacy.css"), { prefix: RETIRED_DIR, tag: "retire-last", reason: "owner: a later phase deletes it" }];
+  const entries = [entry("src/legacy.css"), { prefix: RETIRED_DIR, tag: "retire-last", reason: "owner: a later phase deletes it", max_hits: 1 }];
   assert.deepEqual(scanTree(dir, entries), []);
+});
+
+// WR-08 (phase 186 review): the allowlist is path-level, so a retired value added to a file that is already
+// listed used to pass. Each entry now carries max_hits, the count of occurrences in the files it covers.
+test("planted growth in an already-allowlisted file fails", () => {
+  const dir = makeTree({ "src/legacy.css": `a { color: ${retired}; }\nb { color: ${retired}; }\n` });
+  assert.deepEqual(scanTree(dir, [entry("src/legacy.css", "p187", 2)]), []);
+  assert.ok(
+    anyFailure(scanTree(dir, [entry("src/legacy.css", "p187", 1)]), /unlisted retired identity values in allowlisted entry src\/legacy\.css: 2 found, max_hits is 1/),
+  );
+});
+
+test("planted growth through a different form in a listed file fails", () => {
+  const dir = makeTree({ "src/legacy.css": `a { color: ${retired}; background: rgb(${retiredTriplet.join(", ")}); }\n` });
+  assert.ok(anyFailure(scanTree(dir, [entry("src/legacy.css", "p187", 1)]), /2 found, max_hits is 1/));
+});
+
+test("planted growth inside a prefix entry fails", () => {
+  const prefix = { prefix: RETIRED_DIR, tag: "retire-last", reason: "owner: a later phase deletes it", max_hits: 1 };
+  const dir = makeTree({
+    [`${RETIRED_DIR}a.css`]: `a { color: ${retired}; }\n`,
+    [`${RETIRED_DIR}b.css`]: `b { color: ${retired}; }\n`,
+  });
+  assert.ok(anyFailure(scanTree(dir, [prefix]), /allowlisted entry .* 2 found, max_hits is 1/));
+  assert.deepEqual(scanTree(dir, [{ ...prefix, max_hits: 2 }]), []);
+});
+
+test("planted hit drop below the ceiling fails until the ceiling is lowered", () => {
+  const dir = makeTree({ "src/legacy.css": `a { color: ${retired}; }\nb { color: ${retired}; }\n` });
+  assert.ok(
+    anyFailure(scanTree(dir, [entry("src/legacy.css", "p187", 3)]), /src\/legacy\.css holds 2 retired values, under its max_hits 3: lower max_hits to 2/),
+  );
+});
+
+test("planted missing or invalid max_hits fails", () => {
+  const dir = makeTree({ "src/legacy.css": `a { color: ${retired}; }\n` });
+  const { max_hits: _omitted, ...withoutCeiling } = entry("src/legacy.css");
+  assert.ok(anyFailure(scanTree(dir, [withoutCeiling]), /src\/legacy\.css needs max_hits, a positive integer/));
+  for (const bad of [0, -1, 1.5, "1", null]) {
+    assert.ok(anyFailure(scanTree(dir, [{ ...withoutCeiling, max_hits: bad }]), /needs max_hits/), String(bad));
+  }
+});
+
+test("planted prefix entry that is not retire-last fails", () => {
+  const dir = makeTree({ "src/legacy.css": `a { color: ${retired}; }\n` });
+  const failures = scanTree(dir, [{ prefix: "src/", tag: "p187", reason: "planted fixture entry", max_hits: 1 }]);
+  assert.ok(anyFailure(failures, /allowlist prefix entry src\/ covers a whole directory and must be tagged retire-last/));
+});
+
+test("planted hits ceiling must equal the sum of max_hits", () => {
+  const dir = makeTree({ "src/a.css": `a { color: ${retired}; }\n`, "src/b.css": `b { color: ${retired}; }\n` });
+  const files = listRepoFiles(dir);
+  const hits = scanFiles(dir, files, buildDeny());
+  const allowlist = { schema: ALLOWLIST_SCHEMA, entries: [entry("src/a.css"), entry("src/b.css")] };
+  assert.deepEqual(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 2 }), []);
+  assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 1 }), /add up to 2, over HITS_CEILING 1/));
+  assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 3 }), /under HITS_CEILING 3: lower HITS_CEILING to 2/));
 });
