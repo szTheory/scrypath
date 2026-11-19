@@ -1386,10 +1386,15 @@
     gap: var(--spacing-ops-2);
   }
 
+  /* The card is one link, so its title is underlined at rest (it is the link text) and the arrow is
+     Ink: Plum is reserved for text links, the Plum button, selection and focus (P-18). */
   .ops-intent-card__title {
     font-size: var(--text-ops-md);
     font-weight: 600;
     color: var(--color-base-content);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
   }
 
   .ops-intent-card__summary {
@@ -1405,7 +1410,7 @@
     align-items: center;
     font-size: var(--text-ops-body);
     font-weight: 600;
-    color: var(--color-primary);
+    color: var(--color-base-content);
   }
 
   .ops-result-row {
@@ -1730,7 +1735,7 @@
     min-height: var(--control-h-lg);
     padding-inline: var(--spacing-ops-panel);
     border: 0;
-    border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-bottom: var(--border) solid var(--ops-control-edge);
     background: transparent;
     font-size: var(--text-ops-md);
     color: var(--color-base-content);
@@ -1847,10 +1852,11 @@
   transition-timing-function: var(--ease-ops-standard);
 }
 
+/* Selecting a button changes its fill and its 2px start line, never its text weight: a heavier
+   label is wider, and the Selection Signature may not move layout (P-07). */
 .ops-theme-toggle__button[data-theme-selected="true"] {
   background: var(--ops-theme-selection);
   color: var(--color-base-content);
-  font-weight: 600;
 }
 
 /* The toggle's outer edge is the opaque Control Edge (LD-15). Unlayered so it beats the markup's
@@ -2276,7 +2282,6 @@
   .ops-signal-counts > div { display: flex; align-items: center; gap: .5rem; }
   .ops-signal-counts dt { display: inline-flex; align-items: center; gap: .375rem; font-size: var(--text-ops-body); }
   .ops-signal-counts dd { font-size: var(--text-ops-body); font-weight: 600; font-variant-numeric: tabular-nums; }
-  .ops-signal-counts [data-tone="error"] { color: var(--ops-error-text); }
   .ops-signal-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spacing-ops-1) var(--spacing-ops-2); font-size: var(--text-ops-body); font-variant-numeric: tabular-nums; }
   .ops-signal-facts__sep { color: var(--ops-text-muted); }
   .ops-signal-empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-ops-2); }
@@ -2291,7 +2296,7 @@
   .ops-sync-work { display: grid; gap: .5rem; margin-block: .25rem .5rem; }
   .ops-sync-work li { display: flex; align-items: center; gap: .5rem; }
   .ops-sync-work + .ops-help-link { min-height: var(--control-h-xs); align-items: center; }
-  .ops-setting-live[data-missing="true"] { font-family: var(--font-sans); color: var(--ops-error-text); }
+  .ops-setting-live[data-missing="true"] { font-family: var(--font-sans); }
   [data-ops-validate][aria-invalid="true"] { border-color: var(--ops-error-text); }
   .ops-field-error[hidden] { display: none; }
   @media (min-width: 768px) {
