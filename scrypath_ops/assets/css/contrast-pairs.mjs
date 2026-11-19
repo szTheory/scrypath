@@ -7,7 +7,7 @@
 //   (1) References TOKEN NAMES not hex — hex lives in app.css only (D-10). No
 //       `--color-*` declarations, no hex literals, no import of app.css.
 //   (2) Text never uses alpha (Phase 187, A11Y-01). The muted-alpha manifest this file used to hold
-//       (MUTED_PAIRS, the D-11 and D-15 lockstep) is retired: every text declaration is Ink or the
+//       (with its D-11 and D-15 lockstep) is retired: every text declaration is Ink or the
 //       opaque `--ops-text-muted`, so there is no alpha to composite and no manifest to keep in step.
 //       The checker bans alpha on the `color` property directly (N-07) and bans any color-mix of the
 //       primary, secondary or a status color (N-12); `--ops-text-muted` is covered by the muted text
