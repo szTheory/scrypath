@@ -658,9 +658,27 @@ async function assertActionLoading(page: Page, element: ElementId): Promise<{ ta
   return { target, transport, priorRoute, priorText };
 }
 
+// loading-word-allowlist:begin
+// Phase 187 amendment, the only change to this guard. While a LiveView request is in flight the page
+// text must equal the text before the request, except for the loading words the approved UI-SPEC
+// copy-diff allowlist lists: the refresh button shows `Refreshing…` where it showed `Refresh`.
+// Each entry below is that word as a whole line of the page text and the idle line it replaces. Any
+// other difference, including a changed word beside a loading word, still fails. Add an entry only
+// together with a copy-diff allowlist entry in the phase's UI-SPEC; `scripts/ci/ui_state_pairs.test.cjs`
+// evaluates this block and pins the allowlist to exactly these entries.
+const ALLOWLISTED_LOADING_LINES = [{ busy: "Refreshing…", idle: "Refresh" }];
+function normalizeAllowlistedLoadingText(text: string): string {
+  return text.split("\n").map((line) => {
+    const entry = ALLOWLISTED_LOADING_LINES.find((word) => word.busy === line);
+    return entry ? entry.idle : line;
+  }).join("\n");
+}
+// loading-word-allowlist:end
+
 async function assertPendingState(page: Page, element: ElementId, target: Locator, priorRoute: string, priorText: string): Promise<string> {
   const route = new URL(page.url()).pathname + new URL(page.url()).search;
-  const currentText = await page.locator("[data-phx-main]").innerText();
+  // The observed text with allowlisted loading words read as their idle lines; compared with priorText below.
+  const currentText = normalizeAllowlistedLoadingText(await page.locator("[data-phx-main]").innerText());
   const busyLocator = element === "E10" ? page.locator("#saved-search-delete-form") : element === "E9" ? page.locator("#ops-search-playground-form") : target;
   const busyClass = await busyLocator.getAttribute("class") || "";
   const expectedClass = element === "E1" ? "phx-change-loading" : element === "E10" || element === "E9" ? "phx-submit-loading" : "phx-click-loading";

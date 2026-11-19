@@ -857,3 +857,72 @@ test("pair output is atomic, deterministic and never overwritten by different by
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });
+
+// Phase 187 amendment of the preservation guard `assertPendingState`: while a refresh is in flight the
+// page text must equal the text before it, except for the loading words the approved UI-SPEC copy-diff
+// allowlist lists (`Refreshing…` where the refresh button read `Refresh`). These cases evaluate the
+// guard's own allowlist block (between its two marker comments) and read the guard's wiring, so the
+// tested code is the code Playwright runs.
+describe("the pending-state guard ignores only the allowlisted loading words", () => {
+  const guardPath = path.resolve(__dirname, "../../examples/scrypath_ecommerce/e2e/helpers/ui-preservation-states.ts");
+  const guardSource = fs.readFileSync(guardPath, "utf8");
+  const begin = "// loading-word-allowlist:begin";
+  const end = "// loading-word-allowlist:end";
+
+  function loadAllowlistBlock() {
+    const start = guardSource.indexOf(begin);
+    const stop = guardSource.indexOf(end);
+    assert.ok(start >= 0 && stop > start, "the guard has its two loading-word-allowlist marker comments");
+    const block = guardSource.slice(start, stop);
+    // The block is TypeScript only by its `: string` annotations; removing them leaves plain JavaScript.
+    const plain = block.replace(/:\s*string\b/g, "");
+    return new Function(`${plain}\nreturn { ALLOWLISTED_LOADING_LINES, normalizeAllowlistedLoadingText };`)();
+  }
+
+  const { ALLOWLISTED_LOADING_LINES, normalizeAllowlistedLoadingText } = loadAllowlistBlock();
+  const idle = ["Search health", "Refresh", "Checked 2026-10-06 12:00 UTC", "No failed work"].join("\n");
+  const sameAsCompared = (current, prior) => normalizeAllowlistedLoadingText(current) === prior;
+
+  test("the allowlist is exactly the refresh button label", () => {
+    assert.deepEqual(ALLOWLISTED_LOADING_LINES, [{ busy: "Refreshing…", idle: "Refresh" }]);
+  });
+
+  test("a refresh button that reads Refreshing… while in flight is the same page", () => {
+    const busy = idle.replace("\nRefresh\n", "\nRefreshing…\n");
+    assert.notEqual(busy, idle);
+    assert.equal(sameAsCompared(busy, idle), true);
+    assert.equal(sameAsCompared(idle, idle), true, "the idle text is unchanged by the normalization");
+  });
+
+  test("planted: a non-allowlisted text change during loading still fails", () => {
+    const withLoadingWord = idle.replace("\nRefresh\n", "\nRefreshing…\n");
+    // Another line changes (with and without the loading word), and a lone change on its own.
+    assert.equal(sameAsCompared(withLoadingWord.replace("No failed work", "Failed work found"), idle), false);
+    assert.equal(sameAsCompared(idle.replace("No failed work", "Failed work found"), idle), false);
+    // A line that was removed or added while the loading word is shown.
+    assert.equal(sameAsCompared(withLoadingWord.replace("\nNo failed work", ""), idle), false);
+    assert.equal(sameAsCompared(`${withLoadingWord}\nUnexpected banner`, idle), false);
+    // The button label itself changing to a word that is not allowlisted.
+    for (const word of ["Refreshed", "Loading…", "Running…", "Refreshing", "Refreshing… ", "Refreshing…done"]) {
+      assert.equal(sameAsCompared(idle.replace("\nRefresh\n", `\n${word}\n`), idle), false, `"${word}" is not an allowlisted loading line`);
+    }
+  });
+
+  test("planted: Refreshing… does not stand in for a line that was not there before", () => {
+    const priorWithoutButton = ["Search health", "Checked 2026-10-06 12:00 UTC"].join("\n");
+    const current = ["Search health", "Refreshing…", "Checked 2026-10-06 12:00 UTC"].join("\n");
+    assert.equal(sameAsCompared(current, priorWithoutButton), false);
+    // Only a whole line counts: the word inside a longer line is a text change.
+    assert.equal(sameAsCompared(idle.replace("Checked", "Refreshing… Checked"), idle), false);
+  });
+
+  test("the guard still compares route, text and the busy class, and normalizes only the observed text", () => {
+    const body = /async function assertPendingState\([\s\S]*?\n}\n/.exec(guardSource)?.[0] ?? "";
+    assert.ok(body.length > 0, "assertPendingState is present");
+    assert.match(body, /const currentText = normalizeAllowlistedLoadingText\(await page\.locator\("\[data-phx-main\]"\)\.innerText\(\)\);/);
+    assert.match(body, /route !== priorRoute \|\| currentText !== priorText \|\| !busyClass\.split\(\/\\s\+\/\)\.includes\(expectedClass\)/);
+    assert.doesNotMatch(body, /normalizeAllowlistedLoadingText\(priorText\)/, "the prior text is compared as observed");
+    const uses = guardSource.match(/normalizeAllowlistedLoadingText\(/g) ?? [];
+    assert.equal(uses.length, 2, "one definition and the one call in assertPendingState");
+  });
+});
