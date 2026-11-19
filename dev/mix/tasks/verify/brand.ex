@@ -6,6 +6,13 @@ defmodule Mix.Tasks.Verify.Brand do
   Offline, merge-blocking check that the committed brand assets are exactly the
   pinned ones. It never touches the network; the online re-download check lives
   only in the brand update task.
+
+  This task can only trust `brand/brand.pin.json`: a change that edits an asset
+  and its pin entry together passes it. The contract test
+  (`test/mix/tasks/brand_pin_contract_test.exs`) owns two constants that the pin
+  must match, the archive hash and a digest of the per-asset hashes, so that
+  change needs a second, reviewed edit in a different file. See
+  `Mix.Tasks.Brand.Update` for the trade-off.
   """
   use Mix.Task
 

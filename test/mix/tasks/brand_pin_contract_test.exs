@@ -15,9 +15,20 @@ defmodule Mix.Tasks.BrandPinContractTest do
   @fonts "scrypath_ops/priv/static/assets/fonts"
   @prefix "scrypath-brand/"
 
-  # Test-owned copy of the pinned archive hash. Editing brand/brand.pin.json
-  # alone must fail this test; a refresh changes both keys in the same PR.
+  # Test-owned constants. Editing brand/brand.pin.json alone must fail this file;
+  # a refresh changes the pin and both constants in the same PR.
+  #
+  # @expected_zip_sha256 binds the archive. @expected_assets_digest binds the
+  # vendored bytes: sha256 over the line "path:sha256\n" of every pinned asset,
+  # sorted by path. Without it, a change that edits an asset together with its
+  # pin entry would pass `mix verify.brand`, which can only trust the pin file.
+  # With it, that change needs a second, reviewed edit here. The trade-off: one
+  # more value to copy per refresh (the update task prints it), and a PR that
+  # edits the pin, the asset and both constants together is still not caught
+  # offline. The online check in `mix brand.update` closes that case by comparing
+  # the upstream archive with the committed files.
   @expected_zip_sha256 "3fc6d80f597eb232b6c25d5929cbe9dbbe6503c346c1360456ea839f3334be88"
+  @expected_assets_digest "361c8fc6bc42d734430b9c5f7bafc8fc24e5f577fc4f649ba975a0276069bdaf"
 
   describe "committed pin" do
     test "pin source fields equal the test-owned expectations" do
@@ -28,6 +39,10 @@ defmodule Mix.Tasks.BrandPinContractTest do
       assert source["zip_entries"] == 108
       assert source["zip_uncompressed_bytes"] == 8_912_608
       assert source["repository_commit"] == "ced7c40e"
+    end
+
+    test "the pinned per-asset hashes equal the test-owned assets digest" do
+      assert assets_digest(read_pin!(@root)) == @expected_assets_digest
     end
 
     test "verify.brand check!/1 accepts the committed tree" do
@@ -199,6 +214,23 @@ defmodule Mix.Tasks.BrandPinContractTest do
         error = assert_raise Mix.Error, fn -> Brand.check!(tmp) end
         assert error.message == "verify.brand: active content (#{unquote(label)}): #{file}"
       end
+    end
+
+    test "an asset edited together with its pin entry passes verify.brand but not the assets digest" do
+      tmp = copy_pinned_tree!()
+      file = "brand/assets/docs/scrypath-exdoc.css"
+      File.write!(Path.join(tmp, file), "\n/* edited */\n", [:append])
+      repin_file!(tmp, file)
+
+      assert Brand.check!(tmp) == :ok
+      refute assets_digest(read_pin!(tmp)) == @expected_assets_digest
+    end
+
+    test "update.ex and the test agree on the digest definition" do
+      pairs = for asset <- read_pin!(@root)["assets"], do: {asset["path"], asset["sha256"]}
+
+      assert Update.assets_digest(pairs) == @expected_assets_digest
+      assert Update.assets_digest(Enum.reverse(pairs)) == @expected_assets_digest
     end
 
     test "local references in a pinned SVG are accepted" do
@@ -409,7 +441,8 @@ defmodule Mix.Tasks.BrandPinContractTest do
       output = capture_io(fn -> assert Update.refresh!(target, {:zip, zip_path}, opts) == :ok end)
 
       assert read_pin!(target)["source"]["zip_sha256"] == expected.sha256
-      assert output =~ "to #{expected.sha256} in the same PR"
+      assert output =~ "@expected_zip_sha256 to #{expected.sha256}"
+      assert output =~ "@expected_assets_digest to #{assets_digest(read_pin!(target))}"
       assert Brand.check!(target) == :ok
     end
 
@@ -641,6 +674,49 @@ defmodule Mix.Tasks.BrandPinContractTest do
                "archive bytes"
     end
 
+    test "a live archive whose members differ from the edited pin entries is refused" do
+      {bin, tmp} = live_fixture!()
+      file = "brand/BRAND.md"
+      File.write!(Path.join(tmp, file), "edited after the refresh", [:append])
+      repin_file!(tmp, file)
+
+      assert Brand.check!(tmp) == :ok
+
+      Req.Test.stub(__MODULE__.EditedPin, fn conn -> Plug.Conn.send_resp(conn, 200, bin) end)
+
+      assert_raise Mix.Error,
+                   ~r/member BRAND\.md is \d+ bytes, the pin entry for brand\/BRAND\.md says \d+/,
+                   fn -> Update.check_live!(tmp, plug: {Req.Test, __MODULE__.EditedPin}) end
+    end
+
+    test "a live archive whose member hash differs from the pin entry is refused" do
+      {bin, tmp} = live_fixture!()
+      file = "brand/BRAND.md"
+      path = Path.join(tmp, file)
+      <<first, rest::binary>> = File.read!(path)
+      File.write!(path, <<Bitwise.bxor(first, 1), rest::binary>>)
+      repin_file!(tmp, file)
+
+      assert Brand.check!(tmp) == :ok
+
+      Req.Test.stub(__MODULE__.EditedHash, fn conn -> Plug.Conn.send_resp(conn, 200, bin) end)
+
+      assert_raise Mix.Error,
+                   ~r/member BRAND\.md sha256 differs from the pin entry for brand\/BRAND\.md/,
+                   fn -> Update.check_live!(tmp, plug: {Req.Test, __MODULE__.EditedHash}) end
+    end
+
+    test "a committed file that differs from the archive member is refused" do
+      {bin, tmp} = live_fixture!()
+      flip_first_byte!(Path.join(tmp, "brand/BRAND.md"))
+
+      Req.Test.stub(__MODULE__.EditedFile, fn conn -> Plug.Conn.send_resp(conn, 200, bin) end)
+
+      assert_raise Mix.Error,
+                   ~r/committed file brand\/BRAND\.md differs from archive member BRAND\.md/,
+                   fn -> Update.check_live!(tmp, plug: {Req.Test, __MODULE__.EditedFile}) end
+    end
+
     test "plain http URLs are refused before any request" do
       assert_raise Mix.Error, ~r/only https URLs/, fn ->
         Update.fetch!("http://example.test/scrypath-brand.zip")
@@ -668,6 +744,25 @@ defmodule Mix.Tasks.BrandPinContractTest do
 
   defp read_pin!(root) do
     root |> Path.join("brand/brand.pin.json") |> File.read!() |> Jason.decode!()
+  end
+
+  # Independent of Update.assets_digest/1 on purpose: the constant is checked
+  # against this definition, and a test proves the two agree.
+  defp assets_digest(pin) do
+    pin["assets"]
+    |> Enum.sort_by(& &1["path"])
+    |> Enum.map_join(&"#{&1["path"]}:#{&1["sha256"]}\n")
+    |> sha256()
+  end
+
+  # A fixture archive and a tree written from it, so the pin matches the archive.
+  defp live_fixture! do
+    entries = adopted_entries()
+    bin = build_zip(entries)
+    expected = expected_for(bin, entries)
+    tmp = tmp_root!()
+    Update.write!(tmp, Update.extract!(bin, expected), source_meta(expected))
+    {bin, tmp}
   end
 
   defp sha256(bytes), do: :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)

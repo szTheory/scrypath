@@ -248,7 +248,7 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates. Every 
 
 | Gate | Enforced by | Runs in | Deletion trigger | Expected churn per UI PR |
 |------|-------------|---------|------------------|--------------------------|
-| Offline brand pin | `test/mix/tasks/brand_pin_contract_test.exs` (and `mix verify.brand`) | `core` | Delete when the brand assets are no longer vendored into this repository | None unless brand assets change (two-key update: the pin file and the test-owned zip hash) |
+| Offline brand pin | `test/mix/tasks/brand_pin_contract_test.exs` (and `mix verify.brand`) | `core` | Delete when the brand assets are no longer vendored into this repository | None unless brand assets change (a refresh edits the pin file plus two test-owned constants: the zip hash and the assets digest) |
 | Token parity and retired-identity deny-list | `examples/scrypath_ecommerce/ui-tokens.test.mjs` | `core` and `repository-contracts` | Delete the deny-list half once the allowlist holds no `retire-last` entries; delete the parity half once the token map has no pending rows | One token-map row edit per changed theme property; the allowlist only shrinks |
 | Required `ops-ui (path-scoped)` | `test/mix/tasks/workflow_wiring_test.exs` | Branch protection on `main` | Delete if `scrypath_ops` leaves this repository | None; renaming the job must also change the branch-protection context |
 | Storybook boundary | `test/mix/tasks/dependency_boundary_contract_test.exs` | `core` and `repository-contracts` | Delete if the component catalog leaves `scrypath_ops` or moves to its own Mix project with its own boundary check | None; changes only when the storybook dependency declaration changes |

@@ -2,8 +2,23 @@ defmodule Mix.Tasks.Brand.Update do
   @moduledoc """
   The only module that touches the network for the brand archive. Without
   arguments it re-downloads the archive and compares it with the pin (read
-  only). With a source and the full expected-values set it refreshes the
-  committed assets and the pin. Nothing here runs in CI.
+  only): the archive must match the pinned hash, and every allowlisted member
+  must match its pinned asset entry and the committed file byte for byte. With a
+  source and the full expected-values set it refreshes the committed assets and
+  the pin. Nothing here runs in CI.
+
+  ## Two test-owned constants
+
+  A refresh changes the pin file plus two constants in
+  `test/mix/tasks/brand_pin_contract_test.exs`: `@expected_zip_sha256` (the
+  archive) and `@expected_assets_digest` (the vendored bytes: sha256 over the
+  sorted `path:sha256` line of every pinned asset). The offline verify alone
+  trusts the pin file, so a change that edits an asset and its pin entry together
+  passes it; the second constant makes that a second, reviewed edit in a
+  different file. This costs one more copy-pasted value per refresh and still
+  cannot stop a maintainer who edits the pin, the asset and both constants in one
+  PR. That case is caught by this task's online check, which compares the
+  upstream archive with the committed files.
   """
   use Mix.Task
 
@@ -206,10 +221,23 @@ defmodule Mix.Tasks.Brand.Update do
 
   @doc false
   def check_live!(root, req_options \\ []) do
-    expected = expected_from_pin!(root)
-    verify_archive!(fetch!(@source_url, req_options), expected)
+    pin = read_pin!(root)
+    extracted = extract!(fetch!(@source_url, req_options), expected_from_pin!(pin))
+    check_members_against_pin!(root, pin, extracted)
     Mix.shell().info("brand.update: live archive matches pin")
     :ok
+  end
+
+  @doc """
+  The digest of the vendored bytes that the contract test owns: sha256 over the
+  line `path:sha256` plus a newline for every asset, sorted by path. Takes
+  `{path, sha256}` pairs.
+  """
+  def assets_digest(pairs) do
+    pairs
+    |> Enum.sort()
+    |> Enum.map_join(fn {path, sha256} -> "#{path}:#{sha256}\n" end)
+    |> hex_sha256()
   end
 
   defp run_check(root, opts) do
@@ -238,9 +266,13 @@ defmodule Mix.Tasks.Brand.Update do
 
     Mix.shell().info("brand.update: wrote #{length(extracted)} assets and #{@pin_path}")
 
+    digest = assets_digest(for {entry, bytes} <- extracted, do: {entry.path, hex_sha256(bytes)})
+
     Mix.shell().info(
-      "brand.update: change @expected_zip_sha256 in test/mix/tasks/brand_pin_contract_test.exs " <>
-        "to #{expected.sha256} in the same PR (two keys: the pin and that constant)"
+      "brand.update: in test/mix/tasks/brand_pin_contract_test.exs change " <>
+        "@expected_zip_sha256 to #{expected.sha256} and " <>
+        "@expected_assets_digest to #{digest} in the same PR " <>
+        "(the pin file plus those two test-owned constants)"
     )
 
     :ok
@@ -278,13 +310,18 @@ defmodule Mix.Tasks.Brand.Update do
     }
   end
 
-  defp expected_from_pin!(root) do
-    source =
-      root
-      |> Path.join(@pin_path)
-      |> File.read!()
-      |> Jason.decode!()
-      |> Map.fetch!("source")
+  defp read_pin!(root) do
+    root
+    |> Path.join(@pin_path)
+    |> File.read!()
+    |> Jason.decode!()
+  rescue
+    error in [File.Error, Jason.DecodeError] ->
+      Mix.raise("brand.update: cannot read the pin #{@pin_path}: #{Exception.message(error)}")
+  end
+
+  defp expected_from_pin!(pin) do
+    source = Map.fetch!(pin, "source")
 
     %{
       sha256: Map.fetch!(source, "zip_sha256"),
@@ -293,8 +330,50 @@ defmodule Mix.Tasks.Brand.Update do
       uncompressed: Map.fetch!(source, "zip_uncompressed_bytes")
     }
   rescue
-    error in [File.Error, Jason.DecodeError, KeyError] ->
+    error in [KeyError, BadMapError] ->
       Mix.raise("brand.update: cannot read the pin #{@pin_path}: #{Exception.message(error)}")
+  end
+
+  # The archive hash already matched the pin, so these comparisons catch a pin
+  # whose per-asset entries or committed files were edited without a refresh.
+  defp check_members_against_pin!(root, pin, extracted) do
+    pinned =
+      case pin["assets"] do
+        [_ | _] = assets -> for %{"path" => path} = asset <- assets, into: %{}, do: {path, asset}
+        _other -> refuse!("the pin has no assets list")
+      end
+
+    extracted_paths = Enum.map(extracted, fn {entry, _bytes} -> entry.path end)
+
+    if Enum.sort(extracted_paths) != Enum.sort(Map.keys(pinned)) do
+      differing = (extracted_paths -- Map.keys(pinned)) ++ (Map.keys(pinned) -- extracted_paths)
+      refuse!("pinned assets differ from the archive allowlist: #{Enum.join(differing, ", ")}")
+    end
+
+    for {entry, bytes} <- extracted do
+      check_member_against_pin!(root, entry, bytes, Map.fetch!(pinned, entry.path))
+    end
+
+    :ok
+  end
+
+  defp check_member_against_pin!(root, entry, bytes, asset) do
+    cond do
+      byte_size(bytes) != asset["size"] ->
+        refuse!(
+          "member #{entry.member} is #{byte_size(bytes)} bytes, " <>
+            "the pin entry for #{entry.path} says #{inspect(asset["size"])}"
+        )
+
+      hex_sha256(bytes) != asset["sha256"] ->
+        refuse!("member #{entry.member} sha256 differs from the pin entry for #{entry.path}")
+
+      File.read(Path.join(root, entry.path)) != {:ok, bytes} ->
+        refuse!("committed file #{entry.path} differs from archive member #{entry.member}")
+
+      true ->
+        :ok
+    end
   end
 
   defp fetch_expected!(expected) do
@@ -377,7 +456,7 @@ defmodule Mix.Tasks.Brand.Update do
   end
 
   defp check_sha256!(zip_binary, expected_sha256) do
-    actual = :crypto.hash(:sha256, zip_binary) |> Base.encode16(case: :lower)
+    actual = hex_sha256(zip_binary)
 
     if actual != String.downcase(expected_sha256) do
       refuse!("archive sha256 #{actual} does not match expected #{expected_sha256}")
@@ -582,7 +661,7 @@ defmodule Mix.Tasks.Brand.Update do
         ordered([
           {"path", entry.path},
           {"source_member", entry.member},
-          {"sha256", :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)},
+          {"sha256", hex_sha256(bytes)},
           {"size", byte_size(bytes)},
           {"license", entry.license},
           {"role", entry.role},
@@ -608,6 +687,8 @@ defmodule Mix.Tasks.Brand.Update do
   end
 
   defp ordered(pairs), do: Jason.OrderedObject.new(pairs)
+
+  defp hex_sha256(bytes), do: :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
 
   defp refuse!(message), do: Mix.raise("brand.update: " <> message)
 end
