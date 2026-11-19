@@ -7,15 +7,26 @@
 // here is a gate: the captures are review context, not a baseline, and no image is compared by pixel.
 //
 //   node scripts/reskin-capture.mjs --label before --base-url http://127.0.0.1:4102 --out DIR
+//   node scripts/reskin-capture.mjs --label after --base-url http://127.0.0.1:4102 --out DIR --allow-stale-source
 //   node scripts/reskin-capture.mjs --check DIR
 //
 // The stack must be a MIX_ENV=test build: the `all-statuses` Search health scenario is a test-only
 // fixture route and the seed endpoint (`/dev/e2e/seed`) exists only there.
 //
-// "No capture from a dirty tree" means: refuse to run when `git status --porcelain
-// --untracked-files=no` lists a tracked change outside `.planning/` (those can change what renders;
-// `.planning/` edits cannot). The complete `git status --porcelain` output is recorded in the manifest
-// as `git_status`, so every remaining difference stays visible.
+// The manifest names the source that rendered the images, so two things are checked rather than
+// assumed (review WR-02):
+//
+// 1. "No capture from a dirty tree" means: refuse to run when `git status --porcelain` lists any
+//    change outside `.planning/`, tracked or untracked (a new `.ex`, `.heex`, `.css` or `.js` file
+//    under a bind-mounted dev stack is compiled whatever git thinks of it; `.planning/` edits cannot
+//    change what renders; gitignored files are never listed). The manifest's `clean` is the result
+//    of that check, not a constant, and the complete status output is recorded as `git_status`.
+// 2. The stack serves the build it claims to. The script fetches the ops stylesheet the stack links
+//    from `/admin/search`, hashes it, and compares it with `scrypath_ops/priv/static/assets/css/app.css`
+//    at HEAD. A mismatch means the running image or watcher is not rendering HEAD, so the capture is
+//    refused unless `--allow-stale-source` is passed; both hashes, the match result and the flag are
+//    recorded in the manifest (`served_css_sha256`, `head_css_sha256`, `served_css_matches_head`,
+//    `allow_stale_source`), and `--check` re-derives the match from the two hashes.
 //
 // This file is deliberately not a Playwright spec (no `*.spec.ts`), so Playwright discovery and the
 // evidence inventory ignore it, and it does not touch the fixture-overlay files. It imports only
@@ -45,6 +56,11 @@ export const SCREENS = [
   { id: "failed-sync", route: "/admin/search/failed-sync" },
 ];
 
+/** Where the demo mounts ScrypathOps, and the page whose `<link>` names the stylesheet the stack serves. */
+export const OPS_MOUNT = "/admin/search";
+/** The committed build of the ops stylesheet; the stack must serve exactly these bytes. */
+export const OPS_STYLESHEET_PATH = "scrypath_ops/priv/static/assets/css/app.css";
+
 /** The 12 file names a complete capture set holds: `{screen}-{theme}-{width}.png`. */
 export function expectedFiles() {
   const names = [];
@@ -61,28 +77,124 @@ export function sha256(bytes) {
 }
 
 /**
- * Throws when a status lists a tracked change outside `.planning/`. Untracked (`??`) and ignored (`!!`)
- * entries never affect rendering decisions here and are only recorded, never refused.
+ * Reads a plain `git status --porcelain` listing, untracked entries included, and returns `{ clean, offending }`.
+ * Every tracked change and every untracked, non-ignored file or directory outside `.planning/` is
+ * offending: a bind-mounted dev stack compiles whatever is on disk, tracked or not. Ignored (`!!`)
+ * entries only appear when asked for and never count. `.planning/` edits cannot change what renders.
  */
-export function assertCleanTree(statusText) {
+export function inspectTree(statusText) {
   const offending = [];
   for (const line of String(statusText).split("\n")) {
     if (line.trim() === "") continue;
     const code = line.slice(0, 2);
-    if (code === "??" || code === "!!") continue;
+    if (code === "!!") continue;
     const rest = line.slice(3).trim();
     // A rename reads `old -> new`; both sides count.
     for (const raw of rest.split(" -> ")) {
       const file = raw.replace(/^"(.*)"$/, "$1");
-      if (!file.startsWith(".planning/")) offending.push(file);
+      if (!file.startsWith(".planning/")) offending.push(code === "??" ? `${file} (untracked)` : file);
     }
   }
-  if (offending.length > 0) {
+  return { clean: offending.length === 0, offending };
+}
+
+/** Throws when the tree is not clean (see `inspectTree`); otherwise returns its `{ clean, offending }`. */
+export function assertCleanTree(statusText) {
+  const tree = inspectTree(statusText);
+  if (!tree.clean) {
     throw new Error(
-      `refusing to capture from a dirty tree: tracked changes outside .planning/: ${offending.join(", ")}. ` +
-        "Commit them first so the manifest names the source that rendered the images.",
+      `refusing to capture from a dirty tree: changes outside .planning/: ${tree.offending.join(", ")}. ` +
+        "Commit them (or remove the untracked files) so the manifest names the source that rendered the images.",
     );
   }
+  return tree;
+}
+
+/**
+ * The ops stylesheet URL a page links: the one `<link rel="stylesheet">` whose path ends in
+ * `/assets/css/app.css`, preferring the one under `mount` (the host may link its own `app.css`).
+ * Throws when none or more than one candidate remains, so a hash is never taken of a guess.
+ */
+export function findOpsStylesheetHref(html, mount = OPS_MOUNT) {
+  const hrefs = [];
+  for (const [tag] of String(html).matchAll(/<link\b[^>]*>/gi)) {
+    if (!/\brel\s*=\s*["']?[^"'>]*\bstylesheet\b/i.test(tag)) continue;
+    const match = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(tag);
+    const href = (match?.[1] ?? match?.[2] ?? "").replaceAll("&amp;", "&");
+    if (/\/assets\/css\/app\.css(?:[?#].*)?$/.test(href)) hrefs.push(href);
+  }
+  const mounted = hrefs.filter((href) => href.startsWith(`${mount}/`));
+  const candidates = [...new Set(mounted.length > 0 ? mounted : hrefs)];
+  if (candidates.length !== 1) {
+    throw new Error(
+      `expected exactly one ops stylesheet link (…/assets/css/app.css) on the ${mount} page, found ${candidates.length}` +
+        (candidates.length > 0 ? `: ${candidates.join(", ")}` : ""),
+    );
+  }
+  return candidates[0];
+}
+
+/**
+ * Compares the stylesheet the stack serves with the one committed at HEAD. Equal hashes return
+ * `{ matches: true, allowStale }`. Different hashes throw (the stack is not rendering HEAD) unless
+ * `allowStale` is set, in which case `{ matches: false, allowStale: true }` is returned for the manifest.
+ */
+export function assessStylesheet({ servedSha256, headSha256, allowStale = false }) {
+  const matches = servedSha256 === headSha256;
+  if (!matches && !allowStale) {
+    throw new Error(
+      `the stack serves a different ops stylesheet than HEAD (served ${servedSha256}, HEAD ${headSha256}): ` +
+        "its image or watcher is not rendering this commit. Rebuild and restart the stack, or pass " +
+        "--allow-stale-source to capture anyway and record that in the manifest.",
+    );
+  }
+  return { matches, allowStale: Boolean(allowStale) };
+}
+
+/** Fetches the ops stylesheet the stack at `baseUrl` links from its Search page, and hashes the bytes. */
+export async function fetchServedStylesheet(baseUrl, { mount = OPS_MOUNT } = {}) {
+  const pageUrl = `${baseUrl}${mount}`;
+  const page = await fetch(pageUrl, { redirect: "follow" }).catch((error) => {
+    throw new Error(`could not read ${pageUrl} to find the served stylesheet: ${error.message}`);
+  });
+  if (!page.ok) throw new Error(`${pageUrl} returned HTTP ${page.status}; cannot find the served stylesheet`);
+  const sheetUrl = new URL(findOpsStylesheetHref(await page.text(), mount), page.url);
+  const sheet = await fetch(sheetUrl).catch((error) => {
+    throw new Error(`could not read ${sheetUrl}: ${error.message}`);
+  });
+  if (!sheet.ok) throw new Error(`${sheetUrl} returned HTTP ${sheet.status}; cannot hash the served stylesheet`);
+  return { url: `${sheetUrl.pathname}${sheetUrl.search}`, sha256: sha256(Buffer.from(await sheet.arrayBuffer())) };
+}
+
+/** The sha256 of the ops stylesheet as committed at HEAD. */
+export function headStylesheetSha256() {
+  return sha256(gitBytes(["show", `HEAD:${OPS_STYLESHEET_PATH}`]));
+}
+
+/**
+ * Provenance a manifest states about itself, checked for consistency. A manifest taken before the
+ * served-stylesheet check carries none of these fields and is accepted as it stands; a manifest that
+ * carries them must not contradict itself: `clean` is not false, the match flag is what its two hashes
+ * say, and a mismatch is only present when `allow_stale_source` was recorded.
+ */
+export function checkProvenance(manifest) {
+  const errors = [];
+  if (manifest.clean === false) errors.push(`${MANIFEST_NAME} records a dirty tree (clean: false)`);
+  const served = manifest.served_css_sha256;
+  const head = manifest.head_css_sha256;
+  if (served === undefined && head === undefined && manifest.served_css_matches_head === undefined) return errors;
+  if (typeof served !== "string" || typeof head !== "string") {
+    errors.push(`${MANIFEST_NAME} records a served-stylesheet check without both served_css_sha256 and head_css_sha256`);
+    return errors;
+  }
+  const matches = served === head;
+  if (manifest.served_css_matches_head !== matches) {
+    errors.push(`${MANIFEST_NAME} says served_css_matches_head is ${String(manifest.served_css_matches_head)}, but its two hashes say ${matches}`);
+  }
+  if (!matches && manifest.allow_stale_source !== true) {
+    errors.push(`${MANIFEST_NAME} records a served stylesheet that differs from HEAD without allow_stale_source`);
+  }
+  return errors;
 }
 
 /**
@@ -107,6 +219,7 @@ export function checkInventory(dir) {
   if (manifest) {
     if (manifest.schema !== SCHEMA) errors.push(`${MANIFEST_NAME} schema is ${String(manifest.schema)}, expected ${SCHEMA}`);
     if (!Array.isArray(manifest.files)) errors.push(`${MANIFEST_NAME} has no files list`);
+    errors.push(...checkProvenance(manifest));
   }
   const listed = new Map((Array.isArray(manifest?.files) ? manifest.files : []).map((entry) => [entry?.name, entry]));
   let count = 0;
@@ -138,8 +251,12 @@ function git(args) {
   return execFileSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
 }
 
-function parseArgs(argv) {
-  const args = { label: null, baseUrl: null, out: null, scenario: SCENARIO, check: null };
+function gitBytes(args) {
+  return execFileSync("git", args, { cwd: REPO_ROOT, encoding: "buffer", maxBuffer: 64 * 1024 * 1024 });
+}
+
+export function parseArgs(argv) {
+  const args = { label: null, baseUrl: null, out: null, scenario: SCENARIO, check: null, allowStaleSource: false };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     const take = () => {
@@ -152,19 +269,29 @@ function parseArgs(argv) {
     else if (flag === "--out") args.out = path.resolve(take());
     else if (flag === "--scenario") args.scenario = take();
     else if (flag === "--check") args.check = path.resolve(take());
+    else if (flag === "--allow-stale-source") args.allowStaleSource = true;
     else throw new Error(`unknown argument ${flag}`);
   }
   return args;
 }
 
-async function capture({ label, baseUrl, out }) {
+async function capture({ label, baseUrl, out, allowStaleSource }) {
   if (!["before", "after"].includes(label)) throw new Error("--label must be before or after");
   if (!baseUrl) throw new Error("--base-url is required");
   if (!out) throw new Error("--out is required");
 
-  assertCleanTree(git(["status", "--porcelain", "--untracked-files=no"]));
+  // One status read serves the refusal and the manifest, so what was checked is what is recorded.
+  const statusText = git(["status", "--porcelain"]);
+  const tree = assertCleanTree(statusText);
   const sourceSha = git(["rev-parse", "HEAD"]).trim();
-  const gitStatus = git(["status", "--porcelain"]).split("\n").filter(Boolean);
+  const gitStatus = statusText.split("\n").filter(Boolean);
+
+  // The stack must be rendering HEAD's stylesheet, or the manifest's source_sha labels images that
+  // came from different code (the base Compose stack runs a baked image until it is rebuilt).
+  const served = await fetchServedStylesheet(baseUrl);
+  const headCssSha256 = headStylesheetSha256();
+  const stylesheet = assessStylesheet({ servedSha256: served.sha256, headSha256: headCssSha256, allowStale: allowStaleSource });
+  if (!stylesheet.matches) console.warn("warning: capturing from a stack whose ops stylesheet differs from HEAD (--allow-stale-source)");
 
   // Evidence is never overwritten in place: a populated destination is refused, and the tool's own
   // half-written scratch directory is replaced.
@@ -259,8 +386,14 @@ async function capture({ label, baseUrl, out }) {
       schema: SCHEMA,
       label,
       source_sha: sourceSha,
-      clean: true,
+      clean: tree.clean,
       git_status: gitStatus,
+      served_css_url: served.url,
+      served_css_sha256: served.sha256,
+      head_css_path: OPS_STYLESHEET_PATH,
+      head_css_sha256: headCssSha256,
+      served_css_matches_head: stylesheet.matches,
+      allow_stale_source: stylesheet.allowStale,
       base_url: baseUrl,
       scenario: SCENARIO,
       seed,
