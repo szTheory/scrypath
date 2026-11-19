@@ -253,8 +253,10 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates. Every 
 | Required `ops-ui (path-scoped)` | `test/mix/tasks/workflow_wiring_test.exs` | Branch protection on `main` | Delete if `scrypath_ops` leaves this repository | None; renaming the job must also change the branch-protection context |
 | Storybook boundary | `test/mix/tasks/dependency_boundary_contract_test.exs` | `core` and `repository-contracts` | Delete if the component catalog leaves `scrypath_ops` or moves to its own Mix project with its own boundary check | None; changes only when the storybook dependency declaration changes |
 | Structural preservation pair check | `scripts/ci/ui_state_pairs.test.cjs` | `repository-contracts` (rides the existing Node step; counted conservatively) | Delete when the Phase 185 preservation specs are retired | None unless thresholds are retuned, which needs a new real capture pair in `scripts/ci/fixtures/ui-state-pairs/` |
+| ScrypathOps re-skin static contract | `scrypath_ops/test/scrypath_ops_web/reskin_static_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops brand assets, fonts and retired-identity gates move into a dedicated brand contract or scrypath_ops leaves this repository | One assertion edit when a brand asset, font or allowlisted glyph changes |
+| Mounted font delivery | `examples/scrypath_ecommerce/e2e/harness.spec.ts` | `ecommerce-mounted` | Delete if ops stops shipping self-hosted fonts | None unless font file names change |
 
-Budget used: 5 of 12.
+Budget used: 7 of 12.
 
 ### Exact-source cache acceptance probes
 

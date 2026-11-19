@@ -42,6 +42,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -706,6 +707,80 @@ test("valid fixtures pass", () => {
   assert.deepEqual(checkApplied(themes, map, brandTokens, NO_LIMITS), []);
   assert.deepEqual(checkBuiltEmissions(themes, builtCss), []);
   assert.deepEqual(checkHexAllowlist(themes, map, brandTokens, NO_LIMITS), []);
+});
+
+// ---------------------------------------------------------------------------
+// Font URLs (Phase 187, SKIN-02; the font half of N-10)
+//
+// The built stylesheet declares four @font-face blocks, two of which load a file. Each file URL
+// must be CSS-relative (`../fonts/<file>?v=<sha256>`, so it resolves against
+// `<mount>/assets/css/app.css` at any mount prefix) and its `?v=` must equal the sha256 of the
+// named file under scrypath_ops/priv/static/assets/fonts. AssetPlug sends the immutable cache
+// header only when the two match, so a stale hash silently loses caching and a root-absolute
+// URL breaks every host that is not mounted at the root.
+// ---------------------------------------------------------------------------
+
+const FONT_DIR = path.join(ROOT, "scrypath_ops/priv/static/assets/fonts");
+const FONT_FACE_BLOCK = /@font-face\s*\{[^}]*\}/g;
+const FONT_URL = /url\(\s*(["']?)([^"')]+)\1\s*\)/g;
+const RELATIVE_FONT_URL = /^\.\.\/fonts\/([A-Za-z0-9._-]+)\?v=([0-9a-f]{64})$/;
+
+function fontSha256(fileName) {
+  return crypto.createHash("sha256").update(fs.readFileSync(path.join(FONT_DIR, fileName))).digest("hex");
+}
+
+/** Failures for the font URLs of a stylesheet. `sha256Of(fileName)` returns the file's hex sha256. */
+function checkFontUrls(css, sha256Of) {
+  const failures = [];
+  const faces = css.match(FONT_FACE_BLOCK) ?? [];
+  if (faces.length !== 4) {
+    failures.push(`expected 4 @font-face blocks (two files and two local fallbacks), found ${faces.length}`);
+  }
+  const urls = faces.flatMap((face) => [...face.matchAll(FONT_URL)].map((match) => match[2]));
+  if (urls.length !== 2) {
+    failures.push(`expected 2 font file URLs (one per brand family), found ${urls.length}`);
+  }
+  for (const url of urls) {
+    const parsed = RELATIVE_FONT_URL.exec(url);
+    if (!parsed) {
+      failures.push(`font URL ${url} must look like ../fonts/<file>?v=<64 hex>: relative to the stylesheet, never root-absolute`);
+      continue;
+    }
+    const [, fileName, pinned] = parsed;
+    const actual = sha256Of(fileName);
+    if (actual !== pinned) {
+      failures.push(`font URL for ${fileName} pins ?v=${pinned} but the file's sha256 is ${actual}`);
+    }
+  }
+  return failures;
+}
+
+test("live font URLs are relative and hash-pinned", () => {
+  const builtCss = fs.readFileSync(BUILT_CSS, "utf8");
+  assert.deepEqual(checkFontUrls(builtCss, fontSha256), []);
+  // The source stylesheet is the authored copy; the built one must not drift from it.
+  assert.deepEqual(checkFontUrls(fs.readFileSync(APP_CSS, "utf8"), fontSha256), []);
+});
+
+const PLANTED_HASH = "a".repeat(64);
+const plantedFontCss = (uiUrl) =>
+  [
+    `@font-face { font-family: "Hanken Grotesk"; src: url("${uiUrl}") format("woff2"); }`,
+    `@font-face { font-family: "Sometype Mono"; src: url("../fonts/mono.woff2?v=${PLANTED_HASH}") format("woff2"); }`,
+    `@font-face { font-family: "Hanken Grotesk Fallback"; src: local("Arial"); }`,
+    `@font-face { font-family: "Sometype Mono Fallback"; src: local("Courier New"); }`,
+  ].join("\n");
+const plantedSha256 = () => PLANTED_HASH;
+
+test("planted font hash mismatch fails", () => {
+  assert.deepEqual(checkFontUrls(plantedFontCss(`../fonts/ui.woff2?v=${PLANTED_HASH}`), plantedSha256), []);
+  const failures = checkFontUrls(plantedFontCss(`../fonts/ui.woff2?v=${"b".repeat(64)}`), plantedSha256);
+  assert.ok(failures.some((failure) => /ui\.woff2 .*pins \?v=b{64} but the file's sha256 is a{64}/.test(failure)), failures.join("\n"));
+});
+
+test("planted root-absolute font URL fails", () => {
+  const failures = checkFontUrls(plantedFontCss(`/assets/fonts/ui.woff2?v=${PLANTED_HASH}`), plantedSha256);
+  assert.ok(failures.some((failure) => /\/assets\/fonts\/ui\.woff2.*never root-absolute/.test(failure)), failures.join("\n"));
 });
 
 // ---------------------------------------------------------------------------
