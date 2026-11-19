@@ -1,0 +1,14 @@
+/* scrypath code colors for ExDoc and HexDocs. Version 1.0. NOT verified inside an ExDoc build: it was written from ExDoc's class names.
+   Load it with the ExDoc :before_closing_head_tag option or as an extra stylesheet. GitHub colors the code in a README itself; this file does not change that.
+   No code color equals a status color. Inline code in a sentence is not colored by this file. */
+:root{--scrypath-doc-bg:#F0E9E6;--scrypath-doc-text:#1E1220;--scrypath-doc-comment:#6B5F6E;--scrypath-doc-keyword:#7B2D6B;--scrypath-doc-string:#2748A8;--scrypath-doc-atom:#006A7A}
+@media (prefers-color-scheme:dark){:root{--scrypath-doc-bg:#110A14;--scrypath-doc-text:#F4EDF3;--scrypath-doc-comment:#A89BAD;--scrypath-doc-keyword:#D58BC4;--scrypath-doc-string:#93A9F5;--scrypath-doc-atom:#6FD0DC}}
+body.dark{--scrypath-doc-bg:#110A14;--scrypath-doc-text:#F4EDF3;--scrypath-doc-comment:#A89BAD;--scrypath-doc-keyword:#D58BC4;--scrypath-doc-string:#93A9F5;--scrypath-doc-atom:#6FD0DC}
+pre code.makeup{background:var(--scrypath-doc-bg);color:var(--scrypath-doc-text);font-variant-ligatures:none}
+.makeup .k,.makeup .kd,.makeup .kn,.makeup .kp,.makeup .kr,.makeup .kt,.makeup .ow{color:var(--scrypath-doc-keyword)}
+.makeup .s,.makeup .s1,.makeup .s2,.makeup .sa,.makeup .sb,.makeup .sc,.makeup .sd,.makeup .se,.makeup .sh,.makeup .si,.makeup .sx,.makeup .sr,.makeup .sl{color:var(--scrypath-doc-string)}
+.makeup .ss,.makeup .na,.makeup .no{color:var(--scrypath-doc-atom)}
+.makeup .m,.makeup .mb,.makeup .mf,.makeup .mh,.makeup .mi,.makeup .mo,.makeup .il{color:var(--scrypath-doc-atom)}
+.makeup .nf,.makeup .fm{color:var(--scrypath-doc-text)}
+.makeup .nc,.makeup .nn{color:var(--scrypath-doc-text)}
+.makeup .c,.makeup .c1,.makeup .cm,.makeup .cs,.makeup .ch,.makeup .cp,.makeup .cpf{color:var(--scrypath-doc-comment)}
