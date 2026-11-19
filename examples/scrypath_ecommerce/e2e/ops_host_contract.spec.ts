@@ -3,7 +3,7 @@
  *
  * ScrypathOps is mounted inside a host application, so the re-skin must not leak into the host and
  * must stay overridable by it. This spec treats the e-commerce demo as the fixture host and proves,
- * in a real browser with no change to host code (`page.route` and `addStyleTag` only):
+ * in a real browser with no change to host code (`addStyleTag` and a loopback header proxy only):
  *
  *   P-17a  a non-ops host route links no ops stylesheet and computes no `--color-primary`
  *   P-17b  a sentinel element on a host route computes the same style in all six combinations of OS
@@ -23,6 +23,9 @@
  *     cd examples/scrypath_ecommerce
  *     PLAYWRIGHT_BASE_URL=http://127.0.0.1:<port> npx playwright test e2e/ops_host_contract.spec.ts --workers=1
  */
+import { createServer, request as httpRequest } from "node:http";
+import type { AddressInfo } from "node:net";
+
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 
 import { waitForLiveConnected } from "./helpers/e2e";
@@ -95,6 +98,40 @@ async function readSentinel(page: Page): Promise<SentinelStyle> {
     sentinel.remove();
     return style;
   });
+}
+
+type HeaderProxy = { origin: string; close: () => Promise<void> };
+
+// A loopback HTTP proxy to the host under test that adds one response header to one document path and
+// passes everything else through unchanged. It forwards plain requests only (no WebSocket upgrade).
+async function startHeaderProxy(target: string, documentPath: string, name: string, value: string): Promise<HeaderProxy> {
+  const upstream = new URL(target);
+  const server = createServer((incoming, outgoing) => {
+    const forwarded = httpRequest(
+      { hostname: upstream.hostname, port: upstream.port, method: incoming.method, path: incoming.url, headers: { ...incoming.headers, host: upstream.host } },
+      (response) => {
+        const headers = { ...response.headers };
+        if ((incoming.url ?? "").split("?")[0] === documentPath) headers[name] = value;
+        outgoing.writeHead(response.statusCode ?? 502, headers);
+        response.pipe(outgoing);
+      }
+    );
+    forwarded.on("error", () => {
+      outgoing.writeHead(502);
+      outgoing.end();
+    });
+    incoming.pipe(forwarded);
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  return {
+    origin: `http://127.0.0.1:${port}`,
+    close: () =>
+      new Promise<void>((resolve) => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      })
+  };
 }
 
 async function openHostRoute(page: Page, route: string): Promise<void> {
@@ -186,9 +223,17 @@ test.describe("ops host contract", () => {
   });
 
   test("P-17d font-src 'self' on the ops document still loads both fonts with no violation", async ({ browser }) => {
-    type FontRun = { violations: string[]; loaded: Record<string, string[]>; checks: Record<string, boolean> };
+    type FontRun = { violations: string[]; loaded: Record<string, string[]>; checks: Record<string, boolean>; notes: string[] };
+    const target = test.info().project.use.baseURL;
+    if (!target) throw new Error("this spec needs a baseURL (PLAYWRIGHT_BASE_URL)");
 
-    async function runWithCsp(policy: string): Promise<FontRun> {
+    async function runWithCsp(policy: string, expectViolation: boolean): Promise<FontRun> {
+      // The header comes from a loopback proxy in this process, not from `page.route`. A document that
+      // `route.fulfill` serves is treated by Chromium as public, so on a Compose network (`http://web:4002`,
+      // not a secure context) every stylesheet, script and image it asks for from the private address is
+      // blocked ("The request client is not a secure context"). Through the proxy the page and all its
+      // subresources share one loopback origin, so `'self'` means exactly the host's own origin.
+      const proxy = await startHeaderProxy(target as string, "/admin/search", "content-security-policy", policy);
       const { context, page } = await newPage(browser, { scheme: "light", preference: null });
       try {
         await page.addInitScript(() => {
@@ -198,16 +243,17 @@ test.describe("ops host contract", () => {
             sink.push(`${event.violatedDirective} blocked ${event.blockedURI}`);
           });
         });
-        // Add the header to the ops document only; every other request passes through untouched.
-        await page.route("**/admin/search", async (route) => {
-          if (route.request().resourceType() !== "document") return route.continue();
-          const response = await route.fetch();
-          await route.fulfill({ response, headers: { ...response.headers(), "content-security-policy": policy } });
+        // Anything that went wrong in the page, so a failure names its cause (a CSP block or something else).
+        const notes: string[] = [];
+        page.on("requestfailed", (request) => {
+          notes.push(`failed ${new URL(request.url()).pathname}: ${request.failure()?.errorText ?? "unknown"}`);
         });
-        // No waitForLiveConnected here: Chromium treats a document that `route.fulfill` served as
-        // coming from outside the local network and refuses its loopback WebSocket, so the page never
-        // connects. Fonts do not need the socket; the stylesheet and `document.fonts.load` are enough.
-        await page.goto("/admin/search", { waitUntil: "load" });
+        page.on("console", (message) => {
+          if (message.type() === "error") notes.push(`console: ${message.text().slice(0, 160)}`);
+        });
+        // No waitForLiveConnected: the proxy forwards plain requests only, not the LiveView WebSocket,
+        // and fonts do not need the socket (the stylesheet and `document.fonts.load` are enough).
+        await page.goto(`${proxy.origin}/admin/search`, { waitUntil: "load" });
         const result = await page.evaluate(async () => {
           const families = ["Hanken Grotesk", "Sometype Mono"];
           const loaded: Record<string, string[]> = {};
@@ -223,24 +269,36 @@ test.describe("ops host contract", () => {
             checks[family] = document.fonts.check(`16px "${family}"`);
           }
           await document.fonts.ready;
-          const violations = (window as unknown as { __cspViolations: string[] }).__cspViolations.slice();
-          return { loaded, checks, violations };
+          return { loaded, checks };
         });
-        return result;
+        // The browser queues a securitypolicyviolation event as a task of its own, so it can arrive
+        // after the font promises settle. When one is expected, wait for it; when none is, give any
+        // late one half a second before reading the list.
+        const readViolations = () => page.evaluate(() => (window as unknown as { __cspViolations: string[] }).__cspViolations.slice());
+        if (expectViolation) {
+          // A timeout is not an error here: the assertions after the run report what was seen.
+          await page
+            .waitForFunction(() => (window as unknown as { __cspViolations: string[] }).__cspViolations.length > 0, undefined, { timeout: 5_000 })
+            .catch(() => undefined);
+        } else {
+          await page.waitForTimeout(500);
+        }
+        return { ...result, violations: await readViolations(), notes };
       } finally {
         await context.close();
+        await proxy.close();
       }
     }
 
     // The probe can fail: with no font allowed, a violation fires and the faces do not load.
-    const blocked = await runWithCsp("font-src 'none'");
-    expect(blocked.violations.length, "a planted font-src 'none' makes the probe see a violation").toBeGreaterThan(0);
+    const blocked = await runWithCsp("font-src 'none'", true);
+    expect(blocked.violations.length, `a planted font-src 'none' makes the probe see a violation (page notes: ${blocked.notes.join("; ")})`).toBeGreaterThan(0);
     for (const family of ["Hanken Grotesk", "Sometype Mono"]) {
       expect(blocked.loaded[family].some((face) => face.endsWith(":loaded")), `${family} loads under font-src 'none'`).toBe(false);
     }
 
-    const allowed = await runWithCsp("font-src 'self'");
-    expect(allowed.violations, "font-src 'self' raises no securitypolicyviolation").toEqual([]);
+    const allowed = await runWithCsp("font-src 'self'", false);
+    expect(allowed.violations, `font-src 'self' raises no securitypolicyviolation (page notes: ${allowed.notes.join("; ")})`).toEqual([]);
     for (const family of ["Hanken Grotesk", "Sometype Mono"]) {
       expect(allowed.loaded[family].length, `${family} has a face to load`).toBeGreaterThan(0);
       expect(allowed.loaded[family].every((face) => face.endsWith(":loaded")), `${family} faces: ${allowed.loaded[family].join(", ")}`).toBe(true);
