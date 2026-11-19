@@ -426,7 +426,7 @@ test("a source pair rejects independently mismatched source, fixture, runtime an
   assert.throws(() => compare(undefined, undefined, unqualifiedRecipe), /qualified raster|font profile/);
 });
 
-test("a source pair fails exact pixels, geometry, state, copy and semantic assertions", () => {
+test("a source pair fails structural pixels, geometry, state, copy and semantic assertions", () => {
   const changes = [
     (item) => { item.observations[0].geometry[0].width += 1; },
     (item) => {
@@ -449,9 +449,35 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
     assert.equal(report.passed, false);
   }
 
+  // Each of these changes exactly one input and nothing else, so each fails only through its own term of the
+  // verdict. Dropping `actionEqual` or `identityEqual` from `passed` turns the matching entry red.
+  const isolated = [
+    ["actions", "actions_and_transport", (item) => { item.actions[1] = "observe-changed"; }],
+    ["transport_sequence", "actions_and_transport", (item) => { item.transport_sequence[0].outcome = "reconnected"; }],
+    ["test_identity", "test_identity", (item) => { item.test_identity = `${item.test_identity} changed`; }]
+  ];
+  for (const [label, flag, mutate] of isolated) {
+    const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, mutateCase: mutate });
+    const report = compare(undefined, candidate);
+    assert.equal(report.passed, false, `${label} change alone fails the pair`);
+    assert.equal(report.mismatches[0][flag], false, `${label} change is reported through ${flag}`);
+    assert.equal(report.mismatches[0].pixels, true, `${label} change leaves pixels equal`);
+  }
+
   const layoutBefore = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
   const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT_MOVED });
   assert.equal(compare(layoutBefore, pixelChanged).passed, false);
+});
+
+test("a recolor-only candidate passes the source pair when all other evidence matches", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT_RECOLORED });
+  assert.ok(!before.imageBytesByDimensions.get("1440x900").equals(candidate.imageBytesByDimensions.get("1440x900")), "the candidate rasters really are recolored");
+
+  const report = compare(before, candidate);
+  assert.equal(report.passed, true);
+  assert.deepEqual(report.mismatches, []);
+  assert.ok(report.comparisons.every((item) => item.pixels_equal && item.full_page_pixels_equal && item.hover_pixels_equal));
 });
 
 test("real timer elapsed samples may differ while the shared fixed-clock recipe remains exact", () => {
