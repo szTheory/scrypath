@@ -9878,8 +9878,13 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     localStorage: safeLocalStorage,
     hooks: { ...hooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }
   });
-  import_topbar.default.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
-  window.addEventListener("phx:page-loading-start", (_info) => import_topbar.default.show(300));
+  var showProgressBar = (delay) => {
+    const primary = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim();
+    const colors = primary ? { barColors: { 0: primary } } : {};
+    import_topbar.default.config({ ...colors, shadowColor: "rgba(0, 0, 0, .3)" });
+    import_topbar.default.show(delay);
+  };
+  window.addEventListener("phx:page-loading-start", (_info) => showProgressBar(300));
   window.addEventListener("phx:page-loading-stop", (_info) => import_topbar.default.hide());
   window.addEventListener("phx:copy_run_diagnostics", async ({ detail }) => {
     const text = detail?.text;

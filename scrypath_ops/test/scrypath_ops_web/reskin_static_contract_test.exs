@@ -26,6 +26,13 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   #     name outside the list fails the scan.
   #   - No infinite animation: neither the source stylesheet nor `lib/` can loop an animation or
   #     spin a loader (the render-level half is E-16 in the component contract file).
+  #   - E-18 durations in lib: no Tailwind duration utility or `JS.transition` time in `lib/` is
+  #     off the brand scale (the stylesheet half is `motion_contract_test.exs`).
+  #   - E-12 retired patterns: one scan over the ops stylesheet, `lib/`, the ops JavaScript and the
+  #     ecommerce host's `app.js` finds none of the patterns the re-skin retired (the old identity's
+  #     class families, capital transforms, loops, the error button, alpha text utilities, the two
+  #     old RGB triplets and the old progress-bar hex), and allows a gradient only in the two named
+  #     rules. Planted cases for each family prove the scan fires.
   use ScrypathOpsWeb.ConnCase, async: true
 
   import Phoenix.Component, only: [sigil_H: 2]
@@ -846,6 +853,203 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
                  ui
                )
              ) == 2
+    end
+  end
+
+  # ── Plan 09: E-12, retired patterns stay retired ─────────────────────────────────────────
+
+  describe "E-12 retired patterns" do
+    # The UI-SPEC "Retired Code and Grep Gates" list, one family per entry. Each count is 0 in
+    # the scoped files; none of these has an allowlist.
+    @retired_patterns [
+      {"retired identity family",
+       ~r/ops-path|ops-copper|ops-glow|shadow-ops-glow|copper|primary-strong|ops-surface-2|bg-ops-surface-2/},
+      {"capital transform", ~r/uppercase|tracking-wide/},
+      {"infinite or spinner motion",
+       ~r/infinite|animate-spin|animate-pulse|ops-pulse|@keyframes spin|duration-ops-sting|\b1650\b/},
+      {"error button or danger variant", ~r/btn-error|variant=\{:danger\}|variant: :danger/},
+      {"alpha text utility", ~r/text-base-content\/[0-9]/},
+      {"retired rgb triplet", ~r/rgba?\(\s*(?:108|193)\s*,/},
+      {"old progress-bar hex", ~r/#29d\b/}
+    ]
+
+    # A gradient is allowed only in these rules and only up to these counts. The list can shrink;
+    # growing it is a design decision (LD-11), not a test edit.
+    @gradient_allowance [{".ops-table-scroll", 4}, {"select.ops-form-control", 2}]
+
+    @scope_paths [
+      "scrypath_ops/assets/css/app.css",
+      "scrypath_ops/assets/js/app.js",
+      "examples/scrypath_ecommerce/assets/js/app.js"
+    ]
+
+    # Every problem `text` (the contents of `path`) has, as `{family, path, what}`. Pure: it reads
+    # nothing, so the planted cases below run the same code the live scan does.
+    defp scan_retired(path, text) do
+      pattern_hits =
+        for {family, pattern} <- @retired_patterns,
+            [hit | _] <- Regex.scan(pattern, text),
+            do: {family, path, hit}
+
+      pattern_hits ++ gradient_hits(path, text)
+    end
+
+    defp gradient_hits(path, text) do
+      if String.ends_with?(path, ".css") do
+        css_gradient_hits(path, text)
+      else
+        for [hit] <- Regex.scan(~r/gradient/, text),
+            do: {"gradient outside a stylesheet", path, hit}
+      end
+    end
+
+    # Count the gradient functions per rule, in comment-free CSS, and judge each rule against the
+    # allowance. A rule that is not on the list may hold none.
+    defp css_gradient_hits(path, css) do
+      comment_free = Regex.replace(~r{/\*.*?\*/}s, css, "")
+
+      counts =
+        for [_all, selector, body] <- Regex.scan(~r/([^{};]+)\{([^{}]*)\}/s, comment_free),
+            n = length(Regex.scan(~r/gradient\(/, body)),
+            n > 0,
+            reduce: %{} do
+          acc ->
+            selector = selector |> String.replace(~r/\s+/, " ") |> String.trim()
+            Map.update(acc, selector, n, &(&1 + n))
+        end
+
+      for {selector, n} <- Enum.sort(counts),
+          problem = gradient_problem(selector, n),
+          do: {"gradient outside its allowed rule", path, problem}
+    end
+
+    defp gradient_problem(selector, n) do
+      case List.keyfind(@gradient_allowance, selector, 0) do
+        nil -> "#{selector}: #{n} gradient function(s), none allowed in this rule"
+        {_selector, max} when n > max -> "#{selector}: #{n} gradient functions, at most #{max}"
+        {_selector, _max} -> nil
+      end
+    end
+
+    # The files the gate reads: the ops stylesheet and `lib/`, the ops JavaScript (the entry and
+    # the `ops_*.js` modules, never `vendor/`) and the ecommerce host's `app.js`.
+    defp scoped_files do
+      ops_js = Path.wildcard(Path.join(@ops_root, "assets/js/ops_*.js"))
+      lib = Path.wildcard(Path.join(@lib_root, "**/*.{ex,heex}"))
+      named = Enum.map(@scope_paths, &Path.join(@repo_root, &1))
+
+      Enum.map(named ++ ops_js ++ lib, &{Path.relative_to(&1, @repo_root), &1})
+    end
+
+    test "no scoped file holds a retired pattern or a gradient outside its two rules" do
+      offenders =
+        for {relative, path} <- scoped_files(),
+            {family, file, what} <- scan_retired(relative, File.read!(path)),
+            do: "#{file}: #{family}: #{what}"
+
+      assert offenders == [], Enum.join(offenders, "\n")
+    end
+
+    test "the scope reads the stylesheet, lib, the ops JavaScript and the host app.js, never vendor" do
+      relatives = Enum.map(scoped_files(), &elem(&1, 0))
+
+      for needed <- @scope_paths ++ ["scrypath_ops/assets/js/ops_hooks.js"] do
+        assert needed in relatives, "#{needed} must be scanned"
+      end
+
+      assert Enum.count(relatives, &String.starts_with?(&1, "scrypath_ops/lib/")) >= 20
+      assert Enum.count(relatives, &String.starts_with?(&1, "scrypath_ops/assets/js/ops_")) >= 6
+      refute Enum.any?(relatives, &String.contains?(&1, "/vendor/"))
+    end
+
+    test "a planted occurrence of each retired family fails and names the family and the file" do
+      css = "scrypath_ops/assets/css/app.css"
+      lib = "scrypath_ops/lib/x.ex"
+      js = "scrypath_ops/assets/js/app.js"
+      host = "examples/scrypath_ecommerce/assets/js/app.js"
+
+      planted = [
+        {"retired identity family", css, ".ops-copper-badge { color: red; }", "ops-copper"},
+        {"retired identity family", lib, ~s(class="shadow-ops-glow"), "shadow-ops-glow"},
+        {"retired identity family", css, "--ops-surface-2: #fff;", "ops-surface-2"},
+        {"retired identity family", css, "--color-primary-strong: red;", "primary-strong"},
+        {"capital transform", lib, ~s(class="uppercase"), "uppercase"},
+        {"capital transform", lib, ~s(class="tracking-wide"), "tracking-wide"},
+        {"infinite or spinner motion", css, ".x { animation: a 1s infinite; }", "infinite"},
+        {"infinite or spinner motion", lib, ~s(class="animate-spin"), "animate-spin"},
+        {"infinite or spinner motion", lib, ~s(class="animate-pulse"), "animate-pulse"},
+        {"infinite or spinner motion", css, "@keyframes spin { }", "@keyframes spin"},
+        {"infinite or spinner motion", css, "--x: var(--duration-ops-sting);",
+         "duration-ops-sting"},
+        {"infinite or spinner motion", css, ".x { --t: 1650; }", "1650"},
+        {"error button or danger variant", lib, ~s(class="btn btn-error"), "btn-error"},
+        {"error button or danger variant", lib, "<.ops_button variant={:danger}>",
+         "variant={:danger}"},
+        {"error button or danger variant", lib, "attr :v, default: [variant: :danger]",
+         "variant: :danger"},
+        {"alpha text utility", lib, ~s(class="text-base-content/70"), "text-base-content/7"},
+        {"retired rgb triplet", css, "--x: rgba(108, 99, 255, .2);", "rgba(108,"},
+        {"retired rgb triplet", css, "--x: rgb( 193 , 100, 40);", "rgb( 193 ,"},
+        {"old progress-bar hex", js, ~S|topbar.config({barColors: {0: "#29d"}})|, "#29d"},
+        {"old progress-bar hex", host, ~s(barColors: {0: "#29d"}), "#29d"}
+      ]
+
+      for {family, path, text, needle} <- planted do
+        hits = scan_retired(path, text)
+
+        assert Enum.any?(hits, fn {f, p, what} -> f == family and p == path and what =~ needle end),
+               "a planted #{family} (#{needle}) in #{path} must fail the scan, got #{inspect(hits)}"
+
+        assert scan_retired(path, "#{text}\n.fine { color: var(--color-base-content); }") != []
+      end
+    end
+
+    test "ordinary text is not a retired pattern" do
+      clean = """
+      .ops-card { color: var(--ops-text-muted); box-shadow: var(--shadow-ops-overlay); }
+      <.ops_button variant={:primary}>Save</.ops_button>
+      class="ops-muted text-base-content"
+      topbar.config({barColors: {0: primary}})
+      """
+
+      assert scan_retired("scrypath_ops/lib/x.ex", clean) == []
+    end
+
+    test "a gradient is allowed only in the table scroller and the select chevron, up to their counts" do
+      scroll =
+        ".ops-table-scroll { background: linear-gradient(a, b), linear-gradient(c, d), radial-gradient(e, f), radial-gradient(g, h); }"
+
+      chevron =
+        "select.ops-form-control { background-image: linear-gradient(45deg, a, b), linear-gradient(135deg, c, d); }"
+
+      css = "scrypath_ops/assets/css/app.css"
+
+      assert scan_retired(css, scroll <> "\n" <> chevron) == []
+
+      assert [{"gradient outside its allowed rule", ^css, ".card: 1 gradient function(s)" <> _}] =
+               scan_retired(css, ".card { background: linear-gradient(a, b); }")
+
+      assert [{_, ^css, ".ops-table-scroll: 5 gradient functions, at most 4"}] =
+               scan_retired(
+                 css,
+                 String.replace(scroll, "}", "background: linear-gradient(i, j); }")
+               )
+
+      assert [{_, ^css, "select.ops-form-control: 3 gradient functions, at most 2"}] =
+               scan_retired(
+                 css,
+                 String.replace(chevron, "}", "background: linear-gradient(i, j); }")
+               )
+
+      # a selector that merely contains an allowed name is not the allowed rule
+      assert [{_, ^css, ".ops-table-scroll-extra: 1 gradient function(s)" <> _}] =
+               scan_retired(css, ".ops-table-scroll-extra { background: linear-gradient(a, b); }")
+
+      # comments that talk about gradients do not count; a gradient in code outside a stylesheet does
+      assert scan_retired(css, "/* a linear-gradient(a, b) in prose */ .x { color: red; }") == []
+
+      assert [{"gradient outside a stylesheet", "scrypath_ops/lib/x.ex", "gradient"}] =
+               scan_retired("scrypath_ops/lib/x.ex", ~s(class="bg-gradient-to-r"))
     end
   end
 end

@@ -211,13 +211,6 @@
       "context": "@layer components > .storefront-search__search-field,.storefront-search__facet-group,.storefront-search__result,.storefront-search__empty > border",
       "value": "#d8dee6",
       "count": 1
-    },
-    {
-      "rule": "raw-hex",
-      "path": "scrypath_ops/assets/js/app.js",
-      "context": "JS/TS styling:barColors",
-      "value": "#29d",
-      "count": 1
     }
   ]
 }

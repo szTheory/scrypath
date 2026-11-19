@@ -1507,3 +1507,144 @@ test("planted retired hex in app.css fails", () => {
   ];
   for (const css of rejected) assert.ok(fails(css) > 0, css);
 });
+
+// ---------------------------------------------------------------------------
+// N-13: spacing stays on the 4 px grid (Phase 187, SKIN-06)
+//
+// Two checks, both read from scrypath_ops/assets/css/app.css with comments removed.
+//
+// 1. Every spacing custom property (`--spacing-*`, `--control-h-*`, `--control-pad-*` and
+//    `--ops-sidebar-width`) is a plain px or rem length that is a multiple of 4 px. Two named
+//    exceptions exist and are pinned to their value: `--spacing-ops-field` is 6 px and
+//    `--control-pad-x-sm` is 10 px. A new token off the grid, an exception that moved, or an
+//    exception that no longer exists all fail.
+// 2. The number of padding, margin and gap literals that are not a multiple of 4 px can only
+//    fall. SPACING_OFFGRID_CEILING is the count printed on the first run; it is exact in both
+//    directions (a lower live count fails until the ceiling is lowered), like the ceilings
+//    above. The one value exempted by name is 14 px (`.875rem`) as the block padding of
+//    `.ops-failed-row` and `.ops-saved-search-row`; 14 px anywhere else counts toward the
+//    ceiling. Percentages, `var()` references, zero and `auto` are not literals, and 2 px
+//    border and outline widths are not spacing.
+// ---------------------------------------------------------------------------
+
+const GRID_PX = 4;
+const SPACING_EXCEPTIONS = new Map([
+  ["--spacing-ops-field", 6],
+  ["--control-pad-x-sm", 10],
+]);
+const SPACING_TOKEN = /^--(?:spacing-[a-z0-9-]+|control-h-[a-z0-9-]+|control-pad-[a-z0-9-]+|ops-sidebar-width)$/;
+const SPACING_PROPERTY =
+  /^(?:padding|margin)(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?$|^(?:gap|row-gap|column-gap)$/;
+const SPACING_LENGTH = /(?<![\w.#-])(-?\d*\.?\d+)(px|rem|em)\b/g;
+const FOURTEEN_PX_RULES = new Set([".ops-failed-row", ".ops-saved-search-row"]);
+const FOURTEEN_PX_PROPERTIES = new Set(["padding", "padding-block", "padding-top", "padding-bottom"]);
+
+// Baseline recorded on the first run of N-13 (Plan 09): 37 literals. Lower it when one moves onto the grid.
+const SPACING_OFFGRID_CEILING = 37;
+
+function lengthPx(number, unit) {
+  const px = unit === "px" ? number : number * 16;
+  return Math.round(px * 1000) / 1000;
+}
+
+function spacingTokenFailures(css) {
+  const failures = [];
+  const declared = new Set();
+  for (const match of stripCssComments(css).matchAll(/(?<![\w-])(--[a-z0-9-]+)\s*:\s*([^;}]+)/gi)) {
+    const [, name, raw] = match;
+    if (!SPACING_TOKEN.test(name)) continue;
+    declared.add(name);
+    const value = raw.trim();
+    const length = value.match(/^(-?\d*\.?\d+)(px|rem)$/);
+    if (!length) {
+      failures.push(`${name} is ${value}, not a plain px or rem length`);
+      continue;
+    }
+    const px = lengthPx(Number(length[1]), length[2]);
+    const exception = SPACING_EXCEPTIONS.get(name);
+    if (exception !== undefined) {
+      if (px !== exception) failures.push(`${name} is ${px}px but its named exception is ${exception}px`);
+    } else if (px % GRID_PX !== 0) {
+      failures.push(`${name} is ${px}px, not a multiple of ${GRID_PX}px`);
+    }
+  }
+  for (const name of SPACING_EXCEPTIONS.keys()) {
+    if (!declared.has(name)) failures.push(`${name} is not declared: remove its named exception`);
+  }
+  return failures;
+}
+
+// Each padding, margin or gap length literal that is off the grid, as `selector { property: literal }`.
+function offGridSpacingLiterals(css) {
+  const hits = [];
+  for (const rule of stripCssComments(css).matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
+    const selectors = rule[1].split(",").map((selector) => selector.replace(/\s+/g, " ").trim());
+    for (const declaration of rule[2].split(";")) {
+      const colon = declaration.indexOf(":");
+      if (colon < 0) continue;
+      const property = declaration.slice(0, colon).trim().toLowerCase();
+      if (!SPACING_PROPERTY.test(property)) continue;
+      const value = declaration.slice(colon + 1).replace(/!important/i, "");
+      for (const length of value.matchAll(SPACING_LENGTH)) {
+        const px = Math.abs(lengthPx(Number(length[1]), length[2]));
+        if (px === 0 || px % GRID_PX === 0) continue;
+        const named = px === 14 && FOURTEEN_PX_PROPERTIES.has(property) && selectors.every((selector) => FOURTEEN_PX_RULES.has(selector));
+        if (named) continue;
+        hits.push(`${selectors.join(", ")} { ${property}: ${length[0]} }`);
+      }
+    }
+  }
+  return hits;
+}
+
+test("live spacing tokens stay on the 4 px grid", () => {
+  assert.deepEqual(spacingTokenFailures(fs.readFileSync(APP_CSS, "utf8")), []);
+});
+
+test("live off-grid spacing literals stay at the ceiling", () => {
+  const hits = offGridSpacingLiterals(fs.readFileSync(APP_CSS, "utf8"));
+  assert.ok(
+    hits.length <= SPACING_OFFGRID_CEILING,
+    `${hits.length} off-grid padding, margin and gap literals exceed SPACING_OFFGRID_CEILING ${SPACING_OFFGRID_CEILING} (shrink-only):\n${hits.join("\n")}`,
+  );
+  assert.equal(
+    hits.length,
+    SPACING_OFFGRID_CEILING,
+    `SPACING_OFFGRID_CEILING is ${SPACING_OFFGRID_CEILING} but only ${hits.length} literals are off the grid: lower it to ${hits.length}`,
+  );
+});
+
+test("planted off-grid spacing token fails", () => {
+  const onGrid = `@theme {
+  --spacing-ops-1: 0.25rem; --spacing-ops-field: 0.375rem; --control-h-md: 2.5rem;
+  --control-pad-x-sm: 0.625rem; --ops-sidebar-width: 17rem; --control-h-xs: 28px;
+}
+.ops-failed-row { padding-block: .875rem; gap: .5rem; }
+.ops-saved-search-row { padding: .875rem .75rem; margin: 0 -.5rem; }
+.ops-a { padding: var(--spacing-ops-2) 12px; margin-inline: auto; width: 33px; border-width: 2px; }
+/* .ops-comment { padding: .3rem; } */`;
+
+  // Accepted: on-grid tokens, both named exceptions at their value, 14px as the named block padding,
+  // negative and var() values, and an off-grid literal that only appears in a comment or a width.
+  assert.deepEqual(spacingTokenFailures(onGrid), []);
+  assert.deepEqual(offGridSpacingLiterals(onGrid), []);
+
+  // Planted tokens.
+  const token = (from, to) => spacingTokenFailures(onGrid.replace(from, to));
+  assert.ok(token("--spacing-ops-1: 0.25rem", "--spacing-ops-7: 0.4375rem").some((m) => /--spacing-ops-7 is 7px, not a multiple of 4px/.test(m)));
+  assert.ok(token("--control-h-md: 2.5rem", "--control-h-md: 41px").some((m) => /--control-h-md is 41px/.test(m)));
+  assert.ok(token("--ops-sidebar-width: 17rem", "--ops-sidebar-width: 17.1rem").some((m) => /--ops-sidebar-width is 273.6px/.test(m)));
+  assert.ok(token("--spacing-ops-field: 0.375rem", "--spacing-ops-field: 0.5rem").some((m) => /named exception is 6px/.test(m)));
+  assert.ok(token("--control-pad-x-sm: 0.625rem;", "").some((m) => /--control-pad-x-sm is not declared/.test(m)));
+  assert.ok(token("--control-h-md: 2.5rem", "--control-h-md: calc(2rem + 7px)").some((m) => /not a plain px or rem length/.test(m)));
+
+  // Planted literals: each of these adds exactly one off-grid literal.
+  const literal = (rule) => offGridSpacingLiterals(`${onGrid}\n${rule}`);
+  assert.equal(literal(".ops-b { padding: .3rem; }").length, 1);
+  assert.equal(literal(".ops-c { gap: 5px .5rem; }").length, 1);
+  assert.equal(literal(".ops-d { column-gap: .875rem; }").length, 1, "14px is exempt only as block padding");
+  assert.equal(literal(".ops-e { margin-block: .875rem; }").length, 1, "14px margin is not the named exception");
+  assert.equal(literal(".ops-failed-row__facts { padding-block: .875rem; }").length, 1, "14px padding in another rule counts");
+  assert.equal(literal(".ops-failed-row, .ops-other { padding-block: .875rem; }").length, 1, "a shared rule is not the named rule");
+  assert.equal(literal(".ops-f { padding-inline-start: -.1875rem 7px; }").length, 2);
+});
