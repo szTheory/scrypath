@@ -255,8 +255,9 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates. Every 
 | Structural preservation pair check | `scripts/ci/ui_state_pairs.test.cjs` | `repository-contracts` (rides the existing Node step; counted conservatively) | Delete when the Phase 185 preservation specs are retired | None unless thresholds are retuned, which needs a new real capture pair in `scripts/ci/fixtures/ui-state-pairs/` |
 | ScrypathOps re-skin static contract | `scrypath_ops/test/scrypath_ops_web/reskin_static_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops brand assets, fonts and retired-identity gates move into a dedicated brand contract or scrypath_ops leaves this repository | One assertion edit when a brand asset, font or allowlisted glyph changes |
 | Mounted font delivery | `examples/scrypath_ecommerce/e2e/harness.spec.ts` | `ecommerce-mounted` | Delete if ops stops shipping self-hosted fonts | None unless font file names change |
+| ScrypathOps re-skin component contract | `scrypath_ops/test/scrypath_ops_web/reskin_component_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops component catalog contract replaces it in v1.47 or scrypath_ops leaves this repository | One assertion edit when a status word, confirm label or row-action rule changes |
 
-Budget used: 7 of 12.
+Budget used: 8 of 12.
 
 ### Exact-source cache acceptance probes
 

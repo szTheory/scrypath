@@ -480,6 +480,46 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
+  The one sync-status vocabulary: a word first, then a 16 px bar icon.
+
+  `status` is one of `:failed`, `:retrying`, `:pending` or `:clear`. The word is the accessible
+  text; the icon is decoration, so it carries no role and no name and never appears without its
+  word. The four icons differ by shape (`data-shape` is `notched`, `bottom-filled`, `hollow` or
+  `filled`), so the status reads without color. Word and icon take their color from
+  `--ops-status-<status>` through `currentColor`.
+
+  Words and shapes come from a private table, never from the input, and the attr rejects any
+  other atom at compile time. `Clear` is only for an observed-clear source; callers that did not
+  observe something must render an `ops_condition/1` word instead.
+  """
+  attr(:status, :atom, required: true, values: [:failed, :retrying, :pending, :clear])
+  attr(:class, :any, default: nil)
+
+  def ops_sync_status(assigns) do
+    {shape, word, path} = sync_status_shape(assigns.status)
+    assigns = assign(assigns, shape: shape, word: word, path: path)
+
+    ~H"""
+    <span class={["ops-sync-status", @class]} data-sync-status={@status}>
+      <span class="ops-sync-status__word">{@word}</span>
+      <svg
+        class="ops-sync-status__icon"
+        data-shape={@shape}
+        aria-hidden="true"
+        focusable="false"
+        width="8.63"
+        height="16"
+        viewBox="0 0 8.63 16"
+        fill="currentColor"
+        fill-rule="evenodd"
+      >
+        <path d={@path} />
+      </svg>
+    </span>
+    """
+  end
+
+  @doc """
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
@@ -1894,6 +1934,26 @@ defmodule ScrypathOpsWeb.OpsUi do
   # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
   defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"
   defp loading_bar_width(_n, _total), do: "width: 100%"
+
+  # The four status shapes (UI-SPEC "Shapes", LD-7): one sharp bar that leans 14.46 degrees
+  # (4.13 over 16), drawn in a 8.63 x 16 box. They differ without color: filled, hollow,
+  # hollow with a filled lower half, and a filled bar with a bite out of its left edge.
+  @sync_status_bar "M0 16H4.5L8.63 0H4.13Z"
+  @sync_status_hollow "M1.61 14.75H3.53L7.02 1.25H5.10Z"
+  @sync_status_lower_half "M1.61 14.75H3.53L5.27 8H3.36Z"
+
+  defp sync_status_shape(:clear), do: {"filled", "Clear", @sync_status_bar}
+
+  defp sync_status_shape(:pending),
+    do: {"hollow", "Pending", @sync_status_bar <> " " <> @sync_status_hollow}
+
+  defp sync_status_shape(:retrying),
+    do:
+      {"bottom-filled", "Retrying",
+       @sync_status_bar <> " " <> @sync_status_hollow <> " " <> @sync_status_lower_half}
+
+  defp sync_status_shape(:failed),
+    do: {"notched", "Failed", "M0 16H4.5L8.63 0H4.13L2.71 5.5L4.06 8L1.42 10.5Z"}
 
   defp tone_class(:success), do: "ops-tone-success"
   defp tone_class(:warning), do: "ops-tone-warning"

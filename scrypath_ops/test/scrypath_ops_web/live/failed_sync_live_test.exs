@@ -231,6 +231,46 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert has_element?(view, "a[href='/ops/sync-and-index']")
   end
 
+  # Phase 187 E-02 (Failed sync half): a row's state is the shared status word and icon, never a
+  # badge, and `data-state` keeps its value so the row stays addressable.
+  test "each failed sync row renders one status word and icon from its state", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(501, OpsPostA, error: "** (Ecto.CastError) cannot cast"),
+      upsert_job(509, OpsPostB, state: "discarded", error: "the Variant source remains visible")
+    ])
+
+    {:ok, _view, html} = live(conn, ~p"/ops/failed-sync")
+
+    rows =
+      html
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("[data-testid='failed-sync-row']")
+
+    assert Enum.count(rows) == 3
+
+    states =
+      for row <- rows do
+        [state] = LazyHTML.attribute(row, "data-state")
+        statuses = LazyHTML.query(row, "[data-sync-status]")
+
+        assert Enum.count(statuses) == 1
+        assert LazyHTML.attribute(statuses, "data-sync-status") == [state]
+
+        assert statuses |> LazyHTML.query(".ops-sync-status__word") |> LazyHTML.text() ==
+                 String.capitalize(state)
+
+        assert statuses |> LazyHTML.query("svg[aria-hidden='true'][data-shape]") |> Enum.count() ==
+                 1
+
+        badge_words = row |> LazyHTML.query(".ops-badge") |> Enum.map(&LazyHTML.text/1)
+        assert Enum.all?(badge_words, &(String.trim(&1) not in ~w(Failed Retrying Pending Clear)))
+
+        state
+      end
+
+    assert Enum.sort(states) == ["failed", "failed", "retrying"]
+  end
+
   test "zero-count schemas stay visible but quiet", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
 

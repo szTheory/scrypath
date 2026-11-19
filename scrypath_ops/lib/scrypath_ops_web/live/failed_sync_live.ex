@@ -679,8 +679,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp operation_label(:delete), do: "Delete"
   defp operation_label(_), do: "Unknown operation"
 
-  defp state_label(:retrying), do: "Retrying"
-  defp state_label(_), do: "Failed"
+  # Failed sync work is only ever failed or retrying; it does not observe pending work, so it
+  # never renders Clear or Pending.
+  defp row_sync_status(:retrying), do: :retrying
+  defp row_sync_status(_state), do: :failed
 
   defp source_label(%{source: :meilisearch, id: id}), do: "Meilisearch task ##{id}"
 
@@ -1032,9 +1034,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             data-state={row.state}
           >
             <div class="ops-failed-row__facts">
-              <.ops_badge kind={if row.state == :retrying, do: :warning, else: :error}>
-                {state_label(row.state)}
-              </.ops_badge>
+              <.ops_sync_status status={row_sync_status(row.state)} />
               <h3 class="ops-failed-row__title">
                 <span title={OperatorSelection.canonical(row.schema)} data-ops-identity>
                   {schema_short_name(row.schema)}

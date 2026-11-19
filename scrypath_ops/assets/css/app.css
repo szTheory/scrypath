@@ -812,6 +812,37 @@
     background: color-mix(in oklch, var(--color-primary) 12%, transparent);
   }
 
+  /* The sync-status vocabulary (ops_sync_status): word first, then a 16px bar icon. Word and
+     icon share one color from the status token through currentColor. No transition: a status
+     change must not animate. */
+  .ops-sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-ops-1);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .ops-sync-status__icon {
+    flex: none;
+  }
+
+  .ops-sync-status[data-sync-status="failed"] {
+    color: var(--ops-status-failed);
+  }
+
+  .ops-sync-status[data-sync-status="retrying"] {
+    color: var(--ops-status-retrying);
+  }
+
+  .ops-sync-status[data-sync-status="pending"] {
+    color: var(--ops-status-pending);
+  }
+
+  .ops-sync-status[data-sync-status="clear"] {
+    color: var(--ops-status-clear);
+  }
+
   /* Glow opt-in: quiet violet aura via --shadow-ops-glow (none in light, faint in dark).
      Apply to route-mark, active nav pill, recommended intent-card. Never text/bg floods. */
   .ops-glow {
