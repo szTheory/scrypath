@@ -695,6 +695,43 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
     @infinite_css ~r/\binfinite\b|@keyframes\s+(spin|ops-pulse)\b|\bops-pulse\b/
     @infinite_lib ~r/\binfinite\b|\banimate-(spin|pulse|ping|bounce)\b|\bops-pulse\b/
 
+    test "the source stylesheet never loops, spins or pulses" do
+      css = File.read!(@app_css)
+
+      hits = @infinite_css |> Regex.scan(css) |> Enum.map(&hd/1)
+      assert hits == [], "infinite iteration, spin or pulse in app.css: #{inspect(hits)}"
+
+      # The built stylesheet also carries daisyUI's own `.progress` and `.skeleton` loops, which no
+      # ScrypathOps markup renders (next test), so only the two ops-authored loops are checked here.
+      built = File.read!(@built_css)
+      refute built =~ ~r/@keyframes\s+(spin|ops-pulse)\b|animation:\s*(spin|ops-pulse)\b/
+    end
+
+    test "no template uses a daisyUI loading, skeleton or progress component" do
+      looping_class =
+        ~r/class="[^"]*(?<![\w-])(skeleton|loading|progress|loading-[a-z]+)(?![\w-])[^"]*"/
+
+      offenders =
+        for {file, source} <- lib_sources(),
+            [hit | _] <- Regex.scan(looping_class, source),
+            do: "#{file}: #{hit}"
+
+      assert offenders == [], Enum.join(offenders, "\n")
+
+      assert Regex.match?(looping_class, ~s(<span class="loading loading-spinner"></span>))
+      assert Regex.match?(looping_class, ~s(<div class="skeleton h-4 w-full"></div>))
+      refute Regex.match?(looping_class, ~s(<div class="ops-loading ops-loading__bars"></div>))
+    end
+
+    test "no screen renders an animate class", %{conn: conn} do
+      for {label, path} <- @glyph_screens do
+        html = render_screen(conn, path)
+
+        assert count_in(html, "[class*='animate']") == 0,
+               "#{label} renders an element whose class contains animate"
+      end
+    end
+
     test "lib holds no animated spinner or pulse class, including documentation examples" do
       offenders =
         for {file, source} <- lib_sources(),

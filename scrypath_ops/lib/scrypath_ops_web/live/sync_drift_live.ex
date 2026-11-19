@@ -2199,6 +2199,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           kind={:info}
           title="Checking Meilisearch settings…"
           role="status"
+          aria-busy="true"
           neutral
         >
           <span :if={@drift_result}>

@@ -60,13 +60,6 @@
     },
     {
       "rule": "inline-style",
-      "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
-      "context": "~H:ops_loading > div[1] > span[1]",
-      "value": "[\"{\",\"loading_bar_width\",\"(\",\"n\",\",\",\"@lines\",\")\",\"}\"]",
-      "count": 1
-    },
-    {
-      "rule": "inline-style",
       "path": "scrypath_ops/lib/scrypath_ops_web/live/search_live.ex",
       "context": "~H:render > layouts[1] > div[1] > div[1] > div[8] > div[1] > div[1] > div[1] > id=saved-search-menu",
       "value": "[\"display\",\":\",\"none\",\";\"]",

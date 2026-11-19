@@ -823,10 +823,24 @@
     cursor: progress;
   }
 
-  @media (prefers-reduced-motion: no-preference) {
-    .ops-refresh-button.phx-click-loading svg {
-      animation: spin 1s linear infinite;
-    }
+  /* Loading is a word, never a spinner. Both words share one grid cell, so the button keeps one
+     width whichever shows, and the OpsRefreshButton hook sets aria-busy while LiveView marks the
+     click as loading. Hidden text is out of the accessibility tree and of innerText. */
+  .ops-refresh-button__words {
+    display: inline-grid;
+  }
+
+  .ops-refresh-button__words > [data-ops-refresh-label] {
+    grid-area: 1 / 1;
+  }
+
+  .ops-refresh-button [data-ops-refresh-label="busy"],
+  .ops-refresh-button[aria-busy="true"] [data-ops-refresh-label="idle"] {
+    visibility: hidden;
+  }
+
+  .ops-refresh-button[aria-busy="true"] [data-ops-refresh-label="busy"] {
+    visibility: visible;
   }
 
   .ops-form-stack {
@@ -1480,18 +1494,22 @@
     }
   }
 
-  /* Restrained loading primitive (ops_loading): a quiet opacity pulse for in-flight reads
-     (drift, search, swap) so loading states read consistently. Opacity-only, neutralized by
-     the global reduced-motion rule. `--bar` renders a skeleton placeholder line; `--inline`
-     is a compact spinner-free pulse for "working…" labels. Wiring into screens is 125/126. */
-  .ops-loading {
-    animation: ops-pulse 1.4s var(--ease-ops-in-out) infinite;
+  /* Loading primitive (ops_loading): the word is the signal and aria-busy marks the region. The
+     skeleton lines are static Sunken blocks, the last one short. Nothing moves, so there is
+     nothing for reduced motion to switch off. */
+  .ops-loading__label {
+    font-size: var(--text-ops-body);
+    color: var(--ops-text-muted);
   }
 
   .ops-loading__bar {
     height: 0.75rem;
     border-radius: var(--radius-ops-sm);
-    background: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    background: var(--ops-sunken);
+  }
+
+  .ops-loading__bar--short {
+    width: 60%;
   }
 
   .ops-loading__bars {
@@ -1903,7 +1921,7 @@
 
   /* 3. Code-block hover glint — opt-in only (`shimmer={true}` on ops_code_block).
      A pseudo-element border overlay using opacity ONLY, on :hover, gated to
-     hover-capable pointers. No infinite loop, no mount animation, no
+     hover-capable pointers. It never repeats, has no mount animation and no
      background-position sweep. Default code blocks (no modifier) stay inert. */
   .ops-code-block--shimmer {
     position: relative;
@@ -2012,17 +2030,6 @@
 
   to {
     opacity: 1;
-  }
-}
-
-@keyframes ops-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.45;
   }
 }
 

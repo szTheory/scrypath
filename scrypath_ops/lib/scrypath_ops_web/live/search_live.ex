@@ -1596,16 +1596,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 {submitted_context(@submitted_search)}
               </p>
 
-              <div
-                :if={@searching}
-                class="space-y-3"
-                aria-hidden="true"
-              >
-                <p class="text-ops-body text-base-content/70">
-                  Running search...
-                </p>
-                <.ops_loading lines={4} label="Running search" />
-              </div>
+              <.ops_loading :if={@searching} lines={4} label="Running search..." />
 
               <.ops_status
                 :if={@run_error && !@searching}

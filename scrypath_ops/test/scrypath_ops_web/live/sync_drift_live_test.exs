@@ -202,6 +202,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ ~s(id="index-settings-checking")
     assert html =~ "Checking Meilisearch settings…"
 
+    # Phase 187 (E-16): while the settings load, the word shows with aria-busy and nothing spins.
+    checking = html |> LazyHTML.from_fragment() |> LazyHTML.query("#index-settings-checking")
+    assert LazyHTML.attribute(checking, "aria-busy") == ["true"]
+    assert LazyHTML.attribute(checking, "role") == ["status"]
+    refute html =~ "animate-"
+
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
     refute has_element?(lv, "#index-settings-checking")

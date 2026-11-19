@@ -3524,10 +3524,17 @@
   .ops-refresh-button.phx-click-loading {
     cursor: progress;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .ops-refresh-button.phx-click-loading svg {
-      animation: spin 1s linear infinite;
-    }
+  .ops-refresh-button__words {
+    display: inline-grid;
+  }
+  .ops-refresh-button__words > [data-ops-refresh-label] {
+    grid-area: 1 / 1;
+  }
+  .ops-refresh-button [data-ops-refresh-label="busy"], .ops-refresh-button[aria-busy="true"] [data-ops-refresh-label="idle"] {
+    visibility: hidden;
+  }
+  .ops-refresh-button[aria-busy="true"] [data-ops-refresh-label="busy"] {
+    visibility: visible;
   }
   .ops-form-stack {
     display: grid;
@@ -4115,16 +4122,17 @@
       align-items: start;
     }
   }
-  .ops-loading {
-    animation: ops-pulse 1.4s var(--ease-ops-in-out) infinite;
+  .ops-loading__label {
+    font-size: var(--text-ops-body);
+    color: var(--ops-text-muted);
   }
   .ops-loading__bar {
     height: 0.75rem;
     border-radius: var(--radius-ops-sm);
-    background: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 12%, transparent);
-    }
+    background: var(--ops-sunken);
+  }
+  .ops-loading__bar--short {
+    width: 60%;
   }
   .ops-loading__bars {
     display: grid;
@@ -4503,7 +4511,7 @@
 
   /* 3. Code-block hover glint — opt-in only (`shimmer={true}` on ops_code_block).
      A pseudo-element border overlay using opacity ONLY, on :hover, gated to
-     hover-capable pointers. No infinite loop, no mount animation, no
+     hover-capable pointers. It never repeats, has no mount animation and no
      background-position sweep. Default code blocks (no modifier) stay inert. */
   .ops-code-block--shimmer {
     position: relative;
@@ -4582,7 +4590,7 @@
 
   /* 3. Code-block hover glint — opt-in only (`shimmer={true}` on ops_code_block).
      A pseudo-element border overlay using opacity ONLY, on :hover, gated to
-     hover-capable pointers. No infinite loop, no mount animation, no
+     hover-capable pointers. It never repeats, has no mount animation and no
      background-position sweep. Default code blocks (no modifier) stay inert. */
   .ops-code-block--shimmer {
     position: relative;
@@ -4668,14 +4676,6 @@
   }
   to {
     opacity: 1;
-  }
-}
-@keyframes ops-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
   }
 }
 @keyframes ops-modal-in {
@@ -6630,11 +6630,6 @@ code, pre, kbd {
   syntax: "*";
   inherits: false;
   initial-value: 1;
-}
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {

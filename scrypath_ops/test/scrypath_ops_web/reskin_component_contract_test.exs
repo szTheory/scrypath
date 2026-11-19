@@ -15,6 +15,9 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
   #   - E-17 notices, statuses and verdicts: one Panel surface with a 2px inline-start rule. Failed
   #     color only for errors, Retrying amber for warnings and partial results, Control Edge for
   #     everything else; no cue dot, no tint, no shadow, no Plum or green.
+  #   - E-16 loading: `ops_loading` and the refresh button show a literal word and `aria-busy`
+  #     with static Sunken bars and no animation class, the refresh button swaps its two words on
+  #     `aria-busy` (set by the existing hook), and reconnect flashes carry no spinner.
   use ScrypathOpsWeb.ConnCase, async: true
 
   import Phoenix.Component, only: [sigil_H: 2]
@@ -796,6 +799,179 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert html =~ "No saved searches yet."
       assert count(html, "#saved-search-manage .ops-text-action") == 0
       assert count(html, "#saved-search-list") == 0
+    end
+  end
+
+  # ── Plan 06: loading is a word with aria-busy, never a loop ──────────────────────────────
+
+  @ops_hooks Path.expand("../../assets/js/ops_hooks.js", __DIR__)
+
+  describe "E-16 loading is a word, not a loop" do
+    test "ops_loading bars render the literal word, aria-busy and static bars" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <OpsUi.ops_loading lines={4} label="Running search..." />
+        """)
+
+      assert [region] =
+               html |> LazyHTML.from_fragment() |> LazyHTML.query("[aria-busy]") |> Enum.to_list()
+
+      assert LazyHTML.attribute(region, "aria-busy") == ["true"]
+      assert LazyHTML.attribute(region, "role") == ["status"]
+      assert LazyHTML.text(region) =~ "Running search..."
+
+      bars = LazyHTML.query(region, ".ops-loading__bar")
+      assert Enum.count(bars) == 4
+      assert bars |> LazyHTML.attribute("aria-hidden") |> Enum.uniq() == ["true"]
+
+      # No inline width: the short last line is a class, so the literal ledger has no row for it.
+      refute html =~ "style="
+      assert count(html, ".ops-loading__bar--short") == 1
+      assert count(html, ".ops-loading__bar:last-child.ops-loading__bar--short") == 1
+
+      refute html =~ "animate"
+      assert count(html, "svg") == 0
+    end
+
+    test "one skeleton line is full width, and the inline variant is a word with aria-busy" do
+      assigns = %{}
+
+      single =
+        rendered_to_string(~H"""
+        <OpsUi.ops_loading lines={1} label="Loading…" />
+        """)
+
+      inline =
+        rendered_to_string(~H"""
+        <OpsUi.ops_loading variant={:inline} label="Checking…" />
+        """)
+
+      assert count(single, ".ops-loading__bar") == 1
+      assert count(single, ".ops-loading__bar--short") == 0
+
+      assert count(inline, "[aria-busy='true'][role='status']") == 1
+      assert inline =~ "Checking…"
+      refute inline =~ "animate"
+      assert count(inline, ".ops-loading__bar") == 0
+    end
+
+    test "ops_refresh_button renders both label words, an outline button and no glyph" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <OpsUi.ops_refresh_button id="r" aria_label="Refresh search health" />
+        """)
+
+      assert count(html, "svg") == 0
+      assert count(html, "button.ops-refresh-button.btn-outline") == 1
+      assert count(html, "button.btn-ghost") == 0
+      assert count(html, "button[phx-hook='OpsRefreshButton'][data-ops-refresh]") == 1
+      assert count(html, "button[aria-label='Refresh search health']") == 1
+
+      doc = LazyHTML.from_fragment(html)
+
+      assert doc
+             |> LazyHTML.query("[data-ops-refresh-label='idle']")
+             |> LazyHTML.text()
+             |> String.trim() == "Refresh"
+
+      assert doc
+             |> LazyHTML.query("[data-ops-refresh-label='busy']")
+             |> LazyHTML.text()
+             |> String.trim() == "Refreshing…"
+
+      # The OpsRefreshButton hook owns aria-busy; the server never sets it.
+      refute html =~ "aria-busy"
+      refute html =~ "animate"
+    end
+
+    test "ops_refresh_control passes the outline default through and keeps its time" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <OpsUi.ops_refresh_control id="c" aria_label="Refresh failed sync work" />
+        """)
+
+      assert count(html, "button.btn-outline") == 1
+      assert count(html, "button.btn-ghost") == 0
+      assert count(html, "[data-ops-refresh-label]") == 2
+      assert count(html, "svg") == 0
+    end
+
+    test "a custom busy word replaces Refreshing…" do
+      assigns = %{}
+
+      html =
+        rendered_to_string(~H"""
+        <OpsUi.ops_refresh_button id="r" aria_label="Check" label="Check" busy_label="Checking…" />
+        """)
+
+      # Read the word from its span: an undeclared attribute would otherwise leak into the
+      # button's global attributes and put the word in the markup without ever showing it.
+      assert html
+             |> LazyHTML.from_fragment()
+             |> LazyHTML.query(
+               "button .ops-refresh-button__words > [data-ops-refresh-label='busy']"
+             )
+             |> LazyHTML.text()
+             |> String.trim() == "Checking…"
+
+      refute html =~ "Refreshing…"
+      refute html =~ "busy_label"
+    end
+
+    test "the stylesheet swaps the two words on aria-busy, and the hook is what sets it" do
+      css = File.read!(@app_css)
+
+      assert css =~
+               ~r/\.ops-refresh-button\[aria-busy="true"\]\s+\[data-ops-refresh-label="idle"\]/
+
+      assert css =~
+               ~r/\.ops-refresh-button\[aria-busy="true"\]\s+\[data-ops-refresh-label="busy"\]/
+
+      refute css =~ ~r/phx-click-loading\s+svg/
+
+      # Both words share one grid cell, so the button keeps one width and nothing reflows.
+      assert css =~ ~r/\.ops-refresh-button__words \{\s*display: inline-grid;/
+      assert css =~ ~r/\[data-ops-refresh-label\] \{\s*grid-area: 1 \/ 1;/
+
+      hook = File.read!(@ops_hooks)
+      assert hook =~ ~s|setAttribute("aria-busy", "true")|
+      assert hook =~ "OpsRefreshButton"
+    end
+
+    test "skeleton bars are static Sunken blocks and nothing animates in the loading rules" do
+      css = File.read!(@app_css)
+
+      [bar] = Regex.run(~r/\.ops-loading__bar \{[^}]*\}/, css)
+      assert bar =~ "background: var(--ops-sunken)"
+      refute bar =~ "animation"
+
+      [region] = Regex.run(~r/\.ops-loading__bars \{[^}]*\}/, css)
+      refute region =~ "animation"
+      refute css =~ ~r/\.ops-loading\s*\{[^}]*animation/
+    end
+
+    test "reconnect flashes say it in words, with no spinner and no busy hold on the alert" do
+      html = render_component(&ScrypathOpsWeb.Layouts.flash_group/1, flash: %{})
+
+      for id <- ["client-error", "server-error"] do
+        assert count(html, "##{id}[role='alert']") == 1
+        assert count(html, "##{id} .alert > svg") == 0
+        # aria-busy on a live region tells assistive technology to hold its announcements, which
+        # would silence the very message this flash exists to deliver.
+        assert count(html, "##{id}[aria-busy]") == 0
+
+        assert LazyHTML.from_fragment(html) |> LazyHTML.query("##{id}") |> LazyHTML.text() =~
+                 "Attempting to reconnect"
+      end
+
+      assert html =~ "We can&#39;t find the internet" or html =~ "We can't find the internet"
+      refute html =~ "animate"
     end
   end
 end

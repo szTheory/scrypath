@@ -204,18 +204,26 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Contextual refresh action for operator status surfaces."
+  @doc """
+  Contextual refresh action for operator status surfaces.
+
+  An outline button with two words and no glyph: `label` while idle and `busy_label` while the
+  click is in flight. Both words are always rendered and the stylesheet swaps them on
+  `[aria-busy="true"]`, which the `OpsRefreshButton` hook sets while LiveView marks the click as
+  loading, so the width never changes and nothing animates. The server never sets `aria-busy`.
+  """
   attr(:id, :string,
     required: true,
     doc: "Unique DOM id required by the LiveView refresh hook."
   )
 
   attr(:label, :string, default: "Refresh")
+  attr(:busy_label, :string, default: "Refreshing…")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
-    default: :ghost,
+    default: :default,
     values: [:default, :primary, :secondary, :ghost]
   )
 
@@ -233,7 +241,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       variant={@variant}
       size={@size}
-      class={["gap-1.5 ops-refresh-button", @class]}
+      class={["ops-refresh-button", @class]}
       disabled={@disabled}
       data-ops-refresh-eligible={if @disabled, do: "false", else: "true"}
       data-ops-refresh
@@ -241,7 +249,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label={@aria_label}
       {@rest}
     >
-      <span>{@label}</span>
+      <span class="ops-refresh-button__words">
+        <span data-ops-refresh-label="idle">{@label}</span>
+        <span data-ops-refresh-label="busy">{@busy_label}</span>
+      </span>
     </.ops_button>
     """
   end
@@ -251,11 +262,12 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:checked_at, :any, default: nil)
   attr(:checked_label, :string, default: "Checked")
   attr(:label, :string, default: "Refresh")
+  attr(:busy_label, :string, default: "Refreshing…")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
-    default: :ghost,
+    default: :default,
     values: [:default, :primary, :secondary, :ghost]
   )
 
@@ -274,6 +286,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <.ops_refresh_button
         id={@id}
         label={@label}
+        busy_label={@busy_label}
         aria_label={@aria_label}
         variant={@variant}
         size={@size}
@@ -770,10 +783,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Restrained loading primitive for in-flight operator reads.
 
-  `:bars` renders an opacity-pulsing skeleton (a stand-in for content that's loading);
-  `:inline` is a compact pulsing "working…" label for buttons/status rows. Opacity-only
-  and neutralized under reduced-motion (the global rule). Presentation-only — the screen
-  owns when it's shown; wiring into specific reads (drift, search, swap) is Phase 125/126.
+  Loading is said in a word: `label` is always visible, and the loading region carries
+  `aria-busy="true"` so assistive technology knows the content is still on its way. Nothing
+  animates. `:bars` adds static Sunken skeleton lines (a stand-in for content that's loading, the
+  last one short); `:inline` is just the word, for buttons and status rows. Presentation-only: the
+  screen owns when it is shown.
   """
   attr(:variant, :atom, default: :bars, values: [:bars, :inline])
   attr(:lines, :integer, default: 3)
@@ -787,16 +801,22 @@ defmodule ScrypathOpsWeb.OpsUi do
       :if={@variant == :bars}
       class={["ops-loading ops-loading__bars", @class]}
       role="status"
-      aria-label={@label}
+      aria-busy="true"
       {@rest}
     >
-      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}>
+      <p class="ops-loading__label">{@label}</p>
+      <span
+        :for={n <- 1..@lines}
+        class={["ops-loading__bar", if(n == @lines and @lines > 1, do: "ops-loading__bar--short")]}
+        aria-hidden="true"
+      >
       </span>
     </div>
     <span
       :if={@variant == :inline}
       class={["ops-loading inline-flex items-center gap-2 text-ops-sm text-base-content/65", @class]}
       role="status"
+      aria-busy="true"
       {@rest}
     >
       {@label}
@@ -1921,10 +1941,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp nav_hint("Failed sync work"), do: "Review errors and retry"
   defp nav_hint("Sync and index"), do: "Sync progress and index settings"
   defp nav_hint(_), do: ""
-
-  # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
-  defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"
-  defp loading_bar_width(_n, _total), do: "width: 100%"
 
   # The four status shapes (UI-SPEC "Shapes", LD-7): one sharp bar that leans 14.46 degrees
   # (4.13 over 16), drawn in a 8.63 x 16 box. They differ without color: filled, hollow,
