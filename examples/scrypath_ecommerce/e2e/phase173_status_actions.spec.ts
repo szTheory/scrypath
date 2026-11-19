@@ -290,7 +290,9 @@ for (const entry of entries) {
     });
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
     await page.mouse.down();
-    await expect.poll(() => refresh.evaluate((button) => getComputedStyle(button).backgroundColor)).not.toBe(hoverBackground);
+    // Phase 187: the outline button's hover and press share the Sunken fill, so press feedback is
+    // the scale transform, not a second fill.
+    await expect.poll(() => refresh.evaluate((button) => getComputedStyle(button).transform)).not.toBe("none");
     await page.mouse.up();
 
     await refresh.focus();
@@ -303,18 +305,28 @@ for (const entry of entries) {
     });
     expect(focus).toEqual({ width: "2px", offset: "2px", style: "solid" });
 
+    // Phase 187: loading is a word plus aria-busy, never a spinner. The idle word shows when idle
+    // and the busy word shows while busy, in the same cell, with no glyph and no running animation.
+    await expect(refresh.locator("svg")).toHaveCount(0);
+    await expect(refresh.locator('[data-ops-refresh-label="idle"]')).toBeVisible();
+    await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toBeHidden();
+
     await refresh.evaluate((button) => button.classList.add("phx-click-loading"));
     await expect(refresh).toBeDisabled();
     await expect(refresh).toHaveAttribute("aria-busy", "true");
+    await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toBeVisible();
+    await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toHaveText("Refreshing…");
+    await expect(refresh.locator('[data-ops-refresh-label="idle"]')).toBeHidden();
+    expect(await refresh.evaluate((button) => button.getAnimations({ subtree: true }).length)).toBe(0);
     await refresh.evaluate((button) => button.classList.remove("phx-click-loading"));
     await expect(refresh).toBeEnabled();
     await expect(refresh).not.toHaveAttribute("aria-busy");
+    await expect(refresh.locator('[data-ops-refresh-label="idle"]')).toBeVisible();
 
     await page.emulateMedia({ reducedMotion: "reduce" });
     await refresh.evaluate((button) => button.classList.add("phx-click-loading"));
-    await expect
-      .poll(() => refresh.locator("svg").evaluate((icon) => getComputedStyle(icon).animationName))
-      .toBe("none");
+    await expect(refresh.locator('[data-ops-refresh-label="busy"]')).toBeVisible();
+    expect(await refresh.evaluate((button) => button.getAnimations({ subtree: true }).length)).toBe(0);
     await refresh.evaluate((button) => button.classList.remove("phx-click-loading"));
 
     await chooseScenario(page, "refresh-disabled");

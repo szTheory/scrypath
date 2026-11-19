@@ -755,7 +755,9 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await expect(flash).toBeVisible();
           await expect(flash).toHaveClass(/ops-flash/);
           await expect(flash).toHaveClass(/ops-flash--info/);
-          await expect(flash.locator("svg")).not.toHaveCount(0);
+          // Phase 187 (P-16): the toast says it in words. The only glyph is the close control's.
+          await expect(flash.locator(".alert > svg")).toHaveCount(0);
+          await expect(flash.locator("svg")).toHaveCount(1);
           await expect(flash.getByRole("button", { name: "Close notification" })).toBeVisible();
           await expect(page.locator("#flash-group")).toHaveCount(1);
 
