@@ -9340,7 +9340,7 @@ removing illegal node: "${(childNode.outerHTML || childNode.nodeValue).trim()}"
     // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, the 80ms
     // `instant` token) before hiding, so close feels as intentional as open. The timer waits
     // OPS_PALETTE_CLOSE_MS, the same 80ms, so the panel is hidden the moment its animation ends and
-    // an invisible panel never holds focus or catches a click. Behavior is unchanged — the panel
+    // a fully faded panel never holds focus or catches a click. Behavior is unchanged — the panel
     // still ends up [hidden]; this only eases the transition. Re-opening cancels any pending
     // close so an interrupted dismissal snaps back open (interruptibility). Reduced-motion makes
     // the animation ~instant via the global rule, so the panel still hides on the next frame.
