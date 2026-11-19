@@ -913,7 +913,7 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
 
       await firstRow.getByRole("button", { name: `Delete ${first}` }).click();
       await sheet.locator("#saved-search-delete-input").fill(first);
-      await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+      await sheet.getByRole("button", { name: "Delete saved search permanently", exact: true }).click();
       await expect(firstRow).toHaveCount(0);
       await expect.poll(() => sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
       expect(await getSavedSearch(request, first)).toBeUndefined();

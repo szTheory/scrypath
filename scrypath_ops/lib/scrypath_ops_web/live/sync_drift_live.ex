@@ -2444,6 +2444,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         title="Confirm index promotion"
         description="Meilisearch will exchange the live and prepared indexes when its swap task completes."
         action_label="promote index"
+        initial_focus="[data-ops-modal-cancel]"
         cancel_event="cancel_swap_live"
         successor="#promote-target-index"
       >
@@ -2465,12 +2466,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <.ops_button
               type="button"
               phx-click="cancel_swap_live"
-              variant={:ghost}
+              variant={:default}
               data-ops-modal-cancel
             >
               Cancel index swap
             </.ops_button>
-            <.ops_button type="submit" variant={:danger}>Promote target index</.ops_button>
+            <.ops_button type="submit" variant={:primary}>Replace live index with target</.ops_button>
           </div>
         </.form>
       </.ops_modal>

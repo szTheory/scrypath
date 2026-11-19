@@ -117,6 +117,16 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
            )
 
     assert length(:binary.matches(html, "View search health")) == 1
+
+    # E-07: with a verdict the page has exactly one Plum button, the route to Search health
+    assert has_element?(lv, "a[data-testid='control-room-health-link'].btn-primary")
+
+    assert html
+           |> LazyHTML.from_fragment()
+           |> LazyHTML.query(".btn-primary")
+           |> Enum.count() == 1
+
+    refute html =~ "btn-error"
     assert html =~ "Meilisearch task failed"
     refute html =~ "Recover search"
     assert_before(html, "control-room-affected-scope", "control-room-health-link")

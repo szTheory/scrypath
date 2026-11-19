@@ -490,6 +490,90 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
     end
   end
 
+  # Phase 187 E-07, E-08, E-09: one Plum button per scope, destructive confirms named by their
+  # consequence, and row actions as underlined text instead of buttons.
+  describe "buttons, confirms and row actions" do
+    defp plum(view, scope) do
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#{scope} .btn-primary")
+      |> Enum.count()
+    end
+
+    test "the Search page holds one Plum button, Run search, and Save search is outline", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+      assert plum(view, "") == 1
+      assert has_element?(view, "button.btn-primary[type=submit]", "Run search")
+      assert has_element?(view, "#search-save-new.btn-outline:not(.btn-primary)", "Save search")
+    end
+
+    test "the save dialog's single Plum button is Save and its Cancel is outline", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+      view |> element("#search-save-new") |> render_click()
+
+      assert plum(view, "#saved-search-name-modal") == 1
+      assert has_element?(view, "#saved-search-name-modal .btn-primary", "Save")
+
+      assert has_element?(
+               view,
+               "#saved-search-name-modal button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+               "Cancel"
+             )
+    end
+
+    test "Rename is an outline submit and the delete confirm is the sheet's single Plum button",
+         %{
+           conn: conn
+         } do
+      put!("A", single("a"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      # at rest the sheet holds no Plum button
+      assert plum(view, "#saved-search-manage") == 0
+
+      view |> element("#saved-search-list [aria-label='Rename A']") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-rename-form button[type=submit].btn-outline",
+               "Rename"
+             )
+
+      assert plum(view, "#saved-search-manage") == 0
+      refute has_element?(view, "#saved-search-rename-form .btn-ghost")
+
+      view |> element("#saved-search-rename-form button", "Cancel") |> render_click()
+      view |> element("#saved-search-list [aria-label='Delete A']") |> render_click()
+
+      assert plum(view, "#saved-search-manage") == 1
+
+      assert has_element?(
+               view,
+               "#saved-search-delete-form button[type=submit].btn-primary",
+               "Delete saved search permanently"
+             )
+
+      confirm =
+        view |> element("#saved-search-delete-form button[type=submit]") |> render()
+
+      assert confirm |> LazyHTML.from_fragment() |> LazyHTML.text() |> String.trim() ==
+               "Delete saved search permanently"
+
+      refute render(view) =~ "btn-error"
+
+      # the delete form has a Cancel, and it is an outline button
+      assert has_element?(
+               view,
+               "#saved-search-delete-form button.btn-outline:not(.btn-ghost)",
+               "Cancel"
+             )
+    end
+  end
+
   describe "import" do
     test "the file button opens the file input directly and imports on selection", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")

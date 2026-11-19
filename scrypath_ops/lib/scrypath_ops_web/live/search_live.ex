@@ -1781,7 +1781,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             />
           </.ops_field>
           <div class="flex justify-between gap-2">
-            <.ops_button phx-click="cancel_save" variant={:ghost} data-ops-modal-cancel>
+            <.ops_button phx-click="cancel_save" variant={:default} data-ops-modal-cancel>
               Cancel
             </.ops_button>
             <.ops_button type="submit" variant={:primary}>Save</.ops_button>
@@ -1896,8 +1896,8 @@ defmodule ScrypathOpsWeb.SearchLive do
                 />
               </.ops_field>
               <div class="flex flex-wrap gap-2">
-                <.ops_button type="submit" variant={:primary} size={:sm}>Rename</.ops_button>
-                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                <.ops_button type="submit" variant={:default} size={:sm}>Rename</.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:default} size={:sm}>
                   Cancel
                 </.ops_button>
               </div>
@@ -1928,8 +1928,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                 />
               </.ops_field>
               <div class="flex flex-wrap gap-2">
-                <.ops_button type="submit" variant={:danger} size={:sm}>Delete</.ops_button>
-                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                <.ops_button type="submit" variant={:primary} size={:sm}>
+                  Delete saved search permanently
+                </.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:default} size={:sm}>
                   Cancel
                 </.ops_button>
               </div>

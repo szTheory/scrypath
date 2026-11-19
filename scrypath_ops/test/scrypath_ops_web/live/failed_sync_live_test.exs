@@ -821,6 +821,92 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute html =~ "Retry queued"
   end
 
+  describe "E-07 and E-08 retry-delete dialog" do
+    @modal "#retry-delete-modal"
+
+    for {ids, label, noun} <- [
+          {["doc-1"], "Retry deleting 1 document", "1 document"},
+          {["doc-1", "doc-2", "doc-3"], "Retry deleting 3 documents", "3 documents"}
+        ] do
+      test "#{label}: the confirm is the single Plum button and Cancel opens focused", %{
+        conn: conn
+      } do
+        ids = unquote(ids)
+        put_delete_job!(ids)
+
+        {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+        html = render_click(view, "retry", %{"id" => "502"})
+
+        # exactly one Plum button inside the dialog, and it names its consequence
+        assert has_element?(view, "#{@modal} .btn-primary", unquote(label))
+
+        assert [_] =
+                 html
+                 |> LazyHTML.from_fragment()
+                 |> LazyHTML.query("#{@modal} .btn-primary")
+                 |> Enum.to_list()
+
+        refute html =~ "btn-error"
+        refute html =~ "Retry delete sync work"
+
+        # the page behind the dialog has no Plum button of its own
+        assert html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count() ==
+                 1
+
+        # description and list use the same pluralization, titles and Cancel are kept
+        assert has_element?(
+                 view,
+                 "#{@modal}-description",
+                 "Retry deletion of #{unquote(noun)} for ScrypathOps.Test.OpsPostA in fsv_ops_post_a."
+               )
+
+        assert has_element?(view, "#{@modal} p", unquote(noun))
+        assert has_element?(view, "#{@modal}", "Confirm delete sync work")
+
+        # Cancel is present, outline (not ghost), and is the dialog's initial focus
+        assert has_element?(
+                 view,
+                 "#{@modal}[data-ops-modal-initial-focus='[data-ops-modal-cancel]']"
+               )
+
+        assert has_element?(
+                 view,
+                 "#{@modal} button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+                 "Keep failed work and close"
+               )
+      end
+    end
+
+    test "the page itself has no Plum button before the dialog opens", %{conn: conn} do
+      put_delete_job!(["doc-1"])
+      {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+      assert html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count() ==
+               0
+
+      refute has_element?(view, @modal)
+    end
+  end
+
+  defp put_delete_job!(document_ids) do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 502,
+        state: "discarded",
+        worker: "Scrypath.Oban.DeleteWorker",
+        queue: "search_sync",
+        args: %{
+          "operation" => "delete",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_a",
+          "document_count" => length(document_ids),
+          "document_ids" => document_ids
+        }
+      }
+    ])
+  end
+
   defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()
 
   defp put_live_assigns(view, assigns) do

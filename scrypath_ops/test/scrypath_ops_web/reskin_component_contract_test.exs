@@ -360,4 +360,102 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert surface_modifiers(chip) == ["ops-notice-surface--error"]
     end
   end
+
+  # ── Plan 05: buttons, destructive confirms and row actions ───────────────────────────────
+
+  @button_variants [:default, :primary, :secondary, :ghost]
+
+  defp count(html, selector) do
+    html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> Enum.count()
+  end
+
+  describe "E-07 one Plum button per scope" do
+    test "the four button components reject the danger variant" do
+      for component <- [:ops_button, :ops_refresh_button, :ops_refresh_control, :ops_link_button] do
+        variant_attr =
+          OpsUi.__components__()
+          |> Map.fetch!(component)
+          |> Map.fetch!(:attrs)
+          |> Enum.find(&(&1.name == :variant))
+
+        assert Keyword.fetch!(variant_attr.opts, :values) == @button_variants,
+               "#{component} still accepts a danger variant"
+      end
+    end
+
+    test "only the primary variant renders a Plum button and nothing renders the error class" do
+      for variant <- @button_variants do
+        assigns = %{variant: variant}
+
+        html =
+          rendered_to_string(~H"""
+          <OpsUi.ops_button variant={@variant}>Go</OpsUi.ops_button>
+          """)
+
+        link =
+          rendered_to_string(~H"""
+          <OpsUi.ops_link_button href="/x" variant={@variant}>Go</OpsUi.ops_link_button>
+          """)
+
+        expected = if variant == :primary, do: 1, else: 0
+
+        for rendered <- [html, link] do
+          assert count(rendered, ".btn-primary") == expected, "#{variant}"
+          refute rendered =~ "btn-error"
+          refute rendered =~ "btn-secondary"
+        end
+      end
+    end
+
+    test "no component source still names the danger variant, the error button or a primary fill" do
+      for path <- Path.wildcard(Path.expand("../../lib/**/*.ex", __DIR__)) do
+        source = File.read!(path)
+        refute source =~ "btn-error", "#{path} names btn-error"
+        refute source =~ ":danger", "#{path} names a :danger value"
+      end
+
+      refute File.read!(@ops_ui) =~ "bg-primary"
+    end
+
+    # Control Room (1 with a verdict, proved in its own LiveView test) and Search (1) are the
+    # only pages with a Plum button; every other page has none. `/ops` here runs on the default
+    # config, which shows no verdict, so it has none either.
+    for {path, expected} <- [
+          {"/ops", 0},
+          {"/ops/health", 0},
+          {"/ops/failed-sync", 0},
+          {"/ops/sync-and-index", 0},
+          {"/ops/search", 1},
+          {"/ops/help", 0}
+        ] do
+      test "#{path} has #{expected} Plum button at page scope", %{conn: conn} do
+        {:ok, view, _html} = live(conn, unquote(path))
+        html = render(view)
+
+        assert count(html, ".btn-primary") == unquote(expected)
+        assert count(html, ".btn-error") == 0
+      end
+    end
+
+    test "the segmented control marks the selected mode without a primary fill", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/ops/search")
+      html = render(view)
+
+      assert count(html, ".ops-segmented-btn[aria-pressed=true]") == 1
+      assert count(html, ".ops-segmented-btn.bg-primary") == 0
+      assert count(html, ".ops-segmented-btn[aria-pressed=true].btn-primary") == 0
+    end
+  end
+
+  describe "E-09 row actions" do
+    test "an empty saved-search sheet renders no row action", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/ops/search?saved=manage")
+      html = render(view)
+
+      assert count(html, "#saved-search-manage") == 1
+      assert html =~ "No saved searches yet."
+      assert count(html, "#saved-search-manage .ops-text-action") == 0
+      assert count(html, "#saved-search-list") == 0
+    end
+  end
 end

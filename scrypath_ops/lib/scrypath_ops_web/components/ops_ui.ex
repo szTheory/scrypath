@@ -181,7 +181,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Button styling wrapper for operator actions."
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -216,7 +216,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :ghost,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -257,7 +257,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :ghost,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -291,7 +291,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -1183,8 +1183,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           data-testid={if value == "multi", do: "search-mode-multi"}
           class={[
             "ops-segmented-btn ops-transition-status px-3 text-ops-body font-semibold",
-            value == @selected && "bg-primary text-primary-content shadow-ops-mid",
-            value != @selected && "text-base-content/75 hover:bg-base-100"
+            value != @selected && "text-base-content/75"
           ]}
         >
           {label}
@@ -1245,7 +1244,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Consistent action grouping for table rows and toolbar action clusters."
-  attr(:tone, :atom, default: :default, values: [:default, :secondary, :advanced, :danger])
+  attr(:tone, :atom, default: :default, values: [:default, :secondary, :advanced])
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1839,6 +1838,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   # Single source of truth for the button visual contract, shared by
   # `ops_button/1` and `ops_link_button/1`. Height + press feel live in `.ops-btn`;
   # radius is the `rounded-ops-control` utility so it wins over daisyUI's layer.
+  # There is no danger variant: a destructive confirm is the dialog's one Plum button with its
+  # consequence in the label (Failed orange is a status color, never a button). `:secondary`
+  # reads like `:default`; `:ghost` is the borderless variant for icon-only and refresh controls.
   defp button_classes(variant, size) do
     [
       "btn ops-btn rounded-ops-control",
@@ -1847,10 +1849,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       size == :sm && "btn-sm",
       size == :md && "btn-md",
       variant == :primary && "btn-primary",
-      variant == :secondary && "btn-secondary",
-      variant == :danger && "btn-error",
       variant == :ghost && "btn-ghost",
-      variant == :default && "btn-outline"
+      variant in [:default, :secondary] && "btn-outline"
     ]
   end
 

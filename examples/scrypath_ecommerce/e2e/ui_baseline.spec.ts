@@ -119,7 +119,7 @@ test("a saved search with options the form can't show runs as saved and lists it
   const reopened = page.getByRole("dialog", { name: "Manage saved searches" });
   await reopened.getByRole("button", { name: `Delete ${name}` }).click();
   await reopened.locator("#saved-search-delete-input").fill(name);
-  await reopened.getByRole("button", { name: "Delete", exact: true }).click();
+  await reopened.getByRole("button", { name: "Delete saved search permanently", exact: true }).click();
   await expect(reopened.locator(".ops-saved-search-row").filter({ hasText: name })).toHaveCount(0);
 });
 

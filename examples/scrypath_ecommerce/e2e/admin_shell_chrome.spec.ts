@@ -431,11 +431,11 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
     const confirm = sheet.locator("#saved-search-delete-input");
     await expect(confirm).toBeFocused();
     await confirm.fill("wrong name");
-    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+    await sheet.getByRole("button", { name: "Delete saved search permanently", exact: true }).click();
     await expect(confirm).toHaveAttribute("aria-invalid", "true");
     await expect(confirm).toBeFocused();
     await confirm.fill(name);
-    await sheet.getByRole("button", { name: "Delete", exact: true }).click();
+    await sheet.getByRole("button", { name: "Delete saved search permanently", exact: true }).click();
     await expect(row).toHaveCount(0);
     await expect.poll(focusInSheet, { message: "focus stays in the sheet after delete" }).toBe(true);
 

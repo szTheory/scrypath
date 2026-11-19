@@ -821,8 +821,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp delete_confirmation_description(row) do
     count = length(delete_confirmation_ids(row))
 
-    "Retry deletion of #{count} documents for #{OperatorSelection.canonical(row.schema)} in #{delete_confirmation_index(row)}."
+    "Retry deletion of #{document_count_label(count)} for #{OperatorSelection.canonical(row.schema)} in #{delete_confirmation_index(row)}."
   end
+
+  # `1 document`, `3 documents`: the singular reads correctly in the description, the count line
+  # and the confirm label, so one helper builds all three.
+  defp document_count_label(1), do: "1 document"
+  defp document_count_label(count), do: "#{count} documents"
 
   defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
@@ -1219,7 +1224,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               Index
               <.ops_inline_code>{delete_confirmation_index(@delete_row)}</.ops_inline_code>
             </p>
-            <p>{length(delete_confirmation_ids(@delete_row))} documents</p>
+            <p>{document_count_label(length(delete_confirmation_ids(@delete_row)))}</p>
             <ul class="mt-2 list-inside list-disc break-all font-mono text-ops-sm">
               <li :for={document_id <- delete_confirmation_ids(@delete_row)}>
                 {inspect(document_id)}
@@ -1230,13 +1235,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_button
               type="button"
               phx-click="cancel_retry_delete"
-              variant={:ghost}
+              variant={:default}
               aria-label="Keep failed work and close"
               data-ops-modal-cancel
             >
               Keep failed work and close
             </.ops_button>
-            <.ops_button type="submit" variant={:danger}>Retry delete sync work</.ops_button>
+            <.ops_button type="submit" variant={:primary}>
+              Retry deleting {document_count_label(length(delete_confirmation_ids(@delete_row)))}
+            </.ops_button>
           </div>
         </.form>
       </.ops_modal>

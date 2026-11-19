@@ -358,6 +358,55 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
            )
   end
 
+  describe "E-07 and E-08 promotion dialog" do
+    test "the page keeps Promote target index as an outline button and holds no Plum button", %{
+      conn: conn
+    } do
+      Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      html = render_async(lv)
+
+      assert has_element?(lv, "button#promote-target-index.btn-outline", "Promote target index")
+      assert plum_count(html) == 0
+      refute html =~ "btn-error"
+    end
+
+    test "the confirm is the dialog's single Plum button and Cancel opens focused", %{conn: conn} do
+      Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      render_async(lv)
+
+      html = lv |> element("#promote-target-index") |> render_click()
+      modal = "#confirm-index-promotion"
+
+      assert has_element?(lv, "#{modal} .btn-primary", "Replace live index with target")
+      assert plum_count(html) == 1
+      refute html =~ "btn-error"
+
+      # the trigger label is not the confirm label
+      refute has_element?(lv, "#{modal} button", "Promote target index")
+
+      assert has_element?(lv, "#{modal}", "Confirm index promotion")
+
+      assert has_element?(
+               lv,
+               "#{modal}[data-ops-modal-initial-focus='[data-ops-modal-cancel]']"
+             )
+
+      assert has_element?(
+               lv,
+               "#{modal} button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+               "Cancel index swap"
+             )
+
+      assert has_element?(lv, "#{modal}", "Effect: replace live index contents")
+    end
+
+    defp plum_count(html) do
+      html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count()
+    end
+  end
+
   test "a settings response from a previous selection or superseded read is ignored" do
     socket =
       sync_drift_socket(%{
