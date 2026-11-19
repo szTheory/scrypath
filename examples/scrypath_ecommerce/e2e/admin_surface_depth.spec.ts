@@ -538,9 +538,10 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
                 await expect(page.getByTestId("control-room-explore-search")).toBeVisible();
                 await expectNoStatusCopper(page);
                 {
+                  // Phase 187: a verdict is a Panel with a 2px inline-start rule and no shadow; the
+                  // hero's raised shadow is retired (UI-SPEC P-15), so it must compute to none.
                   const heroShadow = await readComputedStyle(page, ".ops-verdict--hero", "boxShadow");
-                  expect(heroShadow, "control-room verdict hero should use a dark raised shadow, not no shadow").not.toBe("none");
-                  expect(heroShadow, "control-room verdict hero should not carry a copper warm halo").not.toContain(COPPER_RGB);
+                  expect(heroShadow, "control-room verdict hero carries no shadow").toBe("none");
                 }
                 break;
               case "search-health-signal-cards": {
