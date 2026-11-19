@@ -165,3 +165,118 @@ export const SURFACE_BINDINGS = [
   { selector: ".ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible", background: "ops-surface-2" },
   { selector: ".ops-sheet__panel", background: "color-base-100" },
 ];
+
+// ─── Phase 187 brand pair matrix (A11Y-01: N-03, N-04, N-05) ───────────────────
+//
+// Every name below is a custom property name (without the leading `--`), never a hex: the checker
+// resolves each one from the two theme blocks in app.css, so a recolor changes the verdict and
+// this file never needs to repeat a value.
+
+export const BRAND_PAIR_MATRIX = {
+  // N-03: 7 text roles on 4 backdrops, in both themes (56 pairs), 4.5:1 or better, unrounded.
+  text: {
+    min: 4.5,
+    roles: [
+      "color-base-content",
+      "ops-text-muted",
+      "color-primary",
+      "ops-status-failed",
+      "ops-status-retrying",
+      "ops-status-pending",
+      "ops-status-clear",
+    ],
+    backdrops: ["color-base-200", "color-base-100", "ops-sunken", "ops-selected"],
+  },
+  // N-04: Control Edge is the only edge of a control, so it needs 3:1 on every backdrop it sits on
+  // and on the overlay surface (LD-3: overlays use the base-100 fill).
+  controlEdge: {
+    property: "ops-control-edge",
+    min: 3.0,
+    backdrops: ["color-base-200", "color-base-100", "ops-sunken", "ops-selected"],
+    overlay: "color-base-100",
+  },
+  // N-04: the focus ring, the selection line and the link color are non-text uses of the primary.
+  primaryNonText: {
+    property: "color-primary",
+    min: 3.0,
+    backdrops: ["color-base-200", "color-base-100", "ops-sunken", "ops-selected"],
+  },
+  // N-04: button labels against their fills (the one Plum button; the default Ink-on-Panel button).
+  buttonLabels: {
+    min: 4.5,
+    pairs: [
+      { fg: "color-primary-content", bg: "color-primary" },
+      { fg: "color-base-content", bg: "color-base-100" },
+    ],
+  },
+  // N-05: Failed and Retrying differ by at least this many degrees of CIELAB hue angle.
+  statusHue: {
+    failed: "ops-status-failed",
+    retrying: "ops-status-retrying",
+    minDegrees: 25,
+  },
+};
+
+// N-05: each pair published in brand/brand.json (color.contrastPairs, by pair id) is bound to the
+// custom properties that carry its two colors in each theme. The checker recomputes the ratio from
+// the resolved properties and compares it, to two decimals, with the number the book prints, so
+// recomputing from the book's own hex text can never satisfy it. Every published pair has exactly
+// one binding here and every binding names a published pair.
+export const PUBLISHED_PAIR_BINDINGS = {
+  body: {
+    light: { fg: "color-base-content", bg: "color-base-200" },
+    dark: { fg: "color-base-content", bg: "color-base-200" },
+  },
+  descriptor: {
+    light: { fg: "ops-text-muted", bg: "color-base-200" },
+    dark: { fg: "ops-text-muted", bg: "color-base-200" },
+  },
+  caption: {
+    light: { fg: "ops-text-muted", bg: "color-base-100" },
+    dark: { fg: "ops-text-muted", bg: "color-base-100" },
+  },
+  "application-copy": {
+    light: { fg: "color-base-content", bg: "color-base-100" },
+    dark: { fg: "color-base-content", bg: "color-base-100" },
+  },
+  link: {
+    light: { fg: "color-primary", bg: "color-base-100" },
+    dark: { fg: "color-primary", bg: "color-base-100" },
+  },
+  focus: {
+    light: { fg: "color-primary", bg: "color-base-200" },
+    dark: { fg: "color-primary", bg: "color-base-200" },
+  },
+  artwork: {
+    light: { fg: "color-primary", bg: "color-base-200" },
+    dark: { fg: "color-primary", bg: "color-base-200" },
+  },
+  button: {
+    light: { fg: "color-primary-content", bg: "color-primary" },
+    dark: { fg: "color-primary-content", bg: "color-primary" },
+  },
+  "selected-row": {
+    light: { fg: "ops-text-muted", bg: "ops-selected" },
+    dark: { fg: "ops-text-muted", bg: "ops-selected" },
+  },
+  "selected-status": {
+    light: { fg: "ops-status-failed", bg: "ops-selected" },
+    dark: { fg: "ops-status-failed", bg: "ops-selected" },
+  },
+  "status-failed": {
+    light: { fg: "ops-status-failed", bg: "color-base-100" },
+    dark: { fg: "ops-status-failed", bg: "color-base-100" },
+  },
+  "status-retrying": {
+    light: { fg: "ops-status-retrying", bg: "color-base-100" },
+    dark: { fg: "ops-status-retrying", bg: "color-base-100" },
+  },
+  "status-pending": {
+    light: { fg: "ops-status-pending", bg: "color-base-100" },
+    dark: { fg: "ops-status-pending", bg: "color-base-100" },
+  },
+  "status-clear": {
+    light: { fg: "ops-status-clear", bg: "color-base-100" },
+    dark: { fg: "ops-status-clear", bg: "color-base-100" },
+  },
+};

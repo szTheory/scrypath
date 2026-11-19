@@ -32,8 +32,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_CSS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/app.css");
 // D-11: muted-alpha manifest beside DESIGN-TOKENS.md
 const PAIRS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/contrast-pairs.mjs");
-// Phase 187: the pinned brand token source the opaque muted guard reads
+// Phase 187: the pinned brand sources the opaque muted guard and the published-pair check read
 const BRAND_TOKENS_PATH = path.resolve(__dirname, "../../brand/tokens.json");
+const BRAND_JSON_PATH = path.resolve(__dirname, "../../brand/brand.json");
 // D-17: report output (mirrors ADMIN_SCREENSHOT_DIR convention)
 const REPORT_DIR = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
 
@@ -645,6 +646,145 @@ ${names.map((name) => `    --color-${name}: #1e1220;`).join("\n")}
     { severity: wr01Finding.severity, actual: wr01Finding.actual_ratio }
   );
 
+  // ── D. PHASE 187 BRAND PAIR CHECKS (N-03, N-04, N-05): synthetic themes, planted failures ──
+  // The themes below are small synthetic stand-ins (brand values, but written here so the cases never
+  // depend on the live stylesheet). The accept case must pass; each planted defect must fail with a
+  // message that names what broke.
+
+  const brandLightFixture = {
+    "color-base-100": "#ffffff",
+    "color-base-200": "#f8f4f2",
+    "color-base-content": "#1e1220",
+    "color-primary": "#7b2d6b",
+    "color-primary-content": "#ffffff",
+    "ops-sunken": "#f0e9e6",
+    "ops-selected": "#ebdfe7",
+    "ops-text-muted": "#5e5360",
+    "ops-control-edge": "#8a7a8e",
+    "ops-status-failed": "#b0360b",
+    "ops-status-retrying": "#8a5a00",
+    "ops-status-pending": "#615765",
+    "ops-status-clear": "#1d6b3c",
+  };
+  const brandDarkFixture = {
+    "color-base-100": "#201624",
+    "color-base-200": "#160e19",
+    "color-base-content": "#f4edf3",
+    "color-primary": "#d58bc4",
+    "color-primary-content": "#160e19",
+    "ops-sunken": "#110a14",
+    "ops-selected": "#2b2130",
+    "ops-text-muted": "#bbaac0",
+    "ops-control-edge": "#8f7f94",
+    "ops-status-failed": "#ff9a6b",
+    "ops-status-retrying": "#e3b25c",
+    "ops-status-pending": "#ab9bb0",
+    "ops-status-clear": "#7fcb9a",
+  };
+  const brandThemes = () => ({ light: { ...brandLightFixture }, dark: { ...brandDarkFixture } });
+  const fixtureBackdrops = ["color-base-200", "color-base-100", "ops-sunken", "ops-selected"];
+  const brandMatrixFixture = {
+    text: {
+      min: 4.5,
+      roles: ["color-base-content", "ops-text-muted", "color-primary", "ops-status-failed", "ops-status-retrying", "ops-status-pending", "ops-status-clear"],
+      backdrops: fixtureBackdrops,
+    },
+    controlEdge: { property: "ops-control-edge", min: 3.0, backdrops: fixtureBackdrops, overlay: "color-base-100" },
+    primaryNonText: { property: "color-primary", min: 3.0, backdrops: fixtureBackdrops },
+    buttonLabels: {
+      min: 4.5,
+      pairs: [
+        { fg: "color-primary-content", bg: "color-primary" },
+        { fg: "color-base-content", bg: "color-base-100" },
+      ],
+    },
+    statusHue: { failed: "ops-status-failed", retrying: "ops-status-retrying", minDegrees: 25 },
+  };
+  const bothThemes = (fg, bg) => ({ light: { fg, bg }, dark: { fg, bg } });
+  const bindingsFixture = {
+    body: bothThemes("color-base-content", "color-base-200"),
+    caption: bothThemes("ops-text-muted", "color-base-100"),
+    button: bothThemes("color-primary-content", "color-primary"),
+  };
+  // The fixture "book" prints exactly what the fixture bindings compute, so the accept case holds by
+  // construction and any binding or color change that moves a ratio shows up as a mismatch.
+  const publishedFixture = (themes, bindings) => ({
+    color: {
+      contrastPairs: Object.entries(bindings).map(([id, bound]) => ({
+        id,
+        minimum: 4.5,
+        light: { contrast: Math.round(propertyRatio(themes.light, bound.light.fg, bound.light.bg) * 100) / 100 },
+        dark: { contrast: Math.round(propertyRatio(themes.dark, bound.dark.fg, bound.dark.bg) * 100) / 100 },
+      })),
+    },
+  });
+  const expectFailure = (label, failures, pattern) => {
+    const hit = failures.some((message) => pattern.test(message));
+    assert(label, hit, failures);
+  };
+
+  // Accept cases: the unmodified synthetic themes pass every check.
+  const acceptReport = {};
+  assert("N-03: accept case has no failures", checkBrandTextPairs(brandThemes(), brandMatrixFixture.text, acceptReport).length === 0, null);
+  assert("N-03: accept case computes 56 text pairs", acceptReport.pairs === 56, acceptReport.pairs);
+  assert("N-04: accept case has no failures", checkNonTextPairs(brandThemes(), brandMatrixFixture).length === 0, null);
+  assert(
+    "N-05: accept case has no published-pair failures",
+    checkPublishedPairs(brandThemes(), publishedFixture(brandThemes(), bindingsFixture), bindingsFixture).length === 0,
+    null
+  );
+  const acceptHue = {};
+  assert("N-05: accept case has no hue-gap failures", checkStatusHueGap(brandThemes(), brandMatrixFixture.statusHue, acceptHue).length === 0, null);
+  assert("N-05: accept case hue gaps are at least 25 degrees", acceptHue.gaps.light >= 25 && acceptHue.gaps.dark >= 25, acceptHue.gaps);
+
+  // Planted 1: one text role nudged below 4.5 on one backdrop.
+  const weakText = brandThemes();
+  weakText.light["ops-status-retrying"] = "#c9a24a";
+  expectFailure(
+    "N-03 planted: a text role below 4.5 fails and names the role, backdrop and theme",
+    checkBrandTextPairs(weakText, brandMatrixFixture.text),
+    /N-03 text pair ops-status-retrying on ops-selected \(light\)/
+  );
+
+  // Planted 2: Control Edge nudged below 3.0.
+  const weakEdge = brandThemes();
+  weakEdge.dark["ops-control-edge"] = "#4a3a4e";
+  expectFailure(
+    "N-04 planted: a Control Edge below 3.0 fails and names the control edge and theme",
+    checkNonTextPairs(weakEdge, brandMatrixFixture),
+    /N-04 control edge ops-control-edge on color-base-200 \(dark\)/
+  );
+
+  // Planted 3: a binding pointed at the wrong custom property, so the recomputed value differs.
+  const wrongBinding = structuredClone(bindingsFixture);
+  wrongBinding.caption.light.bg = "color-base-200";
+  expectFailure(
+    "N-05 planted: a binding on the wrong custom property fails because the pair value differs",
+    checkPublishedPairs(brandThemes(), publishedFixture(brandThemes(), bindingsFixture), wrongBinding),
+    /N-05 pair caption \(light\).*the book publishes/
+  );
+
+  // Planted 4: a published pair that has no binding.
+  const unboundBook = publishedFixture(brandThemes(), bindingsFixture);
+  unboundBook.color.contrastPairs.push({ id: "extra-pair", minimum: 4.5, light: { contrast: 7 }, dark: { contrast: 7 } });
+  expectFailure(
+    "N-05 planted: a published pair with no binding fails",
+    checkPublishedPairs(brandThemes(), unboundBook, bindingsFixture),
+    /N-05 published pair extra-pair has no binding/
+  );
+
+  // Planted 5: Retrying rotated to within 25 degrees of Failed.
+  const closeHue = brandThemes();
+  closeHue.light["ops-status-retrying"] = "#a8450c";
+  const closeHueReport = {};
+  expectFailure(
+    "N-05 planted: a Retrying hue within 25 degrees of Failed fails and names the theme",
+    checkStatusHueGap(closeHue, brandMatrixFixture.statusHue, closeHueReport),
+    /N-05 status hue gap between ops-status-failed and ops-status-retrying \(light\)/
+  );
+  assert("N-05 planted: the rotated hue gap is under 25 degrees", closeHueReport.gaps.light < 25, closeHueReport.gaps);
+
+
   if (failed) {
     process.exit(1);
   }
@@ -907,6 +1047,145 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
   };
 }
 
+// ─── PHASE 187 BRAND PAIR CHECKS (A11Y-01: N-03, N-04, N-05) ─────────────────
+//
+// Each check reads the two theme blocks' custom properties (the shape readThemeProperties returns:
+// { light: { "color-base-100": "#ffffff", ... }, dark: { ... } }) and returns a list of failure
+// strings; an empty list is a pass. Ratios are compared unrounded with `>=`, so a ratio of 4.4996
+// never passes as 4.50. Pair names come from contrast-pairs.mjs as custom property names, never as
+// hex, so a recolor changes the verdict. These are function declarations that use only their own
+// arguments, because the --self-test block runs before module-level constants are initialized.
+
+function resolveThemeColor(properties, name) {
+  return colorValue(`var(--${name})`, properties);
+}
+
+function propertyRatio(properties, fgName, bgName) {
+  return contrastRatioRaw(resolveThemeColor(properties, fgName), resolveThemeColor(properties, bgName));
+}
+
+// N-03: every text role on every backdrop in both themes (7 x 4 x 2 = 56 pairs) at 4.5:1 or better.
+// `report` (optional) receives { pairs, thinnest } so the normal run can print the thinnest pair.
+function checkBrandTextPairs(themes, spec, report = {}) {
+  const failures = [];
+  let pairs = 0;
+  let thinnest = null;
+  for (const [theme, properties] of Object.entries(themes)) {
+    for (const backdrop of spec.backdrops) {
+      for (const role of spec.roles) {
+        const raw = propertyRatio(properties, role, backdrop);
+        pairs += 1;
+        if (!thinnest || raw < thinnest.raw) thinnest = { raw, role, backdrop, theme };
+        if (!(raw >= spec.min)) {
+          failures.push(`N-03 text pair ${role} on ${backdrop} (${theme}) is ${raw.toFixed(4)}, below ${spec.min}`);
+        }
+      }
+    }
+  }
+  if (pairs !== 56) failures.push(`N-03 expected 56 text pairs (7 roles x 4 backdrops x 2 themes), computed ${pairs}`);
+  report.pairs = pairs;
+  report.thinnest = thinnest;
+  return failures;
+}
+
+// N-04: Control Edge on the four backdrops and the overlay surface at 3:1, the primary on the four
+// backdrops at 3:1 (focus ring, selection line, link), and the button labels at 4.5:1.
+function checkNonTextPairs(themes, matrix, report = {}) {
+  const failures = [];
+  let pairs = 0;
+  const check = (label, theme, properties, fg, bg, min) => {
+    const raw = propertyRatio(properties, fg, bg);
+    pairs += 1;
+    if (!(raw >= min)) failures.push(`N-04 ${label} ${fg} on ${bg} (${theme}) is ${raw.toFixed(4)}, below ${min}`);
+  };
+  for (const [theme, properties] of Object.entries(themes)) {
+    const edge = matrix.controlEdge;
+    for (const bg of [...edge.backdrops, edge.overlay]) check("control edge", theme, properties, edge.property, bg, edge.min);
+    const primary = matrix.primaryNonText;
+    for (const bg of primary.backdrops) check("primary", theme, properties, primary.property, bg, primary.min);
+    for (const { fg, bg } of matrix.buttonLabels.pairs) check("button label", theme, properties, fg, bg, matrix.buttonLabels.min);
+  }
+  report.pairs = pairs;
+  return failures;
+}
+
+// N-05: the pairs published in brand/brand.json (color.contrastPairs), by pair id. Each published
+// pair must have exactly one binding naming the custom properties that carry its two colors in each
+// theme; the ratio recomputed from those resolved properties must equal the book's two-decimal value
+// and meet the pair's own minimum. A binding that names no published pair fails as well.
+function checkPublishedPairs(themes, brandJson, bindings, report = {}) {
+  const published = brandJson?.color?.contrastPairs;
+  if (!Array.isArray(published) || published.length === 0) return ["N-05 brand/brand.json has no color.contrastPairs"];
+  const failures = [];
+  const ids = published.map((pair) => pair.id);
+  if (new Set(ids).size !== ids.length) failures.push("N-05 brand/brand.json repeats a contrast pair id");
+  for (const id of Object.keys(bindings)) {
+    if (!ids.includes(id)) failures.push(`N-05 binding ${id} names no pair published in brand/brand.json`);
+  }
+  let pairs = 0;
+  for (const pair of published) {
+    const binding = bindings[pair.id];
+    if (!binding) {
+      failures.push(`N-05 published pair ${pair.id} has no binding in PUBLISHED_PAIR_BINDINGS`);
+      continue;
+    }
+    for (const [theme, properties] of Object.entries(themes)) {
+      const bound = binding[theme];
+      const book = pair[theme];
+      if (!bound || !book || !Number.isFinite(book.contrast)) {
+        failures.push(`N-05 pair ${pair.id} (${theme}) has no binding or no published ratio`);
+        continue;
+      }
+      const raw = propertyRatio(properties, bound.fg, bound.bg);
+      const rounded = Math.round(raw * 100) / 100;
+      pairs += 1;
+      if (rounded !== book.contrast) {
+        failures.push(`N-05 pair ${pair.id} (${theme}): ${bound.fg} on ${bound.bg} is ${rounded}, the book publishes ${book.contrast}`);
+      }
+      if (Number.isFinite(pair.minimum) && !(raw >= pair.minimum)) {
+        failures.push(`N-05 pair ${pair.id} (${theme}) is ${raw.toFixed(4)}, below its published minimum ${pair.minimum}`);
+      }
+    }
+  }
+  report.pairs = pairs;
+  report.published = published.length;
+  return failures;
+}
+
+// CIELAB hue angle in degrees [0, 360) of a six-digit hex (sRGB, D65 white).
+function labHueDegrees(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => toLinear(parseInt(hex.slice(i, i + 2), 16) / 255));
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const a = 500 * (f(x) - f(y));
+  const bStar = 200 * (f(y) - f(z));
+  const degrees = (Math.atan2(bStar, a) * 180) / Math.PI;
+  return degrees < 0 ? degrees + 360 : degrees;
+}
+
+// N-05: the Failed and Retrying text colors stay at least `minDegrees` apart in CIELAB hue angle in
+// each theme, so the pair never collapses into one color for anyone who cannot rely on the word and
+// the icon shape alone.
+function checkStatusHueGap(themes, spec, report = {}) {
+  const failures = [];
+  report.gaps = {};
+  for (const [theme, properties] of Object.entries(themes)) {
+    const failed = labHueDegrees(resolveThemeColor(properties, spec.failed));
+    const retrying = labHueDegrees(resolveThemeColor(properties, spec.retrying));
+    const raw = Math.abs(failed - retrying);
+    const gap = Math.min(raw, 360 - raw);
+    report.gaps[theme] = gap;
+    if (!(gap >= spec.minDegrees)) {
+      failures.push(
+        `N-05 status hue gap between ${spec.failed} and ${spec.retrying} (${theme}) is ${gap.toFixed(1)} degrees, below ${spec.minDegrees}`
+      );
+    }
+  }
+  return failures;
+}
+
 // ─── MAIN FUNCTION ────────────────────────────────────────────────────────────
 
 // Bounded source reader: declarations are data, never evaluated as code.
@@ -1018,13 +1297,20 @@ async function main() {
   let mutedPairs;
   let focusBindings;
   let surfaceBindings;
+  let pairMatrix;
+  let publishedBindings;
   try {
     const manifest = await import(PAIRS_PATH);
     mutedPairs = manifest.MUTED_PAIRS;
     focusBindings = manifest.FOCUS_BINDINGS;
     surfaceBindings = manifest.SURFACE_BINDINGS;
+    pairMatrix = manifest.BRAND_PAIR_MATRIX;
+    publishedBindings = manifest.PUBLISHED_PAIR_BINDINGS;
     if (!Array.isArray(mutedPairs)) {
       throw new Error("MUTED_PAIRS export is not an array");
+    }
+    if (!pairMatrix || typeof pairMatrix !== "object" || !publishedBindings || typeof publishedBindings !== "object") {
+      throw new Error("BRAND_PAIR_MATRIX and PUBLISHED_PAIR_BINDINGS exports are required");
     }
   } catch (err) {
     throw new Error(`Could not load contrast-pairs.mjs at ${PAIRS_PATH}: ${err.message}`);
@@ -1107,6 +1393,44 @@ async function main() {
     }
   }
 
+  // (d2) Phase 187 brand pairs, all computed from the stylesheet's custom properties: N-03 text roles
+  // on four backdrops, N-04 control edge, primary and button labels, N-05 the book's published pairs
+  // and the Failed/Retrying hue gap. Any failure is an AA failure (exit non-zero).
+  let brandJson;
+  try {
+    brandJson = JSON.parse(await readFile(BRAND_JSON_PATH, "utf8"));
+  } catch (err) {
+    throw new Error(`Could not read the pinned brand book at ${BRAND_JSON_PATH}: ${err.message}`);
+  }
+  const brandReport = { text: {}, nonText: {}, published: {}, hue: {} };
+  const brandFailures = [
+    ...checkBrandTextPairs(properties, pairMatrix.text, brandReport.text),
+    ...checkNonTextPairs(properties, pairMatrix, brandReport.nonText),
+    ...checkPublishedPairs(properties, brandJson, publishedBindings, brandReport.published),
+    ...checkStatusHueGap(properties, pairMatrix.statusHue, brandReport.hue),
+  ];
+  for (const message of brandFailures) {
+    findings.push({
+      severity: "aa-fail",
+      producer: "token",
+      theme: "both",
+      selector: null,
+      token_pair: message,
+      fg: null,
+      bg: null,
+      actual_ratio: null,
+      required_ratio: null,
+      element_role: "brand-pair",
+      screen: "token-check",
+      viewport: "n/a",
+      state: "static",
+      shot: null,
+      fix_class: "token",
+      scope: "systemic",
+      evidence: message,
+    });
+  }
+
   // (e) Build report in scrypath.contrast.v1 schema (D-17)
   const report = buildReport(findings);
 
@@ -1156,13 +1480,26 @@ async function main() {
   console.log(`  AA failures:  ${report.summary.aa_fail}`);
   console.log(`  AAA advisory: ${report.summary.aaa_advisory}`);
   console.log(`  Report: ${path.join(REPORT_DIR, "contrast-report.token.json")}`);
+  const thinnest = brandReport.text.thinnest;
+  if (thinnest) {
+    console.log(
+      `  Brand pairs: ${brandReport.text.pairs} text, ${brandReport.nonText.pairs} non-text, ` +
+        `${brandReport.published.pairs} published (${brandReport.published.published} pairs), ` +
+        `Failed/Retrying hue gap ${Object.entries(brandReport.hue.gaps).map(([theme, gap]) => `${theme} ${gap.toFixed(1)}`).join(", ")} degrees`
+    );
+    console.log(
+      `  Thinnest text pair: ${thinnest.role} on ${thinnest.backdrop} (${thinnest.theme}) ${(Math.round(thinnest.raw * 100) / 100).toFixed(2)}`
+    );
+  }
 
   if (report.summary.aa_fail > 0) {
     console.log(`\nAA Failures:`);
     for (const f of findings.filter((f) => f.severity === "aa-fail")) {
       const label = f.selector || f.token_pair;
       console.log(
-        `  [${f.theme}] ${label}: ${f.actual_ratio} (required: ${f.required_ratio}, role: ${f.element_role})`
+        f.element_role === "brand-pair"
+          ? `  ${label}`
+          : `  [${f.theme}] ${label}: ${f.actual_ratio} (required: ${f.required_ratio}, role: ${f.element_role})`
       );
     }
   }
