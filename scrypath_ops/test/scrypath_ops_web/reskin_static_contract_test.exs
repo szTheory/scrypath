@@ -1054,4 +1054,75 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
                scan_retired("scrypath_ops/lib/x.ex", ~s(class="bg-gradient-to-r"))
     end
   end
+
+  # ── Review WR-03: the host accent override has a premise the stylesheet must keep ─────────
+
+  describe "the host accent override premise" do
+    # The README tells hosts that an unlayered `:root { --color-primary: ... }` rule loaded after the
+    # ops stylesheet wins, and that a Tailwind `@theme` override loses. Both rest on one fact about
+    # the built stylesheet: the daisyUI theme variables are declared inside `@layer base`, which
+    # outranks the `theme` layer and yields to any unlayered rule. If a daisyUI or Tailwind
+    # update moved them, the README sentence (and the P-17c browser cases) would stop being true.
+
+    # The top-level blocks of `css` as `{header, body}`, comments removed. Pure.
+    defp top_level_blocks(css) do
+      css = Regex.replace(~r{/\*.*?\*/}s, css, "")
+
+      braces =
+        for [{index, 1}] <- Regex.scan(~r/[{}]/, css, return: :index),
+            do: {index, if(binary_part(css, index, 1) == "{", do: :open, else: :close)}
+
+      {blocks, _state} =
+        Enum.reduce(braces, {[], {0, 0, nil}}, fn
+          {index, :open}, {blocks, {0, mark, _open}} ->
+            header =
+              css |> binary_part(mark, index - mark) |> String.split(";") |> List.last()
+
+            {blocks, {1, mark, {index, String.trim(header)}}}
+
+          {_index, :open}, {blocks, {depth, mark, open}} ->
+            {blocks, {depth + 1, mark, open}}
+
+          {index, :close}, {blocks, {1, _mark, {start, header}}} ->
+            body = binary_part(css, start + 1, index - start - 1)
+            {[{header, body} | blocks], {0, index + 1, nil}}
+
+          {_index, :close}, {blocks, {depth, mark, open}} ->
+            {blocks, {depth - 1, mark, open}}
+        end)
+
+      Enum.reverse(blocks)
+    end
+
+    # The header of every top-level block that declares `--color-primary` itself.
+    defp accent_declaring_headers(css) do
+      for {header, body} <- top_level_blocks(css),
+          Regex.match?(~r/--color-primary\s*:/, body),
+          do: header
+    end
+
+    test "every --color-primary declaration in the built stylesheet is inside @layer base" do
+      headers = accent_declaring_headers(File.read!(@built_css))
+
+      # Dark, light and the System dark default each declare it once, all in a base layer block.
+      assert length(headers) >= 3
+      assert Enum.uniq(headers) == ["@layer base"]
+    end
+
+    test "the reader finds the declaring layer, nested rules and an unlayered rule" do
+      planted = """
+      @layer properties;
+      @layer theme, base, components, utilities;
+      @layer theme { :root, :host { --color-primary: red; --color-primary-content: white; } }
+      @layer base {
+        @media (prefers-color-scheme: dark) { :root:not([data-theme]) { --color-primary: blue; } }
+      }
+      /* a comment with { braces } and --color-primary: green; */
+      :root { --color-primary: gold; }
+      .btn { color: black; }
+      """
+
+      assert accent_declaring_headers(planted) == ["@layer theme", "@layer base", ":root"]
+    end
+  end
 end
