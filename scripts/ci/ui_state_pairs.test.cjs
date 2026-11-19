@@ -309,7 +309,9 @@ test("source-paired comparator requires exact matched state receipt pairs", () =
   assert.equal(report.passed, true);
   assert.equal(report.comparisons.length, 61);
   assert.equal(report.comparisons.reduce((sum, item) => sum + item.viewport_comparisons.length, 0), 213);
-  assert.equal(report.schema, "scrypath.ui-state-pair-comparison.v3");
+  assert.equal(report.schema, "scrypath.ui-state-pair-comparison.v4");
+  assert.equal(report.status, "structural-match", "a pass is a structural match, never worded as pixel-identical");
+  assert.equal(report.pixel_comparison, "structural-recolor-tolerant-v1");
   assert.ok(report.comparisons.filter((item) => item.id.endsWith("overflow") || item.id.endsWith("long-text")).every((item) =>
     item.viewport_comparisons.length === 9 && REQUIRED_THEMES_FOR_TEST.every((theme) => [1440, 768, 390].every((width) => item.viewport_comparisons.some((observation) => observation.theme === theme && observation.width === width)))
   ));
@@ -815,7 +817,7 @@ test("pair output is atomic, deterministic and never overwritten by different by
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-output-"));
   try {
     const outputDirectory = path.join(directory, "comparison");
-    const report = { schema: "scrypath.ui-state-pair-comparison.v3", status: "exact-match", cases_compared: 61 };
+    const report = { schema: "scrypath.ui-state-pair-comparison.v4", status: "structural-match", cases_compared: 61 };
     const outputPath = pairs.writeOutput(outputDirectory, report);
     const original = fs.readFileSync(outputPath);
 

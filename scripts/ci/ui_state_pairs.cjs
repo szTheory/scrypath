@@ -9,7 +9,10 @@ const { PNG } = require("../../examples/scrypath_ecommerce/node_modules/pngjs");
 
 const AUTHORITY_SCHEMA = "scrypath.ui-state-pair-authority.v2";
 const QUALIFICATION_SCHEMA = "scrypath.phase185-before-qualification.v1";
-const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v3";
+// v4 (phase 186 review WR-06): the pixel term is structural and recolor-tolerant, no longer byte-exact. v3 reports
+// meant pixel-identical when they said "exact-match"; a v4 "structural-match" must never be quoted as that.
+const PAIR_SCHEMA = "scrypath.ui-state-pair-comparison.v4";
+const PIXEL_COMPARISON = "structural-recolor-tolerant-v1";
 const FULL_RECEIPT_NAME = "phase105-evidence.json";
 const BEFORE_RECEIPT_NAME = "phase185-before-only-evidence.json";
 const OUTPUT_NAME = "ui-state-pairs.json";
@@ -742,7 +745,8 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
     qualified_recipe: authority.expected.recipe,
     cases_compared: comparisons.length,
     passed: mismatches.length === 0,
-    status: mismatches.length === 0 ? "exact-match" : "mismatch",
+    status: mismatches.length === 0 ? "structural-match" : "mismatch",
+    pixel_comparison: PIXEL_COMPARISON,
     aesthetic_approval: "not-provided",
     mismatches,
     comparisons
