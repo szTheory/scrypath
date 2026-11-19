@@ -1,6 +1,6 @@
-// Token parity guard for the ScrypathOps theme blocks (Phase 186, TOK-01).
+// Token parity and retired-identity guard (Phase 186, TOK-01 and TOK-02).
 //
-// What it proves, in plain terms:
+// Part 1, token parity for the ScrypathOps theme blocks. What it proves, in plain terms:
 //   - every property in the two daisyUI theme blocks has exactly one row in
 //     scrypath_ops/assets/css/token-map.json, and every row names a live property
 //   - a row marked applied resolves to the pinned brand hex; a pending row does not
@@ -13,6 +13,15 @@
 //
 // It verifies, it never generates: the map is hand-maintained data.
 //
+// Part 2, the retired-identity deny-list. One scan of `git ls-files` (tracked plus
+// untracked-but-not-ignored, so an uncommitted reintroduction is caught too) for
+// hex values, rgb or rgba triplets and the retired brand directory string of the
+// old identity. A path-level, shrink-only allowlist with phase tags covers the
+// files that still hold old values; a stale or missing entry fails. Six planted
+// failures and the accept cases run through the same scan on a temp git tree.
+// The guard never contains a retired value: the deny set is stored without its
+// leading hash and the directory string is joined at runtime.
+//
 // Gate budget (v1.46): this is gate 2 (token parity plus the retired-identity
 // deny-list, one mechanism). Deletion trigger: ScrypathOps stops carrying its own
 // theme blocks, or the theme blocks are generated from brand/tokens.json. Expected
@@ -22,9 +31,11 @@
 //
 // Raising a ceiling below is a visible source edit; that is the second key.
 
-import { test } from "node:test";
+import { test, after } from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { readThemeProperties } from "./contrast-checker.mjs";
@@ -40,6 +51,9 @@ const BRAND_TOKENS = path.join(ROOT, "brand/tokens.json");
 // retired properties are deleted.
 const PENDING_CEILING = 38;
 const HEX_OUTSIDE_CEILING = 34;
+// Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
+// retired value landed in a new file, which is the thing this guard exists to stop.
+const ALLOWLIST_CEILING = 24;
 
 const MODES = ["light", "dark"];
 const DISPOSITIONS = new Set(["adopt", "derive", "keep-platform", "retire", "local"]);
@@ -535,4 +549,308 @@ test("valid fixtures pass", () => {
   assert.deepEqual(checkApplied(themes, map, brandTokens), []);
   assert.deepEqual(checkBuiltEmissions(themes, builtCss), []);
   assert.deepEqual(checkHexAllowlist(themes, map, brandTokens), []);
+});
+
+// ---------------------------------------------------------------------------
+// Retired-identity deny-list (TOK-02)
+// ---------------------------------------------------------------------------
+
+const ALLOWLIST_RELATIVE = "examples/scrypath_ecommerce/retired-identity-allowlist.json";
+const ALLOWLIST_PATH = path.join(ROOT, ALLOWLIST_RELATIVE);
+const ALLOWLIST_SCHEMA = "scrypath.retired-identity-allowlist.v1";
+const ALLOWLIST_TAGS = new Set(["p186", "p187", "p188", "p189", "retire-last"]);
+
+// Bare six-digit hex values of the retired identity, without the leading hash, so
+// this file never contains one. Sources: the CONTEXT list (13), the live values the
+// CONTEXT list missed (5), and the warm-paper and old-ramp tier from the research (12).
+// The tier-4 semantic fills stay off this list until Phase 187 decides their fate.
+const DENY_HEX = [
+  "191e25", "353d48", "f1f2f4", "dce2e9", "f3f5f8", "edf1f5", "202124",
+  "2a3446", "302b4c", "eeebff", "a85d2e", "111419", "222831",
+  "5b4ad1", "aaa0ff", "6c5ce7", "c17a3e", "141923",
+  "fffdf8", "faf7f2", "f4f1ea", "ded8ce", "1b2230", "475066",
+  "6b7388", "7f8aa3", "b3bdcf", "d7d0c4", "e0b487", "f2eee7",
+];
+// The retired brand directory, joined at runtime for the same reason.
+const RETIRED_DIR = ["brand", "book/"].join("");
+
+const EXEMPT_PREFIXES = [".planning/"];
+// Hash-pinned brand prose that prints two retired values, and the allowlist itself.
+const EXEMPT_PATHS = new Set(["brand/BRAND.md", "brand/brand.json", ALLOWLIST_RELATIVE]);
+const MAX_SCAN_BYTES = 8 * 1024 * 1024;
+const NUL_SNIFF_BYTES = 8192;
+
+// Linear patterns: no nested quantifiers, separators are alternatives not overlaps.
+const HEX_PATTERN = /#([0-9a-f]{6})(?:[0-9a-f]{2})?(?![0-9a-f])/gi;
+const RGB_PATTERN = /rgba?\(\s*(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})/gi;
+
+function hexTriplet(hex) {
+  const value = Number.parseInt(hex, 16);
+  return [(value >> 16) & 255, (value >> 8) & 255, value & 255].join(",");
+}
+
+function buildDeny(hexes = DENY_HEX) {
+  return {
+    hexes: new Set(hexes.map(lower)),
+    triplets: new Set(hexes.map(hexTriplet)),
+    directory: RETIRED_DIR,
+  };
+}
+
+function isExempt(relativePath) {
+  return EXEMPT_PATHS.has(relativePath) || EXEMPT_PREFIXES.some((prefix) => relativePath.startsWith(prefix));
+}
+
+/** Tracked plus untracked-but-not-ignored files, NUL-separated, no shell. */
+function listRepoFiles(root) {
+  const output = execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
+    cwd: root,
+    maxBuffer: 256 * 1024 * 1024,
+  });
+  return [...new Set(output.toString("utf8").split("\0").filter(Boolean))].sort();
+}
+
+function scanText(text, deny) {
+  const found = new Set();
+  for (const match of text.matchAll(HEX_PATTERN)) {
+    const hex = match[1].toLowerCase();
+    if (deny.hexes.has(hex)) found.add(`#${hex}`);
+  }
+  for (const match of text.matchAll(RGB_PATTERN)) {
+    const triplet = [match[1], match[2], match[3]].map(Number).join(",");
+    if (deny.triplets.has(triplet)) found.add(`rgb(${triplet})`);
+  }
+  if (text.toLowerCase().includes(deny.directory)) found.add(deny.directory);
+  return found;
+}
+
+/**
+ * Scan files for denied values. Skips exempt paths, files missing from the working
+ * tree, anything that is not a regular file (symlinks are never followed) and
+ * binaries (a NUL byte in the first 8192 bytes). A text file over 8 MiB throws.
+ */
+function scanFiles(root, files, deny) {
+  const hits = new Map();
+  for (const relativePath of files) {
+    if (isExempt(relativePath)) continue;
+    const absolute = path.join(root, relativePath);
+    let stat;
+    try {
+      stat = fs.lstatSync(absolute);
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
+    if (!stat.isFile()) continue;
+    const head = Buffer.alloc(Math.min(NUL_SNIFF_BYTES, stat.size));
+    const fd = fs.openSync(absolute, "r");
+    try {
+      fs.readSync(fd, head, 0, head.length, 0);
+    } finally {
+      fs.closeSync(fd);
+    }
+    if (head.includes(0)) continue;
+    if (stat.size > MAX_SCAN_BYTES) {
+      throw new Error(`${relativePath} is ${stat.size} bytes, over the ${MAX_SCAN_BYTES} byte scan limit`);
+    }
+    const found = scanText(fs.readFileSync(absolute, "utf8"), deny);
+    if (found.size > 0) hits.set(relativePath, found);
+  }
+  return hits;
+}
+
+function entryMatches(entry, relativePath) {
+  return entry.path === undefined ? relativePath.startsWith(entry.prefix) : relativePath === entry.path;
+}
+
+function entryTarget(entry) {
+  return entry.path ?? entry.prefix;
+}
+
+/**
+ * Failures for the allowlist against a scan. Messages start with a category:
+ * "unlisted" (a hit nobody listed) or "allowlist" (the list itself is wrong).
+ */
+function checkAllowlist(hits, allowlist, files) {
+  const failures = [];
+  if (allowlist.schema !== ALLOWLIST_SCHEMA) failures.push(`allowlist schema is ${String(allowlist.schema)}`);
+  if (!Array.isArray(allowlist.entries)) return [...failures, "allowlist has no entries list"];
+  const entries = allowlist.entries;
+  if (entries.length > ALLOWLIST_CEILING) {
+    failures.push(`allowlist has ${entries.length} entries, over ALLOWLIST_CEILING ${ALLOWLIST_CEILING} (shrink-only)`);
+  }
+
+  const seen = new Set();
+  const usable = [];
+  for (const entry of entries) {
+    const hasPath = typeof entry.path === "string" && entry.path !== "";
+    const hasPrefix = typeof entry.prefix === "string" && entry.prefix.endsWith("/");
+    if (hasPath === hasPrefix) {
+      failures.push(`allowlist entry needs exactly one of path or a prefix ending in a slash: ${JSON.stringify(entry)}`);
+      continue;
+    }
+    const target = entryTarget(entry);
+    if (seen.has(target)) failures.push(`allowlist entry ${target} is listed twice`);
+    seen.add(target);
+    if (!ALLOWLIST_TAGS.has(entry.tag)) failures.push(`allowlist entry ${target} has unknown tag ${String(entry.tag)}`);
+    if (typeof entry.reason !== "string" || entry.reason.trim() === "") {
+      failures.push(`allowlist entry ${target} needs a reason`);
+    } else if (entry.tag === "retire-last" && !entry.reason.includes("owner: ")) {
+      failures.push(`allowlist entry ${target} is retire-last and its reason must name an owner ("owner: ...")`);
+    }
+    if (EXEMPT_PATHS.has(target) || EXEMPT_PREFIXES.some((prefix) => target.startsWith(prefix))) {
+      failures.push(`allowlist entry ${target} sits under an exempt path and must be removed`);
+    }
+    usable.push(entry);
+  }
+
+  for (const [relativePath, found] of hits) {
+    if (!usable.some((entry) => entryMatches(entry, relativePath))) {
+      failures.push(`unlisted retired identity value in ${relativePath}: ${[...found].sort().join(" ")}`);
+    }
+  }
+  for (const entry of usable) {
+    const covered = files.filter((file) => entryMatches(entry, file));
+    if (covered.length === 0) {
+      failures.push(`allowlist entry ${entryTarget(entry)} names a missing path`);
+    } else if (!covered.some((file) => hits.has(file))) {
+      failures.push(`stale allowlist entry ${entryTarget(entry)}: no file it covers holds a retired value any more`);
+    }
+  }
+  return failures;
+}
+
+/** The allowlist file may hold paths and prose, never a color. */
+function allowlistTextFailures(text) {
+  const failures = [];
+  if (/#[0-9a-f]{3,8}(?![0-9a-f])/i.test(text)) failures.push("allowlist file holds a hex color pattern");
+  if (/rgba?\(/i.test(text)) failures.push("allowlist file holds an rgb( pattern");
+  return failures;
+}
+
+function liveScan() {
+  const files = listRepoFiles(ROOT);
+  const hits = scanFiles(ROOT, files, buildDeny());
+  return { files, hits, allowlist: readJson(ALLOWLIST_PATH) };
+}
+
+test("live deny-list scan finds no unlisted retired value", () => {
+  const { files, hits, allowlist } = liveScan();
+  const unlisted = checkAllowlist(hits, allowlist, files).filter((failure) => failure.startsWith("unlisted"));
+  assert.deepEqual(unlisted, []);
+});
+
+test("live allowlist entries are current and tagged", () => {
+  const { files, hits, allowlist } = liveScan();
+  const listProblems = checkAllowlist(hits, allowlist, files).filter((failure) => !failure.startsWith("unlisted"));
+  assert.deepEqual(listProblems, []);
+  assert.deepEqual(allowlistTextFailures(fs.readFileSync(ALLOWLIST_PATH, "utf8")), []);
+  console.log(`retired-identity allowlist entries: ${allowlist.entries.length} of ${ALLOWLIST_CEILING}`);
+});
+
+test("deny set and new set are disjoint", () => {
+  const { map, brandTokens } = loadLive();
+  const deny = buildDeny();
+  assert.equal(new Set(DENY_HEX).size, DENY_HEX.length, "deny hexes are unique");
+  assert.ok(DENY_HEX.every((hex) => /^[0-9a-f]{6}$/.test(hex)), "deny hexes are bare six-digit values");
+  const fresh = allowedHexSet(map, brandTokens);
+  assert.deepEqual([...fresh].filter((hex) => deny.hexes.has(hex)), [], "a new value is also denied");
+  assert.deepEqual(
+    [...fresh].map(hexTriplet).filter((triplet) => deny.triplets.has(triplet)),
+    [],
+    "a new value shares an rgb triplet with a denied one",
+  );
+});
+
+// Planted failures and accept cases run through the same listRepoFiles, scanFiles
+// and checkAllowlist on a throwaway git tree. Retired values are assembled here.
+
+const treeRoots = [];
+after(() => {
+  for (const dir of treeRoots) fs.rmSync(dir, { recursive: true, force: true });
+});
+
+function makeTree(fileContents) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-ui-tokens-"));
+  treeRoots.push(dir);
+  execFileSync("git", ["init", "-q"], { cwd: dir });
+  for (const [relativePath, content] of Object.entries(fileContents)) {
+    const absolute = path.join(dir, relativePath);
+    fs.mkdirSync(path.dirname(absolute), { recursive: true });
+    fs.writeFileSync(absolute, content);
+  }
+  execFileSync("git", ["add", "-A"], { cwd: dir });
+  return dir;
+}
+
+function scanTree(dir, entries = []) {
+  const files = listRepoFiles(dir);
+  const hits = scanFiles(dir, files, buildDeny());
+  return checkAllowlist(hits, { schema: ALLOWLIST_SCHEMA, entries }, files);
+}
+
+const retired = `#${DENY_HEX[0]}`;
+const retiredTriplet = hexTriplet(DENY_HEX[5]).split(",");
+const brandPanel = () => resolveBrandHex(readJson(BRAND_TOKENS), "color.light.panel");
+const entry = (target, tag = "p187") => ({ path: target, tag, reason: "planted fixture entry" });
+
+test("planted retired hex fails", () => {
+  const dir = makeTree({ "src/theme.css": `a { color: ${retired}; }\n` });
+  assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in src\/theme\.css/));
+});
+
+test("planted retired rgb triplet fails", () => {
+  const dir = makeTree({ "src/glow.css": `a { box-shadow: 0 0 4px rgba(${retiredTriplet.join(", ")}, 0.3); }\n` });
+  assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in src\/glow\.css/));
+  const spaced = makeTree({ "src/modern.css": `a { color: rgb(${retiredTriplet.join(" ")} / 50%); }\n` });
+  assert.ok(anyFailure(scanTree(spaced), /unlisted retired identity value in src\/modern\.css/));
+});
+
+test("planted uppercase retired hex fails", () => {
+  const dir = makeTree({ "src/Theme.css": `a { color: #${DENY_HEX[3].toUpperCase()}; }\n` });
+  assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in src\/Theme\.css/));
+  const alpha = makeTree({ "src/alpha.css": `a { color: ${retired}cc; }\n` });
+  assert.ok(anyFailure(scanTree(alpha), /unlisted retired identity value in src\/alpha\.css/));
+});
+
+test("planted retired directory string fails", () => {
+  const dir = makeTree({ "docs/guide.md": `See ${RETIRED_DIR}tokens/tokens.css for the old values.\n` });
+  assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in docs\/guide\.md/));
+});
+
+test("planted stale allowlist entry fails", () => {
+  const dir = makeTree({ "src/clean.css": `a { color: ${brandPanel()}; }\n` });
+  assert.ok(anyFailure(scanTree(dir, [entry("src/clean.css")]), /stale allowlist entry src\/clean\.css/));
+});
+
+test("planted missing allowlist path fails", () => {
+  const dir = makeTree({ "src/clean.css": `a { color: ${brandPanel()}; }\n` });
+  assert.ok(anyFailure(scanTree(dir, [entry("src/gone.css")]), /allowlist entry src\/gone\.css names a missing path/));
+});
+
+test("accept brand-only tree", () => {
+  const dir = makeTree({
+    "src/theme.css": `a { color: ${brandPanel()}; background: rgb(17 17 17); }\n`,
+    "src/notes.md": "No retired identity values here.\n",
+    "src/blob.bin": Buffer.from([0, 1, 2, 3]),
+  });
+  assert.deepEqual(scanTree(dir), []);
+});
+
+test("accept exempt planning file", () => {
+  const dir = makeTree({
+    ".planning/notes.md": `Old values ${retired} and ${RETIRED_DIR} live here as a record.\n`,
+    "brand/BRAND.md": `The retired lead color was ${retired}.\n`,
+    "brand/brand.json": `{"legacy": "${retired}"}\n`,
+  });
+  assert.deepEqual(scanTree(dir), []);
+});
+
+test("accept allowlisted file with hits", () => {
+  const dir = makeTree({
+    "src/legacy.css": `a { color: ${retired}; }\n`,
+    [`${RETIRED_DIR}tokens/x.css`]: `a { color: ${retired}; }\n`,
+  });
+  const entries = [entry("src/legacy.css"), { prefix: RETIRED_DIR, tag: "retire-last", reason: "owner: a later phase deletes it" }];
+  assert.deepEqual(scanTree(dir, entries), []);
 });

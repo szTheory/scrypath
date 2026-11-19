@@ -87,7 +87,10 @@ defmodule Mix.Tasks.UiContrastContractTest do
     "live token map parity both directions",
     "live applied rows equal pinned brand hex and pending rows differ",
     "live built CSS emissions equal source theme blocks",
-    "live hex allowlist holds"
+    "live hex allowlist holds",
+    "live deny-list scan finds no unlisted retired value",
+    "live allowlist entries are current and tagged",
+    "deny set and new set are disjoint"
   ]
 
   test "token map parity and retired-identity guards pass" do

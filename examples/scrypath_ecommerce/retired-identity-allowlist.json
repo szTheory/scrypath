@@ -1,0 +1,29 @@
+{
+  "schema": "scrypath.retired-identity-allowlist.v1",
+  "entries": [
+    { "path": "DESIGN.md", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code" },
+    { "path": "scrypath_ops/assets/css/DESIGN-TOKENS.md", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code" },
+    { "path": "scrypath_ops/assets/css/app.css", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code" },
+    { "path": "scrypath_ops/priv/static/assets/css/app.css", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (tracked built CSS, rebuilt by 187)" },
+    { "path": "scrypath_ops/priv/static/favicon.svg", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (SKIN-03 replaces the ops favicon)" },
+    { "path": "scrypath_ops/priv/static/images/logo.svg", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (SKIN-03 replaces the ops logo)" },
+    { "path": "scrypath_ops/priv/static/images/scrypath-wordmark.svg", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (SKIN-03 replaces the ops wordmark)" },
+    { "path": "scrypath_ops/priv/static/images/scrypath-wordmark-inverse.svg", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (SKIN-03 replaces the ops wordmark)" },
+    { "path": "examples/scrypath_ecommerce/e2e/ui-review.mjs", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (editing it shifts the fixture-overlay digest, so it is allowlisted rather than rewritten here)" },
+    { "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; asserts the glow that SKIN-05 retires)" },
+    { "path": "examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old dark surface and glow)" },
+    { "path": "examples/scrypath_ecommerce/e2e/phase173_shell.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old shell colors)" },
+    { "path": "README.md", "tag": "p188", "reason": "Phase 188 documentation adoption (BDOC-01) replaces the retired brand directory reference" },
+    { "path": "PRODUCT.md", "tag": "p188", "reason": "Phase 188 documentation adoption replaces the retired brand directory reference" },
+    { "path": "website/src/assets/brand-mark.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old mark" },
+    { "path": "website/src/assets/og-image.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old social image" },
+    { "path": "test/mix/tasks/ui_contrast_contract_test.exs", "tag": "p186", "reason": "Plan 186-02 Task 3 lifts the pinned literals out of this file, then this entry is removed" },
+    { "path": "scrypath_ops/test/scrypath_ops_web/surface_depth_token_contract_test.exs", "tag": "p186", "reason": "Plan 186-02 Task 3 lifts the pinned literal out of this file, then this entry is removed" },
+    { "prefix": "brandbook/", "tag": "retire-last", "reason": "owner: Phase 188 deletes the directory (fits BDOC-01); no v1.46 requirement deletes it earlier" },
+    { "path": "dev/mix/tasks/verify/ui_tokens.ex", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); retires after the Phase 187 re-skin" },
+    { "path": "test/mix/tasks/ui_tokens_contract_test.exs", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); its legacy shadow and brand-documentation asserts read the retired directory" },
+    { "path": ".github/workflows/ci.yml", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); the ops-ui path regex still names the retired directory" },
+    { "path": "prompts/scrypath-brand-book.md", "tag": "retire-last", "reason": "owner: Phase 188, the nearer fit: it documents the retired brand directory that Phase 188 deletes" },
+    { "path": "examples/scrypath_ecommerce/priv/static/favicon.svg", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup, the nearer fit: it is demo-host identity, outside both the ops-only Phase 187 scope (A11Y-04) and Phase 188's docs scope" }
+  ]
+}
