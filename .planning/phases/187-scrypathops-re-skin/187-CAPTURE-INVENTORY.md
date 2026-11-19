@@ -8,7 +8,7 @@ The captures are review context, not a gate. No image is compared by pixel and n
 
 | | Before | After |
 |---|---|---|
-| Source commit | `3a21916f61affcaa0b9c73c5491f26778739dab6` (Plan 01 gate commit: the old identity, with the Plan 01 fixture and guard edits) | `9217f326599095f8d5e150c71b123578b1ade7cd` (`GATE_SHA`, the last commit with an executable or rendered change) |
+| Source commit | `3a21916f61affcaa0b9c73c5491f26778739dab6` (Plan 01 gate commit: the old identity, with the Plan 01 fixture and guard edits) | `9217f326599095f8d5e150c71b123578b1ade7cd` (`GATE_SHA` of Plan 11; the after captures are from this commit. Review-fix commits up to `cf744109` later changed the loading-word markup (`aria-busy` placement), the command-palette close timer, the rebuilt ops JS bundle and the capture script; the built stylesheet is unchanged since, so the captures stay representative but are not from the final code commit) |
 | `clean` | `true` | `true` |
 | `git_status` | `[" M .planning/UI-PREVIEW.json"]` | `[]` |
 | Captured at (UTC) | 2026-11-19T09:46:24Z | 2026-11-19T21:52:19Z |
