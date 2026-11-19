@@ -562,6 +562,42 @@ defmodule Mix.Tasks.BrandPinContractTest do
       assert output =~ "brand.update: live archive matches pin"
     end
 
+    test "a redirect from https to http is refused before the downgraded request" do
+      test_pid = self()
+
+      Req.Test.stub(__MODULE__.Downgrade, fn conn ->
+        send(test_pid, {:request, conn.scheme})
+
+        conn
+        |> Plug.Conn.put_resp_header("location", "http://example.test/scrypath-brand.zip")
+        |> Plug.Conn.send_resp(302, "")
+      end)
+
+      assert_raise Mix.Error, ~r/refusing non-https hop http:\/\/example\.test/, fn ->
+        Update.fetch!("https://example.test/scrypath-brand.zip",
+          plug: {Req.Test, __MODULE__.Downgrade}
+        )
+      end
+
+      assert_received {:request, :https}
+      refute_received {:request, :http}
+    end
+
+    test "a redirect from https to https is still followed" do
+      Req.Test.stub(__MODULE__.SameScheme, fn
+        %Plug.Conn{request_path: "/a"} = conn ->
+          conn
+          |> Plug.Conn.put_resp_header("location", "https://example.test/b")
+          |> Plug.Conn.send_resp(302, "")
+
+        conn ->
+          Plug.Conn.send_resp(conn, 200, "archive bytes")
+      end)
+
+      assert Update.fetch!("https://example.test/a", plug: {Req.Test, __MODULE__.SameScheme}) ==
+               "archive bytes"
+    end
+
     test "plain http URLs are refused before any request" do
       assert_raise Mix.Error, ~r/only https URLs/, fn ->
         Update.fetch!("http://example.test/scrypath-brand.zip")

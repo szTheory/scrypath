@@ -190,10 +190,15 @@ defmodule Mix.Tasks.Brand.Update do
 
     {:ok, _apps} = Application.ensure_all_started(:req)
 
-    options =
-      [decode_body: false, max_redirects: 3, retry: false, into: &capped_chunk/2] ++ req_options
+    # Req re-runs every request step on each redirect hop, so the scheme check
+    # below also refuses an https-to-http downgrade, not only a bad first URL.
+    req =
+      ([decode_body: false, max_redirects: 3, retry: false, into: &capped_chunk/2] ++
+         req_options)
+      |> Req.new()
+      |> Req.Request.prepend_request_steps(https_only: &require_https/1)
 
-    case Req.get(url, options) do
+    case Req.get(req, url: url) do
       {:ok, response} -> finish_download!(response)
       {:error, error} -> Mix.raise("brand.update: download failed: #{Exception.message(error)}")
     end
@@ -304,6 +309,15 @@ defmodule Mix.Tasks.Brand.Update do
       _other ->
         Mix.raise("brand.update: cannot read a regular archive file at #{path}")
     end
+  end
+
+  defp require_https(%Req.Request{url: %URI{scheme: "https"}} = request), do: request
+
+  defp require_https(%Req.Request{} = request) do
+    Req.Request.halt(
+      request,
+      RuntimeError.exception("refusing non-https hop #{URI.to_string(request.url)}")
+    )
   end
 
   # Streaming size cap: count bytes as they arrive and halt once over the cap.
