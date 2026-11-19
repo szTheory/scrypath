@@ -21,6 +21,14 @@ const REQUIRED_THEMES = ["light", "dark", "system-dark"];
 const MAX_AUTHORITY_BYTES = 4 * 1024 * 1024;
 const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
+// TOK-04: recolor-tolerant structural pixel check, calibrated on committed real captures
+// (scripts/ci/fixtures/ui-state-pairs/PROVENANCE.md). A coarse backstop: the geometry, state and copy
+// receipts catch small layout moves; a single 16-40 px band shifted by 1-8 px stays under tolerance.
+const STRUCTURE_BLOCK_PX = 16;
+const STRUCTURE_STEPS = 16;
+const STRUCTURE_STEP_DELTA = 2;
+const STRUCTURE_MAX_BLOCK_SHARE = 0.0025;
+const STRUCTURE_MAX_WORST_STEP = 8;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const SHA = /^[a-f0-9]{40}$/;
 
@@ -504,7 +512,50 @@ function readBundledPng(bundle, item) {
   return bytes;
 }
 
-function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null, identicalDimensions = null) {
+// Per block of STRUCTURE_BLOCK_PX, the share of pixels whose exact RGBA differs from the block's modal
+// color, rounded to STRUCTURE_STEPS. Any palette substitution that keeps regions distinct leaves the
+// share unchanged; moved, added or removed content changes it.
+function inkCoverageGrid(png) {
+  const { width, height, data } = png;
+  const columns = Math.ceil(width / STRUCTURE_BLOCK_PX);
+  const rows = Math.ceil(height / STRUCTURE_BLOCK_PX);
+  const grid = new Uint8Array(columns * rows);
+  const scratch = new Uint32Array(STRUCTURE_BLOCK_PX * STRUCTURE_BLOCK_PX);
+  for (let row = 0; row < rows; row += 1) {
+    const yEnd = Math.min(height, (row + 1) * STRUCTURE_BLOCK_PX);
+    for (let column = 0; column < columns; column += 1) {
+      const xEnd = Math.min(width, (column + 1) * STRUCTURE_BLOCK_PX);
+      let area = 0;
+      let uniform = true;
+      for (let y = row * STRUCTURE_BLOCK_PX; y < yEnd; y += 1) {
+        for (let x = column * STRUCTURE_BLOCK_PX; x < xEnd; x += 1) {
+          const offset = (y * width + x) * 4;
+          scratch[area] = ((data[offset] << 24) | (data[offset + 1] << 16) | (data[offset + 2] << 8) | data[offset + 3]) >>> 0;
+          if (scratch[area] !== scratch[0]) uniform = false;
+          area += 1;
+        }
+      }
+      let modal = area;
+      if (!uniform) {
+        const sorted = scratch.subarray(0, area).sort();
+        modal = 0;
+        for (let start = 0; start < area;) {
+          let end = start + 1;
+          while (end < area && sorted[end] === sorted[start]) end += 1;
+          if (end - start > modal) modal = end - start;
+          start = end;
+        }
+      }
+      grid[row * columns + column] = Math.round(STRUCTURE_STEPS * (area - modal) / area);
+    }
+  }
+  return grid;
+}
+
+// Structural equality under the calibrated recolor-tolerant check. The `equal` result (and the pixels_equal
+// fields built from it) no longer means byte-identical pixels. `blocks`, `blocks_over` and `worst_step`
+// are null when the dimensions differ, because no grid is comparable.
+function comparePngStructural(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null, identicalDimensions = null) {
   let before;
   let candidate;
   const sameRawBytes = beforeBytes.equals(candidateBytes);
@@ -527,12 +578,35 @@ function comparePngExact(beforeBytes, candidateBytes, beforeMetadata = null, can
   if (candidateMetadata && (candidate.width !== candidateRaster?.width || candidate.height !== candidateRaster?.height || candidate.width !== candidateMetadata.viewport?.width)) {
     fail("candidate_image_dimensions_mismatch", "Candidate decoded PNG dimensions do not match its actual capture geometry");
   }
+  const sameDimensions = before.width === candidate.width && before.height === candidate.height;
+  let structure = { blocks: null, blocks_over: null, worst_step: null };
+  let equal = false;
+  if (sameDimensions) {
+    const blocks = Math.ceil(before.width / STRUCTURE_BLOCK_PX) * Math.ceil(before.height / STRUCTURE_BLOCK_PX);
+    if (sameRawBytes || before.data.equals(candidate.data)) {
+      structure = { blocks, blocks_over: 0, worst_step: 0 };
+      equal = true;
+    } else {
+      const beforeGrid = inkCoverageGrid(before);
+      const candidateGrid = inkCoverageGrid(candidate);
+      let blocksOver = 0;
+      let worstStep = 0;
+      for (let index = 0; index < beforeGrid.length; index += 1) {
+        const delta = Math.abs(beforeGrid[index] - candidateGrid[index]);
+        if (delta > worstStep) worstStep = delta;
+        if (delta > STRUCTURE_STEP_DELTA) blocksOver += 1;
+      }
+      structure = { blocks, blocks_over: blocksOver, worst_step: worstStep };
+      equal = blocksOver / blocks <= STRUCTURE_MAX_BLOCK_SHARE && worstStep <= STRUCTURE_MAX_WORST_STEP;
+    }
+  }
   return {
-    equal: before.width === candidate.width && before.height === candidate.height && (sameRawBytes || before.data.equals(candidate.data)),
+    equal,
     before_width: before.width,
     before_height: before.height,
     candidate_width: candidate.width,
-    candidate_height: candidate.height
+    candidate_height: candidate.height,
+    ...structure
   };
 }
 
@@ -565,8 +639,9 @@ function compareValidatedBundles({ authority, before, candidate, readImage } = {
         if (!Buffer.isBuffer(bytes) || digest(bytes) !== image.sha256) fail("case_image_hash_mismatch", `${side} ${id} image bytes do not match their raw SHA-256 receipt`);
         return bytes;
       };
-      const fullPagePixels = comparePngExact(readVerifiedImage("before", leftImage, before), readVerifiedImage("candidate", rightImage, candidate), leftImage, rightImage, identicalDimensions);
-      const hoverPixels = comparePngExact(readVerifiedImage("before", leftHoverCapture.image, before), readVerifiedImage("candidate", rightHoverCapture.image, candidate), leftHoverCapture.image, rightHoverCapture.image, identicalDimensions);
+      // The *_pixels fields below mean structural equality under the calibrated recolor-tolerant check, not byte equality.
+      const fullPagePixels = comparePngStructural(readVerifiedImage("before", leftImage, before), readVerifiedImage("candidate", rightImage, candidate), leftImage, rightImage, identicalDimensions);
+      const hoverPixels = comparePngStructural(readVerifiedImage("before", leftHoverCapture.image, before), readVerifiedImage("candidate", rightHoverCapture.image, candidate), leftHoverCapture.image, rightHoverCapture.image, identicalDimensions);
       return { key, theme: leftObservation.theme, width: leftObservation.viewport.width, capture_profile: leftObservation.capture_profile,
         before_sha256: leftImage.sha256, candidate_sha256: rightImage.sha256,
         before_hover_sha256: leftHoverCapture.image.sha256, candidate_hover_sha256: rightHoverCapture.image.sha256,
@@ -709,4 +784,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { requiredCaseIds, compareValidatedBundles, comparePngExact, readBundledPng, validateAuthority, loadAuthority, loadReceiptBundle, loadAndCompare, parseArgs, writeOutput };
+module.exports = { requiredCaseIds, compareValidatedBundles, comparePngStructural, inkCoverageGrid, readBundledPng, validateAuthority, loadAuthority, loadReceiptBundle, loadAndCompare, parseArgs, writeOutput };

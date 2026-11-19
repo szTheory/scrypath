@@ -191,7 +191,8 @@ jobs:
             scripts/ci/ecommerce_build.test.cjs \
             scripts/ci/ecommerce_lifecycle.test.cjs \
             scripts/ci/ecommerce_evidence.test.cjs \
-            scripts/ci/ecommerce_target.test.cjs | tee "$RUNNER_TEMP/browser-behavior.tap"
+            scripts/ci/ecommerce_target.test.cjs \
+            scripts/ci/ui_state_pairs.test.cjs | tee "$RUNNER_TEMP/browser-behavior.tap"
           grep -Eq '^# tests [1-9][0-9]*$' "$RUNNER_TEMP/browser-behavior.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/browser-behavior.tap"
       - run: mix verify.repository_contracts

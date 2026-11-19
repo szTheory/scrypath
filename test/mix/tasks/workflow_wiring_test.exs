@@ -583,7 +583,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
             "scripts/ci/ecommerce_build.test.cjs",
             "scripts/ci/ecommerce_lifecycle.test.cjs",
             "scripts/ci/ecommerce_evidence.test.cjs",
-            "scripts/ci/ecommerce_target.test.cjs"
+            "scripts/ci/ecommerce_target.test.cjs",
+            "scripts/ci/ui_state_pairs.test.cjs"
           ] do
         assert job =~ test_file,
                "repository-contracts must execute #{test_file} outside the ExUnit suite"

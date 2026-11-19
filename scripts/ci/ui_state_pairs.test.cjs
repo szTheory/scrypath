@@ -7,6 +7,7 @@ const rawBundle = require("./ui_preservation_bundle.cjs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { describe } = test;
 const evidence = require("./ecommerce_evidence.cjs");
 const build = require("./ecommerce_build.cjs");
 const pairs = require("./ui_state_pairs.cjs");
@@ -114,7 +115,26 @@ function png(width = 1440, height = 900, color = 20) {
   return PNG.sync.write(image);
 }
 
-function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, mutateCase } = {}) {
+// One striped ink rectangle on a background. Stripes (2 px ink, 2 px background) keep every covered 16 px
+// block non-uniform, so the structural check can see the rectangle; a solid-color raster is invisible to a
+// check that is relative to each block's most common color, and would pass vacuously.
+function layoutPng(width, height, { background, ink, blockX, blockY, blockW, blockH }) {
+  const image = new PNG({ width, height });
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const inside = x >= blockX && x < blockX + blockW && y >= blockY && y < blockY + blockH;
+      const color = inside && Math.floor((y - blockY) / 2) % 2 === 0 ? ink : background;
+      image.data.set([color[0], color[1], color[2], 255], (y * width + x) * 4);
+    }
+  }
+  return PNG.sync.write(image);
+}
+
+const LAYOUT = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 40, blockY: 100, blockW: 128, blockH: 64 };
+const LAYOUT_MOVED = { ...LAYOUT, blockX: 200 };
+const LAYOUT_RECOLORED = { ...LAYOUT, background: [240, 232, 226], ink: [90, 30, 110] };
+
+function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, imageLayout, hoverImageLayout = imageLayout, mutateCase } = {}) {
   const beforeSide = sourceSha === BEFORE_SHA;
   buildSha ??= beforeSide ? BEFORE_BUILD_SHA : CANDIDATE_BUILD_SHA;
   productTreeSha ??= beforeSide ? BEFORE_TREE : CANDIDATE_TREE;
@@ -133,7 +153,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     const observations = matrix.map(({ theme, width }) => {
       const height = width === 390 ? 844 : 900;
       const imageKey = `${width}x${height}`;
-      if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, png(width, height, imageColor));
+      if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, imageLayout ? layoutPng(width, height, imageLayout) : png(width, height, imageColor));
       const imageBytes = imageBytesByDimensions.get(imageKey);
       const image = {
         path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-").toLowerCase()}-${theme}-${width}.png`,
@@ -176,7 +196,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
         return { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples };
       };
       const primarySampling = samplingFor(image, imageBytes, primaryDomState);
-      if (!hoverImageBytesByDimensions.has(imageKey)) hoverImageBytesByDimensions.set(imageKey, png(width, height, hoverImageColor));
+      if (!hoverImageBytesByDimensions.has(imageKey)) hoverImageBytesByDimensions.set(imageKey, hoverImageLayout ? layoutPng(width, height, hoverImageLayout) : png(width, height, hoverImageColor));
       const hoverImageBytes = hoverImageBytesByDimensions.get(imageKey);
       const hoverImage = {
         path: image.path.replace(/\.png$/, "--hover.png"),
@@ -345,26 +365,29 @@ test("hover state and assertions participate in the exact source-pair result", (
   assert.equal(report.passed, false);
 });
 
-test("exact PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
-  const hoverBefore = png(12, 8, 20);
-  const hoverCandidate = png(12, 8, 21);
+test("structural PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
+  const small = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 0, blockY: 0, blockW: 32, blockH: 16 };
+  const hoverBefore = layoutPng(64, 32, small);
+  const hoverCandidate = layoutPng(64, 32, { ...small, blockX: 32, blockY: 16 });
   const metadata = {
-    viewport: { width: 12, height: 8 },
-    viewport_raster: { width: 12, height: 8 },
+    viewport: { width: 64, height: 32 },
+    viewport_raster: { width: 64, height: 32 },
     capture: "viewport-real-product-hover"
   };
-  const pixels = pairs.comparePngExact(hoverBefore, hoverCandidate, metadata, metadata);
+  const pixels = pairs.comparePngStructural(hoverBefore, hoverCandidate, metadata, metadata);
   assert.equal(pixels.equal, false);
-  assert.equal(pixels.before_width, 12);
-  assert.equal(pixels.before_height, 8);
-  assert.throws(() => pairs.comparePngExact(hoverBefore, hoverCandidate, {
-    ...metadata, capture: "unsupported", full_page_raster: { width: 12, height: 9 }
+  assert.ok(pixels.blocks_over > 0, "the moved block is seen by the structural grid");
+  assert.equal(pixels.before_width, 64);
+  assert.equal(pixels.before_height, 32);
+  assert.throws(() => pairs.comparePngStructural(hoverBefore, hoverCandidate, {
+    ...metadata, capture: "unsupported", full_page_raster: { width: 64, height: 33 }
   }, metadata), /dimensions/i);
 });
 
 test("a hover-only raster change fails while the neutral full-page raster still matches", () => {
-  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 20, hoverImageColor: 21 });
-  const report = compare(undefined, candidate);
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT, hoverImageLayout: LAYOUT_MOVED });
+  const report = compare(before, candidate);
   const result = report.comparisons[0];
 
   assert.equal(result.full_page_pixels_equal, true);
@@ -426,8 +449,9 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
     assert.equal(report.passed, false);
   }
 
-  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 21 });
-  assert.equal(compare(undefined, pixelChanged).passed, false);
+  const layoutBefore = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT_MOVED });
+  assert.equal(compare(layoutBefore, pixelChanged).passed, false);
 });
 
 test("real timer elapsed samples may differ while the shared fixed-clock recipe remains exact", () => {
@@ -592,6 +616,69 @@ test("run PNG loading verifies path containment, raw hashes and decoded image by
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
+});
+
+// Real v1.43 captures, cropped to whole rows and committed beside the tests (see PROVENANCE.md there), so the
+// tests do not depend on the .planning archive. A missing fixture fails the test; it never skips.
+const CALIBRATION_DIR = path.join(__dirname, "fixtures/ui-state-pairs");
+
+function calibrationFixture(name) {
+  const file = path.join(CALIBRATION_DIR, name);
+  assert.ok(fs.existsSync(file), `calibration fixture is missing: ${file}`);
+  const bytes = fs.readFileSync(file);
+  const decoded = PNG.sync.read(bytes);
+  assert.equal(decoded.width, 390, `${name} width`);
+  assert.equal(decoded.height, 320, `${name} height`);
+  return { bytes, decoded };
+}
+
+function shiftBand(decoded, firstRow, rows, dy) {
+  const shifted = new PNG({ width: decoded.width, height: decoded.height });
+  decoded.data.copy(shifted.data);
+  const stride = decoded.width * 4;
+  for (let row = firstRow + rows - 1; row >= firstRow; row -= 1) decoded.data.copy(shifted.data, (row + dy) * stride, row * stride, (row + 1) * stride);
+  return PNG.sync.write(shifted);
+}
+
+describe("structural calibration on real captures", () => {
+  test("calibration accepts a real recolor pair", () => {
+    const before = calibrationFixture("recolor-before-dark-390x320.png");
+    const after = calibrationFixture("recolor-after-dark-390x320.png");
+    assert.ok(!before.decoded.data.equals(after.decoded.data), "the pair really is recolored, not the identical-bytes shortcut");
+
+    const result = pairs.comparePngStructural(before.bytes, after.bytes);
+    assert.equal(result.equal, true);
+    assert.equal(result.blocks, 500);
+    assert.equal(result.blocks_over, 0);
+  });
+
+  test("calibration rejects a real state-change pair", () => {
+    const before = calibrationFixture("state-before-dark-390x320.png");
+    const after = calibrationFixture("state-after-dark-390x320.png");
+
+    const result = pairs.comparePngStructural(before.bytes, after.bytes);
+    assert.equal(result.equal, false);
+    assert.ok(result.blocks_over / result.blocks > 0.1, `a real state change moves many blocks, saw ${result.blocks_over} of ${result.blocks}`);
+  });
+
+  test("calibration rejects a real capture with an 8 px band shift", () => {
+    const before = calibrationFixture("recolor-before-dark-390x320.png");
+    const after = calibrationFixture("recolor-after-dark-390x320.png");
+    const shifted = shiftBand(after.decoded, 120, 100, 8);
+    assert.equal(pairs.comparePngStructural(before.bytes, after.bytes).equal, true, "the unshifted recolor is accepted, so the shift alone is the cause");
+
+    const result = pairs.comparePngStructural(before.bytes, shifted);
+    assert.equal(result.equal, false);
+    assert.ok(result.blocks_over > Math.floor(result.blocks * 0.0025), `the shift exceeds the 0.25 percent tolerance, saw ${result.blocks_over} of ${result.blocks}`);
+  });
+
+  test("different image dimensions are never structurally equal", () => {
+    const wide = layoutPng(64, 32, { ...LAYOUT, blockX: 0, blockY: 0, blockW: 32, blockH: 16 });
+    const tall = layoutPng(64, 48, { ...LAYOUT, blockX: 0, blockY: 0, blockW: 32, blockH: 16 });
+    const result = pairs.comparePngStructural(wide, tall);
+    assert.equal(result.equal, false);
+    assert.equal(result.blocks, null);
+  });
 });
 
 test("pair output is atomic, deterministic and never overwritten by different bytes", () => {
