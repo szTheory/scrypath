@@ -5167,6 +5167,10 @@
     font-size: var(--text-ops-body);
     font-variant-numeric: tabular-nums;
   }
+  .ops-signal-facts time.ops-time__value {
+    display: inline-block;
+    min-width: 30ch;
+  }
   .ops-signal-facts__sep {
     color: var(--ops-text-muted);
   }

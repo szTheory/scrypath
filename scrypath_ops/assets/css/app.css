@@ -2287,6 +2287,11 @@
   .ops-signal-counts dt { display: inline-flex; align-items: center; gap: .375rem; font-size: var(--text-ops-body); }
   .ops-signal-counts dd { font-size: var(--text-ops-body); font-weight: 600; font-variant-numeric: tabular-nums; }
   .ops-signal-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spacing-ops-1) var(--spacing-ops-2); font-size: var(--text-ops-body); font-variant-numeric: tabular-nums; }
+  /* The browser rewrites each time (the server's 24-hour "at 19:45:07 UTC" becomes the
+     12-hour "07:45:07 PM UTC", one character longer), which can flip where this line wraps and
+     shift everything below it (measured 0.14 on Search health). A time reserves the width of its
+     longest form, so the rewrite never changes the layout. */
+  .ops-signal-facts time.ops-time__value { display: inline-block; min-width: 30ch; }
   .ops-signal-facts__sep { color: var(--ops-text-muted); }
   .ops-signal-empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-ops-2); }
   .ops-signal-success dt { font-size: var(--text-ops-sm); color: var(--ops-text-muted); margin-bottom: .25rem; }
