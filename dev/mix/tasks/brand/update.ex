@@ -111,8 +111,8 @@ defmodule Mix.Tasks.Brand.Update do
 
     case {opts[:zip], opts[:url]} do
       {nil, nil} -> run_check(root, opts)
-      {zip, nil} -> refresh!(root, read_zip!(zip), @source_url, expected_from_opts!(opts), opts)
-      {nil, url} -> refresh!(root, fetch!(url), url, expected_from_opts!(opts), opts)
+      {zip, nil} -> refresh!(root, {:zip, zip}, opts)
+      {nil, url} -> refresh!(root, {:url, url}, opts)
       {_zip, _url} -> Mix.raise("brand.update: pass either --zip or --url, not both")
     end
   end
@@ -221,7 +221,10 @@ defmodule Mix.Tasks.Brand.Update do
     check_live!(root)
   end
 
-  defp refresh!(root, zip_binary, url, expected, opts) do
+  defp refresh!(root, source, opts) do
+    # Validate every flag before touching the file system or the network.
+    expected = expected_from_opts!(opts)
+    {zip_binary, url} = load_source!(source)
     extracted = extract!(zip_binary, expected)
 
     write!(root, extracted, %{
@@ -242,6 +245,10 @@ defmodule Mix.Tasks.Brand.Update do
 
     :ok
   end
+
+  # A local --zip copy is recorded against the canonical Pages URL.
+  defp load_source!({:zip, path}), do: {read_zip!(path), @source_url}
+  defp load_source!({:url, url}), do: {fetch!(url), url}
 
   defp expected_from_opts!(opts) do
     missing = Enum.reject(@refresh_flags, &Keyword.has_key?(opts, &1))
@@ -432,6 +439,9 @@ defmodule Mix.Tasks.Brand.Update do
         after
           :zip.zip_close(handle)
         end
+
+      {:error, {:EXIT, _crash}} ->
+        refuse!("archive could not be opened: not a readable zip file")
 
       {:error, reason} ->
         refuse!("archive could not be opened: #{inspect(reason)}")
