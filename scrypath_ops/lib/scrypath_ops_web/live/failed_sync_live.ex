@@ -11,6 +11,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   use ScrypathOpsWeb, :live_view
 
+  require Logger
+
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias Scrypath.Operator.FailedWork
   alias ScrypathOps.Integrations.Sigra.Gating
@@ -349,9 +351,22 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
 
           {:error, reason} ->
-            put_flash(socket, :error, "Retry failed: #{inspect(reason)}")
+            schema = OperatorSelection.canonical(row.schema)
+
+            # The reason can hold backend or queue detail, so it goes to the log, never to the page.
+            Logger.warning(
+              "Failed sync retry did not go through for #{schema}: " <>
+                inspect(reason, limit: 20, printable_limit: 500)
+            )
+
+            put_flash(socket, :error, retry_failed_copy(schema))
         end
     end
+  end
+
+  defp retry_failed_copy(schema) do
+    "Retry did not go through for #{schema}. The failed work is unchanged and still listed. " <>
+      "Check that the queue and Meilisearch are reachable, then retry."
   end
 
   defp accepted_receipt(socket, row, recovery, result, runtime_opts) do
@@ -1113,7 +1128,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_status
               :if={receipt = @recovery_receipts[row_key(row)]}
               class="ops-failed-row__receipt"
-              kind={:info}
+              kind={:neutral}
               title="Retry queued"
               role="status"
               data-testid="recovery-receipt"

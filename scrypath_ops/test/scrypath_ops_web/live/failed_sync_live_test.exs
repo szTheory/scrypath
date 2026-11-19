@@ -55,6 +55,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     end
   end
 
+  defmodule FailingOban do
+    # An enqueue that fails with the kind of term a real queue returns: a map holding atoms.
+    def insert(_changeset), do: {:error, %{reason: :timeout, meta: %{}}}
+  end
+
   defmodule Elixir.Oban.Job do
     defstruct [:id, :worker, :queue, :state, :attempt, :max_attempts, :args]
 
@@ -510,11 +515,58 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute accepted =~ "Recovery verified"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
+    # The receipt is a neutral notice (Control Edge rule), not a tinted or Plum one.
+    assert has_element?(
+             view,
+             "[data-testid='recovery-receipt'].ops-notice-surface--neutral[data-status-kind='neutral']",
+             "Retry queued"
+           )
+
     receipt = :sys.get_state(view.pid).socket.assigns.recovery_receipts
 
     assert %{
              "ScrypathOps.Test.OpsPostB|oban|509" => %{schema: "Elixir.ScrypathOps.Test.OpsPostB"}
            } = receipt
+  end
+
+  # Phase 187 E-11 / T-187-11: the reason can hold backend or queue detail, so the page gets a
+  # fixed sentence naming the schema and the reason goes to the log.
+  test "a retry that does not go through says so without leaking the raw reason", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :oban, FailingOban)
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(509, OpsPostB, ids: ["variant-509"], error: "the Variant source remains visible")
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    sudo!(view)
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        view |> element("[data-testid='failed-sync-retry']") |> render_click()
+      end)
+
+    expected =
+      "Retry did not go through for ScrypathOps.Test.OpsPostB. " <>
+        "The failed work is unchanged and still listed. " <>
+        "Check that the queue and Meilisearch are reachable, then retry."
+
+    flash = :sys.get_state(view.pid).socket.assigns.flash["error"]
+    assert flash == expected
+
+    for leaked <- ["%{", ":timeout", "{:error", "meta"] do
+      refute flash =~ leaked
+      refute render(view) =~ "Retry failed:"
+    end
+
+    # The failed work is unchanged and still listed, with no receipt.
+    assert has_element?(view, "[data-testid='failed-sync-row']", "#509")
+    refute has_element?(view, "[data-testid='recovery-receipt']")
+
+    # The reason is not lost: it is in the log for the operator running the host.
+    assert log =~ "Failed sync retry did not go through for ScrypathOps.Test.OpsPostB"
+    assert log =~ ":timeout"
   end
 
   test "zero failed sync work stays truthful", %{conn: conn} do

@@ -1202,7 +1202,8 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp search_status_badge_label(%{searching: true}), do: "Running…"
 
-  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Failed"
+  # "Failed" is a sync status word, so a failed search request says "Search failed" instead.
+  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Search failed"
 
   defp search_status_badge_label(%{result_multi: %{failures: [_ | _]}}), do: "Partial"
 

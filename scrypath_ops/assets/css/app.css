@@ -595,25 +595,34 @@
     background: var(--ops-surface-1);
   }
 
-  /* Shared notice/status base. Tinted notices use `.ops-tone-*`; ops_status can opt into
-     a neutral surface with a local cue for its data status kind. */
+  /* Notices, statuses and verdicts share one surface: Panel fill, a 1px Hairline on three sides
+     and a 2px inline-start rule that carries the kind. No tint, no shadow, no cue dot. The rule
+     is Failed for errors, Retrying amber for warnings and partial results, and Control Edge for
+     everything else (info, success, running, neutral). Plum is never an info color and green is
+     only for Clear. The title takes the rule's color only for the two status kinds; every other
+     title and all body text stay Ink. */
   .ops-notice-surface {
-    border-width: 1px;
-    border-style: solid;
+    border: 1px solid var(--color-base-300);
+    border-inline-start-width: 2px;
+    border-inline-start-color: var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
+    background-color: var(--color-base-100);
+    box-shadow: none;
     padding: var(--spacing-ops-3) var(--spacing-ops-4);
     font-size: var(--text-ops-body);
     color: var(--color-base-content);
   }
 
-  .ops-notice-surface--raised {
-    box-shadow: var(--shadow-ops-surface);
+  .ops-notice-surface--error {
+    border-inline-start-color: var(--ops-status-failed);
+  }
+
+  .ops-notice-surface--warning {
+    border-inline-start-color: var(--ops-status-retrying);
   }
 
   .ops-notice-surface--neutral {
-    border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
-    background: var(--ops-surface-1);
-    box-shadow: none;
+    border-inline-start-color: var(--ops-control-edge);
   }
 
   .ops-notice-surface__title {
@@ -622,135 +631,31 @@
     gap: var(--spacing-ops-2);
   }
 
-  /* Keep the status cue outside the shared title/body text column. */
-  .ops-notice-surface__copy--cued {
-    display: grid;
-    grid-template-columns: 0.375rem minmax(0, 1fr);
-    column-gap: var(--spacing-ops-2);
+  .ops-notice-surface--error .ops-notice-surface__title {
+    color: var(--ops-status-failed);
   }
 
-  .ops-notice-surface__copy--cued > .ops-notice-surface__cue {
-    grid-column: 1;
-    grid-row: 1;
+  .ops-notice-surface--warning .ops-notice-surface__title {
+    color: var(--ops-status-retrying);
   }
 
-  .ops-notice-surface__copy--cued > .ops-notice-surface__title,
-  .ops-notice-surface__copy--cued > .ops-notice-surface__body {
-    grid-column: 2;
-  }
-
-  .ops-notice-surface__cue {
-    flex: none;
-    width: 0.375rem;
-    height: 0.375rem;
-    margin-top: var(--spacing-ops-1);
-    border-radius: 9999px;
-    background: var(--color-info);
-  }
-
-  .ops-notice-surface--neutral[data-status-kind="success"] .ops-notice-surface__cue {
-    background: var(--color-success);
-  }
-
-  .ops-notice-surface--neutral[data-status-kind="warning"] .ops-notice-surface__cue,
-  .ops-notice-surface--neutral[data-status-kind="partial"] .ops-notice-surface__cue {
-    background: var(--color-warning);
-  }
-
-  .ops-notice-surface--neutral[data-status-kind="error"] .ops-notice-surface__cue {
-    background: var(--color-error);
-  }
-
-  .ops-notice-surface--neutral[data-status-kind="running"] .ops-notice-surface__cue {
-    background: var(--color-primary);
-  }
-
-  .ops-tone-info {
-    border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
-    background: color-mix(in oklch, var(--color-info) 11%, transparent);
-  }
-
-  .ops-tone-success {
-    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
-    background: color-mix(in oklch, var(--color-success) 10%, transparent);
-  }
-
-  .ops-tone-warning,
-  .ops-tone-partial {
-    border-color: color-mix(in oklch, var(--color-warning) 48%, transparent);
-    background: color-mix(in oklch, var(--color-warning) 12%, transparent);
-  }
-
-  .ops-tone-error {
-    border-color: color-mix(in oklch, var(--color-error) 48%, transparent);
-    background: color-mix(in oklch, var(--color-error) 10%, transparent);
-  }
-
-  .ops-tone-running {
-    border-color: color-mix(in oklch, var(--color-primary) 46%, transparent);
-    background: color-mix(in oklch, var(--color-primary) 10%, transparent);
-  }
-
-  /* Metrics and verdicts group information on neutral surfaces. State is localized to
-     readable icon/value cues so a failure never paints an entire container. */
+  /* Metrics group information on a quiet panel. State shows only as the value color; there are
+     no cue icons. A verdict is a notice with a headline (same surface and rule scheme), so it
+     needs no rules of its own beyond its label. */
   .ops-metric {
-    border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-color: var(--color-base-300);
   }
 
-  .ops-metric__cue {
-    display: inline-flex;
-    margin-right: 0.375rem;
-    vertical-align: -0.125em;
+  .ops-metric__label {
+    color: var(--ops-text-muted);
   }
 
-  .ops-metric__cue--warning,
-  .ops-verdict__icon--warning,
-  .ops-verdict__icon--partial {
-    color: var(--ops-warning-text);
-  }
-
-  .ops-metric__cue--error,
-  .ops-verdict__icon--error,
   .ops-metric__value--error {
     color: var(--ops-error-text);
   }
 
   .ops-metric__value--warning {
     color: var(--ops-warning-text);
-  }
-
-  .ops-verdict__icon--success {
-    color: var(--color-success);
-  }
-
-  .ops-posture-verdict .ops-verdict__icon--success {
-    color: var(--color-base-content);
-  }
-
-  .ops-verdict__icon--running,
-  .ops-verdict__icon--neutral {
-    color: var(--color-base-content);
-  }
-
-  /* A verdict keeps one neutral surface across all states. Only its icon carries tone. */
-  .ops-verdict {
-    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
-    background: var(--ops-surface-1);
-  }
-
-  .ops-verdict-neutral {
-    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
-    background: var(--ops-surface-1);
-  }
-
-  /* Landing hero retains its existing hierarchy; status remains localized to the icon. */
-  .ops-verdict--hero {
-    box-shadow: var(--shadow-ops-raised);
-  }
-
-  .ops-verdict__icon {
-    flex: none;
-    display: inline-flex;
   }
 
   .ops-verdict__label {
@@ -764,52 +669,16 @@
     border-radius: var(--radius-ops-sm);
   }
 
+  /* A badge is plain muted text for a non-sync label (the Search run state). No pill, no border,
+     no tint; sync states use .ops-sync-status and .ops-condition instead. */
   .ops-badge {
     display: inline-flex;
-    min-height: 1.625rem;
     align-items: center;
-    border: 1px solid color-mix(in oklch, var(--color-base-content) 12%, transparent);
-    border-radius: 999px;
-    padding-inline: 0.625rem;
-    font-size: 0.75rem;
+    font-size: var(--text-ops-sm);
     line-height: 1rem;
     font-weight: 600;
     white-space: nowrap;
-    transition:
-      background-color var(--duration-ops-fast) var(--ease-ops-standard),
-      border-color var(--duration-ops-fast) var(--ease-ops-standard),
-      color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-badge-neutral {
-    background: color-mix(in oklch, var(--color-base-200) 74%, transparent);
-    color: color-mix(in oklch, var(--color-base-content) 82%, transparent);
-  }
-
-  .ops-badge-info {
-    border-color: color-mix(in oklch, var(--color-info) 44%, transparent);
-    background: color-mix(in oklch, var(--color-info) 12%, transparent);
-  }
-
-  .ops-badge-success {
-    border-color: color-mix(in oklch, var(--color-success) 45%, transparent);
-    background: color-mix(in oklch, var(--color-success) 12%, transparent);
-  }
-
-  .ops-badge-warning,
-  .ops-badge-partial {
-    border-color: color-mix(in oklch, var(--color-warning) 50%, transparent);
-    background: color-mix(in oklch, var(--color-warning) 13%, transparent);
-  }
-
-  .ops-badge-error {
-    border-color: color-mix(in oklch, var(--color-error) 50%, transparent);
-    background: color-mix(in oklch, var(--color-error) 12%, transparent);
-  }
-
-  .ops-badge-running {
-    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
-    background: color-mix(in oklch, var(--color-primary) 12%, transparent);
+    color: var(--ops-text-muted);
   }
 
   /* The sync-status vocabulary (ops_sync_status): word first, then a 16px bar icon. Word and
@@ -883,39 +752,22 @@
     background: var(--color-secondary);
   }
 
-  /* Labelled tone chip (ops_tone_chip): a `label : value` pill that settles to a
-     status tone. Composes with `.ops-tone-*` for the surface; the trailing value
-     picks up the matching accent color. Tone settles like metrics/verdict. */
+  /* Labelled tone chip (ops_tone_chip): a `label : value` row on the notice surface (the chip
+     also carries .ops-notice-surface and a kind modifier, which supply the Panel fill and the
+     2px rule). Only its own layout lives here. */
   .ops-tone-chip {
     display: flex;
     align-items: center;
     gap: var(--spacing-ops-2);
-    border: 1px solid transparent;
     border-radius: var(--radius-ops-md);
     padding: 0.5rem 0.75rem;
     font-size: var(--text-ops-sm);
-    transition:
-      background-color var(--duration-ops-status) var(--ease-ops-standard),
-      border-color var(--duration-ops-status) var(--ease-ops-standard);
   }
 
   .ops-tone-chip__value {
     margin-left: auto;
     font-weight: 600;
-    color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
-  }
-
-  .ops-tone-chip.ops-tone-success .ops-tone-chip__value {
-    color: var(--color-base-content);
-  }
-
-  .ops-tone-chip.ops-tone-warning .ops-tone-chip__value,
-  .ops-tone-chip.ops-tone-partial .ops-tone-chip__value {
-    color: var(--color-base-content);
-  }
-
-  .ops-tone-chip.ops-tone-error .ops-tone-chip__value {
-    color: var(--color-base-content);
+    color: var(--ops-text-muted);
   }
 
   /* Shared button height + press feel. Radius is applied as the `rounded-ops-control`

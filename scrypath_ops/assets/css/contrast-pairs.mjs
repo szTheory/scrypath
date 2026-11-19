@@ -81,15 +81,6 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "card body text"
   },
-  // app.css line 479 — chip value text (default/no-tone state)
-  {
-    selector: ".ops-tone-chip__value",
-    alpha: 0.75,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "chip value text (default/no-tone state)"
-  },
   // app.css line 493 — empty-state body text
   {
     selector: ".ops-empty-hero__body",
@@ -98,15 +89,6 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "empty-state body text"
-  },
-  // app.css line 431 — neutral badge text (badge bg is base-200 74% ≈ base-200, not base-100)
-  {
-    selector: ".ops-badge-neutral",
-    alpha: 0.82,
-    fg_token: "base-content",
-    bg_token: "base-200",
-    role: "text",
-    note: "neutral badge text"
   },
   // app.css line 985 — table row header text
   {

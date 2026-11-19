@@ -284,11 +284,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       {:noreply, assign(socket, :confirm_swap?, true)}
     else
       {:noreply,
-       put_flash(
-         socket,
-         :error,
-         "Index promotion blocked: #{promotion_eligibility_copy(socket.assigns.promotion_eligibility)}"
-       )}
+       put_flash(socket, :error, promotion_blocked_flash(socket.assigns.promotion_eligibility))}
     end
   end
 
@@ -1253,7 +1249,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           end
 
         {:blocked, reason} ->
-          put_flash(socket, :error, "Index promotion blocked: #{promotion_reason(reason)}")
+          put_flash(socket, :error, promotion_blocked_flash({:blocked, reason}))
       end
     end)
   end
@@ -1568,6 +1564,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:contract_mismatch), do: "resolve contract differences first"
   defp promotion_reason(_), do: "refresh current checks"
 
+  # The one flash for a promotion that cannot go ahead. "Blocked" appears once, then the reason.
+  defp promotion_blocked_flash({:blocked, reason}),
+    do: "Index promotion blocked: #{promotion_reason(reason)}."
+
+  defp promotion_blocked_flash(_other),
+    do: "Index promotion blocked: refresh the current checks first, then promote."
+
+  defp upcase_first(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
+  defp upcase_first(other), do: other
+
   defp promotion_eligibility_title(:eligible), do: "Ready for promotion"
   defp promotion_eligibility_title({:blocked, _}), do: "Promotion unavailable"
   defp promotion_eligibility_title(_), do: "Promotion unavailable"
@@ -1575,8 +1581,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_eligibility_copy(:eligible),
     do: "Current checks are clear for this schema and index pair."
 
+  # The notice's title already says "Promotion unavailable", so its body is the next step alone.
   defp promotion_eligibility_copy({:blocked, reason}),
-    do: "Promotion is blocked: #{promotion_reason(reason)}."
+    do: "#{upcase_first(promotion_reason(reason))}."
 
   defp promotion_eligibility_copy(_), do: "Refresh current checks before promotion."
 

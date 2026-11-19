@@ -208,7 +208,8 @@ inventory names every current export; add new exports here with their role consu
 | `ops_verdict` | Outcome surface with a visible label and headline. The optional `status` attr renders `ops_sync_status` before the headline; `kind` sets the rule (Failed for `:error`, Retrying amber for `:warning`, Control Edge for the rest) and the Control Room and Search health derive both from the worst row, never from the coarse posture state. Evidence and next-step content stay readable |
 | `ops_sync_status` | The one place the four sync-status words and shapes render. Statuses `:failed`, `:retrying`, `:pending`, `:clear` render the word first (600 weight, title case: `Failed`, `Retrying`, `Pending`, `Clear`) and then an `aria-hidden` 16px bar icon whose `data-shape` is `notched`, `bottom-filled`, `hollow` or `filled`. Word and icon take `--ops-status-<status>` through `currentColor`; hooks are `[data-sync-status]` on the span and `[data-shape]` on the svg. The icon never appears without its word and has no role or name |
 | `ops_condition` | A plain muted word for something nobody looked at: `Not observed`, `Not checked`, `Queue not used` or `Unavailable` (a closed set, weight 400, no icon, no status color). `Clear` needs an observation and is rendered by `ops_sync_status` instead; a zero count from an unobserved source never earns it. Hook: `.ops-condition`, `[data-condition]` |
-| `ops_notice`, `ops_status`, `ops_tone_chip`, `ops_badge`, `ops_metric`, `ops_metric_grid` | Decision copy and status use body 14px/400; metric containers stay neutral while local icon/value cues use the theme's AA-safe warning/failure foregrounds |
+| `ops_notice`, `ops_status`, `ops_tone_chip` | Panel (`--color-base-100`) with a 1px Hairline on three sides and a 2px inline-start rule, no tint, no shadow, no cue dot. Rule by kind: `:error` Failed (rule and title), `:warning` and `:partial` Retrying amber (rule and title), `:info`, `:success`, `:running` and `:neutral` the Control Edge rule with an Ink title. Body text is Ink. `ops_status` keeps `data-status-kind`; its `neutral` attr is accepted but no longer changes the surface. `ops_tone_chip` rides the same surface |
+| `ops_badge`, `ops_metric`, `ops_metric_grid` | `ops_badge` is plain muted text (12px, 600) for non-sync labels such as the Search run state; it never carries a sync status. `ops_metric` has no cue icon: state shows as the value color, `data-ops-metric-tone` stays. None of the three is used for a sync status |
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
@@ -235,7 +236,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 | --- | --- |
 | Decorative shell wash and separate sliding theme-selection pill | Keep `.ops-shell` flat; use the three visible System/Light/Dark buttons and their explicit selected state. |
 | Extra top margins on direct `:ops` shell children | Let the shell's `space-y-4` own the page rhythm; add spacing inside the component group that needs it. |
-| Broad status-colored verdict or metric surfaces | Keep summary surfaces neutral; use explicit status text and a local theme-safe icon/value cue. |
+| Broad status-colored verdict or metric surfaces | Keep summary surfaces on the Panel; state is a 2px inline-start rule plus an explicit status word from `ops_sync_status`, never a tint, a cue dot or an icon. |
 | Hidden radios presented as schema cards | One schema is read-only context; multiple schemas use visible native radios in plain stacked rows, with full module names available. |
 | Panels around individual actions or native disclosures | Action groups provide spacing; buttons carry their own affordance. Disclosures remain unframed. Group rows with headings, spacing, or separators. |
 | Repeated “Operator workspace” page eyebrow | The actual page heading provides orientation. |
@@ -339,24 +340,29 @@ scope is the theme blocks only, so the values are recorded here): `--text-ops-sm
 `--text-ops-body` 0.875rem · `--text-ops-md` 1rem · `--text-ops-lg` 1.125rem ·
 `--text-ops-h2` 1.125rem · `--text-ops-h3` 1rem.
 
-## Status / tone — `.ops-tone-*` and `.ops-badge-*`
+## Status / tone: the notice rule scheme and the sync-status words
 
-Six states: `info` · `success` · `warning` (= `partial`) · `error` · `running`, plus
-`neutral` for badges. The single mapping authority is `tone_class/1` / `badge_class/1`
-in `ops_ui.ex`; route any tinted surface (notice, status, action group) through them.
-The **full tone set is supported everywhere a tone is consumed** — surfaces
-(`.ops-tone-*`), badges (`.ops-badge-*`), and the metric border-accent modifiers
-(`.ops-metric-{info,success,warning,partial,error,running}` via `metric_tone_class/1`,
-where `:partial` settles like `:warning` and `:running` accents the brand primary). No
-tone has a "supported on badges but silently `nil` on metrics" gap.
-**Semantics:** neutral facts (counts) use `:neutral`; only real problems use
-`:warning`/`:error`. Don't cry wolf (e.g. "0 queues observed" is neutral, not a warning).
-Red is reserved for "the tool genuinely can't answer" (missing backend); a single degraded
-schema is amber, not red.
+Notices, statuses, verdicts and tone chips share one surface: `.ops-notice-surface` plus one
+modifier chosen by `notice_modifier/1` in `ops_ui.ex` (the single mapping authority):
+
+| Kind | Modifier | Rule (inline-start, 2px) | Title |
+| --- | --- | --- | --- |
+| `:error` | `--error` | `--ops-status-failed` | Failed color |
+| `:warning`, `:partial` | `--warning` | `--ops-status-retrying` | Retrying amber |
+| `:info`, `:success`, `:running`, `:neutral` | `--neutral` | `--ops-control-edge` | Ink |
+
+Plum is never an info color and green appears only on `Clear`, so a success notice stays a
+neutral rule. There are no `.ops-tone-*` tinted fills, no `.ops-badge-*` tinted variants and no
+cue dots. **Sync states** do not use badges or notices at all: they render through
+`ops_sync_status` (`Failed`, `Retrying`, `Pending`, `Clear`) or, when nothing was observed,
+`ops_condition`. **Semantics:** neutral facts (counts) use `:neutral`; only real problems use
+`:warning`/`:error`. Don't cry wolf (e.g. "0 queues observed" is neutral, not a warning). A
+verdict derives its kind from the worst row status, never from the coarse posture state:
+a failed row is `:error`, a retrying or unverified row is `:warning`, anything else is neutral.
 
 **Prop naming:** a component attr named **`kind`** carries *status* semantics
 (`:info/:success/:warning/:error/:partial/:running/:neutral`) — `ops_notice`, `ops_status`,
-`ops_badge`, `ops_metric`, `ops_intent_card`, `ops_verdict`. An attr named **`variant`** or
+`ops_badge`, `ops_metric`, `ops_verdict`. An attr named **`variant`** or
 **`tone`** carries a *presentation* axis, not status — e.g. `ops_action_group`'s
 `:default/:advanced/:danger` or `ops_button`'s `:primary/:ghost/...`. Don't conflate them.
 
@@ -411,11 +417,9 @@ palette plays `ops-modal-out` through a `.ops-cmdk--closing` class the JS hook a
 before `[hidden]` (re-opening cancels it → interruptible). Origin-aware: the exit settles back
 toward the same `translateY(4px) scale(0.98)` the enter came from.
 
-**A2 — signature verdict tone-settle:** `.ops-verdict` (surface), `.ops-verdict__dot`, and every
-`.ops-metric` border share the *same* `--duration-ops-status` + `--ease-ops-standard` transition,
-so a Refresh that flips posture reads as one coherent "the answer just moved" beat — not 6
-independent flickers. Pure CSS (shared token, no JS, no stagger). The dot gets a transition so the
-loudest tone signal doesn't snap ahead of the surface.
+**A2 — verdict tone-settle (retired):** the verdict used to animate its tone with a shared
+transition. A status change must not animate, so `.ops-verdict` and `.ops-metric` carry no
+transition now; the 2px rule and the status word change in place.
 
 **A4 — row press/hover:** `.ops-result-row`/`.ops-object-item` press transform runs at
 `--duration-ops-instant` (matching `.ops-btn:active`); hover color/elevation settle at

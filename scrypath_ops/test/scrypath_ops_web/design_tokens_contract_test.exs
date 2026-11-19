@@ -158,7 +158,10 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
 
     retained = rule(".ops-time__retained")
     assert retained =~ "font-size: var(--text-ops-body)"
-    assert rule(".ops-notice-surface__cue") =~ "margin-top: var(--spacing-ops-1)"
+
+    # Notices carry their kind in a 2px inline-start rule, not a cue dot.
+    assert rule(".ops-notice-surface") =~ "border-inline-start-width: 2px"
+    refute css() =~ ".ops-notice-surface__cue"
 
     posture_live = File.read!(Path.join(@web_root, "live/posture_live.ex"))
     assert posture_live =~ "space-y-ops-4"

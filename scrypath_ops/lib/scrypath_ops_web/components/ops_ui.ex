@@ -307,7 +307,13 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Status or guidance notice with Scrypath operator styling."
+  @doc """
+  Status or guidance notice: a Panel with a 2px inline-start rule, never a tint.
+
+  The kind picks the rule (and the title color): `:error` is Failed, `:warning` and `:partial` are
+  Retrying amber, everything else (`:info`, `:success`, `:running`) is the neutral Control Edge
+  rule. Plum is never an info color and green is only for Clear, so `:success` stays neutral.
+  """
   attr(:kind, :atom,
     default: :info,
     values: [:info, :success, :warning, :error, :partial, :running]
@@ -323,21 +329,27 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface",
-        tone_class(@kind),
+        notice_modifier(@kind),
         @class
       ]}
       {@rest}
     >
-      <p :if={@title} class="font-semibold">{@title}</p>
+      <p :if={@title} class="ops-notice-surface__title font-semibold">{@title}</p>
       <div class={[@title && "mt-1"]}>{render_slot(@inner_block)}</div>
     </div>
     """
   end
 
-  @doc "Operator status surface for results, failures, and important workflow feedback."
+  @doc """
+  Operator status surface for results, failures, and important workflow feedback.
+
+  Same surface and rule scheme as `ops_notice/1`; `data-status-kind` keeps the kind readable. The
+  `neutral` attr is accepted for existing call sites and no longer changes the surface: the kind
+  already decides the rule, so an error stays Failed and a success stays a neutral rule.
+  """
   attr(:kind, :atom,
     default: :info,
-    values: [:info, :success, :warning, :error, :partial, :running]
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
   )
 
   attr(:title, :string, required: true)
@@ -352,8 +364,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "ops-notice-surface ops-notice-surface--raised",
-        if(@neutral, do: "ops-notice-surface--neutral", else: tone_class(@kind)),
+        "ops-notice-surface",
+        notice_modifier(@kind),
         @class
       ]}
       data-status-kind={@kind}
@@ -361,20 +373,11 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class={[
-          "ops-notice-surface__copy min-w-0",
-          @neutral && "ops-notice-surface__copy--cued"
-        ]}>
-          <span
-            :if={@neutral}
-            class="ops-notice-surface__cue"
-            aria-hidden="true"
-          >
-          </span>
+        <div class="ops-notice-surface__copy min-w-0">
           <p class="ops-notice-surface__title font-semibold">
             {@title}
           </p>
-          <div class="ops-notice-surface__body mt-1 text-base-content/80">
+          <div class="ops-notice-surface__body mt-1">
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -398,18 +401,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class="ops-metric ops-muted-panel px-3 py-2" data-ops-metric-tone={@kind}>
-      <p class="text-ops-sm font-semibold tracking-ops-label text-base-content/60">{@label}</p>
+      <p class="ops-metric__label text-ops-sm font-semibold tracking-ops-label">{@label}</p>
       <p class={[
         "ops-metric__value mt-1 font-mono text-ops-lg tabular-nums",
         metric_value_class(@kind)
       ]}>
-        <span
-          :if={metric_cue(@kind)}
-          class={["ops-metric__cue", metric_cue_class(@kind)]}
-          aria-hidden="true"
-        >
-          <ScrypathOpsWeb.CoreComponents.icon name={metric_cue(@kind)} class="size-3.5" />
-        </span>
         {@value}
       </p>
     </div>
@@ -438,10 +434,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Labelled tone chip — a compact `label : value` pill whose surface settles to a
-  status tone. The single shared home for "this dimension matches / differs" style
-  status rows (drift dimensions, per-reason flags) so tone branching stays out of
-  templates and routes through the `tone_class/1` authority.
+  Labelled tone chip: a compact `label : value` row on the same Panel-with-a-rule surface as a
+  notice. The single shared home for "this dimension matches / differs" style status rows (drift
+  dimensions, per-reason flags) so tone branching stays out of templates and routes through the
+  `notice_modifier/1` authority.
   """
   attr(:kind, :atom,
     default: :neutral,
@@ -455,14 +451,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_tone_chip(assigns) do
     ~H"""
-    <div class={["ops-tone-chip", tone_chip_class(@kind), @class]} {@rest}>
+    <div class={["ops-tone-chip ops-notice-surface", notice_modifier(@kind), @class]} {@rest}>
       <span class="font-semibold">{@label}</span>
       <span :if={@value} class="ops-tone-chip__value">{@value}</span>
     </div>
     """
   end
 
-  @doc "Compact status badge for booleans, counts, and operator states."
+  @doc """
+  Plain muted label for a non-sync fact (for example the Search run state).
+
+  It is text, not a pill: no border, no tint, no color of its own. Sync states never use it; they
+  render through `ops_sync_status/1` and `ops_condition/1`. `kind` stays readable as
+  `data-badge-kind` and has no visual effect.
+  """
   attr(:kind, :atom,
     default: :neutral,
     values: [:neutral, :info, :success, :warning, :error, :partial, :running]
@@ -473,7 +475,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_badge(assigns) do
     ~H"""
-    <span class={["ops-badge", badge_class(@kind), @class]}>
+    <span class={["ops-badge", @class]} data-badge-kind={@kind}>
       {render_slot(@inner_block)}
     </span>
     """
@@ -570,8 +572,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "ops-verdict rounded-ops-surface border p-ops-panel",
-        verdict_tone_class(@kind),
+        "ops-verdict ops-notice-surface rounded-ops-surface p-ops-panel",
+        notice_modifier(@kind),
         @class
       ]}
       data-verdict-kind={@kind}
@@ -689,11 +691,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
 
-  attr(:kind, :atom,
-    default: :neutral,
-    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
-  )
-
   attr(:recommended, :boolean,
     default: false,
     doc: "marks this card as the state-recommended next action (renders a 'Start here' flag)"
@@ -708,7 +705,6 @@ defmodule ScrypathOpsWeb.OpsUi do
       navigate={@navigate}
       class={[
         "ops-intent-card",
-        @kind != :neutral && tone_class(@kind),
         @recommended && "ops-intent-card--recommended"
       ]}
       {@rest}
@@ -1976,12 +1972,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp sync_status_shape(:failed),
     do: {"notched", "Failed", "M0 16H4.5L8.63 0H4.13L2.71 5.5L4.06 8L1.42 10.5Z"}
 
-  defp tone_class(:success), do: "ops-tone-success"
-  defp tone_class(:warning), do: "ops-tone-warning"
-  defp tone_class(:error), do: "ops-tone-error"
-  defp tone_class(:partial), do: "ops-tone-partial"
-  defp tone_class(:running), do: "ops-tone-running"
-  defp tone_class(_), do: "ops-tone-info"
+  # Notice, status, verdict and tone-chip kinds map to three rules: Failed, Retrying amber and the
+  # neutral Control Edge. Nothing else carries a rule color (Plum is never info; green is Clear).
+  defp notice_modifier(:error), do: "ops-notice-surface--error"
+  defp notice_modifier(kind) when kind in [:warning, :partial], do: "ops-notice-surface--warning"
+  defp notice_modifier(_kind), do: "ops-notice-surface--neutral"
 
   # Literal column classes so Tailwind's source scan keeps them; mobile-first base.
   defp metric_grid_cols(3), do: "sm:grid-cols-2 lg:grid-cols-3"
@@ -1990,30 +1985,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp metric_grid_cols(_), do: "sm:grid-cols-2 lg:grid-cols-4"
 
   # Tone chips reuse the surface tones; :neutral stays a quiet muted panel (never blue).
-  defp tone_chip_class(:neutral), do: "ops-muted-panel"
-  defp tone_chip_class(kind), do: tone_class(kind)
-
-  defp metric_cue(:warning), do: "hero-exclamation-triangle"
-  defp metric_cue(:error), do: "hero-x-circle"
-  defp metric_cue(_kind), do: nil
-
-  defp metric_cue_class(:warning), do: "ops-metric__cue--warning"
-  defp metric_cue_class(:error), do: "ops-metric__cue--error"
-  defp metric_cue_class(_kind), do: nil
 
   defp metric_value_class(:warning), do: "ops-metric__value--warning"
   defp metric_value_class(:error), do: "ops-metric__value--error"
   defp metric_value_class(_kind), do: nil
-
-  # The verdict uses a neutral surface for every state; tone is localized to its icon.
-  defp verdict_tone_class(:neutral), do: "ops-verdict-neutral"
-  defp verdict_tone_class(kind), do: tone_class(kind)
-
-  defp badge_class(:success), do: "ops-badge-success"
-  defp badge_class(:warning), do: "ops-badge-warning"
-  defp badge_class(:error), do: "ops-badge-error"
-  defp badge_class(:partial), do: "ops-badge-partial"
-  defp badge_class(:running), do: "ops-badge-running"
-  defp badge_class(:info), do: "ops-badge-info"
-  defp badge_class(_), do: "ops-badge-neutral"
 end

@@ -505,8 +505,48 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 2
     assert updated_socket.assigns.selected_schema == OpsPostB
     assert updated_socket.assigns.local_ui_state == %{compact?: true}
-    assert flash_value(updated_socket, "error") =~ "Index promotion blocked"
+    # One "blocked", then the reason as a sentence (E-11).
+    flash = flash_value(updated_socket, "error")
+    assert flash =~ ~r/\AIndex promotion blocked: [^:]+\.\z/
+    assert blocked_count(flash) == 1
     assert updated_socket.assigns.drift_error == :settings
+  end
+
+  # Phase 187 E-11: the flash used to say "Index promotion blocked: Promotion is blocked: ...".
+  describe "promotion that cannot go ahead flashes one sentence" do
+    test "a blocked eligibility says blocked once, then the reason" do
+      for {reason, sentence} <- [
+            {:backend_work_pending, "wait for backend tasks to finish"},
+            {:failed_work, "resolve failed sync work first"},
+            {:reconcile_not_current, "refresh sync and queue status"},
+            {:a_reason_nobody_named, "refresh current checks"}
+          ] do
+        socket = sync_drift_socket(%{promotion_eligibility: {:blocked, reason}})
+
+        assert {:noreply, updated} = SyncDriftLive.handle_event("confirm_swap_live", %{}, socket)
+
+        flash = flash_value(updated, "error")
+        assert flash == "Index promotion blocked: #{sentence}."
+        assert blocked_count(flash) == 1
+        refute flash =~ "Promotion is blocked"
+        refute updated.assigns.confirm_swap?
+      end
+    end
+
+    test "any other ineligibility gets the generic sentence, still with one blocked" do
+      for eligibility <- [nil, :unknown, :checking] do
+        socket = sync_drift_socket(%{promotion_eligibility: eligibility})
+
+        assert {:noreply, updated} = SyncDriftLive.handle_event("confirm_swap_live", %{}, socket)
+
+        flash = flash_value(updated, "error")
+
+        assert flash ==
+                 "Index promotion blocked: refresh the current checks first, then promote."
+
+        assert blocked_count(flash) == 1
+      end
+    end
   end
 
   test "promotion retains the backend task UID returned by the real normalization boundary" do
@@ -1530,6 +1570,8 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     OperatorContext.build(scope, session)
   end
+
+  defp blocked_count(text), do: length(String.split(text, "blocked")) - 1
 
   defp flash_value(socket, key) do
     socket.assigns |> Map.get(:flash, %{}) |> Map.get(key)
