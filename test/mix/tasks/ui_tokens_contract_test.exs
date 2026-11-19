@@ -225,7 +225,12 @@ defmodule Mix.Tasks.UiTokensContractTest do
 
     css_drift_cases = [
       {"--ops-text-muted",
-       UiTokens.replace_theme_value!(css, "dark", "--ops-text-muted", UiTokens.bump_hex(live_muted))},
+       UiTokens.replace_theme_value!(
+         css,
+         "dark",
+         "--ops-text-muted",
+         UiTokens.bump_hex(live_muted)
+       )},
       {"--ops-text-muted",
        UiTokens.replace_theme_value!(
          css,
