@@ -54,6 +54,10 @@ const HEX_OUTSIDE_CEILING = 34;
 // Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
 // retired value landed in a new file, which is the thing this guard exists to stop.
 const ALLOWLIST_CEILING = 22;
+// The checks take these as a parameter so the planted and accept cases can use
+// their own limits and never depend on how far the live ceilings have shrunk.
+const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING };
+const NO_LIMITS = { pending: Infinity, hexOutside: Infinity, allowlist: Infinity };
 
 const MODES = ["light", "dark"];
 const DISPOSITIONS = new Set(["adopt", "derive", "keep-platform", "retire", "local"]);
@@ -300,7 +304,7 @@ function checkParity(themes, map) {
   return failures;
 }
 
-function checkApplied(themes, map, brandTokens) {
+function checkApplied(themes, map, brandTokens, limits = LIMITS) {
   const failures = [];
   for (const row of map.rows ?? []) {
     const key = String(row.property).replace(/^--/, "");
@@ -360,8 +364,8 @@ function checkApplied(themes, map, brandTokens) {
     }
   }
   const pending = countPending(map);
-  if (pending > PENDING_CEILING) {
-    failures.push(`pending count ${pending} exceeds PENDING_CEILING ${PENDING_CEILING} (shrink-only)`);
+  if (pending > limits.pending) {
+    failures.push(`pending count ${pending} exceeds PENDING_CEILING ${limits.pending} (shrink-only)`);
   }
   return failures;
 }
@@ -405,7 +409,7 @@ function checkBuiltEmissions(themes, builtCss) {
   return failures;
 }
 
-function checkHexAllowlist(themes, map, brandTokens) {
+function checkHexAllowlist(themes, map, brandTokens, limits = LIMITS) {
   const failures = [];
   const allowed = allowedHexSet(map, brandTokens);
   for (const { row, mode, cell } of mapCells(map)) {
@@ -421,8 +425,8 @@ function checkHexAllowlist(themes, map, brandTokens) {
       if (HEX.test(value) && !allowed.has(lower(value))) outside += 1;
     }
   }
-  if (outside > HEX_OUTSIDE_CEILING) {
-    failures.push(`theme-block hex values outside the brand set: ${outside} exceeds HEX_OUTSIDE_CEILING ${HEX_OUTSIDE_CEILING} (shrink-only)`);
+  if (outside > limits.hexOutside) {
+    failures.push(`theme-block hex values outside the brand set: ${outside} exceeds HEX_OUTSIDE_CEILING ${limits.hexOutside} (shrink-only)`);
   }
   return failures;
 }
@@ -461,11 +465,100 @@ test("brand token paths resolve and unknown paths throw", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Planted failures and the accept case (in-memory copies, nothing on disk)
+// Planted failures and the accept case (in-memory, nothing on disk)
+//
+// The fixtures are small synthetic ones, not copies of the live files: a planted or
+// accept case must keep meaning the same thing whatever state the live theme blocks,
+// the token map and the built CSS are in. Phase 187 flips rows, recolors the blocks
+// and rebuilds the CSS; none of that may fail a planted case for a wrong reason.
 // ---------------------------------------------------------------------------
 
+const MUTED_MIX = "color-mix(in oklch, var(--color-base-content) 64%, transparent)";
+const brandToken = (hex) => ({ $type: "color", $value: { colorSpace: "srgb", hex } });
+
+function syntheticTheme(base100, base200, primary, selection) {
+  return {
+    "color-base-100": base100,
+    "color-base-200": base200,
+    "color-primary": primary,
+    "color-primary-strong": primary,
+    "color-info": "#334455",
+    "ops-selection": selection,
+    "ops-text-muted": MUTED_MIX,
+    "radius-box": "0.5rem",
+  };
+}
+
+function syntheticBuiltCss(themes) {
+  const declare = (mode, indent) =>
+    Object.entries(themes[mode])
+      .map(([key, value]) =>
+        key === "ops-text-muted"
+          ? [
+              `${indent}--ops-text-muted: var(--color-base-content);`,
+              `${indent}@supports (color: color-mix(in lab, red, red)) {`,
+              `${indent}  --ops-text-muted: ${value};`,
+              `${indent}}`,
+            ].join("\n")
+          : `${indent}--${key}: ${value};`,
+      )
+      .join("\n");
+  return [
+    "@layer base {",
+    "  @media (prefers-color-scheme: dark) {",
+    "    :root {",
+    "      color-scheme: dark;",
+    declare("dark", "      "),
+    "    }",
+    '    html:not([data-theme="light"]) .unrelated-rule { color: red; }',
+    "  }",
+    "}",
+    "@layer base {",
+    '  :root:has(input.theme-controller[value=dark]:checked),[data-theme="dark"] {',
+    "    color-scheme: dark;",
+    declare("dark", "    "),
+    "  }",
+    "}",
+    "@layer base {",
+    '  :where(:root),:root:has(input.theme-controller[value=light]:checked),[data-theme="light"] {',
+    "    color-scheme: light;",
+    declare("light", "    "),
+    "  }",
+    "}",
+    "",
+  ].join("\n");
+}
+
 function fixtures() {
-  return structuredClone(loadLive());
+  const themes = {
+    light: syntheticTheme("#ffffff", "#fafafa", "#222222", "#eeeeee"),
+    dark: syntheticTheme("#101010", "#080808", "#dddddd", "#202020"),
+  };
+  const brandTokens = {
+    color: {
+      light: { panel: brandToken("#FFFFFF"), page: brandToken("#FAFAFA"), plum: brandToken("#333333"), selected: brandToken("#EEEEEE"), muted: brandToken("#444444") },
+      dark: { panel: brandToken("#101010"), night: brandToken("#080808"), orchid: brandToken("#EEEEEE"), muted: brandToken("#CCCCCC") },
+    },
+  };
+  const adopt = (source, applied) => ({ disposition: "adopt", source, applied });
+  const kept = (disposition, extra) => ({ disposition, reason: "fixture", ...extra });
+  const row = (property, light, dark) => ({ property, light, dark });
+  const map = {
+    schema: "scrypath.token-map.v1",
+    brand_tokens: "brand/tokens.json",
+    rows: [
+      row("--color-base-100", adopt("color.light.panel", true), adopt("color.dark.panel", true)),
+      row("--color-base-200", adopt("color.light.page", true), adopt("color.dark.night", true)),
+      // Pending: the live value differs from the brand token.
+      row("--color-primary", adopt("color.light.plum", false), adopt("color.dark.orchid", false)),
+      row("--color-primary-strong", kept("retire", { applied: false }), kept("retire", { applied: false })),
+      row("--color-info", kept("local", { target: "#334455", applied: true }), kept("local", { target: "#334455", applied: true })),
+      row("--ops-selection", adopt("color.light.selected", true), kept("derive", { target: "#202020", applied: true })),
+      row("--ops-text-muted", adopt("color.light.muted", false), adopt("color.dark.muted", false)),
+      row("--radius-box", kept("keep-platform", { value: "0.5rem", applied: true }), kept("keep-platform", { value: "0.5rem", applied: true })),
+    ],
+  };
+  return { themes, map, brandTokens, builtCss: syntheticBuiltCss(themes) };
 }
 
 function rowFor(map, property) {
@@ -543,12 +636,24 @@ test("planted stale built CSS fails", () => {
   assert.ok(anyFailure(checkBuiltEmissions(themes, drifted), /stale built CSS: system-dark emission --ops-text-muted/));
 });
 
+test("planted ceiling breaches fail", () => {
+  // The shrink-only counters fail when the measured count exceeds the limit.
+  const { themes, map, brandTokens } = fixtures();
+  const pending = countPending(map);
+  assert.ok(pending > 0, "fixture has pending cells");
+  assert.deepEqual(checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending }), []);
+  assert.ok(
+    anyFailure(checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending: pending - 1 }), /pending count .* exceeds PENDING_CEILING/),
+  );
+  assert.ok(anyFailure(checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: 0 }), /exceeds HEX_OUTSIDE_CEILING 0/));
+});
+
 test("valid fixtures pass", () => {
   const { themes, map, brandTokens, builtCss } = fixtures();
   assert.deepEqual(checkParity(themes, map), []);
-  assert.deepEqual(checkApplied(themes, map, brandTokens), []);
+  assert.deepEqual(checkApplied(themes, map, brandTokens, NO_LIMITS), []);
   assert.deepEqual(checkBuiltEmissions(themes, builtCss), []);
-  assert.deepEqual(checkHexAllowlist(themes, map, brandTokens), []);
+  assert.deepEqual(checkHexAllowlist(themes, map, brandTokens, NO_LIMITS), []);
 });
 
 // ---------------------------------------------------------------------------
@@ -671,13 +776,13 @@ function entryTarget(entry) {
  * Failures for the allowlist against a scan. Messages start with a category:
  * "unlisted" (a hit nobody listed) or "allowlist" (the list itself is wrong).
  */
-function checkAllowlist(hits, allowlist, files) {
+function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
   const failures = [];
   if (allowlist.schema !== ALLOWLIST_SCHEMA) failures.push(`allowlist schema is ${String(allowlist.schema)}`);
   if (!Array.isArray(allowlist.entries)) return [...failures, "allowlist has no entries list"];
   const entries = allowlist.entries;
-  if (entries.length > ALLOWLIST_CEILING) {
-    failures.push(`allowlist has ${entries.length} entries, over ALLOWLIST_CEILING ${ALLOWLIST_CEILING} (shrink-only)`);
+  if (entries.length > limits.allowlist) {
+    failures.push(`allowlist has ${entries.length} entries, over ALLOWLIST_CEILING ${limits.allowlist} (shrink-only)`);
   }
 
   const seen = new Set();
@@ -786,7 +891,7 @@ function makeTree(fileContents) {
 function scanTree(dir, entries = []) {
   const files = listRepoFiles(dir);
   const hits = scanFiles(dir, files, buildDeny());
-  return checkAllowlist(hits, { schema: ALLOWLIST_SCHEMA, entries }, files);
+  return checkAllowlist(hits, { schema: ALLOWLIST_SCHEMA, entries }, files, NO_LIMITS);
 }
 
 const retired = `#${DENY_HEX[0]}`;
@@ -826,6 +931,15 @@ test("planted stale allowlist entry fails", () => {
 test("planted missing allowlist path fails", () => {
   const dir = makeTree({ "src/clean.css": `a { color: ${brandPanel()}; }\n` });
   assert.ok(anyFailure(scanTree(dir, [entry("src/gone.css")]), /allowlist entry src\/gone\.css names a missing path/));
+});
+
+test("planted allowlist ceiling breach fails", () => {
+  const dir = makeTree({ "src/a.css": `a { color: ${retired}; }\n`, "src/b.css": `b { color: ${retired}; }\n` });
+  const files = listRepoFiles(dir);
+  const hits = scanFiles(dir, files, buildDeny());
+  const allowlist = { schema: ALLOWLIST_SCHEMA, entries: [entry("src/a.css"), entry("src/b.css")] };
+  assert.deepEqual(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 2 }), []);
+  assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 1 }), /over ALLOWLIST_CEILING 1/));
 });
 
 test("accept brand-only tree", () => {
