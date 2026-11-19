@@ -122,10 +122,11 @@ should check once:
   theme rules on `:root`, so linking it on every page would restyle the host's own pages. The
   e-commerce demo links it only for paths under its mount (`/admin/search`), and its own pages
   load no ops stylesheet at all. The e2e spec `ops_host_contract.spec.ts` checks that on the demo.
-- **Override the accent through the daisyUI variables.** Set `--color-primary` (and, if you want
-  the dark accent to follow, the same variable under your dark selector) in a rule that loads
-  after the ops stylesheet. Plum controls such as `.btn-primary` take the new value. Variable
-  names are stable; the values behind them may change in a later release.
+- **Override the accent through the daisyUI variables.** A plain `:root { --color-primary: ... }`
+  rule that loads after the ops stylesheet wins in light, in an explicit dark theme and in System
+  dark, and Plum controls such as `.btn-primary` take the new value. Put the variable under your
+  own dark selector only if you want a different accent in dark. Variable names are stable; the
+  values behind them may change in a later release.
 - **Contrast is yours once you override.** The operator palette is checked for contrast in its own
   light and dark themes. A host color that replaces a variable is not checked, so keep text at
   4.5:1 and borders and focus rings at 3:1 against their surface.

@@ -9,8 +9,9 @@
  *   P-17b  a sentinel element on a host route computes the same style in all six combinations of OS
  *          scheme and stored theme preference, and again after visiting an ops route and coming back
  *   P-17c  a host `--color-primary` rule added after the ops stylesheet wins on `.btn-primary`, in
- *          light, in an explicit dark theme and in System dark (where the documented selector is
- *          `:root:not([data-theme])` inside `prefers-color-scheme: dark`)
+ *          light, in an explicit dark theme and in System dark. The System dark case below uses the
+ *          dark-scheme form of the override; a plain `:root` rule also wins there (a one-off probe on
+ *          the final stack, recorded in 187-CAPTURE-INVENTORY.md)
  *   P-17d  with `Content-Security-Policy: font-src 'self'` on the ops document both fonts still load
  *          and no `securitypolicyviolation` fires; a planted `font-src 'none'` makes the same probe
  *          fail, so the probe can see a break
