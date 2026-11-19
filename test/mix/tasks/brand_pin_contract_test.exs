@@ -203,7 +203,34 @@ defmodule Mix.Tasks.BrandPinContractTest do
             {"remote url()", "brand/assets/docs/scrypath-exdoc.css",
              "a{background:url(https://example.test/a.png)}"},
             {"remote href", svg, ~s(<image href="https://example.test/a.png"/>)},
-            {"remote href", svg, ~s(<image xlink:href="http://example.test/a.png"/>)}
+            {"remote href", svg, ~s(<image xlink:href="http://example.test/a.png"/>)},
+            # Bypasses of the first eight patterns, each planted in a rehashed pinned file.
+            {"remote href", svg, ~s(<a href="//evil.example/x"></a>)},
+            {"remote url()", "brand/assets/docs/scrypath-exdoc.css",
+             "a{background:url(//evil.example/a.png)}"},
+            {"remote href", "brand/assets/readme/header-snippet.html",
+             ~s(<img src="//evil.example/a.png">)},
+            {"data: URI", svg, ~s(<use href="data:image/svg+xml;base64,AAAA"/>)},
+            {"data: URI", "brand/assets/docs/scrypath-exdoc.css",
+             "a{background:url( 'data:,x')}"},
+            {"character reference", svg, ~s|<a href="&#106;avascript:alert(1)"></a>|},
+            {"character reference", svg, ~s|<a href="java&Tab;script&colon;alert(1)"></a>|},
+            {"javascript: URL", svg, ~s|<a href="java\tscript:alert(1)"></a>|},
+            {"javascript: URL", svg, ~s|<a href="java\nscript:alert(1)"></a>|},
+            {"event handler attribute", "brand/assets/readme/header-snippet.html",
+             "<img/src=x/onerror=alert(1)>"},
+            {"event handler attribute", svg, ~s(<g class="a"onclick="x"></g>)},
+            {"event handler attribute", svg, "<svg/onload=alert(1)>"},
+            {"SMIL animation element", svg, ~s|<set attributeName="onmouseover" to="alert(1)"/>|},
+            {"SMIL animation element", svg,
+             ~s(<animate attributeName="href" values="javascript&colon;x"/>)},
+            {"@import rule", "brand/assets/docs/scrypath-exdoc.css", ~S(@\69mport "x.css";)},
+            {"@import rule", "brand/assets/docs/scrypath-exdoc.css", ~S(@\0069 mport "x.css";)},
+            {"remote url()", "brand/assets/docs/scrypath-exdoc.css",
+             ~S|a{background:u\72l(http://example.test/a.png)}|},
+            {"reference outside the file", svg, ~s(<use href="other.svg#a"/>)},
+            {"reference outside the file", "brand/assets/docs/scrypath-exdoc.css",
+             "a{background:url(sibling.png)}"}
           ]) do
       test "active content in a rehashed pinned file fails (#{index}): #{label}" do
         tmp = copy_pinned_tree!()
@@ -213,6 +240,96 @@ defmodule Mix.Tasks.BrandPinContractTest do
 
         error = assert_raise Mix.Error, fn -> Brand.check!(tmp) end
         assert error.message == "verify.brand: active content (#{unquote(label)}): #{file}"
+      end
+    end
+
+    test "UTF-16 and UTF-32 files are decoded before scanning, not skipped" do
+      file = "brand/assets/logo/scrypath-symbol-dark.svg"
+      svg = ~s(<svg xmlns="http://www.w3.org/2000/svg"><script>x</script></svg>)
+
+      for {bom, encoding} <- [
+            {<<0xFF, 0xFE>>, {:utf16, :little}},
+            {<<0xFE, 0xFF>>, {:utf16, :big}},
+            {<<0xFF, 0xFE, 0, 0>>, {:utf32, :little}},
+            {<<0, 0, 0xFE, 0xFF>>, {:utf32, :big}}
+          ] do
+        tmp = copy_pinned_tree!()
+
+        File.write!(
+          Path.join(tmp, file),
+          bom <> :unicode.characters_to_binary(svg, :utf8, encoding)
+        )
+
+        repin_file!(tmp, file)
+
+        error = assert_raise Mix.Error, fn -> Brand.check!(tmp) end
+        assert error.message == "verify.brand: active content (script element): #{file}"
+      end
+    end
+
+    test "a wide-encoded file without a BOM, a NUL byte or invalid UTF-8 is refused, not skipped" do
+      file = "brand/assets/logo/scrypath-symbol-dark.svg"
+
+      wide =
+        :unicode.characters_to_binary("<svg><script>x</script></svg>", :utf8, {:utf16, :little})
+
+      for {contents, reason} <- [
+            {wide, "NUL byte"},
+            {"<svg>" <> <<0>> <> "</svg>", "NUL byte"},
+            {"<svg>" <> <<0xC3, 0x28>> <> "</svg>", "not valid UTF-8"},
+            {<<0xFF, 0xFE, 0x3C>>, "invalid utf16"}
+          ] do
+        tmp = copy_pinned_tree!()
+        File.write!(Path.join(tmp, file), contents)
+        repin_file!(tmp, file)
+
+        error = assert_raise Mix.Error, fn -> Brand.check!(tmp) end
+        assert error.message == "verify.brand: content cannot be scanned (#{reason}): #{file}"
+      end
+    end
+
+    test "a UTF-8 BOM in front of clean content is accepted" do
+      tmp = copy_pinned_tree!()
+      file = "brand/assets/logo/scrypath-symbol-dark.svg"
+
+      File.write!(
+        Path.join(tmp, file),
+        <<0xEF, 0xBB, 0xBF>> <> File.read!(Path.join(@root, file))
+      )
+
+      repin_file!(tmp, file)
+
+      assert Brand.check!(tmp) == :ok
+    end
+
+    test "the content patterns run in linear time on long whitespace runs" do
+      file = "brand/assets/logo/scrypath-symbol-dark.svg"
+
+      # An earlier `\s*["']?\s*` pattern took 1.5 s on the second and third inputs
+      # at this size (quadratic); the flat patterns take milliseconds. The pinned
+      # total ceiling (400,000 B) leaves room for about 70,000 appended bytes.
+      for filler <- [
+            "j" <> String.duplicate(" ", 70_000),
+            "<a href=" <> String.duplicate(" ", 70_000),
+            "<a href=" <> String.duplicate("\" ", 35_000),
+            "url(" <> String.duplicate(" ", 70_000),
+            "url(" <> String.duplicate("' ", 35_000),
+            String.duplicate("\\69 ", 17_000)
+          ] do
+        tmp = copy_pinned_tree!()
+        File.write!(Path.join(tmp, file), filler, [:append])
+        repin_file!(tmp, file)
+
+        {microseconds, _result} =
+          :timer.tc(fn ->
+            try do
+              Brand.check!(tmp)
+            rescue
+              Mix.Error -> :refused
+            end
+          end)
+
+        assert microseconds < 1_000_000
       end
     end
 

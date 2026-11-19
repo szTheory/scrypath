@@ -24,18 +24,35 @@ defmodule Mix.Tasks.Verify.Brand do
   @allowed_extensions ~w(.md .json .svg .png .ico .css .html .woff2 .txt)
   @max_total_bytes 400_000
   @scanned_extensions ~w(.svg .css .html)
+  @fragment_only_extensions ~w(.svg .css)
   @hex64 ~r/\A[0-9a-f]{64}\z/
 
-  # Active content refused in vendored SVG, CSS and HTML (T-186-04).
+  # Active content refused in vendored SVG, CSS and HTML (T-186-04). This is a
+  # deny-list, so every pattern is a flat regex without nested quantifiers (linear
+  # time on adversarial whitespace; `\s*["']?\s*` is avoided because the two
+  # whitespace runs split quadratically) and runs over the decoded text twice: as
+  # written and with CSS escapes resolved, so `@\69mport` is seen. The vendored
+  # files are plain (SVG uses `svg` and `path` only), so a refresh that needs any
+  # of this is a decision for a maintainer, not something to scan around.
   @active_content [
     {~r/<script/i, "script element"},
-    {~r/javascript:/i, "javascript: URL"},
-    {~r/\son[a-z]+\s*=/i, "event handler attribute"},
+    {~r/j\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t\s*:/i, "javascript: URL"},
+    {~r/[\s\/"']on[a-z]+\s*=/i, "event handler attribute"},
     {~r/<foreignobject/i, "foreignObject element"},
     {~r/<iframe/i, "iframe element"},
     {~r/@import/i, "@import rule"},
-    {~r/url\(\s*["']?\s*http/i, "remote url()"},
-    {~r/(?:xlink:)?href\s*=\s*["']?\s*http/i, "remote href"}
+    {~r/url\([\s"']*(?:http|\/\/)/i, "remote url()"},
+    {~r/(?:xlink:)?(?:href|src|srcset)\s*=[\s"']*(?:http|\/\/)/i, "remote href"},
+    {~r/<\s*(?:set|animate(?:transform|motion)?)\b/i, "SMIL animation element"},
+    {~r/[(="']\s*data\s*:/i, "data: URI"},
+    {~r/&#|&(?:colon|tab|newline|sol|bsol|lpar|rpar);/i, "character reference"}
+  ]
+
+  # SVG and CSS here carry no external references at all, so a reference must point
+  # inside the file. (HTML is exempt: the README snippet links its sibling files.)
+  @fragment_only [
+    {~r/(?:xlink:)?href\s*=[\s"']*[^#\s"'>]/i, "reference outside the file"},
+    {~r/url\([\s"']*[^#\s"')]/i, "reference outside the file"}
   ]
 
   @impl true
@@ -170,14 +187,70 @@ defmodule Mix.Tasks.Verify.Brand do
   end
 
   defp check_active_content!(path, contents) do
-    if String.downcase(Path.extname(path)) in @scanned_extensions do
-      for {pattern, label} <- @active_content, Regex.match?(pattern, contents) do
+    extension = String.downcase(Path.extname(path))
+
+    if extension in @scanned_extensions do
+      text = decode_text!(path, contents)
+      variants = Enum.uniq([text, css_unescape(text)])
+
+      patterns =
+        if extension in @fragment_only_extensions,
+          do: @active_content ++ @fragment_only,
+          else: @active_content
+
+      for {pattern, label} <- patterns, variant <- variants, Regex.match?(pattern, variant) do
         fail!("active content (#{label})", path)
       end
     end
 
     :ok
   end
+
+  # The byte-level patterns cannot see inside UTF-16 or UTF-32, so a BOM-marked
+  # file is decoded first. Anything that still cannot be read as UTF-8 text (a NUL
+  # byte, a BOM-less wide encoding, invalid bytes) is refused rather than skipped.
+  defp decode_text!(path, contents) do
+    text = strip_bom!(path, contents)
+
+    cond do
+      String.contains?(text, <<0>>) -> fail!("content cannot be scanned (NUL byte)", path)
+      not String.valid?(text) -> fail!("content cannot be scanned (not valid UTF-8)", path)
+      true -> text
+    end
+  end
+
+  defp strip_bom!(path, <<0xFF, 0xFE, 0, 0, rest::binary>>),
+    do: decode_wide!(rest, {:utf32, :little}, path)
+
+  defp strip_bom!(path, <<0, 0, 0xFE, 0xFF, rest::binary>>),
+    do: decode_wide!(rest, {:utf32, :big}, path)
+
+  defp strip_bom!(path, <<0xFF, 0xFE, rest::binary>>),
+    do: decode_wide!(rest, {:utf16, :little}, path)
+
+  defp strip_bom!(path, <<0xFE, 0xFF, rest::binary>>),
+    do: decode_wide!(rest, {:utf16, :big}, path)
+
+  defp strip_bom!(_path, <<0xEF, 0xBB, 0xBF, rest::binary>>), do: rest
+  defp strip_bom!(_path, contents), do: contents
+
+  defp decode_wide!(bytes, encoding, path) do
+    case :unicode.characters_to_binary(bytes, encoding, :utf8) do
+      text when is_binary(text) -> text
+      _error -> fail!("content cannot be scanned (invalid #{elem(encoding, 0)})", path)
+    end
+  end
+
+  # CSS lets any character be written as a backslash escape (`\69` is `i`).
+  defp css_unescape(text) do
+    Regex.replace(~r/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?|\\(.)/su, text, fn
+      _match, hex, "" -> codepoint(String.to_integer(hex, 16))
+      _match, "", character -> character
+    end)
+  end
+
+  defp codepoint(value) when value in 0..0xD7FF or value in 0xE000..0x10FFFF, do: <<value::utf8>>
+  defp codepoint(_value), do: "\uFFFD"
 
   defp check_closed_directories!(root, assets) do
     allowed = MapSet.new([Update.pin_path() | Enum.map(assets, & &1["path"])])
