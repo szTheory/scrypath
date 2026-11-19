@@ -151,6 +151,13 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
              lv,
              "[data-testid='control-room-verdict'] [data-testid='control-room-explore-search']"
            )
+
+    # Phase 187 (E-10): the two intent cards are words only, with no icon and no flag.
+    assert has_element?(lv, ".ops-intent-card .ops-intent-card__title", "Try a search")
+    refute has_element?(lv, ".ops-intent-card svg")
+    refute has_element?(lv, ".ops-intent-card__icon")
+    refute has_element?(lv, ".ops-intent-card__flag")
+    refute html =~ "Start here"
   end
 
   test "healthy wording requires complete evidence and keeps freshness explicit", %{conn: conn} do

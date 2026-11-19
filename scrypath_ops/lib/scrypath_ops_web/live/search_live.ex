@@ -1637,7 +1637,6 @@ defmodule ScrypathOpsWeb.SearchLive do
                 title={
                   if @submitted_search.page > 1, do: "No more results", else: "No matching documents"
                 }
-                icon="hero-magnifying-glass"
               >
                 {if @submitted_search.page > 1,
                   do: "Return to the previous page or try another query.",
@@ -1964,11 +1963,10 @@ defmodule ScrypathOpsWeb.SearchLive do
               id="saved-search-import-file"
               variant={:default}
               size={:sm}
-              class="gap-1.5"
               phx-click={JS.dispatch("click", to: "##{@uploads.saved_search_file.ref}")}
               aria-describedby="saved-search-import-hint"
             >
-              <.icon name="hero-arrow-up-tray" class="size-4" /> Import JSON file
+              Import JSON file
             </.ops_button>
           </.form>
 

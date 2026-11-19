@@ -425,6 +425,9 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     assert has_element?(view, ".ops-empty-hero", "No matching documents")
+    # Phase 187 (E-10): the empty state is a heading and a sentence, with no mark icon.
+    refute has_element?(view, ".ops-empty-hero svg")
+    refute has_element?(view, ".ops-empty-hero__mark")
     refute has_element?(view, "[data-index-outcome=no-hits]")
     assert has_element?(view, "details", "Response data")
   end

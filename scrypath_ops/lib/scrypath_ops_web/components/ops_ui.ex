@@ -241,7 +241,6 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label={@aria_label}
       {@rest}
     >
-      <ScrypathOpsWeb.CoreComponents.icon name="hero-arrow-path" class="size-3.5" />
       <span>{@label}</span>
     </.ops_button>
     """
@@ -680,45 +679,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   The whole card is a single navigation target; `route_label` is the visible
   affordance. Composes the `.ops-*` surface layer so it inherits branded styling.
+  It carries words only: no icon and no "Start here" flag.
   """
-  attr(:icon, :string,
-    required: true,
-    doc: "a `hero-*` Heroicon name; rendered as a monoline mark, not an emoji"
-  )
-
   attr(:title, :string, required: true)
   attr(:summary, :string, required: true)
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
-
-  attr(:recommended, :boolean,
-    default: false,
-    doc: "marks this card as the state-recommended next action (renders a 'Start here' flag)"
-  )
-
   attr(:rest, :global, include: ~w(data-testid))
   slot(:badge)
 
   def ops_intent_card(assigns) do
     ~H"""
-    <.link
-      navigate={@navigate}
-      class={[
-        "ops-intent-card",
-        @recommended && "ops-intent-card--recommended"
-      ]}
-      {@rest}
-    >
-      <span class="ops-intent-card__topline">
-        <span class="ops-intent-card__icon" aria-hidden="true">
-          <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-5" />
-        </span>
-        <span class="ops-intent-card__markers">
-          <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
-          <span :if={@badge != []} class="ops-intent-card__badges">
-            {render_slot(@badge)}
-          </span>
-        </span>
+    <.link navigate={@navigate} class="ops-intent-card" {@rest}>
+      <span :if={@badge != []} class="ops-intent-card__badges">
+        {render_slot(@badge)}
       </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
@@ -748,7 +722,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Hero-style empty state for high-attention blank sections."
   attr(:id, :string, default: nil)
   attr(:title, :string, required: true)
-  attr(:icon, :string, required: true)
   attr(:heading_level, :integer, default: 3, values: [2, 3])
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -770,9 +743,6 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-labelledby={@heading_id}
       {@rest}
     >
-      <span class="ops-empty-hero__mark" aria-hidden="true">
-        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
-      </span>
       <div class="ops-empty-hero__copy">
         <h2
           :if={@heading_level == 2}

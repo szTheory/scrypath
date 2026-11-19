@@ -21,7 +21,6 @@
     --font-weight-bold: 700;
     --radius-md: 0.375rem;
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
-    --animate-spin: spin 1s linear infinite;
     --default-transition-duration: 150ms;
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
@@ -1936,9 +1935,6 @@
   .mb-ops-4 {
     margin-bottom: var(--spacing-ops-4);
   }
-  .ml-1 {
-    margin-left: calc(var(--spacing) * 1);
-  }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
   }
@@ -2188,10 +2184,6 @@
     width: var(--size);
     height: var(--size);
   }
-  .size-3 {
-    width: calc(var(--spacing) * 3);
-    height: calc(var(--spacing) * 3);
-  }
   .size-3\.5 {
     width: calc(var(--spacing) * 3.5);
     height: calc(var(--spacing) * 3.5);
@@ -2203,10 +2195,6 @@
   .size-5 {
     width: calc(var(--spacing) * 5);
     height: calc(var(--spacing) * 5);
-  }
-  .size-6 {
-    width: calc(var(--spacing) * 6);
-    height: calc(var(--spacing) * 6);
   }
   .max-h-48 {
     max-height: calc(var(--spacing) * 48);
@@ -2711,9 +2699,6 @@
   .opacity-0 {
     opacity: 0%;
   }
-  .opacity-40 {
-    opacity: 40%;
-  }
   .opacity-75 {
     opacity: 75%;
   }
@@ -2830,13 +2815,6 @@
     --btn-color: var(--color-primary);
     --btn-fg: var(--color-primary-content);
   }
-  .group-hover\:opacity-70 {
-    &:is(:where(.group):hover *) {
-      @media (hover: hover) {
-        opacity: 70%;
-      }
-    }
-  }
   .hover\:opacity-100 {
     &:hover {
       @media (hover: hover) {
@@ -2914,11 +2892,6 @@
         --tw-shadow: 0 8px 24px var(--tw-shadow-color, color-mix(in oklch, var(--color-base-content) 12%, transparent));
       }
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-    }
-  }
-  .motion-safe\:animate-spin {
-    @media (prefers-reduced-motion: no-preference) {
-      animation: var(--animate-spin);
     }
   }
   .sm\:translate-y-0 {
@@ -3354,27 +3327,6 @@
     box-shadow: var(--shadow-ops-surface);
     padding: clamp(var(--spacing-ops-5), 4vw, 2rem);
     text-align: center;
-  }
-  .ops-empty-hero__mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-primary) 22%, transparent);
-    }
-    border-radius: var(--radius-ops-lg);
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 9%, transparent);
-    }
-    color: var(--color-primary);
-    box-shadow: inset 0 1px 0 var(--color-base-100);
-    @supports (color: color-mix(in lab, red, red)) {
-      box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-100) 55%, transparent);
-    }
   }
   .ops-empty-hero__copy {
     display: grid;
@@ -3859,15 +3811,6 @@
     color: var(--color-primary);
     font-weight: 600;
   }
-  .ops-nav-item__icon {
-    display: inline-flex;
-    width: 1.25rem;
-    height: 1.25rem;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.78;
-  }
   .ops-nav-item__label {
     min-width: 0;
     overflow: hidden;
@@ -4092,62 +4035,12 @@
       border-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
     }
   }
-  .ops-intent-card--recommended {
-    box-shadow: var(--shadow-ops-surface), inset 0 0 0 1px var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      box-shadow: var(--shadow-ops-surface), inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent);
-    }
-  }
-  .ops-intent-card__topline {
-    display: flex;
-    min-height: 2.25rem;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-ops-3);
-  }
-  .ops-intent-card__markers, .ops-intent-card__badges {
+  .ops-intent-card__badges {
     display: flex;
     min-width: 0;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-ops-2);
-  }
-  .ops-intent-card__markers {
-    justify-content: flex-end;
-    text-align: right;
-  }
-  .ops-intent-card__flag {
-    border-radius: 999px;
-    padding-inline: var(--control-pad-x-sm);
-    padding-block: 0.125rem;
-    font-size: var(--text-ops-sm);
-    font-weight: 600;
-    letter-spacing: var(--tracking-ops-label);
-    color: var(--color-primary);
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 12%, transparent);
-    }
-  }
-  .ops-intent-card__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    flex: none;
-    border: 1px solid var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-primary) 22%, transparent);
-    }
-    border-radius: var(--radius-ops-control);
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 9%, transparent);
-    }
-    line-height: 1;
-    color: var(--color-primary);
-    opacity: 0.9;
   }
   .ops-intent-card__title {
     font-size: var(--text-ops-md);
@@ -4983,20 +4876,6 @@
     }
   }
 }
-[data-theme="dark"] .ops-intent-card--recommended {
-  box-shadow: inset 0 0 0 1px var(--color-primary), var(--shadow-ops-panel-dark), var(--shadow-ops-glow);
-  @supports (color: color-mix(in lab, red, red)) {
-    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent), var(--shadow-ops-panel-dark), var(--shadow-ops-glow);
-  }
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-intent-card--recommended {
-    box-shadow: inset 0 0 0 1px var(--color-primary), var(--shadow-ops-panel-dark), var(--shadow-ops-glow);
-    @supports (color: color-mix(in lab, red, red)) {
-      box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent), var(--shadow-ops-panel-dark), var(--shadow-ops-glow);
-    }
-  }
-}
 [data-theme="dark"] {
   --shadow-ops-surface: 0 1px 2px rgba(0,0,0,0.40);
   --shadow-ops-mid: 0 1px 4px rgba(0,0,0,0.45);
@@ -5133,9 +5012,6 @@
     position: relative;
     gap: .5rem;
     padding: 1.25rem;
-  }
-  .ops-intent-card__topline {
-    display: none;
   }
   .ops-intent-card__cta {
     position: absolute;
@@ -5617,11 +5493,6 @@
   .ops-help-link svg {
     flex-shrink: 0;
     align-self: center;
-  }
-  .ops-help-heading {
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
   }
   .ops-help-content .ops-help-subtopic {
     border: 0;

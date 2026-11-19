@@ -248,9 +248,6 @@ defmodule ScrypathOpsWeb.Layouts do
                 aria-current={if nav_item_active?(item, @page_title), do: "page", else: nil}
                 data-ops-nav-link
               >
-                <span class="ops-nav-item__icon" aria-hidden="true">
-                  <.icon name={item.icon} class="size-4" />
-                </span>
                 <span class="ops-nav-item__label">{item.label}</span>
               </.link>
             </li>
@@ -264,9 +261,6 @@ defmodule ScrypathOpsWeb.Layouts do
           aria-current={if @page_title == "Help", do: "page", else: nil}
           data-ops-nav-link
         >
-          <span class="ops-nav-item__icon" aria-hidden="true">
-            <.icon name="hero-question-mark-circle" class="size-4" />
-          </span>
           <span class="ops-nav-item__label">Help</span>
         </.link>
       </div>
@@ -323,27 +317,14 @@ defmodule ScrypathOpsWeb.Layouts do
       %{
         label: nil,
         items: [
-          %{
-            path: mount_path,
-            label: "Control Room",
-            title: "Control Room",
-            icon: "hero-rectangle-group"
-          }
-          | Enum.map(
-              ScrypathOpsWeb.Nav.primary(mount_path),
-              &Map.put(&1, :icon, nav_item_icon(&1))
-            )
+          %{path: mount_path, label: "Control Room", title: "Control Room"}
+          | mount_path
+            |> ScrypathOpsWeb.Nav.primary()
             |> Enum.reject(&(&1[:group] == :support))
         ]
       }
     ]
   end
-
-  defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
-  defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
-  defp nav_item_icon(%{label: "Sync and index"}), do: "hero-arrows-right-left"
-  defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
-  defp nav_item_icon(_item), do: "hero-square-2-stack"
 
   @doc """
   Shows the flash group with standard titles and content.
@@ -366,7 +347,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         <div class="alert w-full max-w-full text-wrap">
-          <.icon name="hero-information-circle" class="size-5 shrink-0" />
           <div class="min-w-0 flex-1">
             <p data-ops-notification-message aria-live="polite" aria-atomic="true"></p>
             <pre data-ops-notification-source hidden tabindex="0" class="ops-notification-source"></pre>
@@ -375,7 +355,7 @@ defmodule ScrypathOpsWeb.Layouts do
             type="button"
             data-ops-notification-close
             aria-label="Close notification"
-            class="cursor-pointer"
+            class="ops-flash__close cursor-pointer"
           >
             <.icon name="hero-x-mark" class="size-5" />
           </button>
@@ -393,7 +373,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -405,7 +384,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """

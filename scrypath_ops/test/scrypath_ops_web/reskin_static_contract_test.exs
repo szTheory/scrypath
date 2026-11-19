@@ -20,9 +20,19 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   #     16 and 32 px entries, and the shell shows both lockups at 136 px wide.
   #   - E-15 preload: the standalone root layout links the SVG and ICO favicons and preloads the
   #     interface font with `crossorigin`; the mounted host layout never preloads.
+  #   - E-10 control glyphs only: the nine control Heroicons are the only icons the source can
+  #     render, every rendered svg sits inside a control (or is a sync-status shape), and no
+  #     screen draws an icon in its nav, headings, flash, counts, refresh or import. A planted
+  #     name outside the list fails the scan.
+  #   - No infinite animation: neither the source stylesheet nor `lib/` can loop an animation or
+  #     spin a loader (the render-level half is E-16 in the component contract file).
   use ScrypathOpsWeb.ConnCase, async: true
 
+  import Phoenix.Component, only: [sigil_H: 2]
   import Phoenix.LiveViewTest
+
+  alias ScrypathOpsWeb.CoreComponents
+  alias ScrypathOpsWeb.OpsUi
 
   @ops_root Path.expand("../..", __DIR__)
   @repo_root Path.expand("..", @ops_root)
@@ -62,6 +72,27 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   # Neither subset carries these three. They render from the metric-adjusted fallback faces and
   # then system-ui or ui-monospace. This is the whole named allowlist; growing it is a decision.
   @fallback_allowlist %{0x00B7 => "·", 0x203A => "›", 0x2318 => "⌘"}
+
+  # LD-6, the whole set of Heroicons ScrypathOps may render. Each one is a control affordance
+  # with an accessible name; none stands in for a word. Growing this list is a design decision.
+  @control_glyphs ~w(hero-bars-3 hero-x-mark hero-chevron-down hero-clipboard-document
+                     hero-sun-micro hero-moon-micro hero-computer-desktop-micro
+                     hero-arrow-top-right-on-square hero-magnifying-glass)
+
+  # The controls a rendered Heroicon may sit in: the nearest enclosing button or link, named by
+  # tag and class (or `#id`). A status shape is not a Heroicon and is checked separately.
+  @control_owners [
+    {"button", "ops-nav-trigger"},
+    {"button", "ops-nav-close"},
+    {"button", "ops-command-hint"},
+    {"button", "ops-theme-toggle__button"},
+    {"button", "ops-time__stamp"},
+    {"button", "ops-quiet-action"},
+    {"button", "ops-icon-btn"},
+    {"button", "ops-flash__close"},
+    {"button", "#saved-search-picker-button"},
+    {"a", "ops-help-link"}
+  ]
 
   # The six screens, plus the all-statuses Search health fixture (five rows, every status word).
   @glyph_screens [
@@ -415,6 +446,275 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
       # It links the favicons at the mount prefix instead (documented in the README).
       assert host =~ "/admin/search/favicon.svg"
       assert host =~ "/admin/search/favicon.ico"
+    end
+  end
+
+  # ── Plan 06: icons are control glyphs, nothing loops ─────────────────────────────────────
+
+  @lib_root Path.join(@ops_root, "lib")
+
+  defp lib_sources do
+    @lib_root
+    |> Path.join("**/*.{ex,heex}")
+    |> Path.wildcard()
+    |> Enum.map(&{Path.relative_to(&1, @ops_root), File.read!(&1)})
+  end
+
+  # Quoted Heroicon names in `source` that are not on the control list. Only a literal that
+  # starts with `"hero-` counts, so an id that merely contains the word "hero" is not an icon.
+  defp icon_offenders(source) do
+    ~r/"(hero-[a-z0-9-]+)/
+    |> Regex.scan(source, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.reject(&(&1 in @control_glyphs))
+  end
+
+  # Icons rendered from a variable name cannot be checked by the literal scan, so none may exist.
+  defp dynamic_icon_names(source), do: Regex.scan(~r/\bicon\s+name=\{/, source)
+
+  # Every svg in `html` with its ancestors (nearest first) as {tag, attributes}.
+  defp svg_chains(html) do
+    html |> LazyHTML.from_fragment() |> LazyHTML.to_tree() |> collect_svgs([], [])
+  end
+
+  defp collect_svgs(nodes, ancestors, acc) when is_list(nodes),
+    do: Enum.reduce(nodes, acc, &collect_svgs(&1, ancestors, &2))
+
+  defp collect_svgs({"svg", attrs, _children}, ancestors, acc),
+    do: [{Map.new(attrs), ancestors} | acc]
+
+  defp collect_svgs({tag, attrs, children}, ancestors, acc),
+    do: collect_svgs(children, [{tag, Map.new(attrs)} | ancestors], acc)
+
+  defp collect_svgs(_text_or_comment, _ancestors, acc), do: acc
+
+  defp classes(attrs), do: String.split(attrs["class"] || "")
+
+  defp owner_matches?({tag, attrs}, {tag, "#" <> id}), do: attrs["id"] == id
+  defp owner_matches?({tag, attrs}, {tag, class}), do: class in classes(attrs)
+  defp owner_matches?(_control, _owner), do: false
+
+  # A Heroicon is allowed only inside one of the named controls (its nearest button or link).
+  defp control_glyph?({_svg, ancestors}) do
+    case Enum.find(ancestors, fn {tag, _attrs} -> tag in ["button", "a"] end) do
+      nil -> false
+      control -> Enum.any?(@control_owners, &owner_matches?(control, &1))
+    end
+  end
+
+  # A sync-status shape is the other kind of svg: it carries `data-shape` and sits in the status.
+  defp status_shape?({svg, ancestors}) do
+    Map.has_key?(svg, "data-shape") and
+      Enum.any?(ancestors, fn {_tag, attrs} -> "ops-sync-status" in classes(attrs) end)
+  end
+
+  defp svg_label({svg, ancestors}) do
+    chain =
+      ancestors
+      |> Enum.take(4)
+      |> Enum.map_join(" < ", fn {tag, attrs} ->
+        id = if attrs["id"], do: "#" <> attrs["id"], else: ""
+        "#{tag}#{id}.#{attrs |> classes() |> Enum.take(2) |> Enum.join(".")}"
+      end)
+
+    "svg.#{svg |> classes() |> Enum.join(".")} in #{chain}"
+  end
+
+  defp count_in(html, selector),
+    do: html |> LazyHTML.from_fragment() |> LazyHTML.query(selector) |> Enum.count()
+
+  describe "E-10 control glyphs only (source)" do
+    test "every quoted Heroicon literal under lib is on the control-glyph list" do
+      sources = lib_sources()
+
+      # The scan must see the files it claims to scan, so an empty glob cannot pass.
+      assert Enum.any?(sources, fn {file, source} ->
+               file =~ "components/layouts.ex" and source =~ ~s("hero-bars-3")
+             end)
+
+      offenders =
+        for {file, source} <- sources, name <- icon_offenders(source), do: "#{file}: #{name}"
+
+      assert offenders == [],
+             "Heroicons outside the control-glyph list (LD-6):\n" <> Enum.join(offenders, "\n")
+    end
+
+    test "no icon takes its name from a variable" do
+      offenders =
+        for {file, source} <- lib_sources(), dynamic_icon_names(source) != [], do: file
+
+      assert offenders == [], "icon name={...} hides a name from the scan: #{inspect(offenders)}"
+    end
+
+    test "a planted name outside the list fails the scan, and an exact control name passes" do
+      assert icon_offenders(~s(<.icon name="hero-arrow-path" class="size-4" />)) ==
+               ["hero-arrow-path"]
+
+      # A longer name that merely starts with a control name is a different icon.
+      assert icon_offenders(~s(<.icon name="hero-x-mark-solid" />)) == ["hero-x-mark-solid"]
+      assert icon_offenders(~s(icon: "hero-information-circle")) == ["hero-information-circle"]
+
+      for name <- @control_glyphs do
+        assert icon_offenders(~s(<.icon name="#{name}" />)) == []
+      end
+
+      # A string that only contains the word is not an icon literal.
+      assert icon_offenders(~s(id: "ops-empty-hero-heading-1")) == []
+
+      assert dynamic_icon_names(~s(<.icon name={@icon} class="size-5" />)) != []
+      assert dynamic_icon_names(~s(<.icon name="hero-x-mark" />)) == []
+    end
+
+    test "the control list is exactly the nine LD-6 glyphs" do
+      assert Enum.sort(@control_glyphs) ==
+               Enum.sort(~w(hero-bars-3 hero-x-mark hero-chevron-down hero-clipboard-document
+                            hero-sun-micro hero-moon-micro hero-computer-desktop-micro
+                            hero-arrow-top-right-on-square hero-magnifying-glass))
+    end
+  end
+
+  describe "E-10 control glyphs only (rendered)" do
+    for {label, path} <- @glyph_screens do
+      test "#{label}: every svg is a control glyph or a sync-status shape", %{conn: conn} do
+        html = render_screen(conn, unquote(path))
+        chains = svg_chains(html)
+
+        assert chains != [], "#{unquote(label)} renders no svg at all; the check would be vacuous"
+
+        offenders =
+          chains
+          |> Enum.reject(&(control_glyph?(&1) or status_shape?(&1)))
+          |> Enum.map(&svg_label/1)
+
+        assert offenders == [],
+               "#{unquote(label)} renders an icon outside a control:\n" <>
+                 Enum.join(offenders, "\n")
+
+        # A data-shape svg exists only inside the status component.
+        assert count_in(html, "svg[data-shape]") ==
+                 count_in(html, ".ops-sync-status svg[data-shape]")
+      end
+
+      test "#{label}: nav, counts, refresh, flash and headings carry no icon", %{conn: conn} do
+        html = render_screen(conn, unquote(path))
+
+        assert count_in(html, ".ops-primary-nav svg") == 0
+        assert count_in(html, ".ops-nav-item__icon") == 0
+        assert count_in(html, ".ops-signal-counts svg:not([data-shape])") == 0
+        assert count_in(html, ".ops-refresh-button svg") == 0
+        assert count_in(html, ".ops-flash .alert > svg") == 0
+        assert count_in(html, ".ops-intent-card svg") == 0
+        assert count_in(html, ".ops-empty-hero svg") == 0
+        assert count_in(html, "h1 svg, h2 svg, h3 svg") == 0
+        assert count_in(html, ".ops-help-heading") == 0
+      end
+    end
+
+    test "the status shapes render on the all-statuses fixture, only inside the status", %{
+      conn: conn
+    } do
+      html = render_screen(conn, "/ops/phase173/health?scenario=all-statuses")
+
+      assert count_in(html, "svg[data-shape]") >= 4
+
+      assert count_in(html, "svg[data-shape]") ==
+               count_in(html, ".ops-sync-status svg[data-shape]")
+    end
+
+    test "the matcher rejects an icon in a nav item and one inside a plain link" do
+      nav =
+        ~s(<a class="ops-nav-item"><span class="ops-nav-item__icon"><svg class="size-4"></svg></span></a>)
+
+      plain = ~s(<a href="/x" class="link"><svg class="size-4"></svg></a>)
+      help = ~s(<a href="/x" class="ops-help-link"><svg class="size-3.5"></svg></a>)
+
+      assert [chain] = svg_chains(nav)
+      refute control_glyph?(chain)
+      assert [chain] = svg_chains(plain)
+      refute control_glyph?(chain)
+      assert [chain] = svg_chains(help)
+      assert control_glyph?(chain)
+
+      # A data-shape svg outside the status is not a status shape.
+      stray = ~s(<span class="other"><svg data-shape="filled"></svg></span>)
+      assert [chain] = svg_chains(stray)
+      refute status_shape?(chain)
+    end
+
+    test "the Help screen headings carry text only", %{conn: conn} do
+      html = render_screen(conn, "/ops/help")
+
+      assert count_in(html, ".ops-help-content h2") >= 5
+      assert count_in(html, ".ops-help-content h2 svg, .ops-help-content h3 svg") == 0
+      assert count_in(html, ".ops-help-content h2 span") == 0
+    end
+
+    test "an intent card, an empty hero and a refresh button render no icon" do
+      assigns = %{}
+
+      card =
+        rendered_to_string(~H"""
+        <OpsUi.ops_intent_card
+          title="Try a search"
+          summary="Query your schemas."
+          route_label="Try a search"
+          navigate="/ops/search"
+        />
+        """)
+
+      hero =
+        rendered_to_string(~H"""
+        <OpsUi.ops_empty_hero title="No matching documents">Try fewer words.</OpsUi.ops_empty_hero>
+        """)
+
+      refresh =
+        rendered_to_string(~H"""
+        <OpsUi.ops_refresh_button id="r" aria_label="Refresh search health" />
+        """)
+
+      for html <- [card, hero, refresh], do: assert(svg_chains(html) == [])
+      refute card =~ "Start here"
+      refute card =~ "ops-intent-card__icon"
+      refute hero =~ "ops-empty-hero__mark"
+    end
+
+    test "the flash renders its text and a close button, with no leading icon" do
+      for {kind, flash} <- [info: %{"info" => "Saved."}, error: %{"error" => "Did not save."}] do
+        html = render_component(&CoreComponents.flash/1, kind: kind, flash: flash)
+
+        assert html =~ "aria-label=\"Close notification\""
+        assert count_in(html, ".alert > svg") == 0
+        assert [chain] = svg_chains(html)
+        assert control_glyph?(chain)
+        refute html =~ "opacity-40"
+      end
+    end
+  end
+
+  describe "no infinite animation in source" do
+    @infinite_css ~r/\binfinite\b|@keyframes\s+(spin|ops-pulse)\b|\bops-pulse\b/
+    @infinite_lib ~r/\binfinite\b|\banimate-(spin|pulse|ping|bounce)\b|\bops-pulse\b/
+
+    test "lib holds no animated spinner or pulse class, including documentation examples" do
+      offenders =
+        for {file, source} <- lib_sources(),
+            hit <- Regex.scan(@infinite_lib, source),
+            do: "#{file}: #{hd(hit)}"
+
+      assert offenders == [], Enum.join(offenders, "\n")
+    end
+
+    test "the patterns catch a planted loop in a stylesheet and in a template" do
+      assert Regex.match?(@infinite_css, ".x { animation: spin 1s linear infinite; }")
+      assert Regex.match?(@infinite_css, "@keyframes spin { to { transform: rotate(1turn) } }")
+      assert Regex.match?(@infinite_css, ".x { animation: ops-pulse 1s; }")
+
+      assert Regex.match?(
+               @infinite_lib,
+               ~s(<.icon name="hero-x-mark" class="motion-safe:animate-spin" />)
+             )
+
+      refute Regex.match?(@infinite_css, ".x { animation: ops-fade-in 240ms both; }")
     end
   end
 end

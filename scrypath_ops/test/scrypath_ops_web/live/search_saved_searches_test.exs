@@ -628,6 +628,8 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
 
       assert has_element?(view, "#saved-search-import-file", "Import JSON file")
+      # Phase 187 (E-10): the import button is a word, not an upload glyph.
+      refute has_element?(view, "#saved-search-import-file svg")
       refute has_element?(view, "a[href='#saved-search-import']")
       refute has_element?(view, "#saved-search-import-form button[type=submit]")
 

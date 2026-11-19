@@ -210,8 +210,8 @@ inventory names every current export; add new exports here with their role consu
 | `ops_condition` | A plain muted word for something nobody looked at: `Not observed`, `Not checked`, `Queue not used` or `Unavailable` (a closed set, weight 400, no icon, no status color). `Clear` needs an observation and is rendered by `ops_sync_status` instead; a zero count from an unobserved source never earns it. Hook: `.ops-condition`, `[data-condition]` |
 | `ops_notice`, `ops_status`, `ops_tone_chip` | Panel (`--color-base-100`) with a 1px Hairline on three sides and a 2px inline-start rule, no tint, no shadow, no cue dot. Rule by kind: `:error` Failed (rule and title), `:warning` and `:partial` Retrying amber (rule and title), `:info`, `:success`, `:running` and `:neutral` the Control Edge rule with an Ink title. Body text is Ink. `ops_status` keeps `data-status-kind`; its `neutral` attr is accepted but no longer changes the surface. `ops_tone_chip` rides the same surface |
 | `ops_badge`, `ops_metric`, `ops_metric_grid` | `ops_badge` is plain muted text (12px, 600) for non-sync labels such as the Search run state; it never carries a sync status. `ops_metric` has no cue icon: state shows as the value color, `data-ops-metric-tone` stays. None of the three is used for a sync status |
-| `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
-| `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
+| `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles. `ops_intent_card` is words only: no icon and no "Start here" flag |
+| `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception. `ops_empty_hero` has no mark icon |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
 | `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata use the 12px floor; times, code, keys and identity names are Sometype Mono |
 | `ops_modal`, `ops_sheet`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles. `ops_sheet` docks right on wide screens and rises from the bottom below 640px |
@@ -395,6 +395,21 @@ a failed row is `:error`, a retrying or unverified row is `:warning`, anything e
 `:default/:secondary/:advanced` or `ops_button`'s `:primary/:ghost/...`. There is no danger value
 anywhere (Phase 187). Don't conflate them.
 
+## Icons — control glyphs only (Phase 187, LD-6)
+
+ScrypathOps says state in words. The only Heroicons `lib/` may render are nine control glyphs,
+each inside a control that has an accessible name or screen-reader text: `hero-bars-3` (open
+navigation), `hero-x-mark` (close), `hero-chevron-down` (the Saved searches disclosure),
+`hero-clipboard-document` (copy), `hero-sun-micro`, `hero-moon-micro` and
+`hero-computer-desktop-micro` (theme choice), `hero-arrow-top-right-on-square` (opens in a new
+tab) and `hero-magnifying-glass` (the command hint, shown alone only at 360px and below). Nav
+items, headings, flash messages, counts, the refresh button, the import button, intent cards
+and the empty hero render no icon. The four sync-status shapes are not Heroicons; they exist
+only inside `ops_sync_status`. The flash close glyph renders at full opacity (the alpha on the
+theme-toggle and timestamp-copy glyphs belongs to the alpha sweep). E-10 in
+`reskin_static_contract_test.exs` scans every quoted `"hero-…"` literal under `lib/` against
+this list, so adding a glyph is an edit to the list and a design decision, not a side effect.
+
 ## Z-index — `--z-index-ops-*` → `z-ops-*`
 
 | Token | Value | Consumer |
@@ -484,8 +499,8 @@ Transform/opacity/box-shadow end states only.
 | `.ops-object-item-active` (dark override) | Active Saved search item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
 | `.ops-code-block--shimmer` | Opt-in code-block hover glint — an opacity-only `::after` ring inside `@media (hover: hover)`; surfaced via `shimmer={true}` on `ops_code_block/1` | `--duration-ops-fast` + `--ease-ops-standard` | `:hover` on hover-capable pointers only |
 
-**Anchors (the allowed surface):** the route mark, the recommended Control Room intent card
-(`.ops-intent-card--recommended`), Search federation/merge-trace disclosures (`.ops-path-trace`),
+**Anchors (the allowed surface):** the route mark, Search federation/merge-trace disclosures
+(`.ops-path-trace`),
 the active Saved search item (`.ops-object-item-active`), and optionally the breadcrumb current path
 (`[aria-current="page"]`). Every path/node signal is paired with the existing visible
 text/ARIA state so motion never carries status meaning alone (D-07).

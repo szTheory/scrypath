@@ -59,8 +59,6 @@ defmodule ScrypathOpsWeb.CoreComponents do
       {@rest}
     >
       <div class="alert w-full max-w-full text-wrap">
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
@@ -68,10 +66,10 @@ defmodule ScrypathOpsWeb.CoreComponents do
         <div class="flex-1" />
         <button
           type="button"
-          class="group self-start cursor-pointer"
+          class="ops-flash__close self-start cursor-pointer"
           aria-label={gettext("Close notification")}
         >
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+          <.icon name="hero-x-mark" class="size-5" />
         </button>
       </div>
     </div>
@@ -91,10 +89,14 @@ defmodule ScrypathOpsWeb.CoreComponents do
   Icons render through the Hex `heroicons` Phoenix components so ScrypathOps
   does not depend on npm Heroicons assets being present in host applications.
 
+  ScrypathOps renders icons only as control glyphs (the menu, close, copy, theme,
+  new-tab, command-hint and disclosure controls), each inside a control that has an
+  accessible name. Say a state in words, never with an icon, and never animate one.
+
   ## Examples
 
       <.icon name="hero-x-mark" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+      <.icon name="hero-x-mark" class="size-5" />
   """
   attr(:name, :string, required: true)
   attr(:class, :any, default: "size-4")

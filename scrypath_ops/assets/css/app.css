@@ -560,19 +560,6 @@
     text-align: center;
   }
 
-  .ops-empty-hero__mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border: 1px solid color-mix(in oklch, var(--color-primary) 22%, transparent);
-    border-radius: var(--radius-ops-lg);
-    background: color-mix(in oklch, var(--color-primary) 9%, transparent);
-    color: var(--color-primary);
-    box-shadow: inset 0 1px 0 color-mix(in oklch, var(--color-base-100) 55%, transparent);
-  }
-
   .ops-empty-hero__copy {
     display: grid;
     max-width: 38rem;
@@ -1150,16 +1137,6 @@
     font-weight: 600;
   }
 
-  .ops-nav-item__icon {
-    display: inline-flex;
-    width: 1.25rem;
-    height: 1.25rem;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.78;
-  }
-
   .ops-nav-item__label {
     min-width: 0;
     overflow: hidden;
@@ -1415,60 +1392,12 @@
     border-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
   }
 
-  /* State-recommended card: a quiet ring so the eye lands on the right job first,
-     without shouting. Pairs with the kind tone (e.g. warning) when degraded. */
-  .ops-intent-card--recommended {
-    box-shadow:
-      var(--shadow-ops-surface),
-      inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent);
-  }
-
-  .ops-intent-card__topline {
-    display: flex;
-    min-height: 2.25rem;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--spacing-ops-3);
-  }
-
-  .ops-intent-card__markers,
   .ops-intent-card__badges {
     display: flex;
     min-width: 0;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--spacing-ops-2);
-  }
-
-  .ops-intent-card__markers {
-    justify-content: flex-end;
-    text-align: right;
-  }
-
-  .ops-intent-card__flag {
-    border-radius: 999px;
-    padding-inline: var(--control-pad-x-sm);
-    padding-block: 0.125rem;
-    font-size: var(--text-ops-sm);
-    font-weight: 600;
-    letter-spacing: var(--tracking-ops-label);
-    color: var(--color-primary);
-    background: color-mix(in oklch, var(--color-primary) 12%, transparent);
-  }
-
-  .ops-intent-card__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    flex: none;
-    border: 1px solid color-mix(in oklch, var(--color-primary) 22%, transparent);
-    border-radius: var(--radius-ops-control);
-    background: color-mix(in oklch, var(--color-primary) 9%, transparent);
-    line-height: 1;
-    color: var(--color-primary);
-    opacity: 0.9;
   }
 
   .ops-intent-card__title {
@@ -2311,23 +2240,6 @@
   }
 }
 
-/* D-02: recommended intent-card dark 3-layer composition (ring→seat→glow).
-   Light base at .ops-intent-card--recommended is byte-unchanged (D-02a). */
-[data-theme="dark"] .ops-intent-card--recommended {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
-    var(--shadow-ops-panel-dark),
-    var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-intent-card--recommended {
-    box-shadow:
-      inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 45%, transparent),
-      var(--shadow-ops-panel-dark),
-      var(--shadow-ops-glow);
-  }
-}
-
 /* D-10: --shadow-ops-* are @theme tokens, not daisyUI keys — must hand-author both dark paths.
    Same offsets/blur as light; color/alpha only. Cascades to all 14 shadow consumers. */
 [data-theme="dark"] {
@@ -2393,7 +2305,6 @@
   .ops-time-preference { display: flex; align-items: center; gap: .375rem; color: var(--ops-text-muted); font-size: var(--text-ops-sm); }
   .ops-time-preference select { width: auto; background-color: var(--ops-surface-1); color: var(--color-base-content); border: var(--border) solid var(--ops-control-edge); }
   .ops-intent-card { position: relative; gap: .5rem; padding: 1.25rem; }
-  .ops-intent-card__topline { display: none; }
   .ops-intent-card__cta { position: absolute; right: 1.25rem; top: 1.25rem; }
   .ops-intent-card__title { padding-right: 1.5rem; }
   .ops-intent-card__summary { max-width: 50ch; }
@@ -2515,7 +2426,6 @@
   .ops-code-toolbar button { background: var(--color-base-100); border-radius: var(--radius-ops-control); padding-inline: .5rem; min-height: var(--control-h-sm); font-size: var(--text-ops-sm); }
   .ops-help-link { display: inline-flex; align-items: baseline; gap: .25em; font: inherit; }
   .ops-help-link svg { flex-shrink: 0; align-self: center; }
-  .ops-help-heading { display: inline-flex; align-items: center; gap: .5rem; }
   .ops-help-content .ops-help-subtopic { border: 0; padding-block: 1rem 0; }
   .ops-help-subtopic h3 { font-size: var(--text-ops-h3); font-weight: 600; }
   .ops-signal-group { display: grid; gap: .75rem; align-content: start; }

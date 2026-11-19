@@ -190,7 +190,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             data-testid="control-room-secondary-intents"
           >
             <.ops_intent_card
-              icon="hero-magnifying-glass"
               title="Try a search"
               summary="Query your schemas and inspect the results."
               route_label="Try a search"
@@ -198,7 +197,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               data-testid="control-room-explore-search"
             />
             <.ops_intent_card
-              icon="hero-arrows-right-left"
               title="Check sync and settings"
               summary="See pending work and compare your declared settings with Meilisearch."
               route_label="Check sync and settings"
