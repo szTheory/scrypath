@@ -394,6 +394,31 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              |> LazyHTML.query("[data-testid='posture-facts'] time")
              |> Enum.count() == 2
     end
+
+    test "the facts line repeats a time as plain text, so each exact time has one copy control",
+         %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+      healthy = row_html(lv, "Phase173FixtureSchema")
+      fragment = LazyHTML.from_fragment(healthy)
+
+      # No copy button inside the facts line, and its times keep the exact value and the mono face.
+      assert fragment
+             |> LazyHTML.query("[data-testid='posture-facts'] [data-ops-timestamp-copy]")
+             |> Enum.count() == 0
+
+      assert fragment
+             |> LazyHTML.query("[data-testid='posture-facts'] time.ops-time__value[datetime]")
+             |> Enum.count() == 2
+
+      # Every exact value is offered for copying exactly once in the row (the source groups).
+      copy_values =
+        fragment
+        |> LazyHTML.query("[data-ops-timestamp-copy]")
+        |> Enum.map(&(&1 |> LazyHTML.attribute("data-ops-timestamp-copy") |> List.first()))
+
+      assert copy_values != []
+      assert copy_values == Enum.uniq(copy_values)
+    end
   end
 
   describe "conditions are plain muted words (E-03)" do

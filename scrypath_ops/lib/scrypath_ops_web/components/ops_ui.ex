@@ -1317,6 +1317,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:retained_text, :string, default: nil)
   attr(:operational, :boolean, default: false)
   attr(:copy, :boolean, default: false)
+
+  attr(:copyable, :boolean,
+    default: true,
+    doc:
+      "`false` renders the exact time as plain mono text with no copy button, for a summary line that repeats a time already offered once with its copy control (one copy control per exact value)."
+  )
+
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do
@@ -1332,7 +1339,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <span id={@time_id} class={["ops-time", @class]} phx-hook="OpsTimestampCopy">
       <span :if={@label && @label != ""} class="ops-time__label">{@label}</span>
-      <%= if @exact do %>
+      <%= if @exact && @copyable do %>
         <button
           type="button"
           class="ops-time__stamp"
@@ -1347,7 +1354,11 @@ defmodule ScrypathOpsWeb.OpsUi do
           />
         </button>
       <% else %>
-        <span class="ops-time__value">{@human}</span>
+        <%= if @exact do %>
+          <time class="ops-time__value" datetime={@exact} data-ops-time-value>{@human}</time>
+        <% else %>
+          <span class="ops-time__value">{@human}</span>
+        <% end %>
       <% end %>
       <span :if={@retained_text} class="ops-time__retained">{@retained_text}</span>
     </span>

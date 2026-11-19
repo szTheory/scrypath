@@ -377,6 +377,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                         label={facts_time_label(status.queue.last_succeeded)}
                         state_text={lower_first(queue_time_state_text(status))}
                         operational
+                        copyable={false}
                       />
                     <% else %>
                       <%= if Posture.queue_unused?(status) do %>
@@ -397,6 +398,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       label={facts_time_label(status.backend.last_succeeded)}
                       state_text={lower_first(time_state_text(status.backend.last_succeeded))}
                       operational
+                      copyable={false}
                     />
                   </span>
                 </p>
