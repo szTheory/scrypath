@@ -470,17 +470,23 @@ Suggested three test-only commits: (A) `test/support/ui_tokens.ex` helper plus `
 | A9 | Offline brand verify costs well under 1 s (44 files, 326,773 B) | Validation | Negligible; measure when written. |
 | A10 | Tier 3 values (warm paper, brandbook ramp) are safe to deny now | Section 5 | If 187 reuses one as a local color, it moves to the token map; low cost. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Token-map `applied` semantics.**
    - Known: no `adopt` row can match brand hex before 187 (V). Parity both ways is enforceable now.
    - Unclear: whether the maintainer wants pending rows visible as a count in output.
    - Recommendation: Pattern 3; print the pending count; 187's plan lists "pending count reaches 0" as its own exit check.
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "Token-map `applied` flag" (symmetric check, shrink-only pending count; Phase 187 flips rows). Planned in 186-02 Task 1.
 2. **Tier 4 semantic colors (`#0c0f14 #5ca9e6 #4fae74 #d9a441 #d96262 ...`).** Not in any adopted brand member (V). Recommend leaving them off the deny-list in 186 and deciding in 187's token map (`local` or retired).
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "Deny-list source of new" (tier 4 stays off the deny-list until Phase 187's `local` decision). Planned in 186-02 Tasks 1-2 (rows `local` with target equal to the current value).
 3. **Who deletes `brandbook/`, the DTCG mirror and their tests?** No v1.46 requirement does, yet the allowlist is described as emptying by 187. Recommend a `retire-last` tag now and an explicit later item (v1.47 first plan) so the shrink-only rule has a finish line.
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "Allowlist seed" (`retire-last` tag; allowlist need not be empty at the end of 187), plus ownership recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary: the `brandbook/` directory and `prompts/scrypath-brand-book.md` are owned by Phase 188 (BDOC-01 already requires no `brandbook/` reference in the built docs, so deleting the directory fits there; ROADMAP Phase 188 carries the exit check); `dev/mix/tasks/verify/ui_tokens.ex`, the `ops.*` DTCG mirror, `test/mix/tasks/ui_tokens_contract_test.exs`, the `ci.yml` path regex and the demo host favicon are a tracked cleanup item for the first v1.47 phase. Both are recorded in ROADMAP (Phase 188 scope note and the v1.47 "Deferred" line) and in each allowlist entry's reason.
 4. **GATE-02 in an all-evidence phase.** Roadmap allows three plans here but also says a second consecutive evidence-only plan forces a stop-and-decide. Recommend a recorded checkpoint at the end of Plan 02 (projection result plus a go or no-go for Plan 03), not a user question unless the projection fails (AGENTS.md: ask only when scope, risk or cost change).
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "GATE-02 checkpoint" (recorded stop-and-decide at the end of Plan 02; Plan 03 proceeds only on a projection where Phase 187 owns every remaining failure). Planned in 186-02 Task 3 and the 186-03 Task 1 precondition.
 5. **Do TOK-04's tests run in CI?** Wiring `ui_state_pairs.test.cjs` adds about 25 s and a gate; leaving it unwired keeps the replacement unexercised after this phase. Recommend wiring only a small calibration test file and counting it in the budget.
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "TOK-04" ("The tests run inside the existing focused step; no new gate"). Planned in 186-03 Task 1: the test file joins the existing `repository-contracts` Node step and is counted conservatively in the gate ledger.
 6. **Neutralize the contrast-checker self-test fixture now?** Removes 14 deny hits from guard source and lets the allowlist drop that file; touching `:536-589` also touches the 21-token lock that 187 flips. Recommend neutralizing hexes only, leaving the 21 count for 187 (or make the count data-driven; U).
+   - **RESOLVED** by CONTEXT "Decisions from research", bullet "Allowlist seed" ("Neutralize the contrast-checker self-test fixture's 14 deny hits by string concatenation now"); the 21-token lock stays for Phase 187. Planned in 186-02 Task 2.
 
 ## Environment Availability
 

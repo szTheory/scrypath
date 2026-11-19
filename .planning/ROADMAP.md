@@ -58,7 +58,12 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
   3. The about 12 pinned old-identity literals are gone from the three root and ops contract tests, which now assert token relationships through a resolved-token helper, landed in at most 3 test-only commits; the recolor dry-run projection after those commits shows no failing test outside Phase 187's scope (otherwise the phase stops and re-plans). (TOK-03)
   4. The Phase 185 preservation specs still fail on copy, geometry, state, action and identity changes, and the replacement structural check accepts its calibrated recolor case and rejects its calibrated regression case. (TOK-04)
   5. `ops-ui (path-scoped)` is a required check asserted by the workflow-wiring test with its path list covering `brand/`, `language/` and `fixtures/`, the static storybook-boundary checks run in a required job, every new required gate records its deletion trigger and churn within the budget of 12, and the phase closes in at most 3 plans with one full gate run per commit SHA. (GATE-01, GATE-02; GATE-02 is first satisfied here and stays a standing rule for later phases)
-**Plans**: TBD (at most 3)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 186-01-PLAN.md — Brand pin: `brand/` and ops fonts pinned by `brand/brand.pin.json`, offline `mix verify.brand`, `mix brand.update` with archive refusals (PIN-01..03)
+- [ ] 186-02-PLAN.md — Token map plus one Node token test (parity, applied flag, built-CSS emissions, deny-list with shrink-only allowlist), literal lifts in at most 3 test-only commits, recolor projection and GATE-02 stop-and-decide (TOK-01..03, GATE-02)
+- [ ] 186-03-PLAN.md — Calibrated structural pair check on real captures, six-context wiring test, storybook boundary checks, gate-budget ledger and phase-close receipts (TOK-04, GATE-01, GATE-02)
 
 ### Phase 187: ScrypathOps re-skin
 **Goal**: Operators see ScrypathOps in the plum/orchid identity in light and dark with one consistent sync-status vocabulary, hosts that mount it see no change outside ops, and the maintainer receives it as one Draft PR with green gates and capture inventory, merged only on the maintainer's yes.
@@ -77,10 +82,12 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
 **Goal**: A reader sees the new brand header, logo and favicon in the README on GitHub and on HexDocs, with code blocks in brand colors that follow ExDoc's own theme toggle.
 **Depends on**: Phase 186 (pinned `brand/` assets). Sequenced after Phase 187's PR lands on main (no stacked PRs).
 **Requirements**: BDOC-01, BDOC-02
+**Scope note** (recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary): Phase 188 also deletes the retired `brandbook/` directory and removes its `retire-last` deny-list allowlist entry, and resolves `prompts/scrypath-brand-book.md` (the superseded brand prompt that documents that directory) by deleting or rewriting it and removing its allowlist entry. This falls under BDOC-01 ("no `brandbook/` reference left in the built docs"); no new requirement ID.
 **Success Criteria** (what must be TRUE):
   1. One real `mix docs` build produces a `readme.html` whose header images use `brand/assets/readme/...` paths, and every `src` and `srcset` in the built docs resolves to a file in the output; the same relative paths resolve to committed files for the GitHub README. (BDOC-01)
   2. The built docs contain no `brandbook/` reference. (BDOC-01)
   3. The built docs head links the brand stylesheet after ExDoc's, the brand favicon and the brand logo from `doc/assets/`; the stylesheet prefixes every color rule with `body ` and `body.dark `, has no `prefers-color-scheme` block, and the contract test asserts the code-block colors. (BDOC-02)
+  4. Exit check (scope note above): the `brandbook/` directory is deleted, its allowlist entry and the `prompts/scrypath-brand-book.md` entry are removed, and the shrink-only deny-list test (`examples/scrypath_ecommerce/ui-tokens.test.mjs`) still passes. (BDOC-01)
 **Plans**: TBD
 **UI hint**: yes
 
@@ -117,6 +124,10 @@ Phases 189 and 190 move to v1.47 if v1.46 runs long. This is a scope call by the
 
 On deferral: SITE-01 and COPY-01 move to the v1.47 requirements and the traceability table is updated; website entries in the deny-list allowlist keep their entries with the phase tag retargeted to the v1.47 phase (the shrink-only rule still applies); v1.46 closes after Phase 188. Phase 190 is independent of 189 and can stay in v1.46 alone if only the website is deferred.
 
+## Deferred to v1.47
+
+- **Deferred (first v1.47 phase, tracked cleanup; recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary):** retire `dev/mix/tasks/verify/ui_tokens.ex`, the `ops.*` DTCG mirror and `test/mix/tasks/ui_tokens_contract_test.exs` after the Phase 187 re-skin, replace the demo host favicon `examples/scrypath_ecommerce/priv/static/favicon.svg`, and remove their `retire-last` deny-list allowlist entries (with the `ci.yml` path-regex entry). Recorded in Phase 186 research Open Question 3; no v1.46 requirement.
+
 ## Out of scope for v1.46
 
 Type-scale reflow, master-detail Search health and the progress line, sounds, logo animation, bulk retry, fully scoped `.ops-root` isolation, Bricolage in ops, light default for ops, the "Control room" sentence-case rename (v1.47 wording), and the online brand re-download check in CI. See the Out of Scope table in [REQUIREMENTS.md](REQUIREMENTS.md).
@@ -127,7 +138,7 @@ Type-scale reflow, master-detail Search health and the progress line, sounds, lo
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 186. Ingest, pin and guard | v1.46 | 0/TBD | Not started | - |
+| 186. Ingest, pin and guard | v1.46 | 0/3 | Planned | - |
 | 187. ScrypathOps re-skin | v1.46 | 0/TBD | Not started | - |
 | 188. README header and HexDocs | v1.46 | 0/TBD | Not started | - |
 | 189. Website re-skin | v1.46 (deferrable) | 0/TBD | Not started | - |

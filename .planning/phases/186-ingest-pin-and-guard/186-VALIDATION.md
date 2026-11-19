@@ -1,8 +1,8 @@
 ---
 phase: "186"
 slug: "ingest-pin-and-guard"
-status: draft
-nyquist_compliant: false
+status: validated
+nyquist_compliant: true
 wave_0_complete: false
 created: "2026-11-18"
 ---
@@ -69,4 +69,4 @@ All phase behaviors have automated verification. The online re-download check (`
 - [ ] Per-commit feedback latency under 30 s
 - [ ] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-11-18 (plan checker passed after 2 revisions)
