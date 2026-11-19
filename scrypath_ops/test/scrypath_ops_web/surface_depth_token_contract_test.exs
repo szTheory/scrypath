@@ -12,9 +12,47 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
 
   defp css, do: File.read!(@app_css)
 
-  test "--ops-surface-2 stays #222831 for dark raised surfaces" do
-    assert Regex.match?(~r/--ops-surface-2:\s*#222831;/, css()),
-           "Dark --ops-surface-2 drifted from the Phase 173 #222831 neutral elevation token."
+  # A few lines copied from the root test helper (this is a separate Mix project,
+  # so copying is cheaper than a dependency): the live value of a property from the
+  # dark daisyUI theme block, and WCAG 2.x relative luminance of a #rrggbb color.
+  defp dark_theme_value(property) do
+    [block] =
+      for [block] <- Regex.scan(~r/@plugin\s+"[^"]*daisyui-theme"\s*\{[^{}]*\}/s, css()),
+          block =~ ~r/^\s*name:\s*"dark"\s*;/m,
+          do: block
+
+    [_, value] = Regex.run(~r/^\s*#{Regex.escape(property)}:\s*(#[0-9a-fA-F]{6});/m, block)
+    value
+  end
+
+  defp luminance("#" <> hex) do
+    {value, ""} = Integer.parse(hex, 16)
+
+    [red, green, blue] =
+      for shift <- [16, 8, 0] do
+        channel = Bitwise.band(Bitwise.bsr(value, shift), 255) / 255
+
+        if channel <= 0.03928,
+          do: channel / 12.92,
+          else: :math.pow((channel + 0.055) / 1.055, 2.4)
+      end
+
+    0.2126 * red + 0.7152 * green + 0.0722 * blue
+  end
+
+  test "dark surfaces rise in luminance from --ops-bg through --ops-surface-1 to --ops-surface-2" do
+    # The relationship is the contract, not a color: each raised dark surface is
+    # lighter than the one below it. Values are read live from the dark theme block.
+    [page, surface_1, surface_2] =
+      for property <- ["--ops-bg", "--ops-surface-1", "--ops-surface-2"] do
+        property |> dark_theme_value() |> luminance()
+      end
+
+    assert page < surface_1,
+           "Dark --ops-surface-1 must be lighter than the --ops-bg page (#{page} vs #{surface_1})."
+
+    assert surface_1 < surface_2,
+           "Dark --ops-surface-2 must be lighter than --ops-surface-1 (#{surface_1} vs #{surface_2})."
   end
 
   test ".ops-data-card dark fill references --ops-surface-2" do

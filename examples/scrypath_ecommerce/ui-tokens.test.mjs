@@ -53,7 +53,7 @@ const PENDING_CEILING = 38;
 const HEX_OUTSIDE_CEILING = 34;
 // Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
 // retired value landed in a new file, which is the thing this guard exists to stop.
-const ALLOWLIST_CEILING = 23;
+const ALLOWLIST_CEILING = 22;
 
 const MODES = ["light", "dark"];
 const DISPOSITIONS = new Set(["adopt", "derive", "keep-platform", "retire", "local"]);
