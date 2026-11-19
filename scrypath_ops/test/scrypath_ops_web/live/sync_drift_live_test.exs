@@ -282,6 +282,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute has_element?(lv, ".ops-sync-work [data-tone='error']")
     refute has_element?(lv, "#sync-pipeline-status", "Caught up")
 
+    # Pending work says Pending through the shared component; the scheduled-retry line stays
+    # plain text, and the arrow is a decorative text arrow, not an icon.
+    assert has_element?(lv, ".ops-sync-work [data-sync-status='pending']", "Pending")
+    refute has_element?(lv, ".ops-sync-work [data-sync-status='failed']")
+    refute has_element?(lv, ".ops-sync-work [data-sync-status='retrying']")
+    refute has_element?(lv, ".ops-sync-work svg[class*='hero-']")
+    assert has_element?(lv, ".ops-sync-work a span[aria-hidden='true']", "→")
+
     assert has_element?(
              lv,
              ".ops-sync-work a[href='/ops/health?schema=ScrypathOps.Test.OpsPostA']"
@@ -306,6 +314,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
              updated_lv,
              ".ops-sync-work [data-tone='error']",
              "1 failed sync operation"
+           )
+
+    assert has_element?(
+             updated_lv,
+             ".ops-sync-work [data-tone='error'] [data-sync-status='failed']",
+             "Failed"
            )
 
     assert has_element?(

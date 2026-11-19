@@ -843,6 +843,13 @@
     color: var(--ops-status-clear);
   }
 
+  /* A condition (Not observed, Not checked, Queue not used, Unavailable) is plain muted text:
+     no icon, no status color. It says what was not looked at and never reads as healthy. */
+  .ops-condition {
+    color: var(--ops-text-muted);
+    font-weight: 400;
+  }
+
   /* Glow opt-in: quiet violet aura via --shadow-ops-glow (none in light, faint in dark).
      Apply to route-mark, active nav pill, recommended intent-card. Never text/bg floods. */
   .ops-glow {
@@ -2672,6 +2679,9 @@
   .ops-signal-counts dt { display: inline-flex; align-items: center; gap: .375rem; font-size: var(--text-ops-body); }
   .ops-signal-counts dd { font-size: var(--text-ops-body); font-weight: 600; font-variant-numeric: tabular-nums; }
   .ops-signal-counts [data-tone="error"] { color: var(--ops-error-text); }
+  .ops-signal-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--spacing-ops-1) var(--spacing-ops-2); font-size: var(--text-ops-body); font-variant-numeric: tabular-nums; }
+  .ops-signal-facts__sep { color: var(--ops-text-muted); }
+  .ops-signal-empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-ops-2); }
   .ops-signal-success dt { font-size: var(--text-ops-sm); color: var(--ops-text-muted); margin-bottom: .25rem; }
   .ops-signal-success dd { font-size: var(--text-ops-body); color: var(--ops-text-muted); }
   .ops-sync-identity { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .375rem; font-size: var(--text-ops-sm); color: var(--ops-text-muted); }
@@ -2682,10 +2692,8 @@
   }
   .ops-sync-work { display: grid; gap: .5rem; margin-block: .25rem .5rem; }
   .ops-sync-work li { display: flex; align-items: center; gap: .5rem; }
-  .ops-sync-work li > svg { flex-shrink: 0; }
   .ops-sync-work .ops-text-action { font-weight: 600; min-height: var(--control-h-sm); }
   .ops-sync-work + .ops-help-link { min-height: var(--control-h-xs); align-items: center; }
-  .ops-sync-work [data-tone="error"] > svg { color: var(--ops-error-text); }
   .ops-setting-live[data-missing="true"] { font-family: var(--font-sans); color: var(--ops-error-text); }
   [data-ops-validate][aria-invalid="true"] { border-color: var(--ops-error-text); }
   .ops-field-error[hidden] { display: none; }

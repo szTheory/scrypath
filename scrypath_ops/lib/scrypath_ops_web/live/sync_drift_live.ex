@@ -1710,8 +1710,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp unobserved_queue_copy(_mode), do: "This sync mode has no queue to check."
 
-  defp reconcile_signal_icon(:failed_sync_work), do: "hero-exclamation-circle"
-  defp reconcile_signal_icon(_), do: "hero-clock"
+  # Only signals that name a sync status render one; every other signal stays plain text.
+  defp signal_status(:failed_sync_work), do: :failed
+  defp signal_status(:pending_queue_work), do: :pending
+  defp signal_status(:pending_backend_work), do: :pending
+  defp signal_status(_signal), do: nil
 
   defp sync_mode_label(:oban), do: "Oban background sync"
   defp sync_mode_label(:inline), do: "Inline sync"
@@ -2010,14 +2013,14 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               :for={signal <- @activity}
               data-tone={if signal == :failed_sync_work, do: "error"}
             >
-              <.icon name={reconcile_signal_icon(signal)} class="size-4" />
+              <.ops_sync_status :if={signal_status(signal)} status={signal_status(signal)} />
               <.link
                 :if={signal == :failed_sync_work}
                 navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
                 class="ops-text-action"
               >
                 {reconcile_signal_label(signal, @reconcile_result)}
-                <.icon name="hero-arrow-right" class="size-4" />
+                <span aria-hidden="true">→</span>
               </.link>
               <.link
                 :if={signal in [:pending_queue_work, :pending_backend_work]}
@@ -2025,7 +2028,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
                 class="ops-sync-activity-link"
               >
                 {reconcile_signal_label(signal, @reconcile_result)}
-                <.icon name="hero-arrow-right" class="size-4" />
+                <span aria-hidden="true">→</span>
               </.link>
               <span :if={
                 signal not in [:failed_sync_work, :pending_queue_work, :pending_backend_work]

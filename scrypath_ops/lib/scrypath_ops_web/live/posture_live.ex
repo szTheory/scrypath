@@ -9,6 +9,7 @@ defmodule ScrypathOpsWeb.PostureLive do
   use ScrypathOpsWeb, :live_view
 
   alias ScrypathOps.OperatorSelection
+  alias ScrypathOps.Posture
 
   @impl true
   def mount(params, _session, socket) do
@@ -183,9 +184,16 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   # Map the shared summary back onto this view's legacy `posture_rows` assign,
   # which the per-schema table and empty-state guards still pattern-match on.
-  defp posture_rows_assign(%ScrypathOps.Posture{state: :unconfigured}), do: :empty_allowlist
-  defp posture_rows_assign(%ScrypathOps.Posture{state: :missing_backend}), do: :missing_backend
-  defp posture_rows_assign(%ScrypathOps.Posture{rows: rows}), do: {:ok, rows}
+  #
+  # Rows are ranked here, once, when they are loaded or refreshed (SKIN-07): failed, retrying,
+  # pending, unverified, clear, then module name. Rendering never sorts, so a row does not jump
+  # while an operator reads it; it moves only when a refresh brings new evidence.
+  defp posture_rows_assign(%Posture{state: :unconfigured}), do: :empty_allowlist
+  defp posture_rows_assign(%Posture{state: :missing_backend}), do: :missing_backend
+  defp posture_rows_assign(%Posture{rows: rows}), do: {:ok, Posture.sort_by_urgency(rows)}
+
+  defp posture_rows({:ok, rows}) when is_list(rows), do: rows
+  defp posture_rows(_other), do: []
 
   defp module_flat_name(mod) when is_atom(mod) do
     mod |> Atom.to_string() |> String.replace_prefix("Elixir.", "")
@@ -277,7 +285,8 @@ defmodule ScrypathOpsWeb.PostureLive do
       >
         <h2 id="posture-summary-heading" class="sr-only">Search health summary</h2>
         <.ops_verdict
-          kind={ScrypathOps.Posture.badge_kind(@posture_state)}
+          kind={Posture.verdict_kind(posture_rows(@posture_rows))}
+          status={Posture.worst_status(posture_rows(@posture_rows))}
           class="ops-posture-verdict"
           headline={@posture_headline}
         >
@@ -309,7 +318,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         class="ops-schema-signal-list"
         aria-label="Per-schema search health"
       >
-        <%= for {mod, row} <- posture_rows_worst_first(elem(@posture_rows, 1)) do %>
+        <%= for {mod, row} <- posture_rows(@posture_rows) do %>
           <article
             data-testid="posture-row"
             id={"posture-#{inspect(mod)}"}
@@ -344,18 +353,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </dl>
                   </div>
                   <div class="ops-schema-signal-card__badges">
-                    <.ops_badge :if={status.backend.failed != []} kind={backend_badge_kind(status)}>
-                      {backend_badge_label(status)}
-                    </.ops_badge>
-                    <.ops_badge
-                      :if={
-                        !status.queue.observed? || status.queue.failed != [] ||
-                          status.queue.retrying != []
-                      }
-                      kind={queue_badge_kind(status)}
-                    >
-                      {queue_badge_label(status)}
-                    </.ops_badge>
+                    <.row_status_word status={Posture.row_status(row)} />
                     <.link
                       :if={failed_work_present?(status)}
                       navigate={OperatorSelection.path(@mount_path, "failed-sync", mod)}
@@ -366,6 +364,42 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </.link>
                   </div>
                 </div>
+
+                <p class="ops-signal-facts" data-testid="posture-facts">
+                  <span data-source="queue">
+                    <%= if status.queue.observed? do %>
+                      Queue {queue_counts_text(status)},
+                      <.ops_time
+                        id={"posture-facts-time-queue-#{inspect(mod)}"}
+                        dt={state_at(status.queue.last_succeeded)}
+                        source_iso={state_source_iso(status.queue.last_succeeded)}
+                        snapshot_at={source_ref(@posture_summary, mod, :queue)[:checked_at]}
+                        label={facts_time_label(status.queue.last_succeeded)}
+                        state_text={lower_first(queue_time_state_text(status))}
+                        operational
+                      />
+                    <% else %>
+                      <%= if Posture.queue_unused?(status) do %>
+                        <.ops_condition word="Queue not used" />
+                      <% else %>
+                        Queue <.ops_condition word="Not observed" />
+                      <% end %>
+                    <% end %>
+                  </span>
+                  <span class="ops-signal-facts__sep" aria-hidden="true">·</span>
+                  <span data-source="backend">
+                    Meilisearch {backend_counts_text(status)},
+                    <.ops_time
+                      id={"posture-facts-time-backend-#{inspect(mod)}"}
+                      dt={state_at(status.backend.last_succeeded)}
+                      source_iso={state_source_iso(status.backend.last_succeeded)}
+                      snapshot_at={source_ref(@posture_summary, mod, :backend)[:checked_at]}
+                      label={facts_time_label(status.backend.last_succeeded)}
+                      state_text={lower_first(time_state_text(status.backend.last_succeeded))}
+                      operational
+                    />
+                  </span>
+                </p>
 
                 <div class="ops-schema-signal-card__groups">
                   <section
@@ -384,20 +418,20 @@ defmodule ScrypathOpsWeb.PostureLive do
                     <div class="ops-signal-activity">
                       <p
                         :if={status.backend.pending == [] && status.backend.failed == []}
-                        class="text-ops-body text-base-content/70"
+                        class="ops-signal-empty text-ops-body text-base-content/70"
                       >
-                        No pending or failed tasks.
+                        <.ops_sync_status status={:clear} /> No pending or failed tasks.
                       </p>
                       <dl
                         :if={status.backend.pending != [] || status.backend.failed != []}
                         class="ops-signal-counts"
                       >
                         <div :if={status.backend.pending != []}>
-                          <dt><.icon name="hero-clock" class="size-4" />Pending</dt>
+                          <dt><.ops_sync_status status={:pending} /></dt>
                           <dd>{length(status.backend.pending)}</dd>
                         </div>
                         <div :if={status.backend.failed != []} data-tone="error">
-                          <dt><.icon name="hero-exclamation-circle" class="size-4" />Failed</dt>
+                          <dt><.ops_sync_status status={:failed} /></dt>
                           <dd>{length(status.backend.failed)}</dd>
                         </div>
                       </dl>
@@ -436,25 +470,26 @@ defmodule ScrypathOpsWeb.PostureLive do
                           status.queue.observed? && status.queue.pending == [] &&
                             status.queue.retrying == [] && status.queue.failed == []
                         }
-                        class="text-ops-body text-base-content/70"
+                        class="ops-signal-empty text-ops-body text-base-content/70"
                       >
-                        No pending, retrying or failed jobs.
+                        <.ops_sync_status status={:clear} /> No pending, retrying or failed jobs.
                       </p>
                       <dl :if={status.queue.observed?} class="ops-signal-counts">
                         <div :if={status.queue.pending != []}>
-                          <dt><.icon name="hero-clock" class="size-4" />Pending</dt>
+                          <dt><.ops_sync_status status={:pending} /></dt>
                           <dd>{length(status.queue.pending)}</dd>
                         </div>
                         <div :if={status.queue.retrying != []} data-tone="retrying">
-                          <dt><.icon name="hero-arrow-path" class="size-4" />Retrying</dt>
+                          <dt><.ops_sync_status status={:retrying} /></dt>
                           <dd>{length(status.queue.retrying)}</dd>
                         </div>
                         <div :if={status.queue.failed != []} data-tone="error">
-                          <dt><.icon name="hero-exclamation-circle" class="size-4" />Failed</dt>
+                          <dt><.ops_sync_status status={:failed} /></dt>
                           <dd>{length(status.queue.failed)}</dd>
                         </div>
                       </dl>
                       <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
+                        <.ops_condition :if={!Posture.queue_unused?(status)} word="Not observed" />
                         {queue_unobserved_copy(status)}
                       </p>
                     </div>
@@ -488,12 +523,12 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </h3>
                     <p class="mt-ops-1 break-all text-ops-sm text-base-content/70">{inspect(mod)}</p>
                   </div>
+                  <div class="ops-schema-signal-card__badges">
+                    <.row_status_word status={Posture.row_status(row)} />
+                  </div>
                 </div>
-                <p class="mt-ops-2 flex items-start gap-ops-2 text-ops-body text-error">
-                  <.icon name="hero-exclamation-circle" class="mt-ops-1 size-4 shrink-0" />
-                  <span>
-                    Search health could not be checked: {fetch_error_copy(reason)} Refresh health to try again.
-                  </span>
+                <p class="mt-ops-2 text-ops-body" data-testid="posture-row-error">
+                  Search health could not be checked: {fetch_error_copy(reason)} Refresh health to try again.
                 </p>
                 <dl class="ops-signal-metrics ops-signal-metrics--retained mt-ops-2">
                   <div :for={source <- [:backend, :queue]}>
@@ -519,28 +554,21 @@ defmodule ScrypathOpsWeb.PostureLive do
     """
   end
 
-  # Default-sort the per-schema table worst-first so a red/degraded schema lands at the
-  # top of the scan path (B1). Rank: fetch error (0) → backend failures (1) → queue not
-  # observed or queue failures (2) → clean (3); ties break alphabetically by module name.
-  defp posture_rows_worst_first(rows) when is_list(rows) do
-    Enum.sort_by(rows, fn {mod, row} -> {posture_row_rank(row), inspect(mod)} end)
+  # One status word per row: the most urgent sync status, or a condition word when the row could
+  # not be observed. Never an icon beside a condition, never a status for a missing observation.
+  defp row_status_word(%{status: {:condition, word}} = assigns) do
+    assigns = assign(assigns, :word, word)
+
+    ~H"""
+    <.ops_condition word={@word} />
+    """
   end
 
-  defp posture_rows_worst_first(rows), do: rows
-
-  defp posture_row_rank({:error, _reason}), do: 0
-
-  defp posture_row_rank({:ok, status}) do
-    cond do
-      length(status.backend.failed) > 0 -> 1
-      not status.queue.observed? -> 2
-      length(status.queue.failed) > 0 -> 2
-      length(status.queue.retrying) > 0 -> 2
-      true -> 3
-    end
+  defp row_status_word(assigns) do
+    ~H"""
+    <.ops_sync_status status={@status} />
+    """
   end
-
-  defp posture_row_rank(_), do: 3
 
   defp failed_work_present?(status) do
     status.backend.failed != [] or status.queue.failed != []
@@ -650,45 +678,43 @@ defmodule ScrypathOpsWeb.PostureLive do
     end
   end
 
-  defp backend_badge_kind(status) do
-    if length(status.backend.failed) > 0, do: :error, else: :neutral
+  # The dense facts line: counts per source, zero statuses left out unless all are zero.
+  defp queue_counts_text(status) do
+    counts_text([
+      {status.queue.pending, "pending"},
+      {status.queue.retrying, "retrying"},
+      {status.queue.failed, "failed"}
+    ])
   end
 
-  defp backend_badge_label(status) do
-    if length(status.backend.failed) > 0,
-      do: "Meilisearch tasks failed",
-      else: "No failed Meilisearch tasks"
+  defp backend_counts_text(status) do
+    counts_text([
+      {status.backend.pending, "pending"},
+      {status.backend.failed, "failed"}
+    ])
   end
 
-  defp queue_badge_kind(status) do
-    cond do
-      not status.queue.observed? and queue_unused_mode?(status.mode) -> :neutral
-      not status.queue.observed? -> :warning
-      length(status.queue.failed) > 0 -> :error
-      length(status.queue.retrying) > 0 -> :warning
-      true -> :neutral
+  defp counts_text(counts) do
+    case for({states, word} <- counts, states != [], do: "#{length(states)} #{word}") do
+      [] -> "0 pending"
+      parts -> Enum.join(parts, ", ")
     end
   end
 
-  defp queue_badge_label(status) do
-    cond do
-      not status.queue.observed? and queue_unused_mode?(status.mode) -> "Queue not used"
-      not status.queue.observed? -> "Queue observations unavailable"
-      length(status.queue.failed) > 0 -> "Sync jobs failed"
-      length(status.queue.retrying) > 0 -> "Jobs retrying"
-      true -> "No failed sync jobs"
-    end
-  end
+  # A recorded success time reads "last succeeded <time>"; a missing one prints its own sentence.
+  defp facts_time_label(%Scrypath.Operator.State{at: %DateTime{}}), do: "last succeeded"
+  defp facts_time_label(_state), do: nil
+
+  defp lower_first(<<first::utf8, rest::binary>>), do: String.downcase(<<first::utf8>>) <> rest
+  defp lower_first(other), do: other
 
   defp sync_mode_label(:oban), do: "Background sync with Oban"
   defp sync_mode_label(:inline), do: "Inline sync"
   defp sync_mode_label(:manual), do: "Manual sync"
   defp sync_mode_label(mode), do: "Sync: #{mode}"
 
-  defp queue_unused_mode?(mode), do: mode in [:inline, :manual, "inline", "manual"]
-
   defp queue_unobserved_copy(status) do
-    if queue_unused_mode?(status.mode) do
+    if Posture.queue_unused?(status) do
       "Queue not used in #{status.mode} sync mode."
     else
       "Queue observations unavailable; no queue counts are reported as zero."

@@ -3719,6 +3719,10 @@
   .ops-sync-status[data-sync-status="clear"] {
     color: var(--ops-status-clear);
   }
+  .ops-condition {
+    color: var(--ops-text-muted);
+    font-weight: 400;
+  }
   .ops-glow {
     box-shadow: var(--shadow-ops-glow);
     transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
@@ -6006,6 +6010,23 @@
   .ops-signal-counts [data-tone="error"] {
     color: var(--ops-error-text);
   }
+  .ops-signal-facts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-ops-1) var(--spacing-ops-2);
+    font-size: var(--text-ops-body);
+    font-variant-numeric: tabular-nums;
+  }
+  .ops-signal-facts__sep {
+    color: var(--ops-text-muted);
+  }
+  .ops-signal-empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-ops-2);
+  }
   .ops-signal-success dt {
     font-size: var(--text-ops-sm);
     color: var(--ops-text-muted);
@@ -6046,9 +6067,6 @@
     align-items: center;
     gap: .5rem;
   }
-  .ops-sync-work li > svg {
-    flex-shrink: 0;
-  }
   .ops-sync-work .ops-text-action {
     font-weight: 600;
     min-height: var(--control-h-sm);
@@ -6056,9 +6074,6 @@
   .ops-sync-work + .ops-help-link {
     min-height: var(--control-h-xs);
     align-items: center;
-  }
-  .ops-sync-work [data-tone="error"] > svg {
-    color: var(--ops-error-text);
   }
   .ops-setting-live[data-missing="true"] {
     font-family: var(--font-sans);

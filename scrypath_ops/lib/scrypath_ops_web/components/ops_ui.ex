@@ -520,6 +520,26 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
+  A condition word: plain muted text that says what was not looked at. Never a status.
+
+  The closed set is `Not observed`, `Not checked`, `Queue not used` and `Unavailable`. A
+  condition carries no icon and no color of its own, so an unobserved source can never read as
+  healthy or as failed; `Clear` needs an observation and is rendered by `ops_sync_status/1`.
+  """
+  attr(:word, :string,
+    required: true,
+    values: ["Not observed", "Not checked", "Queue not used", "Unavailable"]
+  )
+
+  attr(:class, :any, default: nil)
+
+  def ops_condition(assigns) do
+    ~H"""
+    <span class={["ops-condition", @class]} data-condition={@word}>{@word}</span>
+    """
+  end
+
+  @doc """
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
@@ -533,6 +553,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:headline, :string, required: true)
   attr(:headline_id, :string, default: nil, doc: "id for labelling the surrounding section")
+
+  attr(:status, :atom,
+    default: nil,
+    values: [nil, :failed, :retrying, :pending, :clear],
+    doc: "worst sync status, rendered by `ops_sync_status/1` before the headline"
+  )
+
   attr(:label, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -547,6 +574,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         verdict_tone_class(@kind),
         @class
       ]}
+      data-verdict-kind={@kind}
       {@rest}
     >
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -561,14 +589,7 @@ defmodule ScrypathOpsWeb.OpsUi do
             id={@headline_id}
             class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            <span
-              class={["ops-verdict__icon", verdict_icon_class(@kind)]}
-              data-testid="ops-verdict-icon"
-              data-state={@kind}
-              aria-hidden="true"
-            >
-              <ScrypathOpsWeb.CoreComponents.icon name={verdict_icon(@kind)} class="size-5" />
-            </span>
+            <.ops_sync_status :if={@status} status={@status} />
             {@headline}
           </p>
           <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
@@ -1983,20 +2004,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp metric_value_class(:warning), do: "ops-metric__value--warning"
   defp metric_value_class(:error), do: "ops-metric__value--error"
   defp metric_value_class(_kind), do: nil
-
-  defp verdict_icon(:success), do: "hero-check-circle"
-  defp verdict_icon(:warning), do: "hero-exclamation-triangle"
-  defp verdict_icon(:error), do: "hero-x-circle"
-  defp verdict_icon(:partial), do: "hero-exclamation-circle"
-  defp verdict_icon(:running), do: "hero-arrow-path"
-  defp verdict_icon(_kind), do: "hero-information-circle"
-
-  defp verdict_icon_class(:success), do: "ops-verdict__icon--success"
-  defp verdict_icon_class(:warning), do: "ops-verdict__icon--warning"
-  defp verdict_icon_class(:error), do: "ops-verdict__icon--error"
-  defp verdict_icon_class(:partial), do: "ops-verdict__icon--partial"
-  defp verdict_icon_class(:running), do: "ops-verdict__icon--running"
-  defp verdict_icon_class(_kind), do: "ops-verdict__icon--neutral"
 
   # The verdict uses a neutral surface for every state; tone is localized to its icon.
   defp verdict_tone_class(:neutral), do: "ops-verdict-neutral"

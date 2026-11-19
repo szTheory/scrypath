@@ -9,11 +9,17 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
   #   - E-01 `ops_sync_status`: each status renders its word first and then one decorative 16px
   #     bar icon with its own shape, so the status reads without color, and an unknown status is
   #     rejected when the component is compiled.
+  #   - E-03 `ops_condition`: "Not observed", "Not checked", "Queue not used" and "Unavailable"
+  #     are plain muted words with no icon, no status and no color of their own, so something
+  #     nobody looked at can never read as healthy or as failed.
   use ScrypathOpsWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
   alias ScrypathOpsWeb.OpsUi
+
+  @app_css Path.expand("../../assets/css/app.css", __DIR__)
+  @condition_words ["Not observed", "Not checked", "Queue not used", "Unavailable"]
 
   @status_words %{
     failed: "Failed",
@@ -104,6 +110,44 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert status_attr.required
       assert status_attr.type == :atom
       assert Keyword.fetch!(status_attr.opts, :values) == [:failed, :retrying, :pending, :clear]
+    end
+  end
+
+  describe "E-03 ops_condition" do
+    for word <- ["Not observed", "Not checked", "Queue not used", "Unavailable"] do
+      test "#{word} is a plain word with no icon and no status" do
+        word = unquote(word)
+        html = render_component(&OpsUi.ops_condition/1, %{word: word})
+        doc = LazyHTML.from_fragment(html)
+
+        assert [condition] = doc |> LazyHTML.query(".ops-condition") |> Enum.to_list()
+        assert String.trim(LazyHTML.text(condition)) == word
+
+        assert doc |> LazyHTML.query("svg") |> Enum.count() == 0
+        refute html =~ "hero-"
+        refute html =~ "data-sync-status"
+        refute html =~ "data-shape"
+      end
+    end
+
+    test "the condition set is closed" do
+      word_attr =
+        OpsUi.__components__()
+        |> Map.fetch!(:ops_condition)
+        |> Map.fetch!(:attrs)
+        |> Enum.find(&(&1.name == :word))
+
+      assert word_attr.required
+      assert Keyword.fetch!(word_attr.opts, :values) == @condition_words
+      refute "Unknown" in @condition_words
+    end
+
+    test "the stylesheet paints a condition as muted body text with no status color" do
+      [_, body] = Regex.run(~r/\n  \.ops-condition \{([^}]*)\}/, File.read!(@app_css))
+
+      assert body =~ "color: var(--ops-text-muted)"
+      assert body =~ "font-weight: 400"
+      refute body =~ "--ops-status-"
     end
   end
 end

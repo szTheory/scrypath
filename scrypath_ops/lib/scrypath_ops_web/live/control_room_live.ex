@@ -139,7 +139,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
-            kind={Posture.badge_kind(@posture.state)}
+            kind={Posture.verdict_kind(@posture.rows)}
+            status={Posture.worst_status(@posture.rows)}
             label={
               cond do
                 @refresh_issue && @last_successful_posture -> "Last successful observation"

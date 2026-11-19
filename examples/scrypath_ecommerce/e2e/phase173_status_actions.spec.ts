@@ -35,13 +35,20 @@ async function chooseScenario(page: Page, scenario: string): Promise<void> {
   await waitForLiveConnected(page);
 }
 
+// A surface's fill and its three plain borders. The 2px inline-start rule is left out on purpose:
+// it is the one part of a verdict that carries the state, so it is compared separately below.
 async function surfaceFingerprint(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const style = (selector: string) => {
       const node = document.querySelector<HTMLElement>(selector);
       if (!node) return "missing";
       const computed = getComputedStyle(node);
-      return `${computed.backgroundColor}|${computed.borderColor}`;
+      return [
+        computed.backgroundColor,
+        computed.borderTopColor,
+        computed.borderRightColor,
+        computed.borderBottomColor
+      ].join("|");
     };
 
     return [
@@ -49,6 +56,13 @@ async function surfaceFingerprint(page: Page): Promise<string[]> {
       style(".ops-schema-signal-card")
     ];
   });
+}
+
+async function verdictRuleColor(page: Page): Promise<string> {
+  return page
+    .locator(".ops-verdict")
+    .first()
+    .evaluate((node) => getComputedStyle(node).borderInlineStartColor);
 }
 
 async function setTheme(page: Page, preference: "light" | "dark"): Promise<void> {
@@ -68,30 +82,37 @@ for (const entry of entries) {
     await visit(page, entry);
 
     const baseline = await surfaceFingerprint(page);
-    const healthyVerdictIcon = page.getByTestId("ops-verdict-icon");
-    await expect(healthyVerdictIcon).toHaveAttribute("data-state", "success");
-    const healthyIconColors = await healthyVerdictIcon.evaluate((icon) => ({
-      icon: getComputedStyle(icon).color,
-      headline: getComputedStyle(icon.parentElement!).color
+    const healthyRule = await verdictRuleColor(page);
+    // The verdict says Clear through the shared status component: the word, then a decorative
+    // icon, both in the one status color.
+    const healthyStatus = page.locator(".ops-verdict [data-sync-status]");
+    await expect(healthyStatus).toHaveAttribute("data-sync-status", "clear");
+    await expect(healthyStatus.locator(".ops-sync-status__word")).toHaveText("Clear");
+    await expect(healthyStatus.locator("svg")).toHaveAttribute("data-shape", "filled");
+    const healthyStatusColors = await healthyStatus.evaluate((status) => ({
+      word: getComputedStyle(status.querySelector(".ops-sync-status__word")!).color,
+      icon: getComputedStyle(status.querySelector("svg")!).color
     }));
-    expect(healthyIconColors.icon).toBe(healthyIconColors.headline);
+    expect(healthyStatusColors.icon).toBe(healthyStatusColors.word);
     const healthyRow = page.getByTestId("posture-row").first();
-    await expect(healthyRow.locator(".ops-badge-neutral")).toHaveCount(0);
-    await expect(healthyRow.locator(".ops-badge-success")).toHaveCount(0);
+    await expect(healthyRow.locator(".ops-badge")).toHaveCount(0);
     await expect(page.locator(".ops-metric")).toHaveCount(0);
     await expect(healthyRow).toContainText("No pending or failed tasks.");
     await expect(page.getByTestId("posture-row").first()).toContainText(entry.schema);
 
     await chooseScenario(page, "failed");
     await expect(page.locator(".ops-verdict")).toContainText("Sync jobs and Meilisearch tasks failed");
-    await expect(page.locator('[data-testid="ops-verdict-icon"][data-state="warning"]')).toBeVisible();
+    await expect(page.locator(".ops-verdict")).toHaveAttribute("data-verdict-kind", "error");
+    await expect(page.locator('.ops-verdict [data-sync-status="failed"]')).toBeVisible();
     const failed = page.getByTestId("posture-row").first();
-    await expect(failed).toContainText("Meilisearch tasks failed");
-    await expect(failed).toContainText("Sync jobs failed");
+    await expect(failed.locator(".ops-schema-signal-card__badges [data-sync-status='failed']")).toHaveText("Failed");
+    await expect(failed.locator("[data-tone='error'] [data-sync-status='failed']")).toHaveCount(2);
     await expect(failed.locator("[data-testid='posture-failed-sync-link']")).toBeVisible();
-    await expect(failed.locator(".ops-badge-error")).toHaveCount(2);
+    await expect(failed.locator(".ops-badge")).toHaveCount(0);
     await expect(page.locator(".ops-metric-success, .ops-schema-signal-card--warning, .ops-schema-signal-card--error")).toHaveCount(0);
+    // State stays local: the fill and the three plain borders do not change, only the rule does.
     expect(await surfaceFingerprint(page)).toEqual(baseline);
+    expect(await verdictRuleColor(page)).not.toBe(healthyRule);
 
     await chooseScenario(page, "unavailable");
     const unavailable = page.getByTestId("posture-row").first();
@@ -100,6 +121,8 @@ for (const entry of entries) {
     await expect(unavailable).toContainText(unavailableReason);
     await expect(unavailable).toContainText("Refresh health to try again");
     await expect(unavailable).not.toContainText("Meilisearch tasks failed");
+    await expect(unavailable.locator(".ops-condition")).toHaveText("Not checked");
+    await expect(unavailable.locator("[data-sync-status]")).toHaveCount(0);
     await expect(unavailable).not.toContainText("phase173_backend_unavailable");
     await expect(page.locator(".ops-verdict")).toContainText("could not be fully checked");
     await expect(
