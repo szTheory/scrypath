@@ -55,9 +55,9 @@ defmodule ScrypathOps.MixProject do
       {:postgrex, "~> 0.22.4"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 1.1.33"},
+      {:phoenix_live_view, "~> 1.2.13"},
       {:lazy_html, ">= 0.1.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3", only: :dev, optional: true},
+      {:phoenix_live_dashboard, "~> 0.9.1", only: :dev, optional: true},
       {:esbuild, "~> 0.10", only: :dev, runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", only: :dev, runtime: Mix.env() == :dev},
       # Hex package avoids git-based heroicons fetch (GitHub credential helpers can block `mix deps.get` in some environments).
@@ -68,7 +68,7 @@ defmodule ScrypathOps.MixProject do
       {:telemetry_poller, "~> 1.0", only: :dev, optional: true},
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.2.0"},
+      {:dns_cluster, "~> 0.3.1"},
       {:bandit, "~> 1.13"}
     ]
   end
