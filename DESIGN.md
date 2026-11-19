@@ -8,13 +8,13 @@ The implementation authority is [`app.css`](scrypath_ops/assets/css/app.css), it
 
 ## Colors
 
-The page floor is cool neutral in light (`#f3f5f8`) and dark charcoal in dark (`#111419`). Resting surfaces use white / `#191e25`; the next neutral surface uses `#edf1f5` / `#222831`. Primary interaction is violet (`#5b4ad1` / `#aaa0ff`), with active navigation on a soft selected fill. The System/Light/Dark picker uses a neutral selected surface. Use the named semantic status tokens and their AA-checked foreground pairs for warnings and failures. Status color stays local to explicit text or an icon; verdict, metric, and record surfaces remain neutral.
+The palette is the plum and orchid brand book (`brand/`). The page floor is a warm off-white (Page) in light and a deep plum-black (Night) in dark. Resting surfaces are Panel / Night Panel; recessed fills (code, hover, disabled fields) use Sunken, and the selected row, item or nav entry uses Selected plus a 2px accent line. Plum (light) and Orchid (dark) are the accent: links, the focus ring, the one primary button per scope, the selection line and checked native controls, and nothing else. Failed orange-red, Retrying amber, Pending gray-plum and Clear green are status colors for the status word and its icon; Failed is never decoration. Controls are drawn with the Control Edge border, and Hairline is only a divider. Text never uses alpha: it is Ink or the opaque muted text color, and every text pair is checked at 4.5:1 or better from the stylesheet. Status color stays local to explicit text or an icon; verdict, metric, and record surfaces remain neutral. The exact values, roles and checks are in `DESIGN-TOKENS.md`.
 
-System appearance follows the operating-system preference when no explicit theme is selected. The visible System, Light, and Dark controls represent the saved preference, not just the effective colors.
+System appearance is the default: an explicit `data-theme` on `html` wins, otherwise the operating-system preference decides, and ScrypathOps never forces light. The visible System, Light, and Dark controls represent the saved preference, not just the effective colors.
 
 ## Typography
 
-Use the system sans-serif stack for interface copy and the technical monospace stack for exact identifiers and evidence. The established scale is 24px page title, 18px section heading, 16px subsection or record heading, and 14px body, values, labels, help, and action copy. The 11px/12px exceptions are for short timestamps, badges, contextual notes/help, and optional metadata only.
+Use Hanken Grotesk for interface copy and Sometype Mono for schema and index names, commands, times, keys and code. The established scale is a 28px page title at weight 700, 18px section heading, 16px subsection or record heading, and 14px body, values, labels, help, and action copy. Nothing computes below 12px; the 12px size is for short timestamps, badges, contextual notes/help, and optional metadata only. Labels are sentence case; no text is transformed to capitals.
 
 ## Layout
 
@@ -24,7 +24,7 @@ Navigation is a flat list with Search directly after Control Room. The six task 
 
 ## Elevation & Depth
 
-Hierarchy comes from neutral surface steps, spacing, borders, and restrained shadows. Dark panels use the named seated-depth supplement; light panels retain their existing subtle lift. Keep the shell floor flat. Reserve glow for the existing active route or path anchors; never add it to resting evidence, broad backgrounds, or status surfaces.
+Hierarchy comes from neutral surface steps, spacing, borders, and restrained shadows. Dark panels use the named seated-depth supplement; light panels retain their existing subtle lift. Keep the shell floor flat. Glow is retired: do not add it anywhere; the remaining active route and path anchors lose theirs in the shape and motion pass.
 
 ## Shapes
 

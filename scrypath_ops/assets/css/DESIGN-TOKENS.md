@@ -27,63 +27,139 @@ file consume them. This doc is the catalog — change a value here only by chang
 
 ## Brand colors
 
-daisyUI semantic tokens, two themes (light default, dark via `prefers-dark` / explicit
-`data-theme="dark"`). Generate utilities like `bg-primary`, `text-base-content`, `border-base-300`.
+The palette is the pinned plum and orchid brand book (`brand/`, with its tokens in
+`brand/tokens.json`). daisyUI semantic tokens, two themes. System appearance is the default:
+`html[data-theme]` wins, otherwise the operating system decides (`prefers-color-scheme`), and
+ops never forces light. Both theme blocks in `app.css` declare exactly the 20 daisyUI color
+variables below plus the platform rows, every value a literal hex (no `var()` aliases), and
+[`token-map.json`](./token-map.json) records the brand source of each value. Generate utilities
+like `bg-primary`, `text-base-content`, `border-base-300`.
 
-| Token | Light | Dark | Use |
+| Token | Light | Dark | Brand role and use |
 | --- | --- | --- | --- |
-| `primary` | `#5b4ad1` | `#aaa0ff` | brand/accent, active nav, primary actions |
-| `--color-primary-strong` | `#5b4ad1` | `#aaa0ff` | text-bearing selected fills only; see Phase 132 floor |
-| `secondary` | `#a85d2e` | `#c17a3e` | warm accent, eyebrow labels |
-| `accent` | `#5b4ad1` | `#aaa0ff` | restrained active-theme brand accent |
-| `base-100` | `#ffffff` | `#191e25` | surfaces |
-| `base-200` | `#f3f5f8` | `#111419` | app background, muted panels |
-| `base-300` | `#dce2e9` | `#353d48` | borders, dividers, light theme-preference tray |
-| `base-content` | `#202124` | `#f1f2f4` | text |
-| `info` / `success` / `warning` / `error` | `#5ca9e6` / `#4fae74` / `#d9a441` / `#d96262` | (same hues) | status semantics |
+| `base-100` | `#ffffff` | `#201624` | Panel / Night Panel: resting surfaces and overlays |
+| `base-200` | `#f8f4f2` | `#160e19` | Page / Night: app background |
+| `base-300` | `#e0d5d1` | `#3a2a3e` | Hairline / Night Hairline: dividers and container borders, never a control's only edge |
+| `base-content` | `#1e1220` | `#f4edf3` | Ink / Pale Ink: text |
+| `primary`, `accent` | `#7b2d6b` | `#d58bc4` | Plum / Orchid: the accent, on the reserved list below |
+| `primary-content`, `accent-content` | `#ffffff` | `#160e19` | label on an accent fill |
+| `secondary` | `#f0e9e6` | `#3a2a3e` | quiet neutral (Sunken Page / Night Hairline), not an accent |
+| `secondary-content` | `#1e1220` | `#f4edf3` | Ink / Pale Ink |
+| `neutral` | `#1e1220` | `#3a2a3e` | Ink / Night Hairline |
+| `neutral-content` | `#f8f4f2` | `#f4edf3` | Page / Pale Ink |
+| `info` | `#5e5360` | `#bbaac0` | Muted Ink / Muted Pale (local default LD-1) |
+| `success` | `#1d6b3c` | `#7fcb9a` | the Clear text color (LD-1) |
+| `warning` | `#8a5a00` | `#e3b25c` | the Retrying text color (LD-1) |
+| `error` | `#b0360b` | `#ff9a6b` | the Failed text color (LD-1) |
+| `info-content`, `success-content`, `warning-content`, `error-content` | `#ffffff` | `#160e19` | Panel / Night (LD-1) |
 
-## A11y contrast floors -- Phase 132
+The four LD-1 aliases exist because daisyUI requires a fill and a content color for each; ops
+never paints them as fills (notices use a 2px rule), and the content colors still hold 4.5:1
+on them if a daisyUI utility leaks. There is no destructive fill: Failed is a status and error
+color only.
+
+### 60 / 30 / 10
+
+| Role | Light | Dark | Share and usage |
+| --- | --- | --- | --- |
+| Dominant (60%) | Page `#f8f4f2` | Night `#160e19` | `body`, the page floor, the space between rows |
+| Secondary (30%) | Panel `#ffffff`, Sunken `#f0e9e6`, Selected `#ebdfe7` | Night Panel `#201624`, Night Sunken `#110a14`, Selected Night `#2b2130` | header, sidebar, tables, rows, fields, notices, verdicts, code blocks, selected state |
+| Accent (10% at most) | Plum `#7b2d6b` | Orchid `#d58bc4` | the reserved list below and nothing else |
+
+Ink is text, not a surface.
+
+**Accent is reserved for (and nothing else):** the lockup's slash (inside the SVG); the
+`:focus-visible` ring; text links, underlined at rest; the one primary button per scope (the page,
+or one open modal or sheet); the selection line (`border-inline-start`) and the text of the
+current-page nav item and the active command-palette item; the checked fill of native checkbox,
+radio and toggle inputs; the finite navigation progress bar. Plum is never an info color and never
+text on Night (Orchid is the dark pair).
+
+**Failed color is reserved for:** the word and icon of `ops_sync_status :failed`, error-kind
+notices, verdicts and flash (rule and title), and invalid-input or unreadable text (`.text-error`).
+Retrying amber is the word and icon of Retrying plus warning and partial notices (rule and title
+only). Green is the word and icon of Clear only. Pending is a muted gray-plum.
+
+### Alpha policy
+
+Text never uses alpha: no `color-mix`, `rgba`, `/NN` utility or element `opacity` below 1 on
+text; it is Ink or the opaque `--ops-text-muted`. Plum and status tints (`color-mix` containing
+the primary or a status color), glow and tinted fills are retired in favor of `--ops-selected`,
+`--ops-sunken`, `--ops-control-edge`, `--color-base-300` or a solid token. Control borders are the
+opaque Control Edge. Kept, because they are not text and carry no retired color: container
+dividers and borders that mix `--color-base-content` with transparent, the black or
+base-content shadows, the one normalized scrim, the scroll-edge gradients in `.ops-table-scroll`,
+and near-opaque surface mixes such as the sidebar.
+
+## A11y contrast floors
 
 AA contrast is the hard gate for the operator UI. Body and long-form AAA status is
 advisory/report-only; AAA findings should stay visible in reports, but AA failures block
 the contrast gate.
 
-| Token | Light | Dark | Consumers |
-| --- | --- | --- | --- |
-| `--ops-text-muted` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `color-mix(in oklch, var(--color-base-content) 64%, transparent)` | `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60`, `.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`, `.ops-cmdk__item-hint`, `.ops-cmdk__empty` |
-| `--color-primary-strong` | `#5b4ad1` | `#5b4ad1` | `.ops-nav-item-active`, `.bg-primary.text-primary-content` |
+`contrast-checker.mjs` computes every pair below from the custom properties in `app.css`
+(pair names live in [`contrast-pairs.mjs`](./contrast-pairs.mjs) as property names, never as hex),
+compares unrounded ratios, and prints the thinnest text pair on every run.
 
-`--ops-text-muted` is the named readable-muted floor. Do not reintroduce raw
-`color-mix(in oklch, var(--color-base-content) NN%, transparent)` declarations for
-the consumers above. `contrast-pairs.mjs` entries that use `css_var: "ops-text-muted"`
-remain part of the D-15 lockstep contract: the manifest selector, token name, and
-`64%` alpha must match `app.css`. Header and shell overrides are unlayered after
-Tailwind's utility layer so the floor remains effective when an opacity utility is present.
+| Check | Rule |
+| --- | --- |
+| N-03 text pairs | Seven text roles (`base-content`, `--ops-text-muted`, `primary`, and the four `--ops-status-*` colors) on four backdrops (`base-200`, `base-100`, `--ops-sunken`, `--ops-selected`), both themes: 56 pairs, each 4.5:1 or better. Thinnest pair: Retrying on Selected Page, 4.58:1 |
+| N-04 non-text pairs | `--ops-control-edge` on the four backdrops and on the overlay surface (`base-100`), and `primary` on the four backdrops: 3:1 or better. Button labels (`primary-content` on `primary`, `base-content` on `base-100`): 4.5:1 or better |
+| N-05 published pairs | The 14 pairs printed in the brand book are bound to custom properties and must reproduce to two decimals; Failed and Retrying stay at least 25 degrees apart in CIELAB hue angle |
+| Opaque muted token | `--ops-text-muted` is a six-digit hex equal to the brand's Muted Ink (light) and Muted Pale (dark); an alpha mix on it fails |
+| Color-variable count | Each theme block declares exactly 20 `--color-*` variables |
+
+`--ops-text-muted` consumers: `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60`,
+`.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`,
+`.ops-cmdk__item-hint`, `.ops-cmdk__empty`. Because the token is an opaque color, a consumer needs
+no manifest entry; do not reintroduce a `color-mix(in oklch, var(--color-base-content) NN%, transparent)`
+declaration for them. Header and shell overrides are unlayered after Tailwind's utility layer so the
+floor remains effective when an opacity utility is present.
 
 Text links inside `.ops-shell` use `--color-base-content` unless the template explicitly
 selects a primary color. This prevents an inline link from inheriting a muted container
 color while keeping muted supporting copy on `--ops-text-muted`.
 
-`--color-primary-strong` is allowed only for text-bearing interactive/selected fills:
-`.ops-nav-item-active` and `.bg-primary.text-primary-content`. Decorative primary and
-accent recipes stay on `--color-primary` / `--color-accent` so the violet brand wash,
-glow, borders, focus, and route-mark treatments are not globally retuned.
+## Surfaces, selection, control edge and status roles — Phase 187
 
-## Elevation surfaces — `--ops-bg`, `--ops-surface-1`, `--ops-surface-2`
-
-Named elevation tokens declared in the daisyUI `@plugin` blocks (dark + light). The plugin
-spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: dark)` for
-free. Ramp direction in dark: bg (floor) → surface-1 (resting panel) → surface-2 (raised).
+Named roles declared in the daisyUI `@plugin` blocks (dark + light), each a literal hex. The plugin
+spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: dark)` for free.
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
-| `--ops-bg` | `#f3f5f8` | `#111419` | Flat page floor and shell background |
-| `--ops-surface-1` | `#ffffff` | `#191e25` | Resting panel — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
-| `--ops-surface-2` | `#edf1f5` | `#222831` | Raised / muted step — `.ops-muted-panel`, `.ops-disclosure`, `.ops-nav-list`, `.ops-kbd`, `.ops-verdict-neutral`, `.ops-preflight__card--locked` |
-| `--ops-selection` | `#eeebff` | `#302b4c` | Soft selected fill for active navigation and explicitly selected actions |
-| `--ops-theme-selection` | `#ffffff` | `#222831` | Neutral selected surface in the System/Light/Dark preference control |
+| `--ops-bg` | `#f8f4f2` | `#160e19` | Flat page floor and shell background |
+| `--ops-surface-1` | `#ffffff` | `#201624` | Resting panel — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
+| `--ops-sunken` | `#f0e9e6` | `#110a14` | Recessed fill: code, hover fills, disabled fields, skeleton blocks |
+| `--ops-selected` | `#ebdfe7` | `#2b2130` | Selected fill, always paired with the 2px Plum or Orchid inline-start line |
+| `--ops-selection`, `--ops-theme-selection` | `#ebdfe7` | `#2b2130` | The same value under the two older names, kept one milestone because tests and surface lists still name them; the v1.47 cleanup collapses them into `--ops-selected` |
+| `--ops-control-edge` | `#8a7a8e` | `#8f7f94` | The opaque border of every control; 3:1 or better on every backdrop |
+| `--ops-text-muted` | `#5e5360` | `#bbaac0` | Opaque muted text (Muted Ink / Muted Pale) |
+| `--ops-status-failed` | `#b0360b` | `#ff9a6b` | The word and icon of Failed |
+| `--ops-status-retrying` | `#8a5a00` | `#e3b25c` | The word and icon of Retrying |
+| `--ops-status-pending` | `#615765` | `#ab9bb0` | The word and icon of Pending |
+| `--ops-status-clear` | `#1d6b3c` | `#7fcb9a` | The word and icon of Clear |
+| `--ops-warning-text`, `--ops-error-text` | `#8a5a00`, `#b0360b` | `#e3b25c`, `#ff9a6b` | Kept names, literal duplicates of the Retrying and Failed text colors |
 
-Dark 4-step neutral ramp: `#111419` (bg) → `#191e25` (surface-1) → `#222831` (surface-2) → `#353d48` (base-300 / borders).
+`--ops-surface-2` is a retired role (its meaning flips from raised to recessed; use `--ops-sunken`).
+It is still declared, with the Selected value in each theme, only so its remaining consumers and the
+dark order bg → surface-1 → surface-2 keep working until the plan that deletes the property and those
+consumers lands.
+
+### Retired in Phase 187
+
+Names only; none of these is a brand value.
+
+- `--color-primary-strong`: the second primary tier is deleted from both blocks, the token map and the
+  example theme. Plum and Orchid carry 4.5:1 labels themselves.
+- `--ops-surface-2`: kept with an interim value (above), then deleted with its consumers.
+- `--shadow-ops-glow` and `--shadow-ops-glow-copper`, the glow that rode on them, and the
+  `.ops-path-node` glow treatments: no new consumer, removed with the motion and shape pass.
+- The copper secondary and the `.ops-copper-*` classes: `--color-secondary` is now a quiet neutral.
+- Plum and status alpha tints (`color-mix` of the primary or a status color) and the violet and
+  copper translucent shadows.
+- The old blue, green, gold and red fills of `info`, `success`, `warning` and `error`, and the old
+  near-black content color on them.
+- Capital-letter transforms on labels (see Typography).
 
 ## Spacing — `--spacing-ops-*` → `p-ops-*` / `gap-ops-*` / `space-y-ops-*`
 
@@ -188,69 +264,28 @@ the box-shadow ring is only an escape hatch for inset focus inside overflow-clip
 
 **Dark-only augmentation:** `--shadow-ops-panel-dark` is a dark-only supplement declared in
 the D-10 dual-path blocks; it is **not** declared in light. Light panels continue to use
-`--shadow-ops-surface` (vertical lift). See §Glow + dark ambient depth — Phase 131 below.
+`--shadow-ops-surface` (vertical lift). See §Dark ambient depth — Phase 131 below.
 
-## Glow + dark ambient depth — Phase 131
+## Dark ambient depth — Phase 131 (glow retired in Phase 187)
 
-Three new shadow tokens extending the ladder for dark brand expression. Light values for the
-glow tokens are `none` (declared in `@theme`) so they produce zero visual change in light;
-`--shadow-ops-panel-dark` has no light declaration at all — the absence is the mechanism that
-keeps light panels pixel-identical.
+`--shadow-ops-panel-dark` extends the shadow ladder for dark panels. It has no light declaration at
+all — the absence is the mechanism that keeps light panels unchanged.
 
 | Token | Light value | Dark value | Use |
 | --- | --- | --- | --- |
 | `--shadow-ops-panel-dark` | (not declared in light) | `0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45)` | Ambient seated-depth shadow on dark panels and shell chrome: `.ops-panel`, `.ops-header`, `.ops-theme-toggle`, `.ops-cmdk__panel`, `.ops-flash`, `.ops-intent-card` |
-| `--shadow-ops-glow` | `none` | `0 0 8px 2px rgba(108,92,231,0.30)` | Quiet violet glow — live brand mark, active nav, route/path nodes, and key-callout hover only. Never on the theme control, text, resting panels, or background floods |
-| `--shadow-ops-glow-copper` | `none` | `0 0 6px 1px rgba(193,122,62,0.25)` | Quiet copper glow — key-node hover only. No consumer in Phase 131 (reserved for Phase 133/134) |
 
 **Panel-dark detail:** the `0 0 0 1px` zero-offset ring reads as ambient inset depth (panel
 seated into the surface, not floating above it); the `0 1px 3px` retains the subtle downward
 lift. Combined with the panel's `border: 1px solid color-mix(base-content 14%)`, the result is
 dark seated depth without visible shadow lift.
 
-**Glow-copper restraint:** Lower alpha (0.25) and tighter spread (6px/1px) than the violet
-glow — copper is the 5% accent; violet is the 10% primary. The `.ops-glow` class wraps
-`--shadow-ops-glow` only; copper glow is applied per-site as needed (not via a shared class).
-
-## Copper accent vocabulary — Phase 131
-
-Copper (`--color-secondary`: `#c17a3e` dark / `#a85d2e` light) is the brand's **5% accent**.
-Three component classes expose it for eyebrow labels, key-callout badges, and key-node markers.
-
-**Hard rule:** Copper is a brand accent, **NEVER a status tone**. It does not appear in
-`tone_class/1` or `badge_class/1`. It carries no semantic meaning (not info / success /
-warning / error / partial / running / neutral). Do not route copper through status machinery.
-
-### Allowed application sites (exhaustive — no others)
-
-| Class | Allowed sites | Screen(s) |
-| --- | --- | --- |
-| `.ops-copper-eyebrow` | Page eyebrow label ("Operator workspace") | All 6 screens |
-| `.ops-copper-badge` (compose with `.ops-badge`) | Intent-card federation badge, saved search file-type badge, key-callout badge | Control Room, Search, Saved searches |
-| `.ops-copper-node` | Key-node / diagram icon emphasis (color only) | Future Phase 133/134 |
-| `.ops-copper-node--fill` | Filled copper icon container | Future Phase 133/134 |
-
-### Text color rules
-
-**Badge text:** Always `var(--color-base-content)` inside `.ops-copper-badge` — never
-`var(--color-secondary)` as the badge label text. Light AA fails at 4.15:1 on tinted copper
-background (below the 4.5:1 AA threshold for small text).
-
-**Eyebrow text:** `var(--color-secondary)` as eyebrow text on a `--ops-surface-1` background
-is AA-safe in both themes. Do NOT use `var(--color-secondary)` as badge label text.
-
-### AA pairing evidence
-
-| Pairing | Theme | Ratio | AA verdict |
-| --- | --- | --- | --- |
-| `base-content` (`#f4f1ea`) text on `.ops-copper-badge` tinted bg | Dark | 12.07:1 | PASS |
-| `base-content` (`#141923`) text on `.ops-copper-badge` tinted bg | Light | 14.86:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#c17a3e`) on `--ops-surface-1` `#141923` | Dark | 5.13:1 | PASS |
-| `.ops-copper-eyebrow` (`--color-secondary` `#a85d2e`) on `--ops-surface-1` `#fffdf8` | Light | 4.84:1 | PASS |
-| `--color-secondary-content` (`#0c0f14`) on solid copper `#c17a3e` | Dark | 5.59:1 | PASS |
-| Copper text `#c17a3e` on `--ops-surface-2` `#1b2230` | Dark | 4.64:1 | PASS |
-
-All ratios computed with sRGB relative luminance (D-12 compliant, matching axe-core).
+**Glow and copper are retired.** `--shadow-ops-glow`, `--shadow-ops-glow-copper` and the copper
+vocabulary (`.ops-copper-eyebrow`, `.ops-copper-badge`, `.ops-copper-node`, `.ops-copper-node--fill`)
+are on the retired list above. They stay declared, wired to no template, only until the shape and
+motion pass removes their remaining consumers (the active nav item, route and path nodes, and the
+active saved search item); no new rule may use them. `--color-secondary` is a quiet neutral: it is
+never an accent and never a status tone.
 
 ## Focus
 
@@ -273,7 +308,7 @@ the effective OS appearance.
 | `.ops-header` | In dark, composes `--shadow-ops-surface` with `--shadow-ops-panel-dark` plus a 14% base-content divider so the header reads as a seated operator surface. Light keeps the base `--shadow-ops-surface` lift. |
 | `.ops-shell` | Flat `background-color: var(--ops-bg)` with `background-image: none` in light, dark, System, and responsive modes. Keep functional scroll-edge cues; do not add a decorative wash. |
 | `.ops-wordmark` | Displays the canonical horizontal Scrypath wordmark. Light and inverse SVG assets switch with explicit and system theme; the files are byte-identical copies of the brand lockups under frozen names; keep the artwork unfiltered. The lockup is 136px wide (`width: 8.5rem`, `flex: none`, `height: auto`), so at least 28.8px tall. |
-| `.ops-nav-item-active` | Text-bearing selected fill stays `--color-primary-strong`; dark paths compose `--shadow-ops-surface` with `--shadow-ops-glow`. |
+| `.ops-nav-item-active` | Selected fill is `--ops-selection` (Selected Page, Selected Night) with Plum or Orchid text; the Selection Signature line and the removal of the dark glow composed with `--shadow-ops-surface` arrive with the shape pass. |
 | `.ops-theme-toggle`, `.ops-theme-toggle__button` | Three visible native buttons name System, Light, and Dark and retain at least a 44px target. Exactly one preference-selected button exposes `aria-pressed="true"` and `data-theme-selected="true"`; its backing uses `--ops-selection`. System appearance may change with the OS without changing the selected preference. |
 | `.ops-cmdk__panel`, `.ops-flash` | Overlay chrome uses `--shadow-ops-overlay` in light. In explicit dark and system dark, compose overlay first (`--shadow-ops-overlay`) and panel-dark second (`--shadow-ops-panel-dark`) so transient shell surfaces keep depth without glow. |
 | `.ops-flash`, `.ops-flash--info`, `.ops-flash--error` | Info confirmations use a polite `role="status"` toast and dismiss after 4 seconds; errors use `role="alert"` and stay until dismissed. Status colors tint the active theme's base surface and mark the outer border; text stays on `base-content` for contrast. |
@@ -439,8 +474,11 @@ text/ARIA state so motion never carries status meaning alone (D-07).
 
 ## Muted-Text Contrast Registry
 
-The muted-alpha text pairs are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
-this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. The guard
+The muted-alpha text pairs that remain are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
+this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. Only direct
+`color: color-mix(...)` declarations are listed there now; readable muted text goes through the opaque
+`--ops-text-muted` token, which needs no entry (see A11y contrast floors), and the plan that
+converts the remaining direct declarations retires this registry. The guard
 is **bidirectional**: every `color: color-mix(in oklch, var(--color-base-content) NN%, transparent)`
 occurrence in `app.css` (including single-line rules and rules nested inside `@media` blocks) must
 have a corresponding manifest entry, AND every non-`decorative` manifest entry must match an actual
