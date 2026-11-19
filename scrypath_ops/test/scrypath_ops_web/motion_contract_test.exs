@@ -25,6 +25,7 @@ defmodule ScrypathOpsWeb.MotionContractTest do
 
   @app_css Path.join(__DIR__, "../../assets/css/app.css") |> Path.expand()
   @built_css Path.join(__DIR__, "../../priv/static/assets/css/app.css") |> Path.expand()
+  @ops_hooks Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand()
 
   # Each retired family with the pattern that finds it. The patterns match selectors and
   # token names, so a rule, a custom property or a Tailwind utility spelled with the name
@@ -297,6 +298,41 @@ defmodule ScrypathOpsWeb.MotionContractTest do
              "transition-duration",
              "quick"
            )
+  end
+
+  # The milliseconds each `.ops-cmdk--closing` rule in `source` runs its animation for, resolved
+  # from the duration token it names (through the old-name alias to the brand value).
+  defp closing_animation_ms(source) do
+    for {selectors, body} <- rules(source),
+        Enum.any?(selectors, &String.contains?(&1, ".ops-cmdk--closing")),
+        [_all, name] <- Regex.scan(~r/animation:[^;]*var\(--duration-ops-([a-z-]+)\)/, body) do
+      brand = Map.get(@duration_aliases, name, name)
+      [_all, ms] = Regex.run(~r/^(\d+)ms$/, Map.fetch!(@brand_durations, brand))
+      String.to_integer(ms)
+    end
+  end
+
+  test "the palette close timer waits as long as the closing animation runs" do
+    hooks = File.read!(@ops_hooks)
+
+    assert [_all, declared] = Regex.run(~r/^const OPS_PALETTE_CLOSE_MS = (\d+)$/m, hooks)
+    # The timer uses the constant, so the number cannot be a second, unchecked literal.
+    assert hooks =~ "}, OPS_PALETTE_CLOSE_MS)"
+
+    # The panel and the backdrop each run one closing animation, both on the instant token (80ms).
+    assert closing_animation_ms(css()) == [80, 80]
+    assert Enum.uniq(closing_animation_ms(css())) == [String.to_integer(declared)]
+  end
+
+  test "the closing-animation reader resolves the alias and sees a drifted token" do
+    planted = """
+    .ops-cmdk--closing .ops-cmdk__panel { animation: out var(--duration-ops-fast) ease forwards; }
+    .ops-cmdk--closing .ops-cmdk__backdrop { animation: out var(--duration-ops-quick) ease forwards; }
+    .ops-cmdk__panel { animation: in var(--duration-ops-slow) ease; }
+    """
+
+    # `fast` aliases `instant` (80ms), `quick` is 160ms, and a rule outside the closing state is ignored.
+    assert closing_animation_ms(planted) == [80, 160]
   end
 
   test "reduced motion keeps the global rule at one iteration and 0.01ms" do

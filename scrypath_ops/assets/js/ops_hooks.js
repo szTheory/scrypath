@@ -5,6 +5,10 @@ import {formatTimes, syncTimePreference} from "./ops_time"
 let opsModalPendingTrigger = null
 let activeOpsModal = null
 const OPS_INFO_DISMISS_MS = 4000
+// How long the palette and sheet stay in the DOM after Esc: the length of their closing animation.
+// `.ops-cmdk--closing` runs `--duration-ops-fast`, which aliases the brand `instant` token (80ms).
+// The motion contract test fails if this number and the stylesheet drift apart.
+const OPS_PALETTE_CLOSE_MS = 80
 
 const scheduleInfoDismiss = (owner, dismiss) => {
   window.clearTimeout(owner.dismissTimer)
@@ -224,8 +228,10 @@ const CommandPalette = {
     this.sheet.setAttribute("hidden", "")
     this.setActive(-1)
   },
-  // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, 80ms)
-  // before hiding, so close feels as intentional as open. Behavior is unchanged — the panel
+  // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, the 80ms
+  // `instant` token) before hiding, so close feels as intentional as open. The timer waits
+  // OPS_PALETTE_CLOSE_MS, the same 80ms, so the panel is hidden the moment its animation ends and
+  // an invisible panel never holds focus or catches a click. Behavior is unchanged — the panel
   // still ends up [hidden]; this only eases the transition. Re-opening cancels any pending
   // close so an interrupted dismissal snaps back open (interruptibility). Reduced-motion makes
   // the animation ~instant via the global rule, so the panel still hides on the next frame.
@@ -237,7 +243,7 @@ const CommandPalette = {
       el._opsCloseTimer = null
       el.classList.remove("ops-cmdk--closing")
       el.setAttribute("hidden", "")
-    }, 160)
+    }, OPS_PALETTE_CLOSE_MS)
   },
   // Interrupt a pending dismissal (re-open mid-close): clear the timer + the closing class
   // so the panel stays open and re-enters cleanly instead of fading out under the user.
