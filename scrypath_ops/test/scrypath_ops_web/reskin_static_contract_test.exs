@@ -15,11 +15,30 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   #   - E-14 glyph coverage: every non-ASCII character that the six screens render, or that a CSS
   #     `content:` string can render, is either in the shipped font subsets or on a short, named
   #     fallback list. A character outside both would silently fall back to a system font.
+  #   - E-13 brand assets: the lockups, symbol, favicon SVG and ICO that ops serves are
+  #     byte-identical to their pinned `brand/` sources under the frozen file names, the ICO holds
+  #     16 and 32 px entries, and the shell shows both lockups at 136 px wide.
+  #   - E-15 preload: the standalone root layout links the SVG and ICO favicons and preloads the
+  #     interface font with `crossorigin`; the mounted host layout never preloads.
   use ScrypathOpsWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
   @ops_root Path.expand("../..", __DIR__)
+  @repo_root Path.expand("..", @ops_root)
+  @host_layout Path.join(
+                 @repo_root,
+                 "examples/scrypath_ecommerce/lib/scrypath_ecommerce_web/components/layouts.ex"
+               )
+
+  # Served file (relative to scrypath_ops/priv/static) => its pinned source under brand/.
+  @brand_assets [
+    {"images/scrypath-wordmark.svg", "assets/logo/scrypath-lockup-light.svg"},
+    {"images/scrypath-wordmark-inverse.svg", "assets/logo/scrypath-lockup-dark.svg"},
+    {"images/logo.svg", "assets/logo/scrypath-symbol-light.svg"},
+    {"favicon.svg", "assets/icon/favicon.svg"},
+    {"favicon.ico", "assets/icon/favicon.ico"}
+  ]
   @app_css Path.join(@ops_root, "assets/css/app.css")
   @built_css Path.join(@ops_root, "priv/static/assets/css/app.css")
   @fonts_dir Path.join(@ops_root, "priv/static/assets/fonts")
@@ -304,6 +323,98 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
       # If a font refresh adds one of the three glyphs to a subset, its allowlist entry is stale.
       assert Enum.sort(Map.keys(@fallback_allowlist)) == [0x00B7, 0x203A, 0x2318]
       refute Enum.any?(Map.keys(@fallback_allowlist), &MapSet.member?(@covered, &1))
+    end
+  end
+
+  describe "E-13 brand assets" do
+    test "every served brand file exists under its frozen name and equals its pinned source" do
+      for {served, source} <- @brand_assets do
+        served_path = Path.join(@ops_root, "priv/static/#{served}")
+        source_path = Path.join(@repo_root, "brand/#{source}")
+
+        assert File.exists?(served_path), "#{served} must exist under its frozen name"
+        assert File.exists?(source_path), "brand/#{source} must exist"
+
+        assert File.read!(served_path) == File.read!(source_path),
+               "#{served} must be a byte-identical copy of brand/#{source}"
+      end
+    end
+
+    test "the ICO holds exactly the 16 and 32 pixel entries" do
+      <<0::little-16, 1::little-16, count::little-16, rest::binary>> =
+        File.read!(Path.join(@ops_root, "priv/static/favicon.ico"))
+
+      assert count == 2
+
+      entries =
+        for index <- 0..(count - 1) do
+          <<width, height, _colors, 0, _planes::little-16, _bits::little-16, size::little-32,
+            offset::little-32>> = binary_part(rest, index * 16, 16)
+
+          {width, height, size, offset}
+        end
+
+      assert entries |> Enum.map(fn {width, height, _, _} -> {width, height} end) |> Enum.sort() ==
+               [{16, 16}, {32, 32}]
+
+      # Each entry points at PNG data inside the file.
+      file = File.read!(Path.join(@ops_root, "priv/static/favicon.ico"))
+
+      for {_, _, size, offset} <- entries do
+        assert binary_part(file, offset, 8) == <<137, 80, 78, 71, 13, 10, 26, 10>>
+        assert offset + size <= byte_size(file)
+      end
+    end
+
+    test "the shell shows both lockups at 136px wide under the frozen names", %{conn: conn} do
+      doc = conn |> render_screen("/ops/help") |> LazyHTML.from_fragment()
+
+      light = LazyHTML.query(doc, "img.ops-wordmark__light")
+      dark = LazyHTML.query(doc, "img.ops-wordmark__dark")
+
+      # The shell renders the lockup in more than one place (header, sidebar, drawer); every
+      # copy must use the frozen src and the 136px width.
+      assert light |> LazyHTML.attribute("src") |> Enum.uniq() ==
+               ["/ops/images/scrypath-wordmark.svg"]
+
+      assert dark |> LazyHTML.attribute("src") |> Enum.uniq() ==
+               ["/ops/images/scrypath-wordmark-inverse.svg"]
+
+      assert light |> LazyHTML.attribute("width") |> Enum.uniq() == ["136"]
+      assert dark |> LazyHTML.attribute("width") |> Enum.uniq() == ["136"]
+
+      css = File.read!(@app_css)
+      assert css =~ ~r/\.ops-wordmark\s*\{[^}]*flex:\s*none;[^}]*width:\s*8\.5rem;/s
+      assert css =~ ~r/\.ops-wordmark img\s*\{[^}]*height:\s*auto;/s
+    end
+  end
+
+  describe "E-15 root layout links and font preload" do
+    test "standalone HTML links both favicons and preloads the interface font once", %{conn: conn} do
+      doc = conn |> get("/ops/help") |> html_response(200) |> LazyHTML.from_document()
+
+      icons = doc |> LazyHTML.query("link[rel=icon]") |> LazyHTML.attributes()
+
+      assert [{"rel", "icon"}, {"href", "/favicon.svg"}, {"type", "image/svg+xml"}] in icons
+      assert [{"rel", "icon"}, {"href", "/favicon.ico"}, {"sizes", "32x32"}] in icons
+
+      assert [preload] = doc |> LazyHTML.query("link[rel=preload]") |> LazyHTML.attributes()
+      attributes = Map.new(preload)
+
+      version = sha256(Path.join(@fonts_dir, "ui.woff2"))
+      assert attributes["href"] == "/assets/fonts/ui.woff2?v=#{version}"
+      assert attributes["as"] == "font"
+      assert attributes["type"] == "font/woff2"
+      assert Map.has_key?(attributes, "crossorigin")
+    end
+
+    test "the mounted host layout never preloads a font" do
+      host = File.read!(@host_layout)
+
+      refute host =~ ~s(rel="preload")
+      # It links the favicons at the mount prefix instead (documented in the README).
+      assert host =~ "/admin/search/favicon.svg"
+      assert host =~ "/admin/search/favicon.ico"
     end
   end
 end

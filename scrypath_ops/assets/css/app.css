@@ -1799,7 +1799,7 @@
   .ops-wordmark {
     flex: none;
     display: block;
-    width: 7.5rem;
+    width: 8.5rem;   /* 136px: the lockup is 4.71:1, so at least 28.8px tall; the book's floor is 112 x 24 */
     min-height: var(--control-h-lg);
     line-height: 0;
   }

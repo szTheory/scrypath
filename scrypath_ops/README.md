@@ -91,6 +91,34 @@ the already-built static bundle. The [`local demo Docker
 runbook`](../docs/local-demo-docker-dx.md#asset-and-runtime-boundary) documents
 the dev-only asset wrappers and the test/production image handoff.
 
+## Hosting notes for the brand re-skin
+
+The Scrypath brand re-skin changes how ScrypathOps looks, not how a host mounts it. What a host
+should check once:
+
+- **Stylesheet and mount prefix are unchanged.** Keep linking `<mount>/assets/css/app.css` as
+  shown above. Nothing else needs a new link or a new route.
+- **The nine JavaScript hook names are unchanged.** A host that registers the operator hooks
+  keeps `CommandPalette`, `OpsNavDrawer`, `OpsModal`, `OpsRefreshButton`, `OpsToast`,
+  `OpsTimestampCopy`, `OpsSearchDraft`, `OpsHelpAnchor` and `OpsFieldValidation`; the e-commerce
+  demo re-registers all nine in its `app.js`.
+- **Fonts load from the mount prefix.** The interface face (Hanken Grotesk) and the mono face
+  (Sometype Mono) are served from `<mount>/assets/fonts/` by the same asset route as the
+  stylesheet, through CSS-relative URLs with a content hash, so they follow whatever prefix you
+  mount at. They are same-origin files, so a host Content-Security-Policy only needs
+  `font-src 'self'`; there is no third-party font host and no inlined data URL. The standalone
+  layout preloads the interface font. A mounted host does not need to, and ScrypathOps never edits
+  a host's `<head>`.
+- **File names under `priv/static` are frozen.** `images/scrypath-wordmark.svg`,
+  `images/scrypath-wordmark-inverse.svg`, `images/logo.svg`, `favicon.svg` and `favicon.ico` keep
+  their paths, so existing links keep working while the artwork behind them changes.
+- **Link the favicon from the host head.** Use `<mount>/favicon.svg` (and `<mount>/favicon.ico`
+  with `sizes="32x32"`), as in the snippet above.
+- **Theme follows `html[data-theme]`, else the operating system.** ScrypathOps never forces
+  light. A host whose own toggle sets `class="dark"` on `<html>` should also set
+  `data-theme="dark"` there (one line next to the class change), because the operator themes
+  key off the attribute, not the class.
+
 ## OPSUI schema allowlist
 
 The `/ops` LiveViews only load schema modules listed in **`schema_allowlist`** under

@@ -275,8 +275,9 @@ defmodule ScrypathOpsWeb.Layouts do
   end
 
   @doc false
-  # Use the canonical horizontal wordmark from the brand book. The paired SVGs
-  # preserve its ink/paper colors while the copper slash stays consistent in both themes.
+  # Use the canonical horizontal lockup from the brand book, at 136px wide (so at least 28.8px
+  # tall; the book's floor is 112 x 24). The two files are byte-identical copies of the brand's
+  # light and dark lockups under their frozen names; CSS shows the one that matches the theme.
   # Decorative; the enclosing home link supplies the accessible name.
   attr(:class, :string, default: nil)
   attr(:mount_path, :string, required: true)
@@ -287,14 +288,14 @@ defmodule ScrypathOpsWeb.Layouts do
       <img
         class="ops-wordmark__light"
         src={"#{@mount_path}/images/scrypath-wordmark.svg"}
-        width="120"
+        width="136"
         alt=""
         decoding="async"
       />
       <img
         class="ops-wordmark__dark"
         src={"#{@mount_path}/images/scrypath-wordmark-inverse.svg"}
-        width="120"
+        width="136"
         alt=""
         decoding="async"
       />
