@@ -26,6 +26,18 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
+## Current Milestone: v1.46 Brand foundation and re-skin
+
+**Goal:** Adopt the new plum/orchid scry/path brand book (official identity since 2026-11-18, superseding the v1.35 violet and copper identity) across ScrypathOps, the README and HexDocs, and the website, changing colors, font families, logo, favicon and status vocabulary without reflowing type sizes or adding new interactions.
+
+**Target features:**
+- Phase 186 Ingest, pin and guard: offline-verified `brand/` pin, one Node token-parity test with a retired-value deny-list, about 12 pinned test literals lifted, a recolor-tolerant replacement for the Phase 185 pixel comparison (test and evidence only, at most 3 plans)
+- Phase 187 ScrypathOps re-skin as one Draft PR: theme blocks, Hanken and Sometype Mono fonts, logo and favicon, `ops_sync_status`, button and row-action rules, focus and scroll padding, dark theme, motion tokens, retirement of path/copper/glow/infinite animations, 12 px floor, h1 at 28, the Search health ranking fix and two verified copy bugs
+- Phase 188 README header and HexDocs (brand assets, ExDoc stylesheet fix, favicon)
+- Phase 189 website re-skin and Phase 190 wording that does not need the catalog (both deferrable to v1.47)
+
+**Key context:** Prep and evidence live in [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md), [PROPOSAL.md](research/brand-and-catalog/PROPOSAL.md) and the [brand adoption playbook](reference/BRAND-ADOPTION-PLAYBOOK.md). Ops stays System-default for theme. Deferred: type-scale reflow, master-detail Search health, progress line, sounds, animation, bulk retry. Guardrails: progress guard, loop breakers, finite route inventory, gate budget (at most 12 new required gates, each with a deletion trigger). No human UAT: every rule is a computed-style or DOM assertion. The 187 Draft PR needs one merge-time yes (merge authority, no aesthetic claim). `deep-quality` stays an advisory red until sigra drops its hard `cloak_ecto` requirement.
+
 ## Current State
 
 v1.45 **Foundation and CI** is archived locally: Phases 182–185, 38 plans and all 21 requirements have completion evidence. It delivers reliable full browser/cache proof, unpackaged maintainer tooling, explicit lean dependency/runtime graphs and deterministic UI quality foundations. The core value, Ecto-first positioning, internal adapter boundary and root compatibility floor remain unchanged.
@@ -36,7 +48,7 @@ All final archive/tracking edits precede terminal attestation. Its exact source/
 
 ## Next Milestone Goals
 
-The rolling roadmap proposes **v1.46 UI quality engine and pilot**: shared personas/fixtures, Storybook, Search health and Control Room extraction, story sweep, copy lint and decisions log. After terminal acceptance, `$gsd-new-milestone v1.46` selects/confirms that scope; it does not begin implementation. v1.47 polish and v1.48 adopter features remain later boundaries. PR #122/#123 delivery and publication are separate actions.
+After v1.46: v1.47 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half), v1.48 Screens, flows and full catalog, v1.49 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
@@ -47,7 +59,7 @@ Historical milestone setup, state, next steps and the v1.40 to v1.45 archived-mi
 
 ## Future Work
 
-Keep `main` green and release only when a package change warrants it. v1.45 is archived locally; PR delivery and publication remain separate. The rolling roadmap in `reference/ROLLING-ROADMAP.md` proposes v1.46–v1.47 UI quality engine/polish, followed by v1.48 adopter features; activate each through its own milestone boundary. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
+Keep `main` green and release only when a package change warrants it. v1.45 is archived locally; PR delivery and publication remain separate. The rolling roadmap in `reference/ROLLING-ROADMAP.md` orders v1.46 brand re-skin, v1.47 catalog, v1.48 screens and flows, then v1.49 adopter features; activate each through its own milestone boundary. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Canonical Adopter Contract
 
@@ -500,4 +512,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-01 after v1.45 qualified local archive; terminal source acceptance remains external.*
+*Last updated: 2026-11-18 after v1.46 milestone start.*

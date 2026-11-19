@@ -1,39 +1,33 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.45
-milestone_name: Foundation and CI
-current_phase: null
-current_phase_name: null
-status: Awaiting next milestone
-stopped_at: v1.45 qualified archive prepared; terminal exact-source machine gate follows all tracked writes.
-last_updated: "2026-11-01T17:09:22Z"
-last_activity: 2026-11-01
-last_activity_desc: v1.45 qualified local archive; final-source acceptance is external.
+milestone: v1.46
+milestone_name: Brand foundation and re-skin
+status: planning
+last_updated: "2026-11-19T01:27:49.739Z"
+last_activity: 2026-11-18
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 38
-  completed_plans: 38
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See [PROJECT](PROJECT.md), updated 2026-11-01.
+See [PROJECT](PROJECT.md), updated 2026-11-18.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Awaiting next milestone; no phase is active.
+**Current focus:** v1.46 Brand foundation and re-skin; defining requirements.
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-01 — v1.45 qualified local archive; terminal source acceptance is external.
-
-All 21 approved requirements have completion evidence across Phases 182–185 and 38 plans. [Roadmap archive](milestones/v1.45-ROADMAP.md), [requirements](milestones/v1.45-REQUIREMENTS.md), [audit](milestones/v1.45-MILESTONE-AUDIT.md), and [closeout](milestones/v1.45-CLOSEOUT.md) retain scope, evidence, debt and override limits. The root roadmap is now a shipped-milestone index, not an active phase roadmap.
+Status: Defining requirements
+Last activity: 2026-11-18 — Milestone v1.46 started
 
 ## Candidate and local evidence
 
