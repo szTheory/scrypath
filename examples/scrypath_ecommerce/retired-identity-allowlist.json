@@ -1,9 +1,6 @@
 {
   "schema": "scrypath.retired-identity-allowlist.v1",
   "entries": [
-    { "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; asserts the glow that SKIN-05 retires)", "max_hits": 2 },
-    { "path": "examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old dark surface and glow)", "max_hits": 1 },
-    { "path": "examples/scrypath_ecommerce/e2e/phase173_shell.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old shell colors)", "max_hits": 3 },
     { "path": "README.md", "tag": "p188", "reason": "Phase 188 documentation adoption (BDOC-01) replaces the retired brand directory reference", "max_hits": 2 },
     { "path": "PRODUCT.md", "tag": "p188", "reason": "Phase 188 documentation adoption replaces the retired brand directory reference", "max_hits": 1 },
     { "path": "website/src/assets/brand-mark.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old mark", "max_hits": 2 },

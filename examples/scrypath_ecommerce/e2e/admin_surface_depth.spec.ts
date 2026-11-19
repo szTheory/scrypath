@@ -10,7 +10,7 @@
  *     cd examples/scrypath_ecommerce
  *     npm run test:e2e:admin-depth
  */
-import { expect, test, type APIRequestContext, type Browser, type Locator, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Browser, type Page } from "@playwright/test";
 import { Buffer } from "node:buffer";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -44,11 +44,10 @@ import {
   type ViewportName
 } from "./helpers/theme-grid";
 
-const GLOW_RGB = "108, 92, 231";
-const DARK_SURFACE_2_RGB = "rgb(34, 40, 49)";
-const COPPER_RGB = "193, 122, 62";
+// Surface roles are read from the live theme through `resolveCssColor`, never pinned as RGB
+// (Phase 187): the page floor, the Panel, the Sunken recess and the Selected fill.
+type SurfaceRole = "--ops-bg" | "--ops-surface-1" | "--ops-sunken" | "--ops-selected";
 const ELEVATION_DELTA_FLOOR = 0.0045;
-const FLAT_SURFACE_DELTA_FLOOR = 0.011;
 const DK13_ROW_BORDER_TRIGGER = 1.2;
 // Saved search names are limited to 120 characters; this one is rejected on rename.
 const TOO_LONG_NAME = "n".repeat(121);
@@ -115,15 +114,6 @@ async function readComputedStyle(
     },
     [selector, property] as const
   );
-}
-
-async function readLocatorComputedStyle(
-  locator: Locator,
-  property: "backgroundColor" | "borderColor" | "boxShadow" | "color"
-): Promise<string> {
-  return locator.evaluate((el, prop) => {
-    return getComputedStyle(el)[prop as "backgroundColor" | "borderColor" | "boxShadow" | "color"];
-  }, property);
 }
 
 async function resolveCssColor(
@@ -224,15 +214,6 @@ function colorRgbaChannels(raw: string): [number, number, number, number] {
   return [...rgbChannels(trimmed), alphaChannel(trimmed)];
 }
 
-function colorsEquivalent(actual: string, expected: string): boolean {
-  const actualChannels = colorRgbaChannels(actual);
-  const expectedChannels = colorRgbaChannels(expected);
-
-  return actualChannels.every((channel, index) =>
-    Math.abs(channel - expectedChannels[index]) <= (index === 3 ? 0.005 : 1)
-  );
-}
-
 function colorChannels(raw: string, backdrop?: string): [number, number, number] {
   const [r, g, b, alpha] = colorRgbaChannels(raw);
 
@@ -262,12 +243,12 @@ function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-async function darkBgFloor(page: Page): Promise<string> {
-  return resolveCssColor(page, "background: var(--ops-bg)", "backgroundColor");
+async function resolveSurfaceRole(page: Page, role: SurfaceRole): Promise<string> {
+  return resolveCssColor(page, `background: var(${role})`, "backgroundColor");
 }
 
-async function darkSurface2(page: Page): Promise<string> {
-  return resolveCssColor(page, "background: var(--ops-surface-2)", "backgroundColor");
+async function darkBgFloor(page: Page): Promise<string> {
+  return resolveSurfaceRole(page, "--ops-bg");
 }
 
 async function expectRaisedAboveFloor(page: Page, selector: string, label: string): Promise<void> {
@@ -279,83 +260,17 @@ async function expectRaisedAboveFloor(page: Page, selector: string, label: strin
   ).toBeGreaterThanOrEqual(ELEVATION_DELTA_FLOOR);
 }
 
-async function expectFlatSurface2(page: Page, selector: string, label: string): Promise<void> {
-  const floor = await darkBgFloor(page);
-  const surface2 = await darkSurface2(page);
-  const bg = await readComputedStyle(page, selector, "backgroundColor");
-  expect(bg, `${label} uses the dark surface-2 token`).toBe(surface2);
-  expect(
-    relativeLuminance(bg, floor) - relativeLuminance(floor),
-    `${label} luminance must exceed --ops-bg floor by >= ${FLAT_SURFACE_DELTA_FLOOR}`
-  ).toBeGreaterThanOrEqual(FLAT_SURFACE_DELTA_FLOOR);
-}
-
-async function expectPrimaryHover55(page: Page, selector: string, label: string): Promise<void> {
-  const target = page.locator(selector).first();
-  await expect(target).toBeVisible();
-  const resting = await readLocatorComputedStyle(target, "borderColor");
-  await target.hover();
-  await page.waitForTimeout(400);
-  const hover = await readLocatorComputedStyle(target, "borderColor");
-  const expected = await resolveCssColor(
-    page,
-    "border-color: color-mix(in oklch, var(--color-primary) 55%, transparent)"
-  );
-
-  expect(hover, `${label} hover border must resolve to primary 55%`).toBe(expected);
-  if (resting !== expected) {
-    expect(hover, `${label} hover border must differ from resting`).not.toBe(resting);
-  }
-}
-
-async function expectNoStatusCopper(page: Page): Promise<void> {
-  const copperBorder = await resolveCssColor(
-    page,
-    "border-color: color-mix(in oklch, var(--color-secondary) 44%, transparent)"
-  );
-  const copperBg = await resolveCssColor(
-    page,
-    "background: color-mix(in oklch, var(--color-secondary) 12%, transparent)",
-    "backgroundColor"
-  );
-  const candidates = await page.evaluate(() => {
-    const statusClassPattern =
-      /\b(ops-tone-|ops-badge-(success|warning|error|partial|running|info|neutral)|ops-metric-)/;
-
-    return Array.from(document.querySelectorAll<HTMLElement>("[class]"))
-      .filter(
-        (el) =>
-          statusClassPattern.test(el.className) && !el.classList.contains("ops-copper-badge")
-      )
-      .map((el) => {
-        const style = getComputedStyle(el);
-        return {
-          className: el.className,
-          borderColor: style.borderColor,
-          backgroundColor: style.backgroundColor
-        };
-      });
-  });
-
-  const matches = candidates
-    .filter(
-      (candidate) =>
-        colorsEquivalent(candidate.borderColor, copperBorder) ||
-        colorsEquivalent(candidate.backgroundColor, copperBg)
-    )
-    .map((candidate) => candidate.className);
-
-  expect(matches, "status tone/badge classes must never compute to copper").toEqual([]);
-}
-
 async function expectSearchHealthSignalCardsMeasured(page: Page): Promise<void> {
   const card = ".ops-schema-signal-card";
   await expect(page.locator(card).first()).toBeVisible();
 
   const bg = await readComputedStyle(page, card, "backgroundColor");
   const shadow = await readComputedStyle(page, card, "boxShadow");
-  expect(bg, "search health signal cards use the dark surface-2 depth token").toBe(DARK_SURFACE_2_RGB);
-  expect(shadow, "search health signal cards must keep seated dark-panel depth").not.toBe("none");
+  const panel = await resolveSurfaceRole(page, "--ops-surface-1");
+  expect(bg, "search health rows sit on the Panel surface").toBe(panel);
+  expect(bg, "search health rows are not recessed").not.toBe(await resolveSurfaceRole(page, "--ops-sunken"));
+  expect(bg, "search health rows are not the selected fill").not.toBe(await resolveSurfaceRole(page, "--ops-selected"));
+  expect(shadow, "search health rows are hairline rows with no shadow").toBe("none");
 
   const signalGroup = ".ops-signal-group";
   await expect(page.locator(signalGroup).first()).toBeVisible();
@@ -536,7 +451,6 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
               case "control-room-intents":
                 await expect(page.getByTestId("control-room-verify-change")).toBeVisible();
                 await expect(page.getByTestId("control-room-explore-search")).toBeVisible();
-                await expectNoStatusCopper(page);
                 {
                   // Phase 187: a verdict is a Panel with a 2px inline-start rule and no shadow; the
                   // hero's raised shadow is retired (UI-SPEC P-15), so it must compute to none.
@@ -921,21 +835,6 @@ test.describe("admin surface depth — SCREEN-DARK-01", () => {
     } finally {
       await close();
       await deleteSavedSearches(request, { names: [first, second] });
-    }
-  });
-
-  test("Loaded saved search marker has no violet glow in light", async ({ browser, request }) => {
-    await seedAndMaybeConfirmSearch(request, "all_green");
-    const { page, close } = await newThemedPage(browser, { kind: "explicit", theme: "light" }, "desktop");
-    try {
-      await preparePopulatedSavedSearches(page);
-      await page.keyboard.press("Escape");
-      await page.locator("#saved-search-manage-open").click();
-      await expect(page.locator(".ops-saved-search-row--loaded")).toBeVisible();
-      const glow = await readComputedStyle(page, ".ops-saved-search-row--loaded", "boxShadow");
-      expect(glow, "light loaded saved search row must not carry the dark violet glow").not.toContain(GLOW_RGB);
-    } finally {
-      await close();
     }
   });
 });
