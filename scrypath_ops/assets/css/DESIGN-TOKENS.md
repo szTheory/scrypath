@@ -445,17 +445,47 @@ numeric values.
 
 ## Motion — `--duration-ops-*` (component-only) + `--ease-ops-*` → `ease-ops-*`
 
+The brand book's names are the source (Phase 187, SKIN-05): four durations and six easings, and
+nothing else. The old names stay for one milestone as `var()` aliases, so no consumer had to move.
+
 | Token | Value | Use |
 | --- | --- | --- |
-| `--duration-ops-instant` | 90ms | tap/press feedback (`.ops-btn:active`) |
-| `--duration-ops-fast` | 120ms | hover, nav/badge color shifts, modal dismissal |
-| `--duration-ops-standard` | 180ms | disclosure content fade, larger surfaces |
-| `--duration-ops-status` | 200ms | status/verdict tone settle (metric + `ops_verdict`) |
-| `--duration-ops-slow` | 240ms | overlay/modal entrance only |
-| `--ease-ops-standard` | cubic-bezier(0.2,0.8,0.2,1) | ease-out, enter |
-| `--ease-ops-out` | cubic-bezier(0.16,1,0.3,1) | stronger ease-out, overlay/modal entrance |
-| `--ease-ops-in-out` | cubic-bezier(0.45,0,0.55,1) | symmetric, position toggles |
-| `--ease-ops-exit` | cubic-bezier(0.4,0,1,1) | ease-in, crisp dismissal (modal/palette/flash **close**); faster/more linear than the enter eases |
+| `--duration-ops-instant` | 80ms | a change the eye must not wait for: hover, press, focus (`.ops-btn:active`) |
+| `--duration-ops-quick` | 160ms | a small change of one element: a status word, a row highlight, a dialog closing |
+| `--duration-ops-base` | 240ms | a change of a region: a panel or dialog opening |
+| `--duration-ops-advance` | 600ms | an update moving along the progress line. **No rule consumes it** in v1.46 |
+| `--duration-ops-fast` | alias of `instant` | was 120ms: hover, nav/badge color shifts, modal dismissal |
+| `--duration-ops-status` | alias of `quick` | was 200ms: status/verdict tone settle |
+| `--duration-ops-standard` | alias of `base` | was 180ms: disclosure content fade, larger surfaces |
+| `--duration-ops-slow` | alias of `base` | was 240ms: overlay/modal entrance |
+| `--ease-ops-strike` | cubic-bezier(0.1,0.9,0.2,1) | fast in, hard stop: a thing that lands |
+| `--ease-ops-resolve` | cubic-bezier(0.2,0.8,0.2,1) | quick start, soft landing: a thing that appears |
+| `--ease-ops-settle` | cubic-bezier(0.3,0,0.2,1) | slow start, gentle stop: coming back from an overshoot |
+| `--ease-ops-sweep` | cubic-bezier(0.45,0,0.25,1) | in and out: a marker crossing something |
+| `--ease-ops-exit` | cubic-bezier(0.4,0,1,1) | accelerates away: crisp dismissal (modal/palette/flash **close**) |
+| `--ease-ops-advance` | cubic-bezier(0.45,0,0.2,1) | in and out, a little slower to arrive: a step along the progress line |
+| `--ease-ops-standard` | alias of `resolve` | the same curve under its old name |
+| `--ease-ops-out` | alias of `resolve` | was a stronger ease-out for overlays |
+| `--ease-ops-in-out` | alias of `sweep` | was symmetric, for position toggles |
+
+Every transition and animation duration in ops computes to 0, 80, 160 or 240ms, and the stylesheet
+holds no raw millisecond or second literal outside the reduced-motion rule. Three things keep it
+that way:
+
+- **Tailwind's default.** `@theme inline { --default-transition-duration: var(--duration-ops-quick); }`
+  puts `transition`, `transition-all` and `transition-opacity` on the quick token. A duration
+  utility in a template is the token form, `duration-(--duration-ops-quick)`, and a `JS.transition`
+  `time:` is 80, 160 or 240 (E-18).
+- **daisyUI's own literals.** daisyUI sets `.btn` 0.2s, `.modal` 0.3s and 0.1s, `.modal-box` 0.3s and
+  0.2s, `.checkbox` 0.2s and its check mark 0.3s and 0.1s, `.card` outline 0.2s and `.radio` 0.2s.
+  One block in the utilities layer at the end of `app.css` sets each to a token (`quick` for
+  controls, `base` for dialogs), after the vendor rules, as a longhand so each component keeps its
+  own properties and delays.
+- **The contract.** `motion_contract_test.exs` fails any raw literal or unknown or advance token in
+  a `transition` or `animation` declaration, with a planted stylesheet proving each matcher fires,
+  and it fails a component that keeps its vendor duration. `e2e/admin_path_motion.spec.ts` (P-12)
+  proves the computed durations and the absence of any looping animation in a real browser, in
+  light, dark and System, with and without reduced motion.
 
 Everything below is neutralized under `@media (prefers-reduced-motion: reduce)` (one global
 rule), so any new transition is reduced-motion-safe by default. Keep it restrained:
@@ -465,13 +495,13 @@ transform/opacity only, < 300ms, ease-out for enter, no bounce (this is an incid
 
 | Keyframe | Direction | Pairing | Used by |
 | --- | --- | --- | --- |
-| `ops-modal-in` | enter | `--duration-ops-slow` + `--ease-ops-out` | `.modal-box`, `.ops-cmdk__panel` (open) |
-| `ops-modal-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__panel` (palette/sheet close) |
-| `ops-fade-in` | enter | `--duration-ops-standard` + `--ease-ops-standard` | `.ops-disclosure[open] > .ops-disclosure-body` |
-| `ops-fade-out` | exit | `--duration-ops-fast` + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__backdrop` |
+| `ops-modal-in` | enter | `--duration-ops-slow` (240ms) + `--ease-ops-out` | `.modal-box`, `.ops-cmdk__panel` (open) |
+| `ops-modal-out` | exit | `--duration-ops-fast` (80ms) + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__panel` (palette/sheet close) |
+| `ops-fade-in` | enter | `--duration-ops-standard` (240ms) + `--ease-ops-standard` | `.ops-disclosure[open] > .ops-disclosure-body` |
+| `ops-fade-out` | exit | `--duration-ops-fast` (80ms) + `--ease-ops-exit` | `.ops-cmdk--closing .ops-cmdk__backdrop` |
 
 **Enter/exit asymmetry (the A1 rule):** enters ease *out* (longer, decelerating — `ease-ops-out`,
-~240ms); exits ease *in* (shorter, accelerating — `ease-ops-exit`, ~120ms). Close feels as
+240ms); exits ease *in* (shorter, accelerating — `ease-ops-exit`, 80 to 160ms). Close feels as
 intentional as open without dragging. The modal close also rides this via `phx-remove`
 (`ops_modal`), and flash/banner show/hide via `core_components` `show/2`/`hide/2`. The command
 palette plays `ops-modal-out` through a `.ops-cmdk--closing` class the JS hook adds for one tick
@@ -493,7 +523,7 @@ item explicitly forbids, so it was skipped on the side of restraint.
 
 | Animate | Never animate |
 | --- | --- |
-| tone/badge/verdict **color** settle (≤200ms) | layout/reflow: width, height, margin, content top/left |
+| tone/badge/verdict **color** settle (≤160ms) | layout/reflow: width, height, margin, content top/left |
 | disclosure chevron rotate + body **opacity** fade | `<details>` height (auto height can't transition → reflow) |
 | button press scale, card hover lift (transform) | table row insertion / sort |
 | nav/segmented hover, modal opacity+translateY entrance | metric **value** count-ups (no dashboard-toy tickers) |
@@ -508,8 +538,8 @@ All of it is deleted with the old identity: the Selection Signature, a 2px Plum 
 fill, is the one selection mark, and no rule draws a decorative path, glint or aura. The restraint
 boundaries it kept still hold: no result-list reveal stagger (it would re-fire on every LiveView
 patch), no animation of layout properties, no decorative loops, and evidence code blocks stay calm.
-`motion_contract_test.exs` asserts that the retired families and both glow tokens are absent; the
-duration-token rule for every transition and animation is added with the motion proof in Plan 09.
+`motion_contract_test.exs` asserts that the retired families and both glow tokens are absent, and (Plan 09)
+that every transition and animation duration is a brand token or zero.
 
 ## Muted-Text Contrast (the registry is retired)
 

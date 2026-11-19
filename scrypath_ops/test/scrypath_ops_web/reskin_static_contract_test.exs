@@ -754,4 +754,98 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
       refute Regex.match?(@infinite_css, ".x { animation: ops-fade-in 240ms both; }")
     end
   end
+
+  # ── Plan 09: E-18, durations in lib are tokens ───────────────────────────────────────────
+
+  describe "E-18 durations in lib are brand tokens" do
+    # A Tailwind duration utility in `lib/` must be the token form `duration-(--duration-ops-…)`.
+    # The lookbehind keeps a `--duration-ops-…` custom property name in prose from reading as a
+    # utility.
+    @duration_utility ~r/(?<![\w-])duration-(?!\(--duration-ops-(?:instant|quick|base)\))[^\s"'\\]+/
+    @retired_duration_literals ~r/(?<![\w-])duration-(?:100|200)\b|\btime:\s*120\b|\banimate-spin\b/
+    @js_time ~r/\btime:\s*(\d+)/
+    @js_times [80, 160, 240]
+
+    defp duration_offenders(source) do
+      utilities = Regex.scan(@duration_utility, source) |> Enum.map(&hd/1)
+
+      times =
+        for [hit, ms] <- Regex.scan(@js_time, source),
+            String.to_integer(ms) not in @js_times,
+            do: hit
+
+      Regex.scan(@retired_duration_literals, source)
+      |> Enum.map(&hd/1)
+      |> Kernel.++(utilities)
+      |> Kernel.++(times)
+      |> Enum.uniq()
+    end
+
+    test "lib holds no duration-100, duration-200, time: 120 or animate-spin literal" do
+      offenders =
+        for {file, source} <- lib_sources(),
+            hit <- Regex.scan(@retired_duration_literals, source),
+            do: "#{file}: #{hd(hit)}"
+
+      assert offenders == [], Enum.join(offenders, "\n")
+    end
+
+    test "every Tailwind duration utility and every JS.transition time in lib is a brand token" do
+      offenders =
+        for {file, source} <- lib_sources(),
+            hit <- duration_offenders(source),
+            do: "#{file}: #{hit}"
+
+      assert offenders == [], Enum.join(offenders, "\n")
+    end
+
+    test "the scan rejects planted literals and accepts the token forms" do
+      planted = """
+      JS.transition({"transition-opacity duration-100 ease-ops-exit", "a", "b"}, time: 120)
+      {"transition-all ease-ops-out duration-200", "a", "b"}
+      <div class="transition duration-300 duration-[250ms]">
+      JS.hide(to: "#x", time: 90)
+      <span class="animate-spin"></span>
+      """
+
+      assert duration_offenders(planted) ==
+               [
+                 "duration-100",
+                 "time: 120",
+                 "duration-200",
+                 "animate-spin",
+                 "duration-300",
+                 "duration-[250ms]",
+                 "time: 90"
+               ]
+
+      accepted = """
+      {"transition-all ease-ops-exit duration-(--duration-ops-quick)", "a", "b"}
+      JS.transition({"transition-opacity duration-(--duration-ops-quick) ease-ops-exit", "a", "b"}, time: 160)
+      JS.show(to: "#x", time: 240, transition: {"transition-all duration-(--duration-ops-base)", "a", "b"})
+      # the token is --duration-ops-slow in prose, not a utility
+      """
+
+      assert duration_offenders(accepted) == []
+    end
+
+    test "the JS.transition sites use the quick and base tokens with matching times" do
+      core = File.read!(Path.join(@lib_root, "scrypath_ops_web/components/core_components.ex"))
+      ui = File.read!(Path.join(@lib_root, "scrypath_ops_web/components/ops_ui.ex"))
+
+      # flash enter: base token, 240ms; flash exit and both modal exits: quick token, 160ms
+      assert core =~
+               ~r/time: 240,\s*transition:\s*\{"transition-all ease-ops-out duration-\(--duration-ops-base\)"/
+
+      assert core =~
+               ~r/time: 160,\s*transition:\s*\{"transition-all ease-ops-exit duration-\(--duration-ops-quick\)"/
+
+      assert length(
+               Regex.scan(
+                 ~r/"transition-opacity duration-\(--duration-ops-quick\) ease-ops-exit"[^)]*time: 160/s,
+                 ui
+               )
+             ) == 2
+    end
+  end
 end

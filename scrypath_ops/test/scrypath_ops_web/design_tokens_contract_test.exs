@@ -130,7 +130,9 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert rule(".ops-mobile-nav") =~ "z-index: var(--z-index-ops-drawer)"
     assert rule(".ops-cmdk") =~ "z-index: var(--z-index-ops-palette)"
     assert rule(".ops-modal") =~ "transition: opacity var(--duration-ops-fast)"
-    assert css() =~ "--duration-ops-fast: 120ms;"
+    # `fast` is a `var()` alias of the 80ms brand `instant` token for one milestone (Phase 187).
+    assert css() =~ "--duration-ops-fast: var(--duration-ops-instant);"
+    assert css() =~ "--duration-ops-instant: 80ms;"
   end
 
   test "the token catalog lists all current OpsUi exports with component roles" do

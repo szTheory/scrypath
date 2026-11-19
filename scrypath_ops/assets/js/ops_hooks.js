@@ -224,7 +224,7 @@ const CommandPalette = {
     this.sheet.setAttribute("hidden", "")
     this.setActive(-1)
   },
-  // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, ~120ms)
+  // A1 exit beat: play the crisp --ease-ops-exit dismissal (`.ops-cmdk--closing`, 80ms)
   // before hiding, so close feels as intentional as open. Behavior is unchanged — the panel
   // still ends up [hidden]; this only eases the transition. Re-opening cancels any pending
   // close so an interrupted dismissal snaps back open (interruptibility). Reduced-motion makes
@@ -407,12 +407,15 @@ const OpsNavDrawer = {
     document.body.classList.remove("ops-nav-drawer-open")
     this.openers.forEach(el => el.setAttribute("aria-expanded", "false"))
 
+    // The panel slides out over --duration-ops-standard, an alias of the 240ms base token, so the
+    // drawer stays until that transition ends and is hidden after it (the delay was 180ms when
+    // the token was 180ms).
     if (this.closeTimer) window.clearTimeout(this.closeTimer)
     this.closeTimer = window.setTimeout(() => {
       this.drawer.setAttribute("hidden", "")
       this.closeTimer = null
       if (restoreFocus) this.restoreFocus()
-    }, 180)
+    }, 240)
   },
   closeForModal() {
     if (this.closeTimer) {

@@ -1575,8 +1575,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       class="modal modal-open ops-modal z-ops-modal"
       phx-remove={
         JS.transition(
-          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
-          time: 120
+          {"transition-opacity duration-(--duration-ops-quick) ease-ops-exit", "opacity-100",
+           "opacity-0"},
+          time: 160
         )
       }
     >
@@ -1647,8 +1648,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       class="ops-sheet z-ops-modal"
       phx-remove={
         JS.transition(
-          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
-          time: 120
+          {"transition-opacity duration-(--duration-ops-quick) ease-ops-exit", "opacity-100",
+           "opacity-0"},
+          time: 160
         )
       }
     >
