@@ -3954,10 +3954,7 @@
     font-size: var(--text-ops-sm);
     font-weight: 600;
     color: var(--color-primary);
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 14%, transparent);
-    }
+    background: var(--ops-selected);
   }
   .ops-preflight__title {
     font-size: var(--text-ops-body);
@@ -3987,10 +3984,7 @@
   .ops-intent-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-ops-raised);
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
-    }
+    border-color: var(--ops-control-edge);
   }
   .ops-intent-card__badges {
     display: flex;
@@ -4051,10 +4045,7 @@
     border-top: 0;
   }
   .ops-result-row:hover, .ops-object-item:hover {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 32%, transparent);
-    }
+    border-color: var(--ops-control-edge);
     box-shadow: var(--shadow-ops-mid);
   }
   .ops-search-hit.ops-result-row:hover {
@@ -4115,39 +4106,19 @@
   .ops-schema-signal-list {
     display: grid;
     gap: var(--spacing-ops-section);
+    border-top: 1px solid var(--color-base-300);
   }
   .ops-schema-signal-card {
     min-width: 0;
     overflow-wrap: anywhere;
     display: grid;
     gap: var(--spacing-ops-4);
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
-    }
-    border-radius: var(--radius-ops-lg);
-    background: var(--ops-surface-1);
+    border: 0;
+    border-bottom: 1px solid var(--color-base-300);
+    border-radius: 0;
+    background: var(--color-base-100);
     padding: var(--spacing-ops-panel);
-    box-shadow: var(--shadow-ops-surface);
-    transition: border-color var(--duration-ops-status) var(--ease-ops-standard), box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-  .ops-schema-signal-card--success {
-    border-color: var(--color-success);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-    }
-  }
-  .ops-schema-signal-card--warning {
-    border-color: var(--color-warning);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-    }
-  }
-  .ops-schema-signal-card--error {
-    border-color: var(--color-error);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
-    }
+    box-shadow: none;
   }
   .ops-schema-signal-card__header {
     display: flex;
@@ -4578,33 +4549,19 @@
     background: var(--color-base-100);
   }
 }
-[data-theme="dark"] .ops-schema-signal-card {
-  background: var(--color-base-100);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-schema-signal-card {
-    background: var(--color-base-100);
-  }
-}
 [data-theme="dark"] .ops-result-row:not(.ops-search-hit):hover, [data-theme="dark"] .ops-object-item:hover {
-  border-color: var(--color-primary);
-  @supports (color: color-mix(in lab, red, red)) {
-    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
-  }
+  border-color: var(--ops-control-edge);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-result-row:not(.ops-search-hit):hover, html:not([data-theme="light"]) .ops-object-item:hover {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
-    }
+    border-color: var(--ops-control-edge);
   }
 }
-[data-theme="dark"] .ops-panel, [data-theme="dark"] .ops-intent-card, [data-theme="dark"] .ops-schema-signal-card {
+[data-theme="dark"] .ops-panel, [data-theme="dark"] .ops-intent-card {
   box-shadow: var(--shadow-ops-panel-dark);
 }
 @media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-panel, html:not([data-theme="light"]) .ops-intent-card, html:not([data-theme="light"]) .ops-schema-signal-card {
+  html:not([data-theme="light"]) .ops-panel, html:not([data-theme="light"]) .ops-intent-card {
     box-shadow: var(--shadow-ops-panel-dark);
   }
 }

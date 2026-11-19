@@ -784,6 +784,57 @@ ${names.map((name) => `    --color-${name}: #1e1220;`).join("\n")}
   );
   assert("N-05 planted: the rotated hue gap is under 25 degrees", closeHueReport.gaps.light < 25, closeHueReport.gaps);
 
+  // ── E. PHASE 187 STYLESHEET BANS (N-12): synthetic stylesheets, planted failures ──
+  // The accept stylesheet holds every kept use of alpha (container border, shadow, scrim, scroll-edge
+  // gradient) plus a commented-out tint, and must pass. Each planted tint must fail with a message
+  // that names the line it sits on.
+
+  const keptAlphaCss = `@layer components {
+  .ops-fixture-border { border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent); }
+  .ops-fixture-shadow { box-shadow: 0 1px 2px color-mix(in oklch, var(--color-base-content) 8%, transparent); }
+  .ops-fixture-scrim { background: color-mix(in oklch, var(--color-black) 50%, transparent); }
+  .ops-fixture-edge { background: linear-gradient(to right, color-mix(in oklch, var(--color-base-100) 94%, transparent), transparent); }
+  /* A comment may name color-mix(in oklch, var(--color-primary) 14%, transparent) without failing. */
+}`;
+  assert(
+    "N-12: base-color mixes (borders, shadows, scrims, gradients) and a commented tint pass",
+    checkRetiredColorMixes(keptAlphaCss).length === 0,
+    checkRetiredColorMixes(keptAlphaCss)
+  );
+
+  expectFailure(
+    "N-12 planted: a primary tint fails and names its line",
+    checkRetiredColorMixes(`@layer components {
+  .ops-fixture-tint { background: color-mix(in oklch, var(--color-primary) 14%, transparent); }
+}`),
+    /N-12 color-mix at app\.css line 2 mixes a primary, secondary or status color/
+  );
+  expectFailure(
+    "N-12 planted: a status mix split over several lines fails",
+    checkRetiredColorMixes(`.ops-fixture-border {
+  border-color: color-mix(
+    in oklch,
+    var(--color-error) 48%,
+    var(--color-base-content) 10%
+  );
+}`),
+    /N-12 color-mix at app\.css line 2 /
+  );
+  expectFailure(
+    "N-12 planted: a tint of a status text token fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: color-mix(in oklch, var(--ops-status-failed) 12%, transparent); }"),
+    /N-12 color-mix at app\.css line 1 /
+  );
+  expectFailure(
+    "N-12 planted: a tint nested inside another mix fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: color-mix(in oklch, color-mix(in oklch, var(--color-warning) 20%, white) 50%, transparent); }"),
+    /N-12 color-mix at app\.css line 1 /
+  );
+  expectFailure(
+    "N-12 planted: a relative-color tint of the primary fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: rgb(from var(--color-primary) r g b / 14%); }"),
+    /N-12 relative color at app\.css line 1 /
+  );
 
   if (failed) {
     process.exit(1);
@@ -1186,6 +1237,61 @@ function checkStatusHueGap(themes, spec, report = {}) {
   return failures;
 }
 
+// ─── PHASE 187 STYLESHEET BANS (A11Y-01, SKIN-05: N-12) ──────────────────────
+//
+// These read stylesheet text only and return failure strings (an empty list is a pass). They are
+// function declarations that use only their own arguments, because the --self-test block runs
+// before module-level constants are initialized.
+
+function oneLine(text) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function lineOf(css, index) {
+  return css.slice(0, index).split("\n").length;
+}
+
+// Every call of one of `names` with its balanced parentheses: [{ text, index }]. Nested calls are
+// reported separately, so a tint hidden inside another function is still found.
+function cssFunctionCalls(css, names) {
+  const calls = [];
+  const opener = new RegExp(`(?<![\\w-])(?:${names.join("|")})\\(`, "g");
+  let match;
+  while ((match = opener.exec(css))) {
+    let depth = 1;
+    let end = match.index + match[0].length;
+    for (; end < css.length && depth > 0; end += 1) {
+      if (css[end] === "(") depth += 1;
+      else if (css[end] === ")") depth -= 1;
+    }
+    calls.push({ text: css.slice(match.index, end), index: match.index });
+  }
+  return calls;
+}
+
+// N-12: no color expression mixes the primary, the secondary or a status color. Those mixes were the
+// Plum and status tints (fills, borders, glows) the re-skin retires: a tinted fill is `--ops-selected`
+// or `--ops-sunken`, a tinted border is `--ops-control-edge` or `--color-base-300`. A mix of the base
+// colors (container borders, shadows, scrims, scroll-edge gradients) carries no retired color and
+// passes. Relative color syntax (`rgb(from var(--color-primary) r g b / 14%)`) is the same tint
+// written another way, so it is held to the same rule.
+function checkRetiredColorMixes(cssText) {
+  const css = stripCssComments(cssText);
+  const retired = /var\(\s*--(?:color-(?:primary|secondary|info|success|warning|error)(?:-content)?|ops-status-(?:failed|retrying|pending|clear)|ops-(?:warning|error)-text)\s*[,)]/;
+  const failures = [];
+  for (const call of cssFunctionCalls(css, ["color-mix"])) {
+    if (retired.test(call.text)) {
+      failures.push(`N-12 color-mix at app.css line ${lineOf(css, call.index)} mixes a primary, secondary or status color: ${oneLine(call.text)}`);
+    }
+  }
+  for (const call of cssFunctionCalls(css, ["rgb", "hsl", "hwb", "lab", "lch", "oklab", "oklch", "color"])) {
+    if (/^[\w-]+\(\s*from\s/.test(call.text) && retired.test(call.text)) {
+      failures.push(`N-12 relative color at app.css line ${lineOf(css, call.index)} derives a tint from a primary, secondary or status color: ${oneLine(call.text)}`);
+    }
+  }
+  return failures;
+}
+
 // ─── MAIN FUNCTION ────────────────────────────────────────────────────────────
 
 // Bounded source reader: declarations are data, never evaluated as code.
@@ -1409,27 +1515,29 @@ async function main() {
     ...checkPublishedPairs(properties, brandJson, publishedBindings, brandReport.published),
     ...checkStatusHueGap(properties, pairMatrix.statusHue, brandReport.hue),
   ];
-  for (const message of brandFailures) {
-    findings.push({
-      severity: "aa-fail",
-      producer: "token",
-      theme: "both",
-      selector: null,
-      token_pair: message,
-      fg: null,
-      bg: null,
-      actual_ratio: null,
-      required_ratio: null,
-      element_role: "brand-pair",
-      screen: "token-check",
-      viewport: "n/a",
-      state: "static",
-      shot: null,
-      fix_class: "token",
-      scope: "systemic",
-      evidence: message,
-    });
-  }
+  // N-12: the stylesheet bans. Each failure names the line it sits on, and counts as an AA failure.
+  const banFailures = [...checkRetiredColorMixes(cssText)];
+  const failureFinding = (message, elementRole) => ({
+    severity: "aa-fail",
+    producer: "token",
+    theme: "both",
+    selector: null,
+    token_pair: message,
+    fg: null,
+    bg: null,
+    actual_ratio: null,
+    required_ratio: null,
+    element_role: elementRole,
+    screen: "token-check",
+    viewport: "n/a",
+    state: "static",
+    shot: null,
+    fix_class: "token",
+    scope: "systemic",
+    evidence: message,
+  });
+  for (const message of brandFailures) findings.push(failureFinding(message, "brand-pair"));
+  for (const message of banFailures) findings.push(failureFinding(message, "stylesheet-ban"));
 
   // (e) Build report in scrypath.contrast.v1 schema (D-17)
   const report = buildReport(findings);
@@ -1497,7 +1605,7 @@ async function main() {
     for (const f of findings.filter((f) => f.severity === "aa-fail")) {
       const label = f.selector || f.token_pair;
       console.log(
-        f.element_role === "brand-pair"
+        f.element_role === "brand-pair" || f.element_role === "stylesheet-ban"
           ? `  ${label}`
           : `  [${f.theme}] ${label}: ${f.actual_ratio} (required: ${f.required_ratio}, role: ${f.element_role})`
       );

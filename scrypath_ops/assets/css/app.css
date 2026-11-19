@@ -1316,7 +1316,7 @@
     font-size: var(--text-ops-sm);
     font-weight: 600;
     color: var(--color-primary);
-    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+    background: var(--ops-selected);
   }
 
   .ops-preflight__title {
@@ -1350,7 +1350,7 @@
   .ops-intent-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-ops-raised);
-    border-color: color-mix(in oklch, var(--color-primary) 40%, transparent);
+    border-color: var(--ops-control-edge);
   }
 
   .ops-intent-card__badges {
@@ -1417,7 +1417,7 @@
      to rows that carry an action. Timing polished in Phase 123 (A4): press = instant, hover = fast. */
   .ops-result-row:hover,
   .ops-object-item:hover {
-    border-color: color-mix(in oklch, var(--color-primary) 32%, transparent);
+    border-color: var(--ops-control-edge);
     box-shadow: var(--shadow-ops-mid);
   }
 
@@ -1496,9 +1496,13 @@
     color: color-mix(in oklch, var(--color-base-content) 78%, transparent);
   }
 
+  /* Search health rows are hairline rows on a Panel list: the list has a top hairline, each row has
+     a bottom hairline and nothing else (no radius, no shadow, no status tint). The word and the
+     shape in the row carry its status, not its border. */
   .ops-schema-signal-list {
     display: grid;
     gap: var(--spacing-ops-section);
+    border-top: 1px solid var(--color-base-300);
   }
 
   .ops-schema-signal-card {
@@ -1506,26 +1510,12 @@
     overflow-wrap: anywhere;
     display: grid;
     gap: var(--spacing-ops-4);
-    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
-    border-radius: var(--radius-ops-lg);
-    background: var(--ops-surface-1);
+    border: 0;
+    border-bottom: 1px solid var(--color-base-300);
+    border-radius: 0;
+    background: var(--color-base-100);
     padding: var(--spacing-ops-panel);
-    box-shadow: var(--shadow-ops-surface);
-    transition:
-      border-color var(--duration-ops-status) var(--ease-ops-standard),
-      box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-schema-signal-card--success {
-    border-color: color-mix(in oklch, var(--color-success) 28%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--warning {
-    border-color: color-mix(in oklch, var(--color-warning) 42%, var(--color-base-content) 10%);
-  }
-
-  .ops-schema-signal-card--error {
-    border-color: color-mix(in oklch, var(--color-error) 48%, var(--color-base-content) 10%);
+    box-shadow: none;
   }
 
   .ops-schema-signal-card__header {
@@ -2023,25 +2013,18 @@
   }
 }
 
-[data-theme="dark"] .ops-schema-signal-card {
-  background: var(--color-base-100);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-schema-signal-card {
-    background: var(--color-base-100);
-  }
-}
-
-/* D-15/D-16: dark-only hover border boost on the paired Search row + Saved search item selector.
-   Base hover remains primary 32% for light and fallback; hover stays border-only, not glow. */
+/* D-15/D-16: the paired Search row + Saved search item hover border is the opaque Control Edge in
+   explicit dark and system dark as well. The base hover rule is the same value (the token resolves
+   per theme); the twins stay so the paired selectors remain mirrored. Hover is border-only, not glow,
+   and carries no Plum tint. */
 [data-theme="dark"] .ops-result-row:not(.ops-search-hit):hover,
 [data-theme="dark"] .ops-object-item:hover {
-  border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+  border-color: var(--ops-control-edge);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-result-row:not(.ops-search-hit):hover,
   html:not([data-theme="light"]) .ops-object-item:hover {
-    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+    border-color: var(--ops-control-edge);
   }
 }
 
@@ -2049,14 +2032,12 @@
    .ops-panel/.ops-intent-card carry --shadow-ops-surface at rest; swap to panel-dark in dark.
    Base definitions untouched; light stays pixel-identical. */
 [data-theme="dark"] .ops-panel,
-[data-theme="dark"] .ops-intent-card,
-[data-theme="dark"] .ops-schema-signal-card {
+[data-theme="dark"] .ops-intent-card {
   box-shadow: var(--shadow-ops-panel-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-panel,
-  html:not([data-theme="light"]) .ops-intent-card,
-  html:not([data-theme="light"]) .ops-schema-signal-card {
+  html:not([data-theme="light"]) .ops-intent-card {
     box-shadow: var(--shadow-ops-panel-dark);
   }
 }

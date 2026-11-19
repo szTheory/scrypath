@@ -92,25 +92,47 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
            ".ops-result-row system-dark fill must mirror var(--color-base-100)."
   end
 
-  test "dark hover-border boost resolves to primary 55% on the paired row/item selector" do
+  test "dark hover border is the opaque Control Edge on the paired row/item selector" do
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);/,
              css()
            ),
-           "Dark hover-border boost must keep the paired .ops-result-row/.ops-object-item selector at primary 55%."
+           "Dark hover border must keep the paired .ops-result-row/.ops-object-item selector on var(--ops-control-edge), with no Plum tint."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);/,
              css()
            ),
-           "System-dark hover-border boost must mirror the paired selector at primary 55%."
+           "System-dark hover border must mirror the paired selector on var(--ops-control-edge)."
   end
 
-  test "base shared hover rule stays primary 32% with the neutral mid shadow" do
+  test "base shared hover rule is the opaque Control Edge with the neutral mid shadow" do
     assert Regex.match?(
-             ~r/\.ops-result-row:hover,\s*\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*32%,\s*transparent\);[^{}]*box-shadow:\s*var\(--shadow-ops-mid\)/,
+             ~r/\.ops-result-row:hover,\s*\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);[^{}]*box-shadow:\s*var\(--shadow-ops-mid\)/,
              css()
            ),
-           "Base shared hover rule must remain paired at primary 32% plus var(--shadow-ops-mid) for light and fallback."
+           "Base shared hover rule must be var(--ops-control-edge) plus var(--shadow-ops-mid) for light and fallback."
+  end
+
+  test "Search health rows are hairline rows: no radius, no shadow, no variant tint" do
+    [_, row] = Regex.run(~r/^\s*\.ops-schema-signal-card\s*\{([^{}]*)\}/m, css())
+
+    assert row =~ "border-radius: 0;"
+    assert row =~ "box-shadow: none;"
+    assert row =~ "border-bottom: 1px solid var(--color-base-300);"
+    refute row =~ "color-mix"
+    refute row =~ "box-shadow: var("
+
+    # The status modifiers (success, warning, error) were tinted borders; the word and shape carry status.
+    refute css() =~ "ops-schema-signal-card--"
+
+    # No dark twin brings a shadow or a rounded card back onto the row.
+    for [selector_and_body] <- Regex.scan(~r/[^{}]*\.ops-schema-signal-card\s*(?:,[^{}]*)?\{[^{}]*\}/, css()) do
+      refute selector_and_body =~ ~r/box-shadow:\s*var\(/, selector_and_body
+      refute selector_and_body =~ "border-radius: var(", selector_and_body
+    end
+
+    [_, list] = Regex.run(~r/^\s*\.ops-schema-signal-list\s*\{([^{}]*)\}/m, css())
+    assert list =~ "border-top: 1px solid var(--color-base-300);"
   end
 end
