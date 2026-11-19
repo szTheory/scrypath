@@ -22,16 +22,30 @@ Phase 176 delete dialog before and after an invalid submit (a real state change,
 
 ## Measured results
 
-The check divides each image into 16 px blocks, takes per block the share of pixels that differ from the
-block's most common color (rounded to 16 steps), and counts blocks whose step differs by more than 2.
-Accept needs at most 0.25 percent of blocks over and a worst step of at most 8, with identical dimensions.
-`blocks_over / blocks` below is measured with the module's own `comparePngStructural`.
+The check divides each image into 16 px blocks and runs two signals per block.
 
-| Case | Full capture | Committed crop |
-|------|--------------|----------------|
-| Recolor accept (173 cool vs warm, dark, 390) | 0 of 5100 over, worst step 1 | 0 of 500 over, worst step 0 |
-| State-change reject (176 initial vs invalid, dark, 390) | 322 of 1725 over (18.7 percent), worst step 12 | 179 of 500 over (35.8 percent), worst step 8 |
-| Layout reject (warm capture, band of 100 rows shifted down 8 px, against cool) | 20 of 5100 over (0.39 percent), worst step 6 (rows 600-699) | 71 of 500 over (14.2 percent), worst step 7 (rows 120-219) |
+1. **Ink share.** The share of pixels that differ from the block's most common color (rounded to 16 steps);
+   a block is over when its step differs by more than 2. Accept needs a worst step of at most 8.
+2. **Edge count** (added after the Phase 186 review, WR-05). The number of horizontally and vertically
+   adjacent pixel pairs whose RGBA differs, attributed to the block of the first pixel; a block is over when
+   the count moves by more than 12. A palette swap that keeps neighbouring regions distinct leaves it
+   unchanged; a new boundary, border, rule or moved edge does not.
+
+Accept needs, on each signal, at most 0.25 percent of blocks over **and** at most 8 blocks over (the
+absolute cap, because 0.25 percent of a 1440 x 900 capture is 12 blocks), and identical dimensions.
+`blocks_over / blocks` and `edge_blocks_over / blocks` below are measured with the module's own
+`comparePngStructural`. The share-only results are the Plan 03 calibration and did not change.
+
+| Case | Full capture (ink share) | Committed crop (ink share) | Committed crop (edge count) |
+|------|--------------|----------------|----------------|
+| Recolor accept (173 cool vs warm, dark, 390) | 0 of 5100 over, worst step 1 | 0 of 500 over, worst step 0 | 0 of 500 over, worst delta 1 |
+| State-change reject (176 initial vs invalid, dark, 390) | 322 of 1725 over (18.7 percent), worst step 12 | 179 of 500 over (35.8 percent), worst step 8 | 333 of 500 over, worst delta 231 |
+| Layout reject (warm capture, band of 100 rows shifted down 8 px, against cool) | 20 of 5100 over (0.39 percent), worst step 6 (rows 600-699) | 71 of 500 over (14.2 percent), worst step 7 (rows 120-219) | 60 of 500 over, worst delta 167 |
+
+Edge count on the full real captures (not committed; sources above and under `.planning/milestones/v1.43-phases/`):
+the four recolor pairs (173 cool vs warm, light and dark, 390 and 1440) are 0 blocks over with a worst delta of
+5, 2, 7 and 2, so the delta threshold of 12 has at least 1.7 times the largest real recolor movement. The two
+real state-change pairs measured (176 dark 390 and light 1440) are 568 of 1725 and 816 of 6210 blocks over.
 
 Other real pairs measured when the thresholds were chosen: 173 cool vs warm light 390 gives 0 of 5100 over;
 173 cool vs warm dark 1440 gives 0 of 9630 over (worst step 1); 176 initial vs invalid light 1440 gives
@@ -41,8 +55,29 @@ Block size 8 and 32 were also measured on the full captures (recolor accepted at
 reject 1237 of 6762 and 59 of 455; shift reject 82 of 19992 and 4 of 1326), so 16 px is a calibration choice,
 not the only value that separates the cases.
 
+## Synthetic cases the ink share alone accepted
+
+The Phase 186 review reproduced these on 1440 x 900 pages: an added full-width solid header bar, an added solid
+sidebar, a full-height 1 px rule moved by 8 px, a 400 x 320 card with a 1 px border, and 12 whole new striped
+blocks. Flat regions are one color in both images, so their ink share is 0 in both; 1-2 px lines are under the
+step tolerance; 12 blocks is under 0.25 percent of 5130. The edge count rejects the first four (each leaves 90
+to 112 blocks over, against a limit of 12 on that raster) and the absolute cap rejects the fifth. They are
+planted in `ui_state_pairs.test.cjs` ("structural check on flat, aligned and thin-line changes"), together with
+a palette swap of the same layout that is accepted with 0 blocks over on both signals.
+
 ## Limits
 
-A single 16-40 px band shifted by 1-8 px stays under the tolerance. The structural check is a coarse
-backstop for whole-region changes; the geometry, state, copy and semantic receipts it runs beside are what
-catch small layout moves.
+- A single 16-40 px band shifted by 1-8 px stays under the ink-share tolerance.
+- An edge that moves by 1-2 px and stays inside one 16 px block looks the same to both signals (both are block
+  counts; planted as "a flat-region edge moved by 2 px inside one block is not seen").
+- Neither signal is font-invariant: a font change moves glyph edges and ink and is expected to be rejected, not
+  accepted as a recolor.
+- A recolor that makes two previously identical neighbouring surfaces distinct (or merges two distinct ones)
+  changes the edge count in the blocks along that boundary. A few such blocks are inside the tolerance (8 at
+  most); a long new border is rejected on purpose. The four real recolors measured here did not do this.
+- The thresholds (12 pairs, 8 blocks, 0.25 percent) were calibrated on one real recolor family (the Phase 173
+  cool-to-warm change). Retuning needs a new real capture pair in this directory, not a looser number.
+
+The structural check is a coarse backstop for whole-region changes; the geometry, state, copy and semantic
+receipts it runs beside (and the action, transport and identity checks, which stay exact) are what catch
+small layout moves.

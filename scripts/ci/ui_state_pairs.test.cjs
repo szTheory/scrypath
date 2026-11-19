@@ -134,6 +134,23 @@ const LAYOUT = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 40, bloc
 const LAYOUT_MOVED = { ...LAYOUT, blockX: 200 };
 const LAYOUT_RECOLORED = { ...LAYOUT, background: [240, 232, 226], ink: [90, 30, 110] };
 
+// A page of flat rectangles and striped ink, drawn by a callback. Flat regions are one color in both images of
+// a pair, which is exactly what the per-block ink share cannot see; their boundaries are what the edge count sees.
+function flatPage(draw, { width = 1440, height = 900, background = [20, 30, 40] } = {}) {
+  const image = new PNG({ width, height });
+  const paint = (x, y, color) => image.data.set([color[0], color[1], color[2], 255], (y * width + x) * 4);
+  for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) paint(x, y, background);
+  draw({
+    rect: (x, y, w, h, color) => {
+      for (let yy = y; yy < y + h; yy += 1) for (let xx = x; xx < x + w; xx += 1) paint(xx, yy, color);
+    },
+    stripes: (x, y, w, h, color) => {
+      for (let yy = y; yy < y + h; yy += 1) if (Math.floor((yy - y) / 2) % 2 === 0) for (let xx = x; xx < x + w; xx += 1) paint(xx, yy, color);
+    }
+  });
+  return PNG.sync.write(image);
+}
+
 function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, imageLayout, hoverImageLayout = imageLayout, mutateCase } = {}) {
   const beforeSide = sourceSha === BEFORE_SHA;
   buildSha ??= beforeSide ? BEFORE_BUILD_SHA : CANDIDATE_BUILD_SHA;
@@ -676,6 +693,8 @@ describe("structural calibration on real captures", () => {
     assert.equal(result.equal, true);
     assert.equal(result.blocks, 500);
     assert.equal(result.blocks_over, 0);
+    assert.equal(result.edge_blocks_over, 0);
+    assert.ok(result.worst_edge_delta <= 4, `a real recolor leaves the edge count nearly unchanged, saw ${result.worst_edge_delta}`);
   });
 
   test("calibration rejects a real state-change pair", () => {
@@ -685,6 +704,7 @@ describe("structural calibration on real captures", () => {
     const result = pairs.comparePngStructural(before.bytes, after.bytes);
     assert.equal(result.equal, false);
     assert.ok(result.blocks_over / result.blocks > 0.1, `a real state change moves many blocks, saw ${result.blocks_over} of ${result.blocks}`);
+    assert.ok(result.edge_blocks_over / result.blocks > 0.1, `the edge count sees it too, saw ${result.edge_blocks_over} of ${result.blocks}`);
   });
 
   test("calibration rejects a real capture with an 8 px band shift", () => {
@@ -696,6 +716,7 @@ describe("structural calibration on real captures", () => {
     const result = pairs.comparePngStructural(before.bytes, shifted);
     assert.equal(result.equal, false);
     assert.ok(result.blocks_over > Math.floor(result.blocks * 0.0025), `the shift exceeds the 0.25 percent tolerance, saw ${result.blocks_over} of ${result.blocks}`);
+    assert.ok(result.edge_blocks_over > Math.floor(result.blocks * 0.0025), `the edge count exceeds it too, saw ${result.edge_blocks_over} of ${result.blocks}`);
   });
 
   test("different image dimensions are never structurally equal", () => {
@@ -704,6 +725,89 @@ describe("structural calibration on real captures", () => {
     const result = pairs.comparePngStructural(wide, tall);
     assert.equal(result.equal, false);
     assert.equal(result.blocks, null);
+  });
+});
+
+// WR-05 (phase 186 review): the ink share alone is blind to flat regions (one color in both images), to 1-2 px
+// lines and to a few whole new blocks under the percentage. Each case below was accepted by the share-only check
+// at the size of a real capture; the edge count and the absolute block cap reject them. The recolor accept proves
+// the extra signal does not reject a palette swap.
+describe("structural check on flat, aligned and thin-line changes", () => {
+  const BG = [20, 30, 40];
+  const PANEL = [60, 70, 90];
+  const RULE = [90, 100, 120];
+  const INK = [200, 180, 60];
+  const RED = [200, 60, 60];
+  const base = ({ stripes }) => stripes(700, 700, 128, 64, INK);
+  const before = flatPage(base);
+  const overPercentage = (result, over) => over / result.blocks > 0.0025;
+
+  const flatChanges = [
+    ["a solid header bar added", ({ rect }) => rect(0, 0, 1440, 64, PANEL)],
+    ["a solid sidebar added", ({ rect }) => rect(0, 0, 240, 900, PANEL)],
+    ["a 1 px full-height rule added", ({ rect }) => rect(400, 0, 1, 900, RULE)],
+    ["a card with a 1 px border added", ({ rect }) => { rect(600, 300, 400, 320, RULE); rect(601, 301, 398, 318, BG); }]
+  ];
+  for (const [name, draw] of flatChanges) {
+    test(`${name} is rejected although the ink share cannot see it`, () => {
+      const result = pairs.comparePngStructural(before, flatPage((d) => { base(d); draw(d); }));
+      assert.ok(result.blocks_over / result.blocks <= 0.0025 && result.worst_step <= 8, "the share-only check would have accepted it");
+      assert.ok(overPercentage(result, result.edge_blocks_over), `the edge count rejects it, saw ${result.edge_blocks_over} of ${result.blocks}`);
+      assert.equal(result.equal, false);
+    });
+  }
+
+  test("a full-height 1 px rule moved by 8 px is rejected", () => {
+    const at = (x) => flatPage((d) => { base(d); d.rect(x, 0, 1, 900, RULE); });
+    const result = pairs.comparePngStructural(at(400), at(408));
+    assert.equal(result.blocks_over, 0, "the share is identical, so only the edge count can see the move");
+    assert.equal(result.equal, false);
+  });
+
+  test("twelve new striped blocks are rejected although they are under 0.25 percent of the blocks", () => {
+    const result = pairs.comparePngStructural(before, flatPage((d) => {
+      base(d);
+      for (let index = 0; index < 12; index += 1) d.stripes(304 + index * 32, 100, 16, 16, RED);
+    }));
+    assert.equal(result.blocks_over, 12);
+    assert.ok(result.blocks_over / result.blocks <= 0.0025, "the share-only percentage would have accepted twelve blocks");
+    assert.equal(result.equal, false);
+  });
+
+  test("the absolute block cap rejects a small new region on a large raster where the percentage would not", () => {
+    const size = { width: 2000, height: 2000 };
+    const sparse = (count) => flatPage((d) => { for (let index = 0; index < count; index += 1) d.stripes(48 + index * 64, 400, 16, 16, RED); }, size);
+    const result = pairs.comparePngStructural(sparse(0), sparse(10));
+    assert.equal(result.blocks, 15625);
+    assert.ok(result.blocks_over / result.blocks <= 0.0025 && result.edge_blocks_over / result.blocks <= 0.0025, "both percentages are under 0.25 percent");
+    assert.ok(result.blocks_over > 8, `ten new blocks are over the cap of 8, saw ${result.blocks_over}`);
+    assert.equal(result.equal, false);
+  });
+
+  test("a palette swap of the same layout is accepted with no block over on either signal", () => {
+    const layout = (colors) => flatPage((d) => {
+      d.rect(0, 0, 240, 900, colors.side);
+      d.rect(0, 0, 1440, 64, colors.header);
+      d.rect(600, 300, 400, 320, colors.rule);
+      d.rect(601, 301, 398, 318, colors.bg);
+      d.rect(400, 0, 1, 900, colors.rule);
+      d.stripes(700, 700, 128, 64, colors.ink);
+    }, { background: colors.bg });
+    const cool = layout({ bg: BG, side: [45, 55, 75], header: PANEL, rule: RULE, ink: INK });
+    const plum = layout({ bg: [30, 18, 34], side: [55, 30, 62], header: [70, 40, 80], rule: [130, 100, 140], ink: [230, 140, 190] });
+
+    const result = pairs.comparePngStructural(cool, plum);
+    assert.equal(result.equal, true);
+    assert.equal(result.blocks_over, 0);
+    assert.equal(result.edge_blocks_over, 0);
+  });
+
+  // Documented limit (PROVENANCE.md): both signals are block counts, so an edge that moves by 1-2 px and stays in the
+  // same 16 px block looks the same. The geometry and copy receipts are what catch that. If this starts failing,
+  // the comparator got sharper: update the limit in PROVENANCE.md instead of loosening a threshold.
+  test("a flat-region edge moved by 2 px inside one block is not seen (documented limit)", () => {
+    const header = (height) => flatPage((d) => { base(d); d.rect(0, 0, 1440, height, PANEL); });
+    assert.equal(pairs.comparePngStructural(header(56), header(58)).equal, true);
   });
 });
 

@@ -22,13 +22,23 @@ const MAX_AUTHORITY_BYTES = 4 * 1024 * 1024;
 const MAX_RECEIPT_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 64 * 1024 * 1024;
 // TOK-04: recolor-tolerant structural pixel check, calibrated on committed real captures
-// (scripts/ci/fixtures/ui-state-pairs/PROVENANCE.md). A coarse backstop: the geometry, state and copy
-// receipts catch small layout moves; a single 16-40 px band shifted by 1-8 px stays under tolerance.
+// (scripts/ci/fixtures/ui-state-pairs/PROVENANCE.md). A coarse backstop with two signals per 16 px block:
+// the ink share (how much of the block is off its most common color) and the edge count (how many
+// neighbouring pixel pairs differ). The share is blind to flat regions (a solid header is one color in
+// both images), the edge count is not: a region boundary is an edge whatever the palette. Neither sees a
+// shift of 1-2 px that stays inside one block, a single 16-40 px band shifted by 1-8 px stays under the
+// share tolerance, and neither is font-invariant; the geometry, state and copy receipts catch those.
 const STRUCTURE_BLOCK_PX = 16;
 const STRUCTURE_STEPS = 16;
 const STRUCTURE_STEP_DELTA = 2;
 const STRUCTURE_MAX_BLOCK_SHARE = 0.0025;
 const STRUCTURE_MAX_WORST_STEP = 8;
+// A block is over on the edge signal when its differing-pair count moves by more than this. Real recolors
+// measured at most 7 (cool vs warm, light and dark, 390 and 1440); a full-block boundary alone is 16.
+const STRUCTURE_EDGE_PAIR_DELTA = 12;
+// Absolute ceiling on blocks over, beside the percentage: 0.25 percent of a 1440 x 900 capture is 12
+// blocks, enough for a small new control. Real recolors measured 0 over on both signals.
+const STRUCTURE_MAX_BLOCKS_OVER = 8;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const SHA = /^[a-f0-9]{40}$/;
 
@@ -552,9 +562,32 @@ function inkCoverageGrid(png) {
   return grid;
 }
 
+// Per block of STRUCTURE_BLOCK_PX, the number of horizontally and vertically adjacent pixel pairs whose
+// exact RGBA differs (a pair counts for the block of its first pixel). A palette substitution that keeps
+// neighbouring regions distinct leaves it unchanged; a new boundary, border, rule or moved edge changes it.
+function edgeCountGrid(png) {
+  const { width, height, data } = png;
+  const columns = Math.ceil(width / STRUCTURE_BLOCK_PX);
+  const rows = Math.ceil(height / STRUCTURE_BLOCK_PX);
+  const grid = new Uint16Array(columns * rows);
+  const stride = width * 4;
+  for (let y = 0; y < height; y += 1) {
+    const rowBase = Math.floor(y / STRUCTURE_BLOCK_PX) * columns;
+    const hasBelow = y + 1 < height;
+    for (let x = 0; x < width; x += 1) {
+      const offset = y * stride + x * 4;
+      let differing = 0;
+      if (x + 1 < width && (data[offset] !== data[offset + 4] || data[offset + 1] !== data[offset + 5] || data[offset + 2] !== data[offset + 6] || data[offset + 3] !== data[offset + 7])) differing += 1;
+      if (hasBelow && (data[offset] !== data[offset + stride] || data[offset + 1] !== data[offset + stride + 1] || data[offset + 2] !== data[offset + stride + 2] || data[offset + 3] !== data[offset + stride + 3])) differing += 1;
+      grid[rowBase + Math.floor(x / STRUCTURE_BLOCK_PX)] += differing;
+    }
+  }
+  return grid;
+}
+
 // Structural equality under the calibrated recolor-tolerant check. The `equal` result (and the pixels_equal
-// fields built from it) no longer means byte-identical pixels. `blocks`, `blocks_over` and `worst_step`
-// are null when the dimensions differ, because no grid is comparable.
+// fields built from it) no longer means byte-identical pixels. `blocks`, `blocks_over`, `worst_step`,
+// `edge_blocks_over` and `worst_edge_delta` are null when the dimensions differ, because no grid is comparable.
 function comparePngStructural(beforeBytes, candidateBytes, beforeMetadata = null, candidateMetadata = null, identicalDimensions = null) {
   let before;
   let candidate;
@@ -579,12 +612,12 @@ function comparePngStructural(beforeBytes, candidateBytes, beforeMetadata = null
     fail("candidate_image_dimensions_mismatch", "Candidate decoded PNG dimensions do not match its actual capture geometry");
   }
   const sameDimensions = before.width === candidate.width && before.height === candidate.height;
-  let structure = { blocks: null, blocks_over: null, worst_step: null };
+  let structure = { blocks: null, blocks_over: null, worst_step: null, edge_blocks_over: null, worst_edge_delta: null };
   let equal = false;
   if (sameDimensions) {
     const blocks = Math.ceil(before.width / STRUCTURE_BLOCK_PX) * Math.ceil(before.height / STRUCTURE_BLOCK_PX);
     if (sameRawBytes || before.data.equals(candidate.data)) {
-      structure = { blocks, blocks_over: 0, worst_step: 0 };
+      structure = { blocks, blocks_over: 0, worst_step: 0, edge_blocks_over: 0, worst_edge_delta: 0 };
       equal = true;
     } else {
       const beforeGrid = inkCoverageGrid(before);
@@ -596,8 +629,18 @@ function comparePngStructural(beforeBytes, candidateBytes, beforeMetadata = null
         if (delta > worstStep) worstStep = delta;
         if (delta > STRUCTURE_STEP_DELTA) blocksOver += 1;
       }
-      structure = { blocks, blocks_over: blocksOver, worst_step: worstStep };
-      equal = blocksOver / blocks <= STRUCTURE_MAX_BLOCK_SHARE && worstStep <= STRUCTURE_MAX_WORST_STEP;
+      const beforeEdges = edgeCountGrid(before);
+      const candidateEdges = edgeCountGrid(candidate);
+      let edgeBlocksOver = 0;
+      let worstEdgeDelta = 0;
+      for (let index = 0; index < beforeEdges.length; index += 1) {
+        const delta = Math.abs(beforeEdges[index] - candidateEdges[index]);
+        if (delta > worstEdgeDelta) worstEdgeDelta = delta;
+        if (delta > STRUCTURE_EDGE_PAIR_DELTA) edgeBlocksOver += 1;
+      }
+      structure = { blocks, blocks_over: blocksOver, worst_step: worstStep, edge_blocks_over: edgeBlocksOver, worst_edge_delta: worstEdgeDelta };
+      const withinTolerance = (over) => over / blocks <= STRUCTURE_MAX_BLOCK_SHARE && over <= STRUCTURE_MAX_BLOCKS_OVER;
+      equal = withinTolerance(blocksOver) && withinTolerance(edgeBlocksOver) && worstStep <= STRUCTURE_MAX_WORST_STEP;
     }
   }
   return {
@@ -784,4 +827,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { requiredCaseIds, compareValidatedBundles, comparePngStructural, inkCoverageGrid, readBundledPng, validateAuthority, loadAuthority, loadReceiptBundle, loadAndCompare, parseArgs, writeOutput };
+module.exports = { requiredCaseIds, compareValidatedBundles, comparePngStructural, inkCoverageGrid, edgeCountGrid, readBundledPng, validateAuthority, loadAuthority, loadReceiptBundle, loadAndCompare, parseArgs, writeOutput };
