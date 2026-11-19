@@ -165,9 +165,19 @@ async function scanMotion(page: Page, reduced = false): Promise<MotionScan> {
 
 async function expectMotionContract(page: Page, label: string, reduced = false): Promise<void> {
   if (reduced) {
-    // A reduced-motion transition is 0.01 ms long, so it can still be in flight for a frame.
+    // A reduced-motion transition is 0.01 ms long, so it can still be in flight for a frame. A
+    // transition that starts while the page is otherwise idle (a dialog opening changes the
+    // inherited scrollbar color on every element) stays `pending` until the compositor produces a
+    // frame, and a headless browser in a container does not produce one on its own, so each sample
+    // asks for two frames first. This waits for the transitions to be started and to end; it does
+    // not loosen what is asserted afterwards.
     await expect
-      .poll(async () => (await scanMotion(page, true)).running, {
+      .poll(async () => {
+        await page.evaluate(
+          () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+        );
+        return (await scanMotion(page, true)).running;
+      }, {
         timeout: 5_000,
         message: `${label}: nothing may keep running under reduced motion`
       })
