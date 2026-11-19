@@ -15,8 +15,11 @@
 //
 // Part 2, the retired-identity deny-list. One scan of `git ls-files` (tracked plus
 // untracked-but-not-ignored, so an uncommitted reintroduction is caught too) for
-// hex values, rgb or rgba triplets and the retired brand directory string of the
-// old identity. A path-level, shrink-only allowlist with phase tags covers the
+// hex values (hash, percent-encoded, 0x and quoted bare forms), rgb or rgba
+// triplets (integer, decimal or percent channels), color(srgb ...) and the retired
+// brand directory string of the old identity. UTF-16 files are decoded, never
+// skipped; a text file with an unreadable encoding fails the scan. A path-level,
+// shrink-only allowlist with phase tags covers the
 // files that still hold old values; a stale or missing entry fails. Six planted
 // failures and the accept cases run through the same scan on a temp git tree.
 // The guard never contains a retired value: the deny set is stored without its
@@ -665,17 +668,18 @@ const ALLOWLIST_PATH = path.join(ROOT, ALLOWLIST_RELATIVE);
 const ALLOWLIST_SCHEMA = "scrypath.retired-identity-allowlist.v1";
 const ALLOWLIST_TAGS = new Set(["p186", "p187", "p188", "p189", "retire-last"]);
 
-// Bare six-digit hex values of the retired identity, without the leading hash, so
-// this file never contains one. Sources: the CONTEXT list (13), the live values the
+// Bare six-digit hex values of the retired identity, without the leading hash and in one
+// unquoted list (a quoted bare token such as the JSON form is itself scanned), so this file
+// never contains one. Sources: the CONTEXT list (13), the live values the
 // CONTEXT list missed (5), and the warm-paper and old-ramp tier from the research (12).
 // The tier-4 semantic fills stay off this list until Phase 187 decides their fate.
-const DENY_HEX = [
-  "191e25", "353d48", "f1f2f4", "dce2e9", "f3f5f8", "edf1f5", "202124",
-  "2a3446", "302b4c", "eeebff", "a85d2e", "111419", "222831",
-  "5b4ad1", "aaa0ff", "6c5ce7", "c17a3e", "141923",
-  "fffdf8", "faf7f2", "f4f1ea", "ded8ce", "1b2230", "475066",
-  "6b7388", "7f8aa3", "b3bdcf", "d7d0c4", "e0b487", "f2eee7",
-];
+const DENY_HEX = `
+  191e25 353d48 f1f2f4 dce2e9 f3f5f8 edf1f5 202124
+  2a3446 302b4c eeebff a85d2e 111419 222831
+  5b4ad1 aaa0ff 6c5ce7 c17a3e 141923
+  fffdf8 faf7f2 f4f1ea ded8ce 1b2230 475066
+  6b7388 7f8aa3 b3bdcf d7d0c4 e0b487 f2eee7
+`.trim().split(/\s+/);
 // The retired brand directory, joined at runtime for the same reason.
 const RETIRED_DIR = ["brand", "book/"].join("");
 
@@ -686,8 +690,25 @@ const MAX_SCAN_BYTES = 8 * 1024 * 1024;
 const NUL_SNIFF_BYTES = 8192;
 
 // Linear patterns: no nested quantifiers, separators are alternatives not overlaps.
-const HEX_PATTERN = /#([0-9a-f]{6})(?:[0-9a-f]{2})?(?![0-9a-f])/gi;
-const RGB_PATTERN = /rgba?\(\s*(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})(?:\s*,\s*|\s+)(\d{1,3})/gi;
+// A hex value is written with a hash, percent-encoded (%23, the form inside url("data:image/svg+xml,...")),
+// as a JS literal (0x), or as a quoted bare token ("abc123" in JSON or YAML).
+const HEX_PATTERN = /(?:#|%23|0x)([0-9a-f]{6})(?:[0-9a-f]{2})?(?![0-9a-f])/gi;
+const QUOTED_HEX_PATTERN = /["']([0-9a-f]{6})(?:[0-9a-f]{2})?["']/gi;
+// rgb() and rgba() with integer, decimal or percent channels.
+const RGB_PATTERN = /rgba?\(\s*(\d{1,3}(?:\.\d{1,6})?%?)(?:\s*,\s*|\s+)(\d{1,3}(?:\.\d{1,6})?%?)(?:\s*,\s*|\s+)(\d{1,3}(?:\.\d{1,6})?%?)/gi;
+// color(srgb r g b): channels from 0 to 1, or percent.
+const SRGB_PATTERN = /color\(\s*srgb\s+(\d*\.?\d+%?)\s+(\d*\.?\d+%?)\s+(\d*\.?\d+%?)/gi;
+// Extensions that are binary by nature (skipped without reading) and text extensions where a NUL byte
+// means the file cannot be scanned (an encoding the scan does not understand), not that it is binary.
+const BINARY_EXTENSIONS = new Set([
+  ".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".bmp", ".ico", ".woff", ".woff2", ".ttf", ".otf",
+  ".eot", ".pdf", ".zip", ".gz", ".tgz", ".tar", ".wasm", ".mp3", ".mp4", ".wav", ".ogg", ".mov", ".webm",
+  ".beam", ".ez", ".sqlite", ".db",
+]);
+const TEXT_EXTENSIONS = new Set([
+  ".css", ".scss", ".less", ".svg", ".html", ".htm", ".xml", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx",
+  ".json", ".md", ".markdown", ".txt", ".csv", ".yml", ".yaml", ".toml", ".sh", ".ex", ".exs", ".eex", ".heex",
+]);
 
 function hexTriplet(hex) {
   const value = Number.parseInt(hex, 16);
@@ -715,24 +736,98 @@ function listRepoFiles(root) {
   return [...new Set(output.toString("utf8").split("\0").filter(Boolean))].sort();
 }
 
+/** A color channel from an rgb() token: a number 0 to 255, or a percent of 255. */
+function rgbChannel(token) {
+  return token.endsWith("%") ? Math.round(Number.parseFloat(token) * 2.55) : Math.round(Number.parseFloat(token));
+}
+
+/** A color channel from a color(srgb ...) token: a number 0 to 1, or a percent. */
+function srgbChannel(token) {
+  return token.endsWith("%") ? Math.round(Number.parseFloat(token) * 2.55) : Math.round(Number.parseFloat(token) * 255);
+}
+
 function scanText(text, deny) {
   const found = new Set();
-  for (const match of text.matchAll(HEX_PATTERN)) {
-    const hex = match[1].toLowerCase();
-    if (deny.hexes.has(hex)) found.add(`#${hex}`);
+  for (const pattern of [HEX_PATTERN, QUOTED_HEX_PATTERN]) {
+    for (const match of text.matchAll(pattern)) {
+      const hex = match[1].toLowerCase();
+      if (deny.hexes.has(hex)) found.add(`#${hex}`);
+    }
   }
-  for (const match of text.matchAll(RGB_PATTERN)) {
-    const triplet = [match[1], match[2], match[3]].map(Number).join(",");
-    if (deny.triplets.has(triplet)) found.add(`rgb(${triplet})`);
+  for (const [pattern, channel] of [[RGB_PATTERN, rgbChannel], [SRGB_PATTERN, srgbChannel]]) {
+    for (const match of text.matchAll(pattern)) {
+      const triplet = [match[1], match[2], match[3]].map(channel).join(",");
+      if (deny.triplets.has(triplet)) found.add(`rgb(${triplet})`);
+    }
   }
   if (text.toLowerCase().includes(deny.directory)) found.add(deny.directory);
   return found;
 }
 
+/** The first bytes of a file, for the encoding check. */
+function readHead(absolute, size) {
+  const head = Buffer.alloc(Math.min(NUL_SNIFF_BYTES, size));
+  const fd = fs.openSync(absolute, "r");
+  try {
+    fs.readSync(fd, head, 0, head.length, 0);
+  } finally {
+    fs.closeSync(fd);
+  }
+  return head;
+}
+
+/**
+ * UTF-16 without a byte-order mark: a quarter or more of the bytes are NUL and nearly all of them sit at
+ * the same parity. Returns "utf16le", "utf16be" or null. A lone planted NUL or a binary does not qualify.
+ */
+function wideEncoding(head) {
+  let even = 0;
+  let odd = 0;
+  for (let index = 0; index < head.length; index += 1) {
+    if (head[index] === 0) {
+      if (index % 2 === 0) even += 1;
+      else odd += 1;
+    }
+  }
+  const total = even + odd;
+  if (total < head.length * 0.25 || total === 0) return null;
+  if (odd >= total * 0.9) return "utf16le";
+  if (even >= total * 0.9) return "utf16be";
+  return null;
+}
+
+/**
+ * How to read a file: "skip" (a binary), "utf8", "utf16le" or "utf16be" (a byte-order mark or the wide-encoding
+ * heuristic). A NUL byte in a file with a text extension that is not recognizably UTF-16 throws: the scan
+ * cannot read it, and silently skipping it would hide a retired value.
+ */
+function classifyFile(head, relativePath) {
+  const extension = path.extname(relativePath).toLowerCase();
+  if (BINARY_EXTENSIONS.has(extension)) return "skip";
+  if (head[0] === 0xff && head[1] === 0xfe) return "utf16le";
+  if (head[0] === 0xfe && head[1] === 0xff) return "utf16be";
+  if (!head.includes(0)) return "utf8";
+  const wide = wideEncoding(head);
+  if (wide !== null) return wide;
+  if (TEXT_EXTENSIONS.has(extension)) {
+    throw new Error(`${relativePath} is a text file with a NUL byte in an unknown encoding and cannot be scanned`);
+  }
+  return "skip";
+}
+
+function decodeFile(bytes, encoding) {
+  if (encoding === "utf8") return bytes.toString("utf8");
+  const body = bytes[0] === 0xff && bytes[1] === 0xfe || bytes[0] === 0xfe && bytes[1] === 0xff ? bytes.subarray(2) : bytes;
+  const even = body.subarray(0, body.length - (body.length % 2));
+  return (encoding === "utf16be" ? Buffer.from(even).swap16() : even).toString("utf16le");
+}
+
 /**
  * Scan files for denied values. Skips exempt paths, files missing from the working
  * tree, anything that is not a regular file (symlinks are never followed) and
- * binaries (a NUL byte in the first 8192 bytes). A text file over 8 MiB throws.
+ * binaries (known binary extensions, or a NUL byte in a file that is not text).
+ * UTF-16 text is decoded first. A text file over 8 MiB, or a text file with an
+ * unreadable encoding, throws.
  */
 function scanFiles(root, files, deny) {
   const hits = new Map();
@@ -747,18 +842,12 @@ function scanFiles(root, files, deny) {
       throw error;
     }
     if (!stat.isFile()) continue;
-    const head = Buffer.alloc(Math.min(NUL_SNIFF_BYTES, stat.size));
-    const fd = fs.openSync(absolute, "r");
-    try {
-      fs.readSync(fd, head, 0, head.length, 0);
-    } finally {
-      fs.closeSync(fd);
-    }
-    if (head.includes(0)) continue;
+    const encoding = classifyFile(readHead(absolute, stat.size), relativePath);
+    if (encoding === "skip") continue;
     if (stat.size > MAX_SCAN_BYTES) {
       throw new Error(`${relativePath} is ${stat.size} bytes, over the ${MAX_SCAN_BYTES} byte scan limit`);
     }
-    const found = scanText(fs.readFileSync(absolute, "utf8"), deny);
+    const found = scanText(decodeFile(fs.readFileSync(absolute), encoding), deny);
     if (found.size > 0) hits.set(relativePath, found);
   }
   return hits;
@@ -916,6 +1005,71 @@ test("planted uppercase retired hex fails", () => {
   assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in src\/Theme\.css/));
   const alpha = makeTree({ "src/alpha.css": `a { color: ${retired}cc; }\n` });
   assert.ok(anyFailure(scanTree(alpha), /unlisted retired identity value in src\/alpha\.css/));
+});
+
+// Forms the first scan missed (phase 186 review WR-07): percent-encoded in a data URI, decimal and percent rgb
+// channels, color(srgb), a quoted bare token, a JS literal, and UTF-16 files.
+const percentChannels = retiredTriplet.map((channel) => `${((Number(channel) / 255) * 100).toFixed(2)}%`);
+const unitChannels = retiredTriplet.map((channel) => (Number(channel) / 255).toFixed(4));
+
+const plantedForms = [
+  ["a percent-encoded hash in a data URI", "src/icon.css", `a { background: url("data:image/svg+xml,%3Csvg fill='%23${DENY_HEX[0]}'/%3E"); }\n`],
+  ["decimal rgb channels", "src/decimal.css", `a { color: rgb(${retiredTriplet.map((channel) => `${channel}.0`).join(" ")}); }\n`],
+  ["percent rgb channels", "src/percent.css", `a { color: rgb(${percentChannels.join(" ")}); }\n`],
+  ["color(srgb) channels", "src/srgb.css", `a { color: color(srgb ${unitChannels.join(" ")}); }\n`],
+  ["a quoted bare token in JSON", "src/tokens.json", `{"fill": "${DENY_HEX[0].toUpperCase()}"}\n`],
+  ["a hex literal in JS", "src/colors.js", `export const old = 0x${DENY_HEX[0]};\n`],
+];
+for (const [label, file, content] of plantedForms) {
+  test(`planted retired value as ${label} fails`, () => {
+    const dir = makeTree({ [file]: content });
+    assert.ok(anyFailure(scanTree(dir), new RegExp(`unlisted retired identity value in ${file.replace(".", "\\.")}`)));
+  });
+}
+
+test("planted retired value in UTF-16 files fails instead of being skipped", () => {
+  const css = `a { color: ${retired}; }\n`;
+  const little = Buffer.from(css, "utf16le");
+  const files = {
+    "src/le-bom.css": Buffer.concat([Buffer.from([0xff, 0xfe]), little]),
+    "src/be-bom.css": Buffer.concat([Buffer.from([0xfe, 0xff]), Buffer.from(little).swap16()]),
+    "src/le-no-bom.css": little,
+    "src/be-no-bom.css": Buffer.from(little).swap16(),
+  };
+  const failures = scanTree(makeTree(files));
+  for (const file of Object.keys(files)) {
+    assert.ok(anyFailure(failures, new RegExp(`unlisted retired identity value in ${file.replace(".", "\\.")}`)), file);
+  }
+});
+
+test("a NUL byte in a text file that is not UTF-16 is a failure to scan, not a skip", () => {
+  const dir = makeTree({ "src/planted.css": Buffer.from(`a { color: ${retired}; }\n/* \0 */\n`) });
+  assert.throws(() => scanTree(dir), /src\/planted\.css is a text file with a NUL byte .* cannot be scanned/);
+});
+
+test("accept binaries by extension and unknown binaries with a NUL byte", () => {
+  const dir = makeTree({
+    "src/pic.png": Buffer.concat([Buffer.from([0x89, 0x50, 0, 0]), Buffer.from(retired)]),
+    "src/font.woff2": Buffer.concat([Buffer.from([0, 1, 0, 0]), Buffer.from(retired)]),
+    "src/blob.dat": Buffer.concat([Buffer.from([0, 1, 2, 3, 0, 5]), Buffer.from(retired)]),
+  });
+  assert.deepEqual(scanTree(dir), []);
+});
+
+test("accept new-identity values in every scanned encoding", () => {
+  const brand = brandPanel();
+  const channels = [1, 3, 5].map((offset) => Number.parseInt(brand.slice(offset, offset + 2), 16));
+  const dir = makeTree({
+    "src/new.css": [
+      `a { color: ${brand}; background: url("data:image/svg+xml,%3Csvg fill='%23${brand.slice(1)}'/%3E"); }`,
+      `b { color: rgb(${channels.map((channel) => `${channel}.0`).join(" ")}); }`,
+      `c { color: color(srgb ${channels.map((channel) => (channel / 255).toFixed(4)).join(" ")}); }`,
+    ].join("\n"),
+    "src/new.json": `{"fill": "${brand.slice(1)}"}\n`,
+    "src/new.js": `export const fresh = 0x${brand.slice(1)};\n`,
+    "src/new-utf16.css": Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(`a { color: ${brand}; }\n`, "utf16le")]),
+  });
+  assert.deepEqual(scanTree(dir), []);
 });
 
 test("planted retired directory string fails", () => {
