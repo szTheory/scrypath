@@ -17,7 +17,6 @@
     { "path": "PRODUCT.md", "tag": "p188", "reason": "Phase 188 documentation adoption replaces the retired brand directory reference" },
     { "path": "website/src/assets/brand-mark.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old mark" },
     { "path": "website/src/assets/og-image.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old social image" },
-    { "path": "test/mix/tasks/ui_contrast_contract_test.exs", "tag": "p186", "reason": "Plan 186-02 Task 3 lifts the pinned literals out of this file, then this entry is removed" },
     { "path": "scrypath_ops/test/scrypath_ops_web/surface_depth_token_contract_test.exs", "tag": "p186", "reason": "Plan 186-02 Task 3 lifts the pinned literal out of this file, then this entry is removed" },
     { "prefix": "brandbook/", "tag": "retire-last", "reason": "owner: Phase 188 deletes the directory (fits BDOC-01); no v1.46 requirement deletes it earlier" },
     { "path": "dev/mix/tasks/verify/ui_tokens.ex", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); retires after the Phase 187 re-skin" },
