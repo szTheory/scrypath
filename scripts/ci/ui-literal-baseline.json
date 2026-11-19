@@ -221,13 +221,6 @@
     },
     {
       "rule": "raw-hex",
-      "path": "scrypath_ops/assets/css/app.css",
-      "context": "@layer components > .ops-sheet__backdrop > background",
-      "value": "#000",
-      "count": 1
-    },
-    {
-      "rule": "raw-hex",
       "path": "scrypath_ops/assets/js/app.js",
       "context": "JS/TS styling:barColors",
       "value": "#29d",

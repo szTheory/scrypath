@@ -3096,7 +3096,7 @@
     position: sticky;
     top: 0;
     z-index: var(--z-index-ops-header);
-    min-height: 4rem;
+    min-height: var(--ops-header-h, 4rem);
     border-bottom: 1px solid var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
@@ -3105,6 +3105,10 @@
     box-shadow: var(--shadow-ops-surface);
     backdrop-filter: blur(16px);
   }
+  html:has(.ops-shell) {
+    --ops-header-h: 4rem;
+    scroll-padding-top: calc(var(--ops-header-h) + 1rem);
+  }
   .ops-header__inner {
     display: flex;
     align-items: center;
@@ -3112,6 +3116,9 @@
     gap: var(--spacing-ops-4);
   }
   @media (max-width: 640px) {
+    html:has(.ops-shell) {
+      --ops-header-h: 7rem;
+    }
     .ops-header__inner {
       display: grid;
       grid-template-areas: "brand brand" "action theme";
@@ -3255,7 +3262,10 @@
   .ops-mobile-nav__backdrop {
     position: absolute;
     inset: 0;
-    background: oklch(0% 0 0 / 0.42);
+    background: color-mix(in srgb, #000 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background: color-mix(in oklch, var(--color-black) 50%, transparent);
+    }
     opacity: 0;
     backdrop-filter: blur(0.375rem);
     transition: opacity var(--duration-ops-standard) var(--ease-ops-standard);
@@ -3269,15 +3279,9 @@
     max-width: 100%;
     flex-direction: column;
     overflow-y: auto;
-    border-right: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-right: 1px solid color-mix(in oklch, var(--color-base-content) 16%, transparent);
-    }
-    background: var(--ops-surface-1);
-    box-shadow: 0 0 0 1px var(--color-base-content), 1rem 0 2.5rem oklch(0% 0 0 / 0.22);
-    @supports (color: color-mix(in lab, red, red)) {
-      box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-base-content) 6%, transparent), 1rem 0 2.5rem oklch(0% 0 0 / 0.22);
-    }
+    border: 1px solid var(--ops-control-edge);
+    background-color: var(--color-base-100);
+    box-shadow: var(--shadow-ops-overlay);
     transform: translateX(-100%);
     transition: transform var(--duration-ops-standard) var(--ease-ops-out);
   }
@@ -4242,6 +4246,10 @@
     background-size: 2.5rem 100%, 2.5rem 100%, 0.75rem 100%, 0.75rem 100%;
     background-attachment: local, local, scroll, scroll;
   }
+  .ops-table-scroll :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
   .ops-signal-table table {
     width: 100%;
   }
@@ -4402,29 +4410,7 @@
     pointer-events: auto;
   }
   .ops-flash {
-    overflow: hidden;
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
-    }
     border-radius: var(--radius-ops-overlay);
-    background: var(--color-base-100);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-100) 98%, transparent);
-    }
-    box-shadow: var(--shadow-ops-overlay);
-  }
-  .ops-flash--info {
-    border-color: var(--color-info);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-info) 35%, var(--color-base-content) 14%);
-    }
-  }
-  .ops-flash--error {
-    border-color: var(--color-error);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-error) 35%, var(--color-base-content) 14%);
-    }
   }
   @media (max-width: 640px) {
     #flash-group {
@@ -4454,9 +4440,9 @@
   .ops-cmdk__backdrop {
     position: absolute;
     inset: 0;
-    background: var(--color-base-content);
+    background: color-mix(in srgb, #000 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 32%, transparent);
+      background: color-mix(in oklch, var(--color-black) 50%, transparent);
     }
     backdrop-filter: blur(2px);
   }
@@ -4467,15 +4453,9 @@
     width: min(34rem, calc(100vw - 2rem));
     max-height: 70vh;
     overflow: hidden;
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
-    }
+    border: 1px solid var(--ops-control-edge);
     border-radius: var(--radius-ops-overlay);
-    background: var(--color-base-100);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-100) 98%, transparent);
-    }
+    background-color: var(--color-base-100);
     box-shadow: var(--shadow-ops-overlay);
     animation: ops-modal-in var(--duration-ops-slow) var(--ease-ops-out);
   }
@@ -4851,7 +4831,7 @@
   background: var(--ops-surface-1);
   box-shadow: var(--shadow-ops-surface), var(--shadow-ops-panel-dark);
 }
-[data-theme="dark"] .ops-sidebar, [data-theme="dark"] .ops-mobile-nav__panel {
+[data-theme="dark"] .ops-sidebar {
   border-color: var(--color-base-content);
   @supports (color: color-mix(in lab, red, red)) {
     border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
@@ -4862,9 +4842,6 @@
     box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-base-content) 8%, transparent), 1rem 0 2.75rem rgba(0,0,0,0.46), var(--shadow-ops-panel-dark);
   }
 }
-[data-theme="dark"] .ops-mobile-nav__backdrop {
-  background: oklch(0% 0 0 / 0.62);
-}
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-header {
     border-bottom-color: var(--color-base-content);
@@ -4874,7 +4851,7 @@
     background: var(--ops-surface-1);
     box-shadow: var(--shadow-ops-surface), var(--shadow-ops-panel-dark);
   }
-  html:not([data-theme="light"]) .ops-sidebar, html:not([data-theme="light"]) .ops-mobile-nav__panel {
+  html:not([data-theme="light"]) .ops-sidebar {
     border-color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
@@ -4884,9 +4861,6 @@
     @supports (color: color-mix(in lab, red, red)) {
       box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-base-content) 8%, transparent), 1rem 0 2.75rem rgba(0,0,0,0.46), var(--shadow-ops-panel-dark);
     }
-  }
-  html:not([data-theme="light"]) .ops-mobile-nav__backdrop {
-    background: oklch(0% 0 0 / 0.62);
   }
 }
 [data-theme="dark"] .ops-wordmark .ops-wordmark__light {
@@ -4970,14 +4944,14 @@
 [data-theme="dark"] .ops-cmdk__panel {
   box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
 }
-[data-theme="dark"] .ops-flash {
+[data-theme="dark"] .ops-flash > .alert {
   box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-cmdk__panel {
     box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
   }
-  html:not([data-theme="light"]) .ops-flash {
+  html:not([data-theme="light"]) .ops-flash > .alert {
     box-shadow: var(--shadow-ops-overlay), var(--shadow-ops-panel-dark);
   }
 }
@@ -5044,22 +5018,18 @@
   }
 }
 .ops-flash > .alert {
-  border: 0;
-  border-radius: calc(var(--radius-ops-overlay) - 1px);
+  border: 1px solid var(--ops-control-edge);
+  border-inline-start-width: 2px;
+  border-radius: var(--radius-ops-overlay);
+  background-color: var(--color-base-100);
   color: var(--color-base-content);
-  box-shadow: none;
+  box-shadow: var(--shadow-ops-overlay);
 }
 .ops-flash--info > .alert {
-  background: var(--color-base-100);
-  @supports (color: color-mix(in lab, red, red)) {
-    background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-info) 10%);
-  }
+  border-inline-start-color: var(--ops-control-edge);
 }
 .ops-flash--error > .alert {
-  background: var(--color-base-100);
-  @supports (color: color-mix(in lab, red, red)) {
-    background: color-mix(in oklch, var(--color-base-100) 90%, var(--color-error) 10%);
-  }
+  border-inline-start-color: var(--ops-status-failed);
 }
 @layer components {
   .ops-signal-metrics--retained {
@@ -5223,7 +5193,6 @@
   .ops-help-content section {
     padding-block: 1.5rem;
     border-top: 1px solid var(--color-base-300);
-    scroll-margin-top: 6rem;
   }
   .ops-help-content p {
     margin-top: .75rem;
@@ -5662,9 +5631,6 @@
     font-size: var(--text-ops-h3);
     font-weight: 600;
   }
-  .ops-help-content [id] {
-    scroll-margin-top: 7rem;
-  }
   .ops-signal-group {
     display: grid;
     gap: .75rem;
@@ -5887,9 +5853,9 @@
   .ops-sheet__backdrop {
     position: absolute;
     inset: 0;
-    background: var(--color-neutral, #000);
+    background: color-mix(in srgb, #000 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-neutral, #000) 40%, transparent);
+      background: color-mix(in oklch, var(--color-black) 50%, transparent);
     }
   }
   .ops-sheet__panel {
@@ -5905,7 +5871,7 @@
     padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
     background: var(--color-base-100);
     color: var(--color-base-content);
-    border-left: 1px solid var(--color-base-300);
+    border: 1px solid var(--ops-control-edge);
     box-shadow: var(--shadow-ops-overlay);
   }
   .ops-sheet__panel:focus {
@@ -5945,8 +5911,6 @@
       width: 100%;
       height: auto;
       max-height: 88dvh;
-      border-left: 0;
-      border-top: 1px solid var(--color-base-300);
       border-radius: var(--radius-ops-overlay) var(--radius-ops-overlay) 0 0;
     }
     .ops-saved-search-manage {
@@ -6030,6 +5994,17 @@
     color: var(--ops-text-muted);
     box-shadow: none;
     text-decoration-line: none;
+  }
+  .modal-box {
+    background-color: var(--color-base-100);
+    border: 1px solid var(--ops-control-edge);
+    box-shadow: var(--shadow-ops-overlay);
+  }
+  .ops-modal.modal-open {
+    background-color: color-mix(in srgb, #000 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklch, var(--color-black) 50%, transparent);
+    }
   }
   .input, .select, .textarea, .checkbox, .radio {
     --input-color: var(--ops-control-edge);

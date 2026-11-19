@@ -145,7 +145,7 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
   test "palette and flash overlay shadows are mirrored in both dark paths" do
     source = css()
 
-    for selector <- [".ops-cmdk__panel", ".ops-flash"] do
+    for selector <- [".ops-cmdk__panel", ".ops-flash > .alert"] do
       assert Regex.match?(
                Regex.compile!(
                  ~s/\\[data-theme="dark"\\]\\s+#{Regex.escape(selector)}\\s*\\{[^{}]*box-shadow:\\s*var\\(--shadow-ops-overlay\\),\\s*var\\(--shadow-ops-panel-dark\\)/

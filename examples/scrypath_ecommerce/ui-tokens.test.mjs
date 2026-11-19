@@ -1352,3 +1352,100 @@ test("planted hits ceiling must equal the sum of max_hits", () => {
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 1 }), /add up to 2, over HITS_CEILING 1/));
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 3 }), /under HITS_CEILING 3: lower HITS_CEILING to 2/));
 });
+
+// Part 3, N-09 (A11Y-02): focused elements scroll to a position below the sticky header.
+//
+// What this proves, in plain terms: the stylesheet gives the page a scroll padding that is the
+// sticky header's height plus 1rem, and the header height is one variable (4rem, 7rem at 640px
+// and below, where the header wraps to two rows), so a keyboard user's focused control is never
+// hidden behind the header. The Help page's two old scroll-margin rules are gone, because they
+// duplicated that job with hard-coded numbers. The browser measurement of the real header (P-10)
+// is a separate check; this one stops the rule from being deleted or hard-coded again.
+function stripCssComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+// The text inside the braces of every `@media (<query>) {` block, with nested braces matched.
+function mediaBlocks(css, query) {
+  const blocks = [];
+  const opener = new RegExp(`@media\\s*\\(${query}\\)\\s*\\{`, "g");
+  let match;
+  while ((match = opener.exec(css))) {
+    let depth = 1;
+    let index = opener.lastIndex;
+    while (index < css.length && depth > 0) {
+      if (css[index] === "{") depth += 1;
+      else if (css[index] === "}") depth -= 1;
+      index += 1;
+    }
+    blocks.push(css.slice(opener.lastIndex, index - 1));
+  }
+  return blocks;
+}
+
+// Flat rules (declaration blocks with no nested braces) whose selector satisfies `selectorTest`.
+function flatRules(css, selectorTest) {
+  const rules = [];
+  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = match[1].trim().split("\n").map((line) => line.trim()).join(" ");
+    if (selectorTest(selector)) rules.push({ selector, body: match[2] });
+  }
+  return rules;
+}
+
+function scrollPaddingFailures(source) {
+  const css = stripCssComments(source);
+  const failures = [];
+  const htmlRules = flatRules(css, (selector) => /^html\b/.test(selector));
+
+  if (!htmlRules.some((rule) => /scroll-padding-top:\s*calc\(\s*var\(--ops-header-h\)\s*\+\s*1rem\s*\)/.test(rule.body))) {
+    failures.push("no html rule sets scroll-padding-top to calc(var(--ops-header-h) + 1rem)");
+  }
+  if (!htmlRules.some((rule) => /--ops-header-h:\s*4rem\b/.test(rule.body))) {
+    failures.push("no html rule declares --ops-header-h as 4rem");
+  }
+  const narrow = mediaBlocks(css, "max-width:\\s*640px");
+  const narrowHtml = narrow.flatMap((block) => flatRules(block, (selector) => /^html\b/.test(selector)));
+  if (!narrowHtml.some((rule) => /--ops-header-h:\s*7rem\b/.test(rule.body))) {
+    failures.push("no html rule inside @media (max-width: 640px) declares --ops-header-h as 7rem");
+  }
+  if (!flatRules(css, (selector) => selector === ".ops-header").some((rule) => /min-height:\s*var\(--ops-header-h\b/.test(rule.body))) {
+    failures.push(".ops-header does not take its min-height from --ops-header-h");
+  }
+  for (const rule of flatRules(css, (selector) => /\.ops-help/.test(selector))) {
+    if (/scroll-margin-top\s*:/.test(rule.body)) failures.push(`${rule.selector} still declares a scroll margin`);
+  }
+  return failures;
+}
+
+const SCROLL_PADDING_FIXTURE = `
+html:has(.ops-shell) { --ops-header-h: 4rem; scroll-padding-top: calc(var(--ops-header-h) + 1rem); }
+@media (max-width: 640px) { html:has(.ops-shell) { --ops-header-h: 7rem; } }
+.ops-header { min-height: var(--ops-header-h, 4rem); }
+`;
+
+test("live scroll padding clears the sticky header", () => {
+  const failures = scrollPaddingFailures(fs.readFileSync(APP_CSS, "utf8"));
+  assert.deepEqual(failures, []);
+});
+
+test("planted missing scroll padding fails", () => {
+  assert.deepEqual(scrollPaddingFailures(SCROLL_PADDING_FIXTURE), []);
+
+  const noPadding = SCROLL_PADDING_FIXTURE.replace(/scroll-padding-top:[^;]*;/, "");
+  assert.ok(scrollPaddingFailures(noPadding).some((message) => /no html rule sets scroll-padding-top/.test(message)));
+
+  const hardCoded = SCROLL_PADDING_FIXTURE.replace("calc(var(--ops-header-h) + 1rem)", "5rem");
+  assert.ok(scrollPaddingFailures(hardCoded).some((message) => /no html rule sets scroll-padding-top/.test(message)));
+
+  const noNarrow = SCROLL_PADDING_FIXTURE.replace("7rem", "4rem");
+  assert.ok(scrollPaddingFailures(noNarrow).some((message) => /7rem/.test(message)));
+
+  const detached = SCROLL_PADDING_FIXTURE.replace("var(--ops-header-h, 4rem)", "4rem");
+  assert.ok(scrollPaddingFailures(detached).some((message) => /min-height from --ops-header-h/.test(message)));
+
+  const helpMargin = `${SCROLL_PADDING_FIXTURE}\n.ops-help-content [id] { scroll-margin-top: 7rem; }\n`;
+  assert.ok(scrollPaddingFailures(helpMargin).some((message) => /still declares a scroll margin/.test(message)));
+
+  assert.ok(scrollPaddingFailures("/* html { scroll-padding-top: calc(var(--ops-header-h) + 1rem); } */").length > 0);
+});

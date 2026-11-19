@@ -673,6 +673,120 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
     end
   end
 
+  # Task 3: inset focus in table scrollers, overlay surfaces and the one scrim (A11Y-02, LD-3, LD-16).
+  # The scroll padding rule has its own Node check (N-09, `ui-tokens.test.mjs`).
+  describe "overlays, scrim and focus" do
+    @scrim "color-mix(in oklch, var(--color-black) 50%, transparent)"
+    @overlay_selectors [
+      ".modal-box",
+      ".ops-sheet__panel",
+      ".ops-cmdk__panel",
+      ".ops-mobile-nav__panel",
+      ".ops-flash > .alert"
+    ]
+
+    test "every overlay is a Panel with a 1px Control Edge border and the overlay shadow" do
+      for selector <- @overlay_selectors do
+        bodies = rule_bodies(selector)
+
+        assert Enum.any?(bodies, &(&1 =~ ~r/background(-color)?: var\(--color-base-100\)/)),
+               "#{selector} must fill with --color-base-100"
+
+        assert Enum.any?(bodies, &(&1 =~ ~r/border: 1px solid var\(--ops-control-edge\)/)),
+               "#{selector} must have a 1px Control Edge border"
+
+        assert Enum.any?(bodies, &(&1 =~ "box-shadow: var(--shadow-ops-overlay)")),
+               "#{selector} must use the overlay shadow"
+
+        for body <- bodies, do: refute(body =~ "color-mix(", selector)
+      end
+    end
+
+    test "the sheet panel keeps the bound background shorthand and the flash keeps its 2px rule" do
+      for body <- rule_bodies(".ops-sheet__panel") do
+        refute body =~ "background-color:"
+      end
+
+      assert Enum.any?(
+               rule_bodies(".ops-sheet__panel"),
+               &(&1 =~ "background: var(--color-base-100)")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-flash > .alert"),
+               &(&1 =~ "border-inline-start-width: 2px")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-flash--info > .alert"),
+               &(&1 =~ "border-inline-start-color: var(--ops-control-edge)")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-flash--error > .alert"),
+               &(&1 =~ "border-inline-start-color: var(--ops-status-failed)")
+             )
+
+      for selector <- [".ops-flash--info > .alert", ".ops-flash--error > .alert"] do
+        for body <- rule_bodies(selector), do: refute(body =~ "background")
+      end
+    end
+
+    test "every backdrop is the one black 50 percent scrim in both themes" do
+      css = File.read!(@app_css)
+
+      for selector <- [
+            ".ops-sheet__backdrop",
+            ".ops-cmdk__backdrop",
+            ".ops-mobile-nav__backdrop",
+            ".ops-modal.modal-open"
+          ] do
+        assert Enum.any?(
+                 rule_bodies(selector),
+                 &(&1 =~ "background#{if selector =~ "modal", do: "-color"}: #{@scrim}")
+               ),
+               "#{selector} must use the shared scrim"
+      end
+
+      assert length(String.split(css, "var(--color-black) 50%, transparent")) - 1 >= 4
+
+      # no dark-only scrim survives, and no other backdrop value does either
+      refute css =~ ~r/\[data-theme="dark"\] \.ops-mobile-nav__backdrop/
+      refute css =~ ~r/html:not\(\[data-theme="light"\]\) \.ops-mobile-nav__backdrop/
+      refute css =~ "oklch(0% 0 0 /"
+      refute css =~ "var(--color-neutral, #000)"
+    end
+
+    test "a table scroller draws its focus ring inward and the focus shadow token is gone" do
+      assert [body] = rule_bodies(".ops-table-scroll :focus-visible")
+      assert body =~ "outline: 2px solid var(--color-primary)"
+      assert body =~ "outline-offset: -2px"
+      refute body =~ "box-shadow"
+
+      refute File.read!(@app_css) =~ "shadow-ops-focus"
+
+      built = Path.expand("../../priv/static/assets/css/app.css", __DIR__)
+      refute File.read!(built) =~ "shadow-ops-focus"
+    end
+
+    test "the sticky header height is one variable scoped to a page with the shell" do
+      css = File.read!(@app_css)
+
+      assert css =~
+               ~r/html:has\(\.ops-shell\) \{\s*--ops-header-h: 4rem;\s*scroll-padding-top: calc\(var\(--ops-header-h\) \+ 1rem\);/
+
+      assert css =~
+               ~r/@media \(max-width: 640px\) \{\s*html:has\(\.ops-shell\) \{\s*--ops-header-h: 7rem;/
+
+      assert Enum.any?(
+               rule_bodies(".ops-header"),
+               &(&1 =~ "min-height: var(--ops-header-h, 4rem)")
+             )
+
+      refute css =~ "scroll-margin-top"
+    end
+  end
+
   describe "E-09 row actions" do
     test "an empty saved-search sheet renders no row action", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/ops/search?saved=manage")

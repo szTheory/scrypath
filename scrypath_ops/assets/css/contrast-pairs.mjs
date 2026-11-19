@@ -132,6 +132,8 @@ export const FOCUS_BINDINGS = [
   { selector: ".ops-sheet__header h2:focus", suppressed: true },
   { selector: ".ops-sheet__header h2:focus-visible", offset: "2px" },
   { selector: ".ops-filter-chip:has(input:focus-visible)", offset: "2px" },
+  // Inside a table scroller the ring is drawn inward so overflow clipping cannot cut it (A11Y-02).
+  { selector: ".ops-table-scroll :focus-visible", offset: "-2px" },
 ];
 
 export const SURFACE_BINDINGS = [
