@@ -82,12 +82,12 @@ Plans:
 **Goal**: A reader sees the new brand header, logo and favicon in the README on GitHub and on HexDocs, with code blocks in brand colors that follow ExDoc's own theme toggle.
 **Depends on**: Phase 186 (pinned `brand/` assets). Sequenced after Phase 187's PR lands on main (no stacked PRs).
 **Requirements**: BDOC-01, BDOC-02
-**Scope note** (recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary): Phase 188 also deletes the retired `brandbook/` directory and removes its `retire-last` deny-list allowlist entry, and resolves `prompts/scrypath-brand-book.md` (the superseded brand prompt that documents that directory) by deleting or rewriting it and removing its allowlist entry. This falls under BDOC-01 ("no `brandbook/` reference left in the built docs"); no new requirement ID.
+**Scope note** (recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary): Phase 188 removes every documentation reference to the retired `brandbook/` directory (the directory itself is deleted in the first v1.47 phase cleanup, together with `mix verify.ui_tokens` and `ui_tokens_contract_test.exs`, which still read `brandbook/tokens`; the Phase 186 verifier found that deleting it earlier breaks `repository-contracts`), and resolves `prompts/scrypath-brand-book.md` (the superseded brand prompt that documents that directory) by deleting or rewriting it and removing its allowlist entry. This falls under BDOC-01 ("no `brandbook/` reference left in the built docs"); no new requirement ID.
 **Success Criteria** (what must be TRUE):
   1. One real `mix docs` build produces a `readme.html` whose header images use `brand/assets/readme/...` paths, and every `src` and `srcset` in the built docs resolves to a file in the output; the same relative paths resolve to committed files for the GitHub README. (BDOC-01)
   2. The built docs contain no `brandbook/` reference. (BDOC-01)
   3. The built docs head links the brand stylesheet after ExDoc's, the brand favicon and the brand logo from `doc/assets/`; the stylesheet prefixes every color rule with `body ` and `body.dark `, has no `prefers-color-scheme` block, and the contract test asserts the code-block colors. (BDOC-02)
-  4. Exit check (scope note above): the `brandbook/` directory is deleted, its allowlist entry and the `prompts/scrypath-brand-book.md` entry are removed, and the shrink-only deny-list test (`examples/scrypath_ecommerce/ui-tokens.test.mjs`) still passes. (BDOC-01)
+  4. Exit check (scope note above): no documentation or README reference to `brandbook/` remains, the `prompts/scrypath-brand-book.md` entry is removed from the allowlist, and the shrink-only deny-list test (`examples/scrypath_ecommerce/ui-tokens.test.mjs`) still passes. (BDOC-01)
 **Plans**: TBD
 **UI hint**: yes
 
