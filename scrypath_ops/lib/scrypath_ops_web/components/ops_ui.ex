@@ -1441,9 +1441,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Scrollable code/data block."
   attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
-  # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
-  # evidence code blocks (Failed sync work, search/merge payloads) must stay calm (D-04a/c).
-  attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   attr(:text, :string, default: nil)
@@ -1493,7 +1490,6 @@ defmodule ScrypathOpsWeb.OpsUi do
           @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
           @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
           @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
-          @shimmer && "ops-code-block--shimmer",
           @class
         ]}
         {@rest}

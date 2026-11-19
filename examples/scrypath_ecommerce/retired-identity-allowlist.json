@@ -1,8 +1,6 @@
 {
   "schema": "scrypath.retired-identity-allowlist.v1",
   "entries": [
-    { "path": "scrypath_ops/assets/css/app.css", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code", "max_hits": 4 },
-    { "path": "scrypath_ops/priv/static/assets/css/app.css", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (tracked built CSS, rebuilt by 187)", "max_hits": 4 },
     { "path": "examples/scrypath_ecommerce/e2e/admin_path_motion.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; asserts the glow that SKIN-05 retires)", "max_hits": 2 },
     { "path": "examples/scrypath_ecommerce/e2e/admin_surface_depth.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old dark surface and glow)", "max_hits": 1 },
     { "path": "examples/scrypath_ecommerce/e2e/phase173_shell.spec.ts", "tag": "p187", "reason": "Phase 187 recolor or retired glow/path code (advisory lane; pins the old shell colors)", "max_hits": 3 },

@@ -195,8 +195,6 @@
   /* Focus rings are outlines, never shadows: the global :focus-visible ring (see @layer base)
      sits outside the control, and `.ops-table-scroll :focus-visible` insets it so a scroller's
      overflow cannot clip it. The browser check P-09 measures that, not this comment. */
-  --shadow-ops-glow: none;          /* light no-op — Precedent A overrides in dark */
-  --shadow-ops-glow-copper: none;   /* light no-op */
 
   /* Control sizing. Component-only tokens (no Tailwind utility namespace);
      consume via var() so every control shares one height authority. */
@@ -737,39 +735,6 @@
     font-weight: 400;
   }
 
-  /* Glow opt-in: quiet violet aura via --shadow-ops-glow (none in light, faint in dark).
-     Apply to route-mark, active nav pill, recommended intent-card. Never text/bg floods. */
-  .ops-glow {
-    box-shadow: var(--shadow-ops-glow);
-    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  /* Copper accent vocabulary — brand accent, NOT a status tone.
-     Never route through tone_class/1 or badge_class/1.
-     .ops-copper-badge composes with .ops-badge for layout (class="ops-badge ops-copper-badge").
-     .ops-copper-badge/node/node--fill are declared here but not wired to templates until Phase 134. */
-  .ops-copper-eyebrow {
-    font-size: var(--text-ops-sm);
-    font-weight: 600;
-    letter-spacing: var(--tracking-ops-label);
-    color: var(--color-secondary);            /* AA: dark 5.13:1 / light 4.84:1 on surface-1 (spec-verified) */
-  }
-
-  .ops-copper-badge {                          /* compose with .ops-badge for layout */
-    border-color: color-mix(in oklch, var(--color-secondary) 44%, transparent);
-    background:   color-mix(in oklch, var(--color-secondary) 12%, transparent);
-    color: var(--color-base-content);          /* AA: dark 12.07:1 / light 14.86:1 (spec-verified) */
-  }
-
-  .ops-copper-node {
-    color: var(--color-secondary);
-  }
-
-  .ops-copper-node--fill {
-    color: var(--color-secondary-content);
-    background: var(--color-secondary);
-  }
-
   /* Labelled tone chip (ops_tone_chip): a `label : value` row on the notice surface (the chip
      also carries .ops-notice-surface and a kind modifier, which supply the Panel fill and the
      2px rule). Only its own layout lives here. */
@@ -884,28 +849,13 @@
     border-radius: var(--radius-ops-md);
   }
 
-  /* Single owner of select chrome: height (.ops-form-control), radius, padding,
-     and a theme-aware chevron. A <select> is a replaced element (no pseudo-els,
-     no currentColor in background data-URIs), so the chevron is a baked SVG that
-     swaps stroke color across light / explicit-dark / system-dark. */
+  /* Select chrome owned here: appearance and padding. The chevron is drawn in the `@layer utilities`
+     block near the end of this file, because daisyUI sets its own chevron on .select in that layer. */
   select.ops-form-control {
     appearance: none;
     padding-inline: var(--control-pad-x-md);
     padding-block: 0.5rem;
     padding-right: 2.25rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b76' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.625rem center;
-  }
-
-  [data-theme="dark"] select.ops-form-control {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a6adba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  }
-
-  @media (prefers-color-scheme: dark) {
-    html:not([data-theme="light"]) select.ops-form-control {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a6adba' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    }
   }
 
   .ops-text-label { font-size: var(--text-ops-sm); line-height: var(--leading-ops-tight); font-weight: 600; letter-spacing: var(--tracking-ops-label); }
@@ -1664,11 +1614,6 @@
     white-space: normal;
   }
 
-  .ops-route-mark {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset;
-  }
-
   .ops-wordmark {
     flex: none;
     display: block;
@@ -1860,88 +1805,6 @@
     font-family: var(--font-mono);
     font-size: var(--text-ops-xs);
     font-weight: 500;
-  }
-
-  /* ============================================================
-     Phase 133 — .ops-path-* path-motion vocabulary (DARKMOTION-01)
-     A small, named, opt-in path-expression system applied ONLY to
-     stable JTBD anchors. Reuses existing --duration-ops-*/--ease-ops-*
-     and --shadow-ops-glow[-copper] tokens — no new literals, no new
-     keyframes, no @keyframes-on-mount, no nth-child stagger.
-     Transform/opacity/box-shadow end states only (A3 patch-safe).
-     ============================================================ */
-
-  /* 1. Path line-draw — a state-driven pseudo-element copying the
-     `.ops-disclosure summary::before` precedent (transition, NOT animation).
-     Rests collapsed+invisible; draws to full width ONLY on :hover or on a
-     persistent server-state class. The route/path underline of an anchor. */
-  .ops-path-trace {
-    position: relative;
-  }
-
-  .ops-path-trace::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0 0;
-    display: block;
-    border-bottom: 2px solid transparent;
-    border-image: linear-gradient(90deg, var(--color-primary), var(--color-secondary)) 1;
-    transform: scaleX(0);
-    transform-origin: left center;
-    opacity: 0;
-    transition:
-      transform var(--duration-ops-fast) var(--ease-ops-standard),
-      opacity var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  /* Visible end state — fires on hover OR on a persistent active/current state.
-     Never on mount/insert; never via an nth-child stagger. */
-  .ops-path-trace:hover::after,
-  .ops-path-trace.ops-path-trace--active::after,
-  .ops-path-trace[aria-current="page"]::after {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-
-  /* 2. Active-path node glow — quiet violet route/path emphasis via the
-     existing --shadow-ops-glow token (none in light, faint violet in dark),
-     copying the `.ops-glow` precedent. Only ever applied to active path/key
-     node anchors, never to text/resting panels/backgrounds. */
-  .ops-path-node {
-    box-shadow: var(--shadow-ops-glow);
-    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  /* Key node — copper accent, wires the declared-but-unused `.ops-copper-node`
-     (Phase 133 is its first consumer) to the copper glow token. */
-  .ops-path-node--copper {
-    box-shadow: var(--shadow-ops-glow-copper);
-    transition: box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  /* 3. Code-block hover glint — opt-in only (`shimmer={true}` on ops_code_block).
-     A pseudo-element border overlay using opacity ONLY, on :hover, gated to
-     hover-capable pointers. It never repeats, has no mount animation and no
-     background-position sweep. Default code blocks (no modifier) stay inert. */
-  .ops-code-block--shimmer {
-    position: relative;
-  }
-
-  @media (hover: hover) {
-    .ops-code-block--shimmer::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      pointer-events: none;
-      box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--color-primary) 35%, transparent);
-      opacity: 0;
-      transition: opacity var(--duration-ops-fast) var(--ease-ops-standard);
-    }
-
-    .ops-code-block--shimmer:hover::after {
-      opacity: 1;
-    }
   }
 }
 
@@ -2223,30 +2086,6 @@
   }
 }
 
-/* D-10 application: glow composed onto .ops-route-mark (keep inset ring) in dark. */
-[data-theme="dark"] .ops-route-mark {
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset, var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-route-mark {
-    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary-content) 30%, transparent) inset, var(--shadow-ops-glow);
-  }
-}
-
-/* Phase 133 (DARKMOTION-01): active Saved search item carries the active-path node mark.
-   Compose the violet glow onto the existing inset ring (Precedent D) so the
-   active path node lifts in dark while keeping its light ring byte-unchanged.
-   Keyed off the persistent .ops-object-item-active server-state class — patch-safe,
-   no new attr, no @keyframes. Glow is route/path emphasis, never a decorative loop. */
-[data-theme="dark"] .ops-object-item-active {
-  box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-object-item-active {
-    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent), var(--shadow-ops-glow);
-  }
-}
-
 /* D-10: --shadow-ops-* are @theme tokens, not daisyUI keys — must hand-author both dark paths.
    Same offsets/blur as light; color/alpha only. Cascades to all 14 shadow consumers. */
 [data-theme="dark"] {
@@ -2255,8 +2094,6 @@
   --shadow-ops-raised:  0 2px 10px rgba(0,0,0,0.50);
   --shadow-ops-overlay: 0 8px 24px rgba(0,0,0,0.55);
   --shadow-ops-panel-dark: 0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45);
-  --shadow-ops-glow:        0 0 8px 2px rgba(108,92,231,0.30);
-  --shadow-ops-glow-copper: 0 0 6px 1px rgba(193,122,62,0.25);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) {
@@ -2265,8 +2102,6 @@
     --shadow-ops-raised:  0 2px 10px rgba(0,0,0,0.50);
     --shadow-ops-overlay: 0 8px 24px rgba(0,0,0,0.55);
     --shadow-ops-panel-dark: 0 0 0 1px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.45);
-    --shadow-ops-glow:        0 0 8px 2px rgba(108,92,231,0.30);
-    --shadow-ops-glow-copper: 0 0 6px 1px rgba(193,122,62,0.25);
   }
 }
 
@@ -2617,6 +2452,18 @@
     border-color: var(--ops-control-edge);
     background-color: var(--ops-sunken);
     color: var(--ops-text-muted);
+  }
+
+  /* The select chevron (LD-11): two linear-gradient triangles painted in `currentColor`, so it
+     follows the select's own text color in every theme. One rule serves light, dark and System,
+     with no hard-coded stroke and no dark or media twin (a data-URI image cannot take a custom
+     property). Same geometry daisyUI draws on .select; the more specific selector wins in this
+     layer and also reaches the plain `select.ops-form-control` that has no .select class. */
+  select.ops-form-control {
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 20px) calc(1px + 50%), calc(100% - 16.1px) calc(1px + 50%);
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
   }
 }
 

@@ -140,10 +140,9 @@ spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: da
 | `--ops-status-clear` | `#1d6b3c` | `#7fcb9a` | The word and icon of Clear |
 | `--ops-warning-text`, `--ops-error-text` | `#8a5a00`, `#b0360b` | `#e3b25c`, `#ff9a6b` | Kept names, literal duplicates of the Retrying and Failed text colors |
 
-`--ops-surface-2` is a retired role (its meaning flips from raised to recessed; use `--ops-sunken`).
-It is still declared, with the Selected value in each theme, only so its remaining consumers and the
-dark order bg → surface-1 → surface-2 keep working until the plan that deletes the property and those
-consumers lands.
+`--ops-surface-2` is deleted. Its consumers were reclassified: a raised surface is `--color-base-100`
+(Panel), and a hover or recessed surface is `--ops-sunken`. The dark surface order is now
+`--ops-sunken` < `--ops-bg` < `--ops-surface-1`, and `surface_depth_token_contract_test.exs` asserts it.
 
 ### Retired in Phase 187
 
@@ -151,10 +150,15 @@ Names only; none of these is a brand value.
 
 - `--color-primary-strong`: the second primary tier is deleted from both blocks, the token map and the
   example theme. Plum and Orchid carry 4.5:1 labels themselves.
-- `--ops-surface-2`: kept with an interim value (above), then deleted with its consumers.
-- `--shadow-ops-glow` and `--shadow-ops-glow-copper`, the glow that rode on them, and the
-  `.ops-path-node` glow treatments: no new consumer, removed with the motion and shape pass.
-- The copper secondary and the `.ops-copper-*` classes: `--color-secondary` is now a quiet neutral.
+- `--ops-surface-2`: deleted with its consumers (see above).
+- `--shadow-ops-glow` and `--shadow-ops-glow-copper`, the glow that rode on them, the `.ops-glow`
+  utility and the route mark's gradient and glow: deleted.
+- The `.ops-path-*` path-motion vocabulary and the `.ops-code-block--shimmer` hover glint (with the
+  `shimmer` attribute of `ops_code_block/1`): deleted.
+- The copper secondary and the `.ops-copper-*` classes: deleted; `--color-secondary` is now a quiet
+  neutral.
+- The select chevron's hard-coded stroke colors and its dark and System twins: replaced by one
+  `currentColor` two-layer gradient chevron (LD-11).
 - Plum and status alpha tints (`color-mix` of the primary or a status color) and the violet and
   copper translucent shadows.
 - The old blue, green, gold and red fills of `info`, `success`, `warning` and `error`, and the old
@@ -251,7 +255,7 @@ the only copy needed to choose what to do. Labels are sentence case at 12px, 600
 0.01em letter-spacing; no text is transformed to capitals. Existing radius, shadow, motion,
 and z-index tokens remain the sole authorities for those dimensions.
 
-Shared `.ops-btn` actions use neutral surface-2 hover and a stronger transient neutral press; the existing global 2px focus outline with 2px offset remains independent. Only explicit `aria-pressed="true"` marks a persistent selected action. Disabled native buttons suppress hover/press feedback, and refresh eligibility is re-read from the server-rendered `data-ops-refresh-eligible` value after each LiveView patch.
+Shared `.ops-btn` actions use a neutral Sunken hover and a stronger transient neutral press; the existing global 2px focus outline with 2px offset remains independent. Only explicit `aria-pressed="true"` marks a persistent selected action. Disabled native buttons suppress hover/press feedback, and refresh eligibility is re-read from the server-rendered `data-ops-refresh-eligible` value after each LiveView patch.
 
 ## Radius — `--radius-ops-*` → `rounded-ops-*`
 
@@ -283,13 +287,12 @@ seated into the surface, not floating above it); the `0 1px 3px` retains the sub
 lift. Combined with the panel's `border: 1px solid color-mix(base-content 14%)`, the result is
 dark seated depth without visible shadow lift.
 
-**Glow and copper are retired.** `--shadow-ops-glow`, `--shadow-ops-glow-copper` and the copper
-vocabulary (`.ops-copper-eyebrow`, `.ops-copper-badge`, `.ops-copper-node`, `.ops-copper-node--fill`)
-are on the retired list above. They stay declared, wired to no template, only until the shape and
-motion pass removes their remaining consumers (route and path nodes, and the active saved search
-item's dark rule); no new rule may use them. The active nav item lost its glow to the Selection
-Signature (below). `--color-secondary` is a quiet neutral: it is
-never an accent and never a status tone.
+**Glow and copper are deleted.** `--shadow-ops-glow`, `--shadow-ops-glow-copper`, the `.ops-glow`
+utility and the copper vocabulary (`.ops-copper-eyebrow`, `.ops-copper-badge`, `.ops-copper-node`,
+`.ops-copper-node--fill`) no longer exist in `app.css`, and `motion_contract_test.exs` fails if any of
+them returns. The active nav item and every other selected element carry the Selection Signature
+(below) instead of a glow. `--color-secondary` is a quiet neutral: it is never an accent and never a
+status tone.
 
 ## Focus
 
@@ -483,44 +486,16 @@ item explicitly forbids, so it was skipped on the side of restraint.
 | row hover/press (`.ops-result-row`/`.ops-object-item`: border + `shadow-ops-mid`, subtle scale) | flash bounce, focus rings, decorative loops |
 | nothing loops: loading is a literal word plus `aria-busy="true"` (`Refreshing…`, `Running…`, `Checking Meilisearch settings…`, `Attempting to reconnect`) with static Sunken skeleton bars. The spin and pulse animations are gone, and E-16 plus a source scan keep them gone | any infinite iteration, spinner or pulse |
 
-### `.ops-path-*` path-motion vocabulary (Phase 133, DARKMOTION-01)
+### Path motion (retired in Phase 187)
 
-A small, named, **opt-in** path-expression layer applied **only** to stable JTBD anchors — the
-design-system dividend Phase 134/135 reuse. No new keyframes (line-draw is a `transition`, not an
-`@keyframes` — the A3 patch-safety precedent), no new JS hooks, no new tokens (reuses
-`--duration-ops-fast`, `--ease-ops-standard`, `--shadow-ops-glow`, `--shadow-ops-glow-copper`).
-Transform/opacity/box-shadow end states only.
-
-| Class / token | What it does | Tokens | Fires on |
-| --- | --- | --- | --- |
-| `.ops-path-trace` + `::after` | Path line-draw underline (`transform: scaleX(0→1)` + opacity) — a pseudo-element copying the `.ops-disclosure summary::before` precedent | `--duration-ops-fast` + `--ease-ops-standard` | `:hover`, `.ops-path-trace--active`, or `[aria-current="page"]` — **never** mount/insert, **never** an `nth-child` stagger |
-| `.ops-path-node` | Active-path node glow (violet route/path emphasis) via `--shadow-ops-glow` (none in light, faint in dark — dual-dark-path is free through the token) | `--shadow-ops-glow`, `--duration-ops-fast` | active path/key-node state only |
-| `.ops-path-node--copper` | Key-node copper glow — first consumer of the declared `.ops-copper-node` vocabulary | `--shadow-ops-glow-copper`, `--duration-ops-fast` | active key node only |
-| `.ops-object-item-active` (dark override) | Active Saved search item composes the violet glow onto its existing inset ring (Precedent D), **hand-authored in BOTH** `[data-theme="dark"]` and `@media (prefers-color-scheme: dark) html:not([data-theme="light"])` | `--shadow-ops-glow` | persistent active server-state class (patch-safe) |
-| `.ops-code-block--shimmer` | Opt-in code-block hover glint — an opacity-only `::after` ring inside `@media (hover: hover)`; surfaced via `shimmer={true}` on `ops_code_block/1` | `--duration-ops-fast` + `--ease-ops-standard` | `:hover` on hover-capable pointers only |
-
-**Anchors (the allowed surface):** the route mark, Search federation/merge-trace disclosures
-(`.ops-path-trace`),
-the active Saved search item (`.ops-object-item-active`), and optionally the breadcrumb current path
-(`[aria-current="page"]`). Every path/node signal is paired with the existing visible
-text/ARIA state so motion never carries status meaning alone (D-07).
-
-**Deliberately NOT shipped / restraint boundaries (the A3 voice):**
-- **No result-list reveal stagger** — it would re-fire on every LiveView patch of the result list
-  (re-runs, re-sorts) and read as flicker; the merge-trace line-draw is hover/state-driven, never
-  list-entry (D-06).
-- **`shimmer` never on evidence** — Failed Sync code blocks and search/merge payloads stay calm and
-  readable; `shimmer` defaults to `false` and is never set on evidence panes (D-04a/c).
-- **Glow is route/path emphasis only** — never on text, resting panels, ordinary buttons, broad
-  backgrounds, or status surfaces (D-03b).
-
-| Animate (path-motion) | Never animate (path-motion) |
-| --- | --- |
-| path line-draw (`.ops-path-trace` scaleX + opacity, hover/active) | SVG `stroke-dashoffset` line draws |
-| active-path node glow (`.ops-path-node[--copper]` box-shadow) | `background-position` shimmer sweeps |
-| opt-in code-block hover glint (`.ops-code-block--shimmer` opacity) | `filter:` animation |
-| | result-list entry/reveal stagger (re-fires on patch) |
-| | `shimmer` on evidence code blocks (Failed Sync / search-merge payloads) |
+Phase 133 shipped a `.ops-path-*` vocabulary (a line-draw underline, active-path node glows in violet
+and copper, and an opt-in code-block hover glint) and a dark glow on the active Saved search item.
+All of it is deleted with the old identity: the Selection Signature, a 2px Plum line on the Selected
+fill, is the one selection mark, and no rule draws a decorative path, glint or aura. The restraint
+boundaries it kept still hold: no result-list reveal stagger (it would re-fire on every LiveView
+patch), no animation of layout properties, no decorative loops, and evidence code blocks stay calm.
+`motion_contract_test.exs` asserts that the retired families and both glow tokens are absent; the
+duration-token rule for every transition and animation is added with the motion proof in Plan 09.
 
 ## Muted-Text Contrast Registry
 
