@@ -77,6 +77,43 @@ defmodule Mix.Tasks.UiContrastContractTest do
     refute output =~ "Contrast check:"
   end
 
+  # Gate 2 of the v1.46 gate budget: token-map parity plus the retired-identity
+  # deny-list, one mechanism in one Node test. This wrapper is how it reaches CI:
+  # this file runs in `core` (full suite) and in `repository-contracts`
+  # (@focused_tests in dev/mix/tasks/verify.phase99.ex), so no ci.yml step exists.
+  # Every live test name must appear as a passing TAP line, so an empty or
+  # silently skipped run cannot pass.
+  @token_test_names [
+    "live token map parity both directions",
+    "live applied rows equal pinned brand hex and pending rows differ",
+    "live built CSS emissions equal source theme blocks",
+    "live hex allowlist holds"
+  ]
+
+  test "token map parity and retired-identity guards pass" do
+    node = System.find_executable("node") || flunk("Node is required for the token test")
+
+    {output, status} =
+      System.cmd(
+        node,
+        [
+          "--test",
+          "--test-reporter=tap",
+          Path.join(@root, "examples/scrypath_ecommerce/ui-tokens.test.mjs")
+        ],
+        cd: @root,
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, output
+    assert output =~ ~r/^# fail 0$/m, output
+
+    for name <- @token_test_names do
+      assert output =~ ~r/^ok \d+ - #{Regex.escape(name)}$/m,
+             "the token test did not report #{inspect(name)} as passing:\n#{output}"
+    end
+  end
+
   @tag :contrast_child
   test "repository contracts reject a dark ordinary content label below 4.5" do
     root = copy_repository()
