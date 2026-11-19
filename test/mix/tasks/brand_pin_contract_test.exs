@@ -410,6 +410,96 @@ defmodule Mix.Tasks.BrandPinContractTest do
     end
   end
 
+  describe "bounded extraction (members that lie about their size)" do
+    test "a member that inflates past its declared size is refused while inflating" do
+      {bin, expected} = lying_archive(declared: 10, actual: 20_000_000)
+      assert byte_size(bin) < 8_388_608
+
+      error = assert_raise Mix.Error, fn -> Update.extract!(bin, expected) end
+
+      assert error.message ==
+               "brand.update: member #{@prefix}BRAND.md inflates past its declared size 10"
+    end
+
+    test "a refresh from a lying archive writes nothing" do
+      {bin, expected} = lying_archive(declared: 10, actual: 20_000_000)
+      root = tmp_root!()
+      zip_path = Path.join(root, "lying.zip")
+      File.write!(zip_path, bin)
+      target = Path.join(root, "target")
+      File.mkdir_p!(target)
+
+      assert_raise Mix.Error, ~r/inflates past its declared size 10/, fn ->
+        Update.refresh!(target, {:zip, zip_path}, refresh_opts(expected))
+      end
+
+      assert File.ls!(target) == []
+    end
+
+    test "a local header that disagrees with the central directory is refused" do
+      {bin, expected} = lying_archive(declared: 10, actual: 20_000_000, headers: [:central])
+
+      error = assert_raise Mix.Error, fn -> Update.extract!(bin, expected) end
+
+      assert error.message =~
+               "local header of #{@prefix}BRAND.md disagrees with the central directory sizes"
+    end
+
+    test "a member that inflates to fewer bytes than declared is refused" do
+      {bin, expected} = lying_archive(declared: 5_000, actual: 100)
+
+      error = assert_raise Mix.Error, fn -> Update.extract!(bin, expected) end
+
+      assert error.message ==
+               "brand.update: member #{@prefix}BRAND.md extracted 100 bytes, declared 5000"
+    end
+
+    test "a member whose bytes fail the CRC-32 check is refused" do
+      entries = adopted_entries()
+
+      bin =
+        entries |> build_zip() |> patch_local_header!(@prefix <> "BRAND.md", 14, <<0, 0, 0, 0>>)
+
+      error = assert_raise Mix.Error, fn -> Update.extract!(bin, expected_for(bin, entries)) end
+
+      assert error.message == "brand.update: member #{@prefix}BRAND.md fails its CRC-32 check"
+    end
+
+    test "an unsupported compression method is refused" do
+      entries = adopted_entries()
+      bin = entries |> build_zip() |> patch_local_header!(@prefix <> "BRAND.md", 8, <<9, 0>>)
+
+      error = assert_raise Mix.Error, fn -> Update.extract!(bin, expected_for(bin, entries)) end
+
+      assert error.message =~ "uses compression method 9"
+    end
+
+    test "a corrupt deflate stream is refused with a distinct message" do
+      entries = [{@prefix <> "BRAND.md", :binary.copy("scrypath ", 400)} | tl(adopted_entries())]
+      bin = build_zip(entries)
+      data = member_data_offset!(bin, @prefix <> "BRAND.md")
+      corrupt = patch_at!(bin, data, :binary.copy(<<255>>, 8))
+
+      error =
+        assert_raise Mix.Error, fn -> Update.extract!(corrupt, expected_for(corrupt, entries)) end
+
+      assert error.message =~ "not a valid deflate stream"
+    end
+
+    test "honest members extract to exactly their declared sizes" do
+      entries = adopted_entries()
+      bin = build_zip(entries)
+
+      extracted = Update.extract!(bin, expected_for(bin, entries))
+
+      assert length(extracted) == 44
+
+      for {entry, bytes} <- extracted do
+        assert bytes == "fixture bytes for " <> entry.member
+      end
+    end
+  end
+
   describe "online re-download check" do
     test "bytes that differ from the pin are refused" do
       Req.Test.stub(__MODULE__.DifferentBytes, fn conn ->
@@ -611,6 +701,85 @@ defmodule Mix.Tasks.BrandPinContractTest do
       zip_entries: expected.entries,
       zip_uncompressed_bytes: expected.uncompressed
     }
+  end
+
+  # The zip-bomb shape: BRAND.md really holds `actual` zero bytes but the archive
+  # declares `declared`. `headers` picks where the lie is written; the declared
+  # total the pin expects follows the lie, so every cap and pin check passes and
+  # only the member's own inflation can notice.
+  defp lying_archive(options) do
+    declared = Keyword.fetch!(options, :declared)
+    actual = Keyword.fetch!(options, :actual)
+    headers = Keyword.get(options, :headers, [:central, :local])
+    name = @prefix <> "BRAND.md"
+
+    entries = [{name, :binary.copy(<<0>>, actual)} | tl(adopted_entries())]
+    bin = build_zip(entries)
+
+    bin =
+      if :central in headers,
+        do: patch_central_header!(bin, name, 24, <<declared::32-little>>),
+        else: bin
+
+    bin =
+      if :local in headers,
+        do: patch_local_header!(bin, name, 22, <<declared::32-little>>),
+        else: bin
+
+    expected = expected_for(bin, entries)
+    {bin, %{expected | uncompressed: expected.uncompressed - actual + declared}}
+  end
+
+  defp refresh_opts(expected) do
+    [
+      sha256: expected.sha256,
+      size: expected.size,
+      entries: expected.entries,
+      uncompressed: expected.uncompressed,
+      commit: "abc1234"
+    ]
+  end
+
+  # Fixed-size parts of the zip headers, so the tests can falsify single fields.
+  defp central_header!(bin, name) do
+    {position, _length} =
+      bin
+      |> :binary.matches(<<0x50, 0x4B, 0x01, 0x02>>)
+      |> Enum.find(fn {position, _length} ->
+        <<_::binary-size(position), _fixed::binary-size(28), name_length::16-little, _::binary>> =
+          bin
+
+        binary_part(bin, position + 46, name_length) == name
+      end)
+
+    position
+  end
+
+  defp local_header!(bin, name) do
+    position = central_header!(bin, name)
+    <<_::binary-size(position + 42), offset::32-little, _::binary>> = bin
+    {offset, byte_size(name)}
+  end
+
+  defp member_data_offset!(bin, name) do
+    {offset, name_length} = local_header!(bin, name)
+    <<_::binary-size(offset + 28), extra_length::16-little, _::binary>> = bin
+    offset + 30 + name_length + extra_length
+  end
+
+  defp patch_central_header!(bin, name, field_offset, value) do
+    patch_at!(bin, central_header!(bin, name) + field_offset, value)
+  end
+
+  defp patch_local_header!(bin, name, field_offset, value) do
+    {offset, _name_length} = local_header!(bin, name)
+    patch_at!(bin, offset + field_offset, value)
+  end
+
+  defp patch_at!(bin, position, value) do
+    size = byte_size(value)
+    <<before::binary-size(position), _old::binary-size(size), rest::binary>> = bin
+    <<before::binary, value::binary, rest::binary>>
   end
 
   defp refusal(bin, expected) do

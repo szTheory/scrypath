@@ -151,20 +151,14 @@ defmodule Mix.Tasks.Brand.Update do
   def extract!(zip_binary, expected) do
     verify_archive!(zip_binary, expected)
 
-    with_zip(zip_binary, fn handle, entries ->
-      declared = Map.new(entries)
+    with_zip(zip_binary, fn _handle, entries ->
+      located =
+        Map.new(entries, fn {name, size, offset, comp} -> {name, {size, offset, comp}} end)
 
       for entry <- @adopted do
         full_name = @member_prefix <> entry.member
-        {:ok, {_name, bytes}} = :zip.zip_get(String.to_charlist(full_name), handle)
-
-        if byte_size(bytes) != Map.fetch!(declared, full_name) do
-          refuse!(
-            "member #{full_name} extracted #{byte_size(bytes)} bytes, declared #{declared[full_name]}"
-          )
-        end
-
-        {entry, bytes}
+        {declared, offset, comp_size} = Map.fetch!(located, full_name)
+        {entry, inflate_member!(zip_binary, full_name, declared, offset, comp_size)}
       end
     end)
   end
@@ -221,7 +215,8 @@ defmodule Mix.Tasks.Brand.Update do
     check_live!(root)
   end
 
-  defp refresh!(root, source, opts) do
+  @doc false
+  def refresh!(root, source, opts) do
     # Validate every flag before touching the file system or the network.
     expected = expected_from_opts!(opts)
     {zip_binary, url} = load_source!(source)
@@ -398,7 +393,7 @@ defmodule Mix.Tasks.Brand.Update do
   end
 
   defp check_names!(entries) do
-    for {name, _size} <- entries do
+    for {name, _size, _offset, _comp} <- entries do
       cond do
         String.starts_with?(name, "/") ->
           refuse!("entry name is absolute: #{inspect(name)}")
@@ -429,8 +424,8 @@ defmodule Mix.Tasks.Brand.Update do
     end
   end
 
-  # Opens the archive in memory and yields {name, declared_size} pairs for
-  # regular files. Always closes the handle.
+  # Opens the archive in memory and yields {name, declared_size, offset,
+  # compressed_size} tuples from the central directory. Always closes the handle.
   defp with_zip(zip_binary, fun) do
     case :zip.zip_open(zip_binary, [:memory]) do
       {:ok, handle} ->
@@ -452,13 +447,108 @@ defmodule Mix.Tasks.Brand.Update do
     case :zip.zip_list_dir(handle) do
       {:ok, records} ->
         # zip_file record: {:zip_file, name, file_info, comment, offset, comp_size};
-        # file_info element 1 is the declared uncompressed size.
-        for {:zip_file, name, info, _comment, _offset, _comp} <- records do
-          {List.to_string(name), elem(info, 1)}
+        # file_info element 1 is the declared uncompressed size and offset is the
+        # local header position. Every number here is what the archive claims.
+        for {:zip_file, name, info, _comment, offset, comp_size} <- records do
+          {List.to_string(name), elem(info, 1), offset, comp_size}
         end
 
       {:error, reason} ->
         refuse!("archive listing failed: #{inspect(reason)}")
+    end
+  end
+
+  # Reads one member through its local header and inflates it with a byte budget
+  # equal to the size the central directory declares (zip-bomb defence). The
+  # budget is enforced while inflating, not after: `:zip.zip_get/2` would inflate
+  # the whole stream into memory before any size comparison could run. The
+  # declared sizes were already summed and capped by `verify_archive!/2`.
+  defp inflate_member!(zip_binary, name, declared, offset, comp_size) do
+    {method, crc, checked?, data} = local_member!(zip_binary, name, declared, offset, comp_size)
+
+    bytes =
+      case method do
+        0 when comp_size == declared ->
+          data
+
+        0 ->
+          refuse!("member #{name} is stored with #{comp_size} bytes, declared #{declared}")
+
+        8 ->
+          bounded_inflate!(name, data, declared)
+
+        other ->
+          refuse!("member #{name} uses compression method #{other}; only stored and deflate")
+      end
+
+    if byte_size(bytes) != declared do
+      refuse!("member #{name} extracted #{byte_size(bytes)} bytes, declared #{declared}")
+    end
+
+    if checked? and :erlang.crc32(bytes) != crc do
+      refuse!("member #{name} fails its CRC-32 check")
+    end
+
+    bytes
+  end
+
+  # A bit 3 data descriptor moves the sizes and the CRC out of the local header;
+  # for those members only the central-directory numbers are available.
+  defp local_member!(zip_binary, name, declared, offset, comp_size) do
+    with <<_before::binary-size(offset), 0x50, 0x4B, 0x03, 0x04, _version::16-little,
+           flags::16-little, method::16-little, _time::16, _date::16, crc::32-little,
+           local_comp::32-little, local_size::32-little, name_length::16-little,
+           extra_length::16-little, rest::binary>> <- zip_binary,
+         <<local_name::binary-size(name_length), _extra::binary-size(extra_length),
+           data::binary-size(comp_size), _after::binary>> <- rest do
+      descriptor? = Bitwise.band(flags, 0x08) != 0
+
+      cond do
+        Bitwise.band(flags, 0x01) != 0 ->
+          refuse!("member #{name} is encrypted")
+
+        local_name != name ->
+          refuse!("local header of #{name} names a different member")
+
+        not descriptor? and (local_comp != comp_size or local_size != declared) ->
+          refuse!("local header of #{name} disagrees with the central directory sizes")
+
+        true ->
+          {method, crc, not descriptor?, data}
+      end
+    else
+      _malformed -> refuse!("member #{name} has a malformed local header or truncated data")
+    end
+  end
+
+  defp bounded_inflate!(name, compressed, limit) do
+    z = :zlib.open()
+
+    try do
+      :ok = :zlib.inflateInit(z, -15)
+      inflate_loop!(z, name, :zlib.safeInflate(z, compressed), [], 0, limit)
+    rescue
+      error in ErlangError ->
+        refuse!("member #{name} is not a valid deflate stream: #{inspect(error.original)}")
+    after
+      :zlib.close(z)
+    end
+  end
+
+  # safeInflate returns at most one internal buffer (16 KiB) per call, so memory
+  # held at the moment of refusal is the limit plus one buffer.
+  defp inflate_loop!(z, name, {status, output}, acc, size, limit) do
+    size = size + IO.iodata_length(output)
+
+    if size > limit do
+      refuse!("member #{name} inflates past its declared size #{limit}")
+    end
+
+    acc = [acc | output]
+
+    case status do
+      :finished -> IO.iodata_to_binary(acc)
+      :continue -> inflate_loop!(z, name, :zlib.safeInflate(z, []), acc, size, limit)
     end
   end
 
