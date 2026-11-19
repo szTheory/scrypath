@@ -183,6 +183,60 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute row =~ "ops-badge-success"
   end
 
+  # Phase 187 SKIN-08: the capture fixture. Asserts today's wording only; the re-skin plans
+  # replace these assertions with the status-word checks.
+  test "phase173 all-statuses fixture renders one row per state", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=all-statuses")
+
+    rows = html |> LazyHTML.from_fragment() |> LazyHTML.query("[data-testid='posture-row']")
+    assert Enum.count(rows) == 5
+
+    row = fn short_name ->
+      lv |> element("[id='posture-ScrypathOps.#{short_name}']") |> render()
+    end
+
+    failed = row.("Phase173FixtureSchema")
+    assert failed =~ "Phase173FixtureSchema"
+    assert failed =~ "Meilisearch tasks failed"
+    refute failed =~ "Jobs retrying"
+
+    retrying = row.("Phase173RetryingSchema")
+    assert retrying =~ "Phase173RetryingSchema"
+    assert retrying =~ "Jobs retrying"
+    refute retrying =~ "tasks failed"
+    refute retrying =~ "Sync jobs failed"
+
+    pending = row.("Phase173PendingSchema")
+    assert pending =~ "Phase173PendingSchema"
+    assert pending =~ "Pending"
+    refute pending =~ "tasks failed"
+    refute pending =~ "Sync jobs failed"
+    refute pending =~ "Jobs retrying"
+    refute pending =~ "No pending or failed tasks."
+
+    clear = row.("Phase173ClearSchema")
+    assert clear =~ "Phase173ClearSchema"
+    assert clear =~ "No pending or failed tasks."
+    assert clear =~ "No pending, retrying or failed jobs."
+    refute clear =~ "Jobs retrying"
+    refute clear =~ "tasks failed"
+
+    unreadable = row.("Phase173PartialSchema")
+    assert unreadable =~ "Phase173PartialSchema"
+    assert unreadable =~ "Search health could not be checked"
+
+    assert has_element?(lv, "#phase173-fixture-scenario option[value='all-statuses'][selected]")
+  end
+
+  test "phase173 fixture ignores an unknown scenario and keeps the healthy rows", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=not-a-scenario")
+
+    rows = html |> LazyHTML.from_fragment() |> LazyHTML.query("[data-testid='posture-row']")
+    assert Enum.count(rows) == 1
+    assert has_element?(lv, "#phase173-fixture-scenario option[value='healthy'][selected]")
+    refute has_element?(lv, "#phase173-fixture-scenario option[value='all-statuses'][selected]")
+  end
+
   test "refresh without configured schemas does not report a successful observation", %{
     conn: conn
   } do

@@ -258,7 +258,8 @@ defmodule ScrypathOpsWeb.PostureLive do
                 "processing",
                 "backend-failed",
                 "retrying",
-                "completed"
+                "completed",
+                "all-statuses"
               ]
             }
             value={scenario}

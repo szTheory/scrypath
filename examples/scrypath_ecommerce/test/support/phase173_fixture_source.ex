@@ -11,6 +11,45 @@ defmodule ScrypathEcommerce.Phase173PartialSchema do
   end
 end
 
+defmodule ScrypathEcommerce.Phase173RetryingSchema do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end
+
+defmodule ScrypathEcommerce.Phase173PendingSchema do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end
+
+defmodule ScrypathEcommerce.Phase173ClearSchema do
+  use Ecto.Schema
+
+  use Scrypath,
+    fields: [:title],
+    filterable: [],
+    sortable: []
+
+  embedded_schema do
+    field(:title, :string)
+  end
+end
+
 defmodule ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays do
   use Ecto.Schema
 
@@ -62,12 +101,18 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
     end
   end
 
-  def list_jobs(_schema, config) do
+  # The `all-statuses` scenario tags each job with the schema it belongs to so every row can
+  # show its own queue state. Jobs of every other scenario carry no tag and pass through
+  # untouched, exactly as before.
+  def list_jobs(schema, config) do
     case Keyword.get(config, :oban_jobs, []) do
       {:error, _reason} = error -> error
-      jobs when is_list(jobs) -> {:ok, jobs}
+      jobs when is_list(jobs) -> {:ok, Enum.filter(jobs, &job_visible_to?(&1, schema))}
     end
   end
+
+  defp job_visible_to?(%{phase173_schema: owner}, schema), do: owner == schema
+  defp job_visible_to?(_job, _schema), do: true
 
   defp normalize_scenario(scenario)
        when scenario in [
@@ -85,7 +130,8 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
               "processing",
               "backend-failed",
               "retrying",
-              "completed"
+              "completed",
+              "all-statuses"
             ],
        do: scenario
 
@@ -100,6 +146,16 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
     do: [
       ScrypathEcommerce.Catalog.Product,
       ScrypathEcommerce.Phase173VeryLongSchemaIdentifierForNarrowOperatorDisplays
+    ]
+
+  # One row per sync status plus one whose source cannot be read (the partial schema).
+  defp allowlist("all-statuses"),
+    do: [
+      ScrypathEcommerce.Catalog.Product,
+      ScrypathEcommerce.Phase173RetryingSchema,
+      ScrypathEcommerce.Phase173PendingSchema,
+      ScrypathEcommerce.Phase173ClearSchema,
+      ScrypathEcommerce.Phase173PartialSchema
     ]
 
   defp allowlist(_scenario), do: [ScrypathEcommerce.Catalog.Product]
@@ -173,6 +229,15 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
 
   defp tasks_for("invalid-time") do
     [task(905, "succeeded", "phase173_product", "not-a-timestamp")]
+  end
+
+  # Failed: the catalog product. Pending: an enqueued task on the pending schema. The retrying
+  # and clear schemas have no backend tasks; the partial schema errors in `tasks/2`.
+  defp tasks_for("all-statuses") do
+    [
+      task(849, "failed", "phase173_product", @task_finished),
+      task(850, "enqueued", index_uid(ScrypathEcommerce.Phase173PendingSchema), nil)
+    ]
   end
 
   defp tasks_for(_scenario) do
@@ -268,6 +333,20 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
     ]
   end
 
+  defp jobs_for("all-statuses") do
+    [
+      %{
+        id: 913,
+        state: "retryable",
+        worker: "Scrypath.Oban.UpsertWorker",
+        queue: "scrypath_sync",
+        attempted_at: "2026-10-06T13:17:42-04:00",
+        scheduled_at: "2026-10-06T13:19:42-04:00",
+        phase173_schema: ScrypathEcommerce.Phase173RetryingSchema
+      }
+    ]
+  end
+
   defp jobs_for(_scenario) do
     [
       %{
@@ -279,6 +358,9 @@ defmodule ScrypathEcommerce.Phase173FixtureSource do
       }
     ]
   end
+
+  defp index_uid(schema),
+    do: Scrypath.Meilisearch.index_name(schema, index_prefix: "phase173")
 
   defp task(uid, status, index_uid, finished_at) do
     %{
