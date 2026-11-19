@@ -1269,7 +1269,7 @@ function evaluateLiveBindings(css, themes, focusBindings, surfaceBindings) {
   // Opaque shell floors and actual resting/selected/menu fills. Each theme's
   // live token values are resolved; the muted floor is not applied to base-300,
   // where the theme toggle uses full base-content, not muted text.
-  const surfaces = ["ops-bg", "ops-surface-1", "ops-surface-2", "ops-sunken", "ops-selected", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
+  const surfaces = ["ops-bg", "ops-surface-1", "ops-sunken", "ops-selected", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
   for (const [theme, properties] of Object.entries(themes)) {
     for (const surface of [...surfaces, "color-base-300"]) {
       const bg = colorValue(`var(--${surface})`, properties);

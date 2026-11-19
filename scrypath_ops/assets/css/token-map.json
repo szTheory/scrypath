@@ -153,11 +153,6 @@
       "dark": { "disposition": "adopt", "source": "color.dark.night-panel", "applied": true }
     },
     {
-      "property": "--ops-surface-2",
-      "light": { "disposition": "retire", "applied": false, "reason": "D4 introduces --ops-sunken instead of aliasing a flipped meaning; Phase 187 deletes the property and this row together" },
-      "dark": { "disposition": "retire", "applied": false, "reason": "D4 introduces --ops-sunken instead of aliasing a flipped meaning; Phase 187 deletes the property and this row together" }
-    },
-    {
       "property": "--ops-sunken",
       "light": { "disposition": "adopt", "source": "color.secondary.sunken-page", "applied": true },
       "dark": { "disposition": "adopt", "source": "color.code.background-dark", "applied": true, "reason": "Night Sunken is the brand code background (UI-SPEC: Night Sunken is color.code.background-dark)" }

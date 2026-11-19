@@ -2,6 +2,9 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
   @moduledoc """
   Locks the SCREEN-DARK-01 surface-depth value contract as static CSS assertions.
 
+  Phase 187 deleted `--ops-surface-2`: the dark order is now `--ops-sunken` below `--ops-bg`
+  below `--ops-surface-1`, and the card and row fills point at the Panel token.
+
   This is a pure file-read + regex contract over `assets/css/app.css`, modeled on
   `MotionContractTest`. It pins values that must stay stable while later tasks wire
   the browser depth assertions.
@@ -40,47 +43,53 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
     0.2126 * red + 0.7152 * green + 0.0722 * blue
   end
 
-  test "dark surfaces rise in luminance from --ops-bg through --ops-surface-1 to --ops-surface-2" do
-    # The relationship is the contract, not a color: each raised dark surface is
-    # lighter than the one below it. Values are read live from the dark theme block.
-    [page, surface_1, surface_2] =
-      for property <- ["--ops-bg", "--ops-surface-1", "--ops-surface-2"] do
+  test "dark surfaces rise in luminance from --ops-sunken through --ops-bg to --ops-surface-1" do
+    # The relationship is the contract, not a color: a recessed dark surface sits below the
+    # page, and the Panel sits above it. Values are read live from the dark theme block.
+    [sunken, page, surface_1] =
+      for property <- ["--ops-sunken", "--ops-bg", "--ops-surface-1"] do
         property |> dark_theme_value() |> luminance()
       end
 
+    assert sunken < page,
+           "Dark --ops-sunken must be darker than the --ops-bg page (#{sunken} vs #{page})."
+
     assert page < surface_1,
            "Dark --ops-surface-1 must be lighter than the --ops-bg page (#{page} vs #{surface_1})."
-
-    assert surface_1 < surface_2,
-           "Dark --ops-surface-2 must be lighter than --ops-surface-1 (#{surface_1} vs #{surface_2})."
   end
 
-  test ".ops-data-card dark fill references --ops-surface-2" do
-    assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-data-card explicit-dark fill must reference var(--ops-surface-2), not a hardcoded color."
-
-    assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-data-card system-dark fill must mirror var(--ops-surface-2)."
+  test "the retired --ops-surface-2 role is neither declared nor consumed" do
+    # Raised surfaces are --color-base-100 (Panel); hover and recessed ones are --ops-sunken.
+    refute css() =~ "ops-surface-2",
+           "--ops-surface-2 was deleted in Phase 187; use --color-base-100 (raised) or --ops-sunken (recessed or hover)."
   end
 
-  test "non-search result rows keep the dark surface-2 fill" do
+  test ".ops-data-card dark fill references the Panel token" do
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
+             ~r/\[data-theme="dark"\]\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
              css()
            ),
-           ".ops-result-row explicit-dark fill must reference var(--ops-surface-2), not a hardcoded color."
+           ".ops-data-card explicit-dark fill must reference var(--color-base-100), not a hardcoded color."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
              css()
            ),
-           ".ops-result-row system-dark fill must mirror var(--ops-surface-2)."
+           ".ops-data-card system-dark fill must mirror var(--color-base-100)."
+  end
+
+  test "non-search result rows keep an opaque dark Panel fill" do
+    assert Regex.match?(
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
+             css()
+           ),
+           ".ops-result-row explicit-dark fill must reference var(--color-base-100), not a hardcoded color."
+
+    assert Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
+             css()
+           ),
+           ".ops-result-row system-dark fill must mirror var(--color-base-100)."
   end
 
   test "dark hover-border boost resolves to primary 55% on the paired row/item selector" do

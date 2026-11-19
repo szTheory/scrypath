@@ -42,10 +42,9 @@
   ScrypathOps ships with two quiet operator themes. Build your own at:
   https://daisyui.com/theme-generator/
 
-  Phase 187: both blocks hold the brand palette as literal hexes. `--ops-surface-2` is a retired
-  role kept for now with an interim value (Selected Page and Selected Night, both brand values), so
-  the dark order bg < surface-1 < surface-2 that surface_depth_token_contract_test.exs asserts
-  survives until the plan that deletes the property and its consumers. */
+  Phase 187: both blocks hold the brand palette as literal hexes. A raised surface is --color-base-100
+  (Panel); a recessed or hover surface is --ops-sunken. The dark order --ops-sunken < --ops-bg <
+  --ops-surface-1 is asserted by surface_depth_token_contract_test.exs. */
 @plugin "../vendor/daisyui-theme" {
   name: "dark";
   default: false;
@@ -81,7 +80,6 @@
   --noise: 0;
   --ops-bg: #160e19;
   --ops-surface-1: #201624;
-  --ops-surface-2: #2b2130;
   --ops-sunken: #110a14;
   --ops-selected: #2b2130;
   --ops-selection: #2b2130;
@@ -131,7 +129,6 @@
   --noise: 0;
   --ops-bg: #f8f4f2;
   --ops-surface-1: #ffffff;
-  --ops-surface-2: #ebdfe7;
   --ops-sunken: #f0e9e6;
   --ops-selected: #ebdfe7;
   --ops-selection: #ebdfe7;
@@ -390,7 +387,7 @@
     gap: var(--spacing-ops-2);
     border: var(--border) solid var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
-    background: color-mix(in oklch, var(--ops-surface-2) 56%, transparent);
+    background: var(--color-base-100);
     padding: 0.25rem 0.625rem;
     color: var(--ops-text-muted);
     font: inherit;
@@ -542,7 +539,7 @@
   .ops-muted-panel {
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     border-radius: var(--radius-ops-lg);
-    background: color-mix(in oklch, var(--ops-surface-2) 64%, transparent);
+    background: var(--ops-sunken);
   }
 
   .ops-empty-hero {
@@ -1299,7 +1296,7 @@
 
   .ops-preflight__card--locked {
     opacity: 0.55;
-    background: color-mix(in oklch, var(--ops-surface-2) 60%, transparent);
+    background: var(--ops-sunken);
   }
 
   .ops-preflight__head {
@@ -1801,7 +1798,7 @@
     padding: 0.1rem 0.4rem;
     border: 1px solid color-mix(in oklch, var(--color-base-content) 18%, transparent);
     border-radius: var(--radius-ops-sm);
-    background: color-mix(in oklch, var(--ops-surface-2) 70%, transparent);
+    background: var(--ops-sunken);
     font-family: var(--font-mono);
     font-size: var(--text-ops-xs);
     font-weight: 500;
@@ -1943,9 +1940,9 @@
   }
 }
 
-/* Helper utility for ops_code_block — --ops-surface-2 is an @plugin token, not @theme, so Tailwind v4 cannot auto-generate bg-ops-surface-2. */
-.bg-ops-surface-2 {
-  background: var(--ops-surface-2);
+/* Helper utility for ops_code_block — --ops-sunken is an @plugin token, not @theme, so Tailwind v4 cannot auto-generate bg-ops-sunken. */
+.bg-ops-sunken {
+  background: var(--ops-sunken);
 }
 
 /* SHELL-DARK-01: seated operator header, bounded shell wash, and theme toggle.
@@ -1997,43 +1994,41 @@
 
 [data-theme="dark"] .ops-theme-toggle {
   border-color: var(--ops-control-edge);
-  background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
   box-shadow: var(--shadow-ops-panel-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-theme-toggle {
     border-color: var(--ops-control-edge);
-    background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
     box-shadow: var(--shadow-ops-panel-dark);
   }
 }
 
-/* D-05: .ops-data-card keeps light base-100 fill; dark-only surface-2 lift */
+/* Cards and rows are raised surfaces: the opaque Panel token in dark as well as light. There is
+   no second raised tier; a darker well is --ops-sunken. */
 [data-theme="dark"] .ops-data-card {
-  background: var(--ops-surface-2);
+  background: var(--color-base-100);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-data-card {
-    background: var(--ops-surface-2);
+    background: var(--color-base-100);
   }
 }
 
-/* D-05: .ops-result-row keeps light base-100 fill; dark-only surface-2 lift */
 [data-theme="dark"] .ops-result-row:not(.ops-search-hit) {
-  background: var(--ops-surface-2);
+  background: var(--color-base-100);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-result-row:not(.ops-search-hit) {
-    background: var(--ops-surface-2);
+    background: var(--color-base-100);
   }
 }
 
 [data-theme="dark"] .ops-schema-signal-card {
-  background: var(--ops-surface-2);
+  background: var(--color-base-100);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-schema-signal-card {
-    background: var(--ops-surface-2);
+    background: var(--color-base-100);
   }
 }
 
@@ -2325,7 +2320,7 @@
     text-align: left; border-radius: var(--radius-ops-control); cursor: pointer; background: transparent;
     transition: background-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
-  .ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible { background: var(--ops-surface-2); }
+  .ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible { background: var(--ops-sunken); }
   .ops-saved-search-menu__item:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
   .ops-saved-search-menu__item:disabled { cursor: not-allowed; opacity: .6; }
   .ops-saved-search-menu__item[aria-current="true"] .ops-saved-search-menu__name::after { content: " · loaded"; font-weight: 400; color: var(--ops-text-muted); }

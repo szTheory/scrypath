@@ -101,7 +101,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
   # and are not listed). The floor is the number of such calls when this check was written; lower
   # it only when a case is removed on purpose, which is the second key a deletion needs.
   @token_test_file "examples/scrypath_ecommerce/ui-tokens.test.mjs"
-  @min_token_test_calls 44
+  @min_token_test_calls 46
 
   test "token map parity and retired-identity guards pass" do
     node = System.find_executable("node") || flunk("Node is required for the token test")
@@ -246,12 +246,13 @@ defmodule Mix.Tasks.UiContrastContractTest do
          "outline: 2px solid #333333;",
          global: false
        )},
-      # The --ops-surface-2 name is retired by Phase 187; that phase rewrites this case.
+      # --ops-selection is a surviving bound surface (the selected filter chip fill). Painting it the
+      # primary color puts the focus ring on its own color, so the focus-on-surface pair fails.
       {"changed focus background", css,
        UiTokens.replace_theme_value!(
          original_css,
          "light",
-         "--ops-surface-2",
+         "--ops-selection",
          live_light_primary
        )},
       {"changed shell background declaration", css,

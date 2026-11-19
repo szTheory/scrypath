@@ -141,12 +141,12 @@ export const SURFACE_BINDINGS = [
   { selector: ".ops-header", background: "ops-surface-1" },
   { selector: ".ops-panel", background: "ops-surface-1" },
   { selector: ".ops-sidebar", expression: "color-mix(in oklch, var(--color-base-100) 97%, transparent)" },
-  { selector: ".ops-command-hint", expression: "color-mix(in oklch, var(--ops-surface-2) 56%, transparent)" },
+  { selector: ".ops-command-hint", background: "color-base-100" },
   { selector: "body", background: "color-base-200" },
   { selector: ".ops-filter-chip--selected", background: "ops-selection" },
   { selector: ".ops-theme-toggle__button[data-theme-selected=\"true\"]", background: "ops-theme-selection" },
   { selector: ".ops-saved-search-menu", background: "color-base-100" },
-  { selector: ".ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible", background: "ops-surface-2" },
+  { selector: ".ops-saved-search-menu__item:hover:not(:disabled), .ops-saved-search-menu__item:focus-visible", background: "ops-sunken" },
   { selector: ".ops-sheet__panel", background: "color-base-100" },
 ];
 

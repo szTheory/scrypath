@@ -47,7 +47,6 @@ export const scrypathLight = {
   /* elevation surfaces, selection, control edge and sync status colors (ops-specific) */
   "--ops-bg": "#f8f4f2",
   "--ops-surface-1": "#ffffff",
-  "--ops-surface-2": "#ebdfe7",
   "--ops-sunken": "#f0e9e6",
   "--ops-selected": "#ebdfe7",
   "--ops-selection": "#ebdfe7",
@@ -94,7 +93,6 @@ export const scrypathDark = {
   "--noise": "0",
   "--ops-bg": "#160e19",
   "--ops-surface-1": "#201624",
-  "--ops-surface-2": "#2b2130",
   "--ops-sunken": "#110a14",
   "--ops-selected": "#2b2130",
   "--ops-selection": "#2b2130",

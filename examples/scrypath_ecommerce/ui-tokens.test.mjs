@@ -60,7 +60,7 @@ const BRAND_TOKENS = path.join(ROOT, "brand/tokens.json");
 // count is below it (the ceiling must be lowered, with the printed number), so none can keep
 // unused room. Phase 187 lowers them as rows flip to applied and the retired properties are
 // deleted.
-const PENDING_CEILING = 2;
+const PENDING_CEILING = 0;
 const HEX_OUTSIDE_CEILING = 0;
 // Allowlist entries (paths and prefixes). A new entry means a new retired value landed in a
 // new file, which is the thing this guard exists to stop.
@@ -1448,4 +1448,62 @@ test("planted missing scroll padding fails", () => {
   assert.ok(scrollPaddingFailures(helpMargin).some((message) => /still declares a scroll margin/.test(message)));
 
   assert.ok(scrollPaddingFailures("/* html { scroll-padding-top: calc(var(--ops-header-h) + 1rem); } */").length > 0);
+});
+
+// ---------------------------------------------------------------------------
+// N-08: every hex literal in app.css is a brand value, black, white or a declared target
+// (Phase 187, SKIN-01)
+//
+// The theme-block checks above only look at the values of the two theme plugin blocks. This one
+// reads the whole stylesheet: every `#rrggbb`, `#rgb` or percent-encoded `%23rrggbb` literal
+// anywhere, in a rule or a data URI, must be a hex from brand/tokens.json, a derive or local
+// target declared in the token map, or `#000` or `#fff` (and their six-digit forms). Eight-digit
+// alpha hexes and any other short hex fail, so an old color cannot come back inside a rule the
+// theme checks never read. Comments are not literals.
+// ---------------------------------------------------------------------------
+
+const BLACK_WHITE_HEX = new Set(["#000", "#fff", "#000000", "#ffffff"]);
+const CSS_HEX_LITERAL = /(?:#|%23)(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![0-9a-z_-])/gi;
+
+function cssHexLiteralFailures(css, allowed) {
+  const failures = [];
+  const seen = new Set();
+  for (const match of stripCssComments(css).matchAll(CSS_HEX_LITERAL)) {
+    const literal = lower(match[0].replace(/^%23/i, "#"));
+    if (BLACK_WHITE_HEX.has(literal) || allowed.has(literal) || seen.has(literal)) continue;
+    seen.add(literal);
+    failures.push(`app.css holds ${match[0]}, which is not a brand token, #000, #fff or a declared token-map target`);
+  }
+  return failures;
+}
+
+test("live app.css hex literals are brand or declared", () => {
+  const { map, brandTokens } = loadLive();
+  assert.deepEqual(cssHexLiteralFailures(fs.readFileSync(APP_CSS, "utf8"), allowedHexSet(map, brandTokens)), []);
+});
+
+test("planted retired hex in app.css fails", () => {
+  const { map, brandTokens } = fixtures();
+  const allowed = allowedHexSet(map, brandTokens);
+  const fails = (css) => cssHexLiteralFailures(css, allowed).length;
+
+  // Accepted: a brand hex in either case, a declared target, black and white in both forms, and a
+  // retired value that only appears in a comment.
+  const accepted = [
+    ".a { color: #FFFFFF; background: #101010; border-color: #334455; }",
+    ".b { color: #000; background: #fff; outline-color: #000000; box-shadow: 0 0 0 1px #ffffff; }",
+    `/* history: the old identity used ${retired} */ .c { color: red; }`,
+  ];
+  for (const css of accepted) assert.equal(fails(css), 0, css);
+
+  // Rejected: the retired hex in a rule, percent-encoded inside a data URI, in upper case, an
+  // eight-digit alpha form of an allowed hex, and an arbitrary short hex.
+  const rejected = [
+    `.d { color: ${retired}; }`,
+    `.e { background-image: url("data:image/svg+xml,%3Csvg fill='%23${DENY_HEX[0]}'/%3E"); }`,
+    `.f { color: ${retired.toUpperCase()}; }`,
+    ".g { color: #101010cc; }",
+    ".h { color: #abc; }",
+  ];
+  for (const css of rejected) assert.ok(fails(css) > 0, css);
 });
