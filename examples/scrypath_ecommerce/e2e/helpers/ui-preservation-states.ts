@@ -34,6 +34,9 @@ const PHASE185_SEARCH_RESET = {
   live_documents: "empty", targets: "absent", target_tasks: "empty",
   target_task_history: { indexes: "declared-targets-only", statuses: ["succeeded", "failed", "canceled"] }
 } as const;
+// The saved-search delete confirmation button: today's "Delete" or the later "Delete saved search permanently"
+// (Phase 187). The whole accessible name must match, so the row triggers ("Delete <name>") never do.
+const SAVED_SEARCH_DELETE_CONFIRM = /^(?:Delete|Delete saved search permanently)$/;
 
 type ElementId = typeof CONTENT_ELEMENTS[number];
 type Category = typeof STATE_CATEGORIES[number] | "overflow" | "long-text";
@@ -644,7 +647,7 @@ async function assertActionLoading(page: Page, element: ElementId): Promise<{ ta
     await expect(confirmation).toBeVisible();
     await confirmation.fill(name);
     priorText = await page.locator("[data-phx-main]").innerText();
-    target = page.locator("#saved-search-delete-form").getByRole("button", { name: "Delete", exact: true });
+    target = page.locator("#saved-search-delete-form").getByRole("button", { name: SAVED_SEARCH_DELETE_CONFIRM });
     await target.click();
     transport.push({ operation: "saved-search-delete", outcome: "actual delete action in-flight with configured transport latency" });
   }
@@ -695,7 +698,7 @@ async function assertTransportError(page: Page, element: ElementId, assertions: 
     await expect(input).toBeVisible();
     await input.fill(name.toLowerCase() === name ? `${name}-wrong` : name.toLowerCase());
     const confirmationForm = page.locator("#saved-search-delete-form");
-    await confirmationForm.getByRole("button", { name: "Delete", exact: true }).click();
+    await confirmationForm.getByRole("button", { name: SAVED_SEARCH_DELETE_CONFIRM }).click();
     const alert = confirmationForm.getByRole("alert");
     await expect(alert).toContainText("Type the name exactly as shown to confirm.");
     const text = (await alert.innerText()).trim();

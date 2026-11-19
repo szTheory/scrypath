@@ -55,18 +55,20 @@ const BUILT_CSS = path.join(ROOT, "scrypath_ops/priv/static/assets/css/app.css")
 const TOKEN_MAP = path.join(ROOT, "scrypath_ops/assets/css/token-map.json");
 const BRAND_TOKENS = path.join(ROOT, "brand/tokens.json");
 
-// Shrink-only ceilings. Phase 187 lowers them as rows flip to applied and the
-// retired properties are deleted.
+// Exact ceilings. Each one fails when the live count is above it (growth) and when the live
+// count is below it (the ceiling must be lowered, with the printed number), so none can keep
+// unused room. Phase 187 lowers them as rows flip to applied and the retired properties are
+// deleted.
 const PENDING_CEILING = 38;
 const HEX_OUTSIDE_CEILING = 34;
-// Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
-// retired value landed in a new file, which is the thing this guard exists to stop.
+// Allowlist entries (paths and prefixes). A new entry means a new retired value landed in a
+// new file, which is the thing this guard exists to stop.
 // Growth inside a listed file is stopped by each entry's max_hits (see HITS_CEILING).
-const ALLOWLIST_CEILING = 22;
+const ALLOWLIST_CEILING = 21;
 // The sum of every entry's max_hits in the allowlist file. Each entry's max_hits must equal
 // the live count, so a retired value added to a listed file needs a max_hits edit there and
 // this edit here: the second key. A drop in hits needs both edits too.
-const HITS_CEILING = 485;
+const HITS_CEILING = 483;
 // The checks take these as a parameter so the planted and accept cases can use
 // their own limits and never depend on how far the live ceilings have shrunk.
 const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING, hits: HITS_CEILING };
@@ -379,6 +381,8 @@ function checkApplied(themes, map, brandTokens, limits = LIMITS) {
   const pending = countPending(map);
   if (pending > limits.pending) {
     failures.push(`pending count ${pending} exceeds PENDING_CEILING ${limits.pending} (shrink-only)`);
+  } else if (Number.isFinite(limits.pending) && pending < limits.pending) {
+    failures.push(`PENDING_CEILING is ${limits.pending} but only ${pending} cells are pending: lower it to ${pending}`);
   }
   return failures;
 }
@@ -422,6 +426,18 @@ function checkBuiltEmissions(themes, builtCss) {
   return failures;
 }
 
+/** Theme-block hex values that are neither a brand token nor a declared derive or local target. */
+function countHexOutside(themes, map, brandTokens) {
+  const allowed = allowedHexSet(map, brandTokens);
+  let outside = 0;
+  for (const mode of MODES) {
+    for (const value of Object.values(themes[mode])) {
+      if (HEX.test(value) && !allowed.has(lower(value))) outside += 1;
+    }
+  }
+  return outside;
+}
+
 function checkHexAllowlist(themes, map, brandTokens, limits = LIMITS) {
   const failures = [];
   const allowed = allowedHexSet(map, brandTokens);
@@ -432,14 +448,11 @@ function checkHexAllowlist(themes, map, brandTokens, limits = LIMITS) {
       failures.push(`applied ${row.property} (${mode}) holds ${value}, which is not a brand token or declared target`);
     }
   }
-  let outside = 0;
-  for (const mode of MODES) {
-    for (const value of Object.values(themes[mode])) {
-      if (HEX.test(value) && !allowed.has(lower(value))) outside += 1;
-    }
-  }
+  const outside = countHexOutside(themes, map, brandTokens);
   if (outside > limits.hexOutside) {
     failures.push(`theme-block hex values outside the brand set: ${outside} exceeds HEX_OUTSIDE_CEILING ${limits.hexOutside} (shrink-only)`);
+  } else if (Number.isFinite(limits.hexOutside) && outside < limits.hexOutside) {
+    failures.push(`HEX_OUTSIDE_CEILING is ${limits.hexOutside} but only ${outside} theme-block hex values sit outside the brand set: lower it to ${outside}`);
   }
   return failures;
 }
@@ -659,6 +672,32 @@ test("planted ceiling breaches fail", () => {
     anyFailure(checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending: pending - 1 }), /pending count .* exceeds PENDING_CEILING/),
   );
   assert.ok(anyFailure(checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: 0 }), /exceeds HEX_OUTSIDE_CEILING 0/));
+});
+
+// 186 verification IN-06: only HITS_CEILING used to fail when the live count dropped below it. Every
+// ceiling is exact now: a ceiling above the live count fails and prints the number to use.
+test("planted ceiling above live count fails: pending cells", () => {
+  const { themes, map, brandTokens } = fixtures();
+  const pending = countPending(map);
+  assert.deepEqual(checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending }), []);
+  assert.ok(
+    anyFailure(
+      checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending: pending + 1 }),
+      new RegExp(`PENDING_CEILING is ${pending + 1} but only ${pending} cells are pending: lower it to ${pending}`),
+    ),
+  );
+});
+
+test("planted ceiling above live count fails: hex values outside the brand set", () => {
+  const { themes, map, brandTokens } = fixtures();
+  const outside = countHexOutside(themes, map, brandTokens);
+  assert.deepEqual(checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: outside }), []);
+  assert.ok(
+    anyFailure(
+      checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: outside + 1 }),
+      new RegExp(`HEX_OUTSIDE_CEILING is ${outside + 1} but only ${outside} theme-block hex values .*: lower it to ${outside}`),
+    ),
+  );
 });
 
 test("valid fixtures pass", () => {
@@ -896,6 +935,8 @@ function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
   const entries = allowlist.entries;
   if (entries.length > limits.allowlist) {
     failures.push(`allowlist has ${entries.length} entries, over ALLOWLIST_CEILING ${limits.allowlist} (shrink-only)`);
+  } else if (Number.isFinite(limits.allowlist) && entries.length < limits.allowlist) {
+    failures.push(`ALLOWLIST_CEILING is ${limits.allowlist} but the allowlist has only ${entries.length} entries: lower it to ${entries.length}`);
   }
 
   const seen = new Set();
@@ -1138,6 +1179,19 @@ test("planted allowlist ceiling breach fails", () => {
   const allowlist = { schema: ALLOWLIST_SCHEMA, entries: [entry("src/a.css"), entry("src/b.css")] };
   assert.deepEqual(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 2 }), []);
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 1 }), /over ALLOWLIST_CEILING 1/));
+});
+
+test("planted ceiling above live count fails: allowlist entries", () => {
+  const dir = makeTree({ "src/a.css": `a { color: ${retired}; }\n`, "src/b.css": `b { color: ${retired}; }\n` });
+  const files = listRepoFiles(dir);
+  const hits = scanFiles(dir, files, buildDeny());
+  const allowlist = { schema: ALLOWLIST_SCHEMA, entries: [entry("src/a.css"), entry("src/b.css")] };
+  assert.ok(
+    anyFailure(
+      checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 3 }),
+      /ALLOWLIST_CEILING is 3 but the allowlist has only 2 entries: lower it to 2/,
+    ),
+  );
 });
 
 test("accept brand-only tree", () => {

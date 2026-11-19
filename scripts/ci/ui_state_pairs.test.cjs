@@ -384,6 +384,34 @@ test("hover state and assertions participate in the exact source-pair result", (
   assert.equal(report.passed, false);
 });
 
+// 186 verification finding 2: every other state mutation here changes the neutral and the hover state
+// together, so dropping the neutral `stateEqual` term from the verdict stayed green. This one changes the
+// neutral capture's state alone and leaves the hover capture's state untouched, so only the neutral term can
+// reject it. The receipt validator makes the route, data, clock, scroll and focus identity of the two captures
+// agree, so the one field a valid receipt may change on the neutral side only is the focus ring styling
+// (outline and opacity), which the hover capture keeps as its own.
+test("a neutral-only state change fails the pair while the hover state is unchanged", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE });
+  const observation = candidate.preservation.cases[0].observations[0];
+  const hoverFocus = structuredClone(observation.hover_capture.state.focus);
+  observation.state.focus.opacity = "0.5";
+  assert.deepEqual(observation.hover_capture.state.focus, hoverFocus, "the hover capture's state is untouched");
+
+  const report = compare(before, candidate);
+  const result = report.comparisons[0].viewport_comparisons[0];
+  assert.equal(result.state_equal, false);
+  assert.equal(result.hover_state_equal, true);
+  assert.equal(result.assertions_equal, true);
+  assert.equal(result.hover_assertions_equal, true);
+  assert.equal(result.full_page_pixels.equal, true);
+  assert.equal(result.hover_pixels.equal, true);
+  assert.equal(report.comparisons[0].passed, false);
+  assert.equal(report.passed, false);
+  assert.equal(report.mismatches[0].state, false, "the neutral state term rejects the pair");
+  assert.equal(report.mismatches[0].hover_state, true, "the hover state term is not what rejected it");
+});
+
 test("structural PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
   const small = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 0, blockY: 0, blockW: 32, blockH: 16 };
   const hoverBefore = layoutPng(64, 32, small);

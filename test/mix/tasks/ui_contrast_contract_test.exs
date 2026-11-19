@@ -95,17 +95,31 @@ defmodule Mix.Tasks.UiContrastContractTest do
     "deny set and new set are disjoint"
   ]
 
+  # 186 verification IN-03: the planted and accept cases are what prove the guards can fail, so a
+  # deleted, skipped or `only`-filtered case must fail this wrapper too. Their names are read from
+  # the token test's own `test("...")` calls (the loop-generated planted forms have template names
+  # and are not listed). The floor is the number of such calls when this check was written; lower
+  # it only when a case is removed on purpose, which is the second key a deletion needs.
+  @token_test_file "examples/scrypath_ecommerce/ui-tokens.test.mjs"
+  @min_token_test_calls 39
+
   test "token map parity and retired-identity guards pass" do
     node = System.find_executable("node") || flunk("Node is required for the token test")
+    names = token_test_call_names()
+
+    assert length(names) >= @min_token_test_calls,
+           "#{@token_test_file} has #{length(names)} test(\"...\") calls, below the floor " <>
+             "#{@min_token_test_calls}: a case was deleted or renamed. If that was intended, " <>
+             "lower @min_token_test_calls in #{@test_path}."
+
+    assert length(names) == length(Enum.uniq(names)), "token test names must be unique"
+    assert Enum.any?(names, &String.starts_with?(&1, "planted")), "no planted case found"
+    assert Enum.any?(names, &String.starts_with?(&1, "accept")), "no accept case found"
 
     {output, status} =
       System.cmd(
         node,
-        [
-          "--test",
-          "--test-reporter=tap",
-          Path.join(@root, "examples/scrypath_ecommerce/ui-tokens.test.mjs")
-        ],
+        ["--test", "--test-reporter=tap", Path.join(@root, @token_test_file)],
         cd: @root,
         stderr_to_stdout: true
       )
@@ -113,10 +127,16 @@ defmodule Mix.Tasks.UiContrastContractTest do
     assert status == 0, output
     assert output =~ ~r/^# fail 0$/m, output
 
-    for name <- @token_test_names do
+    for name <- Enum.uniq(@token_test_names ++ names) do
       assert output =~ ~r/^ok \d+ - #{Regex.escape(name)}$/m,
              "the token test did not report #{inspect(name)} as passing:\n#{output}"
     end
+  end
+
+  defp token_test_call_names do
+    ~r/^test\("((?:[^"\\]|\\.)+)",/m
+    |> Regex.scan(File.read!(Path.join(@root, @token_test_file)))
+    |> Enum.map(fn [_match, name] -> name end)
   end
 
   @tag :contrast_child
