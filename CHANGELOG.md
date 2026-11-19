@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.18](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.17...scrypath-v0.3.18) (2026-11-19)
+
+
+### Features
+
+* **telemetry:** add Oban worker upsert and delete spans and missing-record deletion events with a telemetry guide ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+
+
+### Bug Fixes
+
+* **deps:** refresh Phoenix HTML security fix ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+* **deps:** update ecto to 3.14.3 and plug to 1.20.4 for published advisories ([852248c](https://github.com/szTheory/scrypath/commit/852248c670ab7abd76246321903d893467e79e60))
+* **package:** keep repository-only verify tasks out of the Hex package ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+* **reindex:** create the target index with the document id primary key and count omitted records on a fresh target instead of deleting ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+* **sync:** bound id lists and backend writes at 1,000 ids, aggregate task receipts, and enqueue chunks transactionally with shared uniqueness ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+* **sync:** pass current records to related resolvers and cancel invalid persisted Oban job arguments without atom conversion ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+* **sync:** route backfill and reindex through Scrypath.Loader and page composite primary keys on the full key ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
+
 ## [0.3.17](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.16...scrypath-v0.3.17) (2026-10-25)
 
 
