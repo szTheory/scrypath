@@ -1036,7 +1036,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 {state_label(row.state)}
               </.ops_badge>
               <h3 class="ops-failed-row__title">
-                <span title={OperatorSelection.canonical(row.schema)}>
+                <span title={OperatorSelection.canonical(row.schema)} data-ops-identity>
                   {schema_short_name(row.schema)}
                 </span>
                 <span aria-hidden="true">·</span>

@@ -232,7 +232,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         phx-change="phase173_scenario"
         class="mb-ops-4 max-w-sm"
       >
-        <label for="phase173-fixture-scenario" class="mb-ops-1 block text-ops-sm font-medium">
+        <label for="phase173-fixture-scenario" class="mb-ops-1 block text-ops-sm font-semibold">
           Fixture scenario
         </label>
         <select
@@ -324,6 +324,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       id={"posture-title-#{inspect(mod)}"}
                       class="text-ops-h3 font-semibold text-base-content"
                       title={inspect(mod)}
+                      data-ops-identity
                     >
                       {mod |> Module.split() |> List.last()}
                     </h3>
@@ -481,6 +482,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                       id={"posture-title-#{inspect(mod)}"}
                       class="text-ops-h3 font-semibold text-base-content"
                       title={inspect(mod)}
+                      data-ops-identity
                     >
                       {mod |> Module.split() |> List.last()}
                     </h3>

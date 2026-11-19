@@ -51,7 +51,7 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <a
       href="#ops-main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-ops-2 focus:left-ops-2 focus:z-ops-skip-link focus:rounded-ops-control focus:bg-base-100 focus:px-ops-3 focus:py-ops-2 focus:text-ops-body focus:font-medium focus:shadow-ops-overlay"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-ops-2 focus:left-ops-2 focus:z-ops-skip-link focus:rounded-ops-control focus:bg-base-100 focus:px-ops-3 focus:py-ops-2 focus:text-ops-body focus:font-semibold focus:shadow-ops-overlay"
     >
       Skip to operator content
     </a>

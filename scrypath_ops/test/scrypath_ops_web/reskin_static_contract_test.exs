@@ -12,7 +12,12 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   #     reference to the brand's display face.
   #   - E-15 font serving: the fonts are served with the right type and an immutable cache header
   #     at the mount prefix, and the stylesheet's relative URLs land on that path at any depth.
+  #   - E-14 glyph coverage: every non-ASCII character that the six screens render, or that a CSS
+  #     `content:` string can render, is either in the shipped font subsets or on a short, named
+  #     fallback list. A character outside both would silently fall back to a system font.
   use ScrypathOpsWeb.ConnCase, async: true
+
+  import Phoenix.LiveViewTest
 
   @ops_root Path.expand("../..", __DIR__)
   @app_css Path.join(@ops_root, "assets/css/app.css")
@@ -22,6 +27,33 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
   @font_files ~w(ui.woff2 mono.woff2)
 
   @font_url ~r/url\("(\.\.\/fonts\/([a-z]+\.woff2)\?v=([0-9a-f]{64}))"\)/
+
+  # Glyph coverage, read with fontTools 4.62.1 from the pinned scrypath_ops/priv/static/assets/fonts
+  # ui.woff2 (Hanken Grotesk) and mono.woff2 (Sometype Mono) on 2026-11-19. Beyond printable ASCII
+  # (U+0020 to U+007E, in both), both subsets carry exactly: U+00A0, U+00B0, the Latin-1 letters
+  # U+00C0 to U+00FF (including the multiplication and division signs), U+2013, U+2014, U+2018,
+  # U+2019, U+201C, U+201D, U+2022, U+2026, U+2190, U+2192 and U+2212. The mono subset also has
+  # U+2191 and U+2193; the Hanken subset does not, so they are not listed (a rendered up or down
+  # arrow fails this test until it is moved to a mono-only element or added to the allowlist).
+  @covered MapSet.new(
+             [0x00A0, 0x00B0, 0x2013, 0x2014, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2026] ++
+               [0x2190, 0x2192, 0x2212] ++ Enum.to_list(0x00C0..0x00FF)
+           )
+
+  # Neither subset carries these three. They render from the metric-adjusted fallback faces and
+  # then system-ui or ui-monospace. This is the whole named allowlist; growing it is a decision.
+  @fallback_allowlist %{0x00B7 => "·", 0x203A => "›", 0x2318 => "⌘"}
+
+  # The six screens, plus the all-statuses Search health fixture (five rows, every status word).
+  @glyph_screens [
+    {"Control room", "/ops"},
+    {"Search health", "/ops/health"},
+    {"Failed sync work", "/ops/failed-sync"},
+    {"Sync and index", "/ops/sync-and-index"},
+    {"Search", "/ops/search"},
+    {"Help", "/ops/help"},
+    {"Search health (all-statuses fixture)", "/ops/phase173/health?scenario=all-statuses"}
+  ]
 
   defp sha256(path) do
     path |> File.read!() |> then(&:crypto.hash(:sha256, &1)) |> Base.encode16(case: :lower)
@@ -38,6 +70,53 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
       [_, value] -> value |> String.trim() |> String.replace(~r/\s+/, " ")
       nil -> nil
     end
+  end
+
+  # Failures (as strings naming the code point and where it was found) for every character in
+  # `text` that is neither ASCII, nor in the shipped subsets, nor on the named fallback list.
+  defp glyph_failures(text, where) do
+    text
+    |> String.to_charlist()
+    |> Enum.filter(&(&1 > 0x7E))
+    |> Enum.uniq()
+    |> Enum.reject(&(MapSet.member?(@covered, &1) or Map.has_key?(@fallback_allowlist, &1)))
+    |> Enum.map(fn cp ->
+      "U+#{cp |> Integer.to_string(16) |> String.pad_leading(4, "0")} (#{<<cp::utf8>>}) " <>
+        "is in the rendered output of #{where} but in neither font subset nor the fallback allowlist"
+    end)
+  end
+
+  # Text the browser would paint: text nodes plus the attributes that render as text.
+  defp rendered_text(html) do
+    doc = LazyHTML.from_fragment(html)
+
+    attributes =
+      for name <- ~w(title aria-label placeholder alt value),
+          value <- doc |> LazyHTML.query("[#{name}]") |> LazyHTML.attribute(name),
+          do: value
+
+    Enum.join([LazyHTML.text(doc) | attributes], "\n")
+  end
+
+  # Every string a `content:` declaration in the source stylesheet can paint, with CSS escapes
+  # (a backslash plus hex digits) decoded to their characters.
+  defp css_content_strings(css) do
+    ~r/(?<![\w-])content:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/
+    |> Regex.scan(css)
+    |> Enum.map(fn [_, quoted] ->
+      quoted
+      |> String.slice(1..-2//1)
+      |> then(
+        &Regex.replace(~r/\\([0-9a-fA-F]{1,6})\s?/, &1, fn _, hex ->
+          <<String.to_integer(hex, 16)::utf8>>
+        end)
+      )
+    end)
+  end
+
+  defp render_screen(conn, path) do
+    {:ok, view, _html} = live(conn, path)
+    render(view)
   end
 
   defp block_by_family(css, family) do
@@ -182,6 +261,49 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
         assert resolved.path == "#{prefix}/assets/fonts/#{file}"
         assert resolved.query == "v=#{version}"
       end
+    end
+  end
+
+  describe "E-14 glyph coverage" do
+    test "the six screens render only glyphs the fonts carry or the named fallback list names", %{
+      conn: conn
+    } do
+      failures =
+        for {screen, path} <- @glyph_screens,
+            failure <- glyph_failures(rendered_text(render_screen(conn, path)), screen),
+            do: failure
+
+      assert failures == [], Enum.join(failures, "\n")
+    end
+
+    test "CSS content strings paint only glyphs the fonts carry or the named fallback list names" do
+      strings = css_content_strings(File.read!(@app_css))
+
+      failures = Enum.flat_map(strings, &glyph_failures(&1, "a CSS content string"))
+      assert failures == [], Enum.join(failures, "\n")
+    end
+
+    test "the content-string reader decodes escapes and ignores look-alike properties" do
+      css =
+        ~S|a::before { content: "\2500 x"; } .b { justify-content: center; --x-content: "─"; }|
+
+      assert css_content_strings(css) == ["─x"]
+    end
+
+    test "a planted box-drawing character fails and the failure names the code point and screen" do
+      assert [failure] = glyph_failures("Search health ─ ready", "Search health")
+      assert failure =~ "U+2500"
+      assert failure =~ "Search health"
+
+      assert glyph_failures("12 min · 3 › ⌘K → … — ×", "a planted allowed string") == []
+      assert [up] = glyph_failures("rank ↑", "a planted arrow")
+      assert up =~ "U+2191"
+    end
+
+    test "the fallback allowlist and the covered set are disjoint and exactly three entries" do
+      # If a font refresh adds one of the three glyphs to a subset, its allowlist entry is stale.
+      assert Enum.sort(Map.keys(@fallback_allowlist)) == [0x00B7, 0x203A, 0x2318]
+      refute Enum.any?(Map.keys(@fallback_allowlist), &MapSet.member?(@covered, &1))
     end
   end
 end

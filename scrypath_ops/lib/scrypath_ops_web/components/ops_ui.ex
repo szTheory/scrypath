@@ -25,7 +25,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class="space-y-1">
       <h1
         id={@title_id}
-        class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
+        class="text-ops-h1 font-bold leading-ops-title tracking-ops-title text-base-content"
       >
         {@title}
       </h1>
@@ -398,9 +398,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class="ops-metric ops-muted-panel px-3 py-2" data-ops-metric-tone={@kind}>
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+      <p class="text-ops-sm font-semibold tracking-ops-label text-base-content/60">{@label}</p>
       <p class={[
-        "ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums",
+        "ops-metric__value mt-1 font-mono text-ops-lg tabular-nums",
         metric_value_class(@kind)
       ]}>
         <span
@@ -513,7 +513,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
-            class="ops-verdict__label text-ops-sm font-semibold uppercase tracking-wide"
+            class="ops-verdict__label text-ops-sm font-semibold tracking-ops-label"
           >
             {@label}
           </p>
@@ -1364,7 +1364,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     >
       <summary
         id={@summary_id}
-        class="cursor-pointer text-ops-body font-medium text-base-content"
+        class="cursor-pointer text-ops-body font-semibold text-base-content"
       >
         {@summary}
       </summary>

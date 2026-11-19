@@ -125,7 +125,7 @@ inventory names every current export; add new exports here with their role consu
 
 | Component exports | Consumed roles |
 | --- | --- |
-| `ops_page_header`, `ops_heading` | Page h1 24px, section h2 18px, subsection h3 16px; 600 weight and tight heading leading |
+| `ops_page_header`, `ops_heading` | Page h1 28px at weight 700 with title leading (1.2) and -0.01em tracking, the only 700 in ops; section h2 18px and subsection h3 16px at 600 with tight heading leading |
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_refresh_control`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding |
 | `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
@@ -134,7 +134,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_intent_card`, `ops_handoff`, `ops_trail` | Body and next action use 14px; recovery CTA has a 44px target; retain named color and motion roles |
 | `ops_empty_state`, `ops_empty_hero`, `ops_loading`, `ops_config_empty` | Required instructions and error copy use body 14px; optional metadata may use the small exception |
 | `ops_data_card`, `ops_result_row`, `ops_object_list`, `ops_object_item`, `ops_signal_table` | Record headings use h3 16px; body uses 14px; spacing, radius, shadow, and responsive layout stay token-backed |
-| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata retain 11px/12px exceptions |
+| `ops_time`, `ops_disclosure`, `ops_code_block`, `ops_inline_code` | Required copy uses 14px; exact technical evidence may use monospace; optional timestamps and metadata use the 12px floor; times, code, keys and identity names are Sometype Mono |
 | `ops_modal`, `ops_sheet`, `ops_command_palette` | Body/actions use 14px; dialog icon target is 44px; consume named overlay layer, radius, shadow, and motion roles. `ops_sheet` docks right on wide screens and rises from the bottom below 640px |
 
 ### Six-surface examples
@@ -165,10 +165,12 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 Search health diagnostic groups share their schema's surface with a single divider where useful, rather than another boxed card. Keep full identifiers and last-success evidence readable. Schema choices use the same radio treatment at all current allowlist counts; revisit only when real list size demonstrates a need for another control. One schema is read-only context when it is the resolved selection; an unresolved scope remains unselected and offers an explicit valid choice, including with one allowed schema. Never make the first option look selected when the server rejected the URL scope. Keep any genuine danger styling and confirmation on the action itself, not on a surrounding decorative panel.
 
 Primary task weights are 400 for body/value text and 600 for actions, labels, and headings.
-The existing 11px/12px scale remains reserved for short timestamps, badges, eyebrows, and
+The type floor is 12px: `--text-ops-xs` and `--text-ops-sm` are both 0.75rem and nothing
+computes below it. The 12px size remains reserved for short timestamps, badges, labels, and
 optional technical metadata; never use it for an action, form label, failure reason, or
-the only copy needed to choose what to do. Existing radius, shadow, motion, and z-index
-tokens remain the sole authorities for those dimensions.
+the only copy needed to choose what to do. Labels are sentence case at 12px, 600, with
+0.01em letter-spacing; no text is transformed to capitals. Existing radius, shadow, motion,
+and z-index tokens remain the sole authorities for those dimensions.
 
 Shared `.ops-btn` actions use neutral surface-2 hover and a stronger transient neutral press; the existing global 2px focus outline with 2px offset remains independent. Only explicit `aria-pressed="true"` marks a persistent selected action. Disabled native buttons suppress hover/press feedback, and refresh eligibility is re-read from the server-rendered `data-ops-refresh-eligible` value after each LiveView patch.
 
@@ -278,11 +280,27 @@ the effective OS appearance.
 
 ## Typography — `--text-ops-*` → `text-ops-*`, `--leading-ops-*` → `leading-ops-*`
 
-Body sizes: `xs` 0.6875 · `sm` 0.75 · `body` 0.875 · `md` 1 · `lg` 1.125rem.
-Heading scale: `h1` 1.5 (page title) · `h2` 1.125 (section) · `h3` 1rem (card/subsection)
+Body sizes: `xs` 0.75 (alias of `sm`, the 12px floor) · `sm` 0.75 · `body` 0.875 · `md` 1 · `lg` 1.125rem.
+Heading scale: `h1` 1.75 (page title, weight 700) · `h2` 1.125 (section) · `h3` 1rem (card/subsection)
 → `text-ops-h1/h2/h3`. **Headings use the heading scale, never raw `text-2xl`/`text-lg`/
-`text-base`**; pair with `leading-ops-tight font-semibold` (the `<.ops_heading>` component
-does this for you). Leading: `tight` 1.3 · `body` 1.5. Mono stack lives in `.ops-text-mono`.
+`text-base`**; pair h2 and h3 with `leading-ops-tight font-semibold` (the `<.ops_heading>`
+component does this for you) and the h1 with `font-bold leading-ops-title tracking-ops-title`
+(the `<.ops_page_header>` component does this). Leading: `tight` 1.3 · `body` 1.5 · `title` 1.2
+(h1 only). Tracking: `title` -0.01em (h1 only) · `label` 0.01em (sentence-case 12px labels).
+
+Faces: `--font-sans` is Hanken Grotesk (weights 400, 600, 700) and `--font-mono` is Sometype
+Mono (weights 400, 500), each followed by a metric-adjusted local fallback face and then the
+platform stack. Both load from `<mount>/assets/fonts/` through CSS-relative URLs with a
+`?v=<sha256>` content hash and `font-display: swap`; no base64, no third-party host, and the
+brand display face is never declared. Schema and index names (`data-ops-identity`), times
+(`.ops-time__value`, `[data-ops-timestamp-copy]`), `code`, `pre`, `kbd` and `.ops-inline-code`
+compute to the mono face. Weight snapping: 500 and 650 become 600 on Hanken and 500 on mono;
+700 becomes 600 everywhere except the h1; nothing is lighter than 400.
+
+Size scale record (`keep-platform`, no body reflow in this phase; the token map's parity
+scope is the theme blocks only, so the values are recorded here): `--text-ops-sm` 0.75rem ·
+`--text-ops-body` 0.875rem · `--text-ops-md` 1rem · `--text-ops-lg` 1.125rem ·
+`--text-ops-h2` 1.125rem · `--text-ops-h3` 1rem.
 
 ## Status / tone — `.ops-tone-*` and `.ops-badge-*`
 

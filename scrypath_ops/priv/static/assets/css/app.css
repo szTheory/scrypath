@@ -17,10 +17,8 @@
     --text-lg--line-height: calc(1.75 / 1.125);
     --text-2xl: 1.5rem;
     --text-2xl--line-height: calc(2 / 1.5);
-    --font-weight-medium: 500;
     --font-weight-semibold: 600;
-    --tracking-normal: 0em;
-    --tracking-wide: 0.025em;
+    --font-weight-bold: 700;
     --radius-md: 0.375rem;
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
     --animate-spin: spin 1s linear infinite;
@@ -89,16 +87,19 @@
     --ease-ops-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-ops-in-out: cubic-bezier(0.45, 0, 0.55, 1);
     --ease-ops-exit: cubic-bezier(0.4, 0, 1, 1);
-    --text-ops-xs: 0.6875rem;
+    --text-ops-xs: 0.75rem;
     --text-ops-sm: 0.75rem;
     --text-ops-body: 0.875rem;
     --text-ops-md: 1rem;
     --text-ops-lg: 1.125rem;
-    --text-ops-h1: 1.5rem;
+    --text-ops-h1: 1.75rem;
     --text-ops-h2: 1.125rem;
     --text-ops-h3: 1rem;
     --leading-ops-tight: 1.3;
     --leading-ops-body: 1.5;
+    --leading-ops-title: 1.2;
+    --tracking-ops-title: -0.01em;
+    --tracking-ops-label: 0.01em;
   }
 }
 @layer base {
@@ -2012,6 +2013,28 @@
       background-image: none;
     }
   }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-field);
+    background-color: var(--color-base-200);
+    vertical-align: middle;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    border: var(--border) solid var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border: var(--border) solid color-mix(in srgb, var(--color-base-content) 20%, #0000);
+    }
+    border-bottom: calc(var(--border) + 1px) solid var(--color-base-content);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-bottom: calc(var(--border) + 1px) solid color-mix(in srgb, var(--color-base-content) 20%, #0000);
+    }
+    --size: calc(var(--size-selector, 0.25rem) * 6);
+    font-size: 0.875rem;
+    height: var(--size);
+    min-width: var(--size);
+  }
   .navbar {
     display: flex;
     width: 100%;
@@ -2576,21 +2599,25 @@
     --tw-leading: var(--leading-ops-tight);
     line-height: var(--leading-ops-tight);
   }
-  .font-medium {
-    --tw-font-weight: var(--font-weight-medium);
-    font-weight: var(--font-weight-medium);
+  .leading-ops-title {
+    --tw-leading: var(--leading-ops-title);
+    line-height: var(--leading-ops-title);
+  }
+  .font-bold {
+    --tw-font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-bold);
   }
   .font-semibold {
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
   }
-  .tracking-normal {
-    --tw-tracking: var(--tracking-normal);
-    letter-spacing: var(--tracking-normal);
+  .tracking-ops-label {
+    --tw-tracking: var(--tracking-ops-label);
+    letter-spacing: var(--tracking-ops-label);
   }
-  .tracking-wide {
-    --tw-tracking: var(--tracking-wide);
-    letter-spacing: var(--tracking-wide);
+  .tracking-ops-title {
+    --tw-tracking: var(--tracking-ops-title);
+    letter-spacing: var(--tracking-ops-title);
   }
   .text-wrap {
     text-wrap: wrap;
@@ -2875,10 +2902,10 @@
       font-size: var(--text-ops-body);
     }
   }
-  .focus\:font-medium {
+  .focus\:font-semibold {
     &:focus {
-      --tw-font-weight: var(--font-weight-medium);
-      font-weight: var(--font-weight-medium);
+      --tw-font-weight: var(--font-weight-semibold);
+      font-weight: var(--font-weight-semibold);
     }
   }
   .focus\:shadow-ops-overlay {
@@ -3574,7 +3601,7 @@
     padding-inline: 0.625rem;
     font-size: 0.75rem;
     line-height: 1rem;
-    font-weight: 650;
+    font-weight: 600;
     white-space: nowrap;
     transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard), color var(--duration-ops-fast) var(--ease-ops-standard);
   }
@@ -3645,8 +3672,7 @@
   .ops-copper-eyebrow {
     font-size: var(--text-ops-sm);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: var(--tracking-ops-label);
     color: var(--color-secondary);
   }
   .ops-copper-badge {
@@ -3805,7 +3831,8 @@
   .ops-text-label {
     font-size: var(--text-ops-sm);
     line-height: var(--leading-ops-tight);
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: var(--tracking-ops-label);
   }
   .ops-text-body {
     font-size: var(--text-ops-body);
@@ -3817,7 +3844,7 @@
     color: var(--ops-text-muted);
   }
   .ops-text-mono {
-    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-ops-sm);
   }
   .ops-time {
@@ -3830,7 +3857,7 @@
     line-height: var(--leading-ops-tight);
   }
   .ops-time__label {
-    font-weight: 650;
+    font-weight: 600;
     color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
@@ -3943,7 +3970,7 @@
   }
   .ops-schema-picker__module-name {
     min-width: 0;
-    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-ops-sm);
     overflow-wrap: anywhere;
     color: var(--ops-text-muted);
@@ -3970,10 +3997,9 @@
   .ops-nav-group__label {
     padding-inline: 0.625rem;
     font-size: var(--text-ops-xs);
-    font-weight: 700;
+    font-weight: 600;
     line-height: var(--leading-ops-tight);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: var(--tracking-ops-label);
     color: var(--color-base-content);
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklch, var(--color-base-content) 64%, transparent);
@@ -4027,7 +4053,7 @@
     }
     background: var(--ops-selection);
     color: var(--color-primary);
-    font-weight: 650;
+    font-weight: 600;
   }
   .ops-nav-item-active:hover {
     background: var(--ops-selection);
@@ -4090,7 +4116,7 @@
     align-items: center;
     padding: 0;
     color: var(--color-primary);
-    font-weight: 650;
+    font-weight: 600;
   }
   .ops-disclosure-compact summary:hover {
     text-decoration: underline;
@@ -4239,7 +4265,7 @@
     flex: none;
     border-radius: 999px;
     font-size: var(--text-ops-sm);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--color-primary);
     background: var(--color-primary);
     @supports (color: color-mix(in lab, red, red)) {
@@ -4248,7 +4274,7 @@
   }
   .ops-preflight__title {
     font-size: var(--text-ops-body);
-    font-weight: 650;
+    font-weight: 600;
     color: var(--color-base-content);
   }
   .ops-preflight__hint {
@@ -4308,9 +4334,8 @@
     padding-inline: var(--control-pad-x-sm);
     padding-block: 0.125rem;
     font-size: var(--text-ops-sm);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    letter-spacing: var(--tracking-ops-label);
     color: var(--color-primary);
     background: var(--color-primary);
     @supports (color: color-mix(in lab, red, red)) {
@@ -4339,7 +4364,7 @@
   }
   .ops-intent-card__title {
     font-size: var(--text-ops-md);
-    font-weight: 650;
+    font-weight: 600;
     color: var(--color-base-content);
   }
   .ops-intent-card__summary {
@@ -4539,18 +4564,17 @@
   }
   .ops-signal-metrics dt {
     font-size: var(--text-ops-xs);
-    font-weight: 650;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    letter-spacing: var(--tracking-ops-label);
     color: var(--ops-text-muted);
   }
   .ops-signal-metrics dd {
     margin: 0.125rem 0 0;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-ops-body);
-    font-weight: 650;
+    font-weight: 500;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     color: var(--color-base-content);
@@ -4716,7 +4740,7 @@
   }
   .ops-cmdk__item-label {
     font-size: var(--text-ops-body);
-    font-weight: 650;
+    font-weight: 600;
   }
   .ops-cmdk__item-hint {
     font-size: var(--text-ops-xs);
@@ -4764,9 +4788,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background: color-mix(in oklch, var(--ops-surface-2) 70%, transparent);
     }
-    font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+    font-family: var(--font-mono);
     font-size: var(--text-ops-xs);
-    font-weight: 650;
+    font-weight: 500;
   }
   --ease-ops-*
      and --shadow-ops-glow[-copper] tokens — no new literals, no new
@@ -5284,7 +5308,7 @@
     font-weight: 400;
   }
   .ops-signal-metrics .ops-time {
-    font-family: var(--font-sans);
+    font-family: var(--font-mono);
     font-weight: 400;
   }
   @media (min-width: 640px) {
@@ -5972,7 +5996,7 @@
     flex-shrink: 0;
   }
   .ops-sync-work .ops-text-action {
-    font-weight: 500;
+    font-weight: 600;
     min-height: var(--control-h-sm);
   }
   .ops-sync-work + .ops-help-link {
@@ -6492,6 +6516,18 @@
 }
 .ops-shell a.link:not(.link-primary):not(.text-primary) {
   color: var(--color-base-content);
+}
+[data-ops-identity], .ops-time__value, [data-ops-timestamp-copy], code, pre, kbd, .ops-inline-code {
+  font-family: var(--font-mono);
+}
+.ops-time__value, [data-ops-timestamp-copy], .ops-inline-code, code, pre {
+  font-weight: 400;
+}
+[data-ops-identity], kbd, .ops-metric__value {
+  font-weight: 500;
+}
+code, pre, kbd {
+  font-variant-ligatures: none;
 }
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {

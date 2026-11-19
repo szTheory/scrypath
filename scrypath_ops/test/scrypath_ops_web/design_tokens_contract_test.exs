@@ -144,7 +144,7 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert missing == [], "Add these OpsUi exports to DESIGN-TOKENS.md: #{inspect(missing)}"
 
     assert catalog =~ "Primary task weights are 400 for body/value text and 600"
-    assert catalog =~ "The existing 11px/12px scale remains reserved"
+    assert catalog =~ "The type floor is 12px"
   end
 
   test "shared actions and responsive panels consume the named roles" do
