@@ -30,7 +30,9 @@ import {
 import {
   deleteSavedSearches,
   drainSearchQueue,
+  openManageSavedSearches,
   saveCurrentSearch,
+  savedSearchDomId,
   seedScenario,
   waitForLiveConnected
 } from "./helpers/e2e";
@@ -132,6 +134,37 @@ type Facts = {
     visible: Array<{ src: string; width: number; height: number }>;
     marks: Array<{ visible: boolean; flexShrink: string }>;
   };
+  surfaces: {
+    rows: Array<{
+      path: string;
+      radii: number[];
+      shadow: string;
+      widths: number[];
+      bottomColor: string;
+      bottomStyle: string;
+      bg: string;
+    }>;
+    notices: Array<{
+      path: string;
+      modifier: string;
+      bg: string;
+      startWidth: number;
+      startStyle: string;
+      startColor: string;
+      shadow: string;
+      widths: number[];
+      colors: string[];
+    }>;
+  };
+};
+
+type ScrimFacts = {
+  red: number;
+  green: number;
+  blue: number;
+  alpha: number;
+  pageLuminance: number;
+  dimmedLuminance: number;
 };
 
 type ItemFacts = {
@@ -163,6 +196,7 @@ type P187Api = {
   collect: () => Facts;
   tokens: (scope?: string) => Record<string, string>;
   overlayFacts: (rootSelector: string, itemSelector: string, activeSelector: string) => OverlayFacts | null;
+  scrim: (selector: string) => ScrimFacts | null;
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -333,7 +367,13 @@ function installP187(): void {
     ".ops-help-topics a",
     ".ops-help-content a:not(.ops-text-action)"
   ];
-  const FAILED_AREAS = ["[data-sync-status='failed']", ".ops-notice-surface--error", ".text-error", ".ops-metric__value--error"];
+  const FAILED_AREAS = [
+    "[data-sync-status='failed']",
+    ".ops-notice-surface--error",
+    ".ops-flash--error",
+    ".text-error",
+    ".ops-metric__value--error"
+  ];
   const RETRYING_AREAS = ["[data-sync-status='retrying']", ".ops-notice-surface--warning", ".ops-metric__value--warning"];
   const CLEAR_AREAS = ["[data-sync-status='clear']"];
 
@@ -427,7 +467,8 @@ function installP187(): void {
               allowed =
                 el.matches(PLUM_FILL.join(",")) || (side === "left" && el.matches(SIGNATURE.join(",")));
             } else if (side === "left") {
-              allowed = el.matches(areaFor(name).join(","));
+              // The rule sits on the notice itself, or on the toast's inner alert.
+              allowed = el.closest(areaFor(name).join(",")) !== null;
             }
             record(`border-${side}`, allowed);
           }
@@ -624,6 +665,56 @@ function installP187(): void {
       }
     }
 
+    // Search health rows, notices, statuses and verdicts (P-15). The sticky header is not read here.
+    const four = (cs: CSSStyleDeclaration, a: string, b: string, c: string, d: string): string[] => [
+      cs.getPropertyValue(a),
+      cs.getPropertyValue(b),
+      cs.getPropertyValue(c),
+      cs.getPropertyValue(d)
+    ];
+    const surfaces: Facts["surfaces"] = {
+      rows: Array.from(document.querySelectorAll(".ops-schema-signal-card"))
+        .filter(visible)
+        .map((el) => {
+          const cs = getComputedStyle(el);
+          return {
+            path: pathOf(el),
+            radii: four(
+              cs,
+              "border-top-left-radius",
+              "border-top-right-radius",
+              "border-bottom-right-radius",
+              "border-bottom-left-radius"
+            ).map(parseFloat),
+            shadow: cs.boxShadow,
+            widths: four(cs, "border-top-width", "border-right-width", "border-bottom-width", "border-left-width").map(
+              parseFloat
+            ),
+            bottomColor: canon(cs.borderBottomColor),
+            bottomStyle: cs.borderBottomStyle,
+            bg: canon(cs.backgroundColor)
+          };
+        }),
+      notices: Array.from(document.querySelectorAll(".ops-notice-surface"))
+        .filter(visible)
+        .map((el) => {
+          const cs = getComputedStyle(el);
+          const modifier =
+            ["error", "warning", "neutral"].find((m) => el.classList.contains(`ops-notice-surface--${m}`)) ?? "none";
+          return {
+            path: pathOf(el),
+            modifier,
+            bg: canon(cs.backgroundColor),
+            startWidth: parseFloat(cs.borderInlineStartWidth),
+            startStyle: cs.borderInlineStartStyle,
+            startColor: canon(cs.borderInlineStartColor),
+            shadow: cs.boxShadow,
+            widths: [cs.borderTopWidth, cs.borderRightWidth, cs.borderBottomWidth].map(parseFloat),
+            colors: [cs.borderTopColor, cs.borderRightColor, cs.borderBottomColor].map(canon)
+          };
+        })
+    };
+
     return {
       effective,
       tokens: tk,
@@ -649,7 +740,25 @@ function installP187(): void {
       signature,
       controls,
       natives,
-      lockups
+      lockups,
+      surfaces
+    };
+  };
+
+  // A scrim: its computed color, and the page luminance with and without it composited over (P-21).
+  const scrim = (selector: string): ScrimFacts | null => {
+    const el = document.querySelector(selector);
+    if (!el || !visible(el)) return null;
+    const c = parse(getComputedStyle(el).backgroundColor);
+    const page = parse(getComputedStyle(document.body).backgroundColor);
+    const pageRgb = [page[0], page[1], page[2]];
+    return {
+      red: c[0],
+      green: c[1],
+      blue: c[2],
+      alpha: c[3],
+      pageLuminance: lum(pageRgb),
+      dimmedLuminance: lum(over(c, pageRgb))
     };
   };
 
@@ -714,7 +823,7 @@ function installP187(): void {
     };
   };
 
-  (window as unknown as { __p187: P187Api }).__p187 = { collect, tokens, overlayFacts };
+  (window as unknown as { __p187: P187Api }).__p187 = { collect, tokens, overlayFacts, scrim };
 }
 
 // Let every finite transition and animation finish first, so a color read mid-transition (the
@@ -869,18 +978,29 @@ async function overlayFactsOf(page: Page, root: string, item: string, active: st
   );
 }
 
-type StateFacts = { name: string; facts: Facts; overlay: OverlayFacts };
+type StateFacts = {
+  name: string;
+  facts: Facts;
+  overlay: OverlayFacts;
+  scrim: ScrimFacts | null;
+  // Saved-search row heights with neither row loaded (sheet state only): P-19.
+  rowHeights?: { latin: number | null; cjk: number | null };
+};
 
 async function captureState(
   page: Page,
   name: string,
   root: string,
   item: string,
-  active: string
+  active: string,
+  scrimSelector: string | null = null
 ): Promise<StateFacts> {
   const overlay = await overlayFactsOf(page, root, item, active);
   if (!overlay) throw new Error(`${name}: the overlay ${root} is not visible`);
-  return { name, facts: await collectFacts(page), overlay };
+  const scrim = scrimSelector
+    ? await page.evaluate((s) => (window as unknown as { __p187: P187Api }).__p187.scrim(s), scrimSelector)
+    : null;
+  return { name, facts: await collectFacts(page), overlay, scrim };
 }
 
 const stateCache = new Map<string, Promise<StateFacts[]>>();
@@ -897,9 +1017,18 @@ function overlayStates(browser: Browser, mode: ThemeMode, viewport: ViewportName
       const out: StateFacts[] = [];
 
       await gotoPath(page, SCREENS[0].path, SCREENS[0].heading);
-      await page.locator(".ops-header .ops-command-hint").click();
+      await page.locator(".ops-command-hint:visible").first().click();
       await expect(page.locator("#ops-cmdk")).toBeVisible();
-      out.push(await captureState(page, "palette", "#ops-cmdk .ops-cmdk__panel", ".ops-cmdk__item", ".ops-cmdk__item.is-active"));
+      out.push(
+        await captureState(
+          page,
+          "palette",
+          "#ops-cmdk .ops-cmdk__panel",
+          ".ops-cmdk__item",
+          ".ops-cmdk__item.is-active",
+          ".ops-cmdk__backdrop"
+        )
+      );
       await page.keyboard.press("Escape");
       await expect(page.locator("#ops-cmdk")).toBeHidden();
 
@@ -907,7 +1036,14 @@ function overlayStates(browser: Browser, mode: ThemeMode, viewport: ViewportName
         await page.locator("[data-ops-nav-open]").click();
         await expect(page.locator("#ops-mobile-nav")).toBeVisible();
         out.push(
-          await captureState(page, "drawer", ".ops-mobile-nav__panel", ".ops-nav-item", ".ops-nav-item[aria-current='page']")
+          await captureState(
+            page,
+            "drawer",
+            ".ops-mobile-nav__panel",
+            ".ops-nav-item",
+            ".ops-nav-item[aria-current='page']",
+            ".ops-mobile-nav__backdrop"
+          )
         );
         await page.locator("[data-ops-nav-close]").last().click();
         await expect(page.locator("#ops-mobile-nav")).toBeHidden();
@@ -918,9 +1054,28 @@ function overlayStates(browser: Browser, mode: ThemeMode, viewport: ViewportName
       await page.locator("#search-save-new, #search-save-as").first().click();
       const dialog = page.getByRole("dialog", { name: /^Save (search|as)$/ });
       await expect(dialog).toBeVisible();
-      out.push(await captureState(page, "save modal", ".modal-box", "button", ".never-active"));
+      out.push(
+        await captureState(page, "save modal", ".modal-box", "button", ".never-active", ".ops-modal.modal-open")
+      );
       await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
       await expect(dialog).toBeHidden();
+
+      // Row heights with neither saved search loaded, so a loaded marker cannot wrap one row (P-19).
+      await openManageSavedSearches(page);
+      const rowHeights = await page.evaluate(
+        ([latin, cjk]) => {
+          const height = (name: string): number | null => {
+            const row = Array.from(document.querySelectorAll(".ops-saved-search-row")).find((r) =>
+              r.querySelector(".ops-saved-search-row__name")?.textContent?.includes(name)
+            );
+            return row ? row.getBoundingClientRect().height : null;
+          };
+          return { latin: height(latin), cjk: height(cjk) };
+        },
+        [LATIN_NAME, CJK_NAME] as const
+      );
+      await page.goto(SCREENS[4].path);
+      await waitForLiveConnected(page);
 
       await page.locator("#saved-search-picker-button").click();
       await page
@@ -931,9 +1086,24 @@ function overlayStates(browser: Browser, mode: ThemeMode, viewport: ViewportName
       await page.locator("#saved-search-manage-open").click();
       const sheet = page.getByRole("dialog", { name: "Manage saved searches" });
       await expect(sheet).toBeVisible();
-      out.push(
-        await captureState(page, "manage sheet", ".ops-sheet__panel", ".ops-saved-search-row", ".ops-saved-search-row--loaded")
+      const sheetState = await captureState(
+        page,
+        "manage sheet",
+        ".ops-sheet__panel",
+        ".ops-saved-search-row",
+        ".ops-saved-search-row--loaded",
+        ".ops-sheet__backdrop"
       );
+      sheetState.rowHeights = rowHeights;
+      out.push(sheetState);
+
+      // The disconnected-socket flash, an overlay surface of its own. Disconnecting the live socket
+      // fires the same `phx-disconnected` binding a lost connection does.
+      await page.keyboard.press("Escape");
+      await expect(sheet).toBeHidden();
+      await page.evaluate(() => (window as unknown as { liveSocket: { disconnect: () => void } }).liveSocket.disconnect());
+      await expect(page.locator("#client-error")).toBeVisible();
+      out.push(await captureState(page, "flash", "#client-error .alert", ".never-item", ".never-active"));
       return out;
     } finally {
       await close();
@@ -1491,4 +1661,478 @@ test.describe("ops re-skin contract", () => {
       await close();
     }
   });
+
+  // P-09 -----------------------------------------------------------------------------------
+  // No ops page renders a focusable control inside `.ops-table-scroll` today (the Sync and index
+  // settings table holds plain cells), so the rule is proved on the real stylesheet with a planted
+  // scroller that carries the real classes: a wide table whose first and last cells hold controls.
+  // Any real scroller that does hold a focusable control is measured the same way.
+  for (const viewport of VIEWPORT_NAMES) {
+    for (const mode of THEME_MODES.slice(0, 2)) {
+      test(`[P-09] a table scroller's first and last control keep a 2px primary ring inside the scrollport (${themeSlug(mode)}, ${viewport})`, async ({
+        browser
+      }) => {
+        const { page, close } = await newThemedPage(browser, mode, viewport);
+        try {
+          await gotoPath(page, SCREENS[3].path, SCREENS[3].heading);
+          // Plant and measure in one task, so a LiveView patch cannot remove the scroller between.
+          const result = await page.evaluate(() => {
+            const w = window as unknown as { __p187: P187Api };
+            const host = document.querySelector("#ops-main > div") ?? document.body;
+            const wrap = document.createElement("div");
+            wrap.id = "p187-scroller";
+            wrap.className = "ops-table-scroll overflow-x-auto min-w-0";
+            wrap.style.maxWidth = "320px";
+            wrap.innerHTML =
+              '<table style="width:1200px"><tbody><tr>' +
+              '<td><a href="#p187-first" id="p187-first">first control</a></td>' +
+              '<td style="width:900px">filler</td>' +
+              '<td><button type="button" id="p187-last">last control</button></td>' +
+              "</tr></tbody></table>";
+            host.appendChild(wrap);
+
+            const primary = w.__p187.tokens().primary;
+            const measure = (scroller: HTMLElement, el: HTMLElement, label: string) => {
+              el.focus({ focusVisible: true } as FocusOptions);
+              const cs = getComputedStyle(el);
+              const width = parseFloat(cs.outlineWidth);
+              const offset = parseFloat(cs.outlineOffset);
+              const grow = width + offset;
+              const r = el.getBoundingClientRect();
+              const s = scroller.getBoundingClientRect();
+              const left = s.left + scroller.clientLeft;
+              const top = s.top + scroller.clientTop;
+              const right = left + scroller.clientWidth;
+              const bottom = top + scroller.clientHeight;
+              return {
+                label,
+                style: cs.outlineStyle,
+                width,
+                offset,
+                color: cs.outlineColor,
+                focused: document.activeElement === el,
+                inside:
+                  r.left - grow >= left - 0.01 &&
+                  r.right + grow <= right + 0.01 &&
+                  r.top - grow >= top - 0.01 &&
+                  r.bottom + grow <= bottom + 0.01,
+                scrollLeft: scroller.scrollLeft,
+                scrollable: scroller.scrollWidth > scroller.clientWidth
+              };
+            };
+
+            const rings: Array<ReturnType<typeof measure>> = [];
+            for (const scroller of Array.from(document.querySelectorAll<HTMLElement>(".ops-table-scroll"))) {
+              if (scroller.getBoundingClientRect().width <= 0) continue;
+              const focusables = Array.from(
+                scroller.querySelectorAll<HTMLElement>(
+                  "a[href], button:not(:disabled), input:not([type=hidden]):not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"
+                )
+              ).filter((el) => el.getBoundingClientRect().width > 0);
+              if (focusables.length === 0) continue;
+              const id = scroller.id || "real scroller";
+              rings.push(measure(scroller, focusables[focusables.length - 1], `${id} last`));
+              rings.push(measure(scroller, focusables[0], `${id} first`));
+            }
+            wrap.remove();
+            return { primary, rings };
+          });
+
+          const planted = result.rings.filter((r) => r.label.startsWith("p187-scroller"));
+          expect(planted.map((r) => r.label).sort(), "both ends of the planted scroller were measured").toEqual([
+            "p187-scroller first",
+            "p187-scroller last"
+          ]);
+          for (const ring of result.rings) {
+            expect(ring.focused, `${ring.label} took focus`).toBe(true);
+            expect(ring.style, `${ring.label} outline style`).toBe("solid");
+            expect(ring.width, `${ring.label} outline width`).toBe(2);
+            expect(ring.color, `${ring.label} outline color is primary`).toBe(result.primary);
+            expect(ring.inside, `${ring.label} ring (offset ${ring.offset}px) sits inside the scrollport`).toBe(true);
+          }
+          const last = planted.find((r) => r.label.endsWith("last"));
+          const first = planted.find((r) => r.label.endsWith("first"));
+          expect(last?.scrollable, "the planted scroller overflows").toBe(true);
+          expect(last?.scrollLeft, "focusing the last control scrolled it into view").toBeGreaterThan(0);
+          expect(first?.scrollLeft, "focusing the first control scrolled back to the start").toBe(0);
+        } finally {
+          await close();
+        }
+      });
+    }
+  }
+
+  // P-10 -----------------------------------------------------------------------------------
+  for (const viewport of VIEWPORT_NAMES) {
+    test(`[P-10] a Tab traversal keeps every focused element in the main region clear of the sticky header (${viewport})`, async ({
+      browser
+    }) => {
+      const problems: string[] = [];
+      let measured = 0;
+      const { page, close } = await newThemedPage(browser, { kind: "explicit", theme: "light" }, viewport);
+      try {
+        for (const screen of SCREENS) {
+          await gotoPath(page, screen.path, screen.heading);
+          await page.evaluate(() => {
+            window.scrollTo(0, 0);
+            (document.activeElement as HTMLElement | null)?.blur();
+          });
+          const seen = new Set<string>();
+          for (let step = 0; step < 150; step += 1) {
+            await page.keyboard.press("Tab");
+            const info = await page.evaluate(() => {
+              const el = document.activeElement as HTMLElement | null;
+              if (!el || el === document.body || el === document.documentElement) return null;
+              const main = document.querySelector("#ops-main");
+              const header = document.querySelector(".ops-header");
+              const index = Array.from(document.querySelectorAll("*")).indexOf(el);
+              const r = el.getBoundingClientRect();
+              return {
+                key: `${el.tagName}#${index}`,
+                label: `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${
+                  typeof el.className === "string" && el.className ? `.${el.className.trim().split(/\s+/)[0]}` : ""
+                } "${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 30)}"`,
+                inMain: Boolean(main && main.contains(el)),
+                top: r.top,
+                headerBottom: header ? header.getBoundingClientRect().bottom : 0
+              };
+            });
+            if (!info || seen.has(info.key)) break;
+            seen.add(info.key);
+            if (!info.inMain) continue; // the skip link, header and sidebar controls are excluded
+            measured += 1;
+            if (info.top < 64 - 0.5)
+              problems.push(`${screen.name} (${viewport}): ${info.label} is ${info.top.toFixed(1)}px from the top, under 64px`);
+            if (info.top < info.headerBottom - 0.5)
+              problems.push(
+                `${screen.name} (${viewport}): ${info.label} top ${info.top.toFixed(1)}px is under the sticky header (bottom ${info.headerBottom.toFixed(1)}px)`
+              );
+          }
+        }
+      } finally {
+        await close();
+      }
+      expect(grouped(problems), "focus clears the sticky header").toEqual([]);
+      expect(measured, "focused elements in the main region were measured").toBeGreaterThan(30);
+    });
+  }
+
+  // P-14 -----------------------------------------------------------------------------------
+  for (const viewport of VIEWPORT_NAMES) {
+    test(`[P-14] both fonts load with 200 on the six screens, display.woff2 is never requested, and layout shift stays at or under 0.05 (${viewport})`, async ({
+      browser
+    }) => {
+      const problems: string[] = [];
+      const { page, context, close } = await newThemedPage(browser, { kind: "explicit", theme: "light" }, viewport);
+      const responses: Array<{ url: string; status: number }> = [];
+      const requested: string[] = [];
+      try {
+        await context.addInitScript(() => {
+          const w = window as unknown as { __cls: number };
+          w.__cls = 0;
+          try {
+            new PerformanceObserver((list) => {
+              for (const entry of list.getEntries() as unknown as Array<{ value: number; hadRecentInput: boolean }>) {
+                if (!entry.hadRecentInput) w.__cls += entry.value;
+              }
+            }).observe({ type: "layout-shift", buffered: true });
+          } catch {
+            // layout-shift entries are unsupported: the assertion below then reads 0 and the
+            // observer-support check fails the test instead.
+          }
+        });
+        page.on("request", (r) => requested.push(r.url()));
+        page.on("response", (r) => {
+          if (/\.woff2$/.test(new URL(r.url()).pathname)) responses.push({ url: r.url(), status: r.status() });
+        });
+        for (const screen of SCREENS) {
+          responses.length = 0;
+          await gotoPath(page, screen.path, screen.heading);
+          await page.evaluate(() => document.fonts.ready.then(() => undefined));
+          // The sum is read 3 seconds after the page is ready, the window the contract names.
+          await page.waitForTimeout(3000);
+          const probe = await page.evaluate(() => {
+            const w = window as unknown as { __cls: number };
+            const sheetFonts = Array.from(document.styleSheets).flatMap((sheet) => {
+              let rules: CSSRule[] = [];
+              try {
+                rules = Array.from(sheet.cssRules);
+              } catch {
+                return [];
+              }
+              return rules
+                .filter((rule): rule is CSSFontFaceRule => rule instanceof CSSFontFaceRule)
+                .map((rule) => ({ src: rule.style.getPropertyValue("src"), base: sheet.href }));
+            });
+            return {
+              cls: w.__cls,
+              supported: PerformanceObserver.supportedEntryTypes.includes("layout-shift"),
+              sheetFonts
+            };
+          });
+          expect(probe.supported, "the browser reports layout-shift entries").toBe(true);
+          if (probe.cls > 0.05) problems.push(`${screen.name} (${viewport}): layout shift ${probe.cls.toFixed(4)} is over 0.05`);
+
+          const urls = probe.sheetFonts
+            .map((f) => {
+              const declared = f.src.match(/url\(["']?([^"')]+)["']?\)/)?.[1];
+              return declared ? new URL(declared, f.base ?? page.url()).toString() : null;
+            })
+            .filter((u): u is string => u !== null);
+          const faces = urls.filter((u) => /\/fonts\/(ui|mono)\.woff2/.test(u));
+          if (faces.length !== 2) problems.push(`${screen.name} (${viewport}): ${faces.length} font files declared, want 2`);
+          for (const url of faces) {
+            const res = await page.request.get(url);
+            if (res.status() !== 200) problems.push(`${screen.name} (${viewport}): ${url} responds ${res.status()}`);
+          }
+          for (const r of responses) {
+            if (r.status !== 200) problems.push(`${screen.name} (${viewport}): ${r.url} loaded with ${r.status}`);
+          }
+          if (!responses.some((r) => /\/fonts\/ui\.woff2/.test(r.url)))
+            problems.push(`${screen.name} (${viewport}): the interface font was not requested`);
+        }
+        for (const url of requested) {
+          if (new URL(url).pathname.endsWith("display.woff2")) problems.push(`display.woff2 was requested: ${url}`);
+        }
+      } finally {
+        await close();
+      }
+      expect(grouped(problems), "fonts and layout shift").toEqual([]);
+    });
+  }
+
+  test("[P-14] with the fonts and the lockup aborted, 320 px has no horizontal overflow and the home link keeps its name", async ({
+    browser
+  }) => {
+    const problems: string[] = [];
+    let aborted = 0;
+    const { page, context, close } = await newThemedPage(
+      browser,
+      { kind: "explicit", theme: "light" },
+      { width: 320, height: 800 }
+    );
+    try {
+      await context.route(/\/fonts\/[^/]+\.woff2/, (route) => {
+        aborted += 1;
+        return route.abort();
+      });
+      await context.route(/\/images\/scrypath-wordmark(-inverse)?\.svg/, (route) => {
+        aborted += 1;
+        return route.abort();
+      });
+      for (const screen of SCREENS) {
+        await gotoPath(page, screen.path, screen.heading);
+        const overflow = await page.evaluate(() => ({
+          scroll: document.documentElement.scrollWidth,
+          inner: window.innerWidth
+        }));
+        if (overflow.scroll > overflow.inner)
+          problems.push(`${screen.name}: horizontal overflow ${overflow.scroll}px in ${overflow.inner}px`);
+        const home = page.getByRole("link", { name: "Scrypath home" }).first();
+        await expect(home, `${screen.name}: the home link is visible with its name`).toBeVisible();
+      }
+    } finally {
+      await close();
+    }
+    expect(aborted, "the font and lockup requests were really aborted").toBeGreaterThan(0);
+    expect(grouped(problems), "fallback rendering").toEqual([]);
+  });
+
+  // P-15 -----------------------------------------------------------------------------------
+  test("[P-15] Search health rows are flat hairline rows; notices, statuses and verdicts are Panel with a 2px rule and no shadow", async ({
+    browser
+  }) => {
+    const problems: string[] = [];
+    let rows = 0;
+    let notices = 0;
+    for (const { mode, viewport, slug } of MODE_VIEWPORTS) {
+      for (const { screen, facts } of await allFacts(browser, mode, viewport)) {
+        const where = `${screen} (${slug})`;
+        for (const row of facts.surfaces.rows) {
+          rows += 1;
+          if (!row.radii.every((r) => r === 0)) problems.push(`${where}: ${row.path} has a corner radius ${row.radii}`);
+          if (row.shadow !== "none") problems.push(`${where}: ${row.path} has a box-shadow (${row.shadow})`);
+          if (row.widths[2] !== 1 || row.widths[0] !== 0 || row.widths[1] !== 0 || row.widths[3] !== 0)
+            problems.push(`${where}: ${row.path} border widths are ${row.widths}, want only a 1px bottom hairline`);
+          if (row.bottomStyle !== "solid") problems.push(`${where}: ${row.path} bottom border is ${row.bottomStyle}`);
+          if (row.bottomColor !== facts.tokens.base300)
+            problems.push(`${where}: ${row.path} bottom hairline is ${row.bottomColor}, want ${facts.tokens.base300}`);
+        }
+        const ruleColor: Record<string, string> = {
+          error: facts.tokens.failed,
+          warning: facts.tokens.retrying,
+          neutral: facts.tokens.controlEdge
+        };
+        for (const n of facts.surfaces.notices) {
+          notices += 1;
+          if (n.bg !== facts.tokens.base100) problems.push(`${where}: ${n.path} fill is ${n.bg}, want Panel ${facts.tokens.base100}`);
+          if (n.startWidth !== 2 || n.startStyle !== "solid")
+            problems.push(`${where}: ${n.path} start rule is ${n.startWidth}px ${n.startStyle}`);
+          if (n.startColor !== ruleColor[n.modifier])
+            problems.push(`${where}: ${n.path} (${n.modifier}) rule is ${n.startColor}, want ${ruleColor[n.modifier]}`);
+          if (n.shadow !== "none") problems.push(`${where}: ${n.path} has a box-shadow (${n.shadow})`);
+          if (!n.widths.every((w) => w === 1) || !n.colors.every((c) => c === facts.tokens.base300))
+            problems.push(`${where}: ${n.path} hairline is ${n.widths} ${n.colors}, want 1px ${facts.tokens.base300}`);
+        }
+      }
+    }
+    expect(grouped(problems), "flat surfaces").toEqual([]);
+    expect(rows, "Search health rows were rendered and checked").toBeGreaterThan(0);
+    expect(notices, "notices, statuses and verdicts were rendered and checked").toBeGreaterThan(0);
+  });
+
+  // P-16 and P-21 --------------------------------------------------------------------------
+  test("[P-16] overlay surfaces are Panel with a 1px opaque Control Edge, 4.5:1 text and an overlay shadow", async ({
+    browser
+  }) => {
+    const problems: string[] = [];
+    const seen = new Set<string>();
+    for (const { mode, viewport, slug } of MODE_VIEWPORTS) {
+      for (const state of await overlayStates(browser, mode, viewport)) {
+        seen.add(state.name);
+        const where = `${state.name} (${slug})`;
+        const o = state.overlay;
+        const t = state.facts.tokens;
+        if (o.bg !== t.base100) problems.push(`${where}: surface is ${o.bg}, want ${t.base100}`);
+        if (o.surfaceAlpha < 0.999) problems.push(`${where}: surface is translucent (${o.surfaceAlpha})`);
+        for (const edge of o.edges) {
+          if (state.name === "flash" && edge.side === "left") {
+            // The toast carries a 2px rule: Failed for the error flash.
+            if (edge.width !== 2 || edge.style !== "solid" || ![t.failed, t.controlEdge].includes(edge.color))
+              problems.push(`${where}: start rule is ${edge.width}px ${edge.style} ${edge.color}`);
+          } else if (edge.width !== 1 || edge.style !== "solid" || edge.color !== t.controlEdge) {
+            problems.push(`${where}: ${edge.side} edge is ${edge.width}px ${edge.style} ${edge.color}, want 1px Control Edge ${t.controlEdge}`);
+          }
+        }
+        if (o.edgeRatio < 3) problems.push(`${where}: Control Edge is ${o.edgeRatio.toFixed(2)}:1 on the surface`);
+        if (o.pairsChecked === 0) problems.push(`${where}: no text pair was checked`);
+        for (const low of o.lowPairs) problems.push(`${where}: text ${low.path} is ${low.ratio.toFixed(2)}:1, under 4.5`);
+        if (o.boxShadow === "none") problems.push(`${where}: an overlay must keep its shadow`);
+      }
+    }
+    expect(grouped(problems), "overlay surfaces").toEqual([]);
+    expect(Array.from(seen).sort(), "every overlay was opened and checked").toEqual([
+      "drawer",
+      "flash",
+      "manage sheet",
+      "palette",
+      "save modal"
+    ]);
+  });
+
+  test("[P-21] every scrim is black at 50 percent alpha and darkens the page", async ({ browser }) => {
+    const problems: string[] = [];
+    const seen = new Set<string>();
+    for (const { mode, viewport, slug } of MODE_VIEWPORTS) {
+      for (const state of await overlayStates(browser, mode, viewport)) {
+        if (state.name === "flash") continue; // a toast has no scrim
+        const where = `${state.name} (${slug})`;
+        const s = state.scrim;
+        if (!s) {
+          problems.push(`${where}: no scrim was found`);
+          continue;
+        }
+        seen.add(state.name);
+        if (s.red > 1 || s.green > 1 || s.blue > 1) problems.push(`${where}: scrim is rgb(${s.red}, ${s.green}, ${s.blue}), want black`);
+        if (!approx(s.alpha, 0.5, 0.01)) problems.push(`${where}: scrim alpha is ${s.alpha.toFixed(3)}, want 0.5`);
+        if (!(s.dimmedLuminance < s.pageLuminance))
+          problems.push(`${where}: the scrim does not darken the page (${s.pageLuminance} -> ${s.dimmedLuminance})`);
+      }
+    }
+    expect(grouped(problems), "scrims").toEqual([]);
+    expect(Array.from(seen).sort(), "every scrim was opened and checked").toEqual([
+      "drawer",
+      "manage sheet",
+      "palette",
+      "save modal"
+    ]);
+  });
+
+  // P-19 -----------------------------------------------------------------------------------
+  test("[P-19] a CJK-named saved search row is within 2px of a Latin-named row", async ({ browser }) => {
+    const problems: string[] = [];
+    for (const { mode, viewport, slug } of MODE_VIEWPORTS) {
+      const sheet = (await overlayStates(browser, mode, viewport)).find((s) => s.name === "manage sheet");
+      const heights = sheet?.rowHeights;
+      if (!heights || heights.latin === null || heights.cjk === null) {
+        problems.push(`${slug}: both saved-search rows were not found (${JSON.stringify(heights)})`);
+        continue;
+      }
+      if (Math.abs(heights.cjk - heights.latin) > 2)
+        problems.push(`${slug}: CJK row is ${heights.cjk}px, Latin row is ${heights.latin}px`);
+    }
+    expect(problems, "row heights").toEqual([]);
+  });
+
+  // P-20 -----------------------------------------------------------------------------------
+  test("[P-20] at 320 px the six screens and the long-name fixture have no horizontal overflow and dialog confirm labels fit", async ({
+    browser
+  }) => {
+    const problems: string[] = [];
+    const targets = [
+      ...SCREENS.map((s) => ({ name: s.name, path: s.path, heading: s.heading })),
+      { name: "long-name fixture", path: LONG_NAMES_PATH, heading: "Search health" },
+      { name: "all-statuses fixture", path: ALL_STATUSES_PATH, heading: "Search health" }
+    ];
+    const confirmFits = async (page: Page, dialog: string, label: string, where: string): Promise<void> => {
+      const fit = await page.evaluate(
+        ([scope, text]) => {
+          const button = Array.from(document.querySelectorAll(`${scope} .btn-primary`)).find((b) =>
+            (b.textContent ?? "").includes(text)
+          ) as HTMLElement | undefined;
+          return button
+            ? { found: true, scroll: button.scrollWidth, client: button.clientWidth, rectWidth: button.getBoundingClientRect().width }
+            : { found: false, scroll: 0, client: 0, rectWidth: 0 };
+        },
+        [dialog, label] as const
+      );
+      if (!fit.found) problems.push(`${where}: the confirm "${label}" was not found`);
+      else if (fit.scroll > fit.client) problems.push(`${where}: "${label}" scrollWidth ${fit.scroll} exceeds clientWidth ${fit.client}`);
+    };
+
+    for (const theme of ["light", "dark"] as const) {
+      const { page, close } = await newThemedPage(browser, { kind: "explicit", theme }, { width: 320, height: 800 });
+      try {
+        for (const target of targets) {
+          await gotoPath(page, target.path, target.heading);
+          const o = await page.evaluate(() => ({
+            scroll: document.documentElement.scrollWidth,
+            client: document.documentElement.clientWidth
+          }));
+          if (o.scroll > o.client) problems.push(`${target.name} (${theme}): horizontal overflow ${o.scroll}px in ${o.client}px`);
+        }
+
+        // The Save dialog and the saved-search delete confirmation.
+        await runSearchOnPage(page, "contract probe");
+        await page.locator("#search-save-new, #search-save-as").first().click();
+        await expect(page.getByRole("dialog", { name: /^Save (search|as)$/ })).toBeVisible();
+        await confirmFits(page, ".modal-box", "Save", `Save dialog (${theme})`);
+        await page.getByRole("dialog", { name: /^Save (search|as)$/ }).getByRole("button", { name: "Cancel", exact: true }).click();
+
+        await openManageSavedSearches(page);
+        // The row's actions carry the saved search's name in their accessible name, so use the id.
+        await page.locator(`#saved-search-delete-${savedSearchDomId(LATIN_NAME)}`).click({ timeout: 15_000 });
+        await expect(page.getByRole("button", { name: "Delete saved search permanently" })).toBeVisible();
+        await confirmFits(page, ".ops-sheet__panel", "Delete saved search permanently", `delete saved search (${theme})`);
+
+        // The retry-delete confirmation on Failed sync work (the failed delete job's Retry).
+        await gotoPath(page, SCREENS[2].path, SCREENS[2].heading);
+        await page
+          .locator("[data-testid=failed-sync-row]", { hasText: /·\s*Delete/ })
+          .getByTestId("failed-sync-retry")
+          .first()
+          .click({ timeout: 15_000 });
+        await expect(page.getByRole("dialog", { name: "Confirm delete sync work" })).toBeVisible();
+        await confirmFits(page, "#retry-delete-modal", "Retry deleting", `retry delete (${theme})`);
+      } finally {
+        await close();
+      }
+    }
+    expect(grouped(problems), "320px overflow and dialog labels").toEqual([]);
+  });
+
+  // The index promotion confirm (`Replace live index with target`) needs a prepared target index,
+  // which the swap fixture builds only on a stack that has not run the incident seed's failed
+  // Meilisearch tasks. It is covered where it can be built: the required lane's `operator.spec.ts`
+  // opens that dialog at 320 px in light and dark and asserts its buttons stay inside the dialog.
 });
