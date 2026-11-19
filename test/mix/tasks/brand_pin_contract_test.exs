@@ -6,6 +6,9 @@ defmodule Mix.Tasks.BrandPinContractTest do
   # tests below drive it through Req.Test stubs.
   use ExUnit.Case, async: false
 
+  # Req logs each redirect hop at debug level; the redirect tests would print it.
+  @moduletag :capture_log
+
   import ExUnit.CaptureIO
 
   alias Mix.Tasks.Brand.Update
