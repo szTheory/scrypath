@@ -6,6 +6,7 @@ These maintained project records are kept outside the `.planning/` root so GSD's
 - `MILESTONE-ARC.md`: milestone strategy and status context.
 - `PRE-OPERATOR-UI-READINESS.md`: approved non-UI readiness program, evidence dimensions, and operator UI exit gate.
 - [Scrypath milestone ratchet guide](../../prompts/scrypath-milestone-ratchet-roadmap.txt): evidence-gated horizons, quality/verification policy, and milestone closeout.
+- `BRAND-ADOPTION-PLAYBOOK.md`: living, evidence-graded lessons (with provenance) for adopting a brand book, re-skinning a UI and building a storybook and copy catalog. Read before any rebrand, re-skin or catalog work; update it when a phase proves or breaks a rule.
 - `PERFORMANCE-BASELINE.md`: performance measurements and baselines.
 - `QUALITY-LEDGER.md`: quality gate and verification evidence.
 - `milestone-candidates.md`: deferred milestone ideas and selection context.
