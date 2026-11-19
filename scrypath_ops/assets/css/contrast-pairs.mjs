@@ -17,14 +17,16 @@
 //       occurrence in app.css (the `color:` CSS property only — not border-color,
 //       background, box-shadow) is tracked here. Any untracked (alpha%, selector)
 //       pair causes `make contrast` to fail.
+//   (4) Phase 187: `--ops-text-muted` is an opaque hex (Muted Ink on light, Muted Pale
+//       on dark), so the entries that routed through `color: var(--ops-text-muted)`
+//       are gone. That token is covered by the muted text pairs on four backdrops
+//       and by the opaque-token guard in contrast-checker.mjs. Only the direct
+//       `color: color-mix(...)` declarations remain here, until the plan that
+//       converts them retires this manifest.
 //
 // Field reference:
 //   selector  — exact CSS selector as it appears in app.css
 //   alpha     — decimal 0–1 (e.g. 0.55 for 55%)
-//   css_var   — optional named CSS variable for readable muted text entries that
-//               route through `color: var(--ops-text-muted)` instead of a raw
-//               inline color-mix declaration; the token declaration must carry
-//               the same alpha in app.css
 //   fg_token  — token name without `--color-` prefix (always "base-content" here)
 //   bg_token  — token name without `--color-` prefix (the opaque surface)
 //   role      — "text" → AA 4.5 / AAA 7.0
@@ -34,55 +36,6 @@
 //   note      — human-readable description
 
 export const MUTED_PAIRS = [
-  {
-    selector: ".ops-verdict__label",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "neutral verdict context label"
-  },
-  // app.css line 252 — header utility override
-  {
-    selector: ".ops-header .text-base-content\\/60",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "header utility override"
-  },
-  // app.css — shell action label and platform keycap
-  {
-    selector: ".ops-command-hint",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "Jump to surface action label"
-  },
-  // app.css line 256 — shell utility override
-  {
-    selector: ".ops-shell .text-base-content\\/60",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "shell utility override"
-  },
-  // app.css line 537 — meta/secondary text
-  {
-    selector: ".ops-text-meta",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "meta/secondary text — xs size"
-  },
   // app.css line 748 — timestamp label text
   {
     selector: ".ops-time__label",
@@ -91,36 +44,6 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "timestamp label text"
-  },
-  // app.css line 741 — timestamp text container
-  {
-    selector: ".ops-time",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "timestamp text container"
-  },
-  // app.css — timestamp copy outcome feedback
-  {
-    selector: ".ops-time__feedback",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "timestamp copy success feedback"
-  },
-  // app.css — retained source-evidence note
-  {
-    selector: ".ops-time__retained",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "retained operational evidence note"
   },
   // app.css line 877 — sidebar nav group label
   {
@@ -131,16 +54,6 @@ export const MUTED_PAIRS = [
     role: "text",
     note: "uppercase sidebar nav group label"
   },
-  // Full schema module name beside the visible radio.
-  {
-    selector: ".ops-schema-picker__module-name",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "full schema module name"
-  },
   // app.css line 899 — sidebar nav item text
   {
     selector: ".ops-nav-item",
@@ -149,356 +62,6 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "sidebar nav item text"
-  },
-  // app.css line 1457 — signal metric term
-  {
-    selector: ".ops-signal-metrics dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "uppercase signal metric term"
-  },
-  // app.css line 691 — breadcrumb text
-  {
-    selector: ".ops-trail__crumb",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "breadcrumb text"
-  },
-  // app.css — fact-list labels (Inputs used for these results, row details)
-  {
-    selector: ".ops-facts dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "fact-list label"
-  },
-  // app.css — muted label (.ops-time-preference)
-  {
-    selector: ".ops-time-preference",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-help-content p)
-  {
-    selector: ".ops-help-content p",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-help-definitions dd)
-  {
-    selector: ".ops-help-definitions dd",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-schema-identifiers dt)
-  {
-    selector: ".ops-schema-identifiers dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-search-query-hint)
-  {
-    selector: ".ops-search-query-hint",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-description)
-  {
-    selector: ".ops-hit-description",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-source)
-  {
-    selector: ".ops-hit-source",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-fields dt)
-  {
-    selector: ".ops-hit-fields dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-value-null)
-  {
-    selector: ".ops-value-null",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-settings-diff td[data-label]::before)
-  {
-    selector: ".ops-settings-diff td[data-label]::before",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-setting-description)
-  {
-    selector: ".ops-setting-description",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-rank)
-  {
-    selector: ".ops-hit-rank",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-source, .ops-hit-id)
-  {
-    selector: ".ops-hit-source, .ops-hit-id",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-preview dt)
-  {
-    selector: ".ops-hit-preview dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-inspection summary)
-  {
-    selector: ".ops-hit-inspection summary",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-signal-success dt)
-  {
-    selector: ".ops-signal-success dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-signal-success dd)
-  {
-    selector: ".ops-signal-success dd",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-sync-identity)
-  {
-    selector: ".ops-sync-identity",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-hit-inspection .ops-disclosure > summary)
-  {
-    selector: ".ops-hit-inspection .ops-disclosure > summary",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label (.ops-saved-search-status)
-  {
-    selector: ".ops-saved-search-status",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-saved-search-menu__item[aria-current=\"true\"] .ops-saved-search-menu__name::after",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-saved-search-menu__description, .ops-saved-search-row__description",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-saved-search-menu__empty",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-saved-search-row--loaded .ops-saved-search-row__name::after",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-failed-filters__legend",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-filter-chip__count",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-filter-chip--quiet",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-failed-row__facts",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — muted label
-  {
-    selector: ".ops-failed-details dt",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "muted label"
-  },
-  // app.css — "Next step" footer label
-  {
-    selector: ".ops-handoff__eyebrow",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "Next step footer label"
-  },
-  // app.css line 746 — hint copy
-  {
-    selector: ".ops-handoff__hint",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "hint copy"
-  },
-  // app.css line 833 — hint copy
-  {
-    selector: ".ops-preflight__hint",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "hint copy"
   },
   // app.css line 815 — fieldset hint copy
   {
@@ -553,26 +116,6 @@ export const MUTED_PAIRS = [
     bg_token: "base-100",
     role: "text",
     note: "table row header text"
-  },
-  // app.css line 1115 — command palette item hint
-  {
-    selector: ".ops-cmdk__item-hint",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "palette item hint"
-  },
-  // app.css line 1120 — command palette empty state
-  {
-    selector: ".ops-cmdk__empty",
-    css_var: "ops-text-muted",
-    alpha: 0.64,
-    fg_token: "base-content",
-    bg_token: "base-100",
-    role: "text",
-    note: "palette empty state"
   },
   // app.css line 1144 — cheatsheet description text
   {

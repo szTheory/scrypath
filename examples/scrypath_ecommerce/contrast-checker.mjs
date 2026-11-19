@@ -32,6 +32,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_CSS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/app.css");
 // D-11: muted-alpha manifest beside DESIGN-TOKENS.md
 const PAIRS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/contrast-pairs.mjs");
+// Phase 187: the pinned brand token source the opaque muted guard reads
+const BRAND_TOKENS_PATH = path.resolve(__dirname, "../../brand/tokens.json");
 // D-17: report output (mirrors ADMIN_SCREENSHOT_DIR convention)
 const REPORT_DIR = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
 
@@ -93,7 +95,6 @@ const PAIR_RULES = [
   { fg: "base-content",       bg: "base-200",   role: "text" },
   { fg: "base-content",       bg: "base-300",   role: "text" },
   { fg: "primary-content",    bg: "primary",    role: "text" }, // ordinary button labels require 4.5
-  { fg: "primary-content",    bg: "primary-strong", role: "text" }, // selected text fills → 4.5 threshold
   { fg: "secondary-content",  bg: "secondary",  role: "text" },
   { fg: "accent-content",     bg: "accent",     role: "text" },
   { fg: "neutral-content",    bg: "neutral",    role: "text" },
@@ -533,120 +534,89 @@ if (process.argv.includes("--self-test")) {
     nestedSelectorOk
   );
 
-  // Phase 132: theme blocks now include a scoped text-bearing primary-strong token.
-  // The token-count guard must require that semantic token instead of only counting.
-  // The hash comes from a constant so this synthetic fixture holds no retired
-  // identity literal (the deny-list scan in ui-tokens.test.mjs reads this file).
-  // Runtime values are unchanged.
-  const HASH = "#";
-  const primaryStrongBlocks = parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
-    name: "light";
-    --color-base-100: ${HASH}fffdf8;
-    --color-base-200: ${HASH}faf7f2;
-    --color-base-300: ${HASH}ded8ce;
-    --color-base-content: ${HASH}141923;
-    --color-primary: ${HASH}5b4ad1;
-    --color-primary-content: ${HASH}f4f1ea;
-    --color-primary-strong: ${HASH}5b4ad1;
-    --color-secondary: ${HASH}a85d2e;
-    --color-secondary-content: ${HASH}fffdf8;
-    --color-accent: ${HASH}6c5ce7;
-    --color-accent-content: ${HASH}fffdf8;
-    --color-neutral: ${HASH}2a3446;
-    --color-neutral-content: ${HASH}f4f1ea;
-    --color-info: #5ca9e6;
-    --color-info-content: #0c0f14;
-    --color-success: #4fae74;
-    --color-success-content: #0c0f14;
-    --color-warning: #d9a441;
-    --color-warning-content: #0c0f14;
-    --color-error: #d96262;
-    --color-error-content: #0c0f14;
-  }`);
-  let primaryStrongTokenOk = true;
-  try {
-    assertTokenCount(primaryStrongBlocks);
-  } catch (err) {
-    primaryStrongTokenOk = false;
-  }
-  assert(
-    "Phase 132: token guard accepts 21 --color-* tokens including primary-strong",
-    primaryStrongTokenOk,
-    primaryStrongTokenOk
-  );
-
-  const missingPrimaryStrongBlocks = {
-    light: Object.fromEntries(
-      Object.entries(primaryStrongBlocks.light).filter(([key]) => key !== "primary-strong")
-    ),
-  };
-  let missingPrimaryStrongThrew = false;
-  try {
-    assertTokenCount(missingPrimaryStrongBlocks);
-  } catch (err) {
-    missingPrimaryStrongThrew = true;
-  }
-  assert(
-    "Phase 132: token guard rejects theme blocks without primary-strong",
-    missingPrimaryStrongThrew,
-    missingPrimaryStrongThrew
-  );
-
-  // Phase 132: readable muted text can route through the named AA-floor token instead
-  // of a raw color-mix declaration. The manifest css_var entry keeps that source in
-  // the D-15 bidirectional lockstep contract.
-  const namedMutedCss = `@plugin "../vendor/daisyui-theme" {
-    name: "light";
-    --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
-  }
-  @layer ops {
-    .ops-fixture-muted { color: var(--ops-text-muted); }
-  }`;
-  const namedMutedManifest = [
-    {
-      selector: ".ops-fixture-muted",
-      css_var: "ops-text-muted",
-      alpha: 0.64,
-      fg_token: "base-content",
-      bg_token: "base-100",
-      role: "text",
-    },
+  // Phase 187: the theme blocks declare exactly daisyUI's 20 --color-* variables; the old second
+  // primary tier (primary-strong) is gone. The fixture is built from the name list so it holds one
+  // plain brand value and no retired identity literal (the deny-list scan in ui-tokens.test.mjs
+  // reads this file).
+  const COLOR_VARIABLES = [
+    "base-100", "base-200", "base-300", "base-content",
+    "primary", "primary-content", "secondary", "secondary-content",
+    "accent", "accent-content", "neutral", "neutral-content",
+    "info", "info-content", "success", "success-content",
+    "warning", "warning-content", "error", "error-content",
   ];
-  let namedMutedOk = true;
-  try {
-    assertNoUntrackedMutedTokens(namedMutedCss, namedMutedManifest);
-  } catch (err) {
-    namedMutedOk = false;
-  }
-  assert(
-    "Phase 132: named muted token css_var entries are matched against color: var(--ops-text-muted)",
-    namedMutedOk,
-    namedMutedOk
-  );
+  const themeBlockFixture = (names) => parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
+    name: "light";
+${names.map((name) => `    --color-${name}: #1e1220;`).join("\n")}
+  }`);
+  assert("Phase 187: the self-test fixture lists 20 --color-* variables", COLOR_VARIABLES.length === 20, COLOR_VARIABLES.length);
 
-  let untrackedNamedMutedThrew = false;
+  let twentyTokensOk = true;
   try {
-    assertNoUntrackedMutedTokens(namedMutedCss, []);
+    assertTokenCount(themeBlockFixture(COLOR_VARIABLES));
   } catch (err) {
-    untrackedNamedMutedThrew = true;
+    twentyTokensOk = false;
   }
-  assert(
-    "Phase 132: untracked named muted token consumer throws",
-    untrackedNamedMutedThrew,
-    untrackedNamedMutedThrew
-  );
+  assert("Phase 187: token guard accepts exactly 20 --color-* tokens", twentyTokensOk, twentyTokensOk);
 
-  const wrongNamedMutedCss = namedMutedCss.replace("64%", "63%");
-  let wrongNamedMutedThrew = false;
+  let twentyFirstThrew = false;
   try {
-    assertNoUntrackedMutedTokens(wrongNamedMutedCss, namedMutedManifest);
+    assertTokenCount(themeBlockFixture([...COLOR_VARIABLES, "primary-strong"]));
   } catch (err) {
-    wrongNamedMutedThrew = true;
+    twentyFirstThrew = true;
   }
-  assert(
-    "Phase 132: named muted token alpha must match css_var manifest alpha",
-    wrongNamedMutedThrew,
-    wrongNamedMutedThrew
+  assert("Phase 187: token guard rejects a planted 21st --color-* token", twentyFirstThrew, twentyFirstThrew);
+
+  let nineteenThrew = false;
+  try {
+    assertTokenCount(themeBlockFixture(COLOR_VARIABLES.filter((name) => name !== "info")));
+  } catch (err) {
+    nineteenThrew = true;
+  }
+  assert("Phase 187: token guard rejects a theme block with a missing --color-* token", nineteenThrew, nineteenThrew);
+
+  // Phase 187: --ops-text-muted is opaque Muted Ink (light) and Muted Pale (dark), read from the
+  // pinned brand tokens. A named alpha mix, a wrong hex or an eight-digit hex on it must fail.
+  const mutedBrandFixture = {
+    color: {
+      secondary: {
+        "muted-ink": { $value: { hex: "#5E5360" } },
+        "muted-pale": { $value: { hex: "#BBAAC0" } },
+      },
+    },
+  };
+  const mutedThemesFixture = (light, dark) => ({
+    light: { "ops-text-muted": light },
+    dark: { "ops-text-muted": dark },
+  });
+  const expectMutedThrow = (label, themes) => {
+    let threw = false;
+    try {
+      assertOpaqueMutedToken(themes, mutedBrandFixture);
+    } catch (err) {
+      threw = /D-15 Guard 2/.test(err.message);
+    }
+    assert(label, threw, threw);
+  };
+
+  let opaqueMutedOk = true;
+  try {
+    assertOpaqueMutedToken(mutedThemesFixture("#5e5360", "#bbaac0"), mutedBrandFixture);
+  } catch (err) {
+    opaqueMutedOk = false;
+  }
+  assert("Phase 187: opaque muted token accepts the Muted Ink and Muted Pale hexes", opaqueMutedOk, opaqueMutedOk);
+  expectMutedThrow(
+    "Phase 187: a planted alpha mix on --ops-text-muted fails the opaque guard",
+    mutedThemesFixture("color-mix(in oklch, var(--color-base-content) 64%, transparent)", "#bbaac0")
+  );
+  expectMutedThrow(
+    "Phase 187: a muted hex that is not the brand Muted Pale fails the opaque guard",
+    mutedThemesFixture("#5e5360", "#bbaac1")
+  );
+  expectMutedThrow(
+    "Phase 187: an eight-digit (alpha) hex on --ops-text-muted fails the opaque guard",
+    mutedThemesFixture("#5e5360cc", "#bbaac0")
   );
 
   // WR-01: the threshold compare must use the UN-ROUNDED ratio. No discrete 6-hex
@@ -685,19 +655,19 @@ if (process.argv.includes("--self-test")) {
 // ─── D-15 LOCKSTEP GUARDS ─────────────────────────────────────────────────────
 
 // Guard 1 — Token count assertion
-// D-10 says "22 semantic --color-* values"; direct parse of app.css now shows 21
-// explicit declarations per theme block (4 base + 17 semantic = 21). The vendor
-// daisyui-theme plugin injects non-color tokens (--radius-*, --size-*, --border,
-// --depth, --noise, etc.) that are NOT --color-* prefixed. Lock assertion to 21
-// and require the scoped text-bearing primary-strong token.
+// daisyUI requires exactly 20 --color-* variables per theme (4 base + 16 semantic). Phase 187
+// locks the count at 20 and drops the old second primary tier (primary-strong), so a 21st
+// variable fails here just as a missing one does. The vendor daisyui-theme plugin injects
+// non-color tokens (--radius-*, --size-*, --border, --depth, --noise, etc.) that are NOT
+// --color-* prefixed and are not counted.
 function assertTokenCount(blocks) {
   for (const [theme, tokens] of Object.entries(blocks)) {
     const count = Object.keys(tokens).length;
-    if (count !== 21 || !tokens["primary-strong"]) {
+    if (count !== 20) {
       throw new Error(
-        `D-15 Guard 1: expected 21 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
+        `D-15 Guard 1: expected 20 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
           `Tokens found: ${Object.keys(tokens).join(", ")}\n` +
-          `Note: lock is 21 because Phase 132 adds --color-primary-strong; --radius-*, ` +
+          `Note: the lock is 20 (daisyUI's color variables); --radius-*, ` +
           `--size-*, --border, --depth, --noise are non-color tokens injected by the ` +
           `daisyui-theme plugin and are NOT --color-* prefixed.`
       );
@@ -705,10 +675,48 @@ function assertTokenCount(blocks) {
   }
 }
 
-// Guard 2 — Untracked muted token check
+// Guard 2 (named token) — --ops-text-muted is opaque
+// Phase 187: `var(--ops-text-muted)` is plain text color, not an alpha mix. In each theme the
+// property must be a six-digit hex equal to the pinned brand token (Muted Ink on light, Muted Pale on
+// dark), so the N-03 muted pairs on four backdrops are computed from real, opaque colors.
+function brandHexAt(brandTokens, tokenPath) {
+  let node = brandTokens;
+  for (const segment of tokenPath.split(".")) {
+    if (node === null || typeof node !== "object" || !Object.hasOwn(node, segment)) {
+      throw new Error(`Unknown brand token path: ${tokenPath}`);
+    }
+    node = node[segment];
+  }
+  const hex = node?.$value?.hex;
+  if (typeof hex !== "string" || !/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`Brand token ${tokenPath} has no $value.hex`);
+  return hex.toLowerCase();
+}
+
+function assertOpaqueMutedToken(themes, brandTokens) {
+  // Local on purpose: the --self-test block runs before module-level consts are initialized.
+  const brandPaths = { light: "color.secondary.muted-ink", dark: "color.secondary.muted-pale" };
+  for (const [theme, tokenPath] of Object.entries(brandPaths)) {
+    const value = themes[theme]?.["ops-text-muted"];
+    if (typeof value !== "string" || !/^#[0-9a-f]{6}$/i.test(value)) {
+      throw new Error(
+        `D-15 Guard 2: --ops-text-muted in the "${theme}" theme must be an opaque six-digit hex, got ${String(value)}.\n` +
+          `  Text never uses alpha (no color-mix, rgba or eight-digit hex).`
+      );
+    }
+    const expected = brandHexAt(brandTokens, tokenPath);
+    if (value.toLowerCase() !== expected) {
+      throw new Error(
+        `D-15 Guard 2: --ops-text-muted in the "${theme}" theme is ${value}, expected ${expected} (${tokenPath} in brand/tokens.json).`
+      );
+    }
+  }
+}
+
+// Guard 2 (direct mixes) — Untracked muted text check
 // Find all `color:` properties in app.css that use color-mix(in oklch, var(--color-base-content) NN%, transparent).
 // Only the `color:` CSS property is checked — NOT border-color, background, box-shadow, --shadow-*, fill.
-// Fail if any (selector, alpha) pair is NOT present in the MUTED_PAIRS manifest.
+// Fail if any (selector, alpha) pair is NOT present in the MUTED_PAIRS manifest. Plan 08 converts the
+// remaining direct declarations and retires the manifest.
 function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // Find all color-mix muted text patterns in the form:
   //   color: color-mix(in oklch, var(--color-base-content) NN%, transparent)
@@ -724,8 +732,6 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   // `border-color:`/`background-color:` because those have a word char (`r`/`d`)
   // immediately before `color:`, not start-of-line, `{`, or `;`.
   const colorMixRe = /(?:^\s*|[{;]\s*)color:\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/;
-  const namedMutedRe = /(?:^\s*|[{;]\s*)color:\s*var\(--([\w-]+)\)/;
-  const cssVarAlphaRe = /--([\w-]+):\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/g;
   // We need to find the selector for each match. Walk backwards from the match line.
   // Allow leading whitespace (CSS is often indented within @layer blocks).
   // Must start with an alphanumeric, dot, hash, colon, or bracket — NOT @, /, or *
@@ -735,48 +741,13 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
   const sameLineSelectorRe = /^\s*([^{}@]+?)\s*\{/;
 
   const found = [];
-  const namedFound = [];
-  const cssVarAlphas = new Map();
-  const cssVarEntries = mutedPairs.filter((pair) => pair.css_var);
-
-  let cssVarMatch;
-  while ((cssVarMatch = cssVarAlphaRe.exec(cssText)) !== null) {
-    const cssVar = cssVarMatch[1];
-    const alpha = parseInt(cssVarMatch[2], 10) / 100;
-    if (!cssVarAlphas.has(cssVar)) {
-      cssVarAlphas.set(cssVar, []);
-    }
-    cssVarAlphas.get(cssVar).push(alpha);
-  }
-
-  for (const pair of cssVarEntries) {
-    const alphas = cssVarAlphas.get(pair.css_var);
-    if (!alphas || alphas.length === 0) {
-      throw new Error(
-        `D-15 Guard 2: named muted token --${pair.css_var} is referenced by ` +
-          `"${pair.selector}" but no matching declaration exists in app.css.`
-      );
-    }
-
-    const mismatched = alphas.find((alpha) => alpha !== pair.alpha);
-    if (mismatched !== undefined) {
-      throw new Error(
-        `D-15 Guard 2: named muted token --${pair.css_var} alpha mismatch!\n` +
-          `  Manifest alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
-          `  CSS alpha: ${mismatched} (${Math.round(mismatched * 100)}%)\n` +
-          `  Keep contrast-pairs.mjs css_var entries in lockstep with app.css.`
-      );
-    }
-  }
 
   for (let i = 0; i < lines.length; i++) {
     const colorMatch = colorMixRe.exec(lines[i]);
-    const namedMatch = namedMutedRe.exec(lines[i]);
-    if (!colorMatch && !namedMatch) continue;
+    if (!colorMatch) continue;
 
-    const alphaPercent = colorMatch ? parseInt(colorMatch[1], 10) : null;
-    const alpha = colorMatch ? alphaPercent / 100 : null;
-    const cssVar = namedMatch ? namedMatch[1] : null;
+    const alphaPercent = parseInt(colorMatch[1], 10);
+    const alpha = alphaPercent / 100;
 
     // CR-01: if the matching line itself opens a rule (contains a `{` before the match),
     // the selector is on this line — use it directly instead of walking backwards.
@@ -838,16 +809,11 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
     if (!selector) {
       throw new Error(
         `D-15 Guard 2: found untracked muted color: pattern at line ${i + 1} ` +
-          `${colorMatch ? `(alpha ${alphaPercent}%)` : `(--${cssVar})`} but could not determine its selector.`
+          `(alpha ${alphaPercent}%) but could not determine its selector.`
       );
     }
 
-    if (colorMatch) {
-      found.push({ selector, alpha, lineNumber: i + 1 });
-    } else if (cssVarAlphas.has(cssVar)) {
-      const alphaForVar = cssVarAlphas.get(cssVar)?.[0];
-      namedFound.push({ selector, css_var: cssVar, alpha: alphaForVar, lineNumber: i + 1 });
-    }
+    found.push({ selector, alpha, lineNumber: i + 1 });
   }
 
   // Check each found (selector, alpha) pair is in the manifest
@@ -867,50 +833,21 @@ function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
     }
   }
 
-  for (const { selector, css_var, alpha, lineNumber } of namedFound) {
-    const inManifest = mutedPairs.some(
-      (pair) =>
-        pair.selector === selector &&
-        pair.css_var === css_var &&
-        pair.alpha === alpha
-    );
-    if (!inManifest) {
-      throw new Error(
-        `D-15 Guard 2: untracked named muted text token!\n` +
-          `  Selector: "${selector}" at app.css line ${lineNumber}\n` +
-          `  CSS var: --${css_var}\n` +
-          `  Alpha: ${alpha} (${Math.round(alpha * 100)}%)\n` +
-          `  This (selector, css_var, alpha) tuple is NOT present in contrast-pairs.mjs.\n` +
-          `  Add an entry for "${selector}" with css_var: "${css_var}" and alpha: ${alpha}.\n` +
-          `  (D-15: the lockstep guard ensures all named muted text tokens are contrast-gated.)`
-      );
-    }
-  }
-
   // WR-02: reverse lockstep — every non-decorative manifest entry must correspond to an
   // actual `color: color-mix(...)` occurrence found in app.css (at the exact alpha
   // tolerance). This catches stale/renamed/removed manifest entries that no longer match
   // any CSS rule, which the forward (css→manifest) scan above cannot detect.
   for (const pair of mutedPairs) {
     if (pair.role === "decorative") continue;
-    const hasCssHit = pair.css_var
-      ? namedFound.some(
-          (f) =>
-            f.selector === pair.selector &&
-            f.css_var === pair.css_var &&
-            f.alpha === pair.alpha
-        )
-      : found.some(
-          (f) => f.selector === pair.selector && f.alpha === pair.alpha
-        );
+    const hasCssHit = found.some(
+      (f) => f.selector === pair.selector && f.alpha === pair.alpha
+    );
     if (!hasCssHit) {
       throw new Error(
         `D-15 Guard 2 (reverse): stale manifest entry!\n` +
           `  Selector: "${pair.selector}" alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
           `  This entry is in contrast-pairs.mjs but no matching ` +
-          (pair.css_var
-            ? `color: var(--${pair.css_var}) rule exists in app.css with a matching token alpha.\n`
-            : `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) rule exists in app.css.\n`) +
+          `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) rule exists in app.css.\n` +
           `  Remove the stale entry from scrypath_ops/assets/css/contrast-pairs.mjs, or ` +
           `restore the corresponding rule in app.css.\n` +
           `  (D-15: the lockstep guard is bidirectional — manifest and CSS must agree both ways.)`
@@ -1053,7 +990,7 @@ function evaluateLiveBindings(css, themes, focusBindings, surfaceBindings) {
   // Opaque shell floors and actual resting/selected/menu fills. Each theme's
   // live token values are resolved; the muted floor is not applied to base-300,
   // where the theme toggle uses full base-content, not muted text.
-  const surfaces = ["ops-bg", "ops-surface-1", "ops-surface-2", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
+  const surfaces = ["ops-bg", "ops-surface-1", "ops-surface-2", "ops-sunken", "ops-selected", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
   for (const [theme, properties] of Object.entries(themes)) {
     for (const surface of [...surfaces, "color-base-300"]) {
       const bg = colorValue(`var(--${surface})`, properties);
@@ -1109,6 +1046,13 @@ async function main() {
 
   // (b) D-15 guards
   assertTokenCount(blocks);
+  let brandTokens;
+  try {
+    brandTokens = JSON.parse(await readFile(BRAND_TOKENS_PATH, "utf8"));
+  } catch (err) {
+    throw new Error(`Could not read the pinned brand tokens at ${BRAND_TOKENS_PATH}: ${err.message}`);
+  }
+  assertOpaqueMutedToken(properties, brandTokens);
   assertNoUntrackedMutedTokens(cssText, mutedPairs);
 
   // (c) + (d) Evaluate pairs for both themes

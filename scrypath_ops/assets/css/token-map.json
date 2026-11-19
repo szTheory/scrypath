@@ -5,107 +5,102 @@
     {
       "property": "--color-base-100",
       "light": { "disposition": "adopt", "source": "color.light.panel", "applied": true },
-      "dark": { "disposition": "adopt", "source": "color.dark.night-panel", "applied": false }
+      "dark": { "disposition": "adopt", "source": "color.dark.night-panel", "applied": true }
     },
     {
       "property": "--color-base-200",
-      "light": { "disposition": "adopt", "source": "color.light.page", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.page", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": true }
     },
     {
       "property": "--color-base-300",
-      "light": { "disposition": "adopt", "source": "color.light.hairline", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.hairline", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": true }
     },
     {
       "property": "--color-base-content",
-      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": true }
     },
     {
       "property": "--color-primary",
-      "light": { "disposition": "adopt", "source": "color.light.plum", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.orchid", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.plum", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.orchid", "applied": true }
     },
     {
       "property": "--color-primary-content",
       "light": { "disposition": "adopt", "source": "color.light.panel", "applied": true },
-      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": false }
-    },
-    {
-      "property": "--color-primary-strong",
-      "light": { "disposition": "retire", "applied": false, "reason": "D4 retires primary-strong; Phase 187 deletes the property and this row together" },
-      "dark": { "disposition": "retire", "applied": false, "reason": "D4 retires primary-strong; Phase 187 deletes the property and this row together" }
+      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": true }
     },
     {
       "property": "--color-secondary",
-      "light": { "disposition": "adopt", "source": "color.secondary.sunken-page", "applied": false, "reason": "D4 quiet neutral replaces the copper secondary" },
-      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": false, "reason": "D4 quiet neutral replaces the copper secondary" }
+      "light": { "disposition": "adopt", "source": "color.secondary.sunken-page", "applied": true, "reason": "D4 quiet neutral replaces the copper secondary" },
+      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": true, "reason": "D4 quiet neutral replaces the copper secondary" }
     },
     {
       "property": "--color-secondary-content",
-      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": true }
     },
     {
       "property": "--color-accent",
-      "light": { "disposition": "adopt", "source": "color.light.plum", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.orchid", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.plum", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.orchid", "applied": true }
     },
     {
       "property": "--color-accent-content",
       "light": { "disposition": "adopt", "source": "color.light.panel", "applied": true },
-      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": false }
+      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": true }
     },
     {
       "property": "--color-neutral",
-      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.ink", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.night-hairline", "applied": true }
     },
     {
       "property": "--color-neutral-content",
-      "light": { "disposition": "adopt", "source": "color.light.page", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.page", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.pale-ink", "applied": true }
     },
     {
       "property": "--color-info",
-      "light": { "disposition": "local", "target": "#5ca9e6", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#5ca9e6", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#5e5360", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Muted Ink" },
+      "dark": { "disposition": "local", "target": "#bbaac0", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Muted Pale" }
     },
     {
       "property": "--color-info-content",
-      "light": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#ffffff", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Panel" },
+      "dark": { "disposition": "local", "target": "#160e19", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Night" }
     },
     {
       "property": "--color-success",
-      "light": { "disposition": "local", "target": "#4fae74", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#4fae74", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#1d6b3c", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Clear text hex" },
+      "dark": { "disposition": "local", "target": "#7fcb9a", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Clear text hex" }
     },
     {
       "property": "--color-success-content",
-      "light": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#ffffff", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Panel" },
+      "dark": { "disposition": "local", "target": "#160e19", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Night" }
     },
     {
       "property": "--color-warning",
-      "light": { "disposition": "local", "target": "#d9a441", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#d9a441", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#8a5a00", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Retrying text hex" },
+      "dark": { "disposition": "local", "target": "#e3b25c", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Retrying text hex" }
     },
     {
       "property": "--color-warning-content",
-      "light": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#ffffff", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Panel" },
+      "dark": { "disposition": "local", "target": "#160e19", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Night" }
     },
     {
       "property": "--color-error",
-      "light": { "disposition": "local", "target": "#d96262", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#d96262", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#b0360b", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Failed text hex" },
+      "dark": { "disposition": "local", "target": "#ff9a6b", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Failed text hex" }
     },
     {
       "property": "--color-error-content",
-      "light": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" },
-      "dark": { "disposition": "local", "target": "#0c0f14", "applied": true, "reason": "no brand fill color exists (send-back item 6); Phase 187 decides local or retire" }
+      "light": { "disposition": "local", "target": "#ffffff", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Panel" },
+      "dark": { "disposition": "local", "target": "#160e19", "applied": true, "reason": "LD-1 (UI-SPEC Local Defaults Register): daisyUI needs an info, success, warning and error fill plus content, and the brand has none; alias existing brand hexes. Never painted as a fill in ops; Night" }
     },
     {
       "property": "--radius-selector",
@@ -149,13 +144,13 @@
     },
     {
       "property": "--ops-bg",
-      "light": { "disposition": "adopt", "source": "color.light.page", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.light.page", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.dark.night", "applied": true }
     },
     {
       "property": "--ops-surface-1",
       "light": { "disposition": "adopt", "source": "color.light.panel", "applied": true },
-      "dark": { "disposition": "adopt", "source": "color.dark.night-panel", "applied": false }
+      "dark": { "disposition": "adopt", "source": "color.dark.night-panel", "applied": true }
     },
     {
       "property": "--ops-surface-2",
@@ -163,29 +158,64 @@
       "dark": { "disposition": "retire", "applied": false, "reason": "D4 introduces --ops-sunken instead of aliasing a flipped meaning; Phase 187 deletes the property and this row together" }
     },
     {
+      "property": "--ops-sunken",
+      "light": { "disposition": "adopt", "source": "color.secondary.sunken-page", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.code.background-dark", "applied": true, "reason": "Night Sunken is the brand code background (UI-SPEC: Night Sunken is color.code.background-dark)" }
+    },
+    {
+      "property": "--ops-selected",
+      "light": { "disposition": "adopt", "source": "color.secondary.selected-page", "applied": true },
+      "dark": { "disposition": "derive", "target": "#2b2130", "applied": true, "reason": "Selected Night comes from brand.json and is absent from tokens.json" }
+    },
+    {
       "property": "--ops-selection",
-      "light": { "disposition": "adopt", "source": "color.secondary.selected-page", "applied": false },
-      "dark": { "disposition": "derive", "target": "#2b2130", "applied": false, "reason": "Selected Night comes from brand.json and is absent from tokens.json" }
+      "light": { "disposition": "adopt", "source": "color.secondary.selected-page", "applied": true },
+      "dark": { "disposition": "derive", "target": "#2b2130", "applied": true, "reason": "Selected Night comes from brand.json and is absent from tokens.json" }
     },
     {
       "property": "--ops-theme-selection",
-      "light": { "disposition": "adopt", "source": "color.secondary.selected-page", "applied": false },
-      "dark": { "disposition": "derive", "target": "#2b2130", "applied": false, "reason": "Selected Night comes from brand.json and is absent from tokens.json" }
+      "light": { "disposition": "adopt", "source": "color.secondary.selected-page", "applied": true },
+      "dark": { "disposition": "derive", "target": "#2b2130", "applied": true, "reason": "Selected Night comes from brand.json and is absent from tokens.json" }
+    },
+    {
+      "property": "--ops-control-edge",
+      "light": { "disposition": "adopt", "source": "color.secondary.control-edge", "applied": true },
+      "dark": { "disposition": "derive", "target": "#8f7f94", "applied": true, "reason": "dark Control Edge is named in brand.json prose (Control Edge: Dark uses #8F7F94) and is absent from tokens.json" }
     },
     {
       "property": "--ops-text-muted",
-      "light": { "disposition": "adopt", "source": "color.secondary.muted-ink", "applied": false, "reason": "D4 opaque muted text replaces the alpha mix" },
-      "dark": { "disposition": "adopt", "source": "color.secondary.muted-pale", "applied": false, "reason": "D4 opaque muted text replaces the alpha mix" }
+      "light": { "disposition": "adopt", "source": "color.secondary.muted-ink", "applied": true, "reason": "D4 opaque muted text replaces the alpha mix" },
+      "dark": { "disposition": "adopt", "source": "color.secondary.muted-pale", "applied": true, "reason": "D4 opaque muted text replaces the alpha mix" }
+    },
+    {
+      "property": "--ops-status-failed",
+      "light": { "disposition": "adopt", "source": "color.status.failed-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.failed-text-dark", "applied": true }
+    },
+    {
+      "property": "--ops-status-retrying",
+      "light": { "disposition": "adopt", "source": "color.status.retrying-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.retrying-text-dark", "applied": true }
+    },
+    {
+      "property": "--ops-status-pending",
+      "light": { "disposition": "adopt", "source": "color.status.pending-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.pending-text-dark", "applied": true }
+    },
+    {
+      "property": "--ops-status-clear",
+      "light": { "disposition": "adopt", "source": "color.status.clear-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.clear-text-dark", "applied": true }
     },
     {
       "property": "--ops-warning-text",
-      "light": { "disposition": "adopt", "source": "color.status.retrying-text-light", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.status.retrying-text-dark", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.status.retrying-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.retrying-text-dark", "applied": true }
     },
     {
       "property": "--ops-error-text",
-      "light": { "disposition": "adopt", "source": "color.status.failed-text-light", "applied": false },
-      "dark": { "disposition": "adopt", "source": "color.status.failed-text-dark", "applied": false }
+      "light": { "disposition": "adopt", "source": "color.status.failed-text-light", "applied": true },
+      "dark": { "disposition": "adopt", "source": "color.status.failed-text-dark", "applied": true }
     }
   ]
 }

@@ -200,6 +200,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
     # primary is a convenient contrast-breaking color: it is a fill, not a surface.
     live_dark_primary = UiTokens.theme_value!(original_css, "dark", "--color-primary")
     live_light_primary = UiTokens.theme_value!(original_css, "light", "--color-primary")
+    live_dark_muted = UiTokens.theme_value!(original_css, "dark", "--ops-text-muted")
 
     quoted_theme_decoy =
       String.replace(original_css, hd(dark_theme_match), "", global: false) <>
@@ -228,13 +229,14 @@ defmodule Mix.Tasks.UiContrastContractTest do
        String.replace(original_manifest, ~s(role: "text"), ~s(role: "unknown"))},
       {"text role laundering", manifest,
        String.replace(original_manifest, ~s(role: "text"), ~s(role: "decorative"))},
-      # Phase 187 owns this lockstep (opaque muted text replaces the alpha mix);
-      # the replace is a no-op once the alpha is gone, and 187 retires the case.
-      {"muted alpha drift", css,
-       String.replace(
+      # --ops-text-muted is an opaque brand hex (Phase 187). Drift it from its live dark value,
+      # never from a pinned old mix, so the opaque-token guard has to catch the change.
+      {"muted token drift", css,
+       UiTokens.replace_theme_value!(
          original_css,
-         "var(--color-base-content) 64%, transparent",
-         "var(--color-base-content) 63%, transparent"
+         "dark",
+         "--ops-text-muted",
+         UiTokens.bump_hex(live_dark_muted)
        )},
       {"empty pairs", manifest, "export const MUTED_PAIRS = [];"},
       {"dark focus below 3", css,
