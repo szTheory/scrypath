@@ -202,10 +202,15 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ ~s(id="index-settings-checking")
     assert html =~ "Checking Meilisearch settings…"
 
-    # Phase 187 (E-16): while the settings load, the word shows with aria-busy and nothing spins.
-    checking = html |> LazyHTML.from_fragment() |> LazyHTML.query("#index-settings-checking")
-    assert LazyHTML.attribute(checking, "aria-busy") == ["true"]
+    # Phase 187 (E-16): while the settings load, the word shows in a status node and nothing spins.
+    # The word is never held: aria-busy on a live region, or on anything that contains one, asks
+    # assistive technology to hold what it says until busy clears, and this node is removed when
+    # the check ends (WR-01).
+    document = LazyHTML.from_fragment(html)
+    checking = LazyHTML.query(document, "#index-settings-checking")
     assert LazyHTML.attribute(checking, "role") == ["status"]
+    assert Enum.count(LazyHTML.query(document, "#index-settings-checking[aria-busy]")) == 0
+    assert Enum.count(LazyHTML.query(document, "[aria-busy] #index-settings-checking")) == 0
     refute html =~ "animate-"
 
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
@@ -228,6 +233,36 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     refute render(lv) =~ "Full comparison details"
     refute has_element?(lv, ".ops-settings-diff")
+  end
+
+  test "a re-check marks the earlier comparison busy and never holds its own checking word", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(lv)
+
+    # Settled: nothing in the document is busy.
+    assert Enum.count(LazyHTML.query(LazyHTML.from_fragment(render(lv)), "[aria-busy]")) == 0
+
+    # Re-checking with the earlier comparison still on show (same assigns, loading flag set).
+    html =
+      :sys.get_state(lv.pid).socket.assigns
+      |> Map.put(:drift_loading, true)
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    document = LazyHTML.from_fragment(html)
+
+    checking = LazyHTML.query(document, "#index-settings-checking")
+    assert LazyHTML.attribute(checking, "role") == ["status"]
+    assert Enum.count(LazyHTML.query(document, "#index-settings-checking[aria-busy]")) == 0
+    assert Enum.count(LazyHTML.query(document, "[aria-busy] #index-settings-checking")) == 0
+
+    # The earlier verdict is the content being replaced, so it is the busy region.
+    earlier = LazyHTML.query(document, "#index-settings-status")
+    assert LazyHTML.attribute(earlier, "aria-busy") == ["true"]
   end
 
   test "inline and manual sync say there is no queue instead of claiming caught up", %{

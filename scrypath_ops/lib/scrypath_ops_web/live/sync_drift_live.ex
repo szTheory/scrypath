@@ -2199,7 +2199,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           kind={:info}
           title="Checking Meilisearch settings…"
           role="status"
-          aria-busy="true"
           neutral
         >
           <span :if={@drift_result}>
@@ -2244,6 +2243,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           Meilisearch settings can be compared once the Scrypath runtime is configured.
         </p>
 
+        <%!--
+          While a re-check runs, the earlier comparison (this verdict and the table below) stays on
+          show and is marked aria-busy: it is the content being replaced, and assistive technology
+          holds it until the new result lands. The "Checking…" word above is its own status node
+          with no busy node on or above it, so nothing holds the word itself.
+        --%>
         <.ops_status
           :if={@drift_result && is_nil(@drift_error)}
           id="index-settings-status"
@@ -2254,6 +2259,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               else: "Meilisearch settings differ from the schema"
           }
           role="status"
+          aria-busy={@settings_checking? && "true"}
           neutral
         >
           <span :if={settings_match?(@drift_result)}>
@@ -2273,6 +2279,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           tabindex="0"
           role="region"
           aria-label="Index settings differences"
+          aria-busy={@settings_checking? && "true"}
         >
           <thead>
             <tr>

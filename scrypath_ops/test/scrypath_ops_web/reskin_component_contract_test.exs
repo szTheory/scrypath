@@ -15,9 +15,12 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
   #   - E-17 notices, statuses and verdicts: one Panel surface with a 2px inline-start rule. Failed
   #     color only for errors, Retrying amber for warnings and partial results, Control Edge for
   #     everything else; no cue dot, no tint, no shadow, no Plum or green.
-  #   - E-16 loading: `ops_loading` and the refresh button show a literal word and `aria-busy`
-  #     with static Sunken bars and no animation class, the refresh button swaps its two words on
-  #     `aria-busy` (set by the existing hook), and reconnect flashes carry no spinner.
+  #   - E-16 loading: `ops_loading` and the refresh button show a literal word. `ops_loading`
+  #     keeps the word in a `role="status"` node with no `aria-busy` on it or above it, and marks
+  #     its static Sunken bars (the stand-in for the loading content) `aria-busy`, with no
+  #     animation class. The refresh button swaps its two words on `aria-busy` (set by the
+  #     existing hook; a button is not a live region), and reconnect flashes carry no spinner and
+  #     no `aria-busy`.
   use ScrypathOpsWeb.ConnCase, async: true
 
   import Phoenix.Component, only: [sigil_H: 2]
@@ -807,7 +810,7 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
   @ops_hooks Path.expand("../../assets/js/ops_hooks.js", __DIR__)
 
   describe "E-16 loading is a word, not a loop" do
-    test "ops_loading bars render the literal word, aria-busy and static bars" do
+    test "ops_loading bars render the literal word in a status node and mark only the bars busy" do
       assigns = %{}
 
       html =
@@ -815,12 +818,20 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
         <OpsUi.ops_loading lines={4} label="Running search..." />
         """)
 
-      assert [region] =
-               html |> LazyHTML.from_fragment() |> LazyHTML.query("[aria-busy]") |> Enum.to_list()
+      document = LazyHTML.from_fragment(html)
 
+      # The word is a status node, and it is never held: aria-busy on a live region, or on anything
+      # that contains one, asks assistive technology to hold what it says until busy clears. The
+      # word is removed when loading ends, so it would never be released (WR-01).
+      assert [status] = document |> LazyHTML.query("[role='status']") |> Enum.to_list()
+      assert LazyHTML.text(status) =~ "Running search..."
+      assert count(html, "[role='status'][aria-busy]") == 0
+      assert count(html, "[aria-busy] [role='status']") == 0
+
+      # The skeleton lines are the stand-in for the content that is loading, and they are busy.
+      assert [region] = document |> LazyHTML.query("[aria-busy]") |> Enum.to_list()
       assert LazyHTML.attribute(region, "aria-busy") == ["true"]
-      assert LazyHTML.attribute(region, "role") == ["status"]
-      assert LazyHTML.text(region) =~ "Running search..."
+      assert region |> LazyHTML.text() |> String.trim() == ""
 
       bars = LazyHTML.query(region, ".ops-loading__bar")
       assert Enum.count(bars) == 4
@@ -835,7 +846,7 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert count(html, "svg") == 0
     end
 
-    test "one skeleton line is full width, and the inline variant is a word with aria-busy" do
+    test "one skeleton line is full width, and the inline variant is a status word with no busy hold" do
       assigns = %{}
 
       single =
@@ -851,7 +862,8 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       assert count(single, ".ops-loading__bar") == 1
       assert count(single, ".ops-loading__bar--short") == 0
 
-      assert count(inline, "[aria-busy='true'][role='status']") == 1
+      assert count(inline, "[role='status']") == 1
+      assert count(inline, "[aria-busy]") == 0
       assert inline =~ "Checking…"
       refute inline =~ "animate"
       assert count(inline, ".ops-loading__bar") == 0

@@ -783,11 +783,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Restrained loading primitive for in-flight operator reads.
 
-  Loading is said in a word: `label` is always visible, and the loading region carries
-  `aria-busy="true"` so assistive technology knows the content is still on its way. Nothing
-  animates. `:bars` adds static Sunken skeleton lines (a stand-in for content that's loading, the
-  last one short); `:inline` is just the word, for buttons and status rows. Presentation-only: the
-  screen owns when it is shown.
+  Loading is said in a word: `label` is always visible, in a `role="status"` node that never
+  carries `aria-busy`. `aria-busy` on a live region (or on anything that contains one) asks
+  assistive technology to hold what it says until the busy state clears, and this word is removed
+  when loading ends, so it would never be released. Instead `:bars` marks the skeleton lines, the
+  stand-in for the content that is loading, as the busy region (`aria-busy="true"` on a sibling of
+  the word, never an ancestor of it). Nothing animates. The lines are static Sunken blocks, the
+  last one short. `:inline` is just the word, for buttons and status rows; nothing is being
+  replaced there, so it has no busy region. A screen that keeps earlier content on show while it
+  reloads marks that content `aria-busy` itself, and keeps it apart from the word. Presentation-only:
+  the screen owns when it is shown.
   """
   attr(:variant, :atom, default: :bars, values: [:bars, :inline])
   attr(:lines, :integer, default: 3)
@@ -797,26 +802,24 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_loading(assigns) do
     ~H"""
-    <div
-      :if={@variant == :bars}
-      class={["ops-loading ops-loading__bars", @class]}
-      role="status"
-      aria-busy="true"
-      {@rest}
-    >
-      <p class="ops-loading__label">{@label}</p>
-      <span
-        :for={n <- 1..@lines}
-        class={["ops-loading__bar", if(n == @lines and @lines > 1, do: "ops-loading__bar--short")]}
-        aria-hidden="true"
-      >
-      </span>
+    <div :if={@variant == :bars} class={["ops-loading ops-loading__bars", @class]} {@rest}>
+      <p class="ops-loading__label" role="status">{@label}</p>
+      <div class="grid gap-ops-2" aria-busy="true">
+        <span
+          :for={n <- 1..@lines}
+          class={[
+            "ops-loading__bar",
+            if(n == @lines and @lines > 1, do: "ops-loading__bar--short")
+          ]}
+          aria-hidden="true"
+        >
+        </span>
+      </div>
     </div>
     <span
       :if={@variant == :inline}
       class={["ops-loading inline-flex items-center gap-2 text-ops-sm ops-muted", @class]}
       role="status"
-      aria-busy="true"
       {@rest}
     >
       {@label}
