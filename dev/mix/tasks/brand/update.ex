@@ -262,8 +262,16 @@ defmodule Mix.Tasks.Brand.Update do
       Mix.raise("brand.update: --commit must be a lowercase hex commit id")
     end
 
+    # Stored in the pin and printed for the test-owned constant, so it must be in
+    # the lowercase form that verify.brand accepts.
+    sha256 = String.downcase(opts[:sha256])
+
+    unless sha256 =~ ~r/\A[0-9a-f]{64}\z/ do
+      Mix.raise("brand.update: --sha256 must be 64 hex characters")
+    end
+
     %{
-      sha256: opts[:sha256],
+      sha256: sha256,
       size: opts[:size],
       entries: opts[:entries],
       uncompressed: opts[:uncompressed]

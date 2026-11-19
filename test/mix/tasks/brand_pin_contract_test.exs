@@ -394,6 +394,49 @@ defmodule Mix.Tasks.BrandPinContractTest do
       assert File.ls!(root) == []
     end
 
+    test "an uppercase --sha256 is stored lowercase and the written pin passes the offline verify" do
+      entries = adopted_entries()
+      bin = build_zip(entries)
+      expected = expected_for(bin, entries)
+
+      root = tmp_root!()
+      zip_path = Path.join(root, "brand.zip")
+      File.write!(zip_path, bin)
+      target = Path.join(root, "target")
+      File.mkdir_p!(target)
+      opts = Keyword.put(refresh_opts(expected), :sha256, String.upcase(expected.sha256))
+
+      output = capture_io(fn -> assert Update.refresh!(target, {:zip, zip_path}, opts) == :ok end)
+
+      assert read_pin!(target)["source"]["zip_sha256"] == expected.sha256
+      assert output =~ "to #{expected.sha256} in the same PR"
+      assert Brand.check!(target) == :ok
+    end
+
+    test "a --sha256 that is not 64 hex characters is refused before anything is written" do
+      entries = adopted_entries()
+      bin = build_zip(entries)
+      expected = expected_for(bin, entries)
+
+      root = tmp_root!()
+      zip_path = Path.join(root, "brand.zip")
+      File.write!(zip_path, bin)
+      target = Path.join(root, "target")
+      File.mkdir_p!(target)
+
+      for bad <- [String.slice(expected.sha256, 0, 63), String.duplicate("g", 64), ""] do
+        assert_raise Mix.Error, ~r/--sha256 must be 64 hex characters/, fn ->
+          Update.refresh!(
+            target,
+            {:zip, zip_path},
+            Keyword.put(refresh_opts(expected), :sha256, bad)
+          )
+        end
+      end
+
+      assert File.ls!(target) == []
+    end
+
     test "the command line refuses unknown flags, refresh flags without a source and two sources" do
       assert_raise Mix.Error, ~r/unexpected arguments/, fn -> Update.run(["--bogus"]) end
       assert_raise Mix.Error, ~r/need a source/, fn -> Update.run(["--size", "1"]) end
