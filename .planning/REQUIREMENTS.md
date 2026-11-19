@@ -102,13 +102,43 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (filled by roadmapper) | | |
+| PIN-01 | Phase 186 | Pending |
+| PIN-02 | Phase 186 | Pending |
+| PIN-03 | Phase 186 | Pending |
+| TOK-01 | Phase 186 | Pending |
+| TOK-02 | Phase 186 | Pending |
+| TOK-03 | Phase 186 | Pending |
+| TOK-04 | Phase 186 | Pending |
+| SKIN-01 | Phase 187 | Pending |
+| SKIN-02 | Phase 187 | Pending |
+| SKIN-03 | Phase 187 | Pending |
+| SKIN-04 | Phase 187 | Pending |
+| SKIN-05 | Phase 187 | Pending |
+| SKIN-06 | Phase 187 | Pending |
+| SKIN-07 | Phase 187 | Pending |
+| SKIN-08 | Phase 187 | Pending |
+| STAT-01 | Phase 187 | Pending |
+| STAT-02 | Phase 187 | Pending |
+| STAT-03 | Phase 187 | Pending |
+| A11Y-01 | Phase 187 | Pending |
+| A11Y-02 | Phase 187 | Pending |
+| A11Y-03 | Phase 187 | Pending |
+| A11Y-04 | Phase 187 | Pending |
+| GATE-01 | Phase 186 | Pending |
+| GATE-02 | Phase 186 | Pending |
+| GATE-03 | Phase 187 | Pending |
+| BDOC-01 | Phase 188 | Pending |
+| BDOC-02 | Phase 188 | Pending |
+| SITE-01 | Phase 189 | Pending (deferrable to v1.47) |
+| COPY-01 | Phase 190 | Pending (deferrable to v1.47) |
 
 **Coverage:**
 - v1 requirements: 29 total
-- Mapped to phases: 0
-- Unmapped: 29 ⚠️
+- Mapped to phases: 29
+- Unmapped: 0
+
+GATE-01 and GATE-02 span Phases 186-187 and are mapped to Phase 186, where each is first satisfied (the required `ops-ui` check and gate budget land with the guards; GATE-02's guardrails then stay standing rules for Phase 187 onward). GATE-03 is mapped to Phase 187, where the preview refresh precedes visible UI work.
 
 ---
 *Requirements defined: 2026-11-18*
-*Last updated: 2026-11-18 after initial definition*
+*Last updated: 2026-11-18 after roadmap creation (traceability filled)*
