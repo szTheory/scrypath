@@ -2,15 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.46
 milestone_name: Brand foundation and re-skin
+current_phase: 187
+current_phase_name: ScrypathOps re-skin
 status: planning
-last_updated: "2026-11-19T01:31:43.000Z"
-last_activity: 2026-11-18
+stopped_at: Phase 186 complete, ready to plan Phase 187
+last_updated: "2026-11-19T05:42:34.042Z"
+last_activity: 2026-11-19
+last_activity_desc: Phase 186 complete, transitioned to Phase 187
+state_head: b27749a0f6177a1e52160d3b75ae7865465c1456
 progress:
   total_phases: 5
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 3
+  completed_plans: 3
+  percent: 20
 ---
 
 # Project State
@@ -20,16 +25,16 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-18.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.46 Brand foundation and re-skin is the active milestone (no longer awaiting a next milestone). Roadmap defined: Phases 186–190, 29 requirements mapped; Phases 189 and 190 are deferrable to v1.47.
+**Current focus:** Phase 186 — Ingest, pin and guard
 
 ## Current Position
 
-Phase: 186 of 186–190 (Ingest, pin and guard), not started
-Plan: —
-Status: Ready to discuss Phase 186
-Last activity: 2026-11-18 — v1.46 roadmap created
+Phase: 187 — ScrypathOps re-skin
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-19 — Phase 186 complete, transitioned to Phase 187
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
@@ -37,7 +42,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 186 | 3 | - | - |
 
 ## Accumulated Context
 
@@ -79,5 +84,5 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-18 — v1.46 requirements defined and roadmap created (Phases 186–190).
-Stopped at: roadmap written, not yet committed by the orchestrator.
+Stopped at: Phase 186 complete, ready to plan Phase 187
 Acting next: the orchestrator commits the roadmap; then `/gsd-discuss-phase 186` starts Phase 186. No implementation has started.

@@ -15,16 +15,16 @@ Phases continue at 186. Phases 189 and 190 are deferrable to v1.47 if v1.46 runs
 
 ### Brand pin and ingest (Phase 186)
 
-- [ ] **PIN-01**: A maintainer can verify offline that the committed `brand/` assets and the shipped fonts match `brand/brand.pin.json` (zip sha256, per-asset path, source member, sha256, size, license, role), with owned directories closed to unpinned files, and the check blocks merging when it fails.
-- [ ] **PIN-02**: A maintainer can refresh the pin with an update task that refuses on size, hash, entry-count or uncompressed-size mismatch, extracts only allowlisted members in memory, and is the only place the online re-download check lives (not CI).
-- [ ] **PIN-03**: Only the adopted brand assets (about 330 KB: brand docs and tokens, logo and icon SVGs, README headers, ExDoc CSS, social card, OFL texts) are committed; PDFs, HTML books, motion, sounds, previews and TTFs are not, and `brand/` and `brandbook/` stay out of the Hex package `files`.
+- [x] **PIN-01**: A maintainer can verify offline that the committed `brand/` assets and the shipped fonts match `brand/brand.pin.json` (zip sha256, per-asset path, source member, sha256, size, license, role), with owned directories closed to unpinned files, and the check blocks merging when it fails.
+- [x] **PIN-02**: A maintainer can refresh the pin with an update task that refuses on size, hash, entry-count or uncompressed-size mismatch, extracts only allowlisted members in memory, and is the only place the online re-download check lives (not CI).
+- [x] **PIN-03**: Only the adopted brand assets (about 330 KB: brand docs and tokens, logo and icon SVGs, README headers, ExDoc CSS, social card, OFL texts) are committed; PDFs, HTML books, motion, sounds, previews and TTFs are not, and `brand/` and `brandbook/` stay out of the Hex package `files`.
 
 ### Token architecture and guards (Phase 186)
 
-- [ ] **TOK-01**: A contributor can run one Node token test, in an existing required step, that checks token-map parity in both directions (every theme property has a row and every row a property), resolved hex equals the pinned brand hex, system-dark equals the built CSS, and built CSS is fresh.
-- [ ] **TOK-02**: The same test enforces a hex allowlist and a deny-list of retired identity values (hex, rgb and rgba triplets, and the `brandbook/` string) over `git ls-files`, using a shrink-only path-level allowlist where each entry carries a phase tag and a stale entry fails; six planted failures prove it catches sabotage and accepts valid input.
-- [ ] **TOK-03**: The approximately 12 pinned old-identity literals in the three root and ops contract tests are rewritten to read the live token by regex and assert the relationship (not a hex), in at most 3 test-only commits, with a resolved-token helper; the dry-run projection after these commits shows no failure left that Phase 187 does not own.
-- [ ] **TOK-04**: The Phase 185 preservation specs keep their copy, geometry, state, action and identity checks while the pixel comparison is replaced by a recolor-tolerant structural check calibrated with one accept and one reject case.
+- [x] **TOK-01**: A contributor can run one Node token test, in an existing required step, that checks token-map parity in both directions (every theme property has a row and every row a property), resolved hex equals the pinned brand hex, system-dark equals the built CSS, and built CSS is fresh.
+- [x] **TOK-02**: The same test enforces a hex allowlist and a deny-list of retired identity values (hex, rgb and rgba triplets, and the `brandbook/` string) over `git ls-files`, using a shrink-only path-level allowlist where each entry carries a phase tag and a stale entry fails; six planted failures prove it catches sabotage and accepts valid input.
+- [x] **TOK-03**: The approximately 12 pinned old-identity literals in the three root and ops contract tests are rewritten to read the live token by regex and assert the relationship (not a hex), in at most 3 test-only commits, with a resolved-token helper; the dry-run projection after these commits shows no failure left that Phase 187 does not own.
+- [x] **TOK-04**: The Phase 185 preservation specs keep their copy, geometry, state, action and identity checks while the pixel comparison is replaced by a recolor-tolerant structural check calibrated with one accept and one reject case.
 
 ### ScrypathOps re-skin (Phase 187)
 
@@ -52,8 +52,8 @@ Phases continue at 186. Phases 189 and 190 are deferrable to v1.47 if v1.46 runs
 
 ### Delivery and required checks (Phases 186-187)
 
-- [ ] **GATE-01**: `ops-ui` is a required check with its path list extended to `brand/`, `language/` and `fixtures/`, and the wiring test and cheap static storybook-boundary checks are amended to match; new required gates in this milestone stay within the budget of 12, each stating a deletion trigger and expected churn per UI PR.
-- [ ] **GATE-02**: Each phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide, evidence-only phases stay at or below 2 plans (Phase 186 at most 3), one full gate runs per commit SHA, a stale receipt is a failed gate, and no capture runs from a dirty tree.
+- [x] **GATE-01**: `ops-ui` is a required check with its path list extended to `brand/`, `language/` and `fixtures/`, and the wiring test and cheap static storybook-boundary checks are amended to match; new required gates in this milestone stay within the budget of 12, each stating a deletion trigger and expected churn per UI PR.
+- [x] **GATE-02**: Each phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide, evidence-only phases stay at or below 2 plans (Phase 186 at most 3), one full gate runs per commit SHA, a stale receipt is a failed gate, and no capture runs from a dirty tree.
 - [ ] **GATE-03**: The retained UI preview is refreshed to post-merge main before visible UI work, preflight passes, and preview data survives (seed-disabled).
 
 ### README and HexDocs (Phase 188)
@@ -102,13 +102,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIN-01 | Phase 186 | Pending |
-| PIN-02 | Phase 186 | Pending |
-| PIN-03 | Phase 186 | Pending |
-| TOK-01 | Phase 186 | Pending |
-| TOK-02 | Phase 186 | Pending |
-| TOK-03 | Phase 186 | Pending |
-| TOK-04 | Phase 186 | Pending |
+| PIN-01 | Phase 186 | Complete |
+| PIN-02 | Phase 186 | Complete |
+| PIN-03 | Phase 186 | Complete |
+| TOK-01 | Phase 186 | Complete |
+| TOK-02 | Phase 186 | Complete |
+| TOK-03 | Phase 186 | Complete |
+| TOK-04 | Phase 186 | Complete |
 | SKIN-01 | Phase 187 | Pending |
 | SKIN-02 | Phase 187 | Pending |
 | SKIN-03 | Phase 187 | Pending |
@@ -124,8 +124,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | A11Y-02 | Phase 187 | Pending |
 | A11Y-03 | Phase 187 | Pending |
 | A11Y-04 | Phase 187 | Pending |
-| GATE-01 | Phase 186 | Pending |
-| GATE-02 | Phase 186 | Pending |
+| GATE-01 | Phase 186 | Complete |
+| GATE-02 | Phase 186 | Complete |
 | GATE-03 | Phase 187 | Pending |
 | BDOC-01 | Phase 188 | Pending |
 | BDOC-02 | Phase 188 | Pending |

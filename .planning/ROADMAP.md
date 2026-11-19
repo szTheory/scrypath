@@ -40,7 +40,7 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
 - Integer phases (186, 187, ...): planned milestone work, continuing from v1.45 (ended at 185)
 - Decimal phases (186.1, ...): urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 186: Ingest, pin and guard** - Pin the adopted brand assets offline, add one token-parity and retired-value test, lift the pinned old-identity literals, and make the recolor tolerable to existing checks (test and evidence only, at most 3 plans)
+- [x] **Phase 186: Ingest, pin and guard** - Pin the adopted brand assets offline, add one token-parity and retired-value test, lift the pinned old-identity literals, and make the recolor tolerable to existing checks (test and evidence only, at most 3 plans) (completed 2026-11-19)
 - [ ] **Phase 187: ScrypathOps re-skin** - Operators see ScrypathOps in the new identity in light and dark with one status vocabulary, delivered as one Draft PR
 - [ ] **Phase 188: README header and HexDocs** - Readers see the brand header, logo, favicon and corrected stylesheet on GitHub and HexDocs
 - [ ] **Phase 189: Website re-skin** (deferrable to v1.47) - Visitors see the website in the new identity, verified before the merge that deploys it
@@ -58,12 +58,12 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
   3. The about 12 pinned old-identity literals are gone from the three root and ops contract tests, which now assert token relationships through a resolved-token helper, landed in at most 3 test-only commits; the recolor dry-run projection after those commits shows no failing test outside Phase 187's scope (otherwise the phase stops and re-plans). (TOK-03)
   4. The Phase 185 preservation specs still fail on copy, geometry, state, action and identity changes, and the replacement structural check accepts its calibrated recolor case and rejects its calibrated regression case. (TOK-04)
   5. `ops-ui (path-scoped)` is a required check asserted by the workflow-wiring test with its path list covering `brand/`, `language/` and `fixtures/`, the static storybook-boundary checks run in a required job, every new required gate records its deletion trigger and churn within the budget of 12, and the phase closes in at most 3 plans with one full gate run per commit SHA. (GATE-01, GATE-02; GATE-02 is first satisfied here and stays a standing rule for later phases)
-**Plans**: 3 plans
+**Plans**: 3/3 plans complete
 
 Plans:
-- [ ] 186-01-PLAN.md — Brand pin: `brand/` and ops fonts pinned by `brand/brand.pin.json`, offline `mix verify.brand`, `mix brand.update` with archive refusals (PIN-01..03)
-- [ ] 186-02-PLAN.md — Token map plus one Node token test (parity, applied flag, built-CSS emissions, deny-list with shrink-only allowlist), literal lifts in at most 3 test-only commits, recolor projection and GATE-02 stop-and-decide (TOK-01..03, GATE-02)
-- [ ] 186-03-PLAN.md — Calibrated structural pair check on real captures, six-context wiring test, storybook boundary checks, gate-budget ledger and phase-close receipts (TOK-04, GATE-01, GATE-02)
+- [x] 186-01-PLAN.md — Brand pin: `brand/` and ops fonts pinned by `brand/brand.pin.json`, offline `mix verify.brand`, `mix brand.update` with archive refusals (PIN-01..03)
+- [x] 186-02-PLAN.md — Token map plus one Node token test (parity, applied flag, built-CSS emissions, deny-list with shrink-only allowlist), literal lifts in at most 3 test-only commits, recolor projection and GATE-02 stop-and-decide (TOK-01..03, GATE-02)
+- [x] 186-03-PLAN.md — Calibrated structural pair check on real captures, six-context wiring test, storybook boundary checks, gate-budget ledger and phase-close receipts (TOK-04, GATE-01, GATE-02)
 
 ### Phase 187: ScrypathOps re-skin
 **Goal**: Operators see ScrypathOps in the plum/orchid identity in light and dark with one consistent sync-status vocabulary, hosts that mount it see no change outside ops, and the maintainer receives it as one Draft PR with green gates and capture inventory, merged only on the maintainer's yes.
@@ -126,7 +126,7 @@ On deferral: SITE-01 and COPY-01 move to the v1.47 requirements and the traceabi
 
 ## Deferred to v1.47
 
-- **Deferred (first v1.47 phase, tracked cleanup; recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary):** retire `dev/mix/tasks/verify/ui_tokens.ex`, the `ops.*` DTCG mirror and `test/mix/tasks/ui_tokens_contract_test.exs` after the Phase 187 re-skin, replace the demo host favicon `examples/scrypath_ecommerce/priv/static/favicon.svg`, and remove their `retire-last` deny-list allowlist entries (with the `ci.yml` path-regex entry). Recorded in Phase 186 research Open Question 3; no v1.46 requirement.
+- **Deferred (first v1.47 phase, tracked cleanup; recommended defaults recorded by the orchestrator under the maintainer's delegated-decisions rule (2026-11-18); the maintainer may override at the Phase 188 boundary):** delete the retired `brandbook/` directory and its allowlist entry (it must go with `ui_tokens.ex`, which still reads `brandbook/tokens`), retire `dev/mix/tasks/verify/ui_tokens.ex`, the `ops.*` DTCG mirror and `test/mix/tasks/ui_tokens_contract_test.exs` after the Phase 187 re-skin, replace the demo host favicon `examples/scrypath_ecommerce/priv/static/favicon.svg`, and remove their `retire-last` deny-list allowlist entries (with the `ci.yml` path-regex entry). Recorded in Phase 186 research Open Question 3; no v1.46 requirement.
 
 ## Out of scope for v1.46
 
