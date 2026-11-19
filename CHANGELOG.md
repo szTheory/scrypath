@@ -22,6 +22,18 @@ Release Please manages versioned entries after this baseline.
 * **sync:** pass current records to related resolvers and cancel invalid persisted Oban job arguments without atom conversion ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
 * **sync:** route backfill and reindex through Scrypath.Loader and page composite primary keys on the full key ([b67c964](https://github.com/szTheory/scrypath/commit/b67c964d34ec78392104749deff1e3e183885085))
 
+### Upgrade notes
+
+This release carries the v1.44 sync-correctness work. Read these before upgrading if you use custom loaders, related resolvers, backfill, reindex or Oban mode.
+
+* **Backfill and reindex load through `Scrypath.Loader`.** Every batch now goes through the shared loader (`search_records/2` and `preload:`), so documents built by backfill and reindex match the ones built by inline and Oban sync. Caller paging and projection options are stripped, rows fanned out by joins are de-duplicated, and a nil primary key is guarded. If you passed your own query to backfill or reindex, your query scope is preserved; paging now uses every primary-key column and returns composite cursors, so code that stored a single-column cursor should store the cursor value it is given.
+* **Id lists are bounded.** Loads and backend writes are capped at 1,000 ids; task receipts are aggregated across chunks; Oban chunks are enqueued transactionally with shared uniqueness. Invalid persisted job arguments are cancelled instead of crashing on atom conversion.
+* **Related resolvers receive the current trigger records,** not stale ones.
+* **New Oban worker telemetry.** Upsert and delete spans and a missing-record deletion event are emitted with stable metadata; see the telemetry guide.
+* **Optional schema callbacks are declared** (`@optional_callbacks`), and hooks with the wrong arity are diagnosed. Mixed-behaviour annotation upgrades are documented in the guides.
+* **Packaging.** The repository-only `mix verify*` maintainer tasks are no longer shipped in the Hex package; only the public `mix scrypath.*` operator tasks are. The examples (`phoenix_meilisearch`, `scrypath_ecommerce`) were updated for the explicit loader contract.
+* **Oban mode needs `:repo`** (unchanged from 0.3.17): legacy upsert jobs enqueued before 0.3.16 still sync after upgrade.
+
 ## [0.3.17](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.16...scrypath-v0.3.17) (2026-10-25)
 
 
