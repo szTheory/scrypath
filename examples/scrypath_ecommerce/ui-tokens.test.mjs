@@ -1648,3 +1648,201 @@ test("planted off-grid spacing token fails", () => {
   assert.equal(literal(".ops-failed-row, .ops-other { padding-block: .875rem; }").length, 1, "a shared rule is not the named rule");
   assert.equal(literal(".ops-f { padding-inline-start: -.1875rem 7px; }").length, 2);
 });
+
+// ---------------------------------------------------------------------------
+// N-11: the compiled CSS can only lose unscoped selectors and dual dark rules (Phase 187, A11Y-04)
+//
+// The ops stylesheet is linked into a host application's page on `/admin/search*`, so any rule
+// that is not tied to an `.ops-` class can restyle host elements on those pages (the host
+// contract spec proves the host's own routes load no ops sheet at all). Two counts are read from
+// the compiled CSS (`scrypath_ops/priv/static/assets/css/app.css`) and can only fall:
+//
+// 1. Unscoped selector parts. A selector part (one entry of a comma list, in a rule at any
+//    depth) is unscoped when its subject, the last compound selector, is `*`, a pseudo-element
+//    (`::x`, or `:before`, `:after`, `:first-line`, `:first-letter`), `:root`, `:host`, `html`,
+//    `body` or `[data-theme...]`, and no `.ops-` class appears anywhere in the same selector part
+//    (`.ops-shell *` is scoped; `*` is not). Rules inside `@keyframes`, `@font-face` and `@property`
+//    are not selectors and are skipped. Nested `&` rules take their parent's scope and are skipped.
+// 2. Dual dark rules. A rule whose parts all start with `[data-theme="dark"]` that has a twin
+//    inside `@media (prefers-color-scheme: dark)` written with `html:not([data-theme="light"])` in
+//    place of the prefix: the same declarations maintained twice. The theme plugin block (it also
+//    lists `:root:has(...)`) is not one of these.
+//
+// UNSCOPED_SELECTOR_CEILING and DUAL_DARK_RULE_CEILING are the counts printed on the first run. Like
+// the ceilings above, each is exact in both directions: growth fails, and a lower live count fails
+// until the ceiling is lowered to the printed number. They may only fall.
+// ---------------------------------------------------------------------------
+
+// First-run counts (Plan 11): 54 selector parts, among them the Tailwind preflight, the vendored
+// daisyUI theme plugin blocks and `:root` or `html` rules the ops theme needs; 12 dual dark rules
+// (the earlier research count of 23 predates the Plan 5 to 8 retirements). They may only fall.
+const UNSCOPED_SELECTOR_CEILING = 54;
+const DUAL_DARK_RULE_CEILING = 12;
+
+const SKIPPED_AT_RULES = /^@(?:keyframes|-webkit-keyframes|font-face|property|font-palette-values|counter-style)\b/;
+const DARK_PREFIX = '[data-theme="dark"]';
+const DARK_MEDIA_PREFIX = 'html:not([data-theme="light"])';
+
+/** Splits on a separator that sits outside parentheses, brackets and quotes. */
+function splitTopLevel(text, separator) {
+  const parts = [];
+  let depth = 0;
+  let quote = null;
+  let buffer = "";
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (quote) {
+      buffer += c;
+      if (c === "\\") {
+        buffer += text[i + 1] ?? "";
+        i += 1;
+      } else if (c === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (c === '"' || c === "'") quote = c;
+    else if (c === "(" || c === "[") depth += 1;
+    else if (c === ")" || c === "]") depth = Math.max(0, depth - 1);
+    if (depth === 0 && c === separator) {
+      parts.push(buffer);
+      buffer = "";
+    } else {
+      buffer += c;
+    }
+  }
+  parts.push(buffer);
+  return parts.map((part) => part.trim()).filter(Boolean);
+}
+
+/** The last compound selector of a complex selector: what follows the last combinator. */
+function subjectCompound(part) {
+  let depth = 0;
+  let cut = 0;
+  for (let i = 0; i < part.length; i += 1) {
+    const c = part[i];
+    if (c === "(" || c === "[") depth += 1;
+    else if (c === ")" || c === "]") depth = Math.max(0, depth - 1);
+    else if (depth === 0 && (c === " " || c === ">" || c === "+" || c === "~")) cut = i + 1;
+  }
+  return part.slice(cut).trim();
+}
+
+function isUnscopedSelectorPart(part) {
+  if (/\.ops-/.test(part)) return false;
+  const subject = subjectCompound(part);
+  if (subject.startsWith("&")) return false;
+  const universalOrTag = /^(\*|[a-z][a-z0-9-]*)?/i.exec(subject)[0].toLowerCase();
+  if (universalOrTag === "*" || universalOrTag === "html" || universalOrTag === "body") return true;
+  if (/^:(?:root|host)\b/.test(subject) || /^:where\(\s*:root\s*\)/.test(subject)) return true;
+  if (subject.startsWith("[data-theme")) return true;
+  return /::[a-z-]+/i.test(subject) || /:(?:before|after|first-line|first-letter)\b/i.test(subject);
+}
+
+/**
+ * Every top-level style rule with declarations, with its @-rule ancestors. Keyframe-like at-rule
+ * bodies are skipped, and so is every rule nested inside another style rule (`&:hover`,
+ * `> .child`, `+ .step:before`): a nested rule takes its parent's scope, and the parent is counted.
+ */
+function styleRules(css) {
+  const rules = [];
+  const walk = (node, ancestors) => {
+    const isAtRule = node.head.startsWith("@");
+    if (isAtRule && SKIPPED_AT_RULES.test(node.head)) return;
+    if (node.head && !isAtRule) {
+      if (node.decls.length > 0) rules.push({ head: node.head, parts: splitTopLevel(node.head, ","), ancestors });
+      return;
+    }
+    for (const child of node.children) walk(child, node.head ? [...ancestors, node.head] : ancestors);
+  };
+  walk(parseCssBlocks(css), []);
+  return rules;
+}
+
+function unscopedSelectorParts(css) {
+  const found = [];
+  for (const rule of styleRules(css)) {
+    for (const part of rule.parts) if (isUnscopedSelectorPart(part)) found.push(part);
+  }
+  return found;
+}
+
+const inDarkMedia = (rule) => rule.ancestors.some((head) => /^@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/.test(head));
+
+function dualDarkRules(css) {
+  const rules = styleRules(css);
+  const twinNormalized = (head) => splitTopLevel(head, ",").join(",\n");
+  const twins = new Set(rules.filter(inDarkMedia).map((rule) => twinNormalized(rule.head)));
+  const dual = [];
+  for (const rule of rules) {
+    if (inDarkMedia(rule) || !rule.parts.every((part) => part === DARK_PREFIX || part.startsWith(`${DARK_PREFIX} `))) continue;
+    const twin = rule.parts.map((part) => `${DARK_MEDIA_PREFIX}${part.slice(DARK_PREFIX.length)}`).join(",\n");
+    if (twins.has(twin)) dual.push(rule.head);
+  }
+  return dual;
+}
+
+function ratchetFailures(label, ceilingName, count, ceiling, items) {
+  const failures = [];
+  if (count > ceiling) {
+    failures.push(`${count} ${label} exceed ${ceilingName} ${ceiling} (shrink-only):\n${items.join("\n")}`);
+  } else if (count < ceiling) {
+    failures.push(`${ceilingName} is ${ceiling} but only ${count} ${label} remain: lower it to ${count}`);
+  }
+  return failures;
+}
+
+const unscopedFailures = (css) => {
+  const found = unscopedSelectorParts(css);
+  return ratchetFailures("unscoped selector parts", "UNSCOPED_SELECTOR_CEILING", found.length, UNSCOPED_SELECTOR_CEILING, found);
+};
+const dualDarkFailures = (css) => {
+  const found = dualDarkRules(css);
+  return ratchetFailures("dual dark rules", "DUAL_DARK_RULE_CEILING", found.length, DUAL_DARK_RULE_CEILING, found);
+};
+
+test("live unscoped selectors stay at the ceiling", () => {
+  assert.deepEqual(unscopedFailures(fs.readFileSync(BUILT_CSS, "utf8")), []);
+});
+
+test("live dual dark rules stay at the ceiling", () => {
+  assert.deepEqual(dualDarkFailures(fs.readFileSync(BUILT_CSS, "utf8")), []);
+});
+
+test("planted unscoped selector fails and scoped selectors do not count", () => {
+  const live = fs.readFileSync(BUILT_CSS, "utf8");
+  const scoped = `
+.ops-shell *, .ops-shell ::after { box-sizing: border-box; }
+.ops-card::before { content: ""; }
+@keyframes spin { from { transform: none; } to { transform: none; } }
+.ops-a { &:hover { color: red; } }
+@media (min-width: 40rem) { .ops-b > * { margin: 0; } }`;
+  assert.deepEqual(unscopedSelectorParts(scoped), [], "a part with an .ops- class, a keyframe step and a nested rule are not unscoped");
+
+  const before = unscopedSelectorParts(live).length;
+  const unscoped = ["* { margin: 0; }", "html { color: red; }", "body, .host-card { margin: 0; }", ":root { --x: 1; }", ":host { --x: 1; }",
+    "[data-theme=\"dark\"] { --x: 1; }", ".btn::after { content: \"\"; }", "a::selection { color: red; }", "@media (min-width: 40rem) { * { margin: 0; } }"];
+  for (const rule of unscoped) {
+    const planted = `${live}\n${rule}`;
+    assert.ok(unscopedSelectorParts(planted).length > before, `planted rule is counted: ${rule}`);
+    assert.ok(
+      unscopedFailures(planted).some((message) => /exceed UNSCOPED_SELECTOR_CEILING \d+ \(shrink-only\)/.test(message)),
+      `planted rule fails the ratchet: ${rule}`,
+    );
+  }
+});
+
+test("planted dual dark rule fails and a lone dark rule does not count", () => {
+  const live = fs.readFileSync(BUILT_CSS, "utf8");
+  const before = dualDarkRules(live).length;
+  const lone = `${live}\n[data-theme="dark"] .ops-lone { color: red; }`;
+  assert.equal(dualDarkRules(lone).length, before, "a dark rule with no media twin is not dual");
+
+  const planted = `${live}
+[data-theme="dark"] .ops-planted { color: red; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-planted { color: red; }
+}`;
+  assert.equal(dualDarkRules(planted).length, before + 1);
+  assert.ok(dualDarkFailures(planted).some((message) => /exceed DUAL_DARK_RULE_CEILING \d+ \(shrink-only\)/.test(message)));
+});
