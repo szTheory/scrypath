@@ -1,6 +1,6 @@
 ---
 phase: 186-ingest-pin-and-guard
-verified: 2026-11-19T05:40:00Z
+verified: 2026-11-19T05:58:00Z
 status: passed
 score: 5/5 roadmap success criteria verified; 9/9 requirement IDs satisfied (PIN-01..03, TOK-01..04, GATE-01, GATE-02)
 covered_files:
@@ -28,7 +28,7 @@ covered_files:
   - "test/mix/tasks/ui_tokens_contract_test.exs"
   - "test/mix/tasks/workflow_wiring_test.exs"
   - "test/support/ui_tokens.ex"
-covered_digest: "v4:sha256:1ada5b1e3ca2e835a8aefa5b67c46f2e48115577311a25407faebe68d8cb3e7e"
+covered_digest: "v4:sha256:e873b38b4a90b042e741dbd45f7dea3370bf566218c591f8f1320f7305659e7f"
 behavior_unverified: 0
 overrides_applied: 0
 coincidental_reliance_items:
@@ -43,12 +43,15 @@ coincidental_reliance_items:
 # Phase 186: Ingest, pin and guard Verification Report
 
 **Phase Goal:** Maintainers can prove the committed brand assets are exactly the pinned ones and that retired identity values cannot re-enter the repository, and the existing contract tests read live tokens so the Phase 187 recolor fails only on what Phase 187 owns.
-**Verified:** 2026-11-19T05:40:00Z
+**Verified:** 2026-11-19T05:58:00Z
 **Status:** passed
 **Re-verification:** No, initial verification
-**Code verified:** branch `feat/v1.46-186-brand-pin-and-guard` at `21f1353048abeeddb92bf1e071347f450c671de7` (working-tree changes are limited to `.planning/STATE.md`, `.planning/config.json`, `.planning/state.json`)
+**Code verified:** branch `feat/v1.46-186-brand-pin-and-guard`. The full lane runs below were made on `21f13530`; the report was refreshed against `f2fb2929` after the orchestrator's `6744e0f8` (reason text of the `brandbook/` allowlist entry, plus the ROADMAP Phase 188 scope note) and `f2fb2929` (the security audit). Working-tree changes are limited to `.planning/STATE.md`, `.planning/config.json`, `.planning/state.json`.
+**Security audit:** [186-SECURITY.md](186-SECURITY.md) reports SECURED, 20 of 20 threats closed, 0 open (audited 2026-11-19). I did not re-derive its dispositions; my own probes overlap the update-task and verify-task threats (zip slip, zip bomb, tampering, active content, deny-list and comparator looseness) and agree with it.
 
 ## Plain-language result
+
+**Refresh after `6744e0f8`:** the only code-side change since the lane runs is one `reason` string in `examples/scrypath_ecommerce/retired-identity-allowlist.json`, which only `ui-tokens.test.mjs` reads. On `f2fb2929` that test still passes 42 of 42, every `retire-last` entry still carries an `owner: ` name (6 of 6), the entry count (22) and hit total (485) are unchanged, and the ExUnit wrapper plus the workflow-wiring and token-contract tests pass (90 tests, 0 failures). The Phase 188 sequencing problem (finding 3) is resolved.
 
 The goal is achieved. I did not rely on the SUMMARY files: I re-ran every automated check, compared the committed brand files byte for byte against the source archive, and broke each guard on scratch copies outside the repository to confirm it fails when it should. Every guard failed on its planted defect, and every refusal path of the update task refused.
 
@@ -155,7 +158,7 @@ No orphaned requirements: REQUIREMENTS.md maps exactly PIN-01..03, TOK-01..04, G
 | 02 | `b58fd05b` | yes | `verify.repository_contracts`, `verify.core` (all six steps), `verify.ops_ui` green | only `.planning/` until Plan 03's code |
 | 03 | `6af22174` | yes | `verify.repository_contracts` (157 tests), `verify.core` (1117 tests, docs clean), `verify.ops_ui` green | `.planning/` only until the review-fix round |
 | review fixes | `ea9c859c` | yes | `verify.core` green (1158 tests, docs clean); cheap checks green | `.gitignore` only (`21f13530`), then `.planning/` |
-| verifier, HEAD | `21f13530` | HEAD | `verify.core` (1158 tests), `verify.repository_contracts` (157 tests), `verify.ops_ui` (2 + 329 tests), `verify.package`, CI Node step (123 + 33 tests), docs, format, credo: all green | none |
+| verifier | `21f13530` | yes | `verify.core` (1158 tests), `verify.repository_contracts` (157 tests), `verify.ops_ui` (2 + 329 tests), `verify.package`, CI Node step (123 + 33 tests), docs, format, credo: all green | `6744e0f8` (allowlist reason text, ROADMAP), `f2fb2929` (security audit): the allowlist is read only by `ui-tokens.test.mjs` (42/42 on `f2fb2929`); the full lanes were not repeated for a one-string change |
 
 Since `6af22174`, `git diff --name-only` shows no change under `scrypath_ops/`, `lib/`, `mix.exs`, `mix.lock`, `test/release/` or `.github/`, so the `ops-ui` inputs are the same as when that gate ran green. Changes after it are in `dev/`, `scripts/ci/`, `examples/scrypath_ecommerce/`, brand tests and `CONTRIBUTING.md`.
 
@@ -173,7 +176,7 @@ No blockers. Everything below is non-blocking.
 |---|---------|-------|-------------------|
 | 1 | The SUMMARY receipts for `verify.repository_contracts`, `verify.ops_ui` and `verify.package` predate the nine review-fix commits, `verify.core` ran on `ea9c859c`, and the `.gitignore`-only commit `21f13530` had no receipt. GATE-02 says a stale receipt is a failed gate. | non-blocking, closed locally | I ran each of those lanes once on HEAD `21f13530` (table above) and all passed, so the exact final code SHA now has a green receipt for `core`, `package`, `repository-contracts` and `ops-ui`. The remaining item is the hosted exact-SHA run, already the `/gsd-ship` follow-up. |
 | 2 | `stateEqual` is protected by tests only jointly with `hoverStateEqual` (the one state mutation changes both); dropping `stateEqual` alone stays green. Pre-existing coverage shape, not introduced here. | non-blocking | The real verdict still contains both terms and a state change fails the pair. Harden with a neutral-capture-only state mutation. |
-| 3 | Sequencing conflict for Phase 188: its scope note deletes `brandbook/`, but `dev/mix/tasks/verify/ui_tokens.ex` (`brandbook/tokens/tokens.json`) and `test/mix/tasks/ui_tokens_contract_test.exs` (`brandbook/README.md`, `tokens/*`; part of `repository-contracts`) read it, and the allowlist tags both `retire-last` for the first v1.47 phase. Deleting the directory in 188 would break them. | non-blocking (forward flag) | Not a Phase 186 requirement. Reconcile at Phase 188 planning: retire those two with the directory, or keep the directory until v1.47. |
+| 3 | Sequencing conflict for Phase 188: its scope note deleted `brandbook/`, but `mix verify.ui_tokens` and `ui_tokens_contract_test.exs` (part of `repository-contracts`) read it and are retired in the first v1.47 phase. | **resolved** by `6744e0f8` | The ROADMAP Phase 188 scope note and exit check now say Phase 188 only removes documentation references and deletes or rewrites `prompts/scrypath-brand-book.md`; the directory is deleted in the first v1.47 cleanup together with `verify.ui_tokens` and its contract test. The `brandbook/` allowlist entry's reason now names that owner, and no `Phase 188 deletes` wording remains in ROADMAP, REQUIREMENTS, STATE or the allowlist. Minor residual: the ROADMAP "Deferred to v1.47" line lists retiring `verify.ui_tokens`, the mirror and the contract test but does not name deleting `brandbook/` itself or its `retire-last` prefix entry; the allowlist reason does. |
 | 4 | The structural pair check is explicitly not font-invariant and geometry stays exact. Phase 187 swaps fonts (SKIN-02) and may add a visible dark-surface ramp border; both are likely to reject preservation pairs by design. Thresholds were calibrated on one recolor family. | non-blocking (forward flag) | Meets TOK-04 as written (calibrated accept and reject). Phase 187 planning should decide what the pair check is expected to prove across a font change. |
 | 5 | The GATE-02 projection in `186-02-SUMMARY.md` predates the review fixes. My re-run shows one new 187-owned item: after the recolor, `app.css` holds fewer retired values, so Phase 187 must lower that entry's `max_hits` and `HITS_CEILING` in lockstep (SKIN-01/SKIN-05). | non-blocking | Still 187-owned; the guard fails loudly and says the number to use. |
 | 6 | Unfixed review items (out of scope for the fix round): IN-03 the wrapper does not require the 17 planted/accept test names, so deleting them would keep CI green; IN-04 `dependency_options!/2` reports a keyword-only dependency such as `{:phoenix_storybook, github: "...", only: [:dev, :test]}` as a violation (latent false positive, guard is vacuous today); IN-06 `PENDING_CEILING`, `HEX_OUTSIDE_CEILING` and `ALLOWLIST_CEILING` do not fail when the live count drops below them (only `HITS_CEILING` does); IN-01 `write!/3` validates inside its write loop and follows symlinks; IN-02 the license string hard-codes commit `ced7c40e`; IN-05 `relative_luminance/1` is dead code; IN-07 built-CSS parity covers only `--color-*` and `--ops-*`. | non-blocking | Each is advisory and none weakens a success criterion. IN-03 and IN-06 are worth taking in the next test-only commit before Phase 187 flips rows. |
@@ -193,9 +196,9 @@ None. Nothing in this phase is impossible to automate, and the zero-human-verifi
 
 ## Gaps Summary
 
-No gaps. All five roadmap success criteria and all nine requirement IDs are met on the code at `21f13530`. The non-blocking findings above should be handled as follows: take 2, 5 and the IN-03 and IN-06 items in the Phase 187 planning or a small test-only commit; reconcile 3 and 4 when planning Phases 187 and 188; close the hosted gap (finding 1) with the exact-SHA run of all six required checks when the branch is pushed.
+No gaps. All five roadmap success criteria and all nine requirement IDs are met on the code at `21f13530`, and still hold on `f2fb2929` (the later changes are an allowlist reason string, a ROADMAP note and the security report). The non-blocking findings above should be handled as follows: take 2, 5 and the IN-03 and IN-06 items in the Phase 187 planning or a small test-only commit; settle finding 4 when planning Phase 187; finding 3 is resolved (optionally name the `brandbook/` deletion in the ROADMAP "Deferred to v1.47" line); close the hosted gap (finding 1) with the exact-SHA run of all six required checks when the branch is pushed.
 
 ---
 
-_Verified: 2026-11-19T05:40:00Z_
+_Verified: 2026-11-19T05:58:00Z_
 _Verifier: Claude (gsd-verifier)_
