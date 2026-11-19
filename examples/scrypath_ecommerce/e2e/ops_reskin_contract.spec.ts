@@ -1155,6 +1155,11 @@ test.describe("ops re-skin contract", () => {
 
   test.afterAll(async ({ request }) => {
     await deleteSavedSearches(request, { names: [LATIN_NAME, CJK_NAME] });
+    // The incident seed leaves the live index drifted on purpose (`tenant_id` not filterable), and
+    // `storefront.spec.ts`, which runs later in the ordinary partition, seeds a scenario that does
+    // not restore it. Leave the shared stack on the clean scenario, as the specs before this one do.
+    await seedScenario(request, "all_green");
+    await drainSearchQueue(request).catch(() => undefined);
   });
 
   // P-01 -----------------------------------------------------------------------------------
