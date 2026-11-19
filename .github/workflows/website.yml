@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   build-and-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
       SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath
@@ -65,7 +65,7 @@ jobs:
   deploy:
     if: github.event_name == 'push'
     needs: build-and-check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
       SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath

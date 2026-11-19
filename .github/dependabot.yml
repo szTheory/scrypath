@@ -5,8 +5,89 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      mix-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "mix"
+    directory: "/scrypath_ops"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      ops-mix-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "mix"
+    directory: "/examples/phoenix_meilisearch"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      phoenix-example-mix-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "mix"
+    directory: "/examples/scrypath_ecommerce"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      ecommerce-mix-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/examples/scrypath_ecommerce"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    ignore:
+      # Pinned in lockstep with Dockerfile.e2e (PLAYWRIGHT_VERSION and digest); bump by hand.
+      - dependency-name: "@playwright/test"
+      - dependency-name: "playwright"
+      - dependency-name: "playwright-core"
+    groups:
+      ecommerce-npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/website"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 3
+    groups:
+      website-npm-minor-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    directory: "/examples/scrypath_ecommerce"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+    ignore:
+      # Supported Elixir/OTP pair is a compatibility claim; change by hand with the matrix.
+      - dependency-name: "hexpm/elixir"
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/"
+      - "/examples/phoenix_meilisearch"
+      - "/examples/scrypath_ecommerce"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+    ignore:
+      # Meilisearch v1.15 and Postgres 16 are documented compatibility targets.
+      - dependency-name: "getmeili/meilisearch"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "postgres"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      actions-minor-patch:
+        update-types: ["minor", "patch"]

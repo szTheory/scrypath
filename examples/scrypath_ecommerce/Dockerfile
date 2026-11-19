@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM hexpm/elixir:1.19.0-erlang-28.1-debian-bookworm-20260518 AS beam_base
+FROM hexpm/elixir:1.19.0-erlang-28.1-debian-bookworm-20260518@sha256:4b697de76f1f050bcb33a7ab188ee25139e320403494a4569316e1ba6524ef47 AS beam_base
 
 RUN apt-get update -qq \
   && apt-get install -y --no-install-recommends build-essential cmake git curl postgresql-client npm \
