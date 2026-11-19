@@ -566,7 +566,7 @@
   }
 
   .ops-empty-hero__body {
-    color: color-mix(in oklch, var(--color-base-content) 74%, transparent);
+    color: var(--ops-text-muted);
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
   }
@@ -829,7 +829,7 @@
 
   .ops-fieldset__hint {
     max-width: 48rem;
-    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    color: var(--ops-text-muted);
     font-size: var(--text-ops-sm);
     line-height: 1.25rem;
     margin: calc(-1 * var(--spacing-ops-2)) 0 var(--spacing-ops-3);
@@ -860,6 +860,10 @@
   .ops-text-meta  { font-size: var(--text-ops-xs); line-height: var(--leading-ops-body); color: var(--ops-text-muted); }
   .ops-text-mono  { font-family: var(--font-mono); font-size: var(--text-ops-sm); }
 
+  /* Secondary text is the opaque muted token, never an alpha mix of Ink (N-07). A hand-written class:
+     templates say `ops-muted` where they used to put an opacity step on the Ink text utility. */
+  .ops-muted { color: var(--ops-text-muted); }
+
   .ops-time {
     display: inline-flex;
     min-width: 0;
@@ -872,7 +876,7 @@
 
   .ops-time__label {
     font-weight: 600;
-    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    color: var(--ops-text-muted);
   }
 
   .ops-time__value {
@@ -1040,7 +1044,7 @@
     font-weight: 600;
     line-height: var(--leading-ops-tight);
     letter-spacing: var(--tracking-ops-label);
-    color: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+    color: var(--ops-text-muted);
   }
 
   .ops-nav-list {
@@ -1063,7 +1067,7 @@
     padding-inline: 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: color-mix(in oklch, var(--color-base-content) 74%, transparent);
+    color: var(--ops-text-muted);
     text-decoration: none;
     transition-property: background-color, border-color, color, box-shadow, transform;
     transition-duration: var(--duration-ops-fast);
@@ -1214,7 +1218,7 @@
   }
 
   .ops-trail__sep {
-    color: color-mix(in oklch, var(--color-base-content) 35%, transparent);
+    color: var(--ops-text-muted);
   }
 
   /* Unified "Next step" footer (ops_handoff): a consistent, learnable end-of-page
@@ -1371,7 +1375,7 @@
     flex: 1;
     font-size: var(--text-ops-body);
     line-height: var(--leading-ops-body);
-    color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
+    color: var(--ops-text-muted);
   }
 
   .ops-intent-card__cta {
@@ -1493,7 +1497,7 @@
   .ops-signal-table th[scope="row"] {
     width: 12rem;
     vertical-align: top;
-    color: color-mix(in oklch, var(--color-base-content) 78%, transparent);
+    color: var(--ops-text-muted);
   }
 
   /* Search health rows are hairline rows on a Panel list: the list has a top hairline, each row has
@@ -1777,7 +1781,7 @@
 
   .ops-cheatsheet__row dd {
     margin: 0;
-    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    color: var(--ops-text-muted);
   }
 
   .ops-kbd {
@@ -2117,8 +2121,8 @@
   .ops-facts dd { overflow-wrap: anywhere; }
   .ops-time { flex-wrap: wrap; vertical-align: baseline; }
   .ops-time__stamp { display: inline-flex; align-items: center; gap: .375rem; padding: .125rem 0; max-width: 100%; min-height: 1.75rem; color: inherit; font: inherit; text-align: left; cursor: copy; border: 0; background: transparent; text-decoration: none; }
-  .ops-time__affordance { opacity: .45; flex-shrink: 0; }
-  .ops-time__stamp:hover .ops-time__affordance, .ops-time__stamp:focus-visible .ops-time__affordance { opacity: 1; }
+  .ops-time__affordance { color: var(--ops-text-muted); flex-shrink: 0; }
+  .ops-time__stamp:hover .ops-time__affordance, .ops-time__stamp:focus-visible .ops-time__affordance { color: var(--color-base-content); }
   .ops-time__feedback { padding: 0; border: 0; background: transparent; }
   .ops-time-preference { display: flex; align-items: center; gap: .375rem; color: var(--ops-text-muted); font-size: var(--text-ops-sm); }
   .ops-time-preference select { width: auto; background-color: var(--ops-surface-1); color: var(--color-base-content); border: var(--border) solid var(--ops-control-edge); }
@@ -2512,16 +2516,6 @@
 /* Unlayered so they beat the code block's variant utilities. */
 .ops-code-block--inline-copy.ops-code-block--copyable pre { min-height: 2.75rem; padding-block-start: var(--spacing-ops-2); padding-inline-end: 5.5rem; }
 .ops-code-block--clamp:not(.ops-code-block--expanded) pre { max-height: calc(4lh + 1rem); overflow: hidden; }
-
-/* Cascade-safe operator text contrast.
-   Keep these outside Tailwind's ordered layers so readable roles beat generated utilities. */
-.ops-header .text-base-content\/60 {
-  color: var(--ops-text-muted);
-}
-
-.ops-shell .text-base-content\/60 {
-  color: var(--ops-text-muted);
-}
 
 /* Prose links: Plum (Orchid in dark), underlined at rest (1px, offset .2em), 2px on hover.
    Unlayered so they beat daisyUI's link utilities. Exempt: nav items, buttons, the wordmark link

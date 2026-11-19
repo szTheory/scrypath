@@ -29,7 +29,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       >
         {@title}
       </h1>
-      <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
+      <p :if={@subtitle} class="max-w-3xl text-ops-body ops-muted">{@subtitle}</p>
     </div>
     """
   end
@@ -148,8 +148,8 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             {@title}
           </h2>
-          <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
-          <p :if={@meta} class="text-ops-sm tabular-nums text-base-content/70">{@meta}</p>
+          <p :if={@subtitle} class="max-w-3xl text-ops-body ops-muted">{@subtitle}</p>
+          <p :if={@meta} class="text-ops-sm tabular-nums ops-muted">{@meta}</p>
           <div :if={@metadata != []}>{render_slot(@metadata)}</div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap items-center justify-end gap-2">
@@ -606,7 +606,7 @@ defmodule ScrypathOpsWeb.OpsUi do
             <.ops_sync_status :if={@status} status={@status} />
             {@headline}
           </p>
-          <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
+          <div :if={@inner_block != []} class="text-ops-body ops-muted">
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -724,7 +724,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div class={["ops-muted-panel p-ops-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
-      <div class="mt-ops-2 text-base-content/75">{render_slot(@inner_block)}</div>
+      <div class="mt-ops-2 ops-muted">{render_slot(@inner_block)}</div>
       <div :if={@actions != []} class="mt-ops-4 flex flex-wrap gap-2">
         {render_slot(@actions)}
       </div>
@@ -814,7 +814,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     </div>
     <span
       :if={@variant == :inline}
-      class={["ops-loading inline-flex items-center gap-2 text-ops-sm text-base-content/65", @class]}
+      class={["ops-loading inline-flex items-center gap-2 text-ops-sm ops-muted", @class]}
       role="status"
       aria-busy="true"
       {@rest}
@@ -845,7 +845,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <p
         :if={@hint}
         id={@control_id && "#{@control_id}-hint"}
-        class="mt-ops-1 text-ops-sm leading-5 text-base-content/65"
+        class="mt-ops-1 text-ops-sm leading-5 ops-muted"
       >
         {@hint}
       </p>
@@ -917,9 +917,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_field(assigns) do
     ~H"""
     <div id={"#{@id}-field"} phx-hook="OpsFieldValidation" class={["space-y-ops-field", @class]}>
-      <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
+      <label class="block text-ops-body font-semibold ops-muted" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 ops-muted">
         {@hint}
       </p>
       <p
@@ -1095,8 +1095,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
       <fieldset class="space-y-ops-field" disabled={@disabled}>
-        <legend class="block text-ops-body font-semibold text-base-content/75">{@label}</legend>
-        <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 text-base-content/65">
+        <legend class="block text-ops-body font-semibold ops-muted">{@label}</legend>
+        <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 ops-muted">
           {@hint}
         </p>
         <p :if={@error} id={"#{@id}-error"} class="text-ops-sm text-error" role="alert">
@@ -1173,7 +1173,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           data-testid={if value == "multi", do: "search-mode-multi"}
           class={[
             "ops-segmented-btn ops-transition-status px-3 text-ops-body font-semibold",
-            value != @selected && "text-base-content/75"
+            value != @selected && "ops-muted"
           ]}
         >
           {label}
@@ -1265,7 +1265,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">
+          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 ops-muted">
             {@subtitle}
           </p>
         </div>
@@ -1292,7 +1292,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <article class={["ops-result-row text-ops-body", @class]} {@rest}>
       <div class="min-w-0">
         <h3 class="text-ops-h3 font-semibold text-base-content">{@title}</h3>
-        <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 text-base-content/70">{@subtitle}</p>
+        <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 ops-muted">{@subtitle}</p>
         <div :if={@meta != []} class="mt-2 flex flex-wrap gap-2">
           {render_slot(@meta)}
         </div>
@@ -1418,7 +1418,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       >
         {@summary}
       </summary>
-      <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
+      <div class="ops-disclosure-body mt-2 text-ops-body text-base-content">
         {render_slot(@inner_block)}
       </div>
     </details>
@@ -1597,7 +1597,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <p
           :if={@description}
           id={"#{@id}-description"}
-          class="mt-2 max-w-2xl text-ops-body text-base-content/80"
+          class="mt-2 max-w-2xl text-ops-body text-base-content"
         >
           {@description}
         </p>
@@ -1675,7 +1675,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <p
           :if={@description}
           id={"#{@id}-description"}
-          class="mt-ops-1 text-ops-body text-base-content/75"
+          class="mt-ops-1 text-ops-body ops-muted"
         >
           {@description}
         </p>

@@ -411,7 +411,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-computer-desktop-micro" class="size-4" />
         <span>System</span>
       </button>
 
@@ -424,7 +424,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-4" />
         <span>Light</span>
       </button>
 
@@ -437,7 +437,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-4" />
         <span>Dark</span>
       </button>
     </div>

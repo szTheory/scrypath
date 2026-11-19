@@ -292,7 +292,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         >
           {@posture_evidence}
         </.ops_verdict>
-        <p class="text-ops-sm text-base-content/70">
+        <p class="text-ops-sm ops-muted">
           {posture_schema_count(@posture_rows)} {if posture_schema_count(@posture_rows) == 1,
             do: "schema",
             else: "schemas"} · {sync_summary(@scrypath_opts)}
@@ -302,7 +302,7 @@ defmodule ScrypathOpsWeb.PostureLive do
         </p>
       </section>
 
-      <p :if={@auto_refresh} class="mt-ops-2 text-ops-body text-base-content/70">
+      <p :if={@auto_refresh} class="mt-ops-2 text-ops-body ops-muted">
         Auto-refresh is not enabled by default; only manual refresh runs in this build.
       </p>
 
@@ -418,7 +418,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     <div class="ops-signal-activity">
                       <p
                         :if={status.backend.pending == [] && status.backend.failed == []}
-                        class="ops-signal-empty text-ops-body text-base-content/70"
+                        class="ops-signal-empty text-ops-body ops-muted"
                       >
                         <.ops_sync_status status={:clear} /> No pending or failed tasks.
                       </p>
@@ -470,7 +470,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                           status.queue.observed? && status.queue.pending == [] &&
                             status.queue.retrying == [] && status.queue.failed == []
                         }
-                        class="ops-signal-empty text-ops-body text-base-content/70"
+                        class="ops-signal-empty text-ops-body ops-muted"
                       >
                         <.ops_sync_status status={:clear} /> No pending, retrying or failed jobs.
                       </p>
@@ -488,7 +488,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                           <dd>{length(status.queue.failed)}</dd>
                         </div>
                       </dl>
-                      <p :if={!status.queue.observed?} class="text-ops-body text-base-content/75">
+                      <p :if={!status.queue.observed?} class="text-ops-body ops-muted">
                         <.ops_condition :if={!Posture.queue_unused?(status)} word="Not observed" />
                         {queue_unobserved_copy(status)}
                       </p>
@@ -521,7 +521,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     >
                       {mod |> Module.split() |> List.last()}
                     </h3>
-                    <p class="mt-ops-1 break-all text-ops-sm text-base-content/70">{inspect(mod)}</p>
+                    <p class="mt-ops-1 break-all text-ops-sm ops-muted">{inspect(mod)}</p>
                   </div>
                   <div class="ops-schema-signal-card__badges">
                     <.row_status_word status={Posture.row_status(row)} />

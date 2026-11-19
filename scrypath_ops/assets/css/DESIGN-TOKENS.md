@@ -91,6 +91,13 @@ dividers and borders that mix `--color-base-content` with transparent, the black
 base-content shadows, the one normalized scrim, the scroll-edge gradients in `.ops-table-scroll`,
 and near-opaque surface mixes such as the sidebar.
 
+`contrast-checker.mjs` enforces both halves from the stylesheet text, each with a planted failure in
+`--self-test` and a planted clone case in `verify.repository_contracts`: N-07 fails any `color`
+declaration that carries a `color-mix`, an `rgba` or `hsla` call, a slash alpha or a four- or
+eight-digit hex, and N-12 fails any `color-mix` (or relative color) of the primary, the secondary or
+a status color. Secondary text is the `.ops-muted` class (`color: var(--ops-text-muted)`); templates
+never put an opacity step on a text color utility or an `opacity-NN` step on a glyph.
+
 ## A11y contrast floors
 
 AA contrast is the hard gate for the operator UI. Body and long-form AAA status is
@@ -107,14 +114,20 @@ compares unrounded ratios, and prints the thinnest text pair on every run.
 | N-04 non-text pairs | `--ops-control-edge` on the four backdrops and on the overlay surface (`base-100`), and `primary` on the four backdrops: 3:1 or better. Button labels (`primary-content` on `primary`, `base-content` on `base-100`): 4.5:1 or better |
 | N-05 published pairs | The 14 pairs printed in the brand book are bound to custom properties and must reproduce to two decimals; Failed and Retrying stay at least 25 degrees apart in CIELAB hue angle |
 | Opaque muted token | `--ops-text-muted` is a six-digit hex equal to the brand's Muted Ink (light) and Muted Pale (dark); an alpha mix on it fails |
+| N-07 text alpha | No `color` declaration in `app.css` contains `color-mix(`, `rgba(`, `hsla(`, a slash alpha or a four- or eight-digit hex; the failure names the selector and the line |
+| N-12 retired tints | No `color-mix(` or relative color in `app.css` contains the primary, the secondary, `info`, `success`, `warning`, `error` or a status color; base-color borders, shadows, scrims and scroll-edge gradients pass |
+| Fixed floors | The pair matrix may not lower 4.5 (text, button labels), 3.0 (control edge, primary) or 25 degrees (status hue); lowering one fails |
 | Color-variable count | Each theme block declares exactly 20 `--color-*` variables |
 
-`--ops-text-muted` consumers: `.ops-header .text-base-content/60`, `.ops-shell .text-base-content/60`,
-`.ops-text-meta`, `.ops-trail__crumb`, `.ops-handoff__hint`, `.ops-preflight__hint`,
-`.ops-cmdk__item-hint`, `.ops-cmdk__empty`. Because the token is an opaque color, a consumer needs
-no manifest entry; do not reintroduce a `color-mix(in oklch, var(--color-base-content) NN%, transparent)`
-declaration for them. Header and shell overrides are unlayered after Tailwind's utility layer so the
-floor remains effective when an opacity utility is present.
+`--ops-text-muted` consumers: `.ops-muted` (the class templates use for secondary text),
+`.ops-text-meta`, `.ops-trail__crumb`, `.ops-trail__sep`, `.ops-handoff__hint`, `.ops-preflight__hint`,
+`.ops-cmdk__item-hint`, `.ops-cmdk__empty`, `.ops-empty-hero__body`, `.ops-fieldset__hint`,
+`.ops-time__label`, `.ops-nav-group__label`, `.ops-nav-item`, `.ops-intent-card__summary`,
+`.ops-signal-table th[scope="row"]` and `.ops-cheatsheet__row dd`. Because the token is an opaque
+color, a consumer needs no registry entry and there is no registry: do not reintroduce a
+`color-mix(in oklch, var(--color-base-content) NN%, transparent)` text declaration (N-07 fails it).
+The former rule for converting an alpha was: 80 percent or more became Ink, below 80 percent became
+the muted token; every one of the nine declarations that remained at the end of Phase 187 was below 80.
 
 Text links inside `.ops-shell` use `--color-base-content` unless the template explicitly
 selects a primary color. This prevents an inline link from inheriting a muted container
@@ -408,8 +421,9 @@ navigation), `hero-x-mark` (close), `hero-chevron-down` (the Saved searches disc
 tab) and `hero-magnifying-glass` (the command hint, shown alone only at 360px and below). Nav
 items, headings, flash messages, counts, the refresh button, the import button, intent cards
 and the empty hero render no icon. The four sync-status shapes are not Heroicons; they exist
-only inside `ops_sync_status`. The flash close glyph renders at full opacity (the alpha on the
-theme-toggle and timestamp-copy glyphs belongs to the alpha sweep). E-10 in
+only inside `ops_sync_status`. Control glyphs render at full opacity: the flash close glyph, the
+theme-toggle glyphs and the timestamp-copy glyph take the text color (muted, Ink on hover or focus
+for the copy glyph) and carry no opacity step. E-10 in
 `reskin_static_contract_test.exs` scans every quoted `"hero-…"` literal under `lib/` against
 this list, so adding a glyph is an edit to the list and a design decision, not a side effect.
 
@@ -497,22 +511,19 @@ patch), no animation of layout properties, no decorative loops, and evidence cod
 `motion_contract_test.exs` asserts that the retired families and both glow tokens are absent; the
 duration-token rule for every transition and animation is added with the motion proof in Plan 09.
 
-## Muted-Text Contrast Registry
+## Muted-Text Contrast (the registry is retired)
 
-The muted-alpha text pairs that remain are tracked in [`contrast-pairs.mjs`](./contrast-pairs.mjs) (beside
-this file) — the single source for the D-15 lockstep guard in `contrast-checker.mjs`. Only direct
-`color: color-mix(...)` declarations are listed there now; readable muted text goes through the opaque
-`--ops-text-muted` token, which needs no entry (see A11y contrast floors), and the plan that
-converts the remaining direct declarations retires this registry. The guard
-is **bidirectional**: every `color: color-mix(in oklch, var(--color-base-content) NN%, transparent)`
-occurrence in `app.css` (including single-line rules and rules nested inside `@media` blocks) must
-have a corresponding manifest entry, AND every non-`decorative` manifest entry must match an actual
-`app.css` rule (so stale/removed entries are caught too). Either direction failing makes
-`make contrast` fail.
+Phase 187 retired the muted-alpha registry that used to live in `contrast-pairs.mjs`
+(`MUTED_PAIRS`) together with the lockstep guard that tied it to `color: color-mix(...)` declarations
+in `app.css`. There is no alpha on text any more, so there is nothing to track: secondary text is
+`--ops-text-muted`, an opaque color covered by the muted text pairs on four backdrops (N-03) and by
+the opaque-token guard, and N-07 (see A11y contrast floors) fails any alpha that returns. The file
+now holds the focus and surface bindings, the brand pair matrix and the published pair bindings.
 
 ### Alpha Compositing Algorithm (D-12)
 
-Alpha compositing uses sRGB:
+Text no longer uses alpha, so this applies only to the near-opaque sidebar surface binding, which
+the checker composites over the page before it measures text on it. Alpha compositing uses sRGB:
 
 ```
 out_channel = fg_channel × α + bg_channel × (1−α)
@@ -528,7 +539,7 @@ Thresholds per D-14:
 | Role | AA | AAA |
 |------|-----|-----|
 | `text` (body/inline) | 4.5:1 | 7.0:1 |
-| `large` (uppercase + bold, WCAG large text) | 3.0:1 | 4.5:1 |
+| `large` (WCAG large text: 18pt, or 14pt bold) | 3.0:1 | 4.5:1 |
 | `ui` (non-text, semantic pairs `X-content/X`) | 3.0:1 | 4.5:1 |
 
 The `contrast-checker.mjs` gate exits non-zero iff AA failures exist; AAA is reported as advisory

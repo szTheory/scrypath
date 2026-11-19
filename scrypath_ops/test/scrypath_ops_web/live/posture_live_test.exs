@@ -161,7 +161,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     refute error_row =~ "data-sync-status"
 
     assert html =~ "Queue not used"
-    assert html =~ ~s(class="text-ops-body text-base-content/75")
+    assert html =~ ~s(class="text-ops-body ops-muted")
     assert html =~ "Meilisearch document tasks"
     assert html =~ "Manual sync"
     assert html =~ "Last success"

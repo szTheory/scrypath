@@ -206,6 +206,17 @@ defmodule Mix.Tasks.UiContrastContractTest do
       String.replace(original_css, hd(dark_theme_match), "", global: false) <>
         "\n.quoted-theme-decoy::before { content: '#{quoted_dark_theme}'; }\n"
 
+    without_bindings =
+      original_manifest
+      |> String.replace(
+        ~r/export const FOCUS_BINDINGS = \[[\s\S]*?\n\];/,
+        "export const FOCUS_BINDINGS = [];"
+      )
+      |> String.replace(
+        ~r/export const SURFACE_BINDINGS = \[[\s\S]*?\n\];/,
+        "export const SURFACE_BINDINGS = [];"
+      )
+
     cases = [
       {"missing dark theme", css,
        Regex.replace(
@@ -225,10 +236,15 @@ defmodule Mix.Tasks.UiContrastContractTest do
          "--color-primary",
          UiTokens.rgb_function(live_dark_primary)
        )},
-      {"invalid pair role", manifest,
-       String.replace(original_manifest, ~s(role: "text"), ~s(role: "unknown"))},
-      {"text role laundering", manifest,
-       String.replace(original_manifest, ~s(role: "text"), ~s(role: "decorative"))},
+      # The muted-alpha manifest (and its per-entry text roles) is retired, so these two attack the
+      # brand pair matrix that replaced it: a text role dropped from the matrix leaves fewer than the
+      # 56 pairs the check counts, and a lowered floor would let a weak pair pass as text.
+      {"text role dropped from the matrix", manifest,
+       String.replace(original_manifest, ~s(      "ops-text-muted",\n), "", global: false)},
+      {"text floor lowered", manifest,
+       String.replace(original_manifest, "text: {\n    min: 4.5,", "text: {\n    min: 1.0,",
+         global: false
+       )},
       # --ops-text-muted is an opaque brand hex (Phase 187). Drift it from its live dark value,
       # never from a pinned old mix, so the opaque-token guard has to catch the change.
       {"muted token drift", css,
@@ -238,7 +254,17 @@ defmodule Mix.Tasks.UiContrastContractTest do
          "--ops-text-muted",
          UiTokens.bump_hex(live_dark_muted)
        )},
-      {"empty pairs", manifest, "export const MUTED_PAIRS = [];"},
+      # A manifest that exports empty focus and surface bindings (every other export intact) must be
+      # refused rather than treated as "nothing to check".
+      {"manifest without bindings", manifest, without_bindings},
+      # Text never uses alpha (N-07) and no primary or status tint returns (N-12): the retired muted
+      # manifest used to catch the first, these two planted declarations prove the bans stand alone.
+      {"alpha text declaration", css,
+       original_css <>
+         "\n.planted { color: color-mix(in oklch, var(--color-base-content) 50%, transparent); }\n"},
+      {"retired color tint", css,
+       original_css <>
+         "\n.planted { background: color-mix(in oklch, var(--color-primary) 14%, transparent); }\n"},
       {"dark focus below 3", css,
        String.replace(
          original_css,
@@ -266,7 +292,22 @@ defmodule Mix.Tasks.UiContrastContractTest do
       {"broken checker launch", checker, "throw new Error('checker launch witness');"}
     ]
 
+    originals = %{css => original_css, manifest => original_manifest, checker => original_checker}
+
+    # The reason each retired-manifest replacement must fail for, so a case cannot pass by breaking
+    # something unrelated: the checker's own message names the ban or guard that fired.
+    reasons = %{
+      "text role dropped from the matrix" => "N-03 expected 56 text pairs",
+      "text floor lowered" => "N-03 text threshold is 1 in the pair matrix",
+      "manifest without bindings" => "Required focus/surface bindings are empty",
+      "alpha text declaration" => "N-07 text color at app.css line",
+      "retired color tint" => "N-12 color-mix at app.css line"
+    }
+
     for {name, file, content} <- cases do
+      # A mutation that changes nothing would "fail" nothing: it means its target string is gone.
+      refute content == Map.fetch!(originals, file), "#{name} did not change #{file}"
+
       File.write!(css, original_css)
       File.write!(manifest, original_manifest)
       File.write!(checker, original_checker)
@@ -277,6 +318,10 @@ defmodule Mix.Tasks.UiContrastContractTest do
       assert output =~ "Contrast check: FAIL" or output =~ "contrast-checker error:" or
                output =~ "checker launch witness",
              "#{name} failed outside contrast:\n#{output}"
+
+      if reason = reasons[name] do
+        assert output =~ reason, "#{name} did not fail for #{inspect(reason)}:\n#{output}"
+      end
     end
   end
 

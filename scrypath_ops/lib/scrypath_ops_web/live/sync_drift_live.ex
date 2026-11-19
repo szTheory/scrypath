@@ -2062,7 +2062,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
         <p
           :if={@reconcile_result == nil && is_nil(@reconcile_error) && @selected_schema}
-          class="text-ops-body text-base-content/70"
+          class="text-ops-body ops-muted"
         >
           Sync status isn't available yet. Configure the Scrypath runtime, then Refresh.
         </p>
@@ -2149,7 +2149,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Refresh recovery status
           </.ops_button>
         </:actions>
-        <p class="text-ops-body text-base-content/75">
+        <p class="text-ops-body ops-muted">
           Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
         </p>
         <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
@@ -2239,7 +2239,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             !@settings_checking? && is_nil(@drift_error) && is_nil(@drift_result) &&
               @selected_schema
           }
-          class="text-ops-body text-base-content/70"
+          class="text-ops-body ops-muted"
         >
           Meilisearch settings can be compared once the Scrypath runtime is configured.
         </p>
@@ -2307,7 +2307,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_section>
 
       <.ops_section :if={@selected_schema} id="reindexing-heading" title="Reindexing" class="mt-6">
-        <p :if={!@show_promotion?} id="reindex-idle" class="text-ops-body text-base-content/75">
+        <p :if={!@show_promotion?} id="reindex-idle" class="text-ops-body ops-muted">
           <span :if={@reconcile_result}>No reindex in progress.</span>
           <span :if={!@reconcile_result}>Reindex status shows once sync can be checked.</span>
           <.ops_help_link href={"#{@mount_path}/help#reindexing"}>
@@ -2316,7 +2316,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </p>
 
         <div :if={@show_promotion?} id="index-promotion" class="space-y-3">
-          <p class="text-ops-body text-base-content/75">
+          <p class="text-ops-body ops-muted">
             Prepared index
             <.ops_inline_code>{reindex_index(@reconcile_result, :target_index)}</.ops_inline_code>
             found. Promotion swaps it with the live index <.ops_inline_code>{reindex_index(@reconcile_result, :live_index)}</.ops_inline_code>, so searches move to the prepared index in one step.

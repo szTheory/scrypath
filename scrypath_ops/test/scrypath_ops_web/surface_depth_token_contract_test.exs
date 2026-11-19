@@ -127,7 +127,8 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
     refute css() =~ "ops-schema-signal-card--"
 
     # No dark twin brings a shadow or a rounded card back onto the row.
-    for [selector_and_body] <- Regex.scan(~r/[^{}]*\.ops-schema-signal-card\s*(?:,[^{}]*)?\{[^{}]*\}/, css()) do
+    for [selector_and_body] <-
+          Regex.scan(~r/[^{}]*\.ops-schema-signal-card\s*(?:,[^{}]*)?\{[^{}]*\}/, css()) do
       refute selector_and_body =~ ~r/box-shadow:\s*var\(/, selector_and_body
       refute selector_and_body =~ "border-radius: var(", selector_and_body
     end

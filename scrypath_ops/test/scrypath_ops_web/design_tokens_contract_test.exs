@@ -210,16 +210,50 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert css() =~ ".ops-btn:disabled"
   end
 
-  test "muted text and neutral links override Tailwind's utility layer for AA contrast" do
+  # N-07: text never uses alpha. A text color utility with an opacity step (`text-base-content/70`) and
+  # any opacity step other than the two ends of a show or hide transition (`opacity-0`, `opacity-100`)
+  # is an alpha mix, so neither may appear in a template.
+  # Functions, not module attributes: OTP 28 cannot store a compiled regex in an attribute.
+  defp alpha_text_utility, do: ~r/\btext-[a-z0-9-]+\/\d+/
+  defp partial_opacity, do: ~r/\bopacity-(?!0\b|100\b)\d+/
+
+  test "muted text is one opaque class and no template puts alpha on text" do
+    muted = rule(".ops-muted")
+    assert muted =~ "color: var(--ops-text-muted);"
+    refute muted =~ "color-mix"
+    refute muted =~ "opacity"
+
+    # The alpha utility override and its cascade-safe block went away with the utilities (N-07).
+    refute css() =~ "Cascade-safe operator text contrast"
+    refute css() =~ ~r/\.text-base-content\\\//
+
+    hits =
+      for file <- template_files(),
+          content = scannable(File.read!(file)),
+          regex <- [alpha_text_utility(), partial_opacity()],
+          [hit] <- Regex.scan(regex, content),
+          do: {Path.relative_to(file, @web_root), hit}
+
+    assert hits == [],
+           "Text uses alpha: use `ops-muted` (opaque muted token) or `text-base-content` (Ink).\n" <>
+             Enum.map_join(hits, "\n", fn {file, hit} -> "  #{hit}  (#{file})" end)
+
+    # The matchers fire on the old forms and leave the transition ends alone, so a pass is not vacuous.
+    assert Regex.match?(alpha_text_utility(), ~s(class="text-ops-body text-base-content/70"))
+    assert Regex.match?(alpha_text_utility(), ~s(class="text-error/60"))
+    assert Regex.match?(partial_opacity(), ~s(class="size-4 opacity-75 hover:opacity-100"))
+    refute Regex.match?(partial_opacity(), ~s(class="opacity-0 transition-opacity opacity-100"))
+    refute Regex.match?(alpha_text_utility(), ~s(class="text-base-content font-semibold"))
+  end
+
+  test "neutral links override Tailwind's utility layer for AA contrast" do
     overrides =
       css()
-      |> String.split("/* Cascade-safe operator text contrast.", parts: 2)
+      |> String.split("/* Prose links: Plum", parts: 2)
       |> List.last()
 
     refute overrides == css()
     refute overrides =~ "@layer"
-    assert overrides =~ ".ops-shell .text-base-content\\/60"
-    assert overrides =~ "color: var(--ops-text-muted)"
     # Prose links are Plum (Orchid in dark) and underlined at rest; the old Ink override is gone.
     refute overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
     refute css() =~ "a.link-primary {\n  color: var(--color-base-content)"

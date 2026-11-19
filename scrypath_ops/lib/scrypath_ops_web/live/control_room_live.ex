@@ -172,13 +172,13 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             </div>
             <p
               :if={@refresh_issue && @last_successful_posture}
-              class="mt-2 text-ops-sm text-base-content/75"
+              class="mt-2 text-ops-sm ops-muted"
             >
               Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
             <p
               :if={@refresh_issue && is_nil(@last_successful_posture)}
-              class="mt-2 text-ops-sm text-base-content/75"
+              class="mt-2 text-ops-sm ops-muted"
             >
               Incomplete observation checked: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
