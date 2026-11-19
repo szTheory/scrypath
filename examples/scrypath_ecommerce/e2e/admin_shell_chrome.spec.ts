@@ -759,9 +759,12 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await expect(flash.getByRole("button", { name: "Close notification" })).toBeVisible();
           await expect(page.locator("#flash-group")).toHaveCount(1);
 
-          const shadow = await flash.evaluate((el) => getComputedStyle(el).boxShadow);
-          const border = await flash.evaluate((el) => getComputedStyle(el).borderColor);
-          const bg = await flash.evaluate((el) => getComputedStyle(el).backgroundColor);
+          // Phase 187: the toast surface (Panel fill, Control Edge border, overlay shadow) is the inner
+          // alert; the outer .ops-flash only lays it out.
+          const surface = flash.locator(".alert");
+          const shadow = await surface.evaluate((el) => getComputedStyle(el).boxShadow);
+          const border = await surface.evaluate((el) => getComputedStyle(el).borderColor);
+          const bg = await surface.evaluate((el) => getComputedStyle(el).backgroundColor);
           expect(shadow, "flash should expose overlay/depth styling").not.toBe("none");
           expect(border, "flash should expose a visible border color").not.toBe("rgba(0, 0, 0, 0)");
           expect(bg, "flash should expose a visible background").not.toBe("rgba(0, 0, 0, 0)");
