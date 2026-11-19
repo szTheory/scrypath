@@ -2032,7 +2032,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               <.link
                 :if={signal in [:pending_queue_work, :pending_backend_work]}
                 navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-                class="ops-sync-activity-link"
+                class="ops-text-action"
               >
                 {reconcile_signal_label(signal, @reconcile_result)}
                 <span aria-hidden="true">→</span>
@@ -2426,13 +2426,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_section>
 
       <nav class="ops-sync-related" aria-label="Related search views">
-        <.link navigate={@mount_path} class="ops-sync-activity-link">
+        <.link navigate={@mount_path} class="ops-text-action">
           Return to Control Room
         </.link>
         <.link
           :if={@selected_schema}
           navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-          class="ops-sync-activity-link"
+          class="ops-text-action"
         >
           Inspect search health
         </.link>

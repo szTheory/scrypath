@@ -2347,9 +2347,6 @@
   .justify-start {
     justify-content: flex-start;
   }
-  .gap-1 {
-    gap: calc(var(--spacing) * 1);
-  }
   .gap-1\.5 {
     gap: calc(var(--spacing) * 1.5);
   }
@@ -2514,12 +2511,6 @@
       background-color: color-mix(in oklab, var(--color-base-100) 70%, transparent);
     }
   }
-  .bg-base-200\/70 {
-    background-color: var(--color-base-200);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-base-200) 70%, transparent);
-    }
-  }
   .bg-base-300 {
     background-color: var(--color-base-300);
   }
@@ -2529,9 +2520,6 @@
   .checkbox-sm {
     padding: 0.1875rem;
     --size: calc(var(--size-selector, 0.25rem) * 5);
-  }
-  .p-1 {
-    padding: calc(var(--spacing) * 1);
   }
   .p-4 {
     padding: calc(var(--spacing) * 4);
@@ -2707,9 +2695,6 @@
   .text-error {
     color: var(--color-error);
   }
-  .text-primary-content {
-    color: var(--color-primary-content);
-  }
   .uppercase {
     text-transform: uppercase;
   }
@@ -2841,29 +2826,14 @@
     --btn-p: 0.5rem;
     --size: calc(var(--size-field, 0.25rem) * 6);
   }
-  .btn-error {
-    --btn-color: var(--color-error);
-    --btn-fg: var(--color-error-content);
-  }
   .btn-primary {
     --btn-color: var(--color-primary);
     --btn-fg: var(--color-primary-content);
-  }
-  .btn-secondary {
-    --btn-color: var(--color-secondary);
-    --btn-fg: var(--color-secondary-content);
   }
   .group-hover\:opacity-70 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {
         opacity: 70%;
-      }
-    }
-  }
-  .hover\:bg-base-100 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-base-100);
       }
     }
   }
@@ -3200,10 +3170,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-ops-2);
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
-    }
+    border: var(--border) solid var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
     background: var(--ops-surface-2);
     @supports (color: color-mix(in lab, red, red)) {
@@ -3225,14 +3192,7 @@
     display: none;
   }
   .ops-command-hint:hover {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 34%, transparent);
-    }
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 8%, transparent);
-    }
+    background: var(--ops-sunken);
     color: var(--color-base-content);
   }
   .ops-command-hint:active {
@@ -3269,30 +3229,17 @@
     min-height: var(--control-h-lg);
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
-    }
+    border: var(--border) solid var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
-    background: var(--ops-surface-2);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--ops-surface-2) 62%, transparent);
-    }
+    background: var(--color-base-100);
     color: var(--color-base-content);
     transition-property: background-color, border-color, color, transform;
     transition-duration: var(--duration-ops-fast);
     transition-timing-function: var(--ease-ops-standard);
   }
   .ops-nav-trigger:hover, .ops-nav-close:hover {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 36%, transparent);
-    }
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 10%, transparent);
-    }
-    color: var(--color-primary);
+    background: var(--ops-sunken);
+    color: var(--color-base-content);
   }
   .ops-nav-trigger:active, .ops-nav-close:active {
     transform: scale(0.96);
@@ -3501,9 +3448,29 @@
   .ops-verdict__label {
     color: var(--ops-text-muted);
   }
+  .ops-segmented-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-ops-1);
+    padding: var(--spacing-ops-1);
+    border: var(--border) solid var(--ops-control-edge);
+    border-radius: var(--radius-ops-control);
+    background: var(--color-base-100);
+  }
   .ops-segmented-btn {
     min-height: var(--control-h-sm);
+    border: 1px solid transparent;
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-sm);
+    background: transparent;
+    color: var(--color-base-content);
+  }
+  .ops-segmented-btn:hover:not([aria-pressed="true"]):not(:disabled) {
+    background: var(--ops-sunken);
+  }
+  .ops-segmented-btn:disabled {
+    color: var(--ops-text-muted);
+    cursor: not-allowed;
   }
   .ops-badge {
     display: inline-flex;
@@ -3585,39 +3552,11 @@
     min-height: var(--control-h-md);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard), background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
-  .ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error) {
-    border-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-base-content) 18%, transparent);
-    }
-    background: var(--ops-surface-2);
-  }
-  .ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error) {
-    border-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-base-content) 24%, transparent);
-    }
-    background: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 12%, var(--ops-surface-2));
-    }
-  }
-  .ops-btn[aria-pressed="true"] {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
-    }
-    background: var(--ops-selection);
-    color: var(--color-primary);
-  }
   .ops-btn:disabled {
     cursor: not-allowed;
   }
   .ops-btn:disabled:hover, .ops-btn:disabled:active {
     transform: none;
-  }
-  .ops-btn:disabled:hover:not(.btn-primary):not(.btn-error), .ops-btn:disabled:active:not(.btn-primary):not(.btn-error) {
-    background: transparent;
   }
   .btn.ops-icon-btn {
     min-width: var(--control-h-lg);
@@ -3787,21 +3726,22 @@
     align-items: center;
     gap: var(--spacing-ops-2);
     border-radius: var(--radius-ops-control);
+    border-inline-start: 2px solid transparent;
     padding: var(--spacing-ops-2) var(--spacing-ops-3);
     transition: background-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
   .ops-schema-picker__option:hover {
-    background: var(--ops-surface-2);
+    background: var(--ops-sunken);
   }
   .ops-schema-picker__option:active {
-    background: var(--ops-surface-2);
+    background: var(--ops-sunken);
   }
   .ops-schema-picker__option:has(input:focus-visible) {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
   .ops-schema-picker__option:has(input:checked) {
-    background: var(--ops-surface-2);
+    background: var(--ops-selected);
   }
   .ops-schema-picker__radio {
     width: 1rem;
@@ -3880,6 +3820,7 @@
     align-items: center;
     gap: var(--spacing-ops-2);
     border: 1px solid transparent;
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-md);
     padding-inline: 0.75rem;
     font-size: 0.875rem;
@@ -3894,24 +3835,13 @@
     transition-timing-function: var(--ease-ops-standard);
   }
   .ops-nav-item:hover {
-    border-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-base-content) 8%, transparent);
-    }
-    background: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-base-content) 6%, transparent);
-    }
+    background: var(--ops-sunken);
     color: var(--color-base-content);
   }
   .ops-nav-item:active {
     transform: scale(0.99);
   }
   .ops-nav-item-active {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 24%, transparent);
-    }
     background: var(--ops-selection);
     color: var(--color-primary);
     font-weight: 600;
@@ -3919,6 +3849,11 @@
   .ops-nav-item-active:hover {
     background: var(--ops-selection);
     color: var(--color-primary);
+  }
+  .ops-nav-item[aria-current="page"] {
+    background: var(--ops-selected);
+    color: var(--color-primary);
+    font-weight: 600;
   }
   .ops-nav-item__icon {
     display: inline-flex;
@@ -3992,20 +3927,14 @@
     @supports (color: color-mix(in lab, red, red)) {
       border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
     }
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-lg);
     background: var(--ops-surface-1);
     padding: var(--spacing-ops-3);
     transition: transform var(--duration-ops-instant) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard), box-shadow var(--duration-ops-fast) var(--ease-ops-standard);
   }
   .ops-object-item-active {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
-    }
-    box-shadow: 0 0 0 1px var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
-    }
+    background: var(--ops-selected);
   }
   .ops-trail__list {
     display: flex;
@@ -4062,15 +3991,8 @@
   .ops-handoff__link {
     font-size: var(--text-ops-body);
     font-weight: 600;
-    color: var(--color-base-content);
-    text-decoration: underline;
-    text-underline-offset: 2px;
     border-radius: var(--radius-ops-sm);
     transition: color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-  .ops-handoff__link:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
   .ops-preflight {
     display: grid;
@@ -4590,14 +4512,13 @@
     gap: var(--spacing-ops-3);
     padding: var(--spacing-ops-2) var(--spacing-ops-3);
     border-radius: var(--radius-ops-control);
+    border-inline-start: 2px solid transparent;
     color: var(--color-base-content);
     cursor: pointer;
   }
   .ops-cmdk__item.is-active {
-    background: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      background: color-mix(in oklch, var(--color-primary) 14%, transparent);
-    }
+    background: var(--ops-selected);
+    color: var(--color-primary);
   }
   .ops-cmdk__item-label {
     font-size: var(--text-ops-body);
@@ -4825,6 +4746,7 @@
   min-height: var(--control-h-lg);
   border-radius: 999px;
   border: 1px solid transparent;
+  border-inline-start: 2px solid transparent;
   background: transparent;
   color: var(--color-base-content);
   transition-property: background-color, border-color, color;
@@ -4832,13 +4754,13 @@
   transition-timing-function: var(--ease-ops-standard);
 }
 .ops-theme-toggle__button[data-theme-selected="true"] {
-  border-color: var(--color-base-content);
-  @supports (color: color-mix(in lab, red, red)) {
-    border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
-  }
   background: var(--ops-theme-selection);
   color: var(--color-base-content);
   font-weight: 600;
+}
+.ops-theme-toggle {
+  border-color: var(--ops-control-edge);
+  background-color: var(--ops-sunken);
 }
 .ops-disclosure[open] > .ops-disclosure-body {
   animation: ops-fade-in var(--duration-ops-standard) var(--ease-ops-standard);
@@ -4982,10 +4904,7 @@
   }
 }
 [data-theme="dark"] .ops-theme-toggle {
-  border-color: var(--color-base-content);
-  @supports (color: color-mix(in lab, red, red)) {
-    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
-  }
+  border-color: var(--ops-control-edge);
   background: var(--ops-surface-2);
   @supports (color: color-mix(in lab, red, red)) {
     background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
@@ -4994,10 +4913,7 @@
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-theme-toggle {
-    border-color: var(--color-base-content);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
-    }
+    border-color: var(--ops-control-edge);
     background: var(--ops-surface-2);
     @supports (color: color-mix(in lab, red, red)) {
       background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
@@ -5079,14 +4995,6 @@
     }
   }
 }
-[data-theme="dark"] .ops-nav-item-active {
-  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-nav-item-active {
-    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-  }
-}
 [data-theme="dark"] .ops-object-item-active {
   box-shadow: 0 0 0 1px var(--color-primary), var(--shadow-ops-glow);
   @supports (color: color-mix(in lab, red, red)) {
@@ -5134,11 +5042,6 @@
     --shadow-ops-glow: 0 0 8px 2px rgba(108,92,231,0.30);
     --shadow-ops-glow-copper: 0 0 6px 1px rgba(193,122,62,0.25);
   }
-}
-.ops-shell a.link-primary {
-  color: var(--color-base-content);
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 .ops-flash > .alert {
   border: 0;
@@ -5254,7 +5157,7 @@
     width: auto;
     background-color: var(--ops-surface-1);
     color: var(--color-base-content);
-    border: 1px solid var(--color-base-300);
+    border: var(--border) solid var(--ops-control-edge);
   }
   .ops-intent-card {
     position: relative;
@@ -5332,10 +5235,6 @@
     display: grid;
     gap: .5rem;
   }
-  .ops-help-content a, .ops-help-topics a {
-    text-decoration: underline;
-    text-underline-offset: .2em;
-  }
   .ops-help-definitions {
     display: grid;
     gap: 1rem;
@@ -5349,7 +5248,28 @@
     color: var(--ops-text-muted);
     line-height: var(--leading-ops-body);
   }
-  .ops-text-action, .ops-quiet-action {
+  .ops-text-action {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+    min-height: var(--control-h-md);
+    font-size: var(--text-ops-body);
+    font-weight: 600;
+    color: var(--color-base-content);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: .2em;
+    cursor: pointer;
+  }
+  .ops-text-action:hover {
+    text-decoration-thickness: 2px;
+  }
+  .ops-text-action:disabled, .ops-text-action[aria-disabled="true"] {
+    color: var(--ops-text-muted);
+    cursor: not-allowed;
+    text-decoration-thickness: 1px;
+  }
+  .ops-quiet-action {
     display: inline-flex;
     align-items: center;
     gap: .375rem;
@@ -5360,7 +5280,7 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .ops-text-action:hover, .ops-quiet-action:hover {
+  .ops-quiet-action:hover {
     text-decoration: underline;
     text-underline-offset: .2em;
   }
@@ -5582,34 +5502,11 @@
     font-weight: 400;
     color: var(--ops-text-muted);
   }
-  .ops-sync-activity-link {
-    display: inline-flex;
-    align-items: center;
-    gap: .375rem;
-    color: inherit;
-    text-decoration: none;
-    min-height: var(--control-h-sm);
-  }
-  .ops-sync-activity-link:hover {
-    text-decoration: underline;
-    text-underline-offset: .2em;
-  }
   .ops-sync-related {
     display: flex;
     flex-wrap: wrap;
     gap: .5rem 1.5rem;
     font-size: var(--text-ops-sm);
-  }
-  .ops-sync-related .ops-sync-activity-link {
-    text-decoration: underline;
-    text-underline-offset: .2em;
-    text-decoration-color: currentColor;
-    @supports (color: color-mix(in lab, red, red)) {
-      text-decoration-color: color-mix(in oklch, currentColor 45%, transparent);
-    }
-  }
-  .ops-sync-related .ops-sync-activity-link:hover {
-    text-decoration-color: currentColor;
   }
   .ops-search-outcome {
     font-size: var(--text-ops-h2);
@@ -5746,17 +5643,11 @@
     display: inline-flex;
     align-items: baseline;
     gap: .25em;
-    color: inherit;
     font: inherit;
-    text-decoration: underline;
-    text-underline-offset: .2em;
   }
   .ops-help-link svg {
     flex-shrink: 0;
     align-self: center;
-  }
-  .ops-help-link:hover {
-    color: var(--color-base-content);
   }
   .ops-help-heading {
     display: inline-flex;
@@ -5773,16 +5664,6 @@
   }
   .ops-help-content [id] {
     scroll-margin-top: 7rem;
-  }
-  .ops-help-content .ops-text-action {
-    text-decoration: none;
-    gap: .25rem;
-  }
-  .ops-help-content .ops-text-action:hover {
-    text-decoration: none;
-  }
-  .ops-help-content .ops-text-action:hover span {
-    text-decoration: none;
   }
   .ops-signal-group {
     display: grid;
@@ -5869,10 +5750,6 @@
     display: flex;
     align-items: center;
     gap: .5rem;
-  }
-  .ops-sync-work .ops-text-action {
-    font-weight: 600;
-    min-height: var(--control-h-sm);
   }
   .ops-sync-work + .ops-help-link {
     min-height: var(--control-h-xs);
@@ -6089,8 +5966,13 @@
     display: grid;
     gap: .5rem;
     padding-block: .875rem;
+    padding-inline: .75rem;
     border-bottom: 1px solid var(--color-base-300);
+    border-inline-start: 2px solid transparent;
     min-width: 0;
+  }
+  .ops-saved-search-row--loaded {
+    background: var(--ops-selected);
   }
   .ops-saved-search-row--loaded .ops-saved-search-row__name::after {
     content: " · loaded";
@@ -6106,10 +5988,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: .25rem .5rem;
-  }
-  .ops-saved-search-row__actions .ops-btn {
-    min-height: max(24px, var(--control-h-sm));
+    gap: .25rem 1rem;
   }
   .ops-saved-search-row__form {
     display: grid;
@@ -6125,9 +6004,40 @@
   }
 }
 @layer utilities {
-  .ops-btn.ops-saved-search-row__delete {
-    --btn-fg: var(--ops-error-text);
-    color: var(--ops-error-text);
+  .ops-btn.btn-outline {
+    background-color: var(--color-base-100);
+    border-color: var(--ops-control-edge);
+    color: var(--color-base-content);
+    box-shadow: none;
+  }
+  .ops-btn:hover:not(:disabled):not(.btn-primary), .ops-btn:active:not(:disabled):not(.btn-primary) {
+    background-color: var(--ops-sunken);
+  }
+  .ops-btn.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary);
+    text-decoration-line: underline;
+  }
+  .ops-btn.btn-primary:active:not(:disabled) {
+    background-color: var(--color-primary);
+  }
+  .ops-btn[aria-pressed="true"], .ops-btn[aria-pressed="true"]:hover:not(:disabled) {
+    background-color: var(--ops-selected);
+    color: var(--color-base-content);
+  }
+  .ops-btn.btn:disabled:not(.btn-ghost), .ops-btn.btn:disabled:not(.btn-ghost):hover {
+    background-color: var(--color-base-100);
+    border-color: var(--ops-control-edge);
+    color: var(--ops-text-muted);
+    box-shadow: none;
+    text-decoration-line: none;
+  }
+  .input, .select, .textarea, .checkbox, .radio {
+    --input-color: var(--ops-control-edge);
+  }
+  .input:is(:disabled, [disabled]), .select:is(:disabled, [disabled]), .textarea:is(:disabled, [disabled]) {
+    border-color: var(--ops-control-edge);
+    background-color: var(--ops-sunken);
+    color: var(--ops-text-muted);
   }
 }
 @keyframes ops-sheet-in {
@@ -6185,7 +6095,8 @@
     gap: .375rem;
     min-height: var(--control-h-xs);
     padding-inline: .5rem .625rem;
-    border: 1px solid var(--color-base-300);
+    border: var(--border) solid var(--ops-control-edge);
+    border-inline-start-width: 2px;
     border-radius: var(--radius-ops-control);
     background: var(--ops-surface-1);
     color: var(--color-base-content);
@@ -6194,7 +6105,7 @@
     transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
   .ops-filter-chip:hover {
-    background: var(--ops-surface-2);
+    background: var(--ops-sunken);
   }
   .ops-filter-chip input {
     width: .875rem;
@@ -6208,10 +6119,6 @@
     outline-offset: 2px;
   }
   .ops-filter-chip--selected {
-    border-color: var(--color-primary);
-    @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklch, var(--color-primary) 55%, var(--color-base-300));
-    }
     background: var(--ops-selection);
   }
   .ops-filter-chip__count {
@@ -6386,8 +6293,15 @@
 .ops-shell .text-base-content\/60 {
   color: var(--ops-text-muted);
 }
-.ops-shell a.link:not(.link-primary):not(.text-primary) {
-  color: var(--color-base-content);
+.ops-shell a.link, .ops-shell .link-primary, .ops-shell .ops-help-link, .ops-shell .ops-handoff__link, .ops-shell .ops-help-topics a, .ops-shell .ops-help-content a:not(.ops-text-action) {
+  color: var(--color-primary);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.ops-shell a.link:hover, .ops-shell .link-primary:hover, .ops-shell .ops-help-link:hover, .ops-shell .ops-handoff__link:hover, .ops-shell .ops-help-topics a:hover, .ops-shell .ops-help-content a:not(.ops-text-action):hover {
+  color: var(--color-primary);
+  text-decoration-thickness: 2px;
 }
 [data-ops-identity], .ops-time__value, [data-ops-timestamp-copy], code, pre, kbd, .ops-inline-code {
   font-family: var(--font-mono);
@@ -6400,6 +6314,13 @@
 }
 code, pre, kbd {
   font-variant-ligatures: none;
+}
+.ops-nav-item-active, .ops-nav-item[aria-current="page"], .ops-saved-search-row--loaded, .ops-object-item-active, .ops-filter-chip--selected, .ops-schema-picker__option:has(input:checked), .ops-segmented-btn[aria-pressed="true"], .ops-btn[aria-pressed="true"], .ops-theme-toggle__button[aria-pressed="true"], .ops-theme-toggle__button[data-theme-selected="true"], .ops-cmdk__item.is-active {
+  border-inline-start: 2px solid var(--color-primary);
+}
+.ops-segmented-btn[aria-pressed="true"] {
+  background: var(--ops-selected);
+  color: var(--color-base-content);
 }
 @layer base {
   :root:has( .modal-open, .modal[open], .modal:target, .modal-toggle:checked, .drawer:not([class*="drawer-open"]) > .drawer-toggle:checked ) {

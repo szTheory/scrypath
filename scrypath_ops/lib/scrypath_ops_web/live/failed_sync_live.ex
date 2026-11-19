@@ -1117,17 +1117,17 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               :if={row.recovery && is_nil(@recovery_receipts[row_key(row)])}
               class="ops-failed-row__actions"
             >
-              <.ops_button
+              <button
+                type="button"
+                class="ops-text-action"
                 phx-click="retry"
                 phx-value-id={row.id}
                 phx-value-schema={OperatorSelection.canonical(row.schema)}
                 phx-value-source={row.source}
                 data-testid="failed-sync-retry"
-                variant={:default}
-                size={:sm}
               >
                 Retry
-              </.ops_button>
+              </button>
             </div>
 
             <.ops_status

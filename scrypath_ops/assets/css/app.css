@@ -379,7 +379,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-ops-2);
-    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border: var(--border) solid var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
     background: color-mix(in oklch, var(--ops-surface-2) 56%, transparent);
     padding: 0.25rem 0.625rem;
@@ -398,8 +398,7 @@
   .ops-command-hint__icon { display: none; }
 
   .ops-command-hint:hover {
-    border-color: color-mix(in oklch, var(--color-primary) 34%, transparent);
-    background: color-mix(in oklch, var(--color-primary) 8%, transparent);
+    background: var(--ops-sunken);
     color: var(--color-base-content);
   }
 
@@ -437,9 +436,9 @@
     min-height: var(--control-h-lg);
     align-items: center;
     justify-content: center;
-    border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border: var(--border) solid var(--ops-control-edge);
     border-radius: var(--radius-ops-control);
-    background: color-mix(in oklch, var(--ops-surface-2) 62%, transparent);
+    background: var(--color-base-100);
     color: var(--color-base-content);
     transition-property: background-color, border-color, color, transform;
     transition-duration: var(--duration-ops-fast);
@@ -448,9 +447,8 @@
 
   .ops-nav-trigger:hover,
   .ops-nav-close:hover {
-    border-color: color-mix(in oklch, var(--color-primary) 36%, transparent);
-    background: color-mix(in oklch, var(--color-primary) 10%, transparent);
-    color: var(--color-primary);
+    background: var(--ops-sunken);
+    color: var(--color-base-content);
   }
 
   .ops-nav-trigger:active,
@@ -662,11 +660,35 @@
     color: var(--ops-text-muted);
   }
 
-  /* Segmented-control button: shares the control-height authority instead of a raw
-     min-h-9, with the small radius matching the inner pill. */
+  /* Segmented control: the group carries the opaque Control Edge (LD-15); each button shares the
+     control-height authority and has a quiet Sunken hover (LD-13). The selected option is the
+     Selection Signature (see below), never a primary fill. The start edge is reserved at rest. */
+  .ops-segmented-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-ops-1);
+    padding: var(--spacing-ops-1);
+    border: var(--border) solid var(--ops-control-edge);
+    border-radius: var(--radius-ops-control);
+    background: var(--color-base-100);
+  }
+
   .ops-segmented-btn {
     min-height: var(--control-h-sm);
+    border: 1px solid transparent;
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-sm);
+    background: transparent;
+    color: var(--color-base-content);
+  }
+
+  .ops-segmented-btn:hover:not([aria-pressed="true"]):not(:disabled) {
+    background: var(--ops-sunken);
+  }
+
+  .ops-segmented-btn:disabled {
+    color: var(--ops-text-muted);
+    cursor: not-allowed;
   }
 
   /* A badge is plain muted text for a non-sync label (the Search run state). No pill, no border,
@@ -780,22 +802,9 @@
       border-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
-  .ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error) {
-    border-color: color-mix(in oklch, var(--color-base-content) 18%, transparent);
-    background: var(--ops-surface-2);
-  }
-
-  .ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error) {
-    border-color: color-mix(in oklch, var(--color-base-content) 24%, transparent);
-    background: color-mix(in oklch, var(--color-base-content) 12%, var(--ops-surface-2));
-  }
-
-  .ops-btn[aria-pressed="true"] {
-    border-color: color-mix(in oklch, var(--color-primary) 48%, transparent);
-    background: var(--ops-selection);
-    color: var(--color-primary);
-  }
-
+  /* Button colors (Panel fill, Ink text, Control Edge border, Sunken hover, Plum primary) are
+     authored in the `@layer utilities` block near the end of this file: daisyUI sets .btn colors
+     in that layer, so a components-layer color would never reach the button. */
   .ops-btn:disabled {
     cursor: not-allowed;
   }
@@ -803,11 +812,6 @@
   .ops-btn:disabled:hover,
   .ops-btn:disabled:active {
     transform: none;
-  }
-
-  .ops-btn:disabled:hover:not(.btn-primary):not(.btn-error),
-  .ops-btn:disabled:active:not(.btn-primary):not(.btn-error) {
-    background: transparent;
   }
 
   .btn.ops-icon-btn {
@@ -989,16 +993,17 @@
     align-items: center;
     gap: var(--spacing-ops-2);
     border-radius: var(--radius-ops-control);
+    border-inline-start: 2px solid transparent;
     padding: var(--spacing-ops-2) var(--spacing-ops-3);
     transition: background-color var(--duration-ops-fast) var(--ease-ops-standard);
   }
 
   .ops-schema-picker__option:hover {
-    background: var(--ops-surface-2);
+    background: var(--ops-sunken);
   }
 
   .ops-schema-picker__option:active {
-    background: var(--ops-surface-2);
+    background: var(--ops-sunken);
   }
 
   .ops-schema-picker__option:has(input:focus-visible) {
@@ -1007,7 +1012,7 @@
   }
 
   .ops-schema-picker__option:has(input:checked) {
-    background: var(--ops-surface-2);
+    background: var(--ops-selected);
   }
 
   .ops-schema-picker__radio {
@@ -1096,6 +1101,7 @@
     align-items: center;
     gap: var(--spacing-ops-2);
     border: 1px solid transparent;
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-md);
     padding-inline: 0.75rem;
     font-size: 0.875rem;
@@ -1108,8 +1114,7 @@
   }
 
   .ops-nav-item:hover {
-    border-color: color-mix(in oklch, var(--color-base-content) 8%, transparent);
-    background: color-mix(in oklch, var(--color-base-content) 6%, transparent);
+    background: var(--ops-sunken);
     color: var(--color-base-content);
   }
 
@@ -1117,8 +1122,9 @@
     transform: scale(0.99);
   }
 
+  /* The current page: Selection Signature (fill plus the 2px line, shared rule below) and Plum
+     (Orchid in dark) text at weight 600. The breadcrumb's aria-current crumb is not a nav item. */
   .ops-nav-item-active {
-    border-color: color-mix(in oklch, var(--color-primary) 24%, transparent);
     background: var(--ops-selection);
     color: var(--color-primary);
     font-weight: 600;
@@ -1127,6 +1133,12 @@
   .ops-nav-item-active:hover {
     background: var(--ops-selection);
     color: var(--color-primary);
+  }
+
+  .ops-nav-item[aria-current="page"] {
+    background: var(--ops-selected);
+    color: var(--color-primary);
+    font-weight: 600;
   }
 
   .ops-nav-item__icon {
@@ -1214,6 +1226,7 @@
 
   .ops-object-item {
     border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent);
+    border-inline-start: 2px solid transparent;
     border-radius: var(--radius-ops-lg);
     background: var(--ops-surface-1);
     padding: var(--spacing-ops-3);
@@ -1228,8 +1241,7 @@
   }
 
   .ops-object-item-active {
-    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
-    box-shadow: 0 0 0 1px color-mix(in oklch, var(--color-primary) 20%, transparent);
+    background: var(--ops-selected);
   }
 
   /* Contextual breadcrumb trail (ops_trail): group › page. Quiet
@@ -1294,16 +1306,8 @@
   .ops-handoff__link {
     font-size: var(--text-ops-body);
     font-weight: 600;
-    color: var(--color-base-content);
-    text-decoration: underline;
-    text-underline-offset: 2px;
     border-radius: var(--radius-ops-sm);
     transition: color var(--duration-ops-fast) var(--ease-ops-standard);
-  }
-
-  .ops-handoff__link:hover {
-    text-decoration: underline;
-    text-underline-offset: 2px;
   }
 
   /* Promotion preflight checklist (Sync Drift): a sequential, gated wizard. Locked
@@ -1843,12 +1847,16 @@
     gap: var(--spacing-ops-3);
     padding: var(--spacing-ops-2) var(--spacing-ops-3);
     border-radius: var(--radius-ops-control);
+    border-inline-start: 2px solid transparent;
     color: var(--color-base-content);
     cursor: pointer;
   }
 
+  /* The active item differs from an inactive sibling by more than the line: its fill is Selected
+     (not the overlay's Panel) and its text is Plum (Orchid in dark) (P-07). */
   .ops-cmdk__item.is-active {
-    background: color-mix(in oklch, var(--color-primary) 14%, transparent);
+    background: var(--ops-selected);
+    color: var(--color-primary);
   }
 
   .ops-cmdk__item-label {
@@ -2006,6 +2014,7 @@
   min-height: var(--control-h-lg);
   border-radius: 999px;
   border: 1px solid transparent;
+  border-inline-start: 2px solid transparent;
   background: transparent;
   color: var(--color-base-content);
   transition-property: background-color, border-color, color;
@@ -2014,10 +2023,16 @@
 }
 
 .ops-theme-toggle__button[data-theme-selected="true"] {
-  border-color: color-mix(in oklch, var(--color-base-content) 16%, transparent);
   background: var(--ops-theme-selection);
   color: var(--color-base-content);
   font-weight: 600;
+}
+
+/* The toggle's outer edge is the opaque Control Edge (LD-15). Unlayered so it beats the markup's
+   border and fill utilities. */
+.ops-theme-toggle {
+  border-color: var(--ops-control-edge);
+  background-color: var(--ops-sunken);
 }
 
 /* One-shot reveals. Opacity/transform only — never animate <details> height (auto
@@ -2188,13 +2203,13 @@
 }
 
 [data-theme="dark"] .ops-theme-toggle {
-  border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+  border-color: var(--ops-control-edge);
   background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
   box-shadow: var(--shadow-ops-panel-dark);
 }
 @media (prefers-color-scheme: dark) {
   html:not([data-theme="light"]) .ops-theme-toggle {
-    border-color: color-mix(in oklch, var(--color-base-content) 14%, transparent);
+    border-color: var(--ops-control-edge);
     background: color-mix(in oklch, var(--ops-surface-2) 72%, transparent);
     box-shadow: var(--shadow-ops-panel-dark);
   }
@@ -2288,16 +2303,6 @@
   }
 }
 
-/* D-10 application: glow composed onto .ops-nav-item-active (keep surface lift) in dark. */
-[data-theme="dark"] .ops-nav-item-active {
-  box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-}
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) .ops-nav-item-active {
-    box-shadow: var(--shadow-ops-surface), var(--shadow-ops-glow);
-  }
-}
-
 /* Phase 133 (DARKMOTION-01): active Saved search item carries the active-path node mark.
    Compose the violet glow onto the existing inset ring (Precedent D) so the
    active path node lifts in dark while keeping its light ring byte-unchanged.
@@ -2352,13 +2357,6 @@
   }
 }
 
-/* Text links must remain readable above daisyUI's utility-layer primary color. */
-.ops-shell a.link-primary {
-  color: var(--color-base-content);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /* Alert utilities outrank the component layer; these semantic toast surfaces must win in both themes. */
 .ops-flash > .alert {
   border: 0;
@@ -2395,7 +2393,7 @@
   .ops-time__stamp:hover .ops-time__affordance, .ops-time__stamp:focus-visible .ops-time__affordance { opacity: 1; }
   .ops-time__feedback { padding: 0; border: 0; background: transparent; }
   .ops-time-preference { display: flex; align-items: center; gap: .375rem; color: var(--ops-text-muted); font-size: var(--text-ops-sm); }
-  .ops-time-preference select { width: auto; background-color: var(--ops-surface-1); color: var(--color-base-content); border: 1px solid var(--color-base-300); }
+  .ops-time-preference select { width: auto; background-color: var(--ops-surface-1); color: var(--color-base-content); border: var(--border) solid var(--ops-control-edge); }
   .ops-intent-card { position: relative; gap: .5rem; padding: 1.25rem; }
   .ops-intent-card__topline { display: none; }
   .ops-intent-card__cta { position: absolute; right: 1.25rem; top: 1.25rem; }
@@ -2421,12 +2419,18 @@
   .ops-help-content section { padding-block: 1.5rem; border-top: 1px solid var(--color-base-300); scroll-margin-top: 6rem; }
   .ops-help-content p { margin-top: .75rem; line-height: var(--leading-ops-body); color: var(--ops-text-muted); }
   .ops-help-content ul { margin-top: .75rem; display: grid; gap: .5rem; }
-  .ops-help-content a, .ops-help-topics a { text-decoration: underline; text-underline-offset: .2em; }
   .ops-help-definitions { display: grid; gap: 1rem; margin-block: 1rem; }
   .ops-help-definitions dt { font-weight: 600; margin-bottom: .25rem; }
   .ops-help-definitions dd { color: var(--ops-text-muted); line-height: var(--leading-ops-body); }
-  .ops-text-action, .ops-quiet-action { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-md); font-size: var(--text-ops-body); font-weight: 600; color: var(--color-base-content); text-decoration: none; cursor: pointer; }
-  .ops-text-action:hover, .ops-quiet-action:hover { text-decoration: underline; text-underline-offset: .2em; }
+  /* Row actions (Retry, Load, Rename, Export, Delete, View failed sync work, the Sync and index
+     activity links) share one computed style: 14px 600 Ink text underlined at rest, a 24px or
+     larger target, 2px underline on hover. Nothing else may change their family, size, weight,
+     color or decoration. A disabled action is muted and excluded from the shared style. */
+  .ops-text-action { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-md); font-size: var(--text-ops-body); font-weight: 600; color: var(--color-base-content); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; cursor: pointer; }
+  .ops-text-action:hover { text-decoration-thickness: 2px; }
+  .ops-text-action:disabled, .ops-text-action[aria-disabled="true"] { color: var(--ops-text-muted); cursor: not-allowed; text-decoration-thickness: 1px; }
+  .ops-quiet-action { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-md); font-size: var(--text-ops-body); font-weight: 600; color: var(--color-base-content); text-decoration: none; cursor: pointer; }
+  .ops-quiet-action:hover { text-decoration: underline; text-underline-offset: .2em; }
   .ops-schema-identifiers { display: grid; gap: .375rem; margin-top: .75rem; font-size: var(--text-ops-sm); }
   .ops-schema-identifiers > div { display: flex; flex-wrap: wrap; gap: .25rem .75rem; }
   .ops-schema-identifiers dt { color: var(--ops-text-muted); width: 8.5rem; flex-shrink: 0; }
@@ -2482,11 +2486,7 @@
     .ops-settings-diff td[data-label]::before { content: attr(data-label); display: block; margin-bottom: .125rem; font-size: var(--text-ops-sm); font-weight: 600; color: var(--ops-text-muted); }
   }
   .ops-setting-description { display: block; margin-top: .25rem; font-size: var(--text-ops-sm); font-weight: 400; color: var(--ops-text-muted); }
-  .ops-sync-activity-link { display: inline-flex; align-items: center; gap: .375rem; color: inherit; text-decoration: none; min-height: var(--control-h-sm); }
-  .ops-sync-activity-link:hover { text-decoration: underline; text-underline-offset: .2em; }
   .ops-sync-related { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; font-size: var(--text-ops-sm); }
-  .ops-sync-related .ops-sync-activity-link { text-decoration: underline; text-underline-offset: .2em; text-decoration-color: color-mix(in oklch, currentColor 45%, transparent); }
-  .ops-sync-related .ops-sync-activity-link:hover { text-decoration-color: currentColor; }
   .ops-search-outcome { font-size: var(--text-ops-h2); font-weight: 600; }
   .ops-search-hits { min-width: 0; }
   .ops-readable-hit { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: .5rem; padding-block: .75rem; border-bottom: 1px solid var(--color-base-300); font-size: var(--text-ops-body); background: transparent; }
@@ -2515,16 +2515,12 @@
   .ops-code-block { position: relative; min-width: 0; }
   .ops-code-toolbar { position: absolute; inset-block-start: .25rem; inset-inline-end: .5rem; z-index: 1; padding: 0; }
   .ops-code-toolbar button { background: var(--color-base-100); border-radius: var(--radius-ops-control); padding-inline: .5rem; min-height: var(--control-h-sm); font-size: var(--text-ops-sm); }
-  .ops-help-link { display: inline-flex; align-items: baseline; gap: .25em; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: .2em; }
+  .ops-help-link { display: inline-flex; align-items: baseline; gap: .25em; font: inherit; }
   .ops-help-link svg { flex-shrink: 0; align-self: center; }
-  .ops-help-link:hover { color: var(--color-base-content); }
   .ops-help-heading { display: inline-flex; align-items: center; gap: .5rem; }
   .ops-help-content .ops-help-subtopic { border: 0; padding-block: 1rem 0; }
   .ops-help-subtopic h3 { font-size: var(--text-ops-h3); font-weight: 600; }
   .ops-help-content [id] { scroll-margin-top: 7rem; }
-  .ops-help-content .ops-text-action { text-decoration: none; gap: .25rem; }
-  .ops-help-content .ops-text-action:hover { text-decoration: none; }
-  .ops-help-content .ops-text-action:hover span { text-decoration: none; }
   .ops-signal-group { display: grid; gap: .75rem; align-content: start; }
   .ops-signal-counts { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; }
   .ops-signal-counts > div { display: flex; align-items: center; gap: .5rem; }
@@ -2544,7 +2540,6 @@
   }
   .ops-sync-work { display: grid; gap: .5rem; margin-block: .25rem .5rem; }
   .ops-sync-work li { display: flex; align-items: center; gap: .5rem; }
-  .ops-sync-work .ops-text-action { font-weight: 600; min-height: var(--control-h-sm); }
   .ops-sync-work + .ops-help-link { min-height: var(--control-h-xs); align-items: center; }
   .ops-setting-live[data-missing="true"] { font-family: var(--font-sans); color: var(--ops-error-text); }
   [data-ops-validate][aria-invalid="true"] { border-color: var(--ops-error-text); }
@@ -2623,22 +2618,79 @@
   }
 
   .ops-saved-search-list { display: grid; border-top: 1px solid var(--color-base-300); }
-  .ops-saved-search-row { display: grid; gap: .5rem; padding-block: .875rem; border-bottom: 1px solid var(--color-base-300); min-width: 0; }
+  .ops-saved-search-row { display: grid; gap: .5rem; padding-block: .875rem; padding-inline: .75rem; border-bottom: 1px solid var(--color-base-300); border-inline-start: 2px solid transparent; min-width: 0; }
+  .ops-saved-search-row--loaded { background: var(--ops-selected); }
   .ops-saved-search-row--loaded .ops-saved-search-row__name::after { content: " · loaded"; font-weight: 400; color: var(--ops-text-muted); }
   .ops-saved-search-row__name { font-size: var(--text-ops-body); font-weight: 600; overflow-wrap: anywhere; }
-  .ops-saved-search-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; }
-  .ops-saved-search-row__actions .ops-btn { min-height: max(24px, var(--control-h-sm)); }
+  .ops-saved-search-row__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1rem; }
   .ops-saved-search-row__form { display: grid; gap: .75rem; padding-top: .25rem; }
   .ops-saved-search-import { display: grid; gap: .5rem; }
   .ops-saved-search-import .ops-disclosure { margin-top: .25rem; }
 }
 
-/* daisyUI's .btn and .btn-ghost colors live in the utilities layer, so a components-layer
-   color never reaches the button. The destructive row action needs to win there. */
+/* Button colors. daisyUI sets .btn colors in the utilities layer, so a components-layer color
+   never reaches the button: these rules are authored here, after it, in the same layer.
+   Default button (outline, also :secondary): Panel fill, Ink text, opaque Control Edge border
+   (LD-15). Hover and press fill is Sunken, never Selected (LD-13). Plum button: hover underlines
+   the label and keeps its fill. Disabled: muted text, Control Edge border, opaque. There is no
+   danger fill: Failed orange is a status color, never a button (LD-2). */
 @layer utilities {
-  .ops-btn.ops-saved-search-row__delete {
-    --btn-fg: var(--ops-error-text);
-    color: var(--ops-error-text);
+  .ops-btn.btn-outline {
+    background-color: var(--color-base-100);
+    border-color: var(--ops-control-edge);
+    color: var(--color-base-content);
+    box-shadow: none;
+  }
+
+  .ops-btn:hover:not(:disabled):not(.btn-primary),
+  .ops-btn:active:not(:disabled):not(.btn-primary) {
+    background-color: var(--ops-sunken);
+  }
+
+  .ops-btn.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary);
+    text-decoration-line: underline;
+  }
+
+  .ops-btn.btn-primary:active:not(:disabled) {
+    background-color: var(--color-primary);
+  }
+
+  /* A pressed toggle button is the Selection Signature (fill here, the 2px line in the shared
+     rule at the end of this file), with Ink text: Plum text is not a pressed-button color. */
+  .ops-btn[aria-pressed="true"],
+  .ops-btn[aria-pressed="true"]:hover:not(:disabled) {
+    background-color: var(--ops-selected);
+    color: var(--color-base-content);
+  }
+
+  .ops-btn.btn:disabled:not(.btn-ghost),
+  .ops-btn.btn:disabled:not(.btn-ghost):hover {
+    background-color: var(--color-base-100);
+    border-color: var(--ops-control-edge);
+    color: var(--ops-text-muted);
+    box-shadow: none;
+    text-decoration-line: none;
+  }
+
+  /* Control Edge on every form control (LD-15). daisyUI draws the input, select, textarea,
+     checkbox and radio borders from --input-color, a 20% alpha mix, and sets it in this layer;
+     the opaque Control Edge replaces it at the platform --border width. A disabled field is
+     Sunken with muted text. */
+  .input,
+  .select,
+  .textarea,
+  .checkbox,
+  .radio {
+    --input-color: var(--ops-control-edge);
+  }
+
+  .input:is(:disabled, [disabled]),
+  .select:is(:disabled, [disabled]),
+  .textarea:is(:disabled, [disabled]) {
+    border-color: var(--ops-control-edge);
+    background-color: var(--ops-sunken);
+    color: var(--ops-text-muted);
   }
 }
 
@@ -2660,11 +2712,11 @@
   @media (min-width: 640px) {
     .ops-failed-filters__legend { width: 3.5rem; margin-bottom: 0; }
   }
-  .ops-filter-chip { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-xs); padding-inline: .5rem .625rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-ops-control); background: var(--ops-surface-1); color: var(--color-base-content); font-size: var(--text-ops-sm); cursor: pointer; transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard); }
-  .ops-filter-chip:hover { background: var(--ops-surface-2); }
+  .ops-filter-chip { display: inline-flex; align-items: center; gap: .375rem; min-height: var(--control-h-xs); padding-inline: .5rem .625rem; border: var(--border) solid var(--ops-control-edge); border-inline-start-width: 2px; border-radius: var(--radius-ops-control); background: var(--ops-surface-1); color: var(--color-base-content); font-size: var(--text-ops-sm); cursor: pointer; transition: background-color var(--duration-ops-fast) var(--ease-ops-standard), border-color var(--duration-ops-fast) var(--ease-ops-standard); }
+  .ops-filter-chip:hover { background: var(--ops-sunken); }
   .ops-filter-chip input { width: .875rem; height: .875rem; margin: 0; accent-color: var(--color-primary); cursor: pointer; }
   .ops-filter-chip:has(input:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-  .ops-filter-chip--selected { border-color: color-mix(in oklch, var(--color-primary) 55%, var(--color-base-300)); background: var(--ops-selection); }
+  .ops-filter-chip--selected { background: var(--ops-selection); }
   .ops-filter-chip__count { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ops-text-muted); }
   .ops-filter-chip--quiet { color: var(--ops-text-muted); border-style: dashed; }
 
@@ -2722,8 +2774,29 @@
   color: var(--ops-text-muted);
 }
 
-.ops-shell a.link:not(.link-primary):not(.text-primary) {
-  color: var(--color-base-content);
+/* Prose links: Plum (Orchid in dark), underlined at rest (1px, offset .2em), 2px on hover.
+   Unlayered so they beat daisyUI's link utilities. Exempt: nav items, buttons, the wordmark link
+   and the intent card (a whole-card link with its own border and underlined title). */
+.ops-shell a.link,
+.ops-shell .link-primary,
+.ops-shell .ops-help-link,
+.ops-shell .ops-handoff__link,
+.ops-shell .ops-help-topics a,
+.ops-shell .ops-help-content a:not(.ops-text-action) {
+  color: var(--color-primary);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.ops-shell a.link:hover,
+.ops-shell .link-primary:hover,
+.ops-shell .ops-help-link:hover,
+.ops-shell .ops-handoff__link:hover,
+.ops-shell .ops-help-topics a:hover,
+.ops-shell .ops-help-content a:not(.ops-text-action):hover {
+  color: var(--color-primary);
+  text-decoration-thickness: 2px;
 }
 
 /* Brand type faces for identity-bearing text (SKIN-02, SKIN-06).
@@ -2760,4 +2833,29 @@ code,
 pre,
 kbd {
   font-variant-ligatures: none;
+}
+
+/* Selection Signature (LD-14): every selected or current element has one shared mark, a 2px
+   inline-start line in Plum (Orchid in dark) on the --ops-selected fill. The 2px is reserved at
+   rest (transparent) so selecting never moves layout; the line, not the fill (only 1.1 to 1.3:1),
+   carries WCAG 1.4.11. Unlayered so it beats the resting rules, daisyUI and the border utilities.
+   The current nav item and the active command-palette item also take Plum or Orchid text; the
+   other elements keep Ink. */
+.ops-nav-item-active,
+.ops-nav-item[aria-current="page"],
+.ops-saved-search-row--loaded,
+.ops-object-item-active,
+.ops-filter-chip--selected,
+.ops-schema-picker__option:has(input:checked),
+.ops-segmented-btn[aria-pressed="true"],
+.ops-btn[aria-pressed="true"],
+.ops-theme-toggle__button[aria-pressed="true"],
+.ops-theme-toggle__button[data-theme-selected="true"],
+.ops-cmdk__item.is-active {
+  border-inline-start: 2px solid var(--color-primary);
+}
+
+.ops-segmented-btn[aria-pressed="true"] {
+  background: var(--ops-selected);
+  color: var(--color-base-content);
 }

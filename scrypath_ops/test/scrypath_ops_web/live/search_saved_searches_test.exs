@@ -574,6 +574,55 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
     end
   end
 
+  describe "E-09 saved-search row actions" do
+    test "Load, Rename, Export and Delete are text actions, not buttons", %{conn: conn} do
+      put!("A", single("a"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      for action <- ~w(Load Rename Export Delete) do
+        selector = "#saved-search-list [aria-label='#{action} A']"
+
+        assert has_element?(view, "#{selector}.ops-text-action", action)
+        refute has_element?(view, "#{selector}.btn")
+        refute has_element?(view, "#{selector}.ops-btn")
+        refute has_element?(view, "#{selector}.btn-ghost")
+      end
+
+      assert has_element?(view, "a#saved-search-export-#{dom_id("A")}.ops-text-action[download]")
+      refute render(view) =~ "ops-saved-search-row__delete"
+    end
+
+    test "the loaded row is the current one: aria-current and the selected row class", %{
+      conn: conn
+    } do
+      put!("A", single("a"))
+      put!("B", single("b"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+      view |> element("#saved-search-menu button", "A") |> render_click()
+      view |> element("#saved-search-manage-open") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-row-#{dom_id("A")}.ops-saved-search-row--loaded[aria-current=true]"
+             )
+
+      refute has_element?(view, "#saved-search-row-#{dom_id("B")}[aria-current]")
+      refute has_element?(view, "#saved-search-row-#{dom_id("B")}.ops-saved-search-row--loaded")
+    end
+
+    test "an unreadable saved search disables Load with aria-disabled and has no Export", %{
+      conn: conn
+    } do
+      put!("Broken", %{"playbook_format" => 99})
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      load = "#saved-search-load-#{dom_id("Broken")}"
+      assert has_element?(view, "#{load}.ops-text-action[disabled][aria-disabled=true]")
+      refute has_element?(view, "#saved-search-export-#{dom_id("Broken")}")
+      assert has_element?(view, "#saved-search-list", "This saved search can't be read.")
+    end
+  end
+
   describe "import" do
     test "the file button opens the file input directly and imports on selection", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")

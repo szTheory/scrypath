@@ -1171,7 +1171,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <div
         role="group"
         aria-label={@label}
-        class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1"
+        class="ops-segmented-group"
       >
         <button
           :for={{label, value} <- @items}
@@ -1385,7 +1385,11 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_object_item(assigns) do
     ~H"""
-    <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
+    <div
+      id={@id}
+      aria-current={if(@active, do: "true")}
+      class={["ops-object-item", @active && "ops-object-item-active", @class]}
+    >
       <div class="flex flex-col items-start justify-between gap-3 sm:flex-row">
         <div class="min-w-0 w-full flex-1">{render_slot(@inner_block)}</div>
         <div :if={@actions != []} class="flex flex-wrap gap-2 sm:justify-end">

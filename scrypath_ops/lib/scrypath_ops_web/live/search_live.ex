@@ -1810,6 +1810,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           <li
             :for={row <- @saved_searches}
             id={"saved-search-row-#{row.dom_id}"}
+            aria-current={if(@loaded && @loaded.name == row.name, do: "true")}
             class={[
               "ops-saved-search-row",
               @loaded && @loaded.name == row.name && "ops-saved-search-row--loaded"
@@ -1829,48 +1830,48 @@ defmodule ScrypathOpsWeb.SearchLive do
               :if={is_nil(@manage_row) || @manage_row.name != row.name}
               class="ops-saved-search-row__actions"
             >
-              <.ops_button
+              <button
                 id={"saved-search-load-#{row.dom_id}"}
-                variant={:default}
-                size={:sm}
+                type="button"
+                class="ops-text-action"
                 phx-click="load_saved_search"
                 phx-value-name={row.name}
                 aria-label={"Load #{row.name}"}
                 disabled={!row.readable? || !search_configured?(assigns)}
+                aria-disabled={if(!row.readable? || !search_configured?(assigns), do: "true")}
               >
                 Load
-              </.ops_button>
-              <.ops_button
+              </button>
+              <button
                 id={"saved-search-rename-#{row.dom_id}"}
-                variant={:ghost}
-                size={:sm}
+                type="button"
+                class="ops-text-action"
                 phx-click="manage_rename"
                 phx-value-name={row.name}
                 aria-label={"Rename #{row.name}"}
               >
                 Rename
-              </.ops_button>
+              </button>
               <a
                 :if={row.export_href}
                 id={"saved-search-export-#{row.dom_id}"}
                 href={row.export_href}
                 download={row.export_filename}
-                class="btn ops-btn btn-ghost btn-sm rounded-ops-control text-ops-body font-semibold"
+                class="ops-text-action"
                 aria-label={"Export #{row.name}"}
               >
                 Export
               </a>
-              <.ops_button
+              <button
                 id={"saved-search-delete-#{row.dom_id}"}
-                variant={:ghost}
-                size={:sm}
-                class="ops-saved-search-row__delete"
+                type="button"
+                class="ops-text-action"
                 phx-click="manage_delete"
                 phx-value-name={row.name}
                 aria-label={"Delete #{row.name}"}
               >
                 Delete
-              </.ops_button>
+              </button>
             </div>
 
             <.form

@@ -77,7 +77,7 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
            ".ops-theme-toggle system-dark treatment must mirror --shadow-ops-panel-dark."
   end
 
-  test "active nav uses the documented soft selected surface and mirrored dark treatment" do
+  test "active nav uses the documented soft selected surface and the Selection Signature in both themes" do
     source = css()
 
     assert Regex.match?(
@@ -86,17 +86,41 @@ defmodule ScrypathOpsWeb.ShellChromeTokenContractTest do
            ),
            ".ops-nav-item-active must use the documented soft --ops-selection fill."
 
+    # Phase 187: the dark glow is gone. The current item is the Selection Signature in both
+    # themes: the one shared rule draws a 2px --color-primary line (Plum in light, Orchid in
+    # dark, because the dark theme blocks redefine --color-primary), and nothing else in dark
+    # reaches for a glow on a nav item.
     assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-nav-item-active\s*\{[^{}]*box-shadow:[^{}]*var\(--shadow-ops-glow\)/,
+             ~r/\.ops-nav-item-active,[^{}]*\{[^{}]*border-inline-start:\s*2px solid var\(--color-primary\)/,
              source
            ),
-           ".ops-nav-item-active explicit-dark glow must be present."
+           ".ops-nav-item-active must carry the Selection Signature line."
 
     assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-nav-item-active\s*\{[^{}]*box-shadow:[^{}]*var\(--shadow-ops-glow\)/,
+             ~r/\.ops-nav-item\s*\{[^{}]*border-inline-start:\s*2px solid transparent/,
              source
            ),
-           ".ops-nav-item-active system-dark glow must mirror explicit dark."
+           "the 2px line must be reserved at rest so selecting never moves layout."
+
+    refute Regex.match?(
+             ~r/\[data-theme="dark"\]\s+\.ops-nav-item-active\s*\{/,
+             source
+           ),
+           "explicit-dark nav items no longer use a glow shadow."
+
+    refute Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-nav-item-active\s*\{/,
+             source
+           ),
+           "system-dark nav items no longer use a glow shadow."
+
+    for theme <- ["dark", "light"] do
+      assert Regex.match?(
+               ~r/@plugin "..\/vendor\/daisyui-theme" \{\s*name: "#{theme}";[^}]*--color-primary: #[0-9a-f]{6};/,
+               source
+             ),
+             "the #{theme} theme must define --color-primary for the Selection Signature line."
+    end
   end
 
   test "horizontal wordmark variants switch for explicit and system dark themes" do

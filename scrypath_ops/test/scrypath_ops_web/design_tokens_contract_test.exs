@@ -181,11 +181,30 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert dialog_target =~ "min-height: var(--control-h-lg)"
   end
 
-  test "quiet action states use neutral hover and press while keeping focus and selection distinct" do
-    assert css() =~ ".ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error)"
-    assert css() =~ "background: var(--ops-surface-2)"
-    assert css() =~ ".ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error)"
+  test "button hover and press fill is Sunken, never Selected, and every control edge is opaque" do
+    hover =
+      rule(
+        ".ops-btn:hover:not(:disabled):not(.btn-primary),\n  .ops-btn:active:not(:disabled):not(.btn-primary)"
+      )
+
+    assert hover =~ "background-color: var(--ops-sunken)"
+    refute hover =~ "--ops-selected"
+    refute hover =~ "--ops-selection"
+    refute css() =~ "btn-error"
+
+    default = rule(".ops-btn.btn-outline")
+    assert default =~ "background-color: var(--color-base-100)"
+    assert default =~ "border-color: var(--ops-control-edge)"
+    assert default =~ "color: var(--color-base-content)"
+
+    # the pressed state keeps its own selector (the Selection Signature fill with Ink text)
     assert css() =~ ".ops-btn[aria-pressed=\"true\"]"
+
+    refute rule(
+             ".ops-btn[aria-pressed=\"true\"],\n  .ops-btn[aria-pressed=\"true\"]:hover:not(:disabled)"
+           ) =~
+             "var(--color-primary)"
+
     assert css() =~ "outline: 2px solid var(--color-primary)"
     assert css() =~ "outline-offset: 2px"
     assert css() =~ ".ops-btn:disabled"
@@ -201,8 +220,16 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     refute overrides =~ "@layer"
     assert overrides =~ ".ops-shell .text-base-content\\/60"
     assert overrides =~ "color: var(--ops-text-muted)"
-    assert overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
-    assert overrides =~ "color: var(--color-base-content)"
+    # Prose links are Plum (Orchid in dark) and underlined at rest; the old Ink override is gone.
+    refute overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
+    refute css() =~ "a.link-primary {\n  color: var(--color-base-content)"
+
+    [_, prose] =
+      Regex.run(~r/\.ops-shell a\.link,\n(?:\.ops-shell [^{]*,\n)*[^{]*\{([^}]*)\}/, overrides)
+
+    assert prose =~ "color: var(--color-primary)"
+    assert prose =~ "text-decoration-line: underline"
+    assert prose =~ "text-decoration-thickness: 1px"
   end
 
   test "refresh hook reapplies server eligibility after a LiveView patch" do

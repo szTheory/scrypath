@@ -447,6 +447,232 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
     end
   end
 
+  # The stylesheet half of E-09, the Selection Signature and the control edge (D7; LD-13 to LD-15).
+  # Rules are found by selector so a reorder of the file does not matter.
+  defp rule_bodies(selector) do
+    ~r/(?:^|\n)\s*#{Regex.escape(selector)}\s*\{([^}]*)\}/
+    |> Regex.scan(File.read!(@app_css))
+    |> Enum.map(fn [_, body] -> body end)
+  end
+
+  describe "E-09 row actions: one shared style" do
+    test ".ops-text-action is underlined Ink text, 14px 600, with a target of at least 24px" do
+      [body] = rule_bodies(".ops-text-action")
+
+      assert body =~ "text-decoration-line: underline"
+      assert body =~ "text-decoration-thickness: 1px"
+      assert body =~ "font-size: var(--text-ops-body)"
+      assert body =~ "font-weight: 600"
+      assert body =~ "color: var(--color-base-content)"
+      assert body =~ "min-height: var(--control-h-md)"
+      refute body =~ "text-decoration: none"
+
+      assert [hover] = rule_bodies(".ops-text-action:hover")
+      assert hover =~ "text-decoration-thickness: 2px"
+    end
+
+    test "no other rule changes a row action's family, size, weight, color or decoration" do
+      css = @app_css |> File.read!() |> String.replace(~r{/\*.*?\*/}s, "")
+
+      # the Help overrides and the sync-work override are gone
+      refute css =~ ~r/\.ops-help-content \.ops-text-action/
+      refute css =~ ~r/\.ops-sync-work \.ops-text-action/
+      refute css =~ "ops-sync-activity-link"
+
+      overriding =
+        ~r/([^{}]*\.ops-text-action[^{}]*)\{([^}]*)\}/
+        |> Regex.scan(css)
+        |> Enum.reject(fn [_, selector, _] ->
+          # the shared rule, its hover thickness and the disabled state are the only rules
+          String.trim(selector) in [
+            ".ops-text-action",
+            ".ops-text-action:hover",
+            ".ops-text-action:disabled, .ops-text-action[aria-disabled=\"true\"]"
+          ] or String.contains?(selector, ".ops-shell .ops-help-content a:not(.ops-text-action)")
+        end)
+
+      assert overriding == [], "unexpected rule on .ops-text-action: #{inspect(overriding)}"
+    end
+
+    test "a disabled row action is muted and excluded from the shared tuple" do
+      [body] = rule_bodies(".ops-text-action:disabled, .ops-text-action[aria-disabled=\"true\"]")
+
+      assert body =~ "color: var(--ops-text-muted)"
+      assert body =~ "cursor: not-allowed"
+    end
+
+    test "prose links are Plum and underlined at rest; the old Ink override is gone" do
+      css = File.read!(@app_css)
+      refute css =~ "a.link-primary {\n  color: var(--color-base-content)"
+      refute css =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
+
+      [_, selectors, body] =
+        Regex.run(~r/\n(\.ops-shell a\.link,\n(?:[^{}]*,\n)*[^{},]*)\{([^}]*)\}/, css)
+
+      for selector <- ["a.link", ".link-primary", ".ops-help-link", ".ops-help-topics a"] do
+        assert selectors =~ selector
+      end
+
+      assert body =~ "color: var(--color-primary)"
+      assert body =~ "text-decoration-line: underline"
+      assert body =~ "text-decoration-thickness: 1px"
+      assert body =~ "text-underline-offset: 0.2em"
+    end
+  end
+
+  describe "Selection Signature and control edge" do
+    @signature_selectors [
+      ".ops-nav-item-active",
+      ".ops-nav-item[aria-current=\"page\"]",
+      ".ops-saved-search-row--loaded",
+      ".ops-object-item-active",
+      ".ops-filter-chip--selected",
+      ".ops-schema-picker__option:has(input:checked)",
+      ".ops-segmented-btn[aria-pressed=\"true\"]",
+      ".ops-theme-toggle__button[aria-pressed=\"true\"]",
+      ".ops-theme-toggle__button[data-theme-selected=\"true\"]",
+      ".ops-cmdk__item.is-active"
+    ]
+
+    test "every selected or current element draws the 2px Plum line from one shared rule" do
+      css = File.read!(@app_css)
+
+      [_, selectors, body] =
+        Regex.run(~r/\n(\.ops-nav-item-active,\n[^{}]*)\{([^}]*)\}/, css)
+
+      for selector <- @signature_selectors do
+        assert selectors =~ selector, "#{selector} is missing from the Selection Signature rule"
+      end
+
+      assert body =~ "border-inline-start: 2px solid var(--color-primary)"
+    end
+
+    test "the 2px is reserved at rest on the elements that gain it, so selecting never moves layout" do
+      for selector <- [
+            ".ops-nav-item",
+            ".ops-saved-search-row",
+            ".ops-object-item",
+            ".ops-schema-picker__option",
+            ".ops-segmented-btn",
+            ".ops-theme-toggle__button",
+            ".ops-cmdk__item"
+          ] do
+        assert Enum.any?(
+                 rule_bodies(selector),
+                 &(&1 =~ "border-inline-start: 2px solid transparent")
+               ),
+               "#{selector} must reserve the 2px start edge at rest"
+      end
+
+      # a bordered control keeps its opaque edge on the start side; only the width is reserved
+      assert Enum.any?(
+               rule_bodies(".ops-filter-chip"),
+               &(&1 =~ "border-inline-start-width: 2px" and &1 =~ "var(--ops-control-edge)")
+             )
+    end
+
+    test "fills are Selected for selection and Sunken for hover, with the pinned bindings kept" do
+      assert Enum.any?(
+               rule_bodies(".ops-nav-item-active"),
+               &(&1 =~ "background: var(--ops-selection)")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-filter-chip--selected"),
+               &(&1 =~ "background: var(--ops-selection)")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-theme-toggle__button[data-theme-selected=\"true\"]"),
+               &(&1 =~ "background: var(--ops-theme-selection)")
+             )
+
+      for selector <- [
+            ".ops-saved-search-row--loaded",
+            ".ops-object-item-active",
+            ".ops-schema-picker__option:has(input:checked)",
+            ".ops-segmented-btn[aria-pressed=\"true\"]",
+            ".ops-cmdk__item.is-active"
+          ] do
+        assert Enum.any?(rule_bodies(selector), &(&1 =~ "background: var(--ops-selected)")),
+               "#{selector} must use the Selected fill"
+      end
+
+      for selector <- [
+            ".ops-nav-item:hover",
+            ".ops-schema-picker__option:hover",
+            ".ops-filter-chip:hover",
+            ".ops-command-hint:hover"
+          ] do
+        assert Enum.any?(rule_bodies(selector), &(&1 =~ "background: var(--ops-sunken)")),
+               "#{selector} hover must be Sunken, never Selected"
+      end
+    end
+
+    test "the current nav item and the active palette item take Plum text; other selections keep Ink" do
+      assert Enum.any?(
+               rule_bodies(".ops-nav-item-active"),
+               &(&1 =~ "color: var(--color-primary)" and &1 =~ "font-weight: 600")
+             )
+
+      assert Enum.any?(
+               rule_bodies(".ops-cmdk__item.is-active"),
+               &(&1 =~ "color: var(--color-primary)")
+             )
+
+      for selector <- [
+            ".ops-saved-search-row--loaded",
+            ".ops-object-item-active",
+            ".ops-filter-chip--selected",
+            ".ops-segmented-btn[aria-pressed=\"true\"]"
+          ] do
+        for body <- rule_bodies(selector), do: refute(body =~ "color: var(--color-primary)")
+      end
+    end
+
+    test "no selection draws a glow or a Plum alpha border any more" do
+      css = File.read!(@app_css)
+
+      for selector <- [".ops-nav-item-active", ".ops-filter-chip--selected"] do
+        for body <- rule_bodies(selector) do
+          refute body =~ "color-mix("
+          refute body =~ "box-shadow"
+        end
+      end
+
+      for body <- rule_bodies(".ops-object-item-active"), do: refute(body =~ "box-shadow")
+
+      refute css =~ ~r/\.ops-btn\[aria-pressed="true"\] \{[^}]*color: var\(--color-primary\)/
+    end
+
+    test "controls draw an opaque Control Edge border" do
+      css = File.read!(@app_css)
+
+      assert Enum.any?(
+               rule_bodies(".ops-btn.btn-outline"),
+               &(&1 =~ "border-color: var(--ops-control-edge)")
+             )
+
+      for selector <- [
+            ".ops-filter-chip",
+            ".ops-command-hint",
+            ".ops-nav-trigger,\n  .ops-nav-close",
+            ".ops-segmented-group"
+          ] do
+        assert Enum.any?(
+                 rule_bodies(selector),
+                 &(&1 =~ "var(--ops-control-edge)")
+               ),
+               "#{selector} must draw the Control Edge"
+      end
+
+      assert css =~ "--input-color: var(--ops-control-edge)"
+      assert css =~ ~r/\.ops-theme-toggle \{\n  border-color: var\(--ops-control-edge\)/
+      assert css =~ ~r/\.ops-time-preference select \{[^}]*var\(--ops-control-edge\)/
+      assert length(Regex.scan(~r/var\(--ops-control-edge\)/, css)) >= 12
+    end
+  end
+
   describe "E-09 row actions" do
     test "an empty saved-search sheet renders no row action", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/ops/search?saved=manage")

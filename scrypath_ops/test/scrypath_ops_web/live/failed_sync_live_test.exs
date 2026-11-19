@@ -454,7 +454,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Invalid data: fix the record, then retry."
 
     retry = element(view, "[data-testid='failed-sync-retry']")
-    assert render(retry) =~ "btn-outline"
+    # Phase 187: a row action is underlined text, not a button.
+    assert render(retry) =~ "ops-text-action"
+    refute render(retry) =~ ~r/\bbtn\b/
     refute render(retry) =~ "btn-primary"
 
     details = view |> element("details[id^='failed-detail-']") |> render()
@@ -885,6 +887,21 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
                0
 
       refute has_element?(view, @modal)
+    end
+  end
+
+  describe "E-09 Retry row action" do
+    test "Retry is an underlined text action, not a button, and keeps its test id and name", %{
+      conn: conn
+    } do
+      put_delete_job!(["doc-1"])
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+      retry = "button[data-testid='failed-sync-retry']"
+      assert has_element?(view, "#{retry}.ops-text-action", "Retry")
+      refute has_element?(view, "#{retry}.btn")
+      refute has_element?(view, "#{retry}.ops-btn")
+      assert has_element?(view, "#{retry}[type=button][phx-click=retry]")
     end
   end
 
