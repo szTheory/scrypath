@@ -7,6 +7,7 @@ const rawBundle = require("./ui_preservation_bundle.cjs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { describe } = test;
 const evidence = require("./ecommerce_evidence.cjs");
 const build = require("./ecommerce_build.cjs");
 const pairs = require("./ui_state_pairs.cjs");
@@ -114,7 +115,43 @@ function png(width = 1440, height = 900, color = 20) {
   return PNG.sync.write(image);
 }
 
-function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, mutateCase } = {}) {
+// One striped ink rectangle on a background. Stripes (2 px ink, 2 px background) keep every covered 16 px
+// block non-uniform, so the structural check can see the rectangle; a solid-color raster is invisible to a
+// check that is relative to each block's most common color, and would pass vacuously.
+function layoutPng(width, height, { background, ink, blockX, blockY, blockW, blockH }) {
+  const image = new PNG({ width, height });
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const inside = x >= blockX && x < blockX + blockW && y >= blockY && y < blockY + blockH;
+      const color = inside && Math.floor((y - blockY) / 2) % 2 === 0 ? ink : background;
+      image.data.set([color[0], color[1], color[2], 255], (y * width + x) * 4);
+    }
+  }
+  return PNG.sync.write(image);
+}
+
+const LAYOUT = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 40, blockY: 100, blockW: 128, blockH: 64 };
+const LAYOUT_MOVED = { ...LAYOUT, blockX: 200 };
+const LAYOUT_RECOLORED = { ...LAYOUT, background: [240, 232, 226], ink: [90, 30, 110] };
+
+// A page of flat rectangles and striped ink, drawn by a callback. Flat regions are one color in both images of
+// a pair, which is exactly what the per-block ink share cannot see; their boundaries are what the edge count sees.
+function flatPage(draw, { width = 1440, height = 900, background = [20, 30, 40] } = {}) {
+  const image = new PNG({ width, height });
+  const paint = (x, y, color) => image.data.set([color[0], color[1], color[2], 255], (y * width + x) * 4);
+  for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) paint(x, y, background);
+  draw({
+    rect: (x, y, w, h, color) => {
+      for (let yy = y; yy < y + h; yy += 1) for (let xx = x; xx < x + w; xx += 1) paint(xx, yy, color);
+    },
+    stripes: (x, y, w, h, color) => {
+      for (let yy = y; yy < y + h; yy += 1) if (Math.floor((yy - y) / 2) % 2 === 0) for (let xx = x; xx < x + w; xx += 1) paint(xx, yy, color);
+    }
+  });
+  return PNG.sync.write(image);
+}
+
+function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageId, browserImageId, sourceLayerId, imageColor = 20, hoverImageColor = imageColor, imageLayout, hoverImageLayout = imageLayout, mutateCase } = {}) {
   const beforeSide = sourceSha === BEFORE_SHA;
   buildSha ??= beforeSide ? BEFORE_BUILD_SHA : CANDIDATE_BUILD_SHA;
   productTreeSha ??= beforeSide ? BEFORE_TREE : CANDIDATE_TREE;
@@ -133,7 +170,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
     const observations = matrix.map(({ theme, width }) => {
       const height = width === 390 ? 844 : 900;
       const imageKey = `${width}x${height}`;
-      if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, png(width, height, imageColor));
+      if (!imageBytesByDimensions.has(imageKey)) imageBytesByDimensions.set(imageKey, imageLayout ? layoutPng(width, height, imageLayout) : png(width, height, imageColor));
       const imageBytes = imageBytesByDimensions.get(imageKey);
       const image = {
         path: `ui-review-artifacts/iteration3-journeys/phase185-held-out/${entry.id.replaceAll(" ", "-").toLowerCase()}-${theme}-${width}.png`,
@@ -176,7 +213,7 @@ function runReceipt({ sourceSha, buildSha, productTreeSha, appImageId, opsImageI
         return { method: "consecutive-exact-v1", max_samples: 6, max_elapsed_ms: 10000, selected: 1, samples };
       };
       const primarySampling = samplingFor(image, imageBytes, primaryDomState);
-      if (!hoverImageBytesByDimensions.has(imageKey)) hoverImageBytesByDimensions.set(imageKey, png(width, height, hoverImageColor));
+      if (!hoverImageBytesByDimensions.has(imageKey)) hoverImageBytesByDimensions.set(imageKey, hoverImageLayout ? layoutPng(width, height, hoverImageLayout) : png(width, height, hoverImageColor));
       const hoverImageBytes = hoverImageBytesByDimensions.get(imageKey);
       const hoverImage = {
         path: image.path.replace(/\.png$/, "--hover.png"),
@@ -272,7 +309,9 @@ test("source-paired comparator requires exact matched state receipt pairs", () =
   assert.equal(report.passed, true);
   assert.equal(report.comparisons.length, 61);
   assert.equal(report.comparisons.reduce((sum, item) => sum + item.viewport_comparisons.length, 0), 213);
-  assert.equal(report.schema, "scrypath.ui-state-pair-comparison.v3");
+  assert.equal(report.schema, "scrypath.ui-state-pair-comparison.v4");
+  assert.equal(report.status, "structural-match", "a pass is a structural match, never worded as pixel-identical");
+  assert.equal(report.pixel_comparison, "structural-recolor-tolerant-v1");
   assert.ok(report.comparisons.filter((item) => item.id.endsWith("overflow") || item.id.endsWith("long-text")).every((item) =>
     item.viewport_comparisons.length === 9 && REQUIRED_THEMES_FOR_TEST.every((theme) => [1440, 768, 390].every((width) => item.viewport_comparisons.some((observation) => observation.theme === theme && observation.width === width)))
   ));
@@ -345,26 +384,29 @@ test("hover state and assertions participate in the exact source-pair result", (
   assert.equal(report.passed, false);
 });
 
-test("exact PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
-  const hoverBefore = png(12, 8, 20);
-  const hoverCandidate = png(12, 8, 21);
+test("structural PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
+  const small = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 0, blockY: 0, blockW: 32, blockH: 16 };
+  const hoverBefore = layoutPng(64, 32, small);
+  const hoverCandidate = layoutPng(64, 32, { ...small, blockX: 32, blockY: 16 });
   const metadata = {
-    viewport: { width: 12, height: 8 },
-    viewport_raster: { width: 12, height: 8 },
+    viewport: { width: 64, height: 32 },
+    viewport_raster: { width: 64, height: 32 },
     capture: "viewport-real-product-hover"
   };
-  const pixels = pairs.comparePngExact(hoverBefore, hoverCandidate, metadata, metadata);
+  const pixels = pairs.comparePngStructural(hoverBefore, hoverCandidate, metadata, metadata);
   assert.equal(pixels.equal, false);
-  assert.equal(pixels.before_width, 12);
-  assert.equal(pixels.before_height, 8);
-  assert.throws(() => pairs.comparePngExact(hoverBefore, hoverCandidate, {
-    ...metadata, capture: "unsupported", full_page_raster: { width: 12, height: 9 }
+  assert.ok(pixels.blocks_over > 0, "the moved block is seen by the structural grid");
+  assert.equal(pixels.before_width, 64);
+  assert.equal(pixels.before_height, 32);
+  assert.throws(() => pairs.comparePngStructural(hoverBefore, hoverCandidate, {
+    ...metadata, capture: "unsupported", full_page_raster: { width: 64, height: 33 }
   }, metadata), /dimensions/i);
 });
 
 test("a hover-only raster change fails while the neutral full-page raster still matches", () => {
-  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 20, hoverImageColor: 21 });
-  const report = compare(undefined, candidate);
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT, hoverImageLayout: LAYOUT_MOVED });
+  const report = compare(before, candidate);
   const result = report.comparisons[0];
 
   assert.equal(result.full_page_pixels_equal, true);
@@ -403,7 +445,7 @@ test("a source pair rejects independently mismatched source, fixture, runtime an
   assert.throws(() => compare(undefined, undefined, unqualifiedRecipe), /qualified raster|font profile/);
 });
 
-test("a source pair fails exact pixels, geometry, state, copy and semantic assertions", () => {
+test("a source pair fails structural pixels, geometry, state, copy and semantic assertions", () => {
   const changes = [
     (item) => { item.observations[0].geometry[0].width += 1; },
     (item) => {
@@ -426,8 +468,35 @@ test("a source pair fails exact pixels, geometry, state, copy and semantic asser
     assert.equal(report.passed, false);
   }
 
-  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageColor: 21 });
-  assert.equal(compare(undefined, pixelChanged).passed, false);
+  // Each of these changes exactly one input and nothing else, so each fails only through its own term of the
+  // verdict. Dropping `actionEqual` or `identityEqual` from `passed` turns the matching entry red.
+  const isolated = [
+    ["actions", "actions_and_transport", (item) => { item.actions[1] = "observe-changed"; }],
+    ["transport_sequence", "actions_and_transport", (item) => { item.transport_sequence[0].outcome = "reconnected"; }],
+    ["test_identity", "test_identity", (item) => { item.test_identity = `${item.test_identity} changed`; }]
+  ];
+  for (const [label, flag, mutate] of isolated) {
+    const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, mutateCase: mutate });
+    const report = compare(undefined, candidate);
+    assert.equal(report.passed, false, `${label} change alone fails the pair`);
+    assert.equal(report.mismatches[0][flag], false, `${label} change is reported through ${flag}`);
+    assert.equal(report.mismatches[0].pixels, true, `${label} change leaves pixels equal`);
+  }
+
+  const layoutBefore = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const pixelChanged = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT_MOVED });
+  assert.equal(compare(layoutBefore, pixelChanged).passed, false);
+});
+
+test("a recolor-only candidate passes the source pair when all other evidence matches", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE, imageLayout: LAYOUT });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE, imageLayout: LAYOUT_RECOLORED });
+  assert.ok(!before.imageBytesByDimensions.get("1440x900").equals(candidate.imageBytesByDimensions.get("1440x900")), "the candidate rasters really are recolored");
+
+  const report = compare(before, candidate);
+  assert.equal(report.passed, true);
+  assert.deepEqual(report.mismatches, []);
+  assert.ok(report.comparisons.every((item) => item.pixels_equal && item.full_page_pixels_equal && item.hover_pixels_equal));
 });
 
 test("real timer elapsed samples may differ while the shared fixed-clock recipe remains exact", () => {
@@ -594,11 +663,161 @@ test("run PNG loading verifies path containment, raw hashes and decoded image by
   }
 });
 
+// Real v1.43 captures, cropped to whole rows and committed beside the tests (see PROVENANCE.md there), so the
+// tests do not depend on the .planning archive. A missing fixture fails the test; it never skips.
+const CALIBRATION_DIR = path.join(__dirname, "fixtures/ui-state-pairs");
+
+function calibrationFixture(name) {
+  const file = path.join(CALIBRATION_DIR, name);
+  assert.ok(fs.existsSync(file), `calibration fixture is missing: ${file}`);
+  const bytes = fs.readFileSync(file);
+  const decoded = PNG.sync.read(bytes);
+  assert.equal(decoded.width, 390, `${name} width`);
+  assert.equal(decoded.height, 320, `${name} height`);
+  return { bytes, decoded };
+}
+
+function shiftBand(decoded, firstRow, rows, dy) {
+  const shifted = new PNG({ width: decoded.width, height: decoded.height });
+  decoded.data.copy(shifted.data);
+  const stride = decoded.width * 4;
+  for (let row = firstRow + rows - 1; row >= firstRow; row -= 1) decoded.data.copy(shifted.data, (row + dy) * stride, row * stride, (row + 1) * stride);
+  return PNG.sync.write(shifted);
+}
+
+describe("structural calibration on real captures", () => {
+  test("calibration accepts a real recolor pair", () => {
+    const before = calibrationFixture("recolor-before-dark-390x320.png");
+    const after = calibrationFixture("recolor-after-dark-390x320.png");
+    assert.ok(!before.decoded.data.equals(after.decoded.data), "the pair really is recolored, not the identical-bytes shortcut");
+
+    const result = pairs.comparePngStructural(before.bytes, after.bytes);
+    assert.equal(result.equal, true);
+    assert.equal(result.blocks, 500);
+    assert.equal(result.blocks_over, 0);
+    assert.equal(result.edge_blocks_over, 0);
+    assert.ok(result.worst_edge_delta <= 4, `a real recolor leaves the edge count nearly unchanged, saw ${result.worst_edge_delta}`);
+  });
+
+  test("calibration rejects a real state-change pair", () => {
+    const before = calibrationFixture("state-before-dark-390x320.png");
+    const after = calibrationFixture("state-after-dark-390x320.png");
+
+    const result = pairs.comparePngStructural(before.bytes, after.bytes);
+    assert.equal(result.equal, false);
+    assert.ok(result.blocks_over / result.blocks > 0.1, `a real state change moves many blocks, saw ${result.blocks_over} of ${result.blocks}`);
+    assert.ok(result.edge_blocks_over / result.blocks > 0.1, `the edge count sees it too, saw ${result.edge_blocks_over} of ${result.blocks}`);
+  });
+
+  test("calibration rejects a real capture with an 8 px band shift", () => {
+    const before = calibrationFixture("recolor-before-dark-390x320.png");
+    const after = calibrationFixture("recolor-after-dark-390x320.png");
+    const shifted = shiftBand(after.decoded, 120, 100, 8);
+    assert.equal(pairs.comparePngStructural(before.bytes, after.bytes).equal, true, "the unshifted recolor is accepted, so the shift alone is the cause");
+
+    const result = pairs.comparePngStructural(before.bytes, shifted);
+    assert.equal(result.equal, false);
+    assert.ok(result.blocks_over > Math.floor(result.blocks * 0.0025), `the shift exceeds the 0.25 percent tolerance, saw ${result.blocks_over} of ${result.blocks}`);
+    assert.ok(result.edge_blocks_over > Math.floor(result.blocks * 0.0025), `the edge count exceeds it too, saw ${result.edge_blocks_over} of ${result.blocks}`);
+  });
+
+  test("different image dimensions are never structurally equal", () => {
+    const wide = layoutPng(64, 32, { ...LAYOUT, blockX: 0, blockY: 0, blockW: 32, blockH: 16 });
+    const tall = layoutPng(64, 48, { ...LAYOUT, blockX: 0, blockY: 0, blockW: 32, blockH: 16 });
+    const result = pairs.comparePngStructural(wide, tall);
+    assert.equal(result.equal, false);
+    assert.equal(result.blocks, null);
+  });
+});
+
+// WR-05 (phase 186 review): the ink share alone is blind to flat regions (one color in both images), to 1-2 px
+// lines and to a few whole new blocks under the percentage. Each case below was accepted by the share-only check
+// at the size of a real capture; the edge count and the absolute block cap reject them. The recolor accept proves
+// the extra signal does not reject a palette swap.
+describe("structural check on flat, aligned and thin-line changes", () => {
+  const BG = [20, 30, 40];
+  const PANEL = [60, 70, 90];
+  const RULE = [90, 100, 120];
+  const INK = [200, 180, 60];
+  const RED = [200, 60, 60];
+  const base = ({ stripes }) => stripes(700, 700, 128, 64, INK);
+  const before = flatPage(base);
+  const overPercentage = (result, over) => over / result.blocks > 0.0025;
+
+  const flatChanges = [
+    ["a solid header bar added", ({ rect }) => rect(0, 0, 1440, 64, PANEL)],
+    ["a solid sidebar added", ({ rect }) => rect(0, 0, 240, 900, PANEL)],
+    ["a 1 px full-height rule added", ({ rect }) => rect(400, 0, 1, 900, RULE)],
+    ["a card with a 1 px border added", ({ rect }) => { rect(600, 300, 400, 320, RULE); rect(601, 301, 398, 318, BG); }]
+  ];
+  for (const [name, draw] of flatChanges) {
+    test(`${name} is rejected although the ink share cannot see it`, () => {
+      const result = pairs.comparePngStructural(before, flatPage((d) => { base(d); draw(d); }));
+      assert.ok(result.blocks_over / result.blocks <= 0.0025 && result.worst_step <= 8, "the share-only check would have accepted it");
+      assert.ok(overPercentage(result, result.edge_blocks_over), `the edge count rejects it, saw ${result.edge_blocks_over} of ${result.blocks}`);
+      assert.equal(result.equal, false);
+    });
+  }
+
+  test("a full-height 1 px rule moved by 8 px is rejected", () => {
+    const at = (x) => flatPage((d) => { base(d); d.rect(x, 0, 1, 900, RULE); });
+    const result = pairs.comparePngStructural(at(400), at(408));
+    assert.equal(result.blocks_over, 0, "the share is identical, so only the edge count can see the move");
+    assert.equal(result.equal, false);
+  });
+
+  test("twelve new striped blocks are rejected although they are under 0.25 percent of the blocks", () => {
+    const result = pairs.comparePngStructural(before, flatPage((d) => {
+      base(d);
+      for (let index = 0; index < 12; index += 1) d.stripes(304 + index * 32, 100, 16, 16, RED);
+    }));
+    assert.equal(result.blocks_over, 12);
+    assert.ok(result.blocks_over / result.blocks <= 0.0025, "the share-only percentage would have accepted twelve blocks");
+    assert.equal(result.equal, false);
+  });
+
+  test("the absolute block cap rejects a small new region on a large raster where the percentage would not", () => {
+    const size = { width: 2000, height: 2000 };
+    const sparse = (count) => flatPage((d) => { for (let index = 0; index < count; index += 1) d.stripes(48 + index * 64, 400, 16, 16, RED); }, size);
+    const result = pairs.comparePngStructural(sparse(0), sparse(10));
+    assert.equal(result.blocks, 15625);
+    assert.ok(result.blocks_over / result.blocks <= 0.0025 && result.edge_blocks_over / result.blocks <= 0.0025, "both percentages are under 0.25 percent");
+    assert.ok(result.blocks_over > 8, `ten new blocks are over the cap of 8, saw ${result.blocks_over}`);
+    assert.equal(result.equal, false);
+  });
+
+  test("a palette swap of the same layout is accepted with no block over on either signal", () => {
+    const layout = (colors) => flatPage((d) => {
+      d.rect(0, 0, 240, 900, colors.side);
+      d.rect(0, 0, 1440, 64, colors.header);
+      d.rect(600, 300, 400, 320, colors.rule);
+      d.rect(601, 301, 398, 318, colors.bg);
+      d.rect(400, 0, 1, 900, colors.rule);
+      d.stripes(700, 700, 128, 64, colors.ink);
+    }, { background: colors.bg });
+    const cool = layout({ bg: BG, side: [45, 55, 75], header: PANEL, rule: RULE, ink: INK });
+    const plum = layout({ bg: [30, 18, 34], side: [55, 30, 62], header: [70, 40, 80], rule: [130, 100, 140], ink: [230, 140, 190] });
+
+    const result = pairs.comparePngStructural(cool, plum);
+    assert.equal(result.equal, true);
+    assert.equal(result.blocks_over, 0);
+    assert.equal(result.edge_blocks_over, 0);
+  });
+
+  // Documented limit (PROVENANCE.md): both signals are block counts, so an edge that moves by 1-2 px and stays in the
+  // same 16 px block looks the same. The geometry and copy receipts are what catch that. If this starts failing,
+  // the comparator got sharper: update the limit in PROVENANCE.md instead of loosening a threshold.
+  test("a flat-region edge moved by 2 px inside one block is not seen (documented limit)", () => {
+    const header = (height) => flatPage((d) => { base(d); d.rect(0, 0, 1440, height, PANEL); });
+    assert.equal(pairs.comparePngStructural(header(56), header(58)).equal, true);
+  });
+});
+
 test("pair output is atomic, deterministic and never overwritten by different bytes", () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "scrypath-pair-output-"));
   try {
     const outputDirectory = path.join(directory, "comparison");
-    const report = { schema: "scrypath.ui-state-pair-comparison.v3", status: "exact-match", cases_compared: 61 };
+    const report = { schema: "scrypath.ui-state-pair-comparison.v4", status: "structural-match", cases_compared: 61 };
     const outputPath = pairs.writeOutput(outputDirectory, report);
     const original = fs.readFileSync(outputPath);
 

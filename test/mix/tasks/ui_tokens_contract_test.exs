@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.UiTokensContractTest do
   use ExUnit.Case, async: false
 
+  alias Scrypath.TestSupport.UiTokens
+
   @moduletag timeout: 600_000
   @root Path.expand("../../..", __DIR__)
   @token_path "brandbook/tokens/tokens.json"
@@ -147,7 +149,12 @@ defmodule Mix.Tasks.UiTokensContractTest do
     {json_file, css_file, temp} = fixture_paths!()
     File.write!(json_file, json)
 
-    changed_css = String.replace(css, "--ops-bg: #111419;", "--ops-bg: #121519;", global: false)
+    # Read the live value and derive every mutation from it, so a recolor of the
+    # theme block does not change what these cases guard.
+    live_bg = UiTokens.theme_value!(css, "dark", "--ops-bg")
+    bumped_bg = UiTokens.bump_hex(live_bg)
+
+    changed_css = UiTokens.replace_theme_value!(css, "dark", "--ops-bg", bumped_bg)
     refute changed_css == css
     File.write!(css_file, changed_css)
 
@@ -155,10 +162,7 @@ defmodule Mix.Tasks.UiTokensContractTest do
       Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
     end
 
-    duplicate_css =
-      String.replace(css, "  --ops-bg: #111419;", "  --ops-bg: #111419;\n  --ops-bg: #111419;",
-        global: false
-      )
+    duplicate_css = UiTokens.duplicate_theme_declaration!(css, "dark", "--ops-bg")
 
     File.write!(css_file, duplicate_css)
 
@@ -169,13 +173,16 @@ defmodule Mix.Tasks.UiTokensContractTest do
     tokens = Jason.decode!(json)
 
     changed_json =
-      put_in(tokens, ["ops", "dark", "ops-bg", "$value", "hex"], "#121519")
-      |> put_in(["ops", "dark", "ops-bg", "$value", "components"], [18 / 255, 21 / 255, 25 / 255])
+      put_in(tokens, ["ops", "dark", "ops-bg", "$value", "hex"], bumped_bg)
+      |> put_in(
+        ["ops", "dark", "ops-bg", "$value", "components"],
+        UiTokens.rgb_components(bumped_bg)
+      )
 
     File.write!(json_file, Jason.encode!(changed_json, pretty: true))
     File.write!(css_file, css)
 
-    assert_raise Mix.Error, ~r/typed color does not match CSS #111419/, fn ->
+    assert_raise Mix.Error, ~r/typed color does not match CSS #{Regex.escape(live_bg)}/, fn ->
       Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
     end
 
@@ -199,7 +206,10 @@ defmodule Mix.Tasks.UiTokensContractTest do
     extra_token =
       tokens["ops"]["dark"]["ops-bg"]
       |> put_in(["$extensions", "org.scrypath", "css", "name"], "--ops-extra")
-      |> put_in(["$extensions", "org.scrypath", "css", "expression"], "#111419")
+      |> put_in(
+        ["$extensions", "org.scrypath", "css", "expression"],
+        UiTokens.theme_value!(css, "dark", "--ops-bg")
+      )
 
     extra_dark_mapping = put_in(tokens, ["ops", "dark", "ops-extra"], extra_token)
     File.write!(json_file, Jason.encode!(extra_dark_mapping, pretty: true))
@@ -432,9 +442,9 @@ defmodule Mix.Tasks.UiTokensContractTest do
 
     css_path = Path.join(root, @css_path)
     original_css = File.read!(css_path)
+    bumped_bg = original_css |> UiTokens.theme_value!("dark", "--ops-bg") |> UiTokens.bump_hex()
 
-    changed_css =
-      String.replace(original_css, "--ops-bg: #111419;", "--ops-bg: #121519;", global: false)
+    changed_css = UiTokens.replace_theme_value!(original_css, "dark", "--ops-bg", bumped_bg)
 
     refute changed_css == original_css
     File.write!(css_path, changed_css)
@@ -448,8 +458,11 @@ defmodule Mix.Tasks.UiTokensContractTest do
     tokens = read_tokens!(root)
 
     changed_tokens =
-      put_in(tokens, ["ops", "dark", "ops-bg", "$value", "hex"], "#121519")
-      |> put_in(["ops", "dark", "ops-bg", "$value", "components"], [18 / 255, 21 / 255, 25 / 255])
+      put_in(tokens, ["ops", "dark", "ops-bg", "$value", "hex"], bumped_bg)
+      |> put_in(
+        ["ops", "dark", "ops-bg", "$value", "components"],
+        UiTokens.rgb_components(bumped_bg)
+      )
 
     File.write!(json_path, Jason.encode!(changed_tokens, pretty: true))
     {json_output, json_status} = canonical(root)

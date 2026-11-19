@@ -16,9 +16,9 @@ The maintainer approved this order and these working rules after a research fan-
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
 
-## Proposed re-plan (2026-11-18, awaiting maintainer approval)
+## Re-plan (2026-11-18, adopted by opening v1.46)
 
-Status: PROPOSED. Not approved. If approved it supersedes the "Re-order (approved 2026-10-25)" plan and sections 4 to 6 below for the UI work. Detail and evidence: [V1.46-PREP.md](../research/brand-and-catalog/V1.46-PREP.md), [PROPOSAL.md](../research/brand-and-catalog/PROPOSAL.md), [BRAND-ADOPTION-PLAYBOOK.md](BRAND-ADOPTION-PLAYBOOK.md). Trigger: the maintainer adopted a new brand book as the official identity on 2026-11-18 (it supersedes the v1.35 violet and copper identity) and asked for the UI to be re-skinned and cataloged in phoenix_storybook.
+Status: ADOPTED 2026-11-18. The maintainer confirmed the v1.46 scope and ran `/gsd-new-milestone v1.46` from it, with Steps 0, 0b and Hex 0.3.18 done (merged or published). It supersedes the "Re-order (approved 2026-10-25)" plan and sections 4 to 6 below for the UI work. Detail and evidence: [V1.46-PREP.md](../research/brand-and-catalog/V1.46-PREP.md), [PROPOSAL.md](../research/brand-and-catalog/PROPOSAL.md), [BRAND-ADOPTION-PLAYBOOK.md](BRAND-ADOPTION-PLAYBOOK.md). Trigger: the maintainer adopted a new brand book as the official identity on 2026-11-18 (it supersedes the v1.35 violet and copper identity) and asked for the UI to be re-skinned and cataloged in phoenix_storybook.
 
 Standing practice (AGENTS.md, "Milestone preparation"): at every milestone boundary the next milestone is prepared upstream with research and a recommendation, and this file is updated, before the maintainer is asked what is next.
 

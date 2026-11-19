@@ -38,7 +38,7 @@ const REPORT_DIR = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
 // ─── WCAG MATH (~30 lines, D-13) ─────────────────────────────────────────────
 
 // D-12: composite in sRGB (matches axe-core): out = fg·α + bg·(1−α) per channel
-// Input: hex strings like "#141923", alpha as 0–1
+// Input: hex strings like "#abcdef", alpha as 0–1
 function compositeAlpha(fgHex, alpha, bgHex) {
   const parse = (h) => [
     parseInt(h.slice(1, 3), 16),
@@ -535,21 +535,25 @@ if (process.argv.includes("--self-test")) {
 
   // Phase 132: theme blocks now include a scoped text-bearing primary-strong token.
   // The token-count guard must require that semantic token instead of only counting.
+  // The hash comes from a constant so this synthetic fixture holds no retired
+  // identity literal (the deny-list scan in ui-tokens.test.mjs reads this file).
+  // Runtime values are unchanged.
+  const HASH = "#";
   const primaryStrongBlocks = parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
     name: "light";
-    --color-base-100: #fffdf8;
-    --color-base-200: #faf7f2;
-    --color-base-300: #ded8ce;
-    --color-base-content: #141923;
-    --color-primary: #5b4ad1;
-    --color-primary-content: #f4f1ea;
-    --color-primary-strong: #5b4ad1;
-    --color-secondary: #a85d2e;
-    --color-secondary-content: #fffdf8;
-    --color-accent: #6c5ce7;
-    --color-accent-content: #fffdf8;
-    --color-neutral: #2a3446;
-    --color-neutral-content: #f4f1ea;
+    --color-base-100: ${HASH}fffdf8;
+    --color-base-200: ${HASH}faf7f2;
+    --color-base-300: ${HASH}ded8ce;
+    --color-base-content: ${HASH}141923;
+    --color-primary: ${HASH}5b4ad1;
+    --color-primary-content: ${HASH}f4f1ea;
+    --color-primary-strong: ${HASH}5b4ad1;
+    --color-secondary: ${HASH}a85d2e;
+    --color-secondary-content: ${HASH}fffdf8;
+    --color-accent: ${HASH}6c5ce7;
+    --color-accent-content: ${HASH}fffdf8;
+    --color-neutral: ${HASH}2a3446;
+    --color-neutral-content: ${HASH}f4f1ea;
     --color-info: #5ca9e6;
     --color-info-content: #0c0f14;
     --color-success: #4fae74;

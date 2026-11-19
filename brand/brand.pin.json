@@ -1,0 +1,414 @@
+{
+  "schema": "scrypath.brand-pin.v1",
+  "source": {
+    "url": "https://sztheory.github.io/scrypath-brand/scrypath-brand.zip",
+    "repository_commit": "ced7c40e",
+    "zip_sha256": "3fc6d80f597eb232b6c25d5929cbe9dbbe6503c346c1360456ea839f3334be88",
+    "zip_size": 6729996,
+    "zip_entries": 108,
+    "zip_uncompressed_bytes": 8912608,
+    "member_prefix": "scrypath-brand/"
+  },
+  "owned_directories": [
+    "brand",
+    "scrypath_ops/priv/static/assets/fonts"
+  ],
+  "assets": [
+    {
+      "path": "brand/BRAND.md",
+      "source_member": "BRAND.md",
+      "sha256": "e5f1c17a7046d2627039c120cdef244eedf7765e83ff3ad19e5522ba0ff1e8db",
+      "size": 71836,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Brand book text: voice, color, type and usage rules",
+      "kind": "doc"
+    },
+    {
+      "path": "brand/assets/README.md",
+      "source_member": "assets/README.md",
+      "sha256": "a8468dd3e0d6cbbb0e39b6a6e30d163e9124b1ba20f6d8926ab606b1ae77987e",
+      "size": 3466,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Asset folder guide",
+      "kind": "doc"
+    },
+    {
+      "path": "brand/assets/avatar/scrypath-avatar-dark.svg",
+      "source_member": "assets/avatar/scrypath-avatar-dark.svg",
+      "sha256": "97dc8aae7940d2616a0bf6e3f7a826986482907eaceb4921ba53d69dec7f568e",
+      "size": 1268,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Avatar, dark",
+      "kind": "avatar"
+    },
+    {
+      "path": "brand/assets/avatar/scrypath-avatar-light.svg",
+      "source_member": "assets/avatar/scrypath-avatar-light.svg",
+      "sha256": "f823db17698597584668e8c00901e12ff57a07a22c80f3e60163507290dd9ff4",
+      "size": 1267,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Avatar, light",
+      "kind": "avatar"
+    },
+    {
+      "path": "brand/assets/docs/scrypath-exdoc.css",
+      "source_member": "assets/docs/scrypath-exdoc.css",
+      "sha256": "d258b88d7ab31eabafa13a49b5a555967d3fea4566e93a50ce2c1df2b036b287",
+      "size": 1809,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "ExDoc stylesheet (has known bugs)",
+      "kind": "stylesheet"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-dark.png",
+      "source_member": "assets/icon/favicon-16-dark.png",
+      "sha256": "2fa17b784ef77644d93eeec83eee7f17899d010b68d8f2c1a7d35c0c1393232d",
+      "size": 490,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-dark.svg",
+      "source_member": "assets/icon/favicon-16-dark.svg",
+      "sha256": "5554a42b121abc6bd056c72d72be125c22bcf52506aef878c06e000d5b739a59",
+      "size": 795,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon vector, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-light.png",
+      "source_member": "assets/icon/favicon-16-light.png",
+      "sha256": "3a10d40fc4389738fe6a8fbe2713d80477c93a0d432a5e473c3a732c3d047e48",
+      "size": 493,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-light.svg",
+      "source_member": "assets/icon/favicon-16-light.svg",
+      "sha256": "45e5937648aad4083be257e77f4d68ae480bb53a16c22a0cb78440d97cb8cef0",
+      "size": 787,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon vector, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-mono.png",
+      "source_member": "assets/icon/favicon-16-mono.png",
+      "sha256": "76f7f98005b18ba6518c6b4ac2b50094bf31f64f5590a5442497a17ea93c2765",
+      "size": 500,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon, mono",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-16-mono.svg",
+      "source_member": "assets/icon/favicon-16-mono.svg",
+      "sha256": "25f4d92285912209183ac4f39b39dcf4d4c7f5392ef268cd869d8ee5c668120c",
+      "size": 760,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "16 px favicon vector, mono",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-dark.png",
+      "source_member": "assets/icon/favicon-32-dark.png",
+      "sha256": "b5e5008018abb38935a7d6d27e4848c0b4931c996f6da1c361e1c52d1dce2c0a",
+      "size": 1022,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-dark.svg",
+      "source_member": "assets/icon/favicon-32-dark.svg",
+      "sha256": "cdb47ac9f3e08b4e146baf75ba632087b9aab56de972576ec033665f2039ea55",
+      "size": 896,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon vector, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-light.png",
+      "source_member": "assets/icon/favicon-32-light.png",
+      "sha256": "2d51f63daab34fe6f66c5d0536318e88cc3869e33622c0d44998a379f71b7ac9",
+      "size": 1042,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-light.svg",
+      "source_member": "assets/icon/favicon-32-light.svg",
+      "sha256": "832e6098c54300f2129f33bdaef8c67162a714bb36d54c3b6114740f2a4a098c",
+      "size": 901,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon vector, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-mono.png",
+      "source_member": "assets/icon/favicon-32-mono.png",
+      "sha256": "ead48411ea2fbd4df3d7d34a0643434bb28a99a82a2f2b481a40d2b5fe1d45da",
+      "size": 1046,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon, mono",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-32-mono.svg",
+      "source_member": "assets/icon/favicon-32-mono.svg",
+      "sha256": "c3c3df343191a924b598a6537334a37c35c08a5405c224c8d6a29651f235114c",
+      "size": 874,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "32 px favicon vector, mono",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-48-dark.png",
+      "source_member": "assets/icon/favicon-48-dark.png",
+      "sha256": "ed32f3bf372daf57e5db2f758f2746112d58537caff46f40195b03b82cd1604a",
+      "size": 1604,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "48 px favicon, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-48-light.png",
+      "source_member": "assets/icon/favicon-48-light.png",
+      "sha256": "692264ef0d66804464e4692c1e179b31d4c43af75b47f3273a7c77f656b9cac4",
+      "size": 1553,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "48 px favicon, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-48-mono.png",
+      "source_member": "assets/icon/favicon-48-mono.png",
+      "sha256": "7283188f1170b00305710e541f9187571ac94442f9346d8f7328c3a44e44640e",
+      "size": 1556,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "48 px favicon, mono",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-dark.svg",
+      "source_member": "assets/icon/favicon-dark.svg",
+      "sha256": "cdb47ac9f3e08b4e146baf75ba632087b9aab56de972576ec033665f2039ea55",
+      "size": 896,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Scalable favicon, dark",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon-light.svg",
+      "source_member": "assets/icon/favicon-light.svg",
+      "sha256": "832e6098c54300f2129f33bdaef8c67162a714bb36d54c3b6114740f2a4a098c",
+      "size": 901,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Scalable favicon, light",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon.ico",
+      "source_member": "assets/icon/favicon.ico",
+      "sha256": "54363f959875b4fe822af254b5fdaef994555243e8d2978a7323261bcc91e9ff",
+      "size": 1573,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Multi-size ICO favicon",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/icon/favicon.svg",
+      "source_member": "assets/icon/favicon.svg",
+      "sha256": "16a86401dcf480f7de851ab788ab3b9d60a7ae00ae95d81390ef1cda970e6a4f",
+      "size": 891,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Scalable favicon, default",
+      "kind": "icon"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-lockup-dark.svg",
+      "source_member": "assets/logo/scrypath-lockup-dark.svg",
+      "sha256": "eb95ff84f4ad9269bdf4853ce10293ff093cc0db70db405a64eb6483f8aacda1",
+      "size": 5830,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Lockup for dark backgrounds",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-lockup-light.svg",
+      "source_member": "assets/logo/scrypath-lockup-light.svg",
+      "sha256": "eb49a973af574e0d92588103d0243ca0e88a6c0f6d0c89e7fad4ccf56b698c45",
+      "size": 5773,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Lockup for light backgrounds",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-lockup-one-color-ink.svg",
+      "source_member": "assets/logo/scrypath-lockup-one-color-ink.svg",
+      "sha256": "04f742d756657445c5f7f4e8e416622f867db2b992e21931082173655d26592d",
+      "size": 5746,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "One-color ink lockup",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-lockup-one-color-pale-ink.svg",
+      "source_member": "assets/logo/scrypath-lockup-one-color-pale-ink.svg",
+      "sha256": "7bf78e77fbc4ed13bd24f00a8b12f1bf4d958aa92645e090c66eb1dc1900a87e",
+      "size": 5803,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "One-color pale-ink lockup",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-symbol-dark.svg",
+      "source_member": "assets/logo/scrypath-symbol-dark.svg",
+      "sha256": "943d075e9272702404c3552e588c0c339914fbe8c72febf8de9fe7001e333c15",
+      "size": 1131,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Symbol for dark backgrounds",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-symbol-light.svg",
+      "source_member": "assets/logo/scrypath-symbol-light.svg",
+      "sha256": "c7e97b228def75ae5975afd350479cca474bea5d4a95813c15db2f1f15016f8f",
+      "size": 1106,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Symbol for light backgrounds",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-symbol-one-color-ink.svg",
+      "source_member": "assets/logo/scrypath-symbol-one-color-ink.svg",
+      "sha256": "a64fe26c1f75a4d36ae4a0661409f188fc9be9de403b0a8e5feaa6a3034bea47",
+      "size": 1079,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "One-color ink symbol",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/logo/scrypath-symbol-one-color-pale-ink.svg",
+      "source_member": "assets/logo/scrypath-symbol-one-color-pale-ink.svg",
+      "sha256": "1572302acddcb1bdce08757caf8c77afd1c100d8e670e2ee5b7acffc3b26a7d8",
+      "size": 1104,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "One-color pale-ink symbol",
+      "kind": "logo"
+    },
+    {
+      "path": "brand/assets/readme/header-snippet.html",
+      "source_member": "assets/readme/header-snippet.html",
+      "sha256": "c658179ec97c7deadda44c0588e5ddd65fb0e2d7682244c958bd88d2db3beb52",
+      "size": 461,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "picture fragment for the README",
+      "kind": "readme-snippet"
+    },
+    {
+      "path": "brand/assets/readme/scrypath-header-dark.svg",
+      "source_member": "assets/readme/scrypath-header-dark.svg",
+      "sha256": "3243d6abedcef0ad418e09c8f80b8343e099733a01ba01eda8be4ded0faca2a5",
+      "size": 5829,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "README header, dark",
+      "kind": "readme-header"
+    },
+    {
+      "path": "brand/assets/readme/scrypath-header-light.svg",
+      "source_member": "assets/readme/scrypath-header-light.svg",
+      "sha256": "6f1fcd8beaf3da6f353c4088be0d6fd656afd1991c22c8fe0b359d5f4f35680b",
+      "size": 5772,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "README header, light",
+      "kind": "readme-header"
+    },
+    {
+      "path": "brand/assets/social/scrypath-social-card-1280x640.png",
+      "source_member": "assets/social/scrypath-social-card-1280x640.png",
+      "sha256": "70da95391d76240541eee4906bc48cc8201fddab3cf3efadba974fd88efebbe3",
+      "size": 29652,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Social card",
+      "kind": "social-card"
+    },
+    {
+      "path": "brand/brand.json",
+      "source_member": "brand.json",
+      "sha256": "7a9f6e3dc1033b89aaf2819dec2382af612f98d1e072e15b7d4cf460f532483c",
+      "size": 74133,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Machine-readable brand book",
+      "kind": "data"
+    },
+    {
+      "path": "brand/tokens.json",
+      "source_member": "tokens.json",
+      "sha256": "0390f2232ffad3115a26170f480e47f1650124c1a4a46df8869b52bbc0a3dc0c",
+      "size": 18847,
+      "license": "Apache-2.0 (per brand.json legal; brand repository has no LICENSE file at ced7c40e)",
+      "role": "Design tokens: the source for adopted token-map rows",
+      "kind": "data"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/OFL-BricolageGrotesque.txt",
+      "source_member": "assets/fonts/OFL-BricolageGrotesque.txt",
+      "sha256": "4b5a7d8f37f5602621c8a8d7358a6a2e71317e6c231c661e15aef0275d3e07ba",
+      "size": 4403,
+      "license": "OFL-1.1",
+      "role": "OFL text, display face",
+      "kind": "license"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/OFL-HankenGrotesk.txt",
+      "source_member": "assets/fonts/OFL-HankenGrotesk.txt",
+      "sha256": "e02ccb89a86839b22feff7872ff5cc355cc0f58318d29eee20e2cf83a612f16d",
+      "size": 4402,
+      "license": "OFL-1.1",
+      "role": "OFL text, UI face",
+      "kind": "license"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/OFL-SometypeMono.txt",
+      "source_member": "assets/fonts/OFL-SometypeMono.txt",
+      "sha256": "495a16e8214dd38dec1b569224d3a740c8f646336877794c492638e3172e8e9c",
+      "size": 4400,
+      "license": "OFL-1.1",
+      "role": "OFL text, mono face",
+      "kind": "license"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/display.woff2",
+      "source_member": "assets/fonts/web/display.woff2",
+      "sha256": "2b94cd302ccac31bcaab99c2ba8a6c6bbb5c97c370284ad48a3270ab07ef2331",
+      "size": 27072,
+      "license": "OFL-1.1",
+      "role": "Display face (Bricolage Grotesque)",
+      "kind": "font"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/mono.woff2",
+      "source_member": "assets/fonts/web/mono.woff2",
+      "sha256": "d8c5ea4cb7db8b0f56291ee28cf167a10406b36456856646edd58115c73530ea",
+      "size": 9876,
+      "license": "OFL-1.1",
+      "role": "Mono face (Sometype Mono)",
+      "kind": "font"
+    },
+    {
+      "path": "scrypath_ops/priv/static/assets/fonts/ui.woff2",
+      "source_member": "assets/fonts/web/ui.woff2",
+      "sha256": "b9929d2465e7e4731ad39dcf88ab3e92b49f36685a2ec4add82f26ab6aa97a14",
+      "size": 16128,
+      "license": "OFL-1.1",
+      "role": "UI face (Hanken Grotesk)",
+      "kind": "font"
+    }
+  ]
+}
