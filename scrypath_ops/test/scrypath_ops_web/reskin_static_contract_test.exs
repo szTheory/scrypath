@@ -223,14 +223,16 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
     test "the metric-adjusted fallback faces carry the exact override numbers" do
       for {label, css} <- css_files() do
         for {family, local, adjustments} <- [
-              {"Hanken Grotesk Fallback", "local(\"Arial\")",
+              {"Hanken Grotesk Fallback",
+               "local(\"Arial\"), local(\"Liberation Sans\"), local(\"Arimo\")",
                %{
                  "size-adjust" => "101.7%",
                  "ascent-override" => "98.3%",
                  "descent-override" => "29.8%",
                  "line-gap-override" => "0%"
                }},
-              {"Sometype Mono Fallback", "local(\"Courier New\")",
+              {"Sometype Mono Fallback",
+               "local(\"Courier New\"), local(\"Liberation Mono\"), local(\"Cousine\")",
                %{
                  "size-adjust" => "96.7%",
                  "ascent-override" => "95.7%",

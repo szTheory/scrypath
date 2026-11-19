@@ -2968,7 +2968,7 @@
 }
 @font-face {
   font-family: "Hanken Grotesk Fallback";
-  src: local("Arial");
+  src: local("Arial"), local("Liberation Sans"), local("Arimo");
   size-adjust: 101.7%;
   ascent-override: 98.3%;
   descent-override: 29.8%;
@@ -2976,7 +2976,7 @@
 }
 @font-face {
   font-family: "Sometype Mono Fallback";
-  src: local("Courier New");
+  src: local("Courier New"), local("Liberation Mono"), local("Cousine");
   size-adjust: 96.7%;
   ascent-override: 95.7%;
   descent-override: 28.5%;
