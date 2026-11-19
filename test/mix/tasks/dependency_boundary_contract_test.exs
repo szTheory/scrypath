@@ -607,6 +607,96 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     assert Enum.all?(hex_mounts, &String.contains?(&1, "sharing=locked"))
   end
 
+  # Static boundary checks for the v1.47 catalog. They pass vacuously until v1.47 adds the dependency,
+  # which is intended: the planted cases below prove each check can fail. This is gate 4 of the v1.46
+  # required-gate budget (see "Required-gate budget" in CONTRIBUTING.md).
+  describe "storybook boundary (v1.47 catalog)" do
+    test "root lib never mentions the storybook" do
+      paths = Path.wildcard("lib/**/*.{ex,exs}")
+      assert paths != [], "expected root lib sources to scan"
+
+      mentions = paths |> Enum.map(&{&1, File.read!(&1)}) |> storybook_mentions()
+
+      assert mentions == [],
+             "the published package must not reference the storybook: #{inspect(mentions)}"
+    end
+
+    test "root manifest does not depend on the storybook" do
+      refute :phoenix_storybook in direct_dependency_names!(@root_manifest),
+             "#{@root_manifest}: the storybook belongs to scrypath_ops only, never the Hex package"
+    end
+
+    test "ScrypathOps storybook dependency is dev and test only" do
+      assert storybook_dependency_violation(@ops_manifest) == nil
+    end
+
+    test "planted storybook mention and unrestricted dependency are flagged" do
+      sources = [
+        {"lib/planted_module.ex", "alias PhoenixStorybook.Component"},
+        {"lib/planted_package.ex", "# uses phoenix_storybook somewhere"},
+        {"lib/clean.ex", "defmodule Clean do\nend\n"}
+      ]
+
+      assert storybook_mentions(sources) == ["lib/planted_module.ex", "lib/planted_package.ex"]
+
+      tmp =
+        Path.join(System.tmp_dir!(), "storybook-boundary-#{System.unique_integer([:positive])}")
+
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
+      manifest = fn name, dependency_line ->
+        path = Path.join(tmp, name)
+
+        File.write!(path, """
+        defmodule Planted.MixProject do
+          defp deps do
+            [
+              {:phoenix, "~> 1.7"},
+              #{dependency_line}
+            ]
+          end
+        end
+        """)
+
+        path
+      end
+
+      unrestricted = manifest.("unrestricted.exs", ~s({:phoenix_storybook, "~> 1.5"}))
+      dev_only = manifest.("dev_only.exs", ~s({:phoenix_storybook, "~> 1.5", only: :dev}))
+
+      all_envs =
+        manifest.("all_envs.exs", ~s({:phoenix_storybook, "~> 1.5", only: [:dev, :test, :prod]}))
+
+      compliant =
+        manifest.("compliant.exs", ~s({:phoenix_storybook, "~> 1.5", only: [:test, :dev]}))
+
+      absent = manifest.("absent.exs", ~s({:jason, "~> 1.4"}))
+
+      assert storybook_dependency_violation(unrestricted) =~ "only: [:dev, :test]"
+      assert storybook_dependency_violation(dev_only) =~ "only: [:dev, :test]"
+      assert storybook_dependency_violation(all_envs) =~ "only: [:dev, :test]"
+      assert storybook_dependency_violation(compliant) == nil
+      assert storybook_dependency_violation(absent) == nil
+    end
+  end
+
+  defp storybook_mentions(sources) do
+    for {path, text} <- sources, text =~ ~r/PhoenixStorybook|phoenix_storybook/, do: path
+  end
+
+  defp storybook_dependency_violation(manifest_path) do
+    if :phoenix_storybook in direct_dependency_names!(manifest_path) do
+      only = manifest_path |> dependency_options!(:phoenix_storybook) |> Keyword.get(:only)
+
+      if Enum.sort(List.wrap(only)) == [:dev, :test] do
+        nil
+      else
+        "#{manifest_path}: the storybook dependency must declare only: [:dev, :test], got #{inspect(only)}"
+      end
+    end
+  end
+
   defp markdown_table_rows!(path, heading) do
     lines = path |> File.read!() |> String.split("\n")
 

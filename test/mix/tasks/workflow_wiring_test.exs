@@ -606,6 +606,87 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert contributing =~ "**`package`**"
       assert contributing =~ "**`repository-contracts`**"
       assert contributing =~ "**`backend`**"
+      assert contributing =~ "**`ecommerce-mounted`**"
+      assert contributing =~ "**`ops-ui (path-scoped)`**"
+    end
+
+    @ledger_header [
+      "Gate",
+      "Enforced by",
+      "Runs in",
+      "Deletion trigger",
+      "Expected churn per UI PR"
+    ]
+    @phase_186_gate_files [
+      "test/mix/tasks/brand_pin_contract_test.exs",
+      "examples/scrypath_ecommerce/ui-tokens.test.mjs",
+      "test/mix/tasks/workflow_wiring_test.exs",
+      "test/mix/tasks/dependency_boundary_contract_test.exs",
+      "scripts/ci/ui_state_pairs.test.cjs"
+    ]
+
+    test "required-gate budget ledger stays within 12 with deletion triggers" do
+      assert budget_ledger_errors(File.read!("CONTRIBUTING.md")) == []
+    end
+
+    test "planted ledger defects are flagged and a compliant ledger is accepted" do
+      row = fn gate, file, trigger ->
+        "| #{gate} | `#{file}` | `core` | #{trigger} | None |"
+      end
+
+      valid_rows =
+        for file <- @phase_186_gate_files,
+            do: row.("Gate for #{file}", file, "Delete when retired")
+
+      ledger = fn rows, budget_line ->
+        [
+          "### Required-gate budget",
+          "",
+          "| " <> Enum.join(@ledger_header, " | ") <> " |",
+          "|------|------|------|------|------|"
+          | rows
+        ]
+        |> Enum.concat(["", budget_line, "", "### Next section"])
+        |> Enum.join("\n")
+      end
+
+      assert budget_ledger_errors(ledger.(valid_rows, "Budget used: 5 of 12.")) == []
+
+      extra = for n <- 6..13, do: row.("Extra #{n}", "mix.exs", "Delete when retired")
+
+      assert Enum.any?(
+               budget_ledger_errors(ledger.(valid_rows ++ extra, "Budget used: 13 of 12.")),
+               &(&1 =~ "13 gates")
+             )
+
+      empty_trigger = [row.("No trigger", "mix.exs", "") | valid_rows]
+
+      assert Enum.any?(
+               budget_ledger_errors(ledger.(empty_trigger, "Budget used: 6 of 12.")),
+               &(&1 =~ "empty trigger cell")
+             )
+
+      missing_file = [
+        row.("Ghost", "test/mix/tasks/does_not_exist_test.exs", "Never") | valid_rows
+      ]
+
+      assert Enum.any?(
+               budget_ledger_errors(ledger.(missing_file, "Budget used: 6 of 12.")),
+               &(&1 =~ "does not exist")
+             )
+
+      assert Enum.any?(
+               budget_ledger_errors(ledger.(tl(valid_rows), "Budget used: 4 of 12.")),
+               &(&1 =~ "missing the Phase 186 gate")
+             )
+
+      assert Enum.any?(
+               budget_ledger_errors(ledger.(valid_rows, "Budget used: 4 of 12.")),
+               &(&1 =~ "budget line")
+             )
+
+      assert ["CONTRIBUTING.md must keep its Required-gate budget section"] =
+               budget_ledger_errors("# Nothing here")
     end
 
     test "no docs or workflow guidance introduces verify.phase100/phase101 drift" do
@@ -987,21 +1068,27 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert upload =~ "retention-days: 7"
     end
 
-    test "exactly the five established required jobs remain required" do
+    test "exactly six required contexts: five (required) jobs plus ops-ui (path-scoped)" do
       ci = File.read!(@ci_yml)
 
       required =
-        Regex.scan(~r/^  ([a-z][a-z0-9-]+):\n    name: .*\(required\)$/m, ci)
-        |> Enum.map(fn [_, job] -> job end)
+        Regex.scan(~r/^  ([a-z][a-z0-9-]+):\n    name: .*\((required|path-scoped)\)$/m, ci)
+        |> Enum.map(fn [_, job, _suffix] -> job end)
         |> Enum.sort()
 
       assert required == [
                "backend",
                "core",
                "ecommerce-mounted",
+               "ops-ui",
                "package",
                "repository-contracts"
              ]
+
+      # `main` branch protection lists this exact context string. Renaming the job would orphan the
+      # live required context and leave merges waiting for a check that never reports.
+      assert workflow_job_block(ci, "ops-ui") =~ "    name: ops-ui (path-scoped)\n",
+             "renaming the ops-ui job would orphan the live required context on main"
     end
 
     test "full Docker proof retains deterministic checks after judge entrypoint retirement" do
@@ -1259,6 +1346,75 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       idx
     end)
   end
+
+  # Returns a list of problems with the "Required-gate budget" ledger in the given CONTRIBUTING text.
+  defp budget_ledger_errors(contributing) do
+    case String.split(contributing, "### Required-gate budget", parts: 2) do
+      [_before, after_heading] ->
+        section = after_heading |> String.split(["\n## ", "\n### "], parts: 2) |> hd()
+
+        table =
+          section
+          |> String.split("\n")
+          |> Enum.filter(&String.starts_with?(&1, "|"))
+          |> Enum.map(&ledger_cells/1)
+
+        case table do
+          [@ledger_header, _separator | rows] -> ledger_errors(rows, section)
+          _ -> ["the ledger table header must be #{inspect(@ledger_header)}"]
+        end
+
+      [_whole] ->
+        ["CONTRIBUTING.md must keep its Required-gate budget section"]
+    end
+  end
+
+  defp ledger_cells(line) do
+    line |> String.trim() |> String.trim("|") |> String.split("|") |> Enum.map(&String.trim/1)
+  end
+
+  defp ledger_errors(rows, section) do
+    count_errors =
+      if length(rows) in 1..12,
+        do: [],
+        else: ["the ledger lists #{length(rows)} gates; the budget is 1 to 12"]
+
+    enforcing = Enum.map_join(rows, "\n", &Enum.at(&1, 1))
+
+    missing_gates =
+      for file <- @phase_186_gate_files,
+          not String.contains?(enforcing, file),
+          do: "the ledger is missing the Phase 186 gate enforced by #{file}"
+
+    budget_line =
+      if section =~ "Budget used: #{length(rows)} of 12.",
+        do: [],
+        else: ["the budget line must read: Budget used: #{length(rows)} of 12."]
+
+    count_errors ++ Enum.flat_map(rows, &ledger_row_errors/1) ++ missing_gates ++ budget_line
+  end
+
+  defp ledger_row_errors([gate, enforced_by, runs_in, trigger, churn]) do
+    empty_cells =
+      for {label, cell} <- [gate: gate, runs_in: runs_in, trigger: trigger, churn: churn],
+          cell == "",
+          do: "ledger row #{inspect(gate)} has an empty #{label} cell"
+
+    file_errors =
+      case Regex.run(~r/`([^`]+)`/, enforced_by) do
+        [_, file] ->
+          if File.exists?(file),
+            do: [],
+            else: ["ledger row #{inspect(gate)} names #{file}, which does not exist"]
+
+        nil ->
+          ["ledger row #{inspect(gate)} must name its enforcing file in backticks"]
+      end
+
+    empty_cells ++ file_errors
+  end
+
+  defp ledger_row_errors(row), do: ["a ledger row must have five cells: #{inspect(row)}"]
 
   defp workflow_job_block(content, job_name) do
     marker = "\n  #{job_name}:\n"

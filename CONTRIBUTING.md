@@ -242,6 +242,20 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 
 Treat **`core`**, **`package`**, **`repository-contracts`**, **`backend`**, **`ecommerce-mounted`**, and **`ops-ui (path-scoped)`** as required merge gates. The compatibility, deep-quality, Phoenix example, and full E2E lanes remain advisory as labeled.
 
+### Required-gate budget
+
+The brand and UI milestone (v1.46) may add at most 12 new required gates. Every gate states its deletion trigger and the churn it adds to a typical UI PR. A gate that goes red twice within 30 days for reasons that are not product defects drops to advisory. `test/mix/tasks/workflow_wiring_test.exs` reads the table below and fails if it lists more than 12 gates, leaves a trigger or churn cell empty, or names an enforcing file that does not exist.
+
+| Gate | Enforced by | Runs in | Deletion trigger | Expected churn per UI PR |
+|------|-------------|---------|------------------|--------------------------|
+| Offline brand pin | `test/mix/tasks/brand_pin_contract_test.exs` (and `mix verify.brand`) | `core` | Delete when the brand assets are no longer vendored into this repository | None unless brand assets change (two-key update: the pin file and the test-owned zip hash) |
+| Token parity and retired-identity deny-list | `examples/scrypath_ecommerce/ui-tokens.test.mjs` | `core` and `repository-contracts` | Delete the deny-list half once the allowlist holds no `retire-last` entries; delete the parity half once the token map has no pending rows | One token-map row edit per changed theme property; the allowlist only shrinks |
+| Required `ops-ui (path-scoped)` | `test/mix/tasks/workflow_wiring_test.exs` | Branch protection on `main` | Delete if `scrypath_ops` leaves this repository | None; renaming the job must also change the branch-protection context |
+| Storybook boundary | `test/mix/tasks/dependency_boundary_contract_test.exs` | `core` and `repository-contracts` | Delete if the component catalog leaves `scrypath_ops` or moves to its own Mix project with its own boundary check | None; changes only when the storybook dependency declaration changes |
+| Structural preservation pair check | `scripts/ci/ui_state_pairs.test.cjs` | `repository-contracts` (rides the existing Node step; counted conservatively) | Delete when the Phase 185 preservation specs are retired | None unless thresholds are retuned, which needs a new real capture pair in `scripts/ci/fixtures/ui-state-pairs/` |
+
+Budget used: 5 of 12.
+
 ### Exact-source cache acceptance probes
 
 Manual `ci.yml` dispatches default to `phase182_cache_mode=normal`, which keeps
