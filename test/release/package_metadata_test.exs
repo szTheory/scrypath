@@ -139,6 +139,27 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   alias Scrypath.MixProject
 
   @generator ~s(<meta name="generator" content="ExDoc v)
+  @pinned_css "brand/assets/docs/scrypath-exdoc.css"
+  @docs_css "dev/docs/scrypath-exdoc.css"
+  # The one rule the docs-owned stylesheet adds to the pinned rules: ExDoc takes a single logo,
+  # so dark mode swaps in the dark symbol.
+  @dark_logo_rule ~S|body.dark .sidebar-projectImage img{content:url("../brand/assets/logo/scrypath-symbol-dark.svg")}|
+  # Token role to its custom property suffix, and the token classes each role colors, as in the book.
+  @code_roles %{
+    "background" => "--scrypath-doc-bg",
+    "text" => "--scrypath-doc-text",
+    "comment" => "--scrypath-doc-comment",
+    "keyword" => "--scrypath-doc-keyword",
+    "string" => "--scrypath-doc-string",
+    "atom" => "--scrypath-doc-atom"
+  }
+  @class_roles %{
+    "keyword" => ~w(k kd kn kp kr kt ow),
+    "string" => ~w(s s1 s2 sa sb sc sd se sh si sx sr sl),
+    "atom" => ~w(ss na no m mb mf mh mi mo il),
+    "comment" => ~w(c c1 cm cs ch cp cpf),
+    "text" => ~w(nf fm nc nn)
+  }
   @exdoc_css "dist/html-elixir-"
   @docs_link ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
   @header_dark "brand/assets/readme/scrypath-header-dark.svg"
@@ -336,6 +357,186 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     assert hook.(:epub) == ""
     refute function_exported?(MixProject, :before_closing_head_tag, 1)
   end
+
+  # Code-block colors are proven here by rule assertions, not pixels: the docs-owned stylesheet is
+  # the pinned one with two fixes, its colors equal the brand tokens, and its selectors outrank
+  # ExDoc's own code rules by computed specificity. A rendered browser check stays advisory.
+  test "the docs-owned stylesheet has no operating-system dark block and no media rule" do
+    raw = File.read!(@docs_css)
+
+    refute raw =~ "prefers-color-scheme"
+    refute raw =~ "@media"
+  end
+
+  test "every color or background rule is written once for body and once for body.dark" do
+    painted = Enum.filter(docs_rules(), fn {_selectors, decls} -> paints?(decls) end)
+    assert painted != []
+
+    for {selectors, _decls} <- painted do
+      by_base =
+        selectors |> Enum.map(&split_body_prefix/1) |> Enum.group_by(&elem(&1, 1), &elem(&1, 0))
+
+      for {base, prefixes} <- by_base do
+        assert Enum.sort(prefixes) == ["body ", "body.dark "],
+               "#{base} is not written once for body and once for body.dark"
+      end
+    end
+  end
+
+  test "the docs-owned rules equal the rules derived from the pinned file plus the dark-logo rule" do
+    assert docs_rules() ==
+             derive_docs_rules(File.read!(@pinned_css)) ++ parse_rules(@dark_logo_rule)
+  end
+
+  test "the code colors equal the brand tokens, light on :root and dark on body.dark" do
+    root = custom_properties(docs_rules(), ":root")
+    dark = custom_properties(docs_rules(), "body.dark")
+
+    assert map_size(root) == map_size(@code_roles)
+    assert map_size(dark) == map_size(@code_roles)
+
+    for {role, property} <- @code_roles do
+      assert String.downcase(root[property]) == token_hex(role, "light"), "#{role} light"
+      assert String.downcase(dark[property]) == token_hex(role, "dark"), "#{role} dark"
+    end
+  end
+
+  test "each token class maps to its color property, in both themes" do
+    expected =
+      for {role, classes} <- @class_roles, class <- classes, into: %{} do
+        {class, "var(--scrypath-doc-#{role})"}
+      end
+
+    for prefix <- ["body .makeup .", "body.dark .makeup ."] do
+      actual =
+        for {selectors, decls} <- docs_rules(),
+            selector <- selectors,
+            String.starts_with?(selector, prefix),
+            into: %{} do
+          {String.replace_prefix(selector, prefix, ""), String.replace(decls, ~r/^color:|;$/, "")}
+        end
+
+      assert actual == expected, "classes under #{prefix} do not map as in the pinned file"
+    end
+  end
+
+  test "the docs-owned selectors outrank ExDoc's competing code rules", %{out: out} do
+    [exdoc_css] = Path.wildcard(Path.join(out, "dist/html-elixir-*.css"))
+    exdoc = File.read!(exdoc_css)
+
+    # The bug the stylesheet fixes must still exist in this ExDoc version. If ExDoc drops these
+    # rules, re-check whether the docs-owned stylesheet still needs the body prefixes.
+    assert exdoc =~ ".dark .makeup .kd"
+    assert exdoc =~ ".dark .makeup{"
+    assert exdoc =~ ".content-inner code{"
+
+    selectors = Enum.flat_map(docs_rules(), fn {selectors, _decls} -> selectors end)
+    assert "body.dark pre code.makeup" in selectors
+
+    token_classes = Enum.filter(selectors, &String.contains?(&1, ".makeup ."))
+
+    for selector <- token_classes do
+      competing =
+        if String.starts_with?(selector, "body.dark "),
+          do: ".dark .makeup .kd",
+          else: ".makeup .kd"
+
+      assert specificity(selector) > specificity(competing),
+             "#{selector} does not outrank #{competing}"
+    end
+
+    # The dark selector must beat ExDoc's dark text rule, the light one its light rule; both must
+    # beat the inline-code background rule.
+    for {selector, themed} <- [
+          {"body.dark pre code.makeup", ".dark .makeup"},
+          {"body pre code.makeup", ".makeup"}
+        ] do
+      assert selector in selectors
+
+      for competing <- [themed, ".content-inner code"] do
+        assert specificity(selector) > specificity(competing),
+               "#{selector} does not outrank #{competing}"
+      end
+    end
+  end
+
+  defp docs_rules, do: @docs_css |> File.read!() |> strip_comments() |> parse_rules()
+
+  defp strip_comments(css), do: Regex.replace(~r{/\*.*?\*/}s, css, "")
+
+  # Flat rules only: `selector,selector{declarations}`, whitespace normalized.
+  defp parse_rules(css) do
+    for [_whole, selectors, decls] <- Regex.scan(~r/([^{}]+)\{([^{}]*)\}/, css) do
+      {selectors |> String.split(",") |> Enum.map(&String.trim/1),
+       decls |> String.replace(~r/\s+/, " ") |> String.trim()}
+    end
+  end
+
+  # The derivation of the docs-owned file from the pin: drop every media block that follows the
+  # operating-system color setting, keep custom-property rules, and write every other rule's
+  # selectors once for `body ` and once for `body.dark `.
+  defp derive_docs_rules(pinned) do
+    pinned
+    |> strip_comments()
+    |> then(
+      &Regex.replace(
+        ~r/@media[^{]*prefers-color-scheme[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/,
+        &1,
+        ""
+      )
+    )
+    |> parse_rules()
+    |> Enum.map(fn {selectors, decls} ->
+      if custom_only?(decls) do
+        {selectors, decls}
+      else
+        {for(s <- selectors, prefix <- ["body ", "body.dark "], do: prefix <> s), decls}
+      end
+    end)
+  end
+
+  defp declarations(decls) do
+    for declaration <- String.split(decls, ";", trim: true),
+        [property, value] = String.split(declaration, ":", parts: 2),
+        do: {String.trim(property), String.trim(value)}
+  end
+
+  defp custom_only?(decls),
+    do: Enum.all?(declarations(decls), &String.starts_with?(elem(&1, 0), "--"))
+
+  defp paints?(decls) do
+    Enum.any?(declarations(decls), &(elem(&1, 0) in ["color", "background", "background-color"]))
+  end
+
+  defp custom_properties(rules, selector) do
+    [decls] = for {[^selector], decls} <- rules, do: decls
+    Map.new(declarations(decls))
+  end
+
+  defp split_body_prefix("body.dark " <> base), do: {"body.dark ", base}
+  defp split_body_prefix("body " <> base), do: {"body ", base}
+  defp split_body_prefix(other), do: flunk("selector #{inspect(other)} has no body prefix")
+
+  defp token_hex(role, theme) do
+    "brand/tokens.json"
+    |> File.read!()
+    |> Jason.decode!()
+    |> get_in(["color", "code", "#{role}-#{theme}", "$value", "hex"])
+    |> String.downcase()
+  end
+
+  # Specificity of a descendant-only selector as {ids, classes, elements}; tuples compare
+  # left to right, which is how CSS ranks them.
+  defp specificity(selector) do
+    selector
+    |> String.split(~r/\s+/, trim: true)
+    |> Enum.reduce({0, 0, 0}, fn compound, {ids, classes, elements} ->
+      {ids + count(~r/#[\w-]+/, compound), classes + count(~r/\.[\w-]+/, compound),
+       elements + count(~r/^[a-zA-Z][\w-]*/, compound)}
+    end)
+  end
+
+  defp count(regex, string), do: regex |> Regex.scan(string) |> length()
 
   defp content_pages(pages), do: Enum.filter(pages, &(File.read!(&1) =~ @exdoc_css))
 
