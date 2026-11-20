@@ -983,6 +983,81 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute cancelled_html =~ "The swap task failed."
   end
 
+  # COPY-04: the promotion notice body is the next step, as one sentence. Only the flash was
+  # pinned before (for four reasons); this pins the body for every `promotion_reason/1` clause
+  # (16 named reasons and the fallback) and for the eligible and unchecked states.
+  @promotion_notice_sentences [
+    {:schema_not_allowed, "Select an available schema."},
+    {:unsupported_backend, "Meilisearch is unavailable."},
+    {:reconcile_failed, "Refresh sync and queue status."},
+    {:reconcile_not_current, "Refresh sync and queue status."},
+    {:contract_failed, "Refresh the index contract check."},
+    {:contract_not_current, "Run the index contract check."},
+    {:check_in_progress, "Wait for the current check."},
+    {:context_mismatch, "Refresh checks for this schema and index."},
+    {:indexes_not_distinct, "Confirm live and target indexes differ."},
+    {:target_unobserved, "Observe the prepared target index first."},
+    {:backend_work_pending, "Wait for backend tasks to finish."},
+    {:queue_work_pending, "Wait for pending sync work to finish."},
+    {:reindex_pending, "Wait for reindex work to finish."},
+    {:cutover_pending, "Wait for the current cutover to finish."},
+    {:failed_work, "Resolve failed sync work first."},
+    {:contract_mismatch, "Resolve contract differences first."},
+    {:a_reason_no_clause_names, "Refresh current checks."}
+  ]
+
+  test "the promotion notice says one exact sentence for every blocked reason and both other states",
+       %{conn: conn} do
+    # A prepared target index is observed, so the promotion block is on the page; the mounted
+    # view's own assigns are the base and only the eligibility changes.
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+    render_async(lv)
+    base = :sys.get_state(lv.pid).socket.assigns
+
+    assert length(@promotion_notice_sentences) == 17
+
+    for {reason, sentence} <- @promotion_notice_sentences do
+      seen = promotion_notice(base, {:blocked, reason})
+
+      assert seen == {"Promotion unavailable", sentence},
+             "blocked reason #{inspect(reason)} should say #{inspect(sentence)}, saw #{inspect(seen)}"
+    end
+
+    assert promotion_notice(base, :eligible) ==
+             {"Ready for promotion", "Current checks are clear for this schema and index pair."}
+
+    assert promotion_notice(base, nil) ==
+             {"Promotion unavailable", "Refresh current checks before promotion."}
+  end
+
+  # The notice element alone, so a sentence elsewhere on the page cannot satisfy a pin.
+  defp promotion_notice(base, eligibility) do
+    document =
+      base
+      |> Map.put(:promotion_eligibility, eligibility)
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+      |> LazyHTML.from_fragment()
+
+    notice =
+      LazyHTML.query(
+        document,
+        "#index-promotion [data-status-kind]:not(#promotion-status-result)"
+      )
+
+    assert Enum.count(notice) == 1,
+           "expected one promotion notice for #{inspect(eligibility)}, got #{Enum.count(notice)}"
+
+    {notice_text(notice, ".ops-notice-surface__title"),
+     notice_text(notice, ".ops-notice-surface__body")}
+  end
+
+  defp notice_text(notice, selector) do
+    notice |> LazyHTML.query(selector) |> LazyHTML.text() |> String.split() |> Enum.join(" ")
+  end
+
   test "a successful swap task without fresh index evidence is not promotion completion" do
     socket =
       sync_drift_socket(%{
