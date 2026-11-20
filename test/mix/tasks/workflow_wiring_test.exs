@@ -379,6 +379,18 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
          String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
         {"browser probe no longer launches the chrome channel",
          String.replace(yml, "channel: 'chrome'", "channel: 'x'")},
+        {"workflow-level group cancels every superseded run, deploys included",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: true"
+         )},
+        {"rollback dispatch shares the push group",
+         String.replace(
+           yml,
+           "${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}",
+           "${{ github.ref }}"
+         )},
         {"browser selection no longer checks that the ref's check script supports the channel",
          String.replace(yml, "#{@website_channel_guard} \\\n            && ", "")}
       ]
@@ -1909,9 +1921,15 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
     assert build =~ "timeout-minutes: 10"
 
+    # Only a superseded pull_request run is cancelled. A push to main must never cut off a deploy that
+    # is already running, and a rollback dispatch (which also runs on main) must not share a group
+    # with pushes, or the next push would cancel it.
     assert yml =~
-             "concurrency:\n  group: website-${{ github.workflow }}-${{ github.ref }}\n  cancel-in-progress: true",
-           "the workflow-level group keeps cancel-in-progress: true for build-and-check"
+             "concurrency:\n  group: website-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "the workflow-level group cancels only superseded pull_request runs and keys a rollback separately"
+
+    refute yml =~ ~r/^  cancel-in-progress: true/m,
+           "a workflow-level cancel-in-progress: true would cancel a deploy that is already running"
 
     assert deploy =~ "if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
 

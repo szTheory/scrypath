@@ -31,9 +31,12 @@ on:
 permissions:
   contents: read
 
+# Only a superseded pull_request run is cancelled. A push to main or a rollback dispatch is never
+# cancelled mid-run (that could cut off a deploy), and a rollback has its own group so a later push
+# does not displace it. The deploy job below adds its own non-cancelling group.
 concurrency:
-  group: website-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: website-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-and-check:
