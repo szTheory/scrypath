@@ -18,6 +18,19 @@ Scrypath now runs a **green-main release train**:
 
 The optional operator Phoenix app lives in **`scrypath_ops/`** at the repository root. It is **not** part of the published Hex artifact. The root library **`mix.exs`** **`package.files`** whitelist **must never** list **`scrypath_ops/`** (or otherwise pull OPSUI into the tarball). Run **`mix hex.publish`** only from the **library** project directory (the same directory as the root `mix.exs` that defines `:scrypath`), never from `scrypath_ops/`.
 
+### README header and HexDocs brand assets
+
+A published README and its docs cannot be corrected after a release, so the header and the brand assets follow these rules.
+
+- The README header uses relative `brand/assets/readme/...` paths. GitHub resolves them to committed files. `mix docs` mirrors that directory through the ExDoc `assets:` option, so HexDocs resolves the same paths inside the build. `brand/` stays out of `package.files`, and a Hex consumer never reads it.
+- README images never point at the Pages site, because it is mutable and served from `main`.
+- hex.pm does not render the README today. If it starts, switch the two header URLs to commit-pinned `raw.githubusercontent.com/szTheory/scrypath/<commit>/brand/assets/readme/...` URLs before that release, because a published README cannot be fixed afterwards.
+- The header `<picture>` follows the operating-system theme, while ExDoc follows its own light and dark toggle. A dark operating system with ExDoc set to light shows the dark header on a light page. This is a known residual.
+- The ExDoc logo is the light symbol, and one docs-owned rule swaps in the dark symbol under ExDoc's dark mode. The favicon is `brand/assets/icon/favicon-light.svg`, because the pinned `favicon.svg` carries no colors and renders black.
+- `dev/docs/scrypath-exdoc.css` is derived from the pinned `brand/assets/docs/scrypath-exdoc.css`: the block that follows the operating-system dark setting is removed, every color rule is written for both `body ` and `body.dark `, and one logo rule is added. After a brand pin update, re-derive it. `test/release/package_metadata_test.exs` fails until it matches.
+- Token classes the brand book does not color keep ExDoc's own colors.
+- The built-docs checks run in `core` and in `mix verify.package`.
+
 ## Automated Release Gate
 
 Run the auth-free package gate before you merge a release PR or when you need the same checks outside CI:

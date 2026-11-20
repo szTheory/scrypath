@@ -264,6 +264,22 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     end
   end
 
+  test "docs/releasing.md records the README header and HexDocs brand mechanics" do
+    releasing = File.read!("docs/releasing.md")
+
+    for anchor <- [
+          "### README header and HexDocs brand assets",
+          "brand/assets/readme",
+          "raw.githubusercontent.com",
+          "dev/docs/scrypath-exdoc.css",
+          "brand/assets/docs/scrypath-exdoc.css"
+        ] do
+      assert releasing =~ anchor, "docs/releasing.md is missing #{inspect(anchor)}"
+    end
+
+    refute releasing =~ retired_dir()
+  end
+
   test "the only non-ExDoc html with an unresolved local reference is the mirrored pinned snippet",
        %{out: out} do
     generated = MapSet.new(generated_pages(out))
