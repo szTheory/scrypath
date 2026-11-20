@@ -557,7 +557,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   Trust-verdict hero — the branded answer to "can I trust search right now?".
 
   A large status headline + one-line evidence, tone routed through `kind`. The anchor of
-  the Control Room landing; also used for the Search health summary and Sync and index promotion
+  the Control room landing; also used for the Search health summary and Sync and index promotion
   readiness. Keep the headline short and honest (don't upgrade green past the evidence).
   """
   attr(:kind, :atom,
@@ -626,7 +626,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   A short context trail — `<group> › <page>` — not a map of the whole product (that's
   the primary shell nav's job). Siblings are deliberately omitted; the group label
-  (Recover / Explore) is context, not a link. Renders nothing on the Control Room
+  (Recover / Explore) is context, not a link. Renders nothing on the Control room
   landing (a breadcrumb that says "you are at the top" is noise).
   """
   attr(:current, :atom,
@@ -688,7 +688,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Intent task-card for the Control Room landing.
+  Intent task-card for the Control room landing.
 
   The whole card is a single navigation target; `route_label` is the visible
   affordance. Composes the `.ops-*` surface layer so it inherits branded styling.
@@ -1714,7 +1714,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_command_palette(assigns) do
     items =
       ([
-         %{path: assigns.mount_path, label: "Control Room", hint: "Search and sync overview"}
+         %{path: assigns.mount_path, label: "Control room", hint: "Search and sync overview"}
          | Enum.map(
              ScrypathOpsWeb.Nav.primary(assigns.mount_path),
              &%{path: &1.path, label: &1.label, hint: nav_hint(&1.label)}

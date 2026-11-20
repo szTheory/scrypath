@@ -24,7 +24,7 @@
  * The fallback faces name Arial and Courier New first, then the metric-compatible Liberation and
  * Arimo or Cousine faces that Linux (the CI browser image) ships instead: `local()` matches font
  * names, not fontconfig aliases, so without them the adjustment is not applied there, the swap
- * re-wraps text and the page shifts (measured 0.16 on Control Room at 390px, 0.00 with them).
+ * re-wraps text and the page shifts (measured 0.16 on Control room at 390px, 0.00 with them).
  * The brand's display face stays on disk for the pin verifier only and is never declared here.
  */
 @font-face { font-family: "Hanken Grotesk"; src: url("../fonts/ui.woff2?v=b9929d2465e7e4731ad39dcf88ab3e92b49f36685a2ec4add82f26ab6aa97a14") format("woff2"); font-weight: 400 700; font-style: normal; font-display: swap; }

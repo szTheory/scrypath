@@ -12,131 +12,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.RecoveryObservation
   alias ScrypathOpsWeb.SyncDriftLive
   alias Scrypath.Operations.Task, as: OperationTask
-
-  defmodule SyncDriftClient do
-    def tasks(filters, config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :tasks_calls, &(&1 + 1))
-      end)
-
-      tasks =
-        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) and
-             Keyword.get(filters, :index_uids) == ["sdv_ops_post_a__reindex"] do
-          [
-            %{
-              "uid" => 100,
-              "status" => "succeeded",
-              "type" => "indexCreation",
-              "indexUid" => "sdv_ops_post_a__reindex"
-            }
-          ]
-        else
-          Keyword.get(config, :meilisearch_tasks, [])
-        end
-
-      {:ok, %{results: tasks}}
-    end
-
-    def get_settings(_index, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :settings_calls, &(&1 + 1))
-      end)
-
-      if settings = Agent.get(:sync_drift_live_test_state, &Map.get(&1, :applied_settings)) do
-        {:ok, settings}
-      else
-        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
-          {:ok,
-           %{
-             "searchableAttributes" => ["*"],
-             "filterableAttributes" => [],
-             "sortableAttributes" => []
-           }}
-        else
-          {:error, :settings}
-        end
-      end
-    end
-
-    def swap_indexes(_indexes, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        state
-        |> Map.put(:swap_called, true)
-        |> Map.update!(:swap_calls, &(&1 + 1))
-      end)
-
-      {:ok,
-       %{
-         "uid" => 201,
-         "status" => "succeeded",
-         "type" => "indexSwap",
-         "indexUid" => "sdv_ops_post_b"
-       }}
-    end
-
-    def task(uid, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :task_calls, &[uid | &1])
-      end)
-
-      Agent.get(:sync_drift_live_test_state, fn state ->
-        %{"uid" => uid, "status" => state.task_status, "type" => "indexSwap"}
-      end)
-      |> then(&{:ok, &1})
-    end
-  end
-
-  defmodule SyncDriftObanInspector do
-    def list_jobs(_schema_module, config) do
-      {:ok, Keyword.get(config, :oban_jobs, [])}
-    end
-  end
+  alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
+  alias ScrypathOps.Test.CopyStubs.SyncDrift.Client, as: SyncDriftClient
+  alias ScrypathOps.Test.CopyStubs.SyncDrift.ObanInspector, as: SyncDriftObanInspector
 
   setup do
-    keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
-      meilisearch_tasks oban oban_queue oban_inspector oban_jobs
-    )a
-
-    previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
-
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
-    Application.put_env(:scrypath_ops, :sync_mode, :manual)
-    Application.put_env(:scrypath_ops, :index_prefix, "sdv")
-    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
-    Application.put_env(:scrypath_ops, :meilisearch_client, SyncDriftClient)
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
-    Application.put_env(:scrypath_ops, :oban, nil)
-    Application.put_env(:scrypath_ops, :oban_queue, nil)
-    Application.put_env(:scrypath_ops, :oban_inspector, SyncDriftObanInspector)
-    Application.put_env(:scrypath_ops, :oban_jobs, [])
-
-    start_supervised!(%{
-      id: :sync_drift_live_test_state,
-      start:
-        {Agent, :start_link,
-         [
-           fn ->
-             %{
-               tasks_calls: 0,
-               settings_calls: 0,
-               swap_called: false,
-               swap_calls: 0,
-               task_calls: [],
-               task_status: "processing"
-             }
-           end,
-           [name: :sync_drift_live_test_state]
-         ]}
-    })
-
-    on_exit(fn ->
-      Enum.each(previous, fn
-        {k, nil} -> Application.delete_env(:scrypath_ops, k)
-        {k, v} -> Application.put_env(:scrypath_ops, k, v)
-      end)
-    end)
+    previous = SyncDriftStubs.put_env()
+    start_supervised!(SyncDriftStubs.agent_spec())
+    on_exit(fn -> SyncDriftStubs.restore_env(previous) end)
 
     :ok
   end
@@ -292,16 +175,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "an observed empty Oban queue reads as caught up", %{conn: conn} do
-    Application.put_env(:scrypath_ops, :sync_mode, :oban)
-    Application.put_env(:scrypath_ops, :oban, Oban)
-    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
+    SyncDriftStubs.put_oban_env()
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
 
     assert has_element?(
              lv,
              "#sync-pipeline-status[data-status-kind='success']",
-             "Caught up. Nothing queued, retrying or failed."
+             "Caught up. Nothing pending, retrying or failed."
            )
 
     assert has_element?(lv, "[data-testid='sync-identity']", "Oban background sync")
@@ -311,15 +192,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "sync activity counts separate pending work, scheduled retries and terminal failures", %{
     conn: conn
   } do
-    Application.put_env(:scrypath_ops, :sync_mode, :oban)
-    Application.put_env(:scrypath_ops, :oban, Oban)
-    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
-    job = %{id: 1, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
-    Application.put_env(:scrypath_ops, :oban_jobs, [job, %{job | id: 2, state: "retryable"}])
+    [job | _] = jobs = SyncDriftStubs.pending_and_retrying_jobs()
+    SyncDriftStubs.put_oban_env(jobs)
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
     assert has_element?(lv, "#sync-pipeline-status", "Sync work is pending")
-    assert has_element?(lv, ".ops-sync-work", "1 job queued, 1 scheduled retry")
+    assert has_element?(lv, ".ops-sync-work", "1 job pending, 1 scheduled retry")
     refute has_element?(lv, ".ops-sync-work [data-tone='error']")
     refute has_element?(lv, "#sync-pipeline-status", "Caught up")
 
@@ -520,8 +398,20 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     render_async(missing_lv)
 
     assert has_element?(missing_lv, ".ops-settings-diff tbody th code", "title")
-    assert has_element?(missing_lv, ".ops-setting-live[data-missing='true']", "Not searchable")
-    assert has_element?(missing_lv, ".ops-settings-diff tbody tr", "Not searched yet.")
+
+    assert has_element?(
+             missing_lv,
+             ".ops-settings-diff tbody td[data-label='Declared in schema']",
+             "Used for search"
+           )
+
+    assert has_element?(
+             missing_lv,
+             ".ops-setting-live[data-missing='true']",
+             "Not used for search"
+           )
+
+    assert has_element?(missing_lv, ".ops-settings-diff tbody tr", "Not used for search yet.")
   end
 
   test "failed settings refresh retains the previous comparison and its original check time", %{
@@ -1093,6 +983,81 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute cancelled_html =~ "The swap task failed."
   end
 
+  # COPY-04: the promotion notice body is the next step, as one sentence. Only the flash was
+  # pinned before (for four reasons); this pins the body for every `promotion_reason/1` clause
+  # (16 named reasons and the fallback) and for the eligible and unchecked states.
+  @promotion_notice_sentences [
+    {:schema_not_allowed, "Select an available schema."},
+    {:unsupported_backend, "Meilisearch is unavailable."},
+    {:reconcile_failed, "Refresh sync and queue status."},
+    {:reconcile_not_current, "Refresh sync and queue status."},
+    {:contract_failed, "Refresh the index contract check."},
+    {:contract_not_current, "Run the index contract check."},
+    {:check_in_progress, "Wait for the current check."},
+    {:context_mismatch, "Refresh checks for this schema and index."},
+    {:indexes_not_distinct, "Confirm live and target indexes differ."},
+    {:target_unobserved, "Observe the prepared target index first."},
+    {:backend_work_pending, "Wait for backend tasks to finish."},
+    {:queue_work_pending, "Wait for pending sync work to finish."},
+    {:reindex_pending, "Wait for reindex work to finish."},
+    {:cutover_pending, "Wait for the current cutover to finish."},
+    {:failed_work, "Resolve failed sync work first."},
+    {:contract_mismatch, "Resolve contract differences first."},
+    {:a_reason_no_clause_names, "Refresh current checks."}
+  ]
+
+  test "the promotion notice says one exact sentence for every blocked reason and both other states",
+       %{conn: conn} do
+    # A prepared target index is observed, so the promotion block is on the page; the mounted
+    # view's own assigns are the base and only the eligibility changes.
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+    render_async(lv)
+    base = :sys.get_state(lv.pid).socket.assigns
+
+    assert length(@promotion_notice_sentences) == 17
+
+    for {reason, sentence} <- @promotion_notice_sentences do
+      seen = promotion_notice(base, {:blocked, reason})
+
+      assert seen == {"Promotion unavailable", sentence},
+             "blocked reason #{inspect(reason)} should say #{inspect(sentence)}, saw #{inspect(seen)}"
+    end
+
+    assert promotion_notice(base, :eligible) ==
+             {"Ready for promotion", "Current checks are clear for this schema and index pair."}
+
+    assert promotion_notice(base, nil) ==
+             {"Promotion unavailable", "Refresh current checks before promotion."}
+  end
+
+  # The notice element alone, so a sentence elsewhere on the page cannot satisfy a pin.
+  defp promotion_notice(base, eligibility) do
+    document =
+      base
+      |> Map.put(:promotion_eligibility, eligibility)
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+      |> LazyHTML.from_fragment()
+
+    notice =
+      LazyHTML.query(
+        document,
+        "#index-promotion [data-status-kind]:not(#promotion-status-result)"
+      )
+
+    assert Enum.count(notice) == 1,
+           "expected one promotion notice for #{inspect(eligibility)}, got #{Enum.count(notice)}"
+
+    {notice_text(notice, ".ops-notice-surface__title"),
+     notice_text(notice, ".ops-notice-surface__body")}
+  end
+
+  defp notice_text(notice, selector) do
+    notice |> LazyHTML.query(selector) |> LazyHTML.text() |> String.split() |> Enum.join(" ")
+  end
+
   test "a successful swap task without fresh index evidence is not promotion completion" do
     socket =
       sync_drift_socket(%{
@@ -1454,7 +1419,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     {:ok, lv, html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostB")
 
     assert html =~ "OpsPostB"
-    assert has_element?(lv, "a[href='/ops']", "Return to Control Room")
+    assert has_element?(lv, "a[href='/ops']", "Return to Control room")
     assert has_element?(lv, "a[href='/ops/health?schema=ScrypathOps.Test.OpsPostB']")
     assert :sys.get_state(lv.pid).socket.assigns.selected_schema == OpsPostB
   end

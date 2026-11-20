@@ -98,3 +98,35 @@ _Avoid_: allowlist (outside setup and access errors)
 **Storage folder**:
 The server-side folder where saved searches are kept as files.
 _Avoid_: workspace (as a team or account concept)
+
+## Status wording
+
+The words ScrypathOps screens use to report sync state. Screen copy follows these entries, and `scrypath_ops/test/support/copy_rules.json` enforces them.
+
+**Searchable**:
+A label for one record's or update's state, used only together with the time it was observed: that record could be found in the active index at that time. It is never a setting value. The settings row for fields is "Searchable fields", and its values are "Used for search" and "Not used for search".
+_Avoid_: Searchable (as a setting value, or without an observation time), Not searchable, Not searched yet
+
+**Pending**:
+Sync work that has not finished, counted for a row or a schema: "2 pending", or the Pending status word beside such a count. It is an aggregate, not the state of one update.
+_Avoid_: queued (for a count over a row or a schema)
+
+**Queued**:
+The step one update is in once the host application's queue holds it, and the outcome shown after a retry hands work to that queue. It is not a count over a row or a schema; that is Pending.
+_Avoid_: Pending (for one update's step), accepted (for the host queue)
+
+**Retry queued**:
+What the operator sees after retrying failed sync work: the host application's queue now holds the retry job. It says nothing about Meilisearch and does not confirm recovery.
+_Avoid_: Retry accepted, Retry sent, resubmitted
+
+**Accepted**:
+Reserved for a Meilisearch task that Meilisearch has taken (see Meilisearch task). "Index swap accepted" is correct. Work in the host application's queue is queued, never accepted.
+_Avoid_: accepted (for sync work, a queue job or a retry)
+
+**Last succeeded**:
+The time of the most recent success, written "Last succeeded" or "<source> last succeeded" beside a time.
+_Avoid_: Last success, Last successful
+
+**Clear**:
+The status word for a source that was observed with nothing pending, retrying or failed. It needs an observation, and it is not shown beside an earlier observation that a failed refresh left on screen. It does not mean documents are searchable.
+_Avoid_: Healthy, All good, Searchable (as a synonym for Clear)

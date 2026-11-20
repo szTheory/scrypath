@@ -1,4 +1,4 @@
-// Focused screenshots of the Phase-1 operator-UI work (Control Room + design-token /
+// Focused screenshots of the Phase-1 operator-UI work (Control room + design-token /
 // IA polish), captured against an already-seeded DEV server (mix scrypath.demo.seed) so
 // the operator signals are real. No reseeding here — we want the demo's expressive state.
 //
@@ -20,7 +20,7 @@ async function capture(page: Page, testInfo: TestInfo, name: string): Promise<vo
 
 test("control room", async ({ page }, testInfo) => {
   await page.goto("/admin/search");
-  await page.getByRole("heading", { name: "Control Room" }).waitFor();
+  await page.getByRole("heading", { name: "Control room" }).waitFor();
   await page.waitForTimeout(300);
   await capture(page, testInfo, "01-control-room");
 });

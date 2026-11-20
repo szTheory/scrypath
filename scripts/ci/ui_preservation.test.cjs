@@ -223,7 +223,7 @@ function validManifest() {
       samples: [0, 1].map((index) => ({ path: `${id}--${kind}-sample-${index}.png`, sha256: "d".repeat(64), state_path: `${id}--${kind}-sample-${index}.json`, state_sha256: "e".repeat(64), elapsed_ms: index * 16 })),
       selected: 1,
     }]));
-    const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control Room", "Search"] } : undefined;
+    const mobile_navigation = surface === "control-room" && width === 390 ? { expanded: true, visible: true, links: ["Control room", "Search"] } : undefined;
     const route = deployment === "host"
       ? ({ storefront: "/", "control-room": "/admin/search/", "search-health": "/admin/search/health", "failed-sync": "/admin/search/failed-sync", "sync-drift": "/admin/search/sync-and-index", search: "/admin/search/search", "saved-searches": "/admin/search/search?saved=manage", help: "/admin/search/help" })[surface]
       : ({ "control-room": "/ops/", "search-health": "/ops/health", "failed-sync": "/ops/failed-sync", "sync-drift": "/ops/sync-and-index", search: "/ops/search", "saved-searches": "/ops/search?saved=manage", help: "/ops/help" })[surface];

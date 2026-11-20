@@ -58,7 +58,7 @@ type ShellSurface = {
 };
 
 const SHELL_SURFACES: ShellSurface[] = [
-  { name: "Control Room", prepare: gotoControlRoom, hasPrimaryNavItem: true },
+  { name: "Control room", prepare: gotoControlRoom, hasPrimaryNavItem: true },
   { name: "Search health", prepare: gotoSearchHealth, hasPrimaryNavItem: true },
   { name: "Failed Sync", prepare: gotoFailedSync, hasPrimaryNavItem: true },
   { name: "Sync/Drift", prepare: gotoSyncDrift, hasPrimaryNavItem: true },
@@ -507,7 +507,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
         const heading = page.locator("#ops-main h3:visible").first();
         if (await heading.count()) await assertReadableControl(heading, `${surface.name} record heading`, 16);
         const primary = {
-          "Control Room": page.getByTestId("control-room-health-link"),
+          "Control room": page.getByTestId("control-room-health-link"),
           "Search health": page.getByTestId("posture-failed-sync-link").first(),
           "Failed Sync": page.getByTestId("failed-sync-retry").first(),
           "Sync/Drift": page.getByRole("button", { name: "Refresh sync and index settings", exact: true }),
@@ -707,7 +707,7 @@ test.describe("admin shell chrome -- SHELL-DARK-01", () => {
           await expect(page.locator("#ops-cmdk-item-0")).toHaveAttribute("href", "/admin/search");
           await page.keyboard.press("Enter");
           await expect(page).toHaveURL(/\/admin\/search$/);
-          await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
+          await expect(page.getByRole("heading", { name: "Control room" })).toBeVisible();
         } finally {
           await close();
         }

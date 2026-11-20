@@ -191,7 +191,7 @@ async function assertServerClock(page: Page, instant: string, assertions: Assert
 async function primaryHeading(page: Page, element: ElementId): Promise<Locator> {
   const names: Record<ElementId, RegExp> = {
     E1: /Tenant-scoped catalog search/,
-    E2: /^Control Room$/,
+    E2: /^Control room$/,
     E3: /^Search health$/,
     E4: /^Failed sync work$/,
     E5: /^Search$/,
@@ -246,7 +246,7 @@ async function assertEmpty(page: Page, element: ElementId, assertions: Assertion
   } else if (element === "E2") {
     locator = page.locator("main");
     const text = await locator.innerText();
-    assertions.push(await assertObserved("Control Room empty seed retains the bounded claim and next routes", text, (value) => String(value).includes("No sync failures found") && String(value).includes("Document visibility is checked separately") && String(value).includes("View search health")));
+    assertions.push(await assertObserved("Control room empty seed retains the bounded claim and next routes", text, (value) => String(value).includes("No sync failures found") && String(value).includes("Document visibility is checked separately") && String(value).includes("View search health")));
   } else if (element === "E3") {
     const response = await page.goto("/admin/search/phase173/health?scenario=empty");
     if (!response?.ok()) throw new Error(`Search health empty fixture returned ${response?.status() ?? "no HTTP response"}.`);
@@ -286,7 +286,7 @@ async function assertPopulated(page: Page, element: ElementId, assertions: Asser
   } else if (element === "E2") {
     locator = page.locator("[data-testid='control-room-verdict']");
     const text = await locator.innerText();
-    assertions.push(await assertObserved("Control Room presents a populated operational observation", text, (value) => String(value).includes("schemas") && String(value).includes("View search health")));
+    assertions.push(await assertObserved("Control room presents a populated operational observation", text, (value) => String(value).includes("schemas") && String(value).includes("View search health")));
   } else if (element === "E3" || element === "E7") {
     locator = page.locator("[data-testid='posture-row']").first();
     const rows = await page.getByTestId("posture-row").count();
@@ -348,9 +348,9 @@ async function assertPartial(page: Page, element: ElementId, assertions: Asserti
     assertions.push(await assertObserved("scoped storefront subset is available and is not mislabeled as unknown or unavailable", await locator.innerText(), (value) => String(value).includes("2 visible hits") && !String(value).includes("Search unavailable") && !String(value).includes("Unknown data")));
   } else if (element === "E2") {
     locator = page.locator("[data-testid='control-room-affected-scope']");
-    assertions.push(await assertObserved("Control Room identifies affected schema scope", await locator.isVisible(), (value) => value === true));
+    assertions.push(await assertObserved("Control room identifies affected schema scope", await locator.isVisible(), (value) => value === true));
     const fullText = await page.locator("[data-testid='control-room-verdict']").innerText();
-    assertions.push(await assertObserved("Control Room keeps the exact terminal-failed-job and affected-schema evidence without a healthy verdict", `${fullText};${await locator.innerText()}`, (value) => String(value).includes("3 sync jobs failed") && String(value).includes("ScrypathEcommerce.Catalog.Product") && !String(value).includes("No sync failures found")));
+    assertions.push(await assertObserved("Control room keeps the exact terminal-failed-job and affected-schema evidence without a healthy verdict", `${fullText};${await locator.innerText()}`, (value) => String(value).includes("3 sync jobs failed") && String(value).includes("ScrypathEcommerce.Catalog.Product") && !String(value).includes("No sync failures found")));
   } else if (element === "E3" || element === "E7") {
     await page.goto("/admin/search/phase173/health?scenario=partial");
     await waitForLiveConnected(page);
@@ -501,15 +501,15 @@ async function assertZeroOneMany(page: Page, element: ElementId, assertions: Ass
       observations.push({ scenario, text });
       transport.push({ operation: "control-room-operational-read", outcome: `seed=${scenario}; verdict=${text}` });
     }
-    actions.push("seed and read actual Control Room outcomes in order: zero failures, drifted settings with no failed jobs, one terminal-failed job, three terminal-failed jobs plus two retrying jobs; leave incident visible");
-    assertions.push(await assertObserved("Control Room preserves exact zero, one and many failed-job counts while the drifted-settings seed remains a zero-failure observation", JSON.stringify(observations), (value) => {
+    actions.push("seed and read actual Control room outcomes in order: zero failures, drifted settings with no failed jobs, one terminal-failed job, three terminal-failed jobs plus two retrying jobs; leave incident visible");
+    assertions.push(await assertObserved("Control room preserves exact zero, one and many failed-job counts while the drifted-settings seed remains a zero-failure observation", JSON.stringify(observations), (value) => {
       const rows = JSON.parse(String(value)) as typeof observations;
       const driftOnly = rows.find((row) => row.scenario === "degraded")?.text || "";
       const oneFailed = rows.find((row) => row.scenario === "phase185_one_failed")?.text || "";
       const manyFailed = rows.find((row) => row.scenario === "incident")?.text || "";
       return rows.length === 4 && rows[0].scenario === "all_green" && rows[0].text.includes("No sync failures found") && driftOnly.includes("No sync failures found") && !/\b\d+ sync jobs failed\b/.test(driftOnly) && /\b1 sync job failed\b/.test(oneFailed) && /\b3 sync jobs failed\b/.test(manyFailed);
     }));
-    assertions.push(await assertObserved("Control Room still exposes its health and settings entry actions", await page.getByTestId("control-room-secondary-intents").isVisible(), (value) => value === true));
+    assertions.push(await assertObserved("Control room still exposes its health and settings entry actions", await page.getByTestId("control-room-secondary-intents").isVisible(), (value) => value === true));
     return page.locator("main");
   }
   if (element === "E3" || element === "E7") {
@@ -786,7 +786,7 @@ async function assertLongText(page: Page, element: ElementId, assertions: Assert
     await waitForLiveConnected(page);
     locator = page.getByTestId("control-room-verdict");
     const text = await locator.innerText();
-    assertions.push(await assertObserved("Control Room retains the exact schema identifier and terminal-failed-job count in its operational evidence", text, (value) => String(value).includes("ScrypathEcommerce.Catalog.Product") && String(value).includes("3 sync jobs failed")));
+    assertions.push(await assertObserved("Control room retains the exact schema identifier and terminal-failed-job count in its operational evidence", text, (value) => String(value).includes("ScrypathEcommerce.Catalog.Product") && String(value).includes("3 sync jobs failed")));
   } else if (element === "E4") {
     await page.goto("/admin/search/failed-sync");
     await waitForLiveConnected(page);

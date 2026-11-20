@@ -204,6 +204,34 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
       {:ok, _lv, html} = live(conn, ~p"/ops/search")
       assert_ops_shell!(html, "Search")
     end
+
+    # The Control room label lives in three literals that must agree: the nav item title in
+    # `Layouts` (compared with the page title to set `aria-current`), the page title in
+    # `ControlRoomLive`, and the command palette item in `OpsUi`. A mismatch silently drops
+    # `aria-current="page"`, so each is asserted here.
+    test "/ops", %{conn: conn} do
+      {:ok, lv, html} = live(conn, ~p"/ops")
+      assert_ops_shell!(html, "Control room")
+
+      assert has_element?(lv, "a[href='/ops'][aria-current='page']", "Control room")
+
+      # The document title, read from the connected view and from the dead render's <title>.
+      assert page_title(lv) =~ ~r/^Control room/
+
+      assert html
+             |> LazyHTML.from_document()
+             |> LazyHTML.query("title")
+             |> LazyHTML.text()
+             |> String.trim() =~ ~r/^Control room/
+
+      # The command palette's first item is the Control room.
+      assert has_element?(lv, "#ops-cmdk-item-0 .ops-cmdk__item-label", "Control room")
+
+      # On another route the Control room link is not current, so loosening the match fails.
+      {:ok, health, _html} = live(conn, ~p"/ops/health")
+      assert has_element?(health, "a[href='/ops/health'][aria-current='page']")
+      refute has_element?(health, "a[href='/ops'][aria-current]")
+    end
   end
 
   test "root theme provider synchronizes selected theme button state" do

@@ -54,7 +54,7 @@ const VIEWPORT_NAMES = Object.keys(VIEWPORTS_187) as ViewportName[];
 type Screen = { name: string; path: string; heading: string };
 
 const SCREENS: Screen[] = [
-  { name: "Control Room", path: "/admin/search", heading: "Control Room" },
+  { name: "Control room", path: "/admin/search", heading: "Control room" },
   { name: "Search health", path: "/admin/search/health", heading: "Search health" },
   { name: "Failed sync work", path: "/admin/search/failed-sync", heading: "Failed sync work" },
   { name: "Sync and index", path: "/admin/search/sync-and-index", heading: "Sync and index" },
@@ -1569,7 +1569,7 @@ test.describe("ops re-skin contract", () => {
         const { page, close } = await newThemedPage(browser, { kind: "explicit", theme }, { width, height: 800 });
         try {
           await gotoPath(page, SCREENS[0].path, SCREENS[0].heading);
-          lockupProblems(`Control Room (${theme}, ${width}px)`, theme, await collectFacts(page), problems);
+          lockupProblems(`Control room (${theme}, ${width}px)`, theme, await collectFacts(page), problems);
         } finally {
           await close();
         }

@@ -145,7 +145,7 @@ defmodule ScrypathOpsWeb.RouterTest do
     conn = secured_request("/admin/search/", "test-operator")
 
     assert conn.status == 200
-    assert conn.resp_body =~ "Control Room"
+    assert conn.resp_body =~ "Control room"
     assert conn.resp_body =~ "data-phx-main"
     assert conn.private[:phoenix_router] == SecuredCallerRouter
   end
