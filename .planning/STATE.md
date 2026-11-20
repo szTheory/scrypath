@@ -2,15 +2,15 @@
 gsd_state_version: "1.0"
 milestone: v1.47
 milestone_name: Brand completion
-status: planning
+status: executing
 last_updated: "2026-11-20T14:32:06.000Z"
 last_activity: 2026-11-20
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 50
 ---
 
 # Project State
@@ -20,21 +20,21 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-20.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.47 Brand completion, Phase 188.1 (CI path classifier, plain PR) then Phase 189 (Website re-skin). Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** v1.47 Brand completion: Phase 188.1 merged (PR #149); Phase 189 (Website re-skin) built and verified, PR awaiting exact-head `build-and-check` and merge; then 190 and 191. Roadmap: [ROADMAP](ROADMAP.md).
 
 ## Current Position
 
-Phase: 188.1 of 188.1, 189–191 (CI path classifier), not started
-Plan: — (1 expected; not planned yet)
-Status: Roadmap revised after the gap pass; ready for Phase 188.1, then discussing Phase 189
-Last activity: 2026-11-20 — v1.47 roadmap revised (Phases 188.1, 189–191, 17 of 17 requirements mapped)
+Phase: 189 (Website re-skin), 3 of 3 plans executed and verified; PR open or about to open
+Plan: 189-03 complete
+Status: awaiting `build-and-check` and required checks on the exact PR head, then squash merge and watch the deploy
+Last activity: 2026-11-20 — Phase 188.1 merged (PR #149, #132 merged, #129 left open for a real axe finding); Phase 189 executed, reviewed, fixed and verified
 
-Progress: [░░░░░░░░░░] 0% (0 of 4 phases)
+Progress: [█████░░░░░] 50% (1 of 4 phases merged; 189 built)
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
-**v1.47 plans:** none yet; about 8 expected (188.1: 1, 189: 3, 190: 2, 191: 2).
+**v1.47 plans:** 4 done (188.1: 1, 189: 3); 4 expected (190: 2, 191: 2).
 
 ## Accumulated Context
 
@@ -51,7 +51,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 ### Pending Todos
 
-- Pre-seed `CONTEXT.md` and `RESEARCH.md` for Phases 189, 190 and 191 from the prep and gap-pass notes before running `gsd-autonomous --only N` (see ROADMAP run notes).
+- Phases 190 and 191 CONTEXT and RESEARCH are pre-seeded; pre-seed their VALIDATION.md (Nyquist) before planning.
 - Baseline: the 2026-11-20 nightly (run 44689855947, head `bd69905e`) had `ecommerce-e2e` green; a red after Phase 190 is attributable to it.
 
 ### Blockers/Concerns
@@ -60,7 +60,7 @@ None blocking. Standing conditions (not blockers):
 
 - `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed with no exception.
 - The retained UI preview (`.planning/UI-PREVIEW.json`) records pre-squash commits; refresh to current main before the first phase that needs rendered ops evidence (expected v1.48). v1.47's checks do not need it.
-- Open Dependabot PRs: #132 (relax a hardcoded SHA in `workflow_wiring_test`) and #129 (re-run after the re-skin).
+- Open Dependabot PR #129 (`@axe-core/playwright` 4.14.0): fails `ecommerce-mounted` on the new axe rule `label-content-name-mismatch` for `.ops-command-hint` and the timestamp copy buttons in ScrypathOps (dark theme, `retry-accepted-dark-desktop`). Real accessibility finding; left open. Phase 190 may fix it with the wording work. #132 merged.
 - Unrelated dirty `.planning/config.json` and `.planning/state.json` edits stay out of owned commits.
 
 ## Carried forward from v1.45

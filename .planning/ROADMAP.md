@@ -19,7 +19,7 @@
 
 ## Current Posture
 
-v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. No phase has started. The first step is Phase 188.1 (a small CI classifier PR), then discussing Phase 189. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
+v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. Phase 188.1 is merged (PR #149) and Phase 189 is built and verified (website PR pending merge and deploy). Next: Phases 190 and 191. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
 
 `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
 
@@ -45,8 +45,8 @@ v1.47 Brand completion is the active milestone. Requirements are defined (18, re
 - Integer phases (189, 190, 191): planned milestone work, continuing from v1.46 (ended at 188). Numbers are fixed: the `p189` allowlist tags already point at Phase 189.
 - Decimal phase 188.1 (INSERTED): the CI path classifier, a plain PR that runs first so autonomous mode tracks it.
 
-- [ ] **Phase 188.1: CI path classifier (INSERTED)** - Planning-only and docs-only PRs skip the browser lanes, as an allowlist that fails open to running them (1 plan)
-- [ ] **Phase 189: Website re-skin** - Visitors see the website in the new identity, light by default with a Light/Dark/System picker, derived from the pinned brand files and proved before the merge that deploys it (3 plans)
+- [x] **Phase 188.1: CI path classifier (INSERTED)** - Planning-only and docs-only PRs skip the browser lanes, as an allowlist that fails open to running them (1 plan)
+- [x] **Phase 189: Website re-skin** - Visitors see the website in the new identity, light by default with a Light/Dark/System picker, derived from the pinned brand files and proved before the merge that deploys it (3 plans)
 - [ ] **Phase 190: Wording that does not need the catalog** - Operators read screen copy that follows the recorded glossary rules and "Control room" casing, guarded by one data table the v1.48 copy lint can ingest (2 plans)
 - [ ] **Phase 191: Cleanup** - The old identity's last code is gone: demo favicon swapped, `brandbook/` readers and data deleted, the allowlist empty, and cheap static invariants and tripwires keep it that way (2 plans)
 
@@ -123,7 +123,7 @@ v1.47 Brand completion is the active milestone. Requirements are defined (18, re
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 188.1. CI path classifier | 0/1 | Not started | - |
-| 189. Website re-skin | 0/3 | Not started | - |
+| 188.1. CI path classifier | 1/1 | Complete | 2026-11-20 |
+| 189. Website re-skin | 3/3 | Complete (merge and deploy pending) | 2026-11-20 |
 | 190. Wording that does not need the catalog | 0/2 | Not started | - |
 | 191. Cleanup | 0/2 | Not started | - |

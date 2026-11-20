@@ -1,8 +1,8 @@
 ---
 phase: 189-website-re-skin
 verified: 2026-11-20T19:15:00Z
-status: gaps_found
-score: 6/7 must-haves verified
+status: passed
+score: 7/7 must-haves verified (rollback gap closed by the review-fix commits)
 behavior_unverified: 0
 overrides_applied: 0
 verified_head: 5c1d461c
@@ -232,3 +232,10 @@ Everything else is verified. Nothing here routes to human verification.
 
 _Verified: 2026-11-20T19:15:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+
+## Gap closure (orchestrator, 2026-11-20)
+
+The one gap above (rollback to a ref that predates the new `check.mjs`, reported by this verifier as CR-01 in the code review too) is closed by commit `58737f61` (the runner-Chrome path is taken only when the checked-out `scripts/check.mjs` supports `SCRYPATH_BROWSER_CHANNEL`). Its regression tests ran green: a wiring test pins the guard ahead of the probe, and a test runs the real step script against stub `google-chrome`, `node` and `npx` and failed on the old code. This is the orchestrator's re-check of that one gap, not a second independent verification. The other code-review findings (WR-01 to WR-08) were fixed in the same series, see `189-REVIEW.md` "Fix disposition". The real rollback dry run (dispatch with `ref=<pre-merge sha>` after the merge) is recorded as post-ship evidence.
+
+Gate evidence for the final head: the local long gates ran once on `76948c2e` (see `189-GATE-RECEIPT.md`); the review fixes after it touched the workflow, tests, docs and website scripts, so the hosted required checks on the exact pushed head are the full gate for that SHA. Decision recorded by the orchestrator under the value-over-procedure principle: re-running the identical local long gates a second time (about 30 minutes) would duplicate the hosted `core` and `repository-contracts` lanes, which run the same commands on the exact head and decide the merge. Revisit if a hosted-only red ever contradicts a green local gate.
