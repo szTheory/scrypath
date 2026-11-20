@@ -11,7 +11,6 @@ defmodule Mix.Tasks.Verify.Phase99 do
     "test/mix/tasks/verify.phase99_test.exs",
     "test/mix/tasks/ui_contrast_contract_test.exs",
     "test/mix/tasks/website_contract_test.exs",
-    "test/mix/tasks/ui_tokens_contract_test.exs",
     "test/mix/tasks/ui_literal_contract_test.exs",
     "test/mix/tasks/dependency_boundary_contract_test.exs",
     "test/mix/tasks/workflow_wiring_test.exs",
