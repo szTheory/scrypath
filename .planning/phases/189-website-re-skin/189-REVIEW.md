@@ -311,3 +311,77 @@ content type alone.
 _Reviewed: 2026-11-20T19:14:29Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+
+---
+
+## Fix disposition
+
+**Applied:** 2026-11-20, in the main checkout (no worktree), on top of `a9b07109`. One commit per
+finding; each new test was run red on the unfixed code first and green after. Verification ran in the main
+checkout, so every number below reproduces from this tree.
+
+### Fixed
+
+| Finding | Commit | What changed | Regression test (red before, green after) |
+| --- | --- | --- | --- |
+| CR-01 | `58737f61` | `Select browser` takes the runner Chrome only when `grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs` holds, otherwise runs `npx playwright install --with-deps chromium`. Rollback section of `docs/releasing.md` says so. | `workflow_wiring_test.exs`: the guard must exist and precede the Chrome probe; a planted workflow without it is rejected; a new test runs the real step script against stub `google-chrome`, `node` and `npx` and shows a pre-phase `check.mjs` gets the install and no `SCRYPATH_BROWSER_CHANNEL`, a supporting one gets the channel and no install. |
+| WR-01 | `5fb4366c`, `209260ec` | Workflow-level `cancel-in-progress` is `${{ github.event_name == 'pull_request' }}`; a `workflow_dispatch` run keys its own `rollback` group; the job-level non-cancelling deploy group is kept. The self-contradicting sentence in `docs/releasing.md` is rewritten, and the doc now says a rollback holds only until the next matching push (revert the bad commit) and that a waiting rollback deploy can be replaced by GitHub, so the smoke step must be confirmed. | Wiring test pins the exact block and refutes a workflow-level `cancel-in-progress: true`; two planted workflows (cancel everything, rollback shares the push group) are rejected. The old assertion that pinned `cancel-in-progress: true` at workflow level was replaced, not loosened: it asserted the defect. |
+| WR-02 | `7303c544` | `timeout-minutes: 15` on `deploy`; every smoke request (headers and body) is abandoned after `timeoutMs` (default 20000) and retried as a network error. | Wiring test pins the deploy timeout and rejects its removal. New `planted smoke fails within its request timeout ...` stalls a local server before the headers and mid-body and expects a failed `home` check within the timeout and one retry; before the fix it hung until the 20 s test timeout. |
+| WR-03 | `0f13ce38` | The smoke requires `styles.css` and `tokens.css` to be declared, fetches every declared stylesheet (200, `text/css`, non-empty) and script (200, JavaScript type, non-empty), and includes their URLs in the base-path check. | Four planted cases: stylesheet missing, `tokens.css` missing, `theme.js` missing (`theme-picker`-tagged with a light-only form), stylesheet and script served as `text/plain`. The accept case now expects the `stylesheet` and `script` codes. |
+| WR-04 | `3b88320c` | Entry-point guard compares real paths on both sides. | `planted smoke still runs and exits 1 ... through a symlinked path`; before the fix it exited 0 with no output. |
+| WR-05 | `b0aa3f45` | `assertSafeOut` now also refuses an output that is, or is inside, the source directory, the given and the repository's own brand directory, `scrypath_ops`, `website/scripts`, `website/node_modules` or `.git`, comparing real paths so a symlink cannot hide one. `website/dist` stays allowed. | Five planted cases (inside src, a src subdirectory, inside a brand copy, inside the real brand, font and scripts directories, through a symlink), each safe by construction (scratch copies, or a path that does not exist yet). |
+| WR-06 | `ea379d1f` | `checkBuilt` scans every `srcset` candidate, `@import "..."` string form in built CSS, and the target of `meta http-equiv=refresh` in the `0;url=/`, `0; URL='/x'` and `0;/x` forms. | Three planted cases plus one accept case (relative and absolute-URL forms raise nothing). |
+| WR-07 | `4653b876` | `captureScreenshots(browser)` runs inside try/catch that logs the first error line and carries on. | Scratch run with an unwritable website directory under `CI=1`: old script crashes with EACCES and exit 1, no summary line; fixed script logs `screenshots: failed ...; they do not gate`, prints `check-summary: ran=11 failed=none`, exits 0. In the contract, a `live` case reads `check.mjs` (the contract cannot run a browser) and a `planted` case proves the reader rejects a missing catch, a rethrow and a silent catch. |
+| WR-08 | `43fa0990` | `deploy` job `if:` is `(push or workflow_dispatch) && github.ref == 'refs/heads/main'`; `docs/releasing.md` no longer relies on the `github-pages` environment and says a dispatch from another branch builds and checks but does not deploy. The job still does not name the environment. | Wiring tests pin the full condition (two places) and reject a workflow that drops the ref clause or the event clause. |
+
+### Counted floors
+
+- `@min_site_test_calls` in `test/mix/tasks/website_contract_test.exs`: 82 to 99, equal to the number of
+  `test(...)` calls in `site-contract.test.mjs` (17 added; raised in each commit that added cases, never
+  lowered).
+- The `theme-picker` vacuity floor (6) is unchanged: 12 cases now carry the tag, so the floor still
+  cannot be met by accident. All new case names start with `live`, `planted` or `accept`, are unique and
+  contain neither `#` nor a backslash.
+- `workflow_wiring_test.exs`: 87 to 88 tests. No ledger row was added, so `CONTRIBUTING.md` stays at
+  9 of 12.
+
+### Checks run (main checkout)
+
+`node --test website/scripts/site-contract.test.mjs`: 99 of 99 on Node 26.10, 22.14 and 20.18.
+`node --test examples/scrypath_ecommerce/ui-tokens.test.mjs`: 61 of 61. `mix test --warnings-as-errors`
+on `workflow_wiring_test.exs` and `website_contract_test.exs`: 89 tests, 0 failures. `mix format
+--check-formatted`, `mix credo --strict` on the two changed test files, and `actionlint
+.github/workflows/website.yml`: clean. Not run, by instruction: `mix verify.repository_contracts`,
+`mix verify.core`, any Docker lane, a dispatch of the real workflow.
+
+### Deferred, no code change
+
+- **WR-09** (necessity, `THEME_MODE` light-only machinery): scope decision, left alone. The picker shipped
+  and the SITE-02 fallback lapsed, so the light-only branches are dead weight, and the documented
+  one-line switch does not work on the real source (14 violations with `THEME_MODE` set to `light-only`).
+  Note for later removal: delete the constant and every `light-only` branch in `build.mjs`,
+  `contract.mjs`, `check.mjs`, `golden.mjs` and the `PICKER_MODE` else branches in the contract test, or
+  make the real source mode-aware. Until then the new smoke and contract cases keep a light-only form
+  where they are mode-dependent.
+- **IN-01** (branch or tag `ref` can validate one commit and deploy another): not requested. The docs
+  recommend a commit SHA, which avoids it.
+- **IN-02** (`SITE_URL` trailing slash, half-written output after a failed pin check): not requested.
+- **IN-03** (`finalUrl` recorded and unused in the smoke): not requested.
+
+### Not done within a fixed finding
+
+- WR-05: an ordinary directory outside every protected path (`--out ~/Documents`) is still accepted and
+  emptied. The requested fix was the inside-a-protected-path direction; a marker file or an empty-directory
+  rule would close this and was not asked for.
+- WR-06: the late request-log assertion in `check.mjs` still counts only 404s under `/scrypath/` and a
+  root `/favicon.ico`, so a root-absolute fetch that 404s at the origin root is invisible to the browser
+  check. The static detectors now catch the three missed forms; the request-log tightening was left out of
+  the requested scope.
+
+### What still needs hosted evidence
+
+These edits touch the workflow, wiring tests, docs and website scripts, so the receipt for `76948c2e` no
+longer covers the tree. Gate evidence for the pushed head comes from the hosted required checks (the
+orchestrator records that decision). The reviewer's suggested real rollback dry run (dispatch with
+`ref=2bfaeab3` and confirm it reaches the soft check) cannot run before a push and is still worth doing
+once the fix is on `main`.
