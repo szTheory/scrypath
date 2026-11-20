@@ -60,12 +60,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| SITE-01 | Phase 189 | Pending |
+| SITE-02 | Phase 189 | Pending |
+| SITE-03 | Phase 189 | Pending |
+| SITE-04 | Phase 189 | Pending |
+| SITE-05 | Phase 189 | Pending |
+| GATE-02 | Phase 189 (standing rule for Phases 190 and 191) | Pending |
+| COPY-01 | Phase 190 | Pending |
+| COPY-02 | Phase 190 | Pending |
+| COPY-03 | Phase 190 | Pending |
+| COPY-04 | Phase 190 | Pending |
+| CLEAN-01 | Phase 191 | Pending |
+| CLEAN-02 | Phase 191 | Pending |
+| CLEAN-03 | Phase 191 | Pending |
+| CLEAN-04 | Phase 191 | Pending |
+| CLEAN-05 | Phase 191 | Pending |
+| CLEAN-06 | Phase 191 | Pending |
 
 **Coverage:**
 - v1 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16 ⚠️
+- Mapped to phases: 16
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-20*
-*Last updated: 2026-11-20 after initial definition*
+*Last updated: 2026-11-20 after roadmap creation (Phases 189-191)*
