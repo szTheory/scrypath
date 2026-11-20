@@ -8,6 +8,6 @@
     "check": "node scripts/check.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.53.1"
+    "playwright": "^1.65.1"
   }
 }

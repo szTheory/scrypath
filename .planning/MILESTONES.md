@@ -1,5 +1,29 @@
 # Milestones
 
+## v1.46 Brand foundation and re-skin (Shipped: 2026-11-19)
+
+**Delivered:** The plum/orchid scry/path identity is adopted across ScrypathOps, the README and HexDocs, pinned offline and guarded so retired identity values cannot return. Phases 189 (website) and 190 (catalog-free wording) were deferred to v1.47 by the maintainer.
+
+**Phases completed:** 186-188; 3 phases, 16 plans, 27 of 29 requirements (SITE-01 and COPY-01 deferred). The CLI's task count (2) is an extraction artifact; no task total is claimed.
+
+**PRs on main:** #137 (Phase 186), #138 (Phase 187), #139 (Phase 188), #143 (audit fix: standalone ops favicon rendered black; hex.pm README note corrected).
+
+**Key accomplishments:**
+
+- Phase 186: the 44 adopted brand files (326,773 B) are byte-pinned and checked offline by `mix verify.brand`; one Node test ties both ops theme blocks to the pinned tokens and keeps retired colors out of the repository; `ops-ui (path-scoped)` is a required check; 8 of the 12 allowed new required gates used.
+- Phase 187: ScrypathOps in both themes with the brand fonts served from the mount prefix, one four-word sync-status vocabulary (Failed, Retrying, Pending, Clear), one Plum button per scope, contrast and focus checks, and no change to host pages outside ops.
+- Phase 188: the README brand header, HexDocs logo, favicon and a docs-owned code stylesheet, proved by one real `mix docs` build inside the root suite; the superseded brand prompt is deleted.
+
+**Audit:** `tech_debt`; no unsatisfied requirement and no broken flow; all three Nyquist records compliant; the integration check found two real defects (black ops favicon, wrong hex.pm README note) and both were fixed before close. See [audit](milestones/v1.46-MILESTONE-AUDIT.md).
+
+**Known verification overrides: 3 carried.** The close ran as `override_closeout` because (1) the CLI marks all three phases' verification "stale" (later phases edited files an earlier verifier covered; the cross-phase audit re-ran the relevant checks on main instead), (2) the roadmap lists Phases 189 and 190 as unstarted (closed with `--force`; they move to v1.47), and (3) one Phase 186 deferred note about a `mix docs --warnings-as-errors` failure was acknowledged because it is fixed on main.
+
+**Not proven:** how the new look reads (no person or independent reviewer judged the rendered screens); the README header image on the hex.pm page (it 404s there until the header URLs are commit-pinned before the next Hex release); the browser computed-style specs run on dispatch and nightly, not on every push. `deep-quality` stays an advisory red (cloak via optional sigra).
+
+**Carried to v1.47:** SITE-01, COPY-01, the `brandbook/` and old token-tooling cleanup, the demo favicon, a refreshed retained preview, and the Release Please repository setting.
+
+---
+
 ## v1.45 Foundation and CI (Archived locally: 2026-11-01; merge/publication separate)
 
 **Delivered on branch:** Reliable full browser/cache verification, unpackaged maintainer tooling, lean explicit dependency/runtime graphs and executable UI quality foundations preserving supported visible behavior.
