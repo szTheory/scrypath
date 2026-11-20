@@ -10,9 +10,12 @@ import { fileURLToPath } from 'node:url';
 // It fetches the home page and checks, each as an `ok` or `not ok` line (exit 1 on any `not ok`):
 //
 //   home       the home page answers 200
-//   base-path  every asset URL the page declares (font preloads, lockups, icons, og and twitter
-//              images) resolves to the base URL's origin and path prefix, and none is written
-//              root-absolute; a URL outside the base is reported and never fetched
+//   base-path  every asset URL the page declares (stylesheets, scripts, font preloads, lockups, icons,
+//              og and twitter images) resolves to the base URL's origin and path prefix, and none is
+//              written root-absolute; a URL outside the base is reported and never fetched
+//   stylesheet styles.css and tokens.css are declared, and every declared stylesheet answers 200 as
+//              text/css with a body (a page that loses either one still answers 200 but looks broken)
+//   script     every declared script (theme.js) answers 200 as JavaScript with a body
 //   font       the preloaded ui font answers 200 as font/woff2 with the sha256 pinned in
 //              brand/brand.pin.json
 //   lockups    the light and the dark lockup answer 200 with an image content type
@@ -131,7 +134,7 @@ export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, ti
   record('home', true, `home page ${base.href} answers 200`);
 
   const html = home.body.toString('utf8');
-  const tags = tagsOf(html, ['link', 'meta', 'img']);
+  const tags = tagsOf(html, ['link', 'meta', 'img', 'script']);
   const attr = (tag, name) => tag.attributes[name];
   const metaContent = property =>
     tags.find(tag => tag.name === 'meta' && (attr(tag, 'property') === property || attr(tag, 'name') === property))?.attributes.content;
@@ -139,9 +142,13 @@ export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, ti
   const preloads = tags.filter(tag => tag.name === 'link' && attr(tag, 'rel') === 'preload' && attr(tag, 'as') === 'font');
   const lockupImages = tags.filter(tag => tag.name === 'img' && /scrypath-lockup-(light|dark)\.svg$/.test(attr(tag, 'src') ?? ''));
   const iconLinks = tags.filter(tag => tag.name === 'link' && /(^|\s)icon(\s|$)/.test(attr(tag, 'rel') ?? ''));
+  const stylesheets = tags.filter(tag => tag.name === 'link' && /(^|\s)stylesheet(\s|$)/i.test(attr(tag, 'rel') ?? ''));
+  const scripts = tags.filter(tag => tag.name === 'script' && attr(tag, 'src') !== undefined);
 
   // Every declared asset URL: where it came from, its raw value and where it resolves.
   const declared = [
+    ...stylesheets.map(tag => ['stylesheet', attr(tag, 'href')]),
+    ...scripts.map(tag => ['script', attr(tag, 'src')]),
     ...preloads.map(tag => ['font preload', attr(tag, 'href')]),
     ...lockupImages.map(tag => ['lockup image', attr(tag, 'src')]),
     ...iconLinks.map(tag => ['icon link', attr(tag, 'href')]),
@@ -188,6 +195,25 @@ export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, ti
     const failure = verify(response, url);
     record(code, !failure, name, failure ? `${url.pathname}: ${failure}` : '');
   };
+
+  const hasBody = response => (response.body.length > 0 ? '' : 'the body is empty');
+  const asType = (pattern, expected) => response =>
+    pattern.test(response.contentType) ? hasBody(response) : `content-type is ${JSON.stringify(response.contentType)}, expected ${expected}`;
+
+  for (const name of ['styles.css', 'tokens.css']) {
+    const declaredHere = stylesheets.some(tag => (attr(tag, 'href') ?? '').split(/[?#]/)[0].endsWith(`/${name}`));
+    if (!declaredHere) {
+      record('stylesheet', false, `the page declares ${name}`, `no <link rel="stylesheet"> names ${name}`);
+    }
+  }
+  for (const link of stylesheets) {
+    const href = attr(link, 'href');
+    await check('stylesheet', `stylesheet ${href} answers 200 as CSS`, inside('stylesheet', href), asType(/^text\/css\b/i, 'text/css'));
+  }
+  for (const script of scripts) {
+    const src = attr(script, 'src');
+    await check('script', `script ${src} answers 200 as JavaScript`, inside('script', src), asType(/^(?:text|application)\/(?:x-)?(?:javascript|ecmascript)\b/i, 'a JavaScript type'));
+  }
 
   const uiPreload = preloads.find(tag => /\/ui\.woff2$/.test(attr(tag, 'href') ?? ''));
   await check('font', 'the ui font answers 200 as font/woff2 with its pinned hash', inside('font preload', uiPreload && attr(uiPreload, 'href')), response => {

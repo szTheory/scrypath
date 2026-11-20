@@ -727,7 +727,11 @@ test('accept smoke passes against the built site served under /scrypath/', async
     const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
     assert.deepEqual(failedCodes(results), [], JSON.stringify(results.filter(result => !result.ok)));
     assert.equal(ok, true);
-    assert.deepEqual([...new Set(results.map(result => result.code))].sort(), ['base-path', 'card', 'favicon', 'font', 'home', 'lockups']);
+    // `script` appears only when the page declares a script, which light-only mode does not.
+    assert.deepEqual(
+      [...new Set(results.map(result => result.code))].sort(),
+      ['base-path', 'card', 'favicon', 'font', 'home', 'lockups', ...(PICKER_MODE ? ['script'] : []), 'stylesheet']
+    );
 
     // Every URL the smoke asked for is under the base path: nothing reached the origin root.
     await server.flush();
@@ -761,6 +765,57 @@ test('planted smoke fails when a pinned font is missing from the served tree', a
     const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
     assert.equal(ok, false, 'a missing font must fail the smoke');
     assert.deepEqual(failedCodes(results), ['font']);
+  });
+});
+
+test('planted smoke fails when the stylesheet is missing from the served tree', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    rmSync(path.join(dir, 'assets', 'styles.css'));
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.equal(ok, false, 'a page whose stylesheet 404s must fail the smoke');
+    assert.deepEqual(failedCodes(results), ['stylesheet']);
+    assert.match(results.find(result => !result.ok).detail, /assets\/styles\.css: status 404/);
+  });
+});
+
+test('planted smoke fails when tokens.css is missing from the served tree', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    rmSync(path.join(dir, 'assets', 'tokens.css'));
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.equal(ok, false, 'a page without its role variables must fail the smoke');
+    assert.deepEqual(failedCodes(results), ['stylesheet']);
+    assert.match(results.find(result => !result.ok).detail, /assets\/tokens\.css: status 404/);
+  });
+});
+
+test('planted theme-picker smoke fails when theme.js is missing from the served tree', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    if (PICKER_MODE) {
+      rmSync(path.join(dir, 'assets', 'theme.js'));
+      const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+      assert.equal(ok, false, 'a page whose theme script 404s must fail the smoke');
+      assert.deepEqual(failedCodes(results), ['script']);
+      assert.match(results.find(result => !result.ok).detail, /assets\/theme\.js: status 404/);
+    } else {
+      assert.equal(existsSync(path.join(dir, 'assets', 'theme.js')), false, 'light-only mode ships no theme.js');
+      const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+      assert.deepEqual(failedCodes(results), []);
+      assert.equal(ok, true);
+    }
+  });
+});
+
+test('planted smoke fails when a declared stylesheet or script is served as plain text', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    writeFileSync(path.join(dir, 'assets', 'planted.txt'), 'body { color: inherit; }\n');
+    edit(dir, 'index.html', html =>
+      html.replace('</head>', '<link rel="stylesheet" href="./assets/planted.txt" /><script src="./assets/planted.txt"></script></head>')
+    );
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.equal(ok, false, 'a stylesheet or script with a text/plain content type must fail the smoke');
+    assert.deepEqual(failedCodes(results).sort(), ['script', 'stylesheet']);
+    assert.match(results.find(result => result.code === 'stylesheet' && !result.ok).detail, /content-type is "text\/plain/);
+    assert.match(results.find(result => result.code === 'script' && !result.ok).detail, /content-type is "text\/plain/);
   });
 });
 
