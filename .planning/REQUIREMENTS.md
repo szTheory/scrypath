@@ -18,6 +18,7 @@ Scope source: the prepared v1.47 input (`research/v1.47-prep/` notes A to D, `re
 - [ ] **SITE-03**: The website's old palette is added to the retired-value deny-set in the same commit as the asset swap, except `d08e54`, `0c0f14` and `9aa4b6`, which also appear in `brandbook/` (4, 10 and 1 hits) and join the deny set in the Phase 191 commit that deletes `brandbook/`; the website static contract asserts those three absent from website source until then. The two `p189` allowlist entries are removed in the same commit (ceilings 7 to 5 entries and 201 to 197 hits), and the deny-list reports no retired value in website source.
 - [ ] **SITE-04**: `website/scripts/check.mjs` is rewritten from capture-only to computed-style, font-hash and contrast assertions for both themes, served under the production prefix (`serve.mjs --base /scrypath/`, 404 at `/`, port 0, any root-absolute `href`, `src` or CSS `url()` rejected). A dependency-free static contract runs in `core` and `repository-contracts` and takes ledger row 9 of 12 in `CONTRIBUTING.md`. Contrast is read from computed colors normalized for `color-mix()` and alpha, per pair id from `brand/brand.json` with its exact selector and background token. The website workflow's push and pull-request filters include `brand/**`, and the browser install step is measured and hardened (`channel: 'chrome'` or cache, `timeout-minutes` set) with the result recorded in `CI-EFFICIENCY.md`.
 - [ ] **SITE-05**: Because merging to `main` deploys, the exact-head evidence is a command, not prose: `gh api repos/szTheory/scrypath/commits/<head>/check-runs` shows `build-and-check` completed and successful with `head_sha` equal to the PR head. `build-and-check` stays a non-required check (decision recorded with its reasons and re-open trigger: a rendering regression only that job would have caught reaches `main`). The `deploy` job has its own concurrency group with `cancel-in-progress: false` and ends with a smoke step against the deployed URL (home page, one font, both lockups, the social card, all under `/scrypath/`); a `workflow_dispatch` run with a `ref` input is the documented rollback in `docs/releasing.md`.
+- [ ] **SITE-06**: Website copy never tells a Hex adopter to run a repo-only task: every `mix verify.adopter` mention in `website/src` (home status strip, install callout, operators step 2, docs page, `diagram.svg`) is replaced by a shipped task (`mix scrypath.status`, `failed`, `retry` or `reconcile`, whichever matches the sentence), and the website static contract fails any `mix verify.*` string in website source. The two Hex-shipped guides that also mention `verify.adopter` are a separate, contract-tested item recorded in the phase notes, not changed here. The `phase110` and `phase112` website contract tests are updated in the same commit if they pin any changed sentence.
 
 ### Wording that does not need the catalog (Phase 190)
 
@@ -53,7 +54,7 @@ Deferred to later milestones; not in this roadmap.
 |---------|--------|
 | Making `build-and-check` or any new check a required context | Branch protection is the maintainer's call; revisit only if a browser-only regression reaches `main` |
 | Promoting a browser computed-style spec to a required lane | One observed hole does not justify gate 9 or beyond; revisit on a regression only a browser spec would catch |
-| Website content changes beyond identity (headline, single CTA, command picture, version badge) | The book's site content spec is a separate decision; SITE-01 is identity only |
+| Website content changes beyond identity and the SITE-06 accuracy fix (headline, single CTA, command picture, version badge, page structure, new pages) | The full refresh is planted as SEED-004 and scoped in `research/website-refresh/`; SITE-01 is identity only |
 | Ops theme default change or Bricolage in ops | Settled in v1.46: ops stays System-default, no type-scale reflow |
 | Palette input focus-outline defect (v1.46 IN-07) | Needs a rendered check; owned by the v1.49 screens work |
 | Catalog, storybook, fixtures, preview refresh | v1.48 |
@@ -72,6 +73,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SITE-03 | Phase 189 | Pending |
 | SITE-04 | Phase 189 | Pending |
 | SITE-05 | Phase 189 | Pending |
+| SITE-06 | Phase 189 | Pending |
 | GATE-02 | Phase 189 (standing rule for Phases 188.1, 190 and 191) | Pending |
 | COPY-01 | Phase 190 | Pending |
 | COPY-02 | Phase 190 | Pending |
@@ -85,8 +87,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLEAN-06 | Phase 191 | Pending |
 
 **Coverage:**
-- v1 requirements: 17 total
-- Mapped to phases: 17
+- v1 requirements: 18 total
+- Mapped to phases: 18
 - Unmapped: 0 ✓
 
 ---
