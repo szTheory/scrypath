@@ -259,8 +259,10 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert CopyRules.scan_source(retry, clean, [path]) == []
       assert CopyRules.evaluate_surface(retry, "x", "<p>Retry queued · queue job 4</p>") == []
 
-      assert [%{kind: :required_missing, text: "Retry queued"}] =
-               CopyRules.evaluate_surface(retry, "x", "<p>Retry sent</p>")
+      assert [
+               %{kind: :required_missing, text: "Retry queued"},
+               %{kind: :forbidden, text: "Retry sent"}
+             ] = CopyRules.evaluate_surface(retry, "x", "<p>Retry sent</p>")
 
       # The word-level row reads rendered text only, and only whole words.
       assert [%{kind: :forbidden, text: ^accepted}] =
@@ -287,6 +289,104 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
 
       assert [%{kind: :required_missing}] =
                CopyRules.evaluate_surface(queued, "x", "<p>dequeued</p>")
+    end
+
+    # 190 review WR-04: the forbidden lists cover the variants the glossary Avoid lists name,
+    # not only the old strings, and the Q-2 flash is pinned by a positive assertion.
+    test "the widened forbidden lists catch the glossary's variants and pass the real wording", %{
+      rules: rules
+    } do
+      aggregate = row!(rules, "pending-aggregate")
+      retry = row!(rules, "retry-queued-not-accepted")
+      searchable = row!(rules, "searchable-observation-only")
+      healthy = row!(rules, "clear-not-healthy")
+      path = "scrypath_ops/lib/planted.ex"
+      accepted = "accep" <> "ted"
+
+      forbidden = fn row, text ->
+        root = temp_tree!(%{path => ~s(label: "#{text}"\n)})
+        scanned = CopyRules.scan_source(row, root, [path])
+        rendered = CopyRules.evaluate_surface(row, "x", "<p>" <> text <> "</p>")
+
+        {Enum.filter(scanned, &(&1.kind == :forbidden)),
+         Enum.filter(rendered, &(&1.kind == :forbidden))}
+      end
+
+      for {row, texts} <- [
+            {aggregate,
+             [
+               "2 queued " <> "jobs",
+               "3 " <> "queued",
+               "2 jobs are " <> "queued",
+               "Nothing is " <> "queued"
+             ]},
+            {retry,
+             [
+               "Queue " <> accepted <> " this retry",
+               "The retry was " <> accepted,
+               "Accepted" <> " retry",
+               "Retry " <> "sent",
+               "Retry was " <> "sent"
+             ]},
+            {searchable,
+             ["not " <> "searchable", "Not " <> "searched yet", "not searched " <> "yet"]},
+            {healthy, ["Healthy", "All " <> "good", "all good"]}
+          ],
+          text <- texts do
+        assert {[_ | _], [_ | _]} = forbidden.(row, text), "#{row["id"]} missed #{inspect(text)}"
+      end
+
+      # What the screens say today stays clean.
+      for {row, texts} <- [
+            {aggregate,
+             [
+               "1 job pending",
+               "A retry for job 4 is already queued.",
+               "Retry queued · queue job 991",
+               "Nothing pending, retrying or failed"
+             ]},
+            {retry,
+             [
+               "A retry for job 4 is already queued.",
+               "Retry queued · queue job 991",
+               "A queued retry is a new operation",
+               "The backend " <> accepted <> " this swap"
+             ]},
+            {searchable,
+             ["Used for search", "Not used for search yet.", "documents are searchable yet"]},
+            {healthy, ["Clear", "Search health", "No sync failures found"]}
+          ],
+          text <- texts do
+        assert {[], []} = forbidden.(row, text), "#{row["id"]} flagged #{inspect(text)}"
+      end
+
+      # The one developer doc that says an accepted retry is excused by its exact phrase only.
+      doc =
+        "# Private, bounded correlation of an " <>
+          accepted <> " retry with its own Meilisearch task.\n"
+
+      excused_root = temp_tree!(%{path => doc})
+      stray_root = temp_tree!(%{path => "# an " <> accepted <> " retry elsewhere\n"})
+
+      assert CopyRules.scan_source(retry, excused_root, [path]) == []
+      assert [%{kind: :forbidden}] = CopyRules.scan_source(retry, stray_root, [path])
+    end
+
+    test "the retry flash must name its queue job", %{rules: rules} do
+      row = row!(rules, "retry-queued-not-accepted--flash")
+      surface = "failed_sync.after_retry"
+
+      assert CopyRules.evaluate_surface(row, surface, "<p>Retry queued · queue job 991</p>") == []
+
+      # The receipt title alone is also "Retry queued": it must not satisfy the flash row.
+      for text <- [
+            "<h3>Retry queued</h3>",
+            "<p>Retry " <> "sent · queue job 991</p>",
+            "<p>Retry queued · queue job</p>"
+          ] do
+        assert [%{kind: :required_missing, row: "retry-queued-not-accepted--flash"}] =
+                 CopyRules.evaluate_surface(row, surface, text)
+      end
     end
 
     test "a Status wording term that no row cites fails, and the real table cites them all", %{

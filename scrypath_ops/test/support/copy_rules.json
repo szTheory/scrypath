@@ -10,6 +10,7 @@
     "HTML attribute text that is not rendered text (aria-label, title, placeholder) is not guarded; a row can catch it only by accident.",
     "Playwright locators and assertion names are read only by the Control room casing row, never by the status wording rows.",
     "Screen states with no named fixture surface are not rendered; a row's static scan still reads their source.",
+    "Lower-case healthy in copy is not caught: the Clear wording row forbids only the capitalised word, because the lower-case word appears in developer comments and in a fixture scenario value under scrypath_ops/lib.",
     "Non-English text is not covered."
   ],
   "rules": [
@@ -20,7 +21,9 @@
       "forbidden": [
         {"text": "Searchable(?! fields)", "match": "regex", "case": "sensitive"},
         {"text": "Not searchable", "match": "literal", "case": "sensitive"},
-        {"text": "Not searched yet", "match": "literal", "case": "sensitive"}
+        {"text": "Not searched yet", "match": "literal", "case": "sensitive"},
+        {"text": "\\bnot\\s+searchable\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bnot\\s+searched\\s+yet\\b", "match": "regex", "case": "insensitive"}
       ],
       "required": [],
       "allowed_in": [],
@@ -93,7 +96,11 @@
       "forbidden": [
         {"text": "\\bjobs? queued\\b", "match": "regex", "case": "insensitive"},
         {"text": "Nothing queued", "match": "literal", "case": "insensitive"},
-        {"text": "queued work", "match": "literal", "case": "insensitive"}
+        {"text": "queued work", "match": "literal", "case": "insensitive"},
+        {"text": "\\bqueued\\s+jobs?\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\d+\\s+queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bjobs?\\s+(is|are|was|were)\\s+queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bnothing\\s+(is\\s+)?queued\\b", "match": "regex", "case": "insensitive"}
       ],
       "required": [],
       "allowed_in": [],
@@ -149,12 +156,17 @@
         {"text": "is already accepted", "match": "literal", "case": "insensitive"},
         {"text": "The queue accepted", "match": "literal", "case": "insensitive"},
         {"text": "accepted operation", "match": "literal", "case": "insensitive"},
-        {"text": "Acceptance alone", "match": "literal", "case": "insensitive"}
+        {"text": "Acceptance alone", "match": "literal", "case": "insensitive"},
+        {"text": "\\bqueue\\s+accepted\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\baccepted\\s+retry\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bretry\\s+(was\\s+|is\\s+)?(accepted|sent)\\b", "match": "regex", "case": "insensitive"}
       ],
       "required": [
         {"text": "Retry queued", "match": "literal", "case": "sensitive"}
       ],
-      "allowed_in": [],
+      "allowed_in": [
+        "correlation of an accepted retry with its own Meilisearch task"
+      ],
       "source_scope": ["scrypath_ops/lib/**"],
       "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
     },
@@ -221,6 +233,36 @@
       "allowed_in": [],
       "source_scope": [],
       "surfaces": ["control_room.refresh_retained_degraded"]
+    },
+    {
+      "id": "clear-not-healthy",
+      "rule": "Clear is the status word for an observed source with nothing pending, retrying or failed: say Clear, never Healthy or All good.",
+      "glossary": "Clear",
+      "forbidden": [
+        {"text": "\\bHealthy\\b", "match": "regex", "case": "sensitive"},
+        {"text": "\\ball\\s+good\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "control_room.healthy",
+        "control_room.refresh_retained",
+        "posture.default",
+        "sync_drift.caught_up"
+      ]
+    },
+    {
+      "id": "retry-queued-not-accepted--flash",
+      "rule": "The flash after a retry names the queue job: Retry queued, then the number of the job the host application's queue now holds.",
+      "glossary": "Retry queued",
+      "forbidden": [],
+      "required": [
+        {"text": "Retry queued · queue job \\d+", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry"]
     }
   ]
 }

@@ -24,6 +24,7 @@ defmodule ScrypathOps.Test.CopySurfaces do
 
   @anchors %{
     "control_room.default" => "Search backend not configured.",
+    "control_room.healthy" => "Document visibility is checked separately.",
     "control_room.refresh_no_prior" => "Incomplete observation checked:",
     "control_room.refresh_retained" => "Search health refresh incomplete.",
     "control_room.refresh_retained_degraded" => "Search health refresh incomplete.",
@@ -73,6 +74,15 @@ defmodule ScrypathOps.Test.CopySurfaces do
       Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
       lv |> element("#control-room-refresh") |> render_click()
       render(lv)
+    end)
+  end
+
+  # /ops after a first check that found nothing pending, retrying or failed: the verdict says Clear.
+  def render("control_room.healthy", %{conn: conn}) do
+    ControlRoomStubs.with_env(fn ->
+      ControlRoomStubs.put_healthy_posture!()
+      {:ok, _lv, html} = live(conn, "/ops")
+      html
     end)
   end
 

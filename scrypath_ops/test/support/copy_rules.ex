@@ -529,11 +529,25 @@ defmodule ScrypathOps.Test.CopyRules do
   defp forbidden_hits(regexes, allowed_in, text) do
     excused = allowed_ranges(Enum.map(allowed_in, &normalise/1), text)
 
-    for regex <- regexes,
-        [{start, length} | _] <- Regex.scan(regex, text, return: :index),
-        not excused?(excused, start, length) do
-      %{text: binary_part(text, start, length), index: start}
-    end
+    hits =
+      for regex <- regexes,
+          [{start, length} | _] <- Regex.scan(regex, text, return: :index),
+          not excused?(excused, start, length) do
+        %{text: binary_part(text, start, length), index: start}
+      end
+
+    # Two entries that match the same span, or one inside the other (a literal and the regex that
+    # widens it), are one finding: report the widest.
+    hits = Enum.uniq_by(hits, &{&1.index, &1.text})
+
+    Enum.reject(hits, fn hit ->
+      Enum.any?(hits, fn other -> other != hit and nested?(hit, other) end)
+    end)
+  end
+
+  defp nested?(hit, other) do
+    other.index <= hit.index and
+      hit.index + byte_size(hit.text) <= other.index + byte_size(other.text)
   end
 
   # An allowed_in phrase excuses only a hit that lies wholly inside one occurrence of that exact
