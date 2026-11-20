@@ -36,7 +36,7 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 - Website re-skin (SITE-01..05, Phase 189): pinned brand tokens, fonts, lockups and favicons; light default with a Light/Dark/System picker; computed-style, font-hash and contrast checks in place of the capture-only `check.mjs`.
 - Wording that does not need the catalog (COPY-01..04, Phase 190): glossary-rule copy fixes, "Control room" casing, guards as a data table inside the required `ops-ui` job, the Cancel-focus assertion and the unpinned copy values.
 - Cleanup (CLEAN-01..06, Phase 191): demo favicon, `brandbook/` readers then data, static token invariants (12 px floor and friends), the unthemed-favicon tripwire, ledger wording, and `brand/tokens.json` named as the token authority.
-- Kickoff chore, outside the phases (a small CI PR first): an `ecommerce-path` classifier so planning-only and docs-only PRs skip the browser lanes.
+- CI path classifier (CI-01, Phase 188.1, a plain PR first): an `ecommerce-path` allowlist classifier so planning-only and docs-only PRs skip the browser lanes.
 
 ## Current State
 
@@ -480,7 +480,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-v1.47 Brand completion (Phases 189-191): SITE-01..05, COPY-01..04, CLEAN-01..06, plus the standing GATE-02 guardrails. Full text and traceability are in `REQUIREMENTS.md`. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
+v1.47 Brand completion (Phases 188.1, 189-191): CI-01, SITE-01..05, COPY-01..04, CLEAN-01..06, plus the standing GATE-02 guardrails. Full text and traceability are in `REQUIREMENTS.md`. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
 
 ### Out of Scope
 
