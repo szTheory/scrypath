@@ -41,7 +41,7 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
 - Decimal phases (186.1, ...): urgent insertions (marked with INSERTED)
 
 - [x] **Phase 186: Ingest, pin and guard** - Pin the adopted brand assets offline, add one token-parity and retired-value test, lift the pinned old-identity literals, and make the recolor tolerable to existing checks (test and evidence only, at most 3 plans) (completed 2026-11-19)
-- [ ] **Phase 187: ScrypathOps re-skin** - Operators see ScrypathOps in the new identity in light and dark with one status vocabulary, delivered as one Draft PR
+- [x] **Phase 187: ScrypathOps re-skin** - Operators see ScrypathOps in the new identity in light and dark with one status vocabulary, delivered as one Draft PR (completed 2026-11-19)
 - [ ] **Phase 188: README header and HexDocs** - Readers see the brand header, logo, favicon and corrected stylesheet on GitHub and HexDocs
 - [ ] **Phase 189: Website re-skin** (deferrable to v1.47) - Visitors see the website in the new identity, verified before the merge that deploys it
 - [ ] **Phase 190: Wording that does not need the catalog** (deferrable to v1.47) - Screen copy follows the recorded glossary rules, each guarded by a copy test
@@ -75,20 +75,20 @@ Plans:
   3. DOM checks find at most one visible, non-inert Plum button per page and per open dialog and no `.btn-error`; destructive confirms name the consequence in the label and open with Cancel focused; row actions share one computed style with at least a 24 px target; prose links are underlined at rest. (SKIN-04)
   4. The extended contrast checker, reading the stylesheet's custom properties, passes every text role at 4.5:1 or better on page, panel, sunken and selected backdrops in both themes and the control edge at 3:1 or better, with no alpha on text and a 2 px inline-start rule on the selected row; the focus ring is a 2 px solid Plum or Orchid ring that stays inside the scrollport of `.ops-table-scroll`; a tab-through keeps the focused element at least 64 px below the viewport top; `getAnimations()` finds no infinite animation and reduced motion is honored. (A11Y-01, A11Y-02, A11Y-03)
   5. A fixture host in light, dark and System shows no computed-style change on its sentinel element off ops routes, a host accent override still wins, a CSP of `font-src 'self'` still loads the fonts, and the unscoped-selector ratchet passes; the retained preview is refreshed to post-merge main with preflight passing and preview data intact before captures; one Draft PR is open with every automated gate green at the exact head SHA, light and dark before and after captures of Control room, Search health and Failed sync work at 390 and 1280 px, and a plain list of what the gates prove and do not prove, with no aesthetic or independent-review claim. (A11Y-04, GATE-03, SKIN-08)
-**Plans**: 11 plans
+**Plans**: 11/11 plans complete
 
 Plans:
-- [ ] 187-01-PLAN.md — Evidence prep: all-statuses fixture, one-time overlay edits, capture script, GATE-03 preview refresh and the 12 before captures (GATE-03, SKIN-08)
-- [ ] 187-02-PLAN.md — Fonts from the mount prefix with the Dockerfile fix, 28 px h1 and 12 px floor, brand lockup and favicon (SKIN-02, SKIN-03, SKIN-06)
-- [ ] 187-03-PLAN.md — Atomic brand palette commit, seven new roles, opaque muted text, contrast checker with published-pair bindings, design docs (SKIN-01, A11Y-01)
-- [ ] 187-04-PLAN.md — ops_sync_status vocabulary, conditions, ranking with the unverified tier, verdicts, 2 px notice rule, two copy bugs (STAT-01..03, SKIN-07, SKIN-08)
-- [ ] 187-05-PLAN.md — One Plum button per scope, consequence-named confirms, text row actions and links, Selection Signature, inset focus, scroll padding, overlays and scrim (SKIN-04, A11Y-02, A11Y-01)
-- [ ] 187-06-PLAN.md — Control-glyph allowlist and word-plus-aria-busy loading, required lane after (SKIN-05, A11Y-03)
-- [ ] 187-07-PLAN.md — Retired identity families and the old raised surface deleted with every contract that read them (SKIN-05, SKIN-01)
-- [ ] 187-08-PLAN.md — Brand and status tints removed, no alpha on text, muted-alpha manifest retired (SKIN-05, A11Y-01, STAT-03)
-- [ ] 187-09-PLAN.md — Brand motion tokens, theme-coloured progress bar, grep gates and spacing ratchet, advisory spec rewrites and the motion proof (SKIN-05, A11Y-03, SKIN-06)
-- [ ] 187-10-PLAN.md — Computed-style re-skin spec and one local run of the whole ordinary e2e partition with fix authority (SKIN-01..06, STAT-01, STAT-03, A11Y-01..03)
-- [ ] 187-11-PLAN.md — Host contract spec and unscoped ratchet, after captures, preview to head, Draft PR with exact-head gates and inventory (A11Y-04, GATE-03, SKIN-08)
+- [x] 187-01-PLAN.md — Evidence prep: all-statuses fixture, one-time overlay edits, capture script, GATE-03 preview refresh and the 12 before captures (GATE-03, SKIN-08)
+- [x] 187-02-PLAN.md — Fonts from the mount prefix with the Dockerfile fix, 28 px h1 and 12 px floor, brand lockup and favicon (SKIN-02, SKIN-03, SKIN-06)
+- [x] 187-03-PLAN.md — Atomic brand palette commit, seven new roles, opaque muted text, contrast checker with published-pair bindings, design docs (SKIN-01, A11Y-01)
+- [x] 187-04-PLAN.md — ops_sync_status vocabulary, conditions, ranking with the unverified tier, verdicts, 2 px notice rule, two copy bugs (STAT-01..03, SKIN-07, SKIN-08)
+- [x] 187-05-PLAN.md — One Plum button per scope, consequence-named confirms, text row actions and links, Selection Signature, inset focus, scroll padding, overlays and scrim (SKIN-04, A11Y-02, A11Y-01)
+- [x] 187-06-PLAN.md — Control-glyph allowlist and word-plus-aria-busy loading, required lane after (SKIN-05, A11Y-03)
+- [x] 187-07-PLAN.md — Retired identity families and the old raised surface deleted with every contract that read them (SKIN-05, SKIN-01)
+- [x] 187-08-PLAN.md — Brand and status tints removed, no alpha on text, muted-alpha manifest retired (SKIN-05, A11Y-01, STAT-03)
+- [x] 187-09-PLAN.md — Brand motion tokens, theme-coloured progress bar, grep gates and spacing ratchet, advisory spec rewrites and the motion proof (SKIN-05, A11Y-03, SKIN-06)
+- [x] 187-10-PLAN.md — Computed-style re-skin spec and one local run of the whole ordinary e2e partition with fix authority (SKIN-01..06, STAT-01, STAT-03, A11Y-01..03)
+- [x] 187-11-PLAN.md — Host contract spec and unscoped ratchet, after captures, preview to head, Draft PR with exact-head gates and inventory (A11Y-04, GATE-03, SKIN-08)
 **UI hint**: yes
 
 ### Phase 188: README header and HexDocs

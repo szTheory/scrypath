@@ -28,33 +28,33 @@ Phases continue at 186. Phases 189 and 190 are deferrable to v1.47 if v1.46 runs
 
 ### ScrypathOps re-skin (Phase 187)
 
-- [ ] **SKIN-01**: An operator sees ScrypathOps in the new brand palette in light and dark: the two theme blocks map the brand roles (Page, Panel, Hairline, Ink, Plum, Orchid) with daisyUI's required set, hand-authored roles (`--ops-sunken`, `--ops-selected`, `--ops-control-edge`, opaque `--ops-text-muted`, `--ops-status-*`), and no `primary-strong`, copper secondary or glow tokens; ops stays System-default for theme.
-- [ ] **SKIN-02**: Hanken Grotesk and Sometype Mono ship byte-identical under the ops assets, load from the mount prefix at any depth with content-hash `?v=`, `font-display: swap` and metric-adjusted fallbacks, and the h1 is Hanken 700 at 28 px; Bricolage is not shipped in ops. A coverage test lists the glyphs the subsets lack and their named fallbacks.
-- [ ] **SKIN-03**: The brand lockup and favicon (SVG plus PNG-in-ICO) replace the old logo and the 152-byte stub, with exactly one lockup displayed per theme at a legible size at 320 px.
-- [ ] **SKIN-04**: Operators get the brand buttons and actions: at most one Plum button per visible non-inert scope, no `.btn-error`, destructive confirms use the modal's single Plum button with the consequence in the label and Cancel as initial focus, row actions are underlined Ink text sharing one computed style with at least a 24 px target, and prose links are underlined at rest.
-- [ ] **SKIN-05**: Retired identity code is gone: `.ops-path-*`, `.ops-copper-*`, glow and copper gradients, hard-coded select-chevron colors, every `uppercase` site, nav and verdict icons, and every `infinite` animation (replaced by a word plus `aria-busy`); every transition and animation duration is one of the brand motion tokens, with old token names kept as `var()` aliases for one milestone.
-- [ ] **SKIN-06**: The 11 px sites are raised to 12 px (floor met), `.ops-signal-metrics .ops-time` and copy targets use the mono face, and no body text is reflowed (the size scale is recorded as `keep-platform`).
-- [ ] **SKIN-07**: Search health ranks rows Failed, Retrying, Pending, Clear, then name, and each row shows its most urgent status, and the two verified copy bugs (the promotion prefix and the `inspect(reason)` leak) are fixed.
-- [ ] **SKIN-08**: A maintainer receives the re-skin as one Draft PR with light and dark before and after captures of Control room, Search health and Failed sync work at 390 and 1280 px, plus a plain list of what the gates prove and do not prove; merge happens only on the maintainer's yes, with no aesthetic or independent-review claim.
+- [x] **SKIN-01**: An operator sees ScrypathOps in the new brand palette in light and dark: the two theme blocks map the brand roles (Page, Panel, Hairline, Ink, Plum, Orchid) with daisyUI's required set, hand-authored roles (`--ops-sunken`, `--ops-selected`, `--ops-control-edge`, opaque `--ops-text-muted`, `--ops-status-*`), and no `primary-strong`, copper secondary or glow tokens; ops stays System-default for theme.
+- [x] **SKIN-02**: Hanken Grotesk and Sometype Mono ship byte-identical under the ops assets, load from the mount prefix at any depth with content-hash `?v=`, `font-display: swap` and metric-adjusted fallbacks, and the h1 is Hanken 700 at 28 px; Bricolage is not shipped in ops. A coverage test lists the glyphs the subsets lack and their named fallbacks.
+- [x] **SKIN-03**: The brand lockup and favicon (SVG plus PNG-in-ICO) replace the old logo and the 152-byte stub, with exactly one lockup displayed per theme at a legible size at 320 px.
+- [x] **SKIN-04**: Operators get the brand buttons and actions: at most one Plum button per visible non-inert scope, no `.btn-error`, destructive confirms use the modal's single Plum button with the consequence in the label and Cancel as initial focus, row actions are underlined Ink text sharing one computed style with at least a 24 px target, and prose links are underlined at rest.
+- [x] **SKIN-05**: Retired identity code is gone: `.ops-path-*`, `.ops-copper-*`, glow and copper gradients, hard-coded select-chevron colors, every `uppercase` site, nav and verdict icons, and every `infinite` animation (replaced by a word plus `aria-busy`); every transition and animation duration is one of the brand motion tokens, with old token names kept as `var()` aliases for one milestone.
+- [x] **SKIN-06**: The 11 px sites are raised to 12 px (floor met), `.ops-signal-metrics .ops-time` and copy targets use the mono face, and no body text is reflowed (the size scale is recorded as `keep-platform`).
+- [x] **SKIN-07**: Search health ranks rows Failed, Retrying, Pending, Clear, then name, and each row shows its most urgent status, and the two verified copy bugs (the promotion prefix and the `inspect(reason)` leak) are fixed.
+- [x] **SKIN-08**: A maintainer receives the re-skin as one Draft PR with light and dark before and after captures of Control room, Search health and Failed sync work at 390 and 1280 px, plus a plain list of what the gates prove and do not prove; merge happens only on the maintainer's yes, with no aesthetic or independent-review claim.
 
 ### Status vocabulary and component (Phase 187)
 
-- [ ] **STAT-01**: One `ops_sync_status(:failed | :retrying | :pending | :clear)` component renders word first, then a bar icon (filled, hollow, bottom-filled, notched), with the word color from the brand text hexes and `aria-hidden` icons; it is used for Failed sync work row badges and Search health queue and backend badges and counts, and the existing `data-status-kind` and `data-ops-metric-tone` hooks survive.
-- [ ] **STAT-02**: "Not observed", "Not checked" and "Queue not used" render as plain muted words with no icon, "Clear" appears only with an observation, and health is never inferred from zero counts.
-- [ ] **STAT-03**: Notices and verdicts use Panel plus a 2 px left rule, only an error uses the Failed color, Plum is never an info color, `:running` is neutral, and green appears only on the word and icon of Clear.
+- [x] **STAT-01**: One `ops_sync_status(:failed | :retrying | :pending | :clear)` component renders word first, then a bar icon (filled, hollow, bottom-filled, notched), with the word color from the brand text hexes and `aria-hidden` icons; it is used for Failed sync work row badges and Search health queue and backend badges and counts, and the existing `data-status-kind` and `data-ops-metric-tone` hooks survive.
+- [x] **STAT-02**: "Not observed", "Not checked" and "Queue not used" render as plain muted words with no icon, "Clear" appears only with an observation, and health is never inferred from zero counts.
+- [x] **STAT-03**: Notices and verdicts use Panel plus a 2 px left rule, only an error uses the Failed color, Plum is never an info color, `:running` is neutral, and green appears only on the word and icon of Clear.
 
 ### Accessibility and host contract (Phase 187)
 
-- [ ] **A11Y-01**: Every text role keeps at least 4.5:1 contrast on page, panel, sunken and selected backdrops in both themes, the control edge keeps at least 3:1 on its backdrops, text never uses alpha, and the selected row carries a 2 px `border-inline-start` in both themes, all computed from the stylesheet's custom properties by the extended contrast checker (unrounded thresholds).
-- [ ] **A11Y-02**: Focus is a 2 px solid Plum or Orchid ring whose rect stays inside the scrollport for the first and last controls of `.ops-table-scroll`, and a tab-through never leaves the focused element's top less than 64 px below the viewport top (`scroll-padding-top`).
-- [ ] **A11Y-03**: Motion honors `prefers-reduced-motion`, no animation runs infinitely (`getAnimations()`), and the minimum computed text size is 12 px.
-- [ ] **A11Y-04**: A host that mounts ScrypathOps keeps its own page unchanged: a fixture host in light, dark and System with a sentinel element shows no computed-style change on non-ops routes, a host accent override still wins, a CSP of `font-src 'self'` still loads the fonts, and an allowlist ratchet covers unscoped selectors in the compiled CSS.
+- [x] **A11Y-01**: Every text role keeps at least 4.5:1 contrast on page, panel, sunken and selected backdrops in both themes, the control edge keeps at least 3:1 on its backdrops, text never uses alpha, and the selected row carries a 2 px `border-inline-start` in both themes, all computed from the stylesheet's custom properties by the extended contrast checker (unrounded thresholds).
+- [x] **A11Y-02**: Focus is a 2 px solid Plum or Orchid ring whose rect stays inside the scrollport for the first and last controls of `.ops-table-scroll`, and a tab-through never leaves the focused element's top less than 64 px below the viewport top (`scroll-padding-top`).
+- [x] **A11Y-03**: Motion honors `prefers-reduced-motion`, no animation runs infinitely (`getAnimations()`), and the minimum computed text size is 12 px.
+- [x] **A11Y-04**: A host that mounts ScrypathOps keeps its own page unchanged: a fixture host in light, dark and System with a sentinel element shows no computed-style change on non-ops routes, a host accent override still wins, a CSP of `font-src 'self'` still loads the fonts, and an allowlist ratchet covers unscoped selectors in the compiled CSS.
 
 ### Delivery and required checks (Phases 186-187)
 
 - [x] **GATE-01**: `ops-ui` is a required check with its path list extended to `brand/`, `language/` and `fixtures/`, and the wiring test and cheap static storybook-boundary checks are amended to match; new required gates in this milestone stay within the budget of 12, each stating a deletion trigger and expected churn per UI PR.
 - [x] **GATE-02**: Each phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide, evidence-only phases stay at or below 2 plans (Phase 186 at most 3), one full gate runs per commit SHA, a stale receipt is a failed gate, and no capture runs from a dirty tree.
-- [ ] **GATE-03**: The retained UI preview is refreshed to post-merge main before visible UI work, preflight passes, and preview data survives (seed-disabled).
+- [x] **GATE-03**: The retained UI preview is refreshed to post-merge main before visible UI work, preflight passes, and preview data survives (seed-disabled).
 
 ### README and HexDocs (Phase 188)
 
@@ -109,24 +109,24 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TOK-02 | Phase 186 | Complete |
 | TOK-03 | Phase 186 | Complete |
 | TOK-04 | Phase 186 | Complete |
-| SKIN-01 | Phase 187 | Pending |
-| SKIN-02 | Phase 187 | Pending |
-| SKIN-03 | Phase 187 | Pending |
-| SKIN-04 | Phase 187 | Pending |
-| SKIN-05 | Phase 187 | Pending |
-| SKIN-06 | Phase 187 | Pending |
-| SKIN-07 | Phase 187 | Pending |
-| SKIN-08 | Phase 187 | Pending |
-| STAT-01 | Phase 187 | Pending |
-| STAT-02 | Phase 187 | Pending |
-| STAT-03 | Phase 187 | Pending |
-| A11Y-01 | Phase 187 | Pending |
-| A11Y-02 | Phase 187 | Pending |
-| A11Y-03 | Phase 187 | Pending |
-| A11Y-04 | Phase 187 | Pending |
+| SKIN-01 | Phase 187 | Complete |
+| SKIN-02 | Phase 187 | Complete |
+| SKIN-03 | Phase 187 | Complete |
+| SKIN-04 | Phase 187 | Complete |
+| SKIN-05 | Phase 187 | Complete |
+| SKIN-06 | Phase 187 | Complete |
+| SKIN-07 | Phase 187 | Complete |
+| SKIN-08 | Phase 187 | Complete |
+| STAT-01 | Phase 187 | Complete |
+| STAT-02 | Phase 187 | Complete |
+| STAT-03 | Phase 187 | Complete |
+| A11Y-01 | Phase 187 | Complete |
+| A11Y-02 | Phase 187 | Complete |
+| A11Y-03 | Phase 187 | Complete |
+| A11Y-04 | Phase 187 | Complete |
 | GATE-01 | Phase 186 | Complete |
 | GATE-02 | Phase 186 | Complete |
-| GATE-03 | Phase 187 | Pending |
+| GATE-03 | Phase 187 | Complete |
 | BDOC-01 | Phase 188 | Pending |
 | BDOC-02 | Phase 188 | Pending |
 | SITE-01 | Phase 189 | Pending (deferrable to v1.47) |
