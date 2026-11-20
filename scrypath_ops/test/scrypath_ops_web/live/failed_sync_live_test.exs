@@ -771,6 +771,4 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   end
 
   defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()
-
-  defp put_live_assigns(view, assigns), do: FailedSyncStubs.put_live_assigns(view, assigns)
 end
