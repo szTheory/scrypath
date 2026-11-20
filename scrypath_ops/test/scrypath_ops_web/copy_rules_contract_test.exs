@@ -126,6 +126,46 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert CopyRules.evaluate_surface(clear, "x", "<span>Cleared</span> no status word") == []
     end
 
+    test "a retained degraded observation must keep its Failed word and must not read Clear", %{
+      rules: rules
+    } do
+      clear = row!(rules, "clear-needs-observation")
+      kept = row!(rules, "clear-needs-observation--failed-word-kept")
+      surface = "control_room.refresh_retained_degraded"
+
+      word = fn text -> ~s(<span class="ops-sync-status__word">#{text}</span>) end
+
+      # The nav link reads "Failed sync work": the bare word is on every page, so the row must
+      # key on the status word's own element.
+      nav = ~s(<a href="/ops/failed-sync">Failed sync work</a>)
+
+      assert CopyRules.evaluate_surface(kept, surface, nav <> word.("Failed")) == []
+      assert CopyRules.evaluate_surface(clear, surface, nav <> word.("Failed")) == []
+
+      assert [%{kind: :required_missing, row: "clear-needs-observation--failed-word-kept"}] =
+               CopyRules.evaluate_surface(
+                 kept,
+                 surface,
+                 nav <> "<p>1 Meilisearch task failed</p>"
+               )
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(kept, surface, nav <> word.("Clear"))
+
+      assert [%{kind: :forbidden, row: "clear-needs-observation", text: "Clear"}] =
+               CopyRules.evaluate_surface(clear, surface, nav <> word.("Clear"))
+
+      # Through the surface check: the anchor alone, with no Failed word, fails the row.
+      anchor = CopySurfaces.anchor(surface)
+
+      violated =
+        rules["rules"]
+        |> CopyRules.check_surface(surface, anchor, "<p>" <> anchor <> "</p>")
+        |> Enum.map(& &1.row)
+
+      assert "clear-needs-observation--failed-word-kept" in violated
+    end
+
     test "the pending rows catch their old forms and pass their new ones", %{rules: rules} do
       aggregate = row!(rules, "pending-aggregate")
       count = row!(rules, "pending-count")

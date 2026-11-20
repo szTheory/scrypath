@@ -140,7 +140,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.verdict_kind(@posture.rows)}
-            status={if @refresh_issue, do: nil, else: Posture.worst_status(@posture.rows)}
+            status={verdict_status(@posture, @refresh_issue)}
             label={
               cond do
                 @refresh_issue && @last_successful_posture -> "Last succeeded"
@@ -212,6 +212,18 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   defp verdict_headline(%Posture{state: :degraded} = summary), do: summary.headline
   defp verdict_headline(%Posture{state: :ok}), do: "No sync failures found"
+
+  # Clear needs an observation, and a failed refresh leaves an earlier observation on screen
+  # (187 review IN-02), so only the Clear word is dropped beside it. Failed, Retrying and Pending
+  # still read: the word is the non-colour cue for the rule the verdict already shows.
+  defp verdict_status(%Posture{rows: rows}, nil), do: Posture.worst_status(rows)
+
+  defp verdict_status(%Posture{rows: rows}, _refresh_issue) do
+    case Posture.worst_status(rows) do
+      :clear -> nil
+      status -> status
+    end
+  end
 
   defp affected_names(%Posture{rows: rows}) do
     rows

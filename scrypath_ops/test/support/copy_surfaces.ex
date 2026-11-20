@@ -26,6 +26,7 @@ defmodule ScrypathOps.Test.CopySurfaces do
     "control_room.default" => "Search backend not configured.",
     "control_room.refresh_no_prior" => "Incomplete observation checked:",
     "control_room.refresh_retained" => "Search health refresh incomplete.",
+    "control_room.refresh_retained_degraded" => "Search health refresh incomplete.",
     "failed_sync.after_retry" => "Oban job #991",
     "posture.default" => "Meilisearch document tasks",
     "posture.failed_row_retained" => "source-local evidence is retained from check",
@@ -68,6 +69,18 @@ defmodule ScrypathOps.Test.CopySurfaces do
   def render("control_room.refresh_retained", %{conn: conn}) do
     ControlRoomStubs.with_env(fn ->
       ControlRoomStubs.put_healthy_posture!()
+      {:ok, lv, _html} = live(conn, "/ops")
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      lv |> element("#control-room-refresh") |> render_click()
+      render(lv)
+    end)
+  end
+
+  # /ops after a first check that found failed work, when a refresh fails: the earlier
+  # observation stays on screen and keeps its Failed word (only Clear is dropped beside it).
+  def render("control_room.refresh_retained_degraded", %{conn: conn}) do
+    ControlRoomStubs.with_env(fn ->
+      ControlRoomStubs.put_degraded_posture!()
       {:ok, lv, _html} = live(conn, "/ops")
       Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
       lv |> element("#control-room-refresh") |> render_click()

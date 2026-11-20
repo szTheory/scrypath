@@ -93,6 +93,24 @@ defmodule ScrypathOps.Test.CopyStubs.ControlRoom do
     ])
   end
 
+  @doc """
+  The healthy environment with one failed Meilisearch task for the first schema, so the worst
+  row reads Failed and the verdict is an error. Call it inside `put_env/0`'s environment.
+  """
+  def put_degraded_posture! do
+    put_healthy_posture!()
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 401,
+        "status" => "failed",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "ctrl_ops_post_a",
+        "error" => %{"message" => "index missing"}
+      }
+    ])
+  end
+
   @doc "Runs `fun` inside the environment, then restores it, even if `fun` raises."
   def with_env(fun) when is_function(fun, 0) do
     previous = put_env()

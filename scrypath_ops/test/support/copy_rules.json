@@ -69,6 +69,7 @@
       "source_scope": ["scrypath_ops/lib/**"],
       "surfaces": [
         "control_room.refresh_retained",
+        "control_room.refresh_retained_degraded",
         "posture.default",
         "sync_drift.reconcile_error_retained"
       ]
@@ -203,7 +204,23 @@
       "required": [],
       "allowed_in": [],
       "source_scope": [],
-      "surfaces": ["control_room.refresh_retained", "control_room.refresh_no_prior"]
+      "surfaces": [
+        "control_room.refresh_retained",
+        "control_room.refresh_retained_degraded",
+        "control_room.refresh_no_prior"
+      ]
+    },
+    {
+      "id": "clear-needs-observation--failed-word-kept",
+      "rule": "A failed refresh drops only the Clear word: an earlier observation that found failed work still reads Failed beside it.",
+      "glossary": "Clear",
+      "forbidden": [],
+      "required": [
+        {"text": "ops-sync-status__word\">\\s*Failed\\s*</span>", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["control_room.refresh_retained_degraded"]
     }
   ]
 }

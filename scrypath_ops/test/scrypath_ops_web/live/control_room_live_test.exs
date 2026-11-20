@@ -312,21 +312,39 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
       assert has_element?(no_prior, "#{verdict} .ops-verdict__label", "Partial observation")
       refute has_element?(no_prior, "#{verdict} [data-sync-status]")
     end
+
+    # Only Clear is dropped beside a retained observation. A retained check that found failed
+    # work still says Failed (the word is the non-colour cue for the error rule) and never Clear
+    # (190 review WR-01).
+    test "a retained degraded observation keeps its Failed word and never reads Clear", %{
+      conn: conn
+    } do
+      verdict = "[data-testid='control-room-verdict']"
+      failed = "#{verdict}[data-verdict-kind='error'] [data-sync-status='failed']"
+
+      put_degraded_posture_config!()
+      {:ok, lv, _html} = live(conn, ~p"/ops")
+      assert has_element?(lv, failed, "Failed")
+
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      lv |> element("#control-room-refresh") |> render_click()
+
+      assert has_element?(
+               lv,
+               "[data-testid='control-room-refresh-issue']",
+               "The last complete observation is retained below"
+             )
+
+      assert has_element?(lv, failed, "Failed")
+      assert has_element?(lv, verdict, "1 Meilisearch task failed")
+      assert has_element?(lv, "#{verdict} .ops-verdict__label", "Last succeeded")
+      assert has_element?(lv, verdict, "Last succeeded:")
+      refute has_element?(lv, "#{verdict} [data-sync-status='clear']")
+      refute lv |> element(verdict) |> render() =~ "Clear"
+    end
   end
 
-  defp put_degraded_posture_config! do
-    put_healthy_posture_config!()
-
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
-      %{
-        "uid" => 401,
-        "status" => "failed",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "ctrl_ops_post_a",
-        "error" => %{"message" => "index missing"}
-      }
-    ])
-  end
+  defp put_degraded_posture_config!, do: ControlRoomStubs.put_degraded_posture!()
 
   defp put_healthy_posture_config!, do: ControlRoomStubs.put_healthy_posture!()
 
