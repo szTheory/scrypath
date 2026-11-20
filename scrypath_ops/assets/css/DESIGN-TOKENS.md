@@ -28,7 +28,9 @@ file consume them. This doc is the catalog — change a value here only by chang
 ## Brand colors
 
 The palette is the pinned plum and orchid brand book (`brand/`, with its tokens in
-`brand/tokens.json`). daisyUI semantic tokens, two themes. System appearance is the default:
+`brand/tokens.json`). That file is the single token authority; `app.css` is a hand-maintained
+projection of it, checked both ways by `ui-tokens.test.mjs` (token-map parity in both
+directions). daisyUI semantic tokens, two themes. System appearance is the default:
 `html[data-theme]` wins, otherwise the operating system decides (`prefers-color-scheme`), and
 ops never forces light. Both theme blocks in `app.css` declare exactly the 20 daisyUI color
 variables below plus the platform rows, every value a literal hex (no `var()` aliases), and
