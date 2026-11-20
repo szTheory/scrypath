@@ -182,3 +182,76 @@ Related: the Q-2 flash `Retry queued · queue job N` is not guarded by any posit
 _Reviewed: 2026-11-20T21:55:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+
+---
+
+## Fix disposition
+
+**Fixed:** 2026-11-20, by the code fixer (`gsd-code-fixer`), directly in the main checkout on `gsd/phase-190-wording-without-the-catalog` (no worktree). In scope: WR-01, WR-03, WR-04, WR-05 and IN-02. Deferred: WR-02, IN-01 and IN-03. `190-VERIFICATION.md` had reproduced WR-01, WR-03, WR-04 and WR-05 independently. Every fix has a test that fails against the old code and passes against the new code; each red run was observed, not assumed.
+
+| Finding | Status | Commit |
+|---------|--------|--------|
+| WR-01 | fixed | `ac177aaf` |
+| IN-02 | fixed (same commit as WR-01, as the review asked) | `ac177aaf` |
+| WR-03 | fixed | `ef5c6803` |
+| WR-04 | fixed | `c4bee791` |
+| WR-05 | fixed | `953e5dcf` |
+| WR-02 | deferred, accepted trade (below) | none |
+| IN-01 | deferred | none |
+| IN-03 | deferred (necessity finding, outside the requested scope) | none |
+
+### WR-01: fixed, requires human verification of the label call
+
+`control_room_live.ex` now drops only the `Clear` word while a refresh issue is showing (`verdict_status/2`); `Failed`, `Retrying` and `Pending` still read. A retained degraded observation renders `Failed` in the error rule again. Test: `control_room_live_test.exs`, "a retained degraded observation keeps its Failed word and never reads Clear" (a failed Meilisearch task in the first check, then `:unavailable`); it failed on the second `Failed` assertion before the change. The copy table gained a surface `control_room.refresh_retained_degraded` (cited by `clear-needs-observation` and `last-succeeded`, so `Clear` stays forbidden and `Last succeeded` stays required there) and a row `clear-needs-observation--failed-word-kept` that requires the status word's own element (`ops-sync-status__word">Failed</span>`). The row keys on the element, not the bare word, because the nav link `Failed sync work` puts `Failed` on every page. Its planted accept and reject cases are in `copy_rules_contract_test.exs`. The degraded fixture moved from the LiveView test into `copy_stubs/control_room.ex` (`put_degraded_posture!/0`), so the test and the surface share one definition.
+
+Label call: the label stays `Last succeeded` (the pre-seed wording; the glossary forbids only `Last success` and `Last successful`). It is not false in the degraded state: the retained observation is the last check that completed, and it found failed work. With the `Failed` word back on the headline line below it, it no longer reads as if the failure were the last success. The review's alternative, `Last check that succeeded`, is a one-string change plus the test pin if the maintainer prefers it; the paragraph below the verdict keeps `Last succeeded: <time>`, so the `last-succeeded` row would still be satisfied. The label is still not beside a time (the time is in the paragraph below the action link); that is also true of the healthy retained case and was not changed.
+
+### IN-02: fixed
+
+`DESIGN-TOKENS.md` (the `ops_verdict` row) now says the Control room and Search health derive status from the worst row, with one exception: while a refresh issue is showing, the Control room drops `Clear` and keeps `Failed`, `Retrying` and `Pending`.
+
+### WR-03: fixed
+
+`copy_rules.ex` collapses every run of whitespace (including newlines and tabs) to one space on the text and on `allowed_in` phrases before matching, for the static scan and the rendered check, and for the state-anchor check. The static scan maps each match back to the original file and reports the line where the match starts. Planted cases (source and rendered) for `Retry\n   accepted`, `Last\n  success` and `Control\n Room` fail before the change and pass after it, with accept cases for a reflowed required phrase, a wrapped `allowed_in` phrase, a tab and blank-line run, and words on one line that only look alike. The whole-tree scan and the lib scans found no false positive from collapsing whitespace.
+
+### WR-04: fixed
+
+Added to the forbidden lists (existing entries kept, nothing removed or loosened):
+
+- `pending-aggregate`: `\bqueued\s+jobs?\b`, `\d+\s+queued\b`, `\bjobs?\s+(is|are|was|were)\s+queued\b`, `\bnothing\s+(is\s+)?queued\b`.
+- `retry-queued-not-accepted`: `\bqueue\s+accepted\b`, `\baccepted\s+retry\b`, `\bretry\s+(was\s+|is\s+)?(accepted|sent)\b` (this also puts the glossary's own Avoid term `Retry sent` under a rule).
+- `searchable-observation-only`: `\bnot\s+searchable\b` and `\bnot\s+searched\s+yet\b`, case-insensitive.
+- New row `clear-not-healthy` (the glossary's Avoid terms for Clear): `\bHealthy\b` (case-sensitive) and `\ball\s+good\b`, scoped to `scrypath_ops/lib/**` and the surfaces where Clear is shown: new surface `control_room.healthy` (a healthy first check), `control_room.refresh_retained`, `posture.default` and `sync_drift.caught_up`.
+- New row `retry-queued-not-accepted--flash`: requires `Retry queued · queue job \d+` on `failed_sync.after_retry`, so the Q-2 flash is pinned by a positive assertion. Mutation check: rewording the flash in `failed_sync_live.ex` to `Retry sent · queue job N` now fails three ways (static scan of `failed_sync_live.ex:351`, the forbidden `Retry sent` on the surface, and the missing flash text); the edit was reverted.
+
+One variant legitimately occurs in the tree: `lib/scrypath_ops/recovery_observation.ex:3` says "an accepted retry" in a developer `@moduledoc`. `retry-queued-not-accepted` excuses that exact phrase with `allowed_in` (`correlation of an accepted retry with its own Meilisearch task`); a stray `accepted retry` elsewhere still fails, and a planted test proves both. Lower-case `healthy` is not forbidden: it appears in developer comments (`posture.ex`, `ops_ui.ex`) and in a fixture scenario value (`posture_live.ex:255`), so the table's `not_covered` list now says so. The helper reports a hit once when two entries match the same span or one span lies inside another (a literal and the regex that widens it), which the old planted tests needed once the lists overlapped. `Retry sent` was one of the existing test's expectations (only `required_missing`); it now also expects the forbidden hit.
+
+The table is now 17 rows and 16 registered surfaces (it was 14 and 14).
+
+### WR-05: fixed
+
+The refute of a dash placeholder in `posture_live_test.exs` is replaced by two assertions that can fail: each retained `last succeeded` label (`Meilisearch last succeeded`, `Queue last succeeded`) sits beside the retained time element of its own source (`posture-time-retained-backend-...`, `posture-time-retained-queue-...`). Mutation check: renaming the element id in `posture_live.ex` makes the test fail; the edit was reverted. The old-label guard for this surface is the `last-succeeded--absence` table row, as before.
+
+### WR-02: deferred (accepted trade, not fixed)
+
+The `ops-ui-path` regex deliberately omits `README.md`, the root docs, `guides/`, `website/` and the demo's `README.md`, `Makefile` and `docs/`. This is the D-18 / D-19 economy: a docs-only PR skips `ops-ui` (the 386 s measurement in `CI-EFFICIENCY.md` finding 12), and the whole-tree `control-room-casing` scan still runs on every push to `main`. The cost: a PR that edits only an omitted path back to title case can merge on green and turn `main` red on the push run, which the wiring test also pins by asserting that `README.md` and the website index do not match. Widening the pattern would also change the wiring test's "does not match" probes, so it is a maintainer cost decision and not a code-fixer change. **Revisit trigger:** reconsider before the website refresh (SEED-004) starts, or the first time the push-to-`main` scan goes red for a docs-only change, whichever comes first. If it is reopened, the review's suggested alternatives are to add the directories the label lives in to the pattern, or to move the whole-tree casing scan to a lane that always runs.
+
+### IN-01: deferred
+
+Unchanged from D-08: a retrying-only queue reads "pending" in the promotion block and the Pending word repeats on the queue line. Fixing it means changing `promotion_eligibility.ex` or splitting `:queue_work_pending`, which is outside this phase's wording scope. Take it up with the 187 IN-01 item.
+
+### IN-03: deferred
+
+A necessity finding: two table requirements that cannot fail independently of another entry. Removing code is a scope decision for the maintainer, and the finding itself says it is not a removal request. Not applied. (The new `retry-queued-not-accepted--flash` row gives the retry surfaces a requirement of their own, but `queued-host-queue-outcome` was left as it is.)
+
+### Checks run
+
+Cheap checks only, in the main checkout (no worktree was created, so these numbers are reproducible from the tree you are looking at):
+
+- `cd scrypath_ops && MIX_ENV=test mix test`, whole suite, run on a random seed and on `--seed 0`: 2 doctests, 553 tests (was 546; seven new tests), 0 failures both times.
+- `MIX_ENV=test mix compile --warnings-as-errors --force` in `scrypath_ops`: exit 0, no warnings.
+- `mix format --check-formatted` at the repository root and in `scrypath_ops`: clean.
+- `mix test test/mix/tasks/workflow_wiring_test.exs test/mix/tasks/verify_namespace_fence_test.exs` at the root: 92 tests, 0 failures.
+- `git grep -o 'Control Room' -- . ':!.planning' ':!brand' ':!scrypath_ops/test/support/copy_rules.json'`: no output, exit 1.
+
+Not run, by the orchestrator's decision: `mix verify.repository_contracts`, `mix verify.core`, the CI Node step, any Docker or Playwright lane. The four fix commits change files outside `.planning/`, so `190-GATE-RECEIPT.md` (which names `f6c78bd2`) no longer covers the branch head; the hosted required checks on the pushed head are the gate for this fix.
