@@ -383,6 +383,28 @@ test('planted root-absolute-url: a root-absolute css url', () => {
   assertCodes(built(dir), ['root-absolute-url'], 'root-absolute css url');
 });
 
+test('planted root-absolute-url: a root-absolute css import written as a string', () => {
+  for (const statement of ['@import "/assets/planted.css";', "@import '/assets/planted.css' screen;"]) {
+    const dir = builtCopy();
+    edit(dir, 'assets/styles.css', css => `${statement}\n${css}`);
+    assertCodes(built(dir), ['root-absolute-url'], `root-absolute import ${statement}`);
+  }
+});
+
+test('planted root-absolute-url: a srcset whose second candidate is root-absolute', () => {
+  const dir = builtCopy();
+  edit(dir, 'index.html', html => html.replace('<main id="content">', '<main id="content"><img srcset="./assets/planted.png 1x, /assets/planted-2x.png 2x" alt="" />'));
+  assertCodes(built(dir), ['root-absolute-url'], 'root-absolute srcset candidate');
+});
+
+test('planted root-absolute-url: a meta refresh to a root-absolute url', () => {
+  for (const content of ['0;url=/', "0; URL='/docs/'", '5;/docs/']) {
+    const dir = builtCopy();
+    edit(dir, 'index.html', html => html.replace('</head>', `<meta http-equiv="refresh" content="${content}" /></head>`));
+    assertCodes(built(dir), ['root-absolute-url'], `root-absolute meta refresh ${content}`);
+  }
+});
+
 test('planted external-url: an http url in built css', () => {
   const dir = builtCopy();
   edit(dir, 'assets/styles.css', css => `${css}\n.planted { background: url(http://example.test/planted.png); }\n`);
@@ -666,6 +688,21 @@ test('accept transparent and currentColor in css produce no color-literal', () =
   const dir = sourceCopy();
   edit(dir, 'assets/styles.css', css => `${css}\n.ok { border-color: transparent; color: currentColor; background: none; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 20%, transparent); }\n`);
   assertCodes(checkSource(dir), [], 'transparent and currentColor');
+});
+
+test('accept relative css imports, srcset candidates and meta refresh targets produce no root-absolute-url', () => {
+  const dir = builtCopy();
+  edit(dir, 'assets/styles.css', css => `@import "./planted.css";\n@import url(./planted-2.css);\n${css}`);
+  edit(dir, 'index.html', html =>
+    html
+      .replace('<main id="content">', '<main id="content"><img srcset="./assets/a.png 1x, ../assets/b.png 2x, https://example.test/c.png 3x" alt="" />')
+      .replace('</head>', '<meta http-equiv="refresh" content="0; url=./docs/" /></head>')
+  );
+  assert.equal(
+    built(dir).filter(violation => violation.code === 'root-absolute-url').length,
+    0,
+    'relative and absolute-URL forms are not root-absolute'
+  );
 });
 
 test('accept the five allowed non-ascii characters produce no non-ascii violation', () => {

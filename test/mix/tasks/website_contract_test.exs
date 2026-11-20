@@ -18,7 +18,7 @@ defmodule Mix.Tasks.WebsiteContractTest do
   # renamed case must fail this wrapper too. Names are read from the contract's own `test('...')`
   # calls. This floor is the number of such calls when it was written; lowering it is the second key
   # a deletion needs.
-  @min_site_test_calls 93
+  @min_site_test_calls 97
 
   # Cases that exist only because of the picker or the dark theme carry the tag below in their name
   # (the SITE-02 fallback decision runs --test-name-pattern=theme-picker), so a pattern run needs a
@@ -39,7 +39,7 @@ defmodule Mix.Tasks.WebsiteContractTest do
     assert length(names) >= @min_site_test_calls,
            "#{@contract_file} has #{length(names)} test(...) calls, below the floor " <>
              "#{@min_site_test_calls}: a case was deleted or renamed. If that was intended, " <>
-             "lower @min_site_test_calls 93in #{@test_path}."
+             "lower @min_site_test_calls 97in #{@test_path}."
 
     assert length(names) == length(Enum.uniq(names)), "website contract case names must be unique"
     assert Enum.any?(names, &String.starts_with?(&1, "planted")), "no planted case found"

@@ -334,6 +334,22 @@ export function htmlTags(html) {
   return tags;
 }
 
+// The URL candidates of a srcset value: the first token of each comma-separated candidate. A srcset is
+// a list, so a check that reads only the start of the attribute sees the first candidate and no other.
+function srcsetUrls(value) {
+  return value
+    .split(',')
+    .map(candidate => candidate.trim().split(/\s+/)[0])
+    .filter(Boolean);
+}
+
+// The target of a <meta http-equiv="refresh" content="0;url=..."> value: after the delay, an optional
+// separator, an optional `url=` and an optional quote, as the HTML refresh parser reads it.
+function metaRefreshTarget(content) {
+  const match = /^\s*\d*\.?\d*\s*[;,]?\s*(?:url\s*=\s*)?(["']?)([^"']*)/i.exec(content);
+  return match ? match[2].trim() : '';
+}
+
 function headOf(html) {
   return /<head\b[^>]*>([\s\S]*?)<\/head>/i.exec(stripHtmlComments(html))?.[1] ?? '';
 }
@@ -635,6 +651,11 @@ function checkBuiltCss(distDir, cssFiles, violations) {
       const target = match[2].trim();
       if (/^\/(?!\/)/.test(target)) violations.push(violation('root-absolute-url', file, `url(${target}) is root-absolute and 404s under /scrypath/`));
     }
+    // @import written as a string has no url(); the url() form is covered above.
+    for (const match of bare.matchAll(/@import\s+(["'])([^"']*)\1/gi)) {
+      const target = match[2].trim();
+      if (/^\/(?!\/)/.test(target)) violations.push(violation('root-absolute-url', file, `@import "${target}" is root-absolute and 404s under /scrypath/`));
+    }
     for (const match of bare.matchAll(/(?:https?:)?\/\/[^\s)"';]+/gi)) {
       if (/^(?:https?:\/\/|\/\/[A-Za-z0-9])/.test(match[0])) violations.push(violation('external-url', file, `${match[0]} is an external URL in CSS`));
     }
@@ -753,7 +774,16 @@ function checkHtmlPages(distDir, htmlFiles, ctx, violations) {
     for (const tag of tags) {
       for (const name of ['href', 'src', 'srcset', 'poster', 'xlink:href']) {
         const value = tag.attrs[name];
-        if (value !== undefined && /^\s*\/(?!\/)/.test(value)) violations.push(violation('root-absolute-url', file, `<${tag.name} ${name}="${value}"> is root-absolute and 404s under /scrypath/`));
+        if (value === undefined) continue;
+        // Every srcset candidate counts, not only the first.
+        const candidates = name === 'srcset' ? srcsetUrls(value) : [value];
+        if (candidates.some(candidate => /^\s*\/(?!\/)/.test(candidate))) {
+          violations.push(violation('root-absolute-url', file, `<${tag.name} ${name}="${value}"> is root-absolute and 404s under /scrypath/`));
+        }
+      }
+      if (tag.name === 'meta' && tag.attrs['http-equiv']?.toLowerCase() === 'refresh') {
+        const target = metaRefreshTarget(tag.attrs.content ?? '');
+        if (/^\/(?!\/)/.test(target)) violations.push(violation('root-absolute-url', file, `<meta http-equiv="refresh" content="${tag.attrs.content}"> redirects to a root-absolute URL and 404s under /scrypath/`));
       }
       if (tag.attrs.src !== undefined && /^\s*(?:https?:)?\/\/[A-Za-z0-9]/i.test(tag.attrs.src)) {
         violations.push(violation('external-url', file, `<${tag.name} src="${tag.attrs.src}"> is an external URL`));
