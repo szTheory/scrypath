@@ -24,8 +24,8 @@
         <dd><code>Elixir 1.17+, OTP 26-28</code></dd>
       </div>
       <div>
-        <dt>Verify locally</dt>
-        <dd><code>mix verify.adopter</code></dd>
+        <dt>Check sync status</dt>
+        <dd><code>mix scrypath.status MyApp.Post</code></dd>
       </div>
     </dl>
   </div>
@@ -123,8 +123,8 @@ end
       <p class="persona-label">Operator / SRE</p>
       <h3>See when the index is stale, wedged, or drifting.</h3>
       <p>
-        Use <code>mix verify.adopter</code>, the example app, and the operator docs to tell the difference
-        between queue lag, search drift, and app-side mistakes.
+        Use <code>mix scrypath.status</code>, <code>mix scrypath.reconcile</code>, the example app, and the
+        operator docs to tell the difference between queue lag, search drift, and app-side mistakes.
       </p>
     </article>
     <article class="persona">
@@ -170,8 +170,8 @@ end
     <h2>Install, then verify locally.</h2>
   </div>
   <p>
-    Install the package, wire one schema, and run <code>mix verify.adopter</code> when you
-    want a quick confidence check. Use the Phoenix example when you want to see Meilisearch
+    Install the package, wire one schema, and run <code>mix scrypath.status</code> against it when you
+    want a quick look at sync visibility. Use the Phoenix example when you want to see Meilisearch
     and Oban involved before adopting the production path.
   </p>
 </section>
