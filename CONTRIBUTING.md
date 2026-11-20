@@ -257,8 +257,9 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates. Every 
 | ScrypathOps re-skin static contract | `scrypath_ops/test/scrypath_ops_web/reskin_static_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops brand assets, fonts and retired-identity gates move into a dedicated brand contract or scrypath_ops leaves this repository | One assertion edit when a brand asset, font or allowlisted glyph changes |
 | Mounted font delivery | `examples/scrypath_ecommerce/e2e/harness.spec.ts` | `ecommerce-mounted` | Delete if ops stops shipping self-hosted fonts | None unless font file names change |
 | ScrypathOps re-skin component contract | `scrypath_ops/test/scrypath_ops_web/reskin_component_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops component catalog contract replaces it in v1.47 or scrypath_ops leaves this repository | One assertion edit when a status word, confirm label or row-action rule changes |
+| Website static contract | `test/mix/tasks/website_contract_test.exs` (runs `website/scripts/site-contract.test.mjs`) | `core` and `repository-contracts` | Delete if the website leaves this repository or stops building from the pinned brand | None unless a brand asset or token role changes; otherwise one role-map or allowed-character edit |
 
-Budget used: 8 of 12.
+Budget used: 9 of 12.
 
 ### Exact-source cache acceptance probes
 
