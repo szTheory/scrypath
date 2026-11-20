@@ -628,7 +628,15 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
     assert failed_row =~ "Meilisearch last succeeded"
     assert failed_row =~ "Queue last succeeded"
-    refute failed_row =~ ~r/last succeeded<\/dt>\s*<dd>\s*—/
+
+    # Each retained label sits beside the retained time of its own source, not beside a bare or
+    # empty value (190 review WR-05; the old-label guard is the `last-succeeded` table row).
+    assert failed_row =~
+             ~r/Meilisearch last succeeded<\/dt>\s*<dd>\s*<span id="posture-time-retained-backend-[^"]+"/
+
+    assert failed_row =~
+             ~r/Queue last succeeded<\/dt>\s*<dd>\s*<span id="posture-time-retained-queue-[^"]+"/
+
     refute render(lv) =~ "Search health refreshed."
   end
 
