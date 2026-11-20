@@ -2312,3 +2312,118 @@ test("accept built CSS, vendor files and demo CSS stay outside the ops source sc
   assert.deepEqual(opsSourceFiles(files), [], "none of them is selected");
   assert.deepEqual(opsSourceFailures(dir, files), []);
 });
+
+// ---------------------------------------------------------------------------
+// Phase 191: the unthemed favicon has no consumer outside brand/ (CLEAN-05)
+// ---------------------------------------------------------------------------
+//
+// What this proves, in plain terms: no tracked or untracked-but-not-ignored file outside brand/,
+// .planning/ and the brand updater names the pinned unthemed favicon by path or holds its bytes. That
+// file draws two paths with no fill, so it renders black in every theme. Ops, the demo, the Hex docs
+// and the website all serve the light favicon under the name favicon.svg instead, which is why the
+// check compares bytes and not names. What it does not prove: what the built website serves (the website
+// static contract owns that output) or that upstream fixed the file; the tripwire in
+// test/mix/tasks/brand_pin_contract_test.exs fires when the pinned file changes. The path is joined
+// at runtime here and there, so neither guard spells what it forbids and no self-exemption is needed.
+
+const FAVICON_NEEDLE = ["icon/", "favicon.svg"].join("");
+const PINNED_UNTHEMED_FAVICON = `brand/assets/${FAVICON_NEEDLE}`;
+const LIGHT_FAVICON = "brand/assets/icon/favicon-light.svg";
+// Exactly these and no more. Not the deny-list's exempt set.
+const FAVICON_EXEMPT_PREFIXES = ["brand/", ".planning/"];
+const FAVICON_EXEMPT_PATHS = new Set(["dev/mix/tasks/brand/update.ex"]);
+
+/**
+ * Files outside the exempt paths that hold the pinned unthemed favicon's bytes (any name, any extension) or
+ * name its path in text. Compares size before reading bytes, skips binaries and files missing from the
+ * working tree, and reads no text file over MAX_SCAN_BYTES.
+ */
+function faviconConsumerFailures(root, files, pinnedBytes) {
+  const failures = [];
+  for (const relativePath of files) {
+    if (FAVICON_EXEMPT_PREFIXES.some((prefix) => relativePath.startsWith(prefix)) || FAVICON_EXEMPT_PATHS.has(relativePath)) continue;
+    const absolute = path.join(root, relativePath);
+    let stat;
+    try {
+      stat = fs.lstatSync(absolute);
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
+    if (!stat.isFile()) continue;
+    if (stat.size === pinnedBytes.length && fs.readFileSync(absolute).equals(pinnedBytes)) {
+      failures.push(`${relativePath} holds the same bytes as the pinned unthemed favicon`);
+      continue;
+    }
+    if (stat.size > MAX_SCAN_BYTES) continue;
+    const encoding = classifyFile(readHead(absolute, stat.size), relativePath);
+    if (encoding === "skip") continue;
+    if (decodeFile(fs.readFileSync(absolute), encoding).includes(FAVICON_NEEDLE)) {
+      failures.push(`${relativePath} names the pinned unthemed favicon path`);
+    }
+  }
+  return failures;
+}
+
+const pinnedUnthemedFavicon = () => fs.readFileSync(path.join(ROOT, PINNED_UNTHEMED_FAVICON));
+
+test("live favicon consumer scan finds nothing outside the exempt paths", () => {
+  const pinned = pinnedUnthemedFavicon();
+  assert.ok(pinned.length > 0, "the pinned unthemed favicon is not empty (an empty file would equal every empty file)");
+  assert.deepEqual(faviconConsumerFailures(ROOT, listRepoFiles(ROOT), pinned), []);
+});
+
+test("planted text reference to the unthemed favicon fails", () => {
+  const pinned = pinnedUnthemedFavicon();
+  // Each sub-case is its own file. The last three prove the exempt set is exactly brand/, .planning/
+  // and the one updater path: a lookalike prefix, a sibling of the updater and a nested planning name.
+  const planted = {
+    "docs/notes.md": `Use brand/assets/${FAVICON_NEEDLE} for the tab icon.\n`,
+    "lib/thing.ex": `defmodule Thing do\n  def icon, do: "${FAVICON_NEEDLE}"\nend\n`,
+    "brandish/notes.md": `${FAVICON_NEEDLE}\n`,
+    "dev/mix/tasks/brand/other.ex": `# ${FAVICON_NEEDLE}\n`,
+    "docs/.planning/notes.md": `${FAVICON_NEEDLE}\n`,
+  };
+  const dir = makeTree(planted);
+  const failures = faviconConsumerFailures(dir, listRepoFiles(dir), pinned);
+  for (const file of Object.keys(planted)) {
+    assert.ok(failures.includes(`${file} names the pinned unthemed favicon path`), `${file} is reported, got ${JSON.stringify(failures)}`);
+  }
+});
+
+test("planted renamed byte copy of the unthemed favicon fails", () => {
+  const pinned = pinnedUnthemedFavicon();
+  const planted = {
+    "priv/static/renamed.svg": pinned,
+    "assets/images/logo.png": pinned,
+    "other/dir/copy.dat": pinned,
+  };
+  const dir = makeTree(planted);
+  const failures = faviconConsumerFailures(dir, listRepoFiles(dir), pinned);
+  for (const file of Object.keys(planted)) {
+    assert.ok(failures.includes(`${file} holds the same bytes as the pinned unthemed favicon`), `${file} is reported, got ${JSON.stringify(failures)}`);
+  }
+  // One changed byte is a different file: a near copy is not a byte copy.
+  const changed = Buffer.from(pinned);
+  changed[changed.length - 1] ^= 1;
+  const near = makeTree({ "priv/static/near.svg": changed });
+  assert.deepEqual(faviconConsumerFailures(near, listRepoFiles(near), pinned), []);
+});
+
+test("accept the light favicon served under the name favicon.svg", () => {
+  const pinned = pinnedUnthemedFavicon();
+  const light = fs.readFileSync(path.join(ROOT, LIGHT_FAVICON));
+  assert.ok(!light.equals(pinned), "the light favicon is not the unthemed one");
+  const dir = makeTree({
+    "examples/scrypath_ecommerce/priv/static/favicon.svg": light,
+    "scrypath_ops/priv/static/favicon.svg": light,
+    "website/dist/favicon.svg": light,
+    "docs/notes.md": `The tab icon is ${LIGHT_FAVICON}.\n`,
+    // Exempt paths may hold the needle and the unthemed bytes.
+    "brand/BRAND.md": `${FAVICON_NEEDLE}\n`,
+    [PINNED_UNTHEMED_FAVICON]: pinned,
+    ".planning/phases/note.md": `${FAVICON_NEEDLE}\n`,
+    "dev/mix/tasks/brand/update.ex": `{"assets/${FAVICON_NEEDLE}", "icon"}\n`,
+  });
+  assert.deepEqual(faviconConsumerFailures(dir, listRepoFiles(dir), pinned), []);
+});

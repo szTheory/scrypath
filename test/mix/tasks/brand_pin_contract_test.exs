@@ -874,7 +874,70 @@ defmodule Mix.Tasks.BrandPinContractTest do
     end
   end
 
+  describe "unthemed favicon tripwire" do
+    # The pinned unthemed favicon draws two paths with classes and carries no style, no fill and no
+    # color-scheme rule, so it renders black in every theme. Consumers serve the light favicon under
+    # the name favicon.svg instead. This test fails on purpose on the `mix brand.update` that picks up
+    # an upstream fix: the workarounds listed in the message are then obsolete. It reads only brand/.
+    # The path is built from pieces so this file never spells what examples/scrypath_ecommerce/
+    # ui-tokens.test.mjs forbids outside brand/.
+    test "the pinned unthemed favicon still carries no style, fill, currentColor or color-scheme rule" do
+      markers = unthemed_favicon_path() |> File.read!() |> unthemed_markers()
+
+      assert markers == [], unthemed_fixed_message(markers)
+    end
+
+    test "a doctored copy of the pinned bytes is flagged for each marker and the bytes themselves are not" do
+      pinned = File.read!(unthemed_favicon_path())
+
+      assert unthemed_markers(pinned) == []
+
+      doctored = [
+        {"<style", "<style>.g{opacity:1}</style>"},
+        {"fill=", ~s(<g fill="#123456"></g>)},
+        {"fill:", ~s(<g style="fill:#123456"></g>)},
+        {"currentcolor", "<!-- currentColor -->"},
+        {"currentcolor", "<!-- CURRENTCOLOR -->"},
+        {"prefers-color-scheme", "<!-- Prefers-Color-Scheme -->"}
+      ]
+
+      for {marker, snippet} <- doctored do
+        copy = String.replace(pinned, "</svg>", snippet <> "</svg>")
+
+        assert copy != pinned, "the planted copy must differ from the pinned bytes"
+
+        assert unthemed_markers(copy) == [marker],
+               "the predicate must flag exactly #{inspect(marker)} for #{inspect(snippet)}"
+      end
+    end
+  end
+
   defp brand_entries(files), do: Enum.filter(files, &String.starts_with?(&1, "brand"))
+
+  # Markers that mean the unthemed favicon now themes itself, compared case-insensitively.
+  @unthemed_markers ["<style", "fill=", "fill:", "currentcolor", "prefers-color-scheme"]
+
+  defp unthemed_markers(svg) do
+    lowered = String.downcase(svg)
+    Enum.filter(@unthemed_markers, &String.contains?(lowered, &1))
+  end
+
+  defp unthemed_favicon_path do
+    Path.join([@root, "brand", "assets", "icon", "favicon" <> ".svg"])
+  end
+
+  defp unthemed_fixed_message(markers) do
+    """
+    The pinned unthemed favicon now carries #{inspect(markers)}, so upstream has fixed it and it
+    themes itself. The workarounds that exist only because it rendered black are obsolete. Remove:
+      - mix.exs: the favicon comment and the put_if_file(:favicon, ...) line
+      - test/release/package_metadata_test.exs: the favicon expectations
+      - scrypath_ops/test/scrypath_ops_web/reskin_static_contract_test.exs: the favicon mapping
+      - the demo storefront favicon and its byte-equality test (the pinned favicon consumers describe above)
+      - docs/releasing.md: the favicon sentence
+    Then delete this tripwire and the path-and-bytes scan in examples/scrypath_ecommerce/ui-tokens.test.mjs.
+    """
+  end
 
   defp read_pin!(root) do
     root |> Path.join("brand/brand.pin.json") |> File.read!() |> Jason.decode!()
