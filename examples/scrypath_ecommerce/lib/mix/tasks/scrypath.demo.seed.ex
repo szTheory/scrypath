@@ -192,7 +192,7 @@ defmodule Mix.Tasks.Scrypath.Demo.Seed do
 
     Saved searches: #{saved_search_count} examples
 
-    Open the storefront at / and OPSUI at /admin/search/ (Control Room).
+    Open the storefront at / and OPSUI at /admin/search/ (Control room).
     """)
   end
 

@@ -52,7 +52,7 @@ const DARK_THEME_MODES = THEME_MODES.filter(
 );
 
 const SHELL_SURFACES: ShellSurface[] = [
-  { name: "Control Room", prepare: gotoControlRoom },
+  { name: "Control room", prepare: gotoControlRoom },
   { name: "Search health", prepare: gotoSearchHealth },
   { name: "Failed Sync", prepare: gotoFailedSync },
   { name: "Sync/Drift", prepare: gotoSyncDrift },

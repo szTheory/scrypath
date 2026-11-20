@@ -11,11 +11,11 @@ ScrypathOps is an optional Phoenix and LiveView interface for inspecting search 
 
 ## Navigation
 
-The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Help lives at the bottom of the sidebar and explains the installed UI. This repository guide provides developer and integration context. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control Room. Old `/ops/posture` links redirect to Search health, old `/ops/sync-drift` links redirect to Sync and index (keeping `?schema=`), and old `/ops/playbooks` links open Manage saved searches in Search (`/ops/search?saved=manage`).
+The default mount is `/ops`; host apps can choose another prefix. The demo uses `/admin/search`. Help lives at the bottom of the sidebar and explains the installed UI. This repository guide provides developer and integration context. Navigation is a flat list; Search is the primary exploration path, with health and recovery available alongside it. The landing page remains Control room. Old `/ops/posture` links redirect to Search health, old `/ops/sync-drift` links redirect to Sync and index (keeping `?schema=`), and old `/ops/playbooks` links open Manage saved searches in Search (`/ops/search?saved=manage`).
 
 | Destination | Default route | Purpose |
 | --- | --- | --- |
-| Control Room | `/ops/` | Search entry point and current sync summary. |
+| Control room | `/ops/` | Search entry point and current sync summary. |
 | Search | `/ops/search` | Query configured schemas and inspect attributed results. |
 | Search health | `/ops/health` | Inspect Meilisearch tasks and background sync by schema. |
 | Failed sync work | `/ops/failed-sync` | Review failures and scheduled retries; retry eligible operations. |

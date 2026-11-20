@@ -13,11 +13,15 @@ defmodule ScrypathOps.Test.CopySurfaces do
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
 
+  alias ScrypathOps.Test.CopyStubs.ControlRoom, as: ControlRoomStubs
   alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
+  alias ScrypathOps.Test.OpsPostA
 
   @endpoint ScrypathOpsWeb.Endpoint
 
   @anchors %{
+    "control_room.default" => "Search backend not configured.",
+    "sync_drift.default" => ~s(aria-label="Related search views"),
     "sync_drift.settings_missing_field" => ~s(data-missing="true")
   }
 
@@ -35,6 +39,23 @@ defmodule ScrypathOps.Test.CopySurfaces do
   and the endpoint are the test's own).
   """
   def render(id, ctx)
+
+  # /ops with one allowlisted schema and no configured backend (the first Control room test).
+  def render("control_room.default", %{conn: conn}) do
+    ControlRoomStubs.with_env(fn ->
+      Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+      {:ok, _lv, html} = live(conn, "/ops")
+      html
+    end)
+  end
+
+  # /ops/sync-and-index as it loads, after its settings and sync checks finish.
+  def render("sync_drift.default", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      {:ok, lv, _html} = live(conn, "/ops/sync-and-index")
+      render_async(lv)
+    end)
+  end
 
   # /ops/sync-and-index when the live index lacks a field the schema declares as searchable.
   def render("sync_drift.settings_missing_field", %{conn: conn}) do

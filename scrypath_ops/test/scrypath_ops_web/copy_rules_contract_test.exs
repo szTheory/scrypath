@@ -76,6 +76,41 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert CopyRules.scan_source(row, outside, ["docs/planted.md"]) == []
     end
 
+    test "the whole-tree scope reads any file, and exempt paths are never scanned", %{
+      rules: rules,
+      paths: paths
+    } do
+      row = row!(rules, "control-room-casing")
+      path = "docs/planted.md"
+
+      planted = temp_tree!(%{path => "See the " <> title_case_label() <> " page.\n"})
+      clean = temp_tree!(%{path => "See the Control room page.\n"})
+
+      assert [%{kind: :forbidden, row: "control-room-casing", path: ^path, text: text}] =
+               CopyRules.scan_source(row, planted, [path])
+
+      assert text == title_case_label()
+      assert CopyRules.scan_source(row, clean, [path]) == []
+
+      refute Enum.any?(paths, &String.starts_with?(&1, ".planning/"))
+      refute Enum.any?(paths, &String.starts_with?(&1, "brand/"))
+      refute "scrypath_ops/test/support/copy_rules.json" in paths
+      assert "GLOSSARY.md" in paths
+    end
+
+    test "a rendered surface with the title-case label fails the casing row", %{rules: rules} do
+      row = row!(rules, "control-room-casing")
+      surface = "control_room.default"
+
+      assert [
+               %{kind: :required_missing, text: "Control room"},
+               %{kind: :forbidden, text: text}
+             ] = CopyRules.evaluate_surface(row, surface, "<h1>" <> title_case_label() <> "</h1>")
+
+      assert text == title_case_label()
+      assert CopyRules.evaluate_surface(row, surface, "<h1>Control room</h1>") == []
+    end
+
     test "forbidden text in a rendered surface", %{rules: rules} do
       row = row!(rules, "searchable-observation-only")
       surface = "sync_drift.settings_missing_field"
@@ -279,6 +314,7 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
 
   # Built by concatenation: this file must not spell the phrase the table forbids.
   defp not_searchable, do: "Not " <> "searchable"
+  defp title_case_label, do: "Control " <> "Room"
 
   defp row!(rules, id), do: Enum.find(rules["rules"], &(&1["id"] == id)) || flunk("no row #{id}")
 

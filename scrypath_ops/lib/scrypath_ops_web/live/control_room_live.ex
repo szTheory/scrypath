@@ -14,7 +14,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:page_title, "Control Room")
+      |> assign(:page_title, "Control room")
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> assign(:refresh_issue, nil)
@@ -83,7 +83,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       <div class="space-y-ops-page-gap">
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
-            title="Control Room"
+            title="Control room"
             subtitle="Try a search or check how your indexes are syncing."
           />
           <.ops_refresh_control

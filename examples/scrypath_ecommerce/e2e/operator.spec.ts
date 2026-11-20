@@ -61,7 +61,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Control room" })).toBeVisible();
   const healthRoute = page.getByRole("link", { name: "View search health", exact: true });
   await expect(healthRoute).toHaveCount(1);
   await expect(healthRoute).toBeVisible();

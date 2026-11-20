@@ -4,6 +4,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOps.Test.CopyStubs.ControlRoom, as: ControlRoomStubs
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
 
@@ -30,27 +31,8 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
   end
 
   setup do
-    keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
-      meilisearch_tasks oban oban_queue oban_inspector oban_jobs control_room_client_state
-    )a
-
-    previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
-    prev_auth_mode = System.get_env("OPSUI_AUTH_MODE")
-    Application.put_env(:scrypath_ops, :schema_allowlist, [])
-    Application.delete_env(:scrypath_ops, :backend)
-    System.put_env("OPSUI_AUTH_MODE", "sigra")
-
-    on_exit(fn ->
-      Enum.each(previous, fn
-        {k, nil} -> Application.delete_env(:scrypath_ops, k)
-        {k, v} -> Application.put_env(:scrypath_ops, k, v)
-      end)
-
-      if is_nil(prev_auth_mode),
-        do: System.delete_env("OPSUI_AUTH_MODE"),
-        else: System.put_env("OPSUI_AUTH_MODE", prev_auth_mode)
-    end)
+    previous = ControlRoomStubs.put_env()
+    on_exit(fn -> ControlRoomStubs.restore_env(previous) end)
 
     :ok
   end
@@ -61,7 +43,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
     {:ok, lv, html} = live(conn, ~p"/ops")
 
-    assert html =~ "Control Room"
+    assert html =~ "Control room"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
     assert has_element?(lv, "[data-testid='control-room-missing-backend']")
     assert html =~ "Search backend not configured."

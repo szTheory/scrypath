@@ -179,7 +179,7 @@ defmodule ScrypathOps.Posture do
   # ── row status, ranking and verdict (Phase 187, LD-8 and LD-10) ─────────────
   #
   # One place decides what a Search health row says about itself, how rows rank, and what the
-  # verdicts above them say, so the Control Room and Search health can never disagree.
+  # verdicts above them say, so the Control room and Search health can never disagree.
 
   @typedoc """
   The most urgent thing a row can say: a sync status, a condition word for a row nobody could

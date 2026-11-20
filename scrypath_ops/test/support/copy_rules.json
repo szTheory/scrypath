@@ -40,6 +40,20 @@
       "allowed_in": [],
       "source_scope": [],
       "surfaces": ["sync_drift.settings_missing_field"]
+    },
+    {
+      "id": "control-room-casing",
+      "rule": "The label is Control room in sentence case, never in title case.",
+      "glossary": "Control room",
+      "forbidden": [
+        {"text": "Control Room", "match": "literal", "case": "sensitive"}
+      ],
+      "required": [
+        {"text": "Control room", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": ["**"],
+      "surfaces": ["control_room.default", "sync_drift.default"]
     }
   ]
 }

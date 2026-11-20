@@ -20,7 +20,7 @@ Use Hanken Grotesk for interface copy and Sometype Mono for schema and index nam
 
 The shared shell owns the top-level page rhythm with `space-y-4`; the 24px `space-y-ops-page-gap` role is used for deliberate group spacing inside selected surfaces. Keep the shell's direct children free of extra top margins. Use the responsive native controls and component spacing already defined in CSS; at the compact shell breakpoint, navigation and theme controls keep their named, reachable targets.
 
-Navigation is a flat list with Search directly after Control Room. The six task routes have distinct purposes: Control Room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. A quiet Help destination at the bottom of navigation explains these tasks inside the installed app. Existing task routes and Saved search APIs/JSON remain unchanged; Help adds `/help` under the configured mount.
+Navigation is a flat list with Search directly after Control room. The six task routes have distinct purposes: Control room gives a concise sync summary and entry points; Search puts schema, query and result limit together before attributed results; Search health prioritizes exceptions and separates Meilisearch tasks from background jobs; Failed sync work shows failed and retrying operations with eligible actions; Sync and drift loads read-only settings automatically and shows actual declared/live differences, with operation-specific recovery only when applicable; Saved searches separates saved inputs, a loaded or imported draft, and each run's results. A quiet Help destination at the bottom of navigation explains these tasks inside the installed app. Existing task routes and Saved search APIs/JSON remain unchanged; Help adds `/help` under the configured mount.
 
 ## Elevation & Depth
 
@@ -38,7 +38,7 @@ Use visible native radio rows for schema choices and plain context for a single 
 
 | Surface | Demonstrated grouping |
 | --- | --- |
-| Control Room | A short problem/scope/action summary, followed by Try a search and Check sync and settings. |
+| Control room | A short problem/scope/action summary, followed by Try a search and Check sync and settings. |
 | Search health | A cause-specific summary and worst-first schemas. Positive work counts stay visible; empty sources use one neutral statement. Unknown and retained evidence remain explicit. |
 | Failed sync work | Native schema selection, compact cohort summary, source-qualified IDs, error and eligible Retry. Retry queued is distinct from completion; delete confirmation remains protected. |
 | Sync and drift | Header Refresh checks sync and settings. Settings load automatically with bounded generation-scoped reads; real differences use declared/live columns. Correlated document/retry sections appear only with applicable evidence; promotion remains advanced and confirmed. |

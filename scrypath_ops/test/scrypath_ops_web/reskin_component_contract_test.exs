@@ -423,7 +423,7 @@ defmodule ScrypathOpsWeb.ReskinComponentContractTest do
       refute File.read!(@ops_ui) =~ "bg-primary"
     end
 
-    # Control Room (1 with a verdict, proved in its own LiveView test) and Search (1) are the
+    # Control room (1 with a verdict, proved in its own LiveView test) and Search (1) are the
     # only pages with a Plum button; every other page has none. `/ops` here runs on the default
     # config, which shows no verdict, so it has none either.
     for {path, expected} <- [

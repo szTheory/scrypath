@@ -2436,7 +2436,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
       <nav class="ops-sync-related" aria-label="Related search views">
         <.link navigate={@mount_path} class="ops-text-action">
-          Return to Control Room
+          Return to Control room
         </.link>
         <.link
           :if={@selected_schema}

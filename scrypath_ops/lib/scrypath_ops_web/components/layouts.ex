@@ -317,7 +317,7 @@ defmodule ScrypathOpsWeb.Layouts do
       %{
         label: nil,
         items: [
-          %{path: mount_path, label: "Control Room", title: "Control Room"}
+          %{path: mount_path, label: "Control room", title: "Control room"}
           | mount_path
             |> ScrypathOpsWeb.Nav.primary()
             |> Enum.reject(&(&1[:group] == :support))
