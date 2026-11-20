@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v1.46
 milestone_name: Brand foundation and re-skin
 status: Awaiting next milestone
-stopped_at: v1.46 shipped and archived; Phases 189 and 190 deferred to v1.47; v1.47 prep next
+stopped_at: v1.46 shipped, archived and released (Hex 0.3.19); v1.47 prepared; ready for /gsd-new-milestone v1.47
 last_updated: "2026-11-20T03:26:25.315Z"
-last_activity: 2026-11-19
-last_activity_desc: Milestone v1.46 completed and archived
+last_activity: 2026-11-20
+last_activity_desc: v1.46 closed out; Hex 0.3.19 released; v1.47 prepared
 state_head: 2f767884c6393b0f8cc49cc797966894f6e34cfe
 progress:
   total_phases: 3
@@ -54,8 +54,7 @@ None.
 
 - `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed with no exception.
 - The retained UI preview (`.planning/UI-PREVIEW.json`) records pre-squash commits; refresh to current main before the next visible UI work.
-- Before the next Hex release, switch the README header URLs to commit-pinned `raw.githubusercontent.com` URLs (hex.pm cannot load `brand/` images; see `docs/releasing.md`).
-- Release Please fails on main pushes: "GitHub Actions is not permitted to create or approve pull requests" (repository setting, needs the maintainer).
+- Open Dependabot PRs: #132 (relax a hardcoded SHA in `workflow_wiring_test`) and #129 (re-run after the re-skin).
 - Unrelated dirty `.planning/config.json` and `.planning/state.json` edits stay out of owned commits.
 
 ## Carried forward from v1.45
@@ -75,9 +74,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-19
-Stopped at: v1.46 shipped and archived on main
-Acting next: prepare v1.47 upstream and update `reference/ROLLING-ROADMAP.md`; then the maintainer chooses.
+Last session: 2026-11-20
+Stopped at: v1.46 closed out on `main` (CI green), Hex 0.3.19 released, v1.47 prepared in `MILESTONE-CONTEXT.md`
+Acting next: `/gsd-new-milestone v1.47` (it consumes `.planning/MILESTONE-CONTEXT.md`); first chore is the `ecommerce-path` CI skip (see `reference/CI-EFFICIENCY.md` finding 2).
 
 ## Operator Next Steps
 

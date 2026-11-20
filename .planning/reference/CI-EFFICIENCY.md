@@ -45,4 +45,5 @@ Bot PR serialization (2026-11-20): four Dependabot PRs merged one at a time beca
 
 ## Release (CD) timings
 
-- 0.3.19: release PR created by Release Please at 2026-11-20 13:22 UTC after the repository setting was enabled; hand-edited changelog; CI triggered by `gh pr update-branch`. Publish timings: to be recorded after the merge.
+- 0.3.19 (2026-11-20): Release Please opened PR #146 at 13:22 UTC after the repository setting was enabled (the `release-please` job takes about 23 s); hand-edited changelog pushed to the release branch; CI triggered by `gh pr update-branch` (no close-and-reopen needed); the PR's required checks took about 19 minutes (`ecommerce-mounted` and `repository-contracts` last); merge at 13:38; `publish-hex` took 192 s; the package was live on hex.pm at 13:41:44 UTC and the Verify Published Release run succeeded. Biggest avoidable wait: the 19-minute PR CI for a release that changed only version, manifest and changelog (finding 2 would not cover this one, because `mix.exs` changed; a release-PR-specific skip of the browser lanes is a candidate, but the lanes guard the published package, so measure before changing).
+- First real `act` run: not yet done; record it here.
