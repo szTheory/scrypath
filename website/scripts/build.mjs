@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { existsSync, realpathSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile, cp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -217,14 +218,51 @@ function isInside(child, parent) {
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-// The build removes and recreates its output directory, so refuse anything that is, or contains, a
-// directory the build reads from or a location nobody means to wipe.
+// The absolute path of `target` with symlinks resolved in the part that exists, so a link cannot hide
+// a protected directory from the comparison below.
+function realPathOf(target) {
+  const resolved = path.resolve(target);
+  let existing = resolved;
+  const rest = [];
+  while (!existsSync(existing)) {
+    const parent = path.dirname(existing);
+    if (parent === existing) {
+      return resolved;
+    }
+    rest.unshift(path.basename(existing));
+    existing = parent;
+  }
+  return path.join(realpathSync(existing), ...rest);
+}
+
+// The build removes and recreates its output directory, so the output may not be a directory the build
+// reads from or one that holds the project, in either direction:
+//   - it may not be, or contain, the repository, the website directory, the source or brand directory,
+//     the home directory or the filesystem root (the default website/dist is inside the website
+//     directory, which is fine);
+//   - it may not be, or sit inside, an input directory: the sources, the brand files (the one given and
+//     the repository's own, which the pinned assets are always read from), the pinned fonts, the build
+//     scripts, node_modules or .git.
 function assertSafeOut(dir) {
-  const resolved = path.resolve(dir);
-  const protectedPaths = [repoRoot, websiteDir, srcDir, brandDir, os.homedir(), path.parse(resolved).root];
-  for (const protectedPath of protectedPaths) {
-    if (isInside(protectedPath, resolved)) {
-      throw new Error(`Refusing to build into ${resolved}: it is or contains ${protectedPath}`);
+  const out = realPathOf(dir);
+  const containers = [repoRoot, websiteDir, srcDir, brandDir, os.homedir(), path.parse(out).root];
+  for (const protectedPath of containers.map(realPathOf)) {
+    if (isInside(protectedPath, out)) {
+      throw new Error(`Refusing to build into ${out}: it is or contains ${protectedPath}`);
+    }
+  }
+  const inputs = [
+    srcDir,
+    brandDir,
+    path.join(repoRoot, 'brand'),
+    path.join(repoRoot, 'scrypath_ops'),
+    path.join(websiteDir, 'scripts'),
+    path.join(websiteDir, 'node_modules'),
+    path.join(repoRoot, '.git')
+  ];
+  for (const protectedPath of inputs.map(realPathOf)) {
+    if (isInside(out, protectedPath)) {
+      throw new Error(`Refusing to build into ${out}: it is or is inside ${protectedPath}`);
     }
   }
 }

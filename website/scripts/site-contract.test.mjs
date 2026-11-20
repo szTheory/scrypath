@@ -588,6 +588,65 @@ test('planted build: an output directory that contains the brand directory is re
   assert.equal(existsSync(path.join(brand, 'tokens.json')), true, 'the brand copy must survive');
 });
 
+// The build deletes its output directory before it writes, so the guard has to refuse an output that
+// sits INSIDE a directory the build reads or that holds the project, not only one that contains it.
+// Each case is safe by construction: it either works on a scratch copy of the inputs or names a path
+// that does not exist yet inside the real directory, so a broken guard deletes nothing that matters
+// and the case removes whatever it created.
+function assertRefusedOut({ out, src, brand }, expectation, label) {
+  const result = runBuild({ out, src, brand });
+  assert.notEqual(result.status, 0, `${label}: the build must refuse this output directory`);
+  assert.match(result.stderr, /Refusing to build into/, label);
+  assert.match(result.stderr, expectation, label);
+  assert.equal(existsSync(out), false, `${label}: a refused build must not create its output`);
+}
+
+test('planted build: an output directory inside the source directory is refused', () => {
+  const src = path.join(tempDir('scrypath-guard-src-'), 'src');
+  cpSync(golden().src, src, { recursive: true });
+  const out = path.join(src, 'planted-out');
+  assertRefusedOut({ out, src }, /is or is inside/, 'inside the source directory');
+  assert.equal(existsSync(path.join(src, 'layout.html')), true, 'the source copy must survive');
+});
+
+test('planted build: an output directory that is a subdirectory of the source directory is refused', () => {
+  const src = path.join(tempDir('scrypath-guard-pages-'), 'src');
+  cpSync(golden().src, src, { recursive: true });
+  const result = runBuild({ out: path.join(src, 'pages'), src });
+  assert.notEqual(result.status, 0, 'the build must refuse an output that is a source subdirectory');
+  assert.match(result.stderr, /Refusing to build into/);
+  assert.equal(existsSync(path.join(src, 'pages', 'index.html')), true, 'the source pages must survive');
+});
+
+test('planted build: an output directory inside the brand directory is refused', () => {
+  const brand = brandCopy();
+  const out = path.join(brand, 'planted-out');
+  assertRefusedOut({ out, src: golden().src, brand }, /is or is inside/, 'inside the brand directory');
+  assert.equal(existsSync(path.join(brand, 'tokens.json')), true, 'the brand copy must survive');
+});
+
+test('planted build: an output directory inside the real pinned-source and script directories is refused', () => {
+  for (const relative of ['brand/assets/planted-out', 'scrypath_ops/priv/static/assets/fonts/planted-out', 'website/scripts/planted-out']) {
+    const out = path.join(repoRoot, relative);
+    try {
+      assertRefusedOut({ out, src: golden().src }, /is or is inside/, relative);
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  }
+});
+
+test('planted build: an output directory reached through a symlink into the source directory is refused', () => {
+  const scratch = tempDir('scrypath-guard-link-');
+  const src = path.join(scratch, 'src');
+  cpSync(golden().src, src, { recursive: true });
+  symlinkSync(src, path.join(scratch, 'link'), 'dir');
+  const result = runBuild({ out: path.join(scratch, 'link', 'pages'), src });
+  assert.notEqual(result.status, 0, 'a symlink must not hide the source directory from the guard');
+  assert.match(result.stderr, /Refusing to build into/);
+  assert.equal(existsSync(path.join(src, 'pages', 'index.html')), true, 'the source pages must survive');
+});
+
 // ---------------------------------------------------------------------------
 // Accept: legitimate input passes, helpers match the brand's published numbers
 // ---------------------------------------------------------------------------
