@@ -20,21 +20,21 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-20.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (wording) next, then 191. Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (wording) built and verified, PR pending; then 191. Roadmap: [ROADMAP](ROADMAP.md).
 
 ## Current Position
 
-Phase: 190 (Wording that does not need the catalog), not started
-Plan: — (2 expected)
-Status: Phase 189 merged and deployed; smoke green; planning Phase 190
-Last activity: 2026-11-20 — Phase 189 merged (PR #152), deploy and smoke green, live site in the new identity
+Phase: 190 (Wording that does not need the catalog), 2 of 2 plans executed and verified; PR pending
+Plan: 190-02 complete
+Status: awaiting required checks and the exact-head `ci.yml` dispatch, then squash merge; Phase 191 next
+Last activity: 2026-11-20 — Phase 190 executed, reviewed, fixed and verified
 
-Progress: [███████░░░] 75% (2 of 4 phases merged)
+Progress: [███████░░░] 75% (2 of 4 phases merged; 190 built)
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
-**v1.47 plans:** 4 done (188.1: 1, 189: 3); 4 expected (190: 2, 191: 2).
+**v1.47 plans:** 6 done (188.1: 1, 189: 3, 190: 2); 2 expected (191: 2).
 
 ## Accumulated Context
 

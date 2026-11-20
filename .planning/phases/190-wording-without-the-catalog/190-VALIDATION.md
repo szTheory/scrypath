@@ -1,9 +1,9 @@
 ---
 phase: "190"
 slug: "wording-without-the-catalog"
-status: draft
+status: validated
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: "2026-11-20"
 ---
 
@@ -32,16 +32,16 @@ created: "2026-11-20"
 
 | Criterion | Requirement | Automated check | Lane | Status |
 |-----------|-------------|-----------------|------|--------|
-| SC1 glossary block and wording rules proved on the table's surfaces; pinned strings unchanged | COPY-01 | `copy_rules_contract_test.exs` rows; in-place LiveView assertions; `git diff` check of the pinned `operator.spec.ts` strings | `ops-ui` (required), `ecommerce-mounted` | ⬜ pending |
-| SC2 "Control room" sentence case; whole-tree scan clean; four exact-match Playwright sites updated; `aria-current` and title proved | COPY-02 | row `control-room-casing`; `ops_shell_contract_test.exs`; `playwright test --list`; the two node tests | `ops-ui` | ⬜ pending |
-| SC3 the table scans and renders; planted failures fail; missing field fails; refutes repaired; path regex and wiring test cover the scanned paths; ledger consistent | COPY-03 | planted-failure tests; behavioural regex test and `source_scope` check in `workflow_wiring_test.exs` | `ops-ui`, `core` | ⬜ pending |
-| SC4 Cancel focused on open; `ops_modal` default and destructive dialogs pinned; `page_controller_test.exs` passes; `ecommerce-e2e` green on the exact head | COPY-04 | `operator.spec.ts` line; ExUnit pins; local demo test; `gh workflow run ci.yml --ref <branch>` | `ecommerce-mounted` (required); hosted dispatch (advisory) | ⬜ pending |
-| GATE-02 | GATE-02 | whole CI Node step locally (`app.css` changed); one `mix verify.repository_contracts` per SHA; squash title `chore(...)`; ledger within 12 | `repository-contracts` | ⬜ pending |
+| SC1 glossary block and wording rules proved on the table's surfaces; pinned strings unchanged | COPY-01 | `copy_rules_contract_test.exs` rows; in-place LiveView assertions; `git diff` check of the pinned `operator.spec.ts` strings | `ops-ui` (required), `ecommerce-mounted` | ✅ local green; hosted on the exact head pending by design |
+| SC2 "Control room" sentence case; whole-tree scan clean; four exact-match Playwright sites updated; `aria-current` and title proved | COPY-02 | row `control-room-casing`; `ops_shell_contract_test.exs`; `playwright test --list`; the two node tests | `ops-ui` | ✅ local green; hosted on the exact head pending by design |
+| SC3 the table scans and renders; planted failures fail; missing field fails; refutes repaired; path regex and wiring test cover the scanned paths; ledger consistent | COPY-03 | planted-failure tests; behavioural regex test and `source_scope` check in `workflow_wiring_test.exs` | `ops-ui`, `core` | ✅ local green; hosted on the exact head pending by design |
+| SC4 Cancel focused on open; `ops_modal` default and destructive dialogs pinned; `page_controller_test.exs` passes; `ecommerce-e2e` green on the exact head | COPY-04 | `operator.spec.ts` line; ExUnit pins; local demo test; `gh workflow run ci.yml --ref <branch>` | `ecommerce-mounted` (required); hosted dispatch (advisory) | ✅ local green; hosted on the exact head pending by design |
+| GATE-02 | GATE-02 | whole CI Node step locally (`app.css` changed); one `mix verify.repository_contracts` per SHA; squash title `chore(...)`; ledger within 12 | `repository-contracts` | ✅ local green; hosted on the exact head pending by design |
 
 ## Wave 0 Requirements
 
-- [ ] `scrypath_ops/test/support/copy_rules.json`, `copy_rules.ex`, `scrypath_ops/test/scrypath_ops_web/copy_rules_contract_test.exs`
-- [ ] Shared fixture helpers for the registered surfaces (extract from the LiveView tests, do not copy)
+- [x] `scrypath_ops/test/support/copy_rules.json`, `copy_rules.ex`, `scrypath_ops/test/scrypath_ops_web/copy_rules_contract_test.exs`
+- [x] Shared fixture helpers for the registered surfaces (extract from the LiveView tests, do not copy)
 - [x] Framework install: none (`Jason`, `LazyHTML`, `Phoenix.LiveViewTest` already present)
 
 ## Manual-Only Verifications
