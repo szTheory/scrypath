@@ -100,6 +100,23 @@ defmodule ScrypathOps.Test.CopyStubs.SyncDrift do
   def state_name, do: @state
 
   @doc """
+  Switches the stub environment to Oban background sync with the given jobs in the queue. An
+  empty list is a queue that was observed and holds nothing. `restore_env/1` undoes it.
+  """
+  def put_oban_env(jobs \\ []) do
+    Application.put_env(:scrypath_ops, :sync_mode, :oban)
+    Application.put_env(:scrypath_ops, :oban, Oban)
+    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
+    Application.put_env(:scrypath_ops, :oban_jobs, jobs)
+  end
+
+  @doc "One job waiting in the queue and one scheduled to retry."
+  def pending_and_retrying_jobs do
+    job = %{id: 1, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
+    [job, %{job | id: 2, state: "retryable"}]
+  end
+
+  @doc """
   Puts the allowlist and Meilisearch environment the Sync and index tests use and returns the
   previous values for `restore_env/1`.
   """

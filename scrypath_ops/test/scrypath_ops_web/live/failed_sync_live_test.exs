@@ -6,163 +6,19 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOps.Test.CopyStubs.FailedSync, as: FailedSyncStubs
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
-
-  defmodule FailedSyncFakeClient do
-    # Scoped like Meilisearch: only tasks for the requested index come back.
-    def tasks(filters, config) do
-      uids = Keyword.get(filters, :index_uids, [])
-      failing = Application.get_env(:scrypath_ops, :failing_index_uids, [])
-
-      cond do
-        Enum.any?(uids, &(&1 in failing)) ->
-          {:error, :backend_unavailable}
-
-        true ->
-          case Keyword.get(config, :meilisearch_tasks, []) do
-            {:error, reason} ->
-              {:error, reason}
-
-            results ->
-              {:ok, %{results: Enum.filter(results, &(Map.get(&1, "indexUid") in uids))}}
-          end
-      end
-    end
-  end
-
-  defmodule FailedSyncObanInspector do
-    # Scoped like the real inspector: only jobs whose args name this schema.
-    def list_jobs(schema_module, config) do
-      schema = Atom.to_string(schema_module)
-
-      jobs =
-        config
-        |> Keyword.get(:oban_jobs, [])
-        |> Enum.filter(fn job ->
-          Map.get(job.args, "schema", "Elixir.ScrypathOps.Test.OpsPostA") == schema
-        end)
-
-      {:ok, jobs}
-    end
-  end
-
-  defmodule RecordingOban do
-    def insert(changeset) do
-      Agent.update(:failed_sync_insert_counter, &(&1 + 1))
-      job = Ecto.Changeset.apply_changes(changeset)
-      {:ok, %{job | id: 991, state: "available"}}
-    end
-  end
 
   defmodule FailingOban do
     # An enqueue that fails with the kind of term a real queue returns: a map holding atoms.
     def insert(_changeset), do: {:error, %{reason: :timeout, meta: %{}}}
   end
 
-  defmodule Elixir.Oban.Job do
-    defstruct [:id, :worker, :queue, :state, :attempt, :max_attempts, :args]
-
-    def new(args, opts) do
-      %Ecto.Changeset{
-        data: %__MODULE__{
-          args: args,
-          worker: Keyword.fetch!(opts, :worker),
-          queue: Keyword.fetch!(opts, :queue),
-          max_attempts: Keyword.fetch!(opts, :max_attempts),
-          state: "available",
-          attempt: 0
-        },
-        changes: %{},
-        errors: [],
-        valid?: true,
-        action: nil,
-        types: %{},
-        params: nil
-      }
-    end
-  end
-
   setup do
-    start_supervised!(%{
-      id: :failed_sync_insert_counter,
-      start: {Agent, :start_link, [fn -> 0 end, [name: :failed_sync_insert_counter]]}
-    })
-
-    keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
-      meilisearch_tasks oban oban_queue oban_inspector oban_jobs failing_index_uids
-    )a
-
-    previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
-    prev_sigra = Application.get_env(:scrypath_ops, :sigra)
-    prev_opsui_auth_mode = System.get_env("OPSUI_AUTH_MODE")
-
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
-    Application.put_env(:scrypath_ops, :sync_mode, :oban)
-    Application.put_env(:scrypath_ops, :index_prefix, "fsv")
-    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
-    Application.put_env(:scrypath_ops, :meilisearch_client, FailedSyncFakeClient)
-
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
-      %{
-        "uid" => 401,
-        "status" => "failed",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "fsv_ops_post_a",
-        "error" => %{"message" => "index missing"}
-      }
-    ])
-
-    Application.put_env(:scrypath_ops, :oban, RecordingOban)
-    Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
-    Application.put_env(:scrypath_ops, :oban_inspector, FailedSyncObanInspector)
-
-    Application.put_env(:scrypath_ops, :sigra,
-      sudo_confirm_path: "/sudo/confirm",
-      sudo_window: 300
-    )
-
-    System.put_env("OPSUI_AUTH_MODE", "sigra")
-
-    Application.put_env(:scrypath_ops, :oban_jobs, [
-      %{
-        id: 501,
-        state: "retryable",
-        worker: "Scrypath.Oban.UpsertWorker",
-        queue: "search_sync",
-        args: %{
-          "operation" => "upsert",
-          "repo" => "Elixir.ScrypathOps.Repo",
-          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
-          "backend" => "Elixir.Scrypath.Meilisearch",
-          "index" => "fsv_ops_post_a",
-          "document_count" => 1,
-          "document_ids" => [1],
-          "documents" => [
-            %{"id" => 1, "data" => %{"title" => "One"}, "source" => "fields"}
-          ]
-        }
-      }
-    ])
-
-    on_exit(fn ->
-      Enum.each(previous, fn
-        {k, nil} -> Application.delete_env(:scrypath_ops, k)
-        {k, v} -> Application.put_env(:scrypath_ops, k, v)
-      end)
-
-      if prev_sigra == nil do
-        Application.delete_env(:scrypath_ops, :sigra)
-      else
-        Application.put_env(:scrypath_ops, :sigra, prev_sigra)
-      end
-
-      if prev_opsui_auth_mode == nil,
-        do: System.delete_env("OPSUI_AUTH_MODE"),
-        else: System.put_env("OPSUI_AUTH_MODE", prev_opsui_auth_mode)
-    end)
+    previous = FailedSyncStubs.put_env()
+    start_supervised!(FailedSyncStubs.counter_spec())
+    on_exit(fn -> FailedSyncStubs.restore_env(previous) end)
 
     :ok
   end
@@ -192,17 +48,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     }
   end
 
-  defp sudo!(view) do
-    put_live_assigns(view,
-      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
-      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
-        user_id: "user_123",
-        active_org_id: "org_456",
-        impersonator_user_id: nil,
-        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
-      }
-    )
-  end
+  defp sudo!(view), do: FailedSyncStubs.sudo!(view)
 
   test "all schemas load by default with a schema label on every row", %{conn: conn} do
     Application.put_env(:scrypath_ops, :oban_jobs, [
@@ -701,7 +547,7 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
     repeated = render_click(view, "retry", %{"id" => "501"})
-    assert repeated =~ "A retry for job 501 is already accepted"
+    assert repeated =~ "A retry for job 501 is already queued"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
     render_change(view, "filter", %{"cause" => ["unknown"]})
@@ -926,14 +772,5 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
   defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()
 
-  defp put_live_assigns(view, assigns) do
-    :sys.replace_state(view.pid, fn state ->
-      socket =
-        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
-          Phoenix.Component.assign(socket, key, value)
-        end)
-
-      %{state | socket: socket}
-    end)
-  end
+  defp put_live_assigns(view, assigns), do: FailedSyncStubs.put_live_assigns(view, assigns)
 end

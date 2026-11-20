@@ -126,6 +126,158 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert CopyRules.evaluate_surface(clear, "x", "<span>Cleared</span> no status word") == []
     end
 
+    test "the pending rows catch their old forms and pass their new ones", %{rules: rules} do
+      aggregate = row!(rules, "pending-aggregate")
+      count = row!(rules, "pending-count")
+      caught_up = row!(rules, "pending-caught-up")
+      reason = row!(rules, "pending-promotion-reason")
+      path = "scrypath_ops/lib/planted.ex"
+
+      for old <- [
+            "1 job " <> "queued",
+            "3 jobs " <> "queued",
+            "Nothing " <> "queued, retrying or failed",
+            "wait for " <> "queued work to finish"
+          ] do
+        root = temp_tree!(%{path => ~s(label: "#{old}"\n)})
+
+        assert [%{kind: :forbidden, row: "pending-aggregate"}] =
+                 CopyRules.scan_source(aggregate, root, [path])
+
+        assert [%{kind: :forbidden}] =
+                 CopyRules.evaluate_surface(aggregate, "x", "<p>" <> old <> "</p>")
+      end
+
+      for new <- [
+            "1 job pending",
+            "2 jobs pending, 1 scheduled retry",
+            "Pending work",
+            "a jobs list"
+          ] do
+        root = temp_tree!(%{path => ~s(label: "#{new}"\n)})
+        assert CopyRules.scan_source(aggregate, root, [path]) == []
+        assert CopyRules.evaluate_surface(aggregate, "x", "<p>" <> new <> "</p>") == []
+      end
+
+      assert CopyRules.evaluate_surface(count, "x", "<p>Pending, 1 job pending</p>") == []
+      assert CopyRules.evaluate_surface(count, "x", "<p>12 jobs pending</p>") == []
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(count, "x", "<p>1 job " <> "queued</p>")
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(count, "x", "<p>jobs pending</p>")
+
+      assert CopyRules.evaluate_surface(
+               caught_up,
+               "x",
+               "Caught up. Nothing pending, retrying or failed."
+             ) ==
+               []
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(
+                 caught_up,
+                 "x",
+                 "Caught up. Nothing " <> "queued, retrying or failed."
+               )
+
+      assert CopyRules.evaluate_surface(reason, "x", "Wait for pending sync work to finish.") ==
+               []
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(reason, "x", "Wait for " <> "queued work to finish.")
+    end
+
+    test "the queued and accepted rows catch their old forms and pass their new ones", %{
+      rules: rules
+    } do
+      retry = row!(rules, "retry-queued-not-accepted")
+      no_accepted = row!(rules, "retry-surfaces-no-accepted")
+      meili = row!(rules, "accepted-is-meilisearch-only")
+      queued = row!(rules, "queued-host-queue-outcome")
+      path = "scrypath_ops/lib/planted.ex"
+      accepted = "accep" <> "ted"
+
+      for old <- [
+            "Retry " <> accepted,
+            "A retry for job 4 is already " <> accepted,
+            "The queue " <> accepted <> " this retry",
+            "observes the " <> accepted <> " operation",
+            "Acceptance" <> " alone does not confirm recovery"
+          ] do
+        root = temp_tree!(%{path => ~s(label: "#{old}"\n)})
+
+        assert [%{kind: :forbidden, row: "retry-queued-not-accepted"}] =
+                 CopyRules.scan_source(retry, root, [path])
+
+        assert [%{kind: :forbidden}] =
+                 CopyRules.evaluate_surface(retry, "x", "<p>Retry queued: " <> old <> "</p>")
+      end
+
+      clean = temp_tree!(%{path => ~s(label: "A retry for job 4 is already queued."\n)})
+      assert CopyRules.scan_source(retry, clean, [path]) == []
+      assert CopyRules.evaluate_surface(retry, "x", "<p>Retry queued · queue job 4</p>") == []
+
+      assert [%{kind: :required_missing, text: "Retry queued"}] =
+               CopyRules.evaluate_surface(retry, "x", "<p>Retry sent</p>")
+
+      # The word-level row reads rendered text only, and only whole words.
+      assert [%{kind: :forbidden, text: ^accepted}] =
+               CopyRules.evaluate_surface(no_accepted, "x", "<p>" <> accepted <> "</p>")
+
+      assert [%{kind: :forbidden, text: "Acceptance"}] =
+               CopyRules.evaluate_surface(no_accepted, "x", "<p>Acceptance</p>")
+
+      assert CopyRules.evaluate_surface(no_accepted, "x", "<p>Retry queued, unacceptable</p>") ==
+               []
+
+      assert CopyRules.scan_source(no_accepted, clean, [path]) == []
+
+      # The Meilisearch uses survive: the row requires the swap title.
+      assert CopyRules.evaluate_surface(meili, "x", "<h3>Index swap accepted</h3>") == []
+
+      assert [%{kind: :required_missing, text: "Index swap accepted"}] =
+               CopyRules.evaluate_surface(meili, "x", "<h3>Index swap queued</h3>")
+
+      assert CopyRules.evaluate_surface(queued, "x", "<p>Retry queued</p>") == []
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(queued, "x", "<p>Retry " <> accepted <> "</p>")
+
+      assert [%{kind: :required_missing}] =
+               CopyRules.evaluate_surface(queued, "x", "<p>dequeued</p>")
+    end
+
+    test "a Status wording term that no row cites fails, and the real table cites them all", %{
+      root: root,
+      rules: rules
+    } do
+      terms = CopyRules.status_terms(root)
+
+      assert Enum.sort(terms) ==
+               Enum.sort([
+                 "Searchable",
+                 "Pending",
+                 "Queued",
+                 "Retry queued",
+                 "Accepted",
+                 "Last succeeded",
+                 "Clear"
+               ])
+
+      assert_valid(rules, root)
+
+      # Dropping the only row that cites Queued leaves six of the seven terms cited.
+      six =
+        Map.update!(rules, "rules", fn rows ->
+          Enum.reject(rows, &(&1["id"] == "queued-host-queue-outcome"))
+        end)
+
+      assert {:error, [message]} = validate(six, root)
+      assert message == "glossary term \"Queued\" (Status wording) is cited by no row"
+    end
+
     test "a rendered surface with the title-case label fails the casing row", %{rules: rules} do
       row = row!(rules, "control-room-casing")
       surface = "control_room.default"
@@ -358,6 +510,7 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
   defp validate(rules, root) do
     CopyRules.validate(rules,
       glossary_terms: CopyRules.glossary_terms(root),
+      status_terms: CopyRules.status_terms(root),
       surfaces: CopySurfaces.anchors()
     )
   end

@@ -50,6 +50,26 @@ defmodule ScrypathOps.Test.CopyRules do
   end
 
   @doc """
+  Bold terms in the `## Status wording` section of `GLOSSARY.md`: the entries the table is
+  there to enforce. The section runs to the next `## ` heading or the end of the file.
+  """
+  def status_terms(root) do
+    root
+    |> Path.join("GLOSSARY.md")
+    |> File.read!()
+    |> String.split("\n")
+    |> Enum.drop_while(&(&1 != "## Status wording"))
+    |> Enum.drop(1)
+    |> Enum.take_while(&(not String.starts_with?(&1, "## ")))
+    |> Enum.flat_map(fn line ->
+      case Regex.run(~r/^\*\*(.+?)\*\*:/, line, capture: :all_but_first) do
+        [term] -> [term]
+        nil -> []
+      end
+    end)
+  end
+
+  @doc """
   Tracked text files, relative to `root`. Lists with `git ls-files -z` (the index), drops paths
   under `exempt_paths`, anything that is not a regular file, and any file that is not valid
   text (a NUL byte or invalid UTF-8). Raises when the list would be empty.
@@ -114,14 +134,16 @@ defmodule ScrypathOps.Test.CopyRules do
   def valid_glob?(_other), do: false
 
   @doc """
-  Validates the decoded table. Options: `:glossary_terms` (terms found in the glossary) and
-  `:surfaces` (a map of registered surface id to its state anchor).
+  Validates the decoded table. Options: `:glossary_terms` (terms found in the glossary),
+  `:surfaces` (a map of registered surface id to its state anchor) and the optional
+  `:status_terms` (the glossary's Status wording entries; each must be cited by some row).
 
   Returns `:ok` or `{:error, messages}`.
   """
   def validate(rules, opts) when is_map(rules) do
     terms = opts |> Keyword.fetch!(:glossary_terms) |> MapSet.new()
     surfaces = Keyword.fetch!(opts, :surfaces)
+    status_terms = Keyword.get(opts, :status_terms, [])
 
     errors = top_level_errors(rules)
 
@@ -133,7 +155,7 @@ defmodule ScrypathOps.Test.CopyRules do
           (rows
            |> Enum.with_index(1)
            |> Enum.flat_map(fn {row, index} -> row_errors(row, index, terms, surfaces) end)) ++
-          cross_row_errors(rows, surfaces)
+          cross_row_errors(rows, surfaces) ++ uncited_term_errors(rows, status_terms)
       else
         errors ++ ["rules must be a list of rows"]
       end
@@ -335,6 +357,15 @@ defmodule ScrypathOps.Test.CopyRules do
       end
 
     duplicate_errors ++ unused_errors ++ anchor_errors ++ Enum.uniq(overlap_errors)
+  end
+
+  # A glossary term in the Status wording section that no row cites is a rule nobody enforces.
+  defp uncited_term_errors(rows, status_terms) do
+    cited = for %{"glossary" => term} <- rows, is_binary(term), into: MapSet.new(), do: term
+
+    for term <- status_terms, not MapSet.member?(cited, term) do
+      "glossary term #{inspect(term)} (Status wording) is cited by no row"
+    end
   end
 
   defp surface_ids(row) do

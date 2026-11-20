@@ -175,16 +175,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   end
 
   test "an observed empty Oban queue reads as caught up", %{conn: conn} do
-    Application.put_env(:scrypath_ops, :sync_mode, :oban)
-    Application.put_env(:scrypath_ops, :oban, Oban)
-    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
+    SyncDriftStubs.put_oban_env()
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
 
     assert has_element?(
              lv,
              "#sync-pipeline-status[data-status-kind='success']",
-             "Caught up. Nothing queued, retrying or failed."
+             "Caught up. Nothing pending, retrying or failed."
            )
 
     assert has_element?(lv, "[data-testid='sync-identity']", "Oban background sync")
@@ -194,15 +192,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   test "sync activity counts separate pending work, scheduled retries and terminal failures", %{
     conn: conn
   } do
-    Application.put_env(:scrypath_ops, :sync_mode, :oban)
-    Application.put_env(:scrypath_ops, :oban, Oban)
-    Application.put_env(:scrypath_ops, :oban_queue, :scrypath_sync)
-    job = %{id: 1, state: "available", worker: "Scrypath.Oban.UpsertWorker", args: %{}}
-    Application.put_env(:scrypath_ops, :oban_jobs, [job, %{job | id: 2, state: "retryable"}])
+    [job | _] = jobs = SyncDriftStubs.pending_and_retrying_jobs()
+    SyncDriftStubs.put_oban_env(jobs)
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
     assert has_element?(lv, "#sync-pipeline-status", "Sync work is pending")
-    assert has_element?(lv, ".ops-sync-work", "1 job queued, 1 scheduled retry")
+    assert has_element?(lv, ".ops-sync-work", "1 job pending, 1 scheduled retry")
     refute has_element?(lv, ".ops-sync-work [data-tone='error']")
     refute has_element?(lv, "#sync-pipeline-status", "Caught up")
 

@@ -576,7 +576,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
 
   defp recovery_status_label(nil), do: "Not checked"
-  defp recovery_status_label(:accepted), do: "Retry accepted"
+  defp recovery_status_label(:accepted), do: "Retry queued"
   defp recovery_status_label(:running), do: "Retry running"
 
   defp recovery_status_label(:queue_only_completed),
@@ -598,7 +598,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp recovery_status_copy(:accepted),
     do:
-      "The queue accepted this retry; refresh to observe this same job. Refresh never resubmits work."
+      "The queue has this retry; refresh to observe this same job. Refresh never resubmits work."
 
   defp recovery_status_copy(:running),
     do: "This retry is still running; refresh to observe the same job, attempt, and task."
@@ -1557,7 +1557,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:indexes_not_distinct), do: "confirm live and target indexes differ"
   defp promotion_reason(:target_unobserved), do: "observe the prepared target index first"
   defp promotion_reason(:backend_work_pending), do: "wait for backend tasks to finish"
-  defp promotion_reason(:queue_work_pending), do: "wait for queued work to finish"
+  defp promotion_reason(:queue_work_pending), do: "wait for pending sync work to finish"
   defp promotion_reason(:reindex_pending), do: "wait for reindex work to finish"
   defp promotion_reason(:cutover_pending), do: "wait for the current cutover to finish"
   defp promotion_reason(:failed_work), do: "resolve failed sync work first"
@@ -1650,7 +1650,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
     retrying = length(report.status.queue.retrying)
 
     [
-      if(pending > 0, do: counted_work(pending, "job", "jobs") <> " queued"),
+      if(pending > 0, do: counted_work(pending, "job", "jobs") <> " pending"),
       if(retrying > 0, do: counted_work(retrying, "scheduled retry", "scheduled retries"))
     ]
     |> Enum.reject(&is_nil/1)
@@ -1700,7 +1700,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp sync_verdict_title([], report) do
     if queue_observed?(report),
-      do: "Caught up. Nothing queued, retrying or failed.",
+      do: "Caught up. Nothing pending, retrying or failed.",
       else: "No Meilisearch tasks waiting or failed."
   end
 
@@ -2151,7 +2151,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           </.ops_button>
         </:actions>
         <p class="text-ops-body ops-muted">
-          Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
+          Retry failed work there. Refresh recovery status observes the queued retry and never resubmits it.
         </p>
         <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
           <p :if={@recovery_loading} role="status" aria-label="Checking recovery status">

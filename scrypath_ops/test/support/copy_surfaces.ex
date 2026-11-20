@@ -14,6 +14,7 @@ defmodule ScrypathOps.Test.CopySurfaces do
   import Phoenix.LiveViewTest
 
   alias ScrypathOps.Test.CopyStubs.ControlRoom, as: ControlRoomStubs
+  alias ScrypathOps.Test.CopyStubs.FailedSync, as: FailedSyncStubs
   alias ScrypathOps.Test.CopyStubs.Posture, as: PostureStubs
   alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
   alias ScrypathOps.Test.OpsPostA
@@ -25,10 +26,16 @@ defmodule ScrypathOps.Test.CopySurfaces do
     "control_room.default" => "Search backend not configured.",
     "control_room.refresh_no_prior" => "Incomplete observation checked:",
     "control_room.refresh_retained" => "Search health refresh incomplete.",
+    "failed_sync.after_retry" => "Oban job #991",
     "posture.default" => "Meilisearch document tasks",
     "posture.failed_row_retained" => "source-local evidence is retained from check",
+    "sync_drift.caught_up" => "Caught up.",
     "sync_drift.default" => ~s(aria-label="Related search views"),
+    "sync_drift.promotion_accepted" => ~s(id="promotion-status-result"),
+    "sync_drift.promotion_blocked_queue" => "Promotion unavailable",
+    "sync_drift.queue_pending" => "Sync work is pending",
     "sync_drift.reconcile_error_retained" => ~s(id="sync-pipeline-error"),
+    "sync_drift.recovery_queued" => "Refresh recovery status",
     "sync_drift.settings_missing_field" => ~s(data-missing="true")
   }
 
@@ -78,6 +85,11 @@ defmodule ScrypathOps.Test.CopySurfaces do
       render(lv)
     end)
   end
+
+  # /ops/failed-sync right after the operator retried one failed job: the receipt and the flash
+  # that report the retry are both on screen.
+  def render("failed_sync.after_retry", %{conn: conn}),
+    do: FailedSyncStubs.render_after_retry(conn)
 
   # /ops/health with one unreadable and one clear schema (the default Search health test).
   def render("posture.default", %{conn: conn}) do
@@ -137,5 +149,80 @@ defmodule ScrypathOps.Test.CopySurfaces do
       {:ok, lv, _html} = live(conn, "/ops/sync-and-index")
       render_async(lv)
     end)
+  end
+
+  # /ops/sync-and-index with one job waiting in the queue and one scheduled to retry.
+  def render("sync_drift.queue_pending", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      SyncDriftStubs.put_oban_env(SyncDriftStubs.pending_and_retrying_jobs())
+      {:ok, lv, _html} = live(conn, "/ops/sync-and-index")
+      render_async(lv)
+    end)
+  end
+
+  # /ops/sync-and-index when the queue was observed and holds nothing.
+  def render("sync_drift.caught_up", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      SyncDriftStubs.put_oban_env()
+      {:ok, lv, _html} = live(conn, "/ops/sync-and-index")
+      render_async(lv)
+    end)
+  end
+
+  # The promotion notice when pending sync work blocks the swap. A prepared target index is
+  # observed first (the stub's ready state), so the promotion block is on the page; the blocked
+  # eligibility is then merged into the mounted view's own assigns.
+  def render("sync_drift.promotion_blocked_queue", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      Agent.update(SyncDriftStubs.state_name(), &Map.put(&1, :ready, true))
+
+      render_with_assigns(conn, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA", %{
+        promotion_eligibility: {:blocked, :queue_work_pending}
+      })
+    end)
+  end
+
+  # The retry status block after a retry reached the host queue and its recovery was observed.
+  def render("sync_drift.recovery_queued", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      render_with_assigns(conn, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA", %{
+        recovery_handle: "opaque-receipt",
+        recovery_status: :accepted,
+        recovery_evidence: %{
+          replacement_job: 991,
+          attempt: 1,
+          task_uid: nil,
+          index: "sdv_ops_post_a"
+        }
+      })
+    end)
+  end
+
+  # The promotion result once Meilisearch has taken the index swap task.
+  def render("sync_drift.promotion_accepted", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      render_with_assigns(conn, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA", %{
+        promotion_task_id: 991,
+        promotion_status: :accepted,
+        promotion_loading: true
+      })
+    end)
+  end
+
+  # A route cannot reach these states, so a mounted view's own assigns are merged with the
+  # override and rendered through `SyncDriftLive.render/1` (a hand-built socket lacks assigns the
+  # layout reads).
+  defp render_with_assigns(conn, path, overrides) do
+    {:ok, lv, _html} = live(conn, path)
+    render_async(lv)
+
+    lv.pid
+    |> :sys.get_state()
+    |> Map.fetch!(:socket)
+    |> Map.fetch!(:assigns)
+    |> Map.merge(overrides)
+    |> SyncDriftLive.render()
+    |> Phoenix.HTML.Safe.to_iodata()
+    |> IO.iodata_to_binary()
   end
 end

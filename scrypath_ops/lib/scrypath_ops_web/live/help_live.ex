@@ -120,7 +120,7 @@ defmodule ScrypathOpsWeb.HelpLive do
               Failed sync work lists sync work that didn't reach Meilisearch for every schema; filter by schema or cause to narrow it. Retry queues the same records again and sends their current data, so fix invalid data first. Retrying items will run again automatically.
             </p>
             <p>
-              After Retry is queued, follow Check sync status to track that operation and its expected document effect. Acceptance alone does not confirm recovery.
+              After Retry is queued, follow Check sync status to track that operation and its expected document effect. A queued retry alone does not confirm recovery.
             </p>
           </section>
           <.link navigate={"#{@mount_path}/health"} class="ops-text-action">

@@ -316,7 +316,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
                 unavailable(socket)
 
               Map.has_key?(socket.assigns.recovery_receipts, row_key(row)) ->
-                put_flash(socket, :info, "A retry for job #{row.id} is already accepted.")
+                put_flash(socket, :info, "A retry for job #{row.id} is already queued.")
 
               is_nil(row.recovery) ->
                 put_flash(socket, :error, "That job does not expose a retry action.")
@@ -348,7 +348,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             socket
             |> reload_schema(row.schema)
             |> update(:recovery_receipts, &Map.put(&1, row_key(row), receipt))
-            |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
+            |> put_flash(:info, "Retry queued · queue job #{receipt.replacement_job}")
 
           {:error, reason} ->
             schema = OperatorSelection.canonical(row.schema)

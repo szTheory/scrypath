@@ -86,6 +86,114 @@
       "surfaces": ["control_room.refresh_no_prior", "posture.failed_row_retained"]
     },
     {
+      "id": "pending-aggregate",
+      "rule": "A count or a sentence over a row or a schema says Pending, never queued: queued is the step of one update.",
+      "glossary": "Pending",
+      "forbidden": [
+        {"text": "\\bjobs? queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "Nothing queued", "match": "literal", "case": "insensitive"},
+        {"text": "queued work", "match": "literal", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "sync_drift.queue_pending",
+        "sync_drift.caught_up",
+        "sync_drift.promotion_blocked_queue"
+      ]
+    },
+    {
+      "id": "pending-count",
+      "rule": "The schema-level job count reads N jobs pending.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "\\d+ jobs? pending", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.queue_pending"]
+    },
+    {
+      "id": "pending-caught-up",
+      "rule": "The caught-up sentence says nothing is pending, retrying or failed.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "Nothing pending, retrying or failed", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.caught_up"]
+    },
+    {
+      "id": "pending-promotion-reason",
+      "rule": "The promotion block for work in the host queue says to wait for pending sync work.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "Wait for pending sync work to finish.", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.promotion_blocked_queue"]
+    },
+    {
+      "id": "retry-queued-not-accepted",
+      "rule": "After a retry the host application's queue holds the job: say Retry queued, never accepted.",
+      "glossary": "Retry queued",
+      "forbidden": [
+        {"text": "Retry accepted", "match": "literal", "case": "insensitive"},
+        {"text": "is already accepted", "match": "literal", "case": "insensitive"},
+        {"text": "The queue accepted", "match": "literal", "case": "insensitive"},
+        {"text": "accepted operation", "match": "literal", "case": "insensitive"},
+        {"text": "Acceptance alone", "match": "literal", "case": "insensitive"}
+      ],
+      "required": [
+        {"text": "Retry queued", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
+      "id": "retry-surfaces-no-accepted",
+      "rule": "The retry screens carry no Meilisearch task text, so the word accepted does not appear on them at all.",
+      "glossary": "Accepted",
+      "forbidden": [
+        {"text": "\\baccept(ed|ance)\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
+      "id": "accepted-is-meilisearch-only",
+      "rule": "Accepted stays for a Meilisearch task: the index swap task reads Index swap accepted.",
+      "glossary": "Accepted",
+      "forbidden": [],
+      "required": [
+        {"text": "Index swap accepted", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.promotion_accepted"]
+    },
+    {
+      "id": "queued-host-queue-outcome",
+      "rule": "The outcome of handing a retry to the host application's queue reads queued.",
+      "glossary": "Queued",
+      "forbidden": [],
+      "required": [
+        {"text": "\\bqueued\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
       "id": "clear-needs-observation",
       "rule": "The status word Clear needs an observation: it is not shown beside an earlier observation a failed refresh left on screen.",
       "glossary": "Clear",
