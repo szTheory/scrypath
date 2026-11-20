@@ -18,7 +18,32 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   setup do
     previous = FailedSyncStubs.put_env()
     start_supervised!(FailedSyncStubs.counter_spec())
-    on_exit(fn -> FailedSyncStubs.restore_env(previous) end)
+
+    # The sudo confirmation lives here, not in the shared stubs: the namespace fence keeps
+    # references to that integration out of test/support.
+    prev_sigra = Application.get_env(:scrypath_ops, :sigra)
+    prev_opsui_auth_mode = System.get_env("OPSUI_AUTH_MODE")
+
+    Application.put_env(:scrypath_ops, :sigra,
+      sudo_confirm_path: "/sudo/confirm",
+      sudo_window: 300
+    )
+
+    System.put_env("OPSUI_AUTH_MODE", "sigra")
+
+    on_exit(fn ->
+      FailedSyncStubs.restore_env(previous)
+
+      if prev_sigra == nil do
+        Application.delete_env(:scrypath_ops, :sigra)
+      else
+        Application.put_env(:scrypath_ops, :sigra, prev_sigra)
+      end
+
+      if prev_opsui_auth_mode == nil,
+        do: System.delete_env("OPSUI_AUTH_MODE"),
+        else: System.put_env("OPSUI_AUTH_MODE", prev_opsui_auth_mode)
+    end)
 
     :ok
   end
@@ -48,7 +73,17 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     }
   end
 
-  defp sudo!(view), do: FailedSyncStubs.sudo!(view)
+  defp sudo!(view) do
+    put_live_assigns(view,
+      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
+      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
+        user_id: "user_123",
+        active_org_id: "org_456",
+        impersonator_user_id: nil,
+        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+      }
+    )
+  end
 
   test "all schemas load by default with a schema label on every row", %{conn: conn} do
     Application.put_env(:scrypath_ops, :oban_jobs, [
@@ -771,4 +806,15 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
   end
 
   defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()
+
+  defp put_live_assigns(view, assigns) do
+    :sys.replace_state(view.pid, fn state ->
+      socket =
+        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
+          Phoenix.Component.assign(socket, key, value)
+        end)
+
+      %{state | socket: socket}
+    end)
+  end
 end

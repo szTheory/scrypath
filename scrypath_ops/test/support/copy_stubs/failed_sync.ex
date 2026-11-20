@@ -4,6 +4,11 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
   # recording Oban insert, the `Oban.Job` struct the retry path builds, and the environment they
   # need. `FailedSyncLiveTest` and the copy rules surfaces both use it, so a fixture state is
   # never copied between them.
+  #
+  # Nothing here sets up the sudo confirmation. The namespace fence keeps references to that
+  # integration out of `test/support`, so `FailedSyncLiveTest` adds the confirmation to its own
+  # setup. The surface renders the retry in the default host-authenticated mode, where the
+  # retry runs without one.
 
   import Phoenix.ConnTest
   import Phoenix.LiveViewTest
@@ -78,15 +83,11 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
   end
 
   @doc """
-  Puts the allowlist, Meilisearch, Oban and Sigra environment the Failed sync work tests use and
+  Puts the allowlist, Meilisearch and Oban environment the Failed sync work tests use and
   returns the previous values for `restore_env/1`. The failed job is the Oban job 501.
   """
   def put_env do
-    previous = %{
-      keys: Map.new(@env_keys, &{&1, Application.get_env(:scrypath_ops, &1)}),
-      sigra: Application.get_env(:scrypath_ops, :sigra),
-      auth_mode: System.get_env("OPSUI_AUTH_MODE")
-    }
+    previous = Map.new(@env_keys, &{&1, Application.get_env(:scrypath_ops, &1)})
 
     Application.put_env(:scrypath_ops, :schema_allowlist, [
       ScrypathOps.Test.OpsPostA,
@@ -112,33 +113,17 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
     Application.put_env(:scrypath_ops, :oban, RecordingOban)
     Application.put_env(:scrypath_ops, :oban_queue, :search_sync)
     Application.put_env(:scrypath_ops, :oban_inspector, ObanInspector)
-
-    Application.put_env(:scrypath_ops, :sigra,
-      sudo_confirm_path: "/sudo/confirm",
-      sudo_window: 300
-    )
-
-    System.put_env("OPSUI_AUTH_MODE", "sigra")
-
     Application.put_env(:scrypath_ops, :oban_jobs, [retryable_job()])
 
     previous
   end
 
   @doc "Restores the environment captured by `put_env/0`."
-  def restore_env(%{keys: keys, sigra: sigra, auth_mode: auth_mode}) do
-    Enum.each(keys, fn
+  def restore_env(previous) do
+    Enum.each(previous, fn
       {k, nil} -> Application.delete_env(:scrypath_ops, k)
       {k, v} -> Application.put_env(:scrypath_ops, k, v)
     end)
-
-    if sigra == nil,
-      do: Application.delete_env(:scrypath_ops, :sigra),
-      else: Application.put_env(:scrypath_ops, :sigra, sigra)
-
-    if auth_mode == nil,
-      do: System.delete_env("OPSUI_AUTH_MODE"),
-      else: System.put_env("OPSUI_AUTH_MODE", auth_mode)
   end
 
   @doc "The one retryable upsert job (id 501) every Failed sync work test starts from."
@@ -164,40 +149,14 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
   end
 
   @doc """
-  Gives the mounted view a recent sudo window, as the Sigra confirmation would. Without it a
-  retry redirects to the confirmation page instead of running.
-  """
-  def sudo!(view) do
-    put_live_assigns(view,
-      current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
-      operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
-        user_id: "user_123",
-        active_org_id: "org_456",
-        impersonator_user_id: nil,
-        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
-      }
-    )
-  end
-
-  @doc "Replaces assigns on a mounted LiveView process."
-  def put_live_assigns(view, assigns) do
-    :sys.replace_state(view.pid, fn state ->
-      socket =
-        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
-          Phoenix.Component.assign(socket, key, value)
-        end)
-
-      %{state | socket: socket}
-    end)
-  end
-
-  @doc """
-  Runs `fun` with the environment and the insert counter in place, then stops the counter and
-  restores the environment, even if `fun` raises. For renderers that are not inside a test's own
-  setup.
+  Runs `fun` with the environment and the insert counter in place and the default
+  host-authenticated mode (`basic`), then stops the counter and restores the environment, even
+  if `fun` raises. For renderers that are not inside a test's own setup.
   """
   def with_stubs(fun) when is_function(fun, 0) do
     previous = put_env()
+    previous_mode = System.get_env("OPSUI_AUTH_MODE")
+    System.put_env("OPSUI_AUTH_MODE", "basic")
     {:ok, agent} = Agent.start_link(fn -> 0 end, name: @counter)
 
     try do
@@ -205,6 +164,10 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
     after
       Agent.stop(agent)
       restore_env(previous)
+
+      if previous_mode == nil,
+        do: System.delete_env("OPSUI_AUTH_MODE"),
+        else: System.put_env("OPSUI_AUTH_MODE", previous_mode)
     end
   end
 
@@ -215,7 +178,6 @@ defmodule ScrypathOps.Test.CopyStubs.FailedSync do
   def render_after_retry(conn) do
     with_stubs(fn ->
       {:ok, view, _html} = live(conn, "/ops/failed-sync")
-      sudo!(view)
 
       render_click(view, "retry", %{"id" => "501", "schema" => "ScrypathOps.Test.OpsPostA"})
     end)
