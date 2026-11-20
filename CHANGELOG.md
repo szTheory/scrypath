@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.19](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.18...scrypath-v0.3.19) (2026-11-20)
+
+
+### Features
+
+* **ops-ui:** re-skin ScrypathOps to the new brand identity ([#138](https://github.com/szTheory/scrypath/issues/138)) ([0644981](https://github.com/szTheory/scrypath/commit/0644981c320935603baee12f28eac93ab66e8085))
+
+
+### Bug Fixes
+
+* **ops-ui:** serve the light favicon in standalone ops ([#143](https://github.com/szTheory/scrypath/issues/143)) ([2f76788](https://github.com/szTheory/scrypath/commit/2f767884c6393b0f8cc49cc797966894f6e34cfe))
+
 ## [0.3.18](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.17...scrypath-v0.3.18) (2026-11-19)
 
 
