@@ -7,14 +7,13 @@ Release Please manages versioned entries after this baseline.
 ## [0.3.19](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.18...scrypath-v0.3.19) (2026-11-20)
 
 
-### Features
+### Documentation
 
-* **ops-ui:** re-skin ScrypathOps to the new brand identity ([#138](https://github.com/szTheory/scrypath/issues/138)) ([0644981](https://github.com/szTheory/scrypath/commit/0644981c320935603baee12f28eac93ab66e8085))
+* The README header now uses commit-pinned image URLs, so it loads on hex.pm, and HexDocs shows the new brand logo, favicon and code-block colors ([#139](https://github.com/szTheory/scrypath/issues/139), [#145](https://github.com/szTheory/scrypath/issues/145)).
 
+### Notes
 
-### Bug Fixes
-
-* **ops-ui:** serve the light favicon in standalone ops ([#143](https://github.com/szTheory/scrypath/issues/143)) ([2f76788](https://github.com/szTheory/scrypath/commit/2f767884c6393b0f8cc49cc797966894f6e34cfe))
+* No library behavior changes in this release. The ScrypathOps re-skin ([#138](https://github.com/szTheory/scrypath/issues/138)) and its favicon fix ([#143](https://github.com/szTheory/scrypath/issues/143)) are in the separate `scrypath_ops` app and are not part of this package.
 
 ## [0.3.18](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.17...scrypath-v0.3.18) (2026-11-19)
 
