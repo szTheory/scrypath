@@ -20,7 +20,7 @@ The maintainer approved this order and these working rules after a research fan-
 
 v1.46 shipped to `main` (Phases 186-188, PRs #137, #138, #139, #143; [audit](../milestones/v1.46-MILESTONE-AUDIT.md) `tech_debt`, no blockers). Phases 189 and 190 were deferred. Four decision notes with evidence, lenses and adversarial passes are in [research/v1.47-prep/](../research/v1.47-prep/): A scope and shape, B website, C release and delivery, D verification and cleanup.
 
-**Recommended next milestone: v1.47 Brand completion** (small, about 5-6 plans), then v1.48 Catalog foundation. Run `/gsd-new-milestone v1.47` from this section.
+**Recommended next milestone: v1.47 Brand completion** (small, about 5-6 plans), then v1.48 Catalog foundation. Run `/gsd-new-milestone v1.47` from this section; `.planning/MILESTONE-CONTEXT.md` carries the prepared input.
 
 | Phase | Scope | Gate | Confidence |
 |---|---|---|---|
@@ -30,12 +30,7 @@ v1.46 shipped to `main` (Phases 186-188, PRs #137, #138, #139, #143; [audit](../
 
 v1.48 Catalog foundation (about 11 plans): 192 phoenix_storybook spike and boundary; 193 fixtures and cheap copy layers; 194 pilot read-only half (JOB-03); 195 pilot retry half with `decide/4`; 196 catalog at scale (trimmed). No ADR 0001 revisit trigger has fired. phoenix_storybook 1.5.0 adds 9 packages and one Rust NIF to the 54-package `scrypath_ops` lock, so the spike reads the audit output. Old v1.48 (screens, flows) and v1.49 (adopter features) become v1.49 and v1.50. Confidence medium-high; the phase list is the same under a single combined milestone, so being wrong costs one extra closeout.
 
-**Delivery, in parallel with v1.47 and before it edits `scrypath_ops` mix files:**
-
-1. README header (docs-only PR, no maintainer yes needed): switch the two header URLs to absolute `raw.githubusercontent.com` URLs pinned to the already-merged commit `8beb3ed0` (byte-identical to the current files, so no chicken-and-egg), with a test for URL shape and that the commit is an ancestor of `main`. hex.pm proxies images through `img.hex.pm` and drops `<source>`, so it always shows the light image. Confidence high. Fallback: ship the two 11.6 KB SVGs in the package (conflicts with PIN-03).
-2. Release Please: the repository setting "Allow GitHub Actions to create and approve pull requests" is off (it was on 2026-11-18; probably reset by the Step 0b permission change). **Needs the maintainer** to tick it. Prefer that over a personal access token.
-3. Hex 0.3.19 (maintainer's yes): since 0.3.18 only the README and docs changed in the package, so it is optional; recommended small release after the README fix so hex.pm and HexDocs show the brand. Hand-edit the changelog because the generated notes would say `feat(ops-ui)`. The alternative is to wait for v1.50.
-4. Dependabot: merge #131, #128, #140 and #142 on green; hand-fix #132 (a test pins a SHA); re-run #129 (axe ran on a pre-re-skin base); close #130 (pixelmatch 8 is ESM-only and the repo uses `require`) and #141 (needs a lockstep phoenix_live_view change sequenced with the storybook spike). Closing is the maintainer's batch yes.
+**Delivery: done 2026-11-20.** README header pinned to commit `8beb3ed0` raw URLs (#145, loads on hex.pm, verified on the live 0.3.19 page); Release Please repository setting fixed (via the API); Hex 0.3.19 released (#146; README and HexDocs only, changelog hand-edited); Dependabot #128, #131, #140, #142 merged, #130 closed with an ignore, #141 closed until the storybook spike. Still open: #132 (relax a hardcoded SHA in `workflow_wiring_test`) and #129 (re-run after the re-skin).
 
 **Carry-forward items:** the 11-20 nightly is the first on re-skinned `main` (the `ecommerce-e2e` job failed on 7 of 8 earlier nightlies unnoticed because it is advisory; read it first); the retained preview is refreshed just before the first phase that needs rendered evidence (probably 193); report the unthemed `favicon.svg` upstream to the book's author; the Cancel-focus assertion and two unpinned copy values go to 194.
 

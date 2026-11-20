@@ -18,7 +18,7 @@
 
 ## Current Posture
 
-No milestone is active. v1.46 Brand foundation and re-skin is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Phases 189 (website re-skin, SITE-01) and 190 (wording that does not need the catalog, COPY-01) are deferred to v1.47 together with the `brandbook/` and old token-tooling cleanup, the demo favicon and a refreshed retained preview. Hex releases wait for the maintainer's explicit yes, and the README header URLs must be commit-pinned before the next release (hex.pm cannot load `brand/` images). The next milestone is prepared in [ROLLING-ROADMAP.md](reference/ROLLING-ROADMAP.md).
+No milestone is active. v1.46 Brand foundation and re-skin is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Phases 189 (website re-skin, SITE-01) and 190 (wording that does not need the catalog, COPY-01) are deferred to v1.47 together with the `brandbook/` and old token-tooling cleanup, the demo favicon and a refreshed retained preview. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; Hex releases wait for the maintainer's explicit yes. The next milestone is prepared in [ROLLING-ROADMAP.md](reference/ROLLING-ROADMAP.md).
 
 `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
 
