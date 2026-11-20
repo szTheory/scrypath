@@ -24,7 +24,7 @@ created: "2026-11-20"
 ## Sampling Rate
 
 - **After every task commit:** focused checks (the ui-tokens node test, the changed ExUnit files, `mix format --check-formatted`)
-- **Per deletion commit (favicon, readers, data):** `mix verify.repository_contracts` once on that committed state, because the gate reads committed HEAD
+- **Per deletion commit (favicon, readers, data):** `mix verify.repository_contracts` once on that committed state, because the gate reads committed HEAD. *Superseded by the gate-run budget in 191-01 and 191-02: two runs only (after commit 2 and on the final head); the other four code commits (1, 3, A, B) are covered by focused checks, with reasons and revisit triggers recorded in the plans.*
 - **Phase gate:** six required contexts green on the exact PR head; one `mix verify.core` on the final code head; receipt in the 189 and 190 format
 - **Max feedback latency:** quick checks under 10 s
 
