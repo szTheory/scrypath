@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @website_yml ".github/workflows/website.yml"
   @website_select_browser_step "Select browser (runner Chrome when launchable, else Playwright Chromium)"
   @website_channel_guard "grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs"
+  @website_deploy_if "if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -330,8 +331,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert website =~ "  pull_request:\n"
       assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
 
-      assert deploy =~
-               "if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+      assert deploy =~ @website_deploy_if
 
       assert build =~ "fetch-depth: 0"
       assert deploy =~ "fetch-depth: 0"
@@ -379,6 +379,14 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
          String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
         {"browser probe no longer launches the chrome channel",
          String.replace(yml, "channel: 'chrome'", "channel: 'x'")},
+        {"deploy no longer restricted to main",
+         String.replace(yml, " && github.ref == 'refs/heads/main'", "")},
+        {"deploy no longer limited to push and dispatch events",
+         String.replace(
+           yml,
+           "(github.event_name == 'push' || github.event_name == 'workflow_dispatch') && ",
+           ""
+         )},
         {"workflow-level group cancels every superseded run, deploys included",
          String.replace(
            yml,
@@ -1931,7 +1939,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     refute yml =~ ~r/^  cancel-in-progress: true/m,
            "a workflow-level cancel-in-progress: true would cancel a deploy that is already running"
 
-    assert deploy =~ "if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'"
+    # Deployment is restricted to main by the job's own condition, not by a repository setting the
+    # job never names: a dispatch from a branch with an edited copy of this file must not publish.
+    assert deploy =~ @website_deploy_if,
+           "the deploy job must run only for a push or dispatch on refs/heads/main"
 
     assert deploy =~
              "concurrency:\n      group: website-pages-deploy\n      cancel-in-progress: false",

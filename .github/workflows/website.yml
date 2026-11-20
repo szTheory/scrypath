@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: warn
 
   deploy:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: build-and-check
     runs-on: ubuntu-24.04
     concurrency:
