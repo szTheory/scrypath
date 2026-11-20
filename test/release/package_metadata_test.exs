@@ -173,6 +173,10 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     "text" => ~w(nf fm nc nn)
   }
   @exdoc_css "dist/html-elixir-"
+  # WCAG AA for normal text. The measure uses the same sRGB formula as examples/scrypath_ecommerce/contrast-checker.mjs.
+  @aa_ratio 4.5
+  # The only named colors ExDoc's token rules use (`gh` and `gu`); anything else must be a hex value.
+  @named_colors %{"navy" => "#000080", "purple" => "#800080"}
   @docs_link ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
   @header_dark "brand/assets/readme/scrypath-header-dark.svg"
   @header_light "brand/assets/readme/scrypath-header-light.svg"
@@ -502,7 +506,155 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     end
   end
 
+  # Contrast of the code colors that are left after the pinned rules. The pinned book colors only
+  # some token classes, and ExDoc keeps its own color for every other class it paints, tuned for
+  # ExDoc's near-white code background. For every token class that occurs in a built code block, plus
+  # the classes the contrast rule recolors, this resolves the color the browser applies in each theme
+  # from the built ExDoc CSS and the built docs-owned stylesheet, and requires AA against the code
+  # background (or against the class's own background when ExDoc sets one).
+  test "every token class used in the built docs has AA contrast on the code background, in both themes",
+       %{out: out} do
+    used = used_token_classes(out)
+
+    for class <- ["k", "o", "p", "s"],
+        do: assert(class in used, "no .#{class} token span found in any built code block")
+
+    exdoc = exdoc_rules(out)
+    docs = built_docs_rules(out)
+
+    failures =
+      for theme <- [:light, :dark],
+          class <- Enum.uniq(used ++ @contrast_classes),
+          {fg, bg, ratio} = token_contrast(class, theme, exdoc, docs),
+          ratio < @aa_ratio,
+          do: "#{theme} .#{class}: #{fg} on #{bg} is #{Float.round(ratio, 2)}:1"
+
+    assert failures == [], "token colors below #{@aa_ratio}:1:\n" <> Enum.join(failures, "\n")
+  end
+
+  # Planted failure: the same check, run against the docs-owned stylesheet without its contrast
+  # rule, must fail for the classes the rule exists for. This proves the check is able to fail.
+  test "the contrast check fails when the contrast rule is missing", %{out: out} do
+    exdoc = exdoc_rules(out)
+    docs = built_docs_rules(out)
+
+    planted =
+      Enum.reject(docs, fn {selectors, _decls} -> "body .makeup .o" in selectors end)
+
+    assert length(planted) == length(docs) - 1
+
+    for {theme, class} <- [light: "o", light: "ni", light: "nl", light: "dl", dark: "err"] do
+      {_fg, _bg, without} = token_contrast(class, theme, exdoc, planted)
+      {_fg, _bg, with_rule} = token_contrast(class, theme, exdoc, docs)
+
+      assert without < @aa_ratio, "#{theme} .#{class} is #{without}:1 without the rule"
+      assert with_rule >= @aa_ratio, "#{theme} .#{class} is #{with_rule}:1 with the rule"
+    end
+
+    # The measure itself: black on white is 21:1, and the brand pair is the one the guide quotes.
+    assert_in_delta contrast_ratio("#000000", "#ffffff"), 21.0, 0.001
+    assert_in_delta contrast_ratio("#1e1220", "#f0e9e6"), 15.06, 0.01
+  end
+
   defp docs_rules, do: @docs_css |> File.read!() |> strip_comments() |> parse_rules()
+
+  defp exdoc_rules(out) do
+    [css] = Path.wildcard(Path.join(out, "dist/html-elixir-*.css"))
+    css |> File.read!() |> strip_comments() |> parse_rules()
+  end
+
+  defp built_docs_rules(out) do
+    out
+    |> Path.join("assets/scrypath-exdoc.css")
+    |> File.read!()
+    |> strip_comments()
+    |> parse_rules()
+  end
+
+  # Every class on a token span inside a highlighted code block of any generated page.
+  defp used_token_classes(out) do
+    for page <- generated_pages(out),
+        [block] <-
+          Regex.scan(~r{<code class="makeup[^"]*"[^>]*>(.*?)</code>}s, File.read!(page),
+            capture: :all_but_first
+          ),
+        [classes] <- Regex.scan(~r/<span class="([^"]+)"/, block, capture: :all_but_first),
+        class <- String.split(classes),
+        uniq: true,
+        do: class
+  end
+
+  # {foreground, background, ratio} of a token span in a highlighted code block, in one theme.
+  # The browser applies every rule whose selector matches, property by property, in ascending
+  # specificity (ExDoc's sheet loads first, so it loses ties). A property no rule sets is inherited
+  # from the docs-owned `pre code.makeup` rule: the brand text color and the brand code background.
+  # Dark mode matches the light selectors too, because ExDoc's `.dark` rules sit on top of them.
+  defp token_contrast(class, theme, exdoc, docs) do
+    vars = cascade(docs, theme_selectors(theme, [":root"], ["body.dark"]))
+
+    block =
+      cascade(
+        docs,
+        theme_selectors(theme, ["body pre code.makeup"], ["body.dark pre code.makeup"])
+      )
+
+    token =
+      cascade(
+        exdoc ++ docs,
+        theme_selectors(
+          theme,
+          [".makeup .#{class}", "body .makeup .#{class}"],
+          [".dark .makeup .#{class}", "body.dark .makeup .#{class}"]
+        )
+      )
+
+    fg = color_hex(token["color"] || block["color"], vars)
+    bg = color_hex(token["background-color"] || block["background"], vars)
+    {fg, bg, contrast_ratio(fg, bg)}
+  end
+
+  # The selector spellings that apply in a theme: the light ones always, the dark ones in dark only.
+  defp theme_selectors(theme, light, dark), do: if(theme == :dark, do: light ++ dark, else: light)
+
+  defp cascade(rules, selectors) do
+    rules
+    |> Enum.flat_map(fn {rule_selectors, decls} ->
+      for selector <- rule_selectors, selector in selectors, do: {specificity(selector), decls}
+    end)
+    |> Enum.sort_by(&elem(&1, 0))
+    |> Enum.flat_map(&declarations(elem(&1, 1)))
+    |> Map.new()
+  end
+
+  defp color_hex("var(" <> rest, vars) do
+    rest |> String.trim_trailing(")") |> then(&Map.fetch!(vars, &1)) |> color_hex(vars)
+  end
+
+  defp color_hex("#" <> hex, _vars) when byte_size(hex) == 3,
+    do: "#" <> Enum.map_join(String.graphemes(hex), &(&1 <> &1))
+
+  defp color_hex("#" <> hex, _vars) when byte_size(hex) == 6, do: "#" <> hex
+
+  defp color_hex(name, _vars) do
+    Map.get(@named_colors, name) || flunk("cannot read the color #{inspect(name)}")
+  end
+
+  defp contrast_ratio(fg, bg) do
+    [hi, lo] = Enum.sort([luminance(fg), luminance(bg)], :desc)
+    (hi + 0.05) / (lo + 0.05)
+  end
+
+  defp luminance("#" <> hex) do
+    [r, g, b] =
+      for <<channel::binary-size(2) <- hex>> do
+        channel |> String.to_integer(16) |> Kernel./(255) |> linear()
+      end
+
+    0.2126 * r + 0.7152 * g + 0.0722 * b
+  end
+
+  defp linear(channel) when channel <= 0.04045, do: channel / 12.92
+  defp linear(channel), do: :math.pow((channel + 0.055) / 1.055, 2.4)
 
   defp strip_comments(css), do: Regex.replace(~r{/\*.*?\*/}s, css, "")
 
