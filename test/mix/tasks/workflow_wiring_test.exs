@@ -489,7 +489,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       mounted = workflow_job_block(ci, "ecommerce-mounted")
 
       assert mounted =~ "    name: ecommerce-mounted (required)\n    needs: ecommerce-path\n"
-      assert mounted =~ @mounted_fail_open_if
+      # Anchored to a whole line so a commented-out or indented-away copy cannot satisfy it.
+      assert mounted =~ "\n    " <> @mounted_fail_open_if <> "\n"
 
       # Every consumer compares with != 'false' so a missing or empty output (a renamed step id, a
       # step that wrote nothing) still runs the lane. The equals-true form would silently skip it.

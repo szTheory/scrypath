@@ -35,8 +35,8 @@ const MAX_LOG_CHARS = 200;
 
 /**
  * Pure decision. Order matters: (1) any event other than exactly `pull_request` runs;
- * (2) drop non-string and empty entries, and an empty remainder runs; (3) any path that
- * fails the allowlist runs; (4) otherwise skip.
+ * (2) an empty list, or a list with no usable entry, runs; (3) any entry that is not a
+ * non-empty string, and any path that fails the allowlist, runs; (4) otherwise skip.
  */
 function classify({ eventName, paths } = {}) {
   if (eventName !== "pull_request") {
@@ -49,6 +49,11 @@ function classify({ eventName, paths } = {}) {
 
   if (candidates.length === 0) {
     return { run: true, reason: REASONS.emptyDiff };
+  }
+
+  // An entry that is not a usable path is unexpected input, not something to ignore: run.
+  if (candidates.length !== paths.length) {
+    return { run: true, reason: REASONS.nonAllowlistedPath };
   }
 
   if (candidates.some((entry) => !SKIPPABLE_PATTERN.test(entry))) {

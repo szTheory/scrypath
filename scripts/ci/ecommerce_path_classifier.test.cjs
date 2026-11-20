@@ -101,6 +101,16 @@ test("an empty diff runs the lanes", () => {
   }
 });
 
+test("an entry that is not a usable path runs the lanes even beside allowlisted paths", () => {
+  for (const paths of [
+    [".planning/a.md", { path: "lib/x.ex" }, 42],
+    [".planning/a.md", ""],
+    ["docs/x.md", null],
+  ]) {
+    assert.deepEqual(classify({ eventName: PR, paths }), { run: true, reason: "non-allowlisted-path" });
+  }
+});
+
 test("every event other than pull_request runs the lanes", () => {
   for (const eventName of ["push", "schedule", "workflow_dispatch", "merge_group", "", undefined]) {
     assert.deepEqual(classify({ eventName, paths: [".planning/STATE.md"] }), {
