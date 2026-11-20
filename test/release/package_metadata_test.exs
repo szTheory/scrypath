@@ -223,8 +223,14 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   # The only named colors ExDoc's token rules use (`gh` and `gu`); anything else must be a hex value.
   @named_colors %{"navy" => "#000080", "purple" => "#800080"}
   @docs_link ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
-  @header_dark "brand/assets/readme/scrypath-header-dark.svg"
-  @header_light "brand/assets/readme/scrypath-header-light.svg"
+  # The README header uses absolute, commit-pinned raw URLs: hex.pm renders the README through
+  # readme.hex.pm, which only serves tarball files for relative paths, and `brand/` is not packaged.
+  @header_pin "8beb3ed0f6f0b59f62df28ac60349c6dc9adf1a1"
+  @header_base "https://raw.githubusercontent.com/szTheory/scrypath/#{@header_pin}/"
+  @header_dark_path "brand/assets/readme/scrypath-header-dark.svg"
+  @header_light_path "brand/assets/readme/scrypath-header-light.svg"
+  @header_dark @header_base <> @header_dark_path
+  @header_light @header_base <> @header_light_path
   @snippet "brand/assets/readme/header-snippet.html"
   # ExDoc's head template always loads `docs_config.js`, an optional file the hosting site supplies
   # for the version dropdown (the ExDoc docs call it optional). A local build never contains it, so
@@ -252,7 +258,7 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     %{out: out}
   end
 
-  test "readme.html carries the brand header paths, mirrored into the build", %{out: out} do
+  test "readme.html carries the commit-pinned brand header URLs", %{out: out} do
     readme = File.read!(Path.join(out, "readme.html"))
 
     assert readme =~ ~s(srcset="#{@header_dark}")
@@ -281,23 +287,46 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     assert unexpected == []
   end
 
-  test "README.md header paths are committed files and no README image points at the Pages site" do
+  test "README.md header uses commit-pinned raw URLs whose bytes match the committed files" do
     readme = File.read!("README.md")
-    refs = local_refs(readme)
 
-    assert @header_dark in refs
-    assert @header_light in refs
+    values = html_attribute_values(readme, ["src", "srcset"])
+    assert @header_dark in values
+    assert @header_light in values
 
-    for ref <- refs do
-      assert String.starts_with?(ref, "brand/assets/readme/"),
-             "README reference #{ref} is outside brand/assets/readme/"
+    for value <- values do
+      refute value =~ "github.io", "README image points at the Pages site: #{value}"
 
-      assert File.regular?(ref), "README reference #{ref} is not a regular file"
-      assert committed?(ref), "README reference #{ref} is not committed"
+      assert value =~
+               ~r/^https:\/\/raw\.githubusercontent\.com\/szTheory\/scrypath\/[0-9a-f]{40}\/brand\/assets\/readme\//,
+             "README image #{value} is not a commit-pinned raw URL under brand/assets/readme/"
     end
 
-    for value <- html_attribute_values(readme, ["src", "srcset"]) do
-      refute value =~ "github.io", "README image points at the Pages site: #{value}"
+    # The pinned commit must be on this history, and the bytes at that commit must equal the files
+    # the repository ships now, so a brand update that changes a header also has to move the pin.
+    # A shallow checkout (the `package` job) may not contain the commit; the full-history jobs
+    # (`core`, `repository-contracts`) still run these checks. A full clone must always have it.
+    present? =
+      match?(
+        {_, 0},
+        System.cmd("git", ["cat-file", "-e", "#{@header_pin}^{commit}"], stderr_to_stdout: true)
+      )
+
+    {shallow, 0} = System.cmd("git", ["rev-parse", "--is-shallow-repository"])
+
+    if present? or String.trim(shallow) != "true" do
+      assert match?(
+               {_, 0},
+               System.cmd("git", ["merge-base", "--is-ancestor", @header_pin, "HEAD"],
+                 stderr_to_stdout: true
+               )
+             ),
+             "README header pin #{@header_pin} is not an ancestor of HEAD"
+
+      for path <- [@header_dark_path, @header_light_path] do
+        {pinned, 0} = System.cmd("git", ["show", "#{@header_pin}:#{path}"])
+        assert pinned == File.read!(path), "#{path} differs from its bytes at #{@header_pin}"
+      end
     end
   end
 
@@ -826,12 +855,5 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   defp resolves?(out, page, ref) do
     path = Path.expand(ref, Path.dirname(page))
     String.starts_with?(path, out <> "/") and File.regular?(path)
-  end
-
-  defp committed?(path) do
-    match?(
-      {_, 0},
-      System.cmd("git", ["ls-files", "--error-unmatch", "--", path], stderr_to_stdout: true)
-    )
   end
 end

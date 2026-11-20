@@ -26,29 +26,19 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
-## Current Milestone: v1.46 Brand foundation and re-skin
+## Current Milestone
 
-**Goal:** Adopt the new plum/orchid scry/path brand book (official identity since 2026-11-18, superseding the v1.35 violet and copper identity) across ScrypathOps, the README and HexDocs, and the website, changing colors, font families, logo, favicon and status vocabulary without reflowing type sizes or adding new interactions.
-
-**Target features:**
-- Phase 186 Ingest, pin and guard: offline-verified `brand/` pin, one Node token-parity test with a retired-value deny-list, about 12 pinned test literals lifted, a recolor-tolerant replacement for the Phase 185 pixel comparison (test and evidence only, at most 3 plans)
-- Phase 187 ScrypathOps re-skin as one Draft PR: theme blocks, Hanken and Sometype Mono fonts, logo and favicon, `ops_sync_status`, button and row-action rules, focus and scroll padding, dark theme, motion tokens, retirement of path/copper/glow/infinite animations, 12 px floor, h1 at 28, the Search health ranking fix and two verified copy bugs
-- Phase 188 README header and HexDocs (brand assets, ExDoc stylesheet fix, favicon)
-- Phase 189 website re-skin and Phase 190 wording that does not need the catalog (both deferrable to v1.47)
-
-**Key context:** Prep and evidence live in [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md), [PROPOSAL.md](research/brand-and-catalog/PROPOSAL.md) and the [brand adoption playbook](reference/BRAND-ADOPTION-PLAYBOOK.md). Ops stays System-default for theme. Deferred: type-scale reflow, master-detail Search health, progress line, sounds, animation, bulk retry. Guardrails: progress guard, loop breakers, finite route inventory, gate budget (at most 12 new required gates, each with a deletion trigger). No human UAT: every rule is a computed-style or DOM assertion. The 187 Draft PR needs one merge-time yes (merge authority, no aesthetic claim). `deep-quality` stays an advisory red until sigra drops its hard `cloak_ecto` requirement.
+None active. v1.46 **Brand foundation and re-skin** shipped 2026-11-19; the next milestone is prepared in `reference/ROLLING-ROADMAP.md` and waits for the maintainer's choice.
 
 ## Current State
 
-v1.45 **Foundation and CI** is archived locally: Phases 182–185, 38 plans and all 21 requirements have completion evidence. It delivers reliable full browser/cache proof, unpackaged maintainer tooling, explicit lean dependency/runtime graphs and deterministic UI quality foundations. The core value, Ecto-first positioning, internal adapter boundary and root compatibility floor remain unchanged.
+v1.46 **Brand foundation and re-skin** is on `main` (PRs #137, #138, #139, #143) and archived: Phases 186-188, 16 plans, 27 of 29 requirements. The plum/orchid scry/path identity is pinned offline under `brand/` (checked by `mix verify.brand`), guarded by a token-parity test and a retired-value deny-list, and adopted in ScrypathOps (both themes, brand fonts, one four-word sync-status vocabulary, one Plum button per scope), the README header and HexDocs. Website (SITE-01) and catalog-free wording (COPY-01) were deferred to v1.47. No Hex release has been cut for v1.46; releasing stays the maintainer's separate yes, and the README header URLs must be commit-pinned first because hex.pm cannot load `brand/` images.
 
-The [milestone audit](milestones/v1.45-MILESTONE-AUDIT.md) remains `tech_debt`. The maintainer approved a qualified closeout carrying its debt and stale historical Phase 182–184 reports, subject to fresh candidate and final-source CI. Two upstream Cloak advisories remain affected/unaccepted; inherited UI defects, flagged assumptions, code/documentation warnings and timing limits remain visible. This is branch-local completion, not published-package or merged-main evidence.
-
-All final archive/tracking edits precede terminal attestation. Its exact source/result live outside this checkout under `/private/tmp/scrypath-v145-closeout/`; these bytes do not certify a later event. See [closeout](milestones/v1.45-CLOSEOUT.md). No active phase or automatic successor exists. The retained preview/source-staleness stop, unrelated config edit, historical quick tasks and separate PR delivery boundaries remain preserved.
+The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Not proven: how the new look reads (no person or independent reviewer judged it) and the browser computed-style specs on every push (they run on dispatch and nightly). `deep-quality` stays an advisory red (cloak via optional sigra). The core value, Ecto-first positioning, internal adapter boundary and root compatibility floor are unchanged. v1.45 remains archived with its documented debt; see its [audit](milestones/v1.45-MILESTONE-AUDIT.md).
 
 ## Next Milestone Goals
 
-After v1.46: v1.47 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half), v1.48 Screens, flows and full catalog, v1.49 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
+After v1.46: v1.47 Catalog foundation (plus the deferred website re-skin, catalog-free wording and `brandbook/` cleanup) (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half), v1.48 Screens, flows and full catalog, v1.49 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
@@ -221,7 +211,7 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** (fresh `REQUI
 
 ## Release Train Posture
 
-- **Active milestone:** None. v1.45 is archived locally with qualified historical verification overrides and documented debt; final archive-source attestation is external. PR delivery/publication remain separate. Older dated readiness and approval limits retain their original cutoffs.
+- **Active milestone:** None. v1.46 is archived and on `main` with documented debt (see its audit); v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
 - **Current goals:** Finish the approved v1.45 candidate/final-source machine gates, retain the external receipt and local planning tag, then stop before the next milestone boundary.
 - **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
@@ -235,7 +225,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
 
-**Latest local planning archive:** v1.45 Foundation and CI (2026-11-01); see [archive](milestones/v1.45-ROADMAP.md). This does not establish merged-main or Hex delivery.
+**Latest planning archive:** v1.46 Brand foundation and re-skin (2026-11-19, on `main`); see [archive](milestones/v1.46-ROADMAP.md). Not released to Hex. Before it: v1.45 Foundation and CI (2026-11-01), see [archive](milestones/v1.45-ROADMAP.md).
 
 **v1.42 — ScrypathOps operator/admin UI** (2026-10-04): Phase 172, eight plans, eight OPUX requirements. Consistent shared controls/copy, accessible dialogs and schema selection, exact-work recovery and guarded promotion, 104 passing hosted browser tests and the warranted Scrypath0.3.15 release. See `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
