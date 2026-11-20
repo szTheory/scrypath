@@ -111,3 +111,5 @@ They are contract-tested (`test/scrypath/docs_contract_test.exs`, around lines 3
 ## Gate receipts
 
 See 189-GATE-RECEIPT.md
+
+Result summary: one `mix verify.repository_contracts` and one `mix verify.core --exclude integration --exclude docs_contract` ran once each on commit `76948c2ebd5baae68755f9d359faaef53af83c87` and both passed. The only commits after it change files under `.planning/`. Hosted lanes (`ops_ui`, the browser lanes, `backend`, `package`, `build-and-check`) are not covered by the receipt; they are the Post-ship evidence above.
