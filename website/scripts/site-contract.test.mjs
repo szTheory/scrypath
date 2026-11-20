@@ -499,7 +499,7 @@ test('planted theme-picker token-mismatch: a tokens.css whose system block was c
     assertCodes(built(dir), ['token-mismatch'], 'changed system block');
   } else {
     edit(dir, 'assets/tokens.css', css => `${css}\n@media (prefers-color-scheme: dark) {\n  :root[data-theme="system"] {\n    color-scheme: dark;\n  }\n}\n`);
-    assertCodes(built(dir), ['token-mismatch'], 'system block emitted in light-only mode');
+    assertCodes(built(dir), ['token-mismatch', 'default-state'], 'system block emitted in light-only mode');
   }
 });
 
