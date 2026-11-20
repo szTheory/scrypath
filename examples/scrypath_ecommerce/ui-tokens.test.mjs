@@ -1894,3 +1894,421 @@ test("planted dual dark rule fails and a lone dark rule does not count", () => {
   assert.equal(dualDarkRules(planted).length, before + 1);
   assert.ok(dualDarkFailures(planted).some((message) => /exceed DUAL_DARK_RULE_CEILING \d+ \(shrink-only\)/.test(message)));
 });
+
+// ---------------------------------------------------------------------------
+// Phase 191: source invariants for ops-authored source (CLEAN-04)
+// ---------------------------------------------------------------------------
+//
+// What this proves, in plain terms: the source ScrypathOps authors (the Elixir and HEEx under
+// scrypath_ops/lib, the JavaScript under scrypath_ops/assets/js without vendored files, and
+// scrypath_ops/assets/css/app.css) declares no font size under 12 px, no arbitrary text-[ length,
+// no uppercase, no infinite iteration and no caller that asks for size :xs. Every font-size is
+// resolved through the --text-* custom properties of the tree's app.css; a percent, em, calc( or
+// clamp( value cannot be resolved here, so it fails closed.
+//
+// What it does not prove: rendered size. These checks read source declarations. A caller-supplied
+// variant that emits the daisyUI btn-xs class (11 px) is caught only by the size :xs caller check
+// and by the browser spec on the advisory lane; computed size stays browser-only. The tracked built
+// CSS, vendored files and the demo host CSS are outside the scope on purpose (they carry daisyUI
+// defaults such as infinite spinners and percent sizes). Also not read: camelCase style.fontSize
+// assignments in JavaScript, a font shorthand inside a JavaScript string, and prose in strings or
+// docstrings (only comments are stripped). A comment marker inside a string is treated as a comment
+// start, which can only hide a real violation on the same line; the live tests and the accept cases
+// bound that risk.
+
+const OPS_APP_CSS = "scrypath_ops/assets/css/app.css";
+const FONT_FLOOR_PX = 12;
+const REM_PX = 16;
+const FONT_CHAIN_DEPTH = 8;
+const OPS_INVARIANT = {
+  floor: "12 px font-size floor",
+  arbitrary: "no arbitrary text size",
+  uppercase: "no uppercase",
+  infinite: "no infinite iteration",
+  xs: "no size xs caller",
+};
+
+// Linear patterns: no nested quantifiers.
+const CSS_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;}]*)/g;
+const TEXT_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;"'`}\n]*)/g;
+const CSS_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;}]*)/g;
+const STYLE_ATTRIBUTE = /(?<![\w-])style\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+const STYLE_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;"']*)/g;
+const CUSTOM_PROPERTY = /(?<![\w-])(--[\w-]+)\s*:\s*([^;}]+)/g;
+const ARBITRARY_TEXT_SIZE = /text-\[(?:\d|calc|clamp|length:|min|max)/g;
+const UPPERCASE_TOKEN = /(?<![\w-])uppercase(?![\w-])/g;
+const UPPERCASE_DECLARATION = /text-transform\s*:\s*uppercase/g;
+const INFINITE_WORD = /\binfinite\b/g;
+const SIZE_XS_KEYWORD = /size:\s*:xs\b/g;
+const SIZE_XS_ATTRIBUTE = /size=\{\s*:xs\s*\}/g;
+const TEXT_SOURCE_EXTENSIONS = new Set([".ex", ".heex", ".js"]);
+
+/**
+ * The ops-authored source among a repo file list (D-08): .ex and .heex under scrypath_ops/lib, .js under
+ * scrypath_ops/assets/js outside any vendor directory, and exactly the source app.css. Never the tracked
+ * built CSS, scrypath_ops/assets/vendor or anything under examples/ (demo host CSS).
+ */
+function opsSourceFiles(files) {
+  return files.filter((file) => {
+    if (file === OPS_APP_CSS) return true;
+    if (file.startsWith("scrypath_ops/lib/")) return file.endsWith(".ex") || file.endsWith(".heex");
+    if (file.startsWith("scrypath_ops/assets/js/")) return file.endsWith(".js") && !file.split("/").includes("vendor");
+    return false;
+  });
+}
+
+// Replace every comment character with a space and keep each newline, so line numbers stay true.
+const blank = (match) => match.replace(/[^\n]/g, " ");
+const BLOCK_COMMENT = /\/\*[\s\S]*?\*\//g;
+const JS_LINE_COMMENT = /(^|\s)\/\/[^\n]*/gm;
+const ELIXIR_COMMENT = /(^|\s)#(?!\{)[^\n]*/gm;
+const HEEX_COMMENT = /<%!--[\s\S]*?--%>/g;
+const HTML_COMMENT = /<!--[\s\S]*?-->/g;
+
+/** Source text with its comments blanked, per file kind (CSS, JS, Elixir, HEEx). */
+function blankComments(text, extension) {
+  switch (extension) {
+    case ".css":
+      return text.replace(BLOCK_COMMENT, blank);
+    case ".js":
+      return text.replace(BLOCK_COMMENT, blank).replace(JS_LINE_COMMENT, blank);
+    case ".ex":
+      // An Elixir file may hold a ~H template, so the template comment forms are blanked too.
+      return text.replace(HEEX_COMMENT, blank).replace(HTML_COMMENT, blank).replace(ELIXIR_COMMENT, blank);
+    case ".heex":
+      return text.replace(HEEX_COMMENT, blank).replace(HTML_COMMENT, blank);
+    default:
+      return text;
+  }
+}
+
+function lineAt(text, index) {
+  return text.slice(0, index).split("\n").length;
+}
+
+/** Every custom property declared in the tree's app.css: name to the list of values declared for it. */
+function opsCustomProperties(root) {
+  const props = new Map();
+  let css;
+  try {
+    css = fs.readFileSync(path.join(root, OPS_APP_CSS), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") return props;
+    throw error;
+  }
+  for (const match of blankComments(css, ".css").matchAll(CUSTOM_PROPERTY)) {
+    props.set(match[1], [...(props.get(match[1]) ?? []), match[2].trim()]);
+  }
+  return props;
+}
+
+/**
+ * Resolve a font-size value to pixels: { px } or { error }. inherit passes. A percent, em, calc( or
+ * clamp( value, a keyword, a missing or cyclic custom property and any other unit are unresolvable and
+ * fail closed. var(--name) resolves through the custom properties; a property declared more than once
+ * resolves to its smallest value.
+ */
+function resolveFontSize(raw, props, depth = 0) {
+  const value = raw.replace(/\s*!important\s*$/i, "").trim().replace(/\s+/g, " ");
+  if (value === "inherit") return { px: Infinity };
+  if (value === "") return { error: "unresolvable (empty value)" };
+  if (/%|calc\(|clamp\(/i.test(value) || /(?:^|[^a-z])\d*\.?\d+em\b/i.test(value)) {
+    return { error: "unresolvable (percent, em, calc( and clamp( values are never resolved here)" };
+  }
+  const reference = value.match(/^var\(\s*(--[\w-]+)\s*\)$/);
+  if (reference) {
+    if (depth >= FONT_CHAIN_DEPTH) return { error: `unresolvable (the ${reference[1]} chain is cyclic or deeper than ${FONT_CHAIN_DEPTH})` };
+    const declared = props.get(reference[1]);
+    if (declared === undefined) return { error: `unresolvable (app.css declares no ${reference[1]})` };
+    let smallest = Infinity;
+    for (const candidate of declared) {
+      const outcome = resolveFontSize(candidate, props, depth + 1);
+      if (outcome.error !== undefined) return outcome;
+      smallest = Math.min(smallest, outcome.px);
+    }
+    return { px: smallest };
+  }
+  const literal = value.match(/^(\d*\.?\d+)(px|rem)$/i);
+  if (literal) return { px: Number(literal[1]) * (literal[2].toLowerCase() === "rem" ? REM_PX : 1) };
+  return { error: "unresolvable (not a px or rem literal, inherit or var() chain)" };
+}
+
+const shorthandCarriesSize = (value) => value.replace(/\s*!important\s*$/i, "").trim() !== "inherit";
+
+/** Violations in the ops-authored source of a tree, as "[invariant] path:line message" strings. */
+function opsSourceFailures(root, files) {
+  const failures = [];
+  const props = opsCustomProperties(root);
+  for (const relativePath of opsSourceFiles(files)) {
+    const absolute = path.join(root, relativePath);
+    let stat;
+    try {
+      stat = fs.lstatSync(absolute);
+    } catch (error) {
+      if (error.code === "ENOENT") continue;
+      throw error;
+    }
+    if (!stat.isFile()) continue;
+    if (stat.size > MAX_SCAN_BYTES) {
+      throw new Error(`${relativePath} is ${stat.size} bytes, over the ${MAX_SCAN_BYTES} byte scan limit`);
+    }
+    const extension = path.extname(relativePath);
+    const text = blankComments(fs.readFileSync(absolute, "utf8"), extension);
+    const report = (invariant, index, message) => failures.push(`[${invariant}] ${relativePath}:${lineAt(text, index)} ${message}`);
+    const textSource = TEXT_SOURCE_EXTENSIONS.has(extension);
+
+    for (const match of text.matchAll(extension === ".css" ? CSS_FONT_SIZE : TEXT_FONT_SIZE)) {
+      const outcome = resolveFontSize(match[1], props);
+      const shown = match[1].trim();
+      if (outcome.error !== undefined) report(OPS_INVARIANT.floor, match.index, `font-size ${shown} is ${outcome.error}`);
+      else if (outcome.px < FONT_FLOOR_PX) report(OPS_INVARIANT.floor, match.index, `font-size ${shown} resolves to ${outcome.px} px, below ${FONT_FLOOR_PX} px`);
+    }
+    // A font shorthand carries a size that a font-size scan does not see: CSS, and style attributes.
+    if (extension === ".css") {
+      for (const match of text.matchAll(CSS_FONT_SHORTHAND)) {
+        if (shorthandCarriesSize(match[1])) report(OPS_INVARIANT.floor, match.index, `font shorthand ${match[1].trim()} carries a size, only font: inherit is allowed`);
+      }
+    } else if (extension === ".ex" || extension === ".heex") {
+      for (const attribute of text.matchAll(STYLE_ATTRIBUTE)) {
+        const body = attribute[1] ?? attribute[2];
+        const bodyStart = attribute.index + attribute[0].length - body.length - 1;
+        for (const match of body.matchAll(STYLE_FONT_SHORTHAND)) {
+          if (shorthandCarriesSize(match[1])) report(OPS_INVARIANT.floor, bodyStart + match.index, `font shorthand ${match[1].trim()} carries a size, only font: inherit is allowed`);
+        }
+      }
+    }
+
+    if (textSource) {
+      for (const match of text.matchAll(ARBITRARY_TEXT_SIZE)) report(OPS_INVARIANT.arbitrary, match.index, `arbitrary text size ${match[0]}`);
+      for (const match of text.matchAll(UPPERCASE_TOKEN)) report(OPS_INVARIANT.uppercase, match.index, "the uppercase class or word");
+    } else {
+      for (const match of text.matchAll(UPPERCASE_DECLARATION)) report(OPS_INVARIANT.uppercase, match.index, "text-transform: uppercase");
+    }
+    for (const match of text.matchAll(INFINITE_WORD)) report(OPS_INVARIANT.infinite, match.index, "the word infinite");
+    if (extension === ".ex" || extension === ".heex") {
+      for (const match of text.matchAll(SIZE_XS_KEYWORD)) report(OPS_INVARIANT.xs, match.index, "a size: :xs caller");
+      for (const match of text.matchAll(SIZE_XS_ATTRIBUTE)) report(OPS_INVARIANT.xs, match.index, "a size={:xs} caller");
+    }
+  }
+  return failures;
+}
+
+const OPS_CSS = OPS_APP_CSS;
+const forInvariant = (failures, invariant) => failures.filter((failure) => failure.startsWith(`[${invariant}] `));
+
+// The live scan runs once for the five live tests. A selection that lost app.css or a file kind
+// would make every live invariant pass vacuously, so the first live test checks the selection.
+let liveOpsSource;
+function liveOpsSourceFailures() {
+  if (liveOpsSource === undefined) {
+    const files = listRepoFiles(ROOT);
+    const selected = opsSourceFiles(files);
+    assert.ok(selected.includes(OPS_CSS), "app.css is part of the ops source scan");
+    for (const extension of [".ex", ".heex", ".js"]) {
+      assert.ok(selected.some((file) => file.endsWith(extension)), `a ${extension} file is part of the ops source scan`);
+    }
+    liveOpsSource = opsSourceFailures(ROOT, files);
+  }
+  return liveOpsSource;
+}
+
+function plantedOpsSource(file, content) {
+  const dir = makeTree({ [file]: content });
+  return opsSourceFailures(dir, listRepoFiles(dir));
+}
+
+// Each sub-case is its own tree with its own file, and the assertion names the invariant and that
+// exact file, so a detector removed or narrowed for one form fails that form and nothing else.
+function assertPlantedCases(invariant, cases) {
+  const missed = [];
+  for (const [label, file, content] of cases) {
+    const failures = plantedOpsSource(file, content);
+    if (!failures.some((failure) => failure.startsWith(`[${invariant}] ${file}:`))) {
+      missed.push(`${label}: [${invariant}] ${file} is not reported, got ${JSON.stringify(failures)}`);
+    }
+  }
+  assert.deepEqual(missed, []);
+}
+
+test("live ops source holds the 12 px font-size floor", () => {
+  // The resolver reads the live custom properties: the smallest text size ops declares is the 12 px floor.
+  assert.equal(resolveFontSize("var(--text-ops-sm)", opsCustomProperties(ROOT)).px, FONT_FLOOR_PX);
+  assert.deepEqual(forInvariant(liveOpsSourceFailures(), OPS_INVARIANT.floor), []);
+});
+
+test("live ops source has no arbitrary text size", () => {
+  assert.deepEqual(forInvariant(liveOpsSourceFailures(), OPS_INVARIANT.arbitrary), []);
+});
+
+test("live ops source has no uppercase", () => {
+  assert.deepEqual(forInvariant(liveOpsSourceFailures(), OPS_INVARIANT.uppercase), []);
+});
+
+test("live ops source has no infinite iteration", () => {
+  assert.deepEqual(forInvariant(liveOpsSourceFailures(), OPS_INVARIANT.infinite), []);
+});
+
+test("live ops source has no size xs caller", () => {
+  assert.deepEqual(forInvariant(liveOpsSourceFailures(), OPS_INVARIANT.xs), []);
+});
+
+test("planted font-size below the floor fails", () => {
+  assertPlantedCases(OPS_INVARIANT.floor, [
+    ["a px literal", OPS_CSS, ".x { font-size: 11px; }\n"],
+    ["an rem literal", OPS_CSS, ".x { font-size: 0.5rem; }\n"],
+    ["a var chain that resolves low", OPS_CSS, ":root { --text-low: 0.5rem; --text-chain: var(--text-low); }\n.x { font-size: var(--text-chain); }\n"],
+    ["a var that no custom property declares", OPS_CSS, ".x { font-size: var(--text-missing); }\n"],
+    ["a percent value", OPS_CSS, ".x { font-size: 80%; }\n"],
+    ["an em value", OPS_CSS, ".x { font-size: 1.5em; }\n"],
+    ["a calc value", OPS_CSS, ".x { font-size: calc(1rem + 2px); }\n"],
+    ["a clamp value", OPS_CSS, ".x { font-size: clamp(1rem, 2vw, 2rem); }\n"],
+    ["a keyword value", OPS_CSS, ".x { font-size: small; }\n"],
+    ["a viewport unit value", OPS_CSS, ".x { font-size: 2vw; }\n"],
+    ["a low font shorthand", OPS_CSS, ".x { font: 11px/1.2 sans-serif; }\n"],
+    ["an inline style in a heex file", "scrypath_ops/lib/planted/inline.heex", "<p style=\"font-size: 10px\">x</p>\n"],
+    ["an inline style in an ex string", "scrypath_ops/lib/planted/inline.ex", "defmodule P do\n  def a, do: ~s(<p style=\"font-size: 0.5rem\">x</p>)\nend\n"],
+    ["a font-size string in js", "scrypath_ops/assets/js/planted.js", "el.setAttribute(\"style\", \"font-size: 9px\");\n"],
+    ["a font shorthand in a style attribute", "scrypath_ops/lib/planted/shorthand.heex", "<p style=\"font: 10px sans-serif\">x</p>\n"],
+  ]);
+  // A comment above the violation keeps the reported line number true.
+  const lines = plantedOpsSource("scrypath_ops/lib/planted/line.heex", "<%!-- a\n  comment --%>\n<p style=\"font-size: 10px\">x</p>\n");
+  assert.ok(lines.some((failure) => failure.startsWith(`[${OPS_INVARIANT.floor}] scrypath_ops/lib/planted/line.heex:3 `)), JSON.stringify(lines));
+});
+
+test("planted arbitrary text size fails", () => {
+  assertPlantedCases(OPS_INVARIANT.arbitrary, [
+    ["a digit length", "scrypath_ops/lib/planted/digit.heex", "<p class=\"text-[10px]\">x</p>\n"],
+    ["a calc length", "scrypath_ops/lib/planted/calc.heex", "<p class=\"text-[calc(1rem+2px)]\">x</p>\n"],
+    ["a clamp length", "scrypath_ops/lib/planted/clamp.heex", "<p class=\"text-[clamp(1rem,2vw,2rem)]\">x</p>\n"],
+    ["a length: hint", "scrypath_ops/lib/planted/length.heex", "<p class=\"text-[length:var(--x)]\">x</p>\n"],
+    ["a min length", "scrypath_ops/lib/planted/min.heex", "<p class=\"text-[min(2rem,4vw)]\">x</p>\n"],
+    ["a max length", "scrypath_ops/lib/planted/max.heex", "<p class=\"text-[max(1rem,2vw)]\">x</p>\n"],
+    ["a length in an ex string", "scrypath_ops/lib/planted/string.ex", "defmodule P do\n  def a, do: \"text-[11px] block\"\nend\n"],
+    ["a length in a js string", "scrypath_ops/assets/js/planted.js", "el.className = \"text-[9px]\";\n"],
+  ]);
+});
+
+test("planted uppercase fails", () => {
+  assertPlantedCases(OPS_INVARIANT.uppercase, [
+    ["the class in a heex file", "scrypath_ops/lib/planted/class.heex", "<p class=\"text-xs uppercase\">x</p>\n"],
+    ["the class in an ex string", "scrypath_ops/lib/planted/class.ex", "defmodule P do\n  def a, do: ~s(<p class=\"uppercase\">x</p>)\nend\n"],
+    ["the class in a js string", "scrypath_ops/assets/js/planted.js", "el.className = \"tracking-wide uppercase\";\n"],
+    ["an inline style in a heex file", "scrypath_ops/lib/planted/style.heex", "<p style=\"text-transform: uppercase\">x</p>\n"],
+    ["the CSS declaration", OPS_CSS, ".x { text-transform: uppercase; }\n"],
+    ["the CSS declaration without a space", OPS_CSS, ".x{text-transform:uppercase}\n"],
+  ]);
+});
+
+test("planted infinite iteration fails", () => {
+  assertPlantedCases(OPS_INVARIANT.infinite, [
+    ["a CSS animation", OPS_CSS, ".x { animation: spin 1s linear infinite; }\n"],
+    ["a js string", "scrypath_ops/assets/js/planted.js", "el.style.animation = \"spin 1s linear infinite\";\n"],
+    ["a heex inline style", "scrypath_ops/lib/planted/spin.heex", "<p style=\"animation: spin 1s infinite\">x</p>\n"],
+  ]);
+});
+
+test("planted size xs caller fails", () => {
+  assertPlantedCases(OPS_INVARIANT.xs, [
+    ["the keyword form in an ex file", "scrypath_ops/lib/planted/caller.ex", "defmodule P do\n  def a, do: render(label: \"x\", size: :xs)\nend\n"],
+    ["the attribute form in a heex file", "scrypath_ops/lib/planted/caller.heex", "<.ops_button size={:xs}>x</.ops_button>\n"],
+    ["the attribute form with spaces", "scrypath_ops/lib/planted/spaced.heex", "<.ops_button size={ :xs }>x</.ops_button>\n"],
+  ]);
+});
+
+test("accept font-size values at or above the floor and inherit", () => {
+  const css = [
+    ":root {",
+    "  --text-ops-xs: 0.75rem;",
+    "  --text-ops-sm: 0.75rem;",
+    "  --text-ops-body: 0.875rem;",
+    "  --text-ops-two-step: var(--text-ops-body);",
+    "}",
+    ".a { font-size: 12px; }",
+    ".b { font-size: 0.875rem; }",
+    ".c { font-size: var(--text-ops-sm); }",
+    ".d { font-size: var(--text-ops-two-step); }",
+    ".e { font-size: inherit; font: inherit; }",
+    ".f { font-size: 1.125rem !important; }",
+    "",
+  ].join("\n");
+  const dir = makeTree({
+    [OPS_CSS]: css,
+    "scrypath_ops/lib/accept/inline.heex": "<p style=\"font-size: var(--text-ops-body)\">a</p>\n<p style=\"font: inherit\">b</p>\n",
+    "scrypath_ops/lib/accept/inline.ex": "defmodule A do\n  def a, do: ~s(<p style=\"font-size: 0.875rem; color: #123456\">x</p>)\nend\n",
+    "scrypath_ops/assets/js/accept.js": "el.setAttribute(\"style\", \"font-size: 12px\");\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept colour and variable text values in class strings", () => {
+  const dir = makeTree({
+    "scrypath_ops/lib/accept/colors.heex": "<p class=\"text-[var(--ops-text-muted)] text-[#123456] text-[color:var(--c)] text-sm\">x</p>\n",
+    "scrypath_ops/lib/accept/colors.ex": "defmodule A do\n  def a, do: \"text-[var(--x)] text-ops-body\"\nend\n",
+    "scrypath_ops/assets/js/colors.js": "el.className = \"text-[var(--x)]\";\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept upcase_first, String.upcase and prose in comments", () => {
+  const dir = makeTree({
+    [OPS_CSS]: "/* uppercase infinite text-transform: uppercase font-size: 10px */\n:root { --text-ops-body: 0.875rem; }\n",
+    "scrypath_ops/lib/accept/words.ex": [
+      "defmodule A do",
+      "  # no uppercase, no infinite loop, size: :xs, text-[10px], font-size: 10px",
+      "  def a(s), do: String.upcase(s) <> upcase_first(s) # trailing uppercase infinite",
+      "  def upcase_first(s), do: s",
+      "end",
+      "",
+    ].join("\n"),
+    "scrypath_ops/lib/accept/words.heex": "<%!-- uppercase infinite size={:xs} --%>\n<!-- uppercase infinite font-size: 10px -->\n<p>ok</p>\n",
+    "scrypath_ops/assets/js/words.js": "// uppercase infinite font-size: 10px\n/* uppercase\n   infinite */\nconst x = 1; // trailing uppercase\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept the infinity atom and the word infinity", () => {
+  const dir = makeTree({
+    "scrypath_ops/lib/accept/limits.ex": "defmodule A do\n  def a, do: [limit: :infinity, printable_limit: :infinity]\nend\n",
+    "scrypath_ops/lib/accept/limits.heex": "<p>Infinity is not iteration.</p>\n",
+    "scrypath_ops/assets/js/limits.js": "const limit = Number.POSITIVE_INFINITY; // infinity\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept attr declarations, the btn-xs branch and other sizes", () => {
+  const dir = makeTree({
+    "scrypath_ops/lib/accept/button.ex": [
+      "defmodule A do",
+      "  attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])",
+      "  def classes(size), do: [size == :xs && \"btn-xs\", size == :sm && \"btn-sm\"]",
+      "  def a, do: render(label: \"x\", size: :sm)",
+      "end",
+      "",
+    ].join("\n"),
+    "scrypath_ops/lib/accept/button.heex": "<.ops_button size={:md}>x</.ops_button>\n<.ops_button size={:sm}>y</.ops_button>\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept built CSS, vendor files and demo CSS stay outside the ops source scope", () => {
+  const live = opsSourceFiles(listRepoFiles(ROOT));
+  assert.ok(live.includes(OPS_CSS), "the selection includes app.css");
+  for (const extension of [".ex", ".heex", ".js"]) {
+    assert.ok(live.some((file) => file.endsWith(extension)), `the selection includes a ${extension} file`);
+  }
+  const outside = live.filter(
+    (file) => file.startsWith("scrypath_ops/priv/static/") || file.startsWith("scrypath_ops/assets/vendor/") || file.startsWith("examples/") || file.split("/").includes("vendor"),
+  );
+  assert.deepEqual(outside, [], "no built CSS, vendored file or demo file is selected");
+
+  const dir = makeTree({
+    "scrypath_ops/priv/static/assets/css/app.css": ".x { font-size: 80%; animation: a 1s infinite; text-transform: uppercase; }\n",
+    "scrypath_ops/assets/vendor/daisyui.js": "const x = \"infinite uppercase text-[10px] font-size: 9px\";\n",
+    "scrypath_ops/assets/js/vendor/lib.js": "const x = \"infinite uppercase font-size: 9px\";\n",
+    "examples/scrypath_ecommerce/assets/css/app.css": ".x { font-size: 10px; text-transform: uppercase; animation: a 1s infinite; }\n",
+  });
+  const files = listRepoFiles(dir);
+  assert.equal(files.length, 4, "the planted violations are all present in the tree");
+  assert.deepEqual(opsSourceFiles(files), [], "none of them is selected");
+  assert.deepEqual(opsSourceFailures(dir, files), []);
+});

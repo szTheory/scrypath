@@ -384,6 +384,14 @@ scope is the theme blocks only, so the values are recorded here): `--text-ops-sm
 `--text-ops-body` 0.875rem · `--text-ops-md` 1rem · `--text-ops-lg` 1.125rem ·
 `--text-ops-h2` 1.125rem · `--text-ops-h3` 1rem.
 
+Source invariants: `ui-tokens.test.mjs` checks the ops-authored source (`scrypath_ops/lib`,
+`scrypath_ops/assets/js` without vendored files, and `app.css`) for a 12px minimum font size
+(resolved through the `--text-ops-*` properties), no arbitrary `text-[` length, no uppercase,
+no infinite iteration and no `size: :xs` caller. These read source declarations, not rendered
+size. Demo host CSS, the tracked built CSS and vendored files are not scanned. A variant that
+emits the daisyUI `btn-xs` class (11px) is caught only by the `size: :xs` caller check and by
+the browser spec on the advisory lane; computed size stays browser-only.
+
 ## Status / tone: the notice rule scheme and the sync-status words
 
 Notices, statuses, verdicts and tone chips share one surface: `.ops-notice-surface` plus one
