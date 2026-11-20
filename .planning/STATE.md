@@ -7,10 +7,10 @@ last_updated: "2026-11-20T14:32:06.000Z"
 last_activity: 2026-11-20
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
   completed_plans: 4
-  percent: 50
+  percent: 75
 ---
 
 # Project State
@@ -20,16 +20,16 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-20.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.47 Brand completion: Phase 188.1 merged (PR #149); Phase 189 (Website re-skin) built and verified, PR awaiting exact-head `build-and-check` and merge; then 190 and 191. Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (wording) next, then 191. Roadmap: [ROADMAP](ROADMAP.md).
 
 ## Current Position
 
-Phase: 189 (Website re-skin), 3 of 3 plans executed and verified; PR open or about to open
-Plan: 189-03 complete
-Status: awaiting `build-and-check` and required checks on the exact PR head, then squash merge and watch the deploy
-Last activity: 2026-11-20 — Phase 188.1 merged (PR #149, #132 merged, #129 left open for a real axe finding); Phase 189 executed, reviewed, fixed and verified
+Phase: 190 (Wording that does not need the catalog), not started
+Plan: — (2 expected)
+Status: Phase 189 merged and deployed; smoke green; planning Phase 190
+Last activity: 2026-11-20 — Phase 189 merged (PR #152), deploy and smoke green, live site in the new identity
 
-Progress: [█████░░░░░] 50% (1 of 4 phases merged; 189 built)
+Progress: [███████░░░] 75% (2 of 4 phases merged)
 
 ## Performance Metrics
 

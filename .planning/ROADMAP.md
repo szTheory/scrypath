@@ -19,7 +19,7 @@
 
 ## Current Posture
 
-v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. Phase 188.1 is merged (PR #149) and Phase 189 is built and verified (website PR pending merge and deploy). Next: Phases 190 and 191. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
+v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. Phases 188.1 (PR #149) and 189 (PR #152, website deployed) are merged. Next: Phases 190 and 191. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
 
 `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
 
@@ -124,6 +124,6 @@ v1.47 Brand completion is the active milestone. Requirements are defined (18, re
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 188.1. CI path classifier | 1/1 | Complete | 2026-11-20 |
-| 189. Website re-skin | 3/3 | Complete (merge and deploy pending) | 2026-11-20 |
+| 189. Website re-skin | 3/3 | Complete | 2026-11-20 |
 | 190. Wording that does not need the catalog | 0/2 | Not started | - |
 | 191. Cleanup | 0/2 | Not started | - |
