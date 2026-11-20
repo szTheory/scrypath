@@ -12,131 +12,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
   alias ScrypathOps.RecoveryObservation
   alias ScrypathOpsWeb.SyncDriftLive
   alias Scrypath.Operations.Task, as: OperationTask
-
-  defmodule SyncDriftClient do
-    def tasks(filters, config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :tasks_calls, &(&1 + 1))
-      end)
-
-      tasks =
-        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) and
-             Keyword.get(filters, :index_uids) == ["sdv_ops_post_a__reindex"] do
-          [
-            %{
-              "uid" => 100,
-              "status" => "succeeded",
-              "type" => "indexCreation",
-              "indexUid" => "sdv_ops_post_a__reindex"
-            }
-          ]
-        else
-          Keyword.get(config, :meilisearch_tasks, [])
-        end
-
-      {:ok, %{results: tasks}}
-    end
-
-    def get_settings(_index, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :settings_calls, &(&1 + 1))
-      end)
-
-      if settings = Agent.get(:sync_drift_live_test_state, &Map.get(&1, :applied_settings)) do
-        {:ok, settings}
-      else
-        if Agent.get(:sync_drift_live_test_state, &Map.get(&1, :ready, false)) do
-          {:ok,
-           %{
-             "searchableAttributes" => ["*"],
-             "filterableAttributes" => [],
-             "sortableAttributes" => []
-           }}
-        else
-          {:error, :settings}
-        end
-      end
-    end
-
-    def swap_indexes(_indexes, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        state
-        |> Map.put(:swap_called, true)
-        |> Map.update!(:swap_calls, &(&1 + 1))
-      end)
-
-      {:ok,
-       %{
-         "uid" => 201,
-         "status" => "succeeded",
-         "type" => "indexSwap",
-         "indexUid" => "sdv_ops_post_b"
-       }}
-    end
-
-    def task(uid, _config) do
-      Agent.update(:sync_drift_live_test_state, fn state ->
-        Map.update!(state, :task_calls, &[uid | &1])
-      end)
-
-      Agent.get(:sync_drift_live_test_state, fn state ->
-        %{"uid" => uid, "status" => state.task_status, "type" => "indexSwap"}
-      end)
-      |> then(&{:ok, &1})
-    end
-  end
-
-  defmodule SyncDriftObanInspector do
-    def list_jobs(_schema_module, config) do
-      {:ok, Keyword.get(config, :oban_jobs, [])}
-    end
-  end
+  alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
+  alias ScrypathOps.Test.CopyStubs.SyncDrift.Client, as: SyncDriftClient
+  alias ScrypathOps.Test.CopyStubs.SyncDrift.ObanInspector, as: SyncDriftObanInspector
 
   setup do
-    keys = ~w(
-      schema_allowlist backend sync_mode index_prefix meilisearch_url meilisearch_client
-      meilisearch_tasks oban oban_queue oban_inspector oban_jobs
-    )a
-
-    previous = Map.new(keys, &{&1, Application.get_env(:scrypath_ops, &1)})
-
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
-    Application.put_env(:scrypath_ops, :sync_mode, :manual)
-    Application.put_env(:scrypath_ops, :index_prefix, "sdv")
-    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
-    Application.put_env(:scrypath_ops, :meilisearch_client, SyncDriftClient)
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
-    Application.put_env(:scrypath_ops, :oban, nil)
-    Application.put_env(:scrypath_ops, :oban_queue, nil)
-    Application.put_env(:scrypath_ops, :oban_inspector, SyncDriftObanInspector)
-    Application.put_env(:scrypath_ops, :oban_jobs, [])
-
-    start_supervised!(%{
-      id: :sync_drift_live_test_state,
-      start:
-        {Agent, :start_link,
-         [
-           fn ->
-             %{
-               tasks_calls: 0,
-               settings_calls: 0,
-               swap_called: false,
-               swap_calls: 0,
-               task_calls: [],
-               task_status: "processing"
-             }
-           end,
-           [name: :sync_drift_live_test_state]
-         ]}
-    })
-
-    on_exit(fn ->
-      Enum.each(previous, fn
-        {k, nil} -> Application.delete_env(:scrypath_ops, k)
-        {k, v} -> Application.put_env(:scrypath_ops, k, v)
-      end)
-    end)
+    previous = SyncDriftStubs.put_env()
+    start_supervised!(SyncDriftStubs.agent_spec())
+    on_exit(fn -> SyncDriftStubs.restore_env(previous) end)
 
     :ok
   end
@@ -520,8 +403,20 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     render_async(missing_lv)
 
     assert has_element?(missing_lv, ".ops-settings-diff tbody th code", "title")
-    assert has_element?(missing_lv, ".ops-setting-live[data-missing='true']", "Not searchable")
-    assert has_element?(missing_lv, ".ops-settings-diff tbody tr", "Not searched yet.")
+
+    assert has_element?(
+             missing_lv,
+             ".ops-settings-diff tbody td[data-label='Declared in schema']",
+             "Used for search"
+           )
+
+    assert has_element?(
+             missing_lv,
+             ".ops-setting-live[data-missing='true']",
+             "Not used for search"
+           )
+
+    assert has_element?(missing_lv, ".ops-settings-diff tbody tr", "Not used for search yet.")
   end
 
   test "failed settings refresh retains the previous comparison and its original check time", %{

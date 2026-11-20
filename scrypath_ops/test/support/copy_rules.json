@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "exempt_paths": [
+    ".planning/",
+    "brand/",
+    "scrypath_ops/test/support/copy_rules.json"
+  ],
+  "not_covered": [
+    "JavaScript strings under scrypath_ops/assets/js are neither scanned nor rendered by any row.",
+    "HTML attribute text that is not rendered text (aria-label, title, placeholder) is not guarded; a row can catch it only by accident.",
+    "Playwright locators and assertion names are read only by the Control room casing row, never by the status wording rows.",
+    "Screen states with no named fixture surface are not rendered; a row's static scan still reads their source.",
+    "Non-English text is not covered."
+  ],
+  "rules": [
+    {
+      "id": "searchable-observation-only",
+      "rule": "Searchable is the label for one record's observed state, never a setting value: say Used for search or Not used for search.",
+      "glossary": "Searchable",
+      "forbidden": [
+        {"text": "Searchable(?! fields)", "match": "regex", "case": "sensitive"},
+        {"text": "Not searchable", "match": "literal", "case": "sensitive"},
+        {"text": "Not searched yet", "match": "literal", "case": "sensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": ["sync_drift.settings_missing_field"]
+    },
+    {
+      "id": "searchable-settings-row",
+      "rule": "The Searchable fields settings row reads Used for search, Not used for search and Not used for search yet.",
+      "glossary": "Searchable",
+      "forbidden": [],
+      "required": [
+        {"text": "Used for search", "match": "literal", "case": "sensitive"},
+        {"text": "Not used for search", "match": "literal", "case": "sensitive"},
+        {"text": "Not used for search yet.", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.settings_missing_field"]
+    }
+  ]
+}

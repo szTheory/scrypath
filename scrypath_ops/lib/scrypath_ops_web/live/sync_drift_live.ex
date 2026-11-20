@@ -1731,7 +1731,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   ## Settings section
 
   @set_dimensions [
-    fields: {"Searchable fields", "Searchable", "Not searchable", "Not searched yet."},
+    fields:
+      {"Searchable fields", "Used for search", "Not used for search", "Not used for search yet."},
     filterable_attributes:
       {"Filterable attributes", "Filterable", "Not enabled for filtering",
        "Can't filter by it yet."},
