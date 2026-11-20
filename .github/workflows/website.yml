@@ -98,6 +98,7 @@ jobs:
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: build-and-check
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     concurrency:
       group: website-pages-deploy
       cancel-in-progress: false

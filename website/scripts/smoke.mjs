@@ -23,6 +23,10 @@ import { fileURLToPath } from 'node:url';
 // answers max-age=600). A request is retried (at most `attempts` tries, `retryDelayMs` apart) only for
 // a network error, a 404 or a 5xx, which is what propagation right after a deploy looks like. A
 // response that arrives and is wrong (a 200 with the wrong hash, say) is final: no loop.
+//
+// Each request, headers and body together, is abandoned after `timeoutMs` (20 seconds by default), so a
+// host that accepts the connection and then stalls cannot hold the deploy job for the platform default
+// of minutes per request. An abandoned request is a network error and is retried like one.
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = path.resolve(scriptsDir, '..', '..');
@@ -59,13 +63,13 @@ function tagsOf(html, names) {
 }
 
 // One GET with the cache-busting query and the retry policy described above.
-async function request(url, { attempts, retryDelayMs, token }) {
+async function request(url, { attempts, retryDelayMs, timeoutMs, token }) {
   const target = new URL(url);
   target.searchParams.set('smoke', token);
   let last;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
-      const response = await fetch(target, { redirect: 'follow' });
+      const response = await fetch(target, { redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) });
       const body = Buffer.from(await response.arrayBuffer());
       last = {
         status: response.status,
@@ -92,7 +96,7 @@ function describe(response) {
 
 // Runs every check and resolves with { ok, results: [{ code, ok, name, detail }] }. Never throws for a
 // failed check; a problem reading the pins is itself reported as a failed check.
-export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, repoRoot = defaultRepoRoot, token } = {}) {
+export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, timeoutMs = 20000, repoRoot = defaultRepoRoot, token } = {}) {
   const results = [];
   const record = (code, ok, name, detail = '') => results.push({ code, ok, name, detail });
   const finish = () => ({ ok: results.every(result => result.ok), results });
@@ -105,7 +109,7 @@ export async function runSmoke(baseUrl, { attempts = 3, retryDelayMs = 10000, re
   base.hash = '';
   const basePath = base.pathname;
   const runToken = token ?? process.env.GITHUB_RUN_ID ?? String(Date.now());
-  const options = { attempts, retryDelayMs, token: runToken };
+  const options = { attempts, retryDelayMs, timeoutMs, token: runToken };
 
   let pins;
   try {

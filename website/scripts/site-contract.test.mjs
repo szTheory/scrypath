@@ -16,6 +16,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -781,6 +782,56 @@ test('planted smoke fails when og:image resolves outside the base path', async (
       'the smoke must not fetch a URL outside the base path'
     );
   });
+});
+
+// A server that accepts the request and then stalls: before the response (the headers never come) or
+// after it (the headers come, the body does not finish). Open sockets are destroyed on the way out so
+// the case cannot leave the process waiting.
+async function withStalledServer(handler, run) {
+  const sockets = new Set();
+  const server = http.createServer(handler);
+  server.on('connection', socket => {
+    sockets.add(socket);
+    socket.on('close', () => sockets.delete(socket));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    return await run(`http://127.0.0.1:${server.address().port}/scrypath/`);
+  } finally {
+    for (const socket of sockets) socket.destroy();
+    await new Promise(resolve => server.close(resolve));
+  }
+}
+
+test('planted smoke fails within its request timeout when the server never answers or never finishes the body', { timeout: 20000 }, async () => {
+  const cases = [
+    ['headers never arrive', () => {}],
+    [
+      'the body never finishes',
+      (request, response) => {
+        response.writeHead(200, { 'content-type': 'text/html', 'content-length': '4096' });
+        response.write('<!doctype html>');
+      }
+    ]
+  ];
+  for (const [label, handler] of cases) {
+    let hits = 0;
+    await withStalledServer(
+      (request, response) => {
+        hits += 1;
+        handler(request, response);
+      },
+      async baseUrl => {
+        const started = Date.now();
+        const { ok, results } = await runSmoke(baseUrl, { attempts: 2, retryDelayMs: 0, timeoutMs: 250 });
+        assert.equal(ok, false, `${label}: a stalled server must fail the smoke`);
+        assert.deepEqual(failedCodes(results), ['home'], label);
+        assert.match(results[0].detail, /network error/, label);
+        assert.ok(Date.now() - started < 10000, `${label}: the smoke must give up after its timeout instead of waiting out the platform default`);
+        assert.equal(hits, 2, `${label}: a timeout counts as a network error and is retried once under attempts: 2`);
+      }
+    );
+  }
 });
 
 test('accept theme-picker tagged cases are not vacuous', () => {

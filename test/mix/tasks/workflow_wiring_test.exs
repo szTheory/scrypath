@@ -375,6 +375,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         {"smoke command dropped", String.replace(yml, "node website/scripts/smoke.mjs", "true")},
         {"soft check dropped", String.replace(yml, "curl -fsSI", "curl -sI")},
         {"build timeout dropped", String.replace(yml, "    timeout-minutes: 10\n", "")},
+        {"deploy timeout dropped", String.replace(yml, "    timeout-minutes: 15\n", "")},
         {"dispatch ref interpolated into a shell command",
          String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
         {"browser probe no longer launches the chrome channel",
@@ -1928,6 +1929,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
            "inputs.ref may only be used as a checkout ref, got #{inspect(ref_lines)}"
 
     assert build =~ "timeout-minutes: 10"
+
+    assert deploy =~ "timeout-minutes: 15",
+           "the deploy job needs a timeout: the smoke talks to a remote host, and the default is 360 minutes"
 
     # Only a superseded pull_request run is cancelled. A push to main must never cut off a deploy that
     # is already running, and a rollback dispatch (which also runs on main) must not share a group
