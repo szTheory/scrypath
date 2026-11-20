@@ -19,7 +19,7 @@
 
 ## Current Posture
 
-v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. Phases 188.1 (PR #149) and 189 (PR #152, website deployed) are merged; Phase 190 is built and verified (PR pending). Next: Phase 191. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
+v1.47 Brand completion is the active milestone. Requirements are defined (18, revised after a four-review gap pass in [research/v1.47-gap-pass/](research/v1.47-gap-pass/)) and this roadmap maps all of them to Phases 188.1 and 189–191. Phases 188.1 (PR #149), 189 (PR #152, website deployed) and 190 (PR #153) are merged; Phase 190 (PR #153) is merged. Next: Phase 191. v1.46 is complete and on `main`; its [audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no unsatisfied requirement. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding; no library change is planned in v1.47, and any Hex release stays the maintainer's separate explicit yes.
 
 `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed. The v1.45 archive keeps its documented debt and historical verification overrides.
 
