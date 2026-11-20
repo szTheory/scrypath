@@ -331,6 +331,75 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert CopyRules.evaluate_surface(row, surface, "<h1>Control room</h1>") == []
     end
 
+    # 190 review WR-03: a hand-wrapped template splits a phrase across lines, and a rendered text
+    # node keeps its newline and indentation. Matching collapses whitespace on both sides.
+    test "a phrase wrapped across lines is caught in source and in rendered html", %{
+      rules: rules
+    } do
+      path = "scrypath_ops/lib/planted.ex"
+      accepted = "accep" <> "ted"
+
+      cases = [
+        {"retry-queued-not-accepted", "Retry" <> "\n   " <> accepted, "Retry " <> accepted},
+        {"last-succeeded", "Last" <> "\n  " <> "success", "Last success"},
+        {"control-room-casing", "Control" <> "\n " <> "Room", title_case_label()}
+      ]
+
+      for {id, wrapped, collapsed} <- cases do
+        row = row!(rules, id)
+        root = temp_tree!(%{path => "# one\n# two\n" <> wrapped <> "\n"})
+
+        # Reported at the line where the match starts, in the original file.
+        assert [%{kind: :forbidden, row: ^id, path: ^path, line: 3, text: ^collapsed}] =
+                 CopyRules.scan_source(row, root, [path])
+
+        html = "<p>" <> wrapped <> "</p>"
+
+        assert [%{kind: :forbidden, row: ^id, text: ^collapsed} | _] =
+                 Enum.filter(
+                   CopyRules.evaluate_surface(row, "x", html),
+                   &(&1.kind == :forbidden)
+                 )
+      end
+
+      # A tab and a run of blank lines collapse too.
+      row = row!(rules, "control-room-casing")
+      root = temp_tree!(%{path => "Control" <> "\t\n\n  " <> "Room\n"})
+
+      assert [%{kind: :forbidden, line: 1}] = CopyRules.scan_source(row, root, [path])
+
+      # The same words on one line, and words that only look alike, are not caught.
+      clean = temp_tree!(%{path => "Control room\nControl\n  rooms\n"})
+      assert CopyRules.scan_source(row, clean, [path]) == []
+    end
+
+    test "a required phrase that a template reflows still satisfies its row", %{rules: rules} do
+      row = row!(rules, "searchable-settings-row")
+
+      reflowed = "Used for search, Not used for\n      search, Not used for\n  search yet."
+
+      assert CopyRules.evaluate_surface(row, "x", "<td>" <> reflowed <> "</td>") == []
+
+      assert [%{kind: :required_missing, text: "Not used for search yet."}] =
+               CopyRules.evaluate_surface(row, "x", "Used for search, Not used for search")
+    end
+
+    test "an allowed_in phrase still excuses its own text across a wrap" do
+      row = %{
+        "id" => "sample",
+        "forbidden" => [%{"text" => "beta", "match" => "literal", "case" => "sensitive"}],
+        "required" => [],
+        "allowed_in" => ["beta release"],
+        "source_scope" => [],
+        "surfaces" => ["x"]
+      }
+
+      assert CopyRules.evaluate_surface(row, "x", "ship the beta\n  release") == []
+
+      assert [%{text: "beta"}] =
+               CopyRules.evaluate_surface(row, "x", "ship the beta\n  release, then beta")
+    end
+
     test "forbidden text in a rendered surface", %{rules: rules} do
       row = row!(rules, "searchable-observation-only")
       surface = "sync_drift.settings_missing_field"

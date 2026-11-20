@@ -4,14 +4,18 @@ defmodule ScrypathOps.Test.CopyRules do
   # the real contract test and its planted-failure tests call these same functions, so a guard
   # that is calibrated by a planted failure is calibrated through its own code path.
   #
-  # Text is matched against rendered HTML as a raw string. A phrase inside one text node is
-  # found as written; attribute text is incidentally scanned but is not a promise (the table's
-  # `not_covered` list says so).
+  # Text is matched against rendered HTML as a string with every run of whitespace (spaces,
+  # tabs, line breaks) collapsed to one space, on both the phrase and the text side: a phrase
+  # that a hand-wrapped template splits across lines is still found, and a reflowed sentence
+  # still satisfies a required phrase. The static scan reports the line where the match starts
+  # in the original file. Attribute text is incidentally scanned but is not a promise (the
+  # table's `not_covered` list says so).
 
   @row_fields ~w(id rule glossary forbidden required allowed_in source_scope surfaces)
   @entry_fields ~w(text match case)
   @id_pattern ~r/^[a-z0-9]+(-[a-z0-9]+)*(--[a-z0-9]+(-[a-z0-9]+)*)?$/
   @dir_glob_pattern ~r{^[A-Za-z0-9_.][A-Za-z0-9_./-]*/\*\*$}
+  @whitespace ~r/\s+/u
 
   @doc "Absolute path of the table file, next to this module."
   def rules_path, do: Path.join(__DIR__, "copy_rules.json")
@@ -351,7 +355,7 @@ defmodule ScrypathOps.Test.CopyRules do
           is_binary(anchor) and anchor != "",
           entry <- entries(row),
           entry_valid?(entry),
-          entry_hits?(entry, anchor) do
+          entry_hits?(entry, normalise(anchor)) do
         "surface #{id}: the state anchor contains text row #{row["id"]} #{entry["text"] |> inspect()} " <>
           "forbids or requires"
       end
@@ -419,14 +423,8 @@ defmodule ScrypathOps.Test.CopyRules do
         for path <- rel_paths,
             in_scope?(path, scope),
             {:ok, text} <- [read_text(root, path)],
-            hit <- forbidden_hits(entries, row["allowed_in"], text) do
-          %{
-            kind: :forbidden,
-            row: row["id"],
-            path: path,
-            line: line_of(text, hit.index),
-            text: hit.text
-          }
+            hit <- source_hits(entries, row["allowed_in"], text) do
+          %{kind: :forbidden, row: row["id"], path: path, line: hit.line, text: hit.text}
         end
     end
   end
@@ -436,6 +434,8 @@ defmodule ScrypathOps.Test.CopyRules do
   every `forbidden` entry absent (a hit inside an `allowed_in` phrase is excused).
   """
   def evaluate_surface(row, surface_id, html) when is_binary(html) do
+    html = normalise(html)
+
     missing =
       for entry <- row["required"], not entry_hits?(entry, html) do
         %{kind: :required_missing, row: row["id"], surface: surface_id, text: entry["text"]}
@@ -456,7 +456,7 @@ defmodule ScrypathOps.Test.CopyRules do
   forbidden-only row would otherwise pass on a page that never showed the state).
   """
   def check_surface(rows, surface_id, anchor, html) when is_binary(html) do
-    if String.contains?(html, anchor) do
+    if String.contains?(normalise(html), normalise(anchor)) do
       for row <- rows,
           surface_id in row["surfaces"],
           violation <- evaluate_surface(row, surface_id, html),
@@ -493,8 +493,41 @@ defmodule ScrypathOps.Test.CopyRules do
     end)
   end
 
+  # Collapses every run of whitespace to one space. Applied to the text and to `allowed_in`
+  # phrases, so entries are written with single spaces and match across a wrap.
+  defp normalise(text), do: Regex.replace(@whitespace, text, " ")
+
+  # Forbidden hits in a source file, matched on the whitespace-collapsed text and reported at the
+  # line of the original file where the match starts.
+  defp source_hits(regexes, allowed_in, text) do
+    case forbidden_hits(regexes, allowed_in, normalise(text)) do
+      [] ->
+        []
+
+      hits ->
+        runs =
+          for [{start, length}] <- Regex.scan(@whitespace, text, return: :index),
+              do: {start, length}
+
+        for hit <- hits do
+          %{text: hit.text, line: line_of(text, original_offset(runs, hit.index))}
+        end
+    end
+  end
+
+  # Byte offset in the original text of a byte offset in the collapsed text. `runs` are the
+  # whitespace runs of the original, each one byte long once collapsed.
+  defp original_offset(runs, index) do
+    delta =
+      Enum.reduce_while(runs, 0, fn {start, length}, delta ->
+        if start - delta < index, do: {:cont, delta + length - 1}, else: {:halt, delta}
+      end)
+
+    index + delta
+  end
+
   defp forbidden_hits(regexes, allowed_in, text) do
-    excused = allowed_ranges(allowed_in, text)
+    excused = allowed_ranges(Enum.map(allowed_in, &normalise/1), text)
 
     for regex <- regexes,
         [{start, length} | _] <- Regex.scan(regex, text, return: :index),
