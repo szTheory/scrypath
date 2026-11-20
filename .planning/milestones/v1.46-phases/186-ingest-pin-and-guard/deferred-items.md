@@ -10,3 +10,4 @@ Out-of-scope discoveries logged during execution. Nothing here was fixed by the 
 - **Why this plan did not fix it:** Plan 01 touches neither `CONTRIBUTING.md` nor the docs configuration, and the warning text names only that link. It is an unrelated pre-existing failure.
 - **Consequence:** the hosted `core` job would fail on the same step once this branch is pushed.
 - **Cheapest fixes (maintainer or orchestrator, one line):** write the reference as plain text (`AGENTS.md` without link syntax), or link the repository URL instead of the relative path, or add `AGENTS.md` to the docs extras. Plan 03 edits `CONTRIBUTING.md` for the gate ledger and is a natural place to do it.
+  status: acknowledged
