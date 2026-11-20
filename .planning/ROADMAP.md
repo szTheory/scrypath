@@ -43,8 +43,8 @@ v1.44 and v1.45 landed on main (PRs #123, #124, #126) and `scrypath` 0.3.18 is r
 - [x] **Phase 186: Ingest, pin and guard** - Pin the adopted brand assets offline, add one token-parity and retired-value test, lift the pinned old-identity literals, and make the recolor tolerable to existing checks (test and evidence only, at most 3 plans) (completed 2026-11-19)
 - [x] **Phase 187: ScrypathOps re-skin** - Operators see ScrypathOps in the new identity in light and dark with one status vocabulary, delivered as one Draft PR (completed 2026-11-19)
 - [ ] **Phase 188: README header and HexDocs** - Readers see the brand header, logo, favicon and corrected stylesheet on GitHub and HexDocs
-- [ ] **Phase 189: Website re-skin** (deferrable to v1.47) - Visitors see the website in the new identity, verified before the merge that deploys it
-- [ ] **Phase 190: Wording that does not need the catalog** (deferrable to v1.47) - Screen copy follows the recorded glossary rules, each guarded by a copy test
+- [ ] **Phase 189: Website re-skin** (DEFERRED to v1.47, maintainer followed the recommendation 2026-11-19) - Visitors see the website in the new identity, verified before the merge that deploys it
+- [ ] **Phase 190: Wording that does not need the catalog** (DEFERRED to v1.47, maintainer followed the recommendation 2026-11-19) - Screen copy follows the recorded glossary rules, each guarded by a copy test
 
 ## Phase Details
 
@@ -130,6 +130,8 @@ Plans:
 
 ## Deferral of Phases 189 and 190
 
+**Decided 2026-11-19:** the maintainer followed the recommendation to defer both to v1.47 (trigger: Phase 187's Draft PR #138 is unmerged, so more work would stack behind it). v1.46 closes after Phase 188. SITE-01 and COPY-01 move to the v1.47 requirements.
+
 Phases 189 and 190 move to v1.47 if v1.46 runs long. This is a scope call by the maintainer, not an automatic action, and it is raised at the Phase 188 boundary or earlier when either of these happens:
 
 - Phase 187 needed a re-plan, or the GATE-02 progress guard forced a stop-and-decide in Phase 186 or 187.
@@ -154,5 +156,5 @@ Type-scale reflow, master-detail Search health and the progress line, sounds, lo
 | 186. Ingest, pin and guard | v1.46 | 0/3 | Planned | - |
 | 187. ScrypathOps re-skin | v1.46 | 0/TBD | Not started | - |
 | 188. README header and HexDocs | v1.46 | 0/TBD | Not started | - |
-| 189. Website re-skin | v1.46 (deferrable) | 0/TBD | Not started | - |
-| 190. Wording that does not need the catalog | v1.46 (deferrable) | 0/TBD | Not started | - |
+| 189. Website re-skin | v1.47 (deferred 2026-11-19) | 0/TBD | Deferred | - |
+| 190. Wording that does not need the catalog | v1.47 (deferred 2026-11-19) | 0/TBD | Deferred | - |

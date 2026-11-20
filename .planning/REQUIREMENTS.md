@@ -129,8 +129,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-03 | Phase 187 | Complete |
 | BDOC-01 | Phase 188 | Pending |
 | BDOC-02 | Phase 188 | Pending |
-| SITE-01 | Phase 189 | Pending (deferrable to v1.47) |
-| COPY-01 | Phase 190 | Pending (deferrable to v1.47) |
+| SITE-01 | Phase 189 | Deferred to v1.47 (2026-11-19) |
+| COPY-01 | Phase 190 | Deferred to v1.47 (2026-11-19) |
 
 **Coverage:**
 - v1 requirements: 29 total
