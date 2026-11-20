@@ -196,10 +196,22 @@ defmodule Scrypath.MixProject do
       main: "readme",
       source_url: @source_url,
       source_ref: @source_ref,
-      # The README header paths are relative (`brand/assets/readme/...`): GitHub resolves them to
-      # committed files and this mirror makes the same paths resolve inside the built docs. Strings
-      # only: a Hex consumer evaluates this file without `brand/`, and ExDoc skips a missing source.
-      assets: %{"brand/assets/readme" => "brand/assets/readme"},
+      # ExDoc takes one logo: the light symbol. The docs-owned stylesheet swaps in the dark symbol
+      # under ExDoc's own dark mode. The favicon is the light one because the pinned favicon.svg
+      # carries no fill and renders black.
+      logo: "brand/assets/logo/scrypath-symbol-light.svg",
+      favicon: "brand/assets/icon/favicon-light.svg",
+      # The README header paths are relative (brand/assets/readme/...): GitHub resolves them to
+      # committed files and this mirror makes the same paths resolve inside the built docs. The
+      # logo mirror serves the dark-symbol rule in the stylesheet, and dev/docs holds that
+      # docs-owned stylesheet. Strings only: a Hex consumer evaluates this file without brand/,
+      # and ExDoc skips a missing source directory.
+      assets: %{
+        "brand/assets/readme" => "brand/assets/readme",
+        "brand/assets/logo" => "brand/assets/logo",
+        "dev/docs" => "assets"
+      },
+      before_closing_head_tag: &before_closing_head_tag/1,
       # Verify task modules compile only under :test, so the published (:dev) docs omit them without any filter.
       # A module filter is deliberately absent because it breaks the :test docs build (Phase 183, D-07 as amended).
       extras: [
@@ -282,6 +294,12 @@ defmodule Scrypath.MixProject do
       ]
     ]
   end
+
+  # The docs-owned stylesheet loads after ExDoc's own CSS so its code-block rules win.
+  defp before_closing_head_tag(:html),
+    do: ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
+
+  defp before_closing_head_tag(_format), do: ""
 
   defp package do
     [

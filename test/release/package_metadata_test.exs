@@ -139,6 +139,8 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   alias Scrypath.MixProject
 
   @generator ~s(<meta name="generator" content="ExDoc v)
+  @exdoc_css "dist/html-elixir-"
+  @docs_link ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
   @header_dark "brand/assets/readme/scrypath-header-dark.svg"
   @header_light "brand/assets/readme/scrypath-header-light.svg"
   @snippet "brand/assets/readme/header-snippet.html"
@@ -257,6 +259,85 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
 
     assert unresolved == [@snippet]
   end
+
+  test "every content page links the favicon and the docs-owned stylesheet after ExDoc's CSS", %{
+    out: out
+  } do
+    pages = generated_pages(out)
+    content = content_pages(pages)
+    redirects = pages -- content
+
+    assert length(content) >= 50
+    assert Path.join(out, "readme.html") in content
+
+    for page <- content do
+      html = File.read!(page)
+      {exdoc_at, _} = :binary.match(html, @exdoc_css)
+
+      assert html =~ ~s(<link rel="icon" href="assets/favicon.svg"),
+             "#{rel(out, page)} has no brand favicon link"
+
+      case :binary.match(html, @docs_link) do
+        {docs_at, _} ->
+          assert docs_at > exdoc_at, "#{rel(out, page)} links the docs stylesheet before ExDoc's"
+
+        :nomatch ->
+          flunk("#{rel(out, page)} does not link the docs-owned stylesheet")
+      end
+    end
+
+    assert File.read!(Path.join(out, "readme.html")) =~ ~s(src="assets/logo.svg")
+
+    # The exclusion cannot silently grow: the only generator-marked pages without ExDoc's
+    # stylesheet are the meta-refresh redirects, and every refresh page is one of them.
+    refresh = Enum.filter(pages, &(File.read!(&1) =~ ~s(http-equiv="refresh")))
+    assert redirects != []
+    assert Enum.sort(redirects) == Enum.sort(refresh)
+  end
+
+  test "the built favicon, logo and stylesheet are byte-equal to their sources", %{out: out} do
+    assert File.read!(Path.join(out, "assets/favicon.svg")) ==
+             File.read!("brand/assets/icon/favicon-light.svg")
+
+    assert File.read!(Path.join(out, "assets/logo.svg")) ==
+             File.read!("brand/assets/logo/scrypath-symbol-light.svg")
+
+    assert File.read!(Path.join(out, "assets/scrypath-exdoc.css")) ==
+             File.read!("dev/docs/scrypath-exdoc.css")
+  end
+
+  test "every url() in the docs-owned stylesheet resolves in the build to its pinned source", %{
+    out: out
+  } do
+    urls =
+      "dev/docs/scrypath-exdoc.css"
+      |> File.read!()
+      |> then(&Regex.scan(~r/url\(\s*["']?([^"')]+?)["']?\s*\)/, &1, capture: :all_but_first))
+      |> List.flatten()
+
+    assert urls != [], "the stylesheet has no url() to check"
+
+    for url <- urls do
+      built = Path.expand(url, Path.join(out, "assets"))
+      source = Path.relative_to(built, out)
+
+      assert String.starts_with?(source, "brand/assets/logo/"),
+             "#{url} does not resolve into the mirrored brand logo directory"
+
+      assert File.regular?(built), "#{url} does not resolve to a file in the build"
+      assert File.read!(built) == File.read!(source), "#{url} differs from its pinned source"
+    end
+  end
+
+  test "the head hook links the stylesheet for html only and stays private" do
+    hook = MixProject.project()[:docs][:before_closing_head_tag]
+
+    assert hook.(:html) == @docs_link
+    assert hook.(:epub) == ""
+    refute function_exported?(MixProject, :before_closing_head_tag, 1)
+  end
+
+  defp content_pages(pages), do: Enum.filter(pages, &(File.read!(&1) =~ @exdoc_css))
 
   defp retired_dir, do: "brand" <> "book/"
 
