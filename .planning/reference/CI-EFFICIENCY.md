@@ -14,6 +14,7 @@ How to measure: `gh run view <run-id> --json jobs --jq '.jobs[]|[.name,.conclusi
 6. A change to anything the verifier fixture copies: run the whole CI Node step locally (`.github/workflows/ci.yml`, "Verify browser build, lifecycle, evidence, and target behavior").
 7. A shallow checkout (the `package` job) lacks history: tests that use `git merge-base` or `git show` must handle that (the README header pin test does).
 8. The browser-lane path classifier works offline: `GITHUB_EVENT_NAME=pull_request GITHUB_BASE_REF=main node scripts/ci/ecommerce_path_classifier.cjs --head <ref>` prints `run=false` only when every path changed on `<ref>` over `origin/main` is under `.planning/`, under `docs/`, or a root-level markdown file.
+9. After adding or moving any file under `scrypath_ops/test` (including `test/support`) or `lib/scrypath`: `mix test test/mix/tasks/verify_namespace_fence_test.exs` from the root (3 tests, about 1 s). The namespace fence allows `Sigra.` only under the Sigra integration namespace and `scrypath_ops/test/scrypath_ops_web/live/`, and it reads `test/support` too. Phase 190 plan 02 moved a test helper that named the Sigra operator context into `test/support`; the ScrypathOps suite, the wiring test and the node tests were all green, and the first signal was a failed `mix verify.core` about 6 minutes into its unit-test step on 2026-11-20 (the fix was a code change, so both long gates were rerun on the new SHA, about 14 minutes more).
 
 ## Measured timings (hosted, 2026-11-20, PR #145 run 44670776239 unless noted)
 

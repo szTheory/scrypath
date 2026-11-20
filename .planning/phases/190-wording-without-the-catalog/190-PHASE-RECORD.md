@@ -28,7 +28,7 @@ Written in plan 190-02 (2026-11-20). It holds the decisions, the procedures the 
 
 **(c) The wording calls stand.** The `[pre-seed call]` choices in `190-CONTEXT.md` were followed as written: Used for search and Not used for search, Last succeeded, N jobs pending, and Retry queued replacing accepted for the host queue. The maintainer may veto any of them later; each is one string edit plus one table row.
 
-**(d) Stubs live once.** The failed-sync stubs (client, Oban inspector, recording insert, environment, sudo helper) and the `Oban.Job` struct stub moved to `scrypath_ops/test/support/copy_stubs/`, so the failed-sync LiveView test and the table's `failed_sync.after_retry` surface share one definition. A consequence: `Oban.Job` is now defined in the whole test environment instead of only when the failed-sync test file loads (a whole-suite run already had it, since every test file loads before any test runs).
+**(d) Stubs live once.** The failed-sync stubs (client, Oban inspector, recording insert, environment) and the `Oban.Job` struct stub moved to `scrypath_ops/test/support/copy_stubs/`, so the failed-sync LiveView test and the table's `failed_sync.after_retry` surface share one definition. A consequence: `Oban.Job` is now defined in the whole test environment instead of only when the failed-sync test file loads (a whole-suite run already had it, since every test file loads before any test runs). The sudo confirmation (its Sigra environment and the `sudo!/1` helper) stays in the failed-sync LiveView test, because the namespace fence keeps references to the Sigra integration out of `test/support`; the surface renders the retry in the default host-authenticated mode, where the retry runs without one. The first `mix verify.core` caught the fence violation (see the receipt), and the fix is a code change.
 
 ## Decisions recorded
 
@@ -85,4 +85,6 @@ Run by the orchestrator, with no push after the head is verified:
 
 ## Gate receipts
 
-See 190-GATE-RECEIPT.md (written after the two long gates ran on the final code head).
+See 190-GATE-RECEIPT.md
+
+Result summary: one `mix verify.repository_contracts` and one `mix verify.core --exclude integration --exclude docs_contract` ran once each on commit `f6c78bd243602701857891dd77332d602a392d3e` and both passed (174 tests and 1195 tests plus 5 properties, no failures). An earlier round on `47558725` found one real defect (a shared test stub broke the namespace fence), which was fixed in code, so both gates were rerun on the fixed commit and the earlier results are superseded. The only commits after the tested SHA change files under `.planning/`. Hosted lanes (`ops-ui`, `ecommerce-mounted` with the Cancel-focus line, `backend`, `package`, the advisory dispatch) are not covered by the receipt; they are the Post-ship evidence above.
