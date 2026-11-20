@@ -932,9 +932,14 @@ try {
   }
 
   // -------------------------------------------------------------------------
-  // Review screenshots (never gate)
+  // Review screenshots (never gate): a failure here is logged and does not end the run, because every
+  // assertion above has already been reported and a red job blocks the deploy behind it.
   // -------------------------------------------------------------------------
-  await captureScreenshots(browser);
+  try {
+    await captureScreenshots(browser);
+  } catch (error) {
+    console.log(`screenshots: failed, ${String(error?.message ?? error).split('\n')[0]}; they do not gate`);
+  }
 } finally {
   await browser?.close();
   await server.stop();
@@ -989,6 +994,8 @@ async function captureScreenshots(browserInstance) {
       console.log(`screenshots: skipped, ${artifactsDir} is not writable (${error.message})`);
       return;
     }
+    // Under CI an unwritable directory is reported as a failed capture by the caller, which logs it and
+    // carries on: the artifact upload step already tolerates an empty directory.
     throw error;
   }
   const themes = PICKER_MODE ? ['light', 'dark'] : ['light'];

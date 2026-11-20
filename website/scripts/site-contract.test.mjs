@@ -280,6 +280,33 @@ test('live ofl-links: the footer links all three font license texts', () => {
   assertNoLive('ofl-links');
 });
 
+// check.mjs needs a browser, so this contract cannot run it. The review screenshots are documented as
+// "never gate"; this reads the source and holds that to a catch around the capture call that logs and
+// does not rethrow, because a throw there ends the process non-zero after every assertion passed and
+// blocks the deploy (and a rollback) behind it.
+function screenshotProblems(source) {
+  const call = /\bawait captureScreenshots\(browser\);/.exec(source);
+  if (!call) return ['check.mjs no longer calls captureScreenshots(browser)'];
+  const before = source.slice(0, call.index);
+  const after = source.slice(call.index + call[0].length);
+  const problems = [];
+  if (!/try\s*\{\s*$/.test(before)) problems.push('the capture call is not the first statement of a try block');
+  const handler = /^\s*\}\s*catch\s*(?:\([^)]*\))?\s*\{([\s\S]*?)\n  \}/.exec(after);
+  if (!handler) {
+    problems.push('the capture call has no catch block');
+  } else {
+    if (/\bthrow\b/.test(handler[1])) problems.push('the catch block rethrows');
+    if (!/console\.(?:log|warn)\(/.test(handler[1])) problems.push('the catch block does not log the failure');
+  }
+  return problems;
+}
+
+const checkSourceText = () => readFileSync(path.join(scriptsDir, 'check.mjs'), 'utf8');
+
+test('live screenshots-never-gate: check.mjs catches a screenshot failure instead of failing the run', () => {
+  assert.deepEqual(screenshotProblems(checkSourceText()), []);
+});
+
 // ---------------------------------------------------------------------------
 // Planted: each guard fails on its own defect (mutations of the known-good fixture)
 // ---------------------------------------------------------------------------
@@ -560,6 +587,17 @@ test('planted unthemed-favicon: the unthemed favicon named in a source copy', ()
   const dir = sourceCopy();
   edit(dir, 'layout.html', html => html.replace('</head>', '<link rel="apple-touch-icon" href="{{BASE_PATH}}assets/favicon.svg" /></head>'));
   assertCodes(checkSource(dir), ['unthemed-favicon'], 'unthemed favicon in source');
+});
+
+test('planted screenshots-never-gate: a capture call without a catch, or with one that rethrows, is rejected', () => {
+  const wrap = body => `  try {\n    await captureScreenshots(browser);\n  } catch (error) {\n${body}\n  }\n} finally {\n`;
+  assert.deepEqual(screenshotProblems(wrap('    console.log(String(error));')), [], 'a catch that logs is accepted');
+
+  assert.match(screenshotProblems('  await captureScreenshots(browser);\n} finally {\n').join('; '), /not the first statement of a try block/);
+  assert.match(screenshotProblems('  try {\n    await captureScreenshots(browser);\n  } finally {\n    cleanup();\n  }\n').join('; '), /no catch block/);
+  assert.match(screenshotProblems(wrap('    console.log(String(error));\n    throw error;')).join('; '), /the catch block rethrows/);
+  assert.match(screenshotProblems(wrap('    // ignored')).join('; '), /does not log the failure/);
+  assert.match(screenshotProblems('  const done = true;\n').join('; '), /no longer calls captureScreenshots/);
 });
 
 test('planted build: a tokens.json copy with one role token removed exits non-zero and names the role', () => {
