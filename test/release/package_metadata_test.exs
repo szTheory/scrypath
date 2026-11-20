@@ -304,17 +304,29 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
 
     # The pinned commit must be on this history, and the bytes at that commit must equal the files
     # the repository ships now, so a brand update that changes a header also has to move the pin.
-    assert match?(
-             {_, 0},
-             System.cmd("git", ["merge-base", "--is-ancestor", @header_pin, "HEAD"],
-               stderr_to_stdout: true
-             )
-           ),
-           "README header pin #{@header_pin} is not an ancestor of HEAD"
+    # A shallow checkout (the `package` job) may not contain the commit; the full-history jobs
+    # (`core`, `repository-contracts`) still run these checks. A full clone must always have it.
+    present? =
+      match?(
+        {_, 0},
+        System.cmd("git", ["cat-file", "-e", "#{@header_pin}^{commit}"], stderr_to_stdout: true)
+      )
 
-    for path <- [@header_dark_path, @header_light_path] do
-      {pinned, 0} = System.cmd("git", ["show", "#{@header_pin}:#{path}"])
-      assert pinned == File.read!(path), "#{path} differs from its bytes at #{@header_pin}"
+    {shallow, 0} = System.cmd("git", ["rev-parse", "--is-shallow-repository"])
+
+    if present? or String.trim(shallow) != "true" do
+      assert match?(
+               {_, 0},
+               System.cmd("git", ["merge-base", "--is-ancestor", @header_pin, "HEAD"],
+                 stderr_to_stdout: true
+               )
+             ),
+             "README header pin #{@header_pin} is not an ancestor of HEAD"
+
+      for path <- [@header_dark_path, @header_light_path] do
+        {pinned, 0} = System.cmd("git", ["show", "#{@header_pin}:#{path}"])
+        assert pinned == File.read!(path), "#{path} differs from its bytes at #{@header_pin}"
+      end
     end
   end
 
