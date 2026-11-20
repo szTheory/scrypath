@@ -196,16 +196,13 @@ defmodule Scrypath.MixProject do
       main: "readme",
       source_url: @source_url,
       source_ref: @source_ref,
-      # ExDoc takes one logo: the light symbol. The docs-owned stylesheet swaps in the dark symbol
-      # under ExDoc's own dark mode. The favicon is the light one because the pinned favicon.svg
-      # carries no fill and renders black.
-      logo: "brand/assets/logo/scrypath-symbol-light.svg",
-      favicon: "brand/assets/icon/favicon-light.svg",
       # The README header paths are relative (brand/assets/readme/...): GitHub resolves them to
       # committed files and this mirror makes the same paths resolve inside the built docs. The
       # logo mirror serves the dark-symbol rule in the stylesheet, and dev/docs holds that
       # docs-owned stylesheet. Strings only: a Hex consumer evaluates this file without brand/,
-      # and ExDoc skips a missing source directory.
+      # and ExDoc skips a missing `assets:` source directory. `logo:` and `favicon:` do not degrade
+      # that way (ExDoc copies them with File.copy!/2), so docs/0 adds them only when their files
+      # exist, below.
       assets: %{
         "brand/assets/readme" => "brand/assets/readme",
         "brand/assets/logo" => "brand/assets/logo",
@@ -293,6 +290,16 @@ defmodule Scrypath.MixProject do
         ]
       ]
     ]
+    # ExDoc takes one logo: the light symbol. The docs-owned stylesheet swaps in the dark symbol
+    # under ExDoc's own dark mode. The favicon is the light one because the pinned favicon.svg
+    # carries no fill and renders black. Both files live under brand/, which is not in the Hex
+    # package, so `mix docs` on an unpacked tarball builds without them instead of raising ENOENT.
+    |> put_if_file(:logo, "brand/assets/logo/scrypath-symbol-light.svg")
+    |> put_if_file(:favicon, "brand/assets/icon/favicon-light.svg")
+  end
+
+  defp put_if_file(opts, key, path) do
+    if File.regular?(path), do: Keyword.put(opts, key, path), else: opts
   end
 
   # The docs-owned stylesheet loads after ExDoc's own CSS so its code-block rules win.
