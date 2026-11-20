@@ -53,7 +53,8 @@ defmodule ScrypathOpsWeb.ReskinStaticContractTest do
     {"images/scrypath-wordmark.svg", "assets/logo/scrypath-lockup-light.svg"},
     {"images/scrypath-wordmark-inverse.svg", "assets/logo/scrypath-lockup-dark.svg"},
     {"images/logo.svg", "assets/logo/scrypath-symbol-light.svg"},
-    {"favicon.svg", "assets/icon/favicon.svg"},
+    # The pinned favicon.svg carries no fill and renders black, so ops serves the light variant.
+    {"favicon.svg", "assets/icon/favicon-light.svg"},
     {"favicon.ico", "assets/icon/favicon.ico"}
   ]
   @app_css Path.join(@ops_root, "assets/css/app.css")
