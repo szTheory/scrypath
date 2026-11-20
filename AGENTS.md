@@ -122,6 +122,7 @@ Some repository contracts build a clean Git snapshot. Before rerunning one after
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
+- squash-merge a PR yourself once the work is done and its required checks are green on the exact head, including visible-UI PRs; advisory reds such as `deep-quality` do not block (maintainer standing instruction, 2026-11-19). Do not wait for a separate merge yes. Hex releases and release-please PRs still need the maintainer's explicit yes
 - prefer **PR-first** execution for serious milestone or feature-depth work
 - shift verification left: completion must be backed by executable tests or exact-SHA hosted evidence, never post-implementation human verification or pending UAT
 - resolve subjective choices before implementation or keep them nonblocking; do not simulate a reviewer identity or silently auto-approve a trust gate
