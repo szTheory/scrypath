@@ -65,11 +65,11 @@ const HEX_OUTSIDE_CEILING = 0;
 // Allowlist entries (paths and prefixes). A new entry means a new retired value landed in a
 // new file, which is the thing this guard exists to stop.
 // Growth inside a listed file is stopped by each entry's max_hits (see HITS_CEILING).
-const ALLOWLIST_CEILING = 2;
+const ALLOWLIST_CEILING = 0;
 // The sum of every entry's max_hits in the allowlist file. Each entry's max_hits must equal
 // the live count, so a retired value added to a listed file needs a max_hits edit there and
 // this edit here: the second key. A drop in hits needs both edits too.
-const HITS_CEILING = 178;
+const HITS_CEILING = 0;
 // The checks take these as a parameter so the planted and accept cases can use
 // their own limits and never depend on how far the live ceilings have shrunk.
 const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING, hits: HITS_CEILING };
@@ -798,10 +798,11 @@ const ALLOWLIST_TAGS = new Set(["p186", "p187", "p188", "p189", "retire-last"]);
 // CONTEXT list missed (5), and the warm-paper and old-ramp tier from the research (12).
 // The tier-4 semantic fills stay off this list until Phase 187 decides their fate.
 // Phase 189 adds the retired website palette (18): the violet, copper, cyan and green accents and
-// the dark navy and warm-white ramp of the old website/src stylesheet and its brand files. Three
-// more website values stay off this list until the Phase 191 commit that deletes the old brand
-// directory, because that directory still holds them; the website static contract
-// (website/scripts/lib/contract.mjs, CARVED_OUT_HEX) asserts them absent until then.
+// the dark navy and warm-white ramp of the old website/src stylesheet and its brand files. Phase 191
+// appends the last three website values (positions 48 to 50) in the commit that deleted the old brand
+// directory, which still held them until then. The website static contract
+// (website/scripts/lib/contract.mjs, CARVED_OUT_HEX) keeps asserting them absent; it builds them
+// from two pieces at runtime.
 const DENY_HEX = `
   191e25 353d48 f1f2f4 dce2e9 f3f5f8 edf1f5 202124
   2a3446 302b4c eeebff a85d2e 111419 222831
@@ -810,6 +811,7 @@ const DENY_HEX = `
   6b7388 7f8aa3 b3bdcf d7d0c4 e0b487 f2eee7
   9f8cff 7b61ff e0a06d f0bc93 0b0f15 0b1018 0d121a 111723 131b27
   f5f1e8 83d6ee 8ad9b6 aeb8c8 7d889a 090d13 f5efe4 eedfff eedfd0
+  d08e54 0c0f14 9aa4b6
 `.trim().split(/\s+/);
 // The retired brand directory, joined at runtime for the same reason.
 const RETIRED_DIR = ["brand", "book/"].join("");
@@ -1189,6 +1191,19 @@ test("planted old website palette hex fails the deny scan", () => {
   const failures = scanTree(makeTree(files));
   for (const index of websiteRetired.keys()) {
     assert.ok(anyFailure(failures, new RegExp(`unlisted retired identity value in website/src/old-${index}\\.css`)), `old-${index}.css is reported`);
+  }
+});
+
+// Phase 191: the last three website values (positions 48 to 50) joined the deny set with the commit
+// that deleted the old brand directory, the only other file tree that held them.
+const sharedWebsiteRetired = DENY_HEX.slice(48, 51);
+
+test("planted shared website hex fails the deny scan", () => {
+  assert.equal(sharedWebsiteRetired.length, 3, "three shared website values joined the deny set");
+  const files = Object.fromEntries(sharedWebsiteRetired.map((hex, index) => [`website/src/shared-${index}.css`, `a { color: #${hex}; }\n`]));
+  const failures = scanTree(makeTree(files));
+  for (const index of sharedWebsiteRetired.keys()) {
+    assert.ok(anyFailure(failures, new RegExp(`unlisted retired identity value in website/src/shared-${index}\\.css`)), `shared-${index}.css is reported`);
   }
 });
 
