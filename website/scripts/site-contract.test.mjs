@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { CARVED_OUT_HEX, checkBuilt, checkSource, closedHexSet, codesOf, expectedRoles, hexesIn, loadBrand, PINNED_OUTPUTS } from './lib/contract.mjs';
 import { writeGoldenSource } from './lib/golden.mjs';
 import { startServer } from './lib/server.mjs';
+import { runSmoke } from './smoke.mjs';
 import { THEME_MODE } from './theme-mode.mjs';
 import { compositeOver, contrastRatio, contrastRatioRaw, hexToColor, parseCssColor, roundRatio, toHex } from './lib/wcag.mjs';
 
@@ -699,6 +700,87 @@ test('accept the preview server 404s outside the base, serves real mime types an
   } finally {
     await server.stop();
   }
+});
+
+// Smoke cases (scripts/smoke.mjs): the server starts first on an empty temp directory, then the real
+// website is built into it with the local site URL, so og:image and the canonical URLs resolve to the
+// local server under /scrypath/. No network and no fixed port. Planted cases run the smoke with a
+// single attempt so a planted 404 does not wait out the retry delay.
+async function withServedSite(run) {
+  const dir = tempDir('scrypath-smoke-');
+  const server = await startServer({ dir, base: '/scrypath/' });
+  try {
+    const result = runBuild({ out: dir, siteUrl: server.baseUrl });
+    assert.equal(result.status, 0, result.stderr);
+    return await run({ dir, server });
+  } finally {
+    await server.stop();
+  }
+}
+
+const SMOKE_ONCE = { attempts: 1, retryDelayMs: 0 };
+const failedCodes = results => results.filter(result => !result.ok).map(result => result.code);
+
+test('accept smoke passes against the built site served under /scrypath/', async () => {
+  await withServedSite(async ({ server }) => {
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.deepEqual(failedCodes(results), [], JSON.stringify(results.filter(result => !result.ok)));
+    assert.equal(ok, true);
+    assert.deepEqual([...new Set(results.map(result => result.code))].sort(), ['base-path', 'card', 'favicon', 'font', 'home', 'lockups']);
+
+    // Every URL the smoke asked for is under the base path: nothing reached the origin root.
+    await server.flush();
+    const outside = server.requests.filter(request => !request.path.startsWith('/scrypath/') && !request.path.startsWith('/__flush_'));
+    assert.deepEqual(outside, [], 'the smoke must not request anything outside /scrypath/');
+    assert.ok(server.requests.some(request => request.path === '/scrypath/assets/fonts/ui.woff2' && request.status === 200));
+  });
+});
+
+test('accept smoke command line exits 0 against the served site and 1 with a message when no base URL is set', async () => {
+  const smokeScript = path.join(scriptsDir, 'smoke.mjs');
+  const env = { ...process.env };
+  delete env.SCRYPATH_SMOKE_URL;
+  delete env.SCRYPATH_SITE_URL;
+
+  const missing = spawnSync(process.execPath, [smokeScript], { encoding: 'utf8', env });
+  assert.equal(missing.status, 1);
+  assert.match(missing.stderr, /SCRYPATH_SMOKE_URL/);
+
+  await withServedSite(async ({ server }) => {
+    const served = spawnSync(process.execPath, [smokeScript], { encoding: 'utf8', env: { ...env, SCRYPATH_SMOKE_URL: server.baseUrl } });
+    assert.equal(served.status, 0, `${served.stdout}${served.stderr}`);
+    assert.match(served.stdout, /^ok - the ui font answers 200 as font\/woff2 with its pinned hash$/m);
+    assert.match(served.stdout, /smoke passed/);
+  });
+});
+
+test('planted smoke fails when a pinned font is missing from the served tree', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    rmSync(path.join(dir, 'assets', 'fonts', 'ui.woff2'));
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.equal(ok, false, 'a missing font must fail the smoke');
+    assert.deepEqual(failedCodes(results), ['font']);
+  });
+});
+
+test('planted smoke fails when og:image resolves outside the base path', async () => {
+  await withServedSite(async ({ dir, server }) => {
+    edit(dir, 'index.html', html =>
+      html.replace(`${server.baseUrl}assets/scrypath-social-card-1280x640.png`, `${server.origin}/assets/scrypath-social-card-1280x640.png`)
+    );
+    const { ok, results } = await runSmoke(server.baseUrl, SMOKE_ONCE);
+    assert.equal(ok, false, 'an og:image outside /scrypath/ must fail the smoke');
+    assert.deepEqual(failedCodes(results), ['base-path', 'card']);
+    assert.match(results.find(result => result.code === 'base-path').detail, /og:image .* outside /);
+
+    // The out-of-base URL is reported and never fetched.
+    await server.flush();
+    assert.equal(
+      server.requests.some(request => request.path === '/assets/scrypath-social-card-1280x640.png'),
+      false,
+      'the smoke must not fetch a URL outside the base path'
+    );
+  });
 });
 
 test('accept theme-picker tagged cases are not vacuous', () => {

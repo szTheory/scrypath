@@ -6,6 +6,7 @@
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs",
     "check": "node scripts/check.mjs",
+    "smoke": "node scripts/smoke.mjs",
     "test:contract": "node --test scripts/site-contract.test.mjs"
   },
   "devDependencies": {

@@ -148,6 +148,34 @@ Because Scrypath uses squash merges and Release Please reads the merged commit h
 - Use **breaking-change semantics** (`!` or `BREAKING CHANGE`) only for explicit major-version planning.
 - Avoid vague PR titles that would create noisy or misleading release notes.
 
+## Website deploy and rollback
+
+The website in `website/` is published to `https://sztheory.github.io/scrypath/` by `.github/workflows/website.yml`. This is separate from the Hex release flow above: merging a website change publishes the site, never a package.
+
+**What deploys.** A push to `main` that touches `website/**`, `brand/**`, `README.md`, `guides/**`, `docs/**`, `mix.exs` or the workflow file builds the site, runs `build-and-check` (the static contract and the browser checks) and then deploys it. Pull requests use the same path list, so a brand change is built and checked before it merges.
+
+**Concurrency.** The deploy job has its own group, `website-pages-deploy`, with `cancel-in-progress: false`, so a newer push waits for a deploy that is already running instead of cutting it off. The workflow-level group still cancels a superseded run as a whole, including its deploy job if that has already started; the newer run then deploys the newer content.
+
+**Smoke step.** The last step of the deploy job runs `node website/scripts/smoke.mjs` against the live page URL. It checks that the home page answers 200, that the ui font answers 200 as `font/woff2` with the sha256 pinned in `brand/brand.pin.json`, that both lockups load, that the social card is the pinned PNG, that `favicon.ico` answers, and that every asset URL the page declares stays under `/scrypath/`. Requests carry a `?smoke=` query so the edge cache (Pages answers `max-age=600`) cannot hide a bad deploy, and a request is retried (three tries, ten seconds apart) only for a network error, a 404 or a 5xx, which is what propagation right after a deploy looks like. A red smoke means roll back, not retry.
+
+**Rollback.** Redeploy the last good commit with a manual run:
+
+```bash
+gh workflow run website.yml --ref main -f ref=<commit-sha>
+```
+
+The `github-pages` environment allows `main` only, so the dispatch runs on `main` and `ref` names the commit to redeploy (a commit, tag or branch). The input is used only as the checkout ref and is never part of a shell command. Prefer this to a retry loop and to a revert PR, which takes 5 to 15 minutes. A rollback to a commit that predates the smoke script runs only a soft check, `curl -fsSI` on the home page and the stylesheet, so a green run means the old site answers at both URLs; the manual confirmation is the same two calls, `curl -I https://sztheory.github.io/scrypath/` and `curl -I https://sztheory.github.io/scrypath/assets/styles.css`.
+
+**Exact-head evidence for a website PR.** Before the squash merge, confirm the check ran on the head you are merging:
+
+```bash
+gh api repos/szTheory/scrypath/commits/<head>/check-runs
+```
+
+Read `build-and-check` as completed with conclusion `success` and `head_sha` equal to the PR head, next to the required contexts on the same head.
+
+**`build-and-check` is not a required check.** It is a browser job whose runs take about 47 to 64 seconds, with a timeout (10 minutes) that bounds its slow tail; branch protection is a maintainer setting; and `deploy` needs `build-and-check`, so a red check stops the deploy after the merge. Re-open this when a rendering regression that only this job would have caught reaches `main`: it then becomes a required gate, with a deletion trigger and its expected churn recorded in the ledger in `CONTRIBUTING.md`.
+
 ## Recovering Tag or Version Drift
 
 Start by comparing the repo version sources and the pushed tags directly:

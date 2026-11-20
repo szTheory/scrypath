@@ -2,16 +2,31 @@ name: Website
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
     paths:
       - 'website/**'
+      - 'brand/**'
       - 'README.md'
       - 'guides/**'
       - 'docs/**'
       - 'mix.exs'
       - '.github/workflows/website.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+      - 'brand/**'
+      - 'README.md'
+      - 'guides/**'
+      - 'docs/**'
+      - 'mix.exs'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit, tag or branch to build and redeploy (the rollback input). Defaults to main.'
+        type: string
+        default: main
 
 permissions:
   contents: read
@@ -23,6 +38,7 @@ concurrency:
 jobs:
   build-and-check:
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     env:
       SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
       SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath
@@ -31,6 +47,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -46,11 +63,19 @@ jobs:
         working-directory: website
         run: npm run build
 
-      - name: Install Playwright browsers
+      - name: Select browser (runner Chrome when launchable, else Playwright Chromium)
         working-directory: website
-        run: npx playwright install --with-deps chromium
+        run: |
+          if google-chrome --version \
+            && node -e "import('playwright').then(async ({ chromium }) => { const browser = await chromium.launch({ channel: 'chrome' }); await browser.close(); })"; then
+            echo "Using the runner's $(google-chrome --version) through Playwright's chrome channel"
+            echo "SCRYPATH_BROWSER_CHANNEL=chrome" >> "$GITHUB_ENV"
+          else
+            echo "Runner Chrome is missing or not launchable; installing Playwright Chromium"
+            npx playwright install --with-deps chromium
+          fi
 
-      - name: Run screenshot checks
+      - name: Run site checks
         working-directory: website
         run: npm run check
 
@@ -63,9 +88,12 @@ jobs:
           if-no-files-found: warn
 
   deploy:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: build-and-check
     runs-on: ubuntu-24.04
+    concurrency:
+      group: website-pages-deploy
+      cancel-in-progress: false
     env:
       SCRYPATH_SITE_URL: https://sztheory.github.io/scrypath/
       SCRYPATH_REPO_URL: https://github.com/szTheory/scrypath
@@ -78,6 +106,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          ref: ${{ inputs.ref }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -102,4 +131,18 @@ jobs:
           path: website/dist
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+      - name: Smoke test the deployed site
+        env:
+          SCRYPATH_SMOKE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          if [ -f website/scripts/smoke.mjs ]; then
+            node website/scripts/smoke.mjs
+          else
+            echo "This ref predates website/scripts/smoke.mjs; running the soft check only."
+            site="${SCRYPATH_SMOKE_URL%/}"
+            curl -fsSI --retry 3 --retry-delay 10 --retry-all-errors "${site}/?smoke=${GITHUB_RUN_ID}"
+            curl -fsSI --retry 3 --retry-delay 10 --retry-all-errors "${site}/assets/styles.css?smoke=${GITHUB_RUN_ID}"
+          fi
