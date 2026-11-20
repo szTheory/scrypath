@@ -174,7 +174,14 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   @binary_exts ~w(.woff .woff2 .png .ico .jpg .jpeg .gif .webp)
 
   setup_all do
-    out = Path.join(System.tmp_dir!(), "scrypath-docs-#{System.unique_integer([:positive])}")
+    # `System.unique_integer/1` is unique only inside one VM, and separate OS processes started the
+    # same way draw near-identical values, so the process id keeps two overlapping runs apart.
+    out =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-docs-#{System.pid()}-#{System.unique_integer([:positive])}"
+      )
+
     on_exit(fn -> File.rm_rf!(out) end)
 
     ExUnit.CaptureIO.capture_io(fn ->
