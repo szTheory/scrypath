@@ -1,7 +1,6 @@
 {
   "schema": "scrypath.retired-identity-allowlist.v1",
   "entries": [
-    { "path": "README.md", "tag": "p188", "reason": "Phase 188 documentation adoption (BDOC-01) replaces the retired brand directory reference", "max_hits": 2 },
     { "path": "PRODUCT.md", "tag": "p188", "reason": "Phase 188 documentation adoption replaces the retired brand directory reference", "max_hits": 1 },
     { "path": "website/src/assets/brand-mark.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old mark", "max_hits": 2 },
     { "path": "website/src/assets/og-image.svg", "tag": "p189", "reason": "Phase 189 website adoption replaces the old social image", "max_hits": 2 },

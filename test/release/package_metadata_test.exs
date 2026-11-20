@@ -125,3 +125,192 @@ defmodule Scrypath.Release.PackageMetadataTest do
            ]
   end
 end
+
+defmodule Scrypath.Release.BuiltDocsBrandTest do
+  # Built-docs brand contract (BDOC-01, BDOC-02). It adds no gate: it runs in `core`, because this
+  # file carries no tags, and inside `mix verify.package`, which runs the same file.
+  #
+  # One real docs build runs in `setup_all`. The output goes to `System.tmp_dir!()`, never to the
+  # ExUnit per-test temporary-directory tag: that tag writes under the repository, where the
+  # retired-identity deny-list scan reads untracked files. The retired directory name is built at
+  # runtime, so this source never holds the literal.
+  use ExUnit.Case, async: true
+
+  alias Scrypath.MixProject
+
+  @generator ~s(<meta name="generator" content="ExDoc v)
+  @header_dark "brand/assets/readme/scrypath-header-dark.svg"
+  @header_light "brand/assets/readme/scrypath-header-light.svg"
+  @snippet "brand/assets/readme/header-snippet.html"
+  # ExDoc's head template always loads `docs_config.js`, an optional file the hosting site supplies
+  # for the version dropdown (the ExDoc docs call it optional). A local build never contains it, so
+  # this one name is exempt from the resolution check. Nothing else is: the test asserts that the
+  # unresolved references equal exactly this name.
+  @host_supplied_ref "docs_config.js"
+  # Binary build outputs are skipped in the text scans: they are not text and cannot name a path.
+  @binary_exts ~w(.woff .woff2 .png .ico .jpg .jpeg .gif .webp)
+
+  setup_all do
+    out = Path.join(System.tmp_dir!(), "scrypath-docs-#{System.unique_integer([:positive])}")
+    on_exit(fn -> File.rm_rf!(out) end)
+
+    ExUnit.CaptureIO.capture_io(fn ->
+      Mix.Tasks.Docs.run(["--output", out, "--warnings-as-errors"])
+    end)
+
+    %{out: out}
+  end
+
+  test "readme.html carries the brand header paths, mirrored into the build", %{out: out} do
+    readme = File.read!(Path.join(out, "readme.html"))
+
+    assert readme =~ ~s(srcset="#{@header_dark}")
+    assert readme =~ ~s(src="#{@header_light}")
+  end
+
+  test "every local image and script reference on every ExDoc page resolves inside the build", %{
+    out: out
+  } do
+    pages = generated_pages(out)
+    assert pages != [], "no ExDoc-generated page found in #{out}"
+
+    refs =
+      for page <- pages, ref <- local_refs(File.read!(page)) do
+        {page, ref}
+      end
+
+    assert refs != [], "no local src or srcset reference found on any generated page"
+
+    unexpected =
+      for {page, ref} <- refs,
+          ref != @host_supplied_ref,
+          not resolves?(out, page, ref),
+          do: {rel(out, page), ref}
+
+    assert unexpected == []
+  end
+
+  test "README.md header paths are committed files and no README image points at the Pages site" do
+    readme = File.read!("README.md")
+    refs = local_refs(readme)
+
+    assert @header_dark in refs
+    assert @header_light in refs
+
+    for ref <- refs do
+      assert String.starts_with?(ref, "brand/assets/readme/"),
+             "README reference #{ref} is outside brand/assets/readme/"
+
+      assert File.regular?(ref), "README reference #{ref} is not a regular file"
+      assert committed?(ref), "README reference #{ref} is not committed"
+    end
+
+    for value <- html_attribute_values(readme, ["src", "srcset"]) do
+      refute value =~ "github.io", "README image points at the Pages site: #{value}"
+    end
+  end
+
+  test "no text file in the build, and no epub entry, names the retired brand directory", %{
+    out: out
+  } do
+    files =
+      out |> Path.join("**/*") |> Path.wildcard(match_dot: true) |> Enum.filter(&File.regular?/1)
+
+    # `.build.epub` is ExDoc's plain-text build manifest, not a zip: it stays in the text scan.
+    {epubs, others} = Enum.split_with(files, &epub_archive?/1)
+    assert epubs != [], "no epub in the build"
+
+    for file <- others, not binary?(file) do
+      refute File.read!(file) =~ retired_dir(), "#{rel(out, file)} names the retired directory"
+    end
+
+    for epub <- epubs do
+      {:ok, entries} = :zip.extract(String.to_charlist(epub), [:memory])
+      assert entries != []
+
+      for {name, content} <- entries, not binary?(List.to_string(name)) do
+        refute content =~ retired_dir(),
+               "#{List.to_string(name)} in the epub names the retired directory"
+      end
+    end
+  end
+
+  test "README.md and every docs extra are free of the retired brand directory name" do
+    for file <- ["README.md" | MixProject.project()[:docs][:extras]] do
+      refute File.read!(file) =~ retired_dir(), "#{file} names the retired directory"
+    end
+  end
+
+  test "the only non-ExDoc html with an unresolved local reference is the mirrored pinned snippet",
+       %{out: out} do
+    generated = MapSet.new(generated_pages(out))
+
+    unresolved =
+      out
+      |> Path.join("**/*.html")
+      |> Path.wildcard()
+      |> Enum.reject(&MapSet.member?(generated, &1))
+      |> Enum.filter(fn page ->
+        page |> File.read!() |> local_refs() |> Enum.any?(&(not resolves?(out, page, &1)))
+      end)
+      |> Enum.map(&rel(out, &1))
+
+    assert unresolved == [@snippet]
+  end
+
+  defp retired_dir, do: "brand" <> "book/"
+
+  defp rel(out, path), do: Path.relative_to(path, out)
+
+  defp epub_archive?(path) do
+    String.ends_with?(path, ".epub") and not String.starts_with?(Path.basename(path), ".")
+  end
+
+  defp binary?(path), do: Path.extname(path) in @binary_exts
+
+  defp generated_pages(out) do
+    out
+    |> Path.join("**/*.html")
+    |> Path.wildcard()
+    |> Enum.filter(&(File.read!(&1) =~ @generator))
+  end
+
+  defp html_attribute_values(html, names) do
+    for name <- names,
+        [value] <- Regex.scan(~r/\s#{name}="([^"]*)"/, html, capture: :all_but_first),
+        do: value
+  end
+
+  # Every `src` value and every comma-separated `srcset` candidate (its first whitespace token)
+  # that names a local file, without any query or fragment suffix.
+  defp local_refs(html) do
+    srcs = html_attribute_values(html, ["src"])
+
+    candidates =
+      for value <- html_attribute_values(html, ["srcset"]),
+          candidate <- String.split(value, ","),
+          token = candidate |> String.trim() |> String.split(~r/\s+/, parts: 2) |> hd(),
+          do: token
+
+    (srcs ++ candidates)
+    |> Enum.reject(&(&1 == "" or external?(&1)))
+    |> Enum.map(&(&1 |> String.split(["?", "#"], parts: 2) |> hd()))
+    |> Enum.reject(&(&1 == ""))
+  end
+
+  defp external?(ref) do
+    String.starts_with?(ref, ["http://", "https://", "//", "data:", "mailto:", "#"])
+  end
+
+  defp resolves?(out, page, ref) do
+    path = Path.expand(ref, Path.dirname(page))
+    String.starts_with?(path, out <> "/") and File.regular?(path)
+  end
+
+  defp committed?(path) do
+    match?(
+      {_, 0},
+      System.cmd("git", ["ls-files", "--error-unmatch", "--", path], stderr_to_stdout: true)
+    )
+  end
+end
