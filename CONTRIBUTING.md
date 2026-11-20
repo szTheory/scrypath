@@ -230,13 +230,14 @@ GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 |-----|---------|
 | **`core`** | Required merge gate: `mix verify.core --exclude integration --exclude docs_contract` for warning-free compilation, format, workspace cleanliness, Credo, fast tests, the single CI docs build, and the no-Oban compile. |
 | **`package`** | Required merge gate: `mix verify.package` for package metadata, consumer, release wiring, and unpacked Hex-package truth. |
-| **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. |
+| **`repository-contracts`** | Required merge gate: `mix verify.repository_contracts` for deterministic repository and workflow contracts. On a pull request that `ecommerce-path` classifies as planning-only or docs-only, only its demo dependency install and browser Node step are skipped; `mix verify.repository_contracts` always runs. |
 | **`backend`** | Required Meilisearch v1.15 proof: `mix verify.backend` with live integration enabled and failure diagnostics. A Postgres 16 service with `SCRYPATH_POSTGRES_URL` in the same job runs the real-Postgres loader suite (`mix verify.postgres`). |
-| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` checks source dependency boundaries and the independent `asset_builder`, `runtime_test`, and `runtime_prod` targets, then verifies mounted host routing, failed-sync triage, index swap, and standalone Ops assets/routes. |
+| **`ecommerce-mounted`** | Required Docker-only proof: `mix verify.ecommerce_mounted` checks source dependency boundaries and the independent `asset_builder`, `runtime_test`, and `runtime_prod` targets, then verifies mounted host routing, failed-sync triage, index swap, and standalone Ops assets/routes. On a pull request that `ecommerce-path` classifies as planning-only or docs-only it is skipped and reports success. |
 | **`compatibility`** | Advisory Elixir/OTP tuple matrix: `mix verify.compatibility` on 1.17/26, 1.18/27, 1.19/26, and 1.19/28. |
 | **`deep-quality`** | Advisory `mix verify.deep_quality`: optional-dependency compile, namespace fence, `mix hex.audit`, and Dialyzer. |
 | **`phoenix-example`** | Advisory Postgres 16 + Meilisearch v1.15 proof: `mix verify.phoenix_example` followed by `mix verify.phoenix_example --package`, covering path-backed and package-backed live consumers. |
 | **`ops-ui-path` / `ops-ui`** | Required merge gate that runs only when a change can affect the optional app, the core library, brand or fixture inputs, or CI scripts, and reports success when skipped. `mix verify.ops_ui` runs the root boundary integration contract and the isolated Postgres-backed ScrypathOps suite. |
+| **`ecommerce-path`** | Not a gate, and not a required context. A classifier that fails open: the browser lanes (`ecommerce-mounted` and the browser steps of `repository-contracts`) are skipped on a pull request only when every changed path is under `.planning/`, under `docs/`, or a root-level markdown file. An unknown path, an empty diff, a diff it cannot compute, a classifier error, and every push, schedule or dispatch run keep the lanes. The allowlist lives in `scripts/ci/ecommerce_path_classifier.cjs`; the measurements and the revisit trigger are in the CI efficiency ledger (finding 2 in `.planning/reference/CI-EFFICIENCY.md`, maintainer-facing). |
 | **`coverage`** | Scheduled/manual advisory, informational, non-blocking coverage evidence: `mix verify.coverage` produces a SHA-bound report artifact retained for seven days. |
 | **`ecommerce-e2e`** | Scheduled/manual advisory Docker/browser proof. `mix verify.ecommerce_e2e` runs the full lane and always uploads its bounded evidence bundle. |
 
@@ -253,8 +254,11 @@ The brand and UI milestone (v1.46) may add at most 12 new required gates. Every 
 | Required `ops-ui (path-scoped)` | `test/mix/tasks/workflow_wiring_test.exs` | Branch protection on `main` | Delete if `scrypath_ops` leaves this repository | None; renaming the job must also change the branch-protection context |
 | Storybook boundary | `test/mix/tasks/dependency_boundary_contract_test.exs` | `core` and `repository-contracts` | Delete if the component catalog leaves `scrypath_ops` or moves to its own Mix project with its own boundary check | None; changes only when the storybook dependency declaration changes |
 | Structural preservation pair check | `scripts/ci/ui_state_pairs.test.cjs` | `repository-contracts` (rides the existing Node step; counted conservatively) | Delete when the Phase 185 preservation specs are retired | None unless thresholds are retuned, which needs a new real capture pair in `scripts/ci/fixtures/ui-state-pairs/` |
+| ScrypathOps re-skin static contract | `scrypath_ops/test/scrypath_ops_web/reskin_static_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops brand assets, fonts and retired-identity gates move into a dedicated brand contract or scrypath_ops leaves this repository | One assertion edit when a brand asset, font or allowlisted glyph changes |
+| Mounted font delivery | `examples/scrypath_ecommerce/e2e/harness.spec.ts` | `ecommerce-mounted` | Delete if ops stops shipping self-hosted fonts | None unless font file names change |
+| ScrypathOps re-skin component contract | `scrypath_ops/test/scrypath_ops_web/reskin_component_contract_test.exs` | `ops-ui (path-scoped)` | Delete when the ops component catalog contract replaces it in v1.47 or scrypath_ops leaves this repository | One assertion edit when a status word, confirm label or row-action rule changes |
 
-Budget used: 5 of 12.
+Budget used: 8 of 12.
 
 ### Exact-source cache acceptance probes
 

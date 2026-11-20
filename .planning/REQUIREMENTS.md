@@ -1,100 +1,65 @@
-# Requirements: Scrypath v1.46 Brand foundation and re-skin
+# Requirements: Scrypath v1.47 Brand completion
 
-**Defined:** 2026-11-18
+**Defined:** 2026-11-20 (revised 2026-11-20 after the gap pass in `research/v1.47-gap-pass/`)
 **Core Value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 
-## Scope and provenance
-
-The maintainer confirmed the v1.46 summary on 2026-11-18 and chose to skip the research fan-out because [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md) already ran seven research agents with adversarial passes. Inputs: that prep note (it wins over [PROPOSAL.md](research/brand-and-catalog/PROPOSAL.md) where they differ), the [brand adoption playbook](reference/BRAND-ADOPTION-PLAYBOOK.md), the rolling roadmap, and the current repository. Verify current versions and line numbers during phase planning; the prep's line references were read on 2026-11-18.
-
-Verification default: no human UAT. Every rule below is proved by an executable check (computed style, DOM, contract test or hosted CI at the exact head SHA). Subjective rendered critique stays review context and does not block. Nothing here claims independent or aesthetic approval.
-
-Phases continue at 186. Phases 189 and 190 are deferrable to v1.47 if v1.46 runs long (scope call, recorded in the roadmap).
+Scope source: the prepared v1.47 input (`research/v1.47-prep/` notes A to D, `reference/ROLLING-ROADMAP.md` "Post-v1.46 proposal"), carried over from the Phases 189 and 190 deferred out of v1.46, then tightened by four gap-pass reviews (E adversarial review, F autonomy stalls, G website risk, H wording and cleanup coupling). Every criterion is an executable check or a recorded decision stated as such; nothing here claims aesthetic or independent-review approval.
 
 ## v1 Requirements
 
-### Brand pin and ingest (Phase 186)
+### CI path classifier (Phase 188.1, plain PR first)
 
-- [x] **PIN-01**: A maintainer can verify offline that the committed `brand/` assets and the shipped fonts match `brand/brand.pin.json` (zip sha256, per-asset path, source member, sha256, size, license, role), with owned directories closed to unpinned files, and the check blocks merging when it fails.
-- [x] **PIN-02**: A maintainer can refresh the pin with an update task that refuses on size, hash, entry-count or uncompressed-size mismatch, extracts only allowlisted members in memory, and is the only place the online re-download check lives (not CI).
-- [x] **PIN-03**: Only the adopted brand assets (about 330 KB: brand docs and tokens, logo and icon SVGs, README headers, ExDoc CSS, social card, OFL texts) are committed; PDFs, HTML books, motion, sounds, previews and TTFs are not, and `brand/` and `brandbook/` stay out of the Hex package `files`.
+- [ ] **CI-01**: A planning-only or docs-only PR skips the Docker browser lanes (`ecommerce-mounted` and the browser Node step) while every required context still reports. The classifier is an allowlist: the lanes run unless every changed path matches `^(\.planning/|docs/|[^/]+\.md$)`, so a new path under `brand/`, `scrypath_ops/`, `examples/`, `scripts/ci/`, `lib/`, `dev/`, `config/`, `priv/`, `language/`, `fixtures/`, `test/`, `website/`, `mix.exs`, `mix.lock` or a workflow file always runs them. `workflow_wiring_test` checks both a planted `.planning`-only diff (skips) and a diff touching any one other path (runs). Dependabot #132 is unblocked by relaxing the hardcoded `upload-artifact` SHA in `workflow_wiring_test` to a pattern, and #129 is re-run on the re-skinned base. This adds no required gate.
 
-### Token architecture and guards (Phase 186)
+### Website (Phase 189)
 
-- [x] **TOK-01**: A contributor can run one Node token test, in an existing required step, that checks token-map parity in both directions (every theme property has a row and every row a property), resolved hex equals the pinned brand hex, system-dark equals the built CSS, and built CSS is fresh.
-- [x] **TOK-02**: The same test enforces a hex allowlist and a deny-list of retired identity values (hex, rgb and rgba triplets, and the `brandbook/` string) over `git ls-files`, using a shrink-only path-level allowlist where each entry carries a phase tag and a stale entry fails; six planted failures prove it catches sabotage and accepts valid input.
-- [x] **TOK-03**: The approximately 12 pinned old-identity literals in the three root and ops contract tests are rewritten to read the live token by regex and assert the relationship (not a hex), in at most 3 test-only commits, with a resolved-token helper; the dry-run projection after these commits shows no failure left that Phase 187 does not own.
-- [x] **TOK-04**: The Phase 185 preservation specs keep their copy, geometry, state, action and identity checks while the pixel comparison is replaced by a recolor-tolerant structural check calibrated with one accept and one reject case.
+- [ ] **SITE-01**: A visitor sees the website in the new identity: the three brand fonts with their OFL texts served, the light and dark lockups, the light and dark favicons and the PNG social card, all copied or derived at build time from the pinned `brand/` files. No color literal remains in website source (CSS, HTML, JS, SVG) except the role map in `build.mjs`, which resolves each role to a `brand/tokens.json` path or, for the two dark roles with no token (`selected`, `control-edge`), to a literal held only in that map which the build asserts equals the hex named in `brand.json` (`selected` appears in a `contrastPairs` entry; `control-edge` `#8F7F94` appears only in the role sentence); the build fails if a role resolves to nothing. Roles include `on-primary` (light white, dark Night). The unthemed `favicon.svg` is not used; icon links are `favicon.ico` with `sizes`, plus the pinned themed SVG; `og:image` and `twitter:image` are absolute PNG URLs whose width and height meta equal the PNG header. Identity only: the book's site content spec (headline, single CTA, command picture) is out of scope.
+- [ ] **SITE-02**: The website is light by default (JS off, storage empty or throwing, device dark) and offers a Light, Dark and System picker. The picker is hidden when JavaScript is off or a storage write probe fails, remembers the choice under `scrypath-theme` (only `light`, `dark` or `system` accepted, anything else is light), follows the device in System, shows no flash of the wrong theme, has a non-color pressed indicator under `forced-colors: active`, and prints with the light tokens and lockup. `scroll-behavior: smooth` applies only under `prefers-reduced-motion: no-preference`, and transitions are 0 s under reduce. Fallback rule, decided now so nobody asks: if the picker, `theme.js`, dark tokens and their assertions are not green by the end of plan 189-02, ship light-only and amend this requirement.
+- [ ] **SITE-03**: The website's old palette is added to the retired-value deny-set in the same commit as the asset swap, except `d08e54`, `0c0f14` and `9aa4b6`, which also appear in `brandbook/` (4, 10 and 1 hits) and join the deny set in the Phase 191 commit that deletes `brandbook/`; the website static contract asserts those three absent from website source until then. The two `p189` allowlist entries are removed in the same commit (ceilings 7 to 5 entries and 201 to 197 hits), and the deny-list reports no retired value in website source.
+- [ ] **SITE-04**: `website/scripts/check.mjs` is rewritten from capture-only to computed-style, font-hash and contrast assertions for both themes, served under the production prefix (`serve.mjs --base /scrypath/`, 404 at `/`, port 0, any root-absolute `href`, `src` or CSS `url()` rejected). A dependency-free static contract runs in `core` and `repository-contracts` and takes ledger row 9 of 12 in `CONTRIBUTING.md`. Contrast is read from computed colors normalized for `color-mix()` and alpha, per pair id from `brand/brand.json` with its exact selector and background token. The website workflow's push and pull-request filters include `brand/**`, and the browser install step is measured and hardened (`channel: 'chrome'` or cache, `timeout-minutes` set) with the result recorded in `CI-EFFICIENCY.md`.
+- [ ] **SITE-05**: Because merging to `main` deploys, the exact-head evidence is a command, not prose: `gh api repos/szTheory/scrypath/commits/<head>/check-runs` shows `build-and-check` completed and successful with `head_sha` equal to the PR head. `build-and-check` stays a non-required check (decision recorded with its reasons and re-open trigger: a rendering regression only that job would have caught reaches `main`). The `deploy` job has its own concurrency group with `cancel-in-progress: false` and ends with a smoke step against the deployed URL (home page, one font, both lockups, the social card, all under `/scrypath/`); a `workflow_dispatch` run with a `ref` input is the documented rollback in `docs/releasing.md`.
+- [ ] **SITE-06**: Website copy never tells a Hex adopter to run a repo-only task: every `mix verify.adopter` mention in `website/src` (home status strip, install callout, operators step 2, docs page, `diagram.svg`) is replaced by a shipped task (`mix scrypath.status`, `failed`, `retry` or `reconcile`, whichever matches the sentence), and the website static contract fails any `mix verify.*` string in website source. The two Hex-shipped guides that also mention `verify.adopter` are a separate, contract-tested item recorded in the phase notes, not changed here. The `phase110` and `phase112` website contract tests are updated in the same commit if they pin any changed sentence.
 
-### ScrypathOps re-skin (Phase 187)
+### Wording that does not need the catalog (Phase 190)
 
-- [ ] **SKIN-01**: An operator sees ScrypathOps in the new brand palette in light and dark: the two theme blocks map the brand roles (Page, Panel, Hairline, Ink, Plum, Orchid) with daisyUI's required set, hand-authored roles (`--ops-sunken`, `--ops-selected`, `--ops-control-edge`, opaque `--ops-text-muted`, `--ops-status-*`), and no `primary-strong`, copper secondary or glow tokens; ops stays System-default for theme.
-- [ ] **SKIN-02**: Hanken Grotesk and Sometype Mono ship byte-identical under the ops assets, load from the mount prefix at any depth with content-hash `?v=`, `font-display: swap` and metric-adjusted fallbacks, and the h1 is Hanken 700 at 28 px; Bricolage is not shipped in ops. A coverage test lists the glyphs the subsets lack and their named fallbacks.
-- [ ] **SKIN-03**: The brand lockup and favicon (SVG plus PNG-in-ICO) replace the old logo and the 152-byte stub, with exactly one lockup displayed per theme at a legible size at 320 px.
-- [ ] **SKIN-04**: Operators get the brand buttons and actions: at most one Plum button per visible non-inert scope, no `.btn-error`, destructive confirms use the modal's single Plum button with the consequence in the label and Cancel as initial focus, row actions are underlined Ink text sharing one computed style with at least a 24 px target, and prose links are underlined at rest.
-- [ ] **SKIN-05**: Retired identity code is gone: `.ops-path-*`, `.ops-copper-*`, glow and copper gradients, hard-coded select-chevron colors, every `uppercase` site, nav and verdict icons, and every `infinite` animation (replaced by a word plus `aria-busy`); every transition and animation duration is one of the brand motion tokens, with old token names kept as `var()` aliases for one milestone.
-- [ ] **SKIN-06**: The 11 px sites are raised to 12 px (floor met), `.ops-signal-metrics .ops-time` and copy targets use the mono face, and no body text is reflowed (the size scale is recorded as `keep-platform`).
-- [ ] **SKIN-07**: Search health ranks rows Failed, Retrying, Pending, Clear, then name, and each row shows its most urgent status, and the two verified copy bugs (the promotion prefix and the `inspect(reason)` leak) are fixed.
-- [ ] **SKIN-08**: A maintainer receives the re-skin as one Draft PR with light and dark before and after captures of Control room, Search health and Failed sync work at 390 and 1280 px, plus a plain list of what the gates prove and do not prove; merge happens only on the maintainer's yes, with no aesthetic or independent-review claim.
+- [ ] **COPY-01**: A "Status wording" block is added to `GLOSSARY.md` first (Searchable, Pending, Queued, Retry queued, accepted, Last succeeded, each with Avoid terms), then screen copy follows it (rules in `research/brand-and-catalog/V1.46-PREP.md`): bare "Searchable" only for record or update state with an observation time; the settings row reads "Searchable fields: Used for search or Not used for search"; Pending is a row or schema aggregate and Queued is one update's step or the host-queue outcome; "Retry queued" for the host queue and "accepted" only for a Meilisearch task; "Last succeeded" everywhere; `Clear` is never shown beside a retained observation as if current. The final strings for owner-visible choices (the effect sentence, "Last succeeded" label forms) are resolved in discuss and listed in the plan. Strings pinned by the required-lane `operator.spec.ts` stay unchanged.
+- [ ] **COPY-02**: The label "Control room" renders in sentence case in the page title, navigation (sidebar, mobile drawer, command palette), the h1 and the "Return to Control room" link. A case-sensitive scan of every tracked file outside `.planning/` and `brand/` (explicit exception list: files already sentence case) finds no `Control Room`; every Playwright locator that matches it with `exact: true` or a case-sensitive regex is updated; a LiveView test asserts the nav link carries `aria-current="page"` on the Control room route with a title that starts "Control room".
+- [ ] **COPY-03**: The COPY-01 and COPY-02 guards live in one table file, `scrypath_ops/test/support/copy_rules.json`, with rows `{id, rule, glossary, forbidden, required, allowed_in, source_scope, surfaces}`. One ExUnit test in the required `ops-ui` job scans `source_scope` for `forbidden`, renders each named `surface` fixture state and asserts `required` and absence of `forbidden` (so a renamed string cannot make a `refute` vacuous). A test fails a row missing a field or with empty `surfaces`. The `ops-ui` path regex and `workflow_wiring_test` cover the scanned paths (`examples/scrypath_ecommerce/e2e/`, `GLOSSARY.md`, `DESIGN.md`), or the scan scope is limited to paths that already trigger it; the CONTRIBUTING ledger names the row this extends or adds, with trigger and churn, and the budget line equals the row count.
+- [ ] **COPY-04**: In `operator.spec.ts` (required lane) the promotion dialog's Cancel button is focused when it opens; ExUnit pins `data-ops-modal-initial-focus="[data-ops-modal-cancel]"` as the `ops_modal` default and on each destructive `ops_modal` (the failed-sync and index-swap confirms; the saved-search delete is an inline form and is covered by its own focus test or recorded as not covered), and pins the exact promotion-notice sentence for each `promotion_reason/1` clause.
 
-### Status vocabulary and component (Phase 187)
+### Cleanup (Phase 191)
 
-- [ ] **STAT-01**: One `ops_sync_status(:failed | :retrying | :pending | :clear)` component renders word first, then a bar icon (filled, hollow, bottom-filled, notched), with the word color from the brand text hexes and `aria-hidden` icons; it is used for Failed sync work row badges and Search health queue and backend badges and counts, and the existing `data-status-kind` and `data-ops-metric-tone` hooks survive.
-- [ ] **STAT-02**: "Not observed", "Not checked" and "Queue not used" render as plain muted words with no icon, "Clear" appears only with an observation, and health is never inferred from zero counts.
-- [ ] **STAT-03**: Notices and verdicts use Panel plus a 2 px left rule, only an error uses the Failed color, Plum is never an info color, `:running` is neutral, and green appears only on the word and icon of Clear.
+- [ ] **CLEAN-01**: A root-level ExUnit test in `core` asserts the demo favicon is byte-identical to `brand/assets/icon/favicon-light.svg`; the demo's own `page_controller_test.exs` keeps comparing the served file to its priv copy; the demo favicon's allowlist entry is removed.
+- [ ] **CLEAN-02**: The `brandbook/` readers are gone (`ui_tokens.ex`, its contract test, its `verify.phase99` `@focused_tests` entry the `verify.ui_tokens` `preferred_envs` line in `mix.exs`, and its pin and verifier-module floor in `test/release/package_contents_test.exs`) with `mix verify.repository_contracts` green on the committed state.
+- [ ] **CLEAN-03**: `brandbook/`, its `ci.yml` path-regex entry and its allowlist entries are removed in the same commit as their ratchet ceilings. The chain is recomputed from merged `main` after Phase 189 (expected 5 entries and 197 hits at the start, ending at 0 and 0). The three shared hexes from SITE-03 join the deny set in that commit. The deny-list, `RETIRED_DIR` and the `retire-last` tag stay in `ui-tokens.test.mjs`. Phase 191 docs never spell the retired directory path (the tripwire would flag them).
+- [ ] **CLEAN-04**: On ops-authored source only (`scrypath_ops/lib`, `scrypath_ops/assets/js` excluding `vendor/`, `scrypath_ops/assets/css/app.css`; never built CSS or vendor files), `ui-tokens.test.mjs` asserts every resolved `font-size` is at least 12 px (percent, em, calc and clamp rejected), no `text-[` length arbitrary value, no `uppercase` class or `text-transform: uppercase`, no whole-word `infinite`, and no `size: :xs` caller. Each has a planted failing case and an accept case (a comment, an `:infinity` atom, an `inherit` value); no gate is added; `@min_token_test_calls` and `@token_test_names` rise with the new tests in the same commit; `CONTRIBUTING.md` and `DESIGN-TOKENS.md` say these check source declarations, not rendered size.
+- [ ] **CLEAN-05**: A test in `brand_pin_contract_test.exs` fails if the pinned `brand/assets/icon/favicon.svg` gains `<style`, `fill=`, `currentColor` or `prefers-color-scheme`, and its message lists the workarounds to remove. A scan in `ui-tokens.test.mjs` fails if any file outside `brand/`, `.planning/` and `dev/mix/tasks/brand/update.ex` contains `icon/favicon.svg` or has the same bytes; planted cases are a text reference and a renamed byte copy, the accept case is `favicon-light.svg` served under the name `favicon.svg`. The upstream defect report is drafted in the phase record; filing it is the maintainer's step and does not gate the phase.
+- [ ] **CLEAN-06**: The CONTRIBUTING ledger is reworded now that its literal conditions are met: the token and deny-list row says the deny-list and directory tripwire are permanent and the parity half stays while `app.css` is a hand-kept projection of `brand/tokens.json`, the single token authority (also named in `DESIGN-TOKENS.md`); the budget sentence carries the cap of 12 forward (it names only v1.46 today); the component-contract row says v1.48 not v1.47; the favicon row's churn names the new tripwire. No cell contains a pipe, `workflow_wiring_test` stays green, and the reword lands in or after the commit that empties the allowlist.
 
-### Accessibility and host contract (Phase 187)
+### Standing guardrails
 
-- [ ] **A11Y-01**: Every text role keeps at least 4.5:1 contrast on page, panel, sunken and selected backdrops in both themes, the control edge keeps at least 3:1 on its backdrops, text never uses alpha, and the selected row carries a 2 px `border-inline-start` in both themes, all computed from the stylesheet's custom properties by the extended contrast checker (unrounded thresholds).
-- [ ] **A11Y-02**: Focus is a 2 px solid Plum or Orchid ring whose rect stays inside the scrollport for the first and last controls of `.ops-table-scroll`, and a tab-through never leaves the focused element's top less than 64 px below the viewport top (`scroll-padding-top`).
-- [ ] **A11Y-03**: Motion honors `prefers-reduced-motion`, no animation runs infinitely (`getAnimations()`), and the minimum computed text size is 12 px.
-- [ ] **A11Y-04**: A host that mounts ScrypathOps keeps its own page unchanged: a fixture host in light, dark and System with a sentinel element shows no computed-style change on non-ops routes, a host accent override still wins, a CSP of `font-src 'self'` still loads the fonts, and an allowlist ratchet covers unscoped selectors in the compiled CSS.
-
-### Delivery and required checks (Phases 186-187)
-
-- [x] **GATE-01**: `ops-ui` is a required check with its path list extended to `brand/`, `language/` and `fixtures/`, and the wiring test and cheap static storybook-boundary checks are amended to match; new required gates in this milestone stay within the budget of 12, each stating a deletion trigger and expected churn per UI PR.
-- [x] **GATE-02**: Each phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide, evidence-only phases stay at or below 2 plans (Phase 186 at most 3), one full gate runs per commit SHA, a stale receipt is a failed gate, and no capture runs from a dirty tree.
-- [ ] **GATE-03**: The retained UI preview is refreshed to post-merge main before visible UI work, preflight passes, and preview data survives (seed-disabled).
-
-### README and HexDocs (Phase 188)
-
-- [ ] **BDOC-01**: A reader sees the new brand header in the README on GitHub and on HexDocs (relative `brand/assets/readme/...` paths mirrored through the ExDoc `assets:` option), with no `brandbook/` reference left in the built docs.
-- [ ] **BDOC-02**: HexDocs uses the brand logo, favicon and the corrected ExDoc stylesheet (rules prefixed `body ` and `body.dark `, the prefers-color-scheme block removed), proved by one real `mix docs` build asserting the head links, every `src` and `srcset` resolving to a file, and the code-block colors.
-
-### Website (Phase 189, deferrable)
-
-- [ ] **SITE-01**: A visitor sees the website in the new identity (palette, fonts including Bricolage, logo, favicon, light default), with the old identity removed from website assets and checked by the deny-list; merging to main is the release, so the change is verified before the merge.
-
-### Wording that does not need the catalog (Phase 190, deferrable)
-
-- [ ] **COPY-01**: Screen copy follows the glossary rules recorded in the prep: bare "Searchable" only for record or update state with an observation time, the settings row reads "Searchable fields: Used for search or Not used for search", Pending versus Queued per the rule, "Retry queued" for the host queue and "accepted" only for a Meilisearch task, and "Last succeeded" everywhere, each guarded by a copy test.
+- [ ] **GATE-02**: Every phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide (each phase has at most one); one full gate run per commit SHA; a stale receipt is a failed gate; no capture runs from a dirty tree. A fix to a snapshot-based gate (it reads HEAD) is committed before the gate reruns, and the first `mix verify.repository_contracts` run uses the escalated permission for `FETCH_HEAD`. A plan that touches a file the lifecycle verifier fixture copies (`contrast-checker.mjs`, `app.css`, `contrast-pairs.mjs`, `brand/tokens.json`, `brand/brand.json`) runs the whole CI Node step locally first. No preview capture or `ui:review` runs in v1.47. Squash titles are `chore(...)` or `docs(...)`, never `feat` or `fix`, because no library change ships. New required gates stay within 12 (8 used), each with a deletion trigger and expected churn. At milestone close, one read-only cross-phase check of merged `main` at the final SHA (a check, not independent or aesthetic approval) covers the other consumers of every changed asset.
 
 ## v2 Requirements
 
-Deferred to later milestones. Tracked but not in the current roadmap.
+Deferred to later milestones; not in this roadmap.
 
-### Catalog and screens (v1.47 and v1.48)
-
-- **CAT-01**: phoenix_storybook catalog foundation, fixtures, the JOB-03 read-only and retry pilot halves (v1.47).
-- **SCRN-01**: Search (JOB-05), Sync and index, Help, shell and job stories, type-scale reflow, "Control room" sentence-case rename, per-area parity checks (v1.48).
-
-### Adopter features (v1.49)
-
-- **ADOP-01**: Testing kit, indexable predicate, highlighting passthrough, hit and facet limits, backfill and reindex tasks (grill API shapes first).
+- **CAT-01**: phoenix_storybook catalog foundation, fixtures, the JOB-03 read-only and retry pilot halves (v1.48, Phases 192-196). The retained preview refresh and `ui:review` rendered pass belong to the first rendered-evidence phase there.
+- **SCRN-01**: Search (JOB-05), Sync and index, Help, shell and job stories, type-scale reflow, per-area parity checks, the palette-input focus-outline defect (v1.49).
+- **ADOPT-01**: Adopter features: testing kit, indexable predicate, highlighting passthrough, hit and facet limits, backfill and reindex tasks (v1.50, grill the API shapes first).
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Master-detail Search health picture and the progress line | New interaction with no row selection or per-schema retry today; "solid means reached the next step" is not observable from aggregate counts. Revisit in v1.48. |
-| Sounds, logo animation, bulk retry all | No per-schema progress semantics; the brand book admits the sounds were never heard. |
-| Type-scale reflow (16/28/13) | Six screens would reflow with no catalog to show states; recorded as `keep-platform`. |
-| Fully scoped `.ops-root` style isolation | Do not refactor isolation in the same sitting as the re-skin; a host-reported leak would change this. |
-| Shipping Bricolage in ops | Book's operator row omits it; follow the explicit scope row until the author answers. |
-| Light default for ops theme | A bright default on a dark device hits the on-call persona at night; light default applies to website, README and docs only. |
-| Repinning the v1.44 ledger bootstrap commit | Would invalidate main's own history. |
-| Hex release of 0.3.18 follow-ups | Hex releases wait for the maintainer's explicit yes and are a separate action. |
-| Online brand re-download check in CI, SHA-bound evidence manifests, coverage grid, new hosted browser lane | Gate budget; cut or deferred in the prep. |
+| Making `build-and-check` or any new check a required context | Branch protection is the maintainer's call; revisit only if a browser-only regression reaches `main` |
+| Promoting a browser computed-style spec to a required lane | One observed hole does not justify gate 9 or beyond; revisit on a regression only a browser spec would catch |
+| Website content changes beyond identity and the SITE-06 accuracy fix (headline, single CTA, command picture, version badge, page structure, new pages) | The full refresh is planted as SEED-004 and scoped in `research/website-refresh/`; SITE-01 is identity only |
+| Ops theme default change or Bricolage in ops | Settled in v1.46: ops stays System-default, no type-scale reflow |
+| Palette input focus-outline defect (v1.46 IN-07) | Needs a rendered check; owned by the v1.49 screens work |
+| Catalog, storybook, fixtures, preview refresh | v1.48 |
+| Hex release | The maintainer's separate explicit yes; no library change is planned |
+| Aesthetic or independent-review approval claims | No person or independent reviewer is simulated |
 
 ## Traceability
 
@@ -102,43 +67,30 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PIN-01 | Phase 186 | Complete |
-| PIN-02 | Phase 186 | Complete |
-| PIN-03 | Phase 186 | Complete |
-| TOK-01 | Phase 186 | Complete |
-| TOK-02 | Phase 186 | Complete |
-| TOK-03 | Phase 186 | Complete |
-| TOK-04 | Phase 186 | Complete |
-| SKIN-01 | Phase 187 | Pending |
-| SKIN-02 | Phase 187 | Pending |
-| SKIN-03 | Phase 187 | Pending |
-| SKIN-04 | Phase 187 | Pending |
-| SKIN-05 | Phase 187 | Pending |
-| SKIN-06 | Phase 187 | Pending |
-| SKIN-07 | Phase 187 | Pending |
-| SKIN-08 | Phase 187 | Pending |
-| STAT-01 | Phase 187 | Pending |
-| STAT-02 | Phase 187 | Pending |
-| STAT-03 | Phase 187 | Pending |
-| A11Y-01 | Phase 187 | Pending |
-| A11Y-02 | Phase 187 | Pending |
-| A11Y-03 | Phase 187 | Pending |
-| A11Y-04 | Phase 187 | Pending |
-| GATE-01 | Phase 186 | Complete |
-| GATE-02 | Phase 186 | Complete |
-| GATE-03 | Phase 187 | Pending |
-| BDOC-01 | Phase 188 | Pending |
-| BDOC-02 | Phase 188 | Pending |
-| SITE-01 | Phase 189 | Pending (deferrable to v1.47) |
-| COPY-01 | Phase 190 | Pending (deferrable to v1.47) |
+| CI-01 | Phase 188.1 | Pending |
+| SITE-01 | Phase 189 | Pending |
+| SITE-02 | Phase 189 | Pending |
+| SITE-03 | Phase 189 | Pending |
+| SITE-04 | Phase 189 | Pending |
+| SITE-05 | Phase 189 | Pending |
+| SITE-06 | Phase 189 | Pending |
+| GATE-02 | Phase 189 (standing rule for Phases 188.1, 190 and 191) | Pending |
+| COPY-01 | Phase 190 | Pending |
+| COPY-02 | Phase 190 | Pending |
+| COPY-03 | Phase 190 | Pending |
+| COPY-04 | Phase 190 | Pending |
+| CLEAN-01 | Phase 191 | Pending |
+| CLEAN-02 | Phase 191 | Pending |
+| CLEAN-03 | Phase 191 | Pending |
+| CLEAN-04 | Phase 191 | Pending |
+| CLEAN-05 | Phase 191 | Pending |
+| CLEAN-06 | Phase 191 | Pending |
 
 **Coverage:**
-- v1 requirements: 29 total
-- Mapped to phases: 29
-- Unmapped: 0
-
-GATE-01 and GATE-02 span Phases 186-187 and are mapped to Phase 186, where each is first satisfied (the required `ops-ui` check and gate budget land with the guards; GATE-02's guardrails then stay standing rules for Phase 187 onward). GATE-03 is mapped to Phase 187, where the preview refresh precedes visible UI work.
+- v1 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-11-18*
-*Last updated: 2026-11-18 after roadmap creation (traceability filled)*
+*Requirements defined: 2026-11-20*
+*Last updated: 2026-11-20 after the gap pass (CI-01 added; SITE, COPY, CLEAN and GATE-02 tightened)*

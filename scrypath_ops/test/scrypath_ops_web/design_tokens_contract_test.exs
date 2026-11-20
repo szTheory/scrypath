@@ -130,7 +130,9 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert rule(".ops-mobile-nav") =~ "z-index: var(--z-index-ops-drawer)"
     assert rule(".ops-cmdk") =~ "z-index: var(--z-index-ops-palette)"
     assert rule(".ops-modal") =~ "transition: opacity var(--duration-ops-fast)"
-    assert css() =~ "--duration-ops-fast: 120ms;"
+    # `fast` is a `var()` alias of the 80ms brand `instant` token for one milestone (Phase 187).
+    assert css() =~ "--duration-ops-fast: var(--duration-ops-instant);"
+    assert css() =~ "--duration-ops-instant: 80ms;"
   end
 
   test "the token catalog lists all current OpsUi exports with component roles" do
@@ -144,7 +146,7 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert missing == [], "Add these OpsUi exports to DESIGN-TOKENS.md: #{inspect(missing)}"
 
     assert catalog =~ "Primary task weights are 400 for body/value text and 600"
-    assert catalog =~ "The existing 11px/12px scale remains reserved"
+    assert catalog =~ "The type floor is 12px"
   end
 
   test "shared actions and responsive panels consume the named roles" do
@@ -158,7 +160,10 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
 
     retained = rule(".ops-time__retained")
     assert retained =~ "font-size: var(--text-ops-body)"
-    assert rule(".ops-notice-surface__cue") =~ "margin-top: var(--spacing-ops-1)"
+
+    # Notices carry their kind in a 2px inline-start rule, not a cue dot.
+    assert rule(".ops-notice-surface") =~ "border-inline-start-width: 2px"
+    refute css() =~ ".ops-notice-surface__cue"
 
     posture_live = File.read!(Path.join(@web_root, "live/posture_live.ex"))
     assert posture_live =~ "space-y-ops-4"
@@ -178,28 +183,89 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     assert dialog_target =~ "min-height: var(--control-h-lg)"
   end
 
-  test "quiet action states use neutral hover and press while keeping focus and selection distinct" do
-    assert css() =~ ".ops-btn:hover:not(:disabled):not(.btn-primary):not(.btn-error)"
-    assert css() =~ "background: var(--ops-surface-2)"
-    assert css() =~ ".ops-btn:active:not(:disabled):not(.btn-primary):not(.btn-error)"
+  test "button hover and press fill is Sunken, never Selected, and every control edge is opaque" do
+    hover =
+      rule(
+        ".ops-btn:hover:not(:disabled):not(.btn-primary),\n  .ops-btn:active:not(:disabled):not(.btn-primary)"
+      )
+
+    assert hover =~ "background-color: var(--ops-sunken)"
+    refute hover =~ "--ops-selected"
+    refute hover =~ "--ops-selection"
+    refute css() =~ "btn-error"
+
+    default = rule(".ops-btn.btn-outline")
+    assert default =~ "background-color: var(--color-base-100)"
+    assert default =~ "border-color: var(--ops-control-edge)"
+    assert default =~ "color: var(--color-base-content)"
+
+    # the pressed state keeps its own selector (the Selection Signature fill with Ink text)
     assert css() =~ ".ops-btn[aria-pressed=\"true\"]"
+
+    refute rule(
+             ".ops-btn[aria-pressed=\"true\"],\n  .ops-btn[aria-pressed=\"true\"]:hover:not(:disabled)"
+           ) =~
+             "var(--color-primary)"
+
     assert css() =~ "outline: 2px solid var(--color-primary)"
     assert css() =~ "outline-offset: 2px"
     assert css() =~ ".ops-btn:disabled"
   end
 
-  test "muted text and neutral links override Tailwind's utility layer for AA contrast" do
+  # N-07: text never uses alpha. A text color utility with an opacity step (`text-base-content/70`) and
+  # any opacity step other than the two ends of a show or hide transition (`opacity-0`, `opacity-100`)
+  # is an alpha mix, so neither may appear in a template.
+  # Functions, not module attributes: OTP 28 cannot store a compiled regex in an attribute.
+  defp alpha_text_utility, do: ~r/\btext-[a-z0-9-]+\/\d+/
+  defp partial_opacity, do: ~r/\bopacity-(?!0\b|100\b)\d+/
+
+  test "muted text is one opaque class and no template puts alpha on text" do
+    muted = rule(".ops-muted")
+    assert muted =~ "color: var(--ops-text-muted);"
+    refute muted =~ "color-mix"
+    refute muted =~ "opacity"
+
+    # The alpha utility override and its cascade-safe block went away with the utilities (N-07).
+    refute css() =~ "Cascade-safe operator text contrast"
+    refute css() =~ ~r/\.text-base-content\\\//
+
+    hits =
+      for file <- template_files(),
+          content = scannable(File.read!(file)),
+          regex <- [alpha_text_utility(), partial_opacity()],
+          [hit] <- Regex.scan(regex, content),
+          do: {Path.relative_to(file, @web_root), hit}
+
+    assert hits == [],
+           "Text uses alpha: use `ops-muted` (opaque muted token) or `text-base-content` (Ink).\n" <>
+             Enum.map_join(hits, "\n", fn {file, hit} -> "  #{hit}  (#{file})" end)
+
+    # The matchers fire on the old forms and leave the transition ends alone, so a pass is not vacuous.
+    assert Regex.match?(alpha_text_utility(), ~s(class="text-ops-body text-base-content/70"))
+    assert Regex.match?(alpha_text_utility(), ~s(class="text-error/60"))
+    assert Regex.match?(partial_opacity(), ~s(class="size-4 opacity-75 hover:opacity-100"))
+    refute Regex.match?(partial_opacity(), ~s(class="opacity-0 transition-opacity opacity-100"))
+    refute Regex.match?(alpha_text_utility(), ~s(class="text-base-content font-semibold"))
+  end
+
+  test "neutral links override Tailwind's utility layer for AA contrast" do
     overrides =
       css()
-      |> String.split("/* Cascade-safe operator text contrast.", parts: 2)
+      |> String.split("/* Prose links: Plum", parts: 2)
       |> List.last()
 
     refute overrides == css()
     refute overrides =~ "@layer"
-    assert overrides =~ ".ops-shell .text-base-content\\/60"
-    assert overrides =~ "color: var(--ops-text-muted)"
-    assert overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
-    assert overrides =~ "color: var(--color-base-content)"
+    # Prose links are Plum (Orchid in dark) and underlined at rest; the old Ink override is gone.
+    refute overrides =~ ".ops-shell a.link:not(.link-primary):not(.text-primary)"
+    refute css() =~ "a.link-primary {\n  color: var(--color-base-content)"
+
+    [_, prose] =
+      Regex.run(~r/\.ops-shell a\.link,\n(?:\.ops-shell [^{]*,\n)*[^{]*\{([^}]*)\}/, overrides)
+
+    assert prose =~ "color: var(--color-primary)"
+    assert prose =~ "text-decoration-line: underline"
+    assert prose =~ "text-decoration-thickness: 1px"
   end
 
   test "refresh hook reapplies server eligibility after a LiveView patch" do

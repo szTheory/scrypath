@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.19](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.18...scrypath-v0.3.19) (2026-11-20)
+
+
+### Documentation
+
+* The README header now uses commit-pinned image URLs, so it loads on hex.pm, and HexDocs shows the new brand logo, favicon and code-block colors ([#139](https://github.com/szTheory/scrypath/issues/139), [#145](https://github.com/szTheory/scrypath/issues/145)).
+
+### Notes
+
+* No library behavior changes in this release. The ScrypathOps re-skin ([#138](https://github.com/szTheory/scrypath/issues/138)) and its favicon fix ([#143](https://github.com/szTheory/scrypath/issues/143)) are in the separate `scrypath_ops` app and are not part of this package.
+
 ## [0.3.18](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.17...scrypath-v0.3.18) (2026-11-19)
 
 

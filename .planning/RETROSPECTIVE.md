@@ -2,6 +2,39 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.46 — Brand foundation and re-skin
+
+**Shipped:** 2026-11-19 (on `main`; no Hex release)
+**Phases:** 3 (186-188) | **Plans:** 16 | Phases 189 and 190 deferred to v1.47
+
+### What Was Built
+- Offline-pinned brand assets with a fail-closed verifier, a token-parity test and a retired-value deny-list (186).
+- ScrypathOps re-skinned in both themes with one sync-status vocabulary, one Plum button per scope and contrast, focus and host-isolation checks (187).
+- README header, HexDocs logo, favicon and a docs-owned code stylesheet, proved by a real docs build in the root suite (188).
+
+### What Worked
+- Pinning and guarding first (186) meant the 187 recolor failed only on what 187 owned.
+- Running the whole ordinary e2e partition once with fix authority found eight rendered defects the earlier gates had passed.
+- A read-only cross-phase integration check on `main` found two real defects (black ops favicon from a pinned SVG with no fill; a wrong hex.pm README note) that every per-phase verifier had passed.
+
+### What Was Inefficient
+- A fixture gap (the lifecycle test's temp repo missed `brand/` files) was only seen on the first hosted run because executors ran one of the five Node test files locally.
+- A finding made in 188 (the pinned favicon has no fill) was not propagated back to the 187 asset that used the same file.
+- A Draft PR waited on a merge yes while later phases stacked behind it; the standing squash-merge-on-green instruction now removes that wait.
+- Phase bookkeeping (ROADMAP, REQUIREMENTS, STATE) lagged the work and had to be reconciled at close.
+
+### Patterns Established
+- When a plan changes a file the verifier fixture copies, run the whole CI Node step locally before the final gate.
+- When a later phase finds a defect in a pinned asset, grep for every other consumer of that asset before closing the phase.
+- A milestone audit should include one independent read-only check of the merged `main`, not only per-phase reports.
+
+### Key Lessons
+- A pinned third-party asset can be byte-correct and still wrong; check how it renders, not only that it matches its hash.
+- Documentation claims about external services (here, hex.pm README rendering) need one live check before they are written down.
+
+### Cost Observations
+- Not measured this milestone.
+
 ## Milestone: v1.45 — Foundation and CI
 
 **Archived locally:** 2026-11-01; merge/publication separate.
@@ -711,12 +744,15 @@ No paid visual judge or added CI lane. Focused local runs invalidated only affec
 
 ## Cross-Milestone Trends
 
+- v1.46: pin and guard before recoloring; audit the merged `main` independently, because per-phase verifiers missed two cross-phase defects.
+
 - v1.45: real-input replay, source-bound preservation, relocation-safe contract consumers, and explicit qualified archive/final-source boundaries.
 
 - v1.44: verify canonical status and archive counts before relocation; distinguish path-selector success from executed test proof; keep final tracking before exact-source attestation.
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.46 | 186-188 | Offline-pinned brand identity, ops re-skin with one status vocabulary, branded README and HexDocs |
 | v1.42 | 172 | Existing-system UI repairs, exact recovery proof, automated acceptance and completion-before-attestation |
 | v1.40 | 165-167 | Public tenant/facet contract fixes, host-owned tenant and repair evidence, and an honest dated NOT READY decision |
 | v1.39 | 162-164 | Claim-level non-UI readiness baseline, evidence-led dispositions, and a fail-closed NOT READY decision |

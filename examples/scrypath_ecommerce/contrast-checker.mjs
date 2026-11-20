@@ -2,8 +2,9 @@
 //
 // Fast, dependency-free token-pair contrast checker for ScrypathOps.
 // Reads scrypath_ops/assets/css/app.css, derives semantic pairs by a fixed
-// rule table, composites muted alphas (from contrast-pairs.mjs) in sRGB,
-// evaluates WCAG AA/AAA ratios, and exits non-zero iff summary.aa_fail > 0.
+// rule table and the brand pair matrix (from contrast-pairs.mjs), evaluates
+// WCAG AA/AAA ratios, bans alpha on text (N-07) and the primary or status tints (N-12),
+// and exits non-zero iff summary.aa_fail > 0.
 //
 // Usage:
 //   node contrast-checker.mjs           # full check, writes report
@@ -30,8 +31,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // D-16: read app.css from the cross-workspace path
 const APP_CSS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/app.css");
-// D-11: muted-alpha manifest beside DESIGN-TOKENS.md
+// D-11: pair data (focus and surface bindings, brand matrix) beside DESIGN-TOKENS.md
 const PAIRS_PATH = path.resolve(__dirname, "../../scrypath_ops/assets/css/contrast-pairs.mjs");
+// Phase 187: the pinned brand sources the opaque muted guard and the published-pair check read
+const BRAND_TOKENS_PATH = path.resolve(__dirname, "../../brand/tokens.json");
+const BRAND_JSON_PATH = path.resolve(__dirname, "../../brand/brand.json");
 // D-17: report output (mirrors ADMIN_SCREENSHOT_DIR convention)
 const REPORT_DIR = process.env.CONTRAST_REPORT_DIR || "test-results/contrast";
 
@@ -93,7 +97,6 @@ const PAIR_RULES = [
   { fg: "base-content",       bg: "base-200",   role: "text" },
   { fg: "base-content",       bg: "base-300",   role: "text" },
   { fg: "primary-content",    bg: "primary",    role: "text" }, // ordinary button labels require 4.5
-  { fg: "primary-content",    bg: "primary-strong", role: "text" }, // selected text fills → 4.5 threshold
   { fg: "secondary-content",  bg: "secondary",  role: "text" },
   { fg: "accent-content",     bg: "accent",     role: "text" },
   { fg: "neutral-content",    bg: "neutral",    role: "text" },
@@ -437,216 +440,91 @@ if (process.argv.includes("--self-test")) {
   const passExitCode = passReport.summary.aa_fail > 0 ? 1 : 0;
   assert("advisory fixture: exit code === 0", passExitCode === 0, passExitCode);
 
-  // ── C. D-15 GUARD 2 STRUCTURAL FIXTURES (CR-01 / WR-02 / WR-03 regression locks) ─
+  // ── C. D-15 GUARDS 1 AND 2 (token count, opaque muted token) ─────────────────
 
-  // CR-01: a single-line muted rule (color: mid-line, selector on the same line) MUST be
-  // detected and validated against the manifest. Before the fix the `^\s*color:` anchor
-  // skipped these entirely (false negative). Manifest matches → guard must NOT throw.
-  const singleLineCss = `@layer ops {
-  .ops-fixture-meta  { font-size: 12px; color: color-mix(in oklch, var(--color-base-content) 55%, transparent); }
-}`;
-  const singleLineManifest = [
-    { selector: ".ops-fixture-meta", alpha: 0.55, fg_token: "base-content", bg_token: "base-100", role: "text" },
+  // Phase 187: the theme blocks declare exactly daisyUI's 20 --color-* variables; the old second
+  // primary tier (primary-strong) is gone. The fixture is built from the name list so it holds one
+  // plain brand value and no retired identity literal (the deny-list scan in ui-tokens.test.mjs
+  // reads this file).
+  const COLOR_VARIABLES = [
+    "base-100", "base-200", "base-300", "base-content",
+    "primary", "primary-content", "secondary", "secondary-content",
+    "accent", "accent-content", "neutral", "neutral-content",
+    "info", "info-content", "success", "success-content",
+    "warning", "warning-content", "error", "error-content",
   ];
-  let singleLineDetected = true;
-  try {
-    assertNoUntrackedMutedTokens(singleLineCss, singleLineManifest);
-  } catch (err) {
-    // Should NOT throw — the entry is tracked. A throw here means either it was not
-    // detected (and reverse-check flagged the manifest entry as stale) or mis-attributed.
-    singleLineDetected = false;
-  }
-  assert(
-    "CR-01: single-line muted rule is detected & matched against manifest",
-    singleLineDetected,
-    singleLineDetected
-  );
-
-  // CR-01 (negative): an UNTRACKED single-line muted rule MUST throw (proves the guard
-  // actually scans the line, not just that it tolerates it).
-  let singleLineUntrackedThrew = false;
-  try {
-    assertNoUntrackedMutedTokens(singleLineCss, []);
-  } catch (err) {
-    singleLineUntrackedThrew = true;
-  }
-  assert(
-    "CR-01: untracked single-line muted rule throws (guard scans the line)",
-    singleLineUntrackedThrew,
-    singleLineUntrackedThrew
-  );
-
-  // WR-02: a stale manifest entry (no corresponding app.css rule) MUST throw via the
-  // reverse check, even when every CSS occurrence is tracked.
-  let staleManifestThrew = false;
-  try {
-    assertNoUntrackedMutedTokens(singleLineCss, [
-      ...singleLineManifest,
-      { selector: ".ops-fixture-removed", alpha: 0.6, fg_token: "base-content", bg_token: "base-100", role: "text" },
-    ]);
-  } catch (err) {
-    staleManifestThrew = true;
-  }
-  assert(
-    "WR-02: stale manifest entry with no CSS hit throws (reverse lockstep)",
-    staleManifestThrew,
-    staleManifestThrew
-  );
-
-  // WR-03: a muted color: nested directly inside an @media block (no inner selector)
-  // MUST fail loudly rather than silently bind to an outer selector.
-  const nestedAtRuleCss = `@layer ops {
-  @media (min-width: 800px) {
-    color: color-mix(in oklch, var(--color-base-content) 55%, transparent);
-  }
-}`;
-  let nestedAtRuleThrew = false;
-  try {
-    assertNoUntrackedMutedTokens(nestedAtRuleCss, []);
-  } catch (err) {
-    nestedAtRuleThrew = true;
-  }
-  assert(
-    "WR-03: muted color: nested directly in @media fails loudly (no mis-attribution)",
-    nestedAtRuleThrew,
-    nestedAtRuleThrew
-  );
-
-  // WR-03: a muted color: inside a real selector that is itself nested in an @media block
-  // MUST attribute to the inner selector, not the @media wrapper.
-  const nestedSelectorCss = `@layer ops {
-  @media (min-width: 800px) {
-    .ops-fixture-nested { color: color-mix(in oklch, var(--color-base-content) 60%, transparent); }
-  }
-}`;
-  let nestedSelectorOk = true;
-  try {
-    assertNoUntrackedMutedTokens(nestedSelectorCss, [
-      { selector: ".ops-fixture-nested", alpha: 0.6, fg_token: "base-content", bg_token: "base-100", role: "text" },
-    ]);
-  } catch (err) {
-    nestedSelectorOk = false;
-  }
-  assert(
-    "WR-03: muted color: in a selector nested in @media attributes to the inner selector",
-    nestedSelectorOk,
-    nestedSelectorOk
-  );
-
-  // Phase 132: theme blocks now include a scoped text-bearing primary-strong token.
-  // The token-count guard must require that semantic token instead of only counting.
-  // The hash comes from a constant so this synthetic fixture holds no retired
-  // identity literal (the deny-list scan in ui-tokens.test.mjs reads this file).
-  // Runtime values are unchanged.
-  const HASH = "#";
-  const primaryStrongBlocks = parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
+  const themeBlockFixture = (names) => parseThemeBlocks(`@plugin "../vendor/daisyui-theme" {
     name: "light";
-    --color-base-100: ${HASH}fffdf8;
-    --color-base-200: ${HASH}faf7f2;
-    --color-base-300: ${HASH}ded8ce;
-    --color-base-content: ${HASH}141923;
-    --color-primary: ${HASH}5b4ad1;
-    --color-primary-content: ${HASH}f4f1ea;
-    --color-primary-strong: ${HASH}5b4ad1;
-    --color-secondary: ${HASH}a85d2e;
-    --color-secondary-content: ${HASH}fffdf8;
-    --color-accent: ${HASH}6c5ce7;
-    --color-accent-content: ${HASH}fffdf8;
-    --color-neutral: ${HASH}2a3446;
-    --color-neutral-content: ${HASH}f4f1ea;
-    --color-info: #5ca9e6;
-    --color-info-content: #0c0f14;
-    --color-success: #4fae74;
-    --color-success-content: #0c0f14;
-    --color-warning: #d9a441;
-    --color-warning-content: #0c0f14;
-    --color-error: #d96262;
-    --color-error-content: #0c0f14;
+${names.map((name) => `    --color-${name}: #1e1220;`).join("\n")}
   }`);
-  let primaryStrongTokenOk = true;
-  try {
-    assertTokenCount(primaryStrongBlocks);
-  } catch (err) {
-    primaryStrongTokenOk = false;
-  }
-  assert(
-    "Phase 132: token guard accepts 21 --color-* tokens including primary-strong",
-    primaryStrongTokenOk,
-    primaryStrongTokenOk
-  );
+  assert("Phase 187: the self-test fixture lists 20 --color-* variables", COLOR_VARIABLES.length === 20, COLOR_VARIABLES.length);
 
-  const missingPrimaryStrongBlocks = {
-    light: Object.fromEntries(
-      Object.entries(primaryStrongBlocks.light).filter(([key]) => key !== "primary-strong")
-    ),
-  };
-  let missingPrimaryStrongThrew = false;
+  let twentyTokensOk = true;
   try {
-    assertTokenCount(missingPrimaryStrongBlocks);
+    assertTokenCount(themeBlockFixture(COLOR_VARIABLES));
   } catch (err) {
-    missingPrimaryStrongThrew = true;
+    twentyTokensOk = false;
   }
-  assert(
-    "Phase 132: token guard rejects theme blocks without primary-strong",
-    missingPrimaryStrongThrew,
-    missingPrimaryStrongThrew
-  );
+  assert("Phase 187: token guard accepts exactly 20 --color-* tokens", twentyTokensOk, twentyTokensOk);
 
-  // Phase 132: readable muted text can route through the named AA-floor token instead
-  // of a raw color-mix declaration. The manifest css_var entry keeps that source in
-  // the D-15 bidirectional lockstep contract.
-  const namedMutedCss = `@plugin "../vendor/daisyui-theme" {
-    name: "light";
-    --ops-text-muted: color-mix(in oklch, var(--color-base-content) 64%, transparent);
+  let twentyFirstThrew = false;
+  try {
+    assertTokenCount(themeBlockFixture([...COLOR_VARIABLES, "primary-strong"]));
+  } catch (err) {
+    twentyFirstThrew = true;
   }
-  @layer ops {
-    .ops-fixture-muted { color: var(--ops-text-muted); }
-  }`;
-  const namedMutedManifest = [
-    {
-      selector: ".ops-fixture-muted",
-      css_var: "ops-text-muted",
-      alpha: 0.64,
-      fg_token: "base-content",
-      bg_token: "base-100",
-      role: "text",
+  assert("Phase 187: token guard rejects a planted 21st --color-* token", twentyFirstThrew, twentyFirstThrew);
+
+  let nineteenThrew = false;
+  try {
+    assertTokenCount(themeBlockFixture(COLOR_VARIABLES.filter((name) => name !== "info")));
+  } catch (err) {
+    nineteenThrew = true;
+  }
+  assert("Phase 187: token guard rejects a theme block with a missing --color-* token", nineteenThrew, nineteenThrew);
+
+  // Phase 187: --ops-text-muted is opaque Muted Ink (light) and Muted Pale (dark), read from the
+  // pinned brand tokens. A named alpha mix, a wrong hex or an eight-digit hex on it must fail.
+  const mutedBrandFixture = {
+    color: {
+      secondary: {
+        "muted-ink": { $value: { hex: "#5E5360" } },
+        "muted-pale": { $value: { hex: "#BBAAC0" } },
+      },
     },
-  ];
-  let namedMutedOk = true;
-  try {
-    assertNoUntrackedMutedTokens(namedMutedCss, namedMutedManifest);
-  } catch (err) {
-    namedMutedOk = false;
-  }
-  assert(
-    "Phase 132: named muted token css_var entries are matched against color: var(--ops-text-muted)",
-    namedMutedOk,
-    namedMutedOk
-  );
+  };
+  const mutedThemesFixture = (light, dark) => ({
+    light: { "ops-text-muted": light },
+    dark: { "ops-text-muted": dark },
+  });
+  const expectMutedThrow = (label, themes) => {
+    let threw = false;
+    try {
+      assertOpaqueMutedToken(themes, mutedBrandFixture);
+    } catch (err) {
+      threw = /D-15 Guard 2/.test(err.message);
+    }
+    assert(label, threw, threw);
+  };
 
-  let untrackedNamedMutedThrew = false;
+  let opaqueMutedOk = true;
   try {
-    assertNoUntrackedMutedTokens(namedMutedCss, []);
+    assertOpaqueMutedToken(mutedThemesFixture("#5e5360", "#bbaac0"), mutedBrandFixture);
   } catch (err) {
-    untrackedNamedMutedThrew = true;
+    opaqueMutedOk = false;
   }
-  assert(
-    "Phase 132: untracked named muted token consumer throws",
-    untrackedNamedMutedThrew,
-    untrackedNamedMutedThrew
+  assert("Phase 187: opaque muted token accepts the Muted Ink and Muted Pale hexes", opaqueMutedOk, opaqueMutedOk);
+  expectMutedThrow(
+    "Phase 187: a planted alpha mix on --ops-text-muted fails the opaque guard",
+    mutedThemesFixture("color-mix(in oklch, var(--color-base-content) 64%, transparent)", "#bbaac0")
   );
-
-  const wrongNamedMutedCss = namedMutedCss.replace("64%", "63%");
-  let wrongNamedMutedThrew = false;
-  try {
-    assertNoUntrackedMutedTokens(wrongNamedMutedCss, namedMutedManifest);
-  } catch (err) {
-    wrongNamedMutedThrew = true;
-  }
-  assert(
-    "Phase 132: named muted token alpha must match css_var manifest alpha",
-    wrongNamedMutedThrew,
-    wrongNamedMutedThrew
+  expectMutedThrow(
+    "Phase 187: a muted hex that is not the brand Muted Pale fails the opaque guard",
+    mutedThemesFixture("#5e5360", "#bbaac1")
+  );
+  expectMutedThrow(
+    "Phase 187: an eight-digit (alpha) hex on --ops-text-muted fails the opaque guard",
+    mutedThemesFixture("#5e5360cc", "#bbaac0")
   );
 
   // WR-01: the threshold compare must use the UN-ROUNDED ratio. No discrete 6-hex
@@ -675,6 +553,260 @@ if (process.argv.includes("--self-test")) {
     { severity: wr01Finding.severity, actual: wr01Finding.actual_ratio }
   );
 
+  // ── D. PHASE 187 BRAND PAIR CHECKS (N-03, N-04, N-05): synthetic themes, planted failures ──
+  // The themes below are small synthetic stand-ins (brand values, but written here so the cases never
+  // depend on the live stylesheet). The accept case must pass; each planted defect must fail with a
+  // message that names what broke.
+
+  const brandLightFixture = {
+    "color-base-100": "#ffffff",
+    "color-base-200": "#f8f4f2",
+    "color-base-content": "#1e1220",
+    "color-primary": "#7b2d6b",
+    "color-primary-content": "#ffffff",
+    "ops-sunken": "#f0e9e6",
+    "ops-selected": "#ebdfe7",
+    "ops-text-muted": "#5e5360",
+    "ops-control-edge": "#8a7a8e",
+    "ops-status-failed": "#b0360b",
+    "ops-status-retrying": "#8a5a00",
+    "ops-status-pending": "#615765",
+    "ops-status-clear": "#1d6b3c",
+  };
+  const brandDarkFixture = {
+    "color-base-100": "#201624",
+    "color-base-200": "#160e19",
+    "color-base-content": "#f4edf3",
+    "color-primary": "#d58bc4",
+    "color-primary-content": "#160e19",
+    "ops-sunken": "#110a14",
+    "ops-selected": "#2b2130",
+    "ops-text-muted": "#bbaac0",
+    "ops-control-edge": "#8f7f94",
+    "ops-status-failed": "#ff9a6b",
+    "ops-status-retrying": "#e3b25c",
+    "ops-status-pending": "#ab9bb0",
+    "ops-status-clear": "#7fcb9a",
+  };
+  const brandThemes = () => ({ light: { ...brandLightFixture }, dark: { ...brandDarkFixture } });
+  const fixtureBackdrops = ["color-base-200", "color-base-100", "ops-sunken", "ops-selected"];
+  const brandMatrixFixture = {
+    text: {
+      min: 4.5,
+      roles: ["color-base-content", "ops-text-muted", "color-primary", "ops-status-failed", "ops-status-retrying", "ops-status-pending", "ops-status-clear"],
+      backdrops: fixtureBackdrops,
+    },
+    controlEdge: { property: "ops-control-edge", min: 3.0, backdrops: fixtureBackdrops, overlay: "color-base-100" },
+    primaryNonText: { property: "color-primary", min: 3.0, backdrops: fixtureBackdrops },
+    buttonLabels: {
+      min: 4.5,
+      pairs: [
+        { fg: "color-primary-content", bg: "color-primary" },
+        { fg: "color-base-content", bg: "color-base-100" },
+      ],
+    },
+    statusHue: { failed: "ops-status-failed", retrying: "ops-status-retrying", minDegrees: 25 },
+  };
+  const bothThemes = (fg, bg) => ({ light: { fg, bg }, dark: { fg, bg } });
+  const bindingsFixture = {
+    body: bothThemes("color-base-content", "color-base-200"),
+    caption: bothThemes("ops-text-muted", "color-base-100"),
+    button: bothThemes("color-primary-content", "color-primary"),
+  };
+  // The fixture "book" prints exactly what the fixture bindings compute, so the accept case holds by
+  // construction and any binding or color change that moves a ratio shows up as a mismatch.
+  const publishedFixture = (themes, bindings) => ({
+    color: {
+      contrastPairs: Object.entries(bindings).map(([id, bound]) => ({
+        id,
+        minimum: 4.5,
+        light: { contrast: Math.round(propertyRatio(themes.light, bound.light.fg, bound.light.bg) * 100) / 100 },
+        dark: { contrast: Math.round(propertyRatio(themes.dark, bound.dark.fg, bound.dark.bg) * 100) / 100 },
+      })),
+    },
+  });
+  const expectFailure = (label, failures, pattern) => {
+    const hit = failures.some((message) => pattern.test(message));
+    assert(label, hit, failures);
+  };
+
+  // Accept cases: the unmodified synthetic themes pass every check.
+  const acceptReport = {};
+  assert("N-03: accept case has no failures", checkBrandTextPairs(brandThemes(), brandMatrixFixture.text, acceptReport).length === 0, null);
+  assert("N-03: accept case computes 56 text pairs", acceptReport.pairs === 56, acceptReport.pairs);
+  assert("N-04: accept case has no failures", checkNonTextPairs(brandThemes(), brandMatrixFixture).length === 0, null);
+  assert(
+    "N-05: accept case has no published-pair failures",
+    checkPublishedPairs(brandThemes(), publishedFixture(brandThemes(), bindingsFixture), bindingsFixture).length === 0,
+    null
+  );
+  const acceptHue = {};
+  assert("N-05: accept case has no hue-gap failures", checkStatusHueGap(brandThemes(), brandMatrixFixture.statusHue, acceptHue).length === 0, null);
+  assert("N-05: accept case hue gaps are at least 25 degrees", acceptHue.gaps.light >= 25 && acceptHue.gaps.dark >= 25, acceptHue.gaps);
+
+  // The thresholds are fixed floors: the accept matrix passes, and lowering any one of them fails.
+  assert("N-03 accept case: the fixture matrix keeps every floor", checkMatrixFloors(brandMatrixFixture).length === 0, checkMatrixFloors(brandMatrixFixture));
+  const loweredText = structuredClone(brandMatrixFixture);
+  loweredText.text.min = 1.0;
+  expectFailure("N-03 planted: a text threshold lowered in the matrix fails", checkMatrixFloors(loweredText), /N-03 text threshold is 1 in the pair matrix, the floor is 4\.5/);
+  const loweredEdge = structuredClone(brandMatrixFixture);
+  loweredEdge.controlEdge.min = 2.0;
+  expectFailure("N-04 planted: a control edge threshold lowered in the matrix fails", checkMatrixFloors(loweredEdge), /N-04 control edge threshold is 2 in the pair matrix/);
+  const loweredHue = structuredClone(brandMatrixFixture);
+  loweredHue.statusHue.minDegrees = 5;
+  expectFailure("N-05 planted: a status hue threshold lowered in the matrix fails", checkMatrixFloors(loweredHue), /N-05 status hue threshold is 5 in the pair matrix/);
+
+  // Planted 1: one text role nudged below 4.5 on one backdrop.
+  const weakText = brandThemes();
+  weakText.light["ops-status-retrying"] = "#c9a24a";
+  expectFailure(
+    "N-03 planted: a text role below 4.5 fails and names the role, backdrop and theme",
+    checkBrandTextPairs(weakText, brandMatrixFixture.text),
+    /N-03 text pair ops-status-retrying on ops-selected \(light\)/
+  );
+
+  // Planted 2: Control Edge nudged below 3.0.
+  const weakEdge = brandThemes();
+  weakEdge.dark["ops-control-edge"] = "#4a3a4e";
+  expectFailure(
+    "N-04 planted: a Control Edge below 3.0 fails and names the control edge and theme",
+    checkNonTextPairs(weakEdge, brandMatrixFixture),
+    /N-04 control edge ops-control-edge on color-base-200 \(dark\)/
+  );
+
+  // Planted 3: a binding pointed at the wrong custom property, so the recomputed value differs.
+  const wrongBinding = structuredClone(bindingsFixture);
+  wrongBinding.caption.light.bg = "color-base-200";
+  expectFailure(
+    "N-05 planted: a binding on the wrong custom property fails because the pair value differs",
+    checkPublishedPairs(brandThemes(), publishedFixture(brandThemes(), bindingsFixture), wrongBinding),
+    /N-05 pair caption \(light\).*the book publishes/
+  );
+
+  // Planted 4: a published pair that has no binding.
+  const unboundBook = publishedFixture(brandThemes(), bindingsFixture);
+  unboundBook.color.contrastPairs.push({ id: "extra-pair", minimum: 4.5, light: { contrast: 7 }, dark: { contrast: 7 } });
+  expectFailure(
+    "N-05 planted: a published pair with no binding fails",
+    checkPublishedPairs(brandThemes(), unboundBook, bindingsFixture),
+    /N-05 published pair extra-pair has no binding/
+  );
+
+  // Planted 5: Retrying rotated to within 25 degrees of Failed.
+  const closeHue = brandThemes();
+  closeHue.light["ops-status-retrying"] = "#a8450c";
+  const closeHueReport = {};
+  expectFailure(
+    "N-05 planted: a Retrying hue within 25 degrees of Failed fails and names the theme",
+    checkStatusHueGap(closeHue, brandMatrixFixture.statusHue, closeHueReport),
+    /N-05 status hue gap between ops-status-failed and ops-status-retrying \(light\)/
+  );
+  assert("N-05 planted: the rotated hue gap is under 25 degrees", closeHueReport.gaps.light < 25, closeHueReport.gaps);
+
+  // ── E. PHASE 187 STYLESHEET BANS (N-12): synthetic stylesheets, planted failures ──
+  // The accept stylesheet holds every kept use of alpha (container border, shadow, scrim, scroll-edge
+  // gradient) plus a commented-out tint, and must pass. Each planted tint must fail with a message
+  // that names the line it sits on.
+
+  const keptAlphaCss = `@layer components {
+  .ops-fixture-border { border: 1px solid color-mix(in oklch, var(--color-base-content) 10%, transparent); }
+  .ops-fixture-shadow { box-shadow: 0 1px 2px color-mix(in oklch, var(--color-base-content) 8%, transparent); }
+  .ops-fixture-scrim { background: color-mix(in oklch, var(--color-black) 50%, transparent); }
+  .ops-fixture-edge { background: linear-gradient(to right, color-mix(in oklch, var(--color-base-100) 94%, transparent), transparent); }
+  /* A comment may name color-mix(in oklch, var(--color-primary) 14%, transparent) without failing. */
+}`;
+  assert(
+    "N-12: base-color mixes (borders, shadows, scrims, gradients) and a commented tint pass",
+    checkRetiredColorMixes(keptAlphaCss).length === 0,
+    checkRetiredColorMixes(keptAlphaCss)
+  );
+
+  expectFailure(
+    "N-12 planted: a primary tint fails and names its line",
+    checkRetiredColorMixes(`@layer components {
+  .ops-fixture-tint { background: color-mix(in oklch, var(--color-primary) 14%, transparent); }
+}`),
+    /N-12 color-mix at app\.css line 2 mixes a primary, secondary or status color/
+  );
+  expectFailure(
+    "N-12 planted: a status mix split over several lines fails",
+    checkRetiredColorMixes(`.ops-fixture-border {
+  border-color: color-mix(
+    in oklch,
+    var(--color-error) 48%,
+    var(--color-base-content) 10%
+  );
+}`),
+    /N-12 color-mix at app\.css line 2 /
+  );
+  expectFailure(
+    "N-12 planted: a tint of a status text token fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: color-mix(in oklch, var(--ops-status-failed) 12%, transparent); }"),
+    /N-12 color-mix at app\.css line 1 /
+  );
+  expectFailure(
+    "N-12 planted: a tint nested inside another mix fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: color-mix(in oklch, color-mix(in oklch, var(--color-warning) 20%, white) 50%, transparent); }"),
+    /N-12 color-mix at app\.css line 1 /
+  );
+  expectFailure(
+    "N-12 planted: a relative-color tint of the primary fails",
+    checkRetiredColorMixes(".ops-fixture-tint { background: rgb(from var(--color-primary) r g b / 14%); }"),
+    /N-12 relative color at app\.css line 1 /
+  );
+
+  // ── F. PHASE 187 STYLESHEET BANS (N-07): text never uses alpha ──
+  // The accept stylesheet keeps alpha everywhere except on the `color` property: borders, fills,
+  // decoration colors and `color-scheme` are not text color and pass. Each planted alpha text
+  // declaration must fail with a message that names its selector and its line.
+
+  const opaqueTextCss = `.ops-fixture-ink { color: var(--color-base-content); }
+.ops-fixture-muted { color: var(--ops-text-muted); }
+.ops-fixture-hex { color: #1e1220; }
+.ops-fixture-other {
+  border-color: color-mix(in oklch, var(--color-base-content) 10%, transparent);
+  background-color: rgb(0 0 0 / 50%);
+  text-decoration-color: rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+/* color: color-mix(in oklch, var(--color-base-content) 50%, transparent) in a comment is inert. */`;
+  assert("N-07: opaque text and alpha on other properties pass", checkAlphaTextDeclarations(opaqueTextCss).length === 0, checkAlphaTextDeclarations(opaqueTextCss));
+
+  expectFailure(
+    "N-07 planted: a color-mix text declaration fails and names its selector and line",
+    checkAlphaTextDeclarations(`.ops-fixture-ink { color: var(--color-base-content); }
+.planted { color: color-mix(in oklch, var(--color-base-content) 50%, transparent); }`),
+    /N-07 text color at app\.css line 2 \(\.planted\) uses alpha: color-mix\(/
+  );
+  expectFailure(
+    "N-07 planted: a multi-line rule names the declaration's own line",
+    checkAlphaTextDeclarations(`.planted {
+  font-size: 12px;
+  color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+}`),
+    /N-07 text color at app\.css line 3 \(\.planted\)/
+  );
+  expectFailure(
+    "N-07 planted: a text declaration inside an @media block still fails",
+    checkAlphaTextDeclarations(`@media (min-width: 800px) {
+  .planted { color: color-mix(in oklch, var(--color-base-content) 60%, transparent); }
+}`),
+    /N-07 text color at app\.css line 2 \(\.planted\)/
+  );
+  for (const [label, declaration] of [
+    ["an rgba", "rgba(0, 0, 0, 0.5)"],
+    ["a slash-alpha rgb", "rgb(0 0 0 / 50%)"],
+    ["a slash-alpha oklch", "oklch(0.3 0.1 300 / .6)"],
+    ["an eight-digit hex", "#00000080"],
+    ["a four-digit hex", "#0008"],
+  ]) {
+    expectFailure(
+      `N-07 planted: ${label} text declaration fails`,
+      checkAlphaTextDeclarations(`.planted { font-size: 12px; color: ${declaration}; }`),
+      /N-07 text color at app\.css line 1 \(\.planted\) uses alpha/
+    );
+  }
+
   if (failed) {
     process.exit(1);
   }
@@ -685,19 +817,19 @@ if (process.argv.includes("--self-test")) {
 // ─── D-15 LOCKSTEP GUARDS ─────────────────────────────────────────────────────
 
 // Guard 1 — Token count assertion
-// D-10 says "22 semantic --color-* values"; direct parse of app.css now shows 21
-// explicit declarations per theme block (4 base + 17 semantic = 21). The vendor
-// daisyui-theme plugin injects non-color tokens (--radius-*, --size-*, --border,
-// --depth, --noise, etc.) that are NOT --color-* prefixed. Lock assertion to 21
-// and require the scoped text-bearing primary-strong token.
+// daisyUI requires exactly 20 --color-* variables per theme (4 base + 16 semantic). Phase 187
+// locks the count at 20 and drops the old second primary tier (primary-strong), so a 21st
+// variable fails here just as a missing one does. The vendor daisyui-theme plugin injects
+// non-color tokens (--radius-*, --size-*, --border, --depth, --noise, etc.) that are NOT
+// --color-* prefixed and are not counted.
 function assertTokenCount(blocks) {
   for (const [theme, tokens] of Object.entries(blocks)) {
     const count = Object.keys(tokens).length;
-    if (count !== 21 || !tokens["primary-strong"]) {
+    if (count !== 20) {
       throw new Error(
-        `D-15 Guard 1: expected 21 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
+        `D-15 Guard 1: expected 20 --color-* tokens in "${theme}" theme block, got ${count}.\n` +
           `Tokens found: ${Object.keys(tokens).join(", ")}\n` +
-          `Note: lock is 21 because Phase 132 adds --color-primary-strong; --radius-*, ` +
+          `Note: the lock is 20 (daisyUI's color variables); --radius-*, ` +
           `--size-*, --border, --depth, --noise are non-color tokens injected by the ` +
           `daisyui-theme plugin and are NOT --color-* prefixed.`
       );
@@ -705,215 +837,38 @@ function assertTokenCount(blocks) {
   }
 }
 
-// Guard 2 — Untracked muted token check
-// Find all `color:` properties in app.css that use color-mix(in oklch, var(--color-base-content) NN%, transparent).
-// Only the `color:` CSS property is checked — NOT border-color, background, box-shadow, --shadow-*, fill.
-// Fail if any (selector, alpha) pair is NOT present in the MUTED_PAIRS manifest.
-function assertNoUntrackedMutedTokens(cssText, mutedPairs) {
-  // Find all color-mix muted text patterns in the form:
-  //   color: color-mix(in oklch, var(--color-base-content) NN%, transparent)
-  // Strategy: line-by-line scan. Track the most recent selector line.
-  // A selector line is one that ends with `{` and is not a @-rule or comment.
-  const lines = cssText.split("\n");
-  // CR-01: match `color: color-mix(...)` ANYWHERE on the line, not just at line start.
-  // The leading `(?:^\s*|[{;]\s*)` group requires the property to be either at the start
-  // of the line (with optional indentation — the common multi-line declaration case) OR
-  // immediately after a `{` (single-line rule like
-  // `.ops-text-meta { ...; color: color-mix(...); }`) or a `;` (multiple decls on one
-  // line). The `[{;]` boundary (and the `\b`-less start anchor) excludes
-  // `border-color:`/`background-color:` because those have a word char (`r`/`d`)
-  // immediately before `color:`, not start-of-line, `{`, or `;`.
-  const colorMixRe = /(?:^\s*|[{;]\s*)color:\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/;
-  const namedMutedRe = /(?:^\s*|[{;]\s*)color:\s*var\(--([\w-]+)\)/;
-  const cssVarAlphaRe = /--([\w-]+):\s*color-mix\(in oklch,\s*var\(--color-base-content\)\s*(\d+)%,\s*transparent\)/g;
-  // We need to find the selector for each match. Walk backwards from the match line.
-  // Allow leading whitespace (CSS is often indented within @layer blocks).
-  // Must start with an alphanumeric, dot, hash, colon, or bracket — NOT @, /, or *
-  const selectorRe = /^\s*([\.\#\:\[\&][^@{]*|[a-zA-Z][^@{]*)\s*\{/;
-  // CR-01: detect a selector declared on the SAME line as the muted `color:` (single-line
-  // rule). Capture the text before the first `{`, excluding @-rules (which start with `@`).
-  const sameLineSelectorRe = /^\s*([^{}@]+?)\s*\{/;
-
-  const found = [];
-  const namedFound = [];
-  const cssVarAlphas = new Map();
-  const cssVarEntries = mutedPairs.filter((pair) => pair.css_var);
-
-  let cssVarMatch;
-  while ((cssVarMatch = cssVarAlphaRe.exec(cssText)) !== null) {
-    const cssVar = cssVarMatch[1];
-    const alpha = parseInt(cssVarMatch[2], 10) / 100;
-    if (!cssVarAlphas.has(cssVar)) {
-      cssVarAlphas.set(cssVar, []);
+// Guard 2 (named token) — --ops-text-muted is opaque
+// Phase 187: `var(--ops-text-muted)` is plain text color, not an alpha mix. In each theme the
+// property must be a six-digit hex equal to the pinned brand token (Muted Ink on light, Muted Pale on
+// dark), so the N-03 muted pairs on four backdrops are computed from real, opaque colors.
+function brandHexAt(brandTokens, tokenPath) {
+  let node = brandTokens;
+  for (const segment of tokenPath.split(".")) {
+    if (node === null || typeof node !== "object" || !Object.hasOwn(node, segment)) {
+      throw new Error(`Unknown brand token path: ${tokenPath}`);
     }
-    cssVarAlphas.get(cssVar).push(alpha);
+    node = node[segment];
   }
+  const hex = node?.$value?.hex;
+  if (typeof hex !== "string" || !/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`Brand token ${tokenPath} has no $value.hex`);
+  return hex.toLowerCase();
+}
 
-  for (const pair of cssVarEntries) {
-    const alphas = cssVarAlphas.get(pair.css_var);
-    if (!alphas || alphas.length === 0) {
+function assertOpaqueMutedToken(themes, brandTokens) {
+  // Local on purpose: the --self-test block runs before module-level consts are initialized.
+  const brandPaths = { light: "color.secondary.muted-ink", dark: "color.secondary.muted-pale" };
+  for (const [theme, tokenPath] of Object.entries(brandPaths)) {
+    const value = themes[theme]?.["ops-text-muted"];
+    if (typeof value !== "string" || !/^#[0-9a-f]{6}$/i.test(value)) {
       throw new Error(
-        `D-15 Guard 2: named muted token --${pair.css_var} is referenced by ` +
-          `"${pair.selector}" but no matching declaration exists in app.css.`
+        `D-15 Guard 2: --ops-text-muted in the "${theme}" theme must be an opaque six-digit hex, got ${String(value)}.\n` +
+          `  Text never uses alpha (no color-mix, rgba or eight-digit hex).`
       );
     }
-
-    const mismatched = alphas.find((alpha) => alpha !== pair.alpha);
-    if (mismatched !== undefined) {
+    const expected = brandHexAt(brandTokens, tokenPath);
+    if (value.toLowerCase() !== expected) {
       throw new Error(
-        `D-15 Guard 2: named muted token --${pair.css_var} alpha mismatch!\n` +
-          `  Manifest alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
-          `  CSS alpha: ${mismatched} (${Math.round(mismatched * 100)}%)\n` +
-          `  Keep contrast-pairs.mjs css_var entries in lockstep with app.css.`
-      );
-    }
-  }
-
-  for (let i = 0; i < lines.length; i++) {
-    const colorMatch = colorMixRe.exec(lines[i]);
-    const namedMatch = namedMutedRe.exec(lines[i]);
-    if (!colorMatch && !namedMatch) continue;
-
-    const alphaPercent = colorMatch ? parseInt(colorMatch[1], 10) : null;
-    const alpha = colorMatch ? alphaPercent / 100 : null;
-    const cssVar = namedMatch ? namedMatch[1] : null;
-
-    // CR-01: if the matching line itself opens a rule (contains a `{` before the match),
-    // the selector is on this line — use it directly instead of walking backwards.
-    let selector = null;
-    const braceIdx = lines[i].indexOf("{");
-    const colorIdx = lines[i].indexOf("color:");
-    if (braceIdx !== -1 && braceIdx < colorIdx) {
-      const sameLineMatch = sameLineSelectorRe.exec(lines[i]);
-      if (sameLineMatch) {
-        selector = sameLineMatch[1].trim();
-      }
-    }
-
-    // Otherwise, find the nearest enclosing selector by walking backwards.
-    // WR-03: track brace depth so the walk binds to the INNERMOST still-open rule and
-    // does not mis-attribute a muted color nested inside an @media (or other at-rule)
-    // wrapper. We count `}` (closing a sibling/inner rule we've already passed) and `{`
-    // while scanning upward; the owning selector is the first selector-opening line we
-    // reach once depth returns to the level of the match.
-    if (!selector) {
-      let depth = 0;
-      for (let j = i - 1; j >= 0; j--) {
-        const line = lines[j];
-        // Count braces on this line (closing braces seen on the way up mean we passed an
-        // already-closed inner block; opening braces mean we've stepped out of one).
-        const opens = (line.match(/\{/g) || []).length;
-        const closes = (line.match(/\}/g) || []).length;
-
-        // A line that opens a rule at the current depth level is the owning selector,
-        // but only if we are not currently "inside" a deeper sibling block (depth > 0).
-        if (depth === 0) {
-          const selectorMatch = selectorRe.exec(line);
-          // WR-03: reject at-rule wrappers (@media/@supports/@layer). If the nearest
-          // open block at depth 0 is an at-rule rather than a real selector, the simple
-          // walk cannot attribute the muted color — fail loudly rather than bind it to
-          // the wrong (outer) selector.
-          const atRuleMatch = /^\s*@[\w-]+[^{}]*\{/.test(line);
-          if (atRuleMatch && opens > closes) {
-            throw new Error(
-              `D-15 Guard 2: muted color: at app.css line ${i + 1} is nested directly ` +
-                `inside an at-rule block (e.g. @media) at line ${j + 1}; the selector ` +
-                `walk cannot attribute it. Refactor so the muted rule has an explicit ` +
-                `selector, or extend the guard to resolve into at-rule wrappers.`
-            );
-          }
-          if (selectorMatch && opens > closes) {
-            selector = selectorMatch[1].trim();
-            break;
-          }
-        }
-
-        // Update depth for the next line up: each `}` we passed opened a level going up,
-        // each `{` closed one. (We move upward, so braces invert relative to top-down.)
-        depth += closes - opens;
-        if (depth < 0) depth = 0;
-      }
-    }
-
-    if (!selector) {
-      throw new Error(
-        `D-15 Guard 2: found untracked muted color: pattern at line ${i + 1} ` +
-          `${colorMatch ? `(alpha ${alphaPercent}%)` : `(--${cssVar})`} but could not determine its selector.`
-      );
-    }
-
-    if (colorMatch) {
-      found.push({ selector, alpha, lineNumber: i + 1 });
-    } else if (cssVarAlphas.has(cssVar)) {
-      const alphaForVar = cssVarAlphas.get(cssVar)?.[0];
-      namedFound.push({ selector, css_var: cssVar, alpha: alphaForVar, lineNumber: i + 1 });
-    }
-  }
-
-  // Check each found (selector, alpha) pair is in the manifest
-  for (const { selector, alpha, lineNumber } of found) {
-    const inManifest = mutedPairs.some(
-      (pair) => pair.selector === selector && pair.alpha === alpha
-    );
-    if (!inManifest) {
-      throw new Error(
-        `D-15 Guard 2: untracked muted text token!\n` +
-          `  Selector: "${selector}" at app.css line ${lineNumber}\n` +
-          `  Alpha: ${alpha} (${Math.round(alpha * 100)}%)\n` +
-          `  This (selector, alpha) pair is NOT present in contrast-pairs.mjs.\n` +
-          `  Add an entry for "${selector}" with alpha: ${alpha} to scrypath_ops/assets/css/contrast-pairs.mjs.\n` +
-          `  (D-15: the lockstep guard ensures all muted text tokens are contrast-gated.)`
-      );
-    }
-  }
-
-  for (const { selector, css_var, alpha, lineNumber } of namedFound) {
-    const inManifest = mutedPairs.some(
-      (pair) =>
-        pair.selector === selector &&
-        pair.css_var === css_var &&
-        pair.alpha === alpha
-    );
-    if (!inManifest) {
-      throw new Error(
-        `D-15 Guard 2: untracked named muted text token!\n` +
-          `  Selector: "${selector}" at app.css line ${lineNumber}\n` +
-          `  CSS var: --${css_var}\n` +
-          `  Alpha: ${alpha} (${Math.round(alpha * 100)}%)\n` +
-          `  This (selector, css_var, alpha) tuple is NOT present in contrast-pairs.mjs.\n` +
-          `  Add an entry for "${selector}" with css_var: "${css_var}" and alpha: ${alpha}.\n` +
-          `  (D-15: the lockstep guard ensures all named muted text tokens are contrast-gated.)`
-      );
-    }
-  }
-
-  // WR-02: reverse lockstep — every non-decorative manifest entry must correspond to an
-  // actual `color: color-mix(...)` occurrence found in app.css (at the exact alpha
-  // tolerance). This catches stale/renamed/removed manifest entries that no longer match
-  // any CSS rule, which the forward (css→manifest) scan above cannot detect.
-  for (const pair of mutedPairs) {
-    if (pair.role === "decorative") continue;
-    const hasCssHit = pair.css_var
-      ? namedFound.some(
-          (f) =>
-            f.selector === pair.selector &&
-            f.css_var === pair.css_var &&
-            f.alpha === pair.alpha
-        )
-      : found.some(
-          (f) => f.selector === pair.selector && f.alpha === pair.alpha
-        );
-    if (!hasCssHit) {
-      throw new Error(
-        `D-15 Guard 2 (reverse): stale manifest entry!\n` +
-          `  Selector: "${pair.selector}" alpha: ${pair.alpha} (${Math.round(pair.alpha * 100)}%)\n` +
-          `  This entry is in contrast-pairs.mjs but no matching ` +
-          (pair.css_var
-            ? `color: var(--${pair.css_var}) rule exists in app.css with a matching token alpha.\n`
-            : `color: color-mix(in oklch, var(--color-base-content) ${Math.round(pair.alpha * 100)}%, transparent) rule exists in app.css.\n`) +
-          `  Remove the stale entry from scrypath_ops/assets/css/contrast-pairs.mjs, or ` +
-          `restore the corresponding rule in app.css.\n` +
-          `  (D-15: the lockstep guard is bidirectional — manifest and CSS must agree both ways.)`
+        `D-15 Guard 2: --ops-text-muted in the "${theme}" theme is ${value}, expected ${expected} (${tokenPath} in brand/tokens.json).`
       );
     }
   }
@@ -968,6 +923,237 @@ function evaluatePair({ fg, bg, role, selector, theme, tokenPair }) {
     scope: "systemic", // token-checker findings are systemic by definition (D-19)
     evidence: `contrastRatio(${fg}, ${bg}) = ${actual}`,
   };
+}
+
+// ─── PHASE 187 BRAND PAIR CHECKS (A11Y-01: N-03, N-04, N-05) ─────────────────
+//
+// Each check reads the two theme blocks' custom properties (the shape readThemeProperties returns:
+// { light: { "color-base-100": "#ffffff", ... }, dark: { ... } }) and returns a list of failure
+// strings; an empty list is a pass. Ratios are compared unrounded with `>=`, so a ratio of 4.4996
+// never passes as 4.50. Pair names come from contrast-pairs.mjs as custom property names, never as
+// hex, so a recolor changes the verdict. These are function declarations that use only their own
+// arguments, because the --self-test block runs before module-level constants are initialized.
+
+function resolveThemeColor(properties, name) {
+  return colorValue(`var(--${name})`, properties);
+}
+
+function propertyRatio(properties, fgName, bgName) {
+  return contrastRatioRaw(resolveThemeColor(properties, fgName), resolveThemeColor(properties, bgName));
+}
+
+// The thresholds are WCAG's and the book's, not data: a manifest that lowers one would launder a weak
+// pair past every check below. The matrix keeps the numbers so the checks read them in one place, and
+// this compares each against its fixed floor.
+function checkMatrixFloors(matrix) {
+  const floors = [
+    ["N-03 text", matrix?.text?.min, 4.5],
+    ["N-04 control edge", matrix?.controlEdge?.min, 3.0],
+    ["N-04 primary", matrix?.primaryNonText?.min, 3.0],
+    ["N-04 button label", matrix?.buttonLabels?.min, 4.5],
+    ["N-05 status hue", matrix?.statusHue?.minDegrees, 25],
+  ];
+  return floors
+    .filter(([, actual, floor]) => actual !== floor)
+    .map(([label, actual, floor]) => `${label} threshold is ${String(actual)} in the pair matrix, the floor is ${floor}: the matrix may not lower it`);
+}
+
+// N-03: every text role on every backdrop in both themes (7 x 4 x 2 = 56 pairs) at 4.5:1 or better.
+// `report` (optional) receives { pairs, thinnest } so the normal run can print the thinnest pair.
+function checkBrandTextPairs(themes, spec, report = {}) {
+  const failures = [];
+  let pairs = 0;
+  let thinnest = null;
+  for (const [theme, properties] of Object.entries(themes)) {
+    for (const backdrop of spec.backdrops) {
+      for (const role of spec.roles) {
+        const raw = propertyRatio(properties, role, backdrop);
+        pairs += 1;
+        if (!thinnest || raw < thinnest.raw) thinnest = { raw, role, backdrop, theme };
+        if (!(raw >= spec.min)) {
+          failures.push(`N-03 text pair ${role} on ${backdrop} (${theme}) is ${raw.toFixed(4)}, below ${spec.min}`);
+        }
+      }
+    }
+  }
+  if (pairs !== 56) failures.push(`N-03 expected 56 text pairs (7 roles x 4 backdrops x 2 themes), computed ${pairs}`);
+  report.pairs = pairs;
+  report.thinnest = thinnest;
+  return failures;
+}
+
+// N-04: Control Edge on the four backdrops and the overlay surface at 3:1, the primary on the four
+// backdrops at 3:1 (focus ring, selection line, link), and the button labels at 4.5:1.
+function checkNonTextPairs(themes, matrix, report = {}) {
+  const failures = [];
+  let pairs = 0;
+  const check = (label, theme, properties, fg, bg, min) => {
+    const raw = propertyRatio(properties, fg, bg);
+    pairs += 1;
+    if (!(raw >= min)) failures.push(`N-04 ${label} ${fg} on ${bg} (${theme}) is ${raw.toFixed(4)}, below ${min}`);
+  };
+  for (const [theme, properties] of Object.entries(themes)) {
+    const edge = matrix.controlEdge;
+    for (const bg of [...edge.backdrops, edge.overlay]) check("control edge", theme, properties, edge.property, bg, edge.min);
+    const primary = matrix.primaryNonText;
+    for (const bg of primary.backdrops) check("primary", theme, properties, primary.property, bg, primary.min);
+    for (const { fg, bg } of matrix.buttonLabels.pairs) check("button label", theme, properties, fg, bg, matrix.buttonLabels.min);
+  }
+  report.pairs = pairs;
+  return failures;
+}
+
+// N-05: the pairs published in brand/brand.json (color.contrastPairs), by pair id. Each published
+// pair must have exactly one binding naming the custom properties that carry its two colors in each
+// theme; the ratio recomputed from those resolved properties must equal the book's two-decimal value
+// and meet the pair's own minimum. A binding that names no published pair fails as well.
+function checkPublishedPairs(themes, brandJson, bindings, report = {}) {
+  const published = brandJson?.color?.contrastPairs;
+  if (!Array.isArray(published) || published.length === 0) return ["N-05 brand/brand.json has no color.contrastPairs"];
+  const failures = [];
+  const ids = published.map((pair) => pair.id);
+  if (new Set(ids).size !== ids.length) failures.push("N-05 brand/brand.json repeats a contrast pair id");
+  for (const id of Object.keys(bindings)) {
+    if (!ids.includes(id)) failures.push(`N-05 binding ${id} names no pair published in brand/brand.json`);
+  }
+  let pairs = 0;
+  for (const pair of published) {
+    const binding = bindings[pair.id];
+    if (!binding) {
+      failures.push(`N-05 published pair ${pair.id} has no binding in PUBLISHED_PAIR_BINDINGS`);
+      continue;
+    }
+    for (const [theme, properties] of Object.entries(themes)) {
+      const bound = binding[theme];
+      const book = pair[theme];
+      if (!bound || !book || !Number.isFinite(book.contrast)) {
+        failures.push(`N-05 pair ${pair.id} (${theme}) has no binding or no published ratio`);
+        continue;
+      }
+      const raw = propertyRatio(properties, bound.fg, bound.bg);
+      const rounded = Math.round(raw * 100) / 100;
+      pairs += 1;
+      if (rounded !== book.contrast) {
+        failures.push(`N-05 pair ${pair.id} (${theme}): ${bound.fg} on ${bound.bg} is ${rounded}, the book publishes ${book.contrast}`);
+      }
+      if (Number.isFinite(pair.minimum) && !(raw >= pair.minimum)) {
+        failures.push(`N-05 pair ${pair.id} (${theme}) is ${raw.toFixed(4)}, below its published minimum ${pair.minimum}`);
+      }
+    }
+  }
+  report.pairs = pairs;
+  report.published = published.length;
+  return failures;
+}
+
+// CIELAB hue angle in degrees [0, 360) of a six-digit hex (sRGB, D65 white).
+function labHueDegrees(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => toLinear(parseInt(hex.slice(i, i + 2), 16) / 255));
+  const x = (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047;
+  const y = 0.2126729 * r + 0.7151522 * g + 0.072175 * b;
+  const z = (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883;
+  const f = (t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
+  const a = 500 * (f(x) - f(y));
+  const bStar = 200 * (f(y) - f(z));
+  const degrees = (Math.atan2(bStar, a) * 180) / Math.PI;
+  return degrees < 0 ? degrees + 360 : degrees;
+}
+
+// N-05: the Failed and Retrying text colors stay at least `minDegrees` apart in CIELAB hue angle in
+// each theme, so the pair never collapses into one color for anyone who cannot rely on the word and
+// the icon shape alone.
+function checkStatusHueGap(themes, spec, report = {}) {
+  const failures = [];
+  report.gaps = {};
+  for (const [theme, properties] of Object.entries(themes)) {
+    const failed = labHueDegrees(resolveThemeColor(properties, spec.failed));
+    const retrying = labHueDegrees(resolveThemeColor(properties, spec.retrying));
+    const raw = Math.abs(failed - retrying);
+    const gap = Math.min(raw, 360 - raw);
+    report.gaps[theme] = gap;
+    if (!(gap >= spec.minDegrees)) {
+      failures.push(
+        `N-05 status hue gap between ${spec.failed} and ${spec.retrying} (${theme}) is ${gap.toFixed(1)} degrees, below ${spec.minDegrees}`
+      );
+    }
+  }
+  return failures;
+}
+
+// ─── PHASE 187 STYLESHEET BANS (A11Y-01, SKIN-05: N-12) ──────────────────────
+//
+// These read stylesheet text only and return failure strings (an empty list is a pass). They are
+// function declarations that use only their own arguments, because the --self-test block runs
+// before module-level constants are initialized.
+
+function oneLine(text) {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+function lineOf(css, index) {
+  return css.slice(0, index).split("\n").length;
+}
+
+// Every call of one of `names` with its balanced parentheses: [{ text, index }]. Nested calls are
+// reported separately, so a tint hidden inside another function is still found.
+function cssFunctionCalls(css, names) {
+  const calls = [];
+  const opener = new RegExp(`(?<![\\w-])(?:${names.join("|")})\\(`, "g");
+  let match;
+  while ((match = opener.exec(css))) {
+    let depth = 1;
+    let end = match.index + match[0].length;
+    for (; end < css.length && depth > 0; end += 1) {
+      if (css[end] === "(") depth += 1;
+      else if (css[end] === ")") depth -= 1;
+    }
+    calls.push({ text: css.slice(match.index, end), index: match.index });
+  }
+  return calls;
+}
+
+// N-12: no color expression mixes the primary, the secondary or a status color. Those mixes were the
+// Plum and status tints (fills, borders, glows) the re-skin retires: a tinted fill is `--ops-selected`
+// or `--ops-sunken`, a tinted border is `--ops-control-edge` or `--color-base-300`. A mix of the base
+// colors (container borders, shadows, scrims, scroll-edge gradients) carries no retired color and
+// passes. Relative color syntax (`rgb(from var(--color-primary) r g b / 14%)`) is the same tint
+// written another way, so it is held to the same rule.
+function checkRetiredColorMixes(cssText) {
+  const css = stripCssComments(cssText);
+  const retired = /var\(\s*--(?:color-(?:primary|secondary|info|success|warning|error)(?:-content)?|ops-status-(?:failed|retrying|pending|clear)|ops-(?:warning|error)-text)\s*[,)]/;
+  const failures = [];
+  for (const call of cssFunctionCalls(css, ["color-mix"])) {
+    if (retired.test(call.text)) {
+      failures.push(`N-12 color-mix at app.css line ${lineOf(css, call.index)} mixes a primary, secondary or status color: ${oneLine(call.text)}`);
+    }
+  }
+  for (const call of cssFunctionCalls(css, ["rgb", "hsl", "hwb", "lab", "lch", "oklab", "oklch", "color"])) {
+    if (/^[\w-]+\(\s*from\s/.test(call.text) && retired.test(call.text)) {
+      failures.push(`N-12 relative color at app.css line ${lineOf(css, call.index)} derives a tint from a primary, secondary or status color: ${oneLine(call.text)}`);
+    }
+  }
+  return failures;
+}
+
+// N-07: text never uses alpha. No `color` declaration may carry a color-mix, an rgba or hsla call, a
+// color function written with a slash alpha (`rgb(0 0 0 / 50%)`), or a four- or eight-digit hex. Text
+// is the Ink color or the opaque `--ops-text-muted`; alpha stays legal for borders, shadows, scrims
+// and fills, so only the `color` property itself (not `border-color`, `background-color`,
+// `text-decoration-color` or `color-scheme`) is read.
+function checkAlphaTextDeclarations(cssText) {
+  const css = stripCssComments(cssText);
+  const failures = [];
+  for (const rule of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const bodyStart = rule.index + rule[1].length + 1;
+    for (const declaration of rule[2].matchAll(/(?:^|;)\s*color\s*:\s*([^;]*)/g)) {
+      const value = declaration[1];
+      const slashAlpha = cssFunctionCalls(value, ["rgb", "hsl", "hwb", "lab", "lch", "oklab", "oklch", "color"]).some((call) => call.text.includes("/"));
+      if (!(/color-mix\(|\b(?:rgba|hsla)\(|#(?:[0-9a-f]{4}|[0-9a-f]{8})\b/i.test(value) || slashAlpha)) continue;
+      const at = bodyStart + declaration.index + declaration[0].indexOf("color");
+      failures.push(`N-07 text color at app.css line ${lineOf(css, at)} (${oneLine(rule[1])}) uses alpha: ${oneLine(value)}`);
+    }
+  }
+  return failures;
 }
 
 // ─── MAIN FUNCTION ────────────────────────────────────────────────────────────
@@ -1053,7 +1239,7 @@ function evaluateLiveBindings(css, themes, focusBindings, surfaceBindings) {
   // Opaque shell floors and actual resting/selected/menu fills. Each theme's
   // live token values are resolved; the muted floor is not applied to base-300,
   // where the theme toggle uses full base-content, not muted text.
-  const surfaces = ["ops-bg", "ops-surface-1", "ops-surface-2", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
+  const surfaces = ["ops-bg", "ops-surface-1", "ops-sunken", "ops-selected", "ops-selection", "ops-theme-selection", "color-base-100", "color-base-200"];
   for (const [theme, properties] of Object.entries(themes)) {
     for (const surface of [...surfaces, "color-base-300"]) {
       const bg = colorValue(`var(--${surface})`, properties);
@@ -1078,27 +1264,24 @@ async function main() {
   }
 
   // Load contrast-pairs.mjs manifest (D-11)
-  let mutedPairs;
   let focusBindings;
   let surfaceBindings;
+  let pairMatrix;
+  let publishedBindings;
   try {
     const manifest = await import(PAIRS_PATH);
-    mutedPairs = manifest.MUTED_PAIRS;
     focusBindings = manifest.FOCUS_BINDINGS;
     surfaceBindings = manifest.SURFACE_BINDINGS;
-    if (!Array.isArray(mutedPairs)) {
-      throw new Error("MUTED_PAIRS export is not an array");
+    pairMatrix = manifest.BRAND_PAIR_MATRIX;
+    publishedBindings = manifest.PUBLISHED_PAIR_BINDINGS;
+    if (!pairMatrix || typeof pairMatrix !== "object" || !publishedBindings || typeof publishedBindings !== "object") {
+      throw new Error("BRAND_PAIR_MATRIX and PUBLISHED_PAIR_BINDINGS exports are required");
     }
   } catch (err) {
     throw new Error(`Could not load contrast-pairs.mjs at ${PAIRS_PATH}: ${err.message}`);
   }
 
   const properties = readThemeProperties(cssText);
-  if (new Set(mutedPairs.map(p => p.selector)).size !== mutedPairs.length) throw new Error("Duplicate muted pair selector");
-  if (!mutedPairs.length) throw new Error("Required muted pairs are empty");
-  for (const pair of mutedPairs) {
-    if (pair.fg_token !== "base-content" || (pair.selector === ".ops-trail__sep" ? pair.role !== "decorative" : pair.role !== "text") || !["text", "large", "ui", "decorative"].includes(pair.role) || !Number.isFinite(pair.alpha) || pair.alpha < 0 || pair.alpha > 1 || typeof pair.selector !== "string") throw new Error("Malformed muted pair role/alpha/selector");
-  }
 
   // (a) Parse theme blocks
   const blocks = parseThemeBlocks(cssText);
@@ -1109,7 +1292,13 @@ async function main() {
 
   // (b) D-15 guards
   assertTokenCount(blocks);
-  assertNoUntrackedMutedTokens(cssText, mutedPairs);
+  let brandTokens;
+  try {
+    brandTokens = JSON.parse(await readFile(BRAND_TOKENS_PATH, "utf8"));
+  } catch (err) {
+    throw new Error(`Could not read the pinned brand tokens at ${BRAND_TOKENS_PATH}: ${err.message}`);
+  }
+  assertOpaqueMutedToken(properties, brandTokens);
 
   // (c) + (d) Evaluate pairs for both themes
   const findings = evaluateLiveBindings(cssText, properties, focusBindings, surfaceBindings);
@@ -1135,33 +1324,48 @@ async function main() {
         findings.push(finding);
       }
     }
-
-    // (d) Evaluate MUTED_PAIRS (skip role === "decorative")
-    for (const pair of mutedPairs) {
-      if (pair.role === "decorative") continue;
-
-      const fgTokenHex = tokens[pair.fg_token];
-      const bgTokenHex = tokens[pair.bg_token];
-      if (!fgTokenHex || !bgTokenHex) {
-        throw new Error(`Missing required muted token ${pair.fg_token}/${pair.bg_token} in ${theme}`);
-      }
-
-      // Composite the alpha in sRGB (D-12)
-      const compositedFg = compositeAlpha(fgTokenHex, pair.alpha, bgTokenHex);
-
-      const finding = evaluatePair({
-        fg: compositedFg,
-        bg: bgTokenHex,
-        role: pair.role,
-        selector: pair.selector,
-        theme,
-        tokenPair: `${pair.fg_token}@${Math.round(pair.alpha * 100)}%/${pair.bg_token}`,
-      });
-      if (finding.severity !== "pass") {
-        findings.push(finding);
-      }
-    }
   }
+
+  // (d) Phase 187 brand pairs, all computed from the stylesheet's custom properties: N-03 text roles
+  // on four backdrops, N-04 control edge, primary and button labels, N-05 the book's published pairs
+  // and the Failed/Retrying hue gap. Any failure is an AA failure (exit non-zero).
+  let brandJson;
+  try {
+    brandJson = JSON.parse(await readFile(BRAND_JSON_PATH, "utf8"));
+  } catch (err) {
+    throw new Error(`Could not read the pinned brand book at ${BRAND_JSON_PATH}: ${err.message}`);
+  }
+  const brandReport = { text: {}, nonText: {}, published: {}, hue: {} };
+  const brandFailures = [
+    ...checkMatrixFloors(pairMatrix),
+    ...checkBrandTextPairs(properties, pairMatrix.text, brandReport.text),
+    ...checkNonTextPairs(properties, pairMatrix, brandReport.nonText),
+    ...checkPublishedPairs(properties, brandJson, publishedBindings, brandReport.published),
+    ...checkStatusHueGap(properties, pairMatrix.statusHue, brandReport.hue),
+  ];
+  // N-12 and N-07: the stylesheet bans. Each failure names the line it sits on, and counts as an AA failure.
+  const banFailures = [...checkRetiredColorMixes(cssText), ...checkAlphaTextDeclarations(cssText)];
+  const failureFinding = (message, elementRole) => ({
+    severity: "aa-fail",
+    producer: "token",
+    theme: "both",
+    selector: null,
+    token_pair: message,
+    fg: null,
+    bg: null,
+    actual_ratio: null,
+    required_ratio: null,
+    element_role: elementRole,
+    screen: "token-check",
+    viewport: "n/a",
+    state: "static",
+    shot: null,
+    fix_class: "token",
+    scope: "systemic",
+    evidence: message,
+  });
+  for (const message of brandFailures) findings.push(failureFinding(message, "brand-pair"));
+  for (const message of banFailures) findings.push(failureFinding(message, "stylesheet-ban"));
 
   // (e) Build report in scrypath.contrast.v1 schema (D-17)
   const report = buildReport(findings);
@@ -1212,13 +1416,26 @@ async function main() {
   console.log(`  AA failures:  ${report.summary.aa_fail}`);
   console.log(`  AAA advisory: ${report.summary.aaa_advisory}`);
   console.log(`  Report: ${path.join(REPORT_DIR, "contrast-report.token.json")}`);
+  const thinnest = brandReport.text.thinnest;
+  if (thinnest) {
+    console.log(
+      `  Brand pairs: ${brandReport.text.pairs} text, ${brandReport.nonText.pairs} non-text, ` +
+        `${brandReport.published.pairs} published (${brandReport.published.published} pairs), ` +
+        `Failed/Retrying hue gap ${Object.entries(brandReport.hue.gaps).map(([theme, gap]) => `${theme} ${gap.toFixed(1)}`).join(", ")} degrees`
+    );
+    console.log(
+      `  Thinnest text pair: ${thinnest.role} on ${thinnest.backdrop} (${thinnest.theme}) ${(Math.round(thinnest.raw * 100) / 100).toFixed(2)}`
+    );
+  }
 
   if (report.summary.aa_fail > 0) {
     console.log(`\nAA Failures:`);
     for (const f of findings.filter((f) => f.severity === "aa-fail")) {
       const label = f.selector || f.token_pair;
       console.log(
-        `  [${f.theme}] ${label}: ${f.actual_ratio} (required: ${f.required_ratio}, role: ${f.element_role})`
+        f.element_role === "brand-pair" || f.element_role === "stylesheet-ban"
+          ? `  ${label}`
+          : `  [${f.theme}] ${label}: ${f.actual_ratio} (required: ${f.required_ratio}, role: ${f.element_role})`
       );
     }
   }

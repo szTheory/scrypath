@@ -47,6 +47,20 @@ async function setStoredPreference(page: Page, preference: string): Promise<void
   );
 }
 
+// Resolve a theme custom property to the computed background color the browser paints for it, for
+// whichever theme is active when this runs (Phase 187: the shell floor is read from the theme,
+// never pinned as an RGB triplet).
+async function resolveTokenColor(page: Page, token: string): Promise<string> {
+  return page.evaluate((name) => {
+    const probe = document.createElement("div");
+    probe.style.cssText = `position:absolute; left:-9999px; background-color: var(${name})`;
+    (document.body ?? document.documentElement).appendChild(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  }, token);
+}
+
 async function expectTheme(page: Page, preference: string, effective: "light" | "dark"): Promise<void> {
   await expect(page.locator("html")).toHaveAttribute("data-theme-preference", preference);
   await expect(page.locator("html")).toHaveAttribute("data-theme-effective", effective);
@@ -185,7 +199,10 @@ for (const entry of entries) {
       await expectTheme(page, mode.preference, mode.colorScheme);
       await expectSourceRow(page, entry);
 
-      const expectedFloor = mode.colorScheme === "dark" ? "rgb(17, 20, 25)" : "rgb(243, 245, 248)";
+      const expectedFloor = await resolveTokenColor(page, "--color-base-200");
+      expect(expectedFloor, `${entry.name} ${mode.name}: the page color token must resolve to a color`).not.toBe(
+        "rgba(0, 0, 0, 0)"
+      );
       await expect
         .poll(() => page.locator(".ops-shell").evaluate((element) => getComputedStyle(element).backgroundColor))
         .toBe(expectedFloor);
@@ -306,9 +323,16 @@ test("mounted Ops applies the stored theme before its deferred host bundle runs"
   try {
     const navigation = page.goto(entries[0].url);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    // The dark floor is the dark theme's page color, read from the page while its bundle is held back.
+    await expect
+      .poll(() => resolveTokenColor(page, "--color-base-200"))
+      .not.toBe("rgba(0, 0, 0, 0)");
+    const darkFloor = await resolveTokenColor(page, "--color-base-200");
+    const darkChannels = (darkFloor.match(/\d+/g) ?? []).slice(0, 3).map(Number);
+    expect(Math.max(...darkChannels), "the stored dark theme paints a dark floor before the bundle runs").toBeLessThan(64);
     await expect
       .poll(() => page.locator(".ops-shell").evaluate((element) => getComputedStyle(element).backgroundColor))
-      .toBe("rgb(17, 20, 25)");
+      .toBe(darkFloor);
 
     releaseBundle();
     await navigation;

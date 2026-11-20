@@ -277,7 +277,7 @@ test("operator promotes only this returned task pair and unique target document"
 
   const close = confirmation.getByRole("button", { name: "Close Confirm index promotion dialog" });
   const cancel = confirmation.getByRole("button", { name: "Cancel index swap", exact: true });
-  const confirm = confirmation.getByRole("button", { name: "Promote target index", exact: true });
+  const confirm = confirmation.getByRole("button", { name: "Replace live index with target", exact: true });
   await close.focus();
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");

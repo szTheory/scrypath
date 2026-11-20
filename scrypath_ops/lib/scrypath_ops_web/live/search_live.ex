@@ -1202,7 +1202,8 @@ defmodule ScrypathOpsWeb.SearchLive do
 
   defp search_status_badge_label(%{searching: true}), do: "Running…"
 
-  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Failed"
+  # "Failed" is a sync status word, so a failed search request says "Search failed" instead.
+  defp search_status_badge_label(%{run_error: error}) when not is_nil(error), do: "Search failed"
 
   defp search_status_badge_label(%{result_multi: %{failures: [_ | _]}}), do: "Partial"
 
@@ -1595,16 +1596,7 @@ defmodule ScrypathOpsWeb.SearchLive do
                 {submitted_context(@submitted_search)}
               </p>
 
-              <div
-                :if={@searching}
-                class="space-y-3"
-                aria-hidden="true"
-              >
-                <p class="text-ops-body text-base-content/70">
-                  Running search...
-                </p>
-                <.ops_loading lines={4} label="Running search" />
-              </div>
+              <.ops_loading :if={@searching} lines={4} label="Running search..." />
 
               <.ops_status
                 :if={@run_error && !@searching}
@@ -1636,7 +1628,6 @@ defmodule ScrypathOpsWeb.SearchLive do
                 title={
                   if @submitted_search.page > 1, do: "No more results", else: "No matching documents"
                 }
-                icon="hero-magnifying-glass"
               >
                 {if @submitted_search.page > 1,
                   do: "Return to the previous page or try another query.",
@@ -1780,7 +1771,7 @@ defmodule ScrypathOpsWeb.SearchLive do
             />
           </.ops_field>
           <div class="flex justify-between gap-2">
-            <.ops_button phx-click="cancel_save" variant={:ghost} data-ops-modal-cancel>
+            <.ops_button phx-click="cancel_save" variant={:default} data-ops-modal-cancel>
               Cancel
             </.ops_button>
             <.ops_button type="submit" variant={:primary}>Save</.ops_button>
@@ -1809,6 +1800,7 @@ defmodule ScrypathOpsWeb.SearchLive do
           <li
             :for={row <- @saved_searches}
             id={"saved-search-row-#{row.dom_id}"}
+            aria-current={if(@loaded && @loaded.name == row.name, do: "true")}
             class={[
               "ops-saved-search-row",
               @loaded && @loaded.name == row.name && "ops-saved-search-row--loaded"
@@ -1828,48 +1820,48 @@ defmodule ScrypathOpsWeb.SearchLive do
               :if={is_nil(@manage_row) || @manage_row.name != row.name}
               class="ops-saved-search-row__actions"
             >
-              <.ops_button
+              <button
                 id={"saved-search-load-#{row.dom_id}"}
-                variant={:default}
-                size={:sm}
+                type="button"
+                class="ops-text-action"
                 phx-click="load_saved_search"
                 phx-value-name={row.name}
                 aria-label={"Load #{row.name}"}
                 disabled={!row.readable? || !search_configured?(assigns)}
+                aria-disabled={if(!row.readable? || !search_configured?(assigns), do: "true")}
               >
                 Load
-              </.ops_button>
-              <.ops_button
+              </button>
+              <button
                 id={"saved-search-rename-#{row.dom_id}"}
-                variant={:ghost}
-                size={:sm}
+                type="button"
+                class="ops-text-action"
                 phx-click="manage_rename"
                 phx-value-name={row.name}
                 aria-label={"Rename #{row.name}"}
               >
                 Rename
-              </.ops_button>
+              </button>
               <a
                 :if={row.export_href}
                 id={"saved-search-export-#{row.dom_id}"}
                 href={row.export_href}
                 download={row.export_filename}
-                class="btn ops-btn btn-ghost btn-sm rounded-ops-control text-ops-body font-semibold"
+                class="ops-text-action"
                 aria-label={"Export #{row.name}"}
               >
                 Export
               </a>
-              <.ops_button
+              <button
                 id={"saved-search-delete-#{row.dom_id}"}
-                variant={:ghost}
-                size={:sm}
-                class="ops-saved-search-row__delete"
+                type="button"
+                class="ops-text-action"
                 phx-click="manage_delete"
                 phx-value-name={row.name}
                 aria-label={"Delete #{row.name}"}
               >
                 Delete
-              </.ops_button>
+              </button>
             </div>
 
             <.form
@@ -1895,8 +1887,8 @@ defmodule ScrypathOpsWeb.SearchLive do
                 />
               </.ops_field>
               <div class="flex flex-wrap gap-2">
-                <.ops_button type="submit" variant={:primary} size={:sm}>Rename</.ops_button>
-                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                <.ops_button type="submit" variant={:default} size={:sm}>Rename</.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:default} size={:sm}>
                   Cancel
                 </.ops_button>
               </div>
@@ -1927,8 +1919,10 @@ defmodule ScrypathOpsWeb.SearchLive do
                 />
               </.ops_field>
               <div class="flex flex-wrap gap-2">
-                <.ops_button type="submit" variant={:danger} size={:sm}>Delete</.ops_button>
-                <.ops_button phx-click="cancel_row" variant={:ghost} size={:sm}>
+                <.ops_button type="submit" variant={:primary} size={:sm}>
+                  Delete saved search permanently
+                </.ops_button>
+                <.ops_button phx-click="cancel_row" variant={:default} size={:sm}>
                   Cancel
                 </.ops_button>
               </div>
@@ -1960,11 +1954,10 @@ defmodule ScrypathOpsWeb.SearchLive do
               id="saved-search-import-file"
               variant={:default}
               size={:sm}
-              class="gap-1.5"
               phx-click={JS.dispatch("click", to: "##{@uploads.saved_search_file.ref}")}
               aria-describedby="saved-search-import-hint"
             >
-              <.icon name="hero-arrow-up-tray" class="size-4" /> Import JSON file
+              Import JSON file
             </.ops_button>
           </.form>
 

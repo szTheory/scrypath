@@ -25,11 +25,11 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div class="space-y-1">
       <h1
         id={@title_id}
-        class="text-ops-h1 font-semibold leading-ops-tight tracking-normal text-base-content"
+        class="text-ops-h1 font-bold leading-ops-title tracking-ops-title text-base-content"
       >
         {@title}
       </h1>
-      <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/70">{@subtitle}</p>
+      <p :if={@subtitle} class="max-w-3xl text-ops-body ops-muted">{@subtitle}</p>
     </div>
     """
   end
@@ -148,8 +148,8 @@ defmodule ScrypathOpsWeb.OpsUi do
           >
             {@title}
           </h2>
-          <p :if={@subtitle} class="max-w-3xl text-ops-body text-base-content/75">{@subtitle}</p>
-          <p :if={@meta} class="text-ops-sm tabular-nums text-base-content/70">{@meta}</p>
+          <p :if={@subtitle} class="max-w-3xl text-ops-body ops-muted">{@subtitle}</p>
+          <p :if={@meta} class="text-ops-sm tabular-nums ops-muted">{@meta}</p>
           <div :if={@metadata != []}>{render_slot(@metadata)}</div>
         </div>
         <div :if={@actions != []} class="flex flex-wrap items-center justify-end gap-2">
@@ -181,7 +181,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Button styling wrapper for operator actions."
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -204,19 +204,27 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Contextual refresh action for operator status surfaces."
+  @doc """
+  Contextual refresh action for operator status surfaces.
+
+  An outline button with two words and no glyph: `label` while idle and `busy_label` while the
+  click is in flight. Both words are always rendered and the stylesheet swaps them on
+  `[aria-busy="true"]`, which the `OpsRefreshButton` hook sets while LiveView marks the click as
+  loading, so the width never changes and nothing animates. The server never sets `aria-busy`.
+  """
   attr(:id, :string,
     required: true,
     doc: "Unique DOM id required by the LiveView refresh hook."
   )
 
   attr(:label, :string, default: "Refresh")
+  attr(:busy_label, :string, default: "Refreshing…")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
-    default: :ghost,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    default: :default,
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -233,7 +241,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       id={@id}
       variant={@variant}
       size={@size}
-      class={["gap-1.5 ops-refresh-button", @class]}
+      class={["ops-refresh-button", @class]}
       disabled={@disabled}
       data-ops-refresh-eligible={if @disabled, do: "false", else: "true"}
       data-ops-refresh
@@ -241,8 +249,10 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-label={@aria_label}
       {@rest}
     >
-      <ScrypathOpsWeb.CoreComponents.icon name="hero-arrow-path" class="size-3.5" />
-      <span>{@label}</span>
+      <span class="ops-refresh-button__words">
+        <span data-ops-refresh-label="idle">{@label}</span>
+        <span data-ops-refresh-label="busy">{@busy_label}</span>
+      </span>
     </.ops_button>
     """
   end
@@ -252,12 +262,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:checked_at, :any, default: nil)
   attr(:checked_label, :string, default: "Checked")
   attr(:label, :string, default: "Refresh")
+  attr(:busy_label, :string, default: "Refreshing…")
   attr(:aria_label, :string, required: true)
   attr(:disabled, :boolean, default: false)
 
   attr(:variant, :atom,
-    default: :ghost,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    default: :default,
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -275,6 +286,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <.ops_refresh_button
         id={@id}
         label={@label}
+        busy_label={@busy_label}
         aria_label={@aria_label}
         variant={@variant}
         size={@size}
@@ -291,7 +303,7 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:variant, :atom,
     default: :default,
-    values: [:default, :primary, :secondary, :danger, :ghost]
+    values: [:default, :primary, :secondary, :ghost]
   )
 
   attr(:size, :atom, default: :sm, values: [:xs, :sm, :md])
@@ -307,7 +319,13 @@ defmodule ScrypathOpsWeb.OpsUi do
     """
   end
 
-  @doc "Status or guidance notice with Scrypath operator styling."
+  @doc """
+  Status or guidance notice: a Panel with a 2px inline-start rule, never a tint.
+
+  The kind picks the rule (and the title color): `:error` is Failed, `:warning` and `:partial` are
+  Retrying amber, everything else (`:info`, `:success`, `:running`) is the neutral Control Edge
+  rule. Plum is never an info color and green is only for Clear, so `:success` stays neutral.
+  """
   attr(:kind, :atom,
     default: :info,
     values: [:info, :success, :warning, :error, :partial, :running]
@@ -323,21 +341,27 @@ defmodule ScrypathOpsWeb.OpsUi do
     <div
       class={[
         "ops-notice-surface",
-        tone_class(@kind),
+        notice_modifier(@kind),
         @class
       ]}
       {@rest}
     >
-      <p :if={@title} class="font-semibold">{@title}</p>
+      <p :if={@title} class="ops-notice-surface__title font-semibold">{@title}</p>
       <div class={[@title && "mt-1"]}>{render_slot(@inner_block)}</div>
     </div>
     """
   end
 
-  @doc "Operator status surface for results, failures, and important workflow feedback."
+  @doc """
+  Operator status surface for results, failures, and important workflow feedback.
+
+  Same surface and rule scheme as `ops_notice/1`; `data-status-kind` keeps the kind readable. The
+  `neutral` attr is accepted for existing call sites and no longer changes the surface: the kind
+  already decides the rule, so an error stays Failed and a success stays a neutral rule.
+  """
   attr(:kind, :atom,
     default: :info,
-    values: [:info, :success, :warning, :error, :partial, :running]
+    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
   )
 
   attr(:title, :string, required: true)
@@ -352,8 +376,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "ops-notice-surface ops-notice-surface--raised",
-        if(@neutral, do: "ops-notice-surface--neutral", else: tone_class(@kind)),
+        "ops-notice-surface",
+        notice_modifier(@kind),
         @class
       ]}
       data-status-kind={@kind}
@@ -361,20 +385,11 @@ defmodule ScrypathOpsWeb.OpsUi do
       {@rest}
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <div class={[
-          "ops-notice-surface__copy min-w-0",
-          @neutral && "ops-notice-surface__copy--cued"
-        ]}>
-          <span
-            :if={@neutral}
-            class="ops-notice-surface__cue"
-            aria-hidden="true"
-          >
-          </span>
+        <div class="ops-notice-surface__copy min-w-0">
           <p class="ops-notice-surface__title font-semibold">
             {@title}
           </p>
-          <div class="ops-notice-surface__body mt-1 text-base-content/80">
+          <div class="ops-notice-surface__body mt-1">
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -398,18 +413,11 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_metric(assigns) do
     ~H"""
     <div class="ops-metric ops-muted-panel px-3 py-2" data-ops-metric-tone={@kind}>
-      <p class="text-ops-sm font-semibold uppercase tracking-wide text-base-content/60">{@label}</p>
+      <p class="ops-metric__label text-ops-sm font-semibold tracking-ops-label">{@label}</p>
       <p class={[
-        "ops-metric__value mt-1 font-mono text-ops-lg font-semibold tabular-nums",
+        "ops-metric__value mt-1 font-mono text-ops-lg tabular-nums",
         metric_value_class(@kind)
       ]}>
-        <span
-          :if={metric_cue(@kind)}
-          class={["ops-metric__cue", metric_cue_class(@kind)]}
-          aria-hidden="true"
-        >
-          <ScrypathOpsWeb.CoreComponents.icon name={metric_cue(@kind)} class="size-3.5" />
-        </span>
         {@value}
       </p>
     </div>
@@ -438,10 +446,10 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc """
-  Labelled tone chip — a compact `label : value` pill whose surface settles to a
-  status tone. The single shared home for "this dimension matches / differs" style
-  status rows (drift dimensions, per-reason flags) so tone branching stays out of
-  templates and routes through the `tone_class/1` authority.
+  Labelled tone chip: a compact `label : value` row on the same Panel-with-a-rule surface as a
+  notice. The single shared home for "this dimension matches / differs" style status rows (drift
+  dimensions, per-reason flags) so tone branching stays out of templates and routes through the
+  `notice_modifier/1` authority.
   """
   attr(:kind, :atom,
     default: :neutral,
@@ -455,14 +463,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_tone_chip(assigns) do
     ~H"""
-    <div class={["ops-tone-chip", tone_chip_class(@kind), @class]} {@rest}>
+    <div class={["ops-tone-chip ops-notice-surface", notice_modifier(@kind), @class]} {@rest}>
       <span class="font-semibold">{@label}</span>
       <span :if={@value} class="ops-tone-chip__value">{@value}</span>
     </div>
     """
   end
 
-  @doc "Compact status badge for booleans, counts, and operator states."
+  @doc """
+  Plain muted label for a non-sync fact (for example the Search run state).
+
+  It is text, not a pill: no border, no tint, no color of its own. Sync states never use it; they
+  render through `ops_sync_status/1` and `ops_condition/1`. `kind` stays readable as
+  `data-badge-kind` and has no visual effect.
+  """
   attr(:kind, :atom,
     default: :neutral,
     values: [:neutral, :info, :success, :warning, :error, :partial, :running]
@@ -473,9 +487,69 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_badge(assigns) do
     ~H"""
-    <span class={["ops-badge", badge_class(@kind), @class]}>
+    <span class={["ops-badge", @class]} data-badge-kind={@kind}>
       {render_slot(@inner_block)}
     </span>
+    """
+  end
+
+  @doc """
+  The one sync-status vocabulary: a word first, then a 16 px bar icon.
+
+  `status` is one of `:failed`, `:retrying`, `:pending` or `:clear`. The word is the accessible
+  text; the icon is decoration, so it carries no role and no name and never appears without its
+  word. The four icons differ by shape (`data-shape` is `notched`, `bottom-filled`, `hollow` or
+  `filled`), so the status reads without color. Word and icon take their color from
+  `--ops-status-<status>` through `currentColor`.
+
+  Words and shapes come from a private table, never from the input, and the attr rejects any
+  other atom at compile time. `Clear` is only for an observed-clear source; callers that did not
+  observe something must render an `ops_condition/1` word instead.
+  """
+  attr(:status, :atom, required: true, values: [:failed, :retrying, :pending, :clear])
+  attr(:class, :any, default: nil)
+
+  def ops_sync_status(assigns) do
+    {shape, word, path} = sync_status_shape(assigns.status)
+    assigns = assign(assigns, shape: shape, word: word, path: path)
+
+    ~H"""
+    <span class={["ops-sync-status", @class]} data-sync-status={@status}>
+      <span class="ops-sync-status__word">{@word}</span>
+      <svg
+        class="ops-sync-status__icon"
+        data-shape={@shape}
+        aria-hidden="true"
+        focusable="false"
+        width="8.63"
+        height="16"
+        viewBox="0 0 8.63 16"
+        fill="currentColor"
+        fill-rule="evenodd"
+      >
+        <path d={@path} />
+      </svg>
+    </span>
+    """
+  end
+
+  @doc """
+  A condition word: plain muted text that says what was not looked at. Never a status.
+
+  The closed set is `Not observed`, `Not checked`, `Queue not used` and `Unavailable`. A
+  condition carries no icon and no color of its own, so an unobserved source can never read as
+  healthy or as failed; `Clear` needs an observation and is rendered by `ops_sync_status/1`.
+  """
+  attr(:word, :string,
+    required: true,
+    values: ["Not observed", "Not checked", "Queue not used", "Unavailable"]
+  )
+
+  attr(:class, :any, default: nil)
+
+  def ops_condition(assigns) do
+    ~H"""
+    <span class={["ops-condition", @class]} data-condition={@word}>{@word}</span>
     """
   end
 
@@ -493,6 +567,13 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   attr(:headline, :string, required: true)
   attr(:headline_id, :string, default: nil, doc: "id for labelling the surrounding section")
+
+  attr(:status, :atom,
+    default: nil,
+    values: [nil, :failed, :retrying, :pending, :clear],
+    doc: "worst sync status, rendered by `ops_sync_status/1` before the headline"
+  )
+
   attr(:label, :string, default: nil)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -503,17 +584,18 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div
       class={[
-        "ops-verdict rounded-ops-surface border p-ops-panel",
-        verdict_tone_class(@kind),
+        "ops-verdict ops-notice-surface rounded-ops-surface p-ops-panel",
+        notice_modifier(@kind),
         @class
       ]}
+      data-verdict-kind={@kind}
       {@rest}
     >
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div class="min-w-0 flex-1 space-y-1">
           <p
             :if={@label}
-            class="ops-verdict__label text-ops-sm font-semibold uppercase tracking-wide"
+            class="ops-verdict__label text-ops-sm font-semibold tracking-ops-label"
           >
             {@label}
           </p>
@@ -521,17 +603,10 @@ defmodule ScrypathOpsWeb.OpsUi do
             id={@headline_id}
             class="flex items-center gap-2 text-ops-h2 font-semibold leading-ops-tight text-base-content"
           >
-            <span
-              class={["ops-verdict__icon", verdict_icon_class(@kind)]}
-              data-testid="ops-verdict-icon"
-              data-state={@kind}
-              aria-hidden="true"
-            >
-              <ScrypathOpsWeb.CoreComponents.icon name={verdict_icon(@kind)} class="size-5" />
-            </span>
+            <.ops_sync_status :if={@status} status={@status} />
             {@headline}
           </p>
-          <div :if={@inner_block != []} class="text-ops-body text-base-content/75">
+          <div :if={@inner_block != []} class="text-ops-body ops-muted">
             {render_slot(@inner_block)}
           </div>
         </div>
@@ -617,51 +692,20 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   The whole card is a single navigation target; `route_label` is the visible
   affordance. Composes the `.ops-*` surface layer so it inherits branded styling.
+  It carries words only: no icon and no "Start here" flag.
   """
-  attr(:icon, :string,
-    required: true,
-    doc: "a `hero-*` Heroicon name; rendered as a monoline mark, not an emoji"
-  )
-
   attr(:title, :string, required: true)
   attr(:summary, :string, required: true)
   attr(:route_label, :string, required: true)
   attr(:navigate, :string, required: true)
-
-  attr(:kind, :atom,
-    default: :neutral,
-    values: [:neutral, :info, :success, :warning, :error, :partial, :running]
-  )
-
-  attr(:recommended, :boolean,
-    default: false,
-    doc: "marks this card as the state-recommended next action (renders a 'Start here' flag)"
-  )
-
   attr(:rest, :global, include: ~w(data-testid))
   slot(:badge)
 
   def ops_intent_card(assigns) do
     ~H"""
-    <.link
-      navigate={@navigate}
-      class={[
-        "ops-intent-card",
-        @kind != :neutral && tone_class(@kind),
-        @recommended && "ops-intent-card--recommended"
-      ]}
-      {@rest}
-    >
-      <span class="ops-intent-card__topline">
-        <span class="ops-intent-card__icon" aria-hidden="true">
-          <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-5" />
-        </span>
-        <span class="ops-intent-card__markers">
-          <span :if={@recommended} class="ops-intent-card__flag">Start here</span>
-          <span :if={@badge != []} class="ops-intent-card__badges">
-            {render_slot(@badge)}
-          </span>
-        </span>
+    <.link navigate={@navigate} class="ops-intent-card" {@rest}>
+      <span :if={@badge != []} class="ops-intent-card__badges">
+        {render_slot(@badge)}
       </span>
       <span class="ops-intent-card__title">{@title}</span>
       <span class="ops-intent-card__summary">{@summary}</span>
@@ -680,7 +724,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div class={["ops-muted-panel p-ops-5 text-ops-body", @class]}>
       <h2 class="text-ops-h3 font-semibold leading-ops-tight text-base-content">{@title}</h2>
-      <div class="mt-ops-2 text-base-content/75">{render_slot(@inner_block)}</div>
+      <div class="mt-ops-2 ops-muted">{render_slot(@inner_block)}</div>
       <div :if={@actions != []} class="mt-ops-4 flex flex-wrap gap-2">
         {render_slot(@actions)}
       </div>
@@ -691,7 +735,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Hero-style empty state for high-attention blank sections."
   attr(:id, :string, default: nil)
   attr(:title, :string, required: true)
-  attr(:icon, :string, required: true)
   attr(:heading_level, :integer, default: 3, values: [2, 3])
   attr(:class, :any, default: nil)
   attr(:rest, :global)
@@ -713,9 +756,6 @@ defmodule ScrypathOpsWeb.OpsUi do
       aria-labelledby={@heading_id}
       {@rest}
     >
-      <span class="ops-empty-hero__mark" aria-hidden="true">
-        <ScrypathOpsWeb.CoreComponents.icon name={@icon} class="size-6" />
-      </span>
       <div class="ops-empty-hero__copy">
         <h2
           :if={@heading_level == 2}
@@ -743,10 +783,16 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc """
   Restrained loading primitive for in-flight operator reads.
 
-  `:bars` renders an opacity-pulsing skeleton (a stand-in for content that's loading);
-  `:inline` is a compact pulsing "working…" label for buttons/status rows. Opacity-only
-  and neutralized under reduced-motion (the global rule). Presentation-only — the screen
-  owns when it's shown; wiring into specific reads (drift, search, swap) is Phase 125/126.
+  Loading is said in a word: `label` is always visible, in a `role="status"` node that never
+  carries `aria-busy`. `aria-busy` on a live region (or on anything that contains one) asks
+  assistive technology to hold what it says until the busy state clears, and this word is removed
+  when loading ends, so it would never be released. Instead `:bars` marks the skeleton lines, the
+  stand-in for the content that is loading, as the busy region (`aria-busy="true"` on a sibling of
+  the word, never an ancestor of it). Nothing animates. The lines are static Sunken blocks, the
+  last one short. `:inline` is just the word, for buttons and status rows; nothing is being
+  replaced there, so it has no busy region. A screen that keeps earlier content on show while it
+  reloads marks that content `aria-busy` itself, and keeps it apart from the word. Presentation-only:
+  the screen owns when it is shown.
   """
   attr(:variant, :atom, default: :bars, values: [:bars, :inline])
   attr(:lines, :integer, default: 3)
@@ -756,19 +802,23 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_loading(assigns) do
     ~H"""
-    <div
-      :if={@variant == :bars}
-      class={["ops-loading ops-loading__bars", @class]}
-      role="status"
-      aria-label={@label}
-      {@rest}
-    >
-      <span :for={n <- 1..@lines} class="ops-loading__bar" style={loading_bar_width(n, @lines)}>
-      </span>
+    <div :if={@variant == :bars} class={["ops-loading ops-loading__bars", @class]} {@rest}>
+      <p class="ops-loading__label" role="status">{@label}</p>
+      <div class="grid gap-ops-2" aria-busy="true">
+        <span
+          :for={n <- 1..@lines}
+          class={[
+            "ops-loading__bar",
+            if(n == @lines and @lines > 1, do: "ops-loading__bar--short")
+          ]}
+          aria-hidden="true"
+        >
+        </span>
+      </div>
     </div>
     <span
       :if={@variant == :inline}
-      class={["ops-loading inline-flex items-center gap-2 text-ops-sm text-base-content/65", @class]}
+      class={["ops-loading inline-flex items-center gap-2 text-ops-sm ops-muted", @class]}
       role="status"
       {@rest}
     >
@@ -798,7 +848,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <p
         :if={@hint}
         id={@control_id && "#{@control_id}-hint"}
-        class="mt-ops-1 text-ops-sm leading-5 text-base-content/65"
+        class="mt-ops-1 text-ops-sm leading-5 ops-muted"
       >
         {@hint}
       </p>
@@ -870,9 +920,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   def ops_field(assigns) do
     ~H"""
     <div id={"#{@id}-field"} phx-hook="OpsFieldValidation" class={["space-y-ops-field", @class]}>
-      <label class="block text-ops-body font-semibold text-base-content/75" for={@id}>{@label}</label>
+      <label class="block text-ops-body font-semibold ops-muted" for={@id}>{@label}</label>
       {render_slot(@inner_block)}
-      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 text-base-content/65">
+      <p :if={@hint} id={"#{@id}-hint"} class="text-ops-body leading-5 ops-muted">
         {@hint}
       </p>
       <p
@@ -1048,8 +1098,8 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <div :if={@schemas != []} class={["ops-schema-picker", @class]} {@rest}>
       <fieldset class="space-y-ops-field" disabled={@disabled}>
-        <legend class="block text-ops-body font-semibold text-base-content/75">{@label}</legend>
-        <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 text-base-content/65">
+        <legend class="block text-ops-body font-semibold ops-muted">{@label}</legend>
+        <p :if={@hint} id={"#{@id}-hint"} class="max-w-3xl text-ops-sm leading-5 ops-muted">
           {@hint}
         </p>
         <p :if={@error} id={"#{@id}-error"} class="text-ops-sm text-error" role="alert">
@@ -1114,7 +1164,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       <div
         role="group"
         aria-label={@label}
-        class="inline-flex flex-wrap gap-1 rounded-ops-control border border-base-300 bg-base-200/70 p-1"
+        class="ops-segmented-group"
       >
         <button
           :for={{label, value} <- @items}
@@ -1126,8 +1176,7 @@ defmodule ScrypathOpsWeb.OpsUi do
           data-testid={if value == "multi", do: "search-mode-multi"}
           class={[
             "ops-segmented-btn ops-transition-status px-3 text-ops-body font-semibold",
-            value == @selected && "bg-primary text-primary-content shadow-ops-mid",
-            value != @selected && "text-base-content/75 hover:bg-base-100"
+            value != @selected && "ops-muted"
           ]}
         >
           {label}
@@ -1188,7 +1237,7 @@ defmodule ScrypathOpsWeb.OpsUi do
   end
 
   @doc "Consistent action grouping for table rows and toolbar action clusters."
-  attr(:tone, :atom, default: :default, values: [:default, :secondary, :advanced, :danger])
+  attr(:tone, :atom, default: :default, values: [:default, :secondary, :advanced])
   attr(:class, :any, default: nil)
   slot(:inner_block, required: true)
 
@@ -1219,7 +1268,7 @@ defmodule ScrypathOpsWeb.OpsUi do
       >
         <div class="min-w-0">
           <p :if={@title} class="font-semibold text-base-content">{@title}</p>
-          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 text-base-content/65">
+          <p :if={@subtitle} class="mt-ops-1 text-ops-sm leading-5 ops-muted">
             {@subtitle}
           </p>
         </div>
@@ -1246,7 +1295,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     <article class={["ops-result-row text-ops-body", @class]} {@rest}>
       <div class="min-w-0">
         <h3 class="text-ops-h3 font-semibold text-base-content">{@title}</h3>
-        <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 text-base-content/70">{@subtitle}</p>
+        <p :if={@subtitle} class="mt-1 text-ops-sm leading-5 ops-muted">{@subtitle}</p>
         <div :if={@meta != []} class="mt-2 flex flex-wrap gap-2">
           {render_slot(@meta)}
         </div>
@@ -1271,6 +1320,13 @@ defmodule ScrypathOpsWeb.OpsUi do
   attr(:retained_text, :string, default: nil)
   attr(:operational, :boolean, default: false)
   attr(:copy, :boolean, default: false)
+
+  attr(:copyable, :boolean,
+    default: true,
+    doc:
+      "`false` renders the exact time as plain mono text with no copy button, for a summary line that repeats a time already offered once with its copy control (one copy control per exact value)."
+  )
+
   attr(:class, :any, default: nil)
 
   def ops_time(assigns) do
@@ -1286,7 +1342,7 @@ defmodule ScrypathOpsWeb.OpsUi do
     ~H"""
     <span id={@time_id} class={["ops-time", @class]} phx-hook="OpsTimestampCopy">
       <span :if={@label && @label != ""} class="ops-time__label">{@label}</span>
-      <%= if @exact do %>
+      <%= if @exact && @copyable do %>
         <button
           type="button"
           class="ops-time__stamp"
@@ -1301,7 +1357,11 @@ defmodule ScrypathOpsWeb.OpsUi do
           />
         </button>
       <% else %>
-        <span class="ops-time__value">{@human}</span>
+        <%= if @exact do %>
+          <time class="ops-time__value" datetime={@exact} data-ops-time-value>{@human}</time>
+        <% else %>
+          <span class="ops-time__value">{@human}</span>
+        <% end %>
       <% end %>
       <span :if={@retained_text} class="ops-time__retained">{@retained_text}</span>
     </span>
@@ -1329,7 +1389,11 @@ defmodule ScrypathOpsWeb.OpsUi do
 
   def ops_object_item(assigns) do
     ~H"""
-    <div id={@id} class={["ops-object-item", @active && "ops-object-item-active", @class]}>
+    <div
+      id={@id}
+      aria-current={if(@active, do: "true")}
+      class={["ops-object-item", @active && "ops-object-item-active", @class]}
+    >
       <div class="flex flex-col items-start justify-between gap-3 sm:flex-row">
         <div class="min-w-0 w-full flex-1">{render_slot(@inner_block)}</div>
         <div :if={@actions != []} class="flex flex-wrap gap-2 sm:justify-end">
@@ -1364,11 +1428,11 @@ defmodule ScrypathOpsWeb.OpsUi do
     >
       <summary
         id={@summary_id}
-        class="cursor-pointer text-ops-body font-medium text-base-content"
+        class="cursor-pointer text-ops-body font-semibold text-base-content"
       >
         {@summary}
       </summary>
-      <div class="ops-disclosure-body mt-2 text-ops-body text-base-content/80">
+      <div class="ops-disclosure-body mt-2 text-ops-body text-base-content">
         {render_slot(@inner_block)}
       </div>
     </details>
@@ -1391,9 +1455,6 @@ defmodule ScrypathOpsWeb.OpsUi do
   @doc "Scrollable code/data block."
   attr(:label, :string, default: "Technical details")
   attr(:variant, :atom, default: :default, values: [:default, :compact, :embedded])
-  # Phase 133 (DARKMOTION-01): opt-in hover glint. Default false is load-bearing —
-  # evidence code blocks (Failed sync work, search/merge payloads) must stay calm (D-04a/c).
-  attr(:shimmer, :boolean, default: false)
   attr(:class, :any, default: nil)
   attr(:rest, :global)
   attr(:text, :string, default: nil)
@@ -1440,10 +1501,9 @@ defmodule ScrypathOpsWeb.OpsUi do
         aria-label={@label}
         class={[
           "overflow-auto rounded-ops-md font-mono text-ops-sm whitespace-pre-wrap break-words",
-          @variant == :default && "max-h-96 bg-ops-surface-2 p-ops-3",
+          @variant == :default && "max-h-96 bg-ops-sunken p-ops-3",
           @variant == :compact && "max-h-48 bg-base-100 p-ops-2",
           @variant == :embedded && "max-h-64 bg-base-100/70 p-ops-3",
-          @shimmer && "ops-code-block--shimmer",
           @class
         ]}
         {@rest}
@@ -1529,8 +1589,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       class="modal modal-open ops-modal z-ops-modal"
       phx-remove={
         JS.transition(
-          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
-          time: 120
+          {"transition-opacity duration-(--duration-ops-quick) ease-ops-exit", "opacity-100",
+           "opacity-0"},
+          time: 160
         )
       }
     >
@@ -1551,7 +1612,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <p
           :if={@description}
           id={"#{@id}-description"}
-          class="mt-2 max-w-2xl text-ops-body text-base-content/80"
+          class="mt-2 max-w-2xl text-ops-body text-base-content"
         >
           {@description}
         </p>
@@ -1601,8 +1662,9 @@ defmodule ScrypathOpsWeb.OpsUi do
       class="ops-sheet z-ops-modal"
       phx-remove={
         JS.transition(
-          {"transition-opacity duration-100 ease-ops-exit", "opacity-100", "opacity-0"},
-          time: 120
+          {"transition-opacity duration-(--duration-ops-quick) ease-ops-exit", "opacity-100",
+           "opacity-0"},
+          time: 160
         )
       }
     >
@@ -1629,7 +1691,7 @@ defmodule ScrypathOpsWeb.OpsUi do
         <p
           :if={@description}
           id={"#{@id}-description"}
-          class="mt-ops-1 text-ops-body text-base-content/75"
+          class="mt-ops-1 text-ops-body ops-muted"
         >
           {@description}
         </p>
@@ -1782,6 +1844,9 @@ defmodule ScrypathOpsWeb.OpsUi do
   # Single source of truth for the button visual contract, shared by
   # `ops_button/1` and `ops_link_button/1`. Height + press feel live in `.ops-btn`;
   # radius is the `rounded-ops-control` utility so it wins over daisyUI's layer.
+  # There is no danger variant: a destructive confirm is the dialog's one Plum button with its
+  # consequence in the label (Failed orange is a status color, never a button). `:secondary`
+  # reads like `:default`; `:ghost` is the borderless variant for icon-only and refresh controls.
   defp button_classes(variant, size) do
     [
       "btn ops-btn rounded-ops-control",
@@ -1790,10 +1855,8 @@ defmodule ScrypathOpsWeb.OpsUi do
       size == :sm && "btn-sm",
       size == :md && "btn-md",
       variant == :primary && "btn-primary",
-      variant == :secondary && "btn-secondary",
-      variant == :danger && "btn-error",
       variant == :ghost && "btn-ghost",
-      variant == :default && "btn-outline"
+      variant in [:default, :secondary] && "btn-outline"
     ]
   end
 
@@ -1891,16 +1954,31 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp nav_hint("Sync and index"), do: "Sync progress and index settings"
   defp nav_hint(_), do: ""
 
-  # Skeleton bars taper: the last line is short so the pulse reads as text, not a block.
-  defp loading_bar_width(n, total) when n == total and total > 1, do: "width: 60%"
-  defp loading_bar_width(_n, _total), do: "width: 100%"
+  # The four status shapes (UI-SPEC "Shapes", LD-7): one sharp bar that leans 14.46 degrees
+  # (4.13 over 16), drawn in a 8.63 x 16 box. They differ without color: filled, hollow,
+  # hollow with a filled lower half, and a filled bar with a bite out of its left edge.
+  @sync_status_bar "M0 16H4.5L8.63 0H4.13Z"
+  @sync_status_hollow "M1.61 14.75H3.53L7.02 1.25H5.10Z"
+  @sync_status_lower_half "M1.61 14.75H3.53L5.27 8H3.36Z"
 
-  defp tone_class(:success), do: "ops-tone-success"
-  defp tone_class(:warning), do: "ops-tone-warning"
-  defp tone_class(:error), do: "ops-tone-error"
-  defp tone_class(:partial), do: "ops-tone-partial"
-  defp tone_class(:running), do: "ops-tone-running"
-  defp tone_class(_), do: "ops-tone-info"
+  defp sync_status_shape(:clear), do: {"filled", "Clear", @sync_status_bar}
+
+  defp sync_status_shape(:pending),
+    do: {"hollow", "Pending", @sync_status_bar <> " " <> @sync_status_hollow}
+
+  defp sync_status_shape(:retrying),
+    do:
+      {"bottom-filled", "Retrying",
+       @sync_status_bar <> " " <> @sync_status_hollow <> " " <> @sync_status_lower_half}
+
+  defp sync_status_shape(:failed),
+    do: {"notched", "Failed", "M0 16H4.5L8.63 0H4.13L2.71 5.5L4.06 8L1.42 10.5Z"}
+
+  # Notice, status, verdict and tone-chip kinds map to three rules: Failed, Retrying amber and the
+  # neutral Control Edge. Nothing else carries a rule color (Plum is never info; green is Clear).
+  defp notice_modifier(:error), do: "ops-notice-surface--error"
+  defp notice_modifier(kind) when kind in [:warning, :partial], do: "ops-notice-surface--warning"
+  defp notice_modifier(_kind), do: "ops-notice-surface--neutral"
 
   # Literal column classes so Tailwind's source scan keeps them; mobile-first base.
   defp metric_grid_cols(3), do: "sm:grid-cols-2 lg:grid-cols-3"
@@ -1909,44 +1987,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   defp metric_grid_cols(_), do: "sm:grid-cols-2 lg:grid-cols-4"
 
   # Tone chips reuse the surface tones; :neutral stays a quiet muted panel (never blue).
-  defp tone_chip_class(:neutral), do: "ops-muted-panel"
-  defp tone_chip_class(kind), do: tone_class(kind)
-
-  defp metric_cue(:warning), do: "hero-exclamation-triangle"
-  defp metric_cue(:error), do: "hero-x-circle"
-  defp metric_cue(_kind), do: nil
-
-  defp metric_cue_class(:warning), do: "ops-metric__cue--warning"
-  defp metric_cue_class(:error), do: "ops-metric__cue--error"
-  defp metric_cue_class(_kind), do: nil
 
   defp metric_value_class(:warning), do: "ops-metric__value--warning"
   defp metric_value_class(:error), do: "ops-metric__value--error"
   defp metric_value_class(_kind), do: nil
-
-  defp verdict_icon(:success), do: "hero-check-circle"
-  defp verdict_icon(:warning), do: "hero-exclamation-triangle"
-  defp verdict_icon(:error), do: "hero-x-circle"
-  defp verdict_icon(:partial), do: "hero-exclamation-circle"
-  defp verdict_icon(:running), do: "hero-arrow-path"
-  defp verdict_icon(_kind), do: "hero-information-circle"
-
-  defp verdict_icon_class(:success), do: "ops-verdict__icon--success"
-  defp verdict_icon_class(:warning), do: "ops-verdict__icon--warning"
-  defp verdict_icon_class(:error), do: "ops-verdict__icon--error"
-  defp verdict_icon_class(:partial), do: "ops-verdict__icon--partial"
-  defp verdict_icon_class(:running), do: "ops-verdict__icon--running"
-  defp verdict_icon_class(_kind), do: "ops-verdict__icon--neutral"
-
-  # The verdict uses a neutral surface for every state; tone is localized to its icon.
-  defp verdict_tone_class(:neutral), do: "ops-verdict-neutral"
-  defp verdict_tone_class(kind), do: tone_class(kind)
-
-  defp badge_class(:success), do: "ops-badge-success"
-  defp badge_class(:warning), do: "ops-badge-warning"
-  defp badge_class(:error), do: "ops-badge-error"
-  defp badge_class(:partial), do: "ops-badge-partial"
-  defp badge_class(:running), do: "ops-badge-running"
-  defp badge_class(:info), do: "ops-badge-info"
-  defp badge_class(_), do: "ops-badge-neutral"
 end
