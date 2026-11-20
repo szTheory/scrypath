@@ -124,6 +124,51 @@ defmodule Scrypath.Release.PackageMetadataTest do
              "docs/local-demo-docker-dx.md"
            ]
   end
+
+  # ExDoc copies `logo` and `favicon` with `File.copy!/2`, which raises when the file is missing, and
+  # a Hex consumer who runs `mix docs` on the unpacked tarball has no brand/ directory. So they are
+  # listed only when the files exist. A subprocess evaluates the real mix.exs from a temporary
+  # directory: changing the working directory of the test VM would race every other async test.
+  test "docs config lists the logo and favicon only when the brand files exist" do
+    elixir = System.find_executable("elixir") || flunk("elixir is not on the PATH")
+
+    dir =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-mixexs-#{System.pid()}-#{System.unique_integer([:positive])}"
+      )
+
+    on_exit(fn -> File.rm_rf!(dir) end)
+    File.mkdir_p!(dir)
+    File.cp!("mix.exs", Path.join(dir, "mix.exs"))
+
+    brand_files = [
+      "brand/assets/logo/scrypath-symbol-light.svg",
+      "brand/assets/icon/favicon-light.svg"
+    ]
+
+    probe = ~S"""
+    Mix.start()
+    Code.require_file("mix.exs")
+    docs = Scrypath.MixProject.project()[:docs]
+    IO.write(inspect(docs |> Keyword.take([:logo, :favicon]) |> Enum.sort()))
+    """
+
+    assert {"[]", 0} = System.cmd(elixir, ["-e", probe], cd: dir)
+
+    for file <- brand_files do
+      File.mkdir_p!(Path.dirname(Path.join(dir, file)))
+      File.cp!(file, Path.join(dir, file))
+    end
+
+    assert {listed, 0} = System.cmd(elixir, ["-e", probe], cd: dir)
+
+    assert listed ==
+             inspect(
+               favicon: "brand/assets/icon/favicon-light.svg",
+               logo: "brand/assets/logo/scrypath-symbol-light.svg"
+             )
+  end
 end
 
 defmodule Scrypath.Release.BuiltDocsBrandTest do
