@@ -202,6 +202,17 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert html =~ ~s(id="index-settings-checking")
     assert html =~ "Checking Meilisearch settings…"
 
+    # Phase 187 (E-16): while the settings load, the word shows in a status node and nothing spins.
+    # The word is never held: aria-busy on a live region, or on anything that contains one, asks
+    # assistive technology to hold what it says until busy clears, and this node is removed when
+    # the check ends (WR-01).
+    document = LazyHTML.from_fragment(html)
+    checking = LazyHTML.query(document, "#index-settings-checking")
+    assert LazyHTML.attribute(checking, "role") == ["status"]
+    assert Enum.count(LazyHTML.query(document, "#index-settings-checking[aria-busy]")) == 0
+    assert Enum.count(LazyHTML.query(document, "[aria-busy] #index-settings-checking")) == 0
+    refute html =~ "animate-"
+
     {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
     render_async(lv)
     refute has_element?(lv, "#index-settings-checking")
@@ -222,6 +233,36 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     refute render(lv) =~ "Full comparison details"
     refute has_element?(lv, ".ops-settings-diff")
+  end
+
+  test "a re-check marks the earlier comparison busy and never holds its own checking word", %{
+    conn: conn
+  } do
+    Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+    {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index")
+    render_async(lv)
+
+    # Settled: nothing in the document is busy.
+    assert Enum.count(LazyHTML.query(LazyHTML.from_fragment(render(lv)), "[aria-busy]")) == 0
+
+    # Re-checking with the earlier comparison still on show (same assigns, loading flag set).
+    html =
+      :sys.get_state(lv.pid).socket.assigns
+      |> Map.put(:drift_loading, true)
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
+
+    document = LazyHTML.from_fragment(html)
+
+    checking = LazyHTML.query(document, "#index-settings-checking")
+    assert LazyHTML.attribute(checking, "role") == ["status"]
+    assert Enum.count(LazyHTML.query(document, "#index-settings-checking[aria-busy]")) == 0
+    assert Enum.count(LazyHTML.query(document, "[aria-busy] #index-settings-checking")) == 0
+
+    # The earlier verdict is the content being replaced, so it is the busy region.
+    earlier = LazyHTML.query(document, "#index-settings-status")
+    assert LazyHTML.attribute(earlier, "aria-busy") == ["true"]
   end
 
   test "inline and manual sync say there is no queue instead of claiming caught up", %{
@@ -282,6 +323,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     refute has_element?(lv, ".ops-sync-work [data-tone='error']")
     refute has_element?(lv, "#sync-pipeline-status", "Caught up")
 
+    # Pending work says Pending through the shared component; the scheduled-retry line stays
+    # plain text, and the arrow is a decorative text arrow, not an icon.
+    assert has_element?(lv, ".ops-sync-work [data-sync-status='pending']", "Pending")
+    refute has_element?(lv, ".ops-sync-work [data-sync-status='failed']")
+    refute has_element?(lv, ".ops-sync-work [data-sync-status='retrying']")
+    refute has_element?(lv, ".ops-sync-work svg[class*='hero-']")
+    assert has_element?(lv, ".ops-sync-work a span[aria-hidden='true']", "→")
+
     assert has_element?(
              lv,
              ".ops-sync-work a[href='/ops/health?schema=ScrypathOps.Test.OpsPostA']"
@@ -306,6 +355,12 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
              updated_lv,
              ".ops-sync-work [data-tone='error']",
              "1 failed sync operation"
+           )
+
+    assert has_element?(
+             updated_lv,
+             ".ops-sync-work [data-tone='error'] [data-sync-status='failed']",
+             "Failed"
            )
 
     assert has_element?(
@@ -342,6 +397,55 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
              "#index-promotion button#promote-target-index",
              "Promote target index"
            )
+  end
+
+  describe "E-07 and E-08 promotion dialog" do
+    test "the page keeps Promote target index as an outline button and holds no Plum button", %{
+      conn: conn
+    } do
+      Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      html = render_async(lv)
+
+      assert has_element?(lv, "button#promote-target-index.btn-outline", "Promote target index")
+      assert plum_count(html) == 0
+      refute html =~ "btn-error"
+    end
+
+    test "the confirm is the dialog's single Plum button and Cancel opens focused", %{conn: conn} do
+      Agent.update(:sync_drift_live_test_state, &Map.put(&1, :ready, true))
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      render_async(lv)
+
+      html = lv |> element("#promote-target-index") |> render_click()
+      modal = "#confirm-index-promotion"
+
+      assert has_element?(lv, "#{modal} .btn-primary", "Replace live index with target")
+      assert plum_count(html) == 1
+      refute html =~ "btn-error"
+
+      # the trigger label is not the confirm label
+      refute has_element?(lv, "#{modal} button", "Promote target index")
+
+      assert has_element?(lv, "#{modal}", "Confirm index promotion")
+
+      assert has_element?(
+               lv,
+               "#{modal}[data-ops-modal-initial-focus='[data-ops-modal-cancel]']"
+             )
+
+      assert has_element?(
+               lv,
+               "#{modal} button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+               "Cancel index swap"
+             )
+
+      assert has_element?(lv, "#{modal}", "Effect: replace live index contents")
+    end
+
+    defp plum_count(html) do
+      html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count()
+    end
   end
 
   test "a settings response from a previous selection or superseded read is ignored" do
@@ -491,8 +595,48 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     assert Agent.get(:sync_drift_live_test_state, & &1.settings_calls) == 2
     assert updated_socket.assigns.selected_schema == OpsPostB
     assert updated_socket.assigns.local_ui_state == %{compact?: true}
-    assert flash_value(updated_socket, "error") =~ "Index promotion blocked"
+    # One "blocked", then the reason as a sentence (E-11).
+    flash = flash_value(updated_socket, "error")
+    assert flash =~ ~r/\AIndex promotion blocked: [^:]+\.\z/
+    assert blocked_count(flash) == 1
     assert updated_socket.assigns.drift_error == :settings
+  end
+
+  # Phase 187 E-11: the flash used to say "Index promotion blocked: Promotion is blocked: ...".
+  describe "promotion that cannot go ahead flashes one sentence" do
+    test "a blocked eligibility says blocked once, then the reason" do
+      for {reason, sentence} <- [
+            {:backend_work_pending, "wait for backend tasks to finish"},
+            {:failed_work, "resolve failed sync work first"},
+            {:reconcile_not_current, "refresh sync and queue status"},
+            {:a_reason_nobody_named, "refresh current checks"}
+          ] do
+        socket = sync_drift_socket(%{promotion_eligibility: {:blocked, reason}})
+
+        assert {:noreply, updated} = SyncDriftLive.handle_event("confirm_swap_live", %{}, socket)
+
+        flash = flash_value(updated, "error")
+        assert flash == "Index promotion blocked: #{sentence}."
+        assert blocked_count(flash) == 1
+        refute flash =~ "Promotion is blocked"
+        refute updated.assigns.confirm_swap?
+      end
+    end
+
+    test "any other ineligibility gets the generic sentence, still with one blocked" do
+      for eligibility <- [nil, :unknown, :checking] do
+        socket = sync_drift_socket(%{promotion_eligibility: eligibility})
+
+        assert {:noreply, updated} = SyncDriftLive.handle_event("confirm_swap_live", %{}, socket)
+
+        flash = flash_value(updated, "error")
+
+        assert flash ==
+                 "Index promotion blocked: refresh the current checks first, then promote."
+
+        assert blocked_count(flash) == 1
+      end
+    end
   end
 
   test "promotion retains the backend task UID returned by the real normalization boundary" do
@@ -1516,6 +1660,8 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
     OperatorContext.build(scope, session)
   end
+
+  defp blocked_count(text), do: length(String.split(text, "blocked")) - 1
 
   defp flash_value(socket, key) do
     socket.assigns |> Map.get(:flash, %{}) |> Map.get(key)

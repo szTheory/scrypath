@@ -12,6 +12,7 @@
 - When authorized work remains and no user action is needed, keep working. Carry planning through implementation, tests and review within the selected phase; stop for a real decision or phase/milestone boundary. Removing an unnecessary confirmation is not a reason to leave the task idle.
 - At every pause or handoff, state in chat what is happening, the concrete blocker and consequence, your recommended next step, and exactly who acts next. Explicitly say when waiting for the user versus continuing work.
 - Summarize every risk or decision in plain language before asking; make linked documents optional detail. When the user has no strong preference, recommend a concrete path. An uninformed or indifferent response is not risk acceptance.
+- Guiding principle (maintainer, 2026-11-20): pursue value to the point of diminishing returns. Rules, CI/CD, gates and contract tests serve outcomes; change or delete one that no longer earns its cost, with the reason and a revisit trigger recorded, instead of contorting work around it. Sanity-check that effort is producing value before repeating an approach. Never weaken what a check actually proves just to go green.
 - Prefer the least disruptive evidence-supported remedy. For stuck project tests, inspect attributable processes and consider targeted cleanup first; recommend a whole-machine restart only when its necessity and impact are established.
 - For lightweight delegated work in Codex, prefer GPT-6 Luna (`gpt-6-luna`) with extra-high (`xhigh`) reasoning effort for cost efficiency. Delegate only when authorized; reserve stronger-model synthesis or review for consequential tradeoffs.
 - Approval of a task or phase includes its required local builds, tests, CI, reviews, fixes and bounded retests within the approved scope and limits. Runtime length alone is not an approval gate. Do not turn each plan step or verification command into another permission request.
@@ -122,6 +123,7 @@ Some repository contracts build a clean Git snapshot. Before rerunning one after
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
+- squash-merge a PR yourself once the work is done and its required checks are green on the exact head, including visible-UI PRs; advisory reds such as `deep-quality` do not block (maintainer standing instruction, 2026-11-19). Do not wait for a separate merge yes. Hex releases and release-please PRs still need the maintainer's explicit yes
 - prefer **PR-first** execution for serious milestone or feature-depth work
 - shift verification left: completion must be backed by executable tests or exact-SHA hosted evidence, never post-implementation human verification or pending UAT
 - resolve subjective choices before implementation or keep them nonblocking; do not simulate a reviewer identity or silently auto-approve a trust gate
@@ -131,9 +133,41 @@ Agents should default to the repo's **green-main release train** posture:
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
+## Docker resource cleanup
+
+For Docker-backed work, use task-scoped resource names or labels and clean up temporary containers, images, networks, and owned build cache when the task finishes or fails. Remove per-iteration and candidate images as soon as their comparison is complete; do not leave unbounded snapshots behind. Before handing off, check `docker system df` and confirm task-scoped resources are gone. Never prune another project's resources or volumes without a clear task-specific reason; volumes may contain data and must be reviewed separately.
+
 ## Worktree continuity
 
 Read [.planning/reference/UI-WORKTREE-LEARNINGS.md](.planning/reference/UI-WORKTREE-LEARNINGS.md) before a worktree handoff or retained-preview work. Dirty edits belong to their checkout: inventory intended source changes and checkpoint them in an owned commit or a scoped patch before branching, then verify their disposition in the destination. Preserve unrelated edits; never transfer an older file wholesale over newer behavior without reconciliation. Use an explicit absolute working directory for edits and commands. After a squash merge, verify the actual merged ref and relevant file-tree parity before calling the preview latest; commit SHA differences alone do not prove missing work.
+
+## Milestone preparation (standing maintainer instruction, 2026-11-18)
+
+At every milestone boundary, do the upstream prep before asking what is next: fan out subagents per open decision point, each through the relevant role lenses (security, product, architecture, devops and CI, design and UX, accessibility, OSS maintainer and adopter), weigh patterns, anti-patterns and footguns, prefer primary sources (specs, official docs, source code) over blog posts, run an adversarial pass against each recommendation, and synthesize one recommended option per decision with its confidence and what would change it. Continue until returns diminish. Then present a recommended next milestone and update `.planning/reference/ROLLING-ROADMAP.md` in the same change, so the maintainer chooses from prepared options. The prep feeds, and does not replace, the downstream OpenGSD discuss, plan, execute and verify workflow: write recommendations and research notes, not phase plans. House preferences apply: another copy-paste is better than another dependency, keep dependency trees small and flat, run cheap consistency checks before long suites, and never claim more than the automated evidence proves.
+
+## Phase workflow defaults (standing maintainer instruction, 2026-11-18)
+
+**Discuss phases.** Apply the same fan-out as milestone preparation to every phase's decision points: one subagent per decision (context-window efficiency), each through all relevant role lenses (security, product, architecture, devops, rendering, language and framework specialists, UI and UX where it applies), with pros, cons, tradeoffs, patterns, anti-patterns, footguns and lessons from other products and ecosystems, preferring reputable primary sources. Keep fanning out until returns diminish, run an adversarial pass, then synthesize one coherent recommended set and follow it without asking, unless a choice changes scope, authority, risk or cost. Prefer a small copy-paste over a new dependency; smaller, flatter dependency trees are more secure. For UI work, weigh existing patterns, least surprise and conventions.
+
+**Verify phases.** Automate verification and shift it left: integration, end-to-end, smoke and seam tests, moved onto CI only when the check has recurring value. The goal is zero human verification or UAT. Take verification as far as you can without the maintainer, but only where it yields useful feedback, and never box the work in. Throwaway local verification is fine; not everything belongs in CI. Hand off only what is genuinely impossible to automate, and record that exception. When an item was automated or ruled out, record it in the phase artifacts so it is never re-litigated.
+
+**Cheap checks first.** Where the design allows, run a cheap consistency check before the long suite. When a run is slow or stuck, find the bottleneck and the low-hanging fruit instead of retrying the same thing.
+
+**CI and release efficiency.** (Full rule and ledger: "CI and CD efficiency" below.) Whenever a CI or release run is in progress or finishes, look for low-hanging speed, iteration-time and cost wins (cache keys, duplicated work, path filters, lane timeouts, cold-cache cost) without weakening what the checks prove. Record measured findings in `.planning/` and apply low-risk ones in the next CI change.
+
+## CI and CD efficiency (standing maintainer instruction, first recorded 2026-11-18, restated 2026-11-20)
+
+Applies to every CI run, release run, deploy and Dependabot or release PR, whether in progress or finished. Pointless waiting costs the maintainer time and GitHub Actions money; the checks' quality is never the thing to trade.
+
+- **Evaluate every run.** While a run is in progress and when it finishes, look for low-hanging wins in speed, iteration time and cost: duplicated work, jobs that run when their inputs did not change (path-scoped `if` classifiers like `ops-ui-path`), cache keys and cold-cache cost, serial steps that could run in parallel, advisory lanes that always fail or never gate anything, matrix size, install time, and the strict "branch must be up to date" serialization on bot PRs. Measure first (`gh run view <id> --json jobs`), then change. Never weaken what a required check proves; a skipped job still has to report so the required context passes.
+- **Record it.** Put measured findings, candidates and decisions in [.planning/reference/CI-EFFICIENCY.md](.planning/reference/CI-EFFICIENCY.md) (that file is the ledger; keep it current), apply low-risk wins in the next CI change, and mention the biggest one in the handoff only when it changes a decision. The short form under "Phase workflow defaults" above points here.
+- **Check locally before waiting on hosted CI.** Run the cheap consistency check and the focused test first (`mix format --check-formatted`, the single test file you changed, `node --test` for the token and pair tests, `mix verify.package` for package changes). For workflow wiring and the cheap jobs, use `act` (installed at `/opt/homebrew/bin/act`; `act -l -W .github/workflows/ci.yml` lists the jobs, verified 2026-11-20; on Apple silicon pass `--container-architecture linux/amd64` and pin a runner image with a working Beam/OpenSSL stack, per `docs/releasing.md` "Local CI Reproduction"). The Docker-in-Docker browser lanes (`ecommerce-mounted`, `ecommerce-e2e`) are not `act` candidates: use the repository's own Docker wrappers and the task-scoped Docker cleanup rules above. Run the whole CI Node step locally when a plan changes anything the verifier fixture copies.
+- **Release and deploy (CD).** The same rule covers the Release Please run, the release PR's CI, the publish job, `verify-published-release` and the website deploy: look at their timings, retries and manual steps, and write down what could be removed. Hex releases still need the maintainer's explicit yes; a release PR authored by the bot has no CI until a human-authored event (push to its branch, `gh pr update-branch`, or close and reopen).
+- **Merge rule.** Squash-merge a green PR yourself (see the release-train list above); do not leave a green PR waiting.
+
+## Brand and UI re-skin knowledge
+
+Before brand adoption, UI re-skinning, storybook or copy-catalog work, read [.planning/reference/BRAND-ADOPTION-PLAYBOOK.md](.planning/reference/BRAND-ADOPTION-PLAYBOOK.md). It holds evidence-graded rules with provenance from this repo and sibling projects. When a phase proves, breaks or refines a rule, update the playbook in the same change, keep the provenance, and record contested points beside their resolution. The maintainer wants this to stay reusable for future rebrands.
 
 ## UI work
 

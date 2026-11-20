@@ -1,0 +1,24 @@
+/* scrypath code colors and logo for HexDocs. This file is docs-owned.
+   It is derived from the pinned brand/assets/docs/scrypath-exdoc.css (brand book 1.0) by two edits.
+   First, the block that follows the operating-system dark setting is dropped: ExDoc follows its own
+   light and dark toggle, so the pinned block painted a dark code block on a light page.
+   Second, every rule with a color or a background is written for both "body " and "body.dark ",
+   so it follows that toggle and outranks ExDoc's own "dark makeup" rules.
+   The last two rules are docs-owned and not in the pinned file. The first gives the brand text color
+   to the token classes the book leaves to ExDoc and that ExDoc paints below 4.5:1 on the brand code
+   background (operators, entities, labels, delimiters and lexer errors). The second is the logo:
+   ExDoc takes one logo, so dark mode swaps in the dark symbol.
+   test/release/package_metadata_test.exs fails if this file drifts from the pinned file.
+   After a brand pin update, re-derive it. */
+:root{--scrypath-doc-bg:#F0E9E6;--scrypath-doc-text:#1E1220;--scrypath-doc-comment:#6B5F6E;--scrypath-doc-keyword:#7B2D6B;--scrypath-doc-string:#2748A8;--scrypath-doc-atom:#006A7A}
+body.dark{--scrypath-doc-bg:#110A14;--scrypath-doc-text:#F4EDF3;--scrypath-doc-comment:#A89BAD;--scrypath-doc-keyword:#D58BC4;--scrypath-doc-string:#93A9F5;--scrypath-doc-atom:#6FD0DC}
+body pre code.makeup,body.dark pre code.makeup{background:var(--scrypath-doc-bg);color:var(--scrypath-doc-text);font-variant-ligatures:none}
+body .makeup .k,body.dark .makeup .k,body .makeup .kd,body.dark .makeup .kd,body .makeup .kn,body.dark .makeup .kn,body .makeup .kp,body.dark .makeup .kp,body .makeup .kr,body.dark .makeup .kr,body .makeup .kt,body.dark .makeup .kt,body .makeup .ow,body.dark .makeup .ow{color:var(--scrypath-doc-keyword)}
+body .makeup .s,body.dark .makeup .s,body .makeup .s1,body.dark .makeup .s1,body .makeup .s2,body.dark .makeup .s2,body .makeup .sa,body.dark .makeup .sa,body .makeup .sb,body.dark .makeup .sb,body .makeup .sc,body.dark .makeup .sc,body .makeup .sd,body.dark .makeup .sd,body .makeup .se,body.dark .makeup .se,body .makeup .sh,body.dark .makeup .sh,body .makeup .si,body.dark .makeup .si,body .makeup .sx,body.dark .makeup .sx,body .makeup .sr,body.dark .makeup .sr,body .makeup .sl,body.dark .makeup .sl{color:var(--scrypath-doc-string)}
+body .makeup .ss,body.dark .makeup .ss,body .makeup .na,body.dark .makeup .na,body .makeup .no,body.dark .makeup .no{color:var(--scrypath-doc-atom)}
+body .makeup .m,body.dark .makeup .m,body .makeup .mb,body.dark .makeup .mb,body .makeup .mf,body.dark .makeup .mf,body .makeup .mh,body.dark .makeup .mh,body .makeup .mi,body.dark .makeup .mi,body .makeup .mo,body.dark .makeup .mo,body .makeup .il,body.dark .makeup .il{color:var(--scrypath-doc-atom)}
+body .makeup .nf,body.dark .makeup .nf,body .makeup .fm,body.dark .makeup .fm{color:var(--scrypath-doc-text)}
+body .makeup .nc,body.dark .makeup .nc,body .makeup .nn,body.dark .makeup .nn{color:var(--scrypath-doc-text)}
+body .makeup .c,body.dark .makeup .c,body .makeup .c1,body.dark .makeup .c1,body .makeup .cm,body.dark .makeup .cm,body .makeup .cs,body.dark .makeup .cs,body .makeup .ch,body.dark .makeup .ch,body .makeup .cp,body.dark .makeup .cp,body .makeup .cpf,body.dark .makeup .cpf{color:var(--scrypath-doc-comment)}
+body .makeup .o,body.dark .makeup .o,body .makeup .ni,body.dark .makeup .ni,body .makeup .nl,body.dark .makeup .nl,body .makeup .dl,body.dark .makeup .dl,body .makeup .err,body.dark .makeup .err{color:var(--scrypath-doc-text)}
+body.dark .sidebar-projectImage img{content:url("../brand/assets/logo/scrypath-symbol-dark.svg")}

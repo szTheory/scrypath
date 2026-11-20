@@ -18,6 +18,19 @@ Scrypath now runs a **green-main release train**:
 
 The optional operator Phoenix app lives in **`scrypath_ops/`** at the repository root. It is **not** part of the published Hex artifact. The root library **`mix.exs`** **`package.files`** whitelist **must never** list **`scrypath_ops/`** (or otherwise pull OPSUI into the tarball). Run **`mix hex.publish`** only from the **library** project directory (the same directory as the root `mix.exs` that defines `:scrypath`), never from `scrypath_ops/`.
 
+### README header and HexDocs brand assets
+
+A published README and its docs cannot be corrected after a release, so the header and the brand assets follow these rules.
+
+- The README header uses absolute `raw.githubusercontent.com` URLs pinned to a commit (`.../szTheory/scrypath/<commit>/brand/assets/readme/...`). They load on GitHub, on hex.pm (which proxies images and drops `<source>`, so it always shows the light image) and in HexDocs. `brand/` stays out of `package.files`, and a Hex consumer never reads it. The pinned commit must be an ancestor of `main` and its two SVGs must be byte-identical to the committed files; `test/release/package_metadata_test.exs` checks both, so a brand update that changes a header must move the pin in the same change. Never point README images at the Pages site, because it is mutable and served from `main`.
+- README images never point at the Pages site, because it is mutable and served from `main`.
+- hex.pm renders the README through `readme.hex.pm`, which serves relative images only from files inside the package tarball. That is why the header uses absolute pinned URLs. After publishing, open the package page and confirm the header image loads.
+- The header `<picture>` follows the operating-system theme, while ExDoc follows its own light and dark toggle. A dark operating system with ExDoc set to light shows the dark header on a light page. This is a known residual.
+- The ExDoc logo is the light symbol, and one docs-owned rule swaps in the dark symbol under ExDoc's dark mode. The favicon is `brand/assets/icon/favicon-light.svg`, because the pinned `favicon.svg` carries no colors and renders black.
+- `dev/docs/scrypath-exdoc.css` is derived from the pinned `brand/assets/docs/scrypath-exdoc.css`: the block that follows the operating-system dark setting is removed, every color rule is written for both `body ` and `body.dark `, and two docs-owned rules are added (the token contrast rule below and the dark logo rule). After a brand pin update, re-derive it. `test/release/package_metadata_test.exs` fails until it matches.
+- Token classes the brand book does not color keep ExDoc's own colors, except where those colors fall below WCAG AA (4.5:1) on the brand code background. Operators, entities, labels, delimiters and lexer errors take the brand text color through the contrast rule, and a built-docs test measures every token class the docs use in both themes. If a new docs page uses a class that fails the test, add it to that rule, and send the class back to the brand book owner so the pin carries it.
+- The built-docs checks run in `core` and in `mix verify.package`.
+
 ## Automated Release Gate
 
 Run the auth-free package gate before you merge a release PR or when you need the same checks outside CI:
@@ -75,6 +88,8 @@ Create this GitHub Actions secret before the first automated release:
 The workflow uses GitHub's built-in `GITHUB_TOKEN` for Release Please. Keep `HEX_API_KEY` scoped to the publish workflows only. Do not expose it to the always-on CI job.
 
 ## Local CI Reproduction
+
+When a release or CI run finishes, note any cheap speed or cost win (cache keys, duplicated work, cold-cache time) that would not weaken the gate; see "CI and CD efficiency" in `AGENTS.md` and the measured ledger in `.planning/reference/CI-EFFICIENCY.md`, which also lists the local-first checks to run before waiting on hosted CI.
 
 For a deterministic local reproduction of the always-on release contract gate, run the Docker smoke wrapper:
 

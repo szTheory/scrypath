@@ -55,6 +55,11 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     end
   end
 
+  defmodule FailingOban do
+    # An enqueue that fails with the kind of term a real queue returns: a map holding atoms.
+    def insert(_changeset), do: {:error, %{reason: :timeout, meta: %{}}}
+  end
+
   defmodule Elixir.Oban.Job do
     defstruct [:id, :worker, :queue, :state, :attempt, :max_attempts, :args]
 
@@ -229,6 +234,46 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
 
     refute has_element?(view, "input[name='schema[]']:checked")
     assert has_element?(view, "a[href='/ops/sync-and-index']")
+  end
+
+  # Phase 187 E-02 (Failed sync half): a row's state is the shared status word and icon, never a
+  # badge, and `data-state` keeps its value so the row stays addressable.
+  test "each failed sync row renders one status word and icon from its state", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(501, OpsPostA, error: "** (Ecto.CastError) cannot cast"),
+      upsert_job(509, OpsPostB, state: "discarded", error: "the Variant source remains visible")
+    ])
+
+    {:ok, _view, html} = live(conn, ~p"/ops/failed-sync")
+
+    rows =
+      html
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("[data-testid='failed-sync-row']")
+
+    assert Enum.count(rows) == 3
+
+    states =
+      for row <- rows do
+        [state] = LazyHTML.attribute(row, "data-state")
+        statuses = LazyHTML.query(row, "[data-sync-status]")
+
+        assert Enum.count(statuses) == 1
+        assert LazyHTML.attribute(statuses, "data-sync-status") == [state]
+
+        assert statuses |> LazyHTML.query(".ops-sync-status__word") |> LazyHTML.text() ==
+                 String.capitalize(state)
+
+        assert statuses |> LazyHTML.query("svg[aria-hidden='true'][data-shape]") |> Enum.count() ==
+                 1
+
+        badge_words = row |> LazyHTML.query(".ops-badge") |> Enum.map(&LazyHTML.text/1)
+        assert Enum.all?(badge_words, &(String.trim(&1) not in ~w(Failed Retrying Pending Clear)))
+
+        state
+      end
+
+    assert Enum.sort(states) == ["failed", "failed", "retrying"]
   end
 
   test "zero-count schemas stay visible but quiet", %{conn: conn} do
@@ -409,7 +454,9 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert html =~ "Invalid data: fix the record, then retry."
 
     retry = element(view, "[data-testid='failed-sync-retry']")
-    assert render(retry) =~ "btn-outline"
+    # Phase 187: a row action is underlined text, not a button.
+    assert render(retry) =~ "ops-text-action"
+    refute render(retry) =~ ~r/\bbtn\b/
     refute render(retry) =~ "btn-primary"
 
     details = view |> element("details[id^='failed-detail-']") |> render()
@@ -470,11 +517,58 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute accepted =~ "Recovery verified"
     assert Agent.get(:failed_sync_insert_counter, & &1) == 1
 
+    # The receipt is a neutral notice (Control Edge rule), not a tinted or Plum one.
+    assert has_element?(
+             view,
+             "[data-testid='recovery-receipt'].ops-notice-surface--neutral[data-status-kind='neutral']",
+             "Retry queued"
+           )
+
     receipt = :sys.get_state(view.pid).socket.assigns.recovery_receipts
 
     assert %{
              "ScrypathOps.Test.OpsPostB|oban|509" => %{schema: "Elixir.ScrypathOps.Test.OpsPostB"}
            } = receipt
+  end
+
+  # Phase 187 E-11 / T-187-11: the reason can hold backend or queue detail, so the page gets a
+  # fixed sentence naming the schema and the reason goes to the log.
+  test "a retry that does not go through says so without leaking the raw reason", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+    Application.put_env(:scrypath_ops, :oban, FailingOban)
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(509, OpsPostB, ids: ["variant-509"], error: "the Variant source remains visible")
+    ])
+
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    sudo!(view)
+
+    log =
+      ExUnit.CaptureLog.capture_log(fn ->
+        view |> element("[data-testid='failed-sync-retry']") |> render_click()
+      end)
+
+    expected =
+      "Retry did not go through for ScrypathOps.Test.OpsPostB. " <>
+        "The failed work is unchanged and still listed. " <>
+        "Check that the queue and Meilisearch are reachable, then retry."
+
+    flash = :sys.get_state(view.pid).socket.assigns.flash["error"]
+    assert flash == expected
+
+    for leaked <- ["%{", ":timeout", "{:error", "meta"] do
+      refute flash =~ leaked
+      refute render(view) =~ "Retry failed:"
+    end
+
+    # The failed work is unchanged and still listed, with no receipt.
+    assert has_element?(view, "[data-testid='failed-sync-row']", "#509")
+    refute has_element?(view, "[data-testid='recovery-receipt']")
+
+    # The reason is not lost: it is in the log for the operator running the host.
+    assert log =~ "Failed sync retry did not go through for ScrypathOps.Test.OpsPostB"
+    assert log =~ ":timeout"
   end
 
   test "zero failed sync work stays truthful", %{conn: conn} do
@@ -727,6 +821,107 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     refute html =~ "Confirm delete sync work"
     assert html =~ "Oban search_sync #502"
     refute html =~ "Retry queued"
+  end
+
+  describe "E-07 and E-08 retry-delete dialog" do
+    @modal "#retry-delete-modal"
+
+    for {ids, label, noun} <- [
+          {["doc-1"], "Retry deleting 1 document", "1 document"},
+          {["doc-1", "doc-2", "doc-3"], "Retry deleting 3 documents", "3 documents"}
+        ] do
+      test "#{label}: the confirm is the single Plum button and Cancel opens focused", %{
+        conn: conn
+      } do
+        ids = unquote(ids)
+        put_delete_job!(ids)
+
+        {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+        html = render_click(view, "retry", %{"id" => "502"})
+
+        # exactly one Plum button inside the dialog, and it names its consequence
+        assert has_element?(view, "#{@modal} .btn-primary", unquote(label))
+
+        assert [_] =
+                 html
+                 |> LazyHTML.from_fragment()
+                 |> LazyHTML.query("#{@modal} .btn-primary")
+                 |> Enum.to_list()
+
+        refute html =~ "btn-error"
+        refute html =~ "Retry delete sync work"
+
+        # the page behind the dialog has no Plum button of its own
+        assert html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count() ==
+                 1
+
+        # description and list use the same pluralization, titles and Cancel are kept
+        assert has_element?(
+                 view,
+                 "#{@modal}-description",
+                 "Retry deletion of #{unquote(noun)} for ScrypathOps.Test.OpsPostA in fsv_ops_post_a."
+               )
+
+        assert has_element?(view, "#{@modal} p", unquote(noun))
+        assert has_element?(view, "#{@modal}", "Confirm delete sync work")
+
+        # Cancel is present, outline (not ghost), and is the dialog's initial focus
+        assert has_element?(
+                 view,
+                 "#{@modal}[data-ops-modal-initial-focus='[data-ops-modal-cancel]']"
+               )
+
+        assert has_element?(
+                 view,
+                 "#{@modal} button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+                 "Keep failed work and close"
+               )
+      end
+    end
+
+    test "the page itself has no Plum button before the dialog opens", %{conn: conn} do
+      put_delete_job!(["doc-1"])
+      {:ok, view, html} = live(conn, ~p"/ops/failed-sync")
+
+      assert html |> LazyHTML.from_fragment() |> LazyHTML.query(".btn-primary") |> Enum.count() ==
+               0
+
+      refute has_element?(view, @modal)
+    end
+  end
+
+  describe "E-09 Retry row action" do
+    test "Retry is an underlined text action, not a button, and keeps its test id and name", %{
+      conn: conn
+    } do
+      put_delete_job!(["doc-1"])
+      {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+
+      retry = "button[data-testid='failed-sync-retry']"
+      assert has_element?(view, "#{retry}.ops-text-action", "Retry")
+      refute has_element?(view, "#{retry}.btn")
+      refute has_element?(view, "#{retry}.ops-btn")
+      assert has_element?(view, "#{retry}[type=button][phx-click=retry]")
+    end
+  end
+
+  defp put_delete_job!(document_ids) do
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      %{
+        id: 502,
+        state: "discarded",
+        worker: "Scrypath.Oban.DeleteWorker",
+        queue: "search_sync",
+        args: %{
+          "operation" => "delete",
+          "schema" => "Elixir.ScrypathOps.Test.OpsPostA",
+          "backend" => "Elixir.Scrypath.Meilisearch",
+          "index" => "fsv_ops_post_a",
+          "document_count" => length(document_ids),
+          "document_ids" => document_ids
+        }
+      }
+    ])
   end
 
   defp summary(view), do: view |> element("#failed-sync-summary-heading") |> render()

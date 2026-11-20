@@ -117,6 +117,16 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
            )
 
     assert length(:binary.matches(html, "View search health")) == 1
+
+    # E-07: with a verdict the page has exactly one Plum button, the route to Search health
+    assert has_element?(lv, "a[data-testid='control-room-health-link'].btn-primary")
+
+    assert html
+           |> LazyHTML.from_fragment()
+           |> LazyHTML.query(".btn-primary")
+           |> Enum.count() == 1
+
+    refute html =~ "btn-error"
     assert html =~ "Meilisearch task failed"
     refute html =~ "Recover search"
     assert_before(html, "control-room-affected-scope", "control-room-health-link")
@@ -141,6 +151,13 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
              lv,
              "[data-testid='control-room-verdict'] [data-testid='control-room-explore-search']"
            )
+
+    # Phase 187 (E-10): the two intent cards are words only, with no icon and no flag.
+    assert has_element?(lv, ".ops-intent-card .ops-intent-card__title", "Try a search")
+    refute has_element?(lv, ".ops-intent-card svg")
+    refute has_element?(lv, ".ops-intent-card__icon")
+    refute has_element?(lv, ".ops-intent-card__flag")
+    refute html =~ "Start here"
   end
 
   test "healthy wording requires complete evidence and keeps freshness explicit", %{conn: conn} do
@@ -239,6 +256,75 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     assert render(lv) =~ "Search health refreshed."
     refute has_element?(lv, "[data-testid='control-room-refresh-issue']")
+  end
+
+  # Phase 187 E-06: the verdict shows the worst row status, takes its kind from the worst row
+  # (LD-10), and says Clear only when every row is clear.
+  describe "verdict status (E-06)" do
+    test "a failed row makes an error verdict that says Failed", %{conn: conn} do
+      put_degraded_posture_config!()
+      {:ok, lv, html} = live(conn, ~p"/ops")
+
+      verdict = "[data-testid='control-room-verdict'][data-verdict-kind='error']"
+      assert has_element?(lv, "#{verdict} [data-sync-status='failed']", "Failed")
+      refute has_element?(lv, "[data-testid='control-room-verdict'] [data-sync-status='clear']")
+      refute html =~ "ops-verdict-icon"
+    end
+
+    test "every row clear makes a neutral verdict that says Clear", %{conn: conn} do
+      put_healthy_posture_config!()
+      {:ok, lv, _html} = live(conn, ~p"/ops")
+
+      verdict = "[data-testid='control-room-verdict'][data-verdict-kind='neutral']"
+      assert has_element?(lv, "#{verdict} [data-sync-status='clear']", "Clear")
+    end
+
+    test "rows nobody could check never read Clear", %{conn: conn} do
+      put_healthy_posture_config!()
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      {:ok, lv, _html} = live(conn, ~p"/ops")
+
+      assert has_element?(lv, "[data-testid='control-room-verdict'][data-verdict-kind='warning']")
+      refute has_element?(lv, "[data-testid='control-room-verdict'] [data-sync-status]")
+      assert has_element?(lv, "[data-testid='control-room-verdict']", "Partial observation")
+    end
+
+    test "unconfigured and missing-backend states render no verdict, status word or Clear", %{
+      conn: conn
+    } do
+      Application.put_env(:scrypath_ops, :schema_allowlist, [])
+      Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+      {:ok, lv, html} = live(conn, ~p"/ops")
+
+      assert has_element?(lv, "[data-testid='control-room-unconfigured']")
+      refute has_element?(lv, "[data-testid='control-room-verdict']")
+      refute html =~ "data-sync-status"
+      refute html =~ "Clear"
+
+      Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA])
+      Application.delete_env(:scrypath_ops, :backend)
+      {:ok, lv, html} = live(conn, ~p"/ops")
+
+      assert has_element?(lv, "[data-testid='control-room-missing-backend']")
+      refute has_element?(lv, "[data-testid='control-room-verdict']")
+      refute html =~ "data-sync-status"
+    end
+
+    test "a retained observation keeps its sentences and its warning notice", %{conn: conn} do
+      put_healthy_posture_config!()
+      {:ok, lv, _html} = live(conn, ~p"/ops")
+
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      lv |> element("#control-room-refresh") |> render_click()
+
+      assert has_element?(
+               lv,
+               "[data-testid='control-room-refresh-issue']",
+               "The last complete observation is retained below"
+             )
+
+      assert has_element?(lv, "[data-testid='control-room-verdict']", "Last successful check:")
+    end
   end
 
   defp put_degraded_posture_config! do

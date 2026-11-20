@@ -1,0 +1,1620 @@
+{
+  "about": "scrypath brand data, version 1.0. Every rule in the brand book as structured data; American English. The logo animation and the sounds are in the motion and sound sections.",
+  "name": "scrypath",
+  "version": "1.0",
+  "date": "November 14, 2026",
+  "revisions": [
+    {
+      "version": "1.0",
+      "date": "November 14, 2026",
+      "changes": "This edition replaces the earlier brand book. The logo is the word scrypath with one plum slash between the y and the p, drawn at the angle of the typeface’s own slash, and its symbol is s/. The color is plum, which no search tool measured for this book uses. The type is Bricolage Grotesque, Hanken Grotesk and Sometype Mono. It keeps the name, the slash inside it, the tagline, the plain voice and the rule to say when an update is still queued and not yet searchable. It adds a logo animation and a sonic identity, both built on that rule."
+    }
+  ],
+  "idea": {
+    "line": "The slash in the name is a path, and the progress line shows where each update is on it.",
+    "explanation": [
+      "The name is one word, `scrypath`, but the logo has a slash inside it: `scry/path`. A slash separates the parts of a file path, and Elixir developers also see it in function names such as `search/3`.",
+      "When your app saves a record to its database, you tell Scrypath to sync it, and Scrypath sends the update to Meilisearch, the search engine. Meilisearch indexes the update in the background, so a search may not find a record right after it was saved. This delay is called eventual consistency.",
+      "Scrypath shows how far each schema’s updates have gone on a progress line: solid up to the step an update has reached, dashed after it. Every page of this book has the same line down its left side."
+    ]
+  },
+  "tagline": "Search indexing that feels native to Ecto.",
+  "descriptor": "Ecto-native search indexing",
+  "positioning": "An Elixir library that adds full-text search to your Ecto schemas and shows which updates are waiting and where an update stopped.",
+  "job": "Help me add full-text search to my Ecto schemas, choose how it syncs, and see right away when the index is out of date and what to do about it.",
+  "audience": [
+    {
+      "who": "Elixir developers",
+      "job": "Add search to an existing Ecto schema and choose how updates are sent."
+    },
+    {
+      "who": "Whoever keeps search running",
+      "job": "Use the operator UI, Scrypath’s optional screens, to see which Ecto schemas have an out-of-date search index and where updates are stuck."
+    },
+    {
+      "who": "Maintainers and contributors",
+      "job": "Keep every Scrypath page, from README to operator UI, looking like one project."
+    }
+  ],
+  "values": [
+    {
+      "value": "Honest",
+      "meaning": "Scrypath never reports a record as searchable while Meilisearch is still indexing it."
+    },
+    {
+      "value": "Plain",
+      "meaning": "The operator UI says “record loading”, not “hydration”, and names the exact schema, index or update involved."
+    },
+    {
+      "value": "Exact",
+      "meaning": "Screen text is “1 update to MyApp.Blog.Post failed at 14:31 UTC”, not “something failed recently”."
+    },
+    {
+      "value": "Calm",
+      "meaning": "A Pending update is normal and is shown in muted colors. Retrying is amber. Only a Failed update is shown in an error color, with the next action beside it."
+    },
+    {
+      "value": "Native",
+      "meaning": "Setup is plain Elixir. You list the searchable fields in your Ecto schema with `use Scrypath` and tell Scrypath to sync after each save. Mix tasks show which updates are waiting and which have failed."
+    }
+  ],
+  "rules": [
+    "Write Scrypath in sentences and headings. Write `scrypath` for the logo, package, commands and file names, and `Scrypath` for the Elixir module. Never start a sentence with `scrypath` or write “scry/path”.",
+    "The logo is the word scrypath with one slash; the slash is Plum on light and Orchid on dark. Put no shape behind the logo or symbol, except the avatar’s square, and no cursor except in the logo animation (see Logo). Set the tagline and descriptor beside the logo, never inside it (see Messaging).",
+    "Write every sync status as a word. Add its icon and color if you like, but never use them in place of the word."
+  ],
+  "presence": {
+    "head": "Scrypath’s own pages use the full brand, the operator UI uses part of it, and your users’ search screens use none of it.",
+    "tiers": [
+      [
+        "Scrypath’s own pages",
+        "README, Hex page, HexDocs, website, social card",
+        "Developers deciding whether to adopt Scrypath.",
+        "The logo in both themes, the colors, the progress line, the code colors and the descriptor."
+      ],
+      [
+        "In the operator UI",
+        "ScrypathOps: Search health, Failed sync work, Sync and index",
+        "Whoever keeps search running: developers and platform engineers.",
+        "The logo in the top bar, status icons beside their words, a progress line across each row, names and times in Sometype Mono, and a Plum button only for a screen’s single main action."
+      ],
+      [
+        "In other people’s writing",
+        "Blog posts, talks, other READMEs",
+        "People writing about Scrypath.",
+        "Writers may use the logo unchanged, under the rules in this book, with nothing added to it."
+      ]
+    ],
+    "note": "The search screens your app’s users use carry your app’s own name, logo and colors. You may credit Scrypath in plain text if you choose."
+  },
+  "logo": {
+    "mark": "The word scrypath in Bricolage Grotesque Bold at optical size 96 and width 90, converted from the font into vector shapes, with one Plum slash between the y and the p. Letters, spacing and slash are one drawing. The slash is the only slash: never doubled, never repeated as a pattern, never a gradient and never rounded.",
+    "wordmark": "scrypath, one word, all lowercase, drawn as vector shapes so it needs no font. The logo is the word with the slash between y and p; there is no icon beside it and no cursor after it. In a sentence, write Scrypath.",
+    "together": "The logo is the word scrypath with a slash between the y and the p. The slash is Plum on light and Orchid on dark. Do not move the slash, repeat it, redraw the letters or add a shape, a gradient or a cursor.",
+    "exceptions": "There are two exceptions. The logo animation shows a cursor while it plays and ends without one. The avatar sits on a plain square, because a profile picture is cropped to a square. The slanted bar is a separate element: it is the bullet in this book’s lists and each step marker on the progress line down the left of every page.",
+    "mono": "The slash is the same color as the letters: Ink on a light background, Pale Ink on a dark one. Use it for stamps, print and any single-color job.",
+    "small": "The favicon is the symbol s/, drawn for exactly 16 and 32 px, so its edges fall on whole pixels. The symbol is not drawn below 16 px.",
+    "smallDetail": "At 16 px: x-height 10 px, baseline on row 13, slash 3 px wide in 3 one-pixel steps, at least 1 px between the s and the slash. At 32 px: x-height 20 px, baseline on row 26, slash 6 px wide in 5 steps, and 2 px between the s and the slash. The slash is drawn to line up with whole pixels, so it stays sharp at 16 and 32 px. Only Chrome’s rendering was looked at; other browsers may draw favicons differently.",
+    "clear": "Keep clear space on every side equal to 2 T, twice the thickness of the h’s stem, measured from the outermost edge of the logo. Keep it empty: no other logo, no text and no page edge inside it.",
+    "minNote": "On screen, the logo is never narrower than 112 px (24 px tall) and the favicon drawing of the symbol never narrower than 16 px. Below 24 px tall, use the symbol. In print, the logo is never narrower than 25 mm.",
+    "theme": "The logo has a drawing for each theme. On light, the letters are Ink at weight 700 and the slash is Plum. On dark, the letters are Pale Ink at weight 670 and the slash is Orchid, which is lighter so that it is easy to see on Night. Use the drawing made for the page it sits on; do not make one drawing from the other by swapping colors.",
+    "background": "No shape behind it: the logo sits directly on the page background. The one exception is the avatar, a 512 px square with the symbol on Page or Night, because social sites need an opaque square. A photograph or screenshot is not a background: see the rules for placing the logo on one.",
+    "color": "The slash is never green, blue or red, and it is never recolored to match your app. Meilisearch, the engine Scrypath is built on, uses a mark of three slanted bars in a pink gradient. This logo has one flat Plum slash with sharp-cornered ends, and the symbol always includes a letter. Do not use repeated slashes, stripes or gradients as a brand pattern. Other brands also put a slash inside their names. This logo differs in its drawing, its color and the word around the slash.",
+    "retired": "The earlier drawing is retired: Familjen Grotesk with the slash as a plain font character in copper, the s/p monogram, and the S on a dark square tile. The idea of a slash inside the name is kept and redrawn.",
+    "minimumSizes": [
+      {
+        "version": "Logo",
+        "screen": "112 px wide",
+        "print": "25 mm wide"
+      },
+      {
+        "version": "The symbol, drawn for 16 px",
+        "screen": "16 px wide",
+        "print": "Not specified"
+      }
+    ],
+    "misuse": [
+      "Don’t stretch, squeeze or rotate the logo.",
+      "Don’t use colors other than the ones on the logo pages. For a one-color job, use the one-color logo.",
+      "Don’t put a tile, badge or any other shape behind the logo.",
+      "Don’t add the tagline, the descriptor or any other text to the logo.",
+      "Don’t move the slash, repeat it, or add a cursor after the word.",
+      "Don’t pair a drawing with the wrong background: the dark drawing on light, or the light drawing on dark."
+    ],
+    "onPhotography": {
+      "head": "On screenshots and photographs",
+      "rules": [
+        "Set the logo on a plain, low-detail area at least as wide as the logo plus its clear space.",
+        "Use the light drawing on a light background and the dark drawing on a dark background. If a photograph makes both hard to read, move the logo to a plainer part of the image.",
+        "Do not put a screenshot of the operator UI behind the logo; show the screenshot beside it."
+      ]
+    },
+    "useByOthers": [
+      "Hex packages, blogs, newsletters and conference sites may use the logo unchanged to refer to Scrypath.",
+      "Do not use it to suggest that Scrypath endorses another product, or that Meilisearch is affiliated with Scrypath.",
+      "Do not alter the logo, or build one from the slash alone, unless the maintainers have approved the change."
+    ],
+    "clearSpace": "two T (twice the thickness of the h’s stem) on every side, measured from the outermost edge of the logo"
+  },
+  "color": {
+    "defaultTheme": "light",
+    "light": [
+      {
+        "name": "Page",
+        "hex": "#F8F4F2",
+        "role": "The default background of the book, docs and operator UI.",
+        "sharePercent": 60
+      },
+      {
+        "name": "Panel",
+        "hex": "#FFFFFF",
+        "role": "Tables, form fields, the detail panel and the README card.",
+        "sharePercent": 22
+      },
+      {
+        "name": "Ink",
+        "hex": "#1E1220",
+        "role": "Text, and the letters in the logo on light.",
+        "sharePercent": 9
+      },
+      {
+        "name": "Plum",
+        "hex": "#7B2D6B",
+        "role": "The logo’s slash, links, the focus ring, the main button (at most one per screen) and the marker for the current page on this book’s progress line.",
+        "sharePercent": 5
+      },
+      {
+        "name": "Hairline",
+        "hex": "#E0D5D1",
+        "role": "Dividing lines between rows and sections. An input or a button has a Control Edge border.",
+        "sharePercent": 4
+      }
+    ],
+    "dark": [
+      {
+        "name": "Night",
+        "hex": "#160E19",
+        "role": "The dark background of the terminal, docs and operator UI.",
+        "sharePercent": 60
+      },
+      {
+        "name": "Night Panel",
+        "hex": "#201624",
+        "role": "Tables, form fields and the detail panel on Night.",
+        "sharePercent": 22
+      },
+      {
+        "name": "Pale Ink",
+        "hex": "#F4EDF3",
+        "role": "Text, and the letters in the logo on dark.",
+        "sharePercent": 9
+      },
+      {
+        "name": "Orchid",
+        "hex": "#D58BC4",
+        "role": "The logo’s slash on dark, links, the focus ring, the main button (at most one per screen) and the marker for the current page on this book’s progress line.",
+        "sharePercent": 5
+      },
+      {
+        "name": "Night Hairline",
+        "hex": "#3A2A3E",
+        "role": "Dividing lines on dark.",
+        "sharePercent": 4
+      }
+    ],
+    "logo": {
+      "name": "Plum",
+      "hex": "#7B2D6B",
+      "onDark": "#D58BC4",
+      "role": "The slash in the logo, on light. On dark the slash is Orchid, #D58BC4. Plum is 42 CIELAB units from the pink of Meilisearch’s mark, the engine Scrypath is built on, and further from the other search tools measured for this book; Orchid is nearer, 33 units from that pink."
+    },
+    "secondary": [
+      {
+        "name": "Muted Ink",
+        "hex": "#5E5360",
+        "role": "Secondary text on Page and Panel."
+      },
+      {
+        "name": "Muted Pale",
+        "hex": "#BBAAC0",
+        "role": "Secondary text on Night and Night Panel."
+      },
+      {
+        "name": "Sunken Page",
+        "hex": "#F0E9E6",
+        "role": "The background of code blocks and table heads, on light."
+      },
+      {
+        "name": "Selected Page",
+        "hex": "#EBDFE7",
+        "role": "The background of the selected row, on light. Darker than Page, so the selected row is easy to see."
+      },
+      {
+        "name": "Control Edge",
+        "hex": "#8A7A8E",
+        "role": "The border of an input or a button on light (3.7:1 on Page). Dark uses #8F7F94."
+      }
+    ],
+    "status": [
+      {
+        "word": "Failed",
+        "icon": "failed",
+        "textLight": "#B0360B",
+        "textDark": "#FF9A6B",
+        "meaning": "The update did not go through and will not on its own: the retries ran out, or the error cannot be retried. A person has to look. The only status drawn in an error color."
+      },
+      {
+        "word": "Retrying",
+        "icon": "retrying",
+        "textLight": "#8A5A00",
+        "textDark": "#E3B25C",
+        "meaning": "The update failed for a passing reason, such as a timeout, and will be tried again on its own. Nothing for you to do yet."
+      },
+      {
+        "word": "Pending",
+        "icon": "pending",
+        "textLight": "#615765",
+        "textDark": "#AB9BB0",
+        "meaning": "The update is queued and not searchable yet. Waiting is normal, so it takes a muted color, not an alert color."
+      },
+      {
+        "word": "Clear",
+        "icon": "clear",
+        "textLight": "#1D6B3C",
+        "textDark": "#7FCB9A",
+        "meaning": "Nothing is waiting or failed for this schema. It says nothing about whether the index matches the database: that is what reconcile is for."
+      }
+    ],
+    "statusRule": "Write every sync status as a word. Add its icon and color if you like, but never use them in place of the word.",
+    "contrastPairs": [
+      {
+        "id": "body",
+        "role": "Body text",
+        "use": "README, docs, the operator UI and this book.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#1E1220",
+          "background": "#F8F4F2",
+          "contrast": 16.53,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#F4EDF3",
+          "background": "#160E19",
+          "contrast": 16.43,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "descriptor",
+        "role": "Descriptor and secondary text",
+        "use": "The descriptor next to the logo, and the metadata under a title.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#5E5360",
+          "background": "#F8F4F2",
+          "contrast": 6.67,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#BBAAC0",
+          "background": "#160E19",
+          "contrast": 8.66,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "caption",
+        "role": "Caption and table metadata",
+        "use": "Captions, times and column heads.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#5E5360",
+          "background": "#FFFFFF",
+          "contrast": 7.29,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#BBAAC0",
+          "background": "#201624",
+          "contrast": 8.01,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "application-copy",
+        "role": "Copy inside an application",
+        "use": "Text on a panel in the operator UI or the README.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#1E1220",
+          "background": "#FFFFFF",
+          "contrast": 18.06,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#F4EDF3",
+          "background": "#201624",
+          "contrast": 15.19,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "link",
+        "role": "Link and current navigation item",
+        "use": "Links, and the current item in the top navigation.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#7B2D6B",
+          "background": "#FFFFFF",
+          "contrast": 8.64,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#D58BC4",
+          "background": "#201624",
+          "contrast": 6.92,
+          "use": "Any text size (AA)"
+        }
+      },
+      {
+        "id": "focus",
+        "role": "Focus ring on the page",
+        "use": "A 2 px ring around the control in focus, against the page.",
+        "minimum": 3,
+        "light": {
+          "text": "#7B2D6B",
+          "background": "#F8F4F2",
+          "contrast": 7.91,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#D58BC4",
+          "background": "#160E19",
+          "contrast": 7.49,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "artwork",
+        "role": "Logo slash",
+        "use": "The logo’s slash against the page, as a shape: Plum on light, Orchid on dark.",
+        "minimum": 3,
+        "light": {
+          "text": "#7B2D6B",
+          "background": "#F8F4F2",
+          "contrast": 7.91,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#D58BC4",
+          "background": "#160E19",
+          "contrast": 7.49,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "button",
+        "role": "Main button",
+        "use": "The label on the main button against its fill (Plum on light, Orchid on dark); at most one per screen.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#FFFFFF",
+          "background": "#7B2D6B",
+          "contrast": 8.64,
+          "use": "Any text size (AAA)"
+        },
+        "dark": {
+          "text": "#160E19",
+          "background": "#D58BC4",
+          "contrast": 7.49,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "selected-row",
+        "role": "Notes on the selected row",
+        "use": "Index names and notes on the selected row.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#5E5360",
+          "background": "#EBDFE7",
+          "contrast": 5.64,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#BBAAC0",
+          "background": "#2B2130",
+          "contrast": 7.06,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "selected-status",
+        "role": "Status word, selected row",
+        "use": "The word Failed on the selected row.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#B0360B",
+          "background": "#EBDFE7",
+          "contrast": 4.81,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#FF9A6B",
+          "background": "#2B2130",
+          "contrast": 7.4,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-failed",
+        "role": "Status word: Failed",
+        "use": "The word “Failed”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#B0360B",
+          "background": "#FFFFFF",
+          "contrast": 6.22,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#FF9A6B",
+          "background": "#201624",
+          "contrast": 8.39,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-retrying",
+        "role": "Status word: Retrying",
+        "use": "The word “Retrying”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#8A5A00",
+          "background": "#FFFFFF",
+          "contrast": 5.93,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#E3B25C",
+          "background": "#201624",
+          "contrast": 8.98,
+          "use": "Any text size (AAA)"
+        }
+      },
+      {
+        "id": "status-pending",
+        "role": "Status word: Pending",
+        "use": "The word “Pending”, in Muted Ink.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#615765",
+          "background": "#FFFFFF",
+          "contrast": 6.86,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#AB9BB0",
+          "background": "#201624",
+          "contrast": 6.7,
+          "use": "Any text size (AA)"
+        }
+      },
+      {
+        "id": "status-clear",
+        "role": "Status word: Clear",
+        "use": "The word “Clear”.",
+        "minimum": 4.5,
+        "light": {
+          "text": "#1D6B3C",
+          "background": "#FFFFFF",
+          "contrast": 6.52,
+          "use": "Any text size (AA)"
+        },
+        "dark": {
+          "text": "#7FCB9A",
+          "background": "#201624",
+          "contrast": 9.08,
+          "use": "Any text size (AAA)"
+        }
+      }
+    ],
+    "never": [
+      {
+        "color": "Plum",
+        "notFor": "text on Night (use Orchid)"
+      },
+      {
+        "color": "Hairline",
+        "notFor": "the only edge of a control (use Control Edge)"
+      },
+      {
+        "color": "a status color",
+        "notFor": "the sole sign of a status"
+      },
+      {
+        "color": "Failed orange-red",
+        "notFor": "anything other than a failure"
+      }
+    ],
+    "notes": "Ratios are WCAG 2.2 contrast, computed from the hex values. A pair passing here is not a claim about any product built with it. Plum on Page is 7.9:1 (8.6:1 on Panel), so the slash passes the 3:1 minimum for shapes and Plum also passes as link text. Orchid on Night is 7.5:1. The Failed orange-red and the Retrying amber are 29 degrees apart in hue on light (CIELAB hue angle), and the book’s automated check fails if that gap falls under 25. A person can also tell them apart by the icon’s shape and the word. Color is never the only way to tell the four statuses apart.",
+    "print": "Not specified: proof against a physical swatch; no CMYK or Pantone values are given."
+  },
+  "type": {
+    "display": {
+      "family": "Bricolage Grotesque",
+      "weights": "SemiBold (600), Bold (700) and ExtraBold (800), at optical size 96 and width 90, the same settings as the logo. Headlines on dark backgrounds use weight 670, as the dark logo does, in addition to those three.",
+      "css": "'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif",
+      "use": "For the logo, headlines and covers, never for body text.",
+      "why": "The y, a and t have distinctive shapes at large sizes, so the name is recognizable at a glance. Bricolage Grotesque is an open-source font whose letter width and shape can be adjusted for large sizes."
+    },
+    "sans": {
+      "family": "Hanken Grotesk",
+      "weights": "Weights 400, 600 and 700.",
+      "css": "'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "use": "Reading text, tables, labels and the operator interface.",
+      "why": "A plain sans-serif with open letter shapes and tabular (equal-width) numerals, so a dense table of counts stays legible."
+    },
+    "mono": {
+      "family": "Sometype Mono",
+      "weights": "Regular (400) and Medium (500).",
+      "css": "'Sometype Mono', ui-monospace, 'SF Mono', Consolas, monospace",
+      "use": "Anything copied or compared: schema and index names, commands, Mix task output, times and code.",
+      "why": "Sometype Mono’s zero has a slash (turn on the slashed-zero font feature), and 1, l and I look different from each other, so a module name or an id can be read aloud and copied correctly."
+    },
+    "license": "All three families are SIL Open Font License 1.1, from Google Fonts. Each family’s license text ships in assets/fonts. Hanken Grotesk and Sometype Mono have no up and down arrow characters (U+2191 and U+2193): write “up” and “down”, or draw the arrow.",
+    "hierarchy": [
+      {
+        "role": "Display",
+        "face": "Bricolage Grotesque",
+        "weight": 700,
+        "sizePx": 56,
+        "lineHeight": 1.05,
+        "tracking": "-0.02em",
+        "sample": "Queued, then searchable.",
+        "use": "Covers, decks and social cards. One line, two at most."
+      },
+      {
+        "role": "Heading",
+        "face": "Bricolage Grotesque",
+        "weight": 700,
+        "sizePx": 28,
+        "lineHeight": 1.2,
+        "tracking": "-0.01em",
+        "sample": "Which index is out of date?",
+        "use": "Titles of pages and sections in docs and the operator UI."
+      },
+      {
+        "role": "Body",
+        "face": "Hanken Grotesk",
+        "weight": 400,
+        "sizePx": 16,
+        "lineHeight": 1.55,
+        "tracking": "0",
+        "sample": "In Oban mode, `Scrypath.sync_record/3` returns once the job is queued. The record is searchable when Meilisearch has indexed it.",
+        "use": "README, guides and paragraphs in the operator UI. 62 to 72 characters a line."
+      },
+      {
+        "role": "Dense text",
+        "face": "Hanken Grotesk",
+        "weight": 400,
+        "sizePx": 13,
+        "lineHeight": 1.4,
+        "tracking": "0",
+        "sample": "2 updates pending, 3 retrying, 1 failed",
+        "use": "Counts and notes in each Search health row. Always with tabular numerals."
+      },
+      {
+        "role": "Label",
+        "face": "Hanken Grotesk",
+        "weight": 600,
+        "sizePx": 12,
+        "lineHeight": 1.2,
+        "tracking": "0.01em",
+        "sample": "Failed sync work",
+        "use": "Table heads and small captions. Set in sentence case, never in capitals."
+      },
+      {
+        "role": "Code",
+        "face": "Sometype Mono",
+        "weight": 400,
+        "sizePx": 13,
+        "lineHeight": 1.5,
+        "tracking": "0",
+        "sample": "mix scrypath.status MyApp.Blog.Post",
+        "use": "Schema and index names, commands, task output and times. Clicking a schema name, index name or command copies it."
+      }
+    ],
+    "rules": [
+      "Numbers that stack in a column use tabular numerals (`font-variant-numeric: tabular-nums`) so the digits line up.",
+      "Every schema name, index name, command and time is set in Sometype Mono with the slashed zero on, so it can be compared by eye. None of them is ever set in Hanken Grotesk.",
+      "Show the time zone with every time: `14:02 UTC`. A bare time is a defect, because the queue and Meilisearch can run in different zones.",
+      "Clicking a name or command copies it and shows a brief “Copied to clipboard” note; the text does not move.",
+      "Headlines are in sentence case. Nothing is set below 12 px or lighter than weight 400.",
+      "Characters in code are never joined into one symbol (`font-variant-ligatures: none`), so a pipe operator or an arrow appears as the characters that were typed."
+    ]
+  },
+  "voice": {
+    "summary": "Every message in the operator UI says what happened, which schema or index it concerns and what to do next.",
+    "tone": [
+      {
+        "channel": "The operator UI and Mix task output",
+        "plainToLively0to4": 0,
+        "example": "Meilisearch is still indexing 4 updates. They are not searchable yet."
+      },
+      {
+        "channel": "Guides and README",
+        "plainToLively0to4": 1,
+        "example": "After you save a record, tell Scrypath to sync it with Scrypath.sync_record/3, then read what it returns."
+      },
+      {
+        "channel": "Release notes",
+        "plainToLively0to4": 1,
+        "example": "Failed sync work now shows why each update failed."
+      },
+      {
+        "channel": "Talks and social posts",
+        "plainToLively0to4": 2,
+        "example": "Full-text search for Elixir that tells you when your index is out of date."
+      }
+    ],
+    "toneNote": "Scrypath’s writing is plain in every channel. A talk or a post can be a little more lively than the guides. The operator UI and Mix task output are never lively, because people open them when the search index is out of date or an update has failed.",
+    "thisNotThat": [
+      {
+        "say": "Meilisearch is still indexing 4 updates. They are not searchable yet.",
+        "notThis": "Indexing in progress. Hang tight!"
+      },
+      {
+        "say": "One delete for MyApp.Blog.Post 4417 failed at 14:31 UTC because Meilisearch did not respond in time.",
+        "notThis": "Something went wrong while syncing."
+      },
+      {
+        "say": "Scrypath.sync_record/3 returned :accepted, so the update is not indexed yet. The record is searchable once indexing finishes.",
+        "notThis": "Your documents are synced!"
+      },
+      {
+        "say": "Two updates are waiting for their next attempt. Nothing for you to do yet.",
+        "notThis": "All good! We are on it."
+      },
+      {
+        "say": "This schema syncs in `:oban` mode.",
+        "notThis": "Search that just stays in sync."
+      },
+      {
+        "say": "Retry failed work for MyApp.Blog.Post.",
+        "notThis": "Fix it"
+      },
+      {
+        "say": "There are 2 pending updates in the Oban queue.",
+        "notThis": "Everything looks fine upstream."
+      }
+    ],
+    "inclusive": [
+      "Write for the person on call. Name the schema and say what happened before showing the error’s technical name.",
+      "Point to the safe next action. Every failure message says what you can do next and whether Scrypath will retry the update automatically.",
+      "Write the time zone with every time. Write “14:02 UTC”, never a bare “14:02”.",
+      "One word per status. Failed, Retrying, Pending and Clear mean different things, and no word is used for more than one of them."
+    ],
+    "name": {
+      "rule": "Write Scrypath in sentences and headings. Write `scrypath` for the logo, package, commands and file names, and `Scrypath` for the Elixir module. Never start a sentence with `scrypath` or write “scry/path”.",
+      "never": [
+        {
+          "form": "scry/path, Scry Path",
+          "why": "one word; the slash belongs to the logo only"
+        },
+        {
+          "form": "SCRYPATH, ScryPath",
+          "why": "one capital only (except ScrypathOps)"
+        },
+        {
+          "form": "Scrypath.io, Scrypath Search",
+          "why": "no suffix (except ScrypathOps)"
+        },
+        {
+          "form": "the Scrypath platform, Scrypath Cloud",
+          "why": "Scrypath is a library, not a service"
+        },
+        {
+          "form": "scrypt",
+          "why": "a different thing, the password-hashing function"
+        }
+      ],
+      "descriptor": "Call it “a full-text search library for Elixir”. Call the optional screens “the operator UI”, or ScrypathOps where the screens themselves show that name. Say “your app” for the Elixir app that uses Scrypath."
+    },
+    "terms": [
+      {
+        "term": "Schema",
+        "meaning": "The Ecto schema that declares what is searchable. Screens show its full module name in Sometype Mono.",
+        "avoid": "model, resource, entity"
+      },
+      {
+        "term": "Update",
+        "meaning": "A change Scrypath sends to Meilisearch: a new or edited record, a delete, or a batch of records in a backfill.",
+        "avoid": "write, indexing job, task (Meilisearch has its own tasks)"
+      },
+      {
+        "term": "Failed sync work",
+        "meaning": "The operator UI screen that lists updates that failed, each with its reason and what you can do next.",
+        "avoid": "errors, dead jobs"
+      },
+      {
+        "term": "Search health",
+        "meaning": "The operator UI screen that shows, for each schema, whether its search index is up to date and what is waiting.",
+        "avoid": "dashboard, status page"
+      },
+      {
+        "term": "Queued",
+        "meaning": "Waiting to be indexed: in the Oban queue, or sent and waiting in Meilisearch. Not searchable yet. In code, `Scrypath.sync_record/3` returns `:accepted`.",
+        "avoid": "synced, done, indexed"
+      },
+      {
+        "term": "Searchable",
+        "meaning": "A new search reflects the update: a record that was added or edited is found, and a record that was deleted is gone.",
+        "avoid": "live, fresh"
+      },
+      {
+        "term": "Sync mode",
+        "meaning": "How Scrypath sends an update to Meilisearch. Inline: Scrypath waits for Meilisearch to index it, up to a time limit. Oban: a background job sends it. Manual: Scrypath sends it and you check afterward whether it was indexed. Written `:inline`, `:oban`, `:manual` in code.",
+        "avoid": "strategy, adapter"
+      },
+      {
+        "term": "Index",
+        "meaning": "The part of Meilisearch that holds a schema’s records for searching. Shown by its full name, in Sometype Mono.",
+        "avoid": "collection, table"
+      },
+      {
+        "term": "Backfill",
+        "meaning": "Re-sending existing records to an index, for example after adding Scrypath to a table that already holds records.",
+        "avoid": "reload, resync"
+      },
+      {
+        "term": "Managed reindex",
+        "meaning": "Building a new index and switching search over to it, when settings or mappings changed and the live index can no longer be trusted.",
+        "avoid": "rebuild, migration"
+      },
+      {
+        "term": "Drift",
+        "meaning": "A schema’s search index and its database table no longer match. Scrypath’s guides use this word; screens say which schemas have an out-of-date index.",
+        "avoid": "out of sync, stale"
+      },
+      {
+        "term": "Reconcile",
+        "meaning": "Comparing the index with the database and reporting the difference.",
+        "avoid": "verify, audit"
+      },
+      {
+        "term": "Saved search",
+        "meaning": "A search definition that can be run again. It keeps the query, not the results.",
+        "avoid": "playbook (API and file format only), saved check"
+      },
+      {
+        "term": "Per-schema results",
+        "meaning": "The results of one search, listed separately for each selected schema. There is no combined relevance score.",
+        "avoid": "federated results, merged results"
+      },
+      {
+        "term": "Record loading",
+        "meaning": "After a search returns, your app loads the matching Ecto records itself; Meilisearch does not.",
+        "avoid": "hydration (in screens)"
+      },
+      {
+        "term": "Your app",
+        "meaning": "The Elixir app that uses Scrypath, often a Phoenix app.",
+        "avoid": "host, consumer"
+      }
+    ],
+    "termsNote": "This list covers only the words this book uses. The product glossary is the source for screen copy; “hydrate” and “playbook” stay where the glossary uses them, in code and guides. In prose, write “queued” and “searchable”; in code the values are `:accepted` and `:completed`."
+  },
+  "messaging": {
+    "pitch": "Scrypath adds full-text search to Elixir apps. Declare the searchable fields on your Ecto schema and tell Scrypath to sync after each save. An Oban background job then sends the update to Meilisearch. When an update gets stuck, you see where it stopped and how to fix it.",
+    "pillars": [
+      [
+        "Declared on the schema.",
+        "You list the searchable fields with `use Scrypath` in your Ecto schema. Scrypath sends nothing to Meilisearch until your code tells it to sync a record."
+      ],
+      [
+        "Sync you can see.",
+        "In Oban mode, a background job from Oban, the Elixir job library, sends each update to Meilisearch. `mix scrypath.status` and the Search health screen show which updates are waiting or failed."
+      ],
+      [
+        "When a record is searchable.",
+        "Meilisearch is eventually consistent, so a record can take a moment to show up in search after you save it. Scrypath never says a record is searchable before Meilisearch has indexed it."
+      ]
+    ],
+    "tagline": "The tagline is in sentence case and ends with a period. Set it beside the logo, never inside it. For a page title or alt text, use the shorter descriptor “Ecto-native search indexing”.",
+    "boilerplate": [
+      [
+        "One line, for Hex, GitHub and package listings",
+        "Full-text search for Elixir apps, declared on your Ecto schemas, with a way to see when the search index is out of date."
+      ],
+      [
+        "Short, for the README opening and talk bios",
+        "Scrypath is an open-source Elixir library that adds full-text search to the Ecto schemas you already have. You list the searchable fields on the schema and tell Scrypath to sync after each save. Mix tasks and an optional operator UI show where any update is stuck and how to fix it."
+      ],
+      [
+        "Do not say",
+        "Magic, effortless, “it just stays in sync”, real-time (unless you measured it), federated, hydration, playbook, or “AI-powered”. Scrypath is a library you run inside your own app, and it does not promise that a record is searchable the moment it is saved."
+      ]
+    ]
+  },
+  "imagery": {
+    "guidance": "Scrypath’s pictures show the product at work, using the names Scrypath itself uses. They show the Search health screen, Mix task output, the five steps from a saved record to a search result (saved, queued, sent, indexed, searchable), and a schema declaration. They need no stock photography and no search-box icons.",
+    "show": [
+      {
+        "subject": "A terminal drawing",
+        "detail": "Output from mix scrypath.status, set in Sometype Mono on Night."
+      },
+      {
+        "subject": "A row from the Search health screen",
+        "detail": "A status word, its icon and the three steps of one schema, with sample data and a time zone."
+      },
+      {
+        "subject": "The five steps, drawn",
+        "detail": "The five steps in order (Saved, Queued in Oban, Sent to Meilisearch, Indexed, Searchable), with the stuck step marked."
+      }
+    ],
+    "never": [
+      "Crystal balls, eyes and tarot",
+      "Magnifying glasses over a database",
+      "A cloud with an arrow to a search box",
+      "Glowing neural-network nodes",
+      "Rocket ships and lightning bolts",
+      "Stock people at laptops",
+      "Neon “AI search” gradients",
+      "Result lists with perfect matches"
+    ],
+    "why": "A crystal ball does not show the steps and suggests guessing. A cloud with an arrow does not show them either. A glowing network has nothing a developer can check. With a drawing of the five steps or Mix task output, a developer can compare the picture with what Scrypath does.",
+    "note": "Every product picture here is a drawing of a proposed layout filled with sample data; none is a screenshot of the product."
+  },
+  "code": {
+    "background": {
+      "light": "#F0E9E6",
+      "dark": "#110A14"
+    },
+    "roles": [
+      {
+        "role": "Text",
+        "light": "#1E1220",
+        "dark": "#F4EDF3",
+        "colors": "Names, functions, modules and punctuation."
+      },
+      {
+        "role": "Comment",
+        "light": "#6B5F6E",
+        "dark": "#A89BAD",
+        "colors": "Comments, in a neutral gray-plum."
+      },
+      {
+        "role": "Keyword",
+        "light": "#7B2D6B",
+        "dark": "#D58BC4",
+        "colors": "Keywords such as use, def and fn, in plum."
+      },
+      {
+        "role": "String",
+        "light": "#2748A8",
+        "dark": "#93A9F5",
+        "colors": "Strings, in ultramarine."
+      },
+      {
+        "role": "Atom",
+        "light": "#006A7A",
+        "dark": "#6FD0DC",
+        "colors": "Atoms, keys and numbers, in a deep teal."
+      }
+    ],
+    "rules": [
+      "Code uses three hues, plum, ultramarine and teal, and two neutrals. It has no green, amber or red. The book’s check confirms, each time the book is made, that no code color is the same as a status color, and none is within 30 CIELAB units of Clear, Retrying or Failed.",
+      "Syntax colors belong in code blocks. Inline code in a sentence is plain Sometype Mono on a lightly tinted background, with no syntax colors.",
+      "ExDoc and HexDocs apply their own code colors, so these colors apply there only through the stylesheet in assets/docs, which was written for ExDoc’s class names. That stylesheet has not been tried in an ExDoc build yet.",
+      "GitHub applies its own colors to code in a README, and Scrypath does not control them.",
+      "Show code that runs on the current release, never pseudo-code."
+    ]
+  },
+  "graphicElements": {
+    "head": "Two graphic elements: the progress line and the slanted bar.",
+    "intro": "Scrypath has two graphic elements, both built on the logo’s slash. They are not buttons, tabs or inputs; the product has its own buttons, tabs and inputs.",
+    "items": [
+      [
+        "The slanted bar",
+        "The slanted bar is the logo’s slash, shortened to a small bar. As a status icon it has four shapes: filled for Clear, hollow for Pending, filled from the bottom for Retrying and notched for Failed. It is also the marker at each step of the progress line and the bullet in this book’s lists. Draw every slanted bar as a single sharp-cornered bar that leans 14.46 degrees. Never repeat it as a stripe or pattern."
+      ],
+      [
+        "The progress line",
+        "A line with one slanted bar, called a step marker, at each step. On a Search health row the steps are Queue, Meilisearch and Last succeeded; in this book they are the pages, down the left side, solid up to the current page and dashed after it. A solid line between two steps means updates have reached the later step; a dashed line means they have not. A step marker is filled once updates have reached it and hollow until then. Every progress line ends in a marker. On a Search health row, a step with waiting updates has a marker in the row’s status color and a count."
+      ]
+    ],
+    "never": "A status icon never appears without its word. Outside this book’s list bullets, the slanted bar appears only beside a status word or on a progress line. Never use the progress line as a loading animation or for anything that is not a series of steps in order."
+  },
+  "motion": {
+    "idea": "The logo animation shows the sentence “Queued, then searchable.” A blinking cursor (an underscore) grows into the slash. The letters appear one after another. A highlight moves across the word, the way a search result is highlighted, and then the word moves down and back up once, after the highlight has crossed it. The animation ends on the finished logo, with nothing else on screen.",
+    "never": "The logo never loops and the slash never repeats. The underscore never appears in the logo at rest. Nothing in the product pulses, and counts do not tick up. With reduced motion, the page shows the finished logo with a short fade and no movement.",
+    "logoAnimationMs": 1650,
+    "pathAdvanceMs": 600,
+    "cuesMs": {
+      "blink": 0,
+      "strike": 300,
+      "lettersAt": [
+        440,
+        485,
+        565,
+        620,
+        710,
+        760,
+        835,
+        895
+      ],
+      "hitFrom": 800,
+      "hitTo": 1080,
+      "found": 1100,
+      "cursor": 1300
+    },
+    "trackFormat": "Keyframes are [ms, value, cubic-bezier easing into this key]; letters rise in font units, the slash grows along its own axis, the highlight crosses in the slash’s angle. Every pose is a pure function of time.",
+    "phases": [
+      {
+        "time": "0 to 300 ms",
+        "what": "A cursor blinks, then grows into the slash."
+      },
+      {
+        "time": "300 to 400 ms",
+        "what": "The slash drops in a little taller than its final size and leaning back, then moves to its final size and angle."
+      },
+      {
+        "time": "440 to 895 ms",
+        "what": "The letters appear one after another at uneven gaps, each moving up a little as it appears."
+      },
+      {
+        "time": "800 to 1080 ms",
+        "what": "A plum highlight moves across the word, behind the letters, at the slash’s angle."
+      },
+      {
+        "time": "1100 to 1320 ms",
+        "what": "The word dips down and back once, the slash gets wider once, and a cursor blinks after the h."
+      },
+      {
+        "time": "1650 ms",
+        "what": "The finished logo, identical to the static logo."
+      }
+    ],
+    "storyboard": [
+      {
+        "ms": 60,
+        "picture": "The cursor blinks where the slash will be.",
+        "sound": "A very quiet key."
+      },
+      {
+        "ms": 270,
+        "picture": "The cursor grows into the slash.",
+        "sound": "No sound yet."
+      },
+      {
+        "ms": 300,
+        "picture": "The slash appears slightly too tall and leaning back.",
+        "sound": "The one full-volume key and a low wooden note."
+      },
+      {
+        "ms": 360,
+        "picture": "The slash moves upright and stops at the logo’s own angle.",
+        "sound": "The low note is still sounding."
+      },
+      {
+        "ms": 490,
+        "picture": "The letters s and c have appeared.",
+        "sound": "Quiet keys, each a little higher."
+      },
+      {
+        "ms": 640,
+        "picture": "The y has appeared and the p is about to.",
+        "sound": "Typing, at uneven gaps on purpose."
+      },
+      {
+        "ms": 880,
+        "picture": "A plum highlight moves across the word.",
+        "sound": "A soft rising sweep."
+      },
+      {
+        "ms": 1110,
+        "picture": "The word dips down and back once and the slash gets wider once.",
+        "sound": "Two notes that resolve."
+      },
+      {
+        "ms": 1320,
+        "picture": "The cursor blinks once after the h.",
+        "sound": "A low key."
+      },
+      {
+        "ms": 1650,
+        "picture": "The finished logo, identical to the static logo.",
+        "sound": "The notes fade out."
+      }
+    ],
+    "craft": [
+      {
+        "principle": "Anticipation",
+        "how": "The cursor blinks first, so the slash does not appear out of nowhere."
+      },
+      {
+        "principle": "Squash and stretch",
+        "how": "The slash goes 4.5 percent past its final height and leans back 2.3 degrees, then moves to its final size and angle. It is scaled along its own length, so the stretch does not change its angle."
+      },
+      {
+        "principle": "Follow-through and overlap",
+        "how": "Each letter starts moving before the previous one has stopped. Each letter moves up about 12 percent of the x-height while it fades in, goes 1 percent past its final position, then returns."
+      },
+      {
+        "principle": "Uneven timing",
+        "how": "The letters appear 45 to 90 ms apart, never at even gaps, because evenly spaced letters look mechanical."
+      },
+      {
+        "principle": "One focus at a time",
+        "how": "The word is nearly complete before the highlight starts, and the two overlap for under 100 ms. The highlight moves smoothly, never flashing."
+      },
+      {
+        "principle": "A clear exit",
+        "how": "The cursor fades out and only the logo remains. The finished frame is the static logo."
+      }
+    ],
+    "animates": [
+      {
+        "what": "An update moving to the next step.",
+        "how": "A slanted bar travels along the dashed line to the next step, and the line behind it is solid. When the bar reaches the last marker, the marker fills. 600 ms."
+      },
+      {
+        "what": "A status change on one row.",
+        "how": "The old word fades out as the new one fades in over 160 ms, and the status icon switches shape without moving. Color is never the only change."
+      },
+      {
+        "what": "Selection and focus.",
+        "how": "The selected row’s left border and background, and the focus ring, appear within 80 ms."
+      },
+      {
+        "what": "The logo animation.",
+        "how": "Once, on first view of a page that shows it, and on a deliberate replay."
+      }
+    ],
+    "neverAnimates": [
+      {
+        "what": "Anything that repeats.",
+        "why": "No pulsing progress lines, no fade that repeats, no spinner while updates wait. Waiting updates show as the word Pending or Retrying and a count."
+      },
+      {
+        "what": "Numbers counting up.",
+        "why": "A count jumps straight to its new value."
+      },
+      {
+        "what": "A failed, retrying or pending status that shakes, flashes or bounces.",
+        "why": "A failed update shows its word and status icon without movement, and its sound is soft, not an alarm."
+      },
+      {
+        "what": "Layout.",
+        "why": "Rows, columns and the page never move while an update is moving. Only the animated element changes position or transparency."
+      },
+      {
+        "what": "The logo at rest.",
+        "why": "In print, in the README header, in a favicon and in an avatar the logo is the static drawing."
+      }
+    ],
+    "reducedMotion": [
+      "The logo animation shows the finished logo and fades it in over 160 ms. Nothing moves.",
+      "An update moving along the progress line appears at its new step right away; the status word and the solid line show where the update is now.",
+      "The sound still plays if someone has pressed Play. It never starts by itself.",
+      "The animation follows the device’s reduced-motion setting and no other setting."
+    ],
+    "do": [
+      "In a video, keep each sound within ten milliseconds after its picture, never before it.",
+      "Keep one element moving at a time, except where the logo timeline shows an overlap.",
+      "Use the six easings and five durations in this book, and no others.",
+      "Hold the finished logo for 1.5 seconds at the end of a video."
+    ],
+    "dont": [
+      "Add a second slash or repeat the slash. Meilisearch’s own mark is three slanted bars.",
+      "Animate the slash’s angle at rest. The slash always leans 14.46 degrees.",
+      "Show the cursor in the logo at rest. It exists only in the animation.",
+      "Spin, bounce more than once, scatter the letters or make the highlight a flash.",
+      "Use the logo animation as a loading animation. It plays once."
+    ],
+    "durationsMs": {
+      "instant": 80,
+      "quick": 160,
+      "base": 240,
+      "advance": 600,
+      "sting": 1650
+    },
+    "easings": {
+      "strike": [
+        0.1,
+        0.9,
+        0.2,
+        1
+      ],
+      "resolve": [
+        0.2,
+        0.8,
+        0.2,
+        1
+      ],
+      "settle": [
+        0.3,
+        0,
+        0.2,
+        1
+      ],
+      "sweep": [
+        0.45,
+        0,
+        0.25,
+        1
+      ],
+      "exit": [
+        0.4,
+        0,
+        1,
+        1
+      ],
+      "advance": [
+        0.45,
+        0,
+        0.2,
+        1
+      ]
+    },
+    "video": [
+      "assets/motion/scrypath-logo-animation-dark.mp4",
+      "assets/motion/scrypath-logo-animation-dark.webm",
+      "assets/motion/scrypath-logo-animation-light.mp4",
+      "assets/motion/scrypath-logo-animation-light.webm"
+    ]
+  },
+  "sound": {
+    "character": "Every sound is built from a muted key, a plucked wooden bar and a soft glide, in D minor, short and low in volume. Queued is two notes that end unfinished, on E5. Searchable goes from E5 to D5, the home note. Failed is a muted knock and a low note, never an alarm.",
+    "phrase": "The sounds follow the sentence “Queued, then searchable.” Queued ends on a note that sounds unfinished, and Searchable ends on the note that completes it. Played one after the other they make one short phrase, and Done plays the whole phrase.",
+    "sync": "In the logo animation, each sound is tied to one moment: the firm key and low note play when the slash appears, typing while the letters appear, the rising sweep while the highlight moves, the two resolving notes when the word is found, and a low key when the cursor blinks after the h. On the page, the sound starts first and the animation begins when it is heard, so speaker or Bluetooth delay cannot separate them. In the video, a sound may come up to ten milliseconds after its picture, never before it.",
+    "rules": [
+      {
+        "when": "In the operator UI.",
+        "rule": "Sound is off until someone turns it on with a single setting. Sound follows the system volume and mute."
+      },
+      {
+        "when": "In terminals, logs and CI.",
+        "rule": "Mix tasks, logs and CI output stay silent. Never use the terminal bell."
+      },
+      {
+        "when": "For frequent events.",
+        "rule": "Queued and Retrying play at most once every two seconds, however many records are involved."
+      },
+      {
+        "when": "For batches.",
+        "rule": "Done and Failed play once per batch, not per record."
+      },
+      {
+        "when": "For Slash and the logo sound.",
+        "rule": "Slash is for a notification or a short clip. The logo sound is for intros, talks and video, and plays only after someone presses Play."
+      },
+      {
+        "when": "Never",
+        "rule": "speed a sound up, layer a second sound on it, or add a sound to an event that has none."
+      }
+    ],
+    "notes": [
+      {
+        "role": "The low note of the strike and of Done",
+        "note": "D4",
+        "hz": "294 Hz"
+      },
+      {
+        "role": "The fifth: the first note of Queued",
+        "note": "A4",
+        "hz": "440 Hz"
+      },
+      {
+        "role": "Home: the note Searchable ends on",
+        "note": "D5",
+        "hz": "587 Hz"
+      },
+      {
+        "role": "The second: Queued’s last note",
+        "note": "E5",
+        "hz": "659 Hz"
+      },
+      {
+        "role": "The first note of Failed",
+        "note": "F4",
+        "hz": "349 Hz"
+      },
+      {
+        "role": "The top of the highlight sweep",
+        "note": "D6",
+        "hz": "1175 Hz"
+      }
+    ],
+    "loudness": "Each sound comes in two files. The raw WAV is the synthesis, 48 kHz and mono, measured between −21 and −32 LUFS: louder for rare and important sounds, quieter for frequent ones. The listening master is an MP3 at 320 kbps, corrected gently for laptop speakers and headphones. It is 4 LU quieter than its WAV (the two logo sounds are 3 LU quieter, at −24 LUFS) and under a −1 dBTP true-peak ceiling. The sound players in this book, the logo video and the MP3s use the listening masters. The WAVs are for the product and for a sound designer.",
+    "honest": "These sounds are synthesized from three parts: a muted key, a plucked wooden bar and a soft glide. There are no recordings. Their loudness and timing were measured, and the book’s check measures them again each time the book is made. A sound designer can re-record the same idea with a keyboard and a marimba bar without changing it.",
+    "sounds": {
+      "sting": {
+        "description": "Logo sound: a muted key as the cursor blinks, then a firmer key and a low wooden note as the slash appears. Soft typing plays as the letters appear, then a rising sweep and two resolving notes.",
+        "when": "The logo animation, for intros in docs, talks and video.",
+        "file": "assets/sound/scrypath-sting.wav",
+        "lufs": -21,
+        "peakDbfs": -1.4,
+        "seconds": 1.81,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-sting.mp3",
+          "lufs": -24,
+          "truePeak": -5
+        }
+      },
+      "sting-quiet": {
+        "description": "Logo sound, quiet version: the same keys and notes without the typing and the sweep. For a place where the full version would be too busy.",
+        "when": "The same sound, for places where the full version would be too busy.",
+        "file": "assets/sound/scrypath-sting-quiet.wav",
+        "lufs": -21,
+        "peakDbfs": -1.3,
+        "seconds": 1.81,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-sting-quiet.mp3",
+          "lufs": -24,
+          "truePeak": -4.9
+        }
+      },
+      "slash": {
+        "description": "Slash: the shortest brand sound. One firm key and one low wooden note. For a notification or a short clip.",
+        "when": "A notification or a short clip. The shortest brand sound.",
+        "file": "assets/sound/scrypath-slash.wav",
+        "lufs": -24,
+        "peakDbfs": -3.5,
+        "seconds": 0.55,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-slash.mp3",
+          "lufs": -28,
+          "truePeak": -8.3
+        }
+      },
+      "run": {
+        "description": "Run: a key and a quiet low note, when someone starts a backfill or a reindex in the operator UI.",
+        "when": "Someone starts a backfill or a reindex in the operator UI.",
+        "file": "assets/sound/scrypath-run.wav",
+        "lufs": -28,
+        "peakDbfs": -8.6,
+        "seconds": 0.59,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-run.mp3",
+          "lufs": -32,
+          "truePeak": -13.2
+        }
+      },
+      "accepted": {
+        "description": "Queued: two notes, a fifth apart, ending on a note that sounds unfinished. The update is queued and not searchable yet.",
+        "when": "An update is queued, not yet searchable.",
+        "file": "assets/sound/scrypath-accepted.wav",
+        "lufs": -26,
+        "peakDbfs": -7.8,
+        "seconds": 0.74,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-accepted.mp3",
+          "lufs": -30,
+          "truePeak": -11.7
+        }
+      },
+      "visible": {
+        "description": "Searchable: the unfinished note drops to the home note over a low fifth. The record can now be found by searching.",
+        "when": "The record is now searchable.",
+        "file": "assets/sound/scrypath-visible.wav",
+        "lufs": -22,
+        "peakDbfs": -2.7,
+        "seconds": 0.89,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-visible.mp3",
+          "lufs": -26,
+          "truePeak": -7.4
+        }
+      },
+      "retrying": {
+        "description": "Retrying: two soft keys, the second lower and quieter. Nothing for you to do yet.",
+        "when": "An automatic retry.",
+        "file": "assets/sound/scrypath-retrying.wav",
+        "lufs": -32,
+        "peakDbfs": -9.7,
+        "seconds": 0.58,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-retrying.mp3",
+          "lufs": -36,
+          "truePeak": -14.2
+        }
+      },
+      "failed": {
+        "description": "Failed: one muted knock and one low note that drops by a semitone. It sounds like a sigh, not an alarm.",
+        "when": "One or more updates failed.",
+        "file": "assets/sound/scrypath-failed.wav",
+        "lufs": -23,
+        "peakDbfs": -5.7,
+        "seconds": 0.6,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-failed.mp3",
+          "lufs": -27,
+          "truePeak": -9.3
+        }
+      },
+      "done": {
+        "description": "Done: the whole path in one phrase, queued, then found, ending on a low, resolved note. A batch or reindex has finished.",
+        "when": "A batch or a reindex finished.",
+        "file": "assets/sound/scrypath-done.wav",
+        "lufs": -21,
+        "peakDbfs": -3,
+        "seconds": 1.34,
+        "listening": {
+          "file": "assets/sound/listening/scrypath-done.mp3",
+          "lufs": -25,
+          "truePeak": -6.2
+        }
+      }
+    },
+    "listeningMaster": {
+      "chain": [
+        {
+          "step": "low-mid lift",
+          "filter": "equalizer=f=400:t=o:w=1.2:g=1.5"
+        },
+        {
+          "step": "presence dip",
+          "filter": "equalizer=f=3400:t=o:w=0.8:g=-2"
+        },
+        {
+          "step": "high shelf",
+          "filter": "highshelf=f=6000:t=q:w=0.7:g=-3"
+        },
+        {
+          "step": "nothing a laptop cannot carry",
+          "filter": "highpass=f=120:p=2"
+        }
+      ],
+      "truePeakDbtp": -1,
+      "mp3": "320k"
+    }
+  },
+  "legal": [
+    "Scrypath is released under the Apache License 2.0. The logo files and this book fall under the same license, unless the repository states a different one.",
+    "This book claims no registered trademark, and no trademark register was searched.",
+    "Meilisearch is a separate product. This brand does not use Meilisearch’s logo or colors and does not imply an affiliation."
+  ],
+  "contact": [
+    "Ask the Scrypath maintainers, through the project’s issue tracker, about the brand or about using it.",
+    "Any use that changes the logo or colors needs the maintainers’ approval. Unchanged use under the rules in this book needs none."
+  ],
+  "notNeeded": [
+    {
+      "item": "Mascot",
+      "why": "A mascot was considered and not proposed. A character would not help a library that people trust for plain wording."
+    },
+    {
+      "item": "Patterns and textures",
+      "why": "The progress line and the slanted bar are the only graphic elements. A pattern would make a dense row harder to read, and the status words and the progress line already show where each update is."
+    },
+    {
+      "item": "Stock photography",
+      "why": "A photograph cannot show a sync queue. A drawing of the Search health screen or a diagram can."
+    },
+    {
+      "item": "A magnifying glass",
+      "why": "Most search products use one. Scrypath’s mark is the slash inside its name."
+    },
+    {
+      "item": "A leading slash and a cursor",
+      "why": "The alternative with the slash in front (/scrypath, symbol /s) is kept in the logo files and not chosen: a slash before a word is a common developer motif. Typesense, another search engine, puts a cursor after its name in its logo, so the Scrypath logo has none at rest; one appears only in the logo’s motion."
+    },
+    {
+      "item": "Icon set",
+      "why": "The operator UI uses words and the four status icons, and no other icon set. A new icon would need a new word from the product glossary."
+    },
+    {
+      "item": "Brand-colored tables",
+      "why": "The progress line and status words show where each update is, so rows stay on Panel or Night Panel, apart from the selected row. Only the status icon, the status word and markers at waiting steps use color."
+    }
+  ],
+  "toReview": [
+    {
+      "choice": "The slash stays inside the word, as in the earlier logo. The alternative puts it in front.",
+      "detail": "The earlier mark was a copper slash set between scry and path. That is the one idea of the old logo worth keeping, so this edition keeps it and redraws it at the angle of the typeface’s own slash. The alternative /scrypath, with symbol /s, is the typed-command reading and the more common developer motif; it is kept in the logo files and not chosen."
+    },
+    {
+      "choice": "The name stays one word and the slash is a logo device only.",
+      "detail": "The earlier logo split the name as scry/path. This edition keeps `scrypath` as one word, so text never says “scry/path”."
+    },
+    {
+      "choice": "The accent is plum, a new hue for this library.",
+      "detail": "The earlier palette was violet and copper. Violet was close to Meilisearch’s own blue-violet, and plum is at least 33 CIELAB units from the brand color of every search tool measured. Adopting it changes the operator UI’s main and accent colors and the contrast checks, so it is a coordinated change."
+    },
+    {
+      "choice": "Failed is an orange-red, close to Retrying’s amber.",
+      "detail": "The two are 29 degrees apart on the CIELAB scale, and the check fails under 25. The icon shape and the word also tell them apart. Only Failed uses orange-red."
+    },
+    {
+      "choice": "The tagline comes from the website’s headline.",
+      "detail": "It is plain and accurate, so it stays. Four other taglines were offered and not chosen."
+    },
+    {
+      "choice": "The symbol is s/, a letter and a slash.",
+      "detail": "It is nearly square and is drawn separately for 16 and 32 px. On its own it is just an initial, so its meaning (the start of the name, and of the sed substitute command) has to be explained in words. Not yet checked at 16 to 24 px on a phone or laptop screen."
+    },
+    {
+      "choice": "The slash resembles Meilisearch’s mark.",
+      "detail": "Meilisearch’s own logo is three slanted rounded bars in a pink gradient. This logo is one flat Plum slash with sharp corners, and the symbol always carries a letter. The risk is handled by use rules, not by geometry alone. Orchid on dark is the nearest color, 33 CIELAB units from that pink."
+    },
+    {
+      "choice": "The ink traps are cut back to half depth.",
+      "detail": "Bricolage Grotesque’s ink traps read as hairline cracks at display size, so each of the six is cut back to half its depth. It is the logo’s one drawn detail, and no type designer has reviewed it yet."
+    },
+    {
+      "choice": "Pending is a muted gray-plum, not an alert color.",
+      "detail": "Waiting is normal when updates are sent in the background, so only Failed uses an error color. Retrying is amber because a person may soon need to look."
+    },
+    {
+      "choice": "Scrypath keeps the product glossary’s words on screens.",
+      "detail": "The product glossary uses the names Search health, Failed sync work, Sync and index, Saved search, Per-schema results and Record loading. This book uses the same names."
+    },
+    {
+      "choice": "The Search health pictures are a proposal.",
+      "detail": "They show the layout this book proposes, filled with sample data. They are not a screenshot of the current Search health screen. The three steps follow the queue and backend lines that `mix scrypath.status` prints today."
+    },
+    {
+      "choice": "The pictures use MyApp.* names and `.test` addresses.",
+      "detail": "Sample data uses example app names such as MyApp.Blog.Post and MyApp.Catalog.Product, and addresses that end in .test."
+    },
+    {
+      "choice": "The ExDoc stylesheet is not verified.",
+      "detail": "It was written from ExDoc’s class names and not run in an ExDoc build."
+    },
+    {
+      "choice": "The logo motion and the sounds are designed and measured, not yet checked by eye and ear.",
+      "detail": "The picture and the sound line up to within 10 ms, and every sound is on its loudness target. Not yet checked: the animation at normal playback speed, and the sounds on a laptop speaker. The keys sit mostly under 500 Hz and may sound like a click on a small speaker, and eight typed keys in a row may sound like a ratchet. A quiet version of the logo sound is included for that case."
+    },
+    {
+      "choice": "The first five letters of Scrypath are the first five of scrypt, the password-hashing function.",
+      "detail": "Five Hex packages are named for scrypt, and scrypath.com is a career site, so Scrypath cannot use the .com domain. The Hex packages and the career site are not conflicts in the Elixir space. The name is kept, and not cleared beyond the lookups under Not checked."
+    }
+  ],
+  "notChecked": "Name clearance is limited: lookups of Hex, npm, PyPI, crates.io, RubyGems, GitHub, the US and UK App Stores and eight domain extensions found no conflict in the Elixir space (scrypath.com is taken by a career site), but no trademark register was searched. Look-alike pass: a slash before a word was compared from memory, not looked up. Not checked yet: the symbol at 16 to 24 px on a phone or laptop screen; the operator UI itself, since the pictures are drawings; the ExDoc stylesheet in an ExDoc build; a screen reader and a keyboard on the pictures; printing; the animation at normal playback speed; and the sounds on a laptop speaker.",
+  "retired": [
+    "The split name scry/path in Familjen Grotesk, with a copper slash that was a plain font character. Now: The slash is kept as the idea and is now drawn for the logo: Bricolage Grotesque letters and one sharp-cornered Plum slash.",
+    "The s/p monogram, and the S on a dark square tile. Now: The symbol s/, set directly on the page. Only the avatar has a square background.",
+    "Violet `#5B4AD1` as the lead color, and copper `#C17A3E` as the second. Now: Plum, and Orchid on dark. Violet is close to Meilisearch’s own blue-violet.",
+    "Inter for the interface and IBM Plex Mono for code. Now: Hanken Grotesk and Sometype Mono.",
+    "The line “Declarative search, observable sync, dependable results.” Now: The current tagline, which comes from the website (see Messaging)."
+  ],
+  "fonts": {
+    "source": {
+      "repo": "https://github.com/google/fonts",
+      "commit": "b78877b777ed3a18a1b431b0df7d8ee3f84c2e5f"
+    },
+    "files": [
+      {
+        "path": "ofl/bricolagegrotesque/BricolageGrotesque[opsz,wdth,wght].ttf",
+        "sha256": "413e7357809ddd12fd80a96a8a396de0e401638d4acd3cb3e37532f0472ac682",
+        "file": "BricolageGrotesque[opsz,wdth,wght].ttf"
+      },
+      {
+        "path": "ofl/bricolagegrotesque/OFL.txt",
+        "sha256": "4b5a7d8f37f5602621c8a8d7358a6a2e71317e6c231c661e15aef0275d3e07ba",
+        "file": "OFL-BricolageGrotesque.txt"
+      },
+      {
+        "path": "ofl/hankengrotesk/HankenGrotesk[wght].ttf",
+        "sha256": "813b3f8fa0965405669a89b38e51bbefd95eef6b8e20d1cb2d8c10cce062662f",
+        "file": "HankenGrotesk[wght].ttf"
+      },
+      {
+        "path": "ofl/hankengrotesk/OFL.txt",
+        "sha256": "e02ccb89a86839b22feff7872ff5cc355cc0f58318d29eee20e2cf83a612f16d",
+        "file": "OFL-HankenGrotesk.txt"
+      },
+      {
+        "path": "ofl/sometypemono/SometypeMono[wght].ttf",
+        "sha256": "4095fd328c988392fb00ab867134e69beff0fc16de66ecdd9e7e232c16f16f25",
+        "file": "SometypeMono[wght].ttf"
+      },
+      {
+        "path": "ofl/sometypemono/OFL.txt",
+        "sha256": "495a16e8214dd38dec1b569224d3a740c8f646336877794c492638e3172e8e9c",
+        "file": "OFL-SometypeMono.txt"
+      }
+    ]
+  },
+  "files": [
+    {
+      "need": "Logo on a light background",
+      "files": [
+        "assets/logo/scrypath-lockup-light.svg",
+        "assets/logo/scrypath-symbol-light.svg",
+        "assets/logo/scrypath-lockup-light-2048.png"
+      ]
+    },
+    {
+      "need": "Logo on a dark background",
+      "files": [
+        "assets/logo/scrypath-lockup-dark.svg",
+        "assets/logo/scrypath-symbol-dark.svg",
+        "assets/logo/scrypath-lockup-dark-2048.png"
+      ]
+    },
+    {
+      "need": "One color: print and single-color jobs",
+      "files": [
+        "assets/logo/scrypath-lockup-one-color-ink.svg",
+        "assets/logo/scrypath-lockup-one-color-pale-ink.svg",
+        "assets/logo/scrypath-symbol-one-color-ink.svg",
+        "assets/logo/scrypath-symbol-one-color-pale-ink.svg"
+      ]
+    },
+    {
+      "need": "Favicon (the symbol, drawn for 16 and 32 px)",
+      "files": [
+        "assets/icon/favicon.svg",
+        "assets/icon/favicon.ico",
+        "assets/icon/favicon-32-light.png",
+        "assets/icon/favicon-16-light.png"
+      ]
+    },
+    {
+      "need": "Avatar (a 512 px square: the one place the symbol sits on a background)",
+      "files": [
+        "assets/avatar/scrypath-avatar-light.svg",
+        "assets/avatar/scrypath-avatar-dark.svg",
+        "assets/avatar/scrypath-avatar-512-light.png",
+        "assets/avatar/scrypath-avatar-512-dark.png"
+      ]
+    },
+    {
+      "need": "README header",
+      "files": [
+        "assets/readme/scrypath-header-light.svg",
+        "assets/readme/scrypath-header-dark.svg",
+        "assets/readme/header-snippet.html"
+      ]
+    },
+    {
+      "need": "Link preview and social card",
+      "files": [
+        "assets/social/scrypath-social-card-1280x640.png"
+      ]
+    },
+    {
+      "need": "Docs: code colors for ExDoc",
+      "files": [
+        "assets/docs/scrypath-exdoc.css"
+      ]
+    },
+    {
+      "need": "Logo animation (video, light and dark, with sound)",
+      "files": [
+        "assets/motion/scrypath-logo-animation-dark.mp4",
+        "assets/motion/scrypath-logo-animation-dark.webm",
+        "assets/motion/scrypath-logo-animation-light.mp4",
+        "assets/motion/scrypath-logo-animation-light.webm"
+      ]
+    },
+    {
+      "need": "Sounds: raw files for the product and for a sound designer",
+      "files": [
+        "assets/sound/"
+      ]
+    },
+    {
+      "need": "Sounds: listening masters (MP3) for demos and video",
+      "files": [
+        "assets/sound/listening/"
+      ]
+    },
+    {
+      "need": "Fonts",
+      "files": [
+        "assets/fonts/web/fonts.css",
+        "assets/fonts/variable/BricolageGrotesque[opsz,wdth,wght].ttf",
+        "assets/fonts/variable/HankenGrotesk[wght].ttf",
+        "assets/fonts/variable/SometypeMono[wght].ttf",
+        "assets/fonts/OFL-BricolageGrotesque.txt",
+        "assets/fonts/OFL-HankenGrotesk.txt",
+        "assets/fonts/OFL-SometypeMono.txt"
+      ]
+    }
+  ]
+}

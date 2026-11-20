@@ -117,6 +117,12 @@ function installVerifierFixtureRepo(root) {
   for (const name of ["app.css", "contrast-pairs.mjs"]) {
     copyFileSync(path.join(repositoryRoot, "scrypath_ops", "assets", "css", name), path.join(cssDirectory, name));
   }
+  // The contrast checker also reads the pinned brand tokens and published pairs (Phase 187: D-15 Guard 2 and N-05).
+  const brandDirectory = path.join(root, "brand");
+  mkdirSync(brandDirectory, { recursive: true });
+  for (const name of ["tokens.json", "brand.json"]) {
+    copyFileSync(path.join(repositoryRoot, "brand", name), path.join(brandDirectory, name));
+  }
   copyFileSync(path.join(repositoryRoot, "scripts", "ci", "ecommerce_build.cjs"), path.join(ciDirectory, "ecommerce_build.cjs"));
 
   // TEST DOUBLE ONLY: the lifecycle unit tests exercise orchestration and cleanup,

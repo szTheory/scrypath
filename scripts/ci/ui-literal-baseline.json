@@ -60,13 +60,6 @@
     },
     {
       "rule": "inline-style",
-      "path": "scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex",
-      "context": "~H:ops_loading > div[1] > span[1]",
-      "value": "[\"{\",\"loading_bar_width\",\"(\",\"n\",\",\",\"@lines\",\")\",\"}\"]",
-      "count": 1
-    },
-    {
-      "rule": "inline-style",
       "path": "scrypath_ops/lib/scrypath_ops_web/live/search_live.ex",
       "context": "~H:render > layouts[1] > div[1] > div[1] > div[8] > div[1] > div[1] > div[1] > id=saved-search-menu",
       "value": "[\"display\",\":\",\"none\",\";\"]",
@@ -217,20 +210,6 @@
       "path": "examples/scrypath_ecommerce/assets/css/app.css",
       "context": "@layer components > .storefront-search__search-field,.storefront-search__facet-group,.storefront-search__result,.storefront-search__empty > border",
       "value": "#d8dee6",
-      "count": 1
-    },
-    {
-      "rule": "raw-hex",
-      "path": "scrypath_ops/assets/css/app.css",
-      "context": "@layer components > .ops-sheet__backdrop > background",
-      "value": "#000",
-      "count": 1
-    },
-    {
-      "rule": "raw-hex",
-      "path": "scrypath_ops/assets/js/app.js",
-      "context": "JS/TS styling:barColors",
-      "value": "#29d",
       "count": 1
     }
   ]

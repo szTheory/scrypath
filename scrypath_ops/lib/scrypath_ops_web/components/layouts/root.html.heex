@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <.live_title default="Scrypath" suffix=" · Scrypath">
       {assigns[:page_title]}
     </.live_title>
+    <%!-- Standalone only: the interface face is needed on first paint. A preload for a font must
+         carry `crossorigin` even when it is same-origin, or the browser fetches it twice. The
+         mounted host layout deliberately has no preload (a host's head is not ours to edit). --%>
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href={"/assets/fonts/ui.woff2?v=#{ScrypathOpsWeb.AssetPlug.asset_version("assets/fonts/ui.woff2")}"}
+    />
     <link
       phx-track-static
       rel="stylesheet"

@@ -2,6 +2,9 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
   @moduledoc """
   Locks the SCREEN-DARK-01 surface-depth value contract as static CSS assertions.
 
+  Phase 187 deleted `--ops-surface-2`: the dark order is now `--ops-sunken` below `--ops-bg`
+  below `--ops-surface-1`, and the card and row fills point at the Panel token.
+
   This is a pure file-read + regex contract over `assets/css/app.css`, modeled on
   `MotionContractTest`. It pins values that must stay stable while later tasks wire
   the browser depth assertions.
@@ -12,58 +15,125 @@ defmodule ScrypathOpsWeb.SurfaceDepthTokenContractTest do
 
   defp css, do: File.read!(@app_css)
 
-  test "--ops-surface-2 stays #222831 for dark raised surfaces" do
-    assert Regex.match?(~r/--ops-surface-2:\s*#222831;/, css()),
-           "Dark --ops-surface-2 drifted from the Phase 173 #222831 neutral elevation token."
+  # A few lines copied from the root test helper (this is a separate Mix project,
+  # so copying is cheaper than a dependency): the live value of a property from the
+  # dark daisyUI theme block, and WCAG 2.x relative luminance of a #rrggbb color.
+  defp dark_theme_value(property) do
+    [block] =
+      for [block] <- Regex.scan(~r/@plugin\s+"[^"]*daisyui-theme"\s*\{[^{}]*\}/s, css()),
+          block =~ ~r/^\s*name:\s*"dark"\s*;/m,
+          do: block
+
+    [_, value] = Regex.run(~r/^\s*#{Regex.escape(property)}:\s*(#[0-9a-fA-F]{6});/m, block)
+    value
   end
 
-  test ".ops-data-card dark fill references --ops-surface-2" do
-    assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-data-card explicit-dark fill must reference var(--ops-surface-2), not a hardcoded color."
+  defp luminance("#" <> hex) do
+    {value, ""} = Integer.parse(hex, 16)
 
-    assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-data-card system-dark fill must mirror var(--ops-surface-2)."
+    [red, green, blue] =
+      for shift <- [16, 8, 0] do
+        channel = Bitwise.band(Bitwise.bsr(value, shift), 255) / 255
+
+        if channel <= 0.03928,
+          do: channel / 12.92,
+          else: :math.pow((channel + 0.055) / 1.055, 2.4)
+      end
+
+    0.2126 * red + 0.7152 * green + 0.0722 * blue
   end
 
-  test "non-search result rows keep the dark surface-2 fill" do
-    assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-result-row explicit-dark fill must reference var(--ops-surface-2), not a hardcoded color."
+  test "dark surfaces rise in luminance from --ops-sunken through --ops-bg to --ops-surface-1" do
+    # The relationship is the contract, not a color: a recessed dark surface sits below the
+    # page, and the Panel sits above it. Values are read live from the dark theme block.
+    [sunken, page, surface_1] =
+      for property <- ["--ops-sunken", "--ops-bg", "--ops-surface-1"] do
+        property |> dark_theme_value() |> luminance()
+      end
 
-    assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--ops-surface-2\)/,
-             css()
-           ),
-           ".ops-result-row system-dark fill must mirror var(--ops-surface-2)."
+    assert sunken < page,
+           "Dark --ops-sunken must be darker than the --ops-bg page (#{sunken} vs #{page})."
+
+    assert page < surface_1,
+           "Dark --ops-surface-1 must be lighter than the --ops-bg page (#{page} vs #{surface_1})."
   end
 
-  test "dark hover-border boost resolves to primary 55% on the paired row/item selector" do
-    assert Regex.match?(
-             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
-             css()
-           ),
-           "Dark hover-border boost must keep the paired .ops-result-row/.ops-object-item selector at primary 55%."
-
-    assert Regex.match?(
-             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*55%,\s*transparent\)/,
-             css()
-           ),
-           "System-dark hover-border boost must mirror the paired selector at primary 55%."
+  test "the retired --ops-surface-2 role is neither declared nor consumed" do
+    # Raised surfaces are --color-base-100 (Panel); hover and recessed ones are --ops-sunken.
+    refute css() =~ "ops-surface-2",
+           "--ops-surface-2 was deleted in Phase 187; use --color-base-100 (raised) or --ops-sunken (recessed or hover)."
   end
 
-  test "base shared hover rule stays primary 32% with the neutral mid shadow" do
+  test ".ops-data-card dark fill references the Panel token" do
     assert Regex.match?(
-             ~r/\.ops-result-row:hover,\s*\.ops-object-item:hover\s*\{[^{}]*border-color:\s*color-mix\(in oklch,\s*var\(--color-primary\)\s*32%,\s*transparent\);[^{}]*box-shadow:\s*var\(--shadow-ops-mid\)/,
+             ~r/\[data-theme="dark"\]\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
              css()
            ),
-           "Base shared hover rule must remain paired at primary 32% plus var(--shadow-ops-mid) for light and fallback."
+           ".ops-data-card explicit-dark fill must reference var(--color-base-100), not a hardcoded color."
+
+    assert Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-data-card\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
+             css()
+           ),
+           ".ops-data-card system-dark fill must mirror var(--color-base-100)."
+  end
+
+  test "non-search result rows keep an opaque dark Panel fill" do
+    assert Regex.match?(
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
+             css()
+           ),
+           ".ops-result-row explicit-dark fill must reference var(--color-base-100), not a hardcoded color."
+
+    assert Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\)\s*\{[^{}]*background:\s*var\(--color-base-100\)/,
+             css()
+           ),
+           ".ops-result-row system-dark fill must mirror var(--color-base-100)."
+  end
+
+  test "dark hover border is the opaque Control Edge on the paired row/item selector" do
+    assert Regex.match?(
+             ~r/\[data-theme="dark"\]\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*\[data-theme="dark"\]\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);/,
+             css()
+           ),
+           "Dark hover border must keep the paired .ops-result-row/.ops-object-item selector on var(--ops-control-edge), with no Plum tint."
+
+    assert Regex.match?(
+             ~r/html:not\(\[data-theme="light"\]\)\s+\.ops-result-row:not\(\.ops-search-hit\):hover,\s*html:not\(\[data-theme="light"\]\)\s+\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);/,
+             css()
+           ),
+           "System-dark hover border must mirror the paired selector on var(--ops-control-edge)."
+  end
+
+  test "base shared hover rule is the opaque Control Edge with the neutral mid shadow" do
+    assert Regex.match?(
+             ~r/\.ops-result-row:hover,\s*\.ops-object-item:hover\s*\{[^{}]*border-color:\s*var\(--ops-control-edge\);[^{}]*box-shadow:\s*var\(--shadow-ops-mid\)/,
+             css()
+           ),
+           "Base shared hover rule must be var(--ops-control-edge) plus var(--shadow-ops-mid) for light and fallback."
+  end
+
+  test "Search health rows are hairline rows: no radius, no shadow, no variant tint" do
+    [_, row] = Regex.run(~r/^\s*\.ops-schema-signal-card\s*\{([^{}]*)\}/m, css())
+
+    assert row =~ "border-radius: 0;"
+    assert row =~ "box-shadow: none;"
+    assert row =~ "border-bottom: 1px solid var(--color-base-300);"
+    refute row =~ "color-mix"
+    refute row =~ "box-shadow: var("
+
+    # The status modifiers (success, warning, error) were tinted borders; the word and shape carry status.
+    refute css() =~ "ops-schema-signal-card--"
+
+    # No dark twin brings a shadow or a rounded card back onto the row.
+    for [selector_and_body] <-
+          Regex.scan(~r/[^{}]*\.ops-schema-signal-card\s*(?:,[^{}]*)?\{[^{}]*\}/, css()) do
+      refute selector_and_body =~ ~r/box-shadow:\s*var\(/, selector_and_body
+      refute selector_and_body =~ "border-radius: var(", selector_and_body
+    end
+
+    [_, list] = Regex.run(~r/^\s*\.ops-schema-signal-list\s*\{([^{}]*)\}/m, css())
+    assert list =~ "border-top: 1px solid var(--color-base-300);"
   end
 end

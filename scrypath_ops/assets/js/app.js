@@ -102,9 +102,16 @@ const liveSocket = new LiveSocket("/live", Socket, {
   hooks: {...colocatedHooks, CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation},
 })
 
-// Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
-window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
+// Show progress bar on live navigation and form submits. The bar takes the theme's primary color
+// each time it shows, so it follows light, dark and System and a host's accent override; there is
+// no color literal here (LD-17). With no computed value the bar keeps the library's own colors.
+const showProgressBar = delay => {
+  const primary = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim()
+  const colors = primary ? {barColors: {0: primary}} : {}
+  topbar.config({...colors, shadowColor: "rgba(0, 0, 0, .3)"})
+  topbar.show(delay)
+}
+window.addEventListener("phx:page-loading-start", _info => showProgressBar(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 window.addEventListener("phx:copy_run_diagnostics", async ({detail}) => {
   const text = detail?.text

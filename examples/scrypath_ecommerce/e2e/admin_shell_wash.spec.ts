@@ -3,8 +3,12 @@
  *
  * The shell chrome proof already asserts the CSS contract. This spec renders the
  * actual `.ops-shell` background with page content hidden, then samples pixels so
- * "quiet top-left ambient glow, not a purple blob" is a CI-failing visual fact
+ * "a flat page floor with no wash, not a purple blob" is a CI-failing visual fact
  * rather than a human UAT row.
+ *
+ * Phase 187: the brand floor is plum-tinted by design, so the expected floor is never a pinned
+ * RGB triplet and never an absolute hue. It is the page's own computed `--color-base-200` for the
+ * active theme, read before the screenshot, and a wash is a deviation from that resolved floor.
  *
  * HOW TO RUN (manual server per playwright.config.ts -- there is NO webServer):
  *   Boot the ecommerce dev lane against current source, then:
@@ -116,7 +120,10 @@ async function readComputedStyle(
   );
 }
 
-async function enableWashProbe(page: Page): Promise<PngImage> {
+// The shell starts below the (hidden, but still laid out) header, so its screenshot is taller than
+// the part of it that sits in the viewport. Rows below the viewport are the document canvas, not the
+// shell, so the wash is judged on `visibleHeight` rows only.
+async function enableWashProbe(page: Page): Promise<{ image: PngImage; visibleHeight: number }> {
   await page.addStyleTag({ content: PROBE_STYLE });
   await page.evaluate(() => {
     document.documentElement.setAttribute("data-shell-wash-probe", "true");
@@ -124,10 +131,14 @@ async function enableWashProbe(page: Page): Promise<PngImage> {
 
   const shell = page.locator("#ops-main.ops-shell");
   await expect(shell).toBeVisible();
+  const box = await shell.boundingBox();
+  const viewportHeight = page.viewportSize()?.height ?? 0;
   const image = PNG.sync.read(await shell.screenshot({ animations: "disabled" }));
   expect(image.width, "shell wash screenshot width").toBeGreaterThan(300);
   expect(image.height, "shell wash screenshot height").toBeGreaterThan(500);
-  return image;
+  const visibleHeight = Math.min(image.height, Math.floor(viewportHeight - (box?.y ?? 0)));
+  expect(visibleHeight, "the shell must show at least 400px inside the viewport").toBeGreaterThan(400);
+  return { image, visibleHeight };
 }
 
 function pixel(image: PngImage, x: number, y: number): Rgb {
@@ -162,15 +173,49 @@ function colorDistance(a: Rgb, b: Rgb): number {
   );
 }
 
-function violetScore([r, g, b]: Rgb): number {
-  return (r + b) / 2 - g;
+// How much more violet a color is than the floor: red and blue above green, measured as a shift
+// from the resolved floor's own value, so a plum-tinted floor scores zero and only a wash scores more.
+function violetShift(color: Rgb, floor: Rgb): number {
+  const score = ([r, g, b]: Rgb): number => (r + b) / 2 - g;
+  return score(color) - score(floor);
 }
 
-function assertShellWashImage(image: PngImage, viewport: ViewportName, label: string): void {
+// The page floor for the active theme, resolved from the theme's `--color-base-200` through a probe
+// element, so the expectation follows the palette instead of repeating its hex.
+async function resolveShellFloor(page: Page): Promise<Rgb> {
+  const raw = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:absolute; left:-9999px; background-color: var(--color-base-200)";
+    document.body.appendChild(probe);
+    const value = getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return value;
+  });
+  const match = raw.match(/rgba?\(\s*([0-9.]+)[,\s]+([0-9.]+)[,\s]+([0-9.]+)/);
+  if (!match) throw new Error(`shell wash probe: expected a computed rgb floor, got ${raw}`);
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function assertShellWashImage(
+  image: PngImage,
+  visibleHeight: number,
+  viewport: ViewportName,
+  label: string,
+  floor: Rgb
+): void {
   const margin = viewport === "mobile" ? 28 : 36;
-  const expected: Rgb = [17, 20, 25];
-  for (const [x, y] of [[margin, margin], [image.width / 2, image.height / 2], [image.width - margin, image.height - margin]]) {
-    expect(colorDistance(sample(image, x, y), expected), `${label}: flat charcoal floor`).toBeLessThanOrEqual(1.5);
+  const points: Array<[number, number]> = [
+    [margin, margin],
+    [image.width * 0.15, visibleHeight * 0.12],
+    [image.width / 2, visibleHeight / 2],
+    [image.width - margin, margin],
+    [image.width - margin, visibleHeight - margin]
+  ];
+  for (const [x, y] of points) {
+    const color = sample(image, x, y);
+    const where = `${Math.round(x)},${Math.round(y)}`;
+    expect(colorDistance(color, floor), `${label}: flat floor at ${where}`).toBeLessThanOrEqual(1.5);
+    expect(violetShift(color, floor), `${label}: no violet wash against the floor at ${where}`).toBeLessThanOrEqual(1.5);
   }
 }
 
@@ -199,8 +244,10 @@ test.describe("admin shell wash -- SHELL-DARK-01", () => {
             }
 
             await expectShellWashGradientContract(page, viewport);
-            const image = await enableWashProbe(page);
-            assertShellWashImage(image, viewport, `${surface.name} ${themeSlug(mode)} ${viewport}`);
+            // Sampled before the probe screenshot, from the active theme.
+            const floor = await resolveShellFloor(page);
+            const { image, visibleHeight } = await enableWashProbe(page);
+            assertShellWashImage(image, visibleHeight, viewport, `${surface.name} ${themeSlug(mode)} ${viewport}`, floor);
           }
         } finally {
           await close();
