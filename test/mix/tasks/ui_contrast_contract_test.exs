@@ -101,7 +101,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
   # and are not listed). The floor is the number of such calls when this check was written; lower
   # it only when a case is removed on purpose, which is the second key a deletion needs.
   @token_test_file "examples/scrypath_ecommerce/ui-tokens.test.mjs"
-  @min_token_test_calls 53
+  @min_token_test_calls 55
 
   test "token map parity and retired-identity guards pass" do
     node = System.find_executable("node") || flunk("Node is required for the token test")

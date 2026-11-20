@@ -65,11 +65,11 @@ const HEX_OUTSIDE_CEILING = 0;
 // Allowlist entries (paths and prefixes). A new entry means a new retired value landed in a
 // new file, which is the thing this guard exists to stop.
 // Growth inside a listed file is stopped by each entry's max_hits (see HITS_CEILING).
-const ALLOWLIST_CEILING = 7;
+const ALLOWLIST_CEILING = 5;
 // The sum of every entry's max_hits in the allowlist file. Each entry's max_hits must equal
 // the live count, so a retired value added to a listed file needs a max_hits edit there and
 // this edit here: the second key. A drop in hits needs both edits too.
-const HITS_CEILING = 201;
+const HITS_CEILING = 197;
 // The checks take these as a parameter so the planted and accept cases can use
 // their own limits and never depend on how far the live ceilings have shrunk.
 const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING, hits: HITS_CEILING };
@@ -797,12 +797,19 @@ const ALLOWLIST_TAGS = new Set(["p186", "p187", "p188", "p189", "retire-last"]);
 // never contains one. Sources: the CONTEXT list (13), the live values the
 // CONTEXT list missed (5), and the warm-paper and old-ramp tier from the research (12).
 // The tier-4 semantic fills stay off this list until Phase 187 decides their fate.
+// Phase 189 adds the retired website palette (18): the violet, copper, cyan and green accents and
+// the dark navy and warm-white ramp of the old website/src stylesheet and its brand files. Three
+// more website values stay off this list until the Phase 191 commit that deletes the old brand
+// directory, because that directory still holds them; the website static contract
+// (website/scripts/lib/contract.mjs, CARVED_OUT_HEX) asserts them absent until then.
 const DENY_HEX = `
   191e25 353d48 f1f2f4 dce2e9 f3f5f8 edf1f5 202124
   2a3446 302b4c eeebff a85d2e 111419 222831
   5b4ad1 aaa0ff 6c5ce7 c17a3e 141923
   fffdf8 faf7f2 f4f1ea ded8ce 1b2230 475066
   6b7388 7f8aa3 b3bdcf d7d0c4 e0b487 f2eee7
+  9f8cff 7b61ff e0a06d f0bc93 0b0f15 0b1018 0d121a 111723 131b27
+  f5f1e8 83d6ee 8ad9b6 aeb8c8 7d889a 090d13 f5efe4 eedfff eedfd0
 `.trim().split(/\s+/);
 // The retired brand directory, joined at runtime for the same reason.
 const RETIRED_DIR = ["brand", "book/"].join("");
@@ -1165,6 +1172,32 @@ test("planted uppercase retired hex fails", () => {
   assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in src\/Theme\.css/));
   const alpha = makeTree({ "src/alpha.css": `a { color: ${retired}cc; }\n` });
   assert.ok(anyFailure(scanTree(alpha), /unlisted retired identity value in src\/alpha\.css/));
+});
+
+// Phase 189: the retired website palette is the last 18 values of DENY_HEX (positions 30 to 47).
+const websiteRetired = DENY_HEX.slice(30, 48);
+
+test("planted old website palette hex fails the deny scan", () => {
+  assert.equal(websiteRetired.length, 18, "the retired website palette is 18 values");
+  // One value assembled from two pieces, as the guard sources never spell a retired value whole.
+  const assembled = ["9f8c", "ff"].join("");
+  assert.ok(websiteRetired.includes(assembled), "the assembled value is part of the website palette");
+  const dir = makeTree({ "website/src/assets/styles.css": `a { color: #${assembled}; }\n` });
+  assert.ok(anyFailure(scanTree(dir), /unlisted retired identity value in website\/src\/assets\/styles\.css/));
+  // Every value of the palette is caught, in the stylesheet form the old website used.
+  const files = Object.fromEntries(websiteRetired.map((hex, index) => [`website/src/old-${index}.css`, `a { color: #${hex}; }\n`]));
+  const failures = scanTree(makeTree(files));
+  for (const index of websiteRetired.keys()) {
+    assert.ok(anyFailure(failures, new RegExp(`unlisted retired identity value in website/src/old-${index}\\.css`)), `old-${index}.css is reported`);
+  }
+});
+
+test("accept the re-skinned website source carries no retired value", () => {
+  const files = listRepoFiles(ROOT).filter((file) => file.startsWith("website/src/") || file.startsWith("website/scripts/"));
+  assert.ok(files.length > 0, "the website source is part of the scan");
+  assert.ok(files.includes("website/src/assets/styles.css"), "the stylesheet is scanned");
+  const hits = scanFiles(ROOT, files, buildDeny());
+  assert.deepEqual(checkAllowlist(hits, { schema: ALLOWLIST_SCHEMA, entries: [] }, files, NO_LIMITS), []);
 });
 
 // Forms the first scan missed (phase 186 review WR-07): percent-encoded in a data URI, decimal and percent rgb

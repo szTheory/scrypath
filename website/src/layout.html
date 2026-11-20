@@ -1,33 +1,44 @@
 <!doctype html>
+<!-- Header Tab order: skip link, brand, primary nav, color theme picker, star link, version pill. -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; style-src 'self'; font-src 'self'; script-src 'self'; base-uri 'none'; form-action 'none'" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b0f15" />
+    <meta name="theme-color" content="{{THEME_COLOR}}" />
     <title>{{PAGE_TITLE}}</title>
     <meta name="description" content="{{DESCRIPTION}}" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="{{PAGE_TITLE}}" />
     <meta property="og:description" content="{{DESCRIPTION}}" />
     <meta property="og:url" content="{{SITE_URL}}{{PAGE_PATH}}" />
-    <meta property="og:image" content="{{SITE_URL}}assets/og-image.svg" />
+    <meta property="og:image" content="{{SITE_URL}}assets/scrypath-social-card-1280x640.png" />
+    <meta property="og:image:width" content="{{SOCIAL_WIDTH}}" />
+    <meta property="og:image:height" content="{{SOCIAL_HEIGHT}}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="The scry/path wordmark and the line Queued, then searchable, above a Queue, Meilisearch, Searchable timeline." />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{PAGE_TITLE}}" />
     <meta name="twitter:description" content="{{DESCRIPTION}}" />
+    <meta name="twitter:image" content="{{SITE_URL}}assets/scrypath-social-card-1280x640.png" />
+    <meta name="twitter:image:alt" content="The scry/path wordmark and the line Queued, then searchable, above a Queue, Meilisearch, Searchable timeline." />
     <link rel="canonical" href="{{SITE_URL}}{{PAGE_PATH}}" />
-    <link rel="icon" href="{{BASE_PATH}}assets/brand-mark.svg" type="image/svg+xml" />
+    <link rel="icon" href="{{BASE_PATH}}assets/favicon.ico" sizes="16x16 32x32" />
+    <link rel="icon" type="image/svg+xml" sizes="any" href="{{BASE_PATH}}assets/favicon-light.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="any" media="(prefers-color-scheme: dark)" href="{{BASE_PATH}}assets/favicon-dark.svg" />
+    <link rel="preload" href="{{BASE_PATH}}assets/fonts/ui.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="{{BASE_PATH}}assets/fonts/display.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="{{BASE_PATH}}assets/tokens.css" />
     <link rel="stylesheet" href="{{BASE_PATH}}assets/styles.css" />
+    {{THEME_SCRIPT}}
   </head>
   <body>
     <a class="skip-link" href="#content">Skip to content</a>
     <div class="page-shell">
       <header class="site-header">
         <a class="brand" href="{{BASE_PATH}}index.html" aria-label="Scrypath home">
-          <img src="{{BASE_PATH}}assets/brand-mark.svg" alt="" aria-hidden="true" width="34" height="34" />
-          <span>
-            <strong>Scrypath</strong>
-            <small>Ecto-native search indexing</small>
-          </span>
+          <img class="lockup lockup-light" src="{{BASE_PATH}}assets/scrypath-lockup-light.svg" alt="Scrypath" width="136" height="29" />
+          <img class="lockup lockup-dark" src="{{BASE_PATH}}assets/scrypath-lockup-dark.svg" alt="Scrypath" width="136" height="29" />
         </a>
 
         <nav class="site-nav" aria-label="Primary">
@@ -38,6 +49,7 @@
         </nav>
 
         <div class="header-actions">
+          {{THEME_PICKER}}
           <a class="github-star" href="{{REPO_URL}}" aria-label="Star Scrypath on GitHub">
             <svg class="github-star-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path d="m12 2.8 2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5-4.7-4.6 6.5-.9L12 2.8Z" />
@@ -60,6 +72,11 @@
           <a href="https://hex.pm/packages/scrypath" rel="noreferrer">Hex package</a>
           <a href="https://hexdocs.pm/scrypath" rel="noreferrer">HexDocs</a>
           <a href="{{REPO_URL}}">GitHub</a>
+        </p>
+        <p class="footer-links">
+          <a href="{{BASE_PATH}}assets/fonts/OFL-BricolageGrotesque.txt">Bricolage Grotesque license</a>
+          <a href="{{BASE_PATH}}assets/fonts/OFL-HankenGrotesk.txt">Hanken Grotesk license</a>
+          <a href="{{BASE_PATH}}assets/fonts/OFL-SometypeMono.txt">Sometype Mono license</a>
         </p>
       </footer>
     </div>
