@@ -290,5 +290,6 @@ defmodule Mix.Tasks.Verify.Brand do
 
   defp hex_sha256(contents), do: :crypto.hash(:sha256, contents) |> Base.encode16(case: :lower)
 
+  @spec fail!(String.t(), String.t()) :: no_return()
   defp fail!(reason, path), do: Mix.raise("verify.brand: #{reason}: #{path}")
 end
