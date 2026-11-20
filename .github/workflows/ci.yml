@@ -159,6 +159,12 @@ jobs:
 
   repository-contracts:
     name: repository-contracts (required)
+    needs: ecommerce-path
+    # Required check that must ALWAYS run mix verify.repository_contracts. A job whose `needs` fail
+    # is skipped (and a skipped required job reports success), so a failed or timed-out classifier
+    # would otherwise skip the whole contract suite. The status function keeps the job running; only
+    # the two Node steps below are gated on the classifier.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
     steps:
@@ -184,8 +190,10 @@ jobs:
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
       - run: mix deps.get
       - name: Install locked demo dependencies for PNG evidence validation
+        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
         run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce
       - name: Verify browser build, lifecycle, evidence, and target behavior
+        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
         run: |
           node --test --test-reporter=tap \
             scripts/ci/ecommerce_build.test.cjs \
