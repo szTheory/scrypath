@@ -1618,6 +1618,66 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         assert path_job =~ dir, "ops-ui path gate must cover #{dir}"
       end
     end
+
+    # COPY-03 (Phase 190, D-18 and D-19): the copy rules table scans the glossary, DESIGN.md and
+    # the demo's e2e specs, so a PR that only edits one of them must still run ops-ui. The
+    # substring loop above cannot tell a pattern that works from one that only looks right, so
+    # this compiles the pattern the job really greps with and matches paths against it.
+    test "the ops-ui path pattern matches every path the copy rules table scans" do
+      path_job = @ci_yml |> File.read!() |> workflow_job_block("ops-ui-path")
+      pattern = ops_ui_path_pattern(path_job)
+      regex = Regex.compile!(pattern)
+
+      copy_inputs = [
+        "GLOSSARY.md",
+        "DESIGN.md",
+        "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+        "examples/scrypath_ecommerce/lib/x.ex",
+        "examples/scrypath_ecommerce/test/x_test.exs",
+        "examples/scrypath_ecommerce/scripts/x.mjs",
+        "scrypath_ops/lib/x.ex"
+      ]
+
+      assert ops_ui_path_misses(regex, copy_inputs) == []
+
+      assert ops_ui_path_misses(regex, ["README.md", "website/src/index.html"]) ==
+               ["README.md", "website/src/index.html"]
+
+      # Negative control: the same check run on a pattern with the new alternatives removed
+      # reports the glossary, DESIGN.md and the demo paths as missed. A check that cannot fail
+      # would not be a check.
+      new_alternatives =
+        "|GLOSSARY\\.md|DESIGN\\.md|examples/scrypath_ecommerce/(e2e|lib|test|scripts)/"
+
+      assert pattern =~ new_alternatives
+      narrowed = Regex.compile!(String.replace(pattern, new_alternatives, ""))
+
+      assert ops_ui_path_misses(narrowed, copy_inputs) ==
+               copy_inputs -- ["scrypath_ops/lib/x.ex"]
+
+      # The table and the pattern cannot drift: every literal directory a row scans must match.
+      rows = "scrypath_ops/test/support/copy_rules.json" |> File.read!() |> Jason.decode!()
+
+      scopes =
+        for %{"id" => id, "source_scope" => globs} <- rows["rules"], glob <- globs do
+          {id, glob}
+        end
+
+      assert scopes != [], "the copy rules table has no source_scope to check"
+
+      for {id, glob} <- scopes, glob != "**" do
+        prefix = String.replace_suffix(glob, "**", "")
+
+        assert Regex.match?(regex, prefix),
+               "copy rule #{id} scans #{glob}, but the ops-ui path pattern does not match #{prefix}"
+      end
+
+      # The whole-tree scope is the one place PR-time coverage is partial: a PR that touches
+      # only a path outside the pattern (website/ or a root markdown file, say) skips ops-ui.
+      # It is still enforced on every push to main, because ops-ui-path always runs there.
+      assert Enum.any?(scopes, fn {_id, glob} -> glob == "**" end)
+      assert path_job =~ ~s(GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main)
+    end
   end
 
   defp assert_oban_suppressions!(source, path) do
@@ -1808,6 +1868,17 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       nil -> rest
     end
   end
+
+  # The one `grep -qE '<pattern>'` the ops-ui-path job greps changed paths with.
+  defp ops_ui_path_pattern(path_job) do
+    case Regex.scan(~r/grep -qE '([^']+)'/, path_job, capture: :all_but_first) do
+      [[pattern]] -> pattern
+      other -> flunk("expected one grep -qE pattern in ops-ui-path, found #{length(other)}")
+    end
+  end
+
+  # The paths the compiled pattern does not match.
+  defp ops_ui_path_misses(regex, paths), do: Enum.reject(paths, &Regex.match?(regex, &1))
 
   defp workflow_named_step_block(job_block, step_name) do
     workflow_step_block(job_block, "\n      - name: #{step_name}\n")
