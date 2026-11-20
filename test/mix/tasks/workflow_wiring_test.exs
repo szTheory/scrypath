@@ -4,6 +4,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @ci_yml ".github/workflows/ci.yml"
   @workflow_security_yml ".github/workflows/workflow-security.yml"
   @website_yml ".github/workflows/website.yml"
+  @website_select_browser_step "Select browser (runner Chrome when launchable, else Playwright Chromium)"
+  @website_channel_guard "grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs"
+  @website_deploy_if "if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -327,7 +330,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert website =~ "  pull_request:\n"
       assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
-      assert deploy =~ "if: github.event_name == 'push'"
+
+      assert deploy =~ @website_deploy_if
+
       assert build =~ "fetch-depth: 0"
       assert deploy =~ "fetch-depth: 0"
       assert website =~ "permissions:\n  contents: read"
@@ -337,6 +342,113 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       refute build =~ "pages: write"
       refute build =~ "id-token: write"
+    end
+
+    test "website deploy safety net: filters, dispatch rollback, deploy group, smoke and timeout" do
+      assert_website_safety_net!(File.read!(@website_yml))
+    end
+
+    test "the website safety-net contract rejects a workflow that loses a piece of it" do
+      yml = File.read!(@website_yml)
+      assert_website_safety_net!(yml)
+
+      [before_pr, between, after_push] = String.split(yml, "      - 'brand/**'\n", parts: 3)
+      brand_line = "      - 'brand/**'\n"
+
+      planted = [
+        {"brand/** dropped from the pull_request filter",
+         before_pr <> between <> brand_line <> after_push},
+        {"brand/** dropped from the push filter",
+         before_pr <> brand_line <> between <> after_push},
+        {"dispatch ref input dropped",
+         String.replace(
+           yml,
+           "      ref:\n        description",
+           "      other:\n        description"
+         )},
+        {"deploy group cancels in flight",
+         String.replace(
+           yml,
+           "group: website-pages-deploy\n      cancel-in-progress: false",
+           "group: website-pages-deploy\n      cancel-in-progress: true"
+         )},
+        {"smoke command dropped", String.replace(yml, "node website/scripts/smoke.mjs", "true")},
+        {"soft check dropped", String.replace(yml, "curl -fsSI", "curl -sI")},
+        {"build timeout dropped", String.replace(yml, "    timeout-minutes: 10\n", "")},
+        {"deploy timeout dropped", String.replace(yml, "    timeout-minutes: 15\n", "")},
+        {"dispatch ref interpolated into a shell command",
+         String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
+        {"browser probe no longer launches the chrome channel",
+         String.replace(yml, "channel: 'chrome'", "channel: 'x'")},
+        {"deploy no longer restricted to main",
+         String.replace(yml, " && github.ref == 'refs/heads/main'", "")},
+        {"deploy no longer limited to push and dispatch events",
+         String.replace(
+           yml,
+           "(github.event_name == 'push' || github.event_name == 'workflow_dispatch') && ",
+           ""
+         )},
+        {"workflow-level group cancels every superseded run, deploys included",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: true"
+         )},
+        {"rollback dispatch shares the push group",
+         String.replace(
+           yml,
+           "${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}",
+           "${{ github.ref }}"
+         )},
+        {"browser selection no longer checks that the ref's check script supports the channel",
+         String.replace(yml, "#{@website_channel_guard} \\\n            && ", "")}
+      ]
+
+      for {label, mutated} <- planted do
+        refute mutated == yml, "the planted mutation #{label} changed nothing"
+
+        accepted? =
+          try do
+            assert_website_safety_net!(mutated)
+            true
+          rescue
+            ExUnit.AssertionError -> false
+          end
+
+        refute accepted?, "planted #{label} was accepted by the safety-net contract"
+      end
+    end
+
+    # Runs the real "Select browser" step script with stub executables on PATH, so what it does for a
+    # rollback ref is observed rather than inferred from its text. The probe's node call is a stub that
+    # succeeds, which is the runner case: Chrome is installed and launchable.
+    test "website browser selection takes the runner Chrome only for a ref whose check script supports the channel" do
+      yml = File.read!(@website_yml)
+      build = workflow_job_block(yml, "build-and-check")
+
+      script =
+        build
+        |> workflow_named_step_block(@website_select_browser_step)
+        |> workflow_step_run_script()
+
+      supported =
+        run_website_browser_selection(
+          script,
+          "const channel = process.env.SCRYPATH_BROWSER_CHANNEL;\n"
+        )
+
+      assert supported.github_env =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+      refute supported.npx_calls =~ "playwright install"
+
+      # The check.mjs on main before this phase: a bare launch that ignores the channel variable.
+      predates =
+        run_website_browser_selection(script, "const browser = await chromium.launch();\n")
+
+      refute predates.github_env =~ "SCRYPATH_BROWSER_CHANNEL",
+             "a ref whose check.mjs ignores the channel variable must not be told to use it"
+
+      assert predates.npx_calls =~ "playwright install --with-deps chromium",
+             "a ref whose check.mjs ignores the channel variable needs Playwright's own Chromium installed"
     end
 
     test "release workflows retain tag selection, history, permissions and credential behavior" do
@@ -1701,6 +1813,61 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     workflow_step_block(job_block, "\n      - name: #{step_name}\n")
   end
 
+  # The `run: |` script of a step block, dedented, as bash would receive it.
+  defp workflow_step_run_script(step_block) do
+    [_before, script] = String.split(step_block, "\n        run: |\n", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+  end
+
+  # Runs a "Select browser" script in a scratch workspace whose scripts/check.mjs holds `check_source`.
+  # `google-chrome`, `node` (the launch probe) and `npx` are stubs; the stubs record what was called.
+  defp run_website_browser_selection(script, check_source) do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-select-browser-#{System.unique_integer([:positive])}"
+      )
+
+    bin = Path.join(root, "bin")
+    work = Path.join([root, "work", "scripts"])
+    github_env = Path.join(root, "github_env")
+    npx_log = Path.join(root, "npx.log")
+
+    File.mkdir_p!(bin)
+    File.mkdir_p!(work)
+    File.write!(Path.join(work, "check.mjs"), check_source)
+    File.write!(github_env, "")
+
+    stub = fn name, body ->
+      path = Path.join(bin, name)
+      File.write!(path, "#!/bin/sh\n" <> body)
+      File.chmod!(path, 0o755)
+    end
+
+    stub.("google-chrome", "echo 'Google Chrome 999.0.0.0'\n")
+    stub.("node", "exit 0\n")
+    stub.("npx", "echo \"$@\" >> '#{npx_log}'\n")
+
+    try do
+      {_output, 0} =
+        System.cmd("bash", ["-e", "-o", "pipefail", "-c", script],
+          cd: Path.join(root, "work"),
+          env: [{"PATH", bin <> ":" <> System.get_env("PATH", "")}, {"GITHUB_ENV", github_env}],
+          stderr_to_stdout: true
+        )
+
+      %{
+        github_env: File.read!(github_env),
+        npx_calls: if(File.exists?(npx_log), do: File.read!(npx_log), else: "")
+      }
+    after
+      File.rm_rf!(root)
+    end
+  end
+
   defp workflow_step_with_uses_block(job_block, action) do
     workflow_step_block(job_block, "\n      - uses: #{action}\n")
   end
@@ -1719,6 +1886,112 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       {next_idx, _} -> binary_part(rest, 0, next_idx)
       :nomatch -> rest
     end
+  end
+
+  # The paths listed under one trigger of website.yml, in order.
+  defp website_trigger_paths(yml, trigger) do
+    [_before, rest] = String.split(yml, "\n  #{trigger}:\n", parts: 2)
+
+    block =
+      case Regex.run(~r/\n  [a-z_]+:\n|\n[a-z]+:\n/, rest, return: :index) do
+        [{idx, _}] -> binary_part(rest, 0, idx)
+        nil -> rest
+      end
+
+    ~r/^      - '([^']+)'$/m |> Regex.scan(block) |> Enum.map(fn [_match, path] -> path end)
+  end
+
+  # SITE-04 / SITE-05: the deploy safety net around the website. Every planted mutation in the test
+  # above has to trip one of these assertions.
+  defp assert_website_safety_net!(yml) do
+    build = workflow_job_block(yml, "build-and-check")
+    deploy = workflow_job_block(yml, "deploy")
+
+    for trigger <- ["pull_request", "push"] do
+      paths = website_trigger_paths(yml, trigger)
+
+      assert "brand/**" in paths,
+             "website.yml #{trigger} paths must list brand/** so a brand change rebuilds the site, got #{inspect(paths)}"
+
+      assert "website/**" in paths
+    end
+
+    assert yml =~ ~r/\n  workflow_dispatch:\n    inputs:\n      ref:\n/,
+           "website.yml needs workflow_dispatch with a ref input (the rollback)"
+
+    # The ref input reaches a checkout `ref:` and nothing else, so it can never become shell text.
+    ref_lines = yml |> String.split("\n") |> Enum.filter(&String.contains?(&1, "inputs.ref"))
+
+    assert length(ref_lines) == 2,
+           "inputs.ref must appear exactly twice (one checkout per job), got #{inspect(ref_lines)}"
+
+    assert Enum.all?(ref_lines, &(String.trim(&1) == "ref: ${{ inputs.ref }}")),
+           "inputs.ref may only be used as a checkout ref, got #{inspect(ref_lines)}"
+
+    assert build =~ "timeout-minutes: 10"
+
+    assert deploy =~ "timeout-minutes: 15",
+           "the deploy job needs a timeout: the smoke talks to a remote host, and the default is 360 minutes"
+
+    # Only a superseded pull_request run is cancelled. A push to main must never cut off a deploy that
+    # is already running, and a rollback dispatch (which also runs on main) must not share a group
+    # with pushes, or the next push would cancel it.
+    assert yml =~
+             "concurrency:\n  group: website-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "the workflow-level group cancels only superseded pull_request runs and keys a rollback separately"
+
+    refute yml =~ ~r/^  cancel-in-progress: true/m,
+           "a workflow-level cancel-in-progress: true would cancel a deploy that is already running"
+
+    # Deployment is restricted to main by the job's own condition, not by a repository setting the
+    # job never names: a dispatch from a branch with an edited copy of this file must not publish.
+    assert deploy =~ @website_deploy_if,
+           "the deploy job must run only for a push or dispatch on refs/heads/main"
+
+    assert deploy =~
+             "concurrency:\n      group: website-pages-deploy\n      cancel-in-progress: false",
+           "the deploy job needs its own non-cancelling concurrency group"
+
+    refute deploy =~ "cancel-in-progress: true"
+    refute deploy =~ "environment:"
+
+    assert workflow_named_step_block(deploy, "Deploy to GitHub Pages") =~ "id: deployment"
+
+    smoke = workflow_named_step_block(deploy, "Smoke test the deployed site")
+    assert smoke =~ "SCRYPATH_SMOKE_URL: ${{ steps.deployment.outputs.page_url }}"
+    assert smoke =~ "node website/scripts/smoke.mjs"
+
+    assert smoke =~ "curl -fsSI",
+           "a rollback to a ref without the smoke script needs the soft check"
+
+    assert smoke =~ "assets/styles.css"
+
+    assert {deploy_idx, _} = :binary.match(deploy, "name: Deploy to GitHub Pages")
+    assert {smoke_idx, _} = :binary.match(deploy, "name: Smoke test the deployed site")
+    assert deploy_idx < smoke_idx
+
+    # The runner's Chrome is only used when the checked-out ref's check script can use it (it reads
+    # SCRYPATH_BROWSER_CHANNEL) and a probe launches it; the known-good install is the fallback after
+    # that. Without the first condition a rollback to a ref whose check.mjs predates the channel
+    # support skips the install and then cannot launch any browser.
+    assert build =~ "google-chrome --version"
+    assert build =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+
+    select = workflow_named_step_block(build, @website_select_browser_step)
+
+    assert select =~ @website_channel_guard,
+           "the browser selection must take the runner Chrome only when the checked-out scripts/check.mjs supports SCRYPATH_BROWSER_CHANNEL"
+
+    {guard_idx, _} = :binary.match(select, @website_channel_guard)
+    assert {chrome_idx, _} = :binary.match(select, "google-chrome --version")
+    assert guard_idx < chrome_idx, "the channel-support guard must come before the Chrome probe"
+
+    assert {probe_idx, _} = :binary.match(build, "channel: 'chrome'")
+    assert {install_idx, _} = :binary.match(build, "npx playwright install --with-deps chromium")
+    assert probe_idx < install_idx
+
+    refute build =~ "pages: write"
+    refute build =~ "id-token: write"
   end
 
   defp assert_action_pin!(workflow, action, sha, version) do
