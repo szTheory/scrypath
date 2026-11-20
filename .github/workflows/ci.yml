@@ -402,8 +402,28 @@ jobs:
       - run: mix deps.get
       - run: mix verify.ops_ui
 
+  # Not a gate: decides whether the browser lanes below can be skipped. It is an ALLOWLIST
+  # that fails open: only a pull_request whose changed paths ALL sit under .planning/, under
+  # docs/, or are root-level markdown reports run=false (see scripts/ci/ecommerce_path_classifier.cjs).
+  # Everything else, an empty or uncomputable diff, and every other event reports run=true.
+  # The 5-minute timeout turns a hung classifier into a failed one, which also runs the lanes.
+  ecommerce-path:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs: {run: "${{ steps.check.outputs.run }}"}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {fetch-depth: 0}
+      - id: check
+        run: node scripts/ci/ecommerce_path_classifier.cjs --output "$GITHUB_OUTPUT"
+
   ecommerce-mounted:
     name: ecommerce-mounted (required)
+    needs: ecommerce-path
+    # Required check: a skipped job reports success. Skip ONLY on an explicit run=false from a
+    # successful classifier. A failed or timed-out classifier, and a missing or empty output,
+    # all run the lane (hence != 'false', never == 'true').
+    if: ${{ !cancelled() && (needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
