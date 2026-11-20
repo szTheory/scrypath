@@ -1,6 +1,6 @@
 ---
 slug: website-refresh
-title: Full goal-first refresh of the public website, with permanent upkeep guards
+title: Full goal-first refresh of the public website and the discovery and onboarding journey, with permanent upkeep guards
 status: planted
 created: 2026-11-20
 updated: 2026-11-20
@@ -22,6 +22,10 @@ Two standing requirements from the same conversation:
 
 1. **Tools:** use the Impeccable skill (installed, v4.10.0, modes Persuade, Operate, Read, Experience) for design and the `ux-writing` skill for copy, both checked against the brand book (voice, imagery, typography, color, microcopy).
 2. **Upkeep is permanent.** All user-facing domain language on the site follows the glossary, brand voice and the GOV.UK-style copy rules already recorded for the operator UI. The site must be updated whenever the library, API, version, docs or brand change, and automated guards must stop it from drifting, breaking or becoming inaccurate or generic.
+
+## Wider frame (maintainer, 2026-11-20): the discovery and onboarding journey
+
+The website is one surface of a journey, not the whole problem. The README, website, HexDocs and guides overlap, link lists spam the reader, and people arrive from GitHub, hex.pm, HexDocs or the website. The refresh must start from the journey for first-time visitors, people starting to use Scrypath and returning users, give each surface one job and stop duplicating content. The full intent, journey stages, a hypothesis for surface roles and the open questions are in `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`: read it first. The recommended shape is one milestone covering README, website, HexDocs structure and guides together, with the README trim (`todos/pending/2026-11-20-trim-readme-and-choose-a-route.md`) inside it.
 
 ## Relationship to v1.47
 
@@ -61,6 +65,7 @@ A small milestone immediately after v1.47 ("Website refresh", about 2 to 3 phase
 
 ## Breadcrumbs
 
+- `.planning/reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md` (the intent; read first)
 - `.planning/research/website-refresh/` (01 goals, audience and scope; 02 benchmarks and patterns; 03 current-site inventory)
 - `.planning/research/v1.47-prep/B-website-reskin.md`, `.planning/research/v1.47-gap-pass/G-website-risk.md`
 - `.planning/research/ui-quality-engine/RESEARCH-PERSONAS-FIXTURES-COPY.md` (GOV.UK-style copy rules), `.planning/reference/OPERATOR-UI-QUALITY.md`, `guides/jtbd-and-user-flows.md`

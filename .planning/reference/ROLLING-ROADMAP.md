@@ -142,7 +142,9 @@ Still out of scope: vector/hybrid search, autocomplete, callback or Repo-hook au
 
 **Grill the maintainer on the API shapes before starting this milestone.**
 
-## Website refresh (planted 2026-11-20 as SEED-004; slot pending the maintainer)
+## Discovery and onboarding journey, including the website refresh (planted 2026-11-20 as SEED-004; slot pending the maintainer)
+
+Widened the same day: the website refresh is one part of a coherent journey across README, website, HexDocs and guides for first-time visitors, people starting to use Scrypath and returning users, with one job per surface and no duplicated content or link spam. Intent and open questions: `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`. Recommended shape: one milestone (README trim, website refresh, HexDocs and guide structure, upkeep guards), slotted right after v1.47. The paragraph below describes the website part.
 
 The maintainer wants the public website fully refreshed, not only re-skinned: goal-first scope, Impeccable for design, `ux-writing` for copy, brand-book voice, and permanent upkeep guards so the copy never drifts. Scoping notes: `research/website-refresh/` (01 goals and scope, 02 benchmarks, 03 inventory); seed: `seeds/SEED-004-website-refresh.md`. Recommended slot (confidence medium): a small milestone right after v1.47, ahead of the catalog (the catalog would then renumber to v1.49 and later), because the brand work and deploy safety net are fresh. v1.47 Phase 189 stays identity-only plus the SITE-06 accuracy fix (the site tells Hex adopters to run the repo-only `mix verify.adopter`). Separate item: two Hex-shipped guides (`guides/outside-adopter-intake.md`, `guides/support-and-compatibility.md`) also name `mix verify.adopter`; contract tests pin that text.
 

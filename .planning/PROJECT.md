@@ -28,6 +28,8 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current Milestone
 
+**Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. This is direction, not approved scope; see `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
+
 ## Current Milestone: v1.47 Brand completion
 
 **Goal:** Finish the brand adoption v1.46 started: the website in the new identity, the wording fixes that do not need the catalog, and removal of the old identity's last code, so v1.48 (Catalog foundation) starts from a clean base.
