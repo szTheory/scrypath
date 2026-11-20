@@ -456,6 +456,216 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "CI-01 ecommerce path classifier wiring" do
+    @classifier_script "scripts/ci/ecommerce_path_classifier.cjs"
+    @classifier_node_test "scripts/ci/ecommerce_path_classifier.test.cjs"
+    @classifier_allowlist ~S"^(\.planning/|docs/|[^/]+\.md$)"
+    @mounted_fail_open_if "if: ${{ !cancelled() && (needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false') }}"
+    @step_fail_open_if "if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}"
+    @allowlisted_paths [".planning/STATE.md", "docs/guide.md", "README.md"]
+
+    test "ecommerce-path is a fail-open classifier job, not a gate" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "ecommerce-path")
+
+      assert job =~ "fetch-depth: 0"
+      assert job =~ ~s(outputs: {run: "${{ steps.check.outputs.run }}"})
+      assert job =~ "timeout-minutes: 5"
+
+      check = workflow_step_block(job, "\n      - id: check\n")
+
+      assert check =~
+               ~s(run: node scripts/ci/ecommerce_path_classifier.cjs --output "$GITHUB_OUTPUT")
+
+      # No name, so no new required context; and no `if:`, so the classifier itself always reports.
+      refute job =~ "(required)"
+      refute job =~ "(path-scoped)"
+      refute job =~ ~r/^    name: /m
+      refute job =~ ~r/^\s+if: /m
+    end
+
+    test "ecommerce-mounted skips only on an explicit run=false from a successful classifier" do
+      ci = File.read!(@ci_yml)
+      mounted = workflow_job_block(ci, "ecommerce-mounted")
+
+      assert mounted =~ "    name: ecommerce-mounted (required)\n    needs: ecommerce-path\n"
+      # Anchored to a whole line so a commented-out or indented-away copy cannot satisfy it.
+      assert mounted =~ "\n    " <> @mounted_fail_open_if <> "\n"
+
+      # Every consumer compares with != 'false' so a missing or empty output (a renamed step id, a
+      # step that wrote nothing) still runs the lane. The equals-true form would silently skip it.
+      refute ci =~ "ecommerce-path.outputs.run == 'true'"
+
+      consumers =
+        ci
+        |> String.split("\n")
+        |> Enum.filter(&String.contains?(&1, "needs.ecommerce-path.outputs.run"))
+
+      assert length(consumers) == 3
+
+      assert Enum.all?(
+               consumers,
+               &String.contains?(&1, "needs.ecommerce-path.outputs.run != 'false'")
+             )
+
+      closeout = workflow_job_block(ci, "closeout-attestation")
+
+      assert closeout =~
+               "needs: [core, package, repository-contracts, backend, ecommerce-mounted, coverage]"
+
+      refute closeout =~ "ecommerce-path"
+    end
+
+    test "repository-contracts always runs its contract suite and gates only the two Node steps" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "repository-contracts")
+
+      assert job =~ "    name: repository-contracts (required)\n    needs: ecommerce-path\n"
+
+      # A failed or timed-out classifier must not skip this required job (a job whose `needs` fail
+      # is skipped, and a skipped required job reports success), so the job keeps a status function.
+      assert job =~ "\n    if: ${{ !cancelled() }}\n",
+             "repository-contracts needs a job-level !cancelled() so a failed classifier cannot skip it"
+
+      for step <- [
+            "Install locked demo dependencies for PNG evidence validation",
+            "Verify browser build, lifecycle, evidence, and target behavior"
+          ] do
+        assert workflow_named_step_block(job, step) =~ @step_fail_open_if,
+               "#{step} must fail open on the classifier"
+      end
+
+      # Exactly the job condition plus the two Node-step conditions: nothing else is silently gated.
+      assert length(Regex.scan(~r/^\s+if: /m, job)) == 3
+
+      [_before, after_contract_run] =
+        String.split(job, "- run: mix verify.repository_contracts", parts: 2)
+
+      refute after_contract_run =~ "if:"
+    end
+
+    test "a .planning-only diff is accepted as skippable" do
+      assert_skips!(classify_paths([".planning/STATE.md"], "pull_request"))
+      assert_skips!(classify_paths([".planning/phases/188.1-x/188.1-01-PLAN.md"], "pull_request"))
+    end
+
+    test "docs and root markdown beside planning paths are skippable" do
+      assert_skips!(classify_paths(@allowlisted_paths, "pull_request"))
+    end
+
+    test "allowlisted paths plus exactly one non-allowlisted path run the lanes" do
+      for extra <- ~w(
+            brand/x scrypath_ops/x.ex examples/x scripts/ci/x.cjs lib/x.ex dev/x.ex config/x.exs
+            priv/x language/x fixtures/x test/x.exs website/x guides/x.md mix.exs mix.lock
+            .github/workflows/ci.yml .github/workflows/website.yml
+          ) do
+        assert_runs!(classify_paths(@allowlisted_paths ++ [extra], "pull_request"), extra)
+      end
+    end
+
+    test "an empty diff, an unreadable diff and non-pull-request events run the lanes" do
+      assert_runs!(classify_paths([], "pull_request"))
+
+      dir = classifier_tmp_dir()
+      assert_runs!(run_classifier_file(Path.join(dir, "missing-paths-file"), "pull_request", dir))
+
+      for event <- ~w(push schedule workflow_dispatch merge_group) do
+        assert_runs!(classify_paths([".planning/STATE.md"], event), event)
+      end
+    end
+
+    test "the planted-diff assertion has teeth: a widened allowlist is caught" do
+      source = File.read!(@classifier_script)
+
+      assert source =~ @classifier_allowlist,
+             "the classifier must keep the verbatim CI-01 allowlist literal"
+
+      widened = String.replace(source, @classifier_allowlist, ~S"^(.*)")
+      assert widened != source
+
+      dir = classifier_tmp_dir()
+      pristine_copy = Path.join(dir, "pristine_classifier.cjs")
+      widened_copy = Path.join(dir, "widened_classifier.cjs")
+      File.write!(pristine_copy, source)
+      File.write!(widened_copy, widened)
+
+      planted = @allowlisted_paths ++ ["lib/x.ex"]
+
+      # Control: an untouched copy of the real script runs the lanes for the planted diff.
+      assert_runs!(classify_paths(planted, "pull_request", pristine_copy))
+
+      # The widened copy skips it, and the assertion refuses that.
+      assert_skips!(classify_paths(planted, "pull_request", widened_copy))
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_runs!(classify_paths(planted, "pull_request", widened_copy))
+      end
+    end
+
+    test "the classifier's own node test executes inside the contract lane" do
+      {output, status} =
+        System.cmd("node", ["--test", "--test-reporter=tap", @classifier_node_test],
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      assert output =~ ~r/# tests [1-9]\d*/
+      assert output =~ "# fail 0"
+    end
+  end
+
+  describe "DEP-07 upload-artifact is pinned by pattern" do
+    @dependabot_132_sha "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
+
+    test "every upload-artifact reference in ci.yml and website.yml matches the pattern" do
+      assert_upload_artifact_pin!(File.read!(@ci_yml))
+      assert_upload_artifact_pin!(File.read!(@website_yml))
+    end
+
+    test "the Dependabot 132 SHA is accepted, whichever SHA the files hold today" do
+      for comment <- ["# v7", "# v7.0.2", "# v7.10.0"] do
+        assert_upload_artifact_pin!(
+          "      - uses: actions/upload-artifact@#{@dependabot_132_sha} #{comment}"
+        )
+      end
+
+      for path <- [@ci_yml, @website_yml] do
+        bumped =
+          Regex.replace(
+            ~r|(actions/upload-artifact@)[0-9a-f]{40}|,
+            File.read!(path),
+            "\\1#{@dependabot_132_sha}"
+          )
+
+        assert_upload_artifact_pin!(bumped)
+      end
+    end
+
+    test "a tag, a short or malformed SHA, a wrong major, or a missing comment is rejected" do
+      sha = String.duplicate("a", 40)
+
+      rejected = [
+        "uses: actions/upload-artifact@v7",
+        "uses: actions/upload-artifact@v7 # v7",
+        "uses: actions/upload-artifact@#{String.slice(sha, 0, 7)} # v7",
+        "uses: actions/upload-artifact@#{String.slice(sha, 0, 39)} # v7",
+        "uses: actions/upload-artifact@#{sha}a # v7",
+        "uses: actions/upload-artifact@#{String.upcase(sha)} # v7",
+        "uses: actions/upload-artifact@#{sha} # v6",
+        "uses: actions/upload-artifact@#{sha} # v70",
+        "uses: actions/upload-artifact@#{sha} # v8.0.0",
+        "uses: actions/upload-artifact@#{sha}",
+        "uses: actions/upload-artifact@#{sha} # v7 extra"
+      ]
+
+      for line <- rejected do
+        assert_raise ExUnit.AssertionError, fn -> assert_upload_artifact_pin!(line) end
+      end
+
+      assert_raise ExUnit.AssertionError, fn -> assert_upload_artifact_pin!("no uploads here") end
+    end
+  end
+
   describe "INFRA-04 D-19: scheduled drift-issue wiring" do
     test "create-an-issue step is guarded on failure() + schedule event" do
       yml = File.read!(@verify_published_yml)
@@ -1038,7 +1248,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert upload =~ "if-no-files-found: error"
       assert upload =~ "retention-days: 7"
-      assert upload =~ "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+      assert_upload_artifact_pin!(upload)
 
       assert :binary.match(job, "Record E2E job start and deadline") <
                :binary.match(
@@ -1190,8 +1400,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert coverage_upload =~ "if: always()"
       assert coverage_upload =~ "id: coverage_upload"
 
-      assert coverage_upload =~
-               "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+      assert_upload_artifact_pin!(coverage_upload)
 
       assert coverage_upload =~ "name: coverage-report-${{ github.sha }}"
       assert coverage_upload =~ "path: cover/"
@@ -1235,8 +1444,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert closeout_job =~ "head_sha: $head_sha"
       assert closeout_job =~ "run_id: $run_id"
 
-      assert closeout_upload =~
-               "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7"
+      assert_upload_artifact_pin!(closeout_upload)
 
       assert closeout_upload =~ "name: closeout-attestation-${{ github.sha }}"
       assert closeout_upload =~ "path: closeout-attestation.json"
@@ -1415,6 +1623,66 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   end
 
   defp ledger_row_errors(row), do: ["a ledger row must have five cells: #{inspect(row)}"]
+
+  defp classifier_tmp_dir do
+    dir = Path.join(System.tmp_dir!(), "ci01-classifier-#{System.unique_integer([:positive])}")
+    File.mkdir_p!(dir)
+    on_exit(fn -> File.rm_rf(dir) end)
+    dir
+  end
+
+  # Writes a NUL-separated planted diff and runs the real classifier script over it.
+  defp classify_paths(paths, event, script \\ @classifier_script) do
+    dir = classifier_tmp_dir()
+    paths_file = Path.join(dir, "paths")
+    File.write!(paths_file, Enum.map_join(paths, "", &(&1 <> <<0>>)))
+    run_classifier_file(paths_file, event, dir, script)
+  end
+
+  defp run_classifier_file(paths_file, event, dir, script \\ @classifier_script) do
+    output_file = Path.join(dir, "github_output")
+    File.write!(output_file, "")
+
+    {log, status} =
+      System.cmd("node", [script, "--paths-file", paths_file, "--output", output_file],
+        env: [{"GITHUB_EVENT_NAME", event}, {"GITHUB_BASE_REF", "main"}],
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, "classifier exited #{status} instead of failing open: #{log}"
+    File.read!(output_file)
+  end
+
+  defp assert_skips!(output, label \\ "planted diff") do
+    assert String.starts_with?(output, "run=false\n"),
+           "#{label}: expected run=false, got #{inspect(output)}"
+  end
+
+  defp assert_runs!(output, label \\ "planted diff") do
+    assert String.starts_with?(output, "run=true\n"),
+           "#{label}: expected run=true, got #{inspect(output)}"
+  end
+
+  # A function, not a module attribute: Elixir 1.19 on OTP 28 cannot store a compiled regex in one.
+  # 40 lowercase hex characters, then a comment of `# v7` with optional `.digits` groups, to end of line.
+  defp upload_artifact_pin_pattern do
+    ~r|uses: actions/upload-artifact@[0-9a-f]{40} # v7(\.[0-9]+)*$|m
+  end
+
+  defp assert_upload_artifact_pin!(text) do
+    refs =
+      text
+      |> String.split("\n")
+      |> Enum.filter(&String.contains?(&1, "uses: actions/upload-artifact@"))
+
+    assert refs != [], "expected at least one actions/upload-artifact reference"
+
+    Enum.each(refs, fn ref ->
+      assert Regex.match?(upload_artifact_pin_pattern(), ref),
+             "expected actions/upload-artifact pinned to 40 lowercase hex with a `# v7` comment; " <>
+               "found #{String.trim(ref)}"
+    end)
+  end
 
   defp workflow_job_block(content, job_name) do
     marker = "\n  #{job_name}:\n"
