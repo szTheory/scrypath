@@ -690,5 +690,6 @@ defmodule Mix.Tasks.Brand.Update do
 
   defp hex_sha256(bytes), do: :crypto.hash(:sha256, bytes) |> Base.encode16(case: :lower)
 
+  @spec refuse!(String.t()) :: no_return()
   defp refuse!(message), do: Mix.raise("brand.update: " <> message)
 end
