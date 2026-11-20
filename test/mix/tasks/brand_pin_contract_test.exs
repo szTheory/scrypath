@@ -860,6 +860,20 @@ defmodule Mix.Tasks.BrandPinContractTest do
     end
   end
 
+  describe "pinned favicon consumers" do
+    # The pinned unthemed favicon renders black in every theme, so the demo
+    # storefront serves the pinned light favicon instead. Byte equality is the
+    # whole claim: it says nothing about how a browser draws the icon.
+    test "the demo storefront favicon is byte-identical to the pinned light favicon" do
+      pinned = Path.join(@root, "brand/assets/icon/favicon-light.svg")
+      demo = Path.join(@root, "examples/scrypath_ecommerce/priv/static/favicon.svg")
+
+      assert File.read!(demo) == File.read!(pinned),
+             "examples/scrypath_ecommerce/priv/static/favicon.svg must be a byte copy of " <>
+               "brand/assets/icon/favicon-light.svg"
+    end
+  end
+
   defp brand_entries(files), do: Enum.filter(files, &String.starts_with?(&1, "brand"))
 
   defp read_pin!(root) do
