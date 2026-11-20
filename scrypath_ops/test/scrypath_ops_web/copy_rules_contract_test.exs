@@ -98,6 +98,34 @@ defmodule ScrypathOpsWeb.CopyRulesContractTest do
       assert "GLOSSARY.md" in paths
     end
 
+    test "the Last succeeded and Clear rows catch their old forms and pass their new ones", %{
+      rules: rules
+    } do
+      last = row!(rules, "last-succeeded")
+      absence = row!(rules, "last-succeeded--absence")
+      clear = row!(rules, "clear-needs-observation")
+      path = "scrypath_ops/lib/planted.ex"
+
+      for old <- ["Last " <> "success", "last " <> "successful"] do
+        root = temp_tree!(%{path => ~s(label: "#{old}"\n)})
+        assert [%{row: "last-succeeded", text: ^old}] = CopyRules.scan_source(last, root, [path])
+
+        html = "<dt>" <> old <> "</dt>"
+        assert [%{kind: :forbidden, text: ^old}] = CopyRules.evaluate_surface(absence, "x", html)
+      end
+
+      # Underscored identifiers are not copy: the pattern needs the space.
+      ident = temp_tree!(%{path => "last_success_refs = source_last_success_label\n"})
+      assert CopyRules.scan_source(last, ident, [path]) == []
+
+      assert CopyRules.evaluate_surface(absence, "x", "<dt>Last succeeded</dt>") == []
+
+      assert [%{kind: :forbidden, text: "Clear"}] =
+               CopyRules.evaluate_surface(clear, "x", "<span>Clear</span>")
+
+      assert CopyRules.evaluate_surface(clear, "x", "<span>Cleared</span> no status word") == []
+    end
+
     test "a rendered surface with the title-case label fails the casing row", %{rules: rules} do
       row = row!(rules, "control-room-casing")
       surface = "control_room.default"

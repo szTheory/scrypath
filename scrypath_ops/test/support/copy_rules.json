@@ -54,6 +54,48 @@
       "allowed_in": [],
       "source_scope": ["**"],
       "surfaces": ["control_room.default", "sync_drift.default"]
+    },
+    {
+      "id": "last-succeeded",
+      "rule": "Say Last succeeded, never Last success or Last successful.",
+      "glossary": "Last succeeded",
+      "forbidden": [
+        {"text": "last success(ful)?\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [
+        {"text": "last succeeded", "match": "regex", "case": "insensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "control_room.refresh_retained",
+        "posture.default",
+        "sync_drift.reconcile_error_retained"
+      ]
+    },
+    {
+      "id": "last-succeeded--absence",
+      "rule": "Say Last succeeded, never Last success or Last successful, also where no earlier success is shown.",
+      "glossary": "Last succeeded",
+      "forbidden": [
+        {"text": "last success(ful)?\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["control_room.refresh_no_prior", "posture.failed_row_retained"]
+    },
+    {
+      "id": "clear-needs-observation",
+      "rule": "The status word Clear needs an observation: it is not shown beside an earlier observation a failed refresh left on screen.",
+      "glossary": "Clear",
+      "forbidden": [
+        {"text": "\\bClear\\b", "match": "regex", "case": "sensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["control_room.refresh_retained", "control_room.refresh_no_prior"]
     }
   ]
 }

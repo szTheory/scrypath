@@ -339,8 +339,9 @@ defmodule ScrypathOps.Posture do
           queue: queue_ref
         })
 
-      # A fetch error has no new source timestamp. Keep the last successful source-local
-      # references intact so the caller can label them retained instead of re-dating them.
+      # A fetch error has no new source timestamp. Keep the source-local references from the
+      # last check that succeeded, so the caller can label them retained instead of re-dating
+      # them.
       {_schema, {:error, _reason}}, refs ->
         refs
     end)

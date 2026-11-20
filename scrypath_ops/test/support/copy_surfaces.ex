@@ -14,14 +14,21 @@ defmodule ScrypathOps.Test.CopySurfaces do
   import Phoenix.LiveViewTest
 
   alias ScrypathOps.Test.CopyStubs.ControlRoom, as: ControlRoomStubs
+  alias ScrypathOps.Test.CopyStubs.Posture, as: PostureStubs
   alias ScrypathOps.Test.CopyStubs.SyncDrift, as: SyncDriftStubs
   alias ScrypathOps.Test.OpsPostA
+  alias ScrypathOpsWeb.SyncDriftLive
 
   @endpoint ScrypathOpsWeb.Endpoint
 
   @anchors %{
     "control_room.default" => "Search backend not configured.",
+    "control_room.refresh_no_prior" => "Incomplete observation checked:",
+    "control_room.refresh_retained" => "Search health refresh incomplete.",
+    "posture.default" => "Meilisearch document tasks",
+    "posture.failed_row_retained" => "source-local evidence is retained from check",
     "sync_drift.default" => ~s(aria-label="Related search views"),
+    "sync_drift.reconcile_error_retained" => ~s(id="sync-pipeline-error"),
     "sync_drift.settings_missing_field" => ~s(data-missing="true")
   }
 
@@ -49,11 +56,70 @@ defmodule ScrypathOps.Test.CopySurfaces do
     end)
   end
 
+  # /ops after a healthy first check, when a refresh fails: the earlier observation stays on
+  # screen as the last one that succeeded.
+  def render("control_room.refresh_retained", %{conn: conn}) do
+    ControlRoomStubs.with_env(fn ->
+      ControlRoomStubs.put_healthy_posture!()
+      {:ok, lv, _html} = live(conn, "/ops")
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      lv |> element("#control-room-refresh") |> render_click()
+      render(lv)
+    end)
+  end
+
+  # /ops when the first check already fails and a refresh fails too: no prior observation.
+  def render("control_room.refresh_no_prior", %{conn: conn}) do
+    ControlRoomStubs.with_env(fn ->
+      ControlRoomStubs.put_healthy_posture!()
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      {:ok, lv, _html} = live(conn, "/ops")
+      lv |> element("#control-room-refresh") |> render_click()
+      render(lv)
+    end)
+  end
+
+  # /ops/health with one unreadable and one clear schema (the default Search health test).
+  def render("posture.default", %{conn: conn}) do
+    PostureStubs.with_stubs(fn ->
+      {:ok, _lv, html} = live(conn, "/ops/health")
+      html
+    end)
+  end
+
+  # One Search health row after a refresh failed: its source-local times are retained.
+  def render("posture.failed_row_retained", %{conn: conn}) do
+    PostureStubs.with_stubs(fn ->
+      {:ok, lv, _html} = live(conn, "/ops/phase173/health?scenario=refresh-failure")
+      lv |> element("#search-health-refresh") |> render_click()
+      lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
+    end)
+  end
+
   # /ops/sync-and-index as it loads, after its settings and sync checks finish.
   def render("sync_drift.default", %{conn: conn}) do
     SyncDriftStubs.with_stubs(fn ->
       {:ok, lv, _html} = live(conn, "/ops/sync-and-index")
       render_async(lv)
+    end)
+  end
+
+  # /ops/sync-and-index when a later sync check failed but an earlier result is retained. A
+  # route cannot reach this state, so a mounted view's own assigns are merged with the error and
+  # rendered through `SyncDriftLive.render/1` (a hand-built socket lacks assigns the layout reads).
+  def render("sync_drift.reconcile_error_retained", %{conn: conn}) do
+    SyncDriftStubs.with_stubs(fn ->
+      {:ok, lv, _html} = live(conn, "/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      render_async(lv)
+
+      lv.pid
+      |> :sys.get_state()
+      |> Map.fetch!(:socket)
+      |> Map.fetch!(:assigns)
+      |> Map.put(:reconcile_error, :backend_unreachable)
+      |> SyncDriftLive.render()
+      |> Phoenix.HTML.Safe.to_iodata()
+      |> IO.iodata_to_binary()
     end)
   end
 

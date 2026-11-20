@@ -1992,7 +1992,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         >
           <p>
             Check that Meilisearch and the job queue are reachable, then Refresh.
-            <span :if={@reconcile_result}>Showing the last successful check below.</span>
+            <span :if={@reconcile_result}>Showing the check that last succeeded below.</span>
           </p>
           <.ops_code_block
             class="mt-2"

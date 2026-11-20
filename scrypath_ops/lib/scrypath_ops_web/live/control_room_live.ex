@@ -140,10 +140,10 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.verdict_kind(@posture.rows)}
-            status={Posture.worst_status(@posture.rows)}
+            status={if @refresh_issue, do: nil, else: Posture.worst_status(@posture.rows)}
             label={
               cond do
-                @refresh_issue && @last_successful_posture -> "Last successful observation"
+                @refresh_issue && @last_successful_posture -> "Last succeeded"
                 @refresh_issue || @posture.error_count > 0 -> "Partial observation"
                 true -> nil
               end
@@ -174,7 +174,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               :if={@refresh_issue && @last_successful_posture}
               class="mt-2 text-ops-sm ops-muted"
             >
-              Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
+              Last succeeded: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
             <p
               :if={@refresh_issue && is_nil(@last_successful_posture)}

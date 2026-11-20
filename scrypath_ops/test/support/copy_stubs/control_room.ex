@@ -8,6 +8,28 @@ defmodule ScrypathOps.Test.CopyStubs.ControlRoom do
     meilisearch_tasks oban oban_queue oban_inspector oban_jobs control_room_client_state
   )a
 
+  defmodule Client do
+    @moduledoc false
+
+    def tasks(filters, config) do
+      case Application.get_env(:scrypath_ops, :control_room_client_state, :healthy) do
+        :unavailable -> {:error, :backend_unavailable}
+        :healthy -> healthy_tasks(filters, config)
+      end
+    end
+
+    defp healthy_tasks(filters, config) do
+      uids = filters[:index_uids] || []
+
+      results =
+        config
+        |> Keyword.get(:meilisearch_tasks, [])
+        |> Enum.filter(&(Map.get(&1, "indexUid") in uids))
+
+      {:ok, %{results: results}}
+    end
+  end
+
   @doc """
   Starts from an empty allowlist and no backend, with the sigra auth mode the Control room tests
   use. Returns the previous values for `restore_env/1`.
@@ -33,6 +55,42 @@ defmodule ScrypathOps.Test.CopyStubs.ControlRoom do
     if is_nil(previous_auth_mode),
       do: System.delete_env("OPSUI_AUTH_MODE"),
       else: System.put_env("OPSUI_AUTH_MODE", previous_auth_mode)
+  end
+
+  @doc """
+  Two allowlisted schemas whose Meilisearch tasks all succeeded, so every row reads Clear. Call it
+  inside `put_env/0`'s environment; the client is `Client`, switched by `:control_room_client_state`.
+  """
+  def put_healthy_posture! do
+    Application.put_env(:scrypath_ops, :control_room_client_state, :healthy)
+
+    Application.put_env(:scrypath_ops, :schema_allowlist, [
+      ScrypathOps.Test.OpsPostA,
+      ScrypathOps.Test.OpsPostB
+    ])
+
+    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
+    Application.put_env(:scrypath_ops, :sync_mode, :manual)
+    Application.put_env(:scrypath_ops, :index_prefix, "ctrl")
+    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
+    Application.put_env(:scrypath_ops, :meilisearch_client, Client)
+
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
+      %{
+        "uid" => 1,
+        "status" => "succeeded",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "ctrl_ops_post_a",
+        "finishedAt" => "2026-04-16T18:00:00Z"
+      },
+      %{
+        "uid" => 2,
+        "status" => "succeeded",
+        "type" => "documentAdditionOrUpdate",
+        "indexUid" => "ctrl_ops_post_b",
+        "finishedAt" => "2026-04-16T18:05:00Z"
+      }
+    ])
   end
 
   @doc "Runs `fun` inside the environment, then restores it, even if `fun` raises."

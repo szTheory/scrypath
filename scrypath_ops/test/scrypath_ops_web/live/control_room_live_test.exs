@@ -6,29 +6,6 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
   alias ScrypathOps.Test.CopyStubs.ControlRoom, as: ControlRoomStubs
   alias ScrypathOps.Test.OpsPostA
-  alias ScrypathOps.Test.OpsPostB
-
-  defmodule ControlRoomClient do
-    @moduledoc false
-
-    def tasks(filters, config) do
-      case Application.get_env(:scrypath_ops, :control_room_client_state, :healthy) do
-        :unavailable -> {:error, :backend_unavailable}
-        :healthy -> healthy_tasks(filters, config)
-      end
-    end
-
-    defp healthy_tasks(filters, config) do
-      uids = filters[:index_uids] || []
-
-      results =
-        config
-        |> Keyword.get(:meilisearch_tasks, [])
-        |> Enum.filter(&(Map.get(&1, "indexUid") in uids))
-
-      {:ok, %{results: results}}
-    end
-  end
 
   setup do
     previous = ControlRoomStubs.put_env()
@@ -197,12 +174,16 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
              "schema health could not be checked"
            )
 
-    assert refreshed_html =~ "Last successful observation"
+    assert has_element?(
+             lv,
+             "[data-testid='control-room-verdict'] .ops-verdict__label",
+             "Last succeeded"
+           )
 
     assert refreshed_html =~
              "No failed sync jobs or Meilisearch tasks were found across 2 schemas."
 
-    assert refreshed_html =~ "Last successful check:"
+    assert refreshed_html =~ "Last succeeded:"
     refute refreshed_html =~ "Search health refreshed."
     assert has_element?(lv, "[data-testid='control-room-health-link'][href='/ops/health']")
   end
@@ -224,9 +205,8 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
 
     assert has_element?(lv, "[data-testid='control-room-verdict']", "Partial observation")
     assert refreshed_html =~ "Incomplete observation checked:"
-    refute refreshed_html =~ "The last successful observation is retained below"
-    refute refreshed_html =~ "Last successful observation"
-    refute refreshed_html =~ "Last successful check:"
+    refute refreshed_html =~ "The last complete observation is retained below"
+    refute refreshed_html =~ "Last succeeded"
     refute refreshed_html =~ "Search health refreshed."
   end
 
@@ -305,7 +285,32 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
                "The last complete observation is retained below"
              )
 
-      assert has_element?(lv, "[data-testid='control-room-verdict']", "Last successful check:")
+      assert has_element?(lv, "[data-testid='control-room-verdict']", "Last succeeded:")
+    end
+
+    # Clear needs an observation. A failed refresh leaves the earlier observation on screen, and
+    # Clear is not shown beside it (187 review IN-02).
+    test "a retained or partial observation shows no status word; a healthy one still does", %{
+      conn: conn
+    } do
+      verdict = "[data-testid='control-room-verdict']"
+
+      put_healthy_posture_config!()
+      {:ok, healthy, _html} = live(conn, ~p"/ops")
+      assert has_element?(healthy, "#{verdict} [data-sync-status='clear']", "Clear")
+
+      Application.put_env(:scrypath_ops, :control_room_client_state, :unavailable)
+      healthy |> element("#control-room-refresh") |> render_click()
+
+      assert has_element?(healthy, "#{verdict} .ops-verdict__label", "Last succeeded")
+      assert has_element?(healthy, verdict, "No sync failures found")
+      refute has_element?(healthy, "#{verdict} [data-sync-status]")
+
+      {:ok, no_prior, _html} = live(conn, ~p"/ops")
+      no_prior |> element("#control-room-refresh") |> render_click()
+
+      assert has_element?(no_prior, "#{verdict} .ops-verdict__label", "Partial observation")
+      refute has_element?(no_prior, "#{verdict} [data-sync-status]")
     end
   end
 
@@ -323,32 +328,7 @@ defmodule ScrypathOpsWeb.ControlRoomLiveTest do
     ])
   end
 
-  defp put_healthy_posture_config! do
-    Application.put_env(:scrypath_ops, :control_room_client_state, :healthy)
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
-    Application.put_env(:scrypath_ops, :sync_mode, :manual)
-    Application.put_env(:scrypath_ops, :index_prefix, "ctrl")
-    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
-    Application.put_env(:scrypath_ops, :meilisearch_client, ControlRoomClient)
-
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
-      %{
-        "uid" => 1,
-        "status" => "succeeded",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "ctrl_ops_post_a",
-        "finishedAt" => "2026-04-16T18:00:00Z"
-      },
-      %{
-        "uid" => 2,
-        "status" => "succeeded",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "ctrl_ops_post_b",
-        "finishedAt" => "2026-04-16T18:05:00Z"
-      }
-    ])
-  end
+  defp put_healthy_posture_config!, do: ControlRoomStubs.put_healthy_posture!()
 
   defp assert_before(html, first, second) do
     assert {first_pos, _} = :binary.match(html, first)
