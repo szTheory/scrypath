@@ -15,7 +15,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
@@ -757,6 +757,20 @@ test('accept smoke command line exits 0 against the served site and 1 with a mes
     assert.match(served.stdout, /^ok - the ui font answers 200 as font\/woff2 with its pinned hash$/m);
     assert.match(served.stdout, /smoke passed/);
   });
+});
+
+test('planted smoke still runs and exits 1 with its message when started through a symlinked path', () => {
+  // Node resolves symlinks for the main module, so a guard that compares the raw argv path with
+  // import.meta.url sees two different paths and silently runs nothing: no output, exit 0.
+  const env = { ...process.env };
+  delete env.SCRYPATH_SMOKE_URL;
+  delete env.SCRYPATH_SITE_URL;
+  const link = path.join(tempDir('scrypath-symlink-'), 'website-link');
+  symlinkSync(path.join(repoRoot, 'website'), link, 'dir');
+
+  const viaLink = spawnSync(process.execPath, [path.join(link, 'scripts', 'smoke.mjs')], { encoding: 'utf8', env });
+  assert.equal(viaLink.status, 1, `exit ${viaLink.status}, stdout ${JSON.stringify(viaLink.stdout)}, stderr ${JSON.stringify(viaLink.stderr)}`);
+  assert.match(viaLink.stderr, /SCRYPATH_SMOKE_URL/);
 });
 
 test('planted smoke fails when a pinned font is missing from the served tree', async () => {

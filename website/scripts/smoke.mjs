@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -265,6 +265,20 @@ async function main() {
   process.exit(ok ? 0 : 1);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// Run main only when this file is the entry point. Node resolves symlinks for the main module, so the
+// argv path is compared by real path: a raw comparison silently ran nothing, and exited 0, whenever the
+// script was started through a symlinked checkout or workspace.
+function isEntryPoint() {
+  if (!process.argv[1]) {
+    return false;
+  }
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+  }
+}
+
+if (isEntryPoint()) {
   await main();
 }
