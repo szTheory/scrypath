@@ -141,9 +141,21 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   @generator ~s(<meta name="generator" content="ExDoc v)
   @pinned_css "brand/assets/docs/scrypath-exdoc.css"
   @docs_css "dev/docs/scrypath-exdoc.css"
-  # The one rule the docs-owned stylesheet adds to the pinned rules: ExDoc takes a single logo,
-  # so dark mode swaps in the dark symbol.
+  # Rules the docs-owned stylesheet adds to the pinned rules, in file order. The derivation test
+  # compares the whole file with the pin plus exactly these, so nothing else can be added silently.
+  #
+  # Contrast rule: ExDoc's own colors for these token classes were tuned for ExDoc's near-white code
+  # background. On the brand code background (#F0E9E6) the operator, entity, label and delimiter
+  # colors measure about 4:1 in light mode, and ExDoc's dark lexer-error pair is 2.3:1. They take the
+  # brand text color instead (15.1:1 in light, 16.9:1 in dark). The contrast test below measures it.
+  @contrast_classes ~w(o ni nl dl err)
+  @contrast_rule @contrast_classes
+                 |> Enum.flat_map(&["body .makeup .#{&1}", "body.dark .makeup .#{&1}"])
+                 |> Enum.join(",")
+                 |> Kernel.<>("{color:var(--scrypath-doc-text)}")
+  # Logo rule: ExDoc takes a single logo, so dark mode swaps in the dark symbol.
   @dark_logo_rule ~S|body.dark .sidebar-projectImage img{content:url("../brand/assets/logo/scrypath-symbol-dark.svg")}|
+  @additional_rules [@contrast_rule, @dark_logo_rule]
   # Token role to its custom property suffix, and the token classes each role colors, as in the book.
   @code_roles %{
     "background" => "--scrypath-doc-bg",
@@ -406,9 +418,10 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     end
   end
 
-  test "the docs-owned rules equal the rules derived from the pinned file plus the dark-logo rule" do
+  test "the docs-owned rules equal the rules derived from the pinned file plus the additional rules" do
     assert docs_rules() ==
-             derive_docs_rules(File.read!(@pinned_css)) ++ parse_rules(@dark_logo_rule)
+             derive_docs_rules(File.read!(@pinned_css)) ++
+               Enum.flat_map(@additional_rules, &parse_rules/1)
   end
 
   test "the code colors equal the brand tokens, light on :root and dark on body.dark" do
@@ -425,10 +438,15 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   end
 
   test "each token class maps to its color property, in both themes" do
-    expected =
+    pinned =
       for {role, classes} <- @class_roles, class <- classes, into: %{} do
         {class, "var(--scrypath-doc-#{role})"}
       end
+
+    # The contrast classes are the one named addition. They must stay disjoint from the pinned
+    # classes, so the addition can never hide a changed mapping of a class the book colors.
+    assert MapSet.disjoint?(MapSet.new(Map.keys(pinned)), MapSet.new(@contrast_classes))
+    expected = Map.merge(pinned, Map.new(@contrast_classes, &{&1, "var(--scrypath-doc-text)"}))
 
     for prefix <- ["body .makeup .", "body.dark .makeup ."] do
       actual =
@@ -439,7 +457,8 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
           {String.replace_prefix(selector, prefix, ""), String.replace(decls, ~r/^color:|;$/, "")}
         end
 
-      assert actual == expected, "classes under #{prefix} do not map as in the pinned file"
+      assert actual == expected,
+             "classes under #{prefix} do not map as in the pinned file plus the contrast rule"
     end
   end
 

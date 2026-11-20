@@ -4,7 +4,10 @@
    light and dark toggle, so the pinned block painted a dark code block on a light page.
    Second, every rule with a color or a background is written for both "body " and "body.dark ",
    so it follows that toggle and outranks ExDoc's own "dark makeup" rules.
-   The last rule is docs-owned: ExDoc takes one logo, so dark mode swaps in the dark symbol.
+   The last two rules are docs-owned and not in the pinned file. The first gives the brand text color
+   to the token classes the book leaves to ExDoc and that ExDoc paints below 4.5:1 on the brand code
+   background (operators, entities, labels, delimiters and lexer errors). The second is the logo:
+   ExDoc takes one logo, so dark mode swaps in the dark symbol.
    test/release/package_metadata_test.exs fails if this file drifts from the pinned file.
    After a brand pin update, re-derive it. */
 :root{--scrypath-doc-bg:#F0E9E6;--scrypath-doc-text:#1E1220;--scrypath-doc-comment:#6B5F6E;--scrypath-doc-keyword:#7B2D6B;--scrypath-doc-string:#2748A8;--scrypath-doc-atom:#006A7A}
@@ -17,4 +20,5 @@ body .makeup .m,body.dark .makeup .m,body .makeup .mb,body.dark .makeup .mb,body
 body .makeup .nf,body.dark .makeup .nf,body .makeup .fm,body.dark .makeup .fm{color:var(--scrypath-doc-text)}
 body .makeup .nc,body.dark .makeup .nc,body .makeup .nn,body.dark .makeup .nn{color:var(--scrypath-doc-text)}
 body .makeup .c,body.dark .makeup .c,body .makeup .c1,body.dark .makeup .c1,body .makeup .cm,body.dark .makeup .cm,body .makeup .cs,body.dark .makeup .cs,body .makeup .ch,body.dark .makeup .ch,body .makeup .cp,body.dark .makeup .cp,body .makeup .cpf,body.dark .makeup .cpf{color:var(--scrypath-doc-comment)}
+body .makeup .o,body.dark .makeup .o,body .makeup .ni,body.dark .makeup .ni,body .makeup .nl,body.dark .makeup .nl,body .makeup .dl,body.dark .makeup .dl,body .makeup .err,body.dark .makeup .err{color:var(--scrypath-doc-text)}
 body.dark .sidebar-projectImage img{content:url("../brand/assets/logo/scrypath-symbol-dark.svg")}
