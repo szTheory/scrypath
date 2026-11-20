@@ -1,36 +1,34 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.46
-milestone_name: Brand foundation and re-skin
-status: Awaiting next milestone
-stopped_at: v1.46 shipped, archived and released (Hex 0.3.19); v1.47 prepared; ready for /gsd-new-milestone v1.47
-last_updated: "2026-11-20T03:26:25.315Z"
+milestone: v1.47
+milestone_name: Brand completion
+status: planning
+last_updated: "2026-11-20T14:30:21.403Z"
 last_activity: 2026-11-20
-last_activity_desc: v1.46 closed out; Hex 0.3.19 released; v1.47 prepared
-state_head: 2f767884c6393b0f8cc49cc797966894f6e34cfe
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See [PROJECT](PROJECT.md), updated 2026-11-19.
+See [PROJECT](PROJECT.md), updated 2026-11-20.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
 **Current focus:** Between milestones; v1.47 is prepared in [ROLLING-ROADMAP.md](reference/ROLLING-ROADMAP.md) for the maintainer to choose.
 
 ## Current Position
 
-Phase: Milestone v1.46 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-19 — Milestone v1.46 completed and archived
+Status: Defining requirements
+Last activity: 2026-11-20 — Milestone v1.47 started
+
 
 ## Performance Metrics
 

@@ -28,7 +28,15 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 ## Current Milestone
 
-None active. v1.46 **Brand foundation and re-skin** shipped 2026-11-19; the next milestone is prepared in `reference/ROLLING-ROADMAP.md` and waits for the maintainer's choice.
+## Current Milestone: v1.47 Brand completion
+
+**Goal:** Finish the brand adoption v1.46 started: the website in the new identity, the wording fixes that do not need the catalog, and removal of the old identity's last code, so v1.48 (Catalog foundation) starts from a clean base.
+
+**Target features:**
+- Website re-skin (SITE-01..05, Phase 189): pinned brand tokens, fonts, lockups and favicons; light default with a Light/Dark/System picker; computed-style, font-hash and contrast checks in place of the capture-only `check.mjs`.
+- Wording that does not need the catalog (COPY-01..04, Phase 190): glossary-rule copy fixes, "Control room" casing, guards as a data table inside the required `ops-ui` job, the Cancel-focus assertion and the unpinned copy values.
+- Cleanup (CLEAN-01..06, Phase 191): demo favicon, `brandbook/` readers then data, static token invariants (12 px floor and friends), the unthemed-favicon tripwire, ledger wording, and `brand/tokens.json` named as the token authority.
+- Kickoff chore, outside the phases (a small CI PR first): an `ecommerce-path` classifier so planning-only and docs-only PRs skip the browser lanes.
 
 ## Current State
 
@@ -38,7 +46,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-After v1.46: v1.47 Catalog foundation (plus the deferred website re-skin, catalog-free wording and `brandbook/` cleanup) (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half), v1.48 Screens, flows and full catalog, v1.49 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
+After v1.47 Brand completion: v1.48 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half; Phases 192-196), v1.49 Screens, flows and full catalog, v1.50 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
@@ -49,7 +57,7 @@ Historical milestone setup, state, next steps and the v1.40 to v1.45 archived-mi
 
 ## Future Work
 
-Keep `main` green and release only when a package change warrants it. v1.45 is archived locally; PR delivery and publication remain separate. The rolling roadmap in `reference/ROLLING-ROADMAP.md` orders v1.46 brand re-skin, v1.47 catalog, v1.48 screens and flows, then v1.49 adopter features; activate each through its own milestone boundary. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
+Keep `main` green and release only when a package change warrants it. v1.45 is archived locally; PR delivery and publication remain separate. The rolling roadmap in `reference/ROLLING-ROADMAP.md` orders v1.47 brand completion, v1.48 catalog, v1.49 screens and flows, then v1.50 adopter features; activate each through its own milestone boundary. Runtime, backend, authentication, infrastructure automation, and new workflow/surface scope still require separate evidence and decisions. Retain the Phase 170 freeze/tracker rule and historical record as archived.
 
 ## Canonical Adopter Contract
 
@@ -472,7 +480,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-No active implementation requirement remains after the v1.45 local archive. All 21 v1.45 requirements are in [the requirements archive](milestones/v1.45-REQUIREMENTS.md). Final archive-source attestation is mandatory and external. A new milestone requires fresh requirements and its own scope boundary.
+v1.47 Brand completion (Phases 189-191): SITE-01..05, COPY-01..04, CLEAN-01..06, plus the standing GATE-02 guardrails. Full text and traceability are in `REQUIREMENTS.md`. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
 
 ### Out of Scope
 
@@ -502,4 +510,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-18 after v1.46 milestone start.*
+*Last updated: 2026-11-20 after v1.47 milestone start.*
