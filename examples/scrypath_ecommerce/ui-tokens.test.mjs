@@ -42,6 +42,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -55,18 +56,20 @@ const BUILT_CSS = path.join(ROOT, "scrypath_ops/priv/static/assets/css/app.css")
 const TOKEN_MAP = path.join(ROOT, "scrypath_ops/assets/css/token-map.json");
 const BRAND_TOKENS = path.join(ROOT, "brand/tokens.json");
 
-// Shrink-only ceilings. Phase 187 lowers them as rows flip to applied and the
-// retired properties are deleted.
-const PENDING_CEILING = 38;
-const HEX_OUTSIDE_CEILING = 34;
-// Allowlist entries (paths and prefixes). Shrink-only: a new entry means a new
-// retired value landed in a new file, which is the thing this guard exists to stop.
+// Exact ceilings. Each one fails when the live count is above it (growth) and when the live
+// count is below it (the ceiling must be lowered, with the printed number), so none can keep
+// unused room. Phase 187 lowers them as rows flip to applied and the retired properties are
+// deleted.
+const PENDING_CEILING = 0;
+const HEX_OUTSIDE_CEILING = 0;
+// Allowlist entries (paths and prefixes). A new entry means a new retired value landed in a
+// new file, which is the thing this guard exists to stop.
 // Growth inside a listed file is stopped by each entry's max_hits (see HITS_CEILING).
-const ALLOWLIST_CEILING = 22;
+const ALLOWLIST_CEILING = 10;
 // The sum of every entry's max_hits in the allowlist file. Each entry's max_hits must equal
 // the live count, so a retired value added to a listed file needs a max_hits edit there and
 // this edit here: the second key. A drop in hits needs both edits too.
-const HITS_CEILING = 485;
+const HITS_CEILING = 238;
 // The checks take these as a parameter so the planted and accept cases can use
 // their own limits and never depend on how far the live ceilings have shrunk.
 const LIMITS = { pending: PENDING_CEILING, hexOutside: HEX_OUTSIDE_CEILING, allowlist: ALLOWLIST_CEILING, hits: HITS_CEILING };
@@ -379,6 +382,8 @@ function checkApplied(themes, map, brandTokens, limits = LIMITS) {
   const pending = countPending(map);
   if (pending > limits.pending) {
     failures.push(`pending count ${pending} exceeds PENDING_CEILING ${limits.pending} (shrink-only)`);
+  } else if (Number.isFinite(limits.pending) && pending < limits.pending) {
+    failures.push(`PENDING_CEILING is ${limits.pending} but only ${pending} cells are pending: lower it to ${pending}`);
   }
   return failures;
 }
@@ -422,6 +427,18 @@ function checkBuiltEmissions(themes, builtCss) {
   return failures;
 }
 
+/** Theme-block hex values that are neither a brand token nor a declared derive or local target. */
+function countHexOutside(themes, map, brandTokens) {
+  const allowed = allowedHexSet(map, brandTokens);
+  let outside = 0;
+  for (const mode of MODES) {
+    for (const value of Object.values(themes[mode])) {
+      if (HEX.test(value) && !allowed.has(lower(value))) outside += 1;
+    }
+  }
+  return outside;
+}
+
 function checkHexAllowlist(themes, map, brandTokens, limits = LIMITS) {
   const failures = [];
   const allowed = allowedHexSet(map, brandTokens);
@@ -432,14 +449,11 @@ function checkHexAllowlist(themes, map, brandTokens, limits = LIMITS) {
       failures.push(`applied ${row.property} (${mode}) holds ${value}, which is not a brand token or declared target`);
     }
   }
-  let outside = 0;
-  for (const mode of MODES) {
-    for (const value of Object.values(themes[mode])) {
-      if (HEX.test(value) && !allowed.has(lower(value))) outside += 1;
-    }
-  }
+  const outside = countHexOutside(themes, map, brandTokens);
   if (outside > limits.hexOutside) {
     failures.push(`theme-block hex values outside the brand set: ${outside} exceeds HEX_OUTSIDE_CEILING ${limits.hexOutside} (shrink-only)`);
+  } else if (Number.isFinite(limits.hexOutside) && outside < limits.hexOutside) {
+    failures.push(`HEX_OUTSIDE_CEILING is ${limits.hexOutside} but only ${outside} theme-block hex values sit outside the brand set: lower it to ${outside}`);
   }
   return failures;
 }
@@ -661,12 +675,112 @@ test("planted ceiling breaches fail", () => {
   assert.ok(anyFailure(checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: 0 }), /exceeds HEX_OUTSIDE_CEILING 0/));
 });
 
+// 186 verification IN-06: only HITS_CEILING used to fail when the live count dropped below it. Every
+// ceiling is exact now: a ceiling above the live count fails and prints the number to use.
+test("planted ceiling above live count fails: pending cells", () => {
+  const { themes, map, brandTokens } = fixtures();
+  const pending = countPending(map);
+  assert.deepEqual(checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending }), []);
+  assert.ok(
+    anyFailure(
+      checkApplied(themes, map, brandTokens, { ...NO_LIMITS, pending: pending + 1 }),
+      new RegExp(`PENDING_CEILING is ${pending + 1} but only ${pending} cells are pending: lower it to ${pending}`),
+    ),
+  );
+});
+
+test("planted ceiling above live count fails: hex values outside the brand set", () => {
+  const { themes, map, brandTokens } = fixtures();
+  const outside = countHexOutside(themes, map, brandTokens);
+  assert.deepEqual(checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: outside }), []);
+  assert.ok(
+    anyFailure(
+      checkHexAllowlist(themes, map, brandTokens, { ...NO_LIMITS, hexOutside: outside + 1 }),
+      new RegExp(`HEX_OUTSIDE_CEILING is ${outside + 1} but only ${outside} theme-block hex values .*: lower it to ${outside}`),
+    ),
+  );
+});
+
 test("valid fixtures pass", () => {
   const { themes, map, brandTokens, builtCss } = fixtures();
   assert.deepEqual(checkParity(themes, map), []);
   assert.deepEqual(checkApplied(themes, map, brandTokens, NO_LIMITS), []);
   assert.deepEqual(checkBuiltEmissions(themes, builtCss), []);
   assert.deepEqual(checkHexAllowlist(themes, map, brandTokens, NO_LIMITS), []);
+});
+
+// ---------------------------------------------------------------------------
+// Font URLs (Phase 187, SKIN-02; the font half of N-10)
+//
+// The built stylesheet declares four @font-face blocks, two of which load a file. Each file URL
+// must be CSS-relative (`../fonts/<file>?v=<sha256>`, so it resolves against
+// `<mount>/assets/css/app.css` at any mount prefix) and its `?v=` must equal the sha256 of the
+// named file under scrypath_ops/priv/static/assets/fonts. AssetPlug sends the immutable cache
+// header only when the two match, so a stale hash silently loses caching and a root-absolute
+// URL breaks every host that is not mounted at the root.
+// ---------------------------------------------------------------------------
+
+const FONT_DIR = path.join(ROOT, "scrypath_ops/priv/static/assets/fonts");
+const FONT_FACE_BLOCK = /@font-face\s*\{[^}]*\}/g;
+const FONT_URL = /url\(\s*(["']?)([^"')]+)\1\s*\)/g;
+const RELATIVE_FONT_URL = /^\.\.\/fonts\/([A-Za-z0-9._-]+)\?v=([0-9a-f]{64})$/;
+
+function fontSha256(fileName) {
+  return crypto.createHash("sha256").update(fs.readFileSync(path.join(FONT_DIR, fileName))).digest("hex");
+}
+
+/** Failures for the font URLs of a stylesheet. `sha256Of(fileName)` returns the file's hex sha256. */
+function checkFontUrls(css, sha256Of) {
+  const failures = [];
+  const faces = css.match(FONT_FACE_BLOCK) ?? [];
+  if (faces.length !== 4) {
+    failures.push(`expected 4 @font-face blocks (two files and two local fallbacks), found ${faces.length}`);
+  }
+  const urls = faces.flatMap((face) => [...face.matchAll(FONT_URL)].map((match) => match[2]));
+  if (urls.length !== 2) {
+    failures.push(`expected 2 font file URLs (one per brand family), found ${urls.length}`);
+  }
+  for (const url of urls) {
+    const parsed = RELATIVE_FONT_URL.exec(url);
+    if (!parsed) {
+      failures.push(`font URL ${url} must look like ../fonts/<file>?v=<64 hex>: relative to the stylesheet, never root-absolute`);
+      continue;
+    }
+    const [, fileName, pinned] = parsed;
+    const actual = sha256Of(fileName);
+    if (actual !== pinned) {
+      failures.push(`font URL for ${fileName} pins ?v=${pinned} but the file's sha256 is ${actual}`);
+    }
+  }
+  return failures;
+}
+
+test("live font URLs are relative and hash-pinned", () => {
+  const builtCss = fs.readFileSync(BUILT_CSS, "utf8");
+  assert.deepEqual(checkFontUrls(builtCss, fontSha256), []);
+  // The source stylesheet is the authored copy; the built one must not drift from it.
+  assert.deepEqual(checkFontUrls(fs.readFileSync(APP_CSS, "utf8"), fontSha256), []);
+});
+
+const PLANTED_HASH = "a".repeat(64);
+const plantedFontCss = (uiUrl) =>
+  [
+    `@font-face { font-family: "Hanken Grotesk"; src: url("${uiUrl}") format("woff2"); }`,
+    `@font-face { font-family: "Sometype Mono"; src: url("../fonts/mono.woff2?v=${PLANTED_HASH}") format("woff2"); }`,
+    `@font-face { font-family: "Hanken Grotesk Fallback"; src: local("Arial"); }`,
+    `@font-face { font-family: "Sometype Mono Fallback"; src: local("Courier New"); }`,
+  ].join("\n");
+const plantedSha256 = () => PLANTED_HASH;
+
+test("planted font hash mismatch fails", () => {
+  assert.deepEqual(checkFontUrls(plantedFontCss(`../fonts/ui.woff2?v=${PLANTED_HASH}`), plantedSha256), []);
+  const failures = checkFontUrls(plantedFontCss(`../fonts/ui.woff2?v=${"b".repeat(64)}`), plantedSha256);
+  assert.ok(failures.some((failure) => /ui\.woff2 .*pins \?v=b{64} but the file's sha256 is a{64}/.test(failure)), failures.join("\n"));
+});
+
+test("planted root-absolute font URL fails", () => {
+  const failures = checkFontUrls(plantedFontCss(`/assets/fonts/ui.woff2?v=${PLANTED_HASH}`), plantedSha256);
+  assert.ok(failures.some((failure) => /\/assets\/fonts\/ui\.woff2.*never root-absolute/.test(failure)), failures.join("\n"));
 });
 
 // ---------------------------------------------------------------------------
@@ -896,6 +1010,8 @@ function checkAllowlist(hits, allowlist, files, limits = LIMITS) {
   const entries = allowlist.entries;
   if (entries.length > limits.allowlist) {
     failures.push(`allowlist has ${entries.length} entries, over ALLOWLIST_CEILING ${limits.allowlist} (shrink-only)`);
+  } else if (Number.isFinite(limits.allowlist) && entries.length < limits.allowlist) {
+    failures.push(`ALLOWLIST_CEILING is ${limits.allowlist} but the allowlist has only ${entries.length} entries: lower it to ${entries.length}`);
   }
 
   const seen = new Set();
@@ -1140,6 +1256,19 @@ test("planted allowlist ceiling breach fails", () => {
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 1 }), /over ALLOWLIST_CEILING 1/));
 });
 
+test("planted ceiling above live count fails: allowlist entries", () => {
+  const dir = makeTree({ "src/a.css": `a { color: ${retired}; }\n`, "src/b.css": `b { color: ${retired}; }\n` });
+  const files = listRepoFiles(dir);
+  const hits = scanFiles(dir, files, buildDeny());
+  const allowlist = { schema: ALLOWLIST_SCHEMA, entries: [entry("src/a.css"), entry("src/b.css")] };
+  assert.ok(
+    anyFailure(
+      checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, allowlist: 3 }),
+      /ALLOWLIST_CEILING is 3 but the allowlist has only 2 entries: lower it to 2/,
+    ),
+  );
+});
+
 test("accept brand-only tree", () => {
   const dir = makeTree({
     "src/theme.css": `a { color: ${brandPanel()}; background: rgb(17 17 17); }\n`,
@@ -1222,4 +1351,498 @@ test("planted hits ceiling must equal the sum of max_hits", () => {
   assert.deepEqual(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 2 }), []);
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 1 }), /add up to 2, over HITS_CEILING 1/));
   assert.ok(anyFailure(checkAllowlist(hits, allowlist, files, { ...NO_LIMITS, hits: 3 }), /under HITS_CEILING 3: lower HITS_CEILING to 2/));
+});
+
+// Part 3, N-09 (A11Y-02): focused elements scroll to a position below the sticky header.
+//
+// What this proves, in plain terms: the stylesheet gives the page a scroll padding that is the
+// sticky header's height plus 1rem, and the header height is one variable (4rem, 7rem at 640px
+// and below, where the header wraps to two rows), so a keyboard user's focused control is never
+// hidden behind the header. The Help page's two old scroll-margin rules are gone, because they
+// duplicated that job with hard-coded numbers. The browser measurement of the real header (P-10)
+// is a separate check; this one stops the rule from being deleted or hard-coded again.
+function stripCssComments(css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+// The text inside the braces of every `@media (<query>) {` block, with nested braces matched.
+function mediaBlocks(css, query) {
+  const blocks = [];
+  const opener = new RegExp(`@media\\s*\\(${query}\\)\\s*\\{`, "g");
+  let match;
+  while ((match = opener.exec(css))) {
+    let depth = 1;
+    let index = opener.lastIndex;
+    while (index < css.length && depth > 0) {
+      if (css[index] === "{") depth += 1;
+      else if (css[index] === "}") depth -= 1;
+      index += 1;
+    }
+    blocks.push(css.slice(opener.lastIndex, index - 1));
+  }
+  return blocks;
+}
+
+// Flat rules (declaration blocks with no nested braces) whose selector satisfies `selectorTest`.
+function flatRules(css, selectorTest) {
+  const rules = [];
+  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = match[1].trim().split("\n").map((line) => line.trim()).join(" ");
+    if (selectorTest(selector)) rules.push({ selector, body: match[2] });
+  }
+  return rules;
+}
+
+function scrollPaddingFailures(source) {
+  const css = stripCssComments(source);
+  const failures = [];
+  const htmlRules = flatRules(css, (selector) => /^html\b/.test(selector));
+
+  if (!htmlRules.some((rule) => /scroll-padding-top:\s*calc\(\s*var\(--ops-header-h\)\s*\+\s*1rem\s*\)/.test(rule.body))) {
+    failures.push("no html rule sets scroll-padding-top to calc(var(--ops-header-h) + 1rem)");
+  }
+  if (!htmlRules.some((rule) => /--ops-header-h:\s*4rem\b/.test(rule.body))) {
+    failures.push("no html rule declares --ops-header-h as 4rem");
+  }
+  const narrow = mediaBlocks(css, "max-width:\\s*640px");
+  const narrowHtml = narrow.flatMap((block) => flatRules(block, (selector) => /^html\b/.test(selector)));
+  if (!narrowHtml.some((rule) => /--ops-header-h:\s*7rem\b/.test(rule.body))) {
+    failures.push("no html rule inside @media (max-width: 640px) declares --ops-header-h as 7rem");
+  }
+  if (!flatRules(css, (selector) => selector === ".ops-header").some((rule) => /min-height:\s*var\(--ops-header-h\b/.test(rule.body))) {
+    failures.push(".ops-header does not take its min-height from --ops-header-h");
+  }
+  for (const rule of flatRules(css, (selector) => /\.ops-help/.test(selector))) {
+    if (/scroll-margin-top\s*:/.test(rule.body)) failures.push(`${rule.selector} still declares a scroll margin`);
+  }
+  return failures;
+}
+
+const SCROLL_PADDING_FIXTURE = `
+html:has(.ops-shell) { --ops-header-h: 4rem; scroll-padding-top: calc(var(--ops-header-h) + 1rem); }
+@media (max-width: 640px) { html:has(.ops-shell) { --ops-header-h: 7rem; } }
+.ops-header { min-height: var(--ops-header-h, 4rem); }
+`;
+
+test("live scroll padding clears the sticky header", () => {
+  const failures = scrollPaddingFailures(fs.readFileSync(APP_CSS, "utf8"));
+  assert.deepEqual(failures, []);
+});
+
+test("planted missing scroll padding fails", () => {
+  assert.deepEqual(scrollPaddingFailures(SCROLL_PADDING_FIXTURE), []);
+
+  const noPadding = SCROLL_PADDING_FIXTURE.replace(/scroll-padding-top:[^;]*;/, "");
+  assert.ok(scrollPaddingFailures(noPadding).some((message) => /no html rule sets scroll-padding-top/.test(message)));
+
+  const hardCoded = SCROLL_PADDING_FIXTURE.replace("calc(var(--ops-header-h) + 1rem)", "5rem");
+  assert.ok(scrollPaddingFailures(hardCoded).some((message) => /no html rule sets scroll-padding-top/.test(message)));
+
+  const noNarrow = SCROLL_PADDING_FIXTURE.replace("7rem", "4rem");
+  assert.ok(scrollPaddingFailures(noNarrow).some((message) => /7rem/.test(message)));
+
+  const detached = SCROLL_PADDING_FIXTURE.replace("var(--ops-header-h, 4rem)", "4rem");
+  assert.ok(scrollPaddingFailures(detached).some((message) => /min-height from --ops-header-h/.test(message)));
+
+  const helpMargin = `${SCROLL_PADDING_FIXTURE}\n.ops-help-content [id] { scroll-margin-top: 7rem; }\n`;
+  assert.ok(scrollPaddingFailures(helpMargin).some((message) => /still declares a scroll margin/.test(message)));
+
+  assert.ok(scrollPaddingFailures("/* html { scroll-padding-top: calc(var(--ops-header-h) + 1rem); } */").length > 0);
+});
+
+// ---------------------------------------------------------------------------
+// N-08: every hex literal in app.css is a brand value, black, white or a declared target
+// (Phase 187, SKIN-01)
+//
+// The theme-block checks above only look at the values of the two theme plugin blocks. This one
+// reads the whole stylesheet: every `#rrggbb`, `#rgb` or percent-encoded `%23rrggbb` literal
+// anywhere, in a rule or a data URI, must be a hex from brand/tokens.json, a derive or local
+// target declared in the token map, or `#000` or `#fff` (and their six-digit forms). Eight-digit
+// alpha hexes and any other short hex fail, so an old color cannot come back inside a rule the
+// theme checks never read. Comments are not literals.
+// ---------------------------------------------------------------------------
+
+const BLACK_WHITE_HEX = new Set(["#000", "#fff", "#000000", "#ffffff"]);
+const CSS_HEX_LITERAL = /(?:#|%23)(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})(?![0-9a-z_-])/gi;
+
+function cssHexLiteralFailures(css, allowed) {
+  const failures = [];
+  const seen = new Set();
+  for (const match of stripCssComments(css).matchAll(CSS_HEX_LITERAL)) {
+    const literal = lower(match[0].replace(/^%23/i, "#"));
+    if (BLACK_WHITE_HEX.has(literal) || allowed.has(literal) || seen.has(literal)) continue;
+    seen.add(literal);
+    failures.push(`app.css holds ${match[0]}, which is not a brand token, #000, #fff or a declared token-map target`);
+  }
+  return failures;
+}
+
+test("live app.css hex literals are brand or declared", () => {
+  const { map, brandTokens } = loadLive();
+  assert.deepEqual(cssHexLiteralFailures(fs.readFileSync(APP_CSS, "utf8"), allowedHexSet(map, brandTokens)), []);
+});
+
+test("planted retired hex in app.css fails", () => {
+  const { map, brandTokens } = fixtures();
+  const allowed = allowedHexSet(map, brandTokens);
+  const fails = (css) => cssHexLiteralFailures(css, allowed).length;
+
+  // Accepted: a brand hex in either case, a declared target, black and white in both forms, and a
+  // retired value that only appears in a comment.
+  const accepted = [
+    ".a { color: #FFFFFF; background: #101010; border-color: #334455; }",
+    ".b { color: #000; background: #fff; outline-color: #000000; box-shadow: 0 0 0 1px #ffffff; }",
+    `/* history: the old identity used ${retired} */ .c { color: red; }`,
+  ];
+  for (const css of accepted) assert.equal(fails(css), 0, css);
+
+  // Rejected: the retired hex in a rule, percent-encoded inside a data URI, in upper case, an
+  // eight-digit alpha form of an allowed hex, and an arbitrary short hex.
+  const rejected = [
+    `.d { color: ${retired}; }`,
+    `.e { background-image: url("data:image/svg+xml,%3Csvg fill='%23${DENY_HEX[0]}'/%3E"); }`,
+    `.f { color: ${retired.toUpperCase()}; }`,
+    ".g { color: #101010cc; }",
+    ".h { color: #abc; }",
+  ];
+  for (const css of rejected) assert.ok(fails(css) > 0, css);
+});
+
+// ---------------------------------------------------------------------------
+// N-13: spacing stays on the 4 px grid (Phase 187, SKIN-06)
+//
+// Two checks, both read from scrypath_ops/assets/css/app.css with comments removed.
+//
+// 1. Every spacing custom property (`--spacing-*`, `--control-h-*`, `--control-pad-*` and
+//    `--ops-sidebar-width`) is a plain px or rem length that is a multiple of 4 px. Two named
+//    exceptions exist and are pinned to their value: `--spacing-ops-field` is 6 px and
+//    `--control-pad-x-sm` is 10 px. A new token off the grid, an exception that moved, or an
+//    exception that no longer exists all fail.
+// 2. The number of padding, margin and gap literals that are not a multiple of 4 px can only
+//    fall. SPACING_OFFGRID_CEILING is the count printed on the first run; it is exact in both
+//    directions (a lower live count fails until the ceiling is lowered), like the ceilings
+//    above. The one value exempted by name is 14 px (`.875rem`) as the block padding of
+//    `.ops-failed-row` and `.ops-saved-search-row`; 14 px anywhere else counts toward the
+//    ceiling. Percentages, `var()` references, zero and `auto` are not literals, and 2 px
+//    border and outline widths are not spacing.
+// ---------------------------------------------------------------------------
+
+const GRID_PX = 4;
+const SPACING_EXCEPTIONS = new Map([
+  ["--spacing-ops-field", 6],
+  ["--control-pad-x-sm", 10],
+]);
+const SPACING_TOKEN = /^--(?:spacing-[a-z0-9-]+|control-h-[a-z0-9-]+|control-pad-[a-z0-9-]+|ops-sidebar-width)$/;
+const SPACING_PROPERTY =
+  /^(?:padding|margin)(?:-(?:top|right|bottom|left|inline|block)(?:-(?:start|end))?)?$|^(?:gap|row-gap|column-gap)$/;
+const SPACING_LENGTH = /(?<![\w.#-])(-?\d*\.?\d+)(px|rem|em)\b/g;
+const FOURTEEN_PX_RULES = new Set([".ops-failed-row", ".ops-saved-search-row"]);
+const FOURTEEN_PX_PROPERTIES = new Set(["padding", "padding-block", "padding-top", "padding-bottom"]);
+
+// Baseline recorded on the first run of N-13 (Plan 09): 37 literals. Lower it when one moves onto the grid.
+const SPACING_OFFGRID_CEILING = 37;
+
+function lengthPx(number, unit) {
+  const px = unit === "px" ? number : number * 16;
+  return Math.round(px * 1000) / 1000;
+}
+
+function spacingTokenFailures(css) {
+  const failures = [];
+  const declared = new Set();
+  for (const match of stripCssComments(css).matchAll(/(?<![\w-])(--[a-z0-9-]+)\s*:\s*([^;}]+)/gi)) {
+    const [, name, raw] = match;
+    if (!SPACING_TOKEN.test(name)) continue;
+    declared.add(name);
+    const value = raw.trim();
+    const length = value.match(/^(-?\d*\.?\d+)(px|rem)$/);
+    if (!length) {
+      failures.push(`${name} is ${value}, not a plain px or rem length`);
+      continue;
+    }
+    const px = lengthPx(Number(length[1]), length[2]);
+    const exception = SPACING_EXCEPTIONS.get(name);
+    if (exception !== undefined) {
+      if (px !== exception) failures.push(`${name} is ${px}px but its named exception is ${exception}px`);
+    } else if (px % GRID_PX !== 0) {
+      failures.push(`${name} is ${px}px, not a multiple of ${GRID_PX}px`);
+    }
+  }
+  for (const name of SPACING_EXCEPTIONS.keys()) {
+    if (!declared.has(name)) failures.push(`${name} is not declared: remove its named exception`);
+  }
+  return failures;
+}
+
+// Each padding, margin or gap length literal that is off the grid, as `selector { property: literal }`.
+function offGridSpacingLiterals(css) {
+  const hits = [];
+  for (const rule of stripCssComments(css).matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
+    const selectors = rule[1].split(",").map((selector) => selector.replace(/\s+/g, " ").trim());
+    for (const declaration of rule[2].split(";")) {
+      const colon = declaration.indexOf(":");
+      if (colon < 0) continue;
+      const property = declaration.slice(0, colon).trim().toLowerCase();
+      if (!SPACING_PROPERTY.test(property)) continue;
+      const value = declaration.slice(colon + 1).replace(/!important/i, "");
+      for (const length of value.matchAll(SPACING_LENGTH)) {
+        const px = Math.abs(lengthPx(Number(length[1]), length[2]));
+        if (px === 0 || px % GRID_PX === 0) continue;
+        const named = px === 14 && FOURTEEN_PX_PROPERTIES.has(property) && selectors.every((selector) => FOURTEEN_PX_RULES.has(selector));
+        if (named) continue;
+        hits.push(`${selectors.join(", ")} { ${property}: ${length[0]} }`);
+      }
+    }
+  }
+  return hits;
+}
+
+test("live spacing tokens stay on the 4 px grid", () => {
+  assert.deepEqual(spacingTokenFailures(fs.readFileSync(APP_CSS, "utf8")), []);
+});
+
+test("live off-grid spacing literals stay at the ceiling", () => {
+  const hits = offGridSpacingLiterals(fs.readFileSync(APP_CSS, "utf8"));
+  assert.ok(
+    hits.length <= SPACING_OFFGRID_CEILING,
+    `${hits.length} off-grid padding, margin and gap literals exceed SPACING_OFFGRID_CEILING ${SPACING_OFFGRID_CEILING} (shrink-only):\n${hits.join("\n")}`,
+  );
+  assert.equal(
+    hits.length,
+    SPACING_OFFGRID_CEILING,
+    `SPACING_OFFGRID_CEILING is ${SPACING_OFFGRID_CEILING} but only ${hits.length} literals are off the grid: lower it to ${hits.length}`,
+  );
+});
+
+test("planted off-grid spacing token fails", () => {
+  const onGrid = `@theme {
+  --spacing-ops-1: 0.25rem; --spacing-ops-field: 0.375rem; --control-h-md: 2.5rem;
+  --control-pad-x-sm: 0.625rem; --ops-sidebar-width: 17rem; --control-h-xs: 28px;
+}
+.ops-failed-row { padding-block: .875rem; gap: .5rem; }
+.ops-saved-search-row { padding: .875rem .75rem; margin: 0 -.5rem; }
+.ops-a { padding: var(--spacing-ops-2) 12px; margin-inline: auto; width: 33px; border-width: 2px; }
+/* .ops-comment { padding: .3rem; } */`;
+
+  // Accepted: on-grid tokens, both named exceptions at their value, 14px as the named block padding,
+  // negative and var() values, and an off-grid literal that only appears in a comment or a width.
+  assert.deepEqual(spacingTokenFailures(onGrid), []);
+  assert.deepEqual(offGridSpacingLiterals(onGrid), []);
+
+  // Planted tokens.
+  const token = (from, to) => spacingTokenFailures(onGrid.replace(from, to));
+  assert.ok(token("--spacing-ops-1: 0.25rem", "--spacing-ops-7: 0.4375rem").some((m) => /--spacing-ops-7 is 7px, not a multiple of 4px/.test(m)));
+  assert.ok(token("--control-h-md: 2.5rem", "--control-h-md: 41px").some((m) => /--control-h-md is 41px/.test(m)));
+  assert.ok(token("--ops-sidebar-width: 17rem", "--ops-sidebar-width: 17.1rem").some((m) => /--ops-sidebar-width is 273.6px/.test(m)));
+  assert.ok(token("--spacing-ops-field: 0.375rem", "--spacing-ops-field: 0.5rem").some((m) => /named exception is 6px/.test(m)));
+  assert.ok(token("--control-pad-x-sm: 0.625rem;", "").some((m) => /--control-pad-x-sm is not declared/.test(m)));
+  assert.ok(token("--control-h-md: 2.5rem", "--control-h-md: calc(2rem + 7px)").some((m) => /not a plain px or rem length/.test(m)));
+
+  // Planted literals: each of these adds exactly one off-grid literal.
+  const literal = (rule) => offGridSpacingLiterals(`${onGrid}\n${rule}`);
+  assert.equal(literal(".ops-b { padding: .3rem; }").length, 1);
+  assert.equal(literal(".ops-c { gap: 5px .5rem; }").length, 1);
+  assert.equal(literal(".ops-d { column-gap: .875rem; }").length, 1, "14px is exempt only as block padding");
+  assert.equal(literal(".ops-e { margin-block: .875rem; }").length, 1, "14px margin is not the named exception");
+  assert.equal(literal(".ops-failed-row__facts { padding-block: .875rem; }").length, 1, "14px padding in another rule counts");
+  assert.equal(literal(".ops-failed-row, .ops-other { padding-block: .875rem; }").length, 1, "a shared rule is not the named rule");
+  assert.equal(literal(".ops-f { padding-inline-start: -.1875rem 7px; }").length, 2);
+});
+
+// ---------------------------------------------------------------------------
+// N-11: the compiled CSS can only lose unscoped selectors and dual dark rules (Phase 187, A11Y-04)
+//
+// The ops stylesheet is linked into a host application's page on `/admin/search*`, so any rule
+// that is not tied to an `.ops-` class can restyle host elements on those pages (the host
+// contract spec proves the host's own routes load no ops sheet at all). Two counts are read from
+// the compiled CSS (`scrypath_ops/priv/static/assets/css/app.css`) and can only fall:
+//
+// 1. Unscoped selector parts. A selector part (one entry of a comma list, in a rule at any
+//    depth) is unscoped when its subject, the last compound selector, is `*`, a pseudo-element
+//    (`::x`, or `:before`, `:after`, `:first-line`, `:first-letter`), `:root`, `:host`, `html`,
+//    `body` or `[data-theme...]`, and no `.ops-` class appears anywhere in the same selector part
+//    (`.ops-shell *` is scoped; `*` is not). Rules inside `@keyframes`, `@font-face` and `@property`
+//    are not selectors and are skipped. Nested `&` rules take their parent's scope and are skipped.
+// 2. Dual dark rules. A rule whose parts all start with `[data-theme="dark"]` that has a twin
+//    inside `@media (prefers-color-scheme: dark)` written with `html:not([data-theme="light"])` in
+//    place of the prefix: the same declarations maintained twice. The theme plugin block (it also
+//    lists `:root:has(...)`) is not one of these.
+//
+// UNSCOPED_SELECTOR_CEILING and DUAL_DARK_RULE_CEILING are the counts printed on the first run. Like
+// the ceilings above, each is exact in both directions: growth fails, and a lower live count fails
+// until the ceiling is lowered to the printed number. They may only fall.
+// ---------------------------------------------------------------------------
+
+// First-run counts (Plan 11): 54 selector parts, among them the Tailwind preflight, the vendored
+// daisyUI theme plugin blocks and `:root` or `html` rules the ops theme needs; 12 dual dark rules
+// (the earlier research count of 23 predates the Plan 5 to 8 retirements). They may only fall.
+const UNSCOPED_SELECTOR_CEILING = 54;
+const DUAL_DARK_RULE_CEILING = 12;
+
+const SKIPPED_AT_RULES = /^@(?:keyframes|-webkit-keyframes|font-face|property|font-palette-values|counter-style)\b/;
+const DARK_PREFIX = '[data-theme="dark"]';
+const DARK_MEDIA_PREFIX = 'html:not([data-theme="light"])';
+
+/** Splits on a separator that sits outside parentheses, brackets and quotes. */
+function splitTopLevel(text, separator) {
+  const parts = [];
+  let depth = 0;
+  let quote = null;
+  let buffer = "";
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text[i];
+    if (quote) {
+      buffer += c;
+      if (c === "\\") {
+        buffer += text[i + 1] ?? "";
+        i += 1;
+      } else if (c === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (c === '"' || c === "'") quote = c;
+    else if (c === "(" || c === "[") depth += 1;
+    else if (c === ")" || c === "]") depth = Math.max(0, depth - 1);
+    if (depth === 0 && c === separator) {
+      parts.push(buffer);
+      buffer = "";
+    } else {
+      buffer += c;
+    }
+  }
+  parts.push(buffer);
+  return parts.map((part) => part.trim()).filter(Boolean);
+}
+
+/** The last compound selector of a complex selector: what follows the last combinator. */
+function subjectCompound(part) {
+  let depth = 0;
+  let cut = 0;
+  for (let i = 0; i < part.length; i += 1) {
+    const c = part[i];
+    if (c === "(" || c === "[") depth += 1;
+    else if (c === ")" || c === "]") depth = Math.max(0, depth - 1);
+    else if (depth === 0 && (c === " " || c === ">" || c === "+" || c === "~")) cut = i + 1;
+  }
+  return part.slice(cut).trim();
+}
+
+function isUnscopedSelectorPart(part) {
+  if (/\.ops-/.test(part)) return false;
+  const subject = subjectCompound(part);
+  if (subject.startsWith("&")) return false;
+  const universalOrTag = /^(\*|[a-z][a-z0-9-]*)?/i.exec(subject)[0].toLowerCase();
+  if (universalOrTag === "*" || universalOrTag === "html" || universalOrTag === "body") return true;
+  if (/^:(?:root|host)\b/.test(subject) || /^:where\(\s*:root\s*\)/.test(subject)) return true;
+  if (subject.startsWith("[data-theme")) return true;
+  return /::[a-z-]+/i.test(subject) || /:(?:before|after|first-line|first-letter)\b/i.test(subject);
+}
+
+/**
+ * Every top-level style rule with declarations, with its @-rule ancestors. Keyframe-like at-rule
+ * bodies are skipped, and so is every rule nested inside another style rule (`&:hover`,
+ * `> .child`, `+ .step:before`): a nested rule takes its parent's scope, and the parent is counted.
+ */
+function styleRules(css) {
+  const rules = [];
+  const walk = (node, ancestors) => {
+    const isAtRule = node.head.startsWith("@");
+    if (isAtRule && SKIPPED_AT_RULES.test(node.head)) return;
+    if (node.head && !isAtRule) {
+      if (node.decls.length > 0) rules.push({ head: node.head, parts: splitTopLevel(node.head, ","), ancestors });
+      return;
+    }
+    for (const child of node.children) walk(child, node.head ? [...ancestors, node.head] : ancestors);
+  };
+  walk(parseCssBlocks(css), []);
+  return rules;
+}
+
+function unscopedSelectorParts(css) {
+  const found = [];
+  for (const rule of styleRules(css)) {
+    for (const part of rule.parts) if (isUnscopedSelectorPart(part)) found.push(part);
+  }
+  return found;
+}
+
+const inDarkMedia = (rule) => rule.ancestors.some((head) => /^@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)/.test(head));
+
+function dualDarkRules(css) {
+  const rules = styleRules(css);
+  const twinNormalized = (head) => splitTopLevel(head, ",").join(",\n");
+  const twins = new Set(rules.filter(inDarkMedia).map((rule) => twinNormalized(rule.head)));
+  const dual = [];
+  for (const rule of rules) {
+    if (inDarkMedia(rule) || !rule.parts.every((part) => part === DARK_PREFIX || part.startsWith(`${DARK_PREFIX} `))) continue;
+    const twin = rule.parts.map((part) => `${DARK_MEDIA_PREFIX}${part.slice(DARK_PREFIX.length)}`).join(",\n");
+    if (twins.has(twin)) dual.push(rule.head);
+  }
+  return dual;
+}
+
+function ratchetFailures(label, ceilingName, count, ceiling, items) {
+  const failures = [];
+  if (count > ceiling) {
+    failures.push(`${count} ${label} exceed ${ceilingName} ${ceiling} (shrink-only):\n${items.join("\n")}`);
+  } else if (count < ceiling) {
+    failures.push(`${ceilingName} is ${ceiling} but only ${count} ${label} remain: lower it to ${count}`);
+  }
+  return failures;
+}
+
+const unscopedFailures = (css) => {
+  const found = unscopedSelectorParts(css);
+  return ratchetFailures("unscoped selector parts", "UNSCOPED_SELECTOR_CEILING", found.length, UNSCOPED_SELECTOR_CEILING, found);
+};
+const dualDarkFailures = (css) => {
+  const found = dualDarkRules(css);
+  return ratchetFailures("dual dark rules", "DUAL_DARK_RULE_CEILING", found.length, DUAL_DARK_RULE_CEILING, found);
+};
+
+test("live unscoped selectors stay at the ceiling", () => {
+  assert.deepEqual(unscopedFailures(fs.readFileSync(BUILT_CSS, "utf8")), []);
+});
+
+test("live dual dark rules stay at the ceiling", () => {
+  assert.deepEqual(dualDarkFailures(fs.readFileSync(BUILT_CSS, "utf8")), []);
+});
+
+test("planted unscoped selector fails and scoped selectors do not count", () => {
+  const live = fs.readFileSync(BUILT_CSS, "utf8");
+  const scoped = `
+.ops-shell *, .ops-shell ::after { box-sizing: border-box; }
+.ops-card::before { content: ""; }
+@keyframes spin { from { transform: none; } to { transform: none; } }
+.ops-a { &:hover { color: red; } }
+@media (min-width: 40rem) { .ops-b > * { margin: 0; } }`;
+  assert.deepEqual(unscopedSelectorParts(scoped), [], "a part with an .ops- class, a keyframe step and a nested rule are not unscoped");
+
+  const before = unscopedSelectorParts(live).length;
+  const unscoped = ["* { margin: 0; }", "html { color: red; }", "body, .host-card { margin: 0; }", ":root { --x: 1; }", ":host { --x: 1; }",
+    "[data-theme=\"dark\"] { --x: 1; }", ".btn::after { content: \"\"; }", "a::selection { color: red; }", "@media (min-width: 40rem) { * { margin: 0; } }"];
+  for (const rule of unscoped) {
+    const planted = `${live}\n${rule}`;
+    assert.ok(unscopedSelectorParts(planted).length > before, `planted rule is counted: ${rule}`);
+    assert.ok(
+      unscopedFailures(planted).some((message) => /exceed UNSCOPED_SELECTOR_CEILING \d+ \(shrink-only\)/.test(message)),
+      `planted rule fails the ratchet: ${rule}`,
+    );
+  }
+});
+
+test("planted dual dark rule fails and a lone dark rule does not count", () => {
+  const live = fs.readFileSync(BUILT_CSS, "utf8");
+  const before = dualDarkRules(live).length;
+  const lone = `${live}\n[data-theme="dark"] .ops-lone { color: red; }`;
+  assert.equal(dualDarkRules(lone).length, before, "a dark rule with no media twin is not dual");
+
+  const planted = `${live}
+[data-theme="dark"] .ops-planted { color: red; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .ops-planted { color: red; }
+}`;
+  assert.equal(dualDarkRules(planted).length, before + 1);
+  assert.ok(dualDarkFailures(planted).some((message) => /exceed DUAL_DARK_RULE_CEILING \d+ \(shrink-only\)/.test(message)));
 });

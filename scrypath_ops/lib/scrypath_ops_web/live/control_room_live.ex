@@ -139,7 +139,8 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
-            kind={Posture.badge_kind(@posture.state)}
+            kind={Posture.verdict_kind(@posture.rows)}
+            status={Posture.worst_status(@posture.rows)}
             label={
               cond do
                 @refresh_issue && @last_successful_posture -> "Last successful observation"
@@ -171,13 +172,13 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             </div>
             <p
               :if={@refresh_issue && @last_successful_posture}
-              class="mt-2 text-ops-sm text-base-content/75"
+              class="mt-2 text-ops-sm ops-muted"
             >
               Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
             <p
               :if={@refresh_issue && is_nil(@last_successful_posture)}
-              class="mt-2 text-ops-sm text-base-content/75"
+              class="mt-2 text-ops-sm ops-muted"
             >
               Incomplete observation checked: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
@@ -189,7 +190,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
             data-testid="control-room-secondary-intents"
           >
             <.ops_intent_card
-              icon="hero-magnifying-glass"
               title="Try a search"
               summary="Query your schemas and inspect the results."
               route_label="Try a search"
@@ -197,7 +197,6 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               data-testid="control-room-explore-search"
             />
             <.ops_intent_card
-              icon="hero-arrows-right-left"
               title="Check sync and settings"
               summary="See pending work and compare your declared settings with Meilisearch."
               route_label="Check sync and settings"

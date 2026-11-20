@@ -284,11 +284,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       {:noreply, assign(socket, :confirm_swap?, true)}
     else
       {:noreply,
-       put_flash(
-         socket,
-         :error,
-         "Index promotion blocked: #{promotion_eligibility_copy(socket.assigns.promotion_eligibility)}"
-       )}
+       put_flash(socket, :error, promotion_blocked_flash(socket.assigns.promotion_eligibility))}
     end
   end
 
@@ -1253,7 +1249,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           end
 
         {:blocked, reason} ->
-          put_flash(socket, :error, "Index promotion blocked: #{promotion_reason(reason)}")
+          put_flash(socket, :error, promotion_blocked_flash({:blocked, reason}))
       end
     end)
   end
@@ -1568,6 +1564,16 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_reason(:contract_mismatch), do: "resolve contract differences first"
   defp promotion_reason(_), do: "refresh current checks"
 
+  # The one flash for a promotion that cannot go ahead. "Blocked" appears once, then the reason.
+  defp promotion_blocked_flash({:blocked, reason}),
+    do: "Index promotion blocked: #{promotion_reason(reason)}."
+
+  defp promotion_blocked_flash(_other),
+    do: "Index promotion blocked: refresh the current checks first, then promote."
+
+  defp upcase_first(<<first::utf8, rest::binary>>), do: String.upcase(<<first::utf8>>) <> rest
+  defp upcase_first(other), do: other
+
   defp promotion_eligibility_title(:eligible), do: "Ready for promotion"
   defp promotion_eligibility_title({:blocked, _}), do: "Promotion unavailable"
   defp promotion_eligibility_title(_), do: "Promotion unavailable"
@@ -1575,8 +1581,9 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   defp promotion_eligibility_copy(:eligible),
     do: "Current checks are clear for this schema and index pair."
 
+  # The notice's title already says "Promotion unavailable", so its body is the next step alone.
   defp promotion_eligibility_copy({:blocked, reason}),
-    do: "Promotion is blocked: #{promotion_reason(reason)}."
+    do: "#{upcase_first(promotion_reason(reason))}."
 
   defp promotion_eligibility_copy(_), do: "Refresh current checks before promotion."
 
@@ -1710,8 +1717,11 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp unobserved_queue_copy(_mode), do: "This sync mode has no queue to check."
 
-  defp reconcile_signal_icon(:failed_sync_work), do: "hero-exclamation-circle"
-  defp reconcile_signal_icon(_), do: "hero-clock"
+  # Only signals that name a sync status render one; every other signal stays plain text.
+  defp signal_status(:failed_sync_work), do: :failed
+  defp signal_status(:pending_queue_work), do: :pending
+  defp signal_status(:pending_backend_work), do: :pending
+  defp signal_status(_signal), do: nil
 
   defp sync_mode_label(:oban), do: "Oban background sync"
   defp sync_mode_label(:inline), do: "Inline sync"
@@ -2010,22 +2020,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               :for={signal <- @activity}
               data-tone={if signal == :failed_sync_work, do: "error"}
             >
-              <.icon name={reconcile_signal_icon(signal)} class="size-4" />
+              <.ops_sync_status :if={signal_status(signal)} status={signal_status(signal)} />
               <.link
                 :if={signal == :failed_sync_work}
                 navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
                 class="ops-text-action"
               >
                 {reconcile_signal_label(signal, @reconcile_result)}
-                <.icon name="hero-arrow-right" class="size-4" />
+                <span aria-hidden="true">→</span>
               </.link>
               <.link
                 :if={signal in [:pending_queue_work, :pending_backend_work]}
                 navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-                class="ops-sync-activity-link"
+                class="ops-text-action"
               >
                 {reconcile_signal_label(signal, @reconcile_result)}
-                <.icon name="hero-arrow-right" class="size-4" />
+                <span aria-hidden="true">→</span>
               </.link>
               <span :if={
                 signal not in [:failed_sync_work, :pending_queue_work, :pending_backend_work]
@@ -2052,7 +2062,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
         <p
           :if={@reconcile_result == nil && is_nil(@reconcile_error) && @selected_schema}
-          class="text-ops-body text-base-content/70"
+          class="text-ops-body ops-muted"
         >
           Sync status isn't available yet. Configure the Scrypath runtime, then Refresh.
         </p>
@@ -2139,7 +2149,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             Refresh recovery status
           </.ops_button>
         </:actions>
-        <p class="text-ops-body text-base-content/75">
+        <p class="text-ops-body ops-muted">
           Retry failed work there. Refresh recovery status observes the accepted operation and never resubmits it.
         </p>
         <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
@@ -2228,11 +2238,17 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             !@settings_checking? && is_nil(@drift_error) && is_nil(@drift_result) &&
               @selected_schema
           }
-          class="text-ops-body text-base-content/70"
+          class="text-ops-body ops-muted"
         >
           Meilisearch settings can be compared once the Scrypath runtime is configured.
         </p>
 
+        <%!--
+          While a re-check runs, the earlier comparison (this verdict and the table below) stays on
+          show and is marked aria-busy: it is the content being replaced, and assistive technology
+          holds it until the new result lands. The "Checking…" word above is its own status node
+          with no busy node on or above it, so nothing holds the word itself.
+        --%>
         <.ops_status
           :if={@drift_result && is_nil(@drift_error)}
           id="index-settings-status"
@@ -2243,6 +2259,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
               else: "Meilisearch settings differ from the schema"
           }
           role="status"
+          aria-busy={@settings_checking? && "true"}
           neutral
         >
           <span :if={settings_match?(@drift_result)}>
@@ -2262,6 +2279,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
           tabindex="0"
           role="region"
           aria-label="Index settings differences"
+          aria-busy={@settings_checking? && "true"}
         >
           <thead>
             <tr>
@@ -2296,7 +2314,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_section>
 
       <.ops_section :if={@selected_schema} id="reindexing-heading" title="Reindexing" class="mt-6">
-        <p :if={!@show_promotion?} id="reindex-idle" class="text-ops-body text-base-content/75">
+        <p :if={!@show_promotion?} id="reindex-idle" class="text-ops-body ops-muted">
           <span :if={@reconcile_result}>No reindex in progress.</span>
           <span :if={!@reconcile_result}>Reindex status shows once sync can be checked.</span>
           <.ops_help_link href={"#{@mount_path}/help#reindexing"}>
@@ -2305,7 +2323,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </p>
 
         <div :if={@show_promotion?} id="index-promotion" class="space-y-3">
-          <p class="text-ops-body text-base-content/75">
+          <p class="text-ops-body ops-muted">
             Prepared index
             <.ops_inline_code>{reindex_index(@reconcile_result, :target_index)}</.ops_inline_code>
             found. Promotion swaps it with the live index <.ops_inline_code>{reindex_index(@reconcile_result, :live_index)}</.ops_inline_code>, so searches move to the prepared index in one step.
@@ -2416,13 +2434,13 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       </.ops_section>
 
       <nav class="ops-sync-related" aria-label="Related search views">
-        <.link navigate={@mount_path} class="ops-sync-activity-link">
+        <.link navigate={@mount_path} class="ops-text-action">
           Return to Control Room
         </.link>
         <.link
           :if={@selected_schema}
           navigate={OperatorSelection.path(@mount_path, "health", @selected_schema)}
-          class="ops-sync-activity-link"
+          class="ops-text-action"
         >
           Inspect search health
         </.link>
@@ -2434,6 +2452,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         title="Confirm index promotion"
         description="Meilisearch will exchange the live and prepared indexes when its swap task completes."
         action_label="promote index"
+        initial_focus="[data-ops-modal-cancel]"
         cancel_event="cancel_swap_live"
         successor="#promote-target-index"
       >
@@ -2455,12 +2474,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
             <.ops_button
               type="button"
               phx-click="cancel_swap_live"
-              variant={:ghost}
+              variant={:default}
               data-ops-modal-cancel
             >
               Cancel index swap
             </.ops_button>
-            <.ops_button type="submit" variant={:danger}>Promote target index</.ops_button>
+            <.ops_button type="submit" variant={:primary}>Replace live index with target</.ops_button>
           </div>
         </.form>
       </.ops_modal>

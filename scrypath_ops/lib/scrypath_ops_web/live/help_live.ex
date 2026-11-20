@@ -21,11 +21,7 @@ defmodule ScrypathOpsWeb.HelpLive do
       </nav>
       <div class="ops-help-content" id="ops-help-content" phx-hook="OpsHelpAnchor">
         <section id="search">
-          <.ops_heading>
-            <span class="ops-help-heading">
-              <.icon name="hero-magnifying-glass" class="size-5" />Try a search
-            </span>
-          </.ops_heading>
+          <.ops_heading>Try a search</.ops_heading>
           <p>Select a schema, enter search text and run the query. Leave the text blank to browse.</p>
           <p>
             A schema is the Elixir module that defines your searchable data. Its Meilisearch index holds the search documents.
@@ -63,11 +59,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="saved-searches">
-          <.ops_heading>
-            <span class="ops-help-heading">
-              <.icon name="hero-book-open" class="size-5" />Save and reuse a search
-            </span>
-          </.ops_heading>
+          <.ops_heading>Save and reuse a search</.ops_heading>
           <p>
             Choose Save search beside Run search to keep the inputs in the form under a name. A saved search contains the query and options, not the results.
           </p>
@@ -82,11 +74,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="sync">
-          <.ops_heading>
-            <span class="ops-help-heading">
-              <.icon name="hero-shield-check" class="size-5" />Understand a sync problem
-            </span>
-          </.ops_heading>
+          <.ops_heading>Understand a sync problem</.ops_heading>
           <p>
             Changes travel from your application to Meilisearch, then Meilisearch applies them to the index. A request being accepted does not mean its documents are searchable yet.
           </p>
@@ -140,11 +128,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="settings">
-          <.ops_heading>
-            <span class="ops-help-heading">
-              <.icon name="hero-arrows-right-left" class="size-5" />Check index settings
-            </span>
-          </.ops_heading>
+          <.ops_heading>Check index settings</.ops_heading>
           <p>
             Sync and index compares the settings of the live Meilisearch index with what your schema's
             <code>use Scrypath</code>
@@ -172,11 +156,7 @@ defmodule ScrypathOpsWeb.HelpLive do
           </.link>
         </section>
         <section id="reindexing">
-          <.ops_heading>
-            <span class="ops-help-heading">
-              <.icon name="hero-arrow-path" class="size-5" />Zero-downtime reindexing
-            </span>
-          </.ops_heading>
+          <.ops_heading>Zero-downtime reindexing</.ops_heading>
           <p>
             A zero-downtime reindex builds a complete copy of the index, called the prepared index, while searches keep using the live one. When the prepared index is ready, promotion asks Meilisearch to swap the two, so searches move to the new index in one step.
           </p>

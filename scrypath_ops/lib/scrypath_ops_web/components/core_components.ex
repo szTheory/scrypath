@@ -59,8 +59,6 @@ defmodule ScrypathOpsWeb.CoreComponents do
       {@rest}
     >
       <div class="alert w-full max-w-full text-wrap">
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
         <div>
           <p :if={@title} class="font-semibold">{@title}</p>
           <p>{msg}</p>
@@ -68,10 +66,10 @@ defmodule ScrypathOpsWeb.CoreComponents do
         <div class="flex-1" />
         <button
           type="button"
-          class="group self-start cursor-pointer"
+          class="ops-flash__close self-start cursor-pointer"
           aria-label={gettext("Close notification")}
         >
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+          <.icon name="hero-x-mark" class="size-5" />
         </button>
       </div>
     </div>
@@ -91,10 +89,14 @@ defmodule ScrypathOpsWeb.CoreComponents do
   Icons render through the Hex `heroicons` Phoenix components so ScrypathOps
   does not depend on npm Heroicons assets being present in host applications.
 
+  ScrypathOps renders icons only as control glyphs (the menu, close, copy, theme,
+  new-tab, command-hint and disclosure controls), each inside a control that has an
+  accessible name. Say a state in words, never with an icon, and never animate one.
+
   ## Examples
 
       <.icon name="hero-x-mark" />
-      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+      <.icon name="hero-x-mark" class="size-5" />
   """
   attr(:name, :string, required: true)
   attr(:class, :any, default: "size-4")
@@ -137,26 +139,29 @@ defmodule ScrypathOpsWeb.CoreComponents do
   ## JS Commands
 
   # Enter eases in with the overlay ease (`ease-ops-out`); flash/banner shows over 240ms
-  # (= --duration-ops-slow). Routes through the house ease token, not a raw Tailwind step.
+  # (= --duration-ops-base). The duration is the brand token, not a raw Tailwind step, and `time`
+  # is the same 240ms so the classes stay applied for exactly as long as the transition runs.
   def show(js \\ %JS{}, selector) do
     JS.show(js,
       to: selector,
       time: 240,
       transition:
-        {"transition-all ease-ops-out duration-200",
+        {"transition-all ease-ops-out duration-(--duration-ops-base)",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
          "opacity-100 translate-y-0 sm:scale-100"}
     )
   end
 
   # Exit is the crisp dismissal beat: `ease-ops-exit` (ease-in), faster than the enter, so
-  # closing a flash/banner feels as intentional as it appearing (A1 enter/exit asymmetry).
+  # closing a flash/banner feels as intentional as it appearing (A1 enter/exit asymmetry). It
+  # runs on the quick token (--duration-ops-quick, 160ms), with `time` equal to it.
   def hide(js \\ %JS{}, selector) do
     JS.hide(js,
       to: selector,
-      time: 120,
+      time: 160,
       transition:
-        {"transition-all ease-ops-exit duration-200", "opacity-100 translate-y-0 sm:scale-100",
+        {"transition-all ease-ops-exit duration-(--duration-ops-quick)",
+         "opacity-100 translate-y-0 sm:scale-100",
          "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
     )
   end

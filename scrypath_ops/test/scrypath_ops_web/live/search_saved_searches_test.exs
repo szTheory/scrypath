@@ -490,11 +490,146 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
     end
   end
 
+  # Phase 187 E-07, E-08, E-09: one Plum button per scope, destructive confirms named by their
+  # consequence, and row actions as underlined text instead of buttons.
+  describe "buttons, confirms and row actions" do
+    defp plum(view, scope) do
+      view
+      |> render()
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query("#{scope} .btn-primary")
+      |> Enum.count()
+    end
+
+    test "the Search page holds one Plum button, Run search, and Save search is outline", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+
+      assert plum(view, "") == 1
+      assert has_element?(view, "button.btn-primary[type=submit]", "Run search")
+      assert has_element?(view, "#search-save-new.btn-outline:not(.btn-primary)", "Save search")
+    end
+
+    test "the save dialog's single Plum button is Save and its Cancel is outline", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+      view |> element("#search-save-new") |> render_click()
+
+      assert plum(view, "#saved-search-name-modal") == 1
+      assert has_element?(view, "#saved-search-name-modal .btn-primary", "Save")
+
+      assert has_element?(
+               view,
+               "#saved-search-name-modal button[data-ops-modal-cancel].btn-outline:not(.btn-ghost)",
+               "Cancel"
+             )
+    end
+
+    test "Rename is an outline submit and the delete confirm is the sheet's single Plum button",
+         %{
+           conn: conn
+         } do
+      put!("A", single("a"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      # at rest the sheet holds no Plum button
+      assert plum(view, "#saved-search-manage") == 0
+
+      view |> element("#saved-search-list [aria-label='Rename A']") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-rename-form button[type=submit].btn-outline",
+               "Rename"
+             )
+
+      assert plum(view, "#saved-search-manage") == 0
+      refute has_element?(view, "#saved-search-rename-form .btn-ghost")
+
+      view |> element("#saved-search-rename-form button", "Cancel") |> render_click()
+      view |> element("#saved-search-list [aria-label='Delete A']") |> render_click()
+
+      assert plum(view, "#saved-search-manage") == 1
+
+      assert has_element?(
+               view,
+               "#saved-search-delete-form button[type=submit].btn-primary",
+               "Delete saved search permanently"
+             )
+
+      confirm =
+        view |> element("#saved-search-delete-form button[type=submit]") |> render()
+
+      assert confirm |> LazyHTML.from_fragment() |> LazyHTML.text() |> String.trim() ==
+               "Delete saved search permanently"
+
+      refute render(view) =~ "btn-error"
+
+      # the delete form has a Cancel, and it is an outline button
+      assert has_element?(
+               view,
+               "#saved-search-delete-form button.btn-outline:not(.btn-ghost)",
+               "Cancel"
+             )
+    end
+  end
+
+  describe "E-09 saved-search row actions" do
+    test "Load, Rename, Export and Delete are text actions, not buttons", %{conn: conn} do
+      put!("A", single("a"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      for action <- ~w(Load Rename Export Delete) do
+        selector = "#saved-search-list [aria-label='#{action} A']"
+
+        assert has_element?(view, "#{selector}.ops-text-action", action)
+        refute has_element?(view, "#{selector}.btn")
+        refute has_element?(view, "#{selector}.ops-btn")
+        refute has_element?(view, "#{selector}.btn-ghost")
+      end
+
+      assert has_element?(view, "a#saved-search-export-#{dom_id("A")}.ops-text-action[download]")
+      refute render(view) =~ "ops-saved-search-row__delete"
+    end
+
+    test "the loaded row is the current one: aria-current and the selected row class", %{
+      conn: conn
+    } do
+      put!("A", single("a"))
+      put!("B", single("b"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+      view |> element("#saved-search-menu button", "A") |> render_click()
+      view |> element("#saved-search-manage-open") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-row-#{dom_id("A")}.ops-saved-search-row--loaded[aria-current=true]"
+             )
+
+      refute has_element?(view, "#saved-search-row-#{dom_id("B")}[aria-current]")
+      refute has_element?(view, "#saved-search-row-#{dom_id("B")}.ops-saved-search-row--loaded")
+    end
+
+    test "an unreadable saved search disables Load with aria-disabled and has no Export", %{
+      conn: conn
+    } do
+      put!("Broken", %{"playbook_format" => 99})
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      load = "#saved-search-load-#{dom_id("Broken")}"
+      assert has_element?(view, "#{load}.ops-text-action[disabled][aria-disabled=true]")
+      refute has_element?(view, "#saved-search-export-#{dom_id("Broken")}")
+      assert has_element?(view, "#saved-search-list", "This saved search can't be read.")
+    end
+  end
+
   describe "import" do
     test "the file button opens the file input directly and imports on selection", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
 
       assert has_element?(view, "#saved-search-import-file", "Import JSON file")
+      # Phase 187 (E-10): the import button is a word, not an upload glyph.
+      refute has_element?(view, "#saved-search-import-file svg")
       refute has_element?(view, "a[href='#saved-search-import']")
       refute has_element?(view, "#saved-search-import-form button[type=submit]")
 

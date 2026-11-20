@@ -390,7 +390,12 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     assert has_element?(view, "#search-run-error", "stub_hard_failure")
     assert has_element?(view, ~s([data-ops-copy-success="Error copied"][aria-label="Copy error"]))
     assert html =~ "Fix the query options or operator config, then run search again."
-    assert html =~ "ops-badge-error"
+    # The run state reads "Search failed": "Failed" is the sync status word, and a failed search
+    # request is not a failed sync update (LD-9). It is plain text, not a tinted badge.
+    assert has_element?(view, ".ops-badge[data-badge-kind='error']", "Search failed")
+    refute has_element?(view, ".ops-badge", "Failed")
+    refute has_element?(view, "[data-sync-status]")
+    refute html =~ "ops-badge-error"
     refute html =~ ~s(data-testid="search-outcome")
     refute html =~ "Some schemas could not be searched"
   end
@@ -420,6 +425,9 @@ defmodule ScrypathOpsWeb.SearchLiveTest do
     })
 
     assert has_element?(view, ".ops-empty-hero", "No matching documents")
+    # Phase 187 (E-10): the empty state is a heading and a sentence, with no mark icon.
+    refute has_element?(view, ".ops-empty-hero svg")
+    refute has_element?(view, ".ops-empty-hero__mark")
     refute has_element?(view, "[data-index-outcome=no-hits]")
     assert has_element?(view, "details", "Response data")
   end

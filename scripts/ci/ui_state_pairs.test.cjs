@@ -384,6 +384,34 @@ test("hover state and assertions participate in the exact source-pair result", (
   assert.equal(report.passed, false);
 });
 
+// 186 verification finding 2: every other state mutation here changes the neutral and the hover state
+// together, so dropping the neutral `stateEqual` term from the verdict stayed green. This one changes the
+// neutral capture's state alone and leaves the hover capture's state untouched, so only the neutral term can
+// reject it. The receipt validator makes the route, data, clock, scroll and focus identity of the two captures
+// agree, so the one field a valid receipt may change on the neutral side only is the focus ring styling
+// (outline and opacity), which the hover capture keeps as its own.
+test("a neutral-only state change fails the pair while the hover state is unchanged", () => {
+  const before = runReceipt({ sourceSha: BEFORE_SHA, productTreeSha: BEFORE_TREE, appImageId: APP_BEFORE });
+  const candidate = runReceipt({ sourceSha: CANDIDATE_SHA, productTreeSha: CANDIDATE_TREE, appImageId: APP_CANDIDATE });
+  const observation = candidate.preservation.cases[0].observations[0];
+  const hoverFocus = structuredClone(observation.hover_capture.state.focus);
+  observation.state.focus.opacity = "0.5";
+  assert.deepEqual(observation.hover_capture.state.focus, hoverFocus, "the hover capture's state is untouched");
+
+  const report = compare(before, candidate);
+  const result = report.comparisons[0].viewport_comparisons[0];
+  assert.equal(result.state_equal, false);
+  assert.equal(result.hover_state_equal, true);
+  assert.equal(result.assertions_equal, true);
+  assert.equal(result.hover_assertions_equal, true);
+  assert.equal(result.full_page_pixels.equal, true);
+  assert.equal(result.hover_pixels.equal, true);
+  assert.equal(report.comparisons[0].passed, false);
+  assert.equal(report.passed, false);
+  assert.equal(report.mismatches[0].state, false, "the neutral state term rejects the pair");
+  assert.equal(report.mismatches[0].hover_state, true, "the hover state term is not what rejected it");
+});
+
 test("structural PNG comparison selects viewport raster dimensions only for the explicit hover capture kind", () => {
   const small = { background: [20, 30, 40], ink: [200, 180, 60], blockX: 0, blockY: 0, blockW: 32, blockH: 16 };
   const hoverBefore = layoutPng(64, 32, small);
@@ -828,4 +856,73 @@ test("pair output is atomic, deterministic and never overwritten by different by
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
+});
+
+// Phase 187 amendment of the preservation guard `assertPendingState`: while a refresh is in flight the
+// page text must equal the text before it, except for the loading words the approved UI-SPEC copy-diff
+// allowlist lists (`Refreshing…` where the refresh button read `Refresh`). These cases evaluate the
+// guard's own allowlist block (between its two marker comments) and read the guard's wiring, so the
+// tested code is the code Playwright runs.
+describe("the pending-state guard ignores only the allowlisted loading words", () => {
+  const guardPath = path.resolve(__dirname, "../../examples/scrypath_ecommerce/e2e/helpers/ui-preservation-states.ts");
+  const guardSource = fs.readFileSync(guardPath, "utf8");
+  const begin = "// loading-word-allowlist:begin";
+  const end = "// loading-word-allowlist:end";
+
+  function loadAllowlistBlock() {
+    const start = guardSource.indexOf(begin);
+    const stop = guardSource.indexOf(end);
+    assert.ok(start >= 0 && stop > start, "the guard has its two loading-word-allowlist marker comments");
+    const block = guardSource.slice(start, stop);
+    // The block is TypeScript only by its `: string` annotations; removing them leaves plain JavaScript.
+    const plain = block.replace(/:\s*string\b/g, "");
+    return new Function(`${plain}\nreturn { ALLOWLISTED_LOADING_LINES, normalizeAllowlistedLoadingText };`)();
+  }
+
+  const { ALLOWLISTED_LOADING_LINES, normalizeAllowlistedLoadingText } = loadAllowlistBlock();
+  const idle = ["Search health", "Refresh", "Checked 2026-10-06 12:00 UTC", "No failed work"].join("\n");
+  const sameAsCompared = (current, prior) => normalizeAllowlistedLoadingText(current) === prior;
+
+  test("the allowlist is exactly the refresh button label", () => {
+    assert.deepEqual(ALLOWLISTED_LOADING_LINES, [{ busy: "Refreshing…", idle: "Refresh" }]);
+  });
+
+  test("a refresh button that reads Refreshing… while in flight is the same page", () => {
+    const busy = idle.replace("\nRefresh\n", "\nRefreshing…\n");
+    assert.notEqual(busy, idle);
+    assert.equal(sameAsCompared(busy, idle), true);
+    assert.equal(sameAsCompared(idle, idle), true, "the idle text is unchanged by the normalization");
+  });
+
+  test("planted: a non-allowlisted text change during loading still fails", () => {
+    const withLoadingWord = idle.replace("\nRefresh\n", "\nRefreshing…\n");
+    // Another line changes (with and without the loading word), and a lone change on its own.
+    assert.equal(sameAsCompared(withLoadingWord.replace("No failed work", "Failed work found"), idle), false);
+    assert.equal(sameAsCompared(idle.replace("No failed work", "Failed work found"), idle), false);
+    // A line that was removed or added while the loading word is shown.
+    assert.equal(sameAsCompared(withLoadingWord.replace("\nNo failed work", ""), idle), false);
+    assert.equal(sameAsCompared(`${withLoadingWord}\nUnexpected banner`, idle), false);
+    // The button label itself changing to a word that is not allowlisted.
+    for (const word of ["Refreshed", "Loading…", "Running…", "Refreshing", "Refreshing… ", "Refreshing…done"]) {
+      assert.equal(sameAsCompared(idle.replace("\nRefresh\n", `\n${word}\n`), idle), false, `"${word}" is not an allowlisted loading line`);
+    }
+  });
+
+  test("planted: Refreshing… does not stand in for a line that was not there before", () => {
+    const priorWithoutButton = ["Search health", "Checked 2026-10-06 12:00 UTC"].join("\n");
+    const current = ["Search health", "Refreshing…", "Checked 2026-10-06 12:00 UTC"].join("\n");
+    assert.equal(sameAsCompared(current, priorWithoutButton), false);
+    // Only a whole line counts: the word inside a longer line is a text change.
+    assert.equal(sameAsCompared(idle.replace("Checked", "Refreshing… Checked"), idle), false);
+  });
+
+  test("the guard still compares route, text and the busy class, and normalizes only the observed text", () => {
+    const body = /async function assertPendingState\([\s\S]*?\n}\n/.exec(guardSource)?.[0] ?? "";
+    assert.ok(body.length > 0, "assertPendingState is present");
+    assert.match(body, /const currentText = normalizeAllowlistedLoadingText\(await page\.locator\("\[data-phx-main\]"\)\.innerText\(\)\);/);
+    assert.match(body, /route !== priorRoute \|\| currentText !== priorText \|\| !busyClass\.split\(\/\\s\+\/\)\.includes\(expectedClass\)/);
+    assert.doesNotMatch(body, /normalizeAllowlistedLoadingText\(priorText\)/, "the prior text is compared as observed");
+    const uses = guardSource.match(/normalizeAllowlistedLoadingText\(/g) ?? [];
+    assert.equal(uses.length, 2, "one definition and the one call in assertPendingState");
+  });
 });

@@ -218,15 +218,31 @@ defmodule Mix.Tasks.UiTokensContractTest do
       Mix.Tasks.Verify.UiTokens.check!(json_file, css_file)
     end
 
+    # The muted token is an opaque hex (Phase 187). Both muted mutations start from its live
+    # value, read through the helper, so a recolor does not change what they guard: one drifts
+    # the hex, the other puts an alpha mix back where the opaque color is.
+    live_muted = UiTokens.theme_value!(css, "dark", "--ops-text-muted")
+
     css_drift_cases = [
-      {"--ops-text-muted", "64%, transparent", "63%, transparent"},
-      {"--ops-text-muted", "var(--color-base-content)", "var(--color-primary)"},
-      {"--radius-selector", "0.25rem", "0.3rem"},
-      {"--depth", "--depth: 1;", "--depth: 2;"}
+      {"--ops-text-muted",
+       UiTokens.replace_theme_value!(
+         css,
+         "dark",
+         "--ops-text-muted",
+         UiTokens.bump_hex(live_muted)
+       )},
+      {"--ops-text-muted",
+       UiTokens.replace_theme_value!(
+         css,
+         "dark",
+         "--ops-text-muted",
+         "color-mix(in oklch, var(--color-base-content) 64%, transparent)"
+       )},
+      {"--radius-selector", replace_dark_theme!(css, "0.25rem", "0.3rem")},
+      {"--depth", replace_dark_theme!(css, "--depth: 1;", "--depth: 2;")}
     ]
 
-    for {property, old, new} <- css_drift_cases do
-      changed_css = replace_dark_theme!(css, old, new)
+    for {property, changed_css} <- css_drift_cases do
       refute changed_css == css
       File.write!(json_file, json)
       File.write!(css_file, changed_css)

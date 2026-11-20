@@ -56,7 +56,7 @@ for (const theme of ["light", "dark"]) {
         expect(Math.abs((await sectionHeight()) - pendingHeight)).toBeLessThan(48);
       }
 
-      const statuses = section.locator(".ops-notice-surface--neutral");
+      const statuses = section.locator(".ops-notice-surface[data-status-kind]");
       await expect(statuses).not.toHaveCount(0);
       for (const status of await statuses.all()) {
         const title = await status.locator(".ops-notice-surface__title").boundingBox();
