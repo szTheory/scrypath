@@ -66,12 +66,16 @@ jobs:
       - name: Select browser (runner Chrome when launchable, else Playwright Chromium)
         working-directory: website
         run: |
-          if google-chrome --version \
+          # The runner's Chrome is only usable when this ref's check script reads
+          # SCRYPATH_BROWSER_CHANNEL. A rollback ref from before that support launches a bare
+          # chromium, which needs Playwright's own install.
+          if grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs \
+            && google-chrome --version \
             && node -e "import('playwright').then(async ({ chromium }) => { const browser = await chromium.launch({ channel: 'chrome' }); await browser.close(); })"; then
             echo "Using the runner's $(google-chrome --version) through Playwright's chrome channel"
             echo "SCRYPATH_BROWSER_CHANNEL=chrome" >> "$GITHUB_ENV"
           else
-            echo "Runner Chrome is missing or not launchable; installing Playwright Chromium"
+            echo "Runner Chrome is missing, not launchable or not supported by this ref's check script; installing Playwright Chromium"
             npx playwright install --with-deps chromium
           fi
 

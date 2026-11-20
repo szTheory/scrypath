@@ -4,6 +4,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @ci_yml ".github/workflows/ci.yml"
   @workflow_security_yml ".github/workflows/workflow-security.yml"
   @website_yml ".github/workflows/website.yml"
+  @website_select_browser_step "Select browser (runner Chrome when launchable, else Playwright Chromium)"
+  @website_channel_guard "grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -376,7 +378,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         {"dispatch ref interpolated into a shell command",
          String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
         {"browser probe no longer launches the chrome channel",
-         String.replace(yml, "channel: 'chrome'", "channel: 'x'")}
+         String.replace(yml, "channel: 'chrome'", "channel: 'x'")},
+        {"browser selection no longer checks that the ref's check script supports the channel",
+         String.replace(yml, "#{@website_channel_guard} \\\n            && ", "")}
       ]
 
       for {label, mutated} <- planted do
@@ -392,6 +396,38 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
         refute accepted?, "planted #{label} was accepted by the safety-net contract"
       end
+    end
+
+    # Runs the real "Select browser" step script with stub executables on PATH, so what it does for a
+    # rollback ref is observed rather than inferred from its text. The probe's node call is a stub that
+    # succeeds, which is the runner case: Chrome is installed and launchable.
+    test "website browser selection takes the runner Chrome only for a ref whose check script supports the channel" do
+      yml = File.read!(@website_yml)
+      build = workflow_job_block(yml, "build-and-check")
+
+      script =
+        build
+        |> workflow_named_step_block(@website_select_browser_step)
+        |> workflow_step_run_script()
+
+      supported =
+        run_website_browser_selection(
+          script,
+          "const channel = process.env.SCRYPATH_BROWSER_CHANNEL;\n"
+        )
+
+      assert supported.github_env =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+      refute supported.npx_calls =~ "playwright install"
+
+      # The check.mjs on main before this phase: a bare launch that ignores the channel variable.
+      predates =
+        run_website_browser_selection(script, "const browser = await chromium.launch();\n")
+
+      refute predates.github_env =~ "SCRYPATH_BROWSER_CHANNEL",
+             "a ref whose check.mjs ignores the channel variable must not be told to use it"
+
+      assert predates.npx_calls =~ "playwright install --with-deps chromium",
+             "a ref whose check.mjs ignores the channel variable needs Playwright's own Chromium installed"
     end
 
     test "release workflows retain tag selection, history, permissions and credential behavior" do
@@ -1756,6 +1792,61 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     workflow_step_block(job_block, "\n      - name: #{step_name}\n")
   end
 
+  # The `run: |` script of a step block, dedented, as bash would receive it.
+  defp workflow_step_run_script(step_block) do
+    [_before, script] = String.split(step_block, "\n        run: |\n", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+  end
+
+  # Runs a "Select browser" script in a scratch workspace whose scripts/check.mjs holds `check_source`.
+  # `google-chrome`, `node` (the launch probe) and `npx` are stubs; the stubs record what was called.
+  defp run_website_browser_selection(script, check_source) do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-select-browser-#{System.unique_integer([:positive])}"
+      )
+
+    bin = Path.join(root, "bin")
+    work = Path.join([root, "work", "scripts"])
+    github_env = Path.join(root, "github_env")
+    npx_log = Path.join(root, "npx.log")
+
+    File.mkdir_p!(bin)
+    File.mkdir_p!(work)
+    File.write!(Path.join(work, "check.mjs"), check_source)
+    File.write!(github_env, "")
+
+    stub = fn name, body ->
+      path = Path.join(bin, name)
+      File.write!(path, "#!/bin/sh\n" <> body)
+      File.chmod!(path, 0o755)
+    end
+
+    stub.("google-chrome", "echo 'Google Chrome 999.0.0.0'\n")
+    stub.("node", "exit 0\n")
+    stub.("npx", "echo \"$@\" >> '#{npx_log}'\n")
+
+    try do
+      {_output, 0} =
+        System.cmd("bash", ["-e", "-o", "pipefail", "-c", script],
+          cd: Path.join(root, "work"),
+          env: [{"PATH", bin <> ":" <> System.get_env("PATH", "")}, {"GITHUB_ENV", github_env}],
+          stderr_to_stdout: true
+        )
+
+      %{
+        github_env: File.read!(github_env),
+        npx_calls: if(File.exists?(npx_log), do: File.read!(npx_log), else: "")
+      }
+    after
+      File.rm_rf!(root)
+    end
+  end
+
   defp workflow_step_with_uses_block(job_block, action) do
     workflow_step_block(job_block, "\n      - uses: #{action}\n")
   end
@@ -1846,10 +1937,21 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     assert {smoke_idx, _} = :binary.match(deploy, "name: Smoke test the deployed site")
     assert deploy_idx < smoke_idx
 
-    # The runner's Chrome is only used when a probe launches it, and the known-good install is the
-    # fallback after that probe.
+    # The runner's Chrome is only used when the checked-out ref's check script can use it (it reads
+    # SCRYPATH_BROWSER_CHANNEL) and a probe launches it; the known-good install is the fallback after
+    # that. Without the first condition a rollback to a ref whose check.mjs predates the channel
+    # support skips the install and then cannot launch any browser.
     assert build =~ "google-chrome --version"
     assert build =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+
+    select = workflow_named_step_block(build, @website_select_browser_step)
+
+    assert select =~ @website_channel_guard,
+           "the browser selection must take the runner Chrome only when the checked-out scripts/check.mjs supports SCRYPATH_BROWSER_CHANNEL"
+
+    {guard_idx, _} = :binary.match(select, @website_channel_guard)
+    assert {chrome_idx, _} = :binary.match(select, "google-chrome --version")
+    assert guard_idx < chrome_idx, "the channel-support guard must come before the Chrome probe"
 
     assert {probe_idx, _} = :binary.match(build, "channel: 'chrome'")
     assert {install_idx, _} = :binary.match(build, "npx playwright install --with-deps chromium")
