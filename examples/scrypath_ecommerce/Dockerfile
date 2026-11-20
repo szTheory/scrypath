@@ -28,8 +28,13 @@ RUN --mount=type=cache,target=/root/.hex,sharing=locked \
 
 COPY . .
 
-# Do not let a source checkout's ignored or stale outputs satisfy the build.
-RUN rm -rf scrypath_ops/priv/static/assets examples/scrypath_ecommerce/priv/static/assets \
+# Do not let a source checkout's ignored or stale outputs satisfy the build. Delete only the
+# generated css and js trees (and the demo's generated assets and both cache manifests). The
+# committed brand fonts under scrypath_ops/priv/static/assets/fonts are source, not build
+# output: removing the whole assets tree would drop them from every image, and
+# `font-display: swap` would hide the resulting 404.
+RUN rm -rf scrypath_ops/priv/static/assets/css scrypath_ops/priv/static/assets/js \
+    examples/scrypath_ecommerce/priv/static/assets \
     scrypath_ops/priv/static/cache_manifest.json examples/scrypath_ecommerce/priv/static/cache_manifest.json
 
 RUN (cd /app/scrypath_ops \

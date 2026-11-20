@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.UiContrastContractTest do
   use ExUnit.Case, async: false
 
+  alias Scrypath.TestSupport.UiTokens
+
   @moduletag timeout: 300_000
   @root Path.expand("../../..", __DIR__)
   @test_path "test/mix/tasks/ui_contrast_contract_test.exs"
@@ -77,6 +79,66 @@ defmodule Mix.Tasks.UiContrastContractTest do
     refute output =~ "Contrast check:"
   end
 
+  # Gate 2 of the v1.46 gate budget: token-map parity plus the retired-identity
+  # deny-list, one mechanism in one Node test. This wrapper is how it reaches CI:
+  # this file runs in `core` (full suite) and in `repository-contracts`
+  # (@focused_tests in dev/mix/tasks/verify.phase99.ex), so no ci.yml step exists.
+  # Every live test name must appear as a passing TAP line, so an empty or
+  # silently skipped run cannot pass.
+  @token_test_names [
+    "live token map parity both directions",
+    "live applied rows equal pinned brand hex and pending rows differ",
+    "live built CSS emissions equal source theme blocks",
+    "live hex allowlist holds",
+    "live deny-list scan finds no unlisted retired value",
+    "live allowlist entries are current and tagged",
+    "deny set and new set are disjoint"
+  ]
+
+  # 186 verification IN-03: the planted and accept cases are what prove the guards can fail, so a
+  # deleted, skipped or `only`-filtered case must fail this wrapper too. Their names are read from
+  # the token test's own `test("...")` calls (the loop-generated planted forms have template names
+  # and are not listed). The floor is the number of such calls when this check was written; lower
+  # it only when a case is removed on purpose, which is the second key a deletion needs.
+  @token_test_file "examples/scrypath_ecommerce/ui-tokens.test.mjs"
+  @min_token_test_calls 53
+
+  test "token map parity and retired-identity guards pass" do
+    node = System.find_executable("node") || flunk("Node is required for the token test")
+    names = token_test_call_names()
+
+    assert length(names) >= @min_token_test_calls,
+           "#{@token_test_file} has #{length(names)} test(\"...\") calls, below the floor " <>
+             "#{@min_token_test_calls}: a case was deleted or renamed. If that was intended, " <>
+             "lower @min_token_test_calls in #{@test_path}."
+
+    assert length(names) == length(Enum.uniq(names)), "token test names must be unique"
+    assert Enum.any?(names, &String.starts_with?(&1, "planted")), "no planted case found"
+    assert Enum.any?(names, &String.starts_with?(&1, "accept")), "no accept case found"
+
+    {output, status} =
+      System.cmd(
+        node,
+        ["--test", "--test-reporter=tap", Path.join(@root, @token_test_file)],
+        cd: @root,
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, output
+    assert output =~ ~r/^# fail 0$/m, output
+
+    for name <- Enum.uniq(@token_test_names ++ names) do
+      assert output =~ ~r/^ok \d+ - #{Regex.escape(name)}$/m,
+             "the token test did not report #{inspect(name)} as passing:\n#{output}"
+    end
+  end
+
+  defp token_test_call_names do
+    ~r/^test\("((?:[^"\\]|\\.)+)",/m
+    |> Regex.scan(File.read!(Path.join(@root, @token_test_file)))
+    |> Enum.map(fn [_match, name] -> name end)
+  end
+
   @tag :contrast_child
   test "repository contracts reject a dark ordinary content label below 4.5" do
     root = copy_repository()
@@ -84,12 +146,17 @@ defmodule Mix.Tasks.UiContrastContractTest do
     css = Path.join(root, "scrypath_ops/assets/css/app.css")
     original = File.read!(css)
 
+    # Give the dark secondary content label the same color as its own fill: a
+    # contrast ratio of 1, below 4.5 whatever the palette is. Read from the live
+    # dark block so a recolor does not change what this case guards.
+    secondary_fill = UiTokens.theme_value!(original, "dark", "--color-secondary")
+
     mutated =
-      String.replace(
+      UiTokens.replace_theme_value!(
         original,
-        "--color-secondary-content: #0c0f14;",
-        "--color-secondary-content: #333333;",
-        global: false
+        "dark",
+        "--color-secondary-content",
+        secondary_fill
       )
 
     refute mutated == original
@@ -129,9 +196,26 @@ defmodule Mix.Tasks.UiContrastContractTest do
 
     quoted_dark_theme = dark_theme_match |> hd() |> String.replace(~r/\s+/, " ")
 
+    # Mutations come from live tokens, never from a pinned old color. The light
+    # primary is a convenient contrast-breaking color: it is a fill, not a surface.
+    live_dark_primary = UiTokens.theme_value!(original_css, "dark", "--color-primary")
+    live_light_primary = UiTokens.theme_value!(original_css, "light", "--color-primary")
+    live_dark_muted = UiTokens.theme_value!(original_css, "dark", "--ops-text-muted")
+
     quoted_theme_decoy =
       String.replace(original_css, hd(dark_theme_match), "", global: false) <>
         "\n.quoted-theme-decoy::before { content: '#{quoted_dark_theme}'; }\n"
+
+    without_bindings =
+      original_manifest
+      |> String.replace(
+        ~r/export const FOCUS_BINDINGS = \[[\s\S]*?\n\];/,
+        "export const FOCUS_BINDINGS = [];"
+      )
+      |> String.replace(
+        ~r/export const SURFACE_BINDINGS = \[[\s\S]*?\n\];/,
+        "export const SURFACE_BINDINGS = [];"
+      )
 
     cases = [
       {"missing dark theme", css,
@@ -144,24 +228,43 @@ defmodule Mix.Tasks.UiContrastContractTest do
       {"duplicate theme", css,
        original_css <> hd(Regex.run(~r/@plugin[^{}]*daisyui-theme[^{}]*\{[^}]+\}/, original_css))},
       {"missing required token", css,
-       String.replace(original_css, "--color-warning: #d9a441;", "--color-renamed: #d9a441;")},
+       String.replace(original_css, "--color-warning:", "--color-renamed:")},
       {"unsupported token color", css,
-       String.replace(
+       UiTokens.replace_theme_value!(
          original_css,
-         "--color-primary: #aaa0ff;",
-         "--color-primary: rgb(170 160 255);"
+         "dark",
+         "--color-primary",
+         UiTokens.rgb_function(live_dark_primary)
        )},
-      {"invalid pair role", manifest,
-       String.replace(original_manifest, ~s(role: "text"), ~s(role: "unknown"))},
-      {"text role laundering", manifest,
-       String.replace(original_manifest, ~s(role: "text"), ~s(role: "decorative"))},
-      {"muted alpha drift", css,
-       String.replace(
+      # The muted-alpha manifest (and its per-entry text roles) is retired, so these two attack the
+      # brand pair matrix that replaced it: a text role dropped from the matrix leaves fewer than the
+      # 56 pairs the check counts, and a lowered floor would let a weak pair pass as text.
+      {"text role dropped from the matrix", manifest,
+       String.replace(original_manifest, ~s(      "ops-text-muted",\n), "", global: false)},
+      {"text floor lowered", manifest,
+       String.replace(original_manifest, "text: {\n    min: 4.5,", "text: {\n    min: 1.0,",
+         global: false
+       )},
+      # --ops-text-muted is an opaque brand hex (Phase 187). Drift it from its live dark value,
+      # never from a pinned old mix, so the opaque-token guard has to catch the change.
+      {"muted token drift", css,
+       UiTokens.replace_theme_value!(
          original_css,
-         "var(--color-base-content) 64%, transparent",
-         "var(--color-base-content) 63%, transparent"
+         "dark",
+         "--ops-text-muted",
+         UiTokens.bump_hex(live_dark_muted)
        )},
-      {"empty pairs", manifest, "export const MUTED_PAIRS = [];"},
+      # A manifest that exports empty focus and surface bindings (every other export intact) must be
+      # refused rather than treated as "nothing to check".
+      {"manifest without bindings", manifest, without_bindings},
+      # Text never uses alpha (N-07) and no primary or status tint returns (N-12): the retired muted
+      # manifest used to catch the first, these two planted declarations prove the bans stand alone.
+      {"alpha text declaration", css,
+       original_css <>
+         "\n.planted { color: color-mix(in oklch, var(--color-base-content) 50%, transparent); }\n"},
+      {"retired color tint", css,
+       original_css <>
+         "\n.planted { background: color-mix(in oklch, var(--color-primary) 14%, transparent); }\n"},
       {"dark focus below 3", css,
        String.replace(
          original_css,
@@ -169,20 +272,42 @@ defmodule Mix.Tasks.UiContrastContractTest do
          "outline: 2px solid #333333;",
          global: false
        )},
+      # --ops-selection is a surviving bound surface (the selected filter chip fill). Painting it the
+      # primary color puts the focus ring on its own color, so the focus-on-surface pair fails.
       {"changed focus background", css,
-       String.replace(original_css, "--ops-surface-2: #edf1f5;", "--ops-surface-2: #5b4ad1;")},
+       UiTokens.replace_theme_value!(
+         original_css,
+         "light",
+         "--ops-selection",
+         live_light_primary
+       )},
       {"changed shell background declaration", css,
        String.replace(
          original_css,
          "background-color: var(--ops-bg);",
-         "background-color: #5b4ad1;"
+         "background-color: #{live_light_primary};"
        )},
       {"new unbound focus", css,
        original_css <> "\n.unbound:focus-visible { outline: 2px solid var(--color-primary); }"},
       {"broken checker launch", checker, "throw new Error('checker launch witness');"}
     ]
 
+    originals = %{css => original_css, manifest => original_manifest, checker => original_checker}
+
+    # The reason each retired-manifest replacement must fail for, so a case cannot pass by breaking
+    # something unrelated: the checker's own message names the ban or guard that fired.
+    reasons = %{
+      "text role dropped from the matrix" => "N-03 expected 56 text pairs",
+      "text floor lowered" => "N-03 text threshold is 1 in the pair matrix",
+      "manifest without bindings" => "Required focus/surface bindings are empty",
+      "alpha text declaration" => "N-07 text color at app.css line",
+      "retired color tint" => "N-12 color-mix at app.css line"
+    }
+
     for {name, file, content} <- cases do
+      # A mutation that changes nothing would "fail" nothing: it means its target string is gone.
+      refute content == Map.fetch!(originals, file), "#{name} did not change #{file}"
+
       File.write!(css, original_css)
       File.write!(manifest, original_manifest)
       File.write!(checker, original_checker)
@@ -193,6 +318,10 @@ defmodule Mix.Tasks.UiContrastContractTest do
       assert output =~ "Contrast check: FAIL" or output =~ "contrast-checker error:" or
                output =~ "checker launch witness",
              "#{name} failed outside contrast:\n#{output}"
+
+      if reason = reasons[name] do
+        assert output =~ reason, "#{name} did not fail for #{inspect(reason)}:\n#{output}"
+      end
     end
   end
 

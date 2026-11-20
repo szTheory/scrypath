@@ -18,6 +18,10 @@ for (const [name, url] of [["mounted", "/admin/search/phase173/health"], ["stand
       await page.setViewportSize({width, height: 900});
       const stamp = page.locator(`[data-ops-timestamp-copy='${source}']`);
       const refresh = page.locator("#search-health-refresh");
+      // At 390px the dense facts line pushes the copy control below the fold, so the click would
+      // scroll the page and move both boxes. Bring it into view first: the check is that copying
+      // moves nothing, not that the page never scrolls.
+      await stamp.scrollIntoViewIfNeeded();
       const before = [await stamp.boundingBox(), await refresh.boundingBox()];
       await page.evaluate(() => Object.defineProperty(navigator, "clipboard", {configurable: true, value: {writeText: async () => {}}}));
       await stamp.click();

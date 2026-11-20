@@ -299,7 +299,15 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert info =~ "Saved search."
     assert info =~ ~s(aria-label="Close notification")
     assert info =~ "lv:clear-flash"
-    assert info =~ "hero-information-circle" or Regex.scan(~r/<svg\b/, info) |> length() == 2
+
+    # Phase 187 (LD-6): the toast says what happened in words. The only svg is the close glyph.
+    assert Regex.scan(~r/<svg\b/, info) |> length() == 1
+    assert info |> LazyHTML.from_fragment() |> LazyHTML.query(".alert > svg") |> Enum.count() == 0
+
+    assert info
+           |> LazyHTML.from_fragment()
+           |> LazyHTML.query("button[aria-label='Close notification'] svg")
+           |> Enum.count() == 1
 
     assert error =~ ~s(role="alert")
     assert error =~ "ops-flash"
@@ -307,6 +315,18 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert error =~ "Search sync failed."
     assert error =~ ~s(aria-label="Close notification")
     assert error =~ "lv:clear-flash"
-    assert error =~ "hero-exclamation-circle" or Regex.scan(~r/<svg\b/, error) |> length() == 2
+    assert Regex.scan(~r/<svg\b/, error) |> length() == 1
+
+    assert error |> LazyHTML.from_fragment() |> LazyHTML.query(".alert > svg") |> Enum.count() ==
+             0
+
+    assert error
+           |> LazyHTML.from_fragment()
+           |> LazyHTML.query("button[aria-label='Close notification'] svg")
+           |> Enum.count() == 1
+
+    # The close glyph is a full-opacity control glyph, not a faded one.
+    refute info =~ "opacity-40"
+    refute error =~ "opacity-40"
   end
 end

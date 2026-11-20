@@ -11,6 +11,8 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
 
   use ScrypathOpsWeb, :live_view
 
+  require Logger
+
   alias Scrypath.Operator.FailedSyncWorkInspection
   alias Scrypath.Operator.FailedWork
   alias ScrypathOps.Integrations.Sigra.Gating
@@ -349,9 +351,22 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             |> put_flash(:info, "Retry accepted · queue job #{receipt.replacement_job}")
 
           {:error, reason} ->
-            put_flash(socket, :error, "Retry failed: #{inspect(reason)}")
+            schema = OperatorSelection.canonical(row.schema)
+
+            # The reason can hold backend or queue detail, so it goes to the log, never to the page.
+            Logger.warning(
+              "Failed sync retry did not go through for #{schema}: " <>
+                inspect(reason, limit: 20, printable_limit: 500)
+            )
+
+            put_flash(socket, :error, retry_failed_copy(schema))
         end
     end
+  end
+
+  defp retry_failed_copy(schema) do
+    "Retry did not go through for #{schema}. The failed work is unchanged and still listed. " <>
+      "Check that the queue and Meilisearch are reachable, then retry."
   end
 
   defp accepted_receipt(socket, row, recovery, result, runtime_opts) do
@@ -679,8 +694,10 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp operation_label(:delete), do: "Delete"
   defp operation_label(_), do: "Unknown operation"
 
-  defp state_label(:retrying), do: "Retrying"
-  defp state_label(_), do: "Failed"
+  # Failed sync work is only ever failed or retrying; it does not observe pending work, so it
+  # never renders Clear or Pending.
+  defp row_sync_status(:retrying), do: :retrying
+  defp row_sync_status(_state), do: :failed
 
   defp source_label(%{source: :meilisearch, id: id}), do: "Meilisearch task ##{id}"
 
@@ -804,8 +821,13 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
   defp delete_confirmation_description(row) do
     count = length(delete_confirmation_ids(row))
 
-    "Retry deletion of #{count} documents for #{OperatorSelection.canonical(row.schema)} in #{delete_confirmation_index(row)}."
+    "Retry deletion of #{document_count_label(count)} for #{OperatorSelection.canonical(row.schema)} in #{delete_confirmation_index(row)}."
   end
+
+  # `1 document`, `3 documents`: the singular reads correctly in the description, the count line
+  # and the confirm label, so one helper builds all three.
+  defp document_count_label(1), do: "1 document"
+  defp document_count_label(count), do: "#{count} documents"
 
   defp recovery_handoff_path(mount_path, schema, receipt) do
     base = String.trim_trailing(mount_path, "/")
@@ -1032,11 +1054,9 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             data-state={row.state}
           >
             <div class="ops-failed-row__facts">
-              <.ops_badge kind={if row.state == :retrying, do: :warning, else: :error}>
-                {state_label(row.state)}
-              </.ops_badge>
+              <.ops_sync_status status={row_sync_status(row.state)} />
               <h3 class="ops-failed-row__title">
-                <span title={OperatorSelection.canonical(row.schema)}>
+                <span title={OperatorSelection.canonical(row.schema)} data-ops-identity>
                   {schema_short_name(row.schema)}
                 </span>
                 <span aria-hidden="true">·</span>
@@ -1097,23 +1117,23 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               :if={row.recovery && is_nil(@recovery_receipts[row_key(row)])}
               class="ops-failed-row__actions"
             >
-              <.ops_button
+              <button
+                type="button"
+                class="ops-text-action"
                 phx-click="retry"
                 phx-value-id={row.id}
                 phx-value-schema={OperatorSelection.canonical(row.schema)}
                 phx-value-source={row.source}
                 data-testid="failed-sync-retry"
-                variant={:default}
-                size={:sm}
               >
                 Retry
-              </.ops_button>
+              </button>
             </div>
 
             <.ops_status
               :if={receipt = @recovery_receipts[row_key(row)]}
               class="ops-failed-row__receipt"
-              kind={:info}
+              kind={:neutral}
               title="Retry queued"
               role="status"
               data-testid="recovery-receipt"
@@ -1204,7 +1224,7 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
               Index
               <.ops_inline_code>{delete_confirmation_index(@delete_row)}</.ops_inline_code>
             </p>
-            <p>{length(delete_confirmation_ids(@delete_row))} documents</p>
+            <p>{document_count_label(length(delete_confirmation_ids(@delete_row)))}</p>
             <ul class="mt-2 list-inside list-disc break-all font-mono text-ops-sm">
               <li :for={document_id <- delete_confirmation_ids(@delete_row)}>
                 {inspect(document_id)}
@@ -1215,13 +1235,15 @@ defmodule ScrypathOpsWeb.FailedSyncLive do
             <.ops_button
               type="button"
               phx-click="cancel_retry_delete"
-              variant={:ghost}
+              variant={:default}
               aria-label="Keep failed work and close"
               data-ops-modal-cancel
             >
               Keep failed work and close
             </.ops_button>
-            <.ops_button type="submit" variant={:danger}>Retry delete sync work</.ops_button>
+            <.ops_button type="submit" variant={:primary}>
+              Retry deleting {document_count_label(length(delete_confirmation_ids(@delete_row)))}
+            </.ops_button>
           </div>
         </.form>
       </.ops_modal>

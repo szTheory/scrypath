@@ -122,6 +122,7 @@ Some repository contracts build a clean Git snapshot. Before rerunning one after
 Agents should default to the repo's **green-main release train** posture:
 
 - keep `main` green on the lean required gates
+- squash-merge a PR yourself once the work is done and its required checks are green on the exact head, including visible-UI PRs; advisory reds such as `deep-quality` do not block (maintainer standing instruction, 2026-11-19). Do not wait for a separate merge yes. Hex releases and release-please PRs still need the maintainer's explicit yes
 - prefer **PR-first** execution for serious milestone or feature-depth work
 - shift verification left: completion must be backed by executable tests or exact-SHA hosted evidence, never post-implementation human verification or pending UAT
 - resolve subjective choices before implementation or keep them nonblocking; do not simulate a reviewer identity or silently auto-approve a trust gate
@@ -131,9 +132,31 @@ Agents should default to the repo's **green-main release train** posture:
 Maintainers who use the separate GSD toolkit should follow that tool’s docs so planning artifacts stay consistent; this file does not duplicate those slash-commands for OSS readers.
 <!-- GSD:workflow-end -->
 
+## Docker resource cleanup
+
+For Docker-backed work, use task-scoped resource names or labels and clean up temporary containers, images, networks, and owned build cache when the task finishes or fails. Remove per-iteration and candidate images as soon as their comparison is complete; do not leave unbounded snapshots behind. Before handing off, check `docker system df` and confirm task-scoped resources are gone. Never prune another project's resources or volumes without a clear task-specific reason; volumes may contain data and must be reviewed separately.
+
 ## Worktree continuity
 
 Read [.planning/reference/UI-WORKTREE-LEARNINGS.md](.planning/reference/UI-WORKTREE-LEARNINGS.md) before a worktree handoff or retained-preview work. Dirty edits belong to their checkout: inventory intended source changes and checkpoint them in an owned commit or a scoped patch before branching, then verify their disposition in the destination. Preserve unrelated edits; never transfer an older file wholesale over newer behavior without reconciliation. Use an explicit absolute working directory for edits and commands. After a squash merge, verify the actual merged ref and relevant file-tree parity before calling the preview latest; commit SHA differences alone do not prove missing work.
+
+## Milestone preparation (standing maintainer instruction, 2026-11-18)
+
+At every milestone boundary, do the upstream prep before asking what is next: fan out subagents per open decision point, each through the relevant role lenses (security, product, architecture, devops and CI, design and UX, accessibility, OSS maintainer and adopter), weigh patterns, anti-patterns and footguns, prefer primary sources (specs, official docs, source code) over blog posts, run an adversarial pass against each recommendation, and synthesize one recommended option per decision with its confidence and what would change it. Continue until returns diminish. Then present a recommended next milestone and update `.planning/reference/ROLLING-ROADMAP.md` in the same change, so the maintainer chooses from prepared options. The prep feeds, and does not replace, the downstream OpenGSD discuss, plan, execute and verify workflow: write recommendations and research notes, not phase plans. House preferences apply: another copy-paste is better than another dependency, keep dependency trees small and flat, run cheap consistency checks before long suites, and never claim more than the automated evidence proves.
+
+## Phase workflow defaults (standing maintainer instruction, 2026-11-18)
+
+**Discuss phases.** Apply the same fan-out as milestone preparation to every phase's decision points: one subagent per decision (context-window efficiency), each through all relevant role lenses (security, product, architecture, devops, rendering, language and framework specialists, UI and UX where it applies), with pros, cons, tradeoffs, patterns, anti-patterns, footguns and lessons from other products and ecosystems, preferring reputable primary sources. Keep fanning out until returns diminish, run an adversarial pass, then synthesize one coherent recommended set and follow it without asking, unless a choice changes scope, authority, risk or cost. Prefer a small copy-paste over a new dependency; smaller, flatter dependency trees are more secure. For UI work, weigh existing patterns, least surprise and conventions.
+
+**Verify phases.** Automate verification and shift it left: integration, end-to-end, smoke and seam tests, moved onto CI only when the check has recurring value. The goal is zero human verification or UAT. Take verification as far as you can without the maintainer, but only where it yields useful feedback, and never box the work in. Throwaway local verification is fine; not everything belongs in CI. Hand off only what is genuinely impossible to automate, and record that exception. When an item was automated or ruled out, record it in the phase artifacts so it is never re-litigated.
+
+**Cheap checks first.** Where the design allows, run a cheap consistency check before the long suite. When a run is slow or stuck, find the bottleneck and the low-hanging fruit instead of retrying the same thing.
+
+**CI and release efficiency.** Whenever a CI or release run is in progress or finishes, look for low-hanging speed, iteration-time and cost wins (cache keys, duplicated work, path filters, lane timeouts, cold-cache cost) without weakening what the checks prove. Record measured findings in `.planning/` and apply low-risk ones in the next CI change.
+
+## Brand and UI re-skin knowledge
+
+Before brand adoption, UI re-skinning, storybook or copy-catalog work, read [.planning/reference/BRAND-ADOPTION-PLAYBOOK.md](.planning/reference/BRAND-ADOPTION-PLAYBOOK.md). It holds evidence-graded rules with provenance from this repo and sibling projects. When a phase proves, breaks or refines a rule, update the playbook in the same change, keep the provenance, and record contested points beside their resolution. The maintainer wants this to stay reusable for future rebrands.
 
 ## UI work
 

@@ -10,8 +10,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
+  alias ScrypathOps.Posture
   alias ScrypathOpsWeb.OpsUi
   alias ScrypathOpsWeb.PostureLive
+
+  @fixture_row "[id='posture-ScrypathOps.Phase173FixtureSchema']"
+  @status_words ~w(Failed Retrying Pending Clear)
+  @condition_words ["Not observed", "Not checked", "Queue not used", "Unavailable"]
 
   defmodule PostureFakeClient do
     def tasks(filters, config) do
@@ -146,41 +151,497 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
              "Search health could not be checked: A configured search health source could not be read. Refresh health to try again."
 
     refute html =~ ":boom"
-    assert html =~ ~s(class="mt-ops-2 flex items-start gap-ops-2 text-ops-body text-error")
-    assert html =~ ~s(class="mt-ops-1 size-4 shrink-0")
+
+    # The row that could not be read says so in Ink with the condition word beside it: no icon,
+    # no error color, no status word.
+    error_row = lv |> element("[id='posture-ScrypathOps.Test.OpsPostA']") |> render()
+    assert error_row =~ ~s(data-condition="Not checked")
+    refute error_row =~ "text-error"
+    refute error_row =~ "<svg"
+    refute error_row =~ "data-sync-status"
+
     assert html =~ "Queue not used"
-    assert html =~ ~s(class="text-ops-body text-base-content/75")
+    assert html =~ ~s(class="text-ops-body ops-muted")
     assert html =~ "Meilisearch document tasks"
     assert html =~ "Manual sync"
     assert html =~ "Last success"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
+
+    # The unreadable row is unverified, so it ranks above the clear row (OpsPostB, manual sync).
+    assert row_ids(html) == [
+             "posture-ScrypathOps.Test.OpsPostA",
+             "posture-ScrypathOps.Test.OpsPostB"
+           ]
   end
 
-  test "degraded search health uses neutral containers and local failure cues", %{conn: conn} do
+  test "degraded search health shows its failures as status words, not badges", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
     row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
 
     assert html =~ "Sync jobs and Meilisearch tasks failed"
-    assert row =~ "Meilisearch tasks failed"
-    assert row =~ "Sync jobs failed"
-    assert has_element?(lv, "[data-testid='ops-verdict-icon'][data-state='warning']")
-    assert has_element?(lv, ".ops-badge-error")
+
+    # The verdict follows the worst row (LD-10): a failed row makes it an error, with the word.
+    assert has_element?(lv, ".ops-verdict[data-verdict-kind='error'] [data-sync-status='failed']")
+    refute html =~ "ops-verdict-icon"
+
+    # The row header and both failing source groups say Failed through the shared component.
+    assert has_element?(
+             lv,
+             "#{@fixture_row} .ops-schema-signal-card__badges [data-sync-status='failed']"
+           )
+
+    assert has_element?(lv, "#{@fixture_row} [data-tone='error'] [data-sync-status='failed']")
+    refute has_element?(lv, ".ops-badge")
+    refute row =~ "Meilisearch tasks failed"
+    refute row =~ "Sync jobs failed"
     refute html =~ "ops-metric-success"
     refute row =~ "ops-schema-signal-card--warning"
     refute row =~ "ops-schema-signal-card--error"
   end
 
-  test "healthy Search health badges use neutral treatment", %{conn: conn} do
+  test "healthy Search health says Clear because it observed both sources", %{conn: conn} do
     {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
     row = lv |> element("[id='posture-ScrypathOps.Phase173FixtureSchema']") |> render()
 
     assert html =~ "Search health"
     assert has_element?(lv, ".ops-verdict.ops-posture-verdict")
+
+    assert has_element?(
+             lv,
+             ".ops-verdict[data-verdict-kind='neutral'] [data-sync-status='clear']"
+           )
+
+    assert has_element?(
+             lv,
+             "#{@fixture_row} .ops-schema-signal-card__badges [data-sync-status='clear']"
+           )
+
     refute row =~ "backend clear"
     refute row =~ "queue observed"
-    refute row =~ "ops-badge-neutral"
-    refute row =~ "ops-badge-success"
+    refute has_element?(lv, ".ops-badge")
+  end
+
+  # Phase 187 SKIN-08 / E-19: the capture fixture. The capture command is given this exact
+  # scenario, so the status vocabulary cannot be missing from the captured screen.
+  describe "the all-statuses capture fixture (E-19)" do
+    @all_statuses_path "/ops/phase173/health?scenario=all-statuses"
+    @capture_script Path.expand(
+                      "../../../../examples/scrypath_ecommerce/scripts/reskin-capture.mjs",
+                      __DIR__
+                    )
+
+    test "renders every status word with its shape and a condition word", %{conn: conn} do
+      {:ok, lv, html} = live(conn, @all_statuses_path)
+      doc = LazyHTML.from_fragment(html)
+
+      assert doc |> LazyHTML.query("[data-testid='posture-row']") |> Enum.count() == 5
+
+      statuses = LazyHTML.query(doc, "[data-sync-status]")
+
+      assert statuses |> LazyHTML.attribute("data-sync-status") |> Enum.uniq() |> Enum.sort() ==
+               ["clear", "failed", "pending", "retrying"]
+
+      for {status, word, shape} <- [
+            {"failed", "Failed", "notched"},
+            {"retrying", "Retrying", "bottom-filled"},
+            {"pending", "Pending", "hollow"},
+            {"clear", "Clear", "filled"}
+          ] do
+        matches = LazyHTML.query(doc, "[data-sync-status='#{status}']")
+        assert Enum.count(matches) >= 1
+
+        for match <- matches do
+          assert match |> LazyHTML.query(".ops-sync-status__word") |> LazyHTML.text() == word
+          assert match |> LazyHTML.query("svg") |> LazyHTML.attribute("data-shape") == [shape]
+        end
+      end
+
+      conditions = doc |> LazyHTML.query(".ops-condition") |> Enum.map(&LazyHTML.text/1)
+      assert conditions != []
+      assert Enum.all?(conditions, &(&1 in @condition_words))
+
+      assert has_element?(lv, "#phase173-fixture-scenario option[value='all-statuses'][selected]")
+    end
+
+    test "each row carries its own state and its text", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, @all_statuses_path)
+
+      failed = row_html(lv, "Phase173FixtureSchema")
+      assert row_header_status(failed) == "failed"
+      refute failed =~ "Jobs retrying"
+
+      retrying = row_html(lv, "Phase173RetryingSchema")
+      assert row_header_status(retrying) == "retrying"
+      refute retrying =~ ~s(data-sync-status="failed")
+
+      pending = row_html(lv, "Phase173PendingSchema")
+      assert row_header_status(pending) == "pending"
+      refute pending =~ ~s(data-sync-status="failed")
+      refute pending =~ ~s(data-sync-status="retrying")
+      refute pending =~ "No pending or failed tasks."
+
+      clear = row_html(lv, "Phase173ClearSchema")
+      assert row_header_status(clear) == "clear"
+      assert clear =~ "No pending or failed tasks."
+      assert clear =~ "No pending, retrying or failed jobs."
+      refute clear =~ ~s(data-sync-status="failed")
+
+      unreadable = row_html(lv, "Phase173PartialSchema")
+      assert unreadable =~ ~s(data-condition="Not checked")
+      assert unreadable =~ "Search health could not be checked"
+      refute unreadable =~ "data-sync-status"
+    end
+
+    test "the capture command is given exactly this scenario" do
+      script = File.read!(@capture_script)
+
+      assert [_, scenario] = Regex.run(~r/export const SCENARIO = "([^"]+)";/, script)
+      assert scenario == "all-statuses"
+      assert @all_statuses_path =~ "scenario=#{scenario}"
+    end
+  end
+
+  test "phase173 fixture ignores an unknown scenario and keeps the healthy rows", %{conn: conn} do
+    {:ok, lv, html} = live(conn, ~p"/ops/phase173/health?scenario=not-a-scenario")
+
+    rows = html |> LazyHTML.from_fragment() |> LazyHTML.query("[data-testid='posture-row']")
+    assert Enum.count(rows) == 1
+    assert has_element?(lv, "#phase173-fixture-scenario option[value='healthy'][selected]")
+    refute has_element?(lv, "#phase173-fixture-scenario option[value='all-statuses'][selected]")
+  end
+
+  describe "Search health rows render the shared status component (E-02)" do
+    test "every rendered dt holds one status and its count stays in the dd", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+      row = lv |> element(@fixture_row) |> render() |> LazyHTML.from_fragment()
+
+      dts = LazyHTML.query(row, ".ops-signal-counts dt")
+      assert Enum.count(dts) == 2
+
+      for dt <- dts do
+        assert dt |> LazyHTML.query("[data-sync-status]") |> Enum.count() == 1
+      end
+
+      # One status icon in every dt: the mandatory closeout-attestation case compares these counts.
+      assert row |> LazyHTML.query(".ops-signal-counts dt svg") |> Enum.count() == Enum.count(dts)
+
+      counts =
+        row
+        |> LazyHTML.query(".ops-signal-counts dd")
+        |> Enum.map(&String.trim(LazyHTML.text(&1)))
+
+      assert counts == ["1", "1"]
+    end
+
+    test "the data-tone wrappers that the closeout cases read survive", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=failed")
+      assert has_element?(lv, "#{@fixture_row} .ops-signal-counts [data-tone='error']", "Failed")
+      refute has_element?(lv, "#{@fixture_row} .ops-signal-counts [data-tone='retrying']")
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=retrying")
+
+      assert has_element?(
+               lv,
+               "#{@fixture_row} .ops-signal-counts [data-tone='retrying']",
+               "Retrying"
+             )
+
+      refute has_element?(lv, "#{@fixture_row} .ops-signal-counts [data-tone='error']")
+    end
+
+    test "no badge ever spells a status word", %{conn: conn} do
+      for scenario <- ~w(healthy failed retrying all-statuses unavailable queue-unused partial) do
+        {:ok, lv, html} = live(conn, "/ops/phase173/health?scenario=#{scenario}")
+
+        badge_words =
+          html
+          |> LazyHTML.from_fragment()
+          |> LazyHTML.query(".ops-badge")
+          |> Enum.map(&String.trim(LazyHTML.text(&1)))
+
+        assert Enum.all?(badge_words, &(&1 not in @status_words)),
+               "#{scenario}: #{inspect(badge_words)}"
+
+        assert has_element?(lv, ".ops-verdict")
+      end
+    end
+
+    test "each row has a source-attributed facts line", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=all-statuses")
+
+      retrying = facts_text(row_html(lv, "Phase173RetryingSchema"))
+      assert retrying =~ "Queue 1 retrying, no completed job in available history"
+      assert retrying =~ "· Meilisearch 0 pending, no completed task in available history"
+
+      failed = facts_text(row_html(lv, "Phase173FixtureSchema"))
+      assert failed =~ "Meilisearch 1 failed"
+
+      pending = facts_text(row_html(lv, "Phase173PendingSchema"))
+      assert pending =~ "Meilisearch 1 pending"
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+      healthy = row_html(lv, "Phase173FixtureSchema")
+      # The label and the time are separate flex items, so their text has no space between them.
+      assert facts_text(healthy) =~
+               ~r/Queue 0 pending, last succeeded\s*Oct 5, 2026 at 15:12:13 UTC/
+
+      assert facts_text(healthy) =~
+               ~r/Meilisearch 0 pending, last succeeded\s*Oct 4, 2026 at 17:02:05 UTC/
+
+      assert healthy
+             |> LazyHTML.from_fragment()
+             |> LazyHTML.query("[data-testid='posture-facts'] time")
+             |> Enum.count() == 2
+    end
+
+    test "the facts line repeats a time as plain text, so each exact time has one copy control",
+         %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+      healthy = row_html(lv, "Phase173FixtureSchema")
+      fragment = LazyHTML.from_fragment(healthy)
+
+      # No copy button inside the facts line, and its times keep the exact value and the mono face.
+      assert fragment
+             |> LazyHTML.query("[data-testid='posture-facts'] [data-ops-timestamp-copy]")
+             |> Enum.count() == 0
+
+      assert fragment
+             |> LazyHTML.query("[data-testid='posture-facts'] time.ops-time__value[datetime]")
+             |> Enum.count() == 2
+
+      # Every exact value is offered for copying exactly once in the row (the source groups).
+      copy_values =
+        fragment
+        |> LazyHTML.query("[data-ops-timestamp-copy]")
+        |> Enum.map(&(&1 |> LazyHTML.attribute("data-ops-timestamp-copy") |> List.first()))
+
+      assert copy_values != []
+      assert copy_values == Enum.uniq(copy_values)
+    end
+  end
+
+  describe "conditions are plain muted words (E-03)" do
+    test "an unreadable row and an unused queue say so without an icon or a status", %{
+      conn: conn
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=all-statuses")
+      unreadable = row_html(lv, "Phase173PartialSchema")
+
+      assert condition_words(unreadable) == ["Not checked"]
+      refute unreadable =~ "data-sync-status"
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=queue-unused")
+      unused = row_html(lv, "Phase173FixtureSchema")
+
+      assert "Queue not used" in condition_words(unused)
+      assert row_header_status(unused) == "clear"
+    end
+
+    test "a condition word carries no svg and no icon class", %{conn: conn} do
+      for scenario <- ~w(all-statuses queue-unused unavailable) do
+        {:ok, _lv, html} = live(conn, "/ops/phase173/health?scenario=#{scenario}")
+        conditions = html |> LazyHTML.from_fragment() |> LazyHTML.query(".ops-condition")
+
+        assert Enum.count(conditions) >= 1
+
+        for condition <- conditions do
+          assert Enum.count(LazyHTML.query(condition, "svg")) == 0
+          refute LazyHTML.to_html(condition) =~ "hero-"
+          assert String.trim(LazyHTML.text(condition)) in @condition_words
+        end
+      end
+    end
+  end
+
+  describe "Clear needs an observation (E-04)" do
+    test "observed-empty and queue-not-used rows are Clear; a zero from an unobserved source is not" do
+      assert Posture.row_status({:ok, status(mode: :oban, observed?: true)}) == :clear
+      assert Posture.row_status({:ok, status(mode: :inline, observed?: false)}) == :clear
+      assert Posture.row_status({:ok, status(mode: :manual, observed?: false)}) == :clear
+      assert Posture.row_status({:ok, status(mode: "manual", observed?: false)}) == :clear
+
+      # A queue that the sync mode says should have been observed, but was not: every list is
+      # zero, and that zero is not evidence.
+      assert Posture.row_status({:ok, status(mode: :oban, observed?: false)}) ==
+               {:condition, "Not observed"}
+
+      # A row that could not be read at all.
+      assert Posture.row_status({:error, :backend_unavailable}) == {:condition, "Not checked"}
+    end
+
+    test "observed work outranks a missing queue observation" do
+      unobserved = [mode: :oban, observed?: false]
+
+      assert Posture.row_status({:ok, status([backend_pending: [:t]] ++ unobserved)}) == :pending
+      assert Posture.row_status({:ok, status([backend_failed: [:t]] ++ unobserved)}) == :failed
+    end
+
+    test "a row shows its most urgent status" do
+      everything = [
+        backend_failed: [:t],
+        backend_pending: [:t],
+        queue: %{failed: [:j], retrying: [:j], pending: [:j]}
+      ]
+
+      assert Posture.row_status({:ok, status(everything)}) == :failed
+
+      retrying_and_pending = [backend_pending: [:t], queue: %{retrying: [:j], pending: [:j]}]
+      assert Posture.row_status({:ok, status(retrying_and_pending)}) == :retrying
+
+      assert Posture.row_status({:ok, status(queue: %{pending: [:j]})}) == :pending
+      assert Posture.row_status({:ok, status(queue: %{failed: [:j]})}) == :failed
+    end
+
+    test "a queue that was not observed never renders Clear on the page", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+
+      row = {ScrypathOps.Phase173FixtureSchema, {:ok, status(mode: :oban, observed?: false)}}
+      put_live_assigns(lv, posture_rows: {:ok, [row]})
+      render_patch(lv, ~p"/ops/phase173/health?scenario=healthy")
+
+      html = lv |> element(@fixture_row) |> render()
+      assert "Not observed" in condition_words(html)
+
+      # The row header says Not observed instead of a status, and the queue group, the source
+      # that was not observed, never says Clear. The backend was observed and is empty.
+      refute has_element?(
+               lv,
+               "#{@fixture_row} .ops-schema-signal-card__badges [data-sync-status]"
+             )
+
+      assert has_element?(lv, "#{@fixture_row} .ops-schema-signal-card__badges .ops-condition")
+
+      refute has_element?(
+               lv,
+               "#{@fixture_row} [aria-label^='Queue job signals'] [data-sync-status]"
+             )
+
+      refute html
+             |> LazyHTML.from_fragment()
+             |> LazyHTML.query("[data-testid='posture-facts'] [data-sync-status]")
+             |> Enum.any?()
+
+      refute has_element?(lv, ".ops-verdict [data-sync-status]")
+      assert has_element?(lv, ".ops-verdict[data-verdict-kind='warning']")
+    end
+  end
+
+  describe "ranking (E-05)" do
+    test "failed, retrying, pending, unverified, clear, then module name" do
+      rows = [
+        {Clear.B, {:ok, status(mode: :oban, observed?: true)}},
+        {Clear.A, {:ok, status(mode: :manual, observed?: false)}},
+        {Pending.A, {:ok, status(backend_pending: [:t])}},
+        {Retrying.A, {:ok, status(queue: %{retrying: [:j]})}},
+        {Failed.B, {:ok, status(backend_failed: [:t])}},
+        {Failed.A, {:ok, status(queue: %{failed: [:j]})}},
+        {Unverified.NotObserved, {:ok, status(mode: :oban, observed?: false)}},
+        {Unverified.Error, {:error, :boom}}
+      ]
+
+      expected = [
+        Failed.A,
+        Failed.B,
+        Retrying.A,
+        Pending.A,
+        Unverified.Error,
+        Unverified.NotObserved,
+        Clear.A,
+        Clear.B
+      ]
+
+      assert rows |> Posture.sort_by_urgency() |> Enum.map(&elem(&1, 0)) == expected
+
+      assert rows |> Enum.reverse() |> Posture.sort_by_urgency() |> Enum.map(&elem(&1, 0)) ==
+               expected
+    end
+
+    test "the page orders the fixture rows by urgency", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, @all_statuses_path)
+
+      assert row_ids(html) == [
+               "posture-ScrypathOps.Phase173FixtureSchema",
+               "posture-ScrypathOps.Phase173RetryingSchema",
+               "posture-ScrypathOps.Phase173PendingSchema",
+               "posture-ScrypathOps.Phase173PartialSchema",
+               "posture-ScrypathOps.Phase173ClearSchema"
+             ]
+    end
+
+    test "rows re-sort only when a refresh brings new evidence", %{conn: conn} do
+      {:ok, lv, html} = live(conn, @all_statuses_path)
+      ranked = row_ids(html)
+      {:ok, rows} = :sys.get_state(lv.pid).socket.assigns.posture_rows
+
+      # Evidence changes in the assigns without a refresh: the page keeps the order it was given
+      # instead of re-ranking itself while an operator reads it.
+      put_live_assigns(lv, posture_rows: {:ok, Enum.reverse(rows)})
+      render_patch(lv, @all_statuses_path)
+      assert lv |> render() |> row_ids() == Enum.reverse(ranked)
+
+      # A refresh reloads the evidence and ranks it again.
+      lv |> element("#search-health-refresh") |> render_click()
+      assert lv |> render() |> row_ids() == ranked
+    end
+  end
+
+  describe "verdicts show the worst row status (E-06)" do
+    test "worst status and kind follow LD-10" do
+      clear = {A, {:ok, status(mode: :manual, observed?: false)}}
+      pending = {B, {:ok, status(backend_pending: [:t])}}
+      unverified = {C, {:error, :boom}}
+      retrying = {D, {:ok, status(queue: %{retrying: [:j]})}}
+      failed = {E, {:ok, status(backend_failed: [:t])}}
+
+      for {rows, worst, kind} <- [
+            {[clear, clear], :clear, :neutral},
+            {[clear, pending], :pending, :neutral},
+            {[clear, unverified], nil, :warning},
+            {[pending, unverified], :pending, :warning},
+            {[clear, retrying, pending], :retrying, :warning},
+            {[unverified, failed, retrying], :failed, :error},
+            {[], nil, :neutral}
+          ] do
+        assert Posture.worst_status(rows) == worst, inspect(rows)
+        assert Posture.verdict_kind(rows) == kind, inspect(rows)
+      end
+    end
+
+    test "the verdict names the worst row, and Clear only when every row is clear", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, @all_statuses_path)
+
+      assert has_element?(
+               lv,
+               ".ops-verdict[data-verdict-kind='error'] [data-sync-status='failed']"
+             )
+
+      refute has_element?(lv, ".ops-verdict [data-sync-status='clear']")
+      refute has_element?(lv, "[data-testid='ops-verdict-icon']")
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=retrying")
+
+      assert has_element?(
+               lv,
+               ".ops-verdict[data-verdict-kind='warning'] [data-sync-status='retrying']"
+             )
+
+      {:ok, lv, _html} = live(conn, ~p"/ops/phase173/health?scenario=healthy")
+
+      assert has_element?(
+               lv,
+               ".ops-verdict[data-verdict-kind='neutral'] [data-sync-status='clear']"
+             )
+    end
+
+    test "an unreadable row keeps the verdict from saying Clear", %{conn: conn} do
+      for scenario <- ~w(unavailable partial) do
+        {:ok, lv, _html} = live(conn, "/ops/phase173/health?scenario=#{scenario}")
+
+        assert has_element?(lv, ".ops-verdict[data-verdict-kind='warning']"), scenario
+        refute has_element?(lv, ".ops-verdict [data-sync-status]"), scenario
+      end
+    end
   end
 
   test "refresh without configured schemas does not report a successful observation", %{
@@ -267,7 +728,9 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     refute failed_row =~ "phase173_backend_unavailable"
 
-    assert failed_row =~ "text-ops-body text-error"
+    assert failed_row =~ ~s(data-condition="Not checked")
+    refute failed_row =~ "text-error"
+    refute failed_row =~ "data-sync-status"
 
     assert failed_row =~ "2 days ago"
     assert failed_row =~ iso
@@ -511,6 +974,84 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
     assert flash_value(updated_socket, "error") =~ "allowlisted"
     assert updated_socket.assigns.local_ui_state == :keep
+  end
+
+  # Row ids in page order, e.g. "posture-ScrypathOps.Test.OpsPostA".
+  defp row_ids(html) do
+    html
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query("[data-testid='posture-row']")
+    |> Enum.flat_map(&LazyHTML.attribute(&1, "id"))
+  end
+
+  defp row_html(lv, short_name) do
+    lv |> element("[id='posture-ScrypathOps.#{short_name}']") |> render()
+  end
+
+  # The status word in a row's own header (not the source groups below it).
+  defp row_header_status(row_html) do
+    row_html
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(".ops-schema-signal-card__badges [data-sync-status]")
+    |> LazyHTML.attribute("data-sync-status")
+    |> case do
+      [status] -> status
+      other -> flunk("expected one header status, got #{inspect(other)}")
+    end
+  end
+
+  defp condition_words(row_html) do
+    row_html
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(".ops-condition")
+    |> Enum.map(&String.trim(LazyHTML.text(&1)))
+  end
+
+  defp facts_text(row_html) do
+    row_html
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query("[data-testid='posture-facts']")
+    |> LazyHTML.text()
+    |> String.replace(~r/\s+/, " ")
+    |> String.trim()
+  end
+
+  # A status the way `Scrypath.sync_status/2` returns it, with only the fields a row reads.
+  defp status(opts) do
+    queue =
+      Map.merge(
+        %{
+          observed?: Keyword.get(opts, :observed?, true),
+          pending: [],
+          retrying: [],
+          failed: [],
+          last_succeeded: nil
+        },
+        Keyword.get(opts, :queue, %{})
+      )
+
+    Scrypath.Operator.Status.new(
+      schema: OpsPostA,
+      mode: Keyword.get(opts, :mode, :oban),
+      index: "ranking_ops_post_a",
+      backend: %{
+        pending: Keyword.get(opts, :backend_pending, []),
+        failed: Keyword.get(opts, :backend_failed, []),
+        last_succeeded: nil
+      },
+      queue: queue
+    )
+  end
+
+  defp put_live_assigns(view, assigns) do
+    :sys.replace_state(view.pid, fn state ->
+      socket =
+        Enum.reduce(assigns, state.socket, fn {key, value}, socket ->
+          Phoenix.Component.assign(socket, key, value)
+        end)
+
+      %{state | socket: socket}
+    end)
   end
 
   defp posture_socket(overrides) do

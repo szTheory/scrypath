@@ -176,6 +176,104 @@ defmodule ScrypathOps.Posture do
   def metric_tone(0), do: :neutral
   def metric_tone(_), do: :warning
 
+  # ── row status, ranking and verdict (Phase 187, LD-8 and LD-10) ─────────────
+  #
+  # One place decides what a Search health row says about itself, how rows rank, and what the
+  # verdicts above them say, so the Control Room and Search health can never disagree.
+
+  @typedoc """
+  The most urgent thing a row can say: a sync status, a condition word for a row nobody could
+  observe, or `:clear` for a row that was observed and has nothing to report.
+  """
+  @type row_status :: :failed | :retrying | :pending | {:condition, String.t()} | :clear
+
+  # Rank of a row class, most urgent first. `:unverified` (a row that was not checked, or whose
+  # queue was not observed) sorts above `:clear` because an unknown row is not a healthy one.
+  @rank_order [:failed, :retrying, :pending, :unverified, :clear]
+  @ranks @rank_order |> Enum.with_index() |> Map.new()
+
+  @doc """
+  Most urgent status of a Search health row, from the `Scrypath.sync_status/2` result.
+
+  Order: failed, retrying, pending, unverified (a `{:error, _}` row is `Not checked`; a queue
+  that sync mode says should be observed but was not is `Not observed`), then clear. `:clear`
+  needs an observation: the row read cleanly, its backend lists are empty, and the queue is
+  either observed-empty or not used by the sync mode. A zero count from an unobserved source
+  never produces `:clear`.
+  """
+  @spec row_status({:ok, map()} | {:error, term()}) :: row_status()
+  def row_status({:error, _reason}), do: {:condition, "Not checked"}
+
+  def row_status({:ok, status}) do
+    cond do
+      status.backend.failed != [] or status.queue.failed != [] -> :failed
+      status.queue.retrying != [] -> :retrying
+      status.backend.pending != [] or status.queue.pending != [] -> :pending
+      not status.queue.observed? and not queue_unused?(status) -> {:condition, "Not observed"}
+      true -> :clear
+    end
+  end
+
+  @doc """
+  True when the queue was not observed because the sync mode does not use one (`:inline` or
+  `:manual`), as opposed to a queue that should have been observed.
+  """
+  @spec queue_unused?(map()) :: boolean()
+  def queue_unused?(%{queue: %{observed?: true}}), do: false
+  def queue_unused?(%{mode: mode}), do: mode in [:inline, :manual, "inline", "manual"]
+
+  @doc "Rows ordered most urgent first (failed, retrying, pending, unverified, clear), then by module name."
+  @spec sort_by_urgency([row()]) :: [row()]
+  def sort_by_urgency(rows) when is_list(rows) do
+    Enum.sort_by(rows, fn {mod, result} -> {row_rank(result), inspect(mod)} end)
+  end
+
+  @doc "Rank of one row result in `sort_by_urgency/1` (0 is most urgent)."
+  @spec row_rank({:ok, map()} | {:error, term()}) :: non_neg_integer()
+  def row_rank(result), do: Map.fetch!(@ranks, result |> row_status() |> row_class())
+
+  @doc """
+  The status word a verdict shows: the worst status across rows, or `nil` when no status can
+  be claimed. `:clear` only when every row is clear, so a verdict never reads healthy while any
+  row is unverified; with no rows there is nothing to say.
+  """
+  @spec worst_status([row()]) :: :failed | :retrying | :pending | :clear | nil
+  def worst_status(rows) when is_list(rows) do
+    classes = row_classes(rows)
+
+    cond do
+      :failed in classes -> :failed
+      :retrying in classes -> :retrying
+      :pending in classes -> :pending
+      :unverified in classes -> nil
+      classes == [] -> nil
+      true -> :clear
+    end
+  end
+
+  @doc """
+  The `kind` of a verdict over these rows (LD-10): any failed row is `:error`, retrying or
+  unverified rows are `:warning`, everything else is `:neutral`. It follows the worst row
+  status, never the coarse posture state, so a warning rule never sits beside a `Failed` word.
+  """
+  @spec verdict_kind([row()]) :: :error | :warning | :neutral
+  def verdict_kind(rows) when is_list(rows) do
+    classes = row_classes(rows)
+
+    cond do
+      :failed in classes -> :error
+      :retrying in classes or :unverified in classes -> :warning
+      true -> :neutral
+    end
+  end
+
+  defp row_classes(rows) do
+    Enum.map(rows, fn {_mod, result} -> result |> row_status() |> row_class() end)
+  end
+
+  defp row_class({:condition, _word}), do: :unverified
+  defp row_class(status), do: status
+
   # ── internals ──────────────────────────────────────────────────────────────
 
   defp scan(allowlist, opts) do

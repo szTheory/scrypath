@@ -1,11 +1,11 @@
-# Rolling roadmap (approved 2026-10-24)
+# Rolling roadmap (approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below)
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
 ## Working rules
 
 - One PR per coherent slice. Squash-merge it once the required checks (`core`, `package`, `repository-contracts`, `backend`, `ecommerce-mounted`) pass. `deep-quality (advisory)` is expected to be red until sigra makes `cloak_ecto` optional; see below.
-- Hex releases and visible UI changes wait for the maintainer's explicit yes. A release-please PR needs a close and reopen before its CI runs.
+- Hex releases wait for the maintainer's explicit yes. Visible UI PRs no longer wait: squash-merge any PR once its required checks are green on the exact head (maintainer standing instruction, 2026-11-19, in AGENTS.md). A release-please PR needs a close and reopen before its CI runs.
 - **Full GSD lifecycle per milestone** (maintainer, 2026-10-25, replacing the earlier "one lean plan" rule):
   - `/gsd-new-milestone` turns this file's section into requirements and a phase roadmap;
   - then each phase goes through discuss → (UI-spec for frontend phases) → plan → execute → verify, plus code review and security where they apply;
@@ -15,6 +15,54 @@ The maintainer approved this order and these working rules after a research fan-
 - This file stays the cross-milestone order and its research findings. GSD's `ROADMAP.md`/`REQUIREMENTS.md` hold the active milestone.
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
+
+## Post-v1.46 proposal (2026-11-19, prepared upstream; the maintainer chooses)
+
+v1.46 shipped to `main` (Phases 186-188, PRs #137, #138, #139, #143; [audit](../milestones/v1.46-MILESTONE-AUDIT.md) `tech_debt`, no blockers). Phases 189 and 190 were deferred. Four decision notes with evidence, lenses and adversarial passes are in [research/v1.47-prep/](../research/v1.47-prep/): A scope and shape, B website, C release and delivery, D verification and cleanup.
+
+**Recommended next milestone: v1.47 Brand completion** (small, about 5-6 plans), then v1.48 Catalog foundation. Run `/gsd-new-milestone v1.47` from this section.
+
+| Phase | Scope | Gate | Confidence |
+|---|---|---|---|
+| 189 Website re-skin (SITE-01), 2-3 plans | `build.mjs` derives theme variables from pinned `brand/tokens.json` and copies the pinned fonts (Bricolage included, OFL texts served), lockups, light and dark favicons and social card; light default with a Light/Dark/System picker; the old website palette is added to the deny-set in the same commit as the asset swap; `check.mjs` (today capture-only) rewritten to computed-style, font-hash and contrast assertions; `brand/**` added to the website path filter | dependency-free static contract in `core`/`repository-contracts`; `build-and-check` green on the exact head (the deploy job depends on it, but it is not a required check: wait for it before merging, and decide in the plan whether to make it gate 9 of 12) | 0.75 (0.6 on the picker) |
+| 190 Wording (COPY-01 and the "Control room" casing) | glossary-rule copy fixes, guards written as a data table inside the required `ops-ui` job so the v1.48 copy lint can ingest them | one local e2e run | medium-high |
+| 191 Cleanup | in order: demo favicon becomes a copy of `favicon-light.svg`; delete the `brandbook/` readers (`ui_tokens.ex`, its contract test, the `verify.phase99` entry, the mix alias); then `brandbook/`, the `ci.yml` path regex entry and the allowlist entries (ceilings 7/201 to 2/4). Add static invariants to the existing token test (12 px floor, no arbitrary text sizes, no `uppercase`, no `infinite`; about 1 s, no new gate); tripwire test that the pinned `icon/favicon.svg` is still unthemed plus a scan for any non-`brand/` use of it; reword the CONTRIBUTING ledger triggers; name `brand/tokens.json` as the authority | stays at 8 of 12 | high |
+
+v1.48 Catalog foundation (about 11 plans): 192 phoenix_storybook spike and boundary; 193 fixtures and cheap copy layers; 194 pilot read-only half (JOB-03); 195 pilot retry half with `decide/4`; 196 catalog at scale (trimmed). No ADR 0001 revisit trigger has fired. phoenix_storybook 1.5.0 adds 9 packages and one Rust NIF to the 54-package `scrypath_ops` lock, so the spike reads the audit output. Old v1.48 (screens, flows) and v1.49 (adopter features) become v1.49 and v1.50. Confidence medium-high; the phase list is the same under a single combined milestone, so being wrong costs one extra closeout.
+
+**Delivery, in parallel with v1.47 and before it edits `scrypath_ops` mix files:**
+
+1. README header (docs-only PR, no maintainer yes needed): switch the two header URLs to absolute `raw.githubusercontent.com` URLs pinned to the already-merged commit `8beb3ed0` (byte-identical to the current files, so no chicken-and-egg), with a test for URL shape and that the commit is an ancestor of `main`. hex.pm proxies images through `img.hex.pm` and drops `<source>`, so it always shows the light image. Confidence high. Fallback: ship the two 11.6 KB SVGs in the package (conflicts with PIN-03).
+2. Release Please: the repository setting "Allow GitHub Actions to create and approve pull requests" is off (it was on 2026-11-18; probably reset by the Step 0b permission change). **Needs the maintainer** to tick it. Prefer that over a personal access token.
+3. Hex 0.3.19 (maintainer's yes): since 0.3.18 only the README and docs changed in the package, so it is optional; recommended small release after the README fix so hex.pm and HexDocs show the brand. Hand-edit the changelog because the generated notes would say `feat(ops-ui)`. The alternative is to wait for v1.50.
+4. Dependabot: merge #131, #128, #140 and #142 on green; hand-fix #132 (a test pins a SHA); re-run #129 (axe ran on a pre-re-skin base); close #130 (pixelmatch 8 is ESM-only and the repo uses `require`) and #141 (needs a lockstep phoenix_live_view change sequenced with the storybook spike). Closing is the maintainer's batch yes.
+
+**Carry-forward items:** the 11-20 nightly is the first on re-skinned `main` (the `ecommerce-e2e` job failed on 7 of 8 earlier nightlies unnoticed because it is advisory; read it first); the retained preview is refreshed just before the first phase that needs rendered evidence (probably 193); report the unthemed `favicon.svg` upstream to the book's author; the Cancel-focus assertion and two unpinned copy values go to 194.
+
+**What would change this:** a computed-style regression reaching `main`, a concrete library bug (bundle it into 0.3.19), preferring fewer milestone boundaries (then one combined v1.47 with 189-191 first), or wanting a light-only website (drop the picker, script and dark tokens).
+
+## Re-plan (2026-11-18, adopted by opening v1.46)
+
+Status: ADOPTED 2026-11-18. The maintainer confirmed the v1.46 scope and ran `/gsd-new-milestone v1.46` from it, with Steps 0, 0b and Hex 0.3.18 done (merged or published). It supersedes the "Re-order (approved 2026-10-25)" plan and sections 4 to 6 below for the UI work. Detail and evidence: [V1.46-PREP.md](../research/brand-and-catalog/V1.46-PREP.md), [PROPOSAL.md](../research/brand-and-catalog/PROPOSAL.md), [BRAND-ADOPTION-PLAYBOOK.md](BRAND-ADOPTION-PLAYBOOK.md). Trigger: the maintainer adopted a new brand book as the official identity on 2026-11-18 (it supersedes the v1.35 violet and copper identity) and asked for the UI to be re-skinned and cataloged in phoenix_storybook.
+
+Standing practice (AGENTS.md, "Milestone preparation"): at every milestone boundary the next milestone is prepared upstream with research and a recommendation, and this file is updated, before the maintainer is asked what is next.
+
+| Step | Scope | Key gates | Needs the maintainer |
+|---|---|---|---|
+| Step 0 (not a milestone) — DONE 2026-11-18 (squash `b67c964d`, PR #123; #122 closed as subsumed; `v1.44` and `v1.45` tags on the remote) | Land v1.44 and v1.45: freeze main, push the `v1.45` tag first (it holds the ledger bootstrap commit), retarget #123 to main, close and reopen it, `BEGIN_COMMIT_OVERRIDE` squash, close #122 and five superseded Dependabot PRs; do not repin the ledger | five required checks green on the reopened run | yes (once, including the tag push) |
+| Step 0b (small PR) — IN PROGRESS (branch `chore/ci-hygiene-step-0b`: `ac00e000` CI hygiene, `c05227ea` ecto 3.14.3 and plug 1.20.4) | Clear the advisory bumps the nightly audit flags (cloak and cloak_ecto have no patched release and stay flagged until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed); Dependabot entry for `scrypath_ops`, examples, website, docker; make `ops-ui` required (extend its paths; amend `workflow_wiring_test`); fix the `action-pins` regex; digest-pin the Playwright image; default workflow permission read | `deep-quality` green or each exception recorded; nightly lanes green | no (routine), unless an exception is needed |
+| Hex 0.3.18 | Release-please PR after Step 0 with upgrade notes (v1.44 changed the explicit loader contract) | release checks | yes at release time |
+| Planning compaction | Archive history from PROJECT, MILESTONES, RETROSPECTIVE under `.planning/milestones/`, keep a contract-anchors block | phase108, phase111, no_human_gates, docs_contract tests | no |
+| v1.46 Brand foundation and re-skin — DONE 2026-11-19 (189 and 190 deferred) | 186 ingest, pin and guard (at most 3 plans, test and evidence only); 187 ScrypathOps re-skin as one Draft PR; 188 README header and HexDocs; 189 website (deferrable); 190 wording that does not need the catalog (deferrable) | offline brand pin, one Node token test (parity, allowlist, deny-list), contrast pairs, required `ops-ui`, mounted-host font check | one merge-time yes on 187 (merge authority, no aesthetic claim) |
+| v1.47 Catalog foundation | 191 phoenix_storybook spike and boundary proof; 192 fixtures and cheap copy layers; 193 pilot, read-only half (JOB-03); 194 pilot, retry half with `decide/4`; 195 catalog at scale (trimmed) | storybook boundary required, JOB-03 whole-job test, rendered-text lint | no, unless a revisit trigger fires on ADR 0001 |
+| v1.48 Screens, flows, full catalog | Search (JOB-05 pilot second), Sync and index, Help, shell, Job stories, "every routed state has a story", advisory nightly sweep, type scale, progress line decision, deferred defects | per-area parity checks | batched yes on visible copy and design |
+| v1.49 Adopter features (was v1.48) | Testing kit, indexable predicate, highlighting passthrough, hit and facet limits, backfill and reindex tasks; grill API shapes first | as before | API grilling |
+
+Guardrails proposed for every phase: the progress guard (no phase continues without a rendered-UI change to a whole screen or journey; a second consecutive evidence-only plan forces a stop-and-decide; evidence-only phases capped at 2 plans), loop breakers (one full gate per commit SHA, per-lane timeouts recorded as failures, at most 2 review-and-fix cycles per oracle, a stale receipt is a failed gate, no capture from a dirty tree), a finite route and state inventory per milestone, and a gate budget (at most 12 new required gates, each with a deletion trigger).
+
+Why re-skin before catalog: seven sibling reviews (accrue, sigra, threadline, mailglass, exifcleaner, playstead, fablebook) and a measured recolor dry run (only about 12 literal test lines need a rewrite) point to the cheapest path being a global-token re-skin first, then a small catalog proven on one whole job. It is one chosen path, not a proven winner.
+
+Known stale text to fix when v1.46 opens: PROJECT.md "Current State" and "Next Milestone Goals" call v1.46 "UI quality engine and pilot"; the STATE.md closeout cursor points at a deleted `/private/tmp` directory.
 
 ## 0. 0.3.17 hotfix — done
 
@@ -44,7 +92,7 @@ Done 2026-10-25. Closeout run 40204029522 on `ebed49b5`; receipt in `v1.43-final
 - Add a loader test against a real database; the current ones only use `FakeRepo`.
 - The `lib/scrypath/sync.ex` (around line 60) compile warning is a false positive in builds without Oban. Silence it properly. Phase 181 found it was a real Elixir 1.19 type warning from an always-raising no-Oban stub (fixed), not a false positive; the earlier `verify.no_optional_deps` greens in the Phase 179/180 summaries ran with Oban on the code path.
 
-## Re-order (approved 2026-10-25)
+## Re-order (approved 2026-10-25; superseded for the UI work if the 2026-11-18 re-plan is approved)
 
 The maintainer named a UI quality engine as the next major UI opportunity: [owner intent](../research/ui-quality-engine/OWNER-INTENT.md) and [recommendations](../research/ui-quality-engine/RECOMMENDATIONS.md). Approved order: **v1.44 sync → v1.45 foundation and CI (plus the engine's prerequisites) → v1.46 UI engine and pilot → v1.47 UI surfaces and polish → v1.48 adopter features.**
 
@@ -71,7 +119,7 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
 
   See RECOMMENDATIONS D4 and D6.
 
-## 4. v1.46 UI quality engine and pilot
+## 4. v1.46 UI quality engine and pilot (old plan; see the 2026-11-18 re-plan: this becomes v1.47 Catalog foundation)
 
 - **Personas:** operators and adopters both get personas. Operator personas map onto `ROLE-*`/`JOB-*`; the adopter twins are Wikily, Chatly, Langalern, Budgetly and Shoply. See the grilling decisions in RECOMMENDATIONS.
 - **Fixtures:** a `fixtures/scrypath_fixtures` path dependency (dev/test only) with 12 invariant tests. It replaces both `Phase173FixtureSource` copies.
@@ -83,7 +131,7 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
   - the `ui-decisions.jsonl` decisions log.
 - **Cleanup:** port the `phase173_*` specs onto stories and delete the `phase173` fixture mode.
 
-## 5. v1.47 UI surfaces and polish
+## 5. v1.47 UI surfaces and polish (old plan; becomes v1.48)
 
 - Extract Search, then Failed sync work, then Sync and index, with area, section and page stories for each.
 - L3 element screenshots get one pinned Linux baseline.
@@ -91,7 +139,7 @@ The maintainer named a UI quality engine as the next major UI opportunity: [owne
 - Each section gets one rubric review.
 - Copy and design fixes are batched for the maintainer's yes.
 
-## 6. v1.48 adopter features (was v1.46)
+## 6. v1.48 adopter features (was v1.46; becomes v1.49 in the 2026-11-18 re-plan)
 
 Scope guard, exactly these five: a testing kit (`Scrypath.Testing`); a `search_indexable?/1` predicate (which also covers soft deletes); highlighting/cropping passthrough (`per_query` allowlist, `_formatted`); `pagination.max_total_hits` and `faceting.max_values_per_facet` settings plus a guard; `mix scrypath.backfill` and `mix scrypath.reindex`.
 
@@ -109,5 +157,5 @@ Still out of scope: vector/hybrid search, autocomplete, callback or Repo-hook au
 
 ## Known open items
 
-- `deep-quality (advisory)` is red only on the `scrypath_ops` graph: `cloak` 1.1.4 and `cloak_ecto` 1.3.0 come in through optional `sigra ~> 1.5.0`, and no fixed release exists. An ignore can't help, because `scripts/ci/dependency_audit.ex` treats any ignore as failed by design. When sigra ships `cloak_ecto` as optional, bump sigra in `scrypath_ops/mix.exs` and refresh the lock with Hex 2.5 or newer.
+- `deep-quality (advisory)`: as of 2026-11-18 (audit run at branch HEAD), after the v1.45 lockfile changes only ecto 3.14.2 and plug 1.19.5 or 1.20.3 remained besides cloak; Step 0b bumps ecto to 3.14.3 and plug to 1.20.4, which clears root, phoenix_meilisearch and ecommerce. `scrypath_ops` stays red on `cloak` 1.1.4 (EEF-CVE-2026-95105) and `cloak_ecto` 1.3.0 (EEF-CVE-2026-94206), which have no patched release and come in through optional `sigra ~> 1.5` (sigra 1.7.1 requires `cloak_ecto ~> 1.3` non-optional; `hex.audit` audits the whole lockfile so `optional: true` does not help). An ignore can't help, because `scripts/ci/dependency_audit.ex` treats any ignore as failed by design. Fix: release sigra without a hard `cloak_ecto` requirement, then bump sigra in `scrypath_ops/mix.exs` and refresh the lock with Hex 2.5 or newer (owner decision recorded in V1.46-PREP). The nightly `ecommerce-e2e` failure (`standalone_ops` unresolved) was fixed by the v1.45 merge; confirm with one dispatched run.
 - The maintainer's untracked `examples/scrypath_ecommerce/priv/playbooks/my-search.json` stays untouched.

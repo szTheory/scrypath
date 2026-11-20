@@ -51,7 +51,7 @@ defmodule ScrypathOpsWeb.Layouts do
     ~H"""
     <a
       href="#ops-main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-ops-2 focus:left-ops-2 focus:z-ops-skip-link focus:rounded-ops-control focus:bg-base-100 focus:px-ops-3 focus:py-ops-2 focus:text-ops-body focus:font-medium focus:shadow-ops-overlay"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-ops-2 focus:left-ops-2 focus:z-ops-skip-link focus:rounded-ops-control focus:bg-base-100 focus:px-ops-3 focus:py-ops-2 focus:text-ops-body focus:font-semibold focus:shadow-ops-overlay"
     >
       Skip to operator content
     </a>
@@ -248,9 +248,6 @@ defmodule ScrypathOpsWeb.Layouts do
                 aria-current={if nav_item_active?(item, @page_title), do: "page", else: nil}
                 data-ops-nav-link
               >
-                <span class="ops-nav-item__icon" aria-hidden="true">
-                  <.icon name={item.icon} class="size-4" />
-                </span>
                 <span class="ops-nav-item__label">{item.label}</span>
               </.link>
             </li>
@@ -264,9 +261,6 @@ defmodule ScrypathOpsWeb.Layouts do
           aria-current={if @page_title == "Help", do: "page", else: nil}
           data-ops-nav-link
         >
-          <span class="ops-nav-item__icon" aria-hidden="true">
-            <.icon name="hero-question-mark-circle" class="size-4" />
-          </span>
           <span class="ops-nav-item__label">Help</span>
         </.link>
       </div>
@@ -275,8 +269,9 @@ defmodule ScrypathOpsWeb.Layouts do
   end
 
   @doc false
-  # Use the canonical horizontal wordmark from the brand book. The paired SVGs
-  # preserve its ink/paper colors while the copper slash stays consistent in both themes.
+  # Use the canonical horizontal lockup from the brand book, at 136px wide (so at least 28.8px
+  # tall; the book's floor is 112 x 24). The two files are byte-identical copies of the brand's
+  # light and dark lockups under their frozen names; CSS shows the one that matches the theme.
   # Decorative; the enclosing home link supplies the accessible name.
   attr(:class, :string, default: nil)
   attr(:mount_path, :string, required: true)
@@ -287,14 +282,14 @@ defmodule ScrypathOpsWeb.Layouts do
       <img
         class="ops-wordmark__light"
         src={"#{@mount_path}/images/scrypath-wordmark.svg"}
-        width="120"
+        width="136"
         alt=""
         decoding="async"
       />
       <img
         class="ops-wordmark__dark"
         src={"#{@mount_path}/images/scrypath-wordmark-inverse.svg"}
-        width="120"
+        width="136"
         alt=""
         decoding="async"
       />
@@ -322,27 +317,14 @@ defmodule ScrypathOpsWeb.Layouts do
       %{
         label: nil,
         items: [
-          %{
-            path: mount_path,
-            label: "Control Room",
-            title: "Control Room",
-            icon: "hero-rectangle-group"
-          }
-          | Enum.map(
-              ScrypathOpsWeb.Nav.primary(mount_path),
-              &Map.put(&1, :icon, nav_item_icon(&1))
-            )
+          %{path: mount_path, label: "Control Room", title: "Control Room"}
+          | mount_path
+            |> ScrypathOpsWeb.Nav.primary()
             |> Enum.reject(&(&1[:group] == :support))
         ]
       }
     ]
   end
-
-  defp nav_item_icon(%{label: "Search health"}), do: "hero-shield-check"
-  defp nav_item_icon(%{label: "Failed sync work"}), do: "hero-exclamation-triangle"
-  defp nav_item_icon(%{label: "Sync and index"}), do: "hero-arrows-right-left"
-  defp nav_item_icon(%{label: "Search"}), do: "hero-magnifying-glass"
-  defp nav_item_icon(_item), do: "hero-square-2-stack"
 
   @doc """
   Shows the flash group with standard titles and content.
@@ -365,7 +347,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         <div class="alert w-full max-w-full text-wrap">
-          <.icon name="hero-information-circle" class="size-5 shrink-0" />
           <div class="min-w-0 flex-1">
             <p data-ops-notification-message aria-live="polite" aria-atomic="true"></p>
             <pre data-ops-notification-source hidden tabindex="0" class="ops-notification-source"></pre>
@@ -374,7 +355,7 @@ defmodule ScrypathOpsWeb.Layouts do
             type="button"
             data-ops-notification-close
             aria-label="Close notification"
-            class="cursor-pointer"
+            class="ops-flash__close cursor-pointer"
           >
             <.icon name="hero-x-mark" class="size-5" />
           </button>
@@ -392,7 +373,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
 
       <.flash
@@ -404,7 +384,6 @@ defmodule ScrypathOpsWeb.Layouts do
         hidden
       >
         {gettext("Attempting to reconnect")}
-        <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
     </div>
     """
@@ -432,7 +411,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-computer-desktop-micro" class="size-4" />
         <span>System</span>
       </button>
 
@@ -445,7 +424,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
       >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-sun-micro" class="size-4" />
         <span>Light</span>
       </button>
 
@@ -458,7 +437,7 @@ defmodule ScrypathOpsWeb.Layouts do
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
       >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+        <.icon name="hero-moon-micro" class="size-4" />
         <span>Dark</span>
       </button>
     </div>

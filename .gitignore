@@ -23,3 +23,6 @@ examples/scrypath_ecommerce/test-results/
 examples/scrypath_ecommerce/playwright-report/
 examples/scrypath_ecommerce/ui-review-artifacts/
 tmp_phx/
+
+# Local contrast-checker output when run from the repo root
+/test-results/

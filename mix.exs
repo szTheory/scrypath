@@ -1,7 +1,7 @@
 defmodule Scrypath.MixProject do
   use Mix.Project
 
-  @version "0.3.17"
+  @version "0.3.18"
   @source_url "https://github.com/szTheory/scrypath"
   @source_ref "v#{@version}"
   @hexdocs_url "https://hexdocs.pm/scrypath"
@@ -98,6 +98,8 @@ defmodule Scrypath.MixProject do
         "verify.ops_ui": :test,
         "verify.ecommerce_e2e": :test,
         "verify.ui_tokens": :test,
+        "verify.brand": :test,
+        "brand.update": :test,
         "scrypath.index.contract_drift": :test,
         "scrypath.settings.diff": :test,
         "scrypath.settings.read": :test,
@@ -194,6 +196,19 @@ defmodule Scrypath.MixProject do
       main: "readme",
       source_url: @source_url,
       source_ref: @source_ref,
+      # The README header paths are relative (brand/assets/readme/...): GitHub resolves them to
+      # committed files and this mirror makes the same paths resolve inside the built docs. The
+      # logo mirror serves the dark-symbol rule in the stylesheet, and dev/docs holds that
+      # docs-owned stylesheet. Strings only: a Hex consumer evaluates this file without brand/,
+      # and ExDoc skips a missing `assets:` source directory. `logo:` and `favicon:` do not degrade
+      # that way (ExDoc copies them with File.copy!/2), so docs/0 adds them only when their files
+      # exist, below.
+      assets: %{
+        "brand/assets/readme" => "brand/assets/readme",
+        "brand/assets/logo" => "brand/assets/logo",
+        "dev/docs" => "assets"
+      },
+      before_closing_head_tag: &before_closing_head_tag/1,
       # Verify task modules compile only under :test, so the published (:dev) docs omit them without any filter.
       # A module filter is deliberately absent because it breaks the :test docs build (Phase 183, D-07 as amended).
       extras: [
@@ -275,7 +290,23 @@ defmodule Scrypath.MixProject do
         ]
       ]
     ]
+    # ExDoc takes one logo: the light symbol. The docs-owned stylesheet swaps in the dark symbol
+    # under ExDoc's own dark mode. The favicon is the light one because the pinned favicon.svg
+    # carries no fill and renders black. Both files live under brand/, which is not in the Hex
+    # package, so `mix docs` on an unpacked tarball builds without them instead of raising ENOENT.
+    |> put_if_file(:logo, "brand/assets/logo/scrypath-symbol-light.svg")
+    |> put_if_file(:favicon, "brand/assets/icon/favicon-light.svg")
   end
+
+  defp put_if_file(opts, key, path) do
+    if File.regular?(path), do: Keyword.put(opts, key, path), else: opts
+  end
+
+  # The docs-owned stylesheet loads after ExDoc's own CSS so its code-block rules win.
+  defp before_closing_head_tag(:html),
+    do: ~s(<link rel="stylesheet" href="assets/scrypath-exdoc.css">)
+
+  defp before_closing_head_tag(_format), do: ""
 
   defp package do
     [
