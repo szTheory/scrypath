@@ -258,8 +258,8 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     end
   end
 
-  test "README.md and every docs extra are free of the retired brand directory name" do
-    for file <- ["README.md" | MixProject.project()[:docs][:extras]] do
+  test "README.md, PRODUCT.md and every docs extra are free of the retired brand directory name" do
+    for file <- ["README.md", "PRODUCT.md" | MixProject.project()[:docs][:extras]] do
       refute File.read!(file) =~ retired_dir(), "#{file} names the retired directory"
     end
   end
