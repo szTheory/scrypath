@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="brandbook/assets/logo-primary-inverse.svg">
-    <img alt="scrypath — Ecto-native search indexing" src="brandbook/assets/logo-primary.svg" width="300">
+    <source media="(prefers-color-scheme: dark)" srcset="brand/assets/readme/scrypath-header-dark.svg">
+    <img src="brand/assets/readme/scrypath-header-light.svg" alt="scrypath" width="260">
   </picture>
 </p>
 

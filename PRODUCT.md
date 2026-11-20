@@ -46,7 +46,7 @@ Scrypath is an Ecto-native search indexing and orchestration layer, not a search
 
 ## Brand Commitments
 
-The product name is **Scrypath**. Logo assets exist under `brandbook/assets/`. The accompanying brand book was AI-generated and is exploratory rather than fully ratified; treat its detailed claims, voice, and direction as hypotheses, and preserve only what agrees with product facts and explicit maintainer guidance. Do not invent customer, adoption, or performance claims.
+The product name is **Scrypath**. The brand book (version 1.0, November 2026) and its assets are pinned under `brand/`. `brand/BRAND.md` is the full text, and `mix verify.brand` checks the pinned files against `brand/brand.pin.json`. The maintainer adopted it as the brand in November 2026. Where the book disagrees with product facts or explicit maintainer guidance, those win. Do not invent customer, adoption, or performance claims.
 
 ## Evidence on Hand
 
