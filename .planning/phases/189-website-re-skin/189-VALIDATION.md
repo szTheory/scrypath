@@ -1,7 +1,7 @@
 ---
 phase: "189"
 slug: "website-re-skin"
-status: draft
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-11-20"
@@ -38,11 +38,11 @@ created: "2026-11-20"
 
 | Criterion | Plan | Wave | Requirement | Automated command | Lane | Status |
 |-----------|------|------|-------------|-------------------|------|--------|
-| SC1 static contract (byte identity, token parity via role map, no literals in `website/src`, closed hex set, no root-absolute URLs, og meta, CSP, font-display, glyph allowlist, planted failures) | 01 | 1 | SITE-01, SITE-04 | `node --test website/scripts/site-contract.test.mjs`; `mix test test/mix/tasks/workflow_wiring_test.exs` | `core`, `repository-contracts` | ⬜ pending |
-| SC2 theme behavior (JS off, blocked storage, Light/Dark/System, persistence, reduced motion, forced colors, print) | 01-02 | 1-2 | SITE-02 | `node website/scripts/check.mjs` at `http://127.0.0.1:<port>/scrypath/` | `build-and-check` (non-required; exact-head `gh api` evidence) | ⬜ pending |
-| SC3 identity renders (fonts, hashes, computed families, one lockup, icons, contrast per pair id, 320 px, no console error or CSP violation) | 02 | 2 | SITE-01, SITE-03, SITE-06 | same `check.mjs`; copied WCAG function asserted against `brand/brand.json` | `build-and-check` | ⬜ pending |
-| SC4 deny-set and allowlist (18 hexes, `p189` entries gone, ceilings 5 and 197, planted old hex fails, `brand/**` in both workflow filters) | 02-03 | 2-3 | SITE-04 | `node --test examples/scrypath_ecommerce/ui-tokens.test.mjs`; `mix test test/mix/tasks/workflow_wiring_test.exs` | `core`, `repository-contracts` | ⬜ pending |
-| SC5 deploy evidence (exact-head `build-and-check`, deploy concurrency, smoke, rollback documented, non-required decision, one gate run per SHA, no stale receipt) | 03 | 3 | SITE-05, GATE-02 | `gh api repos/szTheory/scrypath/commits/<head>/check-runs`; workflow structure asserted in `workflow_wiring_test`; smoke on the merge commit | PR checks on the exact head; `deploy` job after merge (orchestrator evidence, recorded post-ship) | ⬜ pending |
+| SC1 static contract (byte identity, token parity via role map, no literals in `website/src`, closed hex set, no root-absolute URLs, og meta, CSP, font-display, glyph allowlist, planted failures) | 01 | 1 | SITE-01, SITE-04 | `node --test website/scripts/site-contract.test.mjs`; `mix test test/mix/tasks/workflow_wiring_test.exs` | `core`, `repository-contracts` | ✅ local green; hosted on the exact head green |
+| SC2 theme behavior (JS off, blocked storage, Light/Dark/System, persistence, reduced motion, forced colors, print) | 01-02 | 1-2 | SITE-02 | `node website/scripts/check.mjs` at `http://127.0.0.1:<port>/scrypath/` | `build-and-check` (non-required; exact-head `gh api` evidence) | ✅ local green; hosted on the exact head green |
+| SC3 identity renders (fonts, hashes, computed families, one lockup, icons, contrast per pair id, 320 px, no console error or CSP violation) | 02 | 2 | SITE-01, SITE-03, SITE-06 | same `check.mjs`; copied WCAG function asserted against `brand/brand.json` | `build-and-check` | ✅ local green; hosted on the exact head green |
+| SC4 deny-set and allowlist (18 hexes, `p189` entries gone, ceilings 5 and 197, planted old hex fails, `brand/**` in both workflow filters) | 02-03 | 2-3 | SITE-04 | `node --test examples/scrypath_ecommerce/ui-tokens.test.mjs`; `mix test test/mix/tasks/workflow_wiring_test.exs` | `core`, `repository-contracts` | ✅ local green; hosted on the exact head green |
+| SC5 deploy evidence (exact-head `build-and-check`, deploy concurrency, smoke, rollback documented, non-required decision, one gate run per SHA, no stale receipt) | 03 | 3 | SITE-05, GATE-02 | `gh api repos/szTheory/scrypath/commits/<head>/check-runs`; workflow structure asserted in `workflow_wiring_test`; smoke on the merge commit | PR checks on the exact head; `deploy` job after merge (orchestrator evidence, recorded post-ship) | ✅ local green; hosted on the exact head green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
