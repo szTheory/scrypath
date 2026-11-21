@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.20](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.19...scrypath-v0.3.20) (2026-11-21)
+
+
+### Bug Fixes
+
+* **docs:** keep shipped docs from sending adopters to repo-only tasks and trim the README ([#160](https://github.com/szTheory/scrypath/issues/160)) ([8e717c9](https://github.com/szTheory/scrypath/commit/8e717c9de12e34642be1e9aaedfccebf42a62f00))
+
 ## [0.3.19](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.18...scrypath-v0.3.19) (2026-11-20)
 
 
