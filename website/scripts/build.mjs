@@ -88,7 +88,7 @@ const BRAND_COPIES = [
   ['brand/assets/icon/favicon-dark.svg', 'assets/favicon-dark.svg'],
   ['brand/assets/icon/favicon.ico', 'assets/favicon.ico'],
   ['brand/assets/social/scrypath-social-card-1280x640.png', 'assets/scrypath-social-card-1280x640.png']
-  // brand/assets/icon/favicon.svg (unthemed) is never copied: it has no fill and renders black (D-13).
+  // The pinned unthemed favicon is never copied: it has no fill and renders black (D-13).
 ];
 
 const SOCIAL_CARD_OUTPUT = 'assets/scrypath-social-card-1280x640.png';

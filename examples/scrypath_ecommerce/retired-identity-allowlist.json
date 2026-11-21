@@ -1,10 +1,4 @@
 {
   "schema": "scrypath.retired-identity-allowlist.v1",
-  "entries": [
-    { "prefix": "brandbook/", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup deletes the directory together with mix verify.ui_tokens and ui_tokens_contract_test.exs, which still read brandbook/tokens; Phase 188 only removes documentation references (BDOC-01)", "max_hits": 177 },
-    { "path": "dev/mix/tasks/verify/ui_tokens.ex", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); retires after the Phase 187 re-skin", "max_hits": 1 },
-    { "path": "test/mix/tasks/ui_tokens_contract_test.exs", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); its legacy shadow and brand-documentation asserts read the retired directory", "max_hits": 15 },
-    { "path": ".github/workflows/ci.yml", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup (DTCG mirror retirement); the ops-ui path regex still names the retired directory", "max_hits": 1 },
-    { "path": "examples/scrypath_ecommerce/priv/static/favicon.svg", "tag": "retire-last", "reason": "owner: first v1.47 phase cleanup, the nearer fit: it is demo-host identity, outside both the ops-only Phase 187 scope (A11Y-04) and Phase 188's docs scope", "max_hits": 3 }
-  ]
+  "entries": []
 }

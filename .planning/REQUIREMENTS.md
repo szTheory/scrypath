@@ -29,16 +29,16 @@ Scope source: the prepared v1.47 input (`research/v1.47-prep/` notes A to D, `re
 
 ### Cleanup (Phase 191)
 
-- [ ] **CLEAN-01**: A root-level ExUnit test in `core` asserts the demo favicon is byte-identical to `brand/assets/icon/favicon-light.svg`; the demo's own `page_controller_test.exs` keeps comparing the served file to its priv copy; the demo favicon's allowlist entry is removed.
-- [ ] **CLEAN-02**: The `brandbook/` readers are gone (`ui_tokens.ex`, its contract test, its `verify.phase99` `@focused_tests` entry the `verify.ui_tokens` `preferred_envs` line in `mix.exs`, and its pin and verifier-module floor in `test/release/package_contents_test.exs`) with `mix verify.repository_contracts` green on the committed state.
-- [ ] **CLEAN-03**: `brandbook/`, its `ci.yml` path-regex entry and its allowlist entries are removed in the same commit as their ratchet ceilings. The chain is recomputed from merged `main` after Phase 189 (expected 5 entries and 197 hits at the start, ending at 0 and 0). The three shared hexes from SITE-03 join the deny set in that commit. The deny-list, `RETIRED_DIR` and the `retire-last` tag stay in `ui-tokens.test.mjs`. Phase 191 docs never spell the retired directory path (the tripwire would flag them).
-- [ ] **CLEAN-04**: On ops-authored source only (`scrypath_ops/lib`, `scrypath_ops/assets/js` excluding `vendor/`, `scrypath_ops/assets/css/app.css`; never built CSS or vendor files), `ui-tokens.test.mjs` asserts every resolved `font-size` is at least 12 px (percent, em, calc and clamp rejected), no `text-[` length arbitrary value, no `uppercase` class or `text-transform: uppercase`, no whole-word `infinite`, and no `size: :xs` caller. Each has a planted failing case and an accept case (a comment, an `:infinity` atom, an `inherit` value); no gate is added; `@min_token_test_calls` and `@token_test_names` rise with the new tests in the same commit; `CONTRIBUTING.md` and `DESIGN-TOKENS.md` say these check source declarations, not rendered size.
-- [ ] **CLEAN-05**: A test in `brand_pin_contract_test.exs` fails if the pinned `brand/assets/icon/favicon.svg` gains `<style`, `fill=`, `currentColor` or `prefers-color-scheme`, and its message lists the workarounds to remove. A scan in `ui-tokens.test.mjs` fails if any file outside `brand/`, `.planning/` and `dev/mix/tasks/brand/update.ex` contains `icon/favicon.svg` or has the same bytes; planted cases are a text reference and a renamed byte copy, the accept case is `favicon-light.svg` served under the name `favicon.svg`. The upstream defect report is drafted in the phase record; filing it is the maintainer's step and does not gate the phase.
-- [ ] **CLEAN-06**: The CONTRIBUTING ledger is reworded now that its literal conditions are met: the token and deny-list row says the deny-list and directory tripwire are permanent and the parity half stays while `app.css` is a hand-kept projection of `brand/tokens.json`, the single token authority (also named in `DESIGN-TOKENS.md`); the budget sentence carries the cap of 12 forward (it names only v1.46 today); the component-contract row says v1.48 not v1.47; the favicon row's churn names the new tripwire. No cell contains a pipe, `workflow_wiring_test` stays green, and the reword lands in or after the commit that empties the allowlist.
+- [x] **CLEAN-01**: A root-level ExUnit test in `core` asserts the demo favicon is byte-identical to `brand/assets/icon/favicon-light.svg`; the demo's own `page_controller_test.exs` keeps comparing the served file to its priv copy; the demo favicon's allowlist entry is removed.
+- [x] **CLEAN-02**: The `brandbook/` readers are gone (`ui_tokens.ex`, its contract test, its `verify.phase99` `@focused_tests` entry the `verify.ui_tokens` `preferred_envs` line in `mix.exs`, and its pin and verifier-module floor in `test/release/package_contents_test.exs`) with `mix verify.repository_contracts` green on the committed state.
+- [x] **CLEAN-03**: `brandbook/`, its `ci.yml` path-regex entry and its allowlist entries are removed in the same commit as their ratchet ceilings. The chain is recomputed from merged `main` after Phase 189 (expected 5 entries and 197 hits at the start, ending at 0 and 0). The three shared hexes from SITE-03 join the deny set in that commit. The deny-list, `RETIRED_DIR` and the `retire-last` tag stay in `ui-tokens.test.mjs`. Phase 191 docs never spell the retired directory path (the tripwire would flag them).
+- [x] **CLEAN-04**: On ops-authored source only (`scrypath_ops/lib`, `scrypath_ops/assets/js` excluding `vendor/`, `scrypath_ops/assets/css/app.css`; never built CSS or vendor files), `ui-tokens.test.mjs` asserts every resolved `font-size` is at least 12 px (percent, em, calc and clamp rejected), no `text-[` length arbitrary value, no `uppercase` class or `text-transform: uppercase`, no whole-word `infinite`, and no `size: :xs` caller. Each has a planted failing case and an accept case (a comment, an `:infinity` atom, an `inherit` value); no gate is added; `@min_token_test_calls` and `@token_test_names` rise with the new tests in the same commit; `CONTRIBUTING.md` and `DESIGN-TOKENS.md` say these check source declarations, not rendered size.
+- [x] **CLEAN-05**: A test in `brand_pin_contract_test.exs` fails if the pinned `brand/assets/icon/favicon.svg` gains `<style`, `fill=`, `currentColor` or `prefers-color-scheme`, and its message lists the workarounds to remove. A scan in `ui-tokens.test.mjs` fails if any file outside `brand/`, `.planning/` and `dev/mix/tasks/brand/update.ex` contains `icon/favicon.svg` or has the same bytes; planted cases are a text reference and a renamed byte copy, the accept case is `favicon-light.svg` served under the name `favicon.svg`. The upstream defect report is drafted in the phase record; filing it is the maintainer's step and does not gate the phase.
+- [x] **CLEAN-06**: The CONTRIBUTING ledger is reworded now that its literal conditions are met: the token and deny-list row says the deny-list and directory tripwire are permanent and the parity half stays while `app.css` is a hand-kept projection of `brand/tokens.json`, the single token authority (also named in `DESIGN-TOKENS.md`); the budget sentence carries the cap of 12 forward (it names only v1.46 today); the component-contract row says v1.48 not v1.47; the favicon row's churn names the new tripwire. No cell contains a pipe, `workflow_wiring_test` stays green, and the reword lands in or after the commit that empties the allowlist.
 
 ### Standing guardrails
 
-- [ ] **GATE-02**: Every phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide (each phase has at most one); one full gate run per commit SHA; a stale receipt is a failed gate; no capture runs from a dirty tree. A fix to a snapshot-based gate (it reads HEAD) is committed before the gate reruns, and the first `mix verify.repository_contracts` run uses the escalated permission for `FETCH_HEAD`. A plan that touches a file the lifecycle verifier fixture copies (`contrast-checker.mjs`, `app.css`, `contrast-pairs.mjs`, `brand/tokens.json`, `brand/brand.json`) runs the whole CI Node step locally first. No preview capture or `ui:review` runs in v1.47. Squash titles are `chore(...)` or `docs(...)`, never `feat` or `fix`, because no library change ships. New required gates stay within 12 (8 used), each with a deletion trigger and expected churn. At milestone close, one read-only cross-phase check of merged `main` at the final SHA (a check, not independent or aesthetic approval) covers the other consumers of every changed asset.
+- [x] **GATE-02**: Every phase honors the guardrails: a second consecutive evidence-only plan forces a stop-and-decide (each phase has at most one); one full gate run per commit SHA; a stale receipt is a failed gate; no capture runs from a dirty tree. A fix to a snapshot-based gate (it reads HEAD) is committed before the gate reruns, and the first `mix verify.repository_contracts` run uses the escalated permission for `FETCH_HEAD`. A plan that touches a file the lifecycle verifier fixture copies (`contrast-checker.mjs`, `app.css`, `contrast-pairs.mjs`, `brand/tokens.json`, `brand/brand.json`) runs the whole CI Node step locally first. No preview capture or `ui:review` runs in v1.47. Squash titles are `chore(...)` or `docs(...)`, never `feat` or `fix`, because no library change ships. New required gates stay within 12 (8 used), each with a deletion trigger and expected churn. At milestone close, one read-only cross-phase check of merged `main` at the final SHA (a check, not independent or aesthetic approval) covers the other consumers of every changed asset.
 
 ## v2 Requirements
 
@@ -74,17 +74,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SITE-04 | Phase 189 | Complete |
 | SITE-05 | Phase 189 | Complete |
 | SITE-06 | Phase 189 | Complete |
-| GATE-02 | Phase 189 (standing rule for Phases 188.1, 190 and 191) | Pending |
+| GATE-02 | Phase 189 (standing rule for Phases 188.1, 190 and 191) | Complete |
 | COPY-01 | Phase 190 | Complete |
 | COPY-02 | Phase 190 | Complete |
 | COPY-03 | Phase 190 | Complete |
 | COPY-04 | Phase 190 | Complete |
-| CLEAN-01 | Phase 191 | Pending |
-| CLEAN-02 | Phase 191 | Pending |
-| CLEAN-03 | Phase 191 | Pending |
-| CLEAN-04 | Phase 191 | Pending |
-| CLEAN-05 | Phase 191 | Pending |
-| CLEAN-06 | Phase 191 | Pending |
+| CLEAN-01 | Phase 191 | Complete |
+| CLEAN-02 | Phase 191 | Complete |
+| CLEAN-03 | Phase 191 | Complete |
+| CLEAN-04 | Phase 191 | Complete |
+| CLEAN-05 | Phase 191 | Complete |
+| CLEAN-06 | Phase 191 | Complete |
 
 **Coverage:**
 - v1 requirements: 18 total

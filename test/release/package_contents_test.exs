@@ -246,11 +246,7 @@ defmodule Scrypath.Release.PackageContentsTest do
         Mix.Tasks.Verify.PhoenixExample.Package
       ]
 
-      # Phase 185 subsequently added this private validator. Keep that addition
-      # explicit rather than rewriting Phase 183's historical count of 27.
-      later_hidden = [Mix.Tasks.Verify.UiTokens]
-
-      assert Enum.sort(hidden) == Enum.sort(phase183_hidden ++ later_hidden),
+      assert Enum.sort(hidden) == Enum.sort(phase183_hidden),
              "verifier documentation visibility changed; inspect added/removed hidden modules"
     end
 

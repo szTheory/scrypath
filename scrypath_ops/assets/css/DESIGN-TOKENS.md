@@ -28,7 +28,9 @@ file consume them. This doc is the catalog — change a value here only by chang
 ## Brand colors
 
 The palette is the pinned plum and orchid brand book (`brand/`, with its tokens in
-`brand/tokens.json`). daisyUI semantic tokens, two themes. System appearance is the default:
+`brand/tokens.json`). That file is the single token authority; `app.css` is a hand-maintained
+projection of it, checked both ways by `ui-tokens.test.mjs` (token-map parity in both
+directions). daisyUI semantic tokens, two themes. System appearance is the default:
 `html[data-theme]` wins, otherwise the operating system decides (`prefers-color-scheme`), and
 ops never forces light. Both theme blocks in `app.css` declare exactly the 20 daisyUI color
 variables below plus the platform rows, every value a literal hex (no `var()` aliases), and
@@ -383,6 +385,16 @@ Size scale record (`keep-platform`, no body reflow in this phase; the token map'
 scope is the theme blocks only, so the values are recorded here): `--text-ops-sm` 0.75rem ·
 `--text-ops-body` 0.875rem · `--text-ops-md` 1rem · `--text-ops-lg` 1.125rem ·
 `--text-ops-h2` 1.125rem · `--text-ops-h3` 1rem.
+
+Source invariants: `ui-tokens.test.mjs` checks the ops-authored source (`scrypath_ops/lib`,
+`scrypath_ops/assets/js` without vendored files, and `app.css`) for a 12px minimum font size
+(resolved through the `--text-ops-*` properties; every `--text-*` token in `app.css` is held
+to it, even one only a utility class uses), no arbitrary `text-[` length, no uppercase, no
+infinite iteration (including the `animate-spin`, `animate-ping`, `animate-pulse` and
+`animate-bounce` utilities) and no `size: :xs` caller. `@apply` lists in `app.css` are read like
+class attributes. These read source declarations, not rendered size. Demo host CSS, the tracked built CSS and vendored files are not scanned. A variant that
+emits the daisyUI `btn-xs` class (11px) is caught only by the `size: :xs` caller check and by
+the browser spec on the advisory lane; computed size stays browser-only.
 
 ## Status / tone: the notice rule scheme and the sync-status words
 
