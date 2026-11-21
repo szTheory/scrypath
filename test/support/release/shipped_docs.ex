@@ -531,6 +531,98 @@ defmodule Scrypath.Release.ShippedDocs do
     |> Enum.any?(fn {_line, target} -> hd(String.split(target, "#", parts: 2)) in forms end)
   end
 
+  # GUARD-01 source rule (Phase 193): the own-docs URLs written in shipped file text. The built-docs
+  # scan in test/release/package_metadata_test.exs reads `https://hexdocs.pm/scrypath/<page>.html`
+  # links against the build; it does not read a versioned, `http://` or non-page URL, which would
+  # go stale or point nowhere. This rule reads raw file text (fences and code spans included).
+  #
+  # An own-docs URL is `http` or `https`, host `hexdocs.pm`, then `/scrypath` not followed by a
+  # word character or `-` (so `hexdocs.pm/scrypath_ops` is another package), then any run of
+  # characters up to whitespace, `)`, `]`, a quote, a backtick, `<` or `>`. Trailing `.`, `,`, `;`
+  # and `:` are punctuation, not URL.
+  @own_docs_url ~r{https?://hexdocs\.pm/scrypath(?![\w-])[^\s)\]"'`<>]*}i
+  @own_docs_parts ~r{\A(https?)://hexdocs\.pm/scrypath(.*)\z}is
+  @own_docs_trailing ~r/[.,;:]+\z/
+  @own_docs_page ~r{\A/[^/#?]+\.html(?:[#?].*)?\z}s
+
+  # Exactly one named exception. It records a reason and a revisit trigger; the contract test
+  # fails if a field is empty or the key stops occurring.
+  @own_docs_exceptions %{
+    {"docs/releasing.md", "https://hexdocs.pm/scrypath/X.Y.Z"} => %{
+      reason:
+        "A template in the post-publish verification description and its curl check, filled in " <>
+          "per release by the publish task. It is not an adopter navigation link.",
+      revisit:
+        "Revisit when the template is removed, or when the publish verification stops naming a " <>
+          "template URL."
+    }
+  }
+
+  @type own_docs_problem :: {Path.t(), pos_integer(), String.t(), atom()}
+
+  @doc "The named own-docs URL exceptions, keyed by `{path, url}`."
+  @spec own_docs_url_exceptions() :: %{
+          {Path.t(), String.t()} => %{reason: String.t(), revisit: String.t()}
+        }
+  def own_docs_url_exceptions, do: @own_docs_exceptions
+
+  @doc """
+  Sorted `{path, line, url, kind}` for each own-docs URL in the `{path, text}` pairs that is not
+  an exact `{path, url}` key of `exceptions`. `line` is the 1-based line the URL starts on.
+
+  Kinds, checked in this order: `:insecure_scheme` (not `https`); `:versioned` (the first path
+  segment after `/scrypath/` starts with a digit, as in `/scrypath/0.3.20/readme.html`);
+  `:not_a_page` (neither the bare root, with at most one trailing `/`, nor
+  `/<name>.html`, `<name>` holding no `/`, optionally followed by a fragment or a query).
+  """
+  @spec own_docs_url_problems([{Path.t(), String.t()}], map()) :: [own_docs_problem()]
+  def own_docs_url_problems(files, exceptions) do
+    problems =
+      for {path, line, url} <- own_docs_urls(files),
+          not Map.has_key?(exceptions, {path, url}),
+          kind = own_docs_kind(url),
+          do: {path, line, url, kind}
+
+    Enum.sort(problems)
+  end
+
+  @doc """
+  `{path, line, url}` for every own-docs URL in the `{path, text}` pairs, valid or not, in text
+  order. The non-vacuity floors and the exception check count these.
+  """
+  @spec own_docs_urls([{Path.t(), String.t()}]) :: [{Path.t(), pos_integer(), String.t()}]
+  def own_docs_urls(files) do
+    for {path, text} <- files,
+        [{start, length}] <- Regex.scan(@own_docs_url, text, return: :index),
+        do: {
+          path,
+          newlines(binary_part(text, 0, start)) + 1,
+          Regex.replace(@own_docs_trailing, binary_part(text, start, length), "")
+        }
+  end
+
+  defp own_docs_kind(url) do
+    [_all, scheme, tail] = Regex.run(@own_docs_parts, url)
+
+    cond do
+      String.downcase(scheme) != "https" -> :insecure_scheme
+      Regex.match?(~r{\A/\d}, tail) -> :versioned
+      tail in ["", "/"] or Regex.match?(@own_docs_page, tail) -> nil
+      true -> :not_a_page
+    end
+  end
+
+  @doc """
+  Scan of the real shipped files for own-docs URLs. It reads source text, so it does not see a
+  URL a macro or string interpolation assembles (the versioned package links in mix.exs, which
+  are versioned on purpose and pinned by the package-metadata test).
+  """
+  @spec own_docs_url_violations() :: [own_docs_problem()]
+  def own_docs_url_violations do
+    files = for path <- shipped_files(), do: {path, File.read!(path)}
+    own_docs_url_problems(files, @own_docs_exceptions)
+  end
+
   @doc """
   The anchor GitHub gives a heading: lowercase, every character other than a letter, a digit, a
   connector such as an underscore, a space or a hyphen dropped, spaces to hyphens.

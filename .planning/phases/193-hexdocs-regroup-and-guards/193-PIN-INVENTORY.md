@@ -100,3 +100,59 @@ One row per pin from both tables. Commit hashes are filled after the owning task
 | O9 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
 | O10 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
 | O11 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
+| `install-line` owner-map HexDocs cell | claim | stays with owner `README`; the cell now names the guard | `test/release/install_line_contract_test.exs` | replaces "Phase 193 GUARD-02 guards parity" | 02 Task 1 | pending |
+| built-docs link scan (TRUTH-03) | wiring | stays, no code change | `BuiltDocsBrandTest` (see GUARD-01 evidence) | none; the source rule beside it is new | 02 Task 1 | pending |
+
+## GUARD-01 evidence
+
+Success criterion 3: the link check passes on the built docs and README and fails a planted self-link and a planted dead target. All of it already exists in `test/release/package_metadata_test.exs`, module `Scrypath.Release.BuiltDocsBrandTest`, which runs one `Mix.Tasks.Docs.run` in `setup_all` (runs in `core` and in `mix verify.package`). Re-verified at plan start HEAD `bbe9891e` by reading each test and running the file (see the Plan 02 SUMMARY for the run). Lines shift as the file is edited, so re-locate by the quoted test name.
+
+| Part of criterion 3 | Existing test | Line | What it asserts |
+|---------------------|---------------|------|-----------------|
+| Real build and README clean | "extras pages have no self-link, unresolved link or dead anchor" | 517 (problems assert 540-546) | `link_problems/3` over every page of `extras_pages(out)` is `[]` |
+| README is covered | same test | 519-520 | a built page exists for every configured extra; `README.md` maps to `readme.html` and is the first extra, so it is scanned like any guide |
+| Planted self-link | "the link scan reports a planted self-link, unresolved link and dead anchor" | 575 (HexDocs form 599) | `readme.html` linked from `readme.html` is `:self_link` |
+| Planted dead target | same | 576 (`no-such-page.html`), 582 (`../readme.html`, leaves the build); HexDocs form 596 | `:unresolved` |
+| Planted dead anchor | same | 578-579; HexDocs form 593-594 | `golden-path.html#no-such-anchor` is `:dead_anchor` |
+| Controls that must pass | same | 585-587, 600-602 | another page, a real anchor, a web link and another project's HexDocs page report nothing |
+| Non-vacuity floors | "extras pages have no self-link, unresolved link or dead anchor" | 527 (`@min_author_hrefs 500`), 537 (at least 4 own-docs links) | the scan read hundreds of hrefs and some own-docs links |
+| A missing built page is named | "a configured extra with no built page is reported by name" | 549 | the scan cannot silently skip an extra |
+| HexDocs URL forms | the two tests above, plus the new `describe "own HexDocs URLs in shipped files"` in `test/release/shipped_docs_contract_test.exs` | `@own_docs_href` 453; new describe after the links block | the built scan resolves unversioned `https://hexdocs.pm/scrypath/<page>.html` links and their fragments against the build; the new source rule rejects a versioned, `http://` or non-page own-docs URL in shipped file text |
+
+No gap in the criterion cases was found, so no planted case was added and `package_metadata_test.exs` is not touched by this plan's Task 1.
+
+Decisions recorded here so they are not re-litigated:
+
+- No new docs build and no change to the built-scan code (CONTEXT, Link check). The one `setup_all` build stays the only one.
+- The source rule lives in `Scrypath.Release.ShippedDocs` (`own_docs_url_problems/2`, `own_docs_urls/1`, `own_docs_url_violations/0`), rides `core` as an untagged test and adds no gate and no lane. It reads raw file text, fences and code spans included, so a versioned URL in a sample block is caught too.
+- The rule has one named exception, the template URL in `docs/releasing.md` (reason and revisit trigger in the module; the contract test fails if the entry stops occurring).
+
+What the two together do not prove:
+
+- External link liveness (no network call is made).
+- Own-docs URLs built by interpolation, such as the versioned package links in `mix.exs` (`@release_docs_url`), which are versioned on purpose and pinned by the package-metadata test.
+- The website's own HexDocs links: `website/` is not a shipped file.
+- That a page's fragment exists for a link written in a non-extras shipped file (`docs/jtbd-gap-map.md`, `CHANGELOG.md`, `SECURITY.md` hold no HexDocs links to extras pages today).
+
+## Install line occurrences
+
+`Scrypath.Release.InstallLine` (GUARD-02) read 140 files (the shipped files plus the website sources that exist) at `mix.exs` version `0.3.20`. Real scan, plan start HEAD `bbe9891e`:
+
+| Path | Line | Requirement | Result |
+|------|------|-------------|--------|
+| `README.md` | 45 | `~> 0.3` | ok |
+| `docs/releasing.md` | 78 | `~> X.Y.Z` | named placeholder (template in the post-publish verification description) |
+| `guides/golden-path.md` | 20 | `~> 0.3` | ok |
+| `guides/outside-adopter-intake.md` | 21 | `~> 0.3` | ok |
+| `guides/support-and-compatibility.md` | 17 | `~> 0.3` | ok |
+| `website/scripts/build.mjs` | 139 | `~> 0.3` | ok |
+
+Violations: none. The website page source holds only the `{{CANONICAL_INSTALL}}` slot, so the build script is the website's only literal.
+
+Choices recorded:
+
+- A requirement must equal the same-length prefix of the version's `[major, minor, patch]` and `Version.match?/2` must hold. `~> 0.2` is satisfied by 0.3.20 and `~> 0.3` by 0.4.0, so satisfaction alone would catch neither.
+- The pattern also reads a tuple with trailing options, such as one with `only: :dev`, so a stale line cannot hide behind them.
+- Minor-bump consequence (accepted, CONTEXT research resolution): at a bump from 0.3.x to 0.4.0 the contract test goes red on four shipped files plus `website/scripts/build.mjs` until the install lines move. The fix is one commit on the bot-authored release PR, written up under "Minor version bumps and the install-line guard" in `docs/releasing.md`.
+- Known foot-gun, not pre-handled: `CHANGELOG.md` is a shipped file. If release-please history ever quotes an old install tuple in a commit message, the guard fails on that line. Fix it by rewording the commit message or by adding a named exemption with a reason; no exemption was added in advance because none is needed today.
+- Not covered: prose that names a series without a tuple (the golden path's minor-series sentence) and the website's rendered install block.

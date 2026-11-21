@@ -148,6 +148,12 @@ Because Scrypath uses squash merges and Release Please reads the merged commit h
 - Use **breaking-change semantics** (`!` or `BREAKING CHANGE`) only for explicit major-version planning.
 - Avoid vague PR titles that would create noisy or misleading release notes.
 
+### Minor version bumps and the install-line guard
+
+Every install line in the shipped docs and in the website build script names the release series, such as `~> 0.3`, and `test/release/install_line_contract_test.exs` checks each one against the `mix.exs` version on every run. A patch release changes nothing there. A minor bump (for example 0.3.x to 0.4.0) leaves those lines on the old series, so that test fails on the release PR until they move. That failure is the guard working, not a flaky check.
+
+The fix is one commit on the release PR that moves the series in `README.md`, `guides/golden-path.md` (including its sentence naming the minor series), `guides/outside-adopter-intake.md`, `guides/support-and-compatibility.md` and the `canonicalInstall` constant in `website/scripts/build.mjs`. The release PR is authored by the bot, so its CI runs only after a human-authored event; the fix commit is that event.
+
 ## Website deploy and rollback
 
 The website in `website/` is published to `https://sztheory.github.io/scrypath/` by `.github/workflows/website.yml`. This is separate from the Hex release flow above: merging a website change publishes the site, never a package.
