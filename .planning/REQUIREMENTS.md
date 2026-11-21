@@ -34,9 +34,9 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Entry-point checkpoint (after Phase 193)
 
-- [ ] **SIGNAL-01**: At the checkpoint the following are recorded once in `research/v1.48-prep/CHECKPOINT.md` with the date: GitHub traffic referrers, popular paths, views and clones (`gh api repos/szTheory/scrypath/traffic/*`; the data keeps only 14 days, so it is read at the checkpoint and not reconstructed later), hex.pm downloads (all time, last 7 days; `hex.pm/api/packages/scrypath`), the live hex.pm and HexDocs README link behavior, and whether any issue or adopter report arrived. The record ends with the decision: run Phase 194, or cut the milestone after 193 and go to v1.49. If traffic is effectively nil, the default is to cut.
+- [x] **SIGNAL-01**: At the checkpoint the following are recorded once in `research/v1.48-prep/CHECKPOINT.md` with the date: GitHub traffic referrers, popular paths, views and clones (`gh api repos/szTheory/scrypath/traffic/*`; the data keeps only 14 days, so it is read at the checkpoint and not reconstructed later), hex.pm downloads (all time, last 7 days; `hex.pm/api/packages/scrypath`), the live hex.pm and HexDocs README link behavior, and whether any issue or adopter report arrived. The record ends with the decision: run Phase 194, or cut the milestone after 193 and go to v1.49. If traffic is effectively nil, the default is to cut.
 
-### Website content (Phase 194, optional, cuttable at the checkpoint)
+### Website content (Phase 194, CUT at the checkpoint on 2026-11-21: see research/v1.48-prep/CHECKPOINT.md; not met, not claimed)
 
 - [ ] **SITE-07**: The website's Docs page and every guide link point at HexDocs (released truth), not `blob/main`; a one-paragraph stub keeps old `docs/` URLs from 404ing. The website static contract fails a `blob/main/guides` link.
 - [ ] **SITE-08**: Home, Evaluate and Operate are rewritten for content and information architecture on the existing v1.47 token pipeline (no new CSS framework, no dependency): what it is, one real run (output from the example app, not a claim), honest limits, one install block whose line comes from `mix.exs`. Checks: the forbidden-phrase table, contrast, computed style, axe, link and the existing token checks on every changed page. The PR says plainly that this is not a design review; how the pages read, Safari and real screen readers stay recorded as unproven.
@@ -83,10 +83,10 @@ Deferred; not in this roadmap.
 | GUARD-01 | Phase 193 | Complete |
 | GUARD-02 | Phase 193 | Complete |
 | GUARD-03 | Phase 193 | Complete |
-| SIGNAL-01 | Checkpoint (after Phase 193) | Pending |
-| SITE-07 | Phase 194 (optional) | Pending |
-| SITE-08 | Phase 194 (optional) | Pending |
-| SITE-09 | Phase 194 (optional) | Pending |
+| SIGNAL-01 | Checkpoint (after Phase 193) | Complete |
+| SITE-07 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
+| SITE-08 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
+| SITE-09 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
 | GATE-03 | Standing (every phase) | Pending |
 
 **Coverage:**
