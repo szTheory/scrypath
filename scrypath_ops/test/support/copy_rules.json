@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "exempt_paths": [
+    ".planning/",
+    "brand/",
+    "scrypath_ops/test/support/copy_rules.json"
+  ],
+  "not_covered": [
+    "JavaScript strings under scrypath_ops/assets/js are neither scanned nor rendered by any row.",
+    "HTML attribute text that is not rendered text (aria-label, title, placeholder) is not guarded; a row can catch it only by accident.",
+    "Playwright locators and assertion names are read only by the Control room casing row, never by the status wording rows.",
+    "Screen states with no named fixture surface are not rendered; a row's static scan still reads their source.",
+    "Lower-case healthy in copy is not caught: the Clear wording row forbids only the capitalised word, because the lower-case word appears in developer comments and in a fixture scenario value under scrypath_ops/lib.",
+    "Non-English text is not covered."
+  ],
+  "rules": [
+    {
+      "id": "searchable-observation-only",
+      "rule": "Searchable is the label for one record's observed state, never a setting value: say Used for search or Not used for search.",
+      "glossary": "Searchable",
+      "forbidden": [
+        {"text": "Searchable(?! fields)", "match": "regex", "case": "sensitive"},
+        {"text": "Not searchable", "match": "literal", "case": "sensitive"},
+        {"text": "Not searched yet", "match": "literal", "case": "sensitive"},
+        {"text": "\\bnot\\s+searchable\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bnot\\s+searched\\s+yet\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": ["sync_drift.settings_missing_field"]
+    },
+    {
+      "id": "searchable-settings-row",
+      "rule": "The Searchable fields settings row reads Used for search, Not used for search and Not used for search yet.",
+      "glossary": "Searchable",
+      "forbidden": [],
+      "required": [
+        {"text": "Used for search", "match": "literal", "case": "sensitive"},
+        {"text": "Not used for search", "match": "literal", "case": "sensitive"},
+        {"text": "Not used for search yet.", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.settings_missing_field"]
+    },
+    {
+      "id": "control-room-casing",
+      "rule": "The label is Control room in sentence case, never in title case.",
+      "glossary": "Control room",
+      "forbidden": [
+        {"text": "Control Room", "match": "literal", "case": "sensitive"}
+      ],
+      "required": [
+        {"text": "Control room", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": ["**"],
+      "surfaces": ["control_room.default", "sync_drift.default"]
+    },
+    {
+      "id": "last-succeeded",
+      "rule": "Say Last succeeded, never Last success or Last successful.",
+      "glossary": "Last succeeded",
+      "forbidden": [
+        {"text": "last success(ful)?\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [
+        {"text": "last succeeded", "match": "regex", "case": "insensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "control_room.refresh_retained",
+        "control_room.refresh_retained_degraded",
+        "posture.default",
+        "sync_drift.reconcile_error_retained"
+      ]
+    },
+    {
+      "id": "last-succeeded--absence",
+      "rule": "Say Last succeeded, never Last success or Last successful, also where no earlier success is shown.",
+      "glossary": "Last succeeded",
+      "forbidden": [
+        {"text": "last success(ful)?\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["control_room.refresh_no_prior", "posture.failed_row_retained"]
+    },
+    {
+      "id": "pending-aggregate",
+      "rule": "A count or a sentence over a row or a schema says Pending, never queued: queued is the step of one update.",
+      "glossary": "Pending",
+      "forbidden": [
+        {"text": "\\bjobs? queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "Nothing queued", "match": "literal", "case": "insensitive"},
+        {"text": "queued work", "match": "literal", "case": "insensitive"},
+        {"text": "\\bqueued\\s+jobs?\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\d+\\s+queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bjobs?\\s+(is|are|was|were)\\s+queued\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bnothing\\s+(is\\s+)?queued\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "sync_drift.queue_pending",
+        "sync_drift.caught_up",
+        "sync_drift.promotion_blocked_queue"
+      ]
+    },
+    {
+      "id": "pending-count",
+      "rule": "The schema-level job count reads N jobs pending.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "\\d+ jobs? pending", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.queue_pending"]
+    },
+    {
+      "id": "pending-caught-up",
+      "rule": "The caught-up sentence says nothing is pending, retrying or failed.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "Nothing pending, retrying or failed", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.caught_up"]
+    },
+    {
+      "id": "pending-promotion-reason",
+      "rule": "The promotion block for work in the host queue says to wait for pending sync work.",
+      "glossary": "Pending",
+      "forbidden": [],
+      "required": [
+        {"text": "Wait for pending sync work to finish.", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.promotion_blocked_queue"]
+    },
+    {
+      "id": "retry-queued-not-accepted",
+      "rule": "After a retry the host application's queue holds the job: say Retry queued, never accepted.",
+      "glossary": "Retry queued",
+      "forbidden": [
+        {"text": "Retry accepted", "match": "literal", "case": "insensitive"},
+        {"text": "is already accepted", "match": "literal", "case": "insensitive"},
+        {"text": "The queue accepted", "match": "literal", "case": "insensitive"},
+        {"text": "accepted operation", "match": "literal", "case": "insensitive"},
+        {"text": "Acceptance alone", "match": "literal", "case": "insensitive"},
+        {"text": "\\bqueue\\s+accepted\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\baccepted\\s+retry\\b", "match": "regex", "case": "insensitive"},
+        {"text": "\\bretry\\s+(was\\s+|is\\s+)?(accepted|sent)\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [
+        {"text": "Retry queued", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [
+        "correlation of an accepted retry with its own Meilisearch task"
+      ],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
+      "id": "retry-surfaces-no-accepted",
+      "rule": "The retry screens carry no Meilisearch task text, so the word accepted does not appear on them at all.",
+      "glossary": "Accepted",
+      "forbidden": [
+        {"text": "\\baccept(ed|ance)\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
+      "id": "accepted-is-meilisearch-only",
+      "rule": "Accepted stays for a Meilisearch task: the index swap task reads Index swap accepted.",
+      "glossary": "Accepted",
+      "forbidden": [],
+      "required": [
+        {"text": "Index swap accepted", "match": "literal", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["sync_drift.promotion_accepted"]
+    },
+    {
+      "id": "queued-host-queue-outcome",
+      "rule": "The outcome of handing a retry to the host application's queue reads queued.",
+      "glossary": "Queued",
+      "forbidden": [],
+      "required": [
+        {"text": "\\bqueued\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+    },
+    {
+      "id": "clear-needs-observation",
+      "rule": "The status word Clear needs an observation: it is not shown beside an earlier observation a failed refresh left on screen.",
+      "glossary": "Clear",
+      "forbidden": [
+        {"text": "\\bClear\\b", "match": "regex", "case": "sensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": [
+        "control_room.refresh_retained",
+        "control_room.refresh_retained_degraded",
+        "control_room.refresh_no_prior"
+      ]
+    },
+    {
+      "id": "clear-needs-observation--failed-word-kept",
+      "rule": "A failed refresh drops only the Clear word: an earlier observation that found failed work still reads Failed beside it.",
+      "glossary": "Clear",
+      "forbidden": [],
+      "required": [
+        {"text": "ops-sync-status__word\">\\s*Failed\\s*</span>", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["control_room.refresh_retained_degraded"]
+    },
+    {
+      "id": "clear-not-healthy",
+      "rule": "Clear is the status word for an observed source with nothing pending, retrying or failed: say Clear, never Healthy or All good.",
+      "glossary": "Clear",
+      "forbidden": [
+        {"text": "\\bHealthy\\b", "match": "regex", "case": "sensitive"},
+        {"text": "\\ball\\s+good\\b", "match": "regex", "case": "insensitive"}
+      ],
+      "required": [],
+      "allowed_in": [],
+      "source_scope": ["scrypath_ops/lib/**"],
+      "surfaces": [
+        "control_room.healthy",
+        "control_room.refresh_retained",
+        "posture.default",
+        "sync_drift.caught_up"
+      ]
+    },
+    {
+      "id": "retry-queued-not-accepted--flash",
+      "rule": "The flash after a retry names the queue job: Retry queued, then the number of the job the host application's queue now holds.",
+      "glossary": "Retry queued",
+      "forbidden": [],
+      "required": [
+        {"text": "Retry queued · queue job \\d+", "match": "regex", "case": "sensitive"}
+      ],
+      "allowed_in": [],
+      "source_scope": [],
+      "surfaces": ["failed_sync.after_retry"]
+    }
+  ]
+}

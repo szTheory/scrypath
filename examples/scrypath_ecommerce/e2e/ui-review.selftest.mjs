@@ -433,7 +433,7 @@ test("disposable captures cannot target retained loopback or arbitrary network h
 });
 
 test("disposable entry fixtures distinguish host incident data from standalone empty allowlists", () => {
-  const incidentSummary = "Control Room 3 sync jobs failed";
+  const incidentSummary = "Control room 3 sync jobs failed";
   const incidentFailures = "3 failed, 2 retrying Product Invalid data Meilisearch rejected it Unknown cause";
   const standaloneSummary = "No search schemas configured. Configure the host application's schema allowlist";
   const standaloneFailures = "No schemas configured. Add allowlisted schema modules with schema_allowlist in :scrypath_ops";

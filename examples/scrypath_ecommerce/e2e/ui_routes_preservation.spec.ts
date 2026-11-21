@@ -90,7 +90,7 @@ test("standalone root redirects locally before the operator route is followed", 
 
   await page.goto(new URL("/ops/", standaloneBaseUrl).toString());
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Control Room", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Control room", exact: true })).toBeVisible();
 });
 
 test("mounted and standalone Ops route inventories remain reachable at their existing prefixes", async ({

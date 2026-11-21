@@ -38,7 +38,7 @@ test("captures canonical ScrypathOps admin UI states", async ({ page, request },
   });
 
   await page.goto("/admin/search");
-  await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Control room" })).toBeVisible();
   await capture(page, testInfo, "00-control-room");
 
   await page.goto("/admin/search/health");

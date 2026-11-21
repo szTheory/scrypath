@@ -440,7 +440,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </div>
                     <dl class="ops-signal-success">
                       <div>
-                        <dt>Last success</dt>
+                        <dt>Last succeeded</dt>
                         <dd>
                           <.ops_time
                             id={"posture-time-backend-#{inspect(mod)}"}
@@ -497,7 +497,7 @@ defmodule ScrypathOpsWeb.PostureLive do
                     </div>
                     <dl class="ops-signal-success">
                       <div>
-                        <dt>Last success</dt>
+                        <dt>Last succeeded</dt>
                         <dd>
                           <.ops_time
                             id={"posture-time-queue-#{inspect(mod)}"}
@@ -607,8 +607,8 @@ defmodule ScrypathOpsWeb.PostureLive do
 
   defp queue_time_state_text(%{queue: %{last_succeeded: state}}), do: time_state_text(state)
 
-  defp source_last_success_label(:backend), do: "Meilisearch last success"
-  defp source_last_success_label(:queue), do: "Queue last success"
+  defp source_last_success_label(:backend), do: "Meilisearch last succeeded"
+  defp source_last_success_label(:queue), do: "Queue last succeeded"
 
   defp source_ref(%ScrypathOps.Posture{last_success_refs: refs}, schema, source) do
     refs

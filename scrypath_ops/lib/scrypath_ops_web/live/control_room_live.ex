@@ -14,7 +14,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:page_title, "Control Room")
+      |> assign(:page_title, "Control room")
       |> assign(:schema_allowlist, ScrypathOps.Schemas.allowlist())
       |> assign(:scrypath_opts, ScrypathOps.Schemas.scrypath_opts())
       |> assign(:refresh_issue, nil)
@@ -83,7 +83,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
       <div class="space-y-ops-page-gap">
         <.ops_toolbar class="items-end gap-4">
           <.ops_page_header
-            title="Control Room"
+            title="Control room"
             subtitle="Try a search or check how your indexes are syncing."
           />
           <.ops_refresh_control
@@ -140,10 +140,10 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
           <.ops_verdict
             :if={@posture.state in [:ok, :degraded]}
             kind={Posture.verdict_kind(@posture.rows)}
-            status={Posture.worst_status(@posture.rows)}
+            status={verdict_status(@posture, @refresh_issue)}
             label={
               cond do
-                @refresh_issue && @last_successful_posture -> "Last successful observation"
+                @refresh_issue && @last_successful_posture -> "Last succeeded"
                 @refresh_issue || @posture.error_count > 0 -> "Partial observation"
                 true -> nil
               end
@@ -174,7 +174,7 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
               :if={@refresh_issue && @last_successful_posture}
               class="mt-2 text-ops-sm ops-muted"
             >
-              Last successful check: <.ops_time label="" dt={@posture.refreshed_at} />.
+              Last succeeded: <.ops_time label="" dt={@posture.refreshed_at} />.
             </p>
             <p
               :if={@refresh_issue && is_nil(@last_successful_posture)}
@@ -212,6 +212,18 @@ defmodule ScrypathOpsWeb.ControlRoomLive do
 
   defp verdict_headline(%Posture{state: :degraded} = summary), do: summary.headline
   defp verdict_headline(%Posture{state: :ok}), do: "No sync failures found"
+
+  # Clear needs an observation, and a failed refresh leaves an earlier observation on screen
+  # (187 review IN-02), so only the Clear word is dropped beside it. Failed, Retrying and Pending
+  # still read: the word is the non-colour cue for the rule the verdict already shows.
+  defp verdict_status(%Posture{rows: rows}, nil), do: Posture.worst_status(rows)
+
+  defp verdict_status(%Posture{rows: rows}, _refresh_issue) do
+    case Posture.worst_status(rows) do
+      :clear -> nil
+      status -> status
+    end
+  end
 
   defp affected_names(%Posture{rows: rows}) do
     rows

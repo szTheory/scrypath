@@ -242,6 +242,32 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
       refute has_element?(view, "#search-save-new")
     end
 
+    # COPY-04: the destructive dialogs open with Cancel focused, and this one is not destructive.
+    # Its name input takes focus instead. The pin is here so nobody "fixes" it to the Cancel
+    # default, which is the default every other ops_modal carries.
+    test "the Save search modal opens on its name input, not on the Cancel default", %{
+      conn: conn
+    } do
+      {:ok, view, _html} = live(conn, ~p"/ops/search")
+      view |> element("#search-save-new") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-name-modal[data-ops-modal-initial-focus='#saved-search-name-input']"
+             )
+
+      refute has_element?(
+               view,
+               "#saved-search-name-modal[data-ops-modal-initial-focus='[data-ops-modal-cancel]']"
+             )
+
+      assert has_element?(
+               view,
+               "#saved-search-name-modal button[data-ops-modal-cancel]",
+               "Cancel"
+             )
+    end
+
     test "a taken name is reported inline and nothing is overwritten", %{conn: conn} do
       original = put!("Taken", single("original"))
       {:ok, view, _html} = live(conn, ~p"/ops/search")
@@ -415,6 +441,31 @@ defmodule ScrypathOpsWeb.SearchSavedSearchesTest do
 
       render_click(view, "close_manage", %{})
       refute has_element?(view, "#saved-search-manage")
+    end
+
+    # COPY-04: deleting a saved search is the third destructive confirmation. It is an inline
+    # form in the sheet, not an ops_modal, so it has no initial-focus attribute; what it keeps is
+    # a Cancel button that sends cancel_row, and Escape (the test above). Pinned as it is.
+    test "the delete confirmation keeps a Cancel button wired to cancel_row", %{conn: conn} do
+      put!("A", single("a"))
+      {:ok, view, _html} = live(conn, ~p"/ops/search?saved=manage")
+
+      view |> element("#saved-search-list button[aria-label='Delete A']") |> render_click()
+
+      assert has_element?(
+               view,
+               "#saved-search-delete-form button[phx-click=cancel_row]",
+               "Cancel"
+             )
+
+      assert has_element?(view, "#saved-search-delete-form button[type=submit]")
+      refute has_element?(view, "#saved-search-delete-form [data-ops-modal-initial-focus]")
+
+      view |> element("#saved-search-delete-form button[phx-click=cancel_row]") |> render_click()
+
+      refute has_element?(view, "#saved-search-delete-form")
+      assert has_element?(view, "#saved-search-manage")
+      assert {:ok, _} = SavedSearches.get(ScrypathOps.Repo, "A")
     end
 
     test "delete requires the exact name and moves focus to the next row", %{conn: conn} do

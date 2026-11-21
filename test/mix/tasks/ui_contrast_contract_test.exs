@@ -92,7 +92,13 @@ defmodule Mix.Tasks.UiContrastContractTest do
     "live hex allowlist holds",
     "live deny-list scan finds no unlisted retired value",
     "live allowlist entries are current and tagged",
-    "deny set and new set are disjoint"
+    "deny set and new set are disjoint",
+    "live ops source holds the 12 px font-size floor",
+    "live ops source has no arbitrary text size",
+    "live ops source has no uppercase",
+    "live ops source has no infinite iteration",
+    "live ops source has no size xs caller",
+    "live favicon consumer scan finds nothing outside the exempt paths"
   ]
 
   # 186 verification IN-03: the planted and accept cases are what prove the guards can fail, so a
@@ -101,7 +107,7 @@ defmodule Mix.Tasks.UiContrastContractTest do
   # and are not listed). The floor is the number of such calls when this check was written; lower
   # it only when a case is removed on purpose, which is the second key a deletion needs.
   @token_test_file "examples/scrypath_ecommerce/ui-tokens.test.mjs"
-  @min_token_test_calls 53
+  @min_token_test_calls 84
 
   test "token map parity and retired-identity guards pass" do
     node = System.find_executable("node") || flunk("Node is required for the token test")

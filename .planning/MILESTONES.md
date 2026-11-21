@@ -1,5 +1,20 @@
 # Milestones
 
+## v1.47 Brand completion (Shipped: 2026-11-20)
+
+**Phases completed:** 4 phases, 8 plans, 10 tasks
+
+**Key accomplishments:**
+- The website now builds its colors, fonts, lockups, favicons and social card from the pinned brand files, serves under the production `/scrypath/` shape, and has a static contract and a browser check that already fail on the old identity.
+- The website now renders in the pinned plum and orchid identity with a Light, Dark and System picker, the old website palette can no longer return, and no site copy names a task the Hex package does not ship.
+- The website deploy now has path filters that watch `brand/
+- Status wording glossary section first, then the Searchable, Last succeeded and Control room strings follow it, each guarded by a row in one JSON table that one `ops-ui` ExUnit test validates, scans and renders, with planted failures run through the same helper code.
+- Host-queue work now reads queued and schema aggregates read pending, each guarded by a table row on an anchored rendered surface; the promotion dialog's Cancel focus is asserted in the required lane; the `ops-ui` path pattern covers every path the table scans, proved by behaviour; one gate run per tested SHA is recorded in a receipt.
+- The demo storefront now serves the pinned light favicon, and the old brand directory, its two readers and every allowlist entry are gone, with the retired-identity ratchet walked from 5 entries and 197 hits down to 0 and 0 in three ordered commits.
+- Five source invariants on ops-authored source, an unthemed-favicon tripwire with a path-and-bytes consumer scan, a ledger reworded by gate name that names brand/tokens.json as the single token authority, and one repository_contracts plus one core run that passed on the final code head `ce250655`.
+
+---
+
 ## v1.46 Brand foundation and re-skin (Shipped: 2026-11-19)
 
 **Delivered:** The plum/orchid scry/path identity is adopted across ScrypathOps, the README and HexDocs, pinned offline and guarded so retired identity values cannot return. Phases 189 (website) and 190 (catalog-free wording) were deferred to v1.47 by the maintainer.

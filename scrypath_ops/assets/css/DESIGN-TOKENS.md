@@ -28,7 +28,9 @@ file consume them. This doc is the catalog — change a value here only by chang
 ## Brand colors
 
 The palette is the pinned plum and orchid brand book (`brand/`, with its tokens in
-`brand/tokens.json`). daisyUI semantic tokens, two themes. System appearance is the default:
+`brand/tokens.json`). That file is the single token authority; `app.css` is a hand-maintained
+projection of it, checked both ways by `ui-tokens.test.mjs` (token-map parity in both
+directions). daisyUI semantic tokens, two themes. System appearance is the default:
 `html[data-theme]` wins, otherwise the operating system decides (`prefers-color-scheme`), and
 ops never forces light. Both theme blocks in `app.css` declare exactly the 20 daisyUI color
 variables below plus the platform rows, every value a literal hex (no `var()` aliases), and
@@ -222,7 +224,7 @@ inventory names every current export; add new exports here with their role consu
 | `ops_panel`, `ops_section`, `ops_scaffold`, `ops_toolbar`, `ops_table` | Body 14px; named spacing and 24px page gap; panel padding 16px below 640px and 20px from 640px |
 | `ops_command_hint`, `ops_button`, `ops_link_button`, `ops_refresh_button`, `ops_refresh_control`, `ops_action_group` | Action labels 14px/600; standard targets 40px; prominent and icon-only targets 44px; compact actions retain compact horizontal padding. The refresh button is an outline button with no glyph: it renders two words (`label`, `busy_label`, default `Refresh` and `Refreshing…`) in one grid cell and the stylesheet swaps them on `[aria-busy="true"]`, which the `OpsRefreshButton` hook sets |
 | `ops_fieldset`, `ops_field`, `ops_text_input`, `ops_number_input`, `ops_textarea`, `ops_select`, `ops_schema_select`, `ops_segmented_control`, `ops_checkbox_list`, `ops_upload_box` | Form labels, help, and values use 14px; standard controls are 40px, multiline controls are at least 96px |
-| `ops_verdict` | Outcome surface with a visible label and headline. The optional `status` attr renders `ops_sync_status` before the headline; `kind` sets the rule (Failed for `:error`, Retrying amber for `:warning`, Control Edge for the rest) and the Control Room and Search health derive both from the worst row, never from the coarse posture state. Evidence and next-step content stay readable |
+| `ops_verdict` | Outcome surface with a visible label and headline. The optional `status` attr renders `ops_sync_status` before the headline; `kind` sets the rule (Failed for `:error`, Retrying amber for `:warning`, Control Edge for the rest) and the Control room and Search health derive both from the worst row, never from the coarse posture state, with one exception: while a refresh issue is showing, the Control room drops the `Clear` word (a failed refresh leaves an earlier observation on screen, and `Clear` needs an observation) and keeps `Failed`, `Retrying` and `Pending`. Evidence and next-step content stay readable |
 | `ops_sync_status` | The one place the four sync-status words and shapes render. Statuses `:failed`, `:retrying`, `:pending`, `:clear` render the word first (600 weight, title case: `Failed`, `Retrying`, `Pending`, `Clear`) and then an `aria-hidden` 16px bar icon whose `data-shape` is `notched`, `bottom-filled`, `hollow` or `filled`. Word and icon take `--ops-status-<status>` through `currentColor`; hooks are `[data-sync-status]` on the span and `[data-shape]` on the svg. The icon never appears without its word and has no role or name |
 | `ops_condition` | A plain muted word for something nobody looked at: `Not observed`, `Not checked`, `Queue not used` or `Unavailable` (a closed set, weight 400, no icon, no status color). `Clear` needs an observation and is rendered by `ops_sync_status` instead; a zero count from an unobserved source never earns it. Hook: `.ops-condition`, `[data-condition]` |
 | `ops_notice`, `ops_status`, `ops_tone_chip` | Panel (`--color-base-100`) with a 1px Hairline on three sides and a 2px inline-start rule, no tint, no shadow, no cue dot. Rule by kind: `:error` Failed (rule and title), `:warning` and `:partial` Retrying amber (rule and title), `:info`, `:success`, `:running` and `:neutral` the Control Edge rule with an Ink title. Body text is Ink. `ops_status` keeps `data-status-kind`; its `neutral` attr is accepted but no longer changes the surface. `ops_tone_chip` rides the same surface |
@@ -240,7 +242,7 @@ template. Preserve the task-specific scan order documented in the root [`DESIGN.
 
 | Surface | Existing pattern | Component/source example |
 | --- | --- | --- |
-| Control Room | Observation → verdict or setup state → safe destination | Labelled native `<section>`, `ops_verdict`, `ops_link_button`, three `ops_intent_card` destinations |
+| Control room | Observation → verdict or setup state → safe destination | Labelled native `<section>`, `ops_verdict`, `ops_link_button`, three `ops_intent_card` destinations |
 | Search health | Fleet verdict and metrics → worst-first schema evidence | `ops_verdict`, `ops_metric_grid`, schema articles with distinct Backend and Queue groups |
 | Failed sync work | All-schema summary → schema/cause filter chips → compact rows (facts line, error code block, outline Retry, More details) | `ops_verdict`, `.ops-filter-chip`, `.ops-failed-row`, `ops_code_block` (`inline_copy`, `clamp`), `ops_disclosure`, `ops_modal`, `ops_handoff` |
 | Sync and drift | Reconciliation → contract → freshness/recovery → gated promotion | `ops_section`, `ops_signal_table`, `ops_data_card`, native advanced `<details>` |
@@ -383,6 +385,16 @@ Size scale record (`keep-platform`, no body reflow in this phase; the token map'
 scope is the theme blocks only, so the values are recorded here): `--text-ops-sm` 0.75rem ·
 `--text-ops-body` 0.875rem · `--text-ops-md` 1rem · `--text-ops-lg` 1.125rem ·
 `--text-ops-h2` 1.125rem · `--text-ops-h3` 1rem.
+
+Source invariants: `ui-tokens.test.mjs` checks the ops-authored source (`scrypath_ops/lib`,
+`scrypath_ops/assets/js` without vendored files, and `app.css`) for a 12px minimum font size
+(resolved through the `--text-ops-*` properties; every `--text-*` token in `app.css` is held
+to it, even one only a utility class uses), no arbitrary `text-[` length, no uppercase, no
+infinite iteration (including the `animate-spin`, `animate-ping`, `animate-pulse` and
+`animate-bounce` utilities) and no `size: :xs` caller. `@apply` lists in `app.css` are read like
+class attributes. These read source declarations, not rendered size. Demo host CSS, the tracked built CSS and vendored files are not scanned. A variant that
+emits the daisyUI `btn-xs` class (11px) is caught only by the `size: :xs` caller check and by
+the browser spec on the advisory lane; computed size stays browser-only.
 
 ## Status / tone: the notice rule scheme and the sync-status words
 
@@ -584,7 +596,7 @@ only and never affects the exit code.
 
 ## Task baseline controls
 
-The flat navigation orders Search immediately after Control Room. Native schema radios
+The flat navigation orders Search immediately after Control room. Native schema radios
 remain visible; a single schema is context rather than a disabled picker. Search uses
 one form surface with query and result limit beside one another on wider screens.
 Saved searches use separator rows rather than cards nested inside action containers.

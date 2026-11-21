@@ -61,7 +61,7 @@ test("operator verifies a rendered recovery for the non-first Variant schema", a
 
   await page.goto("/admin/search");
   await waitForLiveConnected(page);
-  await expect(page.getByRole("heading", { name: "Control Room" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Control room" })).toBeVisible();
   const healthRoute = page.getByRole("link", { name: "View search health", exact: true });
   await expect(healthRoute).toHaveCount(1);
   await expect(healthRoute).toBeVisible();
@@ -258,7 +258,7 @@ test("operator promotes only this returned task pair and unique target document"
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match the schema|differ from the schema)/).first()).toBeVisible();
   // Promotion controls appear only because the fixture prepared a target index.
   const advanced = page.locator("#index-promotion");
   await expect(advanced).toContainText(fixture.target_index);
@@ -278,6 +278,7 @@ test("operator promotes only this returned task pair and unique target document"
   const close = confirmation.getByRole("button", { name: "Close Confirm index promotion dialog" });
   const cancel = confirmation.getByRole("button", { name: "Cancel index swap", exact: true });
   const confirm = confirmation.getByRole("button", { name: "Replace live index with target", exact: true });
+  await expect(cancel).toBeFocused();
   await close.focus();
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");

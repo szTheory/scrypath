@@ -52,7 +52,7 @@ type ViewportName = keyof typeof VIEWPORTS;
 type Screen = { name: string; path: string; heading: string };
 
 const SCREENS: Screen[] = [
-  { name: "Control Room", path: "/admin/search", heading: "Control Room" },
+  { name: "Control room", path: "/admin/search", heading: "Control room" },
   { name: "Search health", path: "/admin/search/health", heading: "Search health" },
   { name: "Failed sync work", path: "/admin/search/failed-sync", heading: "Failed sync work" },
   { name: "Sync and index", path: "/admin/search/sync-and-index", heading: "Sync and index" },
@@ -312,7 +312,7 @@ test.describe("admin motion tokens — P-12", () => {
     const { page, close } = await newThemedPage(browser, THEME_MODES[0], "desktop", "no-preference");
     try {
       await gotoScreen(page, SCREENS[0]);
-      await expectMotionContract(page, "Control Room before planting");
+      await expectMotionContract(page, "Control room before planting");
 
       await page.evaluate(() => {
         const style = document.createElement("style");
@@ -342,7 +342,7 @@ test.describe("admin motion tokens — P-12", () => {
       // The global reduced-motion rule beats the planted rules: every planted duration collapses to
       // 0.01ms and the planted loop runs one iteration, so the reduced contract holds again.
       await page.emulateMedia({ reducedMotion: "reduce" });
-      await expectMotionContract(page, "Control Room with the planted rules under reduced motion", true);
+      await expectMotionContract(page, "Control room with the planted rules under reduced motion", true);
     } finally {
       await close();
     }

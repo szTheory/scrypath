@@ -7,6 +7,8 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias ScrypathOps.Test.CopyStubs.Posture, as: PostureStubs
+  alias ScrypathOps.Test.CopyStubs.Posture.FakeClient, as: PostureFakeClient
   alias ScrypathOps.Test.OpsPostA
   alias ScrypathOps.Test.OpsPostB
   alias ScrypathOps.Integrations.Sigra.OperatorContext
@@ -18,125 +20,13 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
   @status_words ~w(Failed Retrying Pending Clear)
   @condition_words ["Not observed", "Not checked", "Queue not used", "Unavailable"]
 
-  defmodule PostureFakeClient do
-    def tasks(filters, config) do
-      Agent.update(:posture_live_test_state, fn state ->
-        Map.update!(state, :tasks_calls, &(&1 + 1))
-      end)
-
-      uids = filters[:index_uids] || []
-      boom_indexes = Agent.get(:posture_live_test_state, & &1.boom_indexes)
-      boom_reason = Agent.get(:posture_live_test_state, & &1.boom_reason)
-      exit_index = Agent.get(:posture_live_test_state, & &1.exit_index)
-
-      cond do
-        exit_index in uids -> exit(:posture_backend_exit)
-        Enum.any?(boom_indexes, &(&1 in uids)) -> {:error, boom_reason}
-        true -> {:ok, %{results: Keyword.get(config, :meilisearch_tasks, [])}}
-      end
-    end
-
-    def swap_indexes(_indexes, _config) do
-      Agent.update(:posture_live_test_state, fn state ->
-        Map.put(state, :swap_called, true)
-      end)
-
-      {:ok,
-       %{
-         "uid" => 101,
-         "status" => "succeeded",
-         "type" => "indexSwap",
-         "indexUid" => "postlv_ops_post_a"
-       }}
-    end
-  end
-
   setup do
-    prev_allow = Application.get_env(:scrypath_ops, :schema_allowlist)
-    prev_backend = Application.get_env(:scrypath_ops, :backend)
-    prev_sync = Application.get_env(:scrypath_ops, :sync_mode)
-    prev_prefix = Application.get_env(:scrypath_ops, :index_prefix)
-    prev_url = Application.get_env(:scrypath_ops, :meilisearch_url)
-    prev_client = Application.get_env(:scrypath_ops, :meilisearch_client)
-    prev_tasks = Application.get_env(:scrypath_ops, :meilisearch_tasks)
-    prev_oban = Application.get_env(:scrypath_ops, :oban)
-    prev_queue = Application.get_env(:scrypath_ops, :oban_queue)
-    prev_insp = Application.get_env(:scrypath_ops, :oban_inspector)
-    prev_jobs = Application.get_env(:scrypath_ops, :oban_jobs)
-    prev_sigra = Application.get_env(:scrypath_ops, :sigra)
-    prev_auth_mode = System.get_env("OPSUI_AUTH_MODE")
-
-    Application.put_env(:scrypath_ops, :schema_allowlist, [OpsPostA, OpsPostB])
-    Application.put_env(:scrypath_ops, :backend, Scrypath.Meilisearch)
-    Application.put_env(:scrypath_ops, :sync_mode, :manual)
-    Application.put_env(:scrypath_ops, :index_prefix, "postlv")
-    Application.put_env(:scrypath_ops, :meilisearch_url, "http://localhost:7700")
-    Application.put_env(:scrypath_ops, :meilisearch_client, PostureFakeClient)
-
-    Application.put_env(:scrypath_ops, :sigra,
-      sudo_confirm_path: "/sudo/confirm",
-      sudo_window: 300
-    )
-
-    System.put_env("OPSUI_AUTH_MODE", "sigra")
-
-    if pid = Process.whereis(:posture_live_test_state) do
-      Agent.stop(pid)
-    end
-
-    # Keep the fixture alive until on_exit/1 performs deterministic cleanup.
-    # A linked Agent can exit with the test process before the callback runs.
-    {:ok, _pid} =
-      Agent.start(
-        fn ->
-          %{
-            tasks_calls: 0,
-            swap_called: false,
-            exit_index: nil,
-            boom_indexes: ["postlv_ops_post_a"],
-            boom_reason: :boom
-          }
-        end,
-        name: :posture_live_test_state
-      )
-
-    Application.put_env(:scrypath_ops, :meilisearch_tasks, [
-      %{
-        "uid" => 1,
-        "status" => "succeeded",
-        "type" => "documentAdditionOrUpdate",
-        "indexUid" => "postlv_ops_post_b",
-        "finishedAt" => "2026-04-16T18:00:00Z"
-      }
-    ])
+    previous = PostureStubs.put_env()
+    PostureStubs.start_agent()
 
     on_exit(fn ->
-      restore = fn k, v ->
-        if v == nil,
-          do: Application.delete_env(:scrypath_ops, k),
-          else: Application.put_env(:scrypath_ops, k, v)
-      end
-
-      restore.(:schema_allowlist, prev_allow)
-      restore.(:backend, prev_backend)
-      restore.(:sync_mode, prev_sync)
-      restore.(:index_prefix, prev_prefix)
-      restore.(:meilisearch_url, prev_url)
-      restore.(:meilisearch_client, prev_client)
-      restore.(:meilisearch_tasks, prev_tasks)
-      restore.(:oban, prev_oban)
-      restore.(:oban_queue, prev_queue)
-      restore.(:oban_inspector, prev_insp)
-      restore.(:oban_jobs, prev_jobs)
-      restore.(:sigra, prev_sigra)
-
-      if is_nil(prev_auth_mode),
-        do: System.delete_env("OPSUI_AUTH_MODE"),
-        else: System.put_env("OPSUI_AUTH_MODE", prev_auth_mode)
-
-      if pid = Process.whereis(:posture_live_test_state) do
-        Agent.stop(pid)
-      end
+      PostureStubs.restore_env(previous)
+      PostureStubs.stop_agent()
     end)
 
     :ok
@@ -164,7 +54,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert html =~ ~s(class="text-ops-body ops-muted")
     assert html =~ "Meilisearch document tasks"
     assert html =~ "Manual sync"
-    assert html =~ "Last success"
+    assert html =~ "Last succeeded"
     refute html =~ "Posture"
     assert has_element?(lv, "[data-ops-refresh][aria-label='Refresh search health']")
 
@@ -706,7 +596,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
     refute row =~ "Exact timestamp"
     assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
-    assert row =~ ~s(aria-label="Copy timestamp:)
+    # Accessible name = visible time + hidden "copy timestamp"; an aria-label would drop the
+    # visible text the hook rewrites for local time (axe label-content-name-mismatch).
+    refute row =~ ~s(aria-label="Copy timestamp)
+    assert row =~ "copy timestamp</span>"
     refute row =~ ~s(data-ops-timestamp-message)
     assert has_element?(lv, "[data-ops-client-toast]")
   end
@@ -736,8 +629,17 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert failed_row =~ iso
     assert failed_row =~ ~s(data-ops-timestamp-copy="#{iso}")
     assert failed_row =~ "source-local evidence is retained from check 2026-10-06T17:18:42.318Z"
-    assert failed_row =~ "Queue last success"
-    refute failed_row =~ "Last success</dt><dd>—"
+    assert failed_row =~ "Meilisearch last succeeded"
+    assert failed_row =~ "Queue last succeeded"
+
+    # Each retained label sits beside the retained time of its own source, not beside a bare or
+    # empty value (190 review WR-05; the old-label guard is the `last-succeeded` table row).
+    assert failed_row =~
+             ~r/Meilisearch last succeeded<\/dt>\s*<dd>\s*<span id="posture-time-retained-backend-[^"]+"/
+
+    assert failed_row =~
+             ~r/Queue last succeeded<\/dt>\s*<dd>\s*<span id="posture-time-retained-queue-[^"]+"/
+
     refute render(lv) =~ "Search health refreshed."
   end
 
@@ -804,7 +706,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       html = render_time(nil, snapshot_at, state_text)
       assert html =~ state_text
       refute html =~ "<details"
-      refute html =~ "Copy timestamp"
+      refute html =~ "copy timestamp"
       refute html =~ "data-ops-timestamp-copy"
     end
   end

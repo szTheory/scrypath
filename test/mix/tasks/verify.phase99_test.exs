@@ -30,6 +30,7 @@ defmodule Mix.Tasks.Verify.Phase99Test do
       assert source =~ ~S|"test/scrypath/phase111_contract_test.exs"|
       assert source =~ ~S|"test/mix/tasks/verify.phase99_test.exs"|
       assert source =~ ~S|"test/mix/tasks/ui_contrast_contract_test.exs"|
+      assert source =~ ~S|"test/mix/tasks/website_contract_test.exs"|
       assert source =~ ~S|"test/mix/tasks/workflow_wiring_test.exs"|
       assert source =~ ~S|Mix.Task.run("docs", ["--warnings-as-errors"])|
 

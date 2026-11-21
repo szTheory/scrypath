@@ -52,7 +52,7 @@ defmodule ScrypathEcommerceWeb.PageControllerTest do
     conn = get(conn, ~p"/admin/search")
     html = html_response(conn, 200)
 
-    assert html =~ "Control Room"
+    assert html =~ "Control room"
 
     assert html =~
              ~s(href="/admin/search" data-phx-link="redirect" data-phx-link-state="push")

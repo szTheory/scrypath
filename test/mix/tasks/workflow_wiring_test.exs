@@ -4,6 +4,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
   @ci_yml ".github/workflows/ci.yml"
   @workflow_security_yml ".github/workflows/workflow-security.yml"
   @website_yml ".github/workflows/website.yml"
+  @website_select_browser_step "Select browser (runner Chrome when launchable, else Playwright Chromium)"
+  @website_channel_guard "grep -q SCRYPATH_BROWSER_CHANNEL scripts/check.mjs"
+  @website_deploy_if "if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'"
   @publish_hex_yml ".github/workflows/publish-hex.yml"
   @release_please_yml ".github/workflows/release-please.yml"
   @verify_published_yml ".github/workflows/verify-published-release.yml"
@@ -327,7 +330,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       assert website =~ "  pull_request:\n"
       assert website =~ "  push:\n    branches:\n      - main\n    paths:\n"
-      assert deploy =~ "if: github.event_name == 'push'"
+
+      assert deploy =~ @website_deploy_if
+
       assert build =~ "fetch-depth: 0"
       assert deploy =~ "fetch-depth: 0"
       assert website =~ "permissions:\n  contents: read"
@@ -337,6 +342,113 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
       refute build =~ "pages: write"
       refute build =~ "id-token: write"
+    end
+
+    test "website deploy safety net: filters, dispatch rollback, deploy group, smoke and timeout" do
+      assert_website_safety_net!(File.read!(@website_yml))
+    end
+
+    test "the website safety-net contract rejects a workflow that loses a piece of it" do
+      yml = File.read!(@website_yml)
+      assert_website_safety_net!(yml)
+
+      [before_pr, between, after_push] = String.split(yml, "      - 'brand/**'\n", parts: 3)
+      brand_line = "      - 'brand/**'\n"
+
+      planted = [
+        {"brand/** dropped from the pull_request filter",
+         before_pr <> between <> brand_line <> after_push},
+        {"brand/** dropped from the push filter",
+         before_pr <> brand_line <> between <> after_push},
+        {"dispatch ref input dropped",
+         String.replace(
+           yml,
+           "      ref:\n        description",
+           "      other:\n        description"
+         )},
+        {"deploy group cancels in flight",
+         String.replace(
+           yml,
+           "group: website-pages-deploy\n      cancel-in-progress: false",
+           "group: website-pages-deploy\n      cancel-in-progress: true"
+         )},
+        {"smoke command dropped", String.replace(yml, "node website/scripts/smoke.mjs", "true")},
+        {"soft check dropped", String.replace(yml, "curl -fsSI", "curl -sI")},
+        {"build timeout dropped", String.replace(yml, "    timeout-minutes: 10\n", "")},
+        {"deploy timeout dropped", String.replace(yml, "    timeout-minutes: 15\n", "")},
+        {"dispatch ref interpolated into a shell command",
+         String.replace(yml, "node website/scripts/smoke.mjs", "echo ${{ inputs.ref }}")},
+        {"browser probe no longer launches the chrome channel",
+         String.replace(yml, "channel: 'chrome'", "channel: 'x'")},
+        {"deploy no longer restricted to main",
+         String.replace(yml, " && github.ref == 'refs/heads/main'", "")},
+        {"deploy no longer limited to push and dispatch events",
+         String.replace(
+           yml,
+           "(github.event_name == 'push' || github.event_name == 'workflow_dispatch') && ",
+           ""
+         )},
+        {"workflow-level group cancels every superseded run, deploys included",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: true"
+         )},
+        {"rollback dispatch shares the push group",
+         String.replace(
+           yml,
+           "${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}",
+           "${{ github.ref }}"
+         )},
+        {"browser selection no longer checks that the ref's check script supports the channel",
+         String.replace(yml, "#{@website_channel_guard} \\\n            && ", "")}
+      ]
+
+      for {label, mutated} <- planted do
+        refute mutated == yml, "the planted mutation #{label} changed nothing"
+
+        accepted? =
+          try do
+            assert_website_safety_net!(mutated)
+            true
+          rescue
+            ExUnit.AssertionError -> false
+          end
+
+        refute accepted?, "planted #{label} was accepted by the safety-net contract"
+      end
+    end
+
+    # Runs the real "Select browser" step script with stub executables on PATH, so what it does for a
+    # rollback ref is observed rather than inferred from its text. The probe's node call is a stub that
+    # succeeds, which is the runner case: Chrome is installed and launchable.
+    test "website browser selection takes the runner Chrome only for a ref whose check script supports the channel" do
+      yml = File.read!(@website_yml)
+      build = workflow_job_block(yml, "build-and-check")
+
+      script =
+        build
+        |> workflow_named_step_block(@website_select_browser_step)
+        |> workflow_step_run_script()
+
+      supported =
+        run_website_browser_selection(
+          script,
+          "const channel = process.env.SCRYPATH_BROWSER_CHANNEL;\n"
+        )
+
+      assert supported.github_env =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+      refute supported.npx_calls =~ "playwright install"
+
+      # The check.mjs on main before this phase: a bare launch that ignores the channel variable.
+      predates =
+        run_website_browser_selection(script, "const browser = await chromium.launch();\n")
+
+      refute predates.github_env =~ "SCRYPATH_BROWSER_CHANNEL",
+             "a ref whose check.mjs ignores the channel variable must not be told to use it"
+
+      assert predates.npx_calls =~ "playwright install --with-deps chromium",
+             "a ref whose check.mjs ignores the channel variable needs Playwright's own Chromium installed"
     end
 
     test "release workflows retain tag selection, history, permissions and credential behavior" do
@@ -463,6 +575,10 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     @mounted_fail_open_if "if: ${{ !cancelled() && (needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false') }}"
     @step_fail_open_if "if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}"
     @allowlisted_paths [".planning/STATE.md", "docs/guide.md", "README.md"]
+    @browser_install_step "Install locked demo dependencies for PNG evidence validation"
+    @browser_start_step "Start browser build, lifecycle, evidence, and target behavior tests in the background"
+    @browser_wait_step "Verify browser build, lifecycle, evidence, and target behavior"
+    @contract_run_line "      - run: mix verify.repository_contracts\n"
 
     test "ecommerce-path is a fail-open classifier job, not a gate" do
       ci = File.read!(@ci_yml)
@@ -501,7 +617,9 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         |> String.split("\n")
         |> Enum.filter(&String.contains?(&1, "needs.ecommerce-path.outputs.run"))
 
-      assert length(consumers) == 3
+      # ecommerce-mounted, plus three repository-contracts steps (the demo install, the background
+      # start and the final wait, which adds `!cancelled()` so it still reports after a Mix failure).
+      assert length(consumers) == 4
 
       assert Enum.all?(
                consumers,
@@ -516,7 +634,7 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       refute closeout =~ "ecommerce-path"
     end
 
-    test "repository-contracts always runs its contract suite and gates only the two Node steps" do
+    test "repository-contracts always runs its contract suite and gates only the three Node steps" do
       ci = File.read!(@ci_yml)
       job = workflow_job_block(ci, "repository-contracts")
 
@@ -527,21 +645,20 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert job =~ "\n    if: ${{ !cancelled() }}\n",
              "repository-contracts needs a job-level !cancelled() so a failed classifier cannot skip it"
 
-      for step <- [
-            "Install locked demo dependencies for PNG evidence validation",
-            "Verify browser build, lifecycle, evidence, and target behavior"
-          ] do
+      for step <- [@browser_install_step, @browser_start_step] do
         assert workflow_named_step_block(job, step) =~ @step_fail_open_if,
                "#{step} must fail open on the classifier"
       end
 
-      # Exactly the job condition plus the two Node-step conditions: nothing else is silently gated.
-      assert length(Regex.scan(~r/^\s+if: /m, job)) == 3
+      # The wait step adds `!cancelled()` so it still reports after a failed Mix half; it fails open too.
+      assert workflow_named_step_block(job, @browser_wait_step) =~ @mounted_fail_open_if,
+             "#{@browser_wait_step} must fail open on the classifier and survive a failed Mix half"
 
-      [_before, after_contract_run] =
-        String.split(job, "- run: mix verify.repository_contracts", parts: 2)
+      # Exactly the job condition plus the three Node-step conditions: nothing else is silently gated.
+      assert length(Regex.scan(~r/^\s+if: /m, job)) == 4
 
-      refute after_contract_run =~ "if:"
+      # The contract run itself carries no condition: it is the one step that always runs.
+      refute workflow_step_block(job, "\n" <> @contract_run_line) =~ ~r/^\s+if: /m
     end
 
     test "a .planning-only diff is accepted as skippable" do
@@ -611,6 +728,383 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       assert status == 0, output
       assert output =~ ~r/# tests [1-9]\d*/
       assert output =~ "# fail 0"
+    end
+  end
+
+  describe "CI-02 repository-contracts runs its Node and Mix halves concurrently" do
+    @browser_test_files [
+      "scripts/ci/ecommerce_build.test.cjs",
+      "scripts/ci/ecommerce_lifecycle.test.cjs",
+      "scripts/ci/ecommerce_evidence.test.cjs",
+      "scripts/ci/ecommerce_target.test.cjs",
+      "scripts/ci/ui_state_pairs.test.cjs"
+    ]
+
+    test "the Node half starts in the background, the Mix half runs, then the job waits for the Node half" do
+      assert_repository_contracts_concurrent!(File.read!(@ci_yml))
+    end
+
+    test "the contract rejects a job that drops, serializes or ignores either half" do
+      ci = File.read!(@ci_yml)
+      assert_repository_contracts_concurrent!(ci)
+
+      job = workflow_job_block(ci, "repository-contracts")
+
+      start_text =
+        "      - name: #{@browser_start_step}\n" <>
+          workflow_named_step_block(job, @browser_start_step) <> "\n"
+
+      assert String.contains?(job, start_text)
+
+      planted = [
+        {"Node half never started",
+         String.replace(job, "- name: #{@browser_start_step}\n", "- name: Something unrelated\n")},
+        {"Node half never awaited",
+         String.replace(job, "- name: #{@browser_wait_step}\n", "- name: Something unrelated\n")},
+        {"Mix half dropped",
+         String.replace(job, @contract_run_line, "      - run: echo skipped\n")},
+        {"one Node test file dropped from the background run",
+         Regex.replace(~r/ *scripts\/ci\/ecommerce_lifecycle\.test\.cjs \\\n/, job, "")},
+        {"Node exit status ignored by the wait step",
+         String.replace(job, "          test \"$status\" = 0\n", "")},
+        {"Node failure swallowed",
+         String.replace(job, "test \"$status\" = 0\n", "test \"$status\" = 0 || true\n")},
+        {"Node exit status no longer captured",
+         String.replace(job, "echo \"${PIPESTATUS[0]}\" >", "echo 0 >")},
+        {"counted TAP failure check dropped",
+         Regex.replace(~r/ *grep -Eq '\^# fail 0\$'[^\n]*\n/, job, "")},
+        {"counted TAP test-count check dropped",
+         Regex.replace(~r/ *grep -Eq '\^# tests \[1-9\]\[0-9\]\*\$'[^\n]*\n/, job, "")},
+        {"vanished background process not noticed",
+         String.replace(job, "kill -0 \"$pid\" 2>/dev/null", "true")},
+        {"wait step skipped after a failed Mix half",
+         String.replace(job, @mounted_fail_open_if, @step_fail_open_if)},
+        {"wait step soft-fails",
+         String.replace(
+           job,
+           "        timeout-minutes: 30\n",
+           "        timeout-minutes: 30\n        continue-on-error: true\n"
+         )},
+        {"job soft-fails",
+         String.replace(
+           job,
+           "    runs-on: ubuntu-24.04\n",
+           "    runs-on: ubuntu-24.04\n    continue-on-error: true\n"
+         )},
+        {"wait step unbounded", String.replace(job, "        timeout-minutes: 30\n", "")},
+        {"Node half runs in the foreground again",
+         String.replace(job, "< /dev/null &\n", "< /dev/null\n")},
+        {"Node half keeps the step's stdin and output open",
+         String.replace(job, " 2>&1 < /dev/null &\n", " &\n")},
+        {"Node half started only after the Mix half",
+         job
+         |> String.replace(start_text, "")
+         |> String.replace(@contract_run_line, @contract_run_line <> start_text)},
+        {"start step no longer fails open on the classifier",
+         String.replace(
+           job,
+           start_text,
+           String.replace(start_text, @step_fail_open_if, "if: true")
+         )}
+      ]
+
+      for {label, mutated_job} <- planted do
+        mutated = String.replace(ci, job, mutated_job, global: false)
+        refute mutated == ci, "the planted mutation #{label} changed nothing"
+
+        accepted? =
+          try do
+            assert_repository_contracts_concurrent!(mutated)
+            true
+          rescue
+            ExUnit.AssertionError -> false
+          end
+
+        refute accepted?, "planted #{label} was accepted by the concurrency contract"
+      end
+    end
+
+    # Runs the real start and wait scripts from ci.yml against a stub `node`, so what they do is
+    # observed rather than inferred from their text. A stub `sleep` keeps the wait loop quick.
+    test "the start step returns at once and the wait step fails for every way the Node half can fail" do
+      ci = File.read!(@ci_yml)
+      job = workflow_job_block(ci, "repository-contracts")
+
+      start_script =
+        job |> workflow_named_step_block(@browser_start_step) |> workflow_step_run_script()
+
+      wait_script =
+        job |> workflow_named_step_block(@browser_wait_step) |> workflow_step_run_script()
+
+      # Passing: the start step must return while the Node half is still running.
+      fixture = browser_halves_fixture()
+      {_, 0} = run_browser_script(start_script, fixture, STUB_NODE_SLEEP: "2")
+
+      refute File.exists?(fixture.status),
+             "the start step waited for the Node half instead of backgrounding it"
+
+      assert File.exists?(fixture.pid)
+      {output, 0} = run_browser_script(wait_script, fixture, [])
+      assert output =~ "TAP version 13", "the wait step must print the Node half's output"
+      assert output =~ "exit status: 0"
+      assert File.read!(fixture.status) == "0\n"
+
+      # Every way the Node half can fail fails the wait step, so the job.
+      failing = [
+        {"tests failed", [STUB_FAILS: "1", STUB_EXIT: "1"], "exit status: 1"},
+        {"non-zero exit status with a clean TAP summary", [STUB_EXIT: "3"], "exit status: 3"},
+        {"no tests counted", [STUB_TESTS: "0"], "exit status: 0"},
+        {"TAP failures with exit status 0", [STUB_FAILS: "2"], "exit status: 0"}
+      ]
+
+      for {label, stub_env, expected} <- failing do
+        fixture = browser_halves_fixture()
+        {_, 0} = run_browser_script(start_script, fixture, stub_env)
+        {output, status} = run_browser_script(wait_script, fixture, [])
+        assert status != 0, "#{label}: the wait step passed a failing Node half:\n#{output}"
+        assert output =~ expected, "#{label}: #{output}"
+      end
+
+      # The background process vanished without writing a status: fail, do not wait out the timeout.
+      fixture = browser_halves_fixture()
+      {dead_pid, 0} = System.cmd("sh", ["-c", "sh -c 'exit 0' & echo $!; wait"])
+      File.write!(fixture.pid, dead_pid)
+      {output, status} = run_browser_script(wait_script, fixture, [])
+      assert status != 0
+      assert output =~ "stopped without reporting a result"
+
+      # The start step never ran (an earlier step failed): fail with a reason.
+      fixture = browser_halves_fixture()
+      {output, status} = run_browser_script(wait_script, fixture, [])
+      assert status != 0
+      assert output =~ "never started"
+    end
+  end
+
+  describe "CI-03 compatibility matrix path classifier wiring" do
+    @compat_script "scripts/ci/compat_path_classifier.cjs"
+    @compat_node_test "scripts/ci/compat_path_classifier.test.cjs"
+    @compat_relevant_literal ~S"^(lib/|dev/|test/|config/|priv/|scripts/|mix\.exs$|mix\.lock$|\.github/workflows/ci\.yml$)"
+    @compat_if "if: ${{ !cancelled() && (needs.compat-path.result != 'success' || needs.compat-path.outputs.run != 'false') }}"
+
+    test "compat-path is a fail-open classifier job, not a gate" do
+      job = workflow_job_block(File.read!(@ci_yml), "compat-path")
+
+      assert job =~ "fetch-depth: 0"
+      assert job =~ ~s(outputs: {run: "${{ steps.check.outputs.run }}"})
+      assert job =~ "timeout-minutes: 5"
+
+      check = workflow_step_block(job, "\n      - id: check\n")
+
+      assert check =~
+               ~s(run: node scripts/ci/compat_path_classifier.cjs --output "$GITHUB_OUTPUT")
+
+      # No name, so no new context at all; and no `if:`, so the classifier itself always reports.
+      refute job =~ "(required)"
+      refute job =~ "(path-scoped)"
+      refute job =~ ~r/^    name: /m
+      refute job =~ ~r/^\s+if: /m
+    end
+
+    test "compatibility skips only on an explicit run=false from a successful classifier" do
+      ci = File.read!(@ci_yml)
+      compat = workflow_job_block(ci, "compatibility")
+
+      # The name stays stable, and the lane stays advisory and four cells wide.
+      assert compat =~ "    name: compatibility (advisory)\n    needs: compat-path\n"
+      assert compat =~ "\n    continue-on-error: true\n"
+      assert compat =~ "\n    " <> @compat_if <> "\n"
+      assert length(Regex.scan(~r/\{elixir: "[0-9.]+", otp: "[0-9.]+"\}/, compat)) == 4
+      assert compat =~ "run: mix verify.compatibility"
+
+      # The consumer compares with != 'false' so a missing or empty output still runs the matrix.
+      refute ci =~ "compat-path.outputs.run == 'true'"
+
+      consumers =
+        ci
+        |> String.split("\n")
+        |> Enum.filter(&String.contains?(&1, "needs.compat-path.outputs.run"))
+
+      assert length(consumers) == 1
+
+      assert Enum.all?(
+               consumers,
+               &String.contains?(&1, "needs.compat-path.outputs.run != 'false'")
+             )
+
+      # Nothing required waits on the classifier or on the matrix.
+      for job_name <- ~w(core package repository-contracts backend ecommerce-mounted ops-ui) do
+        job = workflow_job_block(ci, job_name)
+        refute job =~ "compat-path", "#{job_name} must not depend on the compatibility classifier"
+        refute job =~ ~r/needs:.*\bcompatibility\b/
+      end
+
+      closeout = workflow_job_block(ci, "closeout-attestation")
+      refute closeout =~ "compat"
+    end
+
+    test "a planted lib/ diff runs the matrix and a website-only diff skips it" do
+      assert_runs!(classify_paths(["lib/scrypath.ex"], "pull_request", @compat_script), "lib/")
+
+      assert_skips!(
+        classify_paths(["website/index.html"], "pull_request", @compat_script),
+        "website/"
+      )
+
+      assert_skips!(
+        classify_paths(
+          ["website/index.html", ".planning/STATE.md", "docs/guide.md", "README.md"],
+          "pull_request",
+          @compat_script
+        ),
+        "website, planning, docs and root markdown"
+      )
+
+      assert_runs!(
+        classify_paths(["website/index.html", "lib/x.ex"], "pull_request", @compat_script),
+        "website beside lib/"
+      )
+    end
+
+    test "each path that can change what the matrix proves runs it, and other workflows do not" do
+      for relevant <- ~w(
+            lib/x.ex dev/mix/tasks/x.ex test/x_test.exs test/support/x.ex config/config.exs
+            priv/x scripts/ci/x.cjs scripts/ci_monitor.cjs mix.exs mix.lock .github/workflows/ci.yml
+          ) do
+        assert_runs!(classify_paths([relevant], "pull_request", @compat_script), relevant)
+      end
+
+      for irrelevant <-
+            ~w(.github/workflows/website.yml .github/dependabot.yml scrypath_ops/lib/x.ex examples/x.ex brand/x guides/x.md) do
+        assert_skips!(classify_paths([irrelevant], "pull_request", @compat_script), irrelevant)
+      end
+    end
+
+    test "an empty diff, an unreadable diff and non-pull-request events run the matrix" do
+      assert_runs!(classify_paths([], "pull_request", @compat_script))
+
+      dir = classifier_tmp_dir()
+
+      assert_runs!(
+        run_classifier_file(
+          Path.join(dir, "missing-paths-file"),
+          "pull_request",
+          dir,
+          @compat_script
+        )
+      )
+
+      for event <- ~w(push schedule workflow_dispatch merge_group) do
+        assert_runs!(classify_paths(["website/index.html"], event, @compat_script), event)
+      end
+    end
+
+    test "the planted-diff assertion has teeth: a narrowed relevant list is caught" do
+      source = File.read!(@compat_script)
+
+      assert source =~ @compat_relevant_literal,
+             "the classifier must keep the verbatim CI-03 relevant-path literal"
+
+      narrowed = String.replace(source, "^(lib/|", "^(")
+      assert narrowed != source
+
+      dir = classifier_tmp_dir()
+      pristine_copy = Path.join(dir, "pristine_compat_classifier.cjs")
+      narrowed_copy = Path.join(dir, "narrowed_compat_classifier.cjs")
+      File.write!(pristine_copy, source)
+      File.write!(narrowed_copy, narrowed)
+
+      # The copies need the sibling module the real script requires.
+      File.cp!(
+        "scripts/ci/ecommerce_path_classifier.cjs",
+        Path.join(dir, "ecommerce_path_classifier.cjs")
+      )
+
+      planted = ["website/index.html", "lib/x.ex"]
+
+      # Control: an untouched copy of the real script runs the matrix for the planted diff.
+      assert_runs!(classify_paths(planted, "pull_request", pristine_copy))
+
+      # The narrowed copy skips it, and the assertion refuses that.
+      assert_skips!(classify_paths(planted, "pull_request", narrowed_copy))
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_runs!(classify_paths(planted, "pull_request", narrowed_copy))
+      end
+    end
+
+    test "the classifier's own node test executes inside the contract lane" do
+      {output, status} =
+        System.cmd("node", ["--test", "--test-reporter=tap", @compat_node_test],
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      assert output =~ ~r/# tests [1-9]\d*/
+      assert output =~ "# fail 0"
+    end
+  end
+
+  describe "CI-04 only a superseded pull request run is cancelled" do
+    @ci_concurrency "concurrency:\n  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n"
+
+    test "ci.yml cancels only pull request runs and never a main, schedule or dispatch run" do
+      assert_ci_concurrency!(File.read!(@ci_yml))
+    end
+
+    test "the concurrency contract rejects a workflow that could cancel a run on main" do
+      yml = File.read!(@ci_yml)
+      assert_ci_concurrency!(yml)
+
+      planted = [
+        {"every event is cancelled",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: true"
+         )},
+        {"no run is cancelled",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: false"
+         )},
+        {"push, schedule and dispatch runs share the branch group",
+         String.replace(yml, "|| github.run_id }}", "|| github.ref }}")},
+        {"pull requests share one group",
+         String.replace(
+           yml,
+           "${{ github.event.pull_request.number || github.run_id }}",
+           "${{ github.run_id }}"
+         )},
+        {"every run shares one group",
+         String.replace(
+           yml,
+           "ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}",
+           "ci-${{ github.workflow }}"
+         )},
+        {"concurrency block dropped", String.replace(yml, @ci_concurrency, "")},
+        {"a job adds its own cancelling group",
+         String.replace(
+           yml,
+           "  core:\n    name: core (required)\n",
+           "  core:\n    name: core (required)\n    concurrency: {group: core, cancel-in-progress: true}\n"
+         )}
+      ]
+
+      for {label, mutated} <- planted do
+        refute mutated == yml, "the planted mutation #{label} changed nothing"
+
+        accepted? =
+          try do
+            assert_ci_concurrency!(mutated)
+            true
+          rescue
+            ExUnit.AssertionError -> false
+          end
+
+        refute accepted?, "planted #{label} was accepted by the concurrency contract"
+      end
     end
   end
 
@@ -765,29 +1259,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       ci = File.read!(@ci_yml)
       job = workflow_job_block(ci, "repository-contracts")
 
-      install =
-        workflow_named_step_block(
-          job,
-          "Install locked demo dependencies for PNG evidence validation"
-        )
-
-      browser_contracts =
-        workflow_named_step_block(
-          job,
-          "Verify browser build, lifecycle, evidence, and target behavior"
-        )
+      install = workflow_named_step_block(job, @browser_install_step)
+      start = workflow_named_step_block(job, @browser_start_step)
+      wait = workflow_named_step_block(job, @browser_wait_step)
 
       assert install =~
                "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce"
 
-      assert :binary.match(job, "Install locked demo dependencies for PNG evidence validation") <
-               :binary.match(
-                 job,
-                 "Verify browser build, lifecycle, evidence, and target behavior"
-               )
+      # Install, then start (in the background), then the wait that counts and judges the result.
+      assert :binary.match(job, @browser_install_step) < :binary.match(job, @browser_start_step)
+      assert :binary.match(job, @browser_start_step) < :binary.match(job, @browser_wait_step)
 
-      assert job =~ "node --test --test-reporter=tap"
-      assert browser_contracts =~ "scripts/ci/ecommerce_evidence.test.cjs"
+      assert start =~ "node --test --test-reporter=tap"
+      assert start =~ "scripts/ci/ecommerce_evidence.test.cjs"
 
       for test_file <- [
             "scripts/ci/ecommerce_build.test.cjs",
@@ -796,9 +1280,13 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
             "scripts/ci/ecommerce_target.test.cjs",
             "scripts/ci/ui_state_pairs.test.cjs"
           ] do
-        assert job =~ test_file,
+        assert start =~ test_file,
                "repository-contracts must execute #{test_file} outside the ExUnit suite"
       end
+
+      # The counted TAP summary is still required, unchanged: at least one test and zero failures.
+      assert wait =~ "grep -Eq '^# tests [1-9][0-9]*$' \"$RUNNER_TEMP/browser-behavior.tap\""
+      assert wait =~ "grep -Eq '^# fail 0$' \"$RUNNER_TEMP/browser-behavior.tap\""
     end
 
     test "ci defines compatibility matrix lane with floor/head tuple evidence" do
@@ -1506,6 +1994,75 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         assert path_job =~ dir, "ops-ui path gate must cover #{dir}"
       end
     end
+
+    # COPY-03 (Phase 190, D-18 and D-19): the copy rules table scans the glossary, DESIGN.md and
+    # the demo's e2e specs, so a PR that only edits one of them must still run ops-ui. The
+    # substring loop above cannot tell a pattern that works from one that only looks right, so
+    # this compiles the pattern the job really greps with and matches paths against it.
+    test "the ops-ui path pattern matches every path the copy rules table scans" do
+      path_job = @ci_yml |> File.read!() |> workflow_job_block("ops-ui-path")
+      pattern = ops_ui_path_pattern(path_job)
+      regex = Regex.compile!(pattern)
+
+      copy_inputs = [
+        "GLOSSARY.md",
+        "DESIGN.md",
+        "examples/scrypath_ecommerce/e2e/operator.spec.ts",
+        "examples/scrypath_ecommerce/lib/x.ex",
+        "examples/scrypath_ecommerce/test/x_test.exs",
+        "examples/scrypath_ecommerce/scripts/x.mjs",
+        # The ScrypathOps shell and reskin contract tests read the host's app.js for the ops hooks.
+        "examples/scrypath_ecommerce/assets/js/app.js",
+        "scrypath_ops/lib/x.ex"
+      ]
+
+      assert ops_ui_path_misses(regex, copy_inputs) == []
+
+      assert ops_ui_path_misses(regex, ["README.md", "website/src/index.html"]) ==
+               ["README.md", "website/src/index.html"]
+
+      # Negative control: the same check run on a pattern with the new alternatives removed
+      # reports the glossary, DESIGN.md and the demo paths as missed. A check that cannot fail
+      # would not be a check.
+      new_alternatives =
+        "|GLOSSARY\\.md|DESIGN\\.md|examples/scrypath_ecommerce/(e2e|lib|test|scripts|assets)/"
+
+      assert pattern =~ new_alternatives
+      narrowed = Regex.compile!(String.replace(pattern, new_alternatives, ""))
+
+      assert ops_ui_path_misses(narrowed, copy_inputs) ==
+               copy_inputs -- ["scrypath_ops/lib/x.ex"]
+
+      # The same for the `assets` alternative alone: without it only the host app.js is missed.
+      assert pattern =~ "|scripts|assets)/"
+      without_assets = Regex.compile!(String.replace(pattern, "|scripts|assets)/", "|scripts)/"))
+
+      assert ops_ui_path_misses(without_assets, copy_inputs) ==
+               ["examples/scrypath_ecommerce/assets/js/app.js"]
+
+      # The table and the pattern cannot drift: every literal directory a row scans must match.
+      rows = "scrypath_ops/test/support/copy_rules.json" |> File.read!() |> Jason.decode!()
+
+      scopes =
+        for %{"id" => id, "source_scope" => globs} <- rows["rules"], glob <- globs do
+          {id, glob}
+        end
+
+      assert scopes != [], "the copy rules table has no source_scope to check"
+
+      for {id, glob} <- scopes, glob != "**" do
+        prefix = String.replace_suffix(glob, "**", "")
+
+        assert Regex.match?(regex, prefix),
+               "copy rule #{id} scans #{glob}, but the ops-ui path pattern does not match #{prefix}"
+      end
+
+      # The whole-tree scope is the one place PR-time coverage is partial: a PR that touches
+      # only a path outside the pattern (website/ or a root markdown file, say) skips ops-ui.
+      # It is still enforced on every push to main, because ops-ui-path always runs there.
+      assert Enum.any?(scopes, fn {_id, glob} -> glob == "**" end)
+      assert path_job =~ ~s(GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/main)
+    end
   end
 
   defp assert_oban_suppressions!(source, path) do
@@ -1697,8 +2254,196 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  # The one `grep -qE '<pattern>'` the ops-ui-path job greps changed paths with.
+  defp ops_ui_path_pattern(path_job) do
+    case Regex.scan(~r/grep -qE '([^']+)'/, path_job, capture: :all_but_first) do
+      [[pattern]] -> pattern
+      other -> flunk("expected one grep -qE pattern in ops-ui-path, found #{length(other)}")
+    end
+  end
+
+  # The paths the compiled pattern does not match.
+  defp ops_ui_path_misses(regex, paths), do: Enum.reject(paths, &Regex.match?(regex, &1))
+
   defp workflow_named_step_block(job_block, step_name) do
     workflow_step_block(job_block, "\n      - name: #{step_name}\n")
+  end
+
+  # CI-04: one workflow-level group per pull request that cancels a superseded run, and a group of its
+  # own (the run id) for every other event with cancellation off. Raises ExUnit.AssertionError otherwise.
+  defp assert_ci_concurrency!(yml) do
+    assert String.contains?(yml, "\n" <> @ci_concurrency),
+           "ci.yml needs the workflow-level concurrency block that cancels only pull request runs"
+
+    # Exactly one block, at the top level: a job-level group could cancel a required check on main.
+    assert length(Regex.scan(~r/^\s*concurrency:/m, yml)) == 1
+    assert length(Regex.scan(~r/cancel-in-progress:/, yml)) == 1
+    refute yml =~ ~r/^\s*cancel-in-progress: true/m
+    :ok
+  end
+
+  defp fetch_step!(job, name) do
+    marker = "\n      - name: #{name}\n"
+
+    assert String.contains?(job, marker),
+           "repository-contracts has no step named #{inspect(name)}"
+
+    workflow_step_block(job, marker)
+  end
+
+  # CI-02: the Node half starts in the background, the Mix half runs in the foreground, and a last
+  # step waits for the Node half and fails the job on its status, its TAP summary or its absence.
+  # Raises ExUnit.AssertionError for any job that drops, serializes or ignores either half.
+  defp assert_repository_contracts_concurrent!(ci) do
+    job = workflow_job_block(ci, "repository-contracts")
+    start = fetch_step!(job, @browser_start_step)
+    wait = fetch_step!(job, @browser_wait_step)
+
+    assert String.contains?(job, @contract_run_line),
+           "the Mix half (`mix verify.repository_contracts`) is missing from repository-contracts"
+
+    # Order: the Node half is already running when the Mix half starts, and is awaited after it.
+    {install_at, _} = :binary.match(job, "- name: #{@browser_install_step}\n")
+    {start_at, _} = :binary.match(job, "- name: #{@browser_start_step}\n")
+    {mix_at, _} = :binary.match(job, @contract_run_line)
+    {wait_at, _} = :binary.match(job, "- name: #{@browser_wait_step}\n")
+
+    assert install_at < start_at and start_at < mix_at and mix_at < wait_at,
+           "expected install, background start, mix verify.repository_contracts, then wait"
+
+    # Nothing in the job may soft-fail: either half failing must fail the required check.
+    refute job =~ "continue-on-error", "repository-contracts must not soft-fail any step"
+    refute wait =~ "|| true", "the wait step must not swallow a failure"
+
+    # Start: gated like the install, runs the five counted test files, records the exit status of
+    # `node --test` itself (not of tee), and detaches from the step's stdin, stdout and stderr.
+    assert start =~ @step_fail_open_if
+    assert start =~ "node --test --test-reporter=tap"
+
+    for test_file <- @browser_test_files do
+      assert start =~ test_file, "the background run must execute #{test_file}"
+    end
+
+    assert start =~ "echo \"${PIPESTATUS[0]}\" > \"$RUNNER_TEMP/browser-behavior.status\""
+    assert start =~ "> \"$RUNNER_TEMP/browser-behavior.log\" 2>&1 < /dev/null &\n"
+    assert start =~ "echo \"$!\" > \"$RUNNER_TEMP/browser-behavior.pid\""
+
+    # Wait: runs after a failed Mix half, is bounded, fails when the process vanished, fails on the
+    # Node exit status, and keeps both counted TAP greps.
+    assert wait =~ @mounted_fail_open_if
+    assert wait =~ "        timeout-minutes: 30\n"
+    assert wait =~ "kill -0 \"$pid\""
+    assert wait =~ "stopped without reporting a result"
+    assert wait =~ "never started"
+    assert wait =~ "\n          test \"$status\" = 0\n"
+    assert wait =~ "grep -Eq '^# tests [1-9][0-9]*$' \"$RUNNER_TEMP/browser-behavior.tap\""
+    assert wait =~ "grep -Eq '^# fail 0$' \"$RUNNER_TEMP/browser-behavior.tap\""
+    :ok
+  end
+
+  # A scratch RUNNER_TEMP and workspace with stub `node` and `sleep` executables on PATH. The stub
+  # node prints a TAP summary from STUB_TESTS and STUB_FAILS and exits with STUB_EXIT.
+  defp browser_halves_fixture do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-browser-halves-#{System.unique_integer([:positive])}"
+      )
+
+    bin = Path.join(root, "bin")
+    runner_temp = Path.join(root, "runner_temp")
+    work = Path.join(root, "work")
+    for dir <- [bin, runner_temp, work], do: File.mkdir_p!(dir)
+    on_exit(fn -> File.rm_rf(root) end)
+
+    stub = fn name, body ->
+      path = Path.join(bin, name)
+      File.write!(path, "#!/bin/sh\n" <> body)
+      File.chmod!(path, 0o755)
+    end
+
+    stub.("node", ~S"""
+    printf 'TAP version 13\n'
+    /bin/sleep "${STUB_NODE_SLEEP:-0}"
+    printf '# tests %s\n# fail %s\n' "${STUB_TESTS:-5}" "${STUB_FAILS:-0}"
+    exit "${STUB_EXIT:-0}"
+    """)
+
+    stub.("sleep", "exec /bin/sleep 0.1\n")
+
+    %{
+      root: root,
+      bin: bin,
+      runner_temp: runner_temp,
+      work: work,
+      status: Path.join(runner_temp, "browser-behavior.status"),
+      pid: Path.join(runner_temp, "browser-behavior.pid")
+    }
+  end
+
+  defp run_browser_script(script, fixture, stub_env) do
+    env =
+      [
+        {"PATH", fixture.bin <> ":" <> System.get_env("PATH", "")},
+        {"RUNNER_TEMP", fixture.runner_temp}
+      ] ++ Enum.map(stub_env, fn {key, value} -> {to_string(key), value} end)
+
+    System.cmd("bash", ["-e", "-c", script], cd: fixture.work, env: env, stderr_to_stdout: true)
+  end
+
+  # The `run: |` script of a step block, dedented, as bash would receive it.
+  defp workflow_step_run_script(step_block) do
+    [_before, script] = String.split(step_block, "\n        run: |\n", parts: 2)
+
+    script
+    |> String.split("\n")
+    |> Enum.map_join("\n", &String.replace_prefix(&1, "          ", ""))
+  end
+
+  # Runs a "Select browser" script in a scratch workspace whose scripts/check.mjs holds `check_source`.
+  # `google-chrome`, `node` (the launch probe) and `npx` are stubs; the stubs record what was called.
+  defp run_website_browser_selection(script, check_source) do
+    root =
+      Path.join(
+        System.tmp_dir!(),
+        "scrypath-select-browser-#{System.unique_integer([:positive])}"
+      )
+
+    bin = Path.join(root, "bin")
+    work = Path.join([root, "work", "scripts"])
+    github_env = Path.join(root, "github_env")
+    npx_log = Path.join(root, "npx.log")
+
+    File.mkdir_p!(bin)
+    File.mkdir_p!(work)
+    File.write!(Path.join(work, "check.mjs"), check_source)
+    File.write!(github_env, "")
+
+    stub = fn name, body ->
+      path = Path.join(bin, name)
+      File.write!(path, "#!/bin/sh\n" <> body)
+      File.chmod!(path, 0o755)
+    end
+
+    stub.("google-chrome", "echo 'Google Chrome 999.0.0.0'\n")
+    stub.("node", "exit 0\n")
+    stub.("npx", "echo \"$@\" >> '#{npx_log}'\n")
+
+    try do
+      {_output, 0} =
+        System.cmd("bash", ["-e", "-o", "pipefail", "-c", script],
+          cd: Path.join(root, "work"),
+          env: [{"PATH", bin <> ":" <> System.get_env("PATH", "")}, {"GITHUB_ENV", github_env}],
+          stderr_to_stdout: true
+        )
+
+      %{
+        github_env: File.read!(github_env),
+        npx_calls: if(File.exists?(npx_log), do: File.read!(npx_log), else: "")
+      }
+    after
+      File.rm_rf!(root)
+    end
   end
 
   defp workflow_step_with_uses_block(job_block, action) do
@@ -1719,6 +2464,112 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       {next_idx, _} -> binary_part(rest, 0, next_idx)
       :nomatch -> rest
     end
+  end
+
+  # The paths listed under one trigger of website.yml, in order.
+  defp website_trigger_paths(yml, trigger) do
+    [_before, rest] = String.split(yml, "\n  #{trigger}:\n", parts: 2)
+
+    block =
+      case Regex.run(~r/\n  [a-z_]+:\n|\n[a-z]+:\n/, rest, return: :index) do
+        [{idx, _}] -> binary_part(rest, 0, idx)
+        nil -> rest
+      end
+
+    ~r/^      - '([^']+)'$/m |> Regex.scan(block) |> Enum.map(fn [_match, path] -> path end)
+  end
+
+  # SITE-04 / SITE-05: the deploy safety net around the website. Every planted mutation in the test
+  # above has to trip one of these assertions.
+  defp assert_website_safety_net!(yml) do
+    build = workflow_job_block(yml, "build-and-check")
+    deploy = workflow_job_block(yml, "deploy")
+
+    for trigger <- ["pull_request", "push"] do
+      paths = website_trigger_paths(yml, trigger)
+
+      assert "brand/**" in paths,
+             "website.yml #{trigger} paths must list brand/** so a brand change rebuilds the site, got #{inspect(paths)}"
+
+      assert "website/**" in paths
+    end
+
+    assert yml =~ ~r/\n  workflow_dispatch:\n    inputs:\n      ref:\n/,
+           "website.yml needs workflow_dispatch with a ref input (the rollback)"
+
+    # The ref input reaches a checkout `ref:` and nothing else, so it can never become shell text.
+    ref_lines = yml |> String.split("\n") |> Enum.filter(&String.contains?(&1, "inputs.ref"))
+
+    assert length(ref_lines) == 2,
+           "inputs.ref must appear exactly twice (one checkout per job), got #{inspect(ref_lines)}"
+
+    assert Enum.all?(ref_lines, &(String.trim(&1) == "ref: ${{ inputs.ref }}")),
+           "inputs.ref may only be used as a checkout ref, got #{inspect(ref_lines)}"
+
+    assert build =~ "timeout-minutes: 10"
+
+    assert deploy =~ "timeout-minutes: 15",
+           "the deploy job needs a timeout: the smoke talks to a remote host, and the default is 360 minutes"
+
+    # Only a superseded pull_request run is cancelled. A push to main must never cut off a deploy that
+    # is already running, and a rollback dispatch (which also runs on main) must not share a group
+    # with pushes, or the next push would cancel it.
+    assert yml =~
+             "concurrency:\n  group: website-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'rollback' || github.ref }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "the workflow-level group cancels only superseded pull_request runs and keys a rollback separately"
+
+    refute yml =~ ~r/^  cancel-in-progress: true/m,
+           "a workflow-level cancel-in-progress: true would cancel a deploy that is already running"
+
+    # Deployment is restricted to main by the job's own condition, not by a repository setting the
+    # job never names: a dispatch from a branch with an edited copy of this file must not publish.
+    assert deploy =~ @website_deploy_if,
+           "the deploy job must run only for a push or dispatch on refs/heads/main"
+
+    assert deploy =~
+             "concurrency:\n      group: website-pages-deploy\n      cancel-in-progress: false",
+           "the deploy job needs its own non-cancelling concurrency group"
+
+    refute deploy =~ "cancel-in-progress: true"
+    refute deploy =~ "environment:"
+
+    assert workflow_named_step_block(deploy, "Deploy to GitHub Pages") =~ "id: deployment"
+
+    smoke = workflow_named_step_block(deploy, "Smoke test the deployed site")
+    assert smoke =~ "SCRYPATH_SMOKE_URL: ${{ steps.deployment.outputs.page_url }}"
+    assert smoke =~ "node website/scripts/smoke.mjs"
+
+    assert smoke =~ "curl -fsSI",
+           "a rollback to a ref without the smoke script needs the soft check"
+
+    assert smoke =~ "assets/styles.css"
+
+    assert {deploy_idx, _} = :binary.match(deploy, "name: Deploy to GitHub Pages")
+    assert {smoke_idx, _} = :binary.match(deploy, "name: Smoke test the deployed site")
+    assert deploy_idx < smoke_idx
+
+    # The runner's Chrome is only used when the checked-out ref's check script can use it (it reads
+    # SCRYPATH_BROWSER_CHANNEL) and a probe launches it; the known-good install is the fallback after
+    # that. Without the first condition a rollback to a ref whose check.mjs predates the channel
+    # support skips the install and then cannot launch any browser.
+    assert build =~ "google-chrome --version"
+    assert build =~ "SCRYPATH_BROWSER_CHANNEL=chrome"
+
+    select = workflow_named_step_block(build, @website_select_browser_step)
+
+    assert select =~ @website_channel_guard,
+           "the browser selection must take the runner Chrome only when the checked-out scripts/check.mjs supports SCRYPATH_BROWSER_CHANNEL"
+
+    {guard_idx, _} = :binary.match(select, @website_channel_guard)
+    assert {chrome_idx, _} = :binary.match(select, "google-chrome --version")
+    assert guard_idx < chrome_idx, "the channel-support guard must come before the Chrome probe"
+
+    assert {probe_idx, _} = :binary.match(build, "channel: 'chrome'")
+    assert {install_idx, _} = :binary.match(build, "npx playwright install --with-deps chromium")
+    assert probe_idx < install_idx
+
+    refute build =~ "pages: write"
+    refute build =~ "id-token: write"
   end
 
   defp assert_action_pin!(workflow, action, sha, version) do
