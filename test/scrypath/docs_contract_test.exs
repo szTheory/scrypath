@@ -93,6 +93,19 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@per_query_tuning_pipeline, "## Telemetry catalog")
   end
 
+  test "per-query tuning pipeline guide names every :per_query key and claims no unmodeled one" do
+    for key <- Scrypath.Options.per_query_allowlist() do
+      assert String.contains?(@per_query_tuning_pipeline, "`#{key}`"),
+             "guide does not name the :per_query key #{key}"
+    end
+
+    refute String.contains?(@per_query_tuning_pipeline, "retrieve / highlight / crop"),
+           "guide must not claim highlight or crop are modeled while :per_query rejects them"
+
+    assert {:error, _} = Scrypath.Options.validate_per_query_map(%{highlight: true})
+    assert {:error, _} = Scrypath.Options.validate_per_query_map(%{crop: true})
+  end
+
   test "published markdown avoids internal planning and task artifact strings" do
     patterns = [
       {~r/\bFACET-\d{2}\b/, "FACET-NN requirement-style IDs"},

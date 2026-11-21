@@ -180,6 +180,8 @@ A recorded maintainer decision (an ADR, `OWNER-INTENT`, a roadmap line the maint
 
 ## UI work
 
+Until the catalog's first screen story ships (v1.49 Phase 197), the retained preview on port 4002 is the mounted-behavior and review surface. After that, the catalog runs on 127.0.0.1:4003 with its own block in `UI-PREVIEW.json`, and UI review moves to it while 4002 stays the mounted-behavior surface.
+
 For the retained maintainer preview, read `.planning/UI-PREVIEW.json` first and use its named checkout. Verify the container bind mount, URL, branch, and inclusion of current `main` before editing or collecting UI evidence. Never assume the shell's starting checkout is the running app. Preserve pending local work and reconcile it explicitly before changing worktrees. The UI capture command rejects a mismatched preview source/port or omitted merged-main baseline.
 
 Run `npm run ui:preflight` from that checkout's demo directory before editing or restarting its preview. It reads source/branch/dirty-work and Docker provenance without launching a browser or writing artifacts, and rejects a stale local main ref by comparing it with remote main. Refresh and reconcile main when it refuses; if the remote cannot be verified, do not claim the preview is latest. Keep review evidence in `ui-review-artifacts/`, outside Playwright cleanup, and preserve existing preview data with the documented seed-disabled Compose override.

@@ -61,7 +61,7 @@ Ordered stages describe responsibility boundaries; exact function names may evol
 - **`showRankingScore`** — Surfaces ranking-related score fields in the response when the engine supports it.
 - **`showRankingScoreDetails`** — Treat as **debug / tuning** only: richer response shape and higher cost; enable deliberately in non-production or bounded dashboards.
 
-Also anchor **existing** first-class options Scrypath already models (`filter`, `sort`, `facets`, pagination, retrieve / highlight / crop, etc.) as participating in the same validate → merge → project → dispatch story.
+Also anchor **existing** first-class options Scrypath already models (`filter`, `sort`, `facets`, pagination, and similar) as participating in the same validate → merge → project → dispatch story. The `:per_query` allowlist today holds exactly three keys: `ranking_score_threshold`, `show_ranking_score` and `show_ranking_score_details`. Highlight and crop are **not** modeled yet and are not accepted by `:per_query`.
 
 **Deferred (documented rationale):**
 
