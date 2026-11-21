@@ -37,6 +37,7 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @mailbox_test "scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs"
   @dev_router "scrypath_ops/lib/scrypath_ops_web/dev_router.ex"
   @catalog_routes_source "scrypath_ops/lib/scrypath_ops_web/optional_catalog_routes.ex"
+  @boundary_script "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
   @telemetry_source "scrypath_ops/lib/scrypath_ops_web/telemetry.ex"
   @application_source "scrypath_ops/lib/scrypath_ops/application.ex"
   @endpoint_source "scrypath_ops/lib/scrypath_ops_web/endpoint.ex"
@@ -730,6 +731,33 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
              "#{@dev_router}: the router must not name the storybook itself; only the guarded macro does"
     end
 
+    test "the Docker boundary script forbids the catalog in prod and host graphs and requires a 404" do
+      script = File.read!(@boundary_script)
+
+      assert storybook_script_violations(script) == []
+
+      {output, status} = System.cmd("bash", ["-n", @boundary_script], stderr_to_stdout: true)
+      assert status == 0, "#{@boundary_script} has a shell syntax error: #{output}"
+
+      # Planted: each edit below removes one thing the script must prove, so each must be reported.
+      mutants = [
+        {~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"),
+         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex)},
+        {~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
+         ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller phoenix_storybook mdex mdex_native")},
+        {", PhoenixStorybook, MDEx]", ", PhoenixStorybook]"},
+        {~s("host|$base_url" "ops|$ops_base_url"), ~s("host|$base_url")}
+      ]
+
+      for {from, to} <- mutants do
+        mutated = String.replace(script, from, to)
+        assert mutated != script, "planted edit found nothing to change: #{from}"
+
+        assert storybook_script_violations(mutated) != [],
+               "the script check accepted a planted edit: #{from} -> #{to}"
+      end
+    end
+
     test "catalog flag is off whenever the test endpoint is not loopback" do
       test_unset = read_catalog_bind!("scrypath_ops/config/test.exs", :test, nil)
       test_served = read_catalog_bind!("scrypath_ops/config/test.exs", :test, "true")
@@ -843,6 +871,39 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       end)
 
     if changes == 0, do: flunk("mutation #{mutation} found nothing to change"), else: mutated
+  end
+
+  # Text-level check of the Docker verify script, the cheap local mirror of the 15 to 20 minute
+  # ecommerce-mounted lane. The catalog names are forbidden for the prod image and for the host project in
+  # both images; in the test image Ops legitimately has them, so they must not join the shared list.
+  defp storybook_script_violations(script) do
+    shared = ~r/^\s*forbidden_deps="([^"$]*)"$/m
+
+    conditional =
+      ~r/if \[\[ "\$environment" == "prod" \|\| "\$project_dir" == "\/app\/examples\/scrypath_ecommerce" \]\]; then\n\s*forbidden_deps="\$forbidden_deps phoenix_storybook mdex mdex_native"\n\s*fi/
+
+    modules = ~r/^\s*forbidden_modules = \[([^\]]*)\]$/m
+
+    [
+      {not Regex.match?(conditional, script),
+       "the prod-or-host condition must add phoenix_storybook mdex mdex_native to the forbidden dependencies"},
+      {not (script =~ "for forbidden_dep in $forbidden_deps; do"),
+       "the dependency loop must iterate the env-aware forbidden_deps list"},
+      {case Regex.run(shared, script) do
+         [_, names] -> names =~ ~r/phoenix_storybook|mdex/
+         nil -> true
+       end, "the shared forbidden list must exist and must not contain the catalog dependencies"},
+      {case Regex.run(modules, script) do
+         [_, names] -> not (names =~ "PhoenixStorybook" and names =~ "MDEx")
+         nil -> true
+       end, "the runtime probe must forbid the PhoenixStorybook and MDEx modules"},
+      {not (script =~ ~s(for catalog_target in "host|$base_url" "ops|$ops_base_url"; do)),
+       "the /storybook 404 probe must cover both the host and standalone Ops"},
+      {not (script =~ ~s([[ "$catalog_status" == "404" ]])),
+       "the /storybook probe must require HTTP 404"}
+    ]
+    |> Enum.filter(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
   end
 
   defp catalog_bind_violation({ip, flag}) do

@@ -6,6 +6,13 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
   @diagnostic_apps [:phoenix_live_dashboard, :telemetry_metrics, :telemetry_poller]
   @asset_apps [:esbuild, :tailwind]
+  # The component catalog is a dev and test dependency of Ops: no consumer graph and no production build may carry it.
+  @storybook_apps [:phoenix_storybook, :mdex, :mdex_native]
+  @storybook_modules [
+    Module.concat(["PhoenixStorybook"]),
+    Module.concat(["MDEx"]),
+    Module.concat(["ScrypathOps", "Catalog", "Storybook"])
+  ]
   @absent_modules [
     Module.concat(["Sigra", "Audit"]),
     Module.concat(["Phoenix", "LiveDashboard"]),
@@ -14,7 +21,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     :telemetry_poller,
     Module.concat(["Esbuild"]),
     Module.concat(["Tailwind"]),
-    Module.concat(["ScrypathOpsWeb", "Telemetry"])
+    Module.concat(["ScrypathOpsWeb", "Telemetry"]),
+    Module.concat(["PhoenixStorybook"]),
+    Module.concat(["MDEx"]),
+    Module.concat(["ScrypathOps", "Catalog", "Storybook"])
   ]
 
   setup_all do
@@ -394,6 +404,10 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
 
         for module <- @forbidden_modules, do: assert!(:code.which(module) == :non_existing, "#{inspect(module)} has a code path in mounted graph")
 
+        routes = Enum.map(ScrypathOpsWeb.DevRouter.__routes__(), & &1.path)
+        assert!(routes != [], "DevRouter exposed no routes in the mounted #{Mix.env()} graph")
+        assert!(Enum.filter(routes, &String.starts_with?(&1, "/storybook")) == [], "/storybook route present in the mounted #{Mix.env()} graph")
+
         {:ok, _} = Application.ensure_all_started(:scrypath_ops)
         assert_absent_runtime_apps!(@forbidden_apps)
         children = Supervisor.which_children(ScrypathOps.Supervisor) |> Enum.map(fn {_, _, _, modules} -> List.first(modules) end)
@@ -518,7 +532,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     """
     |> String.replace(
       "__FORBIDDEN_APPS__",
-      inspect([:sigra | @diagnostic_apps ++ @asset_apps] -- present_apps)
+      inspect([:sigra | @diagnostic_apps ++ @asset_apps ++ @storybook_apps] -- present_apps)
     )
     |> String.replace("__ABSENT_MODULES__", inspect(@absent_modules -- present_modules))
     |> String.replace("__PRESENT_MODULES__", inspect(present_modules))
@@ -531,6 +545,7 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
       @asset_apps __ASSET_APPS__
       @diagnostic_modules [Module.concat(["Phoenix", "LiveDashboard"]), Module.concat(["Phoenix", "LiveDashboard", "RequestLogger"]), Module.concat(["Telemetry", "Metrics"]), :telemetry_poller, Module.concat(["ScrypathOpsWeb", "Telemetry"])]
       @asset_modules [Module.concat(["Esbuild"]), Module.concat(["Tailwind"])]
+      @storybook_modules __STORYBOOK_MODULES__
 
       defmodule Post do
         use Ecto.Schema
@@ -575,6 +590,17 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
           assert!(listed? == expected?, "#{app} .app requirement mismatch in #{env}: #{inspect({applications, optional_applications})}")
         end
         assert!((ScrypathOpsWeb.Telemetry in modules) == dev?, "diagnostics module compilation mismatch in #{env}")
+
+        # The catalog exists exactly in dev and test: the dependency, its backend module and its route.
+        storybook? = env in ["dev", "test"]
+        for module <- @storybook_modules do
+          assert!(module_available?(module) == storybook?, "#{inspect(module)} availability did not match #{env}")
+        end
+        assert!((:phoenix_storybook in applications) == storybook?, ":phoenix_storybook .app requirement mismatch in #{env}: #{inspect(applications)}")
+        routes = Enum.map(ScrypathOpsWeb.DevRouter.__routes__(), & &1.path)
+        storybook_routes = Enum.filter(routes, &String.starts_with?(&1, "/storybook"))
+        assert!(routes != [], "DevRouter exposed no routes in #{env}")
+        assert!((storybook_routes != []) == storybook?, "/storybook route presence did not match #{env}: #{inspect(storybook_routes)}")
 
         standalone? = env in ["test", "prod"]
         Application.put_env(:scrypath_ops, :standalone, standalone?)
@@ -688,5 +714,6 @@ defmodule Scrypath.Release.OpsDependencyBoundaryTest do
     """
     |> String.replace("__DIAGNOSTIC_APPS__", inspect(@diagnostic_apps))
     |> String.replace("__ASSET_APPS__", inspect(@asset_apps))
+    |> String.replace("__STORYBOOK_MODULES__", inspect(@storybook_modules))
   end
 end

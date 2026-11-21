@@ -132,6 +132,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
     refute "playwright-report" in package_files
     refute "test-results" in package_files
     refute "dev" in package_files
+    refute "fixtures" in package_files
+    refute "storybook" in package_files
   end
 
   test "every root docs file is covered by the package allowlist" do
