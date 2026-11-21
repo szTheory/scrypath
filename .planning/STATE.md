@@ -88,7 +88,7 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 Last session: 2026-11-20
 Stopped at: Phase 192 complete, ready to plan Phase 193
-Acting next: ship the Phase 192 PR (squash-merge on green required checks), then `/gsd-autonomous --only 193`. The Hex 0.3.20 release PR waits for the maintainer's explicit yes.
+Acting next: `/gsd-autonomous --only 193`. Phase 192 shipped as PR #160, and Hex 0.3.20 (docs-only, no library changes) was published on 2026-11-21 with the maintainer's go-ahead after green CI.
 
 ## Operator Next Steps
 
