@@ -3,7 +3,7 @@ defmodule Scrypath.BackfillContractDocsTest do
   # Not tagged :docs_contract on purpose, so drift fails the default `mix test`.
   use ExUnit.Case, async: true
 
-  @readme "README.md"
+  @drift_guide "guides/drift-recovery.md"
   @sync_modes_guide "guides/sync-modes-and-visibility.md"
   @related_data_guide "guides/related-data-and-reindexing.md"
   @contributing "CONTRIBUTING.md"
@@ -42,8 +42,9 @@ defmodule Scrypath.BackfillContractDocsTest do
     refute backfill_doc() =~ "prepare_records"
   end
 
-  test "README lists the reindex omission count" do
-    assert File.read!(@readme) =~ "result.omitted"
+  test "drift guide lists the reindex omission count" do
+    # Moved from the README (Phase 192 trim; owner map row reindex-result). The key name is kept.
+    assert File.read!(@drift_guide) =~ "result.omitted"
   end
 
   test "sync-modes guide states backfill removal, reindex omission and the scope limit" do

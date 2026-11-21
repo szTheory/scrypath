@@ -344,9 +344,9 @@ defmodule Scrypath.DocsContractTest do
 
   test "support/readiness authority stays discoverable and verify.adopter parity stays explicit" do
     # Route half: the README links the support guide (HexDocs or relative form). The task half
-    # (`mix verify.adopter` on the README) stays until Task 3 moves it to the shipped-docs invariant.
+    # (`mix verify.adopter` on the README) is covered by the shipped-docs invariant, which forbids an
+    # unqualified README mention (test/release/shipped_docs_contract_test.exs); CONTRIBUTING's half stays.
     assert ShippedDocs.links_to_guide?(@readme, "support-and-compatibility")
-    assert_contains_all(@readme, ["mix verify.adopter"])
 
     assert_contains_all(@contributing, [
       "guides/support-and-compatibility.md",
@@ -470,10 +470,9 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(File.read!("mix.exs"), "\"verify.phase91\": :test")
   end
 
-  test "README opens with installation and first-hour path before the route map" do
+  test "README opens with installation before the quick path" do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
-    assert ordered?(@readme, "## Installation", "## Choose a route")
-    assert ordered?(@readme, "## Choose a route", "## Quick Path")
+    assert ordered?(@readme, "## Installation", "## Quick Path")
     assert @readme =~ ~S|{:scrypath, "~> 0.3"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
@@ -482,9 +481,11 @@ defmodule Scrypath.DocsContractTest do
       "## Quick Path",
       "Scrypath owns its internal transport dependency",
       "Add Oban only when you choose",
-      "field :status, :string",
-      "guides/golden-path.md"
+      "field :status, :string"
     ])
+
+    # Route claim: the README links the golden path in either link form (owner map row quick-path).
+    assert ShippedDocs.links_to_guide?(@readme, "golden-path")
   end
 
   test "phase 35 readme and sync guide share operator lifecycle chain" do
@@ -535,13 +536,26 @@ defmodule Scrypath.DocsContractTest do
 
     assert_contains_all(@readme, [
       "**Start here:**",
-      "guides/golden-path.md",
       "## Versioning and upgrades",
-      "mix verify.phase11",
-      "docs/releasing.md",
-      "Choose **`:inline`**",
-      "guides/sync-modes-and-visibility.md"
+      "Choose **`:inline`**"
     ])
+
+    # Route claims move to the link helper, which accepts the relative and HexDocs forms.
+    assert ShippedDocs.links_to_guide?(@readme, "golden-path")
+    assert ShippedDocs.links_to_guide?(@readme, "sync-modes-and-visibility")
+
+    # `mix verify.phase11` left the README: its owner is CONTRIBUTING's canonical verification
+    # matrix (owner map row packaged-artifact-gate). CONTRIBUTING also names docs/releasing.md,
+    # which owns the verify matrix, Release Please flow and publish checks.
+    matrix = h2_section(@contributing, "## Canonical verification commands")
+
+    row =
+      matrix |> String.split("\n") |> Enum.find(&String.contains?(&1, "Package/release contract"))
+
+    assert row, "CONTRIBUTING's verification matrix has no Package/release contract row"
+    assert String.contains?(row, "mix verify.phase11")
+    assert_contains_all(@contributing, ["docs/releasing.md"])
+    assert File.regular?("docs/releasing.md")
 
     assert ordered?(@readme, "## Sync modes", "## Search")
     assert ordered?(@readme, "## Versioning and upgrades", "## Search")
@@ -760,14 +774,11 @@ defmodule Scrypath.DocsContractTest do
     refute File.regular?("scripts/smoke.sh")
   end
 
-  test "README and CONTRIBUTING document example smoke cwd (Phase 33)" do
-    assert String.contains?(@readme, "cd examples/phoenix_meilisearch") or
-             String.contains?(@readme, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
-
+  test "CONTRIBUTING documents example smoke cwd (Phase 33)" do
+    # README half dropped (Phase 192): the README no longer carries the integration smoke section.
+    # Owner map row integration-smoke: CONTRIBUTING here, and the golden path pins ./scripts/smoke.sh.
     assert String.contains?(@contributing, "cd examples/phoenix_meilisearch") or
              String.contains?(@contributing, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
-
-    assert ordered?(@readme, "cd examples/phoenix_meilisearch", "./scripts/smoke.sh")
 
     assert ordered?(
              @contributing,
@@ -894,7 +905,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "README routes sync semantics to the canonical guide" do
-    assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
+    assert ShippedDocs.links_to_guide?(@readme, "sync-modes-and-visibility")
     assert Regex.match?(~r/exact return contract, lifecycle, and recovery guidance/i, @readme)
   end
 
@@ -931,10 +942,6 @@ defmodule Scrypath.DocsContractTest do
     [_head, job_tail] = String.split(@ci_workflow, "phoenix-example:", parts: 2)
     job_head = String.slice(job_tail, 0, 4000)
     assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
-  end
-
-  test "README surfaces canonical ops verification for optional scrypath_ops (Phase 53)" do
-    assert String.contains?(@readme, "mix verify.ops_ui")
   end
 
   test "CONTRIBUTING documents scrypath_ops saved searches validate for fixture directories (Phase 64)" do
@@ -1272,17 +1279,13 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "operator docs keep tasks thin and Meilisearch-native power namespaced" do
-    assert_contains_all(@readme, [
-      "mix scrypath.status",
-      "mix scrypath.failed",
-      "mix scrypath.retry",
-      "mix scrypath.reconcile",
-      "They do not create a second operator product surface."
-    ])
-
+    # README half retired (Phase 192 trim; owner map row public-surface): ARCHITECTURE carries the
+    # thin-wrapper claim and now also names the two wrapper tasks the README half used to demand.
     assert_contains_all(@architecture, [
       "Thin **`mix scrypath.*` wrappers** delegate to those same root APIs without creating a second operator product surface.",
       "mix scrypath.status",
+      "mix scrypath.failed",
+      "mix scrypath.retry",
       "mix scrypath.reconcile"
     ])
 
@@ -1456,6 +1459,12 @@ defmodule Scrypath.DocsContractTest do
     Regex.scan(~r/```elixir\n(.*?)```/ms, markdown, capture: :all_but_first)
     |> List.flatten()
     |> Enum.map(&String.trim/1)
+  end
+
+  # Text between a level-2 heading and the next level-2 heading.
+  defp h2_section(text, heading) do
+    [_before, rest] = String.split(text, "\n" <> heading <> "\n", parts: 2)
+    rest |> String.split(~r/^## /m, parts: 2) |> hd()
   end
 
   defp assert_docs_extras(paths) do
