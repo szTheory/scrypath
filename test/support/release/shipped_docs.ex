@@ -135,6 +135,12 @@ defmodule Scrypath.Release.ShippedDocs do
     |> Enum.sort()
   end
 
+  @doc "Sorted paths of the task source files the derivation reads (the repo-only globs)."
+  @spec task_source_files() :: [Path.t()]
+  def task_source_files do
+    @task_source_globs |> Enum.flat_map(&Path.wildcard/1) |> Enum.uniq() |> Enum.sort()
+  end
+
   defp task_names(glob) do
     glob
     |> Path.wildcard()

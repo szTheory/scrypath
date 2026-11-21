@@ -39,10 +39,55 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
          %{names: names} do
       assert Enum.all?(names, &is_binary/1)
       assert length(names) >= 50, "the repo-only derivation went vacuous: #{length(names)} names"
-      assert "verify.adopter" in names
-      assert "scrypath_ops.saved_searches.validate" in names
       refute "scrypath.status" in names
       assert names == names |> Enum.uniq() |> Enum.sort()
+
+      # One name per task source glob, so losing any one of them fails here and not only in the
+      # floor above.
+      assert "verify.adopter" in names, "dev/mix/tasks no longer yields names"
+      assert "brand.update" in names, "dev/mix/tasks no longer yields a nested task name"
+
+      assert "scrypath_ops.saved_searches.validate" in names,
+             "scrypath_ops/lib/mix/tasks no longer yields names"
+
+      assert "scrypath.seed" in names, "examples/*/lib/mix/tasks no longer yields names"
+      assert "e2e.prepare_search" in names, "examples/*/lib/mix/tasks no longer yields names"
+    end
+
+    test "every Mix task source outside lib/ and test/ is read by the derivation" do
+      {listing, 0} =
+        System.cmd("git", [
+          "grep",
+          "-lF",
+          "--untracked",
+          "defmodule Mix.Tasks.",
+          "--",
+          "*.ex",
+          "*.exs"
+        ])
+
+      defined = String.split(listing, "\n", trim: true)
+
+      assert Enum.any?(defined, &String.starts_with?(&1, "dev/mix/tasks/")),
+             "the Mix task source search went vacuous: #{length(defined)} files"
+
+      assert unread_task_sources(defined, ShippedDocs.task_source_files()) == [],
+             "a Mix task is defined outside the trees the repo-only derivation reads; " <>
+               "add its glob to @task_source_globs in test/support/release/shipped_docs.ex"
+    end
+
+    test "an unread task tree is reported and the read ones, lib/ and test/ are not" do
+      read = ["dev/mix/tasks/verify.ex", "examples/a/lib/mix/tasks/a.seed.ex"]
+
+      defined =
+        read ++
+          [
+            "lib/mix/tasks/scrypath.status.ex",
+            "test/mix/tasks/some_test.exs",
+            "examples/b/lib/mix/tasks/b.seed.ex"
+          ]
+
+      assert unread_task_sources(defined, read) == ["examples/b/lib/mix/tasks/b.seed.ex"]
     end
 
     test "the shipped file set is expanded from mix.exs package files and is not empty",
@@ -136,6 +181,12 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
       refute Regex.match?(~r/0\.3\.17\s+still\s+contains/, section),
              "the contract still carries the stale published-0.3.17 claim"
     end
+  end
+
+  # Task definitions the derivation does not read. `lib/` is the shipped tree and `test/` holds
+  # fixtures that name a task module inside a string.
+  defp unread_task_sources(defined, read) do
+    Enum.reject(defined, &(String.starts_with?(&1, ["lib/", "test/"]) or &1 in read))
   end
 
   # Units of `text` that name the adopter proof task (any form the scanner recognises).
