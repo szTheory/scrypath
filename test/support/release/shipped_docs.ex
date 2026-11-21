@@ -73,10 +73,12 @@ defmodule Scrypath.Release.ShippedDocs do
 
   # Sentence boundary, kept as data: a `.`, `!` or `?` (plus any closing quote, bracket or
   # emphasis marks), then whitespace (a newline counts), then a character that can start a
-  # sentence. Matched on text where code spans and link targets are masked, so a task name in
-  # backticks or a link target never splits a sentence. Over-splitting (after an abbreviation,
-  # say) only makes the check stricter, never a false pass: each half is judged on its own.
-  @sentence_boundary ~r/([.!?][)\]"'*_]*)\s+(?=[A-Z0-9`*_\[("'“‘])/u
+  # sentence (a blockquote marker `>` counts, so a quoted line is its own sentence). Matched on
+  # text where code spans and link targets are masked, so a task name in backticks or a link
+  # target never splits a sentence. Over-splitting (after an abbreviation, say) only makes the
+  # check stricter, never a false pass: each half is judged on its own. Under-splitting is the
+  # laxer direction, so a new way to start a sentence belongs in this class.
+  @sentence_boundary ~r/([.!?][)\]"'*_]*)\s+(?=[A-Z0-9`*_\[("'“‘>])/u
 
   # The qualifier, kept as data: all three must match inside one unit. The phrases allow a
   # line wrap between the two words.

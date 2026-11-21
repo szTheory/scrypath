@@ -200,6 +200,20 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
       assert ShippedDocs.scan([{@guide, one_sentence}], names) == []
     end
 
+    test "a qualifier in a sibling blockquote sentence does not qualify the mention",
+         %{names: names} do
+      sibling =
+        "> Run `mix verify.adopter`.\n" <>
+          "> It runs from a source checkout and is not in the Hex package.\n"
+
+      assert [{@guide, 1, "verify.adopter"}] = ShippedDocs.scan([{@guide, sibling}], names)
+
+      one_sentence =
+        "> Run `mix verify.adopter`; it runs from a source checkout and is not in the Hex package.\n"
+
+      assert ShippedDocs.scan([{@guide, one_sentence}], names) == []
+    end
+
     test "prose use of the word verify is not a mention", %{names: names} do
       prose = "Settings verify skipped is a temporary flag. We verify the result by hand.\n"
 
