@@ -35,7 +35,7 @@ docker compose up -d
 
 Set **`SCRYPATH_MEILISEARCH_URL`** to your Meilisearch base URL if it is not the default (for example `export SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`).
 
-For a full Phoenix + Postgres smoke (fixtures, scripted test), follow [examples/phoenix_meilisearch/README.md](../examples/phoenix_meilisearch/README.md) (repository path `examples/phoenix_meilisearch/README.md`).
+For a full Phoenix + Postgres smoke (fixtures, scripted test), follow [examples/phoenix_meilisearch/README.md](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) (repository path `examples/phoenix_meilisearch/README.md`).
 
 For where Meilisearch fits in production (networking, keys, backups vs rebuilding from Postgres), read [Meilisearch operations for Scrypath adopters](meilisearch-operations.md).
 
@@ -155,7 +155,7 @@ For controllers, JSON APIs, and LiveView that call the same context boundary, co
 
 The golden path stays **inline** on purpose. To **run** the multi-container example (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
 
-- **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
+- **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md)
 - **CI:** On **pull requests** and pushes to **`main`**, **GitHub Actions** runs advisory job **`phoenix-example`**, which starts **Postgres 16** (`postgres:16-alpine`) and **Meilisearch** (`getmeili/meilisearch:v1.15`) as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs **`mix verify.phoenix_example`**. That root command is a maintainer task that runs from a source checkout and is not in the Hex package; it executes the same consumer-shaped **`mix deps.get && mix test`** path under `examples/phoenix_meilisearch`. For the complete capability matrix, see root [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 ## Ecto without Phoenix (API-only)
