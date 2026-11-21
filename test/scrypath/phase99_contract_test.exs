@@ -2,6 +2,8 @@ defmodule Scrypath.Phase99ContractTest do
   use ExUnit.Case, async: true
   @moduletag :phase99_contract
 
+  alias Scrypath.Release.ShippedDocs
+
   @readme File.read!("README.md")
   @contributing File.read!("CONTRIBUTING.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
@@ -18,11 +20,11 @@ defmodule Scrypath.Phase99ContractTest do
 
   describe "TEST-01 docs contract anchors" do
     test "high-risk surfaces keep canonical install/support/proof wayfinding tokens" do
+      # The README's task tokens are retired: the shipped-docs invariant
+      # (test/release/shipped_docs_contract_test.exs) forbids an unqualified README mention.
       assert_contains_all(@readme, [
         "guides/support-and-compatibility.md",
-        "guides/outside-adopter-intake.md",
-        "mix verify.adopter",
-        "mix verify.adopter --live"
+        "guides/outside-adopter-intake.md"
       ])
 
       assert_contains_all(@contributing, [
@@ -32,16 +34,20 @@ defmodule Scrypath.Phase99ContractTest do
         "mix verify.adopter --live"
       ])
 
+      # Stronger than the old substrings: each guide must name the task AND say it is a
+      # source-checkout task. Companion: test/release/shipped_docs_contract_test.exs.
+      assert_qualified_adopter_mention(@support_guide, "guides/support-and-compatibility.md")
+
       assert_contains_all(@support_guide, [
-        "mix verify.adopter",
         "mix verify.adopter --live",
         "examples/phoenix_meilisearch/README.md"
       ])
 
+      assert_qualified_adopter_mention(@intake_guide, "guides/outside-adopter-intake.md")
+
       assert_contains_all(@intake_guide, [
         "README.md",
         "guides/support-and-compatibility.md",
-        "mix verify.adopter",
         "mix verify.adopter --live"
       ])
 
@@ -277,6 +283,22 @@ defmodule Scrypath.Phase99ContractTest do
   end
 
   defp normalize_tuple_pair([left, right]), do: normalize_tuple_pair({left, right})
+
+  # Names the adopter proof task in at least one unit, and every such unit carries the
+  # source-checkout qualifier (the same unit rule the shipped-docs invariant enforces).
+  defp assert_qualified_adopter_mention(text, doc) do
+    units =
+      text
+      |> ShippedDocs.units()
+      |> Enum.filter(&("verify.adopter" in ShippedDocs.mentions(&1.text, ["verify.adopter"])))
+
+    refute units == [], "#{doc} no longer names mix verify.adopter"
+
+    for unit <- units do
+      assert ShippedDocs.unit_qualified?(unit),
+             "#{doc}:#{unit.line} names mix verify.adopter without the source-checkout qualifier"
+    end
+  end
 
   defp assert_contains_all(content, snippets) do
     Enum.each(snippets, fn snippet ->

@@ -4,14 +4,19 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
   # only (no network, no docs build).
   #
   # This file proves the scanner can fail and can pass, using in-memory strings only. It never
-  # edits a shipped file to prove a check. The real-file zero assertion is added in a later
-  # plan, in the same commit as the contract text edit.
+  # edits a shipped file to prove a check. It also holds the real-file zero assertion and the
+  # agreement test between the PROJECT.md Canonical Adopter Contract and this invariant: the
+  # two change in the same commit (TRUTH-02), and this file is where they cannot drift apart.
   use ExUnit.Case, async: true
 
   alias Scrypath.Release.ShippedDocs
 
   @guide "guides/planted.md"
   @unqualified_bullet "- Run `mix verify.adopter` before you ship."
+
+  @project_file ".planning/PROJECT.md"
+  @contract_heading "\n## Canonical Adopter Contract\n"
+  @owner_docs ~w(guides/support-and-compatibility.md guides/outside-adopter-intake.md docs/operator-support.md)
 
   setup_all do
     %{names: ShippedDocs.repo_only_tasks(), files: ShippedDocs.shipped_files()}
@@ -59,15 +64,84 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
                "#{path} has no recorded revisit trigger"
       end
     end
+  end
 
-    test "every violation names a shipped path and a derived repo-only name",
-         %{names: names, files: files} do
-      for {path, line, name} <- ShippedDocs.violations() do
-        assert path in files
-        assert is_integer(line) and line >= 1
-        assert name in names
+  describe "the real shipped files" do
+    test "no Hex-shipped file names a repo-only task outside a qualified block" do
+      violations = ShippedDocs.violations()
+
+      listing =
+        Enum.map_join(violations, "\n", fn {path, line, name} -> "  #{path}:#{line} #{name}" end)
+
+      assert violations == [], """
+      #{length(violations)} Hex-shipped mention(s) of a repo-only task sit outside a qualified unit:
+      #{listing}
+      Fix: add the source-checkout qualifier in the same sentence or list item, for example
+      #{ShippedDocs.qualifier_example()}, or move the text to CONTRIBUTING.md or docs/releasing.md.
+      """
+    end
+
+    test "owner docs name the adopter proof spine only with the source-checkout qualifier",
+         %{names: names} do
+      for path <- @owner_docs do
+        units = adopter_units(File.read!(path), names)
+
+        assert units != [],
+               "#{path} no longer names mix verify.adopter, so it stopped documenting the fast/live split"
+
+        for unit <- units do
+          assert ShippedDocs.unit_qualified?(unit),
+                 "#{path}:#{unit.line} names mix verify.adopter without saying it runs from a source checkout and is not in the Hex package"
+        end
       end
     end
+  end
+
+  describe "the Canonical Adopter Contract in PROJECT.md" do
+    test "states the same rule the invariant enforces", %{names: names} do
+      section = contract_section()
+
+      assert String.trim(section) != "", "the Canonical Adopter Contract section is empty"
+
+      mentioning = adopter_units(section, names)
+
+      assert mentioning != [],
+             "the Canonical Adopter Contract no longer names mix verify.adopter"
+
+      for unit <- mentioning do
+        assert ShippedDocs.unit_qualified?(unit),
+               "the contract unit starting at section line #{unit.line} names mix verify.adopter without the source-checkout qualifier"
+      end
+
+      for path <- ShippedDocs.allowlist() ++ Map.keys(ShippedDocs.exempt()) do
+        assert String.contains?(section, path),
+               "the contract does not name #{path}, which the invariant allowlists or exempts"
+      end
+
+      assert String.contains?(section, "test/release/shipped_docs_contract_test.exs"),
+             "the contract does not name the test that enforces it"
+
+      refute Regex.match?(~r/0\.3\.17\s+still\s+contains/, section),
+             "the contract still carries the stale published-0.3.17 claim"
+    end
+  end
+
+  # Units of `text` that name the adopter proof task (any form the scanner recognises).
+  defp adopter_units(text, names) do
+    text
+    |> ShippedDocs.units()
+    |> Enum.filter(fn unit -> "verify.adopter" in ShippedDocs.mentions(unit.text, names) end)
+  end
+
+  # Text between the Canonical Adopter Contract heading and the next level-2 heading.
+  defp contract_section do
+    project = File.read!(@project_file)
+
+    assert [_before, rest] = String.split(project, @contract_heading),
+           "#{@project_file} must carry exactly one Canonical Adopter Contract heading"
+
+    [section | _] = String.split(rest, ~r/^## /m, parts: 2)
+    section
   end
 
   describe "mix.exs scope" do

@@ -151,7 +151,9 @@ The CONTEXT list ("five files, README line 31 qualified") understated the surfac
 
 ## Fate log
 
-One row per pin. Columns: pin, type, fate, owner of the intent afterwards, replaced by, plan, commit. The commit column is filled as each plan lands (no amend). Plan 01 edits no pin: every row below is either `stays` or owned by a later plan.
+One row per pin. Columns: pin, type, fate, owner of the intent afterwards, replaced by, plan, commit. The commit column is filled as each plan lands (no amend). Plan 01 edited no pin: every row was `stays` or owned by a later plan. Plan 02 Task 1 rewrote the Table B task pins and the PROJECT.md contract text in one commit (rows B1, B2, B4 to B8 and D below).
+
+The `--live` substring pins in B5, B7 and B8 are kept (the plan said to replace the task tokens; the live-flag demand is a separate claim that the fast/live split is documented, so dropping it would have weakened the pin). Only the bare `mix verify.adopter` substring became the qualified-mention assertion. `assert_qualified_adopter_mention/2` is a small private helper in each of the three pin files; it uses the same `ShippedDocs.units/1`, `mentions/2` and `unit_qualified?/1` the invariant uses.
 
 | Pin | Type | Fate | Owner of the intent afterwards | Replaced by | Plan | Commit |
 |-----|------|------|--------------------------------|-------------|------|--------|
@@ -166,14 +168,14 @@ One row per pin. Columns: pin, type, fate, owner of the intent afterwards, repla
 | A9 package_contents_test.exs:253-297 | wiring | stays | package contents test | unchanged; the invariant generalizes it | - | |
 | A10 CONTRIBUTING halves (phase98, phase99, readiness) | claim | stays (allowlisted) | CONTRIBUTING | unchanged | - | |
 | A11 CONTRIBUTING task rows (docs_contract) | claim | stays (allowlisted) | CONTRIBUTING | unchanged | - | |
-| B1 readiness_contract_test.exs:41 | claim | rewrite | support guide | qualified-mention assertion via `ShippedDocs` | 02 | |
-| B2 readiness_contract_test.exs:64-65 | claim | replace by invariant | CONTRIBUTING (A10) | `shipped_docs_contract_test.exs` | 02 | |
+| B1 readiness_contract_test.exs:41 | claim | rewritten, stronger | support guide | `assert_qualified_adopter_mention/2` in "support guide states the defended branch-tip readiness contract": the guide names the task and every unit that names it is qualified; companion "owner docs name the adopter proof spine only with the source-checkout qualifier" in `shipped_docs_contract_test.exs` | 02 | |
+| B2 readiness_contract_test.exs:64-65 | claim | README demand removed (README is no longer a home for the proof spine) | CONTRIBUTING (A10, `:66-67` unchanged) | "no Hex-shipped file names a repo-only task outside a qualified block" forbids an unqualified README mention | 02 | |
 | B3 docs_contract_test.exs:316-319 | claim | split | README contract test (route), invariant (task) | `readme_contract_test.exs`, `shipped_docs_contract_test.exs` | 04 | |
-| B4 phase98_contract_test.exs:11-14 | claim | replace by invariant | CONTRIBUTING (A10) | `shipped_docs_contract_test.exs` | 02 | |
-| B5 phase98_contract_test.exs:16-22 | claim | rewrite (env tokens stay) | support guide | qualified-mention assertion | 02 | |
-| B6 phase99_contract_test.exs:21-26 | claim | split | invariant (task half); README contract test (route half) | `shipped_docs_contract_test.exs`, `readme_contract_test.exs` | 02, 04 | |
-| B7 phase99_contract_test.exs:35-39 | claim | rewrite | support guide | qualified-mention assertion | 02 | |
-| B8 phase99_contract_test.exs:41-46 | claim | rewrite | intake guide | qualified-mention assertion | 02 | |
+| B4 phase98_contract_test.exs:11-14 | claim | whole README `assert_contains_all` call and the `@readme` attribute deleted | CONTRIBUTING (A10, `:24-30` unchanged) | the same invariant test as B2 | 02 | |
+| B5 phase98_contract_test.exs:16-22 | claim | rewritten, stronger (env tokens and `--live` substring stay) | support guide | `assert_qualified_adopter_mention/2` on the support guide | 02 | |
+| B6 phase99_contract_test.exs:21-26 | claim | split: task tokens removed now, route substrings kept | invariant (task half); README contract test (route half, Plan 04) | `shipped_docs_contract_test.exs` now, `readme_contract_test.exs` in Plan 04 | 02, 04 | |
+| B7 phase99_contract_test.exs:35-39 | claim | rewritten, stronger (`--live` substring and example README path stay) | support guide | `assert_qualified_adopter_mention/2` on the support guide | 02 | |
+| B8 phase99_contract_test.exs:41-46 | claim | rewritten, stronger (`--live` substring, `README.md` and support-guide route stay) | intake guide | `assert_qualified_adopter_mention/2` on the intake guide | 02 | |
 | B9 docs_contract_test.exs:510 | claim | replace (positive CONTRIBUTING assertion) | CONTRIBUTING verify matrix | new assertion | 04 | |
 | B10 docs_contract_test.exs:879 | claim | replace (claim kept, task name dropped) | README one-liner, CONTRIBUTING (A11) | README contract test | 04 | |
 | B11 docs_contract_test.exs:1231-1236 | claim | kept, qualified in place | `docs/operator-support.md` | the invariant now covers the qualification | 01 task 3 | plan 01 task 3 commit (hash in `192-01-SUMMARY.md`) |
@@ -184,4 +186,4 @@ One row per pin. Columns: pin, type, fate, owner of the intent afterwards, repla
 | C2.5, C2.6, C2.8 kept README lines | claim | kept in the trimmed README | README | README contract test | 04 | |
 | C3 stay-valid tokens | claim | kept | README | existing pins | 04 | |
 | C4 header pin | wiring | stays | README lines 1-7 | unchanged | 04 | |
-| D contract text (PROJECT.md) | claim | rewrite with agreement test | PROJECT.md, `shipped_docs_contract_test.exs` | agreement test | 02 | |
+| D contract text (PROJECT.md) | claim | rewritten in the same commit as the pin rewrites; stale 0.3.17 sentence removed | PROJECT.md Canonical Adopter Contract, `shipped_docs_contract_test.exs` | "the Canonical Adopter Contract states the same rule the invariant enforces" | 02 | |

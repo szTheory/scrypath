@@ -72,8 +72,7 @@ Keep `main` green and release only when a package change warrants it. v1.45 is a
 - `main` may include unreleased changes; stable adopter instructions must point to release-backed truth.
 
 **Support and proof policy:**
-- `mix verify.adopter` is the canonical adopter proof spine.
-- Since Phase 183, repository-only `mix verify*` tasks (including `mix verify.adopter`) run from a source checkout. They live in `dev/mix/tasks/`, compile only under `MIX_ENV=test`, and are not part of the Hex package built from this source, which ships only the public `mix scrypath.*` operator tasks. The published 0.3.17 still contains them until a separate maintainer-confirmed release.
+- `mix verify.adopter` is the canonical adopter proof spine for maintainers. It is a repository-only task: it runs from a source checkout (it lives in `dev/mix/tasks/` and compiles only under `MIX_ENV=test`) and is not runnable from the Hex package, which has shipped only the public `mix scrypath.*` operator tasks since 0.3.18. Hex-shipped files name a repository-only task only in a sentence that says so, or in `CONTRIBUTING.md` and `docs/releasing.md`; `CHANGELOG.md` (release history) and `mix.exs` (its task environment registration lines only) are named exemptions. `test/release/shipped_docs_contract_test.exs` enforces this and fails if this bullet and the check disagree, so a change to one lands in the same commit as the change to the other.
 - Fast proof is required for routine PR confidence; repeatable live proof should run in CI when its recurring confidence justifies the cost, and must remain prerequisite-bound and explicit.
 - Prefer exact-commit CI evidence for service-backed acceptance so maintainers do not have to repeat routine UAT locally.
 - Adopter issue intake must request reproducible evidence and flow classification.

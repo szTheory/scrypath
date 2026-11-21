@@ -1,6 +1,8 @@
 defmodule Scrypath.ReadinessContractTest do
   use ExUnit.Case, async: true
 
+  alias Scrypath.Release.ShippedDocs
+
   @readme File.read!("README.md")
   @contributing File.read!("CONTRIBUTING.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
@@ -38,7 +40,10 @@ defmodule Scrypath.ReadinessContractTest do
     assert String.contains?(@support_guide, "`:inline`")
     assert String.contains?(@support_guide, "`:manual`")
     assert String.contains?(@support_guide, "`:oban`")
-    assert String.contains?(@support_guide, "mix verify.adopter")
+
+    # Stronger than the old substring: the guide must name the task AND say it is a source-checkout
+    # task. Companion: test/release/shipped_docs_contract_test.exs (real-file invariant).
+    assert_qualified_adopter_mention(@support_guide, "guides/support-and-compatibility.md")
     assert String.contains?(@support_guide, "outside-adopter evidence")
     assert String.contains?(@support_guide, "Hex")
   end
@@ -61,8 +66,9 @@ defmodule Scrypath.ReadinessContractTest do
   end
 
   test "maintainer docs and example runbook agree on the live proof path" do
-    assert String.contains?(@readme, "mix verify.adopter")
-    assert String.contains?(@readme, "mix verify.adopter --live")
+    # The README is no longer a home for the proof spine: the shipped-docs invariant
+    # (test/release/shipped_docs_contract_test.exs) forbids an unqualified mention there, so only
+    # the maintainer-facing CONTRIBUTING half of this agreement stays demanded.
     assert String.contains?(@contributing, "mix verify.adopter")
     assert String.contains?(@contributing, "mix verify.adopter --live")
     assert String.contains?(@contributing, "phoenix-example")
@@ -73,5 +79,21 @@ defmodule Scrypath.ReadinessContractTest do
     assert String.contains?(@example_readme, "SCRYPATH_EXAMPLE_INTEGRATION")
     assert String.contains?(@example_readme, "PGPORT")
     assert String.contains?(@example_readme, "SCRYPATH_MEILISEARCH_URL")
+  end
+
+  # Names the adopter proof task in at least one unit, and every such unit carries the
+  # source-checkout qualifier (the same unit rule the shipped-docs invariant enforces).
+  defp assert_qualified_adopter_mention(text, doc) do
+    units =
+      text
+      |> ShippedDocs.units()
+      |> Enum.filter(&("verify.adopter" in ShippedDocs.mentions(&1.text, ["verify.adopter"])))
+
+    refute units == [], "#{doc} no longer names mix verify.adopter"
+
+    for unit <- units do
+      assert ShippedDocs.unit_qualified?(unit),
+             "#{doc}:#{unit.line} names mix verify.adopter without the source-checkout qualifier"
+    end
   end
 end
