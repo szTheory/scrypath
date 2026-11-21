@@ -25,3 +25,20 @@ Verified against the 1.5.0 source and by a measured spike-style compile (`.plann
 - **Added trigger.** The Docker `asset_builder` stage growing by more than 60 s revisits the decision, alongside the existing triggers.
 - **Build order.** The spike is Phase 195 and runs before the fixtures project (ADR 0002).
 
+
+## Amendment: measured go/no-go (Phase 195, 2026-11-21)
+
+**Decision: go.** phoenix_storybook stays; the hand-rolled harness remains only the fallback named above. No trigger tripped and the warm line held, so the pre-authorization applied and no maintainer reply was needed. The full record, including run ids and the method, is [GO-NO-GO.md](../phases/195-mount-and-prove/GO-NO-GO.md). The phase PR (#171) was the timing run: its first hosted run is the cold sample and a rerun of the `ops-ui` job on the same commit is the warm sample.
+
+Numbers, from `gh run view <id> --json jobs`, against the locked baseline of 368 s:
+
+- **Cold `ops-ui`: 517 s** (run 44955813968, attempt 1), under the 548 s line (368 + 180) by 31 s. Evidence only: the 14-run main median is 409.5 s and the spread is 360 to 579 s. A same-day control (the main job rerun at the same time) took 342 s, so the cold excess is 175 s against it, five seconds under the 180 s margin. Most of that is the root-graph BEAM cache miss that every lock-changing pull request pays (earlier Dependabot ops-lock runs took 424 to 555 s with no storybook).
+- **Warm `ops-ui`: 378 s** (attempt 2), under the 428 s line (368 + 60). Against the same-day control the storybook's own marginal cost is +36 s (one paired sample).
+- **Rust NIF fetch:** 0.40 s and 0.66 s on hosted `x86_64-unknown-linux-gnu` (Elixir logger timestamps in the Docker builds, `asset_builder` and `runtime_test`); it is not separable inside the `ops-ui` job. Zero NIF failures.
+- **Lock growth:** `scrypath_ops/mix.lock` 56 to 65 lines, nine packages added, no existing entry changed; the root and example locks are unchanged.
+- **Advisories:** none open on a resolved version. phoenix_storybook's three (patched in 1.1.0), mdex's (patched in 0.13.2 and 0.12.3) and mdex_native's (patched in 0.2.3) all predate the resolved versions 1.5.0, 0.14.7 and 0.3.2. The audit shows only the existing sigra, cloak and cloak_ecto baseline.
+- **Docker `asset_builder`:** +33 s (the `Bake and load checked mounted images` step took 292 s against a main median of 259 s; a hosted proxy that includes the stage, so an upper bound), under the 60 s line.
+
+Triggers, one verdict each: advisory open over 14 days, not tripped; cold `ops-ui` over baseline plus 180 s, not tripped; isolation work over a day, not tripped (0.1 h); Docker `asset_builder` over plus 60 s, not tripped; NIF failure twice, not tripped. The warm line (a Phase 195 exit criterion, not a trigger) is within.
+
+Corrections recorded by this phase: the route flag has to be read with `Application.get_env` at expansion, because `Macro.expand` of `Application.compile_env(...)` returns a call AST that is always truthy (the existing `dashboard_routes/1` guard has this latent defect; it is handed to the maintainer, not fixed here); and `data-phx-error` is never emitted by the server, so render-all relies on crash, empty-sandbox and unknown-variation signals. The fidelity probe is deferred to Phase 197.
