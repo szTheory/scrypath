@@ -1,12 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
   "branch": "ui/next",
-  "base_main": "8beb3ed0f6f0b59f62df28ac60349c6dc9adf1a1",
+  "base_main": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Phase 187 delivery (2026-11-19): ui/next fast-forwarded to the Phase 187 head 3bc565c3 (feat/v1.46-187-ops-reskin; origin/main is 8beb3ed0, so main_included and remote_main_current are true). The web service was recreated with compose.preview.yaml (DEMO_SEED_ON_START=0); preflight reports source_match true, main_included true, remote_main_current true before and after the move. The maintainer's untracked my-search.json hash is unchanged (3c8de6b4...). npm run ui:review was not run against this retained preview (its learnings require a disposable backend for mutation runs); the review captures were taken on disposable test stacks and are inventoried in .planning/phases/187-scrypathops-re-skin/187-CAPTURE-INVENTORY.md. The dev watcher shows the built CSS as modified again after a restart (expected, regenerable).",
+  "status": "Refreshed 2026-11-21 for the milestone-end feedback session after v1.46 and v1.47: ui/next reset to origin/main 9b6ec911 (its Phase 187 content was already squash-merged as PR #138; the old head 3bc565c3 is kept as branch backup/ui-next-3bc565c3). Web service recreated with compose.preview.yaml (DEMO_SEED_ON_START=0); data intact (19 products, 3 tenants, 3 saved searches, 3 migrations); the untracked my-search.json hash is unchanged (3c8de6b4...). The scrypath_ops deps volume was behind the lockfile, so mix deps.get was run in it so the CSS watcher works. npm run ui:preflight reports source_match, main_included and remote_main_current true. No storybook exists yet; the review surface becomes the catalog once its first screen story ships. Feedback record: .planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md.",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -26,9 +26,9 @@
   "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md",
   "pause_handoff": ".planning/.continue-here.md",
   "structured_handoff": ".planning/HANDOFF.json",
-  "runtime_checked_at": "2026-11-19T20:00:00Z",
+  "runtime_checked_at": "2026-11-21T00:00:00Z",
   "runtime_status": "running",
-  "implementation_head": "3bc565c394dd8f0e33ad5ccc585540949bea4e1d",
+  "implementation_head": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
   "iteration3_merge": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
   "batch_2026_10_22": {
     "library_pr": 108,
@@ -41,5 +41,6 @@
     "deps_pr": 111,
     "security_docs_pr": 112,
     "release": "scrypath 0.3.16 (PR #100)"
-  }
+  },
+  "feedback_session_2026_11_21": ".planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md"
 }

@@ -16,6 +16,10 @@ The maintainer approved this order and these working rules after a research fan-
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
 
+## Correction 2026-11-21 (maintainer feedback session): the catalog leads
+
+The maintainer called the catalog deferral in the Post-v1.48 proposal below "a huge miss": it overrode their recorded 2026-10-25 decision (ADR 0001, UI engine D1) and they want the storybook now, built with realistic fictional adopters. Recommended sequence: a one-PR readiness pass; **v1.49 Catalog foundation** (fixtures and adopters, spike with pre-authorized continue unless an ADR 0001 trigger trips, one-screen pilot across all five tiers, then scale); **v1.50 Adopter-ready** (the plan below, renumbered). The reopen triggers below are moot for the catalog. Detail, shape and open questions: `.planning/MILESTONE-CONTEXT.md` fold-in, `research/storybook-catalog/`, playbook C31 to C34. Pending the maintainer's confirmation of the sequence.
+
 ## Post-v1.48 proposal (2026-11-21, prepared upstream; ADOPTED 2026-11-21: the maintainer said to follow the recommendations; a UI feedback session on the previous milestone runs before the milestone is opened, and its feedback is folded into `.planning/MILESTONE-CONTEXT.md`)
 
 v1.48 Discovery and onboarding shipped and is archived ([audit](../milestones/v1.48-MILESTONE-AUDIT.md), `tech_debt`, no unsatisfied requirement). The optional website phase was cut at the checkpoint because traffic is effectively nil ([CHECKPOINT.md](../research/v1.48-prep/CHECKPOINT.md)). Three research notes with lenses, primary sources and an adversarial pass are in [research/v1.49-prep/](../research/v1.49-prep/): A catalog readiness refresh, B adopter-features evidence, C sequencing and release. They converge more than they conflict.
