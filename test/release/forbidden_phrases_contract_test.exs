@@ -44,14 +44,9 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
       targets = ForbiddenPhrases.targets()
       rules = ForbiddenPhrases.rules()
 
-      guides =
-        Enum.count(
-          Scrypath.MixProject.project()[:docs][:extras],
-          &String.starts_with?(&1, "guides/")
-        )
-
-      # Non-vacuity: a scan that read few files or few rules proves nothing.
-      assert length(targets) == 1 + guides
+      # Non-vacuity: a scan that read few files or few rules proves nothing. The guide count comes
+      # from the directory listing, not from `extras`, so the two cannot agree by construction.
+      assert length(targets) == 1 + length(Path.wildcard("guides/*.md"))
       assert length(targets) >= 20, "the phrase scan went vacuous: #{length(targets)} files"
       assert length(rules) >= 4, "the phrase table went vacuous: #{length(rules)} rules"
 
@@ -65,6 +60,22 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
                Enum.map_join(hits, "\n", fn {path, line, id, matched} ->
                  "  #{path}:#{line} #{inspect(matched)} (#{id})"
                end)
+    end
+
+    # WR-02 (Phase 193 review): the scan reads the `guides/` directory, which `package.files` ships
+    # whole, so a guide that is not a docs extra is scanned and named here instead of shipping
+    # unlisted and unscanned.
+    test "every guides/*.md file is a docs extra" do
+      guides = ForbiddenPhrases.guide_paths()
+      assert length(guides) >= 20, "the guide listing went vacuous: #{length(guides)} files"
+
+      unlisted = ForbiddenPhrases.unlisted_guides()
+
+      assert unlisted == [],
+             "guide(s) #{inspect(unlisted)} are not in the docs extras of mix.exs; add each to " <>
+               "`extras` and to a `groups_for_extras` group, or it ships but never reaches HexDocs"
+
+      for guide <- guides, do: assert(guide in Scrypath.MixProject.project()[:docs][:extras])
     end
 
     # A fence the pairing does not recognise (inside a blockquote, after a list marker) would leave
@@ -204,6 +215,39 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
       # Prose after the fence keeps its true line.
       after_fence = text <> "\nQuickly.\n"
       assert [{@guide, 9, "time-promise", "Quickly"}] = scan(@guide, after_fence)
+    end
+
+    # WR-02 (Phase 193 review): a new guide that nobody added to `extras` used to be neither scanned
+    # nor reported. The directory under test is a temporary one under the system temp dir (not the
+    # `:tmp_dir` tag, which writes `tmp/` into the repository root), so no shipped file is edited
+    # and the workspace stays clean.
+    test "a guide missing from extras is scanned and named" do
+      root =
+        Path.join(System.tmp_dir!(), "forbidden-phrases-#{System.unique_integer([:positive])}")
+
+      on_exit(fn -> File.rm_rf!(root) end)
+
+      File.mkdir_p!(Path.join(root, "guides"))
+      File.write!(Path.join(root, "README.md"), "# Planted\n")
+      File.write!(Path.join(root, "guides/new-thing.md"), "# New\n\nSearch is effortless here.\n")
+      File.write!(Path.join(root, "guides/listed.md"), "# Listed\n")
+      File.write!(Path.join(root, "guides/notes.txt"), "Search is effortless here.\n")
+
+      extras = ["README.md", "guides/listed.md"]
+
+      assert ForbiddenPhrases.guide_paths(root) == ["guides/listed.md", "guides/new-thing.md"]
+      assert ForbiddenPhrases.unlisted_guides(root, extras) == ["guides/new-thing.md"]
+
+      assert [
+               {"README.md", _},
+               {"guides/listed.md", _},
+               {"guides/new-thing.md", "# New\n\nSearch is effortless here.\n"}
+             ] = targets = ForbiddenPhrases.targets(root)
+
+      assert [{"guides/new-thing.md", 3, "brand-hype", "effortless"}] =
+               ForbiddenPhrases.scan(targets, ForbiddenPhrases.rules())
+
+      assert ForbiddenPhrases.unlisted_guides(root, extras ++ ["guides/new-thing.md"]) == []
     end
 
     # WR-01 (Phase 193 review): a fence line the matcher did not recognise used to invert the pairing

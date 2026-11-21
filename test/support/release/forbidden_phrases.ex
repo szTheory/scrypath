@@ -62,12 +62,33 @@ defmodule Scrypath.Release.ForbiddenPhrases do
   @spec brand_terms() :: [String.t()]
   def brand_terms, do: Enum.flat_map(rules(), &Map.get(&1, "source_terms", []))
 
-  @doc "`{path, text}` for README.md and every `guides/` entry of the docs extras."
-  @spec targets() :: [{Path.t(), String.t()}]
-  def targets do
-    extras = Scrypath.MixProject.project()[:docs][:extras]
-    paths = ["README.md" | Enum.filter(extras, &String.starts_with?(&1, "guides/"))]
-    for path <- paths, do: {path, File.read!(path)}
+  @doc """
+  Sorted `guides/<name>.md` paths of the guides directory under `root`. The scan reads the
+  directory, not the docs extras, because `package.files` ships the whole directory; `root` is for
+  the planted cases only.
+  """
+  @spec guide_paths(Path.t()) :: [Path.t()]
+  def guide_paths(root \\ ".") do
+    root
+    |> Path.join("guides/*.md")
+    |> Path.wildcard()
+    |> Enum.map(&Path.join("guides", Path.basename(&1)))
+    |> Enum.sort()
+  end
+
+  @doc """
+  The guide paths under `root` that are not in `extras` (default: the docs extras of mix.exs). A
+  guide in this list ships in the Hex package and is scanned, but HexDocs has no page for it.
+  """
+  @spec unlisted_guides(Path.t(), [Path.t()]) :: [Path.t()]
+  def unlisted_guides(root \\ ".", extras \\ Scrypath.MixProject.project()[:docs][:extras]) do
+    guide_paths(root) -- extras
+  end
+
+  @doc "`{path, text}` for README.md and every `guides/*.md` file under `root`."
+  @spec targets(Path.t()) :: [{Path.t(), String.t()}]
+  def targets(root \\ ".") do
+    for path <- ["README.md" | guide_paths(root)], do: {path, File.read!(Path.join(root, path))}
   end
 
   @doc """
@@ -92,7 +113,7 @@ defmodule Scrypath.Release.ForbiddenPhrases do
     Enum.sort(hits)
   end
 
-  @doc "Scan of README.md and every guide in extras against every rule."
+  @doc "Scan of README.md and every `guides/*.md` file against every rule."
   @spec violations() :: [hit()]
   def violations, do: scan(targets(), rules())
 
