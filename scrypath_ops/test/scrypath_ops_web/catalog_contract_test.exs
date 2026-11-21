@@ -13,7 +13,13 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # same render_target/2 plus RenderAll.problems/1 path fails on a crash, an empty story and an
   # unknown variation id; keep it green when you change either helper.
 
-  @primitive_stories ["/primitives/ops_button"]
+  @primitive_stories [
+    "/primitives/ops_button",
+    "/primitives/ops_badge",
+    "/primitives/ops_panel",
+    "/primitives/ops_empty_state",
+    "/primitives/ops_sync_status"
+  ]
   @themes ["light", "dark"]
 
   describe "mount" do
