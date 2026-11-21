@@ -38,7 +38,8 @@ defmodule ScrypathOpsWeb.OpsUi do
   Click/touch affordance for opening the operator command palette.
 
   The CommandPalette hook owns the behavior via `data-ops-command-open`; this component
-  keeps visible shortcut hints from reading like inert text.
+  keeps visible shortcut hints from reading like inert text. The button has no `aria-label`:
+  its accessible name comes from its visible text, so it always contains that text (WCAG 2.5.3).
   """
   attr(:class, :any, default: nil)
 
@@ -48,7 +49,6 @@ defmodule ScrypathOpsWeb.OpsUi do
       type="button"
       class={["ops-command-hint", @class]}
       data-ops-command-open
-      aria-label="Go to…"
       aria-keyshortcuts="Meta+K Control+K"
     >
       <.icon name="hero-magnifying-glass" class="ops-command-hint__icon size-4" />
@@ -1347,10 +1347,10 @@ defmodule ScrypathOpsWeb.OpsUi do
           type="button"
           class="ops-time__stamp"
           data-ops-timestamp-copy={@exact}
-          aria-label={"Copy timestamp: #{@exact}"}
           title={"#{@age} · #{@exact} · Click to copy"}
         >
           <time class="ops-time__value" datetime={@exact} data-ops-time-value>{@human}</time>
+          <span class="sr-only">, copy timestamp</span>
           <ScrypathOpsWeb.CoreComponents.icon
             name="hero-clipboard-document"
             class="ops-time__affordance size-3.5"
