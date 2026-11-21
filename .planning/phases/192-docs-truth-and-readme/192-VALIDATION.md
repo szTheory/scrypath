@@ -39,10 +39,10 @@ created: "2026-11-20"
 | Check | Plan | Wave | Requirement | Behavior | Test Type | Automated Command | File Exists | Status |
 |-------|------|------|-------------|----------|-----------|-------------------|-------------|--------|
 | Invariant plus planted cases | 01 | 1 | TRUTH-01 | unqualified repo-only task line in a shipped guide fails; qualified passes; list derived from the task directories; real shipped files clean | unit (in-memory strings plus real scan) | `mix test test/release/shipped_docs_contract_test.exs` | ❌ W0 | ⬜ pending |
-| Pin inventory and pin set | 01 | 1 | TRUTH-01, TRUTH-02 | every old pin accounted for; contract block passes the same qualifier | inventory plus pin set | the doc-pin set command in the plan; `192-PIN-INVENTORY.md` | ❌ W0 | ⬜ pending |
-| README contract | 02 | 2 | README-01, README-02 | word cap, at most 3 onward links, no route block, prerequisite before first fence, quick path ends in a `Scrypath.search/3` result, schema parity, time-promise phrases fail, URL rules | unit (file reads) | `mix test test/scrypath/readme_contract_test.exs` | ❌ W0 | ⬜ pending |
+| Pin inventory, contract and pin set | 01, 02 | 1, 2 | TRUTH-01, TRUTH-02 | every old pin accounted for; contract block passes the same qualifier | inventory plus pin set | the doc-pin set command in the plan; `192-PIN-INVENTORY.md` | ❌ W0 | ⬜ pending |
+| README contract | 04 | 4 | README-01, README-02 | word cap, at most 3 onward links, no route block, prerequisite before first fence, quick path ends in a `Scrypath.search/3` result, schema parity, time-promise phrases fail, URL rules | unit (file reads) | `mix test test/scrypath/readme_contract_test.exs` | ❌ W0 | ⬜ pending |
 | Owner map | 02 | 2 | README-03 | note exists and names one owner per required claim | table-shape test | same README test file | ❌ W0 | ⬜ pending |
-| Built-docs scan | 03 | 3 | TRUTH-03 | no self-link, unresolved extras link or dead anchor in extras pages; planted cases fail; header pin green | built-docs scan | `mix test test/release/package_metadata_test.exs` | extend existing | ⬜ pending |
+| Built-docs scan and source link rule | 03 | 3 | TRUTH-03 | no self-link, unresolved extras link or dead anchor in extras pages; planted cases fail; header pin green | built-docs scan | `mix test test/release/package_metadata_test.exs` | extend existing | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

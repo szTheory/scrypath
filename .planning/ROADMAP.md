@@ -59,7 +59,14 @@ v1.48 Discovery and onboarding is the active milestone (opened 2026-11-21 exactl
   3. The built docs have no self-link and no unresolved extras link (scan with a planted failing case), and the README header pin test is green.
   4. The README is within the recorded word cap, has at most three onward links after the quick path, no "Choose a route" block, the Meilisearch prerequisite and eventual consistency before its first code block, and a quick path that ends in a `Scrypath.search/3` result; a test fails any time-promise phrase.
   5. The owner map note exists and names one owning surface for each claim.
-**Plans**: about 3 (inventory and invariant with the contract text; README trim and quick path with its tests; owner map and the built-docs scan)
+**Plans**: 4 plans (sequential waves; split from about 3 because the contract-and-pin commit must stand alone and the README must be rewritten last)
+
+Plans:
+- [ ] 192-01-PLAN.md — Derived repo-only scanner with planted cases, pin inventory, and in-place qualifiers so the shipped set is clean
+- [ ] 192-02-PLAN.md — Invariant switched on with the PROJECT.md contract edit and the guide-pin rewrites in one commit; claim owner map and the drift-claim moves
+- [ ] 192-03-PLAN.md — Built-docs link scan (self-link, unresolved, dead anchor) with planted cases; 16 repo-path links made absolute; source-level link rule
+- [ ] 192-04-PLAN.md — Quick path and golden-path config fix, README pins re-pointed to owners, README trimmed with the README contract tests; full local lane mirrors
+
 **What this does not prove**: that the new README reads better to a newcomer; time to first search.
 
 ### Phase 193: HexDocs regroup and guards
@@ -121,7 +128,7 @@ See [v1.46-ROADMAP.md](milestones/v1.46-ROADMAP.md).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 192. Docs truth and README | 0/3 | Not started | - |
+| 192. Docs truth and README | 0/4 | Planned | - |
 | 193. HexDocs regroup and guards | 0/2 | Not started | - |
 | Checkpoint: entry-point signal | 0/0 | Not started | - |
 | 194. Website content (optional) | 0/2 | Not started | - |
