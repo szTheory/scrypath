@@ -1,5 +1,7 @@
 # v1.49 prep A: should v1.49 be the catalog, and in what size?
 
+> **Superseded in part (2026-11-21).** The maintainer's feedback session called deferring the catalog "a huge miss" and said they want the storybook now. The facts below stay valid; the recommendation to defer or shrink it against the 2026-10-25 owner decision does not. The catalog is the lead candidate for the next milestone: see [FEEDBACK-SESSION-2026-11-21](../storybook-catalog/FEEDBACK-SESSION-2026-11-21.md) and the fold-in at the top of `.planning/MILESTONE-CONTEXT.md`. The shrunk two-phase plan (fixtures, then spike) is kept as the first step.
+
 Date: 2026-11-21. Research and recommendation only. Read-only: file reads, `gh api` reads, hex.pm API reads, one throwaway dependency-closure script (output in the scratchpad, not in the repo). No gate, Docker, CI or git write was run. Tags: V = verified this session by reading or running something, J = judgment, U = unverified.
 
 ## Recommendation in short
