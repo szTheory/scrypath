@@ -6,7 +6,7 @@ A secondary surface may repeat a claim in one short line and link to the owner; 
 
 How `test/scrypath/readme_contract_test.exs` reads this file:
 
-- The `Owner` cell is exactly one of `README`, `guide:<slug>` (a guide that is a docs extra in `mix.exs`), `doc:<repo path>` (ARCHITECTURE.md, CONTRIBUTING.md, CHANGELOG.md or a docs/ file), `website` or `retired`. A cell that names two owners fails the test.
+- The `Owner` cell is exactly one of `README`, `guide:<slug>` (a guide that is a docs extra in `mix.exs`), `doc:<repo path>` (ARCHITECTURE.md, CONTRIBUTING.md, CHANGELOG.md, mix.exs or a docs/ file), `website` or `retired`. A cell that names two owners fails the test.
 - `Pinned by` lists entries separated by `; `, each a backticked repo path, the word `has`, and a backticked token that is a literal substring of that file today. At least one entry names the owner's own file. A retired row has `reason:` and the reason instead. If an owner stops carrying its token, the default test run goes red.
 - Entries on `README.md` use only tokens the README trim keeps (Phase 192 Plan 04), so the map itself fails if the trim drops one.
 
@@ -32,7 +32,8 @@ How `test/scrypath/readme_contract_test.exs` reads this file:
 | `proof-spine` | The adopter proof task is a maintainer task that runs from a source checkout and is not runnable from the Hex package | `doc:CONTRIBUTING.md` | not named (the shipped-docs invariant forbids an unqualified mention) | the support guide names it with the source-checkout qualifier | not named | `CONTRIBUTING.md` has `mix verify.adopter`; `guides/support-and-compatibility.md` has `mix verify.adopter` |
 | `packaged-artifact-gate` | The packaged-artifact gate and the verify matrix | `doc:CONTRIBUTING.md` | not named | docs/releasing.md owns the publish checks | not named | `CONTRIBUTING.md` has `mix verify.phase11`; `CONTRIBUTING.md` has `docs/releasing.md` |
 | `ops-verify-task` | The operator UI check task | `doc:CONTRIBUTING.md` | not named | not named | not named | `CONTRIBUTING.md` has `mix verify.ops_ui` |
-| `guide-routes` | Where each guide is, grouped by job | `guide:overview` | at most three onward links | the HexDocs sidebar, regrouped by Phase 193 | the docs page points at HexDocs (Phase 194 decides) | `guides/overview.md` has `drift-recovery.md` |
+| `guide-routes` | Where each guide is, grouped by job | `doc:mix.exs` | at most three onward links | the HexDocs sidebar, grouped by job in `groups_for_extras` | the docs page points at HexDocs (Phase 194 decides) | `mix.exs` has `Guides by task` |
+| `reading-order` | A short recommended reading order through the guides | `guide:overview` | one Next Steps link | the overview page | not repeated | `guides/overview.md` has `Recommended reading order`; `README.md` has `overview.html` |
 | `public-surface` | The public runtime surface, the explicit backend-specific escape hatch, the private operations seam, `use Scrypath` as metadata only, and the thin mix wrappers | `doc:ARCHITECTURE.md` | not repeated | the module docs | links to owner (Phase 194 decides) | `ARCHITECTURE.md` has `one explicit backend-specific escape hatch`; `ARCHITECTURE.md` has `without creating a second operator product surface`; `guides/golden-path.md` has `is metadata-only` |
 | `search-api` | The search call and its result keys: records, hits, missing_ids and page | `guide:golden-path` | the quick path ends in a search call | the golden path | links to owner (Phase 194 decides) | `guides/golden-path.md` has `result.missing_ids`; `guides/golden-path.md` has `result.page`; `ARCHITECTURE.md` has `for stale or missing source rows` |
 | `search-hydration` | Record loading is explicit and repo-backed; Scrypath does not infer repos or hide stale rows | `doc:ARCHITECTURE.md` | not repeated | ARCHITECTURE.md | not repeated | `ARCHITECTURE.md` has `Hydration is explicit and repo-backed`; `ARCHITECTURE.md` has `does not infer repos globally` |
@@ -57,6 +58,12 @@ The numbers below are chosen, not measured: no reader study or word-count survey
 | Floor | 400 words | chosen, not measured; a stub guard that fails an accidentally emptied README, not part of the target range |
 | Fenced code | 60 lines | chosen, not measured |
 | Onward links | at most 3 after the quick path's last code block | chosen, not measured |
+
+## Recorded decisions
+
+| Decision | Reason | Decided |
+|----------|--------|---------|
+| `guides/overview.md` stays in the HexDocs extras and shrinks to a short recommended reading order. The four-layer list and the 22-row guide table are retired. | Removing the page would end the `overview.html` page in later HexDocs versions and break the README link, the `Scrypath` moduledoc link and the pinned assertions, while the sidebar already is the index. The four-layer list is owned by `ARCHITECTURE.md` and the getting-started guide (rows `public-surface` and `quick-path`), and the table duplicated the sidebar. | 2026-11-21 |
 
 ## Not proven
 

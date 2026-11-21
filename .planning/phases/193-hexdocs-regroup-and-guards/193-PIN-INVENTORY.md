@@ -53,18 +53,29 @@ Eleven assertion calls in three files read `guides/overview.md`. Re-verified by 
 | O10 | `docs_contract_test.exs:292` | overview contains `examples/phoenix_meilisearch/README.md` | claim (owner-map row `examples`) | carry unchanged: the example paragraph keeps its absolute GitHub URL |
 | O11 | `docs_contract_test.exs:293` | overview contains `examples/scrypath_ecommerce/README.md` | claim (owner-map row `examples`) | carry unchanged (same paragraph) |
 
+Result after the shrink (Plan 01 Task 2): the doc-pin set of 13 files reports 248 tests, 0 failures, and none of the eleven assertion calls was edited; O5 to O8, O10 and O11 pass against the new reading-order text as written.
+
 Owner map rows that read the overview: `guide-routes` (Owner `guide:overview`, Pinned by `guides/overview.md has drift-recovery.md`) and `examples` (Owner `guide:overview`, two overview tokens). The owner-map shape test also requires `"guides/overview.md" in extras` for any `guide:overview` owner.
 
 ## Inbound references
 
-References that no test reads, and the action for each.
+References that no test reads, and what was done about each (Plan 01 Task 2).
 
-| Where | Text today | Problem after the shrink | Action |
-|-------|------------|--------------------------|--------|
-| `lib/scrypath.ex:13` | `[guides/overview.md](guides/overview.md) — table of contents for every published guide.` | False: the page becomes a reading order, not a table of contents | One-line moduledoc reword, docs only, no behavior change. This is the phase's only `lib/` touch |
-| `README.md:111` | `The [guides overview](https://hexdocs.pm/scrypath/overview.html) indexes every guide, from sync modes to drift recovery.` | "indexes every guide" is false; the link must stay (the README caps onward links at 3) | Reword the claim, keep the link and link text |
+| Where | Text before | Problem after the shrink | Fate |
+|-------|-------------|--------------------------|------|
+| `lib/scrypath.ex:13` | `[guides/overview.md](guides/overview.md) — table of contents for every published guide.` | False: the page becomes a reading order, not a table of contents | reworded to "a short recommended reading order; the HexDocs sidebar groups every guide by job." Docs only, no behavior change. This is the phase's only `lib/` touch |
+| `README.md:111` | `The [guides overview](https://hexdocs.pm/scrypath/overview.html) indexes every guide, from sync modes to drift recovery.` | "indexes every guide" is false; the link must stay (the README caps onward links at 3) | reworded to "gives a recommended reading order; the HexDocs sidebar lists every guide, grouped by job"; link and link text unchanged, still one `overview.html` link, no link added |
 | `mix.exs` entries (two) | `"guides/overview.md",` in `extras` and in the first group | none | stays in both |
-| `.planning/reference/CLAIM-OWNER-MAP.md` rows `guide-routes` and `examples` | `guide-routes` owner `guide:overview`, "regrouped by Phase 193"; `examples` unchanged | `guide-routes` is now answered by the sidebar, not the page | `guide-routes` re-owned to `doc:mix.exs`; new row `reading-order` keeps the page owning what it still says; `examples` unchanged |
+| `.planning/reference/CLAIM-OWNER-MAP.md` rows `guide-routes` and `examples` | `guide-routes` owner `guide:overview`, "regrouped by Phase 193"; `examples` unchanged | `guide-routes` is now answered by the sidebar, not the page | `guide-routes` re-owned to `doc:mix.exs` (pinned by `mix.exs has Guides by task`); new row `reading-order` (owner `guide:overview`, pinned by `Recommended reading order` and `overview.html`); `examples` unchanged; the decision is recorded under `## Recorded decisions` in the map |
+
+## Retired overview content
+
+The shrink retired two blocks of `guides/overview.md`. Both stay in git history. No test read either block: `grep -rn 'four layers\|declaration:' test` prints nothing, and no assertion matches a table row of the old page (the eleven overview assertion calls above all read the reading order, the jtbd row text or the example links, which the shrunk page keeps).
+
+| Retired block | Former claim | Owner of the claim now | Evidence no test read it |
+|---------------|--------------|------------------------|--------------------------|
+| "Crash Course" four-layer list (declaration, sync orchestration, search runtime, operator recovery) and the context-boundary sentence | Scrypath is easiest to think about as four layers; the app boundary is a Phoenix context | `ARCHITECTURE.md` (row `public-surface`) and `guides/getting-started.md` (row `quick-path`) | `grep -rn 'four layers\|declaration:' test` prints nothing |
+| The 22-row guide table (guide, purpose) | Where each guide is, with a one-line purpose | The HexDocs sidebar, grouped by job in `groups_for_extras` (row `guide-routes`, owner `doc:mix.exs`); the ten-item reading order keeps the purpose clauses of the guides it lists | `grep -c '^| \[' guides/overview.md` prints 0; the jtbd row text is carried by reading-order item 2 (pin O5) |
 
 ## Fate log
 
@@ -72,13 +83,13 @@ One row per pin from both tables. Commit hashes are filled after the owning task
 
 | Pin | Type | Fate | Owner of the intent afterwards | Replaced by | Plan | Commit |
 |-----|------|------|--------------------------------|-------------|------|--------|
-| G1 | wiring | replace (stronger) | `"Operate and recover"` group | sorted-members assertion in "docs metadata keeps release guide and version-aware source links", plus the config-shape and extras-order tests | 01 Task 1 | |
-| G2 | wiring | stays | Maintainers group | none, byte-identical | 01 Task 1 | |
-| G3 | wiring | stays | extras list | none, byte-identical | 01 Task 1 | |
-| G4 | wiring | retitle and strengthen | `Guides by task` group | multitenancy registration test now asserts extras membership and the group | 01 Task 1 | |
-| G5 | comment | retire with reason | config-shape and built-sidebar tests | two comments reworded to name them | 01 Task 1 | |
-| G6 | claim | stays | getting-started guide | none | 01 Task 1 | |
-| O1 | wiring | stays | extras list | none | 01 Task 1 | |
+| G1 | wiring | replace (stronger) | `"Operate and recover"` group | sorted-members assertion in "docs metadata keeps release guide and version-aware source links", plus the config-shape and extras-order tests | 01 Task 1 | `fb57e627` |
+| G2 | wiring | stays | Maintainers group | none, byte-identical | 01 Task 1 | `fb57e627` |
+| G3 | wiring | stays | extras list | none, byte-identical | 01 Task 1 | `fb57e627` |
+| G4 | wiring | retitle and strengthen | `Guides by task` group | multitenancy registration test now asserts extras membership and the group | 01 Task 1 | `fb57e627` |
+| G5 | comment | retire with reason | config-shape and built-sidebar tests | two comments reworded to name them | 01 Task 1 | `fb57e627` |
+| G6 | claim | stays | getting-started guide | none | 01 Task 1 | `fb57e627` |
+| O1 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
 | O2 | hygiene | stays | phase 112 contract | none | 01 Task 2 | |
 | O3 | hygiene | stays | docs contract | none | 01 Task 2 | |
 | O4 | wiring | stays | docs contract | none | 01 Task 2 | |
@@ -86,6 +97,6 @@ One row per pin from both tables. Commit hashes are filled after the owning task
 | O6 | claim | carry unchanged | `guides/overview.md` reading-order items 2 and 10 | none | 01 Task 2 | |
 | O7 | claim | carry unchanged | `guides/overview.md` reading-order item 4 | none | 01 Task 2 | |
 | O8 | claim | carry unchanged | `guides/overview.md` reading-order items 4 and 5 | none | 01 Task 2 | |
-| O9 | wiring | stays | extras list | none | 01 Task 1 | |
+| O9 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
 | O10 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | |
 | O11 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | |
