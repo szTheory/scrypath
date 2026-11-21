@@ -747,16 +747,27 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       # Planted: each edit below removes one thing the script must prove, so each must be reported.
       mutants = [
         {~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"),
-         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex)},
+         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex")},
         {~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
          ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller phoenix_storybook mdex mdex_native")},
         {", PhoenixStorybook, MDEx]", ", PhoenixStorybook]"},
         {~s("host|$base_url" "ops|$ops_base_url"), ~s("host|$base_url")}
       ]
 
+      tmp = Path.join(System.tmp_dir!(), "storybook-script-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
       for {from, to} <- mutants do
         mutated = String.replace(script, from, to)
         assert mutated != script, "planted edit found nothing to change: #{from}"
+
+        # Each mutant must be well-formed shell, so the check is caught by the one thing it removed and
+        # not by a syntax break that happens to defeat a regex.
+        mutant_path = Path.join(tmp, "mutant.sh")
+        File.write!(mutant_path, mutated)
+        {output, status} = System.cmd("bash", ["-n", mutant_path], stderr_to_stdout: true)
+        assert status == 0, "planted edit is malformed shell (#{from} -> #{to}): #{output}"
 
         assert storybook_script_violations(mutated) != [],
                "the script check accepted a planted edit: #{from} -> #{to}"
