@@ -30,9 +30,9 @@
 // without its leading hash and the directory string is joined at runtime.
 //
 // Gate budget (v1.46): this is gate 2 (token parity plus the retired-identity
-// deny-list, one mechanism). Deletion trigger: ScrypathOps stops carrying its own
-// theme blocks, or the theme blocks are generated from brand/tokens.json. Expected
-// churn per UI PR: one token-map row flip per adopted property, and a lower ceiling.
+// deny-list, one mechanism). Deletion trigger and expected churn: see the gate ledger
+// row for this file in CONTRIBUTING.md, which is the one place they are kept so this
+// header cannot drift from it.
 // It runs through the ExUnit wrapper in test/mix/tasks/ui_contrast_contract_test.exs,
 // so it rides the existing core and repository-contracts jobs with no new CI step.
 //
