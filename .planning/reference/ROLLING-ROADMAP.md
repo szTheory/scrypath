@@ -18,7 +18,18 @@ The maintainer approved this order and these working rules after a research fan-
 
 ## Correction 2026-11-21 (maintainer feedback session): the catalog leads
 
-The maintainer called the catalog deferral in the Post-v1.48 proposal below "a huge miss": it overrode their recorded 2026-10-25 decision (ADR 0001, UI engine D1) and they want the storybook now, built with realistic fictional adopters. Recommended sequence: a one-PR readiness pass; **v1.49 Catalog foundation** (fixtures and adopters, spike with pre-authorized continue unless an ADR 0001 trigger trips, one-screen pilot across all five tiers, then scale); **v1.50 Adopter-ready** (the plan below, renumbered). The reopen triggers below are moot for the catalog. Detail, shape and open questions: `.planning/MILESTONE-CONTEXT.md` fold-in, `research/storybook-catalog/`, playbook C31 to C34. Pending the maintainer's confirmation of the sequence.
+The maintainer called the catalog deferral in the Post-v1.48 proposal below "a huge miss": it overrode their recorded 2026-10-25 decision (ADR 0001, UI engine D1) and they want the storybook now, built from realistic fictional adopters, run in GSD autonomous mode with the storybook opened for their feedback at the end of every milestone. Five sibling-project sessions replied; seven upstream prep notes and an adversarial pass followed. Full reconciliation: `.planning/research/catalog-prep/SYNTHESIS.md`. Learned rules: playbook C31 to C38. The reopen triggers below are moot for the catalog.
+
+| Slot | Milestone | Goal | Size | Confidence |
+|---|---|---|---|---|
+| 0 | Pre-work PRs (not a milestone) | Merge #168; fix the false guide line and `posture.ex` path; split `deep-quality`; proposed cadence text. Titles `docs`/`chore`/`test`/`ci` only | 2 small PRs | high |
+| 1 | **v1.49 Catalog foundation** (decided) | 195 mount and prove (spike, pre-authorized unless an ADR 0001 trigger trips); 196 fixtures and three adopters; 197 JOB-03 pilot then **pause 1**; 198 scale (cut by default); **pause 2** at the end | about 15 plans, stop at 20 | decided |
+| 2 | **v1.50 Adopter-ready** | "Testing your app" guide, fresh-consumer walk, then after an API-grilling session maybe highlight/crop or a paging guard; first release 0.3.21 with the maintainer's yes (phases 199 to 201) | 3 to 5, cut after the guide and walk | 0.7 |
+| 3 | v1.51 Catalog breadth | Remaining screens, a second mounted journey, the storybook becomes the review surface; only if 198 was cut or review says widen | 5 to 8 | 0.4 |
+| 4 | v1.52 Announce-ready | Website content with real product images from stories, then a maintainer-run announcement, after a release carrying the testing guide | 3 to 4 | 0.6 |
+| 5 | ScrypathOps on Hex | A decision, not a milestone (lockstep pin, no `@moduledoc false` internals, allowlisted `files:`, prebuilt assets, clean `hex.audit`) | ADR and package dry run first | 0.8 not planned |
+
+v1.34 is **not** paused (shipped 2026-06-29), so there is no theme milestone: the catalog's light, dark and System stories and the milestone-end review cover the residual gap. No Hex release inside v1.49. Bug candidates handed to the maintainer: `Tasks.list_sync_tasks` truncates history at 1,000 tasks though Meilisearch keeps about 1M (library); the ops UI prints Meilisearch error messages unbounded; a stale-sudo operator returns to `/` in production.
 
 ## Post-v1.48 proposal (2026-11-21, prepared upstream; ADOPTED 2026-11-21: the maintainer said to follow the recommendations; a UI feedback session on the previous milestone runs before the milestone is opened, and its feedback is folded into `.planning/MILESTONE-CONTEXT.md`)
 
