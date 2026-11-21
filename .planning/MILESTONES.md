@@ -1,5 +1,19 @@
 # Milestones
 
+## v1.48 Discovery and onboarding (Shipped: 2026-11-21)
+
+**Phases completed:** 2 phases, 6 plans, 18 tasks
+
+**Key accomplishments:**
+- TRUTH-01 scanner that derives 60 repo-only task names from the task trees, judges every shipped sentence, list item, table row and fence against a source-checkout qualifier, and now reports zero violations on the real shipped files with all 291 existing doc pins still green.
+- The shipped-docs invariant now runs on the real Hex-shipped files in the same commit that rewrites the PROJECT.md Canonical Adopter Contract and the Table B pins; the README claims the trim will remove already live, pinned, in their owner guides; and a 31-claim owner map is checked by tests that read each owner's file.
+- TRUTH-03: the built extras pages are scanned for self-links, unresolved links and dead anchors inside the existing docs build, a source rule keeps every repository-path link in the 33 docs-extra markdown files an absolute `blob/main` URL, and the 21 links that failed one or the other are fixed at the source.
+- The README is now 590 words (fit and non-fit, installation, one quick path that ends in a real `Scrypath.search/3` result, three absolute HexDocs links), every link resolves offline, every README pin was re-pointed to its owner before the trim, and the golden-path config snippet finally matches what `Scrypath.Config` reads.
+- The HexDocs sidebar now has six job-named groups with the golden path second in a five-item first group, a config test and a built-sidebar test fail every grouping mistake ExDoc ignores, and `guides/overview.md` is a 226-word reading order at the same URL with every pin carried.
+- Four mechanical guards now keep the install line, own-docs URLs, README/golden-path snippets and banned wording from drifting, each proven both ways: real files pass, and in-memory planted failures fail.
+
+---
+
 ## v1.47 Brand completion (Shipped: 2026-11-20)
 
 **Phases completed:** 4 phases, 8 plans, 10 tasks

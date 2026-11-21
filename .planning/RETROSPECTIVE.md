@@ -2,6 +2,45 @@
 
 Living notes across planning milestones. Append new sections at the top.
 
+## Milestone: v1.48 — Discovery and onboarding
+
+**Shipped:** 2026-11-21 | **Phases:** 2 (192, 193) plus a checkpoint | **Plans:** 6 | **Requirements:** 13 of 16 (3 cut) | **PRs:** #160, #163, #164 (Hex 0.3.20 carries Phase 192; the Phase 193 regroup is unreleased)
+
+### What Was Built
+- A derived "no shipped doc names a repo-only task" invariant, with the Canonical Adopter Contract text changed in the same commit, and a 590-word single-job README whose quick path ends in a real `Scrypath.search/3` result.
+- A built-docs link scan (self-links, dead targets, dead anchors) and a source-level own-docs URL rule; 21 broken or self-referential links fixed at the source.
+- The HexDocs sidebar regrouped into six job-named groups (five-item first group, no guide renamed, merged or deleted) and `guides/overview.md` shrunk at the same URL.
+- Guards for the install line against the `mix.exs` series, README and golden-path snippet parity, one forbidden-phrase table, and a same-PR rule in `CONTRIBUTING.md`.
+- A recorded entry-point checkpoint (14-day GitHub traffic window, hex.pm downloads, live link behavior) that cut the optional website phase on evidence.
+
+### What Worked
+- A pin inventory before any pin changed (claim versus wiring, with a fate for each), so no assertion was weakened to reach green.
+- Each guard proven both ways: the real files pass and in-memory planted failures fail; a 13-case mutation battery on real files confirmed every guard before merge.
+- Plan checker rounds fixed real mistakes (a wrong local-mirror skip reason, an unclaimed GUARD-01 gap) before execution; the code review found three genuine guard weaknesses (a fence regex that could silently mask prose, a guide-coverage hole, a 1.x install-line rule) that were fixed and re-verified.
+- The local lane mirror on the final head (pre-push, core, package, repository-contracts, ops suite) caught a real ops copy-rules failure before the push; hosted CI was then green first time.
+- Letting the checkpoint decide scope: traffic was nil, so the website rewrite was cut instead of built.
+
+### What Was Inefficient
+- The full local lane mirror took about 40 minutes at machine load 9 and found one failure the focused ops mirror had already shown; the Docker lanes stayed hosted-only.
+- Execution tooling fought the project: an isolation guard blocks sequential executors unless worktrees are switched off in config, `state.begin-phase` and `phase.complete` rewrite STATE.md focus lines, and a stale `gsd/phase-...` branch pointer had to be deleted by hand.
+- Impeccable stop-hook findings fired repeatedly on generated ExDoc pages in the gitignored `doc/` directory; each batch needed per-file ignores that now sit uncommitted in `.impeccable/config.json`.
+- `milestone complete` refuses a cut phase without `--force`, so a deliberate cut still reads as an override.
+
+### Patterns Established
+- Cut-by-evidence checkpoints: a recorded numbers note with a stated default decides an optional phase.
+- A shared pure-scanner module under `test/support/release/` plus untagged contract tests, so a guard adds no CI job and no required check.
+- Same-PR rule: a public-surface change updates the surfaces named in `CLAIM-OWNER-MAP.md` in one PR.
+
+### Key Lessons
+- Check what a checkpoint number can and cannot tell you (clone and download counts were release-week noise); state that in the record.
+- Verify a "live" claim with redirects followed; a plain `curl` read the HexDocs redirect page and nearly recorded a wrong fact.
+- Fix findings at the guard (make it fail where the probe passed), never by narrowing the check.
+
+### Cost Observations
+- Model mix: Sonnet 5.5 for orchestration and executors, Opus for the planner, Haiku for plan checking.
+- Sessions: one long orchestrated run across both phases and the checkpoint.
+- Notable: hosted CI about 14 to 19 minutes per code PR and about 9 for a planning-only PR; critical path `ecommerce-mounted`.
+
 ## Milestone: v1.47 — Brand completion
 
 **Shipped:** 2026-11-20 | **Phases:** 4 (188.1, 189, 190, 191) | **Plans:** 8 | **Requirements:** 18 of 18 | **PRs:** #149, #152, #153, #154 (no Hex release)
@@ -783,6 +822,8 @@ No paid visual judge or added CI lane. Focused local runs invalidated only affec
 
 ## Cross-Milestone Trends
 
+- v1.48: prove each guard both ways (real files pass, planted failures fail) and inventory every pin before changing it; let a recorded checkpoint decide optional scope; follow redirects before recording a "live" fact.
+
 - v1.47: run a review and fix round before shipping deploy-path or gate changes; a green verifier is not a review; build cheap local mirrors of each required lane.
 
 - v1.46: pin and guard before recoloring; audit the merged `main` independently, because per-phase verifiers missed two cross-phase defects.
@@ -793,6 +834,7 @@ No paid visual judge or added CI lane. Focused local runs invalidated only affec
 
 | Milestone | Phases | Dominant theme |
 |-----------|--------|------------------|
+| v1.48 | 192-193 | Docs truth, single-job README, HexDocs regroup by job, drift guards with planted failures, evidence-based cut of the website phase |
 | v1.47 | 188.1, 189-191 | Website in the new identity, copy guarded by one data table, old identity deleted, path classifier |
 | v1.46 | 186-188 | Offline-pinned brand identity, ops re-skin with one status vocabulary, branded README and HexDocs |
 | v1.42 | 172 | Existing-system UI repairs, exact recovery proof, automated acceptance and completion-before-attestation |
