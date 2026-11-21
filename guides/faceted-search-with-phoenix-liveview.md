@@ -285,7 +285,7 @@ Single index; bands are **API**, **Meilisearch**, then **UI**. Each entry lists 
 
 ## Fixture cross-reference
 
-The compile-checked fixture `Scrypath.TestSupport.Docs.PhoenixExampleCase.FacetedBrowseLive` mirrors the `handle_params` flow without importing your application code—useful when extending library tests that keep this guide and ExDoc snippets in sync.
+The compile-checked fixture `FacetedBrowseLive` in `test/support/docs/phoenix_example_case.ex` mirrors the `handle_params` flow without importing your application code—useful when extending library tests that keep this guide and ExDoc snippets in sync.
 
 ## See also
 

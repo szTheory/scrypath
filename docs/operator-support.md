@@ -10,9 +10,9 @@ The support contract stays simple:
 
 1. operator code calls the root APIs on `Scrypath.*`
 2. terminal operators can use the thin `mix scrypath.*` wrappers over those same APIs
-3. **mix verify.phase14** keeps the core Mix task surface, docs contract, package metadata, and docs build aligned
-4. **mix verify.phase28** covers the **index contract drift** CLI and operator docs checks (focused tests plus **`mix docs --warnings-as-errors`**)
-5. **mix verify.phase11** remains the release-contract gate
+3. **mix verify.phase14** keeps the core Mix task surface, docs contract, package metadata, and docs build aligned (source checkout only; not in the Hex package)
+4. **mix verify.phase28** covers the **index contract drift** CLI and operator docs checks (focused tests plus **`mix docs --warnings-as-errors`**; source checkout only, not in the Hex package)
+5. **mix verify.phase11** remains the release-contract gate (source checkout only; not in the Hex package)
 
 ## First Response Path
 
@@ -51,7 +51,7 @@ Do not document the Mix tasks as a replacement for the root API, and do not wide
 
 ## Verification
 
-Before merge or release handoff, run:
+Before merge or release handoff, run these gates from a source checkout of the repository; they are not part of the Hex package:
 
 ```bash
 mix verify.phase14
@@ -61,6 +61,8 @@ mix verify.phase28
 mix verify.phase11
 ```
 
+What each gate covers (these gates run from a source checkout and are not in the Hex package):
+
 | Command | What it covers (auth-free) |
 |---------|----------------------------|
 | **mix verify.phase14** | Thin mix scrypath.* task wrappers, docs contract, package metadata, and **mix docs --warnings-as-errors** |
@@ -69,4 +71,4 @@ mix verify.phase11
 | **mix verify.phase28** | Index contract drift CLI (`mix scrypath.index.contract_drift`), operator docs contracts, focused tests with **--warnings-as-errors**, then **mix docs --warnings-as-errors** |
 | **mix verify.phase11** | Release path: package metadata, clean-consumer smoke, release-doc contract, docs build, workflow checks, **mix hex.build --unpack** |
 
-**mix verify.phase11** remains the gate you use before a real publish flow.
+**mix verify.phase11** remains the gate you use before a real publish flow (source checkout only; not in the Hex package).

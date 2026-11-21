@@ -239,6 +239,25 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   @host_supplied_ref "docs_config.js"
   # Binary build outputs are skipped in the text scans: they are not text and cannot name a path.
   @binary_exts ~w(.woff .woff2 .png .ico .jpg .jpeg .gif .webp)
+  # Link scan (TRUTH-03). A href that leaves the build is not checked here: web links, protocol
+  # relative links, mail links and data URIs. Nothing else is skipped, and there is no ignore list.
+  # The one web link that is checked is an unversioned HexDocs link to one of this project's own
+  # pages, `@own_docs_href`: the README links every guide that way, and a rename of a function or a
+  # heading would leave its fragment dead with nothing else noticing.
+  @external_href ~r{^(?:https?:|//|mailto:|data:)}i
+  @own_docs_href ~r{^https://hexdocs\.pm/scrypath/([^/]+\.html(?:[?#].*)?)$}
+  # The author content of an extras page: ExDoc renders the markdown inside
+  # `<main class="content page-extra" id="main" data-type="extras">`, so everything before it
+  # (head, sidebar) and after it (footer) is chrome and is never scanned. Module pages carry
+  # `data-type="modules"` and legitimately link to themselves (ExDoc autolinks a module name
+  # inside its own docs), so they are out of scope.
+  @extras_region ~r{<main\b[^>]*\bdata-type="extras"[^>]*>(.*?)</main>}s
+  # An `<a>` tag's href. `<link>` tags (stylesheets, icons) are not `<a>` tags.
+  @anchor_href ~r{<a\s(?:[^>]*\s)?href="([^"]*)"}
+  # Non-vacuity floor for the built-docs link scan: the number of `<a>` hrefs read from the author
+  # content of the extras pages (1,360 on the build when this was set). Lower it only with a
+  # reason, never to make a scan that stopped reading ExDoc's markup pass.
+  @min_author_hrefs 500
 
   setup_all do
     # `System.unique_integer/1` is unique only inside one VM, and separate OS processes started the
@@ -285,6 +304,112 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
           do: {rel(out, page), ref}
 
     assert unexpected == []
+  end
+
+  # TRUTH-03. `mix docs --warnings-as-errors` passes while an extras page links a repository file
+  # the build never wrote, or an anchor that does not exist, so the build's own output is scanned.
+  # The scan reads the one build made in `setup_all`; it starts no second docs run.
+  test "extras pages have no self-link, unresolved link or dead anchor", %{out: out} do
+    pages = extras_pages(out)
+    missing = missing_extra_pages(MixProject.project()[:docs][:extras], pages)
+    assert missing == [], "no built extras page for: #{Enum.join(missing, ", ")}"
+
+    scanned = for page <- pages, do: {page, File.read!(Path.join(out, page))}
+    hrefs = Enum.sum(for {_page, html} <- scanned, do: length(author_hrefs(html)))
+
+    # The build reads about 1,360 hrefs today; a floor of one would pass a markup change that
+    # left a single match, so this one sits well under the real count and well over a stray hit.
+    assert hrefs > @min_author_hrefs, "the href scan went vacuous: #{hrefs} hrefs"
+
+    # The README links its guides by absolute HexDocs URL (7 own-docs links on the build when this
+    # was set, 2 with a fragment), so the own-docs read must see some.
+    own_docs =
+      for {_page, html} <- scanned,
+          href <- author_hrefs(html),
+          Regex.match?(@own_docs_href, href),
+          do: href
+
+    assert length(own_docs) >= 4,
+           "the own-docs HexDocs link check went vacuous: #{length(own_docs)} links"
+
+    problems = Enum.flat_map(scanned, fn {page, html} -> link_problems(out, page, html) end)
+
+    assert problems == [],
+           "#{length(problems)} broken link(s) in the built extras pages:\n" <>
+             Enum.map_join(problems, "\n", fn {page, href, kind} ->
+               "  #{page} -> #{href} (#{inspect(kind)})"
+             end)
+  end
+
+  test "a configured extra with no built page is reported by name" do
+    extras = ["README.md", "guides/golden-path.md", "docs/releasing.md", "CONTRIBUTING.md"]
+
+    # `404.html` and `api-reference.html` carry the extras marker too, so a page count cannot
+    # tell a missing extra from these two.
+    pages = [
+      "readme.html",
+      "golden-path.html",
+      "contributing.html",
+      "404.html",
+      "api-reference.html"
+    ]
+
+    assert missing_extra_pages(extras, pages) == ["docs/releasing.md"]
+    assert missing_extra_pages(extras, ["404.html" | pages]) == ["docs/releasing.md"]
+    assert missing_extra_pages(extras, ["releasing.html" | pages]) == []
+  end
+
+  test "the link scan reports a planted self-link, unresolved link and dead anchor", %{out: out} do
+    readme = File.read!(Path.join(out, "readme.html"))
+    golden = File.read!(Path.join(out, "golden-path.html"))
+    [_, real_anchor] = Regex.run(~r/<h2 id="([^"]+)"/, golden)
+
+    planted = fn href -> plant(out, "readme.html", readme, href) end
+
+    # The three kinds, planted inside the scanned region.
+    assert planted.("readme.html") == [{"readme.html", "readme.html", :self_link}]
+    assert planted.("no-such-page.html") == [{"readme.html", "no-such-page.html", :unresolved}]
+
+    assert planted.("golden-path.html#no-such-anchor") ==
+             [{"readme.html", "golden-path.html#no-such-anchor", :dead_anchor}]
+
+    # A link that leaves the build is unresolved and is never opened.
+    assert planted.("../readme.html") == [{"readme.html", "../readme.html", :unresolved}]
+
+    # Controls: another page, a real anchor and a web link are not problems.
+    assert planted.("golden-path.html") == []
+    assert planted.("golden-path.html##{real_anchor}") == []
+    assert planted.("https://example.com/missing") == []
+
+    # An unversioned HexDocs link to this project's own pages is read as the page in the build,
+    # so its fragment and its page are checked too; another project's page is not.
+    own = "https://hexdocs.pm/scrypath/"
+
+    assert planted.(own <> "golden-path.html#no-such-anchor") ==
+             [{"readme.html", own <> "golden-path.html#no-such-anchor", :dead_anchor}]
+
+    assert planted.(own <> "no-such-page.html") ==
+             [{"readme.html", own <> "no-such-page.html", :unresolved}]
+
+    assert planted.(own <> "readme.html") == [{"readme.html", own <> "readme.html", :self_link}]
+    assert planted.(own <> "golden-path.html") == []
+    assert planted.(own <> "golden-path.html##{real_anchor}") == []
+    assert planted.("https://hexdocs.pm/other/golden-path.html#no-such-anchor") == []
+
+    # The same self-link after `</main>` is chrome, outside the scanned region.
+    [content, chrome] = String.split(readme, "</main>", parts: 2)
+    outside = content <> "</main>" <> ~s(<a href="readme.html">x</a>) <> chrome
+
+    assert link_problems(out, "readme.html", outside) -- link_problems(out, "readme.html", readme) ==
+             []
+
+    # A `<link>` tag is not an `<a>` tag.
+    assert plant(out, "readme.html", readme, "no-such.css", "link") == []
+
+    # A page without the extras region is a failure to scan, not a pass.
+    assert_raise ExUnit.AssertionError, fn ->
+      link_problems(out, "readme.html", "<main data-type=\"modules\"></main>")
+    end
   end
 
   test "README.md header uses commit-pinned raw URLs whose bytes match the committed files" do
@@ -855,5 +980,99 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   defp resolves?(out, page, ref) do
     path = Path.expand(ref, Path.dirname(page))
     String.starts_with?(path, out <> "/") and File.regular?(path)
+  end
+
+  # Extras pages of the build, as paths relative to it. A page is an extras page when it says so.
+  defp extras_pages(out) do
+    out
+    |> Path.join("**/*.html")
+    |> Path.wildcard()
+    |> Enum.filter(&(File.read!(&1) =~ ~s(data-type="extras")))
+    |> Enum.map(&rel(out, &1))
+    |> Enum.sort()
+  end
+
+  # The configured extras that have no built page of their own. ExDoc names the page after the
+  # file's base name, lowercased.
+  defp missing_extra_pages(extras, pages) do
+    Enum.reject(extras, fn extra ->
+      ((extra |> Path.basename(Path.extname(extra)) |> String.downcase()) <> ".html") in pages
+    end)
+  end
+
+  # The author content of an extras page. A page that says it is an extras page but has no such
+  # region is a failure to scan, never a pass.
+  defp author_content(html) do
+    case Regex.run(@extras_region, html, capture: :all_but_first) do
+      [content] -> content
+      nil -> flunk("the page has no `<main ... data-type=\"extras\">` region to scan")
+    end
+  end
+
+  defp author_hrefs(html) do
+    @anchor_href |> Regex.scan(author_content(html), capture: :all_but_first) |> List.flatten()
+  end
+
+  # Link problems of one extras page, as `{page, href, kind}`. `page` is the file name relative to
+  # the build, `html` its text (the page itself is not read from disk, so a caller can scan a
+  # changed copy). Kinds: `:self_link` (a link to the page itself, no fragment), `:unresolved` (the
+  # target is not a file in the build, or leaves the build), `:dead_anchor` (the target page has no
+  # element with the fragment as its id).
+  defp link_problems(out, page, html) do
+    for href <- author_hrefs(html),
+        target = build_target(href),
+        kind = href_problem(out, page, html, target),
+        do: {page, href, kind}
+  end
+
+  # What a href means inside the build, or nil when it leaves the build and is not checked. An
+  # own-docs HexDocs link (`https://hexdocs.pm/scrypath/<page>.html#<fragment>`) is read as the
+  # page of that name in this build. HexDocs serves the last published version, so this holds the
+  # link to the pages about to be published: a fragment on a function or heading added since the
+  # last release is found here and would only be dead on HexDocs until the release.
+  defp build_target(href) do
+    case Regex.run(@own_docs_href, href, capture: :all_but_first) do
+      [local] -> local
+      nil -> if Regex.match?(@external_href, href), do: nil, else: href
+    end
+  end
+
+  defp href_problem(out, page, html, href) do
+    {path, fragment} = split_href(href)
+    here = Path.join(out, page)
+    target = if path == "", do: here, else: Path.expand(path, Path.dirname(here))
+
+    cond do
+      not String.starts_with?(target, out <> "/") -> :unresolved
+      not File.regular?(target) -> :unresolved
+      target == here and fragment == "" -> :self_link
+      fragment != "" and not anchor?(page_text(target, here, html), fragment) -> :dead_anchor
+      true -> nil
+    end
+  end
+
+  defp split_href(href) do
+    [before_fragment | fragment] = String.split(href, "#", parts: 2)
+    {before_fragment |> String.split("?", parts: 2) |> hd(), List.first(fragment, "")}
+  end
+
+  # The page being scanned is read from the caller's text, any other page from the build.
+  defp page_text(here, here, html), do: html
+  defp page_text(target, _here, _html), do: File.read!(target)
+
+  defp anchor?(html, fragment), do: Regex.match?(~r/\sid="#{Regex.escape(fragment)}"/, html)
+
+  # The problems a snippet adds to a page: the problems of the page with the snippet inserted just
+  # before `</main>` (inside the scanned region), less the problems the page already has.
+  defp plant(out, page, html, href, tag \\ "a") do
+    snippet =
+      case tag do
+        "a" -> ~s(<a href="#{href}">x</a>)
+        "link" -> ~s(<link rel="stylesheet" href="#{href}">)
+      end
+
+    [content, chrome] = String.split(html, "</main>", parts: 2)
+    planted = content <> snippet <> "</main>" <> chrome
+    link_problems(out, page, planted) -- link_problems(out, page, html)
   end
 end

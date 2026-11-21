@@ -35,22 +35,24 @@ docker compose up -d
 
 Set **`SCRYPATH_MEILISEARCH_URL`** to your Meilisearch base URL if it is not the default (for example `export SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`).
 
-For a full Phoenix + Postgres smoke (fixtures, scripted test), follow [examples/phoenix_meilisearch/README.md](../examples/phoenix_meilisearch/README.md) (repository path `examples/phoenix_meilisearch/README.md`).
+For a full Phoenix + Postgres smoke (fixtures, scripted test), follow [examples/phoenix_meilisearch/README.md](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) (repository path `examples/phoenix_meilisearch/README.md`).
 
 For where Meilisearch fits in production (networking, keys, backups vs rebuilding from Postgres), read [Meilisearch operations for Scrypath adopters](meilisearch-operations.md).
 
 ## Application config
 
-Point your **otp_app** at Meilisearch in **`config/runtime.exs`** or **`config/dev.exs`** (pick the file your team uses for local secrets):
+Point Scrypath at Meilisearch in **`config/runtime.exs`** or **`config/dev.exs`** (pick the file your team uses for local secrets):
 
 ```elixir
 import Config
 
-config :my_app, :scrypath,
-  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700"
+config :scrypath, :defaults,
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700",
+  repo: MyApp.Repo
 ```
 
-Wire that into Scrypath’s backend configuration wherever you centralize runtime options (see [Getting Started](getting-started.md) for the shape: **backend module** + explicit **`sync_mode`** at call sites). Use placeholders for URLs in docs you commit; never embed real API keys.
+Scrypath reads these defaults from its own **`:scrypath`** application key, and any option you pass to a call overrides them (see [Getting Started](getting-started.md) for the shape: **backend module** + explicit **`sync_mode`** at call sites). Use placeholders for URLs in docs you commit; never embed real API keys.
 
 ## Schema
 
@@ -125,6 +127,28 @@ alias MyApp.Content
 result.records
 ```
 
+The common search path stays small and explicit:
+
+```elixir
+alias MyApp.Repo
+
+{:ok, result} =
+  Scrypath.search(MyApp.Blog.Post, "ecto",
+    backend: Scrypath.Meilisearch,
+    repo: Repo,
+    filter: [status: "published"],
+    sort: [desc: :inserted_at],
+    page: [number: 2, size: 20]
+  )
+
+result.records
+result.hits
+result.missing_ids
+result.page
+```
+
+A successful search returns one `%Scrypath.SearchResult{}` with the raw backend hits, the loaded records, pagination metadata, and `missing_ids` for stale or missing source rows.
+
 Index-time relevance tuning lives in [Relevance tuning](relevance-tuning.md); request-time search options are specified in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) guide.
 
 For controllers, JSON APIs, and LiveView that call the same context boundary, continue with [Phoenix Walkthrough](phoenix-walkthrough.md).
@@ -133,8 +157,8 @@ For controllers, JSON APIs, and LiveView that call the same context boundary, co
 
 The golden path stays **inline** on purpose. To **run** the multi-container example (inline + **`:oban`** integration tests, same Meilisearch image pin as CI), use the runnable example—do not duplicate env tables here:
 
-- **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
-- **CI:** On **pull requests** and pushes to **`main`**, **GitHub Actions** runs advisory job **`phoenix-example`**, which starts **Postgres 16** (`postgres:16-alpine`) and **Meilisearch** (`getmeili/meilisearch:v1.15`) as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs **`mix verify.phoenix_example`**. That root command executes the same consumer-shaped **`mix deps.get && mix test`** path under `examples/phoenix_meilisearch`. For the complete capability matrix, see root [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+- **Runbook (from **`examples/phoenix_meilisearch/`** — commands, env vars, **`./scripts/smoke.sh`**):** [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md)
+- **CI:** On **pull requests** and pushes to **`main`**, **GitHub Actions** runs advisory job **`phoenix-example`**, which starts **Postgres 16** (`postgres:16-alpine`) and **Meilisearch** (`getmeili/meilisearch:v1.15`) as workflow services, sets **`SCRYPATH_EXAMPLE_INTEGRATION=1`**, **`PGPORT=5433`**, and **`SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700`**, then runs **`mix verify.phoenix_example`**. That root command is a maintainer task that runs from a source checkout and is not in the Hex package; it executes the same consumer-shaped **`mix deps.get && mix test`** path under `examples/phoenix_meilisearch`. For the complete capability matrix, see root [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 ## Ecto without Phoenix (API-only)
 

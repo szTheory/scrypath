@@ -53,11 +53,14 @@ defmodule Scrypath.Phase112ContractTest do
   test "canonical claim, policy route, and three reopen triggers stay explicit" do
     assert_contains_all(@readme, [
       "Scrypath, the Ecto-native search indexing library",
-      "scope-and-reopen-policy.md",
       "concrete production bug",
       "reviewed outside-adopter evidence",
       "deliberate strategic product decision"
     ])
+
+    # The policy-route token moved from the README to its route owner (owner map row
+    # scope-reopen-policy): the support guide links the scope and reopen policy.
+    assert_contains_all(@support_guide, ["scope-and-reopen-policy.md"])
 
     Enum.each(
       [

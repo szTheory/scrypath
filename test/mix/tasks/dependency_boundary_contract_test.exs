@@ -235,7 +235,12 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     assert support =~
              "Dependency\nand support changes become Hex-package claims only after a release"
 
-    assert support =~ "[ScrypathOps production runbook](../scrypath_ops/README.md#production)"
+    # The link is absolute on purpose: `../scrypath_ops/README.md` would resolve to the Scrypath
+    # README page on HexDocs (ExDoc maps any README.md basename to the landing page), and the
+    # built-docs link scan in package_metadata_test.exs rejects it.
+    assert support =~
+             "[ScrypathOps production runbook](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md#production)"
+
     assert ops_readme =~ "[security boundary](docs/SECURITY.md)"
     assert ops_readme =~ "**Elixir** 1.18+ for the default standalone checkout"
     assert ops_readme =~ "includes optional Sigra"

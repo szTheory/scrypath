@@ -11,15 +11,15 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Docs truth (Phase 192)
 
-- [ ] **TRUTH-01**: No file shipped in the Hex package (`package.files` in `mix.exs`) tells an adopter to run a repo-only task. One invariant test replaces the old pins: it derives the repo-only tasks from `dev/mix/tasks/` (tasks not in the shipped `lib/mix/tasks/`), scans every `package.files` file, and allows a mention only in an explicit allowlist (`CONTRIBUTING.md`, `docs/releasing.md`) or in a sentence that says it runs from a source checkout and is not in the Hex package. A planted-violation case (a shipped guide line with an unqualified `mix verify.adopter`) fails it, and a planted qualified line passes. Phase 192 starts with an inventory of every assertion that pins `verify.adopter` or the shipped-docs wording (`readiness_contract_test`, `docs_contract_test`, `phase108`/`110`/`112` tests), recording for each whether it pins a claim or wiring and how its intent is carried into the invariant; no pin is weakened to reach green.
-- [ ] **TRUTH-02**: The `PROJECT.md` "Canonical Adopter Contract" text and the new invariant say the same thing. The contract says the adopter proof spine is a maintainer task that runs from a source checkout and is not runnable from the Hex package; the change to `PROJECT.md` lands in the same commit as the pin change, so the check never enforces a claim the contract denies.
-- [ ] **TRUTH-03**: Every link in the README resolves to the intended target on GitHub, hex.pm and HexDocs. The built docs (`mix docs`) are scanned for self-links (a link whose target is the page it sits on, such as the old `readme.html` case) and for unresolved extras links, extending `test/release/package_metadata_test.exs` or its sibling; the scan has a planted failing case. Repo paths in the README are absolute GitHub URLs (done for the examples and `scrypath_ops` links in #158; the scan keeps it that way); guide links are relative or absolute-HexDocs consistently. The README header pin test stays green.
+- [x] **TRUTH-01**: No file shipped in the Hex package (`package.files` in `mix.exs`) tells an adopter to run a repo-only task. One invariant test replaces the old pins: it derives the repo-only tasks from `dev/mix/tasks/` (tasks not in the shipped `lib/mix/tasks/`), scans every `package.files` file, and allows a mention only in an explicit allowlist (`CONTRIBUTING.md`, `docs/releasing.md`) or in a sentence that says it runs from a source checkout and is not in the Hex package. A planted-violation case (a shipped guide line with an unqualified `mix verify.adopter`) fails it, and a planted qualified line passes. Phase 192 starts with an inventory of every assertion that pins `verify.adopter` or the shipped-docs wording (`readiness_contract_test`, `docs_contract_test`, `phase108`/`110`/`112` tests), recording for each whether it pins a claim or wiring and how its intent is carried into the invariant; no pin is weakened to reach green.
+- [x] **TRUTH-02**: The `PROJECT.md` "Canonical Adopter Contract" text and the new invariant say the same thing. The contract says the adopter proof spine is a maintainer task that runs from a source checkout and is not runnable from the Hex package; the change to `PROJECT.md` lands in the same commit as the pin change, so the check never enforces a claim the contract denies.
+- [x] **TRUTH-03**: Every link in the README resolves to the intended target on GitHub, hex.pm and HexDocs. The built docs (`mix docs`) are scanned for self-links (a link whose target is the page it sits on, such as the old `readme.html` case) and for unresolved extras links, extending `test/release/package_metadata_test.exs` or its sibling; the scan has a planted failing case. Repo paths in the README are absolute GitHub URLs (done for the examples and `scrypath_ops` links in #158; the scan keeps it that way); guide links are relative or absolute-HexDocs consistently. The README header pin test stays green.
 
 ### README (Phase 192)
 
-- [ ] **README-01**: The README does one job: what Scrypath is, when it fits and does not fit, how to install it, one quick path, and at most three onward links. A small test (about 1 second) enforces a word cap (target 600 to 800 words, set from the owner map and recorded, not a measured optimum), at most three onward links after the quick path, absolute GitHub URLs for repo paths, and no `mix verify.*` string outside a source-checkout qualifier. The seven-bullet "Choose a route" block is gone; its destinations are reachable from the HexDocs sidebar (Phase 193).
-- [ ] **README-02**: The README's quick path ends in a `Scrypath.search/3` call and its result, and states the Meilisearch prerequisite and eventual consistency before the first code block. No sentence promises a time ("in five minutes"); a test fails any such phrase. The quick path's schema snippet is textually identical to the one in `guides/golden-path.md` or is marked as intentionally different (the parity guard in GUARD-03 reads this).
-- [ ] **README-03**: One short reference note records the owner map: for each claim (what it is, fit and non-fit, install line, sync modes, support policy, the operator UI's status) which surface owns it (README, HexDocs guide, website) and where the others link. It is the input to Phase 193 and to the Phase 194 decision.
+- [x] **README-01**: The README does one job: what Scrypath is, when it fits and does not fit, how to install it, one quick path, and at most three onward links. A small test (about 1 second) enforces a word cap (target 600 to 800 words, set from the owner map and recorded, not a measured optimum), at most three onward links after the quick path, absolute GitHub URLs for repo paths, and no `mix verify.*` string outside a source-checkout qualifier. The seven-bullet "Choose a route" block is gone; its destinations are reachable from the HexDocs sidebar (Phase 193).
+- [x] **README-02**: The README's quick path ends in a `Scrypath.search/3` call and its result, and states the Meilisearch prerequisite and eventual consistency before the first code block. No sentence promises a time ("in five minutes"); a test fails any such phrase. The quick path's schema snippet is textually identical to the one in `guides/golden-path.md` or is marked as intentionally different (the parity guard in GUARD-03 reads this).
+- [x] **README-03**: One short reference note records the owner map: for each claim (what it is, fit and non-fit, install line, sync modes, support policy, the operator UI's status) which surface owns it (README, HexDocs guide, website) and where the others link. It is the input to Phase 193 and to the Phase 194 decision.
 
 ### HexDocs structure (Phase 193)
 
@@ -72,12 +72,12 @@ Deferred; not in this roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TRUTH-01 | Phase 192 | Pending |
-| TRUTH-02 | Phase 192 | Pending |
-| TRUTH-03 | Phase 192 | Pending |
-| README-01 | Phase 192 | Pending |
-| README-02 | Phase 192 | Pending |
-| README-03 | Phase 192 | Pending |
+| TRUTH-01 | Phase 192 | Complete |
+| TRUTH-02 | Phase 192 | Complete |
+| TRUTH-03 | Phase 192 | Complete |
+| README-01 | Phase 192 | Complete |
+| README-02 | Phase 192 | Complete |
+| README-03 | Phase 192 | Complete |
 | DOCS-01 | Phase 193 | Pending |
 | DOCS-02 | Phase 193 | Pending |
 | GUARD-01 | Phase 193 | Pending |

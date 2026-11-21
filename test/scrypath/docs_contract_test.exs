@@ -2,6 +2,8 @@ defmodule Scrypath.DocsContractTest do
   use ExUnit.Case, async: true
   @moduletag :docs_contract
 
+  alias Scrypath.Release.ShippedDocs
+
   @readme File.read!("README.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @architecture File.read!("ARCHITECTURE.md")
@@ -118,23 +120,35 @@ defmodule Scrypath.DocsContractTest do
     end
   end
 
-  test "README preserves the operator contract for backfill and reindex" do
-    assert_contains_all(@readme, [
+  # Phase 192: the first-page copy of this contract left the front page; each token is pinned
+  # at the surface that owns it (CLAIM-OWNER-MAP rows backfill-and-reindex, reindex-result,
+  # eventual-consistency). The ARCHITECTURE and sync guide pins below repeat two of them on
+  # purpose so this test still names the whole contract.
+  test "owner guides preserve the operator contract for backfill and reindex" do
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Scrypath.backfill/2",
       "Scrypath.reindex/2",
       "Scrypath.reconcile_sync/2",
       "Use backfill when",
-      "Use managed reindex when",
-      "cutover?: false",
+      "Use managed reindex when"
+    ])
+
+    assert_contains_all(@guides["guides/meilisearch-concepts.md"], [
+      "Use managed reindex when"
+    ])
+
+    assert_contains_all(@architecture, ["cutover?: false"])
+
+    assert_contains_all(@guides["guides/sync-modes-and-visibility.md"], [
       "Accepted work is not the same thing as search visibility"
     ])
   end
 
-  test "README and overview expose the jtbd guide as a first-class entry point" do
-    assert_contains_all(@readme, [
-      "guides/jtbd-and-user-flows.md",
-      "jobs and adoption path"
-    ])
+  test "the jtbd guide is a docs extra and the overview exposes it as a first-class entry point" do
+    # Route-index claim, owner map row guide-routes: the HexDocs sidebar is the route, so the guide
+    # must be a docs extra. The README no longer lists it (Phase 192 trim); Phase 193 regroups the
+    # sidebar. Accepted gap: extras membership proves the guide ships, not that the sidebar groups it.
+    assert_docs_extras(["guides/jtbd-and-user-flows.md"])
 
     overview = @guides["guides/overview.md"]
 
@@ -160,10 +174,9 @@ defmodule Scrypath.DocsContractTest do
       "not public API"
     ])
 
-    assert_contains_all(@readme, [
-      "guides/request-edge-search.md",
-      "Request-edge search"
-    ])
+    # Route-index claim (owner map row guide-routes): the guide is a docs extra; the README no
+    # longer lists it. Same accepted gap as the jtbd guide above.
+    assert_docs_extras(["guides/request-edge-search.md"])
 
     assert_contains_all(File.read!("lib/scrypath.ex"), [
       "guides/request-edge-search.md",
@@ -194,10 +207,8 @@ defmodule Scrypath.DocsContractTest do
       "related-data propagation or rebuild correctness claims"
     ])
 
-    assert_contains_all(@readme, [
-      "guides/composing-real-app-search.md",
-      "real-app composition"
-    ])
+    # Route-index claim (owner map row guide-routes): extras membership replaces the README link.
+    assert_docs_extras(["guides/composing-real-app-search.md"])
 
     assert_contains_all(scrypath_doc, [
       "guides/composing-real-app-search.md",
@@ -240,11 +251,14 @@ defmodule Scrypath.DocsContractTest do
     refute String.contains?(composition_doc, "schema-generated")
   end
 
-  test "readme route map and jtbd next-reading retain unique useful destinations" do
+  test "route destinations stay docs extras or linked repo files and jtbd next-reading retains unique destinations" do
     public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
 
-    assert_contains_all(@readme, [
-      "## Choose a route",
+    # Route-index claim, owner map rows guide-routes, examples and operator-ui-status: the README
+    # route block is gone. Each guide destination is a docs extra (the HexDocs sidebar is the route).
+    # Accepted gap: extras membership proves the guide ships, not that the sidebar groups it
+    # (Phase 193 regroups it).
+    assert_docs_extras([
       "guides/overview.md",
       "guides/golden-path.md",
       "guides/support-and-compatibility.md",
@@ -262,11 +276,27 @@ defmodule Scrypath.DocsContractTest do
       "guides/faceted-search-with-phoenix-liveview.md",
       "guides/multi-index-search.md",
       "guides/per-query-tuning-pipeline.md",
-      "guides/operator-mix-tasks.md",
-      "examples/phoenix_meilisearch/README.md",
-      "examples/scrypath_ecommerce/README.md",
-      "scrypath_ops/README.md"
+      "guides/operator-mix-tasks.md"
     ])
+
+    # Each example or ScrypathOps README exists and is linked from the surface that owns it.
+    for path <- [
+          "examples/phoenix_meilisearch/README.md",
+          "examples/scrypath_ecommerce/README.md",
+          "scrypath_ops/README.md"
+        ] do
+      assert File.regular?(path), "#{path} does not exist"
+    end
+
+    overview = @guides["guides/overview.md"]
+    assert_contains_all(overview, ["examples/phoenix_meilisearch/README.md"])
+    assert_contains_all(overview, ["examples/scrypath_ecommerce/README.md"])
+
+    assert_contains_all(@guides["guides/golden-path.md"], [
+      "examples/phoenix_meilisearch/README.md"
+    ])
+
+    assert_contains_all(@support_guide, ["scrypath_ops/README.md"])
 
     assert length(Regex.scan(~r/^## Flow [1-6]:/m, public_jtbd)) == 6
     assert length(Regex.scan(~r/^## What Scrypath is opinionated about$/m, public_jtbd)) == 1
@@ -313,10 +343,10 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "support/readiness authority stays discoverable and verify.adopter parity stays explicit" do
-    assert_contains_all(@readme, [
-      "guides/support-and-compatibility.md",
-      "mix verify.adopter"
-    ])
+    # Route half: the README links the support guide (HexDocs or relative form). The task half
+    # (`mix verify.adopter` on the README) is covered by the shipped-docs invariant, which forbids an
+    # unqualified README mention (test/release/shipped_docs_contract_test.exs); CONTRIBUTING's half stays.
+    assert ShippedDocs.links_to_guide?(@readme, "support-and-compatibility")
 
     assert_contains_all(@contributing, [
       "guides/support-and-compatibility.md",
@@ -440,10 +470,9 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(File.read!("mix.exs"), "\"verify.phase91\": :test")
   end
 
-  test "README opens with installation and first-hour path before the route map" do
+  test "README opens with installation before the quick path" do
     assert String.contains?(@readme, "Scrypath, the Ecto-native search indexing library")
-    assert ordered?(@readme, "## Installation", "## Choose a route")
-    assert ordered?(@readme, "## Choose a route", "## Quick Path")
+    assert ordered?(@readme, "## Installation", "## Quick Path")
     assert @readme =~ ~S|{:scrypath, "~> 0.3"}|
     refute @readme =~ ~S|{:req, "~> 0.5"}|
     refute @readme =~ ~S|{:scrypath, path: "../scrypath"}|
@@ -452,9 +481,11 @@ defmodule Scrypath.DocsContractTest do
       "## Quick Path",
       "Scrypath owns its internal transport dependency",
       "Add Oban only when you choose",
-      "field :status, :string",
-      "guides/golden-path.md"
+      "field :status, :string"
     ])
+
+    # Route claim: the README links the golden path in either link form (owner map row quick-path).
+    assert ShippedDocs.links_to_guide?(@readme, "golden-path")
   end
 
   test "phase 35 readme and sync guide share operator lifecycle chain" do
@@ -503,18 +534,39 @@ defmodule Scrypath.DocsContractTest do
 
     assert ordered?(@readme, "## Installation", "## Quick Path")
 
+    assert_contains_all(@readme, ["Choose **`:inline`**"])
+
+    # Replaces the README's bold start-here label pin: the first link after the closing line of the
+    # README's last code block (the same boundary the onward-link test in readme_contract_test.exs
+    # counts from) is the golden path.
+    [{_line, first_onward} | _rest] = ShippedDocs.markdown_links(readme_after_last_fence())
+    assert ShippedDocs.links_to_guide?("[next](#{first_onward})", "golden-path")
+
+    # Replaces the `## Versioning and upgrades` heading pin and the two ordering pins that named the
+    # removed Sync modes, Versioning and Search sections: the README keeps one versioning sentence
+    # that names semantic versioning and links the changelog by absolute URL (owner map row
+    # versioning; docs/releasing.md owns the release process).
     assert_contains_all(@readme, [
-      "**Start here:**",
-      "guides/golden-path.md",
-      "## Versioning and upgrades",
-      "mix verify.phase11",
-      "docs/releasing.md",
-      "Choose **`:inline`**",
-      "guides/sync-modes-and-visibility.md"
+      "semantic versioning",
+      "https://github.com/szTheory/scrypath/blob/main/CHANGELOG.md"
     ])
 
-    assert ordered?(@readme, "## Sync modes", "## Search")
-    assert ordered?(@readme, "## Versioning and upgrades", "## Search")
+    # Route claims move to the link helper, which accepts the relative and HexDocs forms.
+    assert ShippedDocs.links_to_guide?(@readme, "golden-path")
+    assert ShippedDocs.links_to_guide?(@readme, "sync-modes-and-visibility")
+
+    # `mix verify.phase11` left the README: its owner is CONTRIBUTING's canonical verification
+    # matrix (owner map row packaged-artifact-gate). CONTRIBUTING also names docs/releasing.md,
+    # which owns the verify matrix, Release Please flow and publish checks.
+    matrix = h2_section(@contributing, "## Canonical verification commands")
+
+    row =
+      matrix |> String.split("\n") |> Enum.find(&String.contains?(&1, "Package/release contract"))
+
+    assert row, "CONTRIBUTING's verification matrix has no Package/release contract row"
+    assert String.contains?(row, "mix verify.phase11")
+    assert_contains_all(@contributing, ["docs/releasing.md"])
+    assert File.regular?("docs/releasing.md")
   end
 
   test "ARCHITECTURE preserves the operational semantics contract" do
@@ -529,7 +581,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "docs keep the operator recovery contract report-first and explicit" do
-    assert_contains_all(@readme, [
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Scrypath.sync_status/2",
       "Scrypath.failed_sync_work/2",
       "Scrypath.retry_sync_work/2",
@@ -549,7 +601,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "documentation keeps drift detection and recovery guidance explicit" do
-    assert_contains_all(@readme, [
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Detect drift before deciding",
       "stale search hits whose hydrated records are now missing",
       "document-count mismatches",
@@ -563,6 +615,34 @@ defmodule Scrypath.DocsContractTest do
       "settings changes that require a full rebuild",
       "failed, retrying, or discarded async work",
       "old-index cleanup as part of the same managed reindex step"
+    ])
+  end
+
+  test "owners carry the README search, reindex and hydration claims the trim removes" do
+    assert_contains_all(@guides["guides/golden-path.md"], [
+      "result.records",
+      "result.hits",
+      "result.missing_ids",
+      "result.page"
+    ])
+
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
+      "result.live_index",
+      "result.target_index",
+      "result.settings_applied",
+      "result.batches",
+      "result.documents",
+      "result.omitted",
+      "result.cutover",
+      "counted rather than deleted",
+      "durable enqueue is not the same thing as rebuild completion"
+    ])
+
+    assert_contains_all(@architecture, [
+      "Hydration is explicit and repo-backed",
+      "does not infer repos globally",
+      "for stale or missing source rows",
+      "whether settings were applied"
     ])
   end
 
@@ -702,14 +782,11 @@ defmodule Scrypath.DocsContractTest do
     refute File.regular?("scripts/smoke.sh")
   end
 
-  test "README and CONTRIBUTING document example smoke cwd (Phase 33)" do
-    assert String.contains?(@readme, "cd examples/phoenix_meilisearch") or
-             String.contains?(@readme, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
-
+  test "CONTRIBUTING documents example smoke cwd (Phase 33)" do
+    # README half dropped (Phase 192): the README no longer carries the integration smoke section.
+    # Owner map row integration-smoke: CONTRIBUTING here, and the golden path pins ./scripts/smoke.sh.
     assert String.contains?(@contributing, "cd examples/phoenix_meilisearch") or
              String.contains?(@contributing, "bash examples/phoenix_meilisearch/scripts/smoke.sh")
-
-    assert ordered?(@readme, "cd examples/phoenix_meilisearch", "./scripts/smoke.sh")
 
     assert ordered?(
              @contributing,
@@ -836,7 +913,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "README routes sync semantics to the canonical guide" do
-    assert @readme =~ ~S|](guides/sync-modes-and-visibility.md)|
+    assert ShippedDocs.links_to_guide?(@readme, "sync-modes-and-visibility")
     assert Regex.match?(~r/exact return contract, lifecycle, and recovery guidance/i, @readme)
   end
 
@@ -873,10 +950,6 @@ defmodule Scrypath.DocsContractTest do
     [_head, job_tail] = String.split(@ci_workflow, "phoenix-example:", parts: 2)
     job_head = String.slice(job_tail, 0, 4000)
     assert ordered?(job_head, "mix deps.get", "mix verify.phoenix_example")
-  end
-
-  test "README surfaces canonical ops verification for optional scrypath_ops (Phase 53)" do
-    assert String.contains?(@readme, "mix verify.ops_ui")
   end
 
   test "CONTRIBUTING documents scrypath_ops saved searches validate for fixture directories (Phase 64)" do
@@ -1214,17 +1287,13 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "operator docs keep tasks thin and Meilisearch-native power namespaced" do
-    assert_contains_all(@readme, [
-      "mix scrypath.status",
-      "mix scrypath.failed",
-      "mix scrypath.retry",
-      "mix scrypath.reconcile",
-      "They do not create a second operator product surface."
-    ])
-
+    # README half retired (Phase 192 trim; owner map row public-surface): ARCHITECTURE carries the
+    # thin-wrapper claim and now also names the two wrapper tasks the README half used to demand.
     assert_contains_all(@architecture, [
       "Thin **`mix scrypath.*` wrappers** delegate to those same root APIs without creating a second operator product surface.",
       "mix scrypath.status",
+      "mix scrypath.failed",
+      "mix scrypath.retry",
       "mix scrypath.reconcile"
     ])
 
@@ -1398,6 +1467,25 @@ defmodule Scrypath.DocsContractTest do
     Regex.scan(~r/```elixir\n(.*?)```/ms, markdown, capture: :all_but_first)
     |> List.flatten()
     |> Enum.map(&String.trim/1)
+  end
+
+  # README text after the closing line of its last fenced code block.
+  defp readme_after_last_fence do
+    @readme |> String.split(~r/^```\s*$/m) |> List.last()
+  end
+
+  # Text between a level-2 heading and the next level-2 heading.
+  defp h2_section(text, heading) do
+    [_before, rest] = String.split(text, "\n" <> heading <> "\n", parts: 2)
+    rest |> String.split(~r/^## /m, parts: 2) |> hd()
+  end
+
+  defp assert_docs_extras(paths) do
+    extras = Scrypath.MixProject.project()[:docs][:extras]
+
+    Enum.each(paths, fn path ->
+      assert path in extras, "#{path} is not a docs extra in mix.exs"
+    end)
   end
 
   defp assert_contains_all(content, snippets) do

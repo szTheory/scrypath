@@ -68,7 +68,7 @@ mix verify.coverage
 
 The **`coverage`** CI job is a scheduled/manual, advisory, informational, and
 non-blocking lane. To reproduce it locally, run `mix verify.coverage`. If a
-maintainer needs fresh hosted evidence, redispatch [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+maintainer needs fresh hosted evidence, redispatch [`.github/workflows/ci.yml`](https://github.com/szTheory/scrypath/blob/main/.github/workflows/ci.yml)
 with `workflow_dispatch`, then download the SHA-bound `coverage-report-<sha>`
 artifact from that run. GitHub retains the report for seven days; it is evidence
 only, not a merge gate or coverage-percentage threshold.
@@ -167,7 +167,7 @@ For adopter support verification:
 mix verify.adopter
 ```
 
-That fast path stays service-free and guards the current support/readiness contract. `mix verify.phoenix_example` runs the existing path-backed Phoenix proof; `mix verify.phoenix_example --package` builds the current checkout's Hex artifact and runs the same consumer integration scenarios against it. Both live modes require `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with Postgres and Meilisearch already running; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md).
+That fast path stays service-free and guards the current support/readiness contract. `mix verify.phoenix_example` runs the existing path-backed Phoenix proof; `mix verify.phoenix_example --package` builds the current checkout's Hex artifact and runs the same consumer integration scenarios against it. Both live modes require `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`, with Postgres and Meilisearch already running; the detailed runbook lives in [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md).
 
 The live branch maps directly to the GitHub Actions **`phoenix-example`** job contract. That job runs the path-backed command first, then the package-backed command in the same advisory job and shared service block. The package-backed mode stages an isolated example copy and verifies that Scrypath resolves from the locally tagged artifact; the example's ordinary `path:` dependency remains unchanged.
 
@@ -226,7 +226,7 @@ Every CI or release run is also a chance to spot cheap speed and cost wins (cach
 
 Before you push, `scripts/ci/pre_push.sh` runs the cheap subset of these checks on your committed tree (workflow lint, format, warning-free compile, Credo, workspace cleanliness, the workflow wiring tests and the focused Node tests; about a minute with a warm build). It does not replace the hosted gate: it cannot run `core`, `repository-contracts`, `backend`, `ops-ui` or the Docker `ecommerce-mounted` lane, and it exits non-zero when a check fails or a tool is missing. The lane-by-lane local mirror commands, their runtimes and what each cannot show are in the maintainer-facing CI efficiency ledger (`.planning/reference/CI-EFFICIENCY.md`, "Local-first checklist").
 
-GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs these jobs:
+GitHub Actions (see [`.github/workflows/ci.yml`](https://github.com/szTheory/scrypath/blob/main/.github/workflows/ci.yml)) runs these jobs:
 
 | Job | Purpose |
 |-----|---------|
@@ -357,11 +357,11 @@ the exact real-acceptance sequence used by the Phase 182-08 executor.
 
 For v1.29 closeout proof, run <code>mix verify.phase108</code> locally when related-data fan-out wording, roadmap/JTBD closeout truth, or contributor verification posture changes. It is a focused service-free truth gate; it does not promote **`phase105-e2e`** to a required merge blocker.
 
-The root [`compose.yaml`](compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
+The root [`compose.yaml`](https://github.com/szTheory/scrypath/blob/main/compose.yaml) is only for **local** Meilisearch when running smoke tasks; CI uses the workflow **`services:`** block instead.
 
 ## Example app (Postgres + Meilisearch)
 
-For the **canonical environment, service, and command runbook**, see [`examples/phoenix_meilisearch/README.md`](examples/phoenix_meilisearch/README.md). The advisory `phoenix-example` CI job runs `mix verify.phoenix_example` first against the example's `path:` dependency, then `mix verify.phoenix_example --package` against the locally built package artifact. Both commands use real Postgres and Meilisearch services and cover inline, Oban, and related-data scenarios. A passing docs contract proves documentation and wiring assertions; it is not live-service proof. The package command is the live package-backed service proof, and does not establish every adopter deployment or production reliability. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
+For the **canonical environment, service, and command runbook**, see [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md). The advisory `phoenix-example` CI job runs `mix verify.phoenix_example` first against the example's `path:` dependency, then `mix verify.phoenix_example --package` against the locally built package artifact. Both commands use real Postgres and Meilisearch services and cover inline, Oban, and related-data scenarios. A passing docs contract proves documentation and wiring assertions; it is not live-service proof. The package command is the live package-backed service proof, and does not establish every adopter deployment or production reliability. For the local orchestration harness, run `cd examples/phoenix_meilisearch` and then `./scripts/smoke.sh`; that script is not the GitHub Actions entrypoint.
 
 ## `phase105-e2e` local runbook
 
@@ -410,7 +410,7 @@ Phase 111 freezes a dual-window evidence model for any future promotion decision
 
 For the human-facing tour of what this lane protects, including the storefront,
 operator routes, demo tenants, and Compose launch path, see
-[`examples/scrypath_ecommerce/README.md`](examples/scrypath_ecommerce/README.md).
+[`examples/scrypath_ecommerce/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md).
 That demo README also documents the bind-mounted Compose dev mode for fast UI
 iteration without rebuilding dependency layers after every HEEx/CSS change.
 

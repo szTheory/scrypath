@@ -9,7 +9,31 @@
 
 Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams add search to existing schemas without hiding the operational work that keeps search in sync.
 
+Scrypath needs a running Meilisearch server; the repository's examples use the `getmeili/meilisearch:v1.15` image on `http://127.0.0.1:7700`. Meilisearch is eventually consistent, so a record can take a moment to show up in search after you save it.
+
 Public website: [sztheory.github.io/scrypath](https://sztheory.github.io/scrypath/)
+
+## When Scrypath Fits
+
+Scrypath is a good fit when you want:
+
+- search indexing that feels native to Ecto instead of bolted onto a controller or callback maze
+- one explicit place to choose between inline, manual, and Oban-backed sync
+- repo-backed record loading through the common `Scrypath.search/3` path
+- first-class backfill and managed reindex workflows when drift or schema changes happen
+
+## When It Does Not
+
+Scrypath is not trying to be:
+
+- a Postgres full-text abstraction
+- a Phoenix-only library
+- a public multi-backend facade in v1
+- a callback-heavy runtime that hides when search is out of date
+
+If you want hidden model hooks, implicit repo access, or a library that pretends accepted work means immediate search visibility, this is the wrong tool.
+
+Scrypath is Meilisearch-first in v1. Its backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity.
 
 ## Installation
 
@@ -23,25 +47,15 @@ def deps do
 end
 ```
 
-**Start here:** follow the [Golden path](guides/golden-path.md) from installation through your first inline `Scrypath.search/3`.
+Scrypath owns its internal transport dependency; configure backend and sync behavior in your app instead of pinning `Req` in the base install path. Add Oban only when you choose `sync_mode: :oban`.
 
-## Choose a route
-
-- **Learn the product:** [JTBD and user flows](guides/jtbd-and-user-flows.md) explains the jobs and adoption path; the [guides overview](guides/overview.md) indexes every guide.
-- **Check support or product boundaries:** [support and compatibility](guides/support-and-compatibility.md) is the route for release-backed guidance and supported versions. From a source checkout (these tasks are not part of the Hex package), run `mix verify.adopter` locally or `mix verify.adopter --live` with its services; main may contain unreleased changes. [Outside-adopter intake](guides/outside-adopter-intake.md) routes real-app evidence. Scope reopens only for a concrete production bug, reviewed outside-adopter evidence, or a deliberate strategic product decision, as described in the [scope and reopen policy](guides/scope-and-reopen-policy.md).
-- **Wire a Phoenix or Ecto app:** [Getting Started](guides/getting-started.md), [Phoenix contexts](guides/phoenix-contexts.md), [the Phoenix walkthrough](guides/phoenix-walkthrough.md), [controllers and JSON](guides/phoenix-controllers-and-json.md), and [LiveView](guides/phoenix-liveview.md) show the app boundary. [Request-edge search](guides/request-edge-search.md) covers browser params and optional Phoenix glue; [real-app composition](guides/composing-real-app-search.md) covers reusable policy and metadata.
-- **Build a search experience:** [Meilisearch concepts](guides/meilisearch-concepts.md) introduces the backend model; [related data and reindexing](guides/related-data-and-reindexing.md), [faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md) covers `Scrypath.search_within_facet/4`; [multi-index search](guides/multi-index-search.md) covers `Scrypath.search_many/2`, `:all` expansion, and `federation_weight:`; [per-query tuning](guides/per-query-tuning-pipeline.md) distinguishes request-time parameters from index-time settings.
-- **Choose sync and recover:** [sync modes and visibility](guides/sync-modes-and-visibility.md), [Meilisearch operations](guides/meilisearch-operations.md), [operator Mix tasks](guides/operator-mix-tasks.md), [drift recovery](guides/drift-recovery.md), and [common mistakes](guides/common-mistakes.md) explain lifecycle, visibility, and repair.
-- **Try the examples:** [Phoenix + Meilisearch](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) is the integration walkthrough; the [e-commerce demo](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md) shows tenant-scoped search, facets, related-data propagation, and operator workflows.
-- **Maintainer tools:** the optional [operator UI](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md) is available in the checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
-
-**Integration smoke (optional):** the [Phoenix + Meilisearch example](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) documents its Docker services and env vars. From the repository root, run `cd examples/phoenix_meilisearch && ./scripts/smoke.sh`; that script lives inside the example.
-
-Scrypath is Meilisearch-first in v1. Its backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity. Scrypath owns its internal transport dependency; configure backend and sync behavior in your app instead of pinning `Req` in the base install path. Add Oban only when you choose `sync_mode: :oban`.
+Scrypath follows semantic versioning for its public API, and the [changelog](https://github.com/szTheory/scrypath/blob/main/CHANGELOG.md) says what each release changed. The optional operator UI lives in the source checkout and is not part of the Hex package.
 
 ## Quick Path
 
-Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration. Declare search metadata with **`use Scrypath`** on the Ecto schema, own **`Scrypath.sync_record/3`** after successful repo writes and **`Scrypath.search/3`** from context functions, and keep controllers or LiveView as thin callers into that boundary. For the full copy-paste path - including context module, controller, and IEx check - follow [guides/golden-path.md](guides/golden-path.md).
+Start a Meilisearch server first; these steps assume it answers on `http://127.0.0.1:7700`. Because Meilisearch is eventually consistent, a new record can take a moment to show up in search. The [golden path](https://hexdocs.pm/scrypath/golden-path.html) covers each step in full.
+
+Declare the searchable fields on your Ecto schema. `use Scrypath` only declares metadata; persistence and sync stay in your context:
 
 ```elixir
 defmodule MyApp.Blog.Post do
@@ -61,161 +75,37 @@ defmodule MyApp.Blog.Post do
 end
 ```
 
-## When Scrypath Fits
-
-Scrypath is a good fit when you want:
-
-- search indexing that feels native to Ecto instead of bolted onto a controller or callback maze
-- one explicit place to choose between inline, manual, and Oban-backed sync
-- repo-backed hydration through the common `Scrypath.search/3` path
-- first-class backfill and managed reindex workflows when drift or schema changes happen
-
-## When It Does Not
-
-Scrypath is not trying to be:
-
-- a Postgres full-text abstraction
-- a Phoenix-only library
-- a public multi-backend facade in v1
-- a callback-heavy "it just stays in sync somehow" runtime
-
-If you want hidden model hooks, implicit repo access, or a library that pretends accepted work means immediate search visibility, this is the wrong tool.
-
-## Public Surface
-
-Scrypath keeps one common runtime surface and one explicit backend-specific escape hatch:
-
-- `Scrypath` for runtime reflection, sync verbs, operator visibility, backfill, managed reindex, and the common search path
-- `Scrypath.Schema` for the declaration contract
-- `Scrypath.Projection` for document projection rules
-- `Scrypath.Meilisearch` for backend-native operations that do not belong on the common path
-
-Backfill and managed reindex now use the same internal operations seam as sync, but that seam stays private. The public backend-native namespace remains `Scrypath.Meilisearch.*`.
-
-The operator surface also stays on `Scrypath.*`:
-
-- `Scrypath.sync_status/2`
-- `Scrypath.failed_sync_work/2`
-- `Scrypath.retry_sync_work/2`
-- `Scrypath.reconcile_sync/2`
-
-For terminal-first operations, the thin `mix scrypath.status`, `mix scrypath.failed`,
-`mix scrypath.retry`, and `mix scrypath.reconcile` tasks wrap those same root APIs.
-They do not create a second operator product surface.
-
-`use Scrypath` is metadata-only. It validates the declaration and exposes stable `__scrypath__/1` reflection keys without generating schema-specific runtime verbs.
-
-## Sync modes
-
-Call [**`Scrypath.sync_record/3`**](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3) after successful repo persistence. Choose **`:inline`** for the first-hour path and workflows that can wait on backend work, **`:oban`** when durable enqueue and worker throughput matter, or **`:manual`** for imports and operator-controlled follow-up. A successful return means work was accepted, or—when inline task waiting applies—completed; neither makes the database and search writes atomic, and accepted work may not yet be visible in search. See [sync modes and visibility](guides/sync-modes-and-visibility.md) for the exact return contract, lifecycle, and recovery guidance.
-
-## Versioning and upgrades
-
-Scrypath follows semantic versioning for the public API: **minor** releases can add backwards-compatible capability; **major** releases signal breaking changes worth a deliberate upgrade read. Patch releases stay focused on fixes and safe doc corrections - see **`CHANGELOG.md`** at the repository root for the human-facing release narrative.
-
-The version in root **`mix.exs`** (`@version`) is the source of truth for **this** checkout; the latest published package is listed on [hex.pm/packages/scrypath](https://hex.pm/packages/scrypath).
-
-Quality for the packaged artifact is guarded by **`mix verify.phase11`**, the always-on gate referenced from [docs/releasing.md](docs/releasing.md). That document - not this README - owns the full verify matrix, Release Please flow, and publish checks for maintainers.
-
-## Search
-
-The common search path stays small and explicit:
+Point Scrypath at Meilisearch in `config/runtime.exs`:
 
 ```elixir
-{:ok, result} =
-  Scrypath.search(MyApp.Blog.Post, "ecto",
-    backend: Scrypath.Meilisearch,
-    repo: Repo,
-    filter: [status: "published"],
-    sort: [desc: :inserted_at],
-    page: [number: 2, size: 20],
-    preload: [:author]
-  )
+import Config
 
+config :scrypath, :defaults,
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700",
+  repo: MyApp.Repo
+```
+
+After a successful repo write, sync the record:
+
+```elixir
+{:ok, post} =
+  MyApp.Repo.insert(%MyApp.Blog.Post{title: "Ecto search", body: "Hello", status: "published"})
+
+{:ok, _sync} = Scrypath.sync_record(MyApp.Blog.Post, post, sync_mode: :inline)
+```
+
+Choose **`:inline`** for the first-hour path, **`:oban`** when durable enqueue and worker throughput matter, or **`:manual`** for imports and operator-controlled follow-up. A successful [`Scrypath.sync_record/3`](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3) return means work was accepted or, when inline waiting applies, completed. Neither makes the database and search writes atomic, and accepted work may not yet be visible in search. See [sync modes and visibility](https://hexdocs.pm/scrypath/sync-modes-and-visibility.html) for the exact return contract, lifecycle, and recovery guidance.
+
+Then search. `result.records` holds the matching rows, loaded through your repo:
+
+```elixir
+{:ok, result} = Scrypath.search(MyApp.Blog.Post, "ecto", page: [size: 10])
 result.records
-result.hits
-result.missing_ids
-result.page
 ```
 
-Hydration is explicit and repo-backed. Scrypath does not infer repos globally or hide stale rows when search hits no longer match the database.
+## Next Steps
 
-## Backfill And Reindex
-
-Scrypath treats repair and rebuild work as first-class operator workflows:
-
-- `Scrypath.backfill/2`
-- `Scrypath.reindex/2`
-
-Use backfill when the live index contract is still correct and you need to repair missing or stale documents.
-
-Use managed reindex when the contract changed, settings changed, or you no longer trust the live index contents.
-
-```elixir
-{:ok, result} =
-  Scrypath.reindex(MyApp.Blog.Post,
-    backend: Scrypath.Meilisearch,
-    repo: Repo,
-    batch_size: 500,
-    cutover?: false
-  )
-
-result.live_index
-result.target_index
-result.settings_applied
-result.batches
-result.documents
-result.omitted
-result.cutover
-```
-
-`cutover?: false` leaves the live index untouched while you inspect the rebuilt target.
-
-`result.omitted` counts records that `search_records/2` left out of the rebuilt index. Because the target index is new, those ids are counted rather than deleted.
-
-## Drift Detection And Recovery
-
-Detect drift before deciding whether a live-index backfill is enough or whether you need a full rebuild. Common signals are:
-
-- stale search hits whose hydrated records are now missing
-- document-count mismatches between the source table and the search index
-- failed or discarded sync work
-- stale deletes where search still returns records removed from the database
-- projection or setting changes that should have rewritten every document
-
-Accepted work is not the same thing as search visibility, and durable enqueue is not the same thing as rebuild completion.
-
-Use `Scrypath.sync_status/2` and `Scrypath.failed_sync_work/2` when you need to inspect pending, retrying, failed, or last-successful work without reading raw Meilisearch or Oban payloads.
-
-Use `Scrypath.reconcile_sync/2` when you need a report-first operator view that combines sync visibility, failed work, and rebuild visibility before you decide on recovery.
-
-`Scrypath.reconcile_sync/2` does not heal anything by default. It returns drift signals plus explicit recovery actions so the caller can choose retry, backfill, or reindex deliberately.
-
-## Integration smoke (Meilisearch)
-
-CI runs live Meilisearch-backed tests in a dedicated workflow job. From a source checkout (this task is not part of the Hex package), you can use Docker Compose locally (from the repo root):
-
-```bash
-docker compose up -d
-SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.meilisearch_smoke
-docker compose down
-```
-
-`mix verify.meilisearch_smoke --skip-integration` exits without contacting Meilisearch (useful for quick task wiring checks only; it does not run the live suites).
-
-## Example: Phoenix + Postgres + Meilisearch
-
-For a minimal consumer-shaped setup (Docker Compose with Postgres and Meilisearch on an explicit network, path dependency on this repo, and a scripted smoke test), see [examples/phoenix_meilisearch/README.md](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md).
-
-For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, see [examples/scrypath_ecommerce/README.md](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md).
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full runtime boundary, sync guarantees, drift model, and managed reindex workflow order.
-
-For operational guides, see [Sync Modes and Visibility](guides/sync-modes-and-visibility.md),
-[Meilisearch Concepts](guides/meilisearch-concepts.md),
-[Meilisearch Operations](guides/meilisearch-operations.md),
-[Operator Mix Tasks](guides/operator-mix-tasks.md),
-[Operator Support](docs/operator-support.md), and
-[Search backend operations - SRE view](docs/search-backend-sre.md).
+- Continue with the [golden path](https://hexdocs.pm/scrypath/golden-path.html) for a context module and an IEx check.
+- [Support and compatibility](https://hexdocs.pm/scrypath/support-and-compatibility.html) covers release-backed guidance and supported versions; main may contain unreleased changes. Scope reopens only for a concrete production bug, reviewed outside-adopter evidence, or a deliberate strategic product decision.
+- The [guides overview](https://hexdocs.pm/scrypath/overview.html) indexes every guide, from sync modes to drift recovery.

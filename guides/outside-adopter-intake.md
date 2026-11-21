@@ -29,10 +29,10 @@ These verification commands run from a source checkout of the Scrypath repositor
 
 We use two commands to verify our contracts and runtime posture:
 
-- `mix verify.adopter`: The fast, auth-free, service-free path. It verifies support and readiness contracts.
-- `mix verify.adopter --live`: The live path. It boots the `examples/phoenix_meilisearch` application and runs its tests against a real Meilisearch instance.
+- `mix verify.adopter`: The fast, auth-free, service-free path. It verifies support and readiness contracts (source checkout only; not in the Hex package).
+- `mix verify.adopter --live`: The live path. It boots the `examples/phoenix_meilisearch` application and runs its tests against a real Meilisearch instance (source checkout only; not in the Hex package).
 
-For live operational steps, environment variables, and repo-clone runbook detail, do not guess: follow the exact runbook in [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md).
+For live operational steps, environment variables, and repo-clone runbook detail, do not guess: follow the exact runbook in [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md).
 
 ## Runtime Assumptions
 

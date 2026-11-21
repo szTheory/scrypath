@@ -2,15 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.48
 milestone_name: Discovery and onboarding
+current_phase: 193
+current_phase_name: HexDocs regroup and guards
 status: planning
-last_updated: "2026-11-21T02:40:54.374Z"
-last_activity: 2026-11-20
+stopped_at: Phase 192 complete, ready to plan Phase 193
+last_updated: "2026-11-21T11:04:49.744Z"
+last_activity: 2026-11-21
+last_activity_desc: Phase 192 complete, transitioned to Phase 193
+state_head: 4c87c97bac6a6bb02db765d4f0cd991fb09177c6
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 3
+  completed_phases: 1
+  total_plans: 4
+  completed_plans: 4
+  percent: 33
 ---
 
 # Project State
@@ -24,16 +29,17 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 ## Current Position
 
-Phase: Not started (roadmap approved; Phase 192 next)
-Plan: —
-Status: Ready to discuss Phase 192
-Last activity: 2026-11-21 — Milestone v1.48 started (3 phases and a checkpoint, 16 requirements)
+Phase: 193 — HexDocs regroup and guards
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-21 — Phase 192 complete, transitioned to Phase 193
 
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
 **v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
+**v1.48 plans:** 4 done (192: 4).
 
 ## Accumulated Context
 
@@ -81,8 +87,8 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-20
-Stopped at: v1.47 requirements defined and roadmap created (Phases 189–191)
-Acting next: the kickoff CI chore PR (`ecommerce-path` classifier), then `/gsd-discuss-phase 189`.
+Stopped at: Phase 192 complete, ready to plan Phase 193
+Acting next: ship the Phase 192 PR (squash-merge on green required checks), then `/gsd-autonomous --only 193`. The Hex 0.3.20 release PR waits for the maintainer's explicit yes.
 
 ## Operator Next Steps
 

@@ -104,7 +104,7 @@ See:
 Use this guide when you want to understand the boundary. Use the runnable example when you want to exercise the same shape against Postgres, Meilisearch, and Oban:
 
 - guide path: this guide plus the rest of `guides/`
-- runnable path: [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md)
+- runnable path: [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md)
 
 Use the guide to understand the boundary. Use the example when you want to prove the operational path against real services.
 
