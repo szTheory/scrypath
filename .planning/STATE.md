@@ -2,14 +2,12 @@
 gsd_state_version: "1.0"
 milestone: v1.48
 milestone_name: Discovery and onboarding
-current_phase: 194
-current_phase_name: Website content (optional, CUT at the checkpoint)
-status: planning
-stopped_at: Phase 193 complete, ready to plan Phase 194
-last_updated: "2026-11-21T14:44:16.197Z"
+status: Awaiting next milestone
+stopped_at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone
+last_updated: "2026-11-21T15:46:20.236Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 193 complete, transitioned to Phase 194
-state_head: 03580e78cd9346884f0b86c93dc48a2ebe9d8af4
+last_activity_desc: Milestone v1.48 completed and archived
+state_head: 3f19b00a3652e8c24df4c2e667b9df75d1427074
 progress:
   total_phases: 3
   completed_phases: 2
@@ -25,21 +23,20 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.48 Discovery and onboarding: Phases 192 and 193 are done (Phase 193 ships as its own PR). The entry-point checkpoint ran 2026-11-21 (research/v1.48-prep/CHECKPOINT.md): traffic is effectively nil, so optional Phase 194 is cut and v1.48 closes after 193 (audit, complete, cleanup are next). Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
+**Current focus:** No active milestone. v1.48 Discovery and onboarding is archived (2026-11-21); the next milestone is chosen from the prepared options in [research/v1.49-prep/](research/v1.49-prep/) and [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
 
 ## Current Position
 
-Phase: v1.48 closeout (Phase 194 cut at the checkpoint)
-Plan: None
-Status: Ready to close the milestone
-Last activity: 2026-11-21 — Phase 193 complete, transitioned to Phase 194
-
+Phase: Milestone v1.48 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-21 — Milestone v1.48 completed and archived
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
 **v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
-**v1.48 plans:** 4 done (192: 4).
+**v1.48 plans:** 6 done (192: 4, 193: 2).
 
 ## Accumulated Context
 
@@ -87,8 +84,8 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-20
-Stopped at: Phase 193 complete, ready to plan Phase 194
-Acting next: close v1.48 (audit, complete, cleanup) and prepare the v1.49 choice upstream. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21. The Phase 193 regroup reaches HexDocs only with the next Hex release, which needs the maintainer's explicit yes.
+Stopped at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone.
+Acting next: the maintainer picks the next milestone from the v1.49 prep notes; a Hex release carrying the Phase 193 regroup needs the maintainer's explicit yes. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21.
 
 ## Operator Next Steps
 
