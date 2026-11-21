@@ -437,4 +437,85 @@ defmodule Scrypath.Release.ShippedDocs do
     files = for path <- shipped_files(), do: {path, File.read!(path)}
     scan(files, repo_only_tasks())
   end
+
+  # TRUTH-03 link helpers (Phase 192). A shipped markdown file is read in two places: on GitHub,
+  # where a relative link means a path in the repository, and on HexDocs, where ExDoc turns a
+  # relative `.md` link into the page of the extra with that file name, and any `README.md`
+  # basename into the Scrypath landing page. A repository file outside the package therefore has to
+  # be linked by absolute URL, under this base.
+  @repo_blob_base "https://github.com/szTheory/scrypath/blob/main/"
+
+  # An inline link or image target: the text after `](` up to whitespace or the closing
+  # parenthesis, so an optional title is left out. Reference-style definitions and autolinks do
+  # not occur in the shipped markdown. HTML attributes (`src`, `srcset`, `href` in the README
+  # header block, which a brand test pins to a commit) are not markdown links and are not seen.
+  @inline_link ~r/\]\(\s*([^)\s]*)/
+
+  # The text of an ATX heading, without its marker and closing marks.
+  @heading_text ~r/^\s{0,3}[#]{1,6}\s+(.*?)\s*[#]*\s*$/
+
+  @doc "The base URL repository files outside the package are linked by."
+  @spec repo_blob_base() :: String.t()
+  def repo_blob_base, do: @repo_blob_base
+
+  @doc """
+  `{line, target}` for every inline markdown link and image target, outside fenced code blocks
+  and code spans. `line` is the 1-based line the target sits on (the line of the `](`).
+  """
+  @spec markdown_links(String.t()) :: [{pos_integer(), String.t()}]
+  def markdown_links(text) do
+    text
+    |> blocks()
+    |> Enum.reject(&(&1.kind in [:fence, :blank]))
+    |> Enum.flat_map(&block_links/1)
+  end
+
+  defp block_links(%{line: line, text: text}) do
+    masked = Regex.replace(@code_span, text, fn span -> fill(span, 1, 1) end)
+
+    for [{start, _length}, {from, size}] <- Regex.scan(@inline_link, masked, return: :index) do
+      {line + newlines(binary_part(text, 0, start)), binary_part(text, from, size)}
+    end
+  end
+
+  @doc """
+  The anchor GitHub gives a heading: lowercase, every character other than a letter, a digit, a
+  connector such as an underscore, a space or a hyphen dropped, spaces to hyphens.
+  """
+  @spec github_slug(String.t()) :: String.t()
+  def github_slug(title) do
+    title
+    |> String.downcase()
+    |> String.replace(~r/[^\p{L}\p{M}\p{N}\p{Pc} -]/u, "")
+    |> String.replace(" ", "-")
+  end
+
+  @doc """
+  The anchors of the ATX headings in a markdown text, in order, outside fenced code. A repeated
+  anchor gets `-1`, `-2` and so on, as on GitHub.
+  """
+  @spec heading_slugs(String.t()) :: [String.t()]
+  def heading_slugs(text) do
+    text
+    |> blocks()
+    |> Enum.filter(&(&1.kind == :heading))
+    |> Enum.map(&(&1.text |> heading_title() |> github_slug()))
+    |> number_repeats()
+  end
+
+  # Link markup inside a heading counts by its text, as in the rendered heading.
+  defp heading_title(line) do
+    [title] = Regex.run(@heading_text, line, capture: :all_but_first)
+    Regex.replace(~r/\[([^\]]*)\]\([^)]*\)/, title, "\\1")
+  end
+
+  defp number_repeats(slugs) do
+    {numbered, _seen} =
+      Enum.map_reduce(slugs, %{}, fn slug, seen ->
+        count = Map.get(seen, slug, 0)
+        {if(count == 0, do: slug, else: "#{slug}-#{count}"), Map.put(seen, slug, count + 1)}
+      end)
+
+    numbered
+  end
 end

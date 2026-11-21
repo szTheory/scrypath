@@ -9,7 +9,15 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
   # two change in the same commit (TRUTH-02), and this file is where they cannot drift apart.
   use ExUnit.Case, async: true
 
+  alias Scrypath.MixProject
   alias Scrypath.Release.ShippedDocs
+
+  # What counts as a repository-path link: a `blob/<ref>/<path>` (file) or `tree/<ref>/<path>`
+  # (directory) URL on this repository, capturing kind, ref, path and fragment. Every other link
+  # on the repository host (the CI badge, issue templates) is not a repository-path link.
+  # Plan 04's README link test uses the same definition.
+  @repo_path_link ~r{^https://github\.com/szTheory/scrypath/(blob|tree)/([^/#?]+)(?:/([^#?]*))?(?:\?[^#]*)?(?:#(.*))?$}
+  @absolute_link ~r{^(?:[a-z][a-z0-9+.-]*:|//)}i
 
   @guide "guides/planted.md"
   @unqualified_bullet "- Run `mix verify.adopter` before you ship."
@@ -312,5 +320,180 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
         assert ShippedDocs.scan([{path, @unqualified_bullet}], names) == []
       end
     end
+  end
+
+  # TRUTH-03, source side. The built-docs scan in package_metadata_test.exs cannot see this class:
+  # ExDoc maps any `README.md` basename to the landing page, so `../examples/x/README.md` becomes
+  # a working-looking link to the wrong page. The rule is therefore on the markdown source:
+  #
+  #   * a relative link target must be another docs extra;
+  #   * a link to a repository path outside the package is an absolute `blob/main` (file) or
+  #     `tree/main` (directory) URL whose path exists in the working tree and whose fragment, on
+  #     a markdown file, is a heading of that file;
+  #   * any other absolute link (the CI badge, issue templates, external sites) is checked for
+  #     nothing beyond being absolute.
+  #
+  # The README header images and links are HTML attributes pinned to a commit by
+  # package_metadata_test.exs, not markdown links, so `markdown_links/1` does not see them.
+  describe "links in shipped markdown" do
+    test "shipped markdown links to repo paths outside the package use absolute GitHub URLs",
+         %{files: files} do
+      extras = MixProject.project()[:docs][:extras]
+      pages = for file <- files, file in extras, do: {file, File.read!(file)}
+
+      links =
+        for {file, text} <- pages, link <- ShippedDocs.markdown_links(text), do: {file, link}
+
+      repo_links =
+        Enum.count(links, fn {_file, {_line, target}} -> Regex.match?(@repo_path_link, target) end)
+
+      # Non-vacuity: a scan that read no links, or found no repository link, proves nothing.
+      assert length(links) > 50, "the link scan went vacuous: #{length(links)} links"
+      assert repo_links >= 16, "the repo-path link check went vacuous: #{repo_links} links"
+
+      failures = Enum.flat_map(pages, fn {file, text} -> link_failures(file, text, extras) end)
+
+      assert failures == [],
+             "#{length(failures)} shipped markdown link(s) break the rule:\n" <>
+               Enum.join(failures, "\n")
+    end
+
+    test "the link rule reports planted cases and passes the allowed forms" do
+      extras = MixProject.project()[:docs][:extras]
+      base = ShippedDocs.repo_blob_base()
+      check = fn target -> link_failures("guides/planted.md", "[x](#{target})\n", extras) end
+
+      # Planted failures, one message each, naming file, line and target.
+      relative = "../examples/phoenix_meilisearch/README.md"
+      assert [message] = check.(relative)
+      assert message =~ "guides/planted.md:1 #{relative}"
+      assert message =~ "not a docs extra"
+
+      assert [_] = check.("../.github/workflows/ci.yml")
+      assert [_] = check.("../../outside.md")
+      assert [_] = check.(base <> "no/such/file.md")
+      assert [_] = check.(base <> "scrypath_ops/README.md#no-such-heading")
+      assert [_] = check.(base <> "examples")
+      assert [_] = check.("https://github.com/szTheory/scrypath/tree/main/mix.exs")
+      assert [message] = check.("https://github.com/szTheory/scrypath/blob/v0.3.17/README.md")
+      assert message =~ "must use main"
+
+      # Allowed forms.
+      assert check.("golden-path.md") == []
+      assert check.("golden-path.md#some-heading") == []
+      assert check.("../README.md") == []
+      assert check.("#same-page-anchor") == []
+      assert check.(base <> "scrypath_ops/README.md#production") == []
+      assert check.(base <> "mix.exs#L10") == []
+      assert check.("https://github.com/szTheory/scrypath/tree/main/examples") == []
+
+      assert check.("https://github.com/szTheory/scrypath/actions/workflows/ci.yml/badge.svg") ==
+               []
+
+      assert check.("https://github.com/szTheory/scrypath/issues/new?template=adopter.yml") ==
+               []
+
+      assert check.("https://hexdocs.pm/scrypath/golden-path.html") == []
+
+      # Links in fenced code and in code spans are not links.
+      fenced = "```markdown\n[x](#{relative})\n```\n\nUse `[x](#{relative})` in your README.\n"
+      assert link_failures("guides/planted.md", fenced, extras) == []
+    end
+
+    test "markdown_links returns line and target for inline and image links outside code" do
+      text = """
+      # Title
+
+      See [one](a.md) and [two](https://example.com/x "a title"), plus ![logo](img/logo.svg).
+      A wrapped sentence with a [link
+      across lines](b.md#frag).
+
+      ```sh
+      [skipped](c.md)
+      ```
+
+      `[also skipped](d.md)` but [`code text`](e.md) counts.
+      """
+
+      assert ShippedDocs.markdown_links(text) == [
+               {3, "a.md"},
+               {3, "https://example.com/x"},
+               {3, "img/logo.svg"},
+               {5, "b.md#frag"},
+               {11, "e.md"}
+             ]
+    end
+
+    test "github_slug and heading_slugs follow GitHub's anchor rule" do
+      assert ShippedDocs.github_slug("Mounted host app assets") == "mounted-host-app-assets"
+      assert ShippedDocs.github_slug("Production") == "production"
+      assert ShippedDocs.github_slug("What's `mix verify`? (v2)") == "whats-mix-verify-v2"
+      assert ShippedDocs.github_slug("Snake_case and kebab-case") == "snake_case-and-kebab-case"
+
+      text =
+        "# Same\n\n## Same ##\n\n## [Linked](x.md) heading\n\n```sh\n# not a heading\n```\n\n## Same\n"
+
+      assert ShippedDocs.heading_slugs(text) == ["same", "same-1", "linked-heading", "same-2"]
+    end
+  end
+
+  defp link_failures(file, text, extras) do
+    for {line, target} <- ShippedDocs.markdown_links(text),
+        reason = link_failure(file, target, extras),
+        do: "#{file}:#{line} #{target} - #{reason}"
+  end
+
+  defp link_failure(file, target, extras) do
+    case Regex.run(@repo_path_link, target, capture: :all_but_first) do
+      [kind, ref | rest] -> repo_path_failure(kind, ref, rest)
+      nil -> other_link_failure(file, target, extras)
+    end
+  end
+
+  defp other_link_failure(file, target, extras) do
+    if Regex.match?(@absolute_link, target), do: nil, else: relative_failure(file, target, extras)
+  end
+
+  defp repo_path_failure(kind, ref, rest) do
+    path = Enum.at(rest, 0, "")
+    fragment = Enum.at(rest, 1, "")
+
+    cond do
+      ref != "main" ->
+        "the link uses ref #{ref}; a repository link must use main"
+
+      not repo_path?(kind, path) ->
+        "#{inspect(path)} is not #{if kind == "tree", do: "a directory", else: "a file"} in the working tree"
+
+      fragment != "" and Path.extname(path) == ".md" and
+          fragment not in ShippedDocs.heading_slugs(File.read!(path)) ->
+        "#{path} has no heading with the anchor ##{fragment}"
+
+      true ->
+        nil
+    end
+  end
+
+  defp repo_path?("tree", path), do: File.dir?(path)
+  defp repo_path?("blob", path), do: File.regular?(path)
+
+  defp relative_failure(file, target, extras) do
+    path = target |> String.split(["#", "?"], parts: 2) |> hd()
+    resolved = resolve(file, path)
+
+    if path == "" or resolved in extras do
+      nil
+    else
+      "relative target resolves to #{resolved}, which is not a docs extra; link a repository " <>
+        "path by absolute URL, #{ShippedDocs.repo_blob_base()}<path>"
+    end
+  end
+
+  # The repository-relative path a relative link means, read from the file that holds it. A link
+  # that climbs above the repository root stays absolute and is never an extra.
+  defp resolve(file, path) do
+    root = "/repository-root"
+    base = Path.join(root, Path.dirname(file))
+    path |> Path.expand(base) |> Path.relative_to(root)
   end
 end
