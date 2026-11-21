@@ -131,6 +131,46 @@ defmodule Scrypath.Release.SnippetParityContractTest do
       refute prose =~ "ls"
     end
 
+    # WR-01 (Phase 193 review): the old matcher saw only a plain lowercase info string, so any other
+    # opening line (`html+eex`, a titled fence, an indented one) inverted the pairing for the rest
+    # of the file.
+    test "fences pair line by line: any info string, indent, tilde and longer fence" do
+      text =
+        "A.\n\n```html+eex\n<p>x</p>\n```\n\nB.\n\n```elixir title=\"a.ex\"\nx = 1\n```\n\n" <>
+          "  ~~~Elixir\ny = 2\n  ~~~\n\n````md\n```elixir\nz\n```\n````\n\nC.\n"
+
+      assert [
+               %{lang: "html+eex", body: "<p>x</p>\n"},
+               %{lang: "elixir", body: "x = 1\n"},
+               %{lang: "Elixir", body: "y = 2\n"},
+               %{lang: "md", body: "```elixir\nz\n```\n"}
+             ] = SnippetParity.fences(text)
+
+      assert [%{body: "x = 1\n"}, %{body: "y = 2\n"}] = SnippetParity.elixir_fences(text)
+
+      prose = SnippetParity.prose(text)
+      assert prose =~ "A."
+      assert prose =~ "B."
+      assert prose =~ "C."
+      refute prose =~ "<p>x</p>"
+      refute prose =~ "x = 1"
+      refute prose =~ "y = 2"
+      refute prose =~ "z"
+    end
+
+    test "a fence that is never closed raises, with the line it opened on" do
+      assert_raise ArgumentError, ~r/opened on line 3 is never closed/, fn ->
+        SnippetParity.fences("A.\n\n```html+eex\n<p>x</p>\n\nB.\n")
+      end
+
+      # A shorter closing line does not close a longer fence.
+      assert_raise ArgumentError, ~r/line 1/, fn -> SnippetParity.fences("````md\nx\n```\n") end
+    end
+
+    test "a line that starts with an inline code span is prose, not a fence" do
+      assert SnippetParity.fences("```code``` is inline.\n\nAfter.\n") == []
+    end
+
     test "marker reads the text directly above a fence" do
       text = "# T\n\n#{@marker}\n\n```elixir\nx\n```\n\n```elixir\ny\n```\n"
       [first, second] = SnippetParity.fences(text)

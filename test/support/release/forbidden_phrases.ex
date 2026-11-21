@@ -18,7 +18,9 @@ defmodule Scrypath.Release.ForbiddenPhrases do
   #     `readme_and_guides` rule applies to README.md and every `guides/` path. There is no
   #     allowlist: a shipped hit is reworded, never excused here.
   #   * Fenced code is masked (each character but a newline becomes a space), so line numbers stay
-  #     true and code samples that name a real option or event are not read as prose.
+  #     true and code samples that name a real option or event are not read as prose. Fences are
+  #     paired by `SnippetParity.fences/1` (any info string, indent or tilde fence), which raises on
+  #     a fence that is never closed, so prose between two blocks is never silently skipped.
   #   * Every pattern is wrapped in word boundaries, so a phrase must begin and end with a word
   #     character. A literal's spaces match any run of blanks or one line break, so a hard-wrapped
   #     sentence is caught. A rule is `case` sensitive or insensitive as the table says.
@@ -78,7 +80,7 @@ defmodule Scrypath.Release.ForbiddenPhrases do
 
     hits =
       for {path, text} <- files,
-          masked = mask(text),
+          masked = mask(path, text),
           {rule, regexes} <- compiled,
           applies?(rule["scope"], path),
           regex <- regexes,
@@ -110,9 +112,18 @@ defmodule Scrypath.Release.ForbiddenPhrases do
   end
 
   # Every character of a fenced block except a newline becomes a space. The byte length is kept,
-  # so offsets and line numbers of the prose stay true.
-  defp mask(text) do
-    Enum.reduce(Enum.reverse(SnippetParity.fences(text)), text, fn fence, acc ->
+  # so offsets and line numbers of the prose stay true. A fence that is never closed raises, with
+  # the path, instead of masking prose it should have scanned.
+  defp mask(path, text) do
+    fences =
+      try do
+        SnippetParity.fences(text)
+      rescue
+        error in ArgumentError ->
+          reraise ArgumentError, "#{path}: #{error.message}", __STACKTRACE__
+      end
+
+    Enum.reduce(Enum.reverse(fences), text, fn fence, acc ->
       binary_part(acc, 0, fence.start) <>
         blank(binary_part(acc, fence.start, fence.stop - fence.start)) <>
         binary_part(acc, fence.stop, byte_size(acc) - fence.stop)

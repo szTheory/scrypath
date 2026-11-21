@@ -67,6 +67,23 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
                end)
     end
 
+    # A fence the pairing does not recognise (inside a blockquote, after a list marker) would leave
+    # its prose masked or its code scanned with no error, so every fence-looking line must belong to
+    # a fence the scan found. `Scrypath.Release.SnippetParity.fences/1` itself raises on an
+    # unclosed fence.
+    test "every fence-looking line of README and the guides belongs to a paired fence" do
+      fence_line = ~r/^[ \t>]*(?:`{3,}[^`\n]*|~{3,}.*)$/m
+
+      for {path, text} <- ForbiddenPhrases.targets() do
+        lines = fence_line |> Regex.scan(text) |> length()
+        fences = text |> Scrypath.Release.SnippetParity.fences() |> length()
+
+        assert lines == 2 * fences,
+               "#{path} has #{lines} fence-looking lines but #{fences} paired fence(s): " <>
+                 "a fence inside a blockquote or after a list marker is not recognised"
+      end
+    end
+
     test "the brand rules equal the brand book's do-not-say list" do
       [_before, rest] =
         "brand/BRAND.md" |> File.read!() |> String.split("\nDo not say\n", parts: 2)
@@ -187,6 +204,56 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
       # Prose after the fence keeps its true line.
       after_fence = text <> "\nQuickly.\n"
       assert [{@guide, 9, "time-promise", "Quickly"}] = scan(@guide, after_fence)
+    end
+
+    # WR-01 (Phase 193 review): a fence line the matcher did not recognise used to invert the pairing
+    # for the rest of the file, so prose between two blocks was masked and never scanned.
+    test "prose between fences with any info string, indent or marker is still scanned" do
+      for opener <- [
+            "```html+eex",
+            "```json5",
+            "```Elixir",
+            "```elixir title=\"a.ex\"",
+            "```{.elixir}",
+            "````elixir",
+            "~~~elixir",
+            "  ```elixir",
+            "```"
+          ] do
+        closer = opener |> String.trim() |> String.replace(~r/^(`+|~+).*$/, "\\1")
+
+        text =
+          "Intro.\n\n#{opener}\nx = 1\n#{closer}\n\nSearch is effortless here.\n\n" <>
+            "```elixir\ny = 2\n```\n\nOutro.\n"
+
+        assert [{@guide, 7, "brand-hype", "effortless"}] = scan(@guide, text),
+               "prose after a #{inspect(opener)} block was not scanned"
+      end
+
+      # The same sentence between two plain fences, as before.
+      plain = "```elixir\nx\n```\n\nSearch is effortless here.\n\n```elixir\ny\n```\n"
+      assert [{@guide, 5, "brand-hype", "effortless"}] = scan(@guide, plain)
+    end
+
+    test "a phrase inside any kind of fenced block is not reported" do
+      for opener <- ["```html+eex", "```json5", "```elixir title=\"a.ex\"", "~~~", "  ```sh"] do
+        closer = opener |> String.trim() |> String.replace(~r/^(`+|~+).*$/, "\\1")
+        text = "Intro.\n\n#{opener}\nsearch in five minutes, effortless\n#{closer}\n\nOutro.\n"
+
+        assert scan(@guide, text) == [], "a #{inspect(opener)} block was read as prose"
+      end
+
+      # A shorter fence line inside a longer fence is content, not a close.
+      nested = "````md\n```elixir\neffortless\n```\n````\n\nOutro.\n"
+      assert scan(@guide, nested) == []
+    end
+
+    test "a code fence that is never closed fails loudly instead of mis-masking" do
+      text = "Intro.\n\n```html+eex\n<p>x</p>\n\nSearch is effortless here.\n"
+
+      error = assert_raise ArgumentError, fn -> scan(@guide, text) end
+      assert error.message =~ "guides/planted.md"
+      assert error.message =~ "line 3"
     end
 
     test "word boundaries and case are decided" do
