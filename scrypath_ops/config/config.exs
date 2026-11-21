@@ -46,6 +46,13 @@ config :esbuild,
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
+  ],
+  # Built by hand with `MIX_ENV=dev mix esbuild scrypath_ops_storybook`; the output is tracked like app.js
+  # and is deliberately not part of assets.build (the Docker asset_builder runs that alias unchanged).
+  scrypath_ops_storybook: [
+    args: ~w(js/storybook.js --bundle --target=es2022 --outdir=../priv/static/assets/js),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
 # Configure tailwind (the version is required)
