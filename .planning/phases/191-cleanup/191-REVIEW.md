@@ -164,3 +164,46 @@ Add a planted symlink case. For near copies, consider comparing with trailing wh
 _Reviewed: 2026-11-21T00:12:42Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+
+---
+
+## Fix disposition
+
+**Recorded:** 2026-11-20, on `gsd/phase-191-cleanup`, after the review above.
+**Scope decision:** fix WR-01 and IN-01; defer WR-02, WR-03 and IN-02 to IN-06 with no code change.
+
+What the deferred items have in common: the source invariants and the favicon consumer scan are cheap source checks. They read declarations and file bytes, they have known limits, and they are not proof of rendered text size. Every limit below is a known false negative or a known false alarm, and none of them fires on today's ops source (checked with `git grep`, noted per item where it was). The hosted required checks on the pushed head are the full gate for this fix; `mix verify.repository_contracts` and `mix verify.core` were deliberately not run locally.
+
+**Revisit trigger for every deferred item:** revisit this list if the first real violation or the first false alarm appears in ops source, or when the v1.48 rendered-text and size lint lands (a rendered check makes most of the source-level limits moot, so re-decide which of these still earn their cost then).
+
+### Fixed
+
+| Finding | Status | Commit | What changed |
+|---------|--------|--------|--------------|
+| WR-01 | fixed | `d1af1b56` | (a) the `font-size`, `font`, `style` and `text-transform` patterns are case-insensitive, so `FONT-SIZE: 10px` and `text-transform: UPPERCASE` fail. (b) the arbitrary `text-[` size and the `uppercase` class checks now run on `app.css`, so `@apply uppercase` and `@apply text-[10px]` fail; `animate-spin`, `animate-ping`, `animate-pulse` and `animate-bounce` count as infinite iteration in `@apply` and in `.ex`, `.heex` and `.js` class strings. (c) every `--text-*` token declared in `app.css` must resolve to at least 12 px, whether or not a `var()` names it, so `@theme { --text-xs: 0.5rem }` used only as `text-ops-tiny` fails. |
+| IN-01 | fixed | `aba88094` | The token test header no longer restates the old deletion trigger and churn; it points at the CONTRIBUTING ledger row, so the two cannot disagree. Comment-only. |
+
+Evidence for WR-01, all automated:
+
+- Eight new tests in `examples/scrypath_ecommerce/ui-tokens.test.mjs`: six planted (31 sub-cases, one temp file each, per-file assertions) and two accept cases. Run before the fix, all six planted tests failed and every one of the 31 sub-cases was reported as missed; the accept cases passed. After the fix all 90 node tests pass.
+- `@min_token_test_calls` went from 76 to 84 in the same commit, equal to the literal `^test("` count.
+- The live-source tests stay green on today's source with no rule narrowed. `git grep` over `scrypath_ops/lib`, `scrypath_ops/assets/js` and `app.css` finds no `@apply`, no `animate-spin`, `animate-ping`, `animate-pulse` or `animate-bounce`, no `text-[`, no `uppercase` or `text-transform` in any case, and exactly eight `--text-ops-*` declarations, all at least 12 px. There is no `--text-*` companion property such as `--text-ops-sm--line-height` today.
+- A live mutation confirmed the token check is wired to the real file: lowering `--text-ops-h3` (used only as a class) to `0.5rem` failed "live ops source holds the 12 px font-size floor"; the file was restored with `git checkout`.
+- Side effects to know about: a lowercase `text-transform: uppercase` inside an inline style in `.ex`, `.heex` or `.js` is now reported by the declaration pass with the message "text-transform: uppercase" (before it was the "uppercase class or word" message); the word pass skips a word the declaration pass already reported, so there is one report, not two. The `--text-*` namespace is treated as reserved for sizes: a `--text-*` property that is not a px or rem size (and is not a `--text-x--y` companion) fails closed. `DESIGN-TOKENS.md` gained one sentence saying so.
+
+### Deferred (no code change)
+
+| Finding | Known limit | Live today | Why it is deferred |
+|---------|-------------|------------|--------------------|
+| WR-02 | Escaped quotes in regular Elixir strings. `"<p style=\"font-size: 0.875rem\">x</p>"` is a false positive (the captured value keeps a trailing backslash and fails closed with a misleading message); `"<p style=\"font: 9px x\">x</p>"` is a false negative (the style-attribute channel needs an unescaped quote). | No escaped-quote style attribute or font string in `scrypath_ops/lib`. | Both forms need a small lexer-level change to the string handling; ops writes templates as HEEx or `~H`, where the quotes are plain. The false positive fails closed, so it is loud, not silent. |
+| WR-03 | The favicon consumer scan skips symlinks (a tracked symlink to the pinned unthemed favicon passes), a byte copy with one trailing newline, a path split across string pieces such as `Path.join(["brand", "assets", ...])`, and a directory-level copy into an ignored output tree. | No tracked symlink (`git ls-files -s` shows none with mode 120000). | A future bypass, not a live one. The tripwire in `brand_pin_contract_test.exs` still fires when the pinned file itself changes, so the worst case is a consumer serving the black icon. The planted one-changed-byte case already records that near copies are intended to pass. |
+| IN-02 | A non-finite live ceiling (`Infinity`, `NaN`) turns the ratchets off because the comparisons are guarded with `Number.isFinite`. | All four live ceilings are finite and 0. | Hardening only; a reviewer sees the diff. The cheap test the review suggests (every live ceiling is a non-negative integer) stays available. |
+| IN-03 | `brand_pin_contract_test.exs:859` spells the old directory name whole (`["brand", "brandbook"]`). | One tracked mention outside `.planning/`. | **Kept as the recorded optional cleanup.** The deny scan looks for the slash form, so it does not flag it, both phase summaries record it, and it predates the phase. The suggested one-line fix is to build the second element at runtime the way line 857 does. |
+| IN-04 | The assertion map in `191-01-SUMMARY.md` names the `contrast_child` tests as the survivor of the deleted token-mutation test; they are not an end-to-end witness for a parity-only CSS drift. | n/a (wording) | What survives is unit-level (planted parity cases) plus wiring (`ui_contrast_contract_test.exs` in `@focused_tests`). A new nested canonical child case costs about 5 minutes per run and is not worth it. The review's reword ("unit-level and wiring-level only") stands as the correct reading. |
+| IN-05 | The header says a comment marker inside a string "can only hide a violation on the same line". That is true for `#` and `//` and false for `/* */`, `<!-- -->` and `<%!-- --%>`, whose hidden text can span lines. In `.ex`, ` #fff; font-size: 10px` inside a string also hides the size. | No `/*` in ops JS; the only `#`-after-space-in-a-string lines are seven non-style lines. | No live exposure. The comment sentence is still inaccurate and a one-line correction is available whenever someone next edits that header. |
+| IN-06 | False negatives: `text-[.7rem]` (leading dot), `text-[small]`, `text-(length:--x)`; a literal `class="btn btn-xs"` or `badge-xs` (only the `size: :xs` caller is checked); daisyUI `loading` classes; `el.style.setProperty("font-size", ...)`; `font_size:` keys; `size="xs"` strings; a capitalised `INFINITE` keyword in CSS (a new note from this fix, since the font and text-transform patterns became case-insensitive and this one did not). False alarms: the words `uppercase` or `infinite` in a docstring or message; `def a(%{size: :xs})` pattern heads flagged as callers; `font-size: var(--x, 14px)` and `font: var(--font-ops)` fail closed by design. | None fires on today's ops source. | Each is a cheap-check limit, not a defect: the invariants are documented as source checks, and `animate-spin`, `animate-ping`, `animate-pulse` and `animate-bounce` moved out of this list with the WR-01 fix. Chasing each remaining form costs more than the browser-level check the v1.48 lint will give. |
+
+---
+
+_Fix disposition recorded: 2026-11-20_
+_Fixer: Claude (gsd-code-fixer)_
