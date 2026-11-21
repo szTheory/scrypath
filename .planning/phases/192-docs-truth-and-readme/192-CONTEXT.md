@@ -38,7 +38,7 @@ Out of scope: HexDocs sidebar regroup and upkeep guards (Phase 193), website con
 - One short reference note, `.planning/reference/CLAIM-OWNER-MAP.md`: for each claim (what it is, fit and non-fit, install line, sync modes, support policy, operator UI status) the owning surface (README, HexDocs guide or website) and where the others link. It is written before the README is trimmed and is the input to Phase 193 and the Phase 194 decision. — **Reversibility:** reversible — a planning note.
 
 ### Delivery
-- Plans: (1) inventory, invariant and contract text; (2) README trim, quick path and README tests, the owner map written first; (3) built-docs scan and checks. Squash-merge each green PR per the standing instruction; PRs that touch `guides/`, `test/` or `mix.exs` pay the full lane cost, so batch where the order allows.
+- Plans (revised after planning): four sequential plans on one branch: (1) scanner, inventory and in-place qualifiers; (2) invariant switch-on with the contract text and pin rewrites in one commit, then the owner map; (3) built-docs scan and link fixes; (4) quick path and README trim with its tests. One push and one PR after Plan 04, squash-merged on green per the standing instruction: every plan touches `test/`, so batching saves three 19-minute cycles. The invariant is green at every commit.
 - No Hex release in this phase. The release PR for 0.3.20 needs the maintainer's explicit yes and is raised after the phase lands.
 
 ### Planning-time decisions from research (added 2026-11-20 after 192-RESEARCH.md; all within the locked scope)
@@ -50,6 +50,10 @@ Out of scope: HexDocs sidebar regroup and upkeep guards (Phase 193), website con
 - The built-docs scan (TRUTH-03) runs inside the existing docs build in `BuiltDocsBrandTest` (no second concurrent docs build), scans extras pages only, regex-based, no new dependency. Today's built docs carry 3 unresolved extras links (`.github/workflows/ci.yml` twice and `compose.yaml` in CONTRIBUTING), 2 dead anchors (`readme.html#production`, `readme.html#mounted-host-app-assets`) and 16 repo-path links that ExDoc silently maps to the README page; the phase fixes the sources (absolute GitHub URLs for repo paths) so the scan is green for a real reason, not by an ignore list.
 - `guides/golden-path.md` config snippet (`config :my_app, :scrypath`) is not read by `Scrypath.Config`; the phase corrects it (and the `:137` mention) to the working `config :scrypath, :defaults` shape, since the quick path must agree with it. — **Reversibility:** reversible — a docs edit.
 - `docs_contract_test.exs` is tagged `:docs_contract` and runs only in the hosted `package` lane: the plan's pre-push step runs the doc-pin set by hand (about 3 seconds) before every push.
+
+- Q5 versioning owner: the README keeps one semantic-versioning sentence pointing to the changelog by absolute GitHub URL; the release process stays owned by `docs/releasing.md`. — **Reversibility:** reversible — one sentence.
+- Q6 README-only claims: move at most the drift and backfill sentences into `guides/drift-recovery.md`; retire the rest with pointers to their pinned owners (`ARCHITECTURE.md`, the sync guide, the Meilisearch concepts guide). Each retired claim keeps a pin at its owner.
+- Qualifier unit (tightened by plan review): plain paragraphs are split at sentence boundaries, so the qualifier must be in the same sentence as the mention (or the same list item or table row; a fence or table only through the sentence directly above it). A sibling sentence does not qualify. The planted cases include a sibling-sentence failure.
 
 ### Decided autonomously
 - [Invariant] Q: "Where does the repo-only task list come from?" → Selected: "derived from dev/mix/tasks/ minus lib/mix/tasks/, not hand-kept" — the test recomputes it on every run, so no list can go stale.

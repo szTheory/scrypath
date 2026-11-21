@@ -578,19 +578,19 @@ Not applicable: no rename, refactor or migration. Docs and test files only. Stor
 
 ## Open Questions
 
-1. **Extend the derivation to `scrypath_ops/` and `examples/` tasks (A1)?**
+1. **Extend the derivation to `scrypath_ops/` and `examples/` tasks (A1)?** (RESOLVED: yes, see 192-CONTEXT.md planning-time decisions, derivation sources.)
    - Known: `guides/operator-mix-tasks.md:98-104` (shipped, pinned by `docs_contract_test.exs:633`) says to run `mix scrypath_ops.saved_searches.validate` "from `scrypath_ops/`"; the task lives in `scrypath_ops/lib/mix/tasks/scrypath_ops/saved_searches/validate.ex`. No shipped doc mentions the three example tasks.
    - Unclear: whether the maintainer counts it as in scope of "repo-only task".
    - Recommendation: include it (still derived, not hand-kept); one qualifier sentence fixes it and the pin keeps passing.
-2. **Where do the 16 wrong-target `README.md` links get fixed?**
+2. **Where do the 16 wrong-target `README.md` links get fixed?** (RESOLVED: all 16 fixed with the source-level rule in Plan 03; CONTEXT built-docs scan decision.)
    - Known: only 6 are needed for TRUTH-03 to be green (3 unresolved + 2 dead anchors from 3 files, plus pin B13); all 16 are one find-and-replace to absolute GitHub URLs.
    - Recommendation: fix all 16 with the source-level rule in Plan 3 (or in the same PR as Plan 1's guide edits to avoid editing a file twice).
-3. **Fix `guides/golden-path.md:49-50` (config snippet) now or hand to Phase 193?**
+3. **Fix `guides/golden-path.md:49-50` (config snippet) now or hand to Phase 193?** (RESOLVED: fix now; CONTEXT planning-time decisions, golden-path config.)
    - Recommendation: fix now in the same edit as `:137` (docs truth is this phase's job; the README quick path needs the corrected form anyway).
-4. **README-02 "first code block": README-wide or quick-path-only?** Recommendation: satisfy both (A4).
-5. **"Versioning and upgrades" is neither in CONTEXT's keep list nor its removal list.** It currently carries `mix verify.phase11`, `docs/releasing.md` and a semver statement (`README.md:112-118`); pinned at `docs_contract_test.exs:504-517`. The owner map must assign the semver claim (candidates: one README line + CHANGELOG, or `docs/releasing.md`).
-6. **Do the 10 README-only claims move into guides or retire with a recorded pointer (Table C2)?** Recommendation: move at most the drift and backfill sentences (3 short additions to `guides/drift-recovery.md`), retire the rest with pointers to the pinned ARCHITECTURE and sync-guide equivalents.
-7. **Batching:** Plan 1 and Plan 3 both edit `guides/` and CONTRIBUTING and both pay about 19 min of CI; Plan 2 must carry its pin edits. Two PRs (1+3, 2) or three; trade-off is review size against one fewer 19-minute cycle.
+4. **README-02 "first code block": README-wide or quick-path-only?** Recommendation: satisfy both (A4). (RESOLVED: satisfy both; Plan 04 tests.)
+5. **"Versioning and upgrades" is neither in CONTEXT's keep list nor its removal list.** It currently carries `mix verify.phase11`, `docs/releasing.md` and a semver statement (`README.md:112-118`); pinned at `docs_contract_test.exs:504-517`. The owner map must assign the semver claim (candidates: one README line + CHANGELOG, or `docs/releasing.md`). (RESOLVED: one README sentence pointing to the changelog by absolute GitHub URL, release process owned by docs/releasing.md; CONTEXT Q5 decision.)
+6. **Do the 10 README-only claims move into guides or retire with a recorded pointer (Table C2)?** Recommendation: move at most the drift and backfill sentences (3 short additions to `guides/drift-recovery.md`), retire the rest with pointers to the pinned ARCHITECTURE and sync-guide equivalents. (RESOLVED: move the drift and backfill sentences to guides/drift-recovery.md, retire the rest with pointers to the pinned ARCHITECTURE and sync-guide equivalents; every token gets an owner pin, see Plan 02 and Plan 04 fate log.)
+7. **Batching:** Plan 1 and Plan 3 both edit `guides/` and CONTRIBUTING and both pay about 19 min of CI; Plan 2 must carry its pin edits. Two PRs (1+3, 2) or three; trade-off is review size against one fewer 19-minute cycle. (RESOLVED: four sequential plans on one branch, one push and one PR after Plan 04; CONTEXT Delivery.)
 
 ## Sources
 
