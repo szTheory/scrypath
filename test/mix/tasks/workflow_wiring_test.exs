@@ -2362,13 +2362,12 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       File.chmod!(path, 0o755)
     end
 
-    stub.(
-      "node",
-      "printf 'TAP version 13\\n'\n" <>
-        "/bin/sleep \"${STUB_NODE_SLEEP:-0}\"\n" <>
-        "printf '# tests %s\\n# fail %s\\n' \"${STUB_TESTS:-5}\" \"${STUB_FAILS:-0}\"\n" <>
-        "exit \"${STUB_EXIT:-0}\"\n"
-    )
+    stub.("node", ~S"""
+    printf 'TAP version 13\n'
+    /bin/sleep "${STUB_NODE_SLEEP:-0}"
+    printf '# tests %s\n# fail %s\n' "${STUB_TESTS:-5}" "${STUB_FAILS:-0}"
+    exit "${STUB_EXIT:-0}"
+    """)
 
     stub.("sleep", "exec /bin/sleep 0.1\n")
 
