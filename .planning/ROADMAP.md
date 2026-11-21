@@ -63,9 +63,9 @@ v1.48 Discovery and onboarding is the active milestone (opened 2026-11-21 exactl
 
 Plans:
 - [ ] 192-01-PLAN.md — Derived repo-only scanner with planted cases, pin inventory, and in-place qualifiers so the shipped set is clean
-- [ ] 192-02-PLAN.md — Invariant switched on with the PROJECT.md contract edit and the guide-pin rewrites in one commit; claim owner map and the drift-claim moves
+- [ ] 192-02-PLAN.md — Invariant switched on with the PROJECT.md contract edit and the guide-pin rewrites in one commit; removed-claim inventory with the claim moves to the drift guide and golden path; claim owner map with checked Pinned-by entries
 - [ ] 192-03-PLAN.md — Built-docs link scan (self-link, unresolved, dead anchor) with planted cases; 16 repo-path links made absolute; source-level link rule
-- [ ] 192-04-PLAN.md — Quick path and golden-path config fix, README pins re-pointed to owners, README trimmed with the README contract tests; full local lane mirrors
+- [ ] 192-04-PLAN.md — Quick path and golden-path config fix, README route and section pins re-pointed to owners against the old README, README trimmed in its own commit with the README contract tests; full local lane mirrors
 
 **What this does not prove**: that the new README reads better to a newcomer; time to first search.
 
