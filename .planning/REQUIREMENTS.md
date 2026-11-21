@@ -44,7 +44,7 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Standing guardrails
 
-- [ ] **GATE-03**: Every phase honors the standing rules: squash titles are `docs(...)` or `chore(...)` (no `feat` or `fix`, because no library behavior changes), one full gate run per commit SHA, no new required gate beyond the ledger budget (10 of 12 used; each new gate names a deletion trigger), cheap local checks before pushing (`scripts/ci/pre_push.sh` plus each required lane's local mirror), a fix to a snapshot-based gate is committed before the gate reruns, and the Hex 0.3.20 release PR waits for the maintainer's explicit yes. No Hex release happens in this milestone without that yes.
+- [x] **GATE-03**: Every phase honors the standing rules: squash titles are `docs(...)` or `chore(...)` (no `feat` or `fix`, because no library behavior changes), one full gate run per commit SHA, no new required gate beyond the ledger budget (10 of 12 used; each new gate names a deletion trigger), cheap local checks before pushing (`scripts/ci/pre_push.sh` plus each required lane's local mirror), a fix to a snapshot-based gate is committed before the gate reruns, and the Hex 0.3.20 release PR waits for the maintainer's explicit yes. No Hex release happens in this milestone without that yes.
 
 ## v2 Requirements
 
@@ -87,7 +87,7 @@ Deferred; not in this roadmap.
 | SITE-07 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
 | SITE-08 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
 | SITE-09 | Phase 194 (cut at the checkpoint 2026-11-21) | Cut |
-| GATE-03 | Standing (every phase) | Pending |
+| GATE-03 | Standing (every phase) | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total
