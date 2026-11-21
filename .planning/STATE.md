@@ -6,9 +6,9 @@ status: planning
 last_updated: "2026-11-21T20:03:22.969Z"
 last_activity: 2026-11-21
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 15
   completed_plans: 0
   percent: 0
 ---
@@ -20,14 +20,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.49 Catalog foundation (opened 2026-11-21): requirements and roadmap being defined; phases 195 to 198 per [catalog-prep/SYNTHESIS.md](research/catalog-prep/SYNTHESIS.md).
+**Current focus:** v1.49 Catalog foundation (opened 2026-11-21): requirements and roadmap defined (23 requirements, 4 phases); phases 195 to 198 per [catalog-prep/SYNTHESIS.md](research/catalog-prep/SYNTHESIS.md).
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 195 (Mount and prove), not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-11-21 — Milestone v1.49 started
+Status: Ready to discuss or plan Phase 195
+Last activity: 2026-11-21 — Milestone v1.49 roadmap created
 
 
 ## Performance Metrics

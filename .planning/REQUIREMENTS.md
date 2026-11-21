@@ -79,35 +79,35 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOUNT-01 | — | Pending |
-| MOUNT-02 | — | Pending |
-| MOUNT-03 | — | Pending |
-| MOUNT-04 | — | Pending |
-| FIX-01 | — | Pending |
-| FIX-02 | — | Pending |
-| FIX-03 | — | Pending |
-| FIX-04 | — | Pending |
-| PILOT-01 | — | Pending |
-| PILOT-02 | — | Pending |
-| PILOT-03 | — | Pending |
-| PILOT-04 | — | Pending |
-| PILOT-05 | — | Pending |
-| PILOT-06 | — | Pending |
-| PILOT-07 | — | Pending |
-| SCALE-01 | — | Pending |
-| SCALE-02 | — | Pending |
-| SCALE-03 | — | Pending |
-| FLOW-01 | — | Pending |
-| FLOW-02 | — | Pending |
-| FLOW-03 | — | Pending |
-| FLOW-04 | — | Pending |
-| FLOW-05 | — | Pending |
+| MOUNT-01 | Phase 195 | Pending |
+| MOUNT-02 | Phase 195 | Pending |
+| MOUNT-03 | Phase 195 | Pending |
+| MOUNT-04 | Phase 195 | Pending |
+| FIX-01 | Phase 196 | Pending |
+| FIX-02 | Phase 196 | Pending |
+| FIX-03 | Phase 196 | Pending |
+| FIX-04 | Phase 196 | Pending |
+| PILOT-01 | Phase 197 | Pending |
+| PILOT-02 | Phase 197 | Pending |
+| PILOT-03 | Phase 197 | Pending |
+| PILOT-04 | Phase 197 | Pending |
+| PILOT-05 | Phase 197 | Pending |
+| PILOT-06 | Phase 197 | Pending |
+| PILOT-07 | Phase 197 | Pending |
+| SCALE-01 | Phase 198 | Pending |
+| SCALE-02 | Phase 198 | Pending |
+| SCALE-03 | Phase 198 | Pending |
+| FLOW-01 | Phase 195 (standing, every phase) | Pending |
+| FLOW-02 | Phase 195 (standing, every phase) | Pending |
+| FLOW-03 | Phase 195 (standing, every phase) | Pending |
+| FLOW-04 | Phase 195 (standing, every phase) | Pending |
+| FLOW-05 | Phase 198 (also runs after Phase 197 if 198 is cut) | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 0
-- Unmapped: 23 ⚠️
+- Mapped to phases: 23 (Phase 195: 8 including standing FLOW-01 to FLOW-04; 196: 4; 197: 7; 198: 4 including FLOW-05)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-21*
-*Last updated: 2026-11-21 after initial definition*
+*Last updated: 2026-11-21 after roadmap creation (traceability mapped)*
