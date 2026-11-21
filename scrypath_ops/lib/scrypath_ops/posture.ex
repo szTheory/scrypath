@@ -414,7 +414,7 @@ defmodule ScrypathOps.Posture do
   end
 
   defp operator_mix_guide_path do
-    Path.expand("../../guides/operator-mix-tasks.md", __DIR__)
+    Path.expand("../../../guides/operator-mix-tasks.md", __DIR__)
   end
 
   defp maybe_append_mix_status(checks) do

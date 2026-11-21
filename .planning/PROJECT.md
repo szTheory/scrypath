@@ -218,10 +218,10 @@ Current planning files: **`.planning/{PROJECT,ROADMAP,STATE}.md`** (fresh `REQUI
 
 ## Release Train Posture
 
-- **Active milestone:** None. v1.46 is archived and on `main` with documented debt (see its audit); v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
+- **Active milestone:** None open. v1.48 is closed and archived; v1.49 Catalog foundation is prepared (`.planning/MILESTONE-CONTEXT.md`, `.planning/research/catalog-prep/SYNTHESIS.md`) and not yet opened. v1.45 keeps its qualified historical verification overrides. Hex publication remains a separate maintainer yes. Older dated readiness and approval limits retain their original cutoffs.
 - **Policy:** Keep `main` green on the lean required gates and prefer PR-first execution for serious milestone or feature-depth work.
-- **Current goals:** Finish the approved v1.45 candidate/final-source machine gates, retain the external receipt and local planning tag, then stop before the next milestone boundary.
-- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new UI surfaces, and unrelated workflow expansion remain out of scope.
+- **Current goals:** Open v1.49 Catalog foundation (spike first) after the two pre-work PRs merge. No Hex release without the maintainer's explicit yes.
+- **Scope guard:** Autocomplete/suggestions, tenant-token helpers, public multi-backend support, vector/hybrid retrieval, new core APIs, new auth models, new product UI surfaces, and unrelated workflow expansion remain out of scope. The one recorded exception is the ScrypathOps component catalog (phoenix_storybook, a maintainer decision of 2026-10-25, ADR 0001): it is a dev and test review surface inside `scrypath_ops/`, never part of the Hex package or a production route, and it is not a new product UI surface.
 
 **v1.37 implementation outcome (2026-08-26):** runtime input and secret
 boundaries hardened; runtime xref cycles reduced to zero; write/search/settings/
