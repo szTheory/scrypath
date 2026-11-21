@@ -11,10 +11,10 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Mount and prove (Phase 195)
 
-- [ ] **MOUNT-01**: `phoenix_storybook ~> 1.5` is a dev/test-only dependency of `scrypath_ops` (`only: [:dev, :test]`). The existing storybook row in `dependency_boundary_contract_test.exs` flips from vacuous to real: it asserts the dependency is present with that `only` list, and a planted loosening (the dependency in prod, or removed) fails it. `PhoenixStorybook` and `MDEx` are in the absent-module list for every mounted and direct-prod scratch consumer and in the `forbidden_dep` and `forbidden_modules` lists of `verify-dependency-boundaries.sh` (prod image); `package_metadata_test.exs` refutes `fixtures` and `storybook` in the Hex tarball.
-- [ ] **MOUNT-02**: The storybook route exists only in dev and test, bound to loopback. The route macro's environment guard sits outside the `quote`; a test proves the production route table (`DevRouter.__routes__()` or the prod scratch consumer probe) has no `/storybook` path, with a planted case that fails if the guard is removed. No storybook route is ever mounted in the ecommerce host's production image.
+- [x] **MOUNT-01**: `phoenix_storybook ~> 1.5` is a dev/test-only dependency of `scrypath_ops` (`only: [:dev, :test]`). The existing storybook row in `dependency_boundary_contract_test.exs` flips from vacuous to real: it asserts the dependency is present with that `only` list, and a planted loosening (the dependency in prod, or removed) fails it. `PhoenixStorybook` and `MDEx` are in the absent-module list for every mounted and direct-prod scratch consumer and in the `forbidden_dep` and `forbidden_modules` lists of `verify-dependency-boundaries.sh` (prod image); `package_metadata_test.exs` refutes `fixtures` and `storybook` in the Hex tarball.
+- [x] **MOUNT-02**: The storybook route exists only in dev and test, bound to loopback. The route macro's environment guard sits outside the `quote`; a test proves the production route table (`DevRouter.__routes__()` or the prod scratch consumer probe) has no `/storybook` path, with a planted case that fails if the guard is removed. No storybook route is ever mounted in the ecommerce host's production image.
 - [x] **MOUNT-03**: The storybook renders with ScrypathOps's real styling and hooks: `css_path` points at the built `/assets/css/app.css`, a small `storybook.js` sets the theme attribute the app uses and registers the same LiveView hooks as `app.js`, and five primitives have stories. A render-all test loads every story variation through the real iframe route (not a helper that bypasses it) and fails on empty output or `data-phx-error`; a planted failing story proves it can fail. Variations that carry adopter brand colors keep them outside the roots the UI literal ratchet scans.
-- [ ] **MOUNT-04**: A measured go/no-go is recorded in `GO-NO-GO.md` and ADR 0001 is amended with the numbers: cold and warm `ops-ui` timings from a hosted run (`gh run view <id> --json jobs`), the Rust NIF fetch time, lock growth, and whether a phoenix_storybook advisory is open. Continue is pre-authorized unless an ADR 0001 trigger trips (advisory open over 14 days; cold `ops-ui` more than 3 minutes over baseline; isolation work over a day; the Docker asset-builder stage more than 60 seconds over; NIF failure twice). If a trigger trips, the run stops and asks the maintainer; the milestone does not continue on its own.
+- [x] **MOUNT-04**: A measured go/no-go is recorded in `GO-NO-GO.md` and ADR 0001 is amended with the numbers: cold and warm `ops-ui` timings from a hosted run (`gh run view <id> --json jobs`), the Rust NIF fetch time, lock growth, and whether a phoenix_storybook advisory is open. Continue is pre-authorized unless an ADR 0001 trigger trips (advisory open over 14 days; cold `ops-ui` more than 3 minutes over baseline; isolation work over a day; the Docker asset-builder stage more than 60 seconds over; NIF failure twice). If a trigger trips, the run stops and asks the maintainer; the milestone does not continue on its own.
 
 ### Fixtures and three adopters (Phase 196)
 
@@ -41,10 +41,10 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### Standing rules (every phase)
 
-- [ ] **FLOW-01**: No Hex release and no release PR in this milestone. Every PR title is `docs`, `chore`, `test` or `ci`, never `feat` or `fix`: release-please has one root package and no `exclude-paths`, so a `feat:` or `fix:` that touches `scrypath_ops/` opens a release PR. The PILOT-02 fix therefore ships under a `chore(ops-ui):` or `test(ops-ui):` title, and the PR body says plainly that it fixes a defect. A change that cannot honestly carry one of those titles is raised with the maintainer before merge.
-- [ ] **FLOW-02**: Each phase stays within its plan cap (5), and the milestone stops and re-asks at 20 plans. Ask-first items stay ask-first: an ADR 0001 trigger tripping or a no-go; a new required CI context or branch-protection change; changing root `lib/` behavior (including findings F1 and F2); copying from the six sibling brand repos; a runtime dependency beyond the storybook subtree.
-- [ ] **FLOW-03**: `.planning/config.json`, `.planning/state.json` and `.impeccable/config.json` are never staged; every commit names its paths explicitly. Every phase's local mirror of each required lane runs before a push (pre-push confidence), and a skipped one has a recorded reason.
-- [ ] **FLOW-04**: Findings F1 (`Tasks.list_sync_tasks` truncates history at 1,000 tasks though Meilisearch keeps about 1M), F2 (the ops UI prints Meilisearch error messages unbounded), D2 (retry receipts are per-process) and the test-hygiene items in SYNTHESIS are recorded and handed to the maintainer, not fixed, unless the maintainer says so.
+- [x] **FLOW-01**: No Hex release and no release PR in this milestone. Every PR title is `docs`, `chore`, `test` or `ci`, never `feat` or `fix`: release-please has one root package and no `exclude-paths`, so a `feat:` or `fix:` that touches `scrypath_ops/` opens a release PR. The PILOT-02 fix therefore ships under a `chore(ops-ui):` or `test(ops-ui):` title, and the PR body says plainly that it fixes a defect. A change that cannot honestly carry one of those titles is raised with the maintainer before merge.
+- [x] **FLOW-02**: Each phase stays within its plan cap (5), and the milestone stops and re-asks at 20 plans. Ask-first items stay ask-first: an ADR 0001 trigger tripping or a no-go; a new required CI context or branch-protection change; changing root `lib/` behavior (including findings F1 and F2); copying from the six sibling brand repos; a runtime dependency beyond the storybook subtree.
+- [x] **FLOW-03**: `.planning/config.json`, `.planning/state.json` and `.impeccable/config.json` are never staged; every commit names its paths explicitly. Every phase's local mirror of each required lane runs before a push (pre-push confidence), and a skipped one has a recorded reason.
+- [x] **FLOW-04**: Findings F1 (`Tasks.list_sync_tasks` truncates history at 1,000 tasks though Meilisearch keeps about 1M), F2 (the ops UI prints Meilisearch error messages unbounded), D2 (retry receipts are per-process) and the test-hygiene items in SYNTHESIS are recorded and handed to the maintainer, not fixed, unless the maintainer says so.
 - [ ] **FLOW-05**: The milestone-end review happens after the last executed phase and before the audit: the storybook is refreshed to current `main`, the maintainer is told what UI changed and where to look, and the run waits (AGENTS.md "Milestone-end review"). The feedback note is folded into the v1.50 input.
 
 ## v2 Requirements
@@ -79,10 +79,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| MOUNT-01 | Phase 195 | Pending |
-| MOUNT-02 | Phase 195 | Pending |
+| MOUNT-01 | Phase 195 | Complete |
+| MOUNT-02 | Phase 195 | Complete |
 | MOUNT-03 | Phase 195 | Complete |
-| MOUNT-04 | Phase 195 | Pending |
+| MOUNT-04 | Phase 195 | Complete |
 | FIX-01 | Phase 196 | Pending |
 | FIX-02 | Phase 196 | Pending |
 | FIX-03 | Phase 196 | Pending |
@@ -97,10 +97,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCALE-01 | Phase 198 | Pending |
 | SCALE-02 | Phase 198 | Pending |
 | SCALE-03 | Phase 198 | Pending |
-| FLOW-01 | Phase 195 (standing, every phase) | Pending |
-| FLOW-02 | Phase 195 (standing, every phase) | Pending |
-| FLOW-03 | Phase 195 (standing, every phase) | Pending |
-| FLOW-04 | Phase 195 (standing, every phase) | Pending |
+| FLOW-01 | Phase 195 (standing, every phase) | Complete |
+| FLOW-02 | Phase 195 (standing, every phase) | Complete |
+| FLOW-03 | Phase 195 (standing, every phase) | Complete |
+| FLOW-04 | Phase 195 (standing, every phase) | Complete |
 | FLOW-05 | Phase 198 (also runs after Phase 197 if 198 is cut) | Pending |
 
 **Coverage:**
