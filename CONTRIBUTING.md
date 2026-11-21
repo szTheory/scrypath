@@ -8,7 +8,8 @@
 - For the outside-adopter review workflow, evidence classes (Class A through D), and verification commands, refer to [`guides/outside-adopter-intake.md`](guides/outside-adopter-intake.md). Do not duplicate the intake checklist or live runbook here.
 - The canonical adopter mental-model guide is [`guides/jtbd-and-user-flows.md`](guides/jtbd-and-user-flows.md). Update it when the library adds, removes, or materially changes a user-facing flow.
 - **Sync modes, visibility, and operator lifecycle** live in [`guides/sync-modes-and-visibility.md`](guides/sync-modes-and-visibility.md)—update that guide instead of duplicating semantics in README or here.
-- Changing published docs should keep **`mix docs --warnings-as-errors`** green. The optional docs contract suite remains available via **`mix test test/scrypath/docs_contract_test.exs`**, but it is no longer part of the default CI and release gates.
+- Changing published docs should keep **`mix docs --warnings-as-errors`** green. The docs contract suite, **`mix test test/scrypath/docs_contract_test.exs`**, runs in the required `package` lane through `mix verify.package` and is excluded from `core`, so run it by name when you change a guide, the README or the docs config in `mix.exs`.
+- **Same-PR rule for public-surface claims.** When a change moves something the README, a guide, the website or the operator UI says about Scrypath (what it is, when it fits, the install line, sync modes, support policy, the operator UI's status), update every surface that owns or repeats that claim in the same PR. The [claim owner map](https://github.com/szTheory/scrypath/blob/main/.planning/reference/CLAIM-OWNER-MAP.md) names the owner and the others.
 
 ## Integrators: pitfalls before you file an issue
 
