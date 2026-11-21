@@ -5,17 +5,17 @@ milestone_name: Catalog foundation
 current_phase: 195
 current_phase_name: Mount and prove
 status: executing
-stopped_at: Completed 195-01-PLAN.md
-last_updated: "2026-11-21T21:32:35.889Z"
+stopped_at: Completed 195-02-PLAN.md
+last_updated: "2026-11-21T21:47:33.695Z"
 last_activity: 2026-11-21
-last_activity_desc: Plan 195-01 complete
-state_head: 38da331c015b22fcbf6e426d047a9d2c0b552ec6
+last_activity_desc: Plan 195-02 complete
+state_head: ccda4080c5111af1816aa4233320ccb58a697807
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 15
-  completed_plans: 1
-  percent: 7
+  completed_plans: 2
+  percent: 13
 ---
 
 # Project State
@@ -30,7 +30,7 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 ## Current Position
 
 Phase: 195 (Mount and prove) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-11-21 — Phase 195 execution started
 
@@ -45,6 +45,7 @@ Last activity: 2026-11-21 — Phase 195 execution started
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 195 P01 | 12 min | 3 tasks | 16 files |
+| Phase 195 P02 | 13 min | 3 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,8 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - No human UAT: every success criterion is an executable check. Hex releases need the maintainer's explicit yes. Green PRs are squash-merged without asking (standing instruction 2026-11-19, see AGENTS.md).
 - [Phase 195]: Catalog route flag is read with Application.get_env at expansion, not Macro.expand of compile_env, and the guard sits outside the quote — Macro.expand of a compile_env call yields a call AST that is always truthy, which would make the guard vacuous
 - [Phase 195]: Test-env catalog_routes flag is off when PHX_SERVER=true so the Docker runtime_test image never mounts /storybook — That image binds 0.0.0.0; the flag must imply a loopback bind
+- [Phase 195]: Planted storybook endpoint is a full request pipeline (Plug.Parsers and render_errors), and render-all crash results carry their cause — Without a parser the query string is dropped and every plant renders the first variation with no theme; without render_errors every crash reads as a missing error view. Pinning the cause per plant keeps a mistyped route from passing as the planted failure.
+- [Phase 195]: Fifth primitive story is ops_sync_status, not the form-field class; the form-field story moves to Phase 197's patterns tier — ops_field is mostly phx-hook behavior that a server-side render-all cannot exercise, so a story for it would claim more than its test proves.
 
 ### Pending Todos
 
@@ -93,9 +96,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-21T21:32:35.873Z
-Stopped at: Completed 195-01-PLAN.md
-Acting next: execute Plan 195-02 (css_path, storybook.js, four more primitive stories, render-all with a planted failing tree). Plan 195-03 owns the push, the hosted timings and the go/no-go; a Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-21T21:47:33.673Z
+Stopped at: Completed 195-02-PLAN.md
+Acting next: execute Plan 195-03 (full local lane mirror, the phase PR and hosted cold and warm timings, GO-NO-GO.md, the ADR 0001 amendment). Plan 195-03 owns the push, the hosted timings and the go/no-go; a Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps

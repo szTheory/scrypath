@@ -13,7 +13,7 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 - [ ] **MOUNT-01**: `phoenix_storybook ~> 1.5` is a dev/test-only dependency of `scrypath_ops` (`only: [:dev, :test]`). The existing storybook row in `dependency_boundary_contract_test.exs` flips from vacuous to real: it asserts the dependency is present with that `only` list, and a planted loosening (the dependency in prod, or removed) fails it. `PhoenixStorybook` and `MDEx` are in the absent-module list for every mounted and direct-prod scratch consumer and in the `forbidden_dep` and `forbidden_modules` lists of `verify-dependency-boundaries.sh` (prod image); `package_metadata_test.exs` refutes `fixtures` and `storybook` in the Hex tarball.
 - [ ] **MOUNT-02**: The storybook route exists only in dev and test, bound to loopback. The route macro's environment guard sits outside the `quote`; a test proves the production route table (`DevRouter.__routes__()` or the prod scratch consumer probe) has no `/storybook` path, with a planted case that fails if the guard is removed. No storybook route is ever mounted in the ecommerce host's production image.
-- [ ] **MOUNT-03**: The storybook renders with ScrypathOps's real styling and hooks: `css_path` points at the built `/assets/css/app.css`, a small `storybook.js` sets the theme attribute the app uses and registers the same LiveView hooks as `app.js`, and five primitives have stories. A render-all test loads every story variation through the real iframe route (not a helper that bypasses it) and fails on empty output or `data-phx-error`; a planted failing story proves it can fail. Variations that carry adopter brand colors keep them outside the roots the UI literal ratchet scans.
+- [x] **MOUNT-03**: The storybook renders with ScrypathOps's real styling and hooks: `css_path` points at the built `/assets/css/app.css`, a small `storybook.js` sets the theme attribute the app uses and registers the same LiveView hooks as `app.js`, and five primitives have stories. A render-all test loads every story variation through the real iframe route (not a helper that bypasses it) and fails on empty output or `data-phx-error`; a planted failing story proves it can fail. Variations that carry adopter brand colors keep them outside the roots the UI literal ratchet scans.
 - [ ] **MOUNT-04**: A measured go/no-go is recorded in `GO-NO-GO.md` and ADR 0001 is amended with the numbers: cold and warm `ops-ui` timings from a hosted run (`gh run view <id> --json jobs`), the Rust NIF fetch time, lock growth, and whether a phoenix_storybook advisory is open. Continue is pre-authorized unless an ADR 0001 trigger trips (advisory open over 14 days; cold `ops-ui` more than 3 minutes over baseline; isolation work over a day; the Docker asset-builder stage more than 60 seconds over; NIF failure twice). If a trigger trips, the run stops and asks the maintainer; the milestone does not continue on its own.
 
 ### Fixtures and three adopters (Phase 196)
@@ -81,7 +81,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | MOUNT-01 | Phase 195 | Pending |
 | MOUNT-02 | Phase 195 | Pending |
-| MOUNT-03 | Phase 195 | Pending |
+| MOUNT-03 | Phase 195 | Complete |
 | MOUNT-04 | Phase 195 | Pending |
 | FIX-01 | Phase 196 | Pending |
 | FIX-02 | Phase 196 | Pending |
