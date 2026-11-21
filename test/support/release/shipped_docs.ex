@@ -479,6 +479,21 @@ defmodule Scrypath.Release.ShippedDocs do
   end
 
   @doc """
+  True when the markdown text links the guide with this slug (the file name without `.md`): by
+  its relative `guides/<slug>.md` form, as a README read on GitHub links it, or by its
+  `https://hexdocs.pm/scrypath/<slug>.html` form, as the trimmed README links it. A fragment
+  after the target is ignored. A plain mention outside a link does not count.
+  """
+  @spec links_to_guide?(String.t(), String.t()) :: boolean()
+  def links_to_guide?(text, slug) do
+    forms = ["guides/#{slug}.md", "https://hexdocs.pm/scrypath/#{slug}.html"]
+
+    text
+    |> markdown_links()
+    |> Enum.any?(fn {_line, target} -> hd(String.split(target, "#", parts: 2)) in forms end)
+  end
+
+  @doc """
   The anchor GitHub gives a heading: lowercase, every character other than a letter, a digit, a
   connector such as an underscore, a space or a hyphen dropped, spaces to hyphens.
   """

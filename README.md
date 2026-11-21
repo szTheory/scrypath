@@ -9,6 +9,8 @@
 
 Scrypath, the Ecto-native search indexing library, helps Phoenix and Ecto teams add search to existing schemas without hiding the operational work that keeps search in sync.
 
+Scrypath needs a running Meilisearch server; the repository's examples use the `getmeili/meilisearch:v1.15` image on `http://127.0.0.1:7700`. Meilisearch is eventually consistent, so a record can take a moment to show up in search after you save it.
+
 Public website: [sztheory.github.io/scrypath](https://sztheory.github.io/scrypath/)
 
 ## Installation
@@ -41,7 +43,9 @@ Scrypath is Meilisearch-first in v1. Its backend seam is internal, not a promise
 
 ## Quick Path
 
-Start with one searchable schema and one Phoenix context that owns both repo persistence and Scrypath orchestration. Declare search metadata with **`use Scrypath`** on the Ecto schema, own **`Scrypath.sync_record/3`** after successful repo writes and **`Scrypath.search/3`** from context functions, and keep controllers or LiveView as thin callers into that boundary. For the full copy-paste path - including context module, controller, and IEx check - follow [guides/golden-path.md](guides/golden-path.md).
+Start a Meilisearch server first; these steps assume it answers on `http://127.0.0.1:7700`. Because Meilisearch is eventually consistent, a new record can take a moment to show up in search. The [golden path](guides/golden-path.md) adds a context module and an IEx check.
+
+Declare the searchable fields on your Ecto schema:
 
 ```elixir
 defmodule MyApp.Blog.Post do
@@ -59,6 +63,33 @@ defmodule MyApp.Blog.Post do
     timestamps()
   end
 end
+```
+
+Point Scrypath at Meilisearch in `config/runtime.exs`:
+
+```elixir
+import Config
+
+config :scrypath, :defaults,
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700",
+  repo: MyApp.Repo
+```
+
+After a successful repo write, sync the record:
+
+```elixir
+{:ok, post} =
+  MyApp.Repo.insert(%MyApp.Blog.Post{title: "Ecto search", body: "Hello", status: "published"})
+
+{:ok, _sync} = Scrypath.sync_record(MyApp.Blog.Post, post, sync_mode: :inline)
+```
+
+Then search. `result.records` holds the matching rows, loaded through your repo:
+
+```elixir
+{:ok, result} = Scrypath.search(MyApp.Blog.Post, "ecto", page: [size: 10])
+result.records
 ```
 
 ## When Scrypath Fits

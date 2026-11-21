@@ -41,16 +41,18 @@ For where Meilisearch fits in production (networking, keys, backups vs rebuildin
 
 ## Application config
 
-Point your **otp_app** at Meilisearch in **`config/runtime.exs`** or **`config/dev.exs`** (pick the file your team uses for local secrets):
+Point Scrypath at Meilisearch in **`config/runtime.exs`** or **`config/dev.exs`** (pick the file your team uses for local secrets):
 
 ```elixir
 import Config
 
-config :my_app, :scrypath,
-  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700"
+config :scrypath, :defaults,
+  backend: Scrypath.Meilisearch,
+  meilisearch_url: System.get_env("SCRYPATH_MEILISEARCH_URL") || "http://127.0.0.1:7700",
+  repo: MyApp.Repo
 ```
 
-Wire that into Scrypath’s backend configuration wherever you centralize runtime options (see [Getting Started](getting-started.md) for the shape: **backend module** + explicit **`sync_mode`** at call sites). Use placeholders for URLs in docs you commit; never embed real API keys.
+Scrypath reads these defaults from its own **`:scrypath`** application key, and any option you pass to a call overrides them (see [Getting Started](getting-started.md) for the shape: **backend module** + explicit **`sync_mode`** at call sites). Use placeholders for URLs in docs you commit; never embed real API keys.
 
 ## Schema
 
