@@ -1,5 +1,8 @@
 # Paste prompts for the storybook catalog context pass (2026-11-21)
 
+> **Superseded the same day.** The prompts below were replaced by four tailored prompts (accrue, threadline, fablebook and the brandbook session) delivered in chat; each reply's question numbers refer to those, and each ended with an advice block: "give me your advice: the 5 things you'd do first and in what order, the 5 you'd refuse, the biggest risk of burning time without value and its early warning sign, anything no question asked, each with confidence and evidence". Replies are in `replies/`. This file keeps the generic first draft for provenance.
+
+
 Why: the maintainer wants a Phoenix Storybook catalog for ScrypathOps, built from realistic adopter data, and wants sibling projects' lessons and the brandbook session's fake-company scenarios brought in as provenance-tagged context. Owner decision D1 (2026-10-25) already adopted `phoenix_storybook`; see [OWNER-INTENT](../ui-quality-engine/OWNER-INTENT.md) and [RECOMMENDATIONS](../ui-quality-engine/RECOMMENDATIONS.md). Replies come back into `.planning/research/storybook-catalog/replies/` with the source project named.
 
 ## Prompt 1: sibling project sessions (accrue, threadline, mailglass, exifcleaner)
@@ -44,4 +47,33 @@ Then add:
 G. A ranking of the 5 companies best suited to exercise a search-ops admin UI, and the single state each one uniquely stresses, so no two overlap.
 H. Which brandbook files/assets (paths) a developer should copy, plus any license caveats. House rule: copy-paste over adding dependencies.
 I. Anything you learned while making these brands about what makes fake data feel real vs contrived.
+```
+
+## Prompt 5: sigra session (sent 2026-11-21, after the mailglass and exifcleaner sessions were closed)
+
+Purpose: sigra did similar catalog and brand work and has read the siblings too, so it can summarize every takeaway that applies to Scrypath, including what it learned from mailglass and exifcleaner, whose own sessions are no longer reachable. The prompt states what Scrypath already concluded so sigra flags disagreements and gaps instead of repeating. The reply goes in `replies/sigra-<date>.md`.
+
+```
+Context: I'm starting a Phoenix Storybook catalog for ScrypathOps (Scrypath: an Elixir library that keeps Meilisearch in sync with Ecto data; the operator UI `scrypath_ops` has ~7 LiveViews: control room, health/posture, failed sync, sync & index drift, search playbooks/saved searches, help; plus a demo ecommerce host). You did similar brand and catalog work in this project, and you have read my other libraries (accrue, threadline, mailglass, exifcleaner, fablebook). Their own sessions are closed, so you are the only one left who can summarize ALL takeaways that apply to Scrypath, yours and everything you learned from them. Answer ONLY from this repo, its history and your session memory. Do not change any files. Reply as ONE markdown document I can paste back verbatim. For every claim give provenance (file:line, commit, phase or PR) and mark it VERIFIED (you read it) or RECALLED (session memory only). Say plainly when something came from a sibling project and which one. No padding.
+
+What Scrypath already concluded (confirm, correct or complete; flag disagreement explicitly):
+- All four sibling replies agree: start thin. Build first one canonical scenario module with a fixed clock (builders take `now`, never the wall clock), stories bound to the real production renderers, one mounted investigation journey with a denial. Refuse at first: a coverage manifest or state grid, hash-bound screenshots, a full Playwright width-by-theme matrix, a parallel gallery, a paid LLM critic.
+- Cost evidence: accrue 138 plan files for its catalog (no defensible time or defect ratio), mailglass 76 plans, threadline mid-migration, exifcleaner capped phases at 5 plans.
+- Static stories prove rendering only; routing, params, authorization and mutation stay in mounted tests. phoenix_storybook 1.2.0 `:example` stories can't `handle_params`; Scrypath targets 1.5 dev/test only and will measure it in a spike.
+- Realistic data: six fictional adopters from fablebook (Logistify, Chatly, Clinicly, Shopadelic, Finanza, Classwell) as shapes for Scrypath-owned fixtures; one unique operator state each; reuse rights are undecided so nothing is copied yet.
+- Ordinary data first, stress states in separately named variations; a fixed demo clock ages out of recency and retention windows.
+
+Please answer:
+1. Your own catalog and brand work: what did you build, in what order, what did it cost (plans, commits, calendar days, CI minutes), and what did you cut or regret? Where did you disagree with the siblings' choices and why?
+2. Takeaways from the siblings that you verified or acted on versus ones you rejected, with reasons. In particular, everything you know about mailglass (it ships both a storybook and a 1,684-line gallery; 76 plans for v2.10; scenario manifest; persona spec) and exifcleaner (12 state classes, subject-by-class grid with waivers, journeys with proof levels, advisory visual job, fixtures that fold the real reducer, 5 plans per phase cap, 13 prerequisite test PRs before a restyle). What would you adopt, simplify or refuse for a project of Scrypath's size?
+3. The denied-state and access-boundary lesson you recorded (a gallery with no denied board; typed reasons from a pure decision function): how would it apply to an operator UI whose sync failures may contain data the operator must not read?
+4. Brand and token flow: what parity checks and pins did you use, what drifted anyway, and which checks earned their cost?
+5. Theme and CSS: how you rendered light, dark and System in stories, wrapper CSS leaks, iframe use, font loading, and anything that cost a day.
+6. Dependencies and supply chain: phoenix_storybook version, mdex/rustler/NIF experience, advisories, how you kept it dev-only and out of the package, and your cloak/cloak_ecto advisory situation if it touches this.
+7. Review loop and feedback: how you run owner review, record feedback and triage it, and what you'd simplify.
+8. Process anti-patterns: the evidence-machinery, stale-verification and gate-budget problems you hit, what rules you made, and which you'd now delete.
+9. Realistic data: what you used for personas and fake companies, what made it feel real or contrived, and what blind spots it exposed.
+10. Gaps: what does the Scrypath conclusions list above get wrong, miss or overstate? What is the single biggest risk of burning time without value on this catalog, and its early warning sign?
+
+Finish with advice, not just facts: (1) the 5 things you'd do first on the Scrypath catalog in order, (2) the 5 you'd refuse, (3) anything no question asked that you wish someone had told you, each marked high, medium or low confidence with the evidence behind it. Then one paragraph: if you had to compress everything you know about doing this well into the 10 most important rules for a small team, what are they?
 ```

@@ -45,6 +45,13 @@
 - V: lessons: `null`, never `""` or `0`, for missing values; never key a record on a display name (two brands reuse the case id `case-offline`; use brand plus sourceId); hand-drawn pictures drifted from the records, so the records are the data; scenarios are equivalence classes, not permutations (`OWNER-DNA.md:116`).
 - V: Finanza's guide says outright that its numbers are not claimed realistic; the records are UI-state-sized, so "huge count" states need our own generators.
 
+## Corrections from the sessions' own replies (2026-11-21)
+
+- **threadline:** the catalog is **mid-migration**, not mature or a finished five-level tree: older Primitives/Patterns/Groups/Operations folders sit beside newer per-component folders; phase 261 still owns groups, screens, workflows and reconciliation. Only plans 01 to 05 of phase 260 have summaries. See `replies/threadline-2026-11-21.md`.
+- **accrue:** the five-entry `phase252-manifest.json` is the subscription-specific manifest, not the whole-admin catalog (256.1 mapped 83 entries); the duplicate `*.index.exs` files are byte-identical pairs; the fixed Cadence clock belongs to the subscription scenario source; the cost is 138 plan files across phases 252 to 261, with no defensible time or owner/automation ratio. See `replies/accrue-2026-11-21.md`.
+- **fablebook:** collections are not all small (61, 84 and 60 cases for Shopadelic, Clinicly and Classwell); Classwell is pinned but not in the twin list; no fixture has a soft-delete field; no phoenix_storybook benchmark exists there (the 6s-versus-58s figures are Ladle versus Storybook). See `replies/fablebook-2026-11-21.md`.
+- Replies received so far: brandbook, fablebook, threadline, accrue. Still outstanding: mailglass and exifcleaner.
+
 ## Questions that remain for the maintainer's sessions
 
 The ten-point prompt in [PASTE-PROMPTS](PASTE-PROMPTS.md) asks each project's own session for measured costs, regrets and what to skip. The scans' most useful unanswered questions: what accrue's catalog cost end to end against defects it caught that axe and route tests would not; which exifcleaner waivers were ever worth writing; whether mailglass would drop the gallery or the storybook; whether mdex/rustler ever broke an Apple-silicon or release-parity build; and the fablebook records license.

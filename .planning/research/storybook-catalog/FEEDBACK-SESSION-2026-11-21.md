@@ -20,7 +20,12 @@ The retained preview was refreshed from the Phase 187 commit to main (9b6ec911):
 | F8 | The milestone-end review must be the storybook once it exists (and be offered even before digging into a milestone). | **fix now** | AGENTS.md "Milestone-end review" updated: the catalog replaces the preview as the review surface once its first screen story ships; until then the preview. |
 | F9 | Screen-level feedback on the ops UI and storefront from v1.46 and v1.47. | **pending** | Not yet received. Append rows here; triage each one. Where possible map each row to the catalog entry id, state, viewport and theme (accrue practice, playbook C32). |
 
+## Replies received (2026-11-21)
+
+Brandbook, fablebook, threadline and accrue replied (`replies/`); mailglass and exifcleaner are outstanding. Outcome: all four converge on starting thin (scenario facts plus stories bound to real renderers plus one mounted journey; no coverage manifest, baselines or full matrix at first). The fablebook and brandbook replies disagree on reuse rights; recorded as contested (playbook C31). Corrections to earlier notes: threadline is mid-migration, fablebook collections are not all small. Milestone shape revised accordingly in `MILESTONE-CONTEXT.md`.
+
 ## Open questions for the maintainer
 
-1. **fablebook reuse license.** May Scrypath copy a trimmed subset of the six fictional adopters' records (and their hex colors, never logos) into this repo? The brand repos have no LICENSE and say redistribution "is not granted". Recommendation: yes, copy about 8 to 12 records per entity with a provenance header and no logos, and relabel the adopters as Scrypath's own fixture names if the maintainer prefers.
+1. **Reuse grant for the six brand repos.** No LICENSE exists; the brandbook session reports a general-reuse statement, the fablebook session finds only a narrow Logistify authorization. You own the repos. Recommendation: add CC BY 4.0 for records, text and token data (images, fonts and marks separate). Until then the fixtures phase authors its own data in the adopters' shapes and copies nothing, so nothing is blocked.
 2. **Sequence.** Catalog first, with the small readiness PR separately, and "Adopter-ready" moved to v1.50 (recommended, see MILESTONE-CONTEXT), or keep Adopter-ready first.
+3. **Two missing adopters.** Commission a help-center SaaS and an industrial parts distributor from the brandbook session (optional; does not block the fixtures phase).
