@@ -1,8 +1,7 @@
 ---
 phase: 195-mount-and-prove
-decision: pending
-decided_by: "pending the maintainer: a cold ops-ui run (the post-merge main run, 620 s) is over the 548 s line, so the Task 2 checkpoint was presented; the first cold run (the PR run, 517 s) was under it"
-recommendation: continue
+decision: go
+decided_by: "the maintainer, against a tripped cold sample (not a pass): selected \"Continue (Recommended)\" in an interactive dialog on 2026-11-21, reported to the executor by the orchestrating agent"
 measured: 2026-11-21
 pull_request: 171
 cold_run: 44955813968
@@ -12,7 +11,11 @@ cold_run: 44955813968
 
 ## Decision
 
-**Pending the maintainer's reply (recommendation: continue).** The checkpoint was reached, because one of the two hosted cold samples is over its line.
+**Go, as the maintainer's choice against a tripped cold sample, not as a pass.** The checkpoint was reached, because one of the two hosted cold samples is over its line, and the maintainer answered it.
+
+> Maintainer selected "Continue (Recommended)" in an interactive dialog on 2026-11-21
+
+The options shown were Continue, Remeasure first and No-go, with the numbers in the table below (the 620 s main run, the 517 s PR run, the 378 s warm rerun, the 38-run median and maximum, the controls and the cache-miss inference). The executor did not see the dialog: the orchestrating agent ran it and relayed the choice, and this line records the relay.
 
 | Cold sample | Run, attempt | Job total | Against the 548 s line |
 |---|---|---|---|
@@ -21,7 +24,7 @@ cold_run: 44955813968
 
 The warm sample is within its line: **378 s** against 428 s. The other four ADR 0001 triggers are not tripped.
 
-What I did and when: I merged the phase PR (#171) on the first cold sample, which was under the line, with all six required checks green on the measured head. The second cold sample arrived about ten minutes later, from the main push run that the merge started. By the adopted rule a cold run over 548 s is a tripped trigger, and a result inside the historic noise band is the maintainer's judgment, not mine, so I stopped there. This record is held in a draft docs PR (#172) until you reply; nothing else was merged.
+What I did and when: I merged the phase PR (#171) on the first cold sample, which was under the line, with all six required checks green on the measured head. The second cold sample arrived about ten minutes later, from the main push run that the merge started. By the adopted rule a cold run over 548 s is a tripped trigger, and a result inside the historic noise band is the maintainer's judgment, not the executor's, so the executor stopped there and held this record in a draft docs PR (#172) until the maintainer answered. Nothing else was merged in the meantime.
 
 Evidence for the judgment (details in the sections below):
 
@@ -31,9 +34,9 @@ Evidence for the judgment (details in the sections below):
 - **Where the 620 s went:** the root half of `verify.ops_ui` (the boundary integration tests, which compile scratch consumers) took 415 s against 341 s on the PR cold run and 267 s warm; the ops half 104 s against 87 s and 73 s. The main run was slower in both halves, which looks like a slower runner, but I cannot prove that from the logs.
 - **A time-matched control moved too.** The main job from before the merge, rerun at 22:57 UTC while the main cold run was finishing, took 417 s; the same job on the same commit took 342 s at 22:32 UTC. Against the time-matched control the main cold run's excess is +203 s. Take away the roughly 135 s lock-change cache miss measured on the PR runs and about +70 s is left for the storybook plus runner variance. That subtraction is an inference, not a measurement.
 
-Options for the maintainer, each with its consequence:
+Options the maintainer was given, each with its consequence:
 
-- **Continue (go).** The code is already merged; this keeps it. Recorded as the maintainer's choice against a tripped cold sample, not as a pass. Recommended: the marginal cost is about +36 s, the 620 s is one sample 30 s above anything seen in 38 runs, and the larger cold cost belongs to lock changes in general.
+- **Continue (go), selected.** The code is already merged; this keeps it. Recorded as the maintainer's choice against a tripped cold sample, not as a pass. Recommended: the marginal cost is about +36 s, the 620 s is one sample 30 s above anything seen in 38 runs, and the larger cold cost belongs to lock changes in general.
 - **Measure again.** The only way to get another cold run is another lock change on a branch (an extra push and a full PR run, about 16 minutes of wall time and a lot of runner time), so I would not choose this unless you want a second sample on a pull request.
 - **Stop (no-go).** The ADR 0001 fallback is the hand-rolled harness. Because #171 is already merged, this means a revert PR for the storybook mount; the Phase 196 fixtures still pay off either way.
 
@@ -111,7 +114,7 @@ Resolved versions: `phoenix_storybook` 1.5.0, `mdex` 0.14.7, `mdex_native` 0.3.2
 | Trigger | Measured | Threshold | Verdict |
 |---|---|---|---|
 | Advisory open over 14 days | none open on a resolved version (storybook advisories are all patched before 1.1.0, mdex ones before 0.13.2, mdex_native ones before 0.2.3; hosted audit shows only the baseline sigra, cloak and cloak_ecto items) | no advisory over 14 days on a resolved version | not tripped |
-| Cold ops-ui over baseline plus 180 s | two cold samples: 517 s (PR run 44955813968, attempt 1, job 137003601222; 31 s under) and **620 s** (post-merge main run 44958204651, attempt 1, job 137010963728; 72 s over). Evidence: 14-run median 409.5 s and spread 360 to 579 s; previous 38 main runs median 410 s, max 590 s, 5 over 548 s with no lock change; controls 342 s and 417 s (cold excess +175 s and +203 s); earlier lock-change cold runs 424 to 555 s | 548 s (368 + 180) | **tripped** (one of two cold samples is over; the maintainer's call, see Decision) |
+| Cold ops-ui over baseline plus 180 s | two cold samples: 517 s (PR run 44955813968, attempt 1, job 137003601222; 31 s under) and **620 s** (post-merge main run 44958204651, attempt 1, job 137010963728; 72 s over). Evidence: 14-run median 409.5 s and spread 360 to 579 s; previous 38 main runs median 410 s, max 590 s, 5 over 548 s with no lock change; controls 342 s and 417 s (cold excess +175 s and +203 s); earlier lock-change cold runs 424 to 555 s | 548 s (368 + 180) | **tripped** (one of two cold samples is over); the maintainer selected Continue, so this is a choice against a tripped trigger, not a pass (see Decision) |
 | Isolation work over a day | 0.1 h (Plan 01: 0.0 h, Plan 02: 0.1 h, Plan 03: none) | 8 h | not tripped |
 | Docker asset_builder over plus 60 s | +33 s (292 s against a main median of 259 s; hosted proxy) | +60 s | not tripped |
 | NIF failure twice | 0 failures across both hosted attempts | 2 | not tripped |
@@ -127,7 +130,7 @@ SYNTHESIS exit criterion (not an ADR trigger, so it asks and never trips):
 - **Non-vacuous boundary tests:** `test/mix/tasks/dependency_boundary_contract_test.exs` (planted storybook mention, unrestricted and wrong-requirement manifests, route-guard mutants moved, deleted and flag-blind, loopback rule, Docker script text check with planted mutants), `scrypath_ops/test/scrypath_ops_web/catalog_routes_test.exs` (a guard-stripped copy of the macro mounts the storybook with the flag off), `test/release/ops_dependency_boundary_test.exs` (mounted test and prod consumers and direct prod lack the apps; direct dev and test have them) and `test/release/package_metadata_test.exs` (tarball refutes). Each has a planted failing case recorded in the 195-01 SUMMARY. Green hosted: `core`, `repository-contracts` and `ops-ui` on run 44955813968.
 - **Render-all with the planted tree:** `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` ("render-all" and "planted tree"): 5 stories, 17 variations, each in light and dark through the real iframe route, and the same loop reports a raising story, an empty story and unknown variation ids. `data-phx-error` is never emitted by the server (LiveView 1.1.34, phoenix_storybook 1.5.0), so the real failure signals are the crash, empty and unknown-variation plants; the selector check stays for the requirement wording.
 - **Prod graphs lack PhoenixStorybook and MDEx:** `test/release/ops_dependency_boundary_test.exs` (prod compile: 14 routes, no `/storybook`, no loaded storybook modules) and the Docker boundary proof inside the required `ecommerce-mounted` job (green on hosted run 44955813968; locally `DEPENDENCY_BOUNDARY_CATALOG ... status=404` for the host and for standalone Ops in both the test and prod images).
-- **Cold at or under +180 s and warm at or under +60 s:** warm 378 s against 428 s is met (hosted run 44955813968, attempt 2). Cold is met on the PR run (517 s against 548 s) and not met on the post-merge main run (620 s); pending the maintainer's judgment.
+- **Cold at or under +180 s and warm at or under +60 s:** warm 378 s against 428 s is met (hosted run 44955813968, attempt 2). Cold is met on the PR run (517 s against 548 s) and not met on the post-merge main run (620 s); the maintainer selected Continue against that second sample.
 - **H exit item, `handle_params` in an `:example` story:** impossible, with evidence rather than a measurement. phoenix_storybook 1.5.0 `lib/phoenix_storybook/stories/story.ex` lines 98 and 99: "Examples are rendered as a child LiveView, so you can implement `mount/3`, `render/1` or any `handle_event/3` callback. Unfortunately `handle_params/3` cannot be defined in a child LiveView." H marked this CONFIRMED.
 - **H exit item, fidelity probe (computed-style parity, three themes by two color schemes):** deferred to Phase 197 under orchestrator decision 7; not run in this phase. It is not a CI gate and not part of this phase's success criteria.
 
@@ -138,8 +141,8 @@ SYNTHESIS exit criterion (not an ADR trigger, so it asks and never trips):
 - **`.dockerignore` skipped.** No `.dockerignore` entries were added for `scrypath_ops/storybook` and `scrypath_ops/catalog`. Only the `asset_builder` stage (`MIX_ENV=dev`) needs those sources, because it compiles `DevRouter` with the flag on, which names the backend module, and the backend loads the stories. `runtime_test` compiles with `PHX_SERVER=true`, so the flag is off there, and `runtime_prod` compiles `lib` only. Excluding the trees would therefore break `asset_builder`, while in the other images the sources are inert. Revisit if the maintainer wants the image contents asserted, for example with a per-stage `COPY --exclude` in the runtime stages.
 - **Fifth story.** The planner chose `ops_sync_status` in place of the form-field class: `ops_field` is mostly `phx-hook` behavior that a server-side render-all cannot exercise, so a story for it would claim more than its test proves (195-02 SUMMARY). The form-field story moves to Phase 197's patterns tier.
 - **No gate row, no CI context.** This phase added neither. `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` is the file Phase 197 extends into ledger row 11.
-- **Record lands after the merge.** This record goes in a post-merge planning-only `docs(phase-195):` PR, which saves one full path-scoped run on the phase PR (see the CI-EFFICIENCY entry). That PR (#172) is held as a draft until the maintainer replies.
-- **The phase PR merged before the second cold sample existed.** #171 merged on the PR cold run (517 s, under the line) with six green required checks on the measured head. The post-merge main run, which the merge itself started, then measured 620 s. The merge was correct against the sample the plan names; the second sample is why this record is pending.
+- **Record lands after the merge.** This record goes in a post-merge planning-only `docs(phase-195):` PR, which saves one full path-scoped run on the phase PR (see the CI-EFFICIENCY entry). That PR (#172) was held as a draft until the maintainer answered the checkpoint, then marked ready and merged.
+- **The phase PR merged before the second cold sample existed.** #171 merged on the PR cold run (517 s, under the line) with six green required checks on the measured head. The post-merge main run, which the merge itself started, then measured 620 s. The merge was correct against the sample the plan names; the second sample is why the checkpoint was presented after the merge.
 - **Plan counts.** The phase has 3 plans (cap 5); the milestone has 16 planned against the stop at 20.
 
 ## Findings for the maintainer
@@ -151,3 +154,4 @@ Recorded and not fixed (FLOW-04). The first two are new from this phase.
 - **(c) Still open and not fixed in Phase 195:** F1 (`Tasks.list_sync_tasks` truncation error, needs a root `lib/` change, so it is ask-first), F2 (unbounded, copyable Meilisearch error messages in the ops UI), D2 (retry receipts live only in the LiveView process), and the SYNTHESIS test-hygiene items (see [SYNTHESIS.md, "Findings handed to you"](../../research/catalog-prep/SYNTHESIS.md)). The stale "v1.47 catalog" describe label was renamed only because Plan 01 rewrote that block.
 - **(d) Unrelated advisory, found today:** `examples/phoenix_meilisearch/mix.lock` pins `phoenix 1.8.16`, which two new HIGH advisories published on 2026-11-21 cover (fixed in 1.8.17; the other two locks already use 1.8.17). It only turns the advisory `deep-quality` lane redder, and it is the kind of bump Dependabot proposes. Not part of this phase.
 - **(e) Cold-run cost of any lock change:** an `ops` lock change misses the whole root-graph BEAM cache and costs about 135 s in `verify.ops_ui` (recorded in CI-EFFICIENCY as a candidate). That is a property of the cache key, not of the storybook.
+- **(f) The measure-then-merge order cannot see the main-run cold number.** PR #171 merged on the 517 s PR sample, before the 620 s main-run sample existed, because a pull request's caches are not visible to main and the first cold main run only exists after the merge. The plan's order (measure on the PR, then merge) therefore could not see it. Recommendation: future gates of this kind measure on the main-run cold sample after merge (or treat the PR cold sample as a lower bound), and keep the post-merge stop-and-ask path open, as this phase did.
