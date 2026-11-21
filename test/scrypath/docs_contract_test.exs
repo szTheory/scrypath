@@ -534,10 +534,21 @@ defmodule Scrypath.DocsContractTest do
 
     assert ordered?(@readme, "## Installation", "## Quick Path")
 
+    assert_contains_all(@readme, ["Choose **`:inline`**"])
+
+    # Replaces the README's bold start-here label pin: the first link after the closing line of the
+    # README's last code block (the same boundary the onward-link test in readme_contract_test.exs
+    # counts from) is the golden path.
+    [{_line, first_onward} | _rest] = ShippedDocs.markdown_links(readme_after_last_fence())
+    assert ShippedDocs.links_to_guide?("[next](#{first_onward})", "golden-path")
+
+    # Replaces the `## Versioning and upgrades` heading pin and the two ordering pins that named the
+    # removed Sync modes, Versioning and Search sections: the README keeps one versioning sentence
+    # that names semantic versioning and links the changelog by absolute URL (owner map row
+    # versioning; docs/releasing.md owns the release process).
     assert_contains_all(@readme, [
-      "**Start here:**",
-      "## Versioning and upgrades",
-      "Choose **`:inline`**"
+      "semantic versioning",
+      "https://github.com/szTheory/scrypath/blob/main/CHANGELOG.md"
     ])
 
     # Route claims move to the link helper, which accepts the relative and HexDocs forms.
@@ -556,9 +567,6 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(row, "mix verify.phase11")
     assert_contains_all(@contributing, ["docs/releasing.md"])
     assert File.regular?("docs/releasing.md")
-
-    assert ordered?(@readme, "## Sync modes", "## Search")
-    assert ordered?(@readme, "## Versioning and upgrades", "## Search")
   end
 
   test "ARCHITECTURE preserves the operational semantics contract" do
@@ -1459,6 +1467,11 @@ defmodule Scrypath.DocsContractTest do
     Regex.scan(~r/```elixir\n(.*?)```/ms, markdown, capture: :all_but_first)
     |> List.flatten()
     |> Enum.map(&String.trim/1)
+  end
+
+  # README text after the closing line of its last fenced code block.
+  defp readme_after_last_fence do
+    @readme |> String.split(~r/^```\s*$/m) |> List.last()
   end
 
   # Text between a level-2 heading and the next level-2 heading.
