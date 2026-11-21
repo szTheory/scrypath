@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 milestone: v1.49
 milestone_name: Catalog foundation
-current_phase: 195
-current_phase_name: Mount and prove
-status: verifying
-stopped_at: Completed 195-03-PLAN.md
-last_updated: "2026-11-21T23:09:50.469Z"
+current_phase: 196
+current_phase_name: Fixtures and three adopters
+status: planning
+stopped_at: Phase 195 complete, ready to plan Phase 196
+last_updated: "2026-11-21T23:51:19.518Z"
 last_activity: 2026-11-21
-last_activity_desc: Plan 195-03 complete
-state_head: ed29d92392dc3bbf4851bc53a0d80e5f56426d29
+last_activity_desc: Phase 195 complete, transitioned to Phase 196
+state_head: f72af5f5187ca232a67bb13e1b884d4c4e26855c
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 15
   completed_plans: 3
   percent: 20
@@ -25,14 +25,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Phase 195 — Mount and prove
+**Current focus:** v1.49 Catalog foundation: Phase 195 (Mount and prove) is complete; Phase 196 (Fixtures and three adopters) is next. The run stops after Phase 197 for the maintainer's storybook look.
 
 ## Current Position
 
-Phase: 195 (Mount and prove) — all 3 plans complete, ready for verification
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-11-21 — Plan 195-03 complete (phase PR #171 merged; go/no-go recorded: go, the maintainer's choice against a tripped cold sample)
+Phase: 196 — Fixtures and three adopters
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-21 — Phase 195 complete, transitioned to Phase 196
 
 
 ## Performance Metrics
@@ -55,6 +55,7 @@ Last activity: 2026-11-21 — Plan 195-03 complete (phase PR #171 merged; go/no-
 Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md) and the [v1.47 prep notes](research/v1.47-prep/). Standing decisions:
 
 - v1.48 Discovery and onboarding (opened 2026-11-21 as recommended; [v1.48 prep notes](research/v1.48-prep/), D is the tie-breaker): 192 docs truth and README, 193 HexDocs regroup plus guards, an entry-point checkpoint (record GitHub traffic referrers and hex.pm downloads; decides 194), optional 194 website content. Cut line after 193. The catalog is v1.49 (renumbered at its opening); the earlier "catalog is v1.48, Phases 192-196" wording in v1.47 notes is superseded. Hex 0.3.20 after Phase 192 needs the maintainer's explicit yes.
+- v1.49 Phase 195 (2026-11-21): storybook mounted dev/test-only and merged (PRs #171, #172). The cold `ops-ui` trigger tripped (620 s on the first main run against the 548 s line) and the maintainer chose to continue; see [GO-NO-GO.md](phases/195-mount-and-prove/GO-NO-GO.md). The plan's measure-then-merge order could not see the main-run cold number, so future gates should measure on the main-run cold sample after merge.
 - v1.47 was the small "Brand completion" milestone: 189 website, 190 wording, 191 cleanup (done).
 - GATE-02 is mapped to Phase 189 and stays a standing rule for every phase. Gate budget: 8 of 12 used at the start of v1.47; Phase 189's static contract takes row 9. `build-and-check` stays non-required (decided in the gap pass; re-open trigger in SITE-05).
 - Phase 189 merges only after `build-and-check` is green on the exact PR head (checked with `gh api`), because merging deploys the site and that job is not a required check.
@@ -68,6 +69,7 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 195]: Continue with the storybook on the maintainer's choice against a tripped cold sample (not a pass): PR cold ops-ui 517 s, first main run after the merge 620 s (over the 548 s line), warm 378 s; the cold excess is mostly the lock-change root-graph cache miss, the storybook's own marginal cost is about +36 s
 
 ### Pending Todos
+- Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
 
 - Phase 192 starts with an inventory of every test pin on `verify.adopter` and the shipped-docs wording (claim or wiring); none is weakened to reach green.
 - At the checkpoint (after Phase 193) record `gh api repos/szTheory/scrypath/traffic/{referrers,popular/paths,views,clones}` (14-day window; 4 views from 3 uniques when last read) and hex.pm downloads (1,782 all time, 89 in the last 7 days when last read).
@@ -99,7 +101,7 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-21T21:47:33.673Z
-Stopped at: Completed 195-03-PLAN.md
+Stopped at: Phase 195 complete, ready to plan Phase 196
 Acting next: verify Phase 195 (all three plans are done; PR #171 is merged and the go/no-go record is in docs PR #172), then Phase 196 (fixtures). A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 

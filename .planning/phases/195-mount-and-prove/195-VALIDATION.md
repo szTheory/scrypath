@@ -1,9 +1,9 @@
 ---
 phase: "195"
 slug: "mount-and-prove"
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-11-21"
 ---
 
@@ -34,18 +34,18 @@ The plans own this map: each task's `<verify>`, `<phase_gate>` and `<acceptance_
 
 | Requirement | Check | Test type | Status |
 |-------------|-------|-----------|--------|
-| MOUNT-01 | dependency present, `~> 1.5`, `only: [:dev, :test]`; planted loosening fails; storybook-only packages absent from mounted and prod graphs | root unit + scratch-consumer integration | ⬜ pending |
-| MOUNT-01 | `verify-dependency-boundaries.sh` forbids the names for prod and host only; mutation fails; tarball refutes `fixtures` and `storybook` | root unit | ⬜ pending |
-| MOUNT-02 | guard outside the `quote` (AST), planted removal and move-inside fail; flag truth table; prod route table has no `/storybook` | root + ops unit, integration probe | ⬜ pending |
-| MOUNT-03 | every variation of five primitives renders through the real iframe route; planted failing tree is detected; `storybook.js` registers the `app.js` hooks | ops unit | ⬜ pending |
-| MOUNT-04 | `GO-NO-GO.md` has the required headings and numbers; ADR 0001 amended; one verdict per trigger | doc check (`grep -c`) plus recorded hosted numbers | ⬜ pending |
-| FLOW-01, FLOW-03 | PR titles; no staged config files | `git diff --cached --name-only` check | ⬜ pending |
+| MOUNT-01 | dependency present, `~> 1.5`, `only: [:dev, :test]`; planted loosening fails; storybook-only packages absent from mounted and prod graphs | root unit + scratch-consumer integration | ✅ green |
+| MOUNT-01 | `verify-dependency-boundaries.sh` forbids the names for prod and host only; mutation fails; tarball refutes `fixtures` and `storybook` | root unit | ✅ green |
+| MOUNT-02 | guard outside the `quote` (AST), planted removal and move-inside fail; flag truth table; prod route table has no `/storybook` | root + ops unit, integration probe | ✅ green |
+| MOUNT-03 | every variation of five primitives renders through the real iframe route; planted failing tree is detected; `storybook.js` registers the `app.js` hooks | ops unit | ✅ green |
+| MOUNT-04 | `GO-NO-GO.md` has the required headings and numbers; ADR 0001 amended; one verdict per trigger | doc check (`grep -c`) plus recorded hosted numbers | ✅ green |
+| FLOW-01, FLOW-03 | PR titles; no staged config files | `git diff --cached --name-only` check | ✅ green |
 
 ## Wave 0 Requirements
 
-- [ ] `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` (mount, render-all, planted tree) and `catalog_routes_test.exs`
-- [ ] `scrypath_ops/test/support/` planted backend, endpoint and router (one module per file)
-- [ ] Root helper `has_node_outside_quote?/2` and the new and edited cases in `dependency_boundary_contract_test.exs`
+- [x] `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` (mount, render-all, planted tree) and `catalog_routes_test.exs`
+- [x] `scrypath_ops/test/support/` planted backend, endpoint and router (one module per file)
+- [x] Root helper `has_node_outside_quote?/2` and the new and edited cases in `dependency_boundary_contract_test.exs`
 
 ## Manual-Only Verifications
 
@@ -53,10 +53,10 @@ All phase behaviors have automated verification. Hosted `ops-ui` timings are rec
 
 ## Validation Sign-Off
 
-- [ ] All tasks have an automated verify or a Wave 0 dependency
-- [ ] Sampling continuity: no 3 consecutive tasks without an automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have an automated verify or a Wave 0 dependency
+- [x] Sampling continuity: no 3 consecutive tasks without an automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** validated 2026-11-21 by the goal-backward verification (8/8, see 195-VERIFICATION.md)
