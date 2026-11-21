@@ -100,6 +100,32 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
       end
     end
 
+    test "a package text file that is not valid UTF-8 stops the scan instead of dropping out" do
+      dir =
+        Path.join(
+          System.tmp_dir!(),
+          "scrypath-shipped-docs-#{System.pid()}-#{System.unique_integer([:positive])}"
+        )
+
+      File.mkdir_p!(dir)
+      on_exit(fn -> File.rm_rf!(dir) end)
+
+      good = Path.join(dir, "good.md")
+      binary = Path.join(dir, ".DS_Store")
+      File.write!(good, "# Fine\n")
+      File.write!(binary, <<0xFF, 0xFE>>)
+
+      # A binary file is out by extension, whatever its bytes.
+      assert ShippedDocs.shipped_files([good, binary]) == [good]
+      assert ShippedDocs.shipped_files([dir]) == [good]
+
+      File.write!(Path.join(dir, "bad.md"), <<"# Bad ", 0xFF, 0xFE, "\n">>)
+
+      assert_raise RuntimeError, ~r/bad\.md is in the package but is not valid UTF-8/, fn ->
+        ShippedDocs.shipped_files([dir])
+      end
+    end
+
     test "allowlisted and exempt paths are in package files and the exempt set has exactly two entries",
          %{files: files} do
       for path <- ShippedDocs.allowlist() ++ Map.keys(ShippedDocs.exempt()) do

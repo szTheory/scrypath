@@ -68,7 +68,8 @@ defmodule Scrypath.Release.ShippedDocs do
     }
   }
 
-  # LICENSE (no extension) and local binaries such as lib/.DS_Store are not text.
+  # LICENSE (no extension) and local binaries such as lib/.DS_Store are not text. The extension
+  # alone decides; a file with a text extension that is unreadable or not UTF-8 raises.
   @text_exts ~w(.md .ex .exs)
 
   # Sentence boundary, kept as data: a `.`, `!` or `?` (plus any closing quote, bracket or
@@ -150,17 +151,24 @@ defmodule Scrypath.Release.ShippedDocs do
     |> Enum.map(&elem(&1, 0))
   end
 
-  @doc "Sorted relative paths of the text files expanded from the mix.exs package `files:`."
-  @spec shipped_files() :: [Path.t()]
-  def shipped_files do
+  @doc """
+  Sorted relative paths of the text files expanded from the mix.exs package `files:`.
+
+  A text file that cannot be read, or is not valid UTF-8, raises: skipping it would leave it
+  unscanned with no failure. Binary files are left out by extension (`@text_exts`), not by
+  content. `entries` is for the planted cases only.
+  """
+  @spec shipped_files([Path.t()]) :: [Path.t()]
+  def shipped_files(entries \\ Scrypath.MixProject.project()[:package][:files]) do
     files =
-      for entry <- Scrypath.MixProject.project()[:package][:files],
+      for entry <- entries,
           path <- Path.wildcard(entry, match_dot: true),
           file <- expand(path),
           text_file?(file),
           uniq: true,
           do: file
 
+    Enum.each(files, &read_utf8!/1)
     Enum.sort(files)
   end
 
@@ -170,15 +178,11 @@ defmodule Scrypath.Release.ShippedDocs do
       else: [path]
   end
 
-  defp text_file?(file) do
-    File.regular?(file) and Path.extname(file) in @text_exts and valid_utf8?(file)
-  end
+  defp text_file?(file), do: File.regular?(file) and Path.extname(file) in @text_exts
 
-  defp valid_utf8?(file) do
-    case File.read(file) do
-      {:ok, contents} -> String.valid?(contents)
-      {:error, _reason} -> false
-    end
+  defp read_utf8!(file) do
+    String.valid?(File.read!(file)) or
+      raise "#{file} is in the package but is not valid UTF-8; scan it or exclude it explicitly"
   end
 
   @spec allowlist() :: [Path.t()]
