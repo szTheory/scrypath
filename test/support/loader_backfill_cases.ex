@@ -41,6 +41,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
           upserted_documents: 0,
           deleted_ids: 0,
           insert_memberships!: 2,
+          membership_keys: 0,
           insert_articles!: 2
         ]
 
@@ -117,7 +118,7 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
 
       property "composite keys: every row visited once, full cursor per batch", %{repo: repo} do
         check all(
-                keys <- uniq_list_of({integer(1..3), integer(1..20)}, max_length: 30),
+                keys <- membership_keys(),
                 batch_size <- integer(1..12),
                 max_runs: 40
               ) do
@@ -527,6 +528,34 @@ defmodule Scrypath.TestSupport.LoaderBackfillCases do
     after
       0 -> Enum.reverse(acc)
     end
+  end
+
+  @doc """
+  Generator of distinct `{org_id, seq}` keys for the composite-key paging property: a random subset
+  of the 3 x 20 key grid, of 0 to 30 keys, in random insertion order.
+
+  It ranks the whole grid with generated integers and takes a prefix, so it never draws a
+  duplicate. `uniq_list_of/2` drew each key at random and gave up after 10 consecutive duplicates
+  (`StreamData.TooManyDuplicatesError`); with up to 30 of 60 possible keys that happened on about
+  0.2 percent of ExUnit seeds (for example `--seed 229`), which failed the required backend lane
+  on a pull request that did not touch this code. Shrinking tends toward the smallest keys in
+  grid order, so a failing case stays small and readable.
+  """
+  def membership_keys do
+    grid = for org_id <- 1..3, seq <- 1..20, do: {org_id, seq}
+
+    StreamData.bind(StreamData.integer(0..30), fn count ->
+      StreamData.map(
+        StreamData.list_of(StreamData.integer(0..1_000_000), length: length(grid)),
+        fn ranks ->
+          grid
+          |> Enum.zip(ranks)
+          |> Enum.sort_by(fn {_key, rank} -> rank end)
+          |> Enum.take(count)
+          |> Enum.map(fn {key, _rank} -> key end)
+        end
+      )
+    end)
   end
 
   @doc "Inserts `lb_memberships` rows for `{org_id, seq}` key tuples."

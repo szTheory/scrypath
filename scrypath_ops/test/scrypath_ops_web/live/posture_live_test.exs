@@ -596,7 +596,10 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
     assert row =~ "Oct 4, 2026 at 17:02:05 UTC"
     refute row =~ "Exact timestamp"
     assert row =~ ~s(data-ops-timestamp-copy="#{iso}")
-    assert row =~ ~s(aria-label="Copy timestamp:)
+    # Accessible name = visible time + hidden "copy timestamp"; an aria-label would drop the
+    # visible text the hook rewrites for local time (axe label-content-name-mismatch).
+    refute row =~ ~s(aria-label="Copy timestamp)
+    assert row =~ "copy timestamp</span>"
     refute row =~ ~s(data-ops-timestamp-message)
     assert has_element?(lv, "[data-ops-client-toast]")
   end
@@ -703,7 +706,7 @@ defmodule ScrypathOpsWeb.PostureLiveTest do
       html = render_time(nil, snapshot_at, state_text)
       assert html =~ state_text
       refute html =~ "<details"
-      refute html =~ "Copy timestamp"
+      refute html =~ "copy timestamp"
       refute html =~ "data-ops-timestamp-copy"
     end
   end

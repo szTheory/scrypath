@@ -1,4 +1,4 @@
-# Rolling roadmap (approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
+# Rolling roadmap (post-v1.47 proposal 2026-11-21 below; approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
@@ -15,6 +15,32 @@ The maintainer approved this order and these working rules after a research fan-
 - This file stays the cross-milestone order and its research findings. GSD's `ROADMAP.md`/`REQUIREMENTS.md` hold the active milestone.
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
+
+## Post-v1.47 proposal (2026-11-21, prepared upstream; the maintainer chooses)
+
+v1.47 Brand completion shipped (Phases 188.1 and 189-191, PRs #149, #152, #153, #154; [audit](../milestones/v1.47-MILESTONE-AUDIT.md) `tech_debt`, no unsatisfied requirement; website live). The slot decision the maintainer left open is the discovery and onboarding milestone versus the catalog milestone. Four research notes with lenses, primary sources and an adversarial pass are in [research/v1.48-prep/](../research/v1.48-prep/): A discovery and onboarding, B catalog readiness, C sequencing, release and CI, D adversarial review and synthesis. Where the notes conflict, D is the tie-breaker.
+
+**Recommended: housekeeping first, then v1.48 Discovery and onboarding as a cuttable three-phase milestone; the catalog becomes v1.49.** Confidence 0.62 that discovery goes before the catalog (a close call), 0.8 for the housekeeping, 0.75 for no Hex release until the README fix lands, 0.5 that the website content phase should happen at all.
+
+**Housekeeping, no milestone, proceed without asking (green required checks, squash):**
+1. The CI speed and reliability PR already in preparation (repository-contracts halves in parallel, compatibility cells skipped on PRs that cannot affect the library, PR-run cancellation, the flaky `loader_backfill_postgres_test` generator, the `ops-ui-path` gap for `examples/scrypath_ecommerce/assets/`, a pre-push local-mirror checklist).
+2. A small `chore(ops-ui)` PR: fix the axe `label-content-name-mismatch` markup in `scrypath_ops/lib/scrypath_ops_web/components/ops_ui.ex` (fix the accessible names, never disable the rule), the vacuous regex at `operator.spec.ts:261`, and qualify the two unqualified `verify.adopter` lines in `docs/`. Then rebase and merge Dependabot #129.
+3. A README-only PR fixing the HexDocs self-links (six links resolve to the README itself on the live HexDocs page).
+Then the other Dependabot PRs (#150, #151) on green.
+
+**v1.48 Discovery and onboarding (about 7 plans, cut line after 193):**
+| Phase | Scope | Verification | Needs the maintainer |
+|---|---|---|---|
+| 192 Docs truth and README | no Hex-shipped doc names a repo-only task (one invariant plus a planted case, changed together with the PROJECT.md Canonical Adopter Contract), README trimmed to one job, links absolute to HexDocs where needed | docs contract tests, link checks, planted violation | Hex 0.3.20 release PR: explicit yes |
+| 193 HexDocs regroup plus guards | sidebar grouping only (no guide merges, deletions or renames), link, snippet and claim guards | docs build, link and snippet checks | no |
+| checkpoint | entry-point signal: record GitHub traffic referrers (14-day window; 4 views from 3 uniques today) and hex.pm downloads (1,782 all time, 89 last week) | numbers recorded | decides whether 194 happens |
+| 194 Website content (optional) | content and information architecture on the existing token pipeline; Docs points at HexDocs | computed-style, contrast, axe, link and copy checks; design recorded as unproven | outward-facing claims need a yes |
+
+**Then v1.49 Catalog foundation** (4 phases, spike-first with a go/no-go by the ADR 0001 triggers; consolidate the fixture copies and copy stubs; the rendered-text lint ingests `copy_rules.json`; storybook route dev-only and loopback-bound; the retained preview refresh is plan 1 of the first rendered-evidence phase), unless the checkpoint favors adopter features. v1.50 stays adopter features; grill API shapes first.
+
+**What would change this:** the checkpoint shows almost no traffic (then adopter features before more docs work), the maintainer does not want a website redesign (drop 194), ScrypathOps becomes a published package (catalog first), or an adopter report of a concrete library bug (bundle it into the next release).
+
+**Notes for the maintainer:** (1) the repository is public and every job uses a standard runner, so runner-minutes cost nothing; the real costs are wall time (about 18.5 minutes per PR, serialized by the strict up-to-date rule), attention, and an Actions cache at 10.76 GB over the 10 GB cap. The AGENTS.md "GitHub Actions money" wording is yours to revisit. (2) No Hex release is recommended now: the shipped files differ from 0.3.19 by almost nothing. (3) Branch protection stays as it is; a merge queue is rejected for now.
 
 ## Post-v1.46 proposal (2026-11-19, prepared upstream; the maintainer chooses)
 

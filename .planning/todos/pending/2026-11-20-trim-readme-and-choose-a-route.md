@@ -7,6 +7,9 @@ files:
   - test/scrypath/docs_contract_test.exs
   - test/scrypath/phase110_contract_test.exs
   - test/scrypath/phase112_contract_test.exs
+audit_acknowledged:
+  milestone: v1.47
+  at: 2026-11-20
 ---
 
 ## Problem
