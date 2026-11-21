@@ -27,6 +27,10 @@ config :scrypath_ops, ScrypathOpsWeb.Endpoint,
   check_origin: System.get_env("PHX_SERVER") != "true",
   server: System.get_env("PHX_SERVER") == "true"
 
+# The component catalog route is off exactly when the test env binds all interfaces: the Docker
+# runtime_test image compiles and serves with PHX_SERVER=true, and /storybook must never be reachable there.
+config :scrypath_ops, catalog_routes: System.get_env("PHX_SERVER") != "true"
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

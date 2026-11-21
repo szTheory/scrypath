@@ -71,6 +71,9 @@ config :scrypath_ops, ScrypathOpsWeb.Endpoint,
 # Enable development diagnostics routes.
 config :scrypath_ops, dev_routes: true
 
+# Mount the component catalog (phoenix_storybook) at /storybook. The dev endpoint binds 127.0.0.1.
+config :scrypath_ops, catalog_routes: true
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
