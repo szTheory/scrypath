@@ -2011,6 +2011,8 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
         "examples/scrypath_ecommerce/lib/x.ex",
         "examples/scrypath_ecommerce/test/x_test.exs",
         "examples/scrypath_ecommerce/scripts/x.mjs",
+        # The ScrypathOps shell and reskin contract tests read the host's app.js for the ops hooks.
+        "examples/scrypath_ecommerce/assets/js/app.js",
         "scrypath_ops/lib/x.ex"
       ]
 
@@ -2023,13 +2025,20 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
       # reports the glossary, DESIGN.md and the demo paths as missed. A check that cannot fail
       # would not be a check.
       new_alternatives =
-        "|GLOSSARY\\.md|DESIGN\\.md|examples/scrypath_ecommerce/(e2e|lib|test|scripts)/"
+        "|GLOSSARY\\.md|DESIGN\\.md|examples/scrypath_ecommerce/(e2e|lib|test|scripts|assets)/"
 
       assert pattern =~ new_alternatives
       narrowed = Regex.compile!(String.replace(pattern, new_alternatives, ""))
 
       assert ops_ui_path_misses(narrowed, copy_inputs) ==
                copy_inputs -- ["scrypath_ops/lib/x.ex"]
+
+      # The same for the `assets` alternative alone: without it only the host app.js is missed.
+      assert pattern =~ "|scripts|assets)/"
+      without_assets = Regex.compile!(String.replace(pattern, "|scripts|assets)/", "|scripts)/"))
+
+      assert ops_ui_path_misses(without_assets, copy_inputs) ==
+               ["examples/scrypath_ecommerce/assets/js/app.js"]
 
       # The table and the pattern cannot drift: every literal directory a row scans must match.
       rows = "scrypath_ops/test/support/copy_rules.json" |> File.read!() |> Jason.decode!()
