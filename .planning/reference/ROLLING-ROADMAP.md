@@ -1,4 +1,4 @@
-# Rolling roadmap (post-v1.48 proposal 2026-11-21, awaiting the maintainer's choice; post-v1.47 proposal 2026-11-21, adopted and v1.48 Discovery and onboarding shipped; approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
+# Rolling roadmap (post-v1.48 proposal 2026-11-21, adopted 2026-11-21; post-v1.47 proposal 2026-11-21, adopted and v1.48 Discovery and onboarding shipped; approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
@@ -16,7 +16,7 @@ The maintainer approved this order and these working rules after a research fan-
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
 
-## Post-v1.48 proposal (2026-11-21, prepared upstream; AWAITING THE MAINTAINER'S CHOICE)
+## Post-v1.48 proposal (2026-11-21, prepared upstream; ADOPTED 2026-11-21: the maintainer said to follow the recommendations; a UI feedback session on the previous milestone runs before the milestone is opened, and its feedback is folded into `.planning/MILESTONE-CONTEXT.md`)
 
 v1.48 Discovery and onboarding shipped and is archived ([audit](../milestones/v1.48-MILESTONE-AUDIT.md), `tech_debt`, no unsatisfied requirement). The optional website phase was cut at the checkpoint because traffic is effectively nil ([CHECKPOINT.md](../research/v1.48-prep/CHECKPOINT.md)). Three research notes with lenses, primary sources and an adversarial pass are in [research/v1.49-prep/](../research/v1.49-prep/): A catalog readiness refresh, B adopter-features evidence, C sequencing and release. They converge more than they conflict.
 
