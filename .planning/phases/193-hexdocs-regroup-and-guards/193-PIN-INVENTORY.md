@@ -90,13 +90,13 @@ One row per pin from both tables. Commit hashes are filled after the owning task
 | G5 | comment | retire with reason | config-shape and built-sidebar tests | two comments reworded to name them | 01 Task 1 | `fb57e627` |
 | G6 | claim | stays | getting-started guide | none | 01 Task 1 | `fb57e627` |
 | O1 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
-| O2 | hygiene | stays | phase 112 contract | none | 01 Task 2 | |
-| O3 | hygiene | stays | docs contract | none | 01 Task 2 | |
-| O4 | wiring | stays | docs contract | none | 01 Task 2 | |
-| O5 | claim | carry unchanged | `guides/overview.md` reading-order item 2 | none | 01 Task 2 | |
-| O6 | claim | carry unchanged | `guides/overview.md` reading-order items 2 and 10 | none | 01 Task 2 | |
-| O7 | claim | carry unchanged | `guides/overview.md` reading-order item 4 | none | 01 Task 2 | |
-| O8 | claim | carry unchanged | `guides/overview.md` reading-order items 4 and 5 | none | 01 Task 2 | |
+| O2 | hygiene | stays | phase 112 contract | none | 01 Task 2 | `517f428e` |
+| O3 | hygiene | stays | docs contract | none | 01 Task 2 | `517f428e` |
+| O4 | wiring | stays | docs contract | none | 01 Task 2 | `517f428e` |
+| O5 | claim | carry unchanged | `guides/overview.md` reading-order item 2 | none | 01 Task 2 | `517f428e` |
+| O6 | claim | carry unchanged | `guides/overview.md` reading-order items 2 and 10 | none | 01 Task 2 | `517f428e` |
+| O7 | claim | carry unchanged | `guides/overview.md` reading-order item 4 | none | 01 Task 2 | `517f428e` |
+| O8 | claim | carry unchanged | `guides/overview.md` reading-order items 4 and 5 | none | 01 Task 2 | `517f428e` |
 | O9 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
-| O10 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | |
-| O11 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | |
+| O10 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
+| O11 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
