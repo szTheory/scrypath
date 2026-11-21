@@ -241,7 +241,11 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   @binary_exts ~w(.woff .woff2 .png .ico .jpg .jpeg .gif .webp)
   # Link scan (TRUTH-03). A href that leaves the build is not checked here: web links, protocol
   # relative links, mail links and data URIs. Nothing else is skipped, and there is no ignore list.
+  # The one web link that is checked is an unversioned HexDocs link to one of this project's own
+  # pages, `@own_docs_href`: the README links every guide that way, and a rename of a function or a
+  # heading would leave its fragment dead with nothing else noticing.
   @external_href ~r{^(?:https?:|//|mailto:|data:)}i
+  @own_docs_href ~r{^https://hexdocs\.pm/scrypath/([^/]+\.html(?:[?#].*)?)$}
   # The author content of an extras page: ExDoc renders the markdown inside
   # `<main class="content page-extra" id="main" data-type="extras">`, so everything before it
   # (head, sidebar) and after it (footer) is chrome and is never scanned. Module pages carry
@@ -317,6 +321,17 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     # left a single match, so this one sits well under the real count and well over a stray hit.
     assert hrefs > @min_author_hrefs, "the href scan went vacuous: #{hrefs} hrefs"
 
+    # The README links its guides by absolute HexDocs URL (7 own-docs links on the build when this
+    # was set, 2 with a fragment), so the own-docs read must see some.
+    own_docs =
+      for {_page, html} <- scanned,
+          href <- author_hrefs(html),
+          Regex.match?(@own_docs_href, href),
+          do: href
+
+    assert length(own_docs) >= 4,
+           "the own-docs HexDocs link check went vacuous: #{length(own_docs)} links"
+
     problems = Enum.flat_map(scanned, fn {page, html} -> link_problems(out, page, html) end)
 
     assert problems == [],
@@ -365,6 +380,21 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     assert planted.("golden-path.html") == []
     assert planted.("golden-path.html##{real_anchor}") == []
     assert planted.("https://example.com/missing") == []
+
+    # An unversioned HexDocs link to this project's own pages is read as the page in the build,
+    # so its fragment and its page are checked too; another project's page is not.
+    own = "https://hexdocs.pm/scrypath/"
+
+    assert planted.(own <> "golden-path.html#no-such-anchor") ==
+             [{"readme.html", own <> "golden-path.html#no-such-anchor", :dead_anchor}]
+
+    assert planted.(own <> "no-such-page.html") ==
+             [{"readme.html", own <> "no-such-page.html", :unresolved}]
+
+    assert planted.(own <> "readme.html") == [{"readme.html", own <> "readme.html", :self_link}]
+    assert planted.(own <> "golden-path.html") == []
+    assert planted.(own <> "golden-path.html##{real_anchor}") == []
+    assert planted.("https://hexdocs.pm/other/golden-path.html#no-such-anchor") == []
 
     # The same self-link after `</main>` is chrome, outside the scanned region.
     [content, chrome] = String.split(readme, "</main>", parts: 2)
@@ -990,9 +1020,21 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   # element with the fragment as its id).
   defp link_problems(out, page, html) do
     for href <- author_hrefs(html),
-        not Regex.match?(@external_href, href),
-        kind = href_problem(out, page, html, href),
+        target = build_target(href),
+        kind = href_problem(out, page, html, target),
         do: {page, href, kind}
+  end
+
+  # What a href means inside the build, or nil when it leaves the build and is not checked. An
+  # own-docs HexDocs link (`https://hexdocs.pm/scrypath/<page>.html#<fragment>`) is read as the
+  # page of that name in this build. HexDocs serves the last published version, so this holds the
+  # link to the pages about to be published: a fragment on a function or heading added since the
+  # last release is found here and would only be dead on HexDocs until the release.
+  defp build_target(href) do
+    case Regex.run(@own_docs_href, href, capture: :all_but_first) do
+      [local] -> local
+      nil -> if Regex.match?(@external_href, href), do: nil, else: href
+    end
   end
 
   defp href_problem(out, page, html, href) do
