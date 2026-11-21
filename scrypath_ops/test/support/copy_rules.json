@@ -3,7 +3,8 @@
   "exempt_paths": [
     ".planning/",
     "brand/",
-    "scrypath_ops/test/support/copy_rules.json"
+    "scrypath_ops/test/support/copy_rules.json",
+    "test/support/release/forbidden_phrases.json"
   ],
   "not_covered": [
     "JavaScript strings under scrypath_ops/assets/js are neither scanned nor rendered by any row.",
