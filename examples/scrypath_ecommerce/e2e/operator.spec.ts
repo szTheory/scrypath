@@ -258,7 +258,7 @@ test("operator promotes only this returned task pair and unique target document"
   await expect(page.getByRole("heading", { name: "Sync and index" })).toBeVisible();
   await waitForLiveConnected(page);
   await page.getByRole("button", { name: "Refresh sync and index settings" }).click();
-  await expect(page.getByText(/Meilisearch settings (match|differ)/|/Meilisearch settings (match|differ)/).first()).toBeVisible();
+  await expect(page.getByText(/Meilisearch settings (match the schema|differ from the schema)/).first()).toBeVisible();
   // Promotion controls appear only because the fixture prepared a target index.
   const advanced = page.locator("#index-promotion");
   await expect(advanced).toContainText(fixture.target_index);

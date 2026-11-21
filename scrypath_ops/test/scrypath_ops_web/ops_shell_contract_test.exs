@@ -171,7 +171,11 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
     assert html =~ ~s(phx-hook="CommandPalette")
     assert html =~ ~s(data-cheatsheet="ops-cheatsheet")
     assert Regex.scan(~r/data-ops-command-open/, html) |> length() == 1
-    assert Regex.scan(~r/aria-label=\"Go to…\"/, html) |> length() == 1
+    # The hint's accessible name comes from its visible text; an aria-label that omits the
+    # shortcut text fails WCAG 2.5.3 (axe label-content-name-mismatch).
+    assert [hint] = Regex.scan(~r/<button[^>]*data-ops-command-open[^>]*>.*?<\/button>/s, html)
+    refute hd(hint) =~ "aria-label"
+    assert hd(hint) =~ "Go to…"
     assert html =~ ~s(aria-keyshortcuts="Meta+K Control+K")
     assert html =~ ~s(id="ops-cmdk")
     assert html =~ ~s(id="ops-cheatsheet")
