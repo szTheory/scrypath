@@ -88,6 +88,38 @@ defmodule Scrypath.Release.InstallLineContractTest do
       assert InstallLine.problems([{@guide, line("~> 0.3") <> "\n"}], "0.3.20", %{}) == []
     end
 
+    # WR-03 (Phase 193 review): the same-length-prefix rule is the 0.x convention, where the minor is
+    # the breaking axis. From 1.0.0 on the breaking axis is the major, `~> 1.0` is the right line at
+    # every 1.x release, and the guard must not send the maintainer to edit it.
+    test "from 1.0.0 on a requirement names the major and Version.match?/2 decides the rest" do
+      # The right line at every 1.x release.
+      assert InstallLine.check("~> 1.0", "1.2.3") == :ok
+      assert InstallLine.check("~> 1.0", "1.0.5") == :ok
+      assert InstallLine.check("~> 1.2", "1.2.3") == :ok
+      assert InstallLine.check("~> 1.2.3", "1.2.3") == :ok
+
+      assert InstallLine.problems([{@guide, line("~> 1.0") <> "\n"}], "1.2.3", %{}) == []
+
+      # An older major, or the 0.x line, is stale at 1.x.
+      assert InstallLine.check("~> 0.2", "1.2.3") == {:error, :series_mismatch}
+      assert InstallLine.check("~> 0.3", "1.0.0") == {:error, :series_mismatch}
+
+      assert [{@guide, 1, "~> 0.3", :series_mismatch}] =
+               InstallLine.problems([{@guide, line("~> 0.3") <> "\n"}], "1.0.0", %{})
+
+      # The current series is stale after a major bump.
+      assert InstallLine.check("~> 1.0", "2.0.0") == {:error, :series_mismatch}
+
+      # Same major, but the version cannot satisfy the requirement.
+      assert InstallLine.check("~> 1.3", "1.2.3") == {:error, :unsatisfied}
+      assert InstallLine.check("~> 1.0.0", "1.2.3") == {:error, :unsatisfied}
+
+      # The 0.x rule is unchanged.
+      assert InstallLine.check("~> 0.3", "0.3.20") == :ok
+      assert InstallLine.check("~> 0.2", "0.3.20") == {:error, :series_mismatch}
+      assert InstallLine.check("~> 0.3", "0.4.0") == {:error, :series_mismatch}
+    end
+
     test "a pre-release version does not satisfy its own series requirement" do
       assert InstallLine.check("~> 0.4", "0.4.0-rc.1") == {:error, :unsatisfied}
     end

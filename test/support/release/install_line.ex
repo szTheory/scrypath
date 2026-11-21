@@ -14,8 +14,10 @@ defmodule Scrypath.Release.InstallLine do
   #   * The version is read from `Scrypath.MixProject.project()[:version]` on every run, so a
   #     Release Please bump cannot leave a stale line behind: the contract test goes red instead.
   #   * Satisfying the requirement is not enough on its own (`~> 0.2` is satisfied by 0.3.20, and
-  #     `~> 0.3` by 0.4.0), so a requirement must also equal the same-length prefix of the
-  #     version's `[major, minor, patch]`, and `Version.match?/2` must hold.
+  #     `~> 0.3` by 0.4.0), so before 1.0.0 a requirement must also equal the same-length prefix of
+  #     the version's `[major, minor, patch]`, and `Version.match?/2` must hold. From 1.0.0 on the
+  #     breaking axis is the major, so only the major must match (`~> 1.0` is right at every 1.x
+  #     release) and `Version.match?/2` decides the rest.
   #   * The scanned files are the files of the mix.exs package `files:` (through
   #     `ShippedDocs.shipped_files/0`) plus the website sources. The website page source holds only
   #     the `{{CANONICAL_INSTALL}}` slot; the literal lives in `website/scripts/build.mjs`, so that
@@ -90,8 +92,9 @@ defmodule Scrypath.Release.InstallLine do
   `:ok`, or `{:error, kind}` for one requirement against a version.
 
     * `:unsupported`: not `~>` plus dot-separated integers, or not a requirement Elixir accepts;
-    * `:series_mismatch`: the requirement's numbers differ from the same-length prefix of the
-      version's `[major, minor, patch]`;
+    * `:series_mismatch`: before 1.0.0, the requirement's numbers differ from the same-length
+      prefix of the version's `[major, minor, patch]`; from 1.0.0 on, its first number differs
+      from the version's major;
     * `:unsatisfied`: the version does not satisfy the requirement.
   """
   @spec check(String.t(), String.t()) :: :ok | {:error, kind()}
@@ -104,15 +107,25 @@ defmodule Scrypath.Release.InstallLine do
 
   defp check_numbers(requirement, numbers, version) do
     parsed = Version.parse!(version)
-    series = [parsed.major, parsed.minor, parsed.patch]
     wanted = numbers |> String.split(".") |> Enum.map(&String.to_integer/1)
 
     cond do
       Version.parse_requirement(requirement) == :error -> {:error, :unsupported}
-      wanted != Enum.take(series, length(wanted)) -> {:error, :series_mismatch}
+      not same_series?(wanted, parsed) -> {:error, :series_mismatch}
       not Version.match?(version, requirement) -> {:error, :unsatisfied}
       true -> :ok
     end
+  end
+
+  # Before 1.0.0 the minor is the breaking axis, so `~> 0.3` is the right line and must equal the
+  # same-length prefix of `[major, minor, patch]`. From 1.0.0 on the breaking axis is the major:
+  # `~> 1.0` is the right line at every 1.x release, so only the major is compared and
+  # `Version.match?/2` decides the rest.
+  defp same_series?([major | _], %Version{major: major}) when major >= 1, do: true
+  defp same_series?(_wanted, %Version{major: major}) when major >= 1, do: false
+
+  defp same_series?(wanted, parsed) do
+    wanted == Enum.take([parsed.major, parsed.minor, parsed.patch], length(wanted))
   end
 
   @doc """
