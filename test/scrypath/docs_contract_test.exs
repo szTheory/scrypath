@@ -146,8 +146,8 @@ defmodule Scrypath.DocsContractTest do
 
   test "the jtbd guide is a docs extra and the overview exposes it as a first-class entry point" do
     # Route-index claim, owner map row guide-routes: the HexDocs sidebar is the route, so the guide
-    # must be a docs extra. The README no longer lists it (Phase 192 trim); Phase 193 regroups the
-    # sidebar. Accepted gap: extras membership proves the guide ships, not that the sidebar groups it.
+    # must be a docs extra. The README no longer lists it (Phase 192 trim). Sidebar grouping is proven
+    # by the config-shape and built-sidebar tests in test/release/package_metadata_test.exs.
     assert_docs_extras(["guides/jtbd-and-user-flows.md"])
 
     overview = @guides["guides/overview.md"]
@@ -256,8 +256,8 @@ defmodule Scrypath.DocsContractTest do
 
     # Route-index claim, owner map rows guide-routes, examples and operator-ui-status: the README
     # route block is gone. Each guide destination is a docs extra (the HexDocs sidebar is the route).
-    # Accepted gap: extras membership proves the guide ships, not that the sidebar groups it
-    # (Phase 193 regroups it).
+    # Sidebar grouping is proven by the config-shape and built-sidebar tests in
+    # test/release/package_metadata_test.exs.
     assert_docs_extras([
       "guides/overview.md",
       "guides/golden-path.md",
@@ -1406,9 +1406,11 @@ defmodule Scrypath.DocsContractTest do
     assert String.contains?(@multitenancy_guide, "tenant_field")
   end
 
-  test "multitenancy guide is registered in ExDoc extras and Getting Started group (TNNT-01)" do
-    mix_exs = File.read!("mix.exs")
-    assert String.contains?(mix_exs, ~s("guides/multitenancy.md"))
+  test "multitenancy guide is registered in ExDoc extras and the Guides by task group (TNNT-01)" do
+    docs = Scrypath.MixProject.project()[:docs]
+
+    assert "guides/multitenancy.md" in docs[:extras]
+    assert "guides/multitenancy.md" in docs[:groups_for_extras][:"Guides by task"]
   end
 
   test "verify.phase96 stays wired into the focused maintainer flow" do

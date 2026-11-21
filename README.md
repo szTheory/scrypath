@@ -108,4 +108,4 @@ result.records
 
 - Continue with the [golden path](https://hexdocs.pm/scrypath/golden-path.html) for a context module and an IEx check.
 - [Support and compatibility](https://hexdocs.pm/scrypath/support-and-compatibility.html) covers release-backed guidance and supported versions; main may contain unreleased changes. Scope reopens only for a concrete production bug, reviewed outside-adopter evidence, or a deliberate strategic product decision.
-- The [guides overview](https://hexdocs.pm/scrypath/overview.html) indexes every guide, from sync modes to drift recovery.
+- The [guides overview](https://hexdocs.pm/scrypath/overview.html) gives a recommended reading order; the HexDocs sidebar lists every guide, grouped by job.

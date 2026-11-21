@@ -10,7 +10,7 @@ defmodule Scrypath do
   - [guides/request-edge-search.md](guides/request-edge-search.md) — canonical request-edge contract for browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `search/3`.
   - [guides/composing-real-app-search.md](guides/composing-real-app-search.md) — canonical real-app guide for reusable composition, metadata reflection, and `search_many/2` lowering.
   - [guides/sync-modes-and-visibility.md](guides/sync-modes-and-visibility.md) — canonical sync modes (`:inline`, `:oban`, `:manual`), eventual consistency, and operator lifecycle language.
-  - [guides/overview.md](guides/overview.md) — table of contents for every published guide.
+  - [guides/overview.md](guides/overview.md) — a short recommended reading order; the HexDocs sidebar groups every guide by job.
   - [guides/common-mistakes.md](guides/common-mistakes.md) — evidence-led pitfalls when search and sync feel inconsistent.
 
   ## Entry points

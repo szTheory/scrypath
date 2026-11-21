@@ -210,25 +210,20 @@ defmodule Scrypath.MixProject do
       before_closing_head_tag: &before_closing_head_tag/1,
       # Verify task modules compile only under :test, so the published (:dev) docs omit them without any filter.
       # A module filter is deliberately absent because it breaks the :test docs build (Phase 183, D-07 as amended).
+      # The list order sets the page order inside each sidebar group, so it must follow
+      # `groups_for_extras` below (ExDoc sorts pages by group and keeps this order within a group).
       extras: [
         "README.md",
-        "CONTRIBUTING.md",
-        "ARCHITECTURE.md",
-        "guides/overview.md",
-        "guides/common-mistakes.md",
-        "guides/drift-recovery.md",
-        "guides/getting-started.md",
         "guides/golden-path.md",
-        "guides/support-and-compatibility.md",
-        "guides/outside-adopter-intake.md",
-        "guides/scope-and-reopen-policy.md",
+        "guides/getting-started.md",
+        "guides/overview.md",
         "guides/meilisearch-concepts.md",
+        "guides/jtbd-and-user-flows.md",
         "guides/request-edge-search.md",
         "guides/composing-real-app-search.md",
-        "guides/jtbd-and-user-flows.md",
         "guides/related-data-and-reindexing.md",
         "guides/multitenancy.md",
-        "guides/meilisearch-operations.md",
+        "guides/common-mistakes.md",
         "guides/phoenix-walkthrough.md",
         "guides/phoenix-contexts.md",
         "guides/phoenix-controllers-and-json.md",
@@ -236,26 +231,32 @@ defmodule Scrypath.MixProject do
         "guides/faceted-search-with-phoenix-liveview.md",
         "guides/multi-index-search.md",
         "guides/sync-modes-and-visibility.md",
+        "guides/drift-recovery.md",
+        "guides/meilisearch-operations.md",
         "guides/operator-mix-tasks.md",
         "guides/relevance-tuning.md",
         "guides/per-query-tuning-pipeline.md",
         "guides/telemetry.md",
+        "ARCHITECTURE.md",
+        "guides/support-and-compatibility.md",
+        "guides/scope-and-reopen-policy.md",
+        "guides/outside-adopter-intake.md",
+        "CONTRIBUTING.md",
         "docs/releasing.md",
         "docs/operator-support.md",
         "docs/search-backend-sre.md",
         "docs/local-demo-docker-dx.md"
       ],
       groups_for_extras: [
-        "Getting Started": [
+        "Getting started": [
           "README.md",
-          "guides/overview.md",
-          "guides/jtbd-and-user-flows.md",
-          "guides/getting-started.md",
           "guides/golden-path.md",
-          "guides/support-and-compatibility.md",
-          "guides/outside-adopter-intake.md",
-          "guides/scope-and-reopen-policy.md",
-          "guides/meilisearch-concepts.md",
+          "guides/getting-started.md",
+          "guides/overview.md",
+          "guides/meilisearch-concepts.md"
+        ],
+        "Guides by task": [
+          "guides/jtbd-and-user-flows.md",
           "guides/request-edge-search.md",
           "guides/composing-real-app-search.md",
           "guides/related-data-and-reindexing.md",
@@ -270,15 +271,20 @@ defmodule Scrypath.MixProject do
           "guides/faceted-search-with-phoenix-liveview.md",
           "guides/multi-index-search.md"
         ],
-        Operations: [
-          "ARCHITECTURE.md",
+        "Operate and recover": [
+          "guides/sync-modes-and-visibility.md",
           "guides/drift-recovery.md",
           "guides/meilisearch-operations.md",
           "guides/operator-mix-tasks.md",
           "guides/relevance-tuning.md",
           "guides/per-query-tuning-pipeline.md",
           "guides/telemetry.md",
-          "guides/sync-modes-and-visibility.md"
+          "ARCHITECTURE.md"
+        ],
+        "Project policy": [
+          "guides/support-and-compatibility.md",
+          "guides/scope-and-reopen-policy.md",
+          "guides/outside-adopter-intake.md"
         ],
         Maintainers: [
           "CONTRIBUTING.md",

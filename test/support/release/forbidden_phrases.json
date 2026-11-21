@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "sources": [
+    "brand/BRAND.md",
+    "GLOSSARY.md",
+    "scrypath_ops/test/support/copy_rules.json"
+  ],
+  "not_covered": [
+    "UI-only status words (Searchable, Last success, Healthy, Pending versus queued, Retry accepted): their source scope in copy_rules.json is scrypath_ops/lib, and the guides use accepted as a contract term.",
+    "Marketing words with no source in the three files above (seamless, blazing, powerful) are not listed.",
+    "The glossary avoid entry last successful has the source scope scrypath_ops/lib in copy_rules.json and one use in guides/operator-mix-tasks.md, so it is not a docs rule.",
+    "docs/*.md, ARCHITECTURE.md and CONTRIBUTING.md are docs extras but are not scanned: some of them use a listed word in a negation or an internal note, and the table's scope is README.md plus guides/*.md.",
+    "Text inside fenced code blocks is not scanned; code and config samples name real option and event names.",
+    "Non-English text is not covered, and a phrase split by markup (a link, emphasis) is not matched."
+  ],
+  "rules": [
+    {
+      "id": "time-promise",
+      "rule": "Say what happens, not how fast: no sentence promises a time.",
+      "scope": "readme_and_guides",
+      "source": "README-02 in test/scrypath/readme_contract_test.exs (Phase 192), moved here",
+      "forbidden": [
+        {"text": "in five minutes", "match": "literal", "case": "insensitive"},
+        {"text": "in 5 minutes", "match": "literal", "case": "insensitive"},
+        {"text": "in minutes", "match": "literal", "case": "insensitive"},
+        {"text": "in a few minutes", "match": "literal", "case": "insensitive"},
+        {"text": "in seconds", "match": "literal", "case": "insensitive"},
+        {"text": "quickly", "match": "literal", "case": "insensitive"},
+        {"text": "instantly", "match": "literal", "case": "insensitive"},
+        {"text": "in no time", "match": "literal", "case": "insensitive"},
+        {"text": "under five minutes", "match": "literal", "case": "insensitive"},
+        {"text": "just works", "match": "literal", "case": "insensitive"}
+      ]
+    },
+    {
+      "id": "brand-hype",
+      "rule": "The brand book's do-not-say words that no doc has a reason to use: effortless, it just stays in sync, real-time, playbook, AI-powered.",
+      "scope": "readme_and_guides",
+      "source": "brand/BRAND.md, Do not say",
+      "source_terms": ["effortless", "it just stays in sync", "real-time", "playbook", "AI-powered"],
+      "forbidden": [
+        {"text": "effortless(ly)?", "match": "regex", "case": "insensitive"},
+        {"text": "just\\s+stays?\\s+in\\s+sync", "match": "regex", "case": "insensitive"},
+        {"text": "real[- ]?time", "match": "regex", "case": "insensitive"},
+        {"text": "AI[- ]powered", "match": "regex", "case": "insensitive"},
+        {"text": "playbook", "match": "literal", "case": "insensitive"}
+      ]
+    },
+    {
+      "id": "brand-technical-readme-only",
+      "rule": "The brand book's do-not-say words that are also technical terms: magic, federated, hydration. README prose does not use them.",
+      "scope": "readme",
+      "reason": "The guides use these words for the [:scrypath, :hydration] telemetry event, the federation_weight: option and explicit negations (not magic), and GLOSSARY.md scopes hydration to UI copy, so the guides are not scanned for them.",
+      "source": "brand/BRAND.md, Do not say; GLOSSARY.md avoid entries",
+      "source_terms": ["magic", "federated", "hydration"],
+      "forbidden": [
+        {"text": "magic(al|ally)?", "match": "regex", "case": "insensitive"},
+        {"text": "federat(ed|ion)", "match": "regex", "case": "insensitive"},
+        {"text": "hydrat(e|ed|es|ion|ing)", "match": "regex", "case": "insensitive"}
+      ]
+    },
+    {
+      "id": "glossary-names",
+      "rule": "Use the glossary's current names: Control room, not Control Room; Sync and index, not the former name Sync and drift.",
+      "scope": "readme_and_guides",
+      "source": "GLOSSARY.md; control-room-casing in scrypath_ops/test/support/copy_rules.json",
+      "forbidden": [
+        {"text": "Control Room", "match": "literal", "case": "sensitive"},
+        {"text": "Sync and drift", "match": "literal", "case": "insensitive"}
+      ]
+    }
+  ]
+}

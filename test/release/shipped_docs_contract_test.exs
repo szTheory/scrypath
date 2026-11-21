@@ -569,6 +569,209 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
     end
   end
 
+  # GUARD-01 source rule (Phase 193). The built-docs scan in package_metadata_test.exs reads
+  # unversioned `https://hexdocs.pm/scrypath/<page>.html` links against the build. This rule reads
+  # the text of every shipped file and rejects the shapes that scan does not read: a versioned
+  # URL, an `http://` URL and a URL that is neither the bare root nor a page. It does not see an
+  # own-docs URL that string interpolation builds (the versioned package links in mix.exs).
+  describe "own HexDocs URLs in shipped files" do
+    test "shipped files hold only unversioned https root or page links to the own docs" do
+      problems = ShippedDocs.own_docs_url_violations()
+
+      assert problems == [],
+             "#{length(problems)} own-docs URL(s) break the rule:\n" <>
+               Enum.map_join(problems, "\n", fn {path, line, url, kind} ->
+                 "  #{path}:#{line} #{url} (#{kind})"
+               end)
+
+      # Non-vacuity: 11 URLs when this was set (7 in README.md, 2 in docs/releasing.md, 1 in
+      # guides/sync-modes-and-visibility.md, 1 in mix.exs).
+      found =
+        ShippedDocs.own_docs_urls(
+          for path <- ShippedDocs.own_docs_url_sources(), do: {path, File.read!(path)}
+        )
+
+      assert length(found) >= 8, "the own-docs URL scan went vacuous: #{length(found)} URLs"
+      assert "README.md" in Enum.map(found, &elem(&1, 0))
+    end
+
+    test "each own-docs URL exception records a reason and a revisit trigger and still occurs" do
+      keys =
+        for {path, _line, url} <-
+              ShippedDocs.own_docs_urls(
+                for p <- ShippedDocs.own_docs_url_sources(), do: {p, File.read!(p)}
+              ),
+            do: {path, url}
+
+      exceptions = ShippedDocs.own_docs_url_exceptions()
+
+      assert map_size(exceptions) == 1,
+             "the exception set changed; record a reason and a revisit trigger for each entry"
+
+      for {{path, url} = key, entry} <- exceptions do
+        assert key in keys, "the exception #{url} no longer occurs in #{path}; remove it"
+        assert String.trim(entry.reason) != "", "the exception #{url} has no reason"
+        assert String.trim(entry.revisit) != "", "the exception #{url} has no revisit trigger"
+      end
+    end
+
+    test "a versioned own-docs URL fails" do
+      for url <- [
+            "https://hexdocs.pm/scrypath/0.3.20/readme.html",
+            "https://hexdocs.pm/scrypath/0.3.20"
+          ] do
+        assert [{@guide, 1, ^url, :versioned}] =
+                 ShippedDocs.own_docs_url_problems([{@guide, "See #{url} for more.\n"}], %{})
+      end
+    end
+
+    test "an http or non-page own-docs URL fails" do
+      problems = fn url -> ShippedDocs.own_docs_url_problems([{@guide, "[x](#{url})\n"}], %{}) end
+
+      assert [{@guide, 1, "http://hexdocs.pm/scrypath/golden-path.html", :insecure_scheme}] =
+               problems.("http://hexdocs.pm/scrypath/golden-path.html")
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/guides/golden-path.md", :not_a_page}] =
+               problems.("https://hexdocs.pm/scrypath/guides/golden-path.md")
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/api-reference", :not_a_page}] =
+               problems.("https://hexdocs.pm/scrypath/api-reference")
+
+      # The scheme is judged first, so an insecure versioned URL reports the scheme.
+      assert [{@guide, 1, _url, :insecure_scheme}] =
+               problems.("http://hexdocs.pm/scrypath/0.3.20/readme.html")
+    end
+
+    test "the release template URL passes only at its named path" do
+      template = "https://hexdocs.pm/scrypath/X.Y.Z"
+      text = "curl -Ifs #{template}\n"
+      exceptions = ShippedDocs.own_docs_url_exceptions()
+
+      assert ShippedDocs.own_docs_url_problems([{"docs/releasing.md", text}], exceptions) == []
+
+      assert [{@guide, 1, ^template, :not_a_page}] =
+               ShippedDocs.own_docs_url_problems([{@guide, text}], exceptions)
+    end
+
+    test "root, page, fragment and other-package forms pass" do
+      allowed = [
+        "[![HexDocs](https://img.shields.io/badge/hex-docs-blue.svg)](https://hexdocs.pm/scrypath)",
+        "[root with a slash](https://hexdocs.pm/scrypath/)",
+        "[page](https://hexdocs.pm/scrypath/golden-path.html#install)",
+        "[module](https://hexdocs.pm/scrypath/Scrypath.html#sync_record/3)",
+        "A sentence ending https://hexdocs.pm/scrypath/overview.html.",
+        "A list: https://hexdocs.pm/scrypath/overview.html, https://hexdocs.pm/scrypath/readme.html;",
+        "[ops](https://hexdocs.pm/scrypath_ops/readme.html)",
+        "[another package](https://hexdocs.pm/scrypath-extras/readme.html)"
+      ]
+
+      for text <- allowed do
+        assert ShippedDocs.own_docs_url_problems([{@guide, text <> "\n"}], %{}) == [],
+               "#{text} should pass"
+      end
+    end
+
+    # IN-04 (Phase 193 review): CHANGELOG.md is generated from squash-commit subjects, so a subject
+    # that quotes an old install tuple or a versioned own-docs URL is history. Both source guards
+    # leave the release history out, and nothing else.
+    test "release history is read by neither source guard and every other shipped file still is",
+         %{files: files} do
+      history = ShippedDocs.history_files()
+
+      assert Map.keys(history) == ["CHANGELOG.md"]
+
+      for {path, entry} <- history do
+        assert path in files, "#{path} is release history but is not a shipped file"
+        assert String.trim(entry.reason) != "", "#{path} has no recorded reason"
+        assert String.trim(entry.revisit) != "", "#{path} has no recorded revisit trigger"
+      end
+
+      assert "CHANGELOG.md" in files
+      refute "CHANGELOG.md" in ShippedDocs.own_docs_url_sources()
+      refute "CHANGELOG.md" in Scrypath.Release.InstallLine.sources()
+
+      # Non-vacuity: only the history is left out of the shipped set.
+      assert Enum.sort(files -- ShippedDocs.own_docs_url_sources()) == ["CHANGELOG.md"]
+
+      for path <- ["README.md", "guides/golden-path.md", "docs/releasing.md"] do
+        assert path in ShippedDocs.own_docs_url_sources()
+        assert path in Scrypath.Release.InstallLine.sources()
+      end
+    end
+
+    test "a stale tuple and a versioned URL are history in the changelog and a failure anywhere else" do
+      text = ~s(Add {:scrypath, "~> 0.2"} and https://hexdocs.pm/scrypath/0.2.0/readme.html\n)
+
+      files =
+        for path <- ShippedDocs.without_history(["README.md", "CHANGELOG.md", "guides/a.md"]),
+            do: {path, text}
+
+      assert Enum.map(files, &elem(&1, 0)) == ["README.md", "guides/a.md"]
+
+      assert [{"README.md", 1, "~> 0.2", :series_mismatch}, {"guides/a.md", 1, "~> 0.2", _}] =
+               Scrypath.Release.InstallLine.problems(files, "0.3.20", %{})
+
+      assert [
+               {"README.md", 1, "https://hexdocs.pm/scrypath/0.2.0/readme.html", :versioned},
+               {"guides/a.md", 1, _, :versioned}
+             ] = ShippedDocs.own_docs_url_problems(files, %{})
+
+      # The same text under the changelog path reaches neither guard.
+      assert ShippedDocs.without_history(["CHANGELOG.md"]) == []
+    end
+
+    # IN-02 (Phase 193 review): a URL wrapped in emphasis, braces or a quoted string used to carry
+    # the closing markup (`.../overview.html*`), which read as a false `:not_a_page`.
+    test "emphasis, brace, escape and sentence punctuation around a valid URL are not the URL" do
+      url = "https://hexdocs.pm/scrypath/overview.html"
+
+      wrapped = [
+        "*#{url}*",
+        "**#{url}**",
+        "_#{url}_",
+        "__#{url}__",
+        "~~#{url}~~",
+        "{#{url}}",
+        "url = \"#{url}\\\"",
+        "Is it #{url}?",
+        "Read #{url}!",
+        "*#{url}*,",
+        "**#{url}**."
+      ]
+
+      for text <- wrapped do
+        assert ShippedDocs.own_docs_urls([{@guide, text <> "\n"}]) == [{@guide, 1, url}],
+               "#{inspect(text)} did not yield the bare URL"
+
+        assert ShippedDocs.own_docs_url_problems([{@guide, text <> "\n"}], %{}) == [],
+               "#{text} should pass"
+      end
+    end
+
+    test "trimming markup does not hide a bad own-docs URL" do
+      problems = fn text -> ShippedDocs.own_docs_url_problems([{@guide, text <> "\n"}], %{}) end
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/0.3.20/readme.html", :versioned}] =
+               problems.("**https://hexdocs.pm/scrypath/0.3.20/readme.html**")
+
+      assert [{@guide, 1, "http://hexdocs.pm/scrypath/readme.html", :insecure_scheme}] =
+               problems.("_http://hexdocs.pm/scrypath/readme.html_")
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/api-reference", :not_a_page}] =
+               problems.("*https://hexdocs.pm/scrypath/api-reference*")
+    end
+
+    test "the rule reports the line of each own-docs URL" do
+      text =
+        "# Planted\nSee https://hexdocs.pm/scrypath/0.3.20/readme.html here.\n\n`http://hexdocs.pm/scrypath/x.html`\n"
+
+      assert [
+               {@guide, 2, "https://hexdocs.pm/scrypath/0.3.20/readme.html", :versioned},
+               {@guide, 4, "http://hexdocs.pm/scrypath/x.html", :insecure_scheme}
+             ] = ShippedDocs.own_docs_url_problems([{@guide, text}], %{})
+    end
+  end
+
   defp link_failures(file, text, extras) do
     for {line, target} <- ShippedDocs.markdown_links(text),
         reason = link_failure(file, target, extras),

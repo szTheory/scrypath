@@ -531,6 +531,135 @@ defmodule Scrypath.Release.ShippedDocs do
     |> Enum.any?(fn {_line, target} -> hd(String.split(target, "#", parts: 2)) in forms end)
   end
 
+  # GUARD-01 source rule (Phase 193): the own-docs URLs written in shipped file text. The built-docs
+  # scan in test/release/package_metadata_test.exs reads `https://hexdocs.pm/scrypath/<page>.html`
+  # links against the build; it does not read a versioned, `http://` or non-page URL, which would
+  # go stale or point nowhere. This rule reads raw file text (fences and code spans included) of
+  # the shipped files minus the release history (`@history` below).
+  #
+  # An own-docs URL is `http` or `https`, host `hexdocs.pm`, then `/scrypath` not followed by a
+  # word character or `-` (so `hexdocs.pm/scrypath_ops` is another package), then any run of
+  # characters up to whitespace, `)`, `]`, a quote, a backtick, `<` or `>`. Trailing sentence
+  # punctuation (`.`, `,`, `;`, `:`, `!`, `?`) and trailing markup (`*`, `_`, `~` for emphasis, `}`
+  # for a brace, `\` for an escaped quote) are not URL: a link written as `**<url>**` or
+  # `{<url>}` is the bare URL. A fragment or path that ends in one of these characters is not a
+  # shape any own-docs page has.
+  @own_docs_url ~r{https?://hexdocs\.pm/scrypath(?![\w-])[^\s)\]"'`<>]*}i
+  @own_docs_parts ~r{\A(https?)://hexdocs\.pm/scrypath(.*)\z}is
+  @own_docs_trailing ~r/[.,;:!?*_~}\\]+\z/
+  @own_docs_page ~r{\A/[^/#?]+\.html(?:[#?].*)?\z}s
+
+  # Exactly one named exception. It records a reason and a revisit trigger; the contract test
+  # fails if a field is empty or the key stops occurring.
+  @own_docs_exceptions %{
+    {"docs/releasing.md", "https://hexdocs.pm/scrypath/X.Y.Z"} => %{
+      reason:
+        "A template in the post-publish verification description and its curl check, filled in " <>
+          "per release by the publish task. It is not an adopter navigation link.",
+      revisit:
+        "Revisit when the template is removed, or when the publish verification stops naming a " <>
+          "template URL."
+    }
+  }
+
+  # Release history, read by neither source guard of Phase 193 (the own-docs URL rule below and
+  # `Scrypath.Release.InstallLine`). release-please builds CHANGELOG.md from squash-commit
+  # subjects, and an entry records what a release said at the time: a subject that quotes an old
+  # install tuple or a versioned `hexdocs.pm/scrypath/<version>` URL is history, not a stale
+  # doc, and a commit already on main cannot be reworded, so scanning it would turn the release
+  # PR red (and keep it red) with no edit that release-please would not regenerate. The file
+  # holds no install tuple and no own-docs URL today, so the exclusion changes no current result.
+  # The contract test fails if a field is empty or the key stops being a shipped file.
+  @history %{
+    "CHANGELOG.md" => %{
+      reason:
+        "Generated release history owned by release-please. An entry quoting an old install " <>
+          "tuple or a versioned own-docs URL records what that release said, and a commit " <>
+          "subject already on main cannot be reworded to satisfy a guard.",
+      revisit:
+        "Revisit when the release-please changelog configuration changes, when a hand-written " <>
+          "CHANGELOG entry starts carrying an install line or an own-docs link meant for " <>
+          "adopters to copy, or when this file is no longer generated."
+    }
+  }
+
+  @type own_docs_problem :: {Path.t(), pos_integer(), String.t(), atom()}
+
+  @doc "The release-history files the install-line and own-docs URL source guards do not read."
+  @spec history_files() :: %{Path.t() => %{reason: String.t(), revisit: String.t()}}
+  def history_files, do: @history
+
+  @doc "`paths` without the release-history files."
+  @spec without_history([Path.t()]) :: [Path.t()]
+  def without_history(paths), do: Enum.reject(paths, &Map.has_key?(@history, &1))
+
+  @doc "Sorted paths the own-docs URL rule reads: the shipped files minus the release history."
+  @spec own_docs_url_sources() :: [Path.t()]
+  def own_docs_url_sources, do: without_history(shipped_files())
+
+  @doc "The named own-docs URL exceptions, keyed by `{path, url}`."
+  @spec own_docs_url_exceptions() :: %{
+          {Path.t(), String.t()} => %{reason: String.t(), revisit: String.t()}
+        }
+  def own_docs_url_exceptions, do: @own_docs_exceptions
+
+  @doc """
+  Sorted `{path, line, url, kind}` for each own-docs URL in the `{path, text}` pairs that is not
+  an exact `{path, url}` key of `exceptions`. `line` is the 1-based line the URL starts on.
+
+  Kinds, checked in this order: `:insecure_scheme` (not `https`); `:versioned` (the first path
+  segment after `/scrypath/` starts with a digit, as in `/scrypath/0.3.20/readme.html`);
+  `:not_a_page` (neither the bare root, with at most one trailing `/`, nor
+  `/<name>.html`, `<name>` holding no `/`, optionally followed by a fragment or a query).
+  """
+  @spec own_docs_url_problems([{Path.t(), String.t()}], map()) :: [own_docs_problem()]
+  def own_docs_url_problems(files, exceptions) do
+    problems =
+      for {path, line, url} <- own_docs_urls(files),
+          not Map.has_key?(exceptions, {path, url}),
+          kind = own_docs_kind(url),
+          do: {path, line, url, kind}
+
+    Enum.sort(problems)
+  end
+
+  @doc """
+  `{path, line, url}` for every own-docs URL in the `{path, text}` pairs, valid or not, in text
+  order. The non-vacuity floors and the exception check count these.
+  """
+  @spec own_docs_urls([{Path.t(), String.t()}]) :: [{Path.t(), pos_integer(), String.t()}]
+  def own_docs_urls(files) do
+    for {path, text} <- files,
+        [{start, length}] <- Regex.scan(@own_docs_url, text, return: :index),
+        do: {
+          path,
+          newlines(binary_part(text, 0, start)) + 1,
+          Regex.replace(@own_docs_trailing, binary_part(text, start, length), "")
+        }
+  end
+
+  defp own_docs_kind(url) do
+    [_all, scheme, tail] = Regex.run(@own_docs_parts, url)
+
+    cond do
+      String.downcase(scheme) != "https" -> :insecure_scheme
+      Regex.match?(~r{\A/\d}, tail) -> :versioned
+      tail in ["", "/"] or Regex.match?(@own_docs_page, tail) -> nil
+      true -> :not_a_page
+    end
+  end
+
+  @doc """
+  Scan of the real shipped files, minus the release history, for own-docs URLs. It reads source
+  text, so it does not see a URL a macro or string interpolation assembles (the versioned package
+  links in mix.exs, which are versioned on purpose and pinned by the package-metadata test).
+  """
+  @spec own_docs_url_violations() :: [own_docs_problem()]
+  def own_docs_url_violations do
+    files = for path <- own_docs_url_sources(), do: {path, File.read!(path)}
+    own_docs_url_problems(files, @own_docs_exceptions)
+  end
+
   @doc """
   The anchor GitHub gives a heading: lowercase, every character other than a letter, a digit, a
   connector such as an underscore, a space or a hyphen dropped, spaces to hyphens.

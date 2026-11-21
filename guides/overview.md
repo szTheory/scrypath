@@ -1,56 +1,20 @@
 # Guides
 
-Short map of published guides for Scrypath, the Ecto-native search indexing library. Start with the [Golden path](golden-path.md) for a linear first-hour setup, or [JTBD and user flows](jtbd-and-user-flows.md) if you want the mental model first.
-
-For supported versions, install guidance, and verification commands, use [Support and compatibility](support-and-compatibility.md).
-
-## Crash Course
-
-Scrypath is easiest to think about as four layers:
-
-- declaration: `use Scrypath` marks a schema with search metadata, but stays metadata-only
-- sync orchestration: `Scrypath.sync_record/3`, `Scrypath.backfill/2`, and `Scrypath.reindex/2` keep writes and recovery explicit
-- search runtime: `Scrypath.search/3`, `Scrypath.search_many/2`, and `Scrypath.search_within_facet/4` stay on one common query path
-- operator recovery: `Scrypath.sync_status/2`, `Scrypath.failed_sync_work/2`, `Scrypath.retry_sync_work/2`, and `Scrypath.reconcile_sync/2` keep drift visible
-
-The intended app boundary is a Phoenix context that owns the search flow, with controllers and LiveView as thin callers.
-
-| Guide | Purpose |
-| ----- | ------- |
-| [JTBD and user flows](jtbd-and-user-flows.md) | Canonical mental model: what jobs Scrypath serves, the main user flows, and what "success" honestly means in each one. |
-| [Meilisearch concepts](meilisearch-concepts.md) | Short crash course on the Meilisearch nouns, async task model, settings-as-migrations posture, and projection boundary Scrypath relies on. |
-| [Common mistakes](common-mistakes.md) | Evidence-led pitfalls (symptom → wrong model → fix) with links back to canonical guides. |
-| [Getting started](getting-started.md) | Mental model: what you configure, where sync and search live in the app. |
-| [Golden path](golden-path.md) | Checklist from `mix.exs` through first `Scrypath.search/3` with **inline** sync. |
-| [Support and compatibility](support-and-compatibility.md) | Current install, runtime, Meilisearch, sync-mode, and verification guidance. |
-| [Outside-adopter intake](outside-adopter-intake.md) | What to include when a real app integration fails or the documented path is unclear. |
-| [Scope and reopen policy](scope-and-reopen-policy.md) | Current non-goals and the only three triggers that reopen feature-lane scope. |
-| [Request-edge search](request-edge-search.md) | Browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`. |
-| [Composing real-app search](composing-real-app-search.md) | Reusable `defaults`, `fixed` scopes, host-owned rendering, and `compose_many/2` lowering. |
-| [Related data and reindexing](related-data-and-reindexing.md) | Canonical guidance for associated-data fan-out, when direct sync is enough, and when to escalate to backfill or reindex. |
-| [Meilisearch operations](meilisearch-operations.md) | Where Meilisearch runs, provisioning sketches, recovery paths, and footguns—through a Scrypath lens. |
-| [Phoenix walkthrough](phoenix-walkthrough.md) | End-to-end Phoenix adoption: schema → context → controller → LiveView. |
-| [Phoenix contexts](phoenix-contexts.md) | Context-owned search and sync boundaries. |
-| [Phoenix controllers and JSON](phoenix-controllers-and-json.md) | JSON APIs and thin controller callers. |
-| [Phoenix LiveView](phoenix-liveview.md) | LiveView calling `Scrypath.search/3` and related patterns. |
-| [Faceted search with Phoenix LiveView](faceted-search-with-phoenix-liveview.md) | Facets, filters, and catalog-style UIs. |
-| [Multi-index search](multi-index-search.md) | Federated / multi-index queries. |
-| [Sync modes and visibility](sync-modes-and-visibility.md) | Inline, Oban, and manual sync semantics and what “done” means. |
-| [Operator Mix tasks](operator-mix-tasks.md) | CLI entrypoints over `Scrypath.*` operator APIs. |
-| [Drift recovery](drift-recovery.md) | Operator path when DB and search disagree or work is stuck. |
-| [Relevance tuning](relevance-tuning.md) | Meilisearch settings, verification, and tuning from schema declarations. |
-| [Per-query tuning pipeline](per-query-tuning-pipeline.md) | Request-time Meilisearch search parameters vs index-time settings — canonical merge and mapping spec. |
-
-The minimal runnable Phoenix example (Postgres + Meilisearch + Oban) lives under [`examples/phoenix_meilisearch/`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md). For a richer click-around showcase with a multi-tenant storefront, mounted operator UI, Docker Compose, realistic seeds, and the advisory browser evidence lane, use [`examples/scrypath_ecommerce/`](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md).
+A short recommended reading order. The HexDocs sidebar lists every guide, grouped by job. If you read one page first, make it the [Golden path](golden-path.md).
 
 ## Recommended reading order
 
-1. [Golden path](golden-path.md)
-2. [JTBD and user flows](jtbd-and-user-flows.md)
-3. [Meilisearch concepts](meilisearch-concepts.md)
-4. [Request-edge search](request-edge-search.md)
-5. [Composing real-app search](composing-real-app-search.md)
-6. [Phoenix walkthrough](phoenix-walkthrough.md)
-7. [Sync modes and visibility](sync-modes-and-visibility.md)
-8. [Related data and reindexing](related-data-and-reindexing.md)
-9. [Drift recovery](drift-recovery.md)
+1. [Golden path](golden-path.md) — a linear first hour, from `mix.exs` to a working `Scrypath.search/3` with inline sync.
+2. [JTBD and user flows](jtbd-and-user-flows.md) — Canonical mental model: the jobs Scrypath serves, the main flows, and what "success" honestly means in each one.
+3. [Meilisearch concepts](meilisearch-concepts.md) — the Meilisearch nouns, the async task model, and the projection boundary Scrypath relies on.
+4. [Request-edge search](request-edge-search.md) — browser params, `Scrypath.QueryParams`, optional `Scrypath.Phoenix`, and context-owned `Scrypath.search/3`.
+5. [Composing real-app search](composing-real-app-search.md) — reusable `defaults`, `fixed` scopes, host-owned rendering, and `compose_many/2` lowering.
+6. [Phoenix walkthrough](phoenix-walkthrough.md) — end-to-end adoption: schema, context, controller, LiveView.
+7. [Sync modes and visibility](sync-modes-and-visibility.md) — inline, Oban, and manual sync, and what "done" means.
+8. [Related data and reindexing](related-data-and-reindexing.md) — associated-data fan-out, and when to escalate to backfill or reindex.
+9. [Drift recovery](drift-recovery.md) — the operator path when the database and search disagree or work is stuck.
+10. [Common mistakes](common-mistakes.md) — evidence-led pitfalls, from symptom to fix.
+
+The minimal runnable Phoenix example (Postgres, Meilisearch, and Oban) lives under [`examples/phoenix_meilisearch/`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md). For a richer click-around showcase with a multi-tenant storefront, a mounted operator UI, Docker Compose, and realistic seeds, use [`examples/scrypath_ecommerce/`](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md).
+
+For supported versions and install guidance, use [Support and compatibility](support-and-compatibility.md).

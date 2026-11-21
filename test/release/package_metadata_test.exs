@@ -3,6 +3,67 @@ defmodule Scrypath.Release.PackageMetadataTest do
 
   alias Scrypath.MixProject
 
+  # The HexDocs sidebar contract (DOCS-01): six job-named groups in this order, each listing its pages
+  # in this order. ExDoc names a group by its keyword key, sorts groups by the keyword order, and
+  # sorts the pages inside a group by their position in `extras`. It warns about none of the mistakes
+  # `docs_group_problems/3` looks for: an extra in no group, in two groups, or a group entry that
+  # names no extra all build clean, so these tests are the only guard.
+  @sidebar_groups [
+    {"Getting started",
+     [
+       "README.md",
+       "guides/golden-path.md",
+       "guides/getting-started.md",
+       "guides/overview.md",
+       "guides/meilisearch-concepts.md"
+     ]},
+    {"Guides by task",
+     [
+       "guides/jtbd-and-user-flows.md",
+       "guides/request-edge-search.md",
+       "guides/composing-real-app-search.md",
+       "guides/related-data-and-reindexing.md",
+       "guides/multitenancy.md",
+       "guides/common-mistakes.md"
+     ]},
+    {"Phoenix",
+     [
+       "guides/phoenix-walkthrough.md",
+       "guides/phoenix-contexts.md",
+       "guides/phoenix-controllers-and-json.md",
+       "guides/phoenix-liveview.md",
+       "guides/faceted-search-with-phoenix-liveview.md",
+       "guides/multi-index-search.md"
+     ]},
+    {"Operate and recover",
+     [
+       "guides/sync-modes-and-visibility.md",
+       "guides/drift-recovery.md",
+       "guides/meilisearch-operations.md",
+       "guides/operator-mix-tasks.md",
+       "guides/relevance-tuning.md",
+       "guides/per-query-tuning-pipeline.md",
+       "guides/telemetry.md",
+       "ARCHITECTURE.md"
+     ]},
+    {"Project policy",
+     [
+       "guides/support-and-compatibility.md",
+       "guides/scope-and-reopen-policy.md",
+       "guides/outside-adopter-intake.md"
+     ]},
+    {"Maintainers",
+     [
+       "CONTRIBUTING.md",
+       "docs/releasing.md",
+       "docs/operator-support.md",
+       "docs/search-backend-sre.md",
+       "docs/local-demo-docker-dx.md"
+     ]}
+  ]
+  # The first sidebar group is the short start page list; a longer one stops being a start list.
+  @first_group_cap 5
+
   test "project metadata exposes public package trust signals" do
     project = MixProject.project()
 
@@ -105,15 +166,17 @@ defmodule Scrypath.Release.PackageMetadataTest do
     assert "guides/telemetry.md" in docs[:extras]
     assert "guides/drift-recovery.md" in docs[:extras]
 
-    assert docs[:groups_for_extras][:Operations] == [
+    # The old `Operations` group is now `"Operate and recover"`: the same eight pages. List order is
+    # pinned by the extras-order test below, because it does not drive rendering; the members do.
+    assert Enum.sort(docs[:groups_for_extras][:"Operate and recover"]) == [
              "ARCHITECTURE.md",
              "guides/drift-recovery.md",
              "guides/meilisearch-operations.md",
              "guides/operator-mix-tasks.md",
-             "guides/relevance-tuning.md",
              "guides/per-query-tuning-pipeline.md",
-             "guides/telemetry.md",
-             "guides/sync-modes-and-visibility.md"
+             "guides/relevance-tuning.md",
+             "guides/sync-modes-and-visibility.md",
+             "guides/telemetry.md"
            ]
 
     assert docs[:groups_for_extras][:Maintainers] == [
@@ -123,6 +186,97 @@ defmodule Scrypath.Release.PackageMetadataTest do
              "docs/search-backend-sre.md",
              "docs/local-demo-docker-dx.md"
            ]
+  end
+
+  test "the sidebar groups are the six job-named groups in order" do
+    groups = docs_groups()
+
+    # The one place the count "six" is pinned; the tests below derive from `@sidebar_groups`.
+    assert length(@sidebar_groups) == 6
+    assert Enum.map(groups, &elem(&1, 0)) == Enum.map(@sidebar_groups, &elem(&1, 0))
+
+    for {{name, members}, {name, expected}} <- Enum.zip(groups, @sidebar_groups) do
+      assert members == expected, "group #{inspect(name)} lists the wrong pages"
+    end
+  end
+
+  test "every docs extra is in exactly one sidebar group" do
+    docs = MixProject.project()[:docs]
+    groups = docs_groups()
+
+    assert docs_group_problems(docs[:extras], groups, @first_group_cap) == []
+
+    # Floors, so a config read that stopped seeing the real lists cannot pass an empty check. The
+    # group count and the first group come from `@sidebar_groups`, which the test above pins to the
+    # config, so adding or moving a guide is one edit there and in mix.exs.
+    assert length(docs[:extras]) >= 33
+    assert length(groups) == length(@sidebar_groups)
+
+    assert [{"Getting started", expected_first} | _] = @sidebar_groups
+    assert {"Getting started", first_group} = hd(groups)
+    assert first_group == expected_first
+    assert first_group != []
+
+    assert length(first_group) <= @first_group_cap
+  end
+
+  # ExDoc keeps the `extras` order inside a group, so a group list that disagrees with `extras`
+  # would claim a sidebar order the build does not render.
+  test "each group lists its pages in extras order" do
+    extras = MixProject.project()[:docs][:extras]
+
+    for {name, members} <- docs_groups() do
+      assert Enum.filter(extras, &(&1 in members)) == members,
+             "group #{inspect(name)} lists its pages in a different order than `extras`"
+    end
+  end
+
+  test "the group check reports a missing, duplicated, dangling or oversized-first-group entry" do
+    extras = ["README.md", "guides/a.md", "guides/b.md", "guides/c.md"]
+    groups = [One: ["README.md", "guides/a.md"], Two: ["guides/b.md", "guides/c.md"]]
+
+    # Control: the keyword shape ExDoc reads, atom keys included, is clean.
+    assert docs_group_problems(extras, groups, 5) == []
+
+    # An extra in no group.
+    assert docs_group_problems(extras, [One: groups[:One], Two: ["guides/b.md"]], 5) ==
+             [{:missing_from_groups, "guides/c.md"}]
+
+    # A path in two groups.
+    assert docs_group_problems(
+             extras,
+             [One: groups[:One], Two: ["guides/a.md", "guides/b.md", "guides/c.md"]],
+             5
+           ) == [{:in_several_groups, "guides/a.md"}]
+
+    # A group entry that names no extra.
+    assert docs_group_problems(
+             extras,
+             [One: groups[:One], Two: groups[:Two] ++ ["guides/gone.md"]],
+             5
+           ) == [{:dangling_member, "guides/gone.md"}]
+
+    # A first group over the cap.
+    six = for n <- 1..6, do: "guides/p#{n}.md"
+    assert docs_group_problems(six, [First: six], 5) == [{:first_group_too_long, {"First", 6}}]
+    assert docs_group_problems(six, [First: six], 6) == []
+
+    # A member that is not a path (a regex pattern); the built-sidebar test covers real patterns.
+    pattern = ~r/guides\/x/
+
+    assert docs_group_problems(extras, [One: groups[:One], Two: groups[:Two] ++ [pattern]], 5) ==
+             [{:non_string_member, {"Two", pattern}}]
+
+    # Two members swapped against the `extras` order.
+    assert docs_group_problems(
+             extras,
+             [One: groups[:One], Two: ["guides/c.md", "guides/b.md"]],
+             5
+           ) ==
+             [
+               {:extras_order,
+                {"Two", ["guides/b.md", "guides/c.md"], ["guides/c.md", "guides/b.md"]}}
+             ]
   end
 
   # ExDoc copies `logo` and `favicon` with `File.copy!/2`, which raises when the file is missing, and
@@ -168,6 +322,56 @@ defmodule Scrypath.Release.PackageMetadataTest do
                favicon: "brand/assets/icon/favicon-light.svg",
                logo: "brand/assets/logo/scrypath-symbol-light.svg"
              )
+  end
+
+  # The configured groups as `{name, members}` with the name as a string, which is how ExDoc reads
+  # a keyword key (`to_string/1`).
+  defp docs_groups do
+    for {name, members} <- MixProject.project()[:docs][:groups_for_extras],
+        do: {to_string(name), members}
+  end
+
+  # The mistakes ExDoc builds clean around in a `groups_for_extras` config, as `{kind, detail}`.
+  # `[]` is a clean config. Each mistake is reported once, under its own kind:
+  #
+  #   * `:missing_from_groups` - an extra no group lists (it would render under an unnamed group)
+  #   * `:in_several_groups`   - a path two groups list (the first group wins, silently)
+  #   * `:dangling_member`     - a group entry that is not an extra (silently ignored)
+  #   * `:first_group_too_long`- the first group has more than `first_group_cap` entries
+  #   * `:non_string_member`   - a group entry that is not a path string, such as a regex; the
+  #     built-sidebar test covers real patterns, this check reads paths only
+  #   * `:extras_order`        - a group's list differs from the order `extras` gives its pages,
+  #     which is the order ExDoc renders them in
+  defp docs_group_problems(extras, groups, first_group_cap) do
+    groups = for {name, members} <- groups, do: {to_string(name), members}
+    paths = for {_name, members} <- groups, member <- members, is_binary(member), do: member
+    counts = Enum.frequencies(paths)
+
+    for(extra <- extras, not is_map_key(counts, extra), do: {:missing_from_groups, extra}) ++
+      for(path <- Enum.uniq(paths), counts[path] > 1, do: {:in_several_groups, path}) ++
+      for(path <- Enum.uniq(paths), path not in extras, do: {:dangling_member, path}) ++
+      first_group_problem(groups, first_group_cap) ++
+      for(
+        {name, members} <- groups,
+        member <- members,
+        not is_binary(member),
+        do: {:non_string_member, {name, member}}
+      ) ++
+      Enum.flat_map(groups, fn {name, members} -> group_order_problem(extras, name, members) end)
+  end
+
+  defp first_group_problem([{name, members} | _], cap) when length(members) > cap,
+    do: [{:first_group_too_long, {name, length(members)}}]
+
+  defp first_group_problem(_groups, _cap), do: []
+
+  # Compares only the entries that are real extras, so a dangling or non-path entry is reported once,
+  # under its own kind, and not again as an order problem.
+  defp group_order_problem(extras, name, members) do
+    listed = members |> Enum.filter(&(is_binary(&1) and &1 in extras)) |> Enum.uniq()
+    rendered = Enum.filter(extras, &(&1 in listed))
+
+    if rendered == listed, do: [], else: [{:extras_order, {name, rendered, listed}}]
   end
 end
 
@@ -410,6 +614,73 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     assert_raise ExUnit.AssertionError, fn ->
       link_problems(out, "readme.html", "<main data-type=\"modules\"></main>")
     end
+  end
+
+  # DOCS-01. ExDoc builds clean with an extra in no group, in two groups, or with a group entry that
+  # names no extra, so the sidebar it actually rendered is read from the build `setup_all` made. This
+  # starts no second docs run.
+  test "the built sidebar renders every extra under its configured group in order", %{out: out} do
+    docs = MixProject.project()[:docs]
+    groups = for {name, members} <- docs[:groups_for_extras], do: {to_string(name), members}
+    entries = built_sidebar_extras(out)
+
+    assert sidebar_group_problems(entries, groups) == []
+
+    # Floors, so a payload parse that stopped reading ExDoc's output fails instead of passing empty.
+    assert length(entries) >= length(docs[:extras])
+    rendered_groups = entries |> Enum.map(& &1["group"]) |> Enum.uniq()
+
+    for {name, _members} <- groups do
+      assert name in rendered_groups, "the built sidebar has no group #{inspect(name)}"
+    end
+
+    start_ids = for %{"group" => "Getting started", "id" => id} <- entries, do: id
+    assert Enum.take(start_ids, 2) == ["readme", "golden-path"]
+  end
+
+  test "the sidebar check reports an ungrouped, misgrouped, misordered or unrendered extra" do
+    groups = [
+      {"Start", ["README.md", "guides/golden-path.md", "guides/getting-started.md"]},
+      {"Phoenix", ["guides/phoenix-walkthrough.md"]}
+    ]
+
+    entries = [
+      %{"id" => "api-reference", "group" => ""},
+      %{"id" => "readme", "group" => "Start"},
+      %{"id" => "golden-path", "group" => "Start"},
+      %{"id" => "getting-started", "group" => "Start"},
+      %{"id" => "phoenix-walkthrough", "group" => "Phoenix"}
+    ]
+
+    # Control: the API reference is the one page ExDoc leaves without a group.
+    assert sidebar_group_problems(entries, groups) == []
+
+    golden = %{"id" => "golden-path", "group" => "Start"}
+
+    replace_golden = fn replacement ->
+      Enum.map(entries, &if(&1 == golden, do: replacement, else: &1))
+    end
+
+    # An extra moved to the unnamed group.
+    assert sidebar_group_problems(replace_golden.(%{golden | "group" => ""}), groups) ==
+             [{:ungrouped, "golden-path"}]
+
+    # An extra under another configured group.
+    assert sidebar_group_problems(replace_golden.(%{golden | "group" => "Phoenix"}), groups) ==
+             [{:wrong_group, "golden-path", "Phoenix", "Start"}]
+
+    # An extra the build did not render.
+    assert sidebar_group_problems(List.delete(entries, golden), groups) ==
+             [{:unrendered, "golden-path"}]
+
+    # Two extras swapped inside a group.
+    [api, readme, golden, started, phoenix] = entries
+
+    assert sidebar_group_problems([api, readme, started, golden, phoenix], groups) ==
+             [
+               {:order, "Start", ["readme", "getting-started", "golden-path"],
+                ["readme", "golden-path", "getting-started"]}
+             ]
   end
 
   test "README.md header uses commit-pinned raw URLs whose bytes match the committed files" do
@@ -1074,5 +1345,82 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     [content, chrome] = String.split(html, "</main>", parts: 2)
     planted = content <> snippet <> "</main>" <> chrome
     link_problems(out, page, planted) -- link_problems(out, page, html)
+  end
+
+  # The `"extras"` list of the sidebar payload ExDoc wrote, in payload order: one map per page with
+  # `"id"`, `"title"` and `"group"`. The file is `dist/sidebar_items-<hash>.js`, which holds
+  # `sidebarNodes=` followed by JSON.
+  defp built_sidebar_extras(out) do
+    with [file] <- Path.wildcard(Path.join(out, "dist/sidebar_items-*.js")),
+         [_head, json] <- file |> File.read!() |> String.split("sidebarNodes=", parts: 2) do
+      json
+      |> String.trim()
+      |> String.trim_trailing(";")
+      |> Jason.decode!()
+      |> Map.fetch!("extras")
+    else
+      other ->
+        flunk(
+          "expected exactly one readable dist/sidebar_items-*.js in the build, got " <>
+            inspect(other, limit: 3, printable_limit: 80)
+        )
+    end
+  end
+
+  # An extra's id in the sidebar and in its page name: the file name without `.md`, runs of
+  # non-word characters turned into `-`, trimmed and downcased (`ExDoc.Utils.text_to_id/1`).
+  defp extra_id(path) do
+    path
+    |> Path.basename(".md")
+    |> String.replace(~r/\W+/u, "-")
+    |> String.trim("-")
+    |> String.downcase()
+  end
+
+  # The problems between the sidebar ExDoc rendered (`entries`, from `built_sidebar_extras/1`) and
+  # the configured groups, as tuples. Each problem is reported once, under its own kind:
+  #
+  #   * `{:unrendered, id}`              - a configured extra has no sidebar entry
+  #   * `{:ungrouped, id}`               - an entry sits in the unnamed group; only the API
+  #     reference may
+  #   * `{:wrong_group, id, got, want}`  - an entry sits under another named group
+  #   * `{:order, group, got_ids, want_ids}` - the ids of a group, in payload order, differ from the
+  #     configured order (compared over the ids the group actually rendered, so a missing or
+  #     misgrouped extra is not reported twice)
+  #
+  # Path members only: the config-shape test rejects any other member.
+  defp sidebar_group_problems(entries, groups) do
+    groups = for {name, members} <- groups, do: {to_string(name), members}
+    rendered = Map.new(entries, &{&1["id"], &1["group"]})
+
+    configured =
+      for {group, members} <- groups,
+          path <- members,
+          is_binary(path),
+          do: {group, extra_id(path)}
+
+    for({_group, id} <- configured, not is_map_key(rendered, id), do: {:unrendered, id}) ++
+      for(
+        %{"id" => id, "group" => ""} <- entries,
+        id != "api-reference",
+        do: {:ungrouped, id}
+      ) ++
+      for(
+        {group, id} <- configured,
+        got = rendered[id],
+        got not in ["", group],
+        do: {:wrong_group, id, got, group}
+      ) ++
+      Enum.flat_map(groups, fn {group, members} ->
+        sidebar_order_problem(entries, group, members)
+      end)
+  end
+
+  defp sidebar_order_problem(entries, group, members) do
+    configured = for member <- members, is_binary(member), do: extra_id(member)
+    got = for %{"id" => id, "group" => ^group} <- entries, id in configured, do: id
+    want = Enum.filter(configured, &(&1 in got))
+
+    if got == want, do: [], else: [{:order, group, got, want}]
   end
 end

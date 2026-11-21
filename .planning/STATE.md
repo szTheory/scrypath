@@ -2,20 +2,20 @@
 gsd_state_version: "1.0"
 milestone: v1.48
 milestone_name: Discovery and onboarding
-current_phase: 193
-current_phase_name: HexDocs regroup and guards
+current_phase: 194
+current_phase_name: Website content (optional)
 status: planning
-stopped_at: Phase 192 complete, ready to plan Phase 193
-last_updated: "2026-11-21T11:04:49.744Z"
+stopped_at: Phase 193 complete, ready to plan Phase 194
+last_updated: "2026-11-21T14:44:16.197Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 192 complete, transitioned to Phase 193
-state_head: 4c87c97bac6a6bb02db765d4f0cd991fb09177c6
+last_activity_desc: Phase 193 complete, transitioned to Phase 194
+state_head: 03580e78cd9346884f0b86c93dc48a2ebe9d8af4
 progress:
   total_phases: 3
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 33
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 67
 ---
 
 # Project State
@@ -25,14 +25,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.48 Discovery and onboarding, opened 2026-11-21: Phase 192 Docs truth and README next, then Phase 193, an entry-point checkpoint, and an optional Phase 194. Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
+**Current focus:** v1.48 Discovery and onboarding: Phases 192 and 193 are done (Phase 193 ships as its own PR). Next is the entry-point checkpoint (SIGNAL-01: record GitHub traffic referrers and hex.pm downloads; it decides whether optional Phase 194 runs or the milestone is cut after 193). Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
 
 ## Current Position
 
-Phase: 193 — HexDocs regroup and guards
+Phase: 194 — Website content (optional)
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-11-21 — Phase 192 complete, transitioned to Phase 193
+Last activity: 2026-11-21 — Phase 193 complete, transitioned to Phase 194
 
 
 ## Performance Metrics
@@ -87,8 +87,8 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 ## Session Continuity
 
 Last session: 2026-11-20
-Stopped at: Phase 192 complete, ready to plan Phase 193
-Acting next: `/gsd-autonomous --only 193`. Phase 192 shipped as PR #160, and Hex 0.3.20 (docs-only, no library changes) was published on 2026-11-21 with the maintainer's go-ahead after green CI.
+Stopped at: Phase 193 complete, ready to plan Phase 194
+Acting next: ship Phase 193 (PR, squash-merge on green required checks and a green `build-and-check` on the exact head), then run the entry-point checkpoint. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21. The Phase 193 regroup reaches HexDocs only with the next Hex release, which needs the maintainer's explicit yes.
 
 ## Operator Next Steps
 

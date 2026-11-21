@@ -42,7 +42,7 @@ v1.48 Discovery and onboarding is the active milestone (opened 2026-11-21 exactl
 - Integer phases 192-194 continue from v1.47 (ended at 191). The catalog milestone that earlier notes numbered 192-196 is renumbered at its opening (v1.49); the old numbers appear only in planning text.
 
 - [x] **Phase 192: Docs truth and README** - A reader of any shipped doc is never told to run a task they cannot run, and the README does one job with working links (about 3 plans; Hex 0.3.20 follows, needs a yes) (completed 2026-11-21)
-- [ ] **Phase 193: HexDocs regroup and guards** - The HexDocs sidebar is grouped by job with a short first group, and link, install-line, snippet and wording guards keep the surfaces from drifting (about 2 plans)
+- [x] **Phase 193: HexDocs regroup and guards** - The HexDocs sidebar is grouped by job with a short first group, and link, install-line, snippet and wording guards keep the surfaces from drifting (about 2 plans) (completed 2026-11-21)
 - [ ] **Checkpoint: entry-point signal** - GitHub traffic, hex.pm downloads and live-link behavior are recorded once and decide whether Phase 194 runs (0 plans)
 - [ ] **Phase 194: Website content (optional)** - Home, Evaluate and Operate carry the same owned claims and Docs points at HexDocs, on the existing token pipeline (about 2 plans; cut if the checkpoint shows almost no traffic)
 
@@ -80,7 +80,12 @@ Plans:
   3. The link check passes on the built docs and README and fails a planted self-link and a planted dead target.
   4. The install line equals the `mix.exs` version in every place it appears, and the schema snippet is identical across README and golden path or carries an explicit "intentionally differs" marker.
   5. The forbidden-phrase table fails a planted banned phrase in README and guide text, and `CONTRIBUTING.md` carries the same-PR rule for public-surface changes.
-**Plans**: about 2 (regroup and the overview decision; guards and the CONTRIBUTING rule)
+**Plans**: 2/2 plans complete (sequential waves: the phrase guard scans the shrunk overview)
+
+Plans:
+- [x] 193-01-PLAN.md — Pin inventory; six job-named sidebar groups with extras reordered to match, proven by a config-shape test and a built-sidebar test with planted failures; overview shrunk to a reading order with every pin carried; README and moduledoc rewords; owner-map rows
+- [x] 193-02-PLAN.md — GUARD-01 recorded as met by the existing link scan; install-line guard against the mix.exs version; shared snippet parity with a reason-carrying marker; forbidden-phrase data table over README and guides; CONTRIBUTING same-PR rule and lane-sentence fix
+
 **What this does not prove**: that the grouping matches how readers look for things.
 
 ### Checkpoint: entry-point signal
@@ -129,6 +134,6 @@ See [v1.46-ROADMAP.md](milestones/v1.46-ROADMAP.md).
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 192. Docs truth and README | 4/4 | Complete    | 2026-11-21 |
-| 193. HexDocs regroup and guards | 0/2 | Not started | - |
+| 193. HexDocs regroup and guards | 2/2 | Complete    | 2026-11-21 |
 | Checkpoint: entry-point signal | 0/0 | Not started | - |
 | 194. Website content (optional) | 0/2 | Not started | - |

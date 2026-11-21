@@ -5,7 +5,9 @@ defmodule Scrypath.ReadmeContractTest do
   # (README-01) join them in the trim commit.
   use ExUnit.Case, async: true
 
+  alias Scrypath.Release.ForbiddenPhrases
   alias Scrypath.Release.ShippedDocs
+  alias Scrypath.Release.SnippetParity
 
   @owner_map ".planning/reference/CLAIM-OWNER-MAP.md"
   @readme_path "README.md"
@@ -16,25 +18,6 @@ defmodule Scrypath.ReadmeContractTest do
   # appear before the README's first code block and before the quick path's first code block.
   @prerequisite_phrases ["needs a running Meilisearch server", "Start a Meilisearch server first"]
   @consistency_phrases ["eventually consistent"]
-
-  # Words a README sentence must not use to promise a time. Matched on word boundaries,
-  # case-insensitively, in prose only (fenced code is skipped).
-  @time_promises [
-    "in five minutes",
-    "in 5 minutes",
-    "in minutes",
-    "in a few minutes",
-    "in seconds",
-    "quickly",
-    "instantly",
-    "in no time",
-    "under five minutes",
-    "just works"
-  ]
-
-  # Marker the Phase 193 parity guard reads: an HTML comment directly above a README snippet says
-  # the snippet differs from the golden path on purpose.
-  @differs_marker "<!-- scrypath:snippet-intentionally-differs -->"
 
   # README budget. The numbers are chosen, not measured; the README budget section of the owner map
   # records the same values and the word cap test compares them.
@@ -60,18 +43,6 @@ defmodule Scrypath.ReadmeContractTest do
   # A link to a repository path (Plan 03's definition, copied from shipped_docs_contract_test.exs):
   # blob or tree, a ref, then a path. Captures: kind, ref, path.
   @repo_path_link ~r/^https:\/\/github\.com\/szTheory\/scrypath\/(blob|tree)\/([^\/#?]+)(?:\/([^#?]*))?(?:\?[^#]*)?(?:#(.*))?$/
-
-  # The "Do not say" words of brand/BRAND.md, matched on word boundaries in README prose.
-  @brand_do_not_say [
-    "magic",
-    "effortless",
-    "it just stays in sync",
-    "real-time",
-    "federated",
-    "hydration",
-    "playbook",
-    "AI-powered"
-  ]
 
   # The level-2 headings the README has, in order: fit, does not fit, installation, one quick path,
   # and the onward links.
@@ -174,6 +145,18 @@ defmodule Scrypath.ReadmeContractTest do
         end
       end
     end
+
+    test "CONTRIBUTING carries the same-PR rule for public-surface claims" do
+      contributing = File.read!("CONTRIBUTING.md")
+
+      assert contributing =~ "Same-PR rule", "CONTRIBUTING.md lost its Same-PR rule bullet"
+      assert contributing =~ "same PR", "the Same-PR rule no longer says to update in the same PR"
+
+      assert contributing =~ "https://github.com/szTheory/scrypath/blob/main/#{@owner_map}",
+             "the Same-PR rule no longer links the claim owner map"
+
+      assert File.regular?(@owner_map), "#{@owner_map} does not exist"
+    end
   end
 
   describe "quick path" do
@@ -187,7 +170,7 @@ defmodule Scrypath.ReadmeContractTest do
 
     test "the quick path ends in a Scrypath.search/3 call and its result" do
       quick = quick_path(File.read!(@readme_path))
-      elixir = elixir_fences(quick)
+      elixir = SnippetParity.elixir_fences(quick)
 
       assert length(elixir) >= 4,
              "the Quick Path has #{length(elixir)} elixir fences; expected schema, config, sync and search"
@@ -216,7 +199,7 @@ defmodule Scrypath.ReadmeContractTest do
     end
 
     test "the quick path syncs a record inline before it searches" do
-      elixir = elixir_fences(quick_path(File.read!(@readme_path)))
+      elixir = SnippetParity.elixir_fences(quick_path(File.read!(@readme_path)))
 
       sync =
         Enum.find_index(elixir, &(&1.body =~ ~r/Scrypath\.sync_record\(.*sync_mode: :inline/))
@@ -232,23 +215,12 @@ defmodule Scrypath.ReadmeContractTest do
     end
 
     test "the quick path schema snippet is identical to the golden path" do
-      readme = File.read!(@readme_path)
-      readme_fence = schema_fence(readme)
-      golden_fence = schema_fence(File.read!(@golden_path))
-
-      assert readme_fence, "README has no elixir fence containing `use Scrypath`"
-      assert golden_fence, "the golden path has no elixir fence containing `use Scrypath`"
-
-      unless differs_marked?(readme, readme_fence) do
-        assert readme_fence.body == golden_fence.body,
-               "the README schema snippet differs from #{@golden_path}; make them identical or put " <>
-                 "#{@differs_marker} directly above the README snippet"
-      end
+      assert_snippet_parity(:schema)
     end
 
     for path <- [@readme_path, @golden_path] do
       test "#{path} config snippet resolves through Scrypath's runtime options" do
-        fence = config_fence(File.read!(unquote(path)))
+        fence = SnippetParity.config_fence(File.read!(unquote(path)))
 
         assert fence, "#{unquote(path)} has no elixir fence containing `config :scrypath`"
 
@@ -264,25 +236,24 @@ defmodule Scrypath.ReadmeContractTest do
     end
 
     test "the README config snippet matches the golden path config snippet" do
-      readme = File.read!(@readme_path)
-      readme_fence = config_fence(readme)
-
-      unless differs_marked?(readme, readme_fence) do
-        assert readme_fence.body == config_fence(File.read!(@golden_path)).body,
-               "the README config snippet differs from #{@golden_path}"
-      end
+      assert_snippet_parity(:config)
     end
 
     test "no README sentence promises a time" do
-      prose = prose(File.read!(@readme_path))
+      prose = SnippetParity.prose(File.read!(@readme_path))
 
       assert String.length(prose) > 1_000, "the prose extraction looks vacuous"
 
+      # The phrases are the `time-promise` rule of test/support/release/forbidden_phrases.json,
+      # matched on word boundaries, case-insensitively, in prose only (fenced code is masked).
       found =
-        for phrase <- @time_promises, Regex.match?(word_pattern(phrase), prose), do: phrase
+        ForbiddenPhrases.scan(
+          [{@readme_path, File.read!(@readme_path)}],
+          ForbiddenPhrases.rules(["time-promise"])
+        )
 
       assert found == [],
-             "README prose promises a time with #{inspect(found)}; say what happens, not how fast"
+             "README prose promises a time: #{inspect(found)}; say what happens, not how fast"
     end
 
     test "the quick path links the golden path" do
@@ -311,7 +282,7 @@ defmodule Scrypath.ReadmeContractTest do
 
       fence_lines =
         readme
-        |> fences()
+        |> SnippetParity.fences()
         |> Enum.map(&(&1.body |> String.trim_trailing("\n") |> String.split("\n") |> length()))
         |> Enum.sum()
 
@@ -321,7 +292,7 @@ defmodule Scrypath.ReadmeContractTest do
 
     test "at most three onward links follow the quick path" do
       readme = File.read!(@readme_path)
-      last_fence = readme |> fences() |> List.last()
+      last_fence = readme |> SnippetParity.fences() |> List.last()
       {from, to} = h2_range(readme, "Quick Path")
 
       assert last_fence, "README has no fenced code block"
@@ -343,7 +314,9 @@ defmodule Scrypath.ReadmeContractTest do
       readme = File.read!(@readme_path)
 
       headings =
-        ~r/^## (.+)$/m |> Regex.scan(prose(readme), capture: :all_but_first) |> List.flatten()
+        ~r/^## (.+)$/m
+        |> Regex.scan(SnippetParity.prose(readme), capture: :all_but_first)
+        |> List.flatten()
 
       assert headings == @section_shape,
              "README level-2 headings are #{inspect(headings)}; expected #{inspect(@section_shape)}"
@@ -425,8 +398,13 @@ defmodule Scrypath.ReadmeContractTest do
     end
 
     test "the README avoids the brand's do-not-say words" do
-      prose = prose(File.read!(@readme_path))
-      found = for word <- @brand_do_not_say, Regex.match?(word_pattern(word), prose), do: word
+      # The words are the brand rules of test/support/release/forbidden_phrases.json, copied from
+      # the "Do not say" paragraph of brand/BRAND.md; a faithfulness test keeps the two equal.
+      found =
+        ForbiddenPhrases.scan(
+          [{@readme_path, File.read!(@readme_path)}],
+          ForbiddenPhrases.rules(["brand-hype", "brand-technical-readme-only"])
+        )
 
       assert found == [],
              "README prose uses words from the brand's do-not-say list: #{inspect(found)}"
@@ -520,43 +498,24 @@ defmodule Scrypath.ReadmeContractTest do
 
   defp before_first_fence(text), do: text |> String.split("```", parts: 2) |> hd()
 
-  # `%{lang, body}` for every fenced code block, with its byte offsets in the text.
-  defp fences(text) do
-    ~r/^```([a-z]*)[ \t]*\n(.*?)^```[ \t]*$/ms
-    |> Regex.scan(text, return: :index)
-    |> Enum.map(fn [{start, length}, {lang, lang_size}, {body, body_size}] ->
-      %{
-        lang: binary_part(text, lang, lang_size),
-        body: binary_part(text, body, body_size),
-        start: start,
-        stop: start + length
-      }
-    end)
+  # README and golden path snippets are the same, or a marker with a reason says why not. The
+  # comparison itself is the shared definition in Scrypath.Release.SnippetParity.
+  defp assert_snippet_parity(kind) do
+    case SnippetParity.check(File.read!(@readme_path), File.read!(@golden_path), kind) do
+      :identical ->
+        :ok
+
+      {:marked, _side, reason} ->
+        assert String.trim(reason) != "", "the snippet marker carries no reason"
+
+      other ->
+        flunk(
+          "the README #{kind} snippet and #{@golden_path} do not match (#{inspect(other)}); make " <>
+            "them identical or put <!-- scrypath:snippet-intentionally-differs: <reason> --> " <>
+            "directly above either snippet"
+        )
+    end
   end
-
-  defp elixir_fences(text), do: Enum.filter(fences(text), &(&1.lang == "elixir"))
-
-  defp schema_fence(text), do: Enum.find(elixir_fences(text), &(&1.body =~ "use Scrypath"))
-
-  defp config_fence(text), do: Enum.find(elixir_fences(text), &(&1.body =~ "config :scrypath"))
-
-  # True when the marker is the last thing before the fence.
-  defp differs_marked?(text, fence) do
-    text
-    |> binary_part(0, fence.start)
-    |> String.trim_trailing()
-    |> String.ends_with?(@differs_marker)
-  end
-
-  # Prose: the text with fenced code removed.
-  defp prose(text) do
-    Enum.reduce(Enum.reverse(fences(text)), text, fn fence, acc ->
-      binary_part(acc, 0, fence.start) <>
-        binary_part(acc, fence.stop, byte_size(acc) - fence.stop)
-    end)
-  end
-
-  defp word_pattern(phrase), do: Regex.compile!("\\b" <> Regex.escape(phrase) <> "\\b", "i")
 
   defp assert_states_both(text, where) do
     assert mentions_any?(text, @prerequisite_phrases),
