@@ -1,6 +1,8 @@
 defmodule Scrypath.Phase110ContractTest do
   use ExUnit.Case, async: true
 
+  alias Scrypath.Release.ShippedDocs
+
   @readme File.read!("README.md")
   @contributing File.read!("CONTRIBUTING.md")
   @support_guide File.read!("guides/support-and-compatibility.md")
@@ -30,8 +32,16 @@ defmodule Scrypath.Phase110ContractTest do
     ])
 
     Enum.each(@non_owner_surfaces, fn {path, surface} ->
-      assert String.contains?(surface, "support-and-compatibility.md"),
-             "expected #{path} to route to guides/support-and-compatibility.md"
+      # The README links the support guide in either link form (HexDocs or relative); every other
+      # surface keeps the substring. The tuple-literal absence check runs for every surface,
+      # README included.
+      if path == "README.md" do
+        assert ShippedDocs.links_to_guide?(surface, "support-and-compatibility"),
+               "expected #{path} to link the support and compatibility guide"
+      else
+        assert String.contains?(surface, "support-and-compatibility.md"),
+               "expected #{path} to route to guides/support-and-compatibility.md"
+      end
 
       assert_absent_all(surface, @tuple_literals, path)
     end)

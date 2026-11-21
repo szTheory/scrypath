@@ -11,14 +11,16 @@ defmodule Scrypath.ReadinessContractTest do
   test "canonical support guide exists and active short docs route to it" do
     assert File.regular?("guides/support-and-compatibility.md")
 
-    assert String.contains?(@readme, "guides/support-and-compatibility.md")
+    # README route: the link form is HexDocs or relative; ShippedDocs.links_to_guide?/2 accepts both.
+    assert ShippedDocs.links_to_guide?(@readme, "support-and-compatibility")
     assert String.contains?(@contributing, "guides/support-and-compatibility.md")
   end
 
   test "canonical outside-adopter intake guide routes from short docs" do
     assert File.regular?("guides/outside-adopter-intake.md")
 
-    assert String.contains?(@readme, "guides/outside-adopter-intake.md")
+    # The README demand is retired (Phase 192): adopters reach the intake guide through the support
+    # guide and the HexDocs sidebar. Its replacements are the two assertions below.
     assert String.contains?(@contributing, "guides/outside-adopter-intake.md")
     assert String.contains?(@support_guide, "outside-adopter-intake.md")
   end

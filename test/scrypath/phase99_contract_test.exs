@@ -22,10 +22,10 @@ defmodule Scrypath.Phase99ContractTest do
     test "high-risk surfaces keep canonical install/support/proof wayfinding tokens" do
       # The README's task tokens are retired: the shipped-docs invariant
       # (test/release/shipped_docs_contract_test.exs) forbids an unqualified README mention.
-      assert_contains_all(@readme, [
-        "guides/support-and-compatibility.md",
-        "guides/outside-adopter-intake.md"
-      ])
+      # README route: the support guide, by either link form. The intake-guide README demand is
+      # retired (Phase 192); readiness_contract_test.exs pins that CONTRIBUTING and the support
+      # guide link it, and the CONTRIBUTING list below still names it.
+      assert ShippedDocs.links_to_guide?(@readme, "support-and-compatibility")
 
       assert_contains_all(@contributing, [
         "guides/support-and-compatibility.md",
@@ -188,9 +188,7 @@ defmodule Scrypath.Phase99ContractTest do
     end
 
     test "entry and intake surfaces route normative policy to support authority" do
-      Enum.each([@readme, @contributing, @intake_guide], fn surface ->
-        assert_contains_all(surface, ["guides/support-and-compatibility.md"])
-      end)
+      Enum.each(route_surfaces(), &assert_routes_to_support/1)
     end
   end
 
@@ -204,9 +202,7 @@ defmodule Scrypath.Phase99ContractTest do
     end
 
     test "non-owner route surfaces keep support authority token without duplicating tuple values" do
-      Enum.each([@readme, @contributing, @intake_guide], fn surface ->
-        assert_contains_all(surface, ["guides/support-and-compatibility.md"])
-      end)
+      Enum.each(route_surfaces(), &assert_routes_to_support/1)
 
       Enum.each([@readme, @contributing, @intake_guide], fn surface ->
         assert_absent_all(surface, [
@@ -298,6 +294,26 @@ defmodule Scrypath.Phase99ContractTest do
       assert ShippedDocs.unit_qualified?(unit),
              "#{doc}:#{unit.line} names mix verify.adopter without the source-checkout qualifier"
     end
+  end
+
+  # README, CONTRIBUTING and the intake guide as {path, text} pairs. The README links the support
+  # guide in either link form (ShippedDocs.links_to_guide?/2); the other two keep the relative-path
+  # substring. The README stays in the list so the tuple-literal absence checks keep covering it.
+  defp route_surfaces do
+    [
+      {"README.md", @readme},
+      {"CONTRIBUTING.md", @contributing},
+      {"guides/outside-adopter-intake.md", @intake_guide}
+    ]
+  end
+
+  defp assert_routes_to_support({"README.md", surface}) do
+    assert ShippedDocs.links_to_guide?(surface, "support-and-compatibility"),
+           "README.md must link the support and compatibility guide"
+  end
+
+  defp assert_routes_to_support({_path, surface}) do
+    assert_contains_all(surface, ["guides/support-and-compatibility.md"])
   end
 
   defp assert_contains_all(content, snippets) do

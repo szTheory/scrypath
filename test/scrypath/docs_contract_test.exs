@@ -2,6 +2,8 @@ defmodule Scrypath.DocsContractTest do
   use ExUnit.Case, async: true
   @moduletag :docs_contract
 
+  alias Scrypath.Release.ShippedDocs
+
   @readme File.read!("README.md")
   @example_readme File.read!("examples/phoenix_meilisearch/README.md")
   @architecture File.read!("ARCHITECTURE.md")
@@ -142,11 +144,11 @@ defmodule Scrypath.DocsContractTest do
     ])
   end
 
-  test "README and overview expose the jtbd guide as a first-class entry point" do
-    assert_contains_all(@readme, [
-      "guides/jtbd-and-user-flows.md",
-      "jobs and adoption path"
-    ])
+  test "the jtbd guide is a docs extra and the overview exposes it as a first-class entry point" do
+    # Route-index claim, owner map row guide-routes: the HexDocs sidebar is the route, so the guide
+    # must be a docs extra. The README no longer lists it (Phase 192 trim); Phase 193 regroups the
+    # sidebar. Accepted gap: extras membership proves the guide ships, not that the sidebar groups it.
+    assert_docs_extras(["guides/jtbd-and-user-flows.md"])
 
     overview = @guides["guides/overview.md"]
 
@@ -172,10 +174,9 @@ defmodule Scrypath.DocsContractTest do
       "not public API"
     ])
 
-    assert_contains_all(@readme, [
-      "guides/request-edge-search.md",
-      "Request-edge search"
-    ])
+    # Route-index claim (owner map row guide-routes): the guide is a docs extra; the README no
+    # longer lists it. Same accepted gap as the jtbd guide above.
+    assert_docs_extras(["guides/request-edge-search.md"])
 
     assert_contains_all(File.read!("lib/scrypath.ex"), [
       "guides/request-edge-search.md",
@@ -206,10 +207,8 @@ defmodule Scrypath.DocsContractTest do
       "related-data propagation or rebuild correctness claims"
     ])
 
-    assert_contains_all(@readme, [
-      "guides/composing-real-app-search.md",
-      "real-app composition"
-    ])
+    # Route-index claim (owner map row guide-routes): extras membership replaces the README link.
+    assert_docs_extras(["guides/composing-real-app-search.md"])
 
     assert_contains_all(scrypath_doc, [
       "guides/composing-real-app-search.md",
@@ -252,11 +251,14 @@ defmodule Scrypath.DocsContractTest do
     refute String.contains?(composition_doc, "schema-generated")
   end
 
-  test "readme route map and jtbd next-reading retain unique useful destinations" do
+  test "route destinations stay docs extras or linked repo files and jtbd next-reading retains unique destinations" do
     public_jtbd = @guides["guides/jtbd-and-user-flows.md"]
 
-    assert_contains_all(@readme, [
-      "## Choose a route",
+    # Route-index claim, owner map rows guide-routes, examples and operator-ui-status: the README
+    # route block is gone. Each guide destination is a docs extra (the HexDocs sidebar is the route).
+    # Accepted gap: extras membership proves the guide ships, not that the sidebar groups it
+    # (Phase 193 regroups it).
+    assert_docs_extras([
       "guides/overview.md",
       "guides/golden-path.md",
       "guides/support-and-compatibility.md",
@@ -274,11 +276,27 @@ defmodule Scrypath.DocsContractTest do
       "guides/faceted-search-with-phoenix-liveview.md",
       "guides/multi-index-search.md",
       "guides/per-query-tuning-pipeline.md",
-      "guides/operator-mix-tasks.md",
-      "examples/phoenix_meilisearch/README.md",
-      "examples/scrypath_ecommerce/README.md",
-      "scrypath_ops/README.md"
+      "guides/operator-mix-tasks.md"
     ])
+
+    # Each example or ScrypathOps README exists and is linked from the surface that owns it.
+    for path <- [
+          "examples/phoenix_meilisearch/README.md",
+          "examples/scrypath_ecommerce/README.md",
+          "scrypath_ops/README.md"
+        ] do
+      assert File.regular?(path), "#{path} does not exist"
+    end
+
+    overview = @guides["guides/overview.md"]
+    assert_contains_all(overview, ["examples/phoenix_meilisearch/README.md"])
+    assert_contains_all(overview, ["examples/scrypath_ecommerce/README.md"])
+
+    assert_contains_all(@guides["guides/golden-path.md"], [
+      "examples/phoenix_meilisearch/README.md"
+    ])
+
+    assert_contains_all(@support_guide, ["scrypath_ops/README.md"])
 
     assert length(Regex.scan(~r/^## Flow [1-6]:/m, public_jtbd)) == 6
     assert length(Regex.scan(~r/^## What Scrypath is opinionated about$/m, public_jtbd)) == 1
@@ -325,10 +343,10 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "support/readiness authority stays discoverable and verify.adopter parity stays explicit" do
-    assert_contains_all(@readme, [
-      "guides/support-and-compatibility.md",
-      "mix verify.adopter"
-    ])
+    # Route half: the README links the support guide (HexDocs or relative form). The task half
+    # (`mix verify.adopter` on the README) stays until Task 3 moves it to the shipped-docs invariant.
+    assert ShippedDocs.links_to_guide?(@readme, "support-and-compatibility")
+    assert_contains_all(@readme, ["mix verify.adopter"])
 
     assert_contains_all(@contributing, [
       "guides/support-and-compatibility.md",
@@ -1438,6 +1456,14 @@ defmodule Scrypath.DocsContractTest do
     Regex.scan(~r/```elixir\n(.*?)```/ms, markdown, capture: :all_but_first)
     |> List.flatten()
     |> Enum.map(&String.trim/1)
+  end
+
+  defp assert_docs_extras(paths) do
+    extras = Scrypath.MixProject.project()[:docs][:extras]
+
+    Enum.each(paths, fn path ->
+      assert path in extras, "#{path} is not a docs extra in mix.exs"
+    end)
   end
 
   defp assert_contains_all(content, snippets) do
