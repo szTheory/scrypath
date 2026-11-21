@@ -191,6 +191,8 @@ defmodule Scrypath.Release.PackageMetadataTest do
   test "the sidebar groups are the six job-named groups in order" do
     groups = docs_groups()
 
+    # The one place the count "six" is pinned; the tests below derive from `@sidebar_groups`.
+    assert length(@sidebar_groups) == 6
     assert Enum.map(groups, &elem(&1, 0)) == Enum.map(@sidebar_groups, &elem(&1, 0))
 
     for {{name, members}, {name, expected}} <- Enum.zip(groups, @sidebar_groups) do
@@ -204,19 +206,16 @@ defmodule Scrypath.Release.PackageMetadataTest do
 
     assert docs_group_problems(docs[:extras], groups, @first_group_cap) == []
 
-    # Floors, so a config read that stopped seeing the real lists cannot pass an empty check.
+    # Floors, so a config read that stopped seeing the real lists cannot pass an empty check. The
+    # group count and the first group come from `@sidebar_groups`, which the test above pins to the
+    # config, so adding or moving a guide is one edit there and in mix.exs.
     assert length(docs[:extras]) >= 33
-    assert length(groups) == 6
+    assert length(groups) == length(@sidebar_groups)
 
+    assert [{"Getting started", expected_first} | _] = @sidebar_groups
     assert {"Getting started", first_group} = hd(groups)
-
-    assert first_group == [
-             "README.md",
-             "guides/golden-path.md",
-             "guides/getting-started.md",
-             "guides/overview.md",
-             "guides/meilisearch-concepts.md"
-           ]
+    assert first_group == expected_first
+    assert first_group != []
 
     assert length(first_group) <= @first_group_cap
   end

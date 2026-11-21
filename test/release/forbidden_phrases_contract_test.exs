@@ -51,7 +51,9 @@ defmodule Scrypath.Release.ForbiddenPhrasesContractTest do
       assert length(rules) >= 4, "the phrase table went vacuous: #{length(rules)} rules"
 
       time = Enum.find(rules, &(&1["id"] == "time-promise"))
-      assert length(time["forbidden"]) == 10
+      # A floor, not an exact count: the phrases the README tests banned before are 10, and the
+      # no-weakening test plants each; a new row is an edit to the table, not to this test.
+      assert length(time["forbidden"]) >= 10
 
       hits = ForbiddenPhrases.violations()
 
