@@ -17,7 +17,7 @@ created: "2026-11-21"
 |----------|-------|
 | **Framework** | ExUnit (Elixir 1.19) with `Phoenix.LiveViewTest` and `LazyHTML` in `scrypath_ops`; ExUnit at the root |
 | **Config file** | `scrypath_ops/test/test_helper.exs`; root `test/test_helper.exs` |
-| **Quick run command** | root: `mix test test/mix/tasks/dependency_boundary_contract_test.exs test/release/package_metadata_test.exs`; ops: the focused catalog test files under `scrypath_ops/test/scrypath_ops_web/` |
+| **Quick run command** | root: `mix test test/mix/tasks/dependency_boundary_contract_test.exs test/release/package_metadata_test.exs`; ops: `mix test test/scrypath_ops_web/catalog_contract_test.exs test/scrypath_ops_web/catalog_routes_test.exs test/scrypath_ops_web/ops_shell_contract_test.exs` (in `scrypath_ops/`) |
 | **Full suite command** | `mix verify.ops_ui` from the repo root (Postgres reachable) |
 | **Estimated runtime** | quick: seconds to about 30 s; full: 6 to 8 min |
 
@@ -30,7 +30,7 @@ created: "2026-11-21"
 
 ## Per-Task Verification Map
 
-Filled in by the plans; the requirement-to-test map is in 195-RESEARCH.md "Validation Architecture".
+The plans own this map: each task's `<verify>`, `<phase_gate>` and `<acceptance_criteria>` in 195-01, 195-02 and 195-03 are authoritative. The research "Validation Architecture" table is the seed. The research's separate `storybook_render_all_test.exs` and `storybook_planted_test.exs` were renamed and merged into `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` (orchestrator decision 5): the file Phase 197 extends, with mount, render-all and planted-tree describes.
 
 | Requirement | Check | Test type | Status |
 |-------------|-------|-----------|--------|
@@ -43,7 +43,7 @@ Filled in by the plans; the requirement-to-test map is in 195-RESEARCH.md "Valid
 
 ## Wave 0 Requirements
 
-- [ ] `scrypath_ops/test/scrypath_ops_web/` render-all, planted and catalog-routes test files
+- [ ] `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` (mount, render-all, planted tree) and `catalog_routes_test.exs`
 - [ ] `scrypath_ops/test/support/` planted backend, endpoint and router (one module per file)
 - [ ] Root helper `has_node_outside_quote?/2` and the new and edited cases in `dependency_boundary_contract_test.exs`
 

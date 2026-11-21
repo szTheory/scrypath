@@ -507,15 +507,22 @@ and `forbidden_modules = [..., :telemetry_poller, PhoenixStorybook, MDEx]` at li
 | A9 | NIF for `x86_64-unknown-linux-gnu` downloads on ubuntu-24.04 and in the hexpm debian-bookworm image (prep C read the checksum file, not re-read here) | Protocol | NIF-failure trigger |
 | A10 | `scrypath_ops/priv/static/assets/js/storybook.js` as a tracked artifact is acceptable drift-wise | Pattern 4 | Add a freshness check or generate in a dev alias only |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Baseline definition for the +180 s trigger.** Locked text says last green main run (about 368 s); data say median 409.5 s with spread 360 to 579 s. Recommendation: record both, evaluate against both, and treat a result between them as an ask-first judgment.
+   **RESOLVED (orchestrator ruling on the plan check; 195-03 context and Task 2):** the locked line stands. Cold `ops-ui` over 548 s (368 + 180) is a tripped trigger: the run stops and asks the maintainer. The median of 409.5 s and the 360 to 579 s spread are shown to the maintainer as evidence, and a result inside the historic noise band is the maintainer's judgment call, never an auto-continue; the trip line does not move to 590 s. Warm over 428 s (368 + 60) is an ask, not a trip (a SYNTHESIS exit criterion). Clearly under both lines continues.
 2. **Test env flag expression and the `runtime_test` image.** Recommend `catalog_routes` off when `PHX_SERVER == "true"` (Pitfall 7), plus an optional 404 curl in the verify script. Planner decides whether the Docker-side proof is worth one more edit to a Docker-only lane.
+   **RESOLVED (orchestrator decisions 2 and 3; 195-01 Tasks 1 to 3):** `config :scrypath_ops, catalog_routes: System.get_env("PHX_SERVER") != "true"` in test.exs; a root subprocess config test proves a non-loopback bind implies the flag is off; the verify script requires HTTP 404 for `/storybook` on the host and standalone Ops in both images.
 3. **`.dockerignore` for `scrypath_ops/storybook` and `scrypath_ops/catalog`.** `COPY . .` puts story and backend sources into prod images (uncompiled, unloaded). Excluding them is cheap defense in depth; but `runtime_test`/`asset_builder` would then compile a router that names a missing backend module. Recommendation: leave the sources in (they are inert in prod) unless the maintainer wants image contents asserted.
+   **RESOLVED (orchestrator decision 3; 195-03 Task 3 "Recorded choices"):** skipped, with the reason recorded in GO-NO-GO.md. Only the asset_builder stage (MIX_ENV=dev) needs the sources; runtime_test compiles with PHX_SERVER=true, so the flag is off there; runtime_prod compiles `lib` only. Revisit if the maintainer wants image contents asserted.
 4. **Root `.formatter.exs` inputs** (`scrypath_ops/{config,lib,test}/**` and `scrypath_ops/mix.exs`) do not cover `catalog/` or `storybook/`. Add `scrypath_ops/{catalog,storybook}/**/*.{ex,exs}` so `core`'s `mix format --check-formatted` covers them.
+   **RESOLVED (orchestrator decision 4; 195-01 Task 2 step 3):** added to both the root and the `scrypath_ops/.formatter.exs` inputs.
 5. **Render-all file and the ledger.** CONTEXT says this phase adds no gate row and row 11 is Phase 197's. Name the 195 file so 197 can fold it into its single contract file (`storybook_render_all_test.exs`); it still runs in the required `ops-ui`.
+   **RESOLVED (orchestrator decision 5; 195-01 Task 1 and 195-02 Tasks 1 and 2):** the file is `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs`, the file Phase 197 extends, holding the mount, render-all and planted-tree describes. This phase adds no gate row and no CI context; the file runs inside the existing `ops-ui` job.
 6. **Latent `dashboard_routes` guard defect** (Finding 1): fix now with its own test or record only? Recommendation: record in the findings note; fix only if the maintainer asks.
+   **RESOLVED (orchestrator decision 6; 195-03 Task 3 "Findings for the maintainer"):** recorded for the maintainer (FLOW-04), not fixed. The catalog macro reads its flag with `Application.get_env` at expansion.
 7. **Playwright fidelity probe** (computed-style parity, three themes by two color schemes) is listed by H as a 195-2 exit item. `examples/scrypath_ecommerce/node_modules/.bin/playwright` and cached chromium exist, so a throwaway local probe is feasible; it is not a CI gate and is not part of the success criteria. Planner decides whether to run it in this phase or leave it to 197.
+   **RESOLVED (orchestrator decision 7; 195-03 Task 3 "Exit criteria"):** left to Phase 197. GO-NO-GO.md records it as "deferred to Phase 197", next to the H exit item for `handle_params` in an `:example` story.
 
 ## Environment Availability
 
