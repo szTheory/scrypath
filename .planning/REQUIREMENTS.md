@@ -23,14 +23,14 @@ Every criterion below is an executable check, a recorded number or a recorded de
 
 ### HexDocs structure (Phase 193)
 
-- [ ] **DOCS-01**: The HexDocs sidebar is regrouped in `mix.exs` `groups_for_extras` with at most five items in the first group, named by job (for example Getting started, Guides by task, Operate and recover, Project policy, Maintainers), one start page (the golden path) and `getting-started.md` linking to it. No guide is renamed, merged or deleted in this milestone (filenames are HexDocs URLs). `mix docs` builds with no warnings and a test asserts every extra appears in exactly one group.
-- [ ] **DOCS-02**: The fate of `guides/overview.md` (a 22-row table that duplicates the sidebar) is decided and recorded: shrink to half a page or drop it from `extras`; if dropped from `extras`, no shipped link points at its old page.
+- [x] **DOCS-01**: The HexDocs sidebar is regrouped in `mix.exs` `groups_for_extras` with at most five items in the first group, named by job (for example Getting started, Guides by task, Operate and recover, Project policy, Maintainers), one start page (the golden path) and `getting-started.md` linking to it. No guide is renamed, merged or deleted in this milestone (filenames are HexDocs URLs). `mix docs` builds with no warnings and a test asserts every extra appears in exactly one group.
+- [x] **DOCS-02**: The fate of `guides/overview.md` (a 22-row table that duplicates the sidebar) is decided and recorded: shrink to half a page or drop it from `extras`; if dropped from `extras`, no shipped link points at its old page.
 
 ### Upkeep guards (Phase 193)
 
-- [ ] **GUARD-01**: A link check runs over the built HexDocs output and the README: every internal target and every `hexdocs.pm/scrypath` target exists in the build, and self-links fail. It runs where the docs build already runs (no new required gate unless the ledger row is justified, with a deletion trigger).
-- [ ] **GUARD-02**: The install line (`{:scrypath, "~> 0.3"}`) is generated or asserted equal to the version in `mix.exs` wherever it appears (README, golden path, website source if present), so a version bump cannot leave a stale line.
-- [ ] **GUARD-03**: Duplicated blocks are guarded by data, not discipline: the schema snippet in the README, golden path and (if Phase 194 runs) website is identical or carries an explicit marker saying it intentionally differs; a forbidden-phrase table (starting from the glossary and brand voice rules, shared with `copy_rules.json` conventions where that is cheap) fails README and guide text that uses banned wording. A CONTRIBUTING rule says a public-surface change updates the other owning surfaces in the same PR.
+- [x] **GUARD-01**: A link check runs over the built HexDocs output and the README: every internal target and every `hexdocs.pm/scrypath` target exists in the build, and self-links fail. It runs where the docs build already runs (no new required gate unless the ledger row is justified, with a deletion trigger).
+- [x] **GUARD-02**: The install line (`{:scrypath, "~> 0.3"}`) is generated or asserted equal to the version in `mix.exs` wherever it appears (README, golden path, website source if present), so a version bump cannot leave a stale line.
+- [x] **GUARD-03**: Duplicated blocks are guarded by data, not discipline: the schema snippet in the README, golden path and (if Phase 194 runs) website is identical or carries an explicit marker saying it intentionally differs; a forbidden-phrase table (starting from the glossary and brand voice rules, shared with `copy_rules.json` conventions where that is cheap) fails README and guide text that uses banned wording. A CONTRIBUTING rule says a public-surface change updates the other owning surfaces in the same PR.
 
 ### Entry-point checkpoint (after Phase 193)
 
@@ -78,11 +78,11 @@ Deferred; not in this roadmap.
 | README-01 | Phase 192 | Complete |
 | README-02 | Phase 192 | Complete |
 | README-03 | Phase 192 | Complete |
-| DOCS-01 | Phase 193 | Pending |
-| DOCS-02 | Phase 193 | Pending |
-| GUARD-01 | Phase 193 | Pending |
-| GUARD-02 | Phase 193 | Pending |
-| GUARD-03 | Phase 193 | Pending |
+| DOCS-01 | Phase 193 | Complete |
+| DOCS-02 | Phase 193 | Complete |
+| GUARD-01 | Phase 193 | Complete |
+| GUARD-02 | Phase 193 | Complete |
+| GUARD-03 | Phase 193 | Complete |
 | SIGNAL-01 | Checkpoint (after Phase 193) | Pending |
 | SITE-07 | Phase 194 (optional) | Pending |
 | SITE-08 | Phase 194 (optional) | Pending |

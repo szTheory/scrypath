@@ -1,9 +1,9 @@
 ---
 phase: "193"
 slug: hexdocs-regroup-and-guards
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: validated
+nyquist_compliant: true
+wave_0_complete: true
 created: "2026-11-21"
 ---
 
@@ -62,4 +62,4 @@ All phase behaviors have automated verification. Explicitly unproven and not cla
 - [ ] No watch-mode flags
 - [ ] `nyquist_compliant: true` set after the plan checker passes
 
-**Approval:** pending
+**Approval:** validated 2026-11-21 by the phase verifier (193-VERIFICATION.md, 20/20, mutation battery M1-M13)
