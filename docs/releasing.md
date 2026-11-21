@@ -13,6 +13,8 @@ Scrypath now runs a **green-main release train**:
 - Serious milestone or feature-depth work should land through **PRs**, not direct `main` development.
 - **Squash merge only** is the intended feed into Release Please. The PR title should be treated as the release-facing summary because it becomes the squash commit title.
 - If `main` is green and there is no coherent release PR to review, the default maintainer answer is **nothing to do**.
+- **Proposed release cadence (a recommendation, not adopted policy; 2026-11-21):** release on a behavior change, a runtime-dependency advisory, an adopter-facing documentation defect, or an announcement; never for docs-only changes alone; at most one release per 14 days except bug and security fixes. The maintainer's explicit yes still gates every Hex release, and this text does not change that. Until the maintainer adopts or edits it, treat it as agent guidance only.
+- **PR titles and `scrypath_ops/`:** Release Please has one root package and no path exclusions, so a `feat:` or `fix:` squash title that touches `scrypath_ops/` opens a release PR. Use `docs`, `chore`, `test` or `ci` titles for ScrypathOps-only work, and check that no release PR appeared after the merge.
 
 ### Hex package files vs `scrypath_ops/`
 
