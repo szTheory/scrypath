@@ -668,6 +668,47 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
       end
     end
 
+    # IN-02 (Phase 193 review): a URL wrapped in emphasis, braces or a quoted string used to carry
+    # the closing markup (`.../overview.html*`), which read as a false `:not_a_page`.
+    test "emphasis, brace, escape and sentence punctuation around a valid URL are not the URL" do
+      url = "https://hexdocs.pm/scrypath/overview.html"
+
+      wrapped = [
+        "*#{url}*",
+        "**#{url}**",
+        "_#{url}_",
+        "__#{url}__",
+        "~~#{url}~~",
+        "{#{url}}",
+        "url = \"#{url}\\\"",
+        "Is it #{url}?",
+        "Read #{url}!",
+        "*#{url}*,",
+        "**#{url}**."
+      ]
+
+      for text <- wrapped do
+        assert ShippedDocs.own_docs_urls([{@guide, text <> "\n"}]) == [{@guide, 1, url}],
+               "#{inspect(text)} did not yield the bare URL"
+
+        assert ShippedDocs.own_docs_url_problems([{@guide, text <> "\n"}], %{}) == [],
+               "#{text} should pass"
+      end
+    end
+
+    test "trimming markup does not hide a bad own-docs URL" do
+      problems = fn text -> ShippedDocs.own_docs_url_problems([{@guide, text <> "\n"}], %{}) end
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/0.3.20/readme.html", :versioned}] =
+               problems.("**https://hexdocs.pm/scrypath/0.3.20/readme.html**")
+
+      assert [{@guide, 1, "http://hexdocs.pm/scrypath/readme.html", :insecure_scheme}] =
+               problems.("_http://hexdocs.pm/scrypath/readme.html_")
+
+      assert [{@guide, 1, "https://hexdocs.pm/scrypath/api-reference", :not_a_page}] =
+               problems.("*https://hexdocs.pm/scrypath/api-reference*")
+    end
+
     test "the rule reports the line of each own-docs URL" do
       text =
         "# Planted\nSee https://hexdocs.pm/scrypath/0.3.20/readme.html here.\n\n`http://hexdocs.pm/scrypath/x.html`\n"

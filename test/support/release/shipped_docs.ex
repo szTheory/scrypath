@@ -538,11 +538,14 @@ defmodule Scrypath.Release.ShippedDocs do
   #
   # An own-docs URL is `http` or `https`, host `hexdocs.pm`, then `/scrypath` not followed by a
   # word character or `-` (so `hexdocs.pm/scrypath_ops` is another package), then any run of
-  # characters up to whitespace, `)`, `]`, a quote, a backtick, `<` or `>`. Trailing `.`, `,`, `;`
-  # and `:` are punctuation, not URL.
+  # characters up to whitespace, `)`, `]`, a quote, a backtick, `<` or `>`. Trailing sentence
+  # punctuation (`.`, `,`, `;`, `:`, `!`, `?`) and trailing markup (`*`, `_`, `~` for emphasis, `}`
+  # for a brace, `\` for an escaped quote) are not URL: a link written as `**<url>**` or
+  # `{<url>}` is the bare URL. A fragment or path that ends in one of these characters is not a
+  # shape any own-docs page has.
   @own_docs_url ~r{https?://hexdocs\.pm/scrypath(?![\w-])[^\s)\]"'`<>]*}i
   @own_docs_parts ~r{\A(https?)://hexdocs\.pm/scrypath(.*)\z}is
-  @own_docs_trailing ~r/[.,;:]+\z/
+  @own_docs_trailing ~r/[.,;:!?*_~}\\]+\z/
   @own_docs_page ~r{\A/[^/#?]+\.html(?:[#?].*)?\z}s
 
   # Exactly one named exception. It records a reason and a revisit trigger; the contract test
