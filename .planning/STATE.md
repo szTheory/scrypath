@@ -2,13 +2,16 @@
 gsd_state_version: "1.0"
 milestone: v1.47
 milestone_name: Brand completion
-status: executing
-last_updated: "2026-11-20T14:32:06.000Z"
+status: Awaiting next milestone
+stopped_at: v1.47 Brand completion complete and archived; next milestone not started
+last_updated: "2026-11-21T00:53:52.035Z"
 last_activity: 2026-11-20
+last_activity_desc: Milestone v1.47 completed and archived
+state_head: 219af695cc77acf64dd94d0fbab417befb21623d
 progress:
   total_phases: 4
   completed_phases: 4
-  total_plans: 4
+  total_plans: 8
   completed_plans: 8
   percent: 100
 ---
@@ -17,19 +20,17 @@ progress:
 
 ## Project Reference
 
-See [PROJECT](PROJECT.md), updated 2026-11-20.
+See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (PR #153, wording) merged; Phase 191 (cleanup) built and verified, PR pending; then the milestone audit and close. Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** Awaiting the next milestone. v1.47 Brand completion is complete and archived; the prepared options are in [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md). Roadmap: [ROADMAP](ROADMAP.md).
 
 ## Current Position
 
-Phase: 191 (Cleanup), 2 of 2 plans executed and verified; PR pending
-Plan: 191-02 complete
-Status: awaiting required checks on the exact PR head, then squash merge; milestone audit and close next
-Last activity: 2026-11-20 — Phase 191 executed, reviewed, fixed and verified
-
-Progress: [██████████] 100% (3 of 4 phases merged; 191 built)
+Phase: Milestone v1.47 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-21 — Milestone v1.47 completed and archived (override closeout, `tech_debt` audit)
 
 ## Performance Metrics
 
@@ -86,5 +87,5 @@ Acting next: the kickoff CI chore PR (`ecommerce-path` classifier), then `/gsd-d
 
 ## Operator Next Steps
 
-- Land the kickoff CI chore as a plain PR (squash-merge on green).
-- Then `/gsd-discuss-phase 189` (Website re-skin).
+
+- Start the next milestone with /gsd-new-milestone

@@ -75,7 +75,7 @@ Why it matters:
 Current state:
 
 - `guides/outside-adopter-intake.md` defines the evidence path
-- `mix verify.adopter` and the Phoenix example defend the in-repo route
+- `mix verify.adopter` (a maintainer task that runs from a source checkout, not from the Hex package) and the Phoenix example defend the in-repo route
 - future feature breadth should reopen only through [scope-and-reopen-policy](../guides/scope-and-reopen-policy.md): a **concrete production bug**, **reviewed outside-adopter evidence**, or a **deliberate strategic product decision**
 
 Priority:

@@ -30,17 +30,13 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. This is direction, not approved scope; see `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
 
-## Current Milestone: v1.47 Brand completion
+## Current Milestone
 
-**Goal:** Finish the brand adoption v1.46 started: the website in the new identity, the wording fixes that do not need the catalog, and removal of the old identity's last code, so v1.48 (Catalog foundation) starts from a clean base.
-
-**Target features:**
-- Website re-skin (SITE-01..05, Phase 189): pinned brand tokens, fonts, lockups and favicons; light default with a Light/Dark/System picker; computed-style, font-hash and contrast checks in place of the capture-only `check.mjs`.
-- Wording that does not need the catalog (COPY-01..04, Phase 190): glossary-rule copy fixes, "Control room" casing, guards as a data table inside the required `ops-ui` job, the Cancel-focus assertion and the unpinned copy values.
-- Cleanup (CLEAN-01..06, Phase 191): demo favicon, `brandbook/` readers then data, static token invariants (12 px floor and friends), the unthemed-favicon tripwire, ledger wording, and `brand/tokens.json` named as the token authority.
-- CI path classifier (CI-01, Phase 188.1, a plain PR first): an `ecommerce-path` allowlist classifier so planning-only and docs-only PRs skip the browser lanes.
+None active. v1.47 Brand completion is complete and archived ([archive](milestones/v1.47-ROADMAP.md), [audit](milestones/v1.47-MILESTONE-AUDIT.md)). The next milestone is chosen from the prepared options in `reference/ROLLING-ROADMAP.md`.
 
 ## Current State
+
+v1.47 **Brand completion** is on `main` (PRs #149, #152, #153, #154) and archived: Phases 188.1, 189, 190 and 191, 8 plans, 18 of 18 requirements, audit `tech_debt` with no unsatisfied requirement. The website at https://sztheory.github.io/scrypath/ is live in the plum/orchid identity (light by default with a Light/Dark/System picker; fonts, lockups, favicons and social card derived from the pinned `brand/` files, proved by a static contract and a browser check, deployed with a live smoke step and a documented rollback). ScrypathOps copy follows the glossary status-wording rules and sentence-case "Control room", guarded by `scrypath_ops/test/support/copy_rules.json` in the required `ops-ui` job. The old brand directory, its readers and the retired-identity allowlist are gone (0 entries, 0 hits), with source-level size, case and animation invariants and an unthemed-favicon tripwire in their place. `brand/tokens.json` is the single token authority. The required-gate ledger stands at 10 of 12. Not proven: how the new look reads (no preview capture, `ui:review` or independent review ran), browsers other than Chromium, real screen readers. Known tech debt (full list in the audit): four Hex-shipped docs still name the repo-only `mix verify.adopter` (ships with the next library release), the `ops-ui-path` regex gap for `examples/scrypath_ecommerce/assets/` and a flaky required property test (both queued in a CI speed PR), Dependabot #129 waiting on a real axe finding in ScrypathOps.
 
 v1.46 **Brand foundation and re-skin** is on `main` (PRs #137, #138, #139, #143) and archived: Phases 186-188, 16 plans, 27 of 29 requirements. The plum/orchid scry/path identity is pinned offline under `brand/` (checked by `mix verify.brand`), guarded by a token-parity test and a retired-value deny-list, and adopted in ScrypathOps (both themes, brand fonts, one four-word sync-status vocabulary, one Plum button per scope), the README header and HexDocs. Website (SITE-01) and catalog-free wording (COPY-01) were deferred to v1.47. Hex 0.3.19 (2026-11-20) shipped the README and HexDocs branding only (no library behavior change); the README header uses commit-pinned raw URLs and loads on hex.pm. The ScrypathOps re-skin lives in the separate `scrypath_ops` app. Hex releases stay the maintainer's separate yes.
 
@@ -48,7 +44,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-After v1.47 Brand completion: v1.48 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half; Phases 192-196), v1.49 Screens, flows and full catalog, v1.50 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
+After v1.47 Brand completion (done): v1.48 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half; Phases 192-196), v1.49 Screens, flows and full catalog, v1.50 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
@@ -235,7 +231,7 @@ measured pure hot paths did not justify speculative optimization.
 
 ## Last shipped milestone
 
-**Latest planning archive:** v1.46 Brand foundation and re-skin (2026-11-19, on `main`); see [archive](milestones/v1.46-ROADMAP.md). Not released to Hex. Before it: v1.45 Foundation and CI (2026-11-01), see [archive](milestones/v1.45-ROADMAP.md).
+**Latest planning archive:** v1.47 Brand completion (2026-11-20, on `main`); see [archive](milestones/v1.47-ROADMAP.md). Not released to Hex. Before it: v1.46 Brand foundation and re-skin (2026-11-19), see [archive](milestones/v1.46-ROADMAP.md). Before that: v1.45 Foundation and CI (2026-11-01), see [archive](milestones/v1.45-ROADMAP.md).
 
 **v1.42 — ScrypathOps operator/admin UI** (2026-10-04): Phase 172, eight plans, eight OPUX requirements. Consistent shared controls/copy, accessible dialogs and schema selection, exact-work recovery and guarded promotion, 104 passing hosted browser tests and the warranted Scrypath0.3.15 release. See `milestones/v1.42-{ROADMAP,REQUIREMENTS,MILESTONE-AUDIT}.md`.
 
@@ -382,6 +378,10 @@ clause and the Multi uniqueness exception).
 
 ### Validated
 
+- ✓ Website in the plum/orchid identity with a light default and Light/Dark/System picker, derived from pinned brand files and proved before and after deploy (SITE-01..06) — v1.47
+- ✓ ScrypathOps copy follows the glossary status-wording rules and sentence-case "Control room", guarded by one data table in the required `ops-ui` job; Cancel focus pinned in the required lane (COPY-01..04) — v1.47
+- ✓ Old-identity code removed, retired-identity allowlist empty, source invariants and unthemed-favicon tripwire, `brand/tokens.json` named as the single token authority (CLEAN-01..06) — v1.47
+- ✓ Planning-only and docs-only PRs skip the browser lanes through a fail-open allowlist classifier (CI-01) — v1.47
 - [x] **v1.45 / Phase 182** (2026-11-01 archive): **BROW-01–BROW-03, CACHE-01–CACHE-02** — complete isolated mounted/standalone browser proof and bounded source-bound cache acceptance.
 - [x] **v1.45 / Phase 183** (2026-11-01 archive): **PKGH-01–PKGH-03** — repository-only tooling excluded from real Hex/compiled consumers, preserved source-checkout commands, durable package/consumer regressions.
 - [x] **v1.45 / Phase 184** (2026-11-01 archive): **DEP-01–DEP-07** — direct Telemetry, approved Req/Sigra compatibility, lean Ops/asset/runtime graphs and explicit advisory accounting.
@@ -482,7 +482,7 @@ clause and the Multi uniqueness exception).
 
 ### Active
 
-v1.47 Brand completion (Phases 188.1, 189-191): CI-01, SITE-01..05, COPY-01..04, CLEAN-01..06, plus the standing GATE-02 guardrails. Full text and traceability are in `REQUIREMENTS.md`. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
+None defined. v1.47's 18 requirements shipped and are archived in [the v1.47 requirements archive](milestones/v1.47-REQUIREMENTS.md); the next milestone defines its own. v1.45's 21 requirements remain in [the requirements archive](milestones/v1.45-REQUIREMENTS.md).
 
 ### Out of Scope
 
@@ -512,4 +512,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-20 after v1.47 milestone start.*
+*Last updated: 2026-11-21 after v1.47 milestone completion.*

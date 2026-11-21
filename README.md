@@ -32,10 +32,10 @@ end
 - **Wire a Phoenix or Ecto app:** [Getting Started](guides/getting-started.md), [Phoenix contexts](guides/phoenix-contexts.md), [the Phoenix walkthrough](guides/phoenix-walkthrough.md), [controllers and JSON](guides/phoenix-controllers-and-json.md), and [LiveView](guides/phoenix-liveview.md) show the app boundary. [Request-edge search](guides/request-edge-search.md) covers browser params and optional Phoenix glue; [real-app composition](guides/composing-real-app-search.md) covers reusable policy and metadata.
 - **Build a search experience:** [Meilisearch concepts](guides/meilisearch-concepts.md) introduces the backend model; [related data and reindexing](guides/related-data-and-reindexing.md), [faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md) covers `Scrypath.search_within_facet/4`; [multi-index search](guides/multi-index-search.md) covers `Scrypath.search_many/2`, `:all` expansion, and `federation_weight:`; [per-query tuning](guides/per-query-tuning-pipeline.md) distinguishes request-time parameters from index-time settings.
 - **Choose sync and recover:** [sync modes and visibility](guides/sync-modes-and-visibility.md), [Meilisearch operations](guides/meilisearch-operations.md), [operator Mix tasks](guides/operator-mix-tasks.md), [drift recovery](guides/drift-recovery.md), and [common mistakes](guides/common-mistakes.md) explain lifecycle, visibility, and repair.
-- **Try the examples:** [Phoenix + Meilisearch](examples/phoenix_meilisearch/README.md) is the integration walkthrough; the [e-commerce demo](examples/scrypath_ecommerce/README.md) shows tenant-scoped search, facets, related-data propagation, and operator workflows.
-- **Maintainer tools:** the optional [operator UI](scrypath_ops/README.md) is available in the checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
+- **Try the examples:** [Phoenix + Meilisearch](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) is the integration walkthrough; the [e-commerce demo](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md) shows tenant-scoped search, facets, related-data propagation, and operator workflows.
+- **Maintainer tools:** the optional [operator UI](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md) is available in the checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
 
-**Integration smoke (optional):** the [Phoenix + Meilisearch example](examples/phoenix_meilisearch/README.md) documents its Docker services and env vars. From the repository root, run `cd examples/phoenix_meilisearch && ./scripts/smoke.sh`; that script lives inside the example.
+**Integration smoke (optional):** the [Phoenix + Meilisearch example](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) documents its Docker services and env vars. From the repository root, run `cd examples/phoenix_meilisearch && ./scripts/smoke.sh`; that script lives inside the example.
 
 Scrypath is Meilisearch-first in v1. Its backend seam is internal, not a promised public abstraction, and v1 does not promise public multi-backend parity. Scrypath owns its internal transport dependency; configure backend and sync behavior in your app instead of pinning `Req` in the base install path. Add Oban only when you choose `sync_mode: :oban`.
 
@@ -205,9 +205,9 @@ docker compose down
 
 ## Example: Phoenix + Postgres + Meilisearch
 
-For a minimal consumer-shaped setup (Docker Compose with Postgres and Meilisearch on an explicit network, path dependency on this repo, and a scripted smoke test), see [examples/phoenix_meilisearch/README.md](examples/phoenix_meilisearch/README.md).
+For a minimal consumer-shaped setup (Docker Compose with Postgres and Meilisearch on an explicit network, path dependency on this repo, and a scripted smoke test), see [examples/phoenix_meilisearch/README.md](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md).
 
-For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, see [examples/scrypath_ecommerce/README.md](examples/scrypath_ecommerce/README.md).
+For a richer click-around showcase with a multi-tenant storefront and mounted operator UI, see [examples/scrypath_ecommerce/README.md](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md).
 
 ## Architecture
 
