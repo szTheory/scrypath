@@ -250,6 +250,10 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   @extras_region ~r{<main\b[^>]*\bdata-type="extras"[^>]*>(.*?)</main>}s
   # An `<a>` tag's href. `<link>` tags (stylesheets, icons) are not `<a>` tags.
   @anchor_href ~r{<a\s(?:[^>]*\s)?href="([^"]*)"}
+  # Non-vacuity floor for the built-docs link scan: the number of `<a>` hrefs read from the author
+  # content of the extras pages (1,360 on the build when this was set). Lower it only with a
+  # reason, never to make a scan that stopped reading ExDoc's markup pass.
+  @min_author_hrefs 500
 
   setup_all do
     # `System.unique_integer/1` is unique only inside one VM, and separate OS processes started the
@@ -303,13 +307,15 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
   # The scan reads the one build made in `setup_all`; it starts no second docs run.
   test "extras pages have no self-link, unresolved link or dead anchor", %{out: out} do
     pages = extras_pages(out)
-
-    assert length(pages) >= length(MixProject.project()[:docs][:extras]),
-           "found #{length(pages)} extras pages for #{length(MixProject.project()[:docs][:extras])} configured extras"
+    missing = missing_extra_pages(MixProject.project()[:docs][:extras], pages)
+    assert missing == [], "no built extras page for: #{Enum.join(missing, ", ")}"
 
     scanned = for page <- pages, do: {page, File.read!(Path.join(out, page))}
     hrefs = Enum.sum(for {_page, html} <- scanned, do: length(author_hrefs(html)))
-    assert hrefs > 0, "no href found in the author content of any extras page"
+
+    # The build reads about 1,360 hrefs today; a floor of one would pass a markup change that
+    # left a single match, so this one sits well under the real count and well over a stray hit.
+    assert hrefs > @min_author_hrefs, "the href scan went vacuous: #{hrefs} hrefs"
 
     problems = Enum.flat_map(scanned, fn {page, html} -> link_problems(out, page, html) end)
 
@@ -318,6 +324,24 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
              Enum.map_join(problems, "\n", fn {page, href, kind} ->
                "  #{page} -> #{href} (#{inspect(kind)})"
              end)
+  end
+
+  test "a configured extra with no built page is reported by name" do
+    extras = ["README.md", "guides/golden-path.md", "docs/releasing.md", "CONTRIBUTING.md"]
+
+    # `404.html` and `api-reference.html` carry the extras marker too, so a page count cannot
+    # tell a missing extra from these two.
+    pages = [
+      "readme.html",
+      "golden-path.html",
+      "contributing.html",
+      "404.html",
+      "api-reference.html"
+    ]
+
+    assert missing_extra_pages(extras, pages) == ["docs/releasing.md"]
+    assert missing_extra_pages(extras, ["404.html" | pages]) == ["docs/releasing.md"]
+    assert missing_extra_pages(extras, ["releasing.html" | pages]) == []
   end
 
   test "the link scan reports a planted self-link, unresolved link and dead anchor", %{out: out} do
@@ -936,6 +960,14 @@ defmodule Scrypath.Release.BuiltDocsBrandTest do
     |> Enum.filter(&(File.read!(&1) =~ ~s(data-type="extras")))
     |> Enum.map(&rel(out, &1))
     |> Enum.sort()
+  end
+
+  # The configured extras that have no built page of their own. ExDoc names the page after the
+  # file's base name, lowercased.
+  defp missing_extra_pages(extras, pages) do
+    Enum.reject(extras, fn extra ->
+      ((extra |> Path.basename(Path.extname(extra)) |> String.downcase()) <> ".html") in pages
+    end)
   end
 
   # The author content of an extras page. A page that says it is an extras page but has no such
