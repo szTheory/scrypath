@@ -1904,7 +1904,11 @@ test("planted dual dark rule fails and a lone dark rule does not count", () => {
 // scrypath_ops/assets/css/app.css) declares no font size under 12 px, no arbitrary text-[ length,
 // no uppercase, no infinite iteration and no caller that asks for size :xs. Every font-size is
 // resolved through the --text-* custom properties of the tree's app.css; a percent, em, calc( or
-// clamp( value cannot be resolved here, so it fails closed.
+// clamp( value cannot be resolved here, so it fails closed. Every --text-* token declared in app.css
+// is held to the same floor whether or not a var() names it, because in Tailwind v4 the token is also
+// a utility class. app.css @apply lists are read like class attributes, the animate-spin, animate-ping,
+// animate-pulse and animate-bounce utilities count as infinite iteration, and CSS property names and
+// keywords match without regard to case.
 //
 // What it does not prove: rendered size. These checks read source declarations. A caller-supplied
 // variant that emits the daisyUI btn-xs class (11 px) is caught only by the size :xs caller check
@@ -1928,20 +1932,23 @@ const OPS_INVARIANT = {
   xs: "no size xs caller",
 };
 
-// Linear patterns: no nested quantifiers.
-const CSS_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;}]*)/g;
-const TEXT_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;"'`}\n]*)/g;
-const CSS_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;}]*)/g;
-const STYLE_ATTRIBUTE = /(?<![\w-])style\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
-const STYLE_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;"']*)/g;
+// Linear patterns: no nested quantifiers. CSS property names and keywords and HTML attribute names
+// are case-insensitive, so the font-size, font, style and text-transform patterns carry the i flag;
+// class names (uppercase, text-[, animate-*) and custom properties are case-sensitive and do not.
+const CSS_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;}]*)/gi;
+const TEXT_FONT_SIZE = /(?<![\w-])font-size\s*:\s*([^;"'`}\n]*)/gi;
+const CSS_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;}]*)/gi;
+const STYLE_ATTRIBUTE = /(?<![\w-])style\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+const STYLE_FONT_SHORTHAND = /(?<![\w-])font\s*:\s*([^;"']*)/gi;
 const CUSTOM_PROPERTY = /(?<![\w-])(--[\w-]+)\s*:\s*([^;}]+)/g;
 const ARBITRARY_TEXT_SIZE = /text-\[(?:\d|calc|clamp|length:|min|max)/g;
 const UPPERCASE_TOKEN = /(?<![\w-])uppercase(?![\w-])/g;
-const UPPERCASE_DECLARATION = /text-transform\s*:\s*uppercase/g;
+const UPPERCASE_DECLARATION = /text-transform\s*:\s*uppercase/gi;
 const INFINITE_WORD = /\binfinite\b/g;
+// Tailwind's built-in utilities that iterate forever without the word infinite in the source.
+const ANIMATION_UTILITY = /(?<![\w-])animate-(?:spin|ping|pulse|bounce)(?![\w-])/g;
 const SIZE_XS_KEYWORD = /size:\s*:xs\b/g;
 const SIZE_XS_ATTRIBUTE = /size=\{\s*:xs\s*\}/g;
-const TEXT_SOURCE_EXTENSIONS = new Set([".ex", ".heex", ".js"]);
 
 /**
  * The ops-authored source among a repo file list (D-08): .ex and .heex under scrypath_ops/lib, .js under
@@ -2055,13 +2062,27 @@ function opsSourceFailures(root, files) {
     const extension = path.extname(relativePath);
     const text = blankComments(fs.readFileSync(absolute, "utf8"), extension);
     const report = (invariant, index, message) => failures.push(`[${invariant}] ${relativePath}:${lineAt(text, index)} ${message}`);
-    const textSource = TEXT_SOURCE_EXTENSIONS.has(extension);
 
     for (const match of text.matchAll(extension === ".css" ? CSS_FONT_SIZE : TEXT_FONT_SIZE)) {
       const outcome = resolveFontSize(match[1], props);
       const shown = match[1].trim();
       if (outcome.error !== undefined) report(OPS_INVARIANT.floor, match.index, `font-size ${shown} is ${outcome.error}`);
       else if (outcome.px < FONT_FLOOR_PX) report(OPS_INVARIANT.floor, match.index, `font-size ${shown} resolves to ${outcome.px} px, below ${FONT_FLOOR_PX} px`);
+    }
+    // In Tailwind v4 a --text-* token is itself the utility class (--text-ops-tiny makes text-ops-tiny), so a
+    // token only a class consumes never reaches a font-size declaration. Every declared size token is held to
+    // the floor, used or not. A companion property such as --text-ops-sm--line-height carries a line height or
+    // letter spacing, not a size, and is skipped. The namespace is reserved for sizes: a --text-* property
+    // that is not a px or rem size fails closed.
+    if (extension === ".css") {
+      for (const match of text.matchAll(CUSTOM_PROPERTY)) {
+        const name = match[1];
+        if (!name.startsWith("--text-") || name.slice(2).includes("--")) continue;
+        const value = match[2].trim();
+        const outcome = resolveFontSize(value, props);
+        if (outcome.error !== undefined) report(OPS_INVARIANT.floor, match.index, `size token ${name}: ${value} is ${outcome.error}`);
+        else if (outcome.px < FONT_FLOOR_PX) report(OPS_INVARIANT.floor, match.index, `size token ${name}: ${value} resolves to ${outcome.px} px, below ${FONT_FLOOR_PX} px`);
+      }
     }
     // A font shorthand carries a size that a font-size scan does not see: CSS, and style attributes.
     if (extension === ".css") {
@@ -2078,13 +2099,21 @@ function opsSourceFailures(root, files) {
       }
     }
 
-    if (textSource) {
-      for (const match of text.matchAll(ARBITRARY_TEXT_SIZE)) report(OPS_INVARIANT.arbitrary, match.index, `arbitrary text size ${match[0]}`);
-      for (const match of text.matchAll(UPPERCASE_TOKEN)) report(OPS_INVARIANT.uppercase, match.index, "the uppercase class or word");
-    } else {
-      for (const match of text.matchAll(UPPERCASE_DECLARATION)) report(OPS_INVARIANT.uppercase, match.index, "text-transform: uppercase");
+    // The class-string checks run on every file kind, app.css included, so an @apply list is read like a
+    // class attribute. The declaration is the one form whose keyword and property name are case-insensitive;
+    // the word pass skips a word the declaration pass already reported.
+    for (const match of text.matchAll(ARBITRARY_TEXT_SIZE)) report(OPS_INVARIANT.arbitrary, match.index, `arbitrary text size ${match[0]}`);
+    const declarations = [];
+    for (const match of text.matchAll(UPPERCASE_DECLARATION)) {
+      declarations.push([match.index, match.index + match[0].length]);
+      report(OPS_INVARIANT.uppercase, match.index, "text-transform: uppercase");
+    }
+    for (const match of text.matchAll(UPPERCASE_TOKEN)) {
+      if (declarations.some(([start, end]) => match.index >= start && match.index < end)) continue;
+      report(OPS_INVARIANT.uppercase, match.index, "the uppercase class or word");
     }
     for (const match of text.matchAll(INFINITE_WORD)) report(OPS_INVARIANT.infinite, match.index, "the word infinite");
+    for (const match of text.matchAll(ANIMATION_UTILITY)) report(OPS_INVARIANT.infinite, match.index, `the ${match[0]} utility iterates forever`);
     if (extension === ".ex" || extension === ".heex") {
       for (const match of text.matchAll(SIZE_XS_KEYWORD)) report(OPS_INVARIANT.xs, match.index, "a size: :xs caller");
       for (const match of text.matchAll(SIZE_XS_ATTRIBUTE)) report(OPS_INVARIANT.xs, match.index, "a size={:xs} caller");
@@ -2215,6 +2244,82 @@ test("planted size xs caller fails", () => {
   ]);
 });
 
+test("planted case variants of font-size and font fail", () => {
+  // CSS property names and keywords are case-insensitive, so the invariants must be too.
+  assertPlantedCases(OPS_INVARIANT.floor, [
+    ["an upper-case font-size property in CSS", OPS_CSS, ".x { FONT-SIZE: 10px; }\n"],
+    ["a mixed-case font-size property in CSS", OPS_CSS, ".x { Font-Size: 0.5rem; }\n"],
+    ["an upper-case font shorthand in CSS", OPS_CSS, ".x { FONT: 10px sans-serif; }\n"],
+    ["an upper-case font-size in a heex style attribute", "scrypath_ops/lib/planted/upper-size.heex", "<p style=\"FONT-SIZE: 9px\">x</p>\n"],
+    ["an upper-case font shorthand in a heex style attribute", "scrypath_ops/lib/planted/upper-font.heex", "<p style=\"FONT: 9px sans-serif\">x</p>\n"],
+    ["an upper-case style attribute name in a heex file", "scrypath_ops/lib/planted/upper-attribute.heex", "<p STYLE=\"font: 9px sans-serif\">x</p>\n"],
+    ["an upper-case font-size string in js", "scrypath_ops/assets/js/planted.js", "el.setAttribute(\"style\", \"FONT-SIZE: 9px\");\n"],
+  ]);
+});
+
+test("planted case variants of text-transform fail", () => {
+  assertPlantedCases(OPS_INVARIANT.uppercase, [
+    ["an upper-case keyword in CSS", OPS_CSS, ".x { text-transform: UPPERCASE; }\n"],
+    ["a mixed-case keyword in CSS", OPS_CSS, ".x { text-transform: Uppercase; }\n"],
+    ["an upper-case property name in CSS", OPS_CSS, ".x { TEXT-TRANSFORM: uppercase; }\n"],
+    ["an upper-case keyword in a heex style attribute", "scrypath_ops/lib/planted/upper-transform.heex", "<p style=\"text-transform: UPPERCASE\">x</p>\n"],
+    ["an upper-case keyword in a js string", "scrypath_ops/assets/js/planted.js", "el.style.cssText = \"text-transform: UPPERCASE\";\n"],
+  ]);
+});
+
+test("planted @apply of uppercase fails in CSS", () => {
+  // app.css is in scope, so its @apply lists are read like class attributes.
+  assertPlantedCases(OPS_INVARIANT.uppercase, [
+    ["@apply uppercase", OPS_CSS, ".x { @apply uppercase tracking-wide; }\n"],
+    ["@apply uppercase behind a variant", OPS_CSS, ".x { @apply hover:uppercase; }\n"],
+    ["@apply uppercase on a later line of the list", OPS_CSS, ".x {\n  @apply font-semibold\n    uppercase;\n}\n"],
+  ]);
+});
+
+test("planted @apply of an arbitrary text size fails in CSS", () => {
+  assertPlantedCases(OPS_INVARIANT.arbitrary, [
+    ["@apply a px length below the floor", OPS_CSS, ".x { @apply text-[10px]; }\n"],
+    ["@apply an rem length below the floor", OPS_CSS, ".x { @apply text-[0.5rem] font-medium; }\n"],
+    ["@apply a calc length that cannot be resolved", OPS_CSS, ".x { @apply text-[calc(1rem-4px)]; }\n"],
+    ["@apply a length: hint that cannot be resolved", OPS_CSS, ".x { @apply text-[length:var(--x)]; }\n"],
+    ["@apply a length above the floor is still an arbitrary size", OPS_CSS, ".x { @apply text-[13px]; }\n"],
+  ]);
+});
+
+test("planted infinite animation utilities fail", () => {
+  // animate-spin, animate-ping, animate-pulse and animate-bounce each iterate forever without the word.
+  assertPlantedCases(OPS_INVARIANT.infinite, [
+    ["@apply animate-spin", OPS_CSS, ".x { @apply animate-spin; }\n"],
+    ["@apply animate-pulse behind a variant", OPS_CSS, ".x { @apply motion-safe:animate-pulse; }\n"],
+    ["animate-ping in a heex class", "scrypath_ops/lib/planted/ping.heex", "<span class=\"animate-ping\">x</span>\n"],
+    ["animate-bounce in an ex string", "scrypath_ops/lib/planted/bounce.ex", "defmodule P do\n  def a, do: \"size-4 animate-bounce\"\nend\n"],
+    ["animate-spin in a js string", "scrypath_ops/assets/js/planted.js", "el.className = \"size-4 animate-spin\";\n"],
+  ]);
+});
+
+test("planted utility-only --text-* tokens below the floor fail", () => {
+  // In Tailwind v4 the token is the class: --text-ops-tiny makes text-ops-tiny, and no font-size
+  // declaration or var() ever names it. Every declared --text-* token is held to the floor.
+  assertPlantedCases(OPS_INVARIANT.floor, [
+    ["--text-xs lowered in @theme", OPS_CSS, "@theme {\n  --text-xs: 0.5rem;\n}\n"],
+    ["a new px token in @theme", OPS_CSS, "@theme {\n  --text-ops-tiny: 11px;\n}\n"],
+    ["a token that chains to a low token", OPS_CSS, "@theme {\n  --text-ops-low: 0.5rem;\n  --text-ops-chain: var(--text-ops-low);\n}\n"],
+    ["a token whose var() names nothing", OPS_CSS, "@theme {\n  --text-ops-ghost: var(--text-missing);\n}\n"],
+    ["a token in a viewport unit", OPS_CSS, "@theme {\n  --text-ops-vw: 2vw;\n}\n"],
+    ["a token with a percent value", OPS_CSS, "@theme {\n  --text-ops-pct: 80%;\n}\n"],
+  ]);
+  // The token is consumed only as a utility class, the way the live text-ops-* classes consume theirs.
+  const dir = makeTree({
+    [OPS_CSS]: "@theme {\n  --text-ops-tiny: 0.5rem;\n}\n",
+    "scrypath_ops/lib/planted/tiny.heex": "<p class=\"text-ops-tiny\">x</p>\n",
+  });
+  const failures = opsSourceFailures(dir, listRepoFiles(dir));
+  assert.ok(
+    failures.some((failure) => failure.startsWith(`[${OPS_INVARIANT.floor}] ${OPS_CSS}:2 `) && failure.includes("--text-ops-tiny")),
+    JSON.stringify(failures),
+  );
+});
+
 test("accept font-size values at or above the floor and inherit", () => {
   const css = [
     ":root {",
@@ -2286,6 +2391,38 @@ test("accept attr declarations, the btn-xs branch and other sizes", () => {
       "",
     ].join("\n"),
     "scrypath_ops/lib/accept/button.heex": "<.ops_button size={:md}>x</.ops_button>\n<.ops_button size={:sm}>y</.ops_button>\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept case variants that are allowed", () => {
+  const dir = makeTree({
+    [OPS_CSS]: ":root { --text-ops-body: 0.875rem; }\n.a { FONT-SIZE: 12PX; }\n.b { Font-Size: var(--text-ops-body); }\n.c { text-transform: NONE; TEXT-TRANSFORM: Capitalize; }\n",
+    "scrypath_ops/lib/accept/case.heex": "<p style=\"FONT-SIZE: 0.875rem; TEXT-TRANSFORM: none\">a</p>\n<p STYLE=\"font: inherit\">b</p>\n",
+    "scrypath_ops/assets/js/case.js": "el.setAttribute(\"style\", \"FONT-SIZE: 12px; text-transform: NONE\");\n",
+  });
+  assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
+});
+
+test("accept --text-* tokens at the floor, their companion properties and unrelated @apply utilities", () => {
+  const css = [
+    "@theme {",
+    "  --text-ops-tiny: 0.75rem;",
+    "  --text-ops-tiny--line-height: 1.5;",
+    "  --text-ops-tiny--letter-spacing: 0.01em;",
+    "  --text-ops-big: 1.125rem;",
+    "  --text-ops-ref: var(--text-ops-big);",
+    "}",
+    ":root { --ops-text-gap: 4px; }",
+    ".x { @apply text-ops-body font-semibold tracking-wide animate-none; }",
+    ".y { @apply text-sm text-[var(--x)] text-[color:var(--c)] motion-safe:animate-none; }",
+    "",
+  ].join("\n");
+  const dir = makeTree({
+    [OPS_CSS]: css,
+    "scrypath_ops/lib/accept/tiny.heex": "<p class=\"text-ops-tiny text-ops-ref animate-none\">x</p>\n",
+    "scrypath_ops/lib/accept/spinner.ex": "defmodule A do\n  def a, do: \"ops-animate-spin-label animate-spinner\"\nend\n",
+    "scrypath_ops/assets/js/spinner.js": "el.className = \"animate-none\";\n",
   });
   assert.deepEqual(opsSourceFailures(dir, listRepoFiles(dir)), []);
 });

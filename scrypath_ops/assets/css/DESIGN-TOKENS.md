@@ -388,9 +388,11 @@ scope is the theme blocks only, so the values are recorded here): `--text-ops-sm
 
 Source invariants: `ui-tokens.test.mjs` checks the ops-authored source (`scrypath_ops/lib`,
 `scrypath_ops/assets/js` without vendored files, and `app.css`) for a 12px minimum font size
-(resolved through the `--text-ops-*` properties), no arbitrary `text-[` length, no uppercase,
-no infinite iteration and no `size: :xs` caller. These read source declarations, not rendered
-size. Demo host CSS, the tracked built CSS and vendored files are not scanned. A variant that
+(resolved through the `--text-ops-*` properties; every `--text-*` token in `app.css` is held
+to it, even one only a utility class uses), no arbitrary `text-[` length, no uppercase, no
+infinite iteration (including the `animate-spin`, `animate-ping`, `animate-pulse` and
+`animate-bounce` utilities) and no `size: :xs` caller. `@apply` lists in `app.css` are read like
+class attributes. These read source declarations, not rendered size. Demo host CSS, the tracked built CSS and vendored files are not scanned. A variant that
 emits the daisyUI `btn-xs` class (11px) is caught only by the `size: :xs` caller check and by
 the browser spec on the advisory lane; computed size stays browser-only.
 
