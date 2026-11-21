@@ -1,19 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.48
-milestone_name: Discovery and onboarding
-status: Awaiting next milestone
-stopped_at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone
-last_updated: "2026-11-21T15:46:20.236Z"
+milestone: v1.49
+milestone_name: Catalog foundation
+status: planning
+last_updated: "2026-11-21T20:03:22.969Z"
 last_activity: 2026-11-21
-last_activity_desc: Milestone v1.48 completed and archived
-state_head: 3f19b00a3652e8c24df4c2e667b9df75d1427074
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 67
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -23,14 +20,15 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** No active milestone. v1.48 Discovery and onboarding is archived (2026-11-21); the next milestone is chosen from the prepared options in [research/v1.49-prep/](research/v1.49-prep/) and [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
+**Current focus:** v1.49 Catalog foundation (opened 2026-11-21): requirements and roadmap being defined; phases 195 to 198 per [catalog-prep/SYNTHESIS.md](research/catalog-prep/SYNTHESIS.md).
 
 ## Current Position
 
-Phase: Milestone v1.48 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-21 — Milestone v1.48 completed and archived
+Status: Defining requirements
+Last activity: 2026-11-21 — Milestone v1.49 started
+
 
 ## Performance Metrics
 

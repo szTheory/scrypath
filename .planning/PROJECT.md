@@ -30,9 +30,17 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. The first slice of it became the v1.48 milestone on 2026-11-21 (below); the rest stays direction, not approved scope. See `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
 
-## Current Milestone: none
+## Current Milestone: v1.49 Catalog foundation
 
-v1.48 Discovery and onboarding was completed and archived on 2026-11-21 ([archive](milestones/v1.48-ROADMAP.md), [audit](milestones/v1.48-MILESTONE-AUDIT.md)). The next milestone is chosen at this boundary from the prepared options in `research/v1.49-prep/` and `reference/ROLLING-ROADMAP.md`; no milestone is active until the maintainer picks one.
+**Goal:** A thin, trustworthy component catalog (phoenix_storybook) for ScrypathOps, built on Scrypath-owned fictional adopter data, with one job (JOB-03: unhealthy verdict to verified retry) carried end to end, so the maintainer can look at the UI and give feedback in a stable place.
+
+**Target features:**
+- Mount and prove phoenix_storybook in `scrypath_ops` as a dev/test-only dependency, with a measured go/no-go against ADR 0001's triggers (Phase 195).
+- A `fixtures/scrypath_fixtures` project (ADR 0002) with pure builders that emit raw Meilisearch task and Oban job maps, and three adopters: Shopadelic, Logistify, Wikily (Phase 196).
+- The JOB-03 pilot: a mounted journey first, then shared function components under it, stories in the glossary tiers, one test file with the catalog checks, and the `storybook` block in `UI-PREVIEW.json` (Phase 197). Pause 1: the maintainer's storybook look sizes Phase 198.
+- Optional scale-up, cut by default: remaining small screens, Clinicly (real denials only), Chatly (Phase 198). Pause 2: milestone-end storybook review before the audit.
+
+**Decision source:** the maintainer's 2026-10-25 decision (ADR 0001, UI engine D1), reconfirmed 2026-11-21 after the feedback session; the final shape is `research/catalog-prep/SYNTHESIS.md` (about 15 plans, stop and re-ask at 20). No Hex release inside this milestone. v1.50 Adopter-ready follows (phases 199 to 201).
 
 ## Current State
 
@@ -46,7 +54,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-Not chosen yet. After v1.48 the candidates are the UI catalog foundation (formerly planned as v1.48, now v1.49: phoenix_storybook spike with a go/no-go, fixtures, pilot), adopter features (grill the API shapes first; no outside evidence exists yet), or a short readiness and release milestone; the prepared comparison and recommendation are in `research/v1.49-prep/` and `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
+v1.49 Catalog foundation is the active milestone (above). After it: v1.50 Adopter-ready ("Testing your app" guide, a fresh-consumer walk, then maybe highlight/crop or a paging guard after an API-grilling session), then catalog breadth and announce-readiness; see `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
@@ -516,4 +524,4 @@ This document evolves at milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-21 after v1.48 milestone completion.*
+*Last updated: 2026-11-21 after v1.49 milestone start.*
