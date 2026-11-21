@@ -118,7 +118,7 @@ Closed state:
 - `Scrypath.sync_related/3` is real and documented
 - v1.29 repairs generated `__scrypath__(:fan_outs)` reflection for `use Scrypath, fan_outs:`
 - v1.29 guards the category-filtered readiness probe so it merges with, rather than replaces, the tenant filter
-- v1.29 aligns roadmap/JTBD truth and closes TRUTH-01 through `mix verify.phase108`
+- v1.29 aligns roadmap/JTBD truth and closes TRUTH-01 through `mix verify.phase108` (a maintainer task that runs from a source checkout, not from the Hex package)
 
 Priority:
 

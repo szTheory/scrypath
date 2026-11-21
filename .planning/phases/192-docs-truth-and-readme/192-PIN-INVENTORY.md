@@ -117,35 +117,35 @@ The "published 0.3.17" sentence is stale: `CHANGELOG.md` (0.3.18, 2026-11-19) re
 
 ## Mention inventory
 
-Unit = sentence of a plain paragraph, list item, heading, table row, or fenced block judged with the sentence directly above it. Q = qualified, U = unqualified at HEAD `1d7573e5` (probe: `violations=28` before Plan 01 edits; the sentence rule reports each operator-support table row and gate line separately, so it is higher than the research's block count of 21). "Action taken" is filled in as Tasks 2 and 3 execute.
+Unit = sentence of a plain paragraph, list item, heading, table row, or fenced block judged with the sentence directly above it. Q = qualified, U = unqualified at HEAD `1d7573e5` (probe: `violations=28` before Plan 01 edits; the sentence rule reports each operator-support table row and gate line separately, so it is higher than the research's block count of 21). "Action taken" records what Plan 01 Tasks 2 and 3 did. Final probe count after Task 3: `violations=0` (28 before Task 2, 16 after Task 2).
 
 | File:line | Name(s) | Q/U at HEAD | Planned action | Plan | Action taken |
 |-----------|---------|-------------|----------------|------|--------------|
-| `README.md:31` | `verify.adopter` | Q | keep; removed later by the README trim | 04 | |
-| `README.md:36` | `verify.ops_ui`, family `verify.*` | U | qualify inside the bullet; removed by the trim | 01 task 2, 04 | |
-| `README.md:118` | `verify.phase11` | U | qualify in the first sentence of the versioning paragraph; removed by the trim | 01 task 2, 04 | |
-| `README.md:198` | `verify.meilisearch_smoke` (fence) | Q (lead-in at `:196`) | keep; removed by the trim | 04 | |
-| `README.md:204` | `verify.meilisearch_smoke` | U | qualify inside the sentence; removed by the trim | 01 task 2, 04 | |
-| `guides/support-and-compatibility.md:123` | qualifier sentence only | n/a | exists; it does not qualify a sibling sentence | - | |
-| `guides/support-and-compatibility.md:125` | family `verify.*` | U | qualify in the same sentence, no reflow (Pitfall 7) | 01 task 2 | |
-| `guides/support-and-compatibility.md:131,132` | `verify.adopter` (two bullets) | U | qualify each bullet | 01 task 2 | |
-| `guides/outside-adopter-intake.md:28` | qualifier sentence only | n/a | exists; a sibling does not count | - | |
-| `guides/outside-adopter-intake.md:32,33` | `verify.adopter` (two bullets) | U | qualify each bullet | 01 task 2 | |
-| `guides/golden-path.md:137` | `verify.phoenix_example` | U | qualify inside the CI bullet; keep pinned env names and image tag | 01 task 2 | |
-| `guides/operator-mix-tasks.md:98` | `scrypath_ops.saved_searches.validate` (heading) | U | qualify inside the heading text | 01 task 2 | |
-| `guides/operator-mix-tasks.md:102` | `scrypath_ops.saved_searches.validate` (fence, command at `:104`) | U | qualify through the sentence directly above (end of line 100) | 01 task 2 | |
-| `docs/operator-support.md:7` | `verify.adopter` | Q | keep | - | |
-| `docs/operator-support.md:13,14,15` | `verify.phase14`, `verify.phase28`, `verify.phase11` | U | qualify each numbered item | 01 task 3 | |
-| `docs/operator-support.md:56` | five gate names (fence, commands `:57-61`) | U | add a lead-in whose last sentence is qualified | 01 task 3 | |
-| `docs/operator-support.md:66-70` | `verify.phase14`, `20`, `26`, `28`, `11` (table rows) | U | qualified sentence directly above the table | 01 task 3 | |
-| `docs/operator-support.md:72` | `verify.phase11` | U | qualify inside the sentence | 01 task 3 | |
-| `docs/search-backend-sre.md:76` | `verify.phase13` | U | qualify inside the bullet | 01 task 3 | |
-| `docs/jtbd-gap-map.md:78` | `verify.adopter` | Q | keep | - | |
-| `docs/jtbd-gap-map.md:121` | `verify.phase108` | U | reword (history line) or qualify; keep phase112 reopen-trigger phrases | 01 task 3 | |
-| `CHANGELOG.md` | 23 history units | n/a | exempt (named exemption) | - | |
-| `mix.exs` | `preferred_envs` registrations | n/a | exempt for registration lines only | - | |
-| `CONTRIBUTING.md` (53 units), `docs/releasing.md` (24 units) | many | n/a | allowlisted by the locked decision | - | |
-| `lib/**`, `ARCHITECTURE.md`, `SECURITY.md`, `docs/local-demo-docker-dx.md`, 20 other guides | none | clean | none | - | |
+| `README.md:31` | `verify.adopter` | Q | keep; removed later by the README trim | 04 | none (already qualified; the trim removes it in Plan 04) |
+| `README.md:36` | `verify.ops_ui`, family `verify.*` | U | qualify inside the bullet; removed by the trim | 01 task 2, 04 | qualified in place, plan 01 task 2: bullet now says "available in a source checkout" beside the existing "not part of the Hex package" |
+| `README.md:118` | `verify.phase11` | U | qualify in the first sentence of the versioning paragraph; removed by the trim | 01 task 2, 04 | qualified in place, plan 01 task 2: first sentence names the gate as a maintainer gate that runs from a source checkout and is not in the Hex package |
+| `README.md:198` | `verify.meilisearch_smoke` (fence) | Q (lead-in at `:196`) | keep; removed by the trim | 04 | none (already qualified through the lead-in) |
+| `README.md:204` | `verify.meilisearch_smoke` | U | qualify inside the sentence; removed by the trim | 01 task 2, 04 | qualified in place, plan 01 task 2: clause added inside the sentence's parenthesis |
+| `guides/support-and-compatibility.md:123` | qualifier sentence only | n/a | exists; it does not qualify a sibling sentence | - | none (sentence exists; unchanged) |
+| `guides/support-and-compatibility.md:125` | family `verify.*` | U | qualify in the same sentence, no reflow (Pitfall 7) | 01 task 2 | qualified in place, plan 01 task 2: "Hex APIs: they run from a source checkout and are not in the Hex package." on the existing line, no reflow |
+| `guides/support-and-compatibility.md:131,132` | `verify.adopter` (two bullets) | U | qualify each bullet | 01 task 2 | qualified in place, plan 01 task 2: each bullet ends with the canonical short qualifier |
+| `guides/outside-adopter-intake.md:28` | qualifier sentence only | n/a | exists; a sibling does not count | - | none (sentence exists; unchanged) |
+| `guides/outside-adopter-intake.md:32,33` | `verify.adopter` (two bullets) | U | qualify each bullet | 01 task 2 | qualified in place, plan 01 task 2: each bullet ends with the canonical short qualifier |
+| `guides/golden-path.md:137` | `verify.phoenix_example` | U | qualify inside the CI bullet; keep pinned env names and image tag | 01 task 2 | qualified in place, plan 01 task 2: the "That root command" sentence inside the CI bullet; pinned env names and image tag untouched |
+| `guides/operator-mix-tasks.md:98` | `scrypath_ops.saved_searches.validate` (heading) | U | qualify inside the heading text | 01 task 2 | qualified in place, plan 01 task 2: heading reads "(source checkout only, from `scrypath_ops/`; not in the Hex package)"; no link targets the heading anchor |
+| `guides/operator-mix-tasks.md:102` | `scrypath_ops.saved_searches.validate` (fence, command at `:104`) | U | qualify through the sentence directly above (end of line 100) | 01 task 2 | qualified in place, plan 01 task 2: the lead-in sentence at the end of line 100 now says "of a source checkout" and "the task is not in the Hex package" |
+| `docs/operator-support.md:7` | `verify.adopter` | Q | keep | - | none (already qualified; unchanged) |
+| `docs/operator-support.md:13,14,15` | `verify.phase14`, `verify.phase28`, `verify.phase11` | U | qualify each numbered item | 01 task 3 | qualified in place, plan 01 task 3: each numbered item carries the qualifier |
+| `docs/operator-support.md:56` | five gate names (fence, commands `:57-61`) | U | add a lead-in whose last sentence is qualified | 01 task 3 | qualified in place, plan 01 task 3: lead-in sentence now says the gates run from a source checkout and are not part of the Hex package |
+| `docs/operator-support.md:66-70` | `verify.phase14`, `20`, `26`, `28`, `11` (table rows) | U | qualified sentence directly above the table | 01 task 3 | qualified in place, plan 01 task 3: new sentence directly above the table carries the qualifier |
+| `docs/operator-support.md:72` | `verify.phase11` | U | qualify inside the sentence | 01 task 3 | qualified in place, plan 01 task 3: parenthetical inside the sentence |
+| `docs/search-backend-sre.md:76` | `verify.phase13` | U | qualify inside the bullet | 01 task 3 | qualified in place, plan 01 task 3: parenthetical inside the bullet |
+| `docs/jtbd-gap-map.md:78` | `verify.adopter` | Q | keep | - | none (already qualified; unchanged) |
+| `docs/jtbd-gap-map.md:121` | `verify.phase108` | U | reword (history line) or qualify; keep phase112 reopen-trigger phrases | 01 task 3 | qualified in place, plan 01 task 3: parenthetical in the history bullet; phase112 reopen-trigger phrases untouched |
+| `CHANGELOG.md` | 23 history units | n/a | exempt (named exemption) | - | none (named exemption) |
+| `mix.exs` | `preferred_envs` registrations | n/a | exempt for registration lines only | - | none (named exemption for registration lines) |
+| `CONTRIBUTING.md` (53 units), `docs/releasing.md` (24 units) | many | n/a | allowlisted by the locked decision | - | none (allowlisted) |
+| `lib/**`, `ARCHITECTURE.md`, `SECURITY.md`, `docs/local-demo-docker-dx.md`, 20 other guides | none | clean | none | - | none |
 
 The CONTEXT list ("five files, README line 31 qualified") understated the surface: it missed `README.md:36,118,204`, `docs/operator-support.md:13-72`, `docs/search-backend-sre.md:76`, `docs/jtbd-gap-map.md:121`, `guides/golden-path.md:137`, `guides/support-and-compatibility.md:125` and, once the derivation includes `scrypath_ops/lib/mix/tasks`, `guides/operator-mix-tasks.md:98,102`.
 
@@ -176,8 +176,8 @@ One row per pin. Columns: pin, type, fate, owner of the intent afterwards, repla
 | B8 phase99_contract_test.exs:41-46 | claim | rewrite | intake guide | qualified-mention assertion | 02 | |
 | B9 docs_contract_test.exs:510 | claim | replace (positive CONTRIBUTING assertion) | CONTRIBUTING verify matrix | new assertion | 04 | |
 | B10 docs_contract_test.exs:879 | claim | replace (claim kept, task name dropped) | README one-liner, CONTRIBUTING (A11) | README contract test | 04 | |
-| B11 docs_contract_test.exs:1231-1236 | claim | kept, qualified in place | `docs/operator-support.md` | the invariant now covers the qualification | 01 task 3 | |
-| B12 docs_contract_test.exs:633 | claim | kept, qualified in place | `guides/operator-mix-tasks.md` | the invariant now covers the qualification | 01 task 2 | |
+| B11 docs_contract_test.exs:1231-1236 | claim | kept, qualified in place | `docs/operator-support.md` | the invariant now covers the qualification | 01 task 3 | plan 01 task 3 commit (hash in `192-01-SUMMARY.md`) |
+| B12 docs_contract_test.exs:633 | claim | kept, qualified in place | `guides/operator-mix-tasks.md` | the invariant now covers the qualification | 01 task 2 | `149545f7` |
 | B13 dependency_boundary_contract_test.exs:238 | claim | rewrite with link fix | support guide | absolute GitHub URL assertion | 03 | |
 | C1.1 to C1.9 route-index pins | claim | re-point | HexDocs sidebar (`mix.exs` extras), README onward links | README contract test, extras membership | 02 (owner map), 04 | |
 | C2.1 to C2.4, C2.7 README-only claims | claim | move claim to owner or retire with owner pin | `guides/drift-recovery.md`, concepts guide, ARCHITECTURE, sync guide | owner pins | 02 | |

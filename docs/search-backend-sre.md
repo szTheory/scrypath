@@ -73,7 +73,7 @@ Before a Meilisearch version upgrade, rehearse dump/import in staging and run kn
 
 From the repo root (maintainer checks):
 
-- **`mix verify.phase13`** (with integration when you have `SCRYPATH_MEILISEARCH_URL`) — focused operator-flow checks against a real Meilisearch, matching the CI-style job that runs with live integration enabled.
+- **`mix verify.phase13`** (source checkout only; not in the Hex package; with integration when you have `SCRYPATH_MEILISEARCH_URL`) — focused operator-flow checks against a real Meilisearch, matching the CI-style job that runs with live integration enabled.
 - **Application-level:** `Scrypath.sync_status/2`, `Scrypath.failed_sync_work/2`, `Scrypath.reconcile_sync/2` for human-readable posture before you change indexing.
 
 ## Related docs
