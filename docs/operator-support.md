@@ -4,7 +4,7 @@ This guide is for maintainers supporting early Scrypath production usage.
 
 For **metrics, paging discipline, and Meilisearch cluster footguns** (SRE / platform view), see [Search backend operations](search-backend-sre.md).
 
-For supported versions, readiness posture, and `mix verify.adopter` versus `mix verify.adopter --live`, use [Support and compatibility](../guides/support-and-compatibility.md). For outside-adopter evidence, Class A-D classification, and maintainer routing vocabulary, use [Outside-adopter intake](../guides/outside-adopter-intake.md).
+For supported versions, readiness posture, and `mix verify.adopter` versus `mix verify.adopter --live` (maintainer tasks that run from a source checkout of the repository, not from the Hex package), use [Support and compatibility](../guides/support-and-compatibility.md). For outside-adopter evidence, Class A-D classification, and maintainer routing vocabulary, use [Outside-adopter intake](../guides/outside-adopter-intake.md).
 
 The support contract stays simple:
 
