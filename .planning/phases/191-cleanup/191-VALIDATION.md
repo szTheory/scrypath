@@ -1,7 +1,7 @@
 ---
 phase: "191"
 slug: "cleanup"
-status: draft
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: "2026-11-20"
@@ -32,12 +32,12 @@ created: "2026-11-20"
 
 | Criterion | Requirement | Automated check | Lane | Status |
 |-----------|-------------|-----------------|------|--------|
-| SC1 demo favicon byte-identical to `brand/assets/icon/favicon-light.svg`; allowlist entry removed | CLEAN-01 | root-level test in `core`; ceilings 5/197 to 4/194 | `core` | ⬜ pending |
-| SC2 `ui_tokens.ex`, its contract test, the `verify.phase99` entry and the `verify.ui_tokens` `preferred_envs` line gone; no reader of `brandbook/` remains; `mix verify.repository_contracts` passes; deleted-to-surviving assertion map recorded | CLEAN-02 | scan for readers; `mix verify.repository_contracts` on the committed state; ceilings to 2/178 | `repository-contracts`, `core` | ⬜ pending |
-| SC3 `brandbook/` and its `ci.yml` regex entry deleted with their allowlist entries and ceilings; allowlist 0 entries and 0 hits; three shared hexes join the deny set; planted retired value and planted retired path still fail; docs never spell the retired path | CLEAN-03 | `ui-tokens.test.mjs` planted and accept cases; `workflow_wiring_test` | `core`, `repository-contracts` | ⬜ pending |
-| SC4 12 px floor, arbitrary-size, `uppercase`, `infinite` and `size: :xs` invariants each fail a planted case and accept valid cases on ops-authored source only; floor count and test names rise; docs say these are source checks | CLEAN-04 | planted and accept cases in `ui-tokens.test.mjs`; `@min_token_test_calls` raised in the same commit | `core` | ⬜ pending |
-| SC5 unthemed-favicon tripwire and consumer scan (path and bytes) pass on `main` and fail their planted cases; upstream report draft in the phase record; ledger reworded per CLEAN-06 with `brand/tokens.json` named as the single token authority; `workflow_wiring_test` green | CLEAN-05, CLEAN-06 | tripwire and scan tests; `workflow_wiring_test` | `core`, `repository-contracts` | ⬜ pending |
-| GATE-02 | GATE-02 | one full gate run per SHA; squash title `chore(...)`; no new required gate (budget 10 of 12 stays or falls) | `repository-contracts` | ⬜ pending |
+| SC1 demo favicon byte-identical to `brand/assets/icon/favicon-light.svg`; allowlist entry removed | CLEAN-01 | root-level test in `core`; ceilings 5/197 to 4/194 | `core` | ✅ local green; hosted on the exact head pending by design |
+| SC2 `ui_tokens.ex`, its contract test, the `verify.phase99` entry and the `verify.ui_tokens` `preferred_envs` line gone; no reader of `brandbook/` remains; `mix verify.repository_contracts` passes; deleted-to-surviving assertion map recorded | CLEAN-02 | scan for readers; `mix verify.repository_contracts` on the committed state; ceilings to 2/178 | `repository-contracts`, `core` | ✅ local green; hosted on the exact head pending by design |
+| SC3 `brandbook/` and its `ci.yml` regex entry deleted with their allowlist entries and ceilings; allowlist 0 entries and 0 hits; three shared hexes join the deny set; planted retired value and planted retired path still fail; docs never spell the retired path | CLEAN-03 | `ui-tokens.test.mjs` planted and accept cases; `workflow_wiring_test` | `core`, `repository-contracts` | ✅ local green; hosted on the exact head pending by design |
+| SC4 12 px floor, arbitrary-size, `uppercase`, `infinite` and `size: :xs` invariants each fail a planted case and accept valid cases on ops-authored source only; floor count and test names rise; docs say these are source checks | CLEAN-04 | planted and accept cases in `ui-tokens.test.mjs`; `@min_token_test_calls` raised in the same commit | `core` | ✅ local green; hosted on the exact head pending by design |
+| SC5 unthemed-favicon tripwire and consumer scan (path and bytes) pass on `main` and fail their planted cases; upstream report draft in the phase record; ledger reworded per CLEAN-06 with `brand/tokens.json` named as the single token authority; `workflow_wiring_test` green | CLEAN-05, CLEAN-06 | tripwire and scan tests; `workflow_wiring_test` | `core`, `repository-contracts` | ✅ local green; hosted on the exact head pending by design |
+| GATE-02 | GATE-02 | one full gate run per SHA; squash title `chore(...)`; no new required gate (budget 10 of 12 stays or falls) | `repository-contracts` | ✅ local green; hosted on the exact head pending by design |
 
 ## Wave 0 Requirements
 

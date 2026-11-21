@@ -7,10 +7,10 @@ last_updated: "2026-11-20T14:32:06.000Z"
 last_activity: 2026-11-20
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 4
-  completed_plans: 4
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -20,21 +20,21 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-20.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (PR #153, wording) merged; Phase 191 (cleanup) is the last phase, then the milestone close. Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** v1.47 Brand completion: Phases 188.1 (PR #149) and 189 (PR #152, website live) merged; Phase 190 (PR #153, wording) merged; Phase 191 (cleanup) built and verified, PR pending; then the milestone audit and close. Roadmap: [ROADMAP](ROADMAP.md).
 
 ## Current Position
 
-Phase: 191 (Cleanup), planned (2 plans); not started
-Plan: —
-Status: Phase 190 merged (PR #153), ops-ui and exact-head e2e green; plans for 191 written, executing next
-Last activity: 2026-11-20 — Phase 190 merged; post-merge ops-ui on main green
+Phase: 191 (Cleanup), 2 of 2 plans executed and verified; PR pending
+Plan: 191-02 complete
+Status: awaiting required checks on the exact PR head, then squash merge; milestone audit and close next
+Last activity: 2026-11-20 — Phase 191 executed, reviewed, fixed and verified
 
-Progress: [█████████░] 88% (3 of 4 phases merged)
+Progress: [██████████] 100% (3 of 4 phases merged; 191 built)
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
-**v1.47 plans:** 6 done (188.1: 1, 189: 3, 190: 2); 2 planned (191: 2).
+**v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
 
 ## Accumulated Context
 
