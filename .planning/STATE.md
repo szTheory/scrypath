@@ -4,18 +4,18 @@ milestone: v1.49
 milestone_name: Catalog foundation
 current_phase: 195
 current_phase_name: Mount and prove
-status: planning
-stopped_at: Phase 195 planned (3 plans); ready to execute
-last_updated: "2026-11-21T21:17:58.007Z"
+status: executing
+stopped_at: Completed 195-01-PLAN.md
+last_updated: "2026-11-21T21:32:35.889Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 195 planned (3 plans)
-state_head: 8cd30437c8ef6aea3409b73b98e4effc1878ceab
+last_activity_desc: Plan 195-01 complete
+state_head: 38da331c015b22fcbf6e426d047a9d2c0b552ec6
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 15
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 7
 ---
 
 # Project State
@@ -25,14 +25,14 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.49 Catalog foundation (opened 2026-11-21): requirements and roadmap defined (23 requirements, 4 phases); phases 195 to 198 per [catalog-prep/SYNTHESIS.md](research/catalog-prep/SYNTHESIS.md).
+**Current focus:** Phase 195 — Mount and prove
 
 ## Current Position
 
-Phase: 195 (Mount and prove) — READY TO EXECUTE
-Plan: —
-Status: Ready to execute Phase 195 (3 plans, 3 waves)
-Last activity: 2026-11-21 — Phase 195 planned
+Phase: 195 (Mount and prove) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-11-21 — Phase 195 execution started
 
 
 ## Performance Metrics
@@ -40,6 +40,11 @@ Last activity: 2026-11-21 — Phase 195 planned
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
 **v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
 **v1.48 plans:** 6 done (192: 4, 193: 2).
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 195 P01 | 12 min | 3 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -54,6 +59,8 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - Gap pass 2026-11-20 ([research/v1.47-gap-pass/](research/v1.47-gap-pass/)): the three website hexes shared with `brandbook/` join the deny set in Phase 191; the Cancel-focus assertion lives in the required-lane `operator.spec.ts`; the kickoff chore is tracked as Phase 188.1 (CI-01); the picker light-only fallback is pre-decided in SITE-02.
 - Ops stays System-default for theme; light default applies to website, README and docs only. Bricolage is not shipped in ops. No type-scale reflow.
 - No human UAT: every success criterion is an executable check. Hex releases need the maintainer's explicit yes. Green PRs are squash-merged without asking (standing instruction 2026-11-19, see AGENTS.md).
+- [Phase 195]: Catalog route flag is read with Application.get_env at expansion, not Macro.expand of compile_env, and the guard sits outside the quote — Macro.expand of a compile_env call yields a call AST that is always truthy, which would make the guard vacuous
+- [Phase 195]: Test-env catalog_routes flag is off when PHX_SERVER=true so the Docker runtime_test image never mounts /storybook — That image binds 0.0.0.0; the flag must imply a loopback bind
 
 ### Pending Todos
 
@@ -86,9 +93,10 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-20
-Stopped at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone.
-Acting next: the maintainer picks the next milestone from the v1.49 prep notes; a Hex release carrying the Phase 193 regroup needs the maintainer's explicit yes. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21.
+Last session: 2026-11-21T21:32:35.873Z
+Stopped at: Completed 195-01-PLAN.md
+Acting next: execute Plan 195-02 (css_path, storybook.js, four more primitive stories, render-all with a planted failing tree). Plan 195-03 owns the push, the hosted timings and the go/no-go; a Hex release still needs the maintainer's explicit yes.
+Resume file: None
 
 ## Operator Next Steps
 

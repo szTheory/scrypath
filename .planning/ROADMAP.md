@@ -56,9 +56,9 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
   2. A test proves the production route table has no `/storybook` path, with a planted case that fails when the environment guard (kept outside the `quote`) is removed; the route is loopback-bound and never mounted in the ecommerce host's production image.
   3. A render-all test loads every variation of the five primitive stories through the real iframe route with `css_path` at the built `/assets/css/app.css` and the `storybook.js` hooks, fails on empty output or `data-phx-error`, and a planted failing story proves it can fail.
   4. `GO-NO-GO.md` records cold and warm `ops-ui` timings from a hosted run, Rust NIF fetch time, lock growth and advisory status, ADR 0001 is amended with those numbers, and each ADR 0001 trigger is explicitly evaluated; continue is pre-authorized unless a trigger trips, in which case the run stops and asks the maintainer.
-**Plans**: 3 plans (cap 5; re-cut from the 2 estimated so the hosted measurement runs on the full phase code and the one decision checkpoint sits in its own plan):
+**Plans**: 1/3 plans executed (cap 5; re-cut from the 2 estimated so the hosted measurement runs on the full phase code and the one decision checkpoint sits in its own plan):
 **Wave 1**
-- [ ] 195-01-PLAN.md — dependency, lock, dev/test route macro with the guard outside the `quote`, boundary row flipped to real, route-guard and loopback proofs, production-graph and Docker-image absence probes, tarball refutes
+- [x] 195-01-PLAN.md — dependency, lock, dev/test route macro with the guard outside the `quote`, boundary row flipped to real, route-guard and loopback proofs, production-graph and Docker-image absence probes, tarball refutes
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 195-02-PLAN.md — `css_path` and `storybook.js` (separate esbuild profile, tracked bundle), render-all through the real iframe route with a planted failing tree, five primitive stories, hook parity
@@ -110,7 +110,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 195. Mount and prove | 0/3 | Planned | - |
+| 195. Mount and prove | 1/3 | In Progress | - |
 | 196. Fixtures and three adopters | 0/4 | Not started | - |
 | 197. Pilot JOB-03 | 0/5 | Not started | - |
 | 198. Scale | 0/4 | Not started (cut by default) | - |

@@ -106,7 +106,7 @@ coverage:
         status: pass
     human_judgment: false
   - id: D6
-    description: "verify-dependency-boundaries.sh forbids the catalog in prod and host graphs, in the runtime module probe, and requires HTTP 404 for /storybook; mutation-tested text check mirrors it locally"
+    description: "verify-dependency-boundaries.sh edits (env-aware forbidden list, runtime module probe, HTTP 404 probe for /storybook) pass a mutation-tested local text check and bash -n; the Docker runtime run of the script is Plan 03's ecommerce-mounted lane, not claimed here"
     requirement: MOUNT-02
     verification:
       - kind: unit
@@ -115,8 +115,7 @@ coverage:
       - kind: other
         ref: "bash examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh --static-contract-only"
         status: pass
-    human_judgment: true
-    rationale: "The Docker-image half (real 404 from the test and prod images, image dependency lists) only runs in the 15 to 20 minute ecommerce-mounted lane, which Plan 03 mirrors before the first push; locally it is covered by the text check and bash -n only."
+    human_judgment: false
   - id: D7
     description: "Hex package file list refutes fixtures and storybook"
     requirement: MOUNT-01
@@ -197,6 +196,8 @@ Fidelity and wiring hours: 0.0 h (none; the mount rendered correctly on the firs
 None - plan executed exactly as written.
 
 The plan's phase-gate text for `mix verify.ops_ui` says the output must contain the `OPS_DEPENDENCY_BOUNDARY` markers. The lane does not print them (the test captures the probe output and asserts it), so the pass is the two green integration tests rather than a grep of the lane log. This is a wording gap in the plan, not a behavior change.
+
+Bookkeeping choice: `requirements.ready-ids` reported MOUNT-01 and MOUNT-02 ready, but they are not checked off in `REQUIREMENTS.md`. Both name Docker-image behavior (the prod image dependency lists and a real 404 from the test and prod images) that the edited script only demonstrates when the `ecommerce-mounted` lane runs it, and this plan proved the script edits by text check and `bash -n` only. Check them off after Plan 03's local or hosted `ecommerce-mounted` run passes. FLOW-01 to FLOW-04 are shared with Plan 03 and stay pending by the shared-ID rule.
 
 **Total deviations:** 0 auto-fixed.
 **Impact on plan:** none.
