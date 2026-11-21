@@ -130,17 +130,19 @@ Decisions recorded here so they are not re-litigated:
 - No new docs build and no change to the built-scan code (CONTEXT, Link check). The one `setup_all` build stays the only one.
 - The source rule lives in `Scrypath.Release.ShippedDocs` (`own_docs_url_problems/2`, `own_docs_urls/1`, `own_docs_url_violations/0`), rides `core` as an untagged test and adds no gate and no lane. It reads raw file text, fences and code spans included, so a versioned URL in a sample block is caught too.
 - The rule has one named exception, the template URL in `docs/releasing.md` (reason and revisit trigger in the module; the contract test fails if the entry stops occurring).
+- The rule does not read `CHANGELOG.md` (code review IN-04, decided in the review-fix pass): the changelog is release history that release-please builds from squash-commit subjects, so a subject that quotes an old install tuple or a versioned `hexdocs.pm/scrypath/<version>` URL is history, not a stale doc, and a commit already on main cannot be reworded to satisfy a guard. The file holds no own-docs URL and no install tuple today, so the exclusion changes no current result. It is one named entry (`ShippedDocs.history_files/0`, with a reason and a revisit trigger) shared with the install-line guard; a contract test fails if the entry empties or stops being a shipped file, and another planted case shows the same text still fails in README and a guide. It matches the existing whole-file `CHANGELOG.md` exemption of the TRUTH-01 command guard, which is a separate, locked set.
+- A link wrapped in emphasis, braces or an escaped quote (`**url**`, `_url_`, `{url}`, `url\"`) is the bare URL: the extractor trims a trailing run of `. , ; : ! ? * _ ~ } \` (code review IN-02), and a planted case shows trimming does not hide a versioned, `http://` or non-page URL.
 
 What the two together do not prove:
 
 - External link liveness (no network call is made).
 - Own-docs URLs built by interpolation, such as the versioned package links in `mix.exs` (`@release_docs_url`), which are versioned on purpose and pinned by the package-metadata test.
 - The website's own HexDocs links: `website/` is not a shipped file.
-- That a page's fragment exists for a link written in a non-extras shipped file (`docs/jtbd-gap-map.md`, `CHANGELOG.md`, `SECURITY.md` hold no HexDocs links to extras pages today).
+- That a page's fragment exists for a link written in a non-extras shipped file (`docs/jtbd-gap-map.md` and `SECURITY.md` hold no HexDocs links to extras pages today; `CHANGELOG.md` is not read, see above).
 
 ## Install line occurrences
 
-`Scrypath.Release.InstallLine` (GUARD-02) read 140 files (the shipped files plus the website sources that exist) at `mix.exs` version `0.3.20`. Real scan, plan start HEAD `bbe9891e`:
+`Scrypath.Release.InstallLine` (GUARD-02) read 140 files (the shipped files plus the website sources that exist) at `mix.exs` version `0.3.20`; after the review-fix pass it reads 139, because `CHANGELOG.md` is excluded as release history (see the foot-gun note below). Real scan, plan start HEAD `bbe9891e`:
 
 | Path | Line | Requirement | Result |
 |------|------|-------------|--------|
@@ -155,10 +157,10 @@ Violations: none. The website page source holds only the `{{CANONICAL_INSTALL}}`
 
 Choices recorded:
 
-- A requirement must equal the same-length prefix of the version's `[major, minor, patch]` and `Version.match?/2` must hold. `~> 0.2` is satisfied by 0.3.20 and `~> 0.3` by 0.4.0, so satisfaction alone would catch neither.
+- Before 1.0.0 a requirement must equal the same-length prefix of the version's `[major, minor, patch]` and `Version.match?/2` must hold. `~> 0.2` is satisfied by 0.3.20 and `~> 0.3` by 0.4.0, so satisfaction alone would catch neither. From 1.0.0 on (code review WR-03) only the major must match, because `~> 1.0` is the right line at every 1.x release; `Version.match?/2` decides the rest. Planted cases: `~> 1.0` at 1.2.3 and 1.0.5 pass, `~> 0.2` at 1.2.3 and `~> 0.3` at 1.0.0 are series mismatches, `~> 1.0` at 2.0.0 is a series mismatch, `~> 1.3` at 1.2.3 is unsatisfied; the 0.x rule is unchanged. `docs/releasing.md` says which rule applies when.
 - The pattern also reads a tuple with trailing options, such as one with `only: :dev`, so a stale line cannot hide behind them.
 - Minor-bump consequence (accepted, CONTEXT research resolution): at a bump from 0.3.x to 0.4.0 the contract test goes red on four shipped files plus `website/scripts/build.mjs` until the install lines move. The fix is one commit on the bot-authored release PR, written up under "Minor version bumps and the install-line guard" in `docs/releasing.md`.
-- Known foot-gun, not pre-handled: `CHANGELOG.md` is a shipped file. If release-please history ever quotes an old install tuple in a commit message, the guard fails on that line. Fix it by rewording the commit message or by adding a named exemption with a reason; no exemption was added in advance because none is needed today.
+- `CHANGELOG.md` is read by neither source guard (code review IN-04, decided in the review-fix pass; this replaces the earlier "known foot-gun, not pre-handled" note). It is a shipped file that release-please builds from squash-commit subjects. Left in scope, a subject quoting an old install tuple (or, for the own-docs rule, a versioned `hexdocs.pm/scrypath/<version>` URL) would turn the bot-authored release PR red, and the remedy would not hold: the subject is already on main and release-please regenerates the entry. Excluding it makes neither guard vacuous, because the file holds no install tuple and no own-docs URL today and the non-vacuity floors are measured over the other files. Mutation check: a stale tuple plus a versioned URL appended to `CHANGELOG.md` leaves both guards green; the same text appended to a guide fails both. Revisit trigger (recorded beside the entry in `ShippedDocs.history_files/0`): the release-please changelog configuration changes, a hand-written entry starts carrying an install line or own-docs link meant to be copied, or the file stops being generated.
 - Not covered: prose that names a series without a tuple (the golden path's minor-series sentence) and the website's rendered install block.
 
 ## Snippet marker

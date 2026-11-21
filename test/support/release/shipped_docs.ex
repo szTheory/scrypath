@@ -534,7 +534,8 @@ defmodule Scrypath.Release.ShippedDocs do
   # GUARD-01 source rule (Phase 193): the own-docs URLs written in shipped file text. The built-docs
   # scan in test/release/package_metadata_test.exs reads `https://hexdocs.pm/scrypath/<page>.html`
   # links against the build; it does not read a versioned, `http://` or non-page URL, which would
-  # go stale or point nowhere. This rule reads raw file text (fences and code spans included).
+  # go stale or point nowhere. This rule reads raw file text (fences and code spans included) of
+  # the shipped files minus the release history (`@history` below).
   #
   # An own-docs URL is `http` or `https`, host `hexdocs.pm`, then `/scrypath` not followed by a
   # word character or `-` (so `hexdocs.pm/scrypath_ops` is another package), then any run of
@@ -561,7 +562,40 @@ defmodule Scrypath.Release.ShippedDocs do
     }
   }
 
+  # Release history, read by neither source guard of Phase 193 (the own-docs URL rule below and
+  # `Scrypath.Release.InstallLine`). release-please builds CHANGELOG.md from squash-commit
+  # subjects, and an entry records what a release said at the time: a subject that quotes an old
+  # install tuple or a versioned `hexdocs.pm/scrypath/<version>` URL is history, not a stale
+  # doc, and a commit already on main cannot be reworded, so scanning it would turn the release
+  # PR red (and keep it red) with no edit that release-please would not regenerate. The file
+  # holds no install tuple and no own-docs URL today, so the exclusion changes no current result.
+  # The contract test fails if a field is empty or the key stops being a shipped file.
+  @history %{
+    "CHANGELOG.md" => %{
+      reason:
+        "Generated release history owned by release-please. An entry quoting an old install " <>
+          "tuple or a versioned own-docs URL records what that release said, and a commit " <>
+          "subject already on main cannot be reworded to satisfy a guard.",
+      revisit:
+        "Revisit when the release-please changelog configuration changes, when a hand-written " <>
+          "CHANGELOG entry starts carrying an install line or an own-docs link meant for " <>
+          "adopters to copy, or when this file is no longer generated."
+    }
+  }
+
   @type own_docs_problem :: {Path.t(), pos_integer(), String.t(), atom()}
+
+  @doc "The release-history files the install-line and own-docs URL source guards do not read."
+  @spec history_files() :: %{Path.t() => %{reason: String.t(), revisit: String.t()}}
+  def history_files, do: @history
+
+  @doc "`paths` without the release-history files."
+  @spec without_history([Path.t()]) :: [Path.t()]
+  def without_history(paths), do: Enum.reject(paths, &Map.has_key?(@history, &1))
+
+  @doc "Sorted paths the own-docs URL rule reads: the shipped files minus the release history."
+  @spec own_docs_url_sources() :: [Path.t()]
+  def own_docs_url_sources, do: without_history(shipped_files())
 
   @doc "The named own-docs URL exceptions, keyed by `{path, url}`."
   @spec own_docs_url_exceptions() :: %{
@@ -616,13 +650,13 @@ defmodule Scrypath.Release.ShippedDocs do
   end
 
   @doc """
-  Scan of the real shipped files for own-docs URLs. It reads source text, so it does not see a
-  URL a macro or string interpolation assembles (the versioned package links in mix.exs, which
-  are versioned on purpose and pinned by the package-metadata test).
+  Scan of the real shipped files, minus the release history, for own-docs URLs. It reads source
+  text, so it does not see a URL a macro or string interpolation assembles (the versioned package
+  links in mix.exs, which are versioned on purpose and pinned by the package-metadata test).
   """
   @spec own_docs_url_violations() :: [own_docs_problem()]
   def own_docs_url_violations do
-    files = for path <- shipped_files(), do: {path, File.read!(path)}
+    files = for path <- own_docs_url_sources(), do: {path, File.read!(path)}
     own_docs_url_problems(files, @own_docs_exceptions)
   end
 

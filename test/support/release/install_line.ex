@@ -19,8 +19,10 @@ defmodule Scrypath.Release.InstallLine do
   #     breaking axis is the major, so only the major must match (`~> 1.0` is right at every 1.x
   #     release) and `Version.match?/2` decides the rest.
   #   * The scanned files are the files of the mix.exs package `files:` (through
-  #     `ShippedDocs.shipped_files/0`) plus the website sources. The website page source holds only
-  #     the `{{CANONICAL_INSTALL}}` slot; the literal lives in `website/scripts/build.mjs`, so that
+  #     `ShippedDocs.shipped_files/0`), minus the release history (`ShippedDocs.history_files/0`:
+  #     CHANGELOG.md, which records what a release said at the time and so may quote an old
+  #     tuple), plus the website sources. The website page source holds only the
+  #     `{{CANONICAL_INSTALL}}` slot; the literal lives in `website/scripts/build.mjs`, so that
   #     file is read too.
   #   * The only non-numeric requirement allowed is a named placeholder: an exact `{path,
   #     requirement}` key with a reason and a revisit trigger. Any other unparseable requirement
@@ -68,13 +70,18 @@ defmodule Scrypath.Release.InstallLine do
   @spec placeholders() :: %{{Path.t(), String.t()} => %{reason: String.t(), revisit: String.t()}}
   def placeholders, do: @placeholders
 
-  @doc "Sorted paths scanned: the shipped files plus the website sources that exist."
+  @doc """
+  Sorted paths scanned: the shipped files, minus the release history, plus the website sources
+  that exist.
+  """
   @spec sources() :: [Path.t()]
   def sources do
     website =
       for glob <- @website_sources, path <- Path.wildcard(glob), File.regular?(path), do: path
 
-    (ShippedDocs.shipped_files() ++ website) |> Enum.uniq() |> Enum.sort()
+    (ShippedDocs.without_history(ShippedDocs.shipped_files()) ++ website)
+    |> Enum.uniq()
+    |> Enum.sort()
   end
 
   @doc """
