@@ -31,6 +31,14 @@ config :scrypath_ops, ScrypathOpsWeb.Endpoint,
 # runtime_test image compiles and serves with PHX_SERVER=true, and /storybook must never be reachable there.
 config :scrypath_ops, catalog_routes: System.get_env("PHX_SERVER") != "true"
 
+# Test-only endpoint for the planted failing storybook (test/support/catalog); it never binds a port.
+config :scrypath_ops, ScrypathOps.Catalog.PlantedEndpoint,
+  secret_key_base: String.duplicate("p", 64),
+  live_view: [signing_salt: "plantedlv"],
+  # A raising story must surface its own exception, not a missing-error-view ArgumentError.
+  render_errors: [formats: [html: ScrypathOpsWeb.ErrorHTML], layout: false],
+  server: false
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
