@@ -224,6 +224,8 @@ When you change **`scrypath_ops/docs/*.json`** saved-search fixtures, exported s
 
 Every CI or release run is also a chance to spot cheap speed and cost wins (cache keys, duplicated work, path filters, cold-cache time) without weakening what the checks prove; see "Phase workflow defaults" in `AGENTS.md` (repository root, maintainer-facing).
 
+Before you push, `scripts/ci/pre_push.sh` runs the cheap subset of these checks on your committed tree (workflow lint, format, warning-free compile, Credo, workspace cleanliness, the workflow wiring tests and the focused Node tests; about a minute with a warm build). It does not replace the hosted gate: it cannot run `core`, `repository-contracts`, `backend`, `ops-ui` or the Docker `ecommerce-mounted` lane, and it exits non-zero when a check fails or a tool is missing. The lane-by-lane local mirror commands, their runtimes and what each cannot show are in the maintainer-facing CI efficiency ledger (`.planning/reference/CI-EFFICIENCY.md`, "Local-first checklist").
+
 GitHub Actions (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs these jobs:
 
 | Job | Purpose |
