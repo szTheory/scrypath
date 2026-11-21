@@ -80,7 +80,12 @@ Plans:
   3. The link check passes on the built docs and README and fails a planted self-link and a planted dead target.
   4. The install line equals the `mix.exs` version in every place it appears, and the schema snippet is identical across README and golden path or carries an explicit "intentionally differs" marker.
   5. The forbidden-phrase table fails a planted banned phrase in README and guide text, and `CONTRIBUTING.md` carries the same-PR rule for public-surface changes.
-**Plans**: about 2 (regroup and the overview decision; guards and the CONTRIBUTING rule)
+**Plans**: 2 plans (sequential waves: the phrase guard scans the shrunk overview)
+
+Plans:
+- [ ] 193-01-PLAN.md — Pin inventory; six job-named sidebar groups with extras reordered to match, proven by a config-shape test and a built-sidebar test with planted failures; overview shrunk to a reading order with every pin carried; README and moduledoc rewords; owner-map rows
+- [ ] 193-02-PLAN.md — GUARD-01 recorded as met by the existing link scan; install-line guard against the mix.exs version; shared snippet parity with a reason-carrying marker; forbidden-phrase data table over README and guides; CONTRIBUTING same-PR rule and lane-sentence fix
+
 **What this does not prove**: that the grouping matches how readers look for things.
 
 ### Checkpoint: entry-point signal

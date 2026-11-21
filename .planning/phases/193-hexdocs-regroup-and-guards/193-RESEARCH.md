@@ -545,7 +545,9 @@ See `package_metadata_test.exs:362-413` (`plant/5`); no new planted built-docs c
 | A9 | Seed phrases beyond the three named sources (`seamless`, `blazing`, `powerful`) are out of the table | Forbidden-phrase table | Adding unsourced words widens scope without a source |
 | A10 | The optional prose pattern `**0.3.x**` in `guides/golden-path.md:25` is not required by GUARD-02 | Install line | A stale series phrase could survive a bump |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All eight are resolved in `193-CONTEXT.md` under "Research resolutions, 2026-11-21" (Q1 reorder: yes; Q2 moduledoc line: yes; Q3 retire Crash Course and table: yes; Q4 README-only technical terms; Q5 marker: either fence, reason required, see the amendment bullet; Q6 GUARD-01: met, plus a cheap versioned-URL source rule; Q7 minor-bump friction: accepted and documented; Q8 fix CONTRIBUTING line 11: yes).
 
 1. **Reorder `extras` so the sidebar matches the group lists? (recommended: yes)**
    - What we know: sidebar order in a group is the `extras` order (verified); the locked bullet says `extras` order is left alone "except where ExDoc needs nothing" (ambiguous).

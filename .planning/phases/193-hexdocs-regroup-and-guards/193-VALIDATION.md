@@ -30,7 +30,17 @@ created: "2026-11-21"
 
 ## Per-Task Verification Map
 
-Filled by the planner: one row per task, each with a runnable `<automated>` command and a stated failure signal.
+One row per task; the full commands and failure signals are the `<verify>` blocks of the plans. Every mix command is prefixed with `export ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 &&`.
+
+| Task | Requirement | Automated command (short form) | Fails when |
+|------|-------------|--------------------------------|------------|
+| 193-01 T1 (tracer) | DOCS-01 | `mix test test/release/package_metadata_test.exs test/scrypath/docs_contract_test.exs`; `mix docs --warnings-as-errors`; rename check `git diff --diff-filter=DR --name-only origin/main -- guides docs ARCHITECTURE.md CONTRIBUTING.md README.md` empty | a config-shape, built-sidebar or planted grouping test fails; a docs warning; any renamed or deleted guide |
+| 193-01 T2 | DOCS-02 | the 13-file doc-pin set; `mix compile --warnings-as-errors && mix docs --warnings-as-errors`; overview at most 320 words | a carried overview pin, owner-map test or README cap fails; a warning; the word ceiling is exceeded |
+| 193-02 T1 (tracer) | GUARD-02, GUARD-01 | `mix test test/release/install_line_contract_test.exs test/release/package_metadata_test.exs test/release/shipped_docs_contract_test.exs test/scrypath/readme_contract_test.exs`; releasing readers; `mix docs --warnings-as-errors` | a real install line off the version series, a floor or planted case fails, or a TRUTH-03 link test fails |
+| 193-02 T2 | GUARD-03 (parity, same-PR rule) | `mix test --warnings-as-errors test/release/snippet_parity_contract_test.exs test/scrypath/readme_contract_test.exs test/release/shipped_docs_contract_test.exs`; the CONTRIBUTING readers list | a planted parity case, a rewired README test, the CONTRIBUTING rule test or a CONTRIBUTING reader fails; a compile warning |
+| 193-02 T3 | GUARD-03 (phrases) | `mix test --warnings-as-errors test/release/forbidden_phrases_contract_test.exs test/release/snippet_parity_contract_test.exs test/scrypath/readme_contract_test.exs`; probe prints `violations=0` and `targets` at least 20 | a real phrase hit, faithfulness, no-weakening or planted case fails; the probe reads too few files |
+
+GUARD-01 adds no new test: its evidence is the existing TRUTH-03 tests in `Scrypath.Release.BuiltDocsBrandTest`, mapped in `193-PIN-INVENTORY.md` "GUARD-01 evidence".
 
 ## Wave 0 Requirements
 
