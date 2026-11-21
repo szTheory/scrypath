@@ -100,8 +100,12 @@ One row per pin from both tables. Commit hashes are filled after the owning task
 | O9 | wiring | stays | extras list | none | 01 Task 1 | `fb57e627` |
 | O10 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
 | O11 | claim | carry unchanged | `guides/overview.md` example paragraph | none | 01 Task 2 | `517f428e` |
-| `install-line` owner-map HexDocs cell | claim | stays with owner `README`; the cell now names the guard | `test/release/install_line_contract_test.exs` | replaces "Phase 193 GUARD-02 guards parity" | 02 Task 1 | pending |
-| built-docs link scan (TRUTH-03) | wiring | stays, no code change | `BuiltDocsBrandTest` (see GUARD-01 evidence) | none; the source rule beside it is new | 02 Task 1 | pending |
+| `install-line` owner-map HexDocs cell | claim | stays with owner `README`; the cell now names the guard | `test/release/install_line_contract_test.exs` | replaces "Phase 193 GUARD-02 guards parity" | 02 Task 1 | `dff73936` |
+| built-docs link scan (TRUTH-03) | wiring | stays, no code change | `BuiltDocsBrandTest` (see GUARD-01 evidence) | none; the source rule beside it is new | 02 Task 1 | `dff73936` |
+| README private snippet marker and fence helpers (`@differs_marker`, `fences`, `schema_fence`, `config_fence`, `differs_marked?`, `prose`) | wiring | move to shared module | `Scrypath.Release.SnippetParity`; the marker now needs a reason and is allowed above either fence | the two README parity tests keep their names and call `SnippetParity.check/3`; planted cases prove each failure | 02 Task 2 | `60be8948` |
+| `CONTRIBUTING.md` sentence "no longer part of the default CI and release gates" | claim | replace (it was false) | `CONTRIBUTING.md` | the docs contract suite runs in the required `package` lane through `mix verify.package` and is excluded from `core` | 02 Task 2 | `60be8948` |
+| README `@time_promises` list (10 phrases) | hygiene | move to data table | `time-promise` rule in `test/support/release/forbidden_phrases.json`, scope README and guides | "no README sentence promises a time" is now a caller; the no-weakening test plants all 10 | 02 Task 3 | pending |
+| README `@brand_do_not_say` list (8 words) | hygiene | move to data table | `brand-hype` (scope README and guides) and `brand-technical-readme-only` (README only) rules | "the README avoids the brand's do-not-say words" is now a caller; the no-weakening test plants all 8; the faithfulness test ties the copy to `brand/BRAND.md` | 02 Task 3 | pending |
 
 ## GUARD-01 evidence
 
@@ -156,3 +160,42 @@ Choices recorded:
 - Minor-bump consequence (accepted, CONTEXT research resolution): at a bump from 0.3.x to 0.4.0 the contract test goes red on four shipped files plus `website/scripts/build.mjs` until the install lines move. The fix is one commit on the bot-authored release PR, written up under "Minor version bumps and the install-line guard" in `docs/releasing.md`.
 - Known foot-gun, not pre-handled: `CHANGELOG.md` is a shipped file. If release-please history ever quotes an old install tuple in a commit message, the guard fails on that line. Fix it by rewording the commit message or by adding a named exemption with a reason; no exemption was added in advance because none is needed today.
 - Not covered: prose that names a series without a tuple (the golden path's minor-series sentence) and the website's rendered install block.
+
+## Snippet marker
+
+Plan 02 Task 2 moved the README parity helpers into `Scrypath.Release.SnippetParity` and changed the marker. Facts and decisions:
+
+- Form: an HTML comment `scrypath:snippet-intentionally-differs: <reason>` as the last thing before the fence, with blank lines between the comment and the fence tolerated. The reason is required. The old bare form (no reason) and a blank reason are an error even when the two bodies match, so nothing can use the marker as a silent switch.
+- Side: allowed above either the README fence or the golden path fence (amends "the later one"; recorded in 193-CONTEXT.md, Plan-check resolutions). A sentence between the comment and the fence cancels it.
+- Survives the build: the research probe appended a probe extra with the comment directly above a fence, and a second with a blank line before the fence, to the real 33 extras and ran the ExDoc 0.40.4 build with `--warnings-as-errors` (clean). Both comments appear in the HTML as `<!-- ... -->` immediately before `<pre><code class="makeup elixir">`, both fences render as code blocks, and the comment text is not visible. How hex.pm renders it is not verified (the README already carries an HTML `<picture>` block hex.pm handles, so a standard renderer is expected to hide comments).
+- In use today: no marker ships. `grep -rn 'snippet-intentionally-differs' README.md guides` prints nothing; the schema and config fences are byte-identical in both files (`SnippetParity.check/3` returns `:identical` for both kinds).
+- Proof it can fail: `test/release/snippet_parity_contract_test.exs` plants identical, different, marked on either side, empty-reason (bare, colon, blank), blank-line gap, a sentence between marker and fence, a fence without `use Scrypath,`, and a missing fence on each side. A mutation of the golden path in memory returned `{:error, :differs}`.
+- Not proven: hex.pm rendering of the comment, and the website's code block, which is not an Elixir fence (Phase 194 decides).
+
+## Forbidden-phrase seed
+
+`test/support/release/forbidden_phrases.json` plus `Scrypath.Release.ForbiddenPhrases` (GUARD-03). Sources, copied and not imported: `brand/BRAND.md` (Do not say), `GLOSSARY.md` (avoid entries), `scrypath_ops/test/support/copy_rules.json` (field names and the `control-room-casing` row), and the two lists the README tests kept in Phase 192.
+
+| Rule | Phrases | Scope | Source |
+|------|---------|-------|--------|
+| `time-promise` | the ten phrases of the old README list | README and guides | README-02 (Phase 192) |
+| `brand-hype` | `effortless(ly)`, `just stays in sync`, `real-time`/`realtime`/`real time`, `AI-powered`, `playbook` | README and guides | `brand/BRAND.md` |
+| `brand-technical-readme-only` | `magic`, `magical`, `federated`, `federation`, `hydration`, `hydrate` and kin | README only, with a recorded reason | `brand/BRAND.md`; `GLOSSARY.md` |
+| `glossary-names` | `Control Room` (case-sensitive), `Sync and drift` | README and guides | `GLOSSARY.md`; `copy_rules.json` |
+
+Result at the Task 3 commit: zero offenders over the 27 targets (README plus 26 guides, fences masked), the same as the research scan. Nothing was reworded and nothing was allowlisted; the table has no allowlist.
+
+Excluded on purpose (also in the data file's `not_covered`):
+
+- `magic`, `federated`, `hydration` in guides: 6, 26 and 21 prose lines of technical or negated use (the `[:scrypath, :hydration]` event, the `federation_weight:` option, "not one magical global index"). Scoping them to the README is the recorded decision; rewording would touch a public option's prose and a telemetry contract page.
+- `accepted work`: never banned; contract tests pin it across README and guides, and a test fails if the data file ever lists it.
+- `last successful` (glossary rule `last-succeeded`): its source scope is `scrypath_ops/lib/**`, and `guides/operator-mix-tasks.md:28` uses it, so it is not seeded.
+- UI-only status words (Searchable, Last success, Healthy, Pending versus queued, Retry accepted): scoped to the operator UI source, not to docs.
+- `docs/*.md`, `ARCHITECTURE.md` and `CONTRIBUTING.md` are extras but out of scope (Pitfall 8: `ARCHITECTURE.md` has "instantly visible" in a negation; `docs/jtbd-gap-map.md` has "quickly").
+- Unsourced marketing words (`seamless`, `blazing`, `powerful`): no source in the three files.
+
+Choices beyond the seed: a literal's spaces match a run of blanks or one line break, so a hard-wrapped sentence is caught; regex and literal patterns are both wrapped in word boundaries by the scanner; `rules/1` raises on an unknown id so a renamed rule cannot silently empty a caller's list; a faithfulness test splits the first sentence of the `Do not say` paragraph in `brand/BRAND.md` and requires the same eight terms as the table's `source_terms`.
+
+Proof it can fail: planted time promise in README and in a guide; a README-only term fails in README and passes in a guide; a fenced phrase is not reported and later lines keep their true number; each of the 18 phrases the README tests banned before is planted in an in-memory README. A real-file mutation (a banned sentence appended to `README.md` and `guides/overview.md`, then reverted with `git checkout` of those two files) failed the real-file scan with `README.md:113` and `guides/overview.md:22` and failed both rewired README tests.
+
+Not proven: that unlisted wording is fine, that the guides read in the brand voice, and that a phrase split by markup (a link or emphasis in the middle) is caught.

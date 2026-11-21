@@ -5,6 +5,7 @@ defmodule Scrypath.ReadmeContractTest do
   # (README-01) join them in the trim commit.
   use ExUnit.Case, async: true
 
+  alias Scrypath.Release.ForbiddenPhrases
   alias Scrypath.Release.ShippedDocs
   alias Scrypath.Release.SnippetParity
 
@@ -17,21 +18,6 @@ defmodule Scrypath.ReadmeContractTest do
   # appear before the README's first code block and before the quick path's first code block.
   @prerequisite_phrases ["needs a running Meilisearch server", "Start a Meilisearch server first"]
   @consistency_phrases ["eventually consistent"]
-
-  # Words a README sentence must not use to promise a time. Matched on word boundaries,
-  # case-insensitively, in prose only (fenced code is skipped).
-  @time_promises [
-    "in five minutes",
-    "in 5 minutes",
-    "in minutes",
-    "in a few minutes",
-    "in seconds",
-    "quickly",
-    "instantly",
-    "in no time",
-    "under five minutes",
-    "just works"
-  ]
 
   # README budget. The numbers are chosen, not measured; the README budget section of the owner map
   # records the same values and the word cap test compares them.
@@ -57,18 +43,6 @@ defmodule Scrypath.ReadmeContractTest do
   # A link to a repository path (Plan 03's definition, copied from shipped_docs_contract_test.exs):
   # blob or tree, a ref, then a path. Captures: kind, ref, path.
   @repo_path_link ~r/^https:\/\/github\.com\/szTheory\/scrypath\/(blob|tree)\/([^\/#?]+)(?:\/([^#?]*))?(?:\?[^#]*)?(?:#(.*))?$/
-
-  # The "Do not say" words of brand/BRAND.md, matched on word boundaries in README prose.
-  @brand_do_not_say [
-    "magic",
-    "effortless",
-    "it just stays in sync",
-    "real-time",
-    "federated",
-    "hydration",
-    "playbook",
-    "AI-powered"
-  ]
 
   # The level-2 headings the README has, in order: fit, does not fit, installation, one quick path,
   # and the onward links.
@@ -270,11 +244,16 @@ defmodule Scrypath.ReadmeContractTest do
 
       assert String.length(prose) > 1_000, "the prose extraction looks vacuous"
 
+      # The phrases are the `time-promise` rule of test/support/release/forbidden_phrases.json,
+      # matched on word boundaries, case-insensitively, in prose only (fenced code is masked).
       found =
-        for phrase <- @time_promises, Regex.match?(word_pattern(phrase), prose), do: phrase
+        ForbiddenPhrases.scan(
+          [{@readme_path, File.read!(@readme_path)}],
+          ForbiddenPhrases.rules(["time-promise"])
+        )
 
       assert found == [],
-             "README prose promises a time with #{inspect(found)}; say what happens, not how fast"
+             "README prose promises a time: #{inspect(found)}; say what happens, not how fast"
     end
 
     test "the quick path links the golden path" do
@@ -419,8 +398,13 @@ defmodule Scrypath.ReadmeContractTest do
     end
 
     test "the README avoids the brand's do-not-say words" do
-      prose = SnippetParity.prose(File.read!(@readme_path))
-      found = for word <- @brand_do_not_say, Regex.match?(word_pattern(word), prose), do: word
+      # The words are the brand rules of test/support/release/forbidden_phrases.json, copied from
+      # the "Do not say" paragraph of brand/BRAND.md; a faithfulness test keeps the two equal.
+      found =
+        ForbiddenPhrases.scan(
+          [{@readme_path, File.read!(@readme_path)}],
+          ForbiddenPhrases.rules(["brand-hype", "brand-technical-readme-only"])
+        )
 
       assert found == [],
              "README prose uses words from the brand's do-not-say list: #{inspect(found)}"
@@ -532,8 +516,6 @@ defmodule Scrypath.ReadmeContractTest do
         )
     end
   end
-
-  defp word_pattern(phrase), do: Regex.compile!("\\b" <> Regex.escape(phrase) <> "\\b", "i")
 
   defp assert_states_both(text, where) do
     assert mentions_any?(text, @prerequisite_phrases),
