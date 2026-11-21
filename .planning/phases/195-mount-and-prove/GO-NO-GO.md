@@ -1,7 +1,8 @@
 ---
 phase: 195-mount-and-prove
-decision: go
-decided_by: "pre-authorized by CONTEXT and ADR 0001: no trigger tripped and warm is within the line, so the checkpoint was not presented; no maintainer reply was needed"
+decision: pending
+decided_by: "pending the maintainer: a cold ops-ui run (the post-merge main run, 620 s) is over the 548 s line, so the Task 2 checkpoint was presented; the first cold run (the PR run, 517 s) was under it"
+recommendation: continue
 measured: 2026-11-21
 pull_request: 171
 cold_run: 44955813968
@@ -11,14 +12,30 @@ cold_run: 44955813968
 
 ## Decision
 
-**Go.** Checkpoint not reached: cold at or under 548 s, warm at or under 428 s, no trigger tripped.
+**Pending the maintainer's reply (recommendation: continue).** The checkpoint was reached, because one of the two hosted cold samples is over its line.
 
-In plain terms: the hosted `ops-ui` job took **517 s cold** (the first run after the lock change) and **378 s warm** (a rerun of the same job on the same commit). The line for cold is 548 s (368 s locked baseline plus 180 s) and the line for warm is 428 s (368 s plus 60 s). Both are under. All five ADR 0001 triggers are not tripped, and the phase continues without a maintainer reply, as CONTEXT and ADR 0001 pre-authorized.
+| Cold sample | Run, attempt | Job total | Against the 548 s line |
+|---|---|---|---|
+| The PR's first run, after the lock change (the sample the plan names) | 44955813968, attempt 1 | **517 s** | 31 s under |
+| The first main push run after the merge (cache cold again, because a pull request's caches are not visible to main) | 44958204651, attempt 1 | **620 s** | 72 s over, and 30 s above the slowest of the previous 38 main runs |
 
-Two things are worth knowing, and neither changes the verdict:
+The warm sample is within its line: **378 s** against 428 s. The other four ADR 0001 triggers are not tripped.
 
-- **Cold is under its line by 31 s.** Read against a same-day control (the same job on the main commit, rerun at the same time, 342 s), the cold excess is 175 s, five seconds under the 180 s margin. That is close.
-- **Most of the cold excess is not the storybook.** The cold run missed the root-graph BEAM cache (both cache keys reported "Cache not found"); the warm rerun hit both. Any pull request that changes a `mix.lock` pays the same miss: the earlier Dependabot ops-lock runs took 424, 437, 508 and 555 s cold with no storybook in them. The storybook's own marginal cost is the warm-versus-control gap: **+36 s** (378 s against 342 s, run at the same time; one paired sample).
+What I did and when: I merged the phase PR (#171) on the first cold sample, which was under the line, with all six required checks green on the measured head. The second cold sample arrived about ten minutes later, from the main push run that the merge started. By the adopted rule a cold run over 548 s is a tripped trigger, and a result inside the historic noise band is the maintainer's judgment, not mine, so I stopped there. This record is held in a draft docs PR (#172) until you reply; nothing else was merged.
+
+Evidence for the judgment (details in the sections below):
+
+- **The storybook's own marginal cost is small.** Warm against the same-day control: 378 s against 342 s, **+36 s**, at the same minute. The cold excess is mostly something else.
+- **Cold is noisy, with or without the storybook.** Of the previous 38 main push runs (2026-11-19 to 2026-11-21), median 410 s, p90 553 s, maximum 590 s, **5 exceeded 548 s and none of those five changed a lock file**. The only earlier main run after an ops lock change took 449 s.
+- **A lock change also throws away the root-graph BEAM cache** (both keys "Cache not found" on both cold runs, "Cache hit" on the warm rerun): about 135 s in `verify.ops_ui` on the PR runs. That cost is paid by every pull request or merge that changes a lock, storybook or not (CI-EFFICIENCY finding 26 is the candidate fix).
+- **Where the 620 s went:** the root half of `verify.ops_ui` (the boundary integration tests, which compile scratch consumers) took 415 s against 341 s on the PR cold run and 267 s warm; the ops half 104 s against 87 s and 73 s. The main run was slower in both halves, which looks like a slower runner, but I cannot prove that from the logs.
+- **A time-matched control moved too.** The main job from before the merge, rerun at 22:57 UTC while the main cold run was finishing, took 417 s; the same job on the same commit took 342 s at 22:32 UTC. Against the time-matched control the main cold run's excess is +203 s. Take away the roughly 135 s lock-change cache miss measured on the PR runs and about +70 s is left for the storybook plus runner variance. That subtraction is an inference, not a measurement.
+
+Options for the maintainer, each with its consequence:
+
+- **Continue (go).** The code is already merged; this keeps it. Recorded as the maintainer's choice against a tripped cold sample, not as a pass. Recommended: the marginal cost is about +36 s, the 620 s is one sample 30 s above anything seen in 38 runs, and the larger cold cost belongs to lock changes in general.
+- **Measure again.** The only way to get another cold run is another lock change on a branch (an extra push and a full PR run, about 16 minutes of wall time and a lot of runner time), so I would not choose this unless you want a second sample on a pull request.
+- **Stop (no-go).** The ADR 0001 fallback is the hand-rolled harness. Because #171 is already merged, this means a revert PR for the storybook mount; the Phase 196 fixtures still pay off either way.
 
 Method change from CONTEXT: the real phase PR (#171) was the timing run, not a throwaway PR. Nothing was pushed before the full phase code existed, so its first run is the cold sample of exactly what merges, and a job rerun is the warm sample. No separate PR was opened or closed.
 
@@ -28,6 +45,8 @@ Method change from CONTEXT: the real phase PR (#171) was the timing run, not a t
 - **Evidence only, not a line:** over 14 successful main pushes on 2026-11-21 (research Finding 9) the job ranged **360 to 579 s** with a **median of 409.5 s** (mean 427 s). Two of the 14 (553 s and 579 s) were above 548 s, so a cold result inside that band is a judgment call; that never came up because the cold result was under the line.
 - **Latest green main push run (44943834998, commit a11c36cd):** `ops-ui` 374 s, `Run mix verify.ops_ui` step 334 s. The two runs before it (44943130548, 44939887715): 409 s and 484 s.
 - **Same-day paired control:** `gh run rerun 44943834998 --job 136966725694` (attempt 2, job 137007989641), started at the same minute as the warm sample: **342 s** total, **307 s** `Run mix verify.ops_ui` step.
+- **Time-matched control, second sample:** the same main job rerun again (attempt 3, job 137014561618) at 22:57 UTC: **417 s** total, **378 s** step. The same job on the same commit took 342 s at 22:32 UTC, so the runner-to-runner spread for identical work is at least 75 s inside 25 minutes.
+- **Previous 38 main push runs (2026-11-19 to 2026-11-21, `gh run view <id> --json jobs`):** min 342 s, median 410 s, mean 433.6 s, p90 553 s, max 590 s. **Five exceeded 548 s** (579, 553, 574, 590 and 553 s) and **none of them changed a lock file**; the only earlier main run after an ops lock change took 449 s (805c47a7). Run ids and lock-change flags are in the 195-03 scratch history, reproducible with `gh run list --branch main --workflow ci.yml --event push --limit 40`.
 - **Earlier cold runs after an ops lock change (Dependabot branch for PR #151, no storybook):** 508 s (run 44860899193), 437 s (44859824928), 555 s (44845716201), 424 s (44792978871).
 
 ## Hosted ops-ui timings
@@ -39,8 +58,12 @@ Job `ops-ui (path-scoped)`, `gh run view <id> --json jobs`, seconds from `starte
 | Cold | 44955813968 | 1 | 137003601222 | success | 517 (22:15:52 to 22:24:29 UTC) | 479 | downloads and resolved keys both "Cache not found" |
 | Warm | 44955813968 | 2 | 137007958395 | success | 378 (22:32:11 to 22:38:29 UTC) | 344 | both "Cache hit" |
 | Same-day control (main a11c36cd) | 44943834998 | 2 | 137007989641 | success | 342 (22:32:17 to 22:37:59 UTC) | 307 | not applicable |
+| **Cold, post-merge main push (96521ab1)** | 44958204651 | 1 | 137010963728 | success | **620** (22:43:36 to 22:53:56 UTC) | **581** | both "Cache not found" |
+| Control matched to that main run (main a11c36cd rerun at 22:57 UTC) | 44943834998 | 3 | 137014561618 | success | 417 (22:57:36 to 23:04:33 UTC) | 378 | not applicable |
 
-- Cold against the locked baseline: +149 s. Against the 14-run median: +107.5 s. Against the same-day control: +175 s.
+- PR cold run (517 s) against the locked baseline: +149 s. Against the 14-run median: +107.5 s. Against the 22:32 control: +175 s.
+- **Post-merge main cold run (620 s)** against the locked baseline: **+252 s**. Against the 14-run median: +210.5 s. Against the 22:32 control: +278 s. Against the control matched to its hour (417 s): +203 s.
+- Where the time went in each cold-cache run (gaps between log flushes of the printed subprocess output): the root half of `verify.ops_ui` took 341 s on the PR cold run, 267 s on the warm rerun and 415 s on the main cold run; the ops half took 87 s, 73 s and 104 s. The main run was slower in both halves.
 - Warm against the locked baseline: +10 s. Against the same-day control: +36 s.
 - **Cold versus warm differ by 139 s (verify step: 135 s).** The plan predicted "a few seconds", because `verify.ops_ui` isolates the ops build, deps and Hex homes in scratch directories, so only the root-graph caches could help. The measured gap is larger because the root half of `verify.ops_ui` still needs the root `deps` and `_build/test`, and the `ops` cache key digests both lock files, so an ops lock change invalidates it with no prefix fallback. The attribution comes from the cache logs (miss against hit) and the isolation analysis, not from a profile.
 - Other jobs on the cold run (all required ones green on head f9af18d4): `ecommerce-mounted` 955 s (bake step 292 s), `repository-contracts` 595 s, `core` 471 s, `package` 103 s, `backend` 59 s; the run was done in about 16 minutes wall. `deep-quality (advisory)` was red for its known cause (see Advisory status).
@@ -88,7 +111,7 @@ Resolved versions: `phoenix_storybook` 1.5.0, `mdex` 0.14.7, `mdex_native` 0.3.2
 | Trigger | Measured | Threshold | Verdict |
 |---|---|---|---|
 | Advisory open over 14 days | none open on a resolved version (storybook advisories are all patched before 1.1.0, mdex ones before 0.13.2, mdex_native ones before 0.2.3; hosted audit shows only the baseline sigra, cloak and cloak_ecto items) | no advisory over 14 days on a resolved version | not tripped |
-| Cold ops-ui over baseline plus 180 s | 517 s (run 44955813968, attempt 1, job 137003601222); evidence: 14-run median 409.5 s, spread 360 to 579 s, same-day control 342 s (+175 s), earlier lock-change cold runs 424 to 555 s | 548 s (368 + 180) | not tripped (31 s under) |
+| Cold ops-ui over baseline plus 180 s | two cold samples: 517 s (PR run 44955813968, attempt 1, job 137003601222; 31 s under) and **620 s** (post-merge main run 44958204651, attempt 1, job 137010963728; 72 s over). Evidence: 14-run median 409.5 s and spread 360 to 579 s; previous 38 main runs median 410 s, max 590 s, 5 over 548 s with no lock change; controls 342 s and 417 s (cold excess +175 s and +203 s); earlier lock-change cold runs 424 to 555 s | 548 s (368 + 180) | **tripped** (one of two cold samples is over; the maintainer's call, see Decision) |
 | Isolation work over a day | 0.1 h (Plan 01: 0.0 h, Plan 02: 0.1 h, Plan 03: none) | 8 h | not tripped |
 | Docker asset_builder over plus 60 s | +33 s (292 s against a main median of 259 s; hosted proxy) | +60 s | not tripped |
 | NIF failure twice | 0 failures across both hosted attempts | 2 | not tripped |
@@ -104,7 +127,7 @@ SYNTHESIS exit criterion (not an ADR trigger, so it asks and never trips):
 - **Non-vacuous boundary tests:** `test/mix/tasks/dependency_boundary_contract_test.exs` (planted storybook mention, unrestricted and wrong-requirement manifests, route-guard mutants moved, deleted and flag-blind, loopback rule, Docker script text check with planted mutants), `scrypath_ops/test/scrypath_ops_web/catalog_routes_test.exs` (a guard-stripped copy of the macro mounts the storybook with the flag off), `test/release/ops_dependency_boundary_test.exs` (mounted test and prod consumers and direct prod lack the apps; direct dev and test have them) and `test/release/package_metadata_test.exs` (tarball refutes). Each has a planted failing case recorded in the 195-01 SUMMARY. Green hosted: `core`, `repository-contracts` and `ops-ui` on run 44955813968.
 - **Render-all with the planted tree:** `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` ("render-all" and "planted tree"): 5 stories, 17 variations, each in light and dark through the real iframe route, and the same loop reports a raising story, an empty story and unknown variation ids. `data-phx-error` is never emitted by the server (LiveView 1.1.34, phoenix_storybook 1.5.0), so the real failure signals are the crash, empty and unknown-variation plants; the selector check stays for the requirement wording.
 - **Prod graphs lack PhoenixStorybook and MDEx:** `test/release/ops_dependency_boundary_test.exs` (prod compile: 14 routes, no `/storybook`, no loaded storybook modules) and the Docker boundary proof inside the required `ecommerce-mounted` job (green on hosted run 44955813968; locally `DEPENDENCY_BOUNDARY_CATALOG ... status=404` for the host and for standalone Ops in both the test and prod images).
-- **Cold at or under +180 s and warm at or under +60 s:** cold 517 s against 548 s; warm 378 s against 428 s (hosted run 44955813968, attempts 1 and 2).
+- **Cold at or under +180 s and warm at or under +60 s:** warm 378 s against 428 s is met (hosted run 44955813968, attempt 2). Cold is met on the PR run (517 s against 548 s) and not met on the post-merge main run (620 s); pending the maintainer's judgment.
 - **H exit item, `handle_params` in an `:example` story:** impossible, with evidence rather than a measurement. phoenix_storybook 1.5.0 `lib/phoenix_storybook/stories/story.ex` lines 98 and 99: "Examples are rendered as a child LiveView, so you can implement `mount/3`, `render/1` or any `handle_event/3` callback. Unfortunately `handle_params/3` cannot be defined in a child LiveView." H marked this CONFIRMED.
 - **H exit item, fidelity probe (computed-style parity, three themes by two color schemes):** deferred to Phase 197 under orchestrator decision 7; not run in this phase. It is not a CI gate and not part of this phase's success criteria.
 
@@ -115,7 +138,8 @@ SYNTHESIS exit criterion (not an ADR trigger, so it asks and never trips):
 - **`.dockerignore` skipped.** No `.dockerignore` entries were added for `scrypath_ops/storybook` and `scrypath_ops/catalog`. Only the `asset_builder` stage (`MIX_ENV=dev`) needs those sources, because it compiles `DevRouter` with the flag on, which names the backend module, and the backend loads the stories. `runtime_test` compiles with `PHX_SERVER=true`, so the flag is off there, and `runtime_prod` compiles `lib` only. Excluding the trees would therefore break `asset_builder`, while in the other images the sources are inert. Revisit if the maintainer wants the image contents asserted, for example with a per-stage `COPY --exclude` in the runtime stages.
 - **Fifth story.** The planner chose `ops_sync_status` in place of the form-field class: `ops_field` is mostly `phx-hook` behavior that a server-side render-all cannot exercise, so a story for it would claim more than its test proves (195-02 SUMMARY). The form-field story moves to Phase 197's patterns tier.
 - **No gate row, no CI context.** This phase added neither. `scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs` is the file Phase 197 extends into ledger row 11.
-- **Record lands after the merge.** This record goes in a post-merge planning-only `docs(phase-195):` PR, which saves one full path-scoped run on the phase PR (see the CI-EFFICIENCY entry).
+- **Record lands after the merge.** This record goes in a post-merge planning-only `docs(phase-195):` PR, which saves one full path-scoped run on the phase PR (see the CI-EFFICIENCY entry). That PR (#172) is held as a draft until the maintainer replies.
+- **The phase PR merged before the second cold sample existed.** #171 merged on the PR cold run (517 s, under the line) with six green required checks on the measured head. The post-merge main run, which the merge itself started, then measured 620 s. The merge was correct against the sample the plan names; the second sample is why this record is pending.
 - **Plan counts.** The phase has 3 plans (cap 5); the milestone has 16 planned against the stop at 20.
 
 ## Findings for the maintainer
