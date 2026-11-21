@@ -1,19 +1,16 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.47
-milestone_name: Brand completion
-status: Awaiting next milestone
-stopped_at: v1.47 Brand completion complete and archived; next milestone not started
-last_updated: "2026-11-21T00:53:52.035Z"
+milestone: v1.48
+milestone_name: Discovery and onboarding
+status: planning
+last_updated: "2026-11-21T02:40:54.374Z"
 last_activity: 2026-11-20
-last_activity_desc: Milestone v1.47 completed and archived
-state_head: 219af695cc77acf64dd94d0fbab417befb21623d
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -23,14 +20,15 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** Awaiting the next milestone. v1.47 Brand completion is complete and archived; the prepared options are in [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md). Roadmap: [ROADMAP](ROADMAP.md).
+**Current focus:** v1.48 Discovery and onboarding, opened 2026-11-21: Phase 192 Docs truth and README next, then Phase 193, an entry-point checkpoint, and an optional Phase 194. Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
 
 ## Current Position
 
-Phase: Milestone v1.47 complete
+Phase: Not started (roadmap approved; Phase 192 next)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-21 — Milestone v1.47 completed and archived (override closeout, `tech_debt` audit)
+Status: Ready to discuss Phase 192
+Last activity: 2026-11-21 — Milestone v1.48 started (3 phases and a checkpoint, 16 requirements)
+
 
 ## Performance Metrics
 
@@ -43,7 +41,8 @@ Last activity: 2026-11-21 — Milestone v1.47 completed and archived (override c
 
 Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalog/V1.46-PREP.md) and the [v1.47 prep notes](research/v1.47-prep/). Standing decisions:
 
-- v1.47 is the small "Brand completion" milestone (prep note A, option b): 189 website, 190 wording, 191 cleanup, in that order; the catalog is v1.48 (Phases 192–196). Phase numbers are fixed (`p189` allowlist tags).
+- v1.48 Discovery and onboarding (opened 2026-11-21 as recommended; [v1.48 prep notes](research/v1.48-prep/), D is the tie-breaker): 192 docs truth and README, 193 HexDocs regroup plus guards, an entry-point checkpoint (record GitHub traffic referrers and hex.pm downloads; decides 194), optional 194 website content. Cut line after 193. The catalog is v1.49 (renumbered at its opening); the earlier "catalog is v1.48, Phases 192-196" wording in v1.47 notes is superseded. Hex 0.3.20 after Phase 192 needs the maintainer's explicit yes.
+- v1.47 was the small "Brand completion" milestone: 189 website, 190 wording, 191 cleanup (done).
 - GATE-02 is mapped to Phase 189 and stays a standing rule for every phase. Gate budget: 8 of 12 used at the start of v1.47; Phase 189's static contract takes row 9. `build-and-check` stays non-required (decided in the gap pass; re-open trigger in SITE-05).
 - Phase 189 merges only after `build-and-check` is green on the exact PR head (checked with `gh api`), because merging deploys the site and that job is not a required check.
 - Gap pass 2026-11-20 ([research/v1.47-gap-pass/](research/v1.47-gap-pass/)): the three website hexes shared with `brandbook/` join the deny set in Phase 191; the Cancel-focus assertion lives in the required-lane `operator.spec.ts`; the kickoff chore is tracked as Phase 188.1 (CI-01); the picker light-only fallback is pre-decided in SITE-02.
@@ -52,8 +51,8 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 
 ### Pending Todos
 
-- Phases 190 and 191 CONTEXT and RESEARCH are pre-seeded; pre-seed their VALIDATION.md (Nyquist) before planning.
-- Baseline: the 2026-11-20 nightly (run 44689855947, head `bd69905e`) had `ecommerce-e2e` green; a red after Phase 190 is attributable to it.
+- Phase 192 starts with an inventory of every test pin on `verify.adopter` and the shipped-docs wording (claim or wiring); none is weakened to reach green.
+- At the checkpoint (after Phase 193) record `gh api repos/szTheory/scrypath/traffic/{referrers,popular/paths,views,clones}` (14-day window; 4 views from 3 uniques when last read) and hex.pm downloads (1,782 all time, 89 in the last 7 days when last read).
 
 ### Blockers/Concerns
 
@@ -61,7 +60,7 @@ None blocking. Standing conditions (not blockers):
 
 - `deep-quality` stays an advisory red with one known cause (cloak and cloak_ecto via optional sigra) until sigra ships without a hard `cloak_ecto` requirement; the audit stays fail-closed with no exception.
 - The retained UI preview (`.planning/UI-PREVIEW.json`) records pre-squash commits; refresh to current main before the first phase that needs rendered ops evidence (expected v1.48). v1.47's checks do not need it.
-- Open Dependabot PR #129 (`@axe-core/playwright` 4.14.0): fails `ecommerce-mounted` on the new axe rule `label-content-name-mismatch` for `.ops-command-hint` and the timestamp copy buttons in ScrypathOps (dark theme, `retry-accepted-dark-desktop`). Real accessibility finding; left open. Phase 190 may fix it with the wording work. #132 merged.
+- Housekeeping before v1.48 (2026-11-21): #157 fixed the axe `label-content-name-mismatch` markup (command hint and timestamp copy buttons now take their accessible name from visible text), the vacuous `operator.spec.ts` regex and two unqualified doc lines; #158 fixed the README HexDocs self-links. Dependabot #129 (axe 4.14.0, verified green locally on a merge with #157), #150 and #151 merge one at a time on green.
 - Unrelated dirty `.planning/config.json` and `.planning/state.json` edits stay out of owned commits.
 
 ## Carried forward from v1.45

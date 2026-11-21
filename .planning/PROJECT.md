@@ -26,13 +26,21 @@ Shift verification left by default. Turn recurring user paths, seams, integratio
 
 **GSD handoff default (maintainer direction, 2026-10-04):** At every phase or milestone boundary, name the phase and milestone just completed, then give the exact next GSD command with its phase number when applicable and explain how it advances approved work. Do not substitute a generic progress/next dispatcher when the concrete command is known. Before recommending a context reset, persist the scope, decisions, verification evidence, unresolved items, working directory/branch, and next action in `.planning/`. Keep the normal project checkout ready for that action when safe; preserve other branches, stashes, and attested source refs. If no work is approved, say so and route to `$gsd-new-milestone` for scope selection without inventing or executing a phase. Never replay completed work merely to refresh context. A handoff after final attestation belongs in a clearly separate planning-only successor; its metadata does not extend the prior exact-SHA evidence.
 
-## Current Milestone
+## Discovery and onboarding direction
 
-**Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. This is direction, not approved scope; see `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
+**Discovery and onboarding direction (maintainer, 2026-11-20):** The README, website, HexDocs and guides must form one coherent journey for people meeting Scrypath for the first time, people starting to use it, and people returning to troubleshoot or dig deeper. Each surface has one job, content is owned once and linked rather than restated, link lists stay short, and onboarding the library is a product surface in its own right. The README is currently too long, especially "Choose a route"; the website is an old-identity starting point that should be refreshed goal-first (Impeccable for design, `ux-writing` for copy, brand voice, honest claims) with permanent upkeep guards. The first slice of it became the v1.48 milestone on 2026-11-21 (below); the rest stays direction, not approved scope. See `reference/DISCOVERY-AND-ONBOARDING-JOURNEY.md`, `seeds/SEED-004-website-refresh.md` and the README todo. Read it before changing any of those surfaces.
 
-## Current Milestone
+## Current Milestone: v1.48 Discovery and onboarding
 
-None active. v1.47 Brand completion is complete and archived ([archive](milestones/v1.47-ROADMAP.md), [audit](milestones/v1.47-MILESTONE-AUDIT.md)). The next milestone is chosen from the prepared options in `reference/ROLLING-ROADMAP.md`.
+**Goal:** The README, HexDocs and (if the checkpoint supports it) the website tell a first-time reader the same true thing, once, and keep doing so.
+
+**Target features:**
+- Phase 192 Docs truth and README: no Hex-shipped doc names a repo-only task (one invariant with a planted violation, changed together with the Canonical Adopter Contract text below), the README does one job with working links.
+- Phase 193 HexDocs regroup and guards: sidebar grouped by job (no guide renamed, merged or deleted), link, install-line, snippet and wording guards.
+- Entry-point checkpoint: GitHub traffic referrers and hex.pm downloads recorded once; decides Phase 194.
+- Phase 194 Website content (optional, cuttable): content and information architecture on the existing token pipeline; Docs points at HexDocs.
+
+Opened 2026-11-21 from `reference/ROLLING-ROADMAP.md` "Post-v1.47 proposal" (prep notes in `research/v1.48-prep/`; note D is the tie-breaker). Requirements: `REQUIREMENTS.md`; roadmap: `ROADMAP.md`. Hex 0.3.20 is expected after Phase 192 and needs the maintainer's explicit yes; no release without it. Not proven by any check in this milestone: how the pages read, Safari, real screen readers.
 
 ## Current State
 
@@ -44,7 +52,7 @@ The [v1.46 audit](milestones/v1.46-MILESTONE-AUDIT.md) is `tech_debt` with no un
 
 ## Next Milestone Goals
 
-After v1.47 Brand completion (done): v1.48 Catalog foundation (phoenix_storybook spike and boundary, fixtures, pilot read-only half then retry half; Phases 192-196), v1.49 Screens, flows and full catalog, v1.50 Adopter features. See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
+After v1.48 Discovery and onboarding: v1.49 Catalog foundation (phoenix_storybook spike with a go/no-go, fixtures, pilot read-only half then retry half; phases renumbered at its opening), then Screens, flows and full catalog, and Adopter features (grill the API shapes first; the v1.48 checkpoint may move adopter features ahead of the catalog). See `reference/ROLLING-ROADMAP.md`. Each boundary is prepared upstream before the maintainer is asked what is next.
 
 <details>
 <summary>Historical milestone planning, source cutoffs and delivery context through v1.45</summary>
