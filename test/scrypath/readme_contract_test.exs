@@ -412,7 +412,11 @@ defmodule Scrypath.ReadmeContractTest do
     test "the README names no repo-only task outside a source-checkout qualifier" do
       readme = File.read!(@readme_path)
 
-      assert ShippedDocs.scan([{@readme_path, readme}], ShippedDocs.repo_only_tasks()) == []
+      assert ShippedDocs.scan(
+               [{@readme_path, readme}],
+               ShippedDocs.repo_only_tasks(),
+               ShippedDocs.shipped_tasks()
+             ) == []
 
       for unit <- ShippedDocs.units(readme), unit.text =~ "mix verify." do
         assert ShippedDocs.unit_qualified?(unit),

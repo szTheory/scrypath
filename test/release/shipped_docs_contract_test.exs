@@ -27,7 +27,11 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
   @owner_docs ~w(guides/support-and-compatibility.md guides/outside-adopter-intake.md docs/operator-support.md)
 
   setup_all do
-    %{names: ShippedDocs.repo_only_tasks(), files: ShippedDocs.shipped_files()}
+    %{
+      names: ShippedDocs.repo_only_tasks(),
+      shipped: ShippedDocs.shipped_tasks(),
+      files: ShippedDocs.shipped_files()
+    }
   end
 
   describe "derivation and expansion guards" do
@@ -153,11 +157,12 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
   end
 
   describe "mix.exs scope" do
-    test "mix.exs is exempt only for its preferred_envs registration lines", %{names: names} do
+    test "mix.exs is exempt only for its preferred_envs registration lines",
+         %{names: names, shipped: shipped} do
       assert %{scope: {:lines, pattern}} = ShippedDocs.exempt()["mix.exs"]
       mix_exs = File.read!("mix.exs")
 
-      assert ShippedDocs.scan([{"mix.exs", mix_exs}], names) == []
+      assert ShippedDocs.scan([{"mix.exs", mix_exs}], names, shipped) == []
 
       registration_lines =
         mix_exs |> String.split("\n") |> Enum.count(&Regex.match?(pattern, &1))
@@ -327,6 +332,42 @@ defmodule Scrypath.Release.ShippedDocsContractTest do
         "Other root `mix verify.*` commands run from a source checkout and are not in the Hex package.\n"
 
       assert ShippedDocs.scan([{@guide, qualified}], names) == []
+    end
+
+    test "a glob or brace spelling of a repo-only task family is reported",
+         %{names: names, shipped: shipped} do
+      scan = fn text -> ShippedDocs.scan([{@guide, text}], names, shipped) end
+
+      assert [{@guide, 1, "verify.phase"}] = scan.("Run the `mix verify.phase*` gates.\n")
+      assert [{@guide, 1, "verify.phase"}] = scan.("Run the `verify.phase*` gates.\n")
+      assert [{@guide, 1, "verify.phase"}] = scan.("Run `mix verify.phase{11,14}` first.\n")
+      assert [{@guide, 1, "verify"}] = scan.("Run `mix verify.{all,core}` first.\n")
+      assert [{@guide, 1, "verify"}] = scan.("Run `mix verify*` first.\n")
+      assert [{@guide, 1, "scrypath_ops"}] = scan.("Run `mix scrypath_ops.*` in the app.\n")
+      assert [{@guide, 1, "scrypath_ops"}] = scan.("Run the `scrypath_ops.*` tasks.\n")
+
+      qualified =
+        "The `mix verify.phase*` gates run from a source checkout and are not in the Hex package.\n"
+
+      assert scan.(qualified) == []
+      assert [{@guide, 3, "scrypath_ops"}] = scan.("# Title\n\n- Run `mix scrypath_ops.*`.\n")
+    end
+
+    test "a glob that names only shipped tasks, or no task, is not a mention",
+         %{names: names, shipped: shipped} do
+      scan = fn text -> ShippedDocs.scan([{@guide, text}], names, shipped) end
+
+      assert "scrypath.status" in shipped
+      assert scan.("The `mix scrypath.*` operator tasks ship with the package.\n") == []
+      assert scan.("Run `mix scrypath.{status,failed}` against the index.\n") == []
+      assert scan.("Run `mix verify.nothing*` or `mix zzz.*` first.\n") == []
+
+      # A `*` that closes a bold span is emphasis, not a glob.
+      assert scan.("Read **mix scrypath_ops** in the app guide.\n") == []
+
+      # Without the shipped names the same text is reported (the stricter reading).
+      assert [{@guide, 1, "scrypath"}] =
+               ShippedDocs.scan([{@guide, "The `mix scrypath.*` tasks ship.\n"}], names)
     end
 
     test "allowlisted files may name repo-only tasks", %{names: names} do

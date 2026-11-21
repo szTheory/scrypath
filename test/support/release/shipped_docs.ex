@@ -104,19 +104,29 @@ defmodule Scrypath.Release.ShippedDocs do
   # Mention patterns. NAMES is replaced with an alternation of escaped task names.
   #   * dotted names: bounded, optional `mix ` prefix, not a longer dotted name or file path;
   #   * undotted names (the bare verify task): the `mix ` prefix is required, so the English
-  #     word does not match, and `mix verify.*` still counts as a mention of that root;
-  #   * family forms: `mix <root>.*` and backticked `<root>.*` for every name that has children.
+  #     word does not match;
+  #   * glob and brace forms: the literal prefix of `mix <prefix>*`, `mix <prefix>{a,b}` and the
+  #     backticked dotted `<prefix>*` (the prefix may end in a dot, as in `mix verify.*`, or stop
+  #     mid-name, as in `mix verify.phase*`). It is a mention of the family when some repo-only
+  #     name starts with the prefix and no shipped task name does, so `mix scrypath.*` (which
+  #     names the shipped operator tasks) is not one while `mix scrypath_ops.*` is. A `*` that
+  #     closes a bold span (`**mix verify.all**`) is not a glob. The report names the prefix
+  #     without its trailing dot.
   @dotted_template ~S/(?<![\w.])(?:mix\s+)?(NAMES)(?![\w]|\.[\w*])/
   @undotted_template ~S/(?<![\w.])mix\s+(NAMES)(?![\w]|\.\w)/
-  @family_template ~S/(?:(?<![\w.])mix\s+|`)(NAMES)\.\*/
+  @glob_form ~r/(?:(?<![\w.])mix\s+|`(?=[a-z0-9_]+\.))([a-z0-9_]+(?:\.[a-z0-9_]+)*\.?)(?:\*(?!\*)|\{)/
 
   @type unit :: %{line: pos_integer(), text: String.t(), lead_in: String.t() | nil}
   @type violation :: {Path.t(), pos_integer(), String.t()}
 
+  @doc "Names of the tasks the shipped lib/ tree defines, derived from its source files."
+  @spec shipped_tasks() :: [String.t()]
+  def shipped_tasks, do: task_names(@shipped_task_glob)
+
   @doc "Names of the tasks defined outside the shipped lib/ tree, derived from the source trees."
   @spec repo_only_tasks() :: [String.t()]
   def repo_only_tasks do
-    shipped = task_names(@shipped_task_glob)
+    shipped = shipped_tasks()
 
     @task_source_globs
     |> Enum.flat_map(&task_names/1)
@@ -340,24 +350,25 @@ defmodule Scrypath.Release.ShippedDocs do
   @doc """
   Repo-only names mentioned in a unit text, deduplicated, in order of first appearance.
 
-  A family form (`mix verify.*`, backticked `verify.*`) counts as a mention of the family
-  root, which is itself a task name.
+  A glob or brace spelling (`mix verify.*`, `mix verify.phase{11,14}`, backticked `verify.*`)
+  counts as a mention of its literal prefix (`verify`, `verify.phase`) when some repo-only name
+  starts with that prefix and no name in `shipped` does. `shipped` defaults to none, which
+  reports every such prefix (the stricter reading).
   """
-  @spec mentions(String.t(), [String.t()]) :: [String.t()]
-  def mentions(text, names) do
-    text |> mention_hits(matchers(names)) |> Enum.map(&elem(&1, 0))
+  @spec mentions(String.t(), [String.t()], [String.t()]) :: [String.t()]
+  def mentions(text, names, shipped \\ []) do
+    text |> mention_hits(matchers(names, shipped)) |> Enum.map(&elem(&1, 0))
   end
 
-  defp matchers(names) do
+  # Each matcher is `{regex, name_for}`: the regex captures one group, and `name_for.(capture)`
+  # is the reported name, or nil when the capture is not a mention.
+  defp matchers(names, shipped) do
     {undotted, dotted} = Enum.split_with(names, &(not String.contains?(&1, ".")))
-
-    roots =
-      Enum.filter(names, fn name -> Enum.any?(names, &String.starts_with?(&1, name <> ".")) end)
 
     [
       matcher(dotted, @dotted_template),
       matcher(undotted, @undotted_template),
-      matcher(roots, @family_template)
+      glob_matcher(names, shipped)
     ]
     |> Enum.reject(&is_nil/1)
   end
@@ -370,14 +381,29 @@ defmodule Scrypath.Release.ShippedDocs do
       |> Enum.sort_by(&{-String.length(&1), &1})
       |> Enum.map_join("|", &Regex.escape/1)
 
-    template |> String.replace("NAMES", alternation) |> Regex.compile!()
+    {template |> String.replace("NAMES", alternation) |> Regex.compile!(), & &1}
+  end
+
+  defp glob_matcher([], _shipped), do: nil
+
+  defp glob_matcher(names, shipped) do
+    name_for = fn prefix ->
+      if Enum.any?(names, &String.starts_with?(&1, prefix)) and
+           not Enum.any?(shipped, &String.starts_with?(&1, prefix)),
+         do: String.trim_trailing(prefix, ".")
+    end
+
+    {@glob_form, name_for}
   end
 
   # `{name, byte_index}` pairs, first appearance per name, in text order.
   defp mention_hits(text, matchers) do
     matchers
-    |> Enum.flat_map(&Regex.scan(&1, text, capture: :all_but_first, return: :index))
-    |> Enum.map(fn [{start, len}] -> {binary_part(text, start, len), start} end)
+    |> Enum.flat_map(fn {regex, name_for} ->
+      for [{start, len}] <- Regex.scan(regex, text, capture: :all_but_first, return: :index),
+          name = name_for.(binary_part(text, start, len)),
+          do: {name, start}
+    end)
     |> Enum.sort_by(&elem(&1, 1))
     |> Enum.uniq_by(&elem(&1, 0))
   end
@@ -388,11 +414,11 @@ defmodule Scrypath.Release.ShippedDocs do
   Allowlisted paths and the whole-file exemption are skipped; the line-scoped exemption has its
   matching lines blanked first (line numbers stay true). Returns sorted
   `{path, line, name}` tuples, one per unit and name, at the line where the name first
-  appears in the unit.
+  appears in the unit. `shipped` is as in `mentions/3`.
   """
-  @spec scan([{Path.t(), String.t()}], [String.t()]) :: [violation()]
-  def scan(files, repo_only) do
-    matchers = matchers(repo_only)
+  @spec scan([{Path.t(), String.t()}], [String.t()], [String.t()]) :: [violation()]
+  def scan(files, repo_only, shipped \\ []) do
+    matchers = matchers(repo_only, shipped)
 
     files
     |> Enum.flat_map(fn {path, text} -> scan_file(path, text, matchers) end)
@@ -422,7 +448,7 @@ defmodule Scrypath.Release.ShippedDocs do
 
   # Cheap whole-file prefilter: a mention cannot sit in a unit unless it sits in the file.
   defp file_violations(path, text, matchers) do
-    if Enum.any?(matchers, &Regex.match?(&1, text)) do
+    if Enum.any?(matchers, fn {regex, _name_for} -> Regex.match?(regex, text) end) do
       for unit <- units(text),
           not unit_qualified?(unit),
           {name, index} <- mention_hits(unit.text, matchers) do
@@ -437,7 +463,7 @@ defmodule Scrypath.Release.ShippedDocs do
   @spec violations() :: [violation()]
   def violations do
     files = for path <- shipped_files(), do: {path, File.read!(path)}
-    scan(files, repo_only_tasks())
+    scan(files, repo_only_tasks(), shipped_tasks())
   end
 
   # TRUTH-03 link helpers (Phase 192). A shipped markdown file is read in two places: on GitHub,
