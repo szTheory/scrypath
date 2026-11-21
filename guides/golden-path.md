@@ -125,6 +125,28 @@ alias MyApp.Content
 result.records
 ```
 
+The common search path stays small and explicit:
+
+```elixir
+alias MyApp.Repo
+
+{:ok, result} =
+  Scrypath.search(MyApp.Blog.Post, "ecto",
+    backend: Scrypath.Meilisearch,
+    repo: Repo,
+    filter: [status: "published"],
+    sort: [desc: :inserted_at],
+    page: [number: 2, size: 20]
+  )
+
+result.records
+result.hits
+result.missing_ids
+result.page
+```
+
+A successful search returns one `%Scrypath.SearchResult{}` with the raw backend hits, the loaded records, pagination metadata, and `missing_ids` for stale or missing source rows.
+
 Index-time relevance tuning lives in [Relevance tuning](relevance-tuning.md); request-time search options are specified in the [Per-query tuning pipeline](per-query-tuning-pipeline.md) guide.
 
 For controllers, JSON APIs, and LiveView that call the same context boundary, continue with [Phoenix Walkthrough](phoenix-walkthrough.md).

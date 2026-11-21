@@ -118,14 +118,26 @@ defmodule Scrypath.DocsContractTest do
     end
   end
 
-  test "README preserves the operator contract for backfill and reindex" do
-    assert_contains_all(@readme, [
+  # Phase 192: the first-page copy of this contract left the front page; each token is pinned
+  # at the surface that owns it (CLAIM-OWNER-MAP rows backfill-and-reindex, reindex-result,
+  # eventual-consistency). The ARCHITECTURE and sync guide pins below repeat two of them on
+  # purpose so this test still names the whole contract.
+  test "owner guides preserve the operator contract for backfill and reindex" do
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Scrypath.backfill/2",
       "Scrypath.reindex/2",
       "Scrypath.reconcile_sync/2",
       "Use backfill when",
-      "Use managed reindex when",
-      "cutover?: false",
+      "Use managed reindex when"
+    ])
+
+    assert_contains_all(@guides["guides/meilisearch-concepts.md"], [
+      "Use managed reindex when"
+    ])
+
+    assert_contains_all(@architecture, ["cutover?: false"])
+
+    assert_contains_all(@guides["guides/sync-modes-and-visibility.md"], [
       "Accepted work is not the same thing as search visibility"
     ])
   end
@@ -529,7 +541,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "docs keep the operator recovery contract report-first and explicit" do
-    assert_contains_all(@readme, [
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Scrypath.sync_status/2",
       "Scrypath.failed_sync_work/2",
       "Scrypath.retry_sync_work/2",
@@ -549,7 +561,7 @@ defmodule Scrypath.DocsContractTest do
   end
 
   test "documentation keeps drift detection and recovery guidance explicit" do
-    assert_contains_all(@readme, [
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
       "Detect drift before deciding",
       "stale search hits whose hydrated records are now missing",
       "document-count mismatches",
@@ -563,6 +575,34 @@ defmodule Scrypath.DocsContractTest do
       "settings changes that require a full rebuild",
       "failed, retrying, or discarded async work",
       "old-index cleanup as part of the same managed reindex step"
+    ])
+  end
+
+  test "owners carry the README search, reindex and hydration claims the trim removes" do
+    assert_contains_all(@guides["guides/golden-path.md"], [
+      "result.records",
+      "result.hits",
+      "result.missing_ids",
+      "result.page"
+    ])
+
+    assert_contains_all(@guides["guides/drift-recovery.md"], [
+      "result.live_index",
+      "result.target_index",
+      "result.settings_applied",
+      "result.batches",
+      "result.documents",
+      "result.omitted",
+      "result.cutover",
+      "counted rather than deleted",
+      "durable enqueue is not the same thing as rebuild completion"
+    ])
+
+    assert_contains_all(@architecture, [
+      "Hydration is explicit and repo-backed",
+      "does not infer repos globally",
+      "for stale or missing source rows",
+      "whether settings were applied"
     ])
   end
 

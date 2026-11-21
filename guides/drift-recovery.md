@@ -9,6 +9,50 @@ This guide is for **operators** who already ship Scrypath with Meilisearch and n
 - [`guides/multi-index-search.md`](multi-index-search.md) — open when the wrong index or federation-style `search_many/2` behavior is suspected.
 - [`guides/meilisearch-operations.md`](meilisearch-operations.md) — open when the symptom looks like service health, task backlog, disk, memory, backup, or upgrade posture.
 
+## Detect drift, then choose backfill or reindex
+
+Detect drift before deciding whether a live-index backfill is enough or whether you need a full rebuild. Common signals are:
+
+- stale search hits whose hydrated records are now missing
+- document-count mismatches between the source table and the search index
+- failed or discarded sync work
+- stale deletes where search still returns records removed from the database
+- projection or setting changes that should have rewritten every document
+
+Accepted work is not the same thing as search visibility, and durable enqueue is not the same thing as rebuild completion.
+
+Use backfill when the live index contract is still correct and you need to repair missing or stale documents.
+
+Use managed reindex when the contract changed, settings changed, or you no longer trust the live index contents.
+
+`Scrypath.reconcile_sync/2` does not heal anything by default. It returns drift signals plus explicit recovery actions so the caller can choose retry, backfill, or reindex deliberately.
+
+### Managed reindex result
+
+```elixir
+alias MyApp.Repo
+
+{:ok, result} =
+  Scrypath.reindex(MyApp.Blog.Post,
+    backend: Scrypath.Meilisearch,
+    repo: Repo,
+    batch_size: 500,
+    cutover?: false
+  )
+
+result.live_index
+result.target_index
+result.settings_applied
+result.batches
+result.documents
+result.omitted
+result.cutover
+```
+
+`cutover?: false` leaves the live index untouched while you inspect the rebuilt target.
+
+`result.omitted` counts records that `search_records/2` left out of the rebuilt index. Because the target index is new, those ids are counted rather than deleted.
+
 ## Empty index (documents exist in the DB but search returns nothing)
 
 **Symptom** — Users see empty search or “no hits” for `YOUR_SCHEMA` while Postgres (or your primary store) clearly has rows that should be indexed.
