@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 Release Please manages versioned entries after this baseline.
 
+## [0.3.20](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.19...scrypath-v0.3.20) (2026-11-21)
+
+
+### Documentation
+
+* The README is now short: what Scrypath is, when it fits and does not fit, install, one quick path that ends in a search result, and three links. The reference text it carried moved into the guides ([#160](https://github.com/szTheory/scrypath/issues/160)) ([8e717c9](https://github.com/szTheory/scrypath/commit/8e717c9de12e34642be1e9aaedfccebf42a62f00)).
+* Shipped guides and docs no longer tell adopters to run repository-only maintainer tasks without saying they run from a source checkout and are not part of the Hex package. Links that pointed at the README page by mistake now point at the right page, and the golden-path config snippet uses the shape Scrypath reads (`config :scrypath, :defaults`).
+
+### Notes
+
+* No library behavior changes in this release.
+
 ## [0.3.19](https://github.com/szTheory/scrypath/compare/scrypath-v0.3.18...scrypath-v0.3.19) (2026-11-20)
 
 
