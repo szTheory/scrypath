@@ -74,7 +74,7 @@ LiveView WebSocket, and long-poll routes. Explicit `sigra` mode requires the
 integration to be available and a valid local `:sudo_confirm_path`. Sensitive
 actions also require valid user and organization context, no active
 impersonation, and a current valid sudo confirmation. Selecting an auth mode
-does not itself authenticate routes. See the [ScrypathOps production runbook](../scrypath_ops/README.md#production), which links to its detailed security boundary.
+does not itself authenticate routes. See the [ScrypathOps production runbook](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md#production), which links to its detailed security boundary.
 
 The final four source graphs were audited independently with Hex 2.5.1 on
 2026-10-30. The root, Phoenix example, and ecommerce graph audits were clean.
@@ -143,7 +143,7 @@ The Phoenix example lives in this repository and depends on Scrypath via a local
 - the runnable Phoenix example path is a repo-clone workflow, not part of the Hex package artifact
 - the example README is the authoritative live runbook for env vars, service startup, and CI parity details
 
-If you are evaluating the packaged library only, start with the public guides and README. If you need the runnable real-app path, use the repository checkout and follow [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md).
+If you are evaluating the packaged library only, start with the public guides and README. If you need the runnable real-app path, use the repository checkout and follow [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md).
 
 ## In-repo verification versus outside-adopter evidence
 
@@ -167,4 +167,4 @@ Scrypath v1 does not currently promise:
 
 Scope-boundary and feature-lane reopen authority is owned by [Scope and reopen policy](scope-and-reopen-policy.md). This guide does not duplicate that policy body.
 
-If you need the first-hour path, start with [Golden path](golden-path.md). If you need the runnable live example, continue to [`examples/phoenix_meilisearch/README.md`](../examples/phoenix_meilisearch/README.md). If you need sync semantics, use [Sync modes and visibility](sync-modes-and-visibility.md).
+If you need the first-hour path, start with [Golden path](golden-path.md). If you need the runnable live example, continue to [`examples/phoenix_meilisearch/README.md`](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md). If you need sync semantics, use [Sync modes and visibility](sync-modes-and-visibility.md).

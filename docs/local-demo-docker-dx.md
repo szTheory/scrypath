@@ -75,7 +75,7 @@ ScrypathOps is mounted in the ecommerce host, the host Endpoint and supplied
 Repo serve it; there is no separate Ops database or Endpoint requirement. The
 runtime `:scrypath_ops, :standalone` setting decides whether Ops starts its own
 Repo, DNS cluster, and Endpoint. It has no effect on dependency resolution or
-compilation. See the [ScrypathOps runbook](../scrypath_ops/README.md#mounted-host-app-assets)
+compilation. See the [ScrypathOps runbook](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md#mounted-host-app-assets)
 for the mounted integration boundary.
 
 `make verify-mounted` runs the disposable dependency-boundary proof before the
