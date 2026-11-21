@@ -1045,6 +1045,69 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "CI-04 only a superseded pull request run is cancelled" do
+    @ci_concurrency "concurrency:\n  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}\n  cancel-in-progress: ${{ github.event_name == 'pull_request' }}\n"
+
+    test "ci.yml cancels only pull request runs and never a main, schedule or dispatch run" do
+      assert_ci_concurrency!(File.read!(@ci_yml))
+    end
+
+    test "the concurrency contract rejects a workflow that could cancel a run on main" do
+      yml = File.read!(@ci_yml)
+      assert_ci_concurrency!(yml)
+
+      planted = [
+        {"every event is cancelled",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: true"
+         )},
+        {"no run is cancelled",
+         String.replace(
+           yml,
+           "cancel-in-progress: ${{ github.event_name == 'pull_request' }}",
+           "cancel-in-progress: false"
+         )},
+        {"push, schedule and dispatch runs share the branch group",
+         String.replace(yml, "|| github.run_id }}", "|| github.ref }}")},
+        {"pull requests share one group",
+         String.replace(
+           yml,
+           "${{ github.event.pull_request.number || github.run_id }}",
+           "${{ github.run_id }}"
+         )},
+        {"every run shares one group",
+         String.replace(
+           yml,
+           "ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}",
+           "ci-${{ github.workflow }}"
+         )},
+        {"concurrency block dropped", String.replace(yml, @ci_concurrency, "")},
+        {"a job adds its own cancelling group",
+         String.replace(
+           yml,
+           "  core:\n    name: core (required)\n",
+           "  core:\n    name: core (required)\n    concurrency: {group: core, cancel-in-progress: true}\n"
+         )}
+      ]
+
+      for {label, mutated} <- planted do
+        refute mutated == yml, "the planted mutation #{label} changed nothing"
+
+        accepted? =
+          try do
+            assert_ci_concurrency!(mutated)
+            true
+          rescue
+            ExUnit.AssertionError -> false
+          end
+
+        refute accepted?, "planted #{label} was accepted by the concurrency contract"
+      end
+    end
+  end
+
   describe "DEP-07 upload-artifact is pinned by pattern" do
     @dependabot_132_sha "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
 
@@ -2195,6 +2258,19 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
 
   defp workflow_named_step_block(job_block, step_name) do
     workflow_step_block(job_block, "\n      - name: #{step_name}\n")
+  end
+
+  # CI-04: one workflow-level group per pull request that cancels a superseded run, and a group of its
+  # own (the run id) for every other event with cancellation off. Raises ExUnit.AssertionError otherwise.
+  defp assert_ci_concurrency!(yml) do
+    assert String.contains?(yml, "\n" <> @ci_concurrency),
+           "ci.yml needs the workflow-level concurrency block that cancels only pull request runs"
+
+    # Exactly one block, at the top level: a job-level group could cancel a required check on main.
+    assert length(Regex.scan(~r/^\s*concurrency:/m, yml)) == 1
+    assert length(Regex.scan(~r/cancel-in-progress:/, yml)) == 1
+    refute yml =~ ~r/^\s*cancel-in-progress: true/m
+    :ok
   end
 
   defp fetch_step!(job, name) do

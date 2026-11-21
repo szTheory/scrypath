@@ -26,9 +26,14 @@ on:
 permissions:
   contents: read
 
+# Only a superseded pull request run is cancelled: a push of a fix replaces the earlier run for the
+# same pull request. Every other event (push to main, schedule, workflow_dispatch) gets a group of
+# its own (the run id), so it is never cancelled and never queued behind another run. Sharing the
+# branch ref instead would let a later push to main cancel the run that verifies the previous main
+# commit, or an exact-SHA closeout dispatch, which are the checks this workflow exists to keep.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   core:
