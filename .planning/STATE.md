@@ -3,7 +3,7 @@ gsd_state_version: "1.0"
 milestone: v1.48
 milestone_name: Discovery and onboarding
 current_phase: 194
-current_phase_name: Website content (optional)
+current_phase_name: Website content (optional, CUT at the checkpoint)
 status: planning
 stopped_at: Phase 193 complete, ready to plan Phase 194
 last_updated: "2026-11-21T14:44:16.197Z"
@@ -25,13 +25,13 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** v1.48 Discovery and onboarding: Phases 192 and 193 are done (Phase 193 ships as its own PR). Next is the entry-point checkpoint (SIGNAL-01: record GitHub traffic referrers and hex.pm downloads; it decides whether optional Phase 194 runs or the milestone is cut after 193). Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
+**Current focus:** v1.48 Discovery and onboarding: Phases 192 and 193 are done (Phase 193 ships as its own PR). The entry-point checkpoint ran 2026-11-21 (research/v1.48-prep/CHECKPOINT.md): traffic is effectively nil, so optional Phase 194 is cut and v1.48 closes after 193 (audit, complete, cleanup are next). Roadmap: [ROADMAP](ROADMAP.md); requirements: [REQUIREMENTS](REQUIREMENTS.md); order: [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
 
 ## Current Position
 
-Phase: 194 — Website content (optional)
-Plan: Not started
-Status: Ready to plan
+Phase: v1.48 closeout (Phase 194 cut at the checkpoint)
+Plan: None
+Status: Ready to close the milestone
 Last activity: 2026-11-21 — Phase 193 complete, transitioned to Phase 194
 
 
@@ -88,7 +88,7 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 Last session: 2026-11-20
 Stopped at: Phase 193 complete, ready to plan Phase 194
-Acting next: ship Phase 193 (PR, squash-merge on green required checks and a green `build-and-check` on the exact head), then run the entry-point checkpoint. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21. The Phase 193 regroup reaches HexDocs only with the next Hex release, which needs the maintainer's explicit yes.
+Acting next: close v1.48 (audit, complete, cleanup) and prepare the v1.49 choice upstream. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21. The Phase 193 regroup reaches HexDocs only with the next Hex release, which needs the maintainer's explicit yes.
 
 ## Operator Next Steps
 

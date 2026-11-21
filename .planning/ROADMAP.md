@@ -43,8 +43,8 @@ v1.48 Discovery and onboarding is the active milestone (opened 2026-11-21 exactl
 
 - [x] **Phase 192: Docs truth and README** - A reader of any shipped doc is never told to run a task they cannot run, and the README does one job with working links (about 3 plans; Hex 0.3.20 follows, needs a yes) (completed 2026-11-21)
 - [x] **Phase 193: HexDocs regroup and guards** - The HexDocs sidebar is grouped by job with a short first group, and link, install-line, snippet and wording guards keep the surfaces from drifting (about 2 plans) (completed 2026-11-21)
-- [ ] **Checkpoint: entry-point signal** - GitHub traffic, hex.pm downloads and live-link behavior are recorded once and decide whether Phase 194 runs (0 plans)
-- [ ] **Phase 194: Website content (optional)** - Home, Evaluate and Operate carry the same owned claims and Docs points at HexDocs, on the existing token pipeline (about 2 plans; cut if the checkpoint shows almost no traffic)
+- [x] **Checkpoint: entry-point signal** - GitHub traffic, hex.pm downloads and live-link behavior are recorded once and decide whether Phase 194 runs (0 plans) (completed 2026-11-21: cut Phase 194)
+- [~] **Phase 194: Website content (optional) - CUT at the checkpoint 2026-11-21** - Home, Evaluate and Operate carry the same owned claims and Docs points at HexDocs, on the existing token pipeline (about 2 plans; cut if the checkpoint shows almost no traffic)
 
 ## Phase Details
 
@@ -135,5 +135,5 @@ See [v1.46-ROADMAP.md](milestones/v1.46-ROADMAP.md).
 |-------|----------------|--------|-----------|
 | 192. Docs truth and README | 4/4 | Complete    | 2026-11-21 |
 | 193. HexDocs regroup and guards | 2/2 | Complete    | 2026-11-21 |
-| Checkpoint: entry-point signal | 0/0 | Not started | - |
-| 194. Website content (optional) | 0/2 | Not started | - |
+| Checkpoint: entry-point signal | 0/0 | Complete | 2026-11-21 |
+| 194. Website content (optional) | 0/2 | Cut at the checkpoint | - |
