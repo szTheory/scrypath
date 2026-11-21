@@ -47,6 +47,12 @@ else
 fi
 
 step "mix format --check-formatted" mix format --check-formatted
+# The ecommerce example and scrypath_ops depend on each other by path, so a lock bump in one can leave
+# another lock stale; the Docker build in `ecommerce-mounted` fails on that after about a minute.
+# Run this after any merge or rebase that touches a mix.lock (Dependabot PRs especially).
+for lock_dir in . scrypath_ops examples/scrypath_ecommerce; do
+  step "mix deps.get --check-locked in $lock_dir" bash -c "cd '$lock_dir' && mix deps.get --check-locked"
+done
 step "mix compile --warnings-as-errors" env MIX_ENV=test mix compile --warnings-as-errors
 step "mix credo --strict" env MIX_ENV=test mix credo --strict
 step "mix verify.workspace_clean" env MIX_ENV=test mix verify.workspace_clean
