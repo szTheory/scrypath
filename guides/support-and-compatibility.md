@@ -123,13 +123,13 @@ This guide names the supported modes, but it does not restate their operational 
 These verification commands run from a source checkout of the Scrypath repository; they are not part of the Hex package.
 
 Other root `mix verify.*` capabilities are repository-maintainer commands, not
-Hex APIs. Their current CI roles and the exact Ops and mounted-demo proof scope
+Hex APIs: they run from a source checkout and are not in the Hex package. Their current CI roles and the exact Ops and mounted-demo proof scope
 are kept in the [contributor verification matrix](../CONTRIBUTING.md#ci).
 
 The adopter verification path is intentionally split into two depths:
 
-- `mix verify.adopter` is the fast, service-free contract check for support/readiness guidance.
-- `mix verify.adopter --live` is the prerequisite-bound live check that requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL`.
+- `mix verify.adopter` is the fast, service-free contract check for support/readiness guidance (source checkout only; not in the Hex package).
+- `mix verify.adopter --live` is the prerequisite-bound live check that requires `SCRYPATH_EXAMPLE_INTEGRATION`, `PGPORT`, and `SCRYPATH_MEILISEARCH_URL` (source checkout only; not in the Hex package).
 
 The live command executes `cd examples/phoenix_meilisearch && mix deps.get && mix test`.
 

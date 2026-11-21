@@ -95,9 +95,9 @@ mix scrypath.index.contract_drift MyApp.Blog.Post --json
 
 **`--json`** prints one JSON document (the `%Scrypath.Operator.IndexContractDrift.Report{}` encoding). Exit codes mirror **`mix scrypath.settings.diff`**: `0` when every dimension matches, `2` when the comparison completes with mismatches, `1` when the comparison cannot be completed. This task does not apply settings, enqueue work, or mutate documents.
 
-## `mix scrypath_ops.saved_searches.validate` (from `scrypath_ops/`)
+## `mix scrypath_ops.saved_searches.validate` (source checkout only, from `scrypath_ops/`; not in the Hex package)
 
-Validates each eligible **`*.json`** file in a single directory using **`ScrypathOps.SavedSearches.V1.validate/1`**. Run it from the **`scrypath_ops`** application directory (not the monorepo root **`mix`** project).
+Validates each eligible **`*.json`** file in a single directory using **`ScrypathOps.SavedSearches.V1.validate/1`**. Run it from the **`scrypath_ops`** application directory of a source checkout (not the monorepo root **`mix`** project); the task is not in the Hex package.
 
 ```bash
 cd scrypath_ops

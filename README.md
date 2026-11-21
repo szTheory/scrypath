@@ -33,7 +33,7 @@ end
 - **Build a search experience:** [Meilisearch concepts](guides/meilisearch-concepts.md) introduces the backend model; [related data and reindexing](guides/related-data-and-reindexing.md), [faceted search with Phoenix LiveView](guides/faceted-search-with-phoenix-liveview.md) covers `Scrypath.search_within_facet/4`; [multi-index search](guides/multi-index-search.md) covers `Scrypath.search_many/2`, `:all` expansion, and `federation_weight:`; [per-query tuning](guides/per-query-tuning-pipeline.md) distinguishes request-time parameters from index-time settings.
 - **Choose sync and recover:** [sync modes and visibility](guides/sync-modes-and-visibility.md), [Meilisearch operations](guides/meilisearch-operations.md), [operator Mix tasks](guides/operator-mix-tasks.md), [drift recovery](guides/drift-recovery.md), and [common mistakes](guides/common-mistakes.md) explain lifecycle, visibility, and repair.
 - **Try the examples:** [Phoenix + Meilisearch](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) is the integration walkthrough; the [e-commerce demo](https://github.com/szTheory/scrypath/blob/main/examples/scrypath_ecommerce/README.md) shows tenant-scoped search, facets, related-data propagation, and operator workflows.
-- **Maintainer tools:** the optional [operator UI](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md) is available in the checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
+- **Maintainer tools:** the optional [operator UI](https://github.com/szTheory/scrypath/blob/main/scrypath_ops/README.md) is available in a source checkout and is not part of the Hex package; `mix verify.ops_ui` checks it. See [CONTRIBUTING](CONTRIBUTING.md) for the CI and `mix verify.*` map.
 
 **Integration smoke (optional):** the [Phoenix + Meilisearch example](https://github.com/szTheory/scrypath/blob/main/examples/phoenix_meilisearch/README.md) documents its Docker services and env vars. From the repository root, run `cd examples/phoenix_meilisearch && ./scripts/smoke.sh`; that script lives inside the example.
 
@@ -115,7 +115,7 @@ Scrypath follows semantic versioning for the public API: **minor** releases can 
 
 The version in root **`mix.exs`** (`@version`) is the source of truth for **this** checkout; the latest published package is listed on [hex.pm/packages/scrypath](https://hex.pm/packages/scrypath).
 
-Quality for the packaged artifact is guarded by **`mix verify.phase11`**, the always-on gate referenced from [docs/releasing.md](docs/releasing.md). That document - not this README - owns the full verify matrix, Release Please flow, and publish checks for maintainers.
+Quality for the packaged artifact is guarded by **`mix verify.phase11`** (a maintainer gate that runs from a source checkout and is not in the Hex package), the always-on gate referenced from [docs/releasing.md](docs/releasing.md). That document - not this README - owns the full verify matrix, Release Please flow, and publish checks for maintainers.
 
 ## Search
 
@@ -201,7 +201,7 @@ SCRYPATH_MEILISEARCH_URL=http://127.0.0.1:7700 mix verify.meilisearch_smoke
 docker compose down
 ```
 
-`mix verify.meilisearch_smoke --skip-integration` exits without contacting Meilisearch (useful for quick task wiring checks only; it does not run the live suites).
+`mix verify.meilisearch_smoke --skip-integration` exits without contacting Meilisearch (useful for quick task wiring checks only; it does not run the live suites; the task runs from a source checkout and is not in the Hex package).
 
 ## Example: Phoenix + Postgres + Meilisearch
 
