@@ -163,7 +163,14 @@ jobs:
     # Required check that must ALWAYS run mix verify.repository_contracts. A job whose `needs` fail
     # is skipped (and a skipped required job reports success), so a failed or timed-out classifier
     # would otherwise skip the whole contract suite. The status function keeps the job running; only
-    # the two Node steps below are gated on the classifier.
+    # the three Node steps below are gated on the classifier.
+    #
+    # The browser Node tests and `mix verify.repository_contracts` are independent halves, so they run
+    # at the same time: the Node half starts in the background right after `npm ci` (it needs no
+    # Elixir) and the last step waits for it. The halves share no port, no repository file and no
+    # build directory: the Node tests work in unique os.tmpdir() directories with a docker stub, and
+    # the Mix half only clones committed history with `git clone --shared` and copies deps and _build
+    # into its own temp clones. Either half failing fails the job, and both outputs always show.
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
@@ -174,6 +181,26 @@ jobs:
         with: {fetch-depth: 0}
       - name: Verify shrink-only UI literal history
         run: node scripts/ci/ui_literal_policy.cjs
+      - name: Install locked demo dependencies for PNG evidence validation
+        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
+        run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce
+      - name: Start browser build, lifecycle, evidence, and target behavior tests in the background
+        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
+        # Output goes to files and stdin is closed, so this step ends at once and the background
+        # process keeps nothing of the step open. The last step of this job reads the status file.
+        run: |
+          rm -f "$RUNNER_TEMP"/browser-behavior.tap "$RUNNER_TEMP"/browser-behavior.log "$RUNNER_TEMP"/browser-behavior.status "$RUNNER_TEMP"/browser-behavior.pid
+          (
+            set +e
+            node --test --test-reporter=tap \
+              scripts/ci/ecommerce_build.test.cjs \
+              scripts/ci/ecommerce_lifecycle.test.cjs \
+              scripts/ci/ecommerce_evidence.test.cjs \
+              scripts/ci/ecommerce_target.test.cjs \
+              scripts/ci/ui_state_pairs.test.cjs | tee "$RUNNER_TEMP/browser-behavior.tap"
+            echo "${PIPESTATUS[0]}" > "$RUNNER_TEMP/browser-behavior.status"
+          ) > "$RUNNER_TEMP/browser-behavior.log" 2>&1 < /dev/null &
+          echo "$!" > "$RUNNER_TEMP/browser-behavior.pid"
       - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with: {elixir-version: "1.19.0", otp-version: "28.1"}
       - id: beam_cache
@@ -189,21 +216,33 @@ jobs:
           key: ${{ steps.beam_cache.outputs.resolved_key }}
           restore-keys: ${{ steps.beam_cache.outputs.resolved_restore_prefix }}
       - run: mix deps.get
-      - name: Install locked demo dependencies for PNG evidence validation
-        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
-        run: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --prefix examples/scrypath_ecommerce
+      - run: mix verify.repository_contracts
+      # Runs after the Mix half even when it failed (!cancelled()), so both results are always in the
+      # log. It fails the job when the Node half's exit status is not 0, when its counted TAP summary
+      # is missing or reports a failure, or when the background process vanished without a status.
       - name: Verify browser build, lifecycle, evidence, and target behavior
-        if: ${{ needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false' }}
+        if: ${{ !cancelled() && (needs.ecommerce-path.result != 'success' || needs.ecommerce-path.outputs.run != 'false') }}
+        timeout-minutes: 30
         run: |
-          node --test --test-reporter=tap \
-            scripts/ci/ecommerce_build.test.cjs \
-            scripts/ci/ecommerce_lifecycle.test.cjs \
-            scripts/ci/ecommerce_evidence.test.cjs \
-            scripts/ci/ecommerce_target.test.cjs \
-            scripts/ci/ui_state_pairs.test.cjs | tee "$RUNNER_TEMP/browser-behavior.tap"
+          if [ ! -f "$RUNNER_TEMP/browser-behavior.pid" ]; then
+            echo "::error::The browser contract tests were never started (an earlier step failed)"
+            exit 1
+          fi
+          pid="$(cat "$RUNNER_TEMP/browser-behavior.pid")"
+          while [ ! -f "$RUNNER_TEMP/browser-behavior.status" ]; do
+            if ! kill -0 "$pid" 2>/dev/null && [ ! -f "$RUNNER_TEMP/browser-behavior.status" ]; then
+              [ ! -f "$RUNNER_TEMP/browser-behavior.log" ] || cat "$RUNNER_TEMP/browser-behavior.log"
+              echo "::error::The browser contract tests stopped without reporting a result"
+              exit 1
+            fi
+            sleep 5
+          done
+          cat "$RUNNER_TEMP/browser-behavior.log"
+          status="$(cat "$RUNNER_TEMP/browser-behavior.status")"
+          echo "browser contract tests (node --test) exit status: $status"
+          test "$status" = 0
           grep -Eq '^# tests [1-9][0-9]*$' "$RUNNER_TEMP/browser-behavior.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/browser-behavior.tap"
-      - run: mix verify.repository_contracts
 
   backend:
     name: backend (required)
