@@ -18,6 +18,9 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
 
   @app_js Path.join(__DIR__, "../../assets/js/app.js") |> Path.expand()
   @ops_hooks Path.join(__DIR__, "../../assets/js/ops_hooks.js") |> Path.expand()
+  @storybook_js Path.join(__DIR__, "../../assets/js/storybook.js") |> Path.expand()
+  @storybook_bundle Path.join(__DIR__, "../../priv/static/assets/js/storybook.js")
+                    |> Path.expand()
   @host_js Path.join(__DIR__, "../../../examples/scrypath_ecommerce/assets/js/app.js")
            |> Path.expand()
 
@@ -295,6 +298,43 @@ defmodule ScrypathOpsWeb.OpsShellContractTest do
              "hooks: { CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation }"
 
     refute File.read!(@host_js) =~ "const CommandPalette ="
+
+    # The catalog iframe registers the same hooks as app.js (minus the colocated hooks, none of which exist).
+    storybook_js = File.read!(@storybook_js)
+
+    assert Regex.match?(
+             ~r/import\s+\{\s*CommandPalette,\s*OpsNavDrawer,\s*OpsModal,\s*OpsRefreshButton,\s*OpsToast,\s*OpsTimestampCopy\s*\}\s+from\s+"\.\/ops_hooks"/,
+             storybook_js
+           )
+
+    assert Regex.match?(
+             ~r/import\s+\{\s*OpsSearchDraft,\s*OpsHelpAnchor,\s*OpsFieldValidation\s*\}\s+from\s+"\.\/ops_search"/,
+             storybook_js
+           )
+
+    app_hooks = hook_names(File.read!(@app_js), "hooks") -- ["...colocatedHooks"]
+    storybook_hooks = hook_names(storybook_js, "Hooks")
+
+    assert length(storybook_hooks) == 9
+    assert Enum.sort(storybook_hooks) == Enum.sort(app_hooks)
+  end
+
+  test "the tracked storybook bundle carries the hooks and the theme hook" do
+    # esbuild is dev-only, so the test env cannot rebuild the bundle; this is the cheap freshness
+    # check, and the render-all ?hash= assertion proves the bundle is served.
+    bundle = File.read!(@storybook_bundle)
+
+    assert bundle =~ "window.storybook"
+    assert bundle =~ "data-theme"
+
+    for hook <- hook_names(File.read!(@storybook_js), "Hooks") do
+      assert bundle =~ hook, "bundle is missing hook #{hook}"
+    end
+  end
+
+  defp hook_names(source, key) do
+    [_, body] = Regex.run(~r/#{key}:\s*\{([^}]*)\}/, source)
+    body |> String.split(",") |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
   end
 
   test "timestamp copy waits for browser outcome and uses shared info timeout" do

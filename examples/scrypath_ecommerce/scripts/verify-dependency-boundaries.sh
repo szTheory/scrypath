@@ -655,7 +655,13 @@ COMPOSE
 
     for project_dir in /app/scrypath_ops /app/examples/scrypath_ecommerce; do
       deps_output="$(docker compose -p "$project" -f "$compose_file" exec -T web sh -lc "cd '$project_dir' && MIX_ENV='$environment' mix deps")"
-      for forbidden_dep in esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller; do
+      forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"
+      # The catalog dependencies are dev and test deps of scrypath_ops, so the test image's /app/scrypath_ops
+      # legitimately lists them. The prod image and the host project, in both images, must never include them.
+      if [[ "$environment" == "prod" || "$project_dir" == "/app/examples/scrypath_ecommerce" ]]; then
+        forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"
+      fi
+      for forbidden_dep in $forbidden_deps; do
         if printf '%s\n' "$deps_output" | grep -Eq "^[*] $forbidden_dep[[:space:]]"; then
           fail "$environment dependency graph in $project_dir includes forbidden $forbidden_dep"
         fi
@@ -688,7 +694,7 @@ for {app, label} <- [{:scrypath_ops, "ops"}, {:scrypath_ecommerce, "host"}] do
   IO.puts("DEPENDENCY_BOUNDARY_APP label=#{label} env=#{environment} required=#{inspect(applications)} optional=#{inspect(optional)} code=#{code_path}")
 end
 
-forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller]
+forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller, PhoenixStorybook, MDEx]
 loaded = Enum.filter(forbidden_modules, &Code.ensure_loaded?/1)
 loaded == [] || raise "runtime loaded builder/diagnostic modules: #{inspect(loaded)}"
 
@@ -788,6 +794,18 @@ ELIXIR
       fail "$environment standalone Ops page omitted its built CSS route"
     grep -Fq 'src="/assets/js/app.js' "$artifact_dir/targets/$environment/ops-health.html" ||
       fail "$environment standalone Ops page omitted its built JS route"
+    # The component catalog is a dev and test tool: neither image may serve it, on the host or on standalone Ops.
+    # The test image compiles with PHX_SERVER=true, which turns the catalog route flag off.
+    for catalog_target in "host|$base_url" "ops|$ops_base_url"; do
+      catalog_name="${catalog_target%%|*}"
+      catalog_url="${catalog_target#*|}"
+      catalog_status="$(curl --silent --show-error --output /dev/null --max-time 30 \
+        --write-out '%{http_code}' "$catalog_url/storybook")" ||
+        fail "$environment request to the $catalog_name /storybook route failed before receiving a status"
+      [[ "$catalog_status" == "404" ]] ||
+        fail "$environment $catalog_name served /storybook with HTTP $catalog_status; the component catalog must be absent from runtime images"
+      printf 'DEPENDENCY_BOUNDARY_CATALOG env=%s target=%s status=404\n' "$environment" "$catalog_name"
+    done
     check_served_asset "$ops_base_url/assets/js/app.js?v=$(sha256_file "$artifact_dir/targets/$environment/scrypath_ops/priv/static/assets/js/app.js")" \
       "$artifact_dir/targets/$environment/scrypath_ops/priv/static/assets/js/app.js" javascript
     check_served_asset "$ops_base_url/assets/css/app.css?v=$(sha256_file "$artifact_dir/targets/$environment/scrypath_ops/priv/static/assets/css/app.css")" \

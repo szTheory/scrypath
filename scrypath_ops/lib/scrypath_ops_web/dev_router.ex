@@ -24,6 +24,7 @@ defmodule ScrypathOpsWeb.DevRouter do
   use ScrypathOpsWeb, :router
 
   require ScrypathOpsWeb.OptionalDevRoutes
+  require ScrypathOpsWeb.OptionalCatalogRoutes
 
   import ScrypathOpsWeb.Router, only: [scrypath_ops_routes: 2]
 
@@ -72,4 +73,7 @@ defmodule ScrypathOpsWeb.DevRouter do
   ScrypathOpsWeb.OptionalDevRoutes.dashboard_routes(
     Application.compile_env(:scrypath_ops, :dev_routes)
   )
+
+  # Mount the component catalog (dev and test only; the macro expands to :ok everywhere else).
+  ScrypathOpsWeb.OptionalCatalogRoutes.catalog_routes()
 end

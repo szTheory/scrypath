@@ -39,7 +39,8 @@ defmodule ScrypathOps.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib", "catalog/lib", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "catalog/lib"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Specifies your project dependencies.
@@ -60,6 +61,7 @@ defmodule ScrypathOps.MixProject do
       {:phoenix_live_dashboard, "~> 0.9.1", only: :dev, optional: true},
       {:esbuild, "~> 0.10", only: :dev, runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.3", only: :dev, runtime: Mix.env() == :dev},
+      {:phoenix_storybook, "~> 1.5", only: [:dev, :test]},
       # Hex package avoids git-based heroicons fetch (GitHub credential helpers can block `mix deps.get` in some environments).
       {:heroicons, "~> 0.5.7", app: false},
       {:req, "~> 0.6.1 or ~> 0.7"},

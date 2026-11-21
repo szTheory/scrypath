@@ -1,19 +1,21 @@
 ---
 gsd_state_version: "1.0"
-milestone: v1.48
-milestone_name: Discovery and onboarding
-status: Awaiting next milestone
-stopped_at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone
-last_updated: "2026-11-21T15:46:20.236Z"
+milestone: v1.49
+milestone_name: Catalog foundation
+current_phase: 195
+current_phase_name: Mount and prove
+status: executing
+stopped_at: Completed 195-02-PLAN.md
+last_updated: "2026-11-21T21:47:33.695Z"
 last_activity: 2026-11-21
-last_activity_desc: Milestone v1.48 completed and archived
-state_head: 3f19b00a3652e8c24df4c2e667b9df75d1427074
+last_activity_desc: Plan 195-02 complete
+state_head: ccda4080c5111af1816aa4233320ccb58a697807
 progress:
-  total_phases: 3
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 67
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 15
+  completed_plans: 2
+  percent: 13
 ---
 
 # Project State
@@ -23,20 +25,27 @@ progress:
 See [PROJECT](PROJECT.md), updated 2026-11-21.
 
 **Core value:** Make search indexing feel native to Ecto and ergonomic for Phoenix teams without hiding the operational realities of keeping search in sync.
-**Current focus:** No active milestone. v1.48 Discovery and onboarding is archived (2026-11-21); the next milestone is chosen from the prepared options in [research/v1.49-prep/](research/v1.49-prep/) and [ROLLING-ROADMAP](reference/ROLLING-ROADMAP.md).
+**Current focus:** Phase 195 — Mount and prove
 
 ## Current Position
 
-Phase: Milestone v1.48 complete
-Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-11-21 — Milestone v1.48 completed and archived
+Phase: 195 (Mount and prove) — EXECUTING
+Plan: 3 of 3
+Status: Ready to execute
+Last activity: 2026-11-21 — Phase 195 execution started
+
 
 ## Performance Metrics
 
 **v1.46 plans:** 16 across Phases 186 (3), 187 (11) and 188 (2).
 **v1.47 plans:** 8 done (188.1: 1, 189: 3, 190: 2, 191: 2).
 **v1.48 plans:** 6 done (192: 4, 193: 2).
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 195 P01 | 12 min | 3 tasks | 16 files |
+| Phase 195 P02 | 13 min | 3 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -51,6 +60,10 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - Gap pass 2026-11-20 ([research/v1.47-gap-pass/](research/v1.47-gap-pass/)): the three website hexes shared with `brandbook/` join the deny set in Phase 191; the Cancel-focus assertion lives in the required-lane `operator.spec.ts`; the kickoff chore is tracked as Phase 188.1 (CI-01); the picker light-only fallback is pre-decided in SITE-02.
 - Ops stays System-default for theme; light default applies to website, README and docs only. Bricolage is not shipped in ops. No type-scale reflow.
 - No human UAT: every success criterion is an executable check. Hex releases need the maintainer's explicit yes. Green PRs are squash-merged without asking (standing instruction 2026-11-19, see AGENTS.md).
+- [Phase 195]: Catalog route flag is read with Application.get_env at expansion, not Macro.expand of compile_env, and the guard sits outside the quote — Macro.expand of a compile_env call yields a call AST that is always truthy, which would make the guard vacuous
+- [Phase 195]: Test-env catalog_routes flag is off when PHX_SERVER=true so the Docker runtime_test image never mounts /storybook — That image binds 0.0.0.0; the flag must imply a loopback bind
+- [Phase 195]: Planted storybook endpoint is a full request pipeline (Plug.Parsers and render_errors), and render-all crash results carry their cause — Without a parser the query string is dropped and every plant renders the first variation with no theme; without render_errors every crash reads as a missing error view. Pinning the cause per plant keeps a mistyped route from passing as the planted failure.
+- [Phase 195]: Fifth primitive story is ops_sync_status, not the form-field class; the form-field story moves to Phase 197's patterns tier — ops_field is mostly phx-hook behavior that a server-side render-all cannot exercise, so a story for it would claim more than its test proves.
 
 ### Pending Todos
 
@@ -83,9 +96,10 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-20
-Stopped at: Milestone v1.48 archived; awaiting the maintainer's choice of the next milestone.
-Acting next: the maintainer picks the next milestone from the v1.49 prep notes; a Hex release carrying the Phase 193 regroup needs the maintainer's explicit yes. Phase 192 shipped as PR #160 and Hex 0.3.20 was published 2026-11-21.
+Last session: 2026-11-21T21:47:33.673Z
+Stopped at: Completed 195-02-PLAN.md
+Acting next: execute Plan 195-03 (full local lane mirror, the phase PR and hosted cold and warm timings, GO-NO-GO.md, the ADR 0001 amendment). Plan 195-03 owns the push, the hosted timings and the go/no-go; a Hex release still needs the maintainer's explicit yes.
+Resume file: None
 
 ## Operator Next Steps
 

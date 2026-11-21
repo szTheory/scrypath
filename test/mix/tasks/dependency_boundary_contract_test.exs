@@ -36,6 +36,8 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
   @mailbox_source "scrypath_ops/lib/scrypath_ops/mailer.ex"
   @mailbox_test "scrypath_ops/test/scrypath_ops/swoosh_api_client_req_test.exs"
   @dev_router "scrypath_ops/lib/scrypath_ops_web/dev_router.ex"
+  @catalog_routes_source "scrypath_ops/lib/scrypath_ops_web/optional_catalog_routes.ex"
+  @boundary_script "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
   @telemetry_source "scrypath_ops/lib/scrypath_ops_web/telemetry.ex"
   @application_source "scrypath_ops/lib/scrypath_ops/application.ex"
   @endpoint_source "scrypath_ops/lib/scrypath_ops_web/endpoint.ex"
@@ -612,10 +614,11 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     assert Enum.all?(hex_mounts, &String.contains?(&1, "sharing=locked"))
   end
 
-  # Static boundary checks for the v1.47 catalog. They pass vacuously until v1.47 adds the dependency,
-  # which is intended: the planted cases below prove each check can fail. This is gate 4 of the v1.46
-  # required-gate budget (see "Required-gate budget" in CONTRIBUTING.md).
-  describe "storybook boundary (v1.47 catalog)" do
+  # Static boundary checks for the catalog. The dependency is present since v1.49 Phase 195, so every
+  # check here is real, and each one has a planted failing case proving it can fail. This is the existing
+  # ledger row "Storybook boundary" (gate 4 of the v1.46 required-gate budget, see "Required-gate budget"
+  # in CONTRIBUTING.md), not a new gate.
+  describe "storybook boundary (catalog, v1.49 Phase 195)" do
     test "root lib never mentions the storybook" do
       paths = Path.wildcard("lib/**/*.{ex,exs}")
       assert paths != [], "expected root lib sources to scan"
@@ -678,11 +681,100 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
       absent = manifest.("absent.exs", ~s({:jason, "~> 1.4"}))
 
+      wrong_requirement =
+        manifest.(
+          "wrong_requirement.exs",
+          ~s({:phoenix_storybook, "~> 1.4", only: [:dev, :test]})
+        )
+
       assert storybook_dependency_violation(unrestricted) =~ "only: [:dev, :test]"
       assert storybook_dependency_violation(dev_only) =~ "only: [:dev, :test]"
       assert storybook_dependency_violation(all_envs) =~ "only: [:dev, :test]"
+      assert storybook_dependency_violation(wrong_requirement) =~ "~> 1.5"
       assert storybook_dependency_violation(compliant) == nil
-      assert storybook_dependency_violation(absent) == nil
+      assert storybook_dependency_violation(absent) =~ "must declare"
+    end
+
+    test "catalog route guard sits outside the quote and fails when moved, deleted or flag-blind" do
+      ast = read_ast!(@catalog_routes_source)
+
+      assert catalog_guard_violation(ast) == nil
+
+      for mutation <- [:delete_guard, :move_guard_inside_quote, :drop_flag_read] do
+        mutated = mutate_catalog_guard(ast, mutation)
+
+        assert mutated != ast, "mutation #{mutation} left the AST unchanged"
+
+        assert catalog_guard_violation(mutated) =~ "route guard",
+               "mutation #{mutation} must be reported as a route guard violation"
+      end
+    end
+
+    test "the dev router mounts the catalog only through the guarded macro" do
+      dev_router_ast = read_ast!(@dev_router)
+
+      assert has_node?(dev_router_ast, fn node ->
+               remote_call?(
+                 node,
+                 [:ScrypathOpsWeb, :OptionalCatalogRoutes],
+                 :catalog_routes,
+                 fn args -> args == [] end
+               )
+             end),
+             "#{@dev_router}: the catalog mount must go through OptionalCatalogRoutes.catalog_routes()"
+
+      refute has_node?(dev_router_ast, fn
+               {:live_storybook, _, _} -> true
+               {:__aliases__, _, [:PhoenixStorybook | _]} -> true
+               _ -> false
+             end),
+             "#{@dev_router}: the router must not name the storybook itself; only the guarded macro does"
+    end
+
+    test "the Docker boundary script forbids the catalog in prod and host graphs and requires a 404" do
+      script = File.read!(@boundary_script)
+
+      assert storybook_script_violations(script) == []
+
+      {output, status} = System.cmd("bash", ["-n", @boundary_script], stderr_to_stdout: true)
+      assert status == 0, "#{@boundary_script} has a shell syntax error: #{output}"
+
+      # Planted: each edit below removes one thing the script must prove, so each must be reported.
+      mutants = [
+        {~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"),
+         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex)},
+        {~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
+         ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller phoenix_storybook mdex mdex_native")},
+        {", PhoenixStorybook, MDEx]", ", PhoenixStorybook]"},
+        {~s("host|$base_url" "ops|$ops_base_url"), ~s("host|$base_url")}
+      ]
+
+      for {from, to} <- mutants do
+        mutated = String.replace(script, from, to)
+        assert mutated != script, "planted edit found nothing to change: #{from}"
+
+        assert storybook_script_violations(mutated) != [],
+               "the script check accepted a planted edit: #{from} -> #{to}"
+      end
+    end
+
+    test "catalog flag is off whenever the test endpoint is not loopback" do
+      test_unset = read_catalog_bind!("scrypath_ops/config/test.exs", :test, nil)
+      test_served = read_catalog_bind!("scrypath_ops/config/test.exs", :test, "true")
+      dev = read_catalog_bind!("scrypath_ops/config/dev.exs", :dev, nil)
+
+      assert test_unset == {{127, 0, 0, 1}, true}
+      assert test_served == {{0, 0, 0, 0}, false}
+      assert dev == {{127, 0, 0, 1}, true}
+
+      for bind <- [test_unset, test_served, dev] do
+        assert catalog_bind_violation(bind) == nil
+      end
+
+      # Planted: a non-loopback bind with the catalog on, and an unset bind, are violations.
+      assert catalog_bind_violation({{0, 0, 0, 0}, true}) =~ "loopback"
+      assert catalog_bind_violation({nil, true}) =~ "loopback"
+      assert catalog_bind_violation({{0, 0, 0, 0}, false}) == nil
     end
   end
 
@@ -692,14 +784,154 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
 
   defp storybook_dependency_violation(manifest_path) do
     if :phoenix_storybook in direct_dependency_names!(manifest_path) do
+      requirement = direct_dependency_requirement!(manifest_path, :phoenix_storybook)
       only = manifest_path |> dependency_options!(:phoenix_storybook) |> Keyword.get(:only)
 
-      if Enum.sort(List.wrap(only)) == [:dev, :test] do
-        nil
-      else
-        "#{manifest_path}: the storybook dependency must declare only: [:dev, :test], got #{inspect(only)}"
+      cond do
+        requirement != "~> 1.5" ->
+          "#{manifest_path}: the storybook dependency must require \"~> 1.5\", got #{inspect(requirement)}"
+
+        Enum.sort(List.wrap(only)) != [:dev, :test] ->
+          "#{manifest_path}: the storybook dependency must declare only: [:dev, :test], got #{inspect(only)}"
+
+        true ->
+          nil
       end
+    else
+      "#{manifest_path}: the manifest must declare {:phoenix_storybook, \"~> 1.5\", only: [:dev, :test]}"
     end
+  end
+
+  # The guard must be an `if` outside any `quote`, so it is read at router expansion. It must test both
+  # that the storybook router is loadable and the catalog flag, and its body must mount `live_storybook`.
+  defp catalog_guard_violation(ast) do
+    guard? = fn
+      {:if, _, [condition, clauses]} when is_list(clauses) ->
+        has_node?(condition, fn node ->
+          remote_call?(node, [:Code], :ensure_loaded?, fn args ->
+            alias_argument?(args, [:PhoenixStorybook, :Router])
+          end)
+        end) and has_node?(condition, &catalog_flag_read?/1) and
+          has_node?(clauses, fn
+            {:live_storybook, _, _} -> true
+            _ -> false
+          end)
+
+      _ ->
+        false
+    end
+
+    if has_node_outside_quote?(ast, guard?) do
+      nil
+    else
+      "#{@catalog_routes_source}: the route guard must be an if outside the quote that checks " <>
+        "Code.ensure_loaded?(PhoenixStorybook.Router) and the :catalog_routes flag around live_storybook"
+    end
+  end
+
+  defp catalog_flag_read?(node) do
+    Enum.any?([:get_env, :compile_env], fn function ->
+      remote_call?(node, [:Application], function, fn args ->
+        match?([:scrypath_ops, :catalog_routes | _], args)
+      end)
+    end)
+  end
+
+  # Quotes are pruned, so nothing inside a quote is ever a candidate. The predicate sees each remaining
+  # node as the walker receives it, before its children are walked, so a candidate `if` keeps its body.
+  defp has_node_outside_quote?(ast, predicate) do
+    {_ast, found?} =
+      Macro.prewalk(ast, false, fn
+        {:quote, _, _}, found? -> {:pruned, found?}
+        node, found? -> {node, found? or predicate.(node)}
+      end)
+
+    found?
+  end
+
+  defp mutate_catalog_guard(ast, mutation) do
+    {mutated, changes} =
+      Macro.postwalk(ast, 0, fn
+        {:if, _, [_condition, clauses]}, changes
+        when is_list(clauses) and mutation == :delete_guard ->
+          {Keyword.fetch!(clauses, :do), changes + 1}
+
+        {:if, _, [_condition, clauses]} = node, changes
+        when is_list(clauses) and mutation == :move_guard_inside_quote ->
+          {{:quote, [], [[do: node]]}, changes + 1}
+
+        {{:., _, [{:__aliases__, _, [:Application]}, :get_env]}, _,
+         [:scrypath_ops, :catalog_routes | _]},
+        changes
+        when mutation == :drop_flag_read ->
+          {true, changes + 1}
+
+        node, changes ->
+          {node, changes}
+      end)
+
+    if changes == 0, do: flunk("mutation #{mutation} found nothing to change"), else: mutated
+  end
+
+  # Text-level check of the Docker verify script, the cheap local mirror of the 15 to 20 minute
+  # ecommerce-mounted lane. The catalog names are forbidden for the prod image and for the host project in
+  # both images; in the test image Ops legitimately has them, so they must not join the shared list.
+  defp storybook_script_violations(script) do
+    shared = ~r/^\s*forbidden_deps="([^"$]*)"$/m
+
+    conditional =
+      ~r/if \[\[ "\$environment" == "prod" \|\| "\$project_dir" == "\/app\/examples\/scrypath_ecommerce" \]\]; then\n\s*forbidden_deps="\$forbidden_deps phoenix_storybook mdex mdex_native"\n\s*fi/
+
+    modules = ~r/^\s*forbidden_modules = \[([^\]]*)\]$/m
+
+    [
+      {not Regex.match?(conditional, script),
+       "the prod-or-host condition must add phoenix_storybook mdex mdex_native to the forbidden dependencies"},
+      {not (script =~ "for forbidden_dep in $forbidden_deps; do"),
+       "the dependency loop must iterate the env-aware forbidden_deps list"},
+      {case Regex.run(shared, script) do
+         [_, names] -> names =~ ~r/phoenix_storybook|mdex/
+         nil -> true
+       end, "the shared forbidden list must exist and must not contain the catalog dependencies"},
+      {case Regex.run(modules, script) do
+         [_, names] -> not (names =~ "PhoenixStorybook" and names =~ "MDEx")
+         nil -> true
+       end, "the runtime probe must forbid the PhoenixStorybook and MDEx modules"},
+      {not (script =~ ~s(for catalog_target in "host|$base_url" "ops|$ops_base_url"; do)),
+       "the /storybook 404 probe must cover both the host and standalone Ops"},
+      {not (script =~ ~s([[ "$catalog_status" == "404" ]])),
+       "the /storybook probe must require HTTP 404"}
+    ]
+    |> Enum.filter(&elem(&1, 0))
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  defp catalog_bind_violation({ip, flag}) do
+    loopback? = ip in [{127, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 0, 1}]
+
+    if flag == true and not loopback? do
+      "the catalog flag is on while the endpoint binds #{inspect(ip)}; it must stay loopback-only"
+    end
+  end
+
+  # Reads a config file in a subprocess so PHX_SERVER can differ per call while this module stays async.
+  defp read_catalog_bind!(config_file, env, phx_server) do
+    program =
+      ~s|c = Config.Reader.read!("#{config_file}", env: :#{env})[:scrypath_ops]; | <>
+        "IO.puts(inspect({c[ScrypathOpsWeb.Endpoint][:http][:ip], c[:catalog_routes]}))"
+
+    {output, status} =
+      System.cmd(System.find_executable("elixir"), ["-e", program],
+        env: [{"PHX_SERVER", phx_server}],
+        stderr_to_stdout: true
+      )
+
+    assert status == 0, "#{config_file}: config read failed: #{output}"
+
+    {bind, _binding} =
+      output |> String.split("\n", trim: true) |> List.last() |> Code.eval_string()
+
+    bind
   end
 
   defp markdown_table_rows!(path, heading) do
