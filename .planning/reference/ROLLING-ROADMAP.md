@@ -1,4 +1,4 @@
-# Rolling roadmap (post-v1.47 proposal 2026-11-21 below; approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
+# Rolling roadmap (post-v1.47 proposal 2026-11-21, adopted: v1.48 Discovery and onboarding open; approved 2026-10-24; re-plan adopted 2026-11-18; post-v1.46 proposal 2026-11-19 below; v1.47 opened 2026-11-20 with a gap pass, see research/v1.47-gap-pass/)
 
 The maintainer approved this order and these working rules after a research fan-out and a grilling round. Pick up the first unfinished item. `STATE.md` records progress.
 
@@ -16,7 +16,7 @@ The maintainer approved this order and these working rules after a research fan-
 - Tests and CI are still the proof: no manual UAT. Subjective checks become executable ones, and anything genuinely subjective goes to the maintainer as a decision rather than a UAT step.
 - Prefer copying a small helper over adding a dependency.
 
-## Post-v1.47 proposal (2026-11-21, prepared upstream; the maintainer chooses)
+## Post-v1.47 proposal (2026-11-21, prepared upstream; ADOPTED 2026-11-21: housekeeping merged as #157 and #158, v1.48 Discovery and onboarding opened exactly as recommended, catalog is v1.49)
 
 v1.47 Brand completion shipped (Phases 188.1 and 189-191, PRs #149, #152, #153, #154; [audit](../milestones/v1.47-MILESTONE-AUDIT.md) `tech_debt`, no unsatisfied requirement; website live). The slot decision the maintainer left open is the discovery and onboarding milestone versus the catalog milestone. Four research notes with lenses, primary sources and an adversarial pass are in [research/v1.48-prep/](../research/v1.48-prep/): A discovery and onboarding, B catalog readiness, C sequencing, release and CI, D adversarial review and synthesis. Where the notes conflict, D is the tie-breaker.
 
