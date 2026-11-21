@@ -881,6 +881,170 @@ defmodule Mix.Tasks.Verify.WorkflowWiringTest do
     end
   end
 
+  describe "CI-03 compatibility matrix path classifier wiring" do
+    @compat_script "scripts/ci/compat_path_classifier.cjs"
+    @compat_node_test "scripts/ci/compat_path_classifier.test.cjs"
+    @compat_relevant_literal ~S"^(lib/|dev/|test/|config/|priv/|scripts/|mix\.exs$|mix\.lock$|\.github/workflows/ci\.yml$)"
+    @compat_if "if: ${{ !cancelled() && (needs.compat-path.result != 'success' || needs.compat-path.outputs.run != 'false') }}"
+
+    test "compat-path is a fail-open classifier job, not a gate" do
+      job = workflow_job_block(File.read!(@ci_yml), "compat-path")
+
+      assert job =~ "fetch-depth: 0"
+      assert job =~ ~s(outputs: {run: "${{ steps.check.outputs.run }}"})
+      assert job =~ "timeout-minutes: 5"
+
+      check = workflow_step_block(job, "\n      - id: check\n")
+
+      assert check =~
+               ~s(run: node scripts/ci/compat_path_classifier.cjs --output "$GITHUB_OUTPUT")
+
+      # No name, so no new context at all; and no `if:`, so the classifier itself always reports.
+      refute job =~ "(required)"
+      refute job =~ "(path-scoped)"
+      refute job =~ ~r/^    name: /m
+      refute job =~ ~r/^\s+if: /m
+    end
+
+    test "compatibility skips only on an explicit run=false from a successful classifier" do
+      ci = File.read!(@ci_yml)
+      compat = workflow_job_block(ci, "compatibility")
+
+      # The name stays stable, and the lane stays advisory and four cells wide.
+      assert compat =~ "    name: compatibility (advisory)\n    needs: compat-path\n"
+      assert compat =~ "\n    continue-on-error: true\n"
+      assert compat =~ "\n    " <> @compat_if <> "\n"
+      assert length(Regex.scan(~r/\{elixir: "[0-9.]+", otp: "[0-9.]+"\}/, compat)) == 4
+      assert compat =~ "run: mix verify.compatibility"
+
+      # The consumer compares with != 'false' so a missing or empty output still runs the matrix.
+      refute ci =~ "compat-path.outputs.run == 'true'"
+
+      consumers =
+        ci
+        |> String.split("\n")
+        |> Enum.filter(&String.contains?(&1, "needs.compat-path.outputs.run"))
+
+      assert length(consumers) == 1
+
+      assert Enum.all?(
+               consumers,
+               &String.contains?(&1, "needs.compat-path.outputs.run != 'false'")
+             )
+
+      # Nothing required waits on the classifier or on the matrix.
+      for job_name <- ~w(core package repository-contracts backend ecommerce-mounted ops-ui) do
+        job = workflow_job_block(ci, job_name)
+        refute job =~ "compat-path", "#{job_name} must not depend on the compatibility classifier"
+        refute job =~ ~r/needs:.*\bcompatibility\b/
+      end
+
+      closeout = workflow_job_block(ci, "closeout-attestation")
+      refute closeout =~ "compat"
+    end
+
+    test "a planted lib/ diff runs the matrix and a website-only diff skips it" do
+      assert_runs!(classify_paths(["lib/scrypath.ex"], "pull_request", @compat_script), "lib/")
+
+      assert_skips!(
+        classify_paths(["website/index.html"], "pull_request", @compat_script),
+        "website/"
+      )
+
+      assert_skips!(
+        classify_paths(
+          ["website/index.html", ".planning/STATE.md", "docs/guide.md", "README.md"],
+          "pull_request",
+          @compat_script
+        ),
+        "website, planning, docs and root markdown"
+      )
+
+      assert_runs!(
+        classify_paths(["website/index.html", "lib/x.ex"], "pull_request", @compat_script),
+        "website beside lib/"
+      )
+    end
+
+    test "each path that can change what the matrix proves runs it, and other workflows do not" do
+      for relevant <- ~w(
+            lib/x.ex dev/mix/tasks/x.ex test/x_test.exs test/support/x.ex config/config.exs
+            priv/x scripts/ci/x.cjs scripts/ci_monitor.cjs mix.exs mix.lock .github/workflows/ci.yml
+          ) do
+        assert_runs!(classify_paths([relevant], "pull_request", @compat_script), relevant)
+      end
+
+      for irrelevant <-
+            ~w(.github/workflows/website.yml .github/dependabot.yml scrypath_ops/lib/x.ex examples/x.ex brand/x guides/x.md) do
+        assert_skips!(classify_paths([irrelevant], "pull_request", @compat_script), irrelevant)
+      end
+    end
+
+    test "an empty diff, an unreadable diff and non-pull-request events run the matrix" do
+      assert_runs!(classify_paths([], "pull_request", @compat_script))
+
+      dir = classifier_tmp_dir()
+
+      assert_runs!(
+        run_classifier_file(
+          Path.join(dir, "missing-paths-file"),
+          "pull_request",
+          dir,
+          @compat_script
+        )
+      )
+
+      for event <- ~w(push schedule workflow_dispatch merge_group) do
+        assert_runs!(classify_paths(["website/index.html"], event, @compat_script), event)
+      end
+    end
+
+    test "the planted-diff assertion has teeth: a narrowed relevant list is caught" do
+      source = File.read!(@compat_script)
+
+      assert source =~ @compat_relevant_literal,
+             "the classifier must keep the verbatim CI-03 relevant-path literal"
+
+      narrowed = String.replace(source, "^(lib/|", "^(")
+      assert narrowed != source
+
+      dir = classifier_tmp_dir()
+      pristine_copy = Path.join(dir, "pristine_compat_classifier.cjs")
+      narrowed_copy = Path.join(dir, "narrowed_compat_classifier.cjs")
+      File.write!(pristine_copy, source)
+      File.write!(narrowed_copy, narrowed)
+
+      # The copies need the sibling module the real script requires.
+      File.cp!(
+        "scripts/ci/ecommerce_path_classifier.cjs",
+        Path.join(dir, "ecommerce_path_classifier.cjs")
+      )
+
+      planted = ["website/index.html", "lib/x.ex"]
+
+      # Control: an untouched copy of the real script runs the matrix for the planted diff.
+      assert_runs!(classify_paths(planted, "pull_request", pristine_copy))
+
+      # The narrowed copy skips it, and the assertion refuses that.
+      assert_skips!(classify_paths(planted, "pull_request", narrowed_copy))
+
+      assert_raise ExUnit.AssertionError, fn ->
+        assert_runs!(classify_paths(planted, "pull_request", narrowed_copy))
+      end
+    end
+
+    test "the classifier's own node test executes inside the contract lane" do
+      {output, status} =
+        System.cmd("node", ["--test", "--test-reporter=tap", @compat_node_test],
+          stderr_to_stdout: true
+        )
+
+      assert status == 0, output
+      assert output =~ ~r/# tests [1-9]\d*/
+      assert output =~ "# fail 0"
+    end
+  end
+
   describe "DEP-07 upload-artifact is pinned by pattern" do
     @dependabot_132_sha "cf430e030ddbb5b0abf93d22962f4752f3646cd9"
 

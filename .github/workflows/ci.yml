@@ -300,8 +300,29 @@ jobs:
           postgres_ids="$(docker ps -aq --filter ancestor=postgres:16-alpine)"
           if [ -n "$postgres_ids" ]; then docker logs "$postgres_ids" || true; fi
 
+  # Not a gate: decides whether the advisory compatibility matrix below can be skipped. Same shape
+  # as ecommerce-path, and it fails open the same way: only a pull_request with a non-empty diff in
+  # which NO path is under lib/, dev/, test/, config/, priv/ or scripts/, or is mix.exs, mix.lock or
+  # this workflow, reports run=false (see scripts/ci/compat_path_classifier.cjs). Every push,
+  # schedule, dispatch and merge-group event, an empty or uncomputable diff, and any error report
+  # run=true. A new top-level repository path must be classified in the script's node test.
+  compat-path:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs: {run: "${{ steps.check.outputs.run }}"}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {fetch-depth: 0}
+      - id: check
+        run: node scripts/ci/compat_path_classifier.cjs --output "$GITHUB_OUTPUT"
+
   compatibility:
     name: compatibility (advisory)
+    needs: compat-path
+    # Advisory lane, not a required context. Skip ONLY on an explicit run=false from a successful
+    # classifier; a failed or timed-out classifier and a missing output run the matrix (hence
+    # != 'false', never == 'true').
+    if: ${{ !cancelled() && (needs.compat-path.result != 'success' || needs.compat-path.outputs.run != 'false') }}
     runs-on: ubuntu-24.04
     continue-on-error: true
     env: {MIX_ENV: test, MIX_TARGET: host, BEAM_CACHE_PROFILE: root-test}
