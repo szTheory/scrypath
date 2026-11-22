@@ -1,8 +1,8 @@
 ---
 phase: 197-pilot-job-03-unhealthy-verdict-to-verified-retry
-verified: 2026-11-22T17:37:00Z
-status: human_needed
-score: 8/9 must-haves verified
+verified: 2026-11-22T18:12:00Z
+status: passed
+score: 9/9 must-haves verified
 covered_files:
   - ".planning/phases/197-pilot-job-03-unhealthy-verdict-to-verified-retry/197-01-PLAN.md"
   - ".planning/phases/197-pilot-job-03-unhealthy-verdict-to-verified-retry/197-01-SUMMARY.md"
@@ -22,12 +22,14 @@ covered_files:
   - "examples/scrypath_ecommerce/e2e/ui-review.mjs"
   - "examples/scrypath_ecommerce/e2e/ui-review.selftest.mjs"
   - "examples/scrypath_ecommerce/scripts/verify-dependency-boundaries.sh"
+  - "fixtures/scrypath_fixtures/lib/scrypath_fixtures/failures.ex"
   - "fixtures/scrypath_fixtures/lib/scrypath_fixtures/shopadelic/product.ex"
   - "scrypath_ops/assets/js/storybook.js"
   - "scrypath_ops/catalog/lib/mix/tasks/scrypath_ops.catalog.serve.ex"
   - "scrypath_ops/catalog/lib/scrypath_ops/catalog/endpoint.ex"
   - "scrypath_ops/catalog/lib/scrypath_ops/catalog/router.ex"
   - "scrypath_ops/config/dev.exs"
+  - "scrypath_ops/config/test.exs"
   - "scrypath_ops/lib/scrypath_ops/failed_sync_view.ex"
   - "scrypath_ops/lib/scrypath_ops/failed_sync_view/row.ex"
   - "scrypath_ops/lib/scrypath_ops/posture.ex"
@@ -60,7 +62,9 @@ covered_files:
   - "scrypath_ops/storybook/surfaces/failed_sync.story.exs"
   - "scrypath_ops/storybook/surfaces/search_health.story.exs"
   - "scrypath_ops/storybook/welcome.story.exs"
+  - "scrypath_ops/test/scrypath_ops/fixtures_recordings_test.exs"
   - "scrypath_ops/test/scrypath_ops_web/catalog_contract_test.exs"
+  - "scrypath_ops/test/scrypath_ops_web/catalog_endpoint_test.exs"
   - "scrypath_ops/test/scrypath_ops_web/design_tokens_contract_test.exs"
   - "scrypath_ops/test/scrypath_ops_web/live/catalog_journey_test.exs"
   - "scrypath_ops/test/scrypath_ops_web/live/failed_sync_live_test.exs"
@@ -76,36 +80,32 @@ covered_files:
   - "test/release/ops_dependency_boundary_test.exs"
   - "test/release/shipped_docs_contract_test.exs"
   - "test/support/release/shipped_docs.ex"
-covered_digest: "v4:sha256:e90947a9ad7aab48a7d968dd2002584d9bf11a589031bacdd51958528f1753da"
+covered_digest: "v4:sha256:aa027784577abd3fc3711b29d4f5ce3d363fb6a43f1106bf98a85485cec8bb85"
 behavior_unverified: 0
 overrides_applied: 0
-coincidental_reliance_items:
-  - truth: "The seeded storybook is stable across restarts (identical canonical iframe documents), the recorded proof for PILOT-06"
-    reason: incidental-ordering
-    harden: "fixtures/scrypath_fixtures/lib/scrypath_fixtures/failures.ex:247 builds the Oban error text with inspect/1 over a struct that holds the atom-keyed map %{task_uid: 908, index_uid: \"shopadelic_product\"}. A runtime-built small map prints its keys in atom-table order, which depends on module load order, and nothing enforces that order. Observed: two boots of the same code with different request order printed the two keys in opposite order; every other byte (data, frozen time, ids, counts) was identical. Build the text from ordered data (a literal, or a sorted rendering) or have the canonical form ignore it, then the restart proof is a guarantee and not a coincidence."
-human_verification:
-  - test: "Pause 1 look (PILOT-07). Open the storybook landing page (currently http://127.0.0.1:4013/storybook/welcome) and the nine linked screens in .planning/research/storybook-catalog/PAUSE-1-PHASE-197.md; paste feedback verbatim into the empty table there (storybook path, variation id, theme, viewport or 'unknown', kind, triage)."
-    expected: "The feedback table has rows, or the maintainer replies 'ok'; the feedback sizes Phase 198 as cut, shrink or run (recommendation in the note: cut)."
-    why_human: "Whether the screens look and read right is subjective and the feedback is the maintainer's own words. The phase artifacts define this stop (ROADMAP 'Gate (Pause 1)'); no automated check can produce it, and nothing here claims the design is approved."
-  - test: "Port decision (PILOT-06 and ROADMAP criterion 5 name 127.0.0.1:4003; the storybook serves on 4013 because another project's beam.smp (pid 22117, cwd /Users/jon/projects/fablebook/hosts/operator) holds 4003)."
-    expected: "Either the holder is freed and the storybook moves back to 4003 using the four steps in the storybook.deviation.move_back field of .planning/UI-PREVIEW.json, or the recorded decision is changed to 4013 (edit ROADMAP criterion 5 and PILOT-06)."
-    why_human: "Stopping another project's process is outside this repository's authority; only the maintainer can free the port or change the recorded decision. This verification treats the deviation as a recorded decision, not a gap."
-  - test: "Fixtures fold decision (the ADR 0002 exit rule, deliberately left to Pause 1 by 197-CONTEXT). Read the evidence and recommendation in the 'Fixtures fold' section of the Pause 1 note."
-    expected: "The maintainer chooses keep (recommended; revisit when the four phase173 host specs are ported or at v1.51) or fold into scrypath_ops."
-    why_human: "A recorded owner decision point that the context reserved for the maintainer; folding moves a top-level project and touches boundary tests, Docker stages and the classifier."
+requirements_not_closed:
+  - id: PILOT-06
+    state: "Done and verified except the literal port. The seeded storybook, its storybook block, the main@sha landing page, the two-surface ui:preflight and AGENTS.md are in place and checked. It serves on 127.0.0.1:4013, not the named 127.0.0.1:4003, because another project's process holds 4003; recorded deviation (197-05-PLAN must-have W5, UI-PREVIEW.json storybook.deviation, Pause 1 note). Not closed: stays Pending until the maintainer moves it back to 4003 or amends the requirement."
+  - id: PILOT-07
+    state: "The phase's part is done and verified: the Pause 1 packet exists and the run stopped. Not closed: the maintainer's verbatim feedback and the Phase 198 sizing do not exist yet (the feedback table is empty by design). Stays Pending until the maintainer replies."
+
 ---
 
 # Phase 197: Pilot JOB-03, unhealthy verdict to verified retry Verification Report
 
 **Phase Goal:** One job (Search health row, to Failed sync prefilled, to retry, to return) is covered by a mounted journey test, extracted into components shared with the story, shown in a stable seeded storybook, and held by one catalog contract test; then the run pauses for the maintainer's look.
-**Verified:** 2026-11-22T17:37:00Z
-**Status:** human_needed
+**Verified:** 2026-11-22T18:12:00Z (first-pass evidence 17:37Z, re-graded and changed files re-checked 18:12Z)
+**Status:** passed (re-graded from an earlier `human_needed`, see Grading note)
 **Re-verification:** No, initial verification
-**Checked at:** `origin/main` 6c22f463 (code PR #177 squash 33aac70f, docs PR #178 squash 6c22f463). The checkout is on `gsd/phase-197-closeout` at that commit.
+**Checked at:** first pass on `origin/main` 6c22f463 (code PR #177 squash 33aac70f, docs PR #178 squash 6c22f463). The branch `gsd/phase-197-closeout` (PR #179) has since added `48e887fe`, `8829e3c2`, `deec9a82` and `7cbe323e` on top of it; the changed code files were re-checked at `7cbe323e` (see Re-check at 7cbe323e) and the fingerprint covers them.
 
 ## Summary in plain language
 
-Everything that a machine can prove about this phase is proven, and most of it I re-ran myself instead of reading the summaries. The only open items are the ones the phase was designed to hand to the maintainer: the Pause 1 look and feedback (PILOT-07), the 4003 versus 4013 port decision (PILOT-06) and the fixtures fold decision. They are not manual UAT for correctness; they are the stop the roadmap defines. One advisory finding: the "stable across restarts" proof is true but not guaranteed (details under the coincidental-reliance item).
+Everything that a machine can prove about this phase is proven, and most of it I re-ran myself instead of reading the summaries. Status is `passed`. Two requirements are **not closed** and are described as such below: PILOT-06 (the storybook serves on 4013, not the named 4003) and PILOT-07 (the maintainer's Pause 1 feedback does not exist yet). Neither is verification debt: each has a recorded decision or a scheduled stop, with the executable evidence that exists for it, in "Recorded maintainer decisions and scheduled stop (not verification debt)".
+
+### Grading note
+
+My first report graded this phase `human_needed` because the maintainer's Pause 1 look, the port decision and the fixtures fold decision are things only the maintainer can do. The coordinator pointed out that the repo's rule (AGENTS.md "Verify phases": zero human verification, hand off only what is genuinely impossible to automate and record the exception; `test/scrypath/no_human_gates_contract_test.exs`) and this phase's own `197-VALIDATION.md` ("the maintainer's look ... is feedback, not a completion gate") treat them differently. I re-graded under that rule. **No evidence changed because of the re-grade**; the rule changed what counts as debt. I agree with the re-grade because none of the three is a truth I was unable to verify: the look is subjective feedback that the validation contract makes nonblocking, and the port and the fold are owner decisions that the plan and CONTEXT reserve for the maintainer. The strict alternative reading, if you want it, is `gaps_found` with one gap ("serves on 4013, not the literal 4003") whose only fix is outside this repository's authority (freeing a port held by another project).
 
 ## Goal Achievement
 
@@ -119,11 +119,12 @@ Everything that a machine can prove about this phase is proven, and most of it I
 | 3a | CONTEXT D3: Sync and index no longer crashes on an unresolvable recovery handle; closed "status unavailable" state with its own test | ✓ VERIFIED | `sync_drift_live_test.exs` "an unresolved recovery handle renders a closed unavailable state" (green at HEAD). Mutation check: that one test extracted into the pre-fix tree fails with `KeyError :replacement_job` at `sync_drift_live.ex:2182`, the recorded defect. `RecoveryView` makes evidence `nil` or a full map, so the half-empty shape cannot be built |
 | 4 | SC4 / PILOT-05: `catalog_contract_test.exs` carries render-all, route and component coverage (no hard-coded counts, literal `@no_story` with reasons, stale keys fail), no-identical-variations, copy lint and DOM hygiene, each with a planted failure; runs in the existing `ops-ui` job as ledger row 11 of 12; no new required context | ✓ VERIFIED | Ran it: 36 tests, 0 failures (with the journey, 40 tests, 0 failures, seed 0). No numeric count literals in the file. Mutation check in a scratch copy: removing the `HelpLive` `@no_story` entry fails the coverage test with `[uncovered: ScrypathOpsWeb.HelpLive]`. `CONTRIBUTING.md` has the row and `Budget used: 11 of 12.`; root `workflow_wiring_test.exs` passes (176 root contract tests, 0 failures). `verify.ops_ui` runs plain `mix test` in `scrypath_ops`, so the file rides the existing lane; no `.github/` change; `ops-ui (path-scoped)` is green on PR head `95d716ae` |
 | 5 | SC5 (tiers) / PILOT-04: stories in `primitives/ patterns/ areas/ surfaces/ jobs/`, JOB ids in paths, adopter as a variation dimension, both themes shown, descriptions claim no more than their linked test proves | ✓ VERIFIED | `find scrypath_ops/storybook`: five tier folders with indexes; `jobs/job_03_on_call_recovers_failed_sync.story.exs`; 40 non-primitive variations (areas 30, jobs 2, patterns 4, surfaces 4), inside the "about 40" cap; variation ids are scenario ids (Shopadelic, Wikily, Logistify). Render-all runs every variation in light and dark. Provenance lint ties each note's `Mounted` test file and scenario id to a real test and caps descriptions at 140 characters (planted failures pass). The Job story captions say only what the journey asserts. No Hosting story exists by recorded decision (CONTEXT: deferred), so "adopter theming only in one Hosting story" holds vacuously. Glossary and playbook C1 use the new tier names |
-| 6 | SC5 (server) / PILOT-06: seeded storybook, `storybook` block in `UI-PREVIEW.json`, landing page with `main@sha`, `ui:preflight` checks it, AGENTS.md matches | ✓ VERIFIED (recorded deviation: port 4013, ratification is a Pause 1 item) | Running on 127.0.0.1:4013 (beam.smp pid 80496); `welcome` markers read `main 6c22f4639fc2`, `head 6c22f4639fc2`, dirty true, the retained checkout, epoch `2026-11-20T14:00:00Z`. I ran `npm run --silent ui:preflight` from the retained checkout: `ok: true`, preview ok, storybook ok with `local_main` = `remote_main` = `6c22f4639fc2`. `npm run ui:review:selftest` 35 of 35; `scripts/ci/ui_preservation.test.cjs` 53 of 53. Deep links answer 200 (page and iframe). Font fix proven live: the fidelity probe in font mode reports the same Hanken Grotesk stack on `html` and `body`, light and dark, for three stories. Server is DB-free, loopback-only (config and boundary tests), refuses a held port without signalling it (`port_verdict/3` tests; `lsof` shows 4003 held by the other project's pid 22117). AGENTS.md "UI work" is present tense and documents the port-collision rule. Port 4003 is held, so the 4003 path itself has not been run |
+| 6 | SC5 (server) / PILOT-06: seeded storybook, `storybook` block in `UI-PREVIEW.json`, landing page with `main@sha`, `ui:preflight` checks it, AGENTS.md matches | ✓ VERIFIED against the plan's accepted must-have (4003 if free, otherwise 4013 with a recorded deviation). **The literal 4003 of ROADMAP criterion 5 and PILOT-06 is not met** | Running on 127.0.0.1:4013 (beam.smp pid 80496); `welcome` markers read `main 6c22f4639fc2`, `head 6c22f4639fc2`, dirty true, the retained checkout, epoch `2026-11-20T14:00:00Z`. I ran `npm run --silent ui:preflight` from the retained checkout: `ok: true`, preview ok, storybook ok with `local_main` = `remote_main` = `6c22f4639fc2`. `npm run ui:review:selftest` 35 of 35; `scripts/ci/ui_preservation.test.cjs` 53 of 53. Deep links answer 200 (page and iframe). Font fix proven live: the fidelity probe in font mode reports the same Hanken Grotesk stack on `html` and `body`, light and dark, for three stories. Server is DB-free, loopback-only (config and boundary tests), refuses a held port without signalling it (`port_verdict/3` tests; `lsof` shows 4003 held by the other project's pid 22117). AGENTS.md "UI work" is present tense and documents the port-collision rule. Port 4003 is held, so the 4003 path itself has not been run |
 | 7 | PILOT-07: Pause 1 happens; feedback recorded verbatim; feedback sizes Phase 198 | ? UNCERTAIN (human) | The pause note exists, with the packet, nine deep links, the empty feedback table (header appears exactly once), fixtures fold evidence, findings and the Phase 198 sizing; no `198-*` directory exists and no audit, complete or cleanup step ran. The feedback itself cannot exist yet: it is the maintainer's. See Human Verification |
+| 7 | PILOT-07 (the part this phase delivers): Pause 1 is reached: the pause packet exists with the empty feedback-row table and the run stops | ✓ VERIFIED (the requirement itself is not closed: the feedback and the Phase 198 sizing are the maintainer's, still to come) | The pause note exists with the packet, nine deep links, the empty feedback table (header appears exactly once), fixtures fold evidence, findings and the Phase 198 sizing; no `198-*` directory exists and no audit, complete or cleanup step ran. This matches the check `197-VALIDATION.md` defines for PILOT-07 ("Pause note written with the feedback-row template; the run then stops"). Not done and not claimed: the maintainer's verbatim feedback and the cut, shrink or run decision |
 | 8 | FLOW-01 to FLOW-04 (standing rules) | ✓ VERIFIED | FLOW-01: PR #177 is `test(ops-ui)`, #178 `docs(phase-197)`, zero `feat`/`fix` commit subjects, 0 open PRs, Release Please run succeeded on both merges and opened nothing. FLOW-02: 5 plans in this phase, 13 plans across Phases 195 to 197 (cap 20); no root `lib/`, dependency, lock or workflow change. FLOW-03: protected files appear in neither PR diff (they remain modified and unstaged in the working tree); every local mirror lane and the one skipped set (docs PR, with a recorded reason) are in 197-05-SUMMARY; hosted required checks read through `gh api` on both exact heads are green or correctly skipped. FLOW-04: F1, F2, F3, F4, D2 and the rest are in the Pause 1 note and not fixed; D1 and D3 fixed. FLOW-05 is mapped to Phase 198 and is not claimed by this phase |
 
-**Score:** 8/9 truths verified (0 present but behavior-unverified; 1 awaiting the maintainer)
+**Score:** 9/9 truths verified (0 present but behavior-unverified). Truth 6 is scored on its plan must-have and truth 7 on the half the phase delivers; the literal port (PILOT-06) and the feedback (PILOT-07) are listed as not closed under Recorded maintainer decisions and scheduled stop, and are not counted as done.
 
 ### Required Artifacts
 
@@ -171,6 +172,16 @@ Everything that a machine can prove about this phase is proven, and most of it I
 | Preflight and probe | `npm run --silent ui:preflight` (retained checkout); `catalog-fidelity-probe.mjs --font` x3 | ok true; same font family, light and dark | ✓ PASS |
 | Node selftests | `ui:review:selftest`, `ui_preservation.test.cjs` | 35 of 35, 53 of 53 | ✓ PASS |
 
+#### Re-check at 7cbe323e (the branch after PR #179's code commits)
+
+| Behavior | Command | Result | Status |
+|---|---|---|---|
+| Ops tests that read the changed files | `mix test` on catalog_contract, catalog_endpoint (new), journey, fixtures_recordings, failed_sync_live, sync_drift_live, posture_live (scrypath_ops, test env, seed 0) | 250 tests, 0 failures | ✓ PASS |
+| Root contract tests | workflow_wiring, dependency_boundary_contract, ops_dependency_boundary, shipped_docs_contract, no_human_gates_contract | 178 tests; the single failure was `no_human_gates_contract_test.exs:27`, caused by this report's earlier `status: human_needed` (fixed by this re-grade) | ✓ PASS after re-grade |
+| Stable map-key printing | `Failures.inspect_stable/1` against plain `inspect/1` on an atom-keyed map | sorted versus VM order | ✓ PASS |
+
+The changes since the first pass are `48e887fe` (the serve task calls a catalog "ours" only for this checkout at this commit), `8829e3c2` (a test that dispatches through the real catalog endpoint and router), `deec9a82` (stable map keys) and `7cbe323e` (docs). I read the serve task and fixtures diffs; they match the review dispositions.
+
 ### Probe Execution
 
 SKIPPED: no `scripts/*/tests/probe-*.sh` is declared by any plan or summary. The fidelity probe (a local, non-gating `.mjs`) was run above in font mode.
@@ -184,8 +195,8 @@ SKIPPED: no `scripts/*/tests/probe-*.sh` is declared by any plan or summary. The
 | PILOT-03 | 02, 03, 04 | View-models, shared components, parity, journey unmodified | ✓ SATISFIED | Truths 3, 3a |
 | PILOT-04 | 02, 03, 04, 05 | Tiers, JOB ids, adopter dimension, both themes, claim-limited descriptions | ✓ SATISFIED | Truth 5 |
 | PILOT-05 | 03, 04 | One contract test, ledger row 11 of 12 | ✓ SATISFIED | Truth 4 |
-| PILOT-06 | 01, 05 | Seeded storybook on 4003, block, landing page, preflight, AGENTS.md | ✓ SATISFIED on everything except the literal port: served on 4013 under a recorded deviation | Truth 6; REQUIREMENTS.md still lists it Pending, which is accurate until the maintainer decides |
-| PILOT-07 | 05 | Pause 1, feedback verbatim, sizes Phase 198 | ? NEEDS HUMAN | The pause packet is delivered; the feedback is the maintainer's |
+| PILOT-06 | 01, 05 | Seeded storybook on 4003, block, landing page, preflight, AGENTS.md | **Not closed.** Done and verified: the seeded DB-free storybook, the `storybook` block, the `main@sha` landing page, the two-surface `ui:preflight` and AGENTS.md. Not met on the literal text: it serves on 127.0.0.1:4013, not 4003, because another project's process holds 4003; recorded deviation (197-05-PLAN must-have W5, `UI-PREVIEW.json` `storybook.deviation`, Pause 1 note). Stays Pending in REQUIREMENTS.md until the maintainer moves it back to 4003 or amends the requirement | Truth 6 |
+| PILOT-07 | 05 | Pause 1, feedback verbatim, sizes Phase 198 | **Not closed.** The phase's part is done and verified: the Pause 1 packet exists and the run stopped. Not done: the maintainer's verbatim feedback and the Phase 198 sizing do not exist yet (the table is empty by design). Stays Pending until the maintainer replies | Truth 7 |
 | FLOW-01 to FLOW-04 | 05 (standing) | Release hygiene, caps, protected files, findings handed off | ✓ SATISFIED | Truth 8 |
 | FLOW-05 | none (mapped to Phase 198, also runs after 197 if 198 is cut) | Milestone-end review | Not this phase's | Pending by design |
 
@@ -218,39 +229,38 @@ Decision coverage: skipped (the handler reports "no trackable decisions" for thi
 - Main: CI success on `33aac70f` and on `6c22f463`; Release Please success on both; no open PR.
 - Out of scope, for the record: the earlier main run on `84afaba0` (Phase 196 closeout) had a red `core` from a hosted `git fetch` timeout in `UiLiteralContractTest`; main has been green since.
 
-### Human Verification Required
+### Recorded maintainer decisions and scheduled stop (not verification debt)
 
-#### 1. Pause 1 look and feedback (PILOT-07)
+None of these is a truth I failed to verify, and none is a manual test of correctness. Each is either an owner decision that the plan or CONTEXT reserved for the maintainer, or the scheduled stop the roadmap defines. PILOT-06 and PILOT-07 are **not closed** by this phase; they are listed here so they are not lost and not claimed.
 
-**Test:** Open http://127.0.0.1:4013/storybook/welcome and the nine links in `.planning/research/storybook-catalog/PAUSE-1-PHASE-197.md`; paste feedback verbatim into its empty table, or reply `ok`.
-**Expected:** Rows (or `ok`) that size Phase 198 as cut, shrink or run (the note recommends cut).
-**Why human:** Subjective, and the feedback is the maintainer's own words. This is the stop the roadmap defines, not a correctness check; no design is claimed approved.
+**1. PILOT-07, the Pause 1 look and feedback (scheduled stop, ROADMAP "Gate (Pause 1)").**
+Not closed: the feedback table in `.planning/research/storybook-catalog/PAUSE-1-PHASE-197.md` is empty, and the Phase 198 sizing (cut, shrink or run; the note recommends cut) is undecided.
+Executable evidence that exists: the contract test renders every variation in light and dark and checks structure, copy and provenance; the mounted journey proves the behavior; the canonical-tree parity run proves the real screens did not change; the fidelity probe proves the product font; every deep link in the note answers 200 on the running storybook; `ui:preflight` proves the storybook serves current `main`.
+What no check can produce: whether the screens look and read right, and the maintainer's words. `197-VALIDATION.md` records this as feedback, not a completion gate, and the landing page and the note both say nothing here is an approved design. Nothing in this report claims it is.
 
-#### 2. Port decision (PILOT-06)
+**2. PILOT-06, the literal port 4003 (recorded deviation, handed to the maintainer).**
+Not closed on the literal text: the storybook serves on 4013 because `lsof -nP -iTCP:4003 -sTCP:LISTEN` shows another project's `beam.smp` (pid 22117, cwd `/Users/jon/projects/fablebook/hosts/operator`). This repository may not stop or signal another project's process.
+Executable evidence that exists: the plan's own must-have authorizes exactly this fallback; `UI-PREVIEW.json` `storybook.deviation` records the holder and the four move-back steps; the serve task refuses a held port without signalling it (`port_verdict/4` cases in the contract test, including the stale-HEAD, other-checkout and unknown plants added in `48e887fe`); `ui:preflight` is green on 4013; AGENTS.md "Port collision" documents the rule. The 4003 path itself has not been run, because the port is held.
+The decision that remains: free 4003 and move back (recommended by the Pause 1 note), or change the recorded decision to 4013.
 
-**Test:** Decide between freeing 4003 (move back with the four steps in `UI-PREVIEW.json` `storybook.deviation.move_back`) and recording 4013 as the decision (edit ROADMAP criterion 5 and PILOT-06).
-**Expected:** One of the two is done; `ui:preflight` stays green on whichever port the block names.
-**Why human:** Only the maintainer can stop the other project's process or change the recorded decision.
-
-#### 3. Fixtures fold (ADR 0002 exit rule)
-
-**Test:** Read the evidence table in the Pause 1 note (one consumer, hosted cost within a few seconds of its same-day control in both phases, 14 files touched by a fold, 6 unused functions).
-**Expected:** Keep (recommended) or fold.
-**Why human:** A recorded owner decision point that CONTEXT reserved for the maintainer.
+**3. Fixtures fold (the ADR 0002 exit rule, reserved for the maintainer by `197-CONTEXT.md`).**
+Not a requirement; a decision point.
+Executable evidence that exists: hosted `ops-ui` cost of keeping the project, warm minus same-day control, is -3 s (Phase 196, CI-EFFICIENCY 29) and -2 s (Phase 197, finding 30), both read from the GitHub API; one consumer (`scrypath_ops`) by grep; a fold touches 14 files that name the project and 6 functions still have no caller; the fixtures contract tests pass. The Pause 1 note recommends keeping it and revisiting when the four `phase173` host specs are ported or at v1.51.
 
 ### Gaps Summary
 
-No gaps. Every automatable truth holds on the code at `origin/main` 6c22f463, and the two defect fixes, the extraction parity and the journey-first ordering were each confirmed by an independent run or mutation, not by the summaries. The status is `human_needed` only because PILOT-07 cannot be satisfied by an agent and PILOT-06's literal port is a maintainer decision.
+No gaps in the work. Every automatable truth holds on the code, and the two defect fixes, the extraction parity and the journey-first ordering were each confirmed by an independent run or mutation, not by the summaries. Two requirements stay open for reasons outside this phase's authority and are stated plainly above: PILOT-06's literal 4003 and PILOT-07's feedback.
 
 Other things the orchestrator should know (none blocks):
 
-- **Advisory, incidental ordering (see `coincidental_reliance_items`):** the restart-stability proof is conditional. Cause: `failures.ex:247` uses `inspect/1` on an atom-keyed map; the key order can flip between boots. Effect: two spots of text in the Failed row error (the visible error block and its copy attribute) can print `task_uid` and `index_uid` in either order across restarts. No data, time or count differs. Hand-off, not fixed (Phase 196 code, outside this phase's brief).
-- **Bookkeeping that phase completion will do, not me:** ROADMAP still shows 197-05 unchecked and "4/5 plans"; REQUIREMENTS.md still shows PILOT-06 and PILOT-07 Pending; STATE.md stops at 197-04. `197-VALIDATION.md` was never updated after execution (`status: draft`, all rows pending, sign-off unchecked, `nyquist_compliant: false`), though every row it lists now has an executable check.
-- **Wording:** ROADMAP criterion 2 says "under a chore or test PR title that says plainly it fixes a defect". The PR title is `test(ops-ui): cover JOB-03 end to end ...`; the body (and the squash commit body) say plainly that it fixes D1 and D3, and the branch commit subjects said "fixes defect D1/D3". Treated as satisfied in substance (FLOW-01 requires the body).
-- **Loopback endpoint note (info):** the catalog endpoint sets `check_origin: false` and a fixed dev `secret_key_base`; it is dev/test only, loopback only, serves fictional fixtures, and the boundary tests keep it out of prod builds. No action suggested.
-- **Verification hygiene:** my scratch trees and captures are under the session scratchpad only; the one scratch catalog I started on port 4023 is stopped; port 4013 and the retained preview were not touched. I wrote two files into scratchpad directories named `parity/base` and `parity/head` before switching to fresh `verify-parity/` directories (throwaway evidence).
+- **My earlier advisory is fixed.** The restart-stability proof was conditional: `failures.ex` used `inspect/1` on an atom-keyed map, so the key order of `%{task_uid, index_uid}` in the Failed row error could flip between boots (two spots of text; no data, time or count differed). Commit `deec9a82` adds `Failures.inspect_stable/1` (`sort_maps: true`) and a test that plants the VM's atom-order printing and fails on plain `inspect/1`. I re-ran that test and also printed both forms directly: plain `inspect` gives `%{task_uid: 908, index_uid: "x"}`, the stable form gives `%{index_uid: "x", task_uid: 908}`. I did not repeat the two-instance restart comparison against the new code.
+- **Bookkeeping that phase completion will do, not me:** ROADMAP and STATE were updated by the branch (`7cbe323e`); REQUIREMENTS.md should keep PILOT-06 and PILOT-07 Pending (accurate). `197-VALIDATION.md` was never updated after execution (`status: draft`, all rows pending, sign-off unchecked), though every row it lists now has an executable check.
+- **Wording:** ROADMAP criterion 2 says "under a chore or test PR title that says plainly it fixes a defect". The PR title is `test(ops-ui): cover JOB-03 end to end ...`; the body (and the squash commit body) say plainly that it fixes D1 and D3. Treated as satisfied in substance (FLOW-01 requires the body).
+- **Loopback endpoint note (info):** recorded as accepted in the review dispositions (`IN-03`); loopback only, dev and test only, kept out of prod builds by the boundary tests.
+- **Out of scope:** the earlier main run on `84afaba0` (Phase 196 closeout) had a red `core` from a hosted `git fetch` timeout in `UiLiteralContractTest`; main has been green since.
+- **Verification hygiene:** my scratch trees and captures were under the session scratchpad only and are removed; the scratch catalog I started on port 4023 is stopped; port 4013 and the retained preview were not touched.
 
 ---
 
-_Verified: 2026-11-22T17:37:00Z_
+_Verified: 2026-11-22T18:12:00Z_
 _Verifier: Claude (gsd-verifier)_
