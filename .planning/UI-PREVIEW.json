@@ -1,12 +1,12 @@
 {
   "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
   "branch": "ui/next",
-  "base_main": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
+  "base_main": "33aac70fa7d6cb90dcc6eee34ca8cc599c52d214",
   "url": "http://127.0.0.1:4002",
   "container": "scrypath_ecommerce-web-1",
   "compose_project": "scrypath_ecommerce",
   "seed_on_start": false,
-  "status": "Refreshed 2026-11-21 for the milestone-end feedback session after v1.46 and v1.47: ui/next reset to origin/main 9b6ec911 (its Phase 187 content was already squash-merged as PR #138; the old head 3bc565c3 is kept as branch backup/ui-next-3bc565c3). Web service recreated with compose.preview.yaml (DEMO_SEED_ON_START=0); data intact (19 products, 3 tenants, 3 saved searches, 3 migrations); the untracked my-search.json hash is unchanged (3c8de6b4...). The scrypath_ops deps volume was behind the lockfile, so mix deps.get was run in it so the CSS watcher works. npm run ui:preflight reports source_match, main_included and remote_main_current true. No storybook exists yet; the review surface becomes the catalog once its first screen story ships. Feedback record: .planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md.",
+  "status": "Refreshed 2026-11-22 for the Phase 197 Pause 1 look: ui/next fast-forwarded to origin/main 33aac70f (Phase 197 code PR #177). The pending Tailwind watcher output in scrypath_ops/priv/static/assets/css/app.css is byte-identical to a fresh build from that checkout, was left in place (the merge does not touch the file, so nothing was stashed or discarded), and the untracked my-search.json hash is unchanged (3c8de6b4...). Web service recreated with compose.preview.yaml (DEMO_SEED_ON_START=0); data counts equal before and after (19 products, 3 tenants, 8 categories, 21 variants, 24 oban_jobs, 3 saved searches, 3 migrations). npm run ui:preflight from this checkout reports the preview and the storybook green. Feedback record for the earlier session: .planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md.",
   "delivery_pr": "https://github.com/szTheory/scrypath/pull/102",
   "tooling_branch": "fix/ui-review-artifact-preservation",
   "tooling_pr": "https://github.com/szTheory/scrypath/pull/103",
@@ -26,9 +26,9 @@
   "sync_layout_followup": ".planning/reference/UI-SYNC-LAYOUT-FOLLOWUP.md",
   "pause_handoff": ".planning/.continue-here.md",
   "structured_handoff": ".planning/HANDOFF.json",
-  "runtime_checked_at": "2026-11-21T00:00:00Z",
+  "runtime_checked_at": "2026-11-22T16:50:36Z",
   "runtime_status": "running",
-  "implementation_head": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
+  "implementation_head": "33aac70fa7d6cb90dcc6eee34ca8cc599c52d214",
   "iteration3_merge": "427dd1ab95c791cd51630fbdc83fc16af90e1926",
   "batch_2026_10_22": {
     "library_pr": 108,
@@ -44,17 +44,31 @@
   },
   "feedback_session_2026_11_21": ".planning/research/storybook-catalog/FEEDBACK-SESSION-2026-11-21.md",
   "storybook": {
-    "url": "http://127.0.0.1:4003",
-    "port": 4003,
+    "url": "http://127.0.0.1:4013",
+    "port": 4013,
     "port_env": "CATALOG_PORT",
     "checkout": "/Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation",
     "branch": "ui/next",
-    "base_main": "9b6ec9110eef96fc803ce564b78b98507ac301f4",
+    "base_main": "33aac70fa7d6cb90dcc6eee34ca8cc599c52d214",
     "landing": "/storybook/welcome",
     "start": "cd /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
     "stop": "kill $(cat /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops/tmp/catalog.pid)",
     "seed": "code: fixtures at ScrypathFixtures.preview_epoch/0, 2026-11-20T14:00:00Z; no database",
-    "status": "Not started yet. Phase 197 Plan 05 Task 3 starts it from the named checkout at current origin/main and records the result here. Check it with npm run ui:preflight from that checkout's examples/scrypath_ecommerce directory. When 4003 is held by another project's process, start with CATALOG_PORT=<free port> and record the port and holder in a deviation field; never stop the other process.",
-    "runtime_checked_at": null
+    "status": "Running from the named checkout at main 33aac70f on port 4013, not the configured 4003 (see deviation). Started with CATALOG_PORT=4013 and the start command below; the landing page prints this checkout, main@33aac70fa7d6, HEAD 33aac70fa7d6 and the fixtures time 2026-11-20T14:00:00Z. npm run ui:preflight from examples/scrypath_ecommerce in the checkout reported the preview and the storybook both green. Restart across stop and start gave identical canonical iframe documents for surfaces/failed_sync and surfaces/search_health. Review note and deep links: .planning/research/storybook-catalog/PAUSE-1-PHASE-197.md.",
+    "runtime_checked_at": "2026-11-22T16:50:36Z",
+    "deviation": {
+      "summary": "ROADMAP success criterion 5 and PILOT-06 name 127.0.0.1:4003. Another project's process holds 4003, so this storybook serves on 4013 until the maintainer frees 4003. Nothing in this repo may stop that process.",
+      "found_on": "2026-11-22",
+      "found_with": "lsof -nP -iTCP:4003 -sTCP:LISTEN",
+      "holder": {
+        "command": "beam.smp",
+        "pid": 22117,
+        "started": "Sat Nov 21 09:34:22 2026",
+        "cwd": "/Users/jon/projects/fablebook/hosts/operator"
+      },
+      "serving_port": 4013,
+      "start": "export CATALOG_PORT=4013 && cd /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops && mkdir -p tmp && { ASDF_ELIXIR_VERSION=1.19.0-otp-28 ASDF_ERLANG_VERSION=28.5 nohup mix scrypath_ops.catalog.serve > tmp/catalog.log 2>&1 & echo $! > tmp/catalog.pid; }",
+      "move_back": "1. Free 4003 (the holder's owner stops it; lsof -nP -iTCP:4003 -sTCP:LISTEN must print nothing). 2. Stop this storybook with the block's stop command, then run the block's start command (no CATALOG_PORT) from /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/scrypath_ops. 3. In .planning/UI-PREVIEW.json set storybook.url to http://127.0.0.1:4003, storybook.port to 4003 and delete storybook.deviation (preflight reads the port from url and port, which must agree). 4. From /Users/jon/projects/scrypath/.claude/worktrees/ui-experience-reconciliation/examples/scrypath_ecommerce run npm run ui:preflight."
+    }
   }
 }
