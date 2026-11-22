@@ -15,6 +15,7 @@ defmodule ScrypathFixtures.Scenarios do
   alias ScrypathFixtures.Logistify
   alias ScrypathFixtures.Scenario
   alias ScrypathFixtures.Shopadelic
+  alias ScrypathFixtures.Wikily
 
   @type builder :: {atom(), (DateTime.t() -> Scenario.t())}
 
@@ -23,9 +24,15 @@ defmodule ScrypathFixtures.Scenarios do
   def builders do
     [
       {:logistify_deep_queue, &Logistify.scenario(:deep_queue, now: &1)},
+      {:logistify_steady, &Logistify.scenario(:steady, now: &1)},
+      {:logistify_history_over_limit_f1, &Logistify.scenario(:history_over_limit, now: &1)},
       {:shopadelic_settings_aligned, &Shopadelic.scenario(:settings_aligned, now: &1)},
       {:shopadelic_settings_drift, &Shopadelic.scenario(:settings_drift, now: &1)},
-      {:shopadelic_failed_journey, &Shopadelic.scenario(:failed_journey, now: &1)}
+      {:shopadelic_failed_journey, &Shopadelic.scenario(:failed_journey, now: &1)},
+      {:wikily_unconfigured, &Wikily.scenario(:unconfigured, now: &1)},
+      {:wikily_missing_backend, &Wikily.scenario(:missing_backend, now: &1)},
+      {:wikily_index_not_created, &Wikily.scenario(:index_not_created, now: &1)},
+      {:wikily_first_delete_failed, &Wikily.scenario(:first_delete_failed, now: &1)}
     ]
   end
 
