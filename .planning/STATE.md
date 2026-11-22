@@ -5,17 +5,17 @@ milestone_name: Catalog foundation
 current_phase: 197
 current_phase_name: Pilot JOB-03, unhealthy verdict to verified retry
 status: executing
-stopped_at: Completed 197-01-PLAN.md
-last_updated: "2026-11-22T14:10:44.503Z"
+stopped_at: Completed 197-02-PLAN.md
+last_updated: "2026-11-22T14:29:39.565Z"
 last_activity: 2026-11-22
-last_activity_desc: Completed 197-01 (journey, D1 fix, catalog server, font fix)
-state_head: 4d048cd20e7d4333e5b9bab55ade2f6a987c80ea
+last_activity_desc: Completed 197-02 (Search health extraction, first stories, parity capture)
+state_head: f19c4866fd16fffe8e0d871c5734aa0f61189d31
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 17
-  completed_plans: 9
-  percent: 53
+  completed_plans: 10
+  percent: 59
 ---
 
 # Project State
@@ -30,9 +30,9 @@ See [PROJECT](PROJECT.md), updated 2026-11-21.
 ## Current Position
 
 Phase: 197 (Pilot JOB-03, unhealthy verdict to verified retry) — EXECUTING
-Plan: 2 of 5
-Status: Executing Phase 197 (Plan 01 complete)
-Last activity: 2026-11-22 — Completed 197-01 (journey, D1 fix, catalog server, font fix)
+Plan: 3 of 5
+Status: Executing Phase 197 (Plans 01 and 02 complete)
+Last activity: 2026-11-22 — Completed 197-02 (Search health extraction, first stories, parity capture)
 
 
 ## Performance Metrics
@@ -53,6 +53,7 @@ Last activity: 2026-11-22 — Completed 197-01 (journey, D1 fix, catalog server,
 | Phase 196 P04 | 24 min | 3 tasks | 15 files |
 | Phase 196 P05 | 130 min | 3 tasks | 16 files |
 | Phase 197 P01 | 31 min | 3 tasks | 14 files |
+| Phase 197 P02 | 15 min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Full decision log lives in PROJECT.md, [V1.46-PREP.md](research/brand-and-catalo
 - [Phase 197]: Journey seams (Queue, JobRepo, Client) live in the journey file, not copy_stubs; Recovery verified kept (under the cut threshold)
 - [Phase 197]: D1 fixed by one return_to assign in OnMount; return_to_path/1 also refuses backslash and control-character paths
 - [Phase 197]: Catalog served by a dedicated endpoint and mix scrypath_ops.catalog.serve (no Repo, loopback, CATALOG_PORT, holder check); storybook font fixed in storybook.js
+- [Phase 197]: health_verdict/1 renders the setup empty states too, so every story variation renders and the render-all empty-output check stays meaningful
+- [Phase 197]: Search health components take the LiveView's ranked rows and never sort; every ops_time in a component falls back to the posture snapshot, never the clock
+- [Phase 197]: Parity capture pins the test clock for copy surfaces and normalizes the random recovery handle; base and head are compared as canonical trees, never raw text
 
 ### Pending Todos
 - Phase 197 discuss takes the deferred fidelity probe (a local, non-gating computed-style comparison of a story against the real ops screen, light and dark) from the Phase 195 go/no-go record.
@@ -119,9 +123,9 @@ Three phase-freshness overrides (182–184) were explicitly authorized for the v
 
 ## Session Continuity
 
-Last session: 2026-11-22T14:10:44.339Z
-Stopped at: Completed 197-01-PLAN.md
-Acting next: execute 197-02 (Posture scan/build split, Search health components and stories) from the journey baseline d913b8b6. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
+Last session: 2026-11-22T14:29:39.390Z
+Stopped at: Completed 197-02-PLAN.md
+Acting next: execute 197-03 (FailedSyncView, Failed sync components and stories, identical-variation and DOM-hygiene checks) from the journey baseline d913b8b6; Plan 02 ended at f19c4866. The run stops at Pause 1 after Plan 05. A Hex release still needs the maintainer's explicit yes.
 Resume file: None
 
 ## Operator Next Steps
