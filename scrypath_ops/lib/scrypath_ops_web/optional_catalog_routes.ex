@@ -2,11 +2,13 @@ defmodule ScrypathOpsWeb.OptionalCatalogRoutes do
   @moduledoc false
 
   # The guard is an `if` outside the `quote`, so it runs when the router expands this macro. The flag
-  # is read with `Application.get_env` as a plain value: `Macro.expand` of a `compile_env` call would
-  # yield a call AST, which is always truthy.
+  # is read with the macro form `Application.compile_env(__CALLER__, ...)`, which returns the plain value
+  # (`Macro.expand` of the `compile_env/3` macro would yield a call AST, which is always truthy) and
+  # also records the read, so changing the flag between two compiles recompiles the router or aborts
+  # instead of silently keeping a stale `/storybook` mount.
   defmacro catalog_routes do
     if enabled?(
-         Application.get_env(:scrypath_ops, :catalog_routes, false),
+         Application.compile_env(__CALLER__, :scrypath_ops, :catalog_routes, false),
          Code.ensure_loaded?(PhoenixStorybook.Router)
        ) do
       quote do

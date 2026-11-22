@@ -695,12 +695,17 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       assert storybook_dependency_violation(absent) =~ "must declare"
     end
 
-    test "catalog route guard sits outside the quote and fails when moved, deleted or flag-blind" do
+    test "catalog route guard sits outside the quote and fails when moved, deleted, flag-blind or untracked" do
       ast = read_ast!(@catalog_routes_source)
 
       assert catalog_guard_violation(ast) == nil
 
-      for mutation <- [:delete_guard, :move_guard_inside_quote, :drop_flag_read] do
+      for mutation <- [
+            :delete_guard,
+            :move_guard_inside_quote,
+            :drop_flag_read,
+            :untrack_flag_read
+          ] do
         mutated = mutate_catalog_guard(ast, mutation)
 
         assert mutated != ast, "mutation #{mutation} left the AST unchanged"
@@ -742,16 +747,27 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
       # Planted: each edit below removes one thing the script must prove, so each must be reported.
       mutants = [
         {~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex mdex_native"),
-         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex)},
+         ~s(forbidden_deps="$forbidden_deps phoenix_storybook mdex")},
         {~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller"),
          ~s(forbidden_deps="esbuild tailwind phoenix_live_dashboard telemetry_metrics telemetry_poller phoenix_storybook mdex mdex_native")},
         {", PhoenixStorybook, MDEx]", ", PhoenixStorybook]"},
         {~s("host|$base_url" "ops|$ops_base_url"), ~s("host|$base_url")}
       ]
 
+      tmp = Path.join(System.tmp_dir!(), "storybook-script-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(tmp)
+      on_exit(fn -> File.rm_rf(tmp) end)
+
       for {from, to} <- mutants do
         mutated = String.replace(script, from, to)
         assert mutated != script, "planted edit found nothing to change: #{from}"
+
+        # Each mutant must be well-formed shell, so the check is caught by the one thing it removed and
+        # not by a syntax break that happens to defeat a regex.
+        mutant_path = Path.join(tmp, "mutant.sh")
+        File.write!(mutant_path, mutated)
+        {output, status} = System.cmd("bash", ["-n", mutant_path], stderr_to_stdout: true)
+        assert status == 0, "planted edit is malformed shell (#{from} -> #{to}): #{output}"
 
         assert storybook_script_violations(mutated) != [],
                "the script check accepted a planted edit: #{from} -> #{to}"
@@ -829,11 +845,13 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
     end
   end
 
+  # The flag must be read through the macro-aware, tracked `Application.compile_env(env, app, key, default)`
+  # (its first argument is the caller env). An untracked `Application.get_env` read, or the three-argument
+  # `compile_env` macro (which would expand to a call AST), is not accepted: Mix would not notice a flag
+  # change and a stale router could keep `/storybook` mounted.
   defp catalog_flag_read?(node) do
-    Enum.any?([:get_env, :compile_env], fn function ->
-      remote_call?(node, [:Application], function, fn args ->
-        match?([:scrypath_ops, :catalog_routes | _], args)
-      end)
+    remote_call?(node, [:Application], :compile_env, fn args ->
+      match?([_env, :scrypath_ops, :catalog_routes | _], args)
     end)
   end
 
@@ -860,11 +878,18 @@ defmodule Scrypath.Repository.DependencyBoundaryContractTest do
         when is_list(clauses) and mutation == :move_guard_inside_quote ->
           {{:quote, [], [[do: node]]}, changes + 1}
 
-        {{:., _, [{:__aliases__, _, [:Application]}, :get_env]}, _,
-         [:scrypath_ops, :catalog_routes | _]},
+        {{:., _, [{:__aliases__, _, [:Application]}, :compile_env]}, _,
+         [_env, :scrypath_ops, :catalog_routes | _]},
         changes
         when mutation == :drop_flag_read ->
           {true, changes + 1}
+
+        # The pre-fix shape: the same read, but untracked by Mix.
+        {{:., dot_meta, [{:__aliases__, _, [:Application]} = app, :compile_env]}, call_meta,
+         [_env | [:scrypath_ops, :catalog_routes | _] = untracked_args]},
+        changes
+        when mutation == :untrack_flag_read ->
+          {{{:., dot_meta, [app, :get_env]}, call_meta, untracked_args}, changes + 1}
 
         node, changes ->
           {node, changes}
