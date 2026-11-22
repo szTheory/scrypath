@@ -7,8 +7,8 @@ status: recorded for the maintainer, nothing fixed
 # Phase 196 findings for the maintainer
 
 These are recorded and not fixed (FLOW-04). Nothing here blocks Phase 196 or Phase 197. The only
-choice this note asks of you is whether F3 is worth a root `lib/` change, and it can wait until
-Phase 198 needs it.
+choices this note asks of you are whether F3 and F4 are worth a root `lib/` change. F3 can wait until
+Phase 198 needs it; F4 is worth a look before anyone relies on `sortable:`.
 
 ## F3 (new): Scrypath can never show an indexSwap task
 
@@ -46,6 +46,38 @@ library's public read path, so it is ask-first (FLOW-02) and is not done here.
 server returning swaps in filtered lists, which means F3 was fixed upstream and the fake client's
 null-index rule needs the same change.
 
+## F4 (new): a schema's `sortable:` list is never sent to Meilisearch
+
+**What happens.** `use Scrypath, sortable: [...]` is checked when you call `search` with `sort:`,
+and `Scrypath.index_contract_drift/2` compares it with the index's `sortableAttributes`. But
+`Scrypath.Meilisearch.Settings.apply/3` sends only what `Settings.resolve/2` returns, and that
+merges the declared `filterable:` list and not `sortable:`. Measured with a capturing client: for
+the Logistify shipment schema (`filterable: [:status]`, `sortable: [:updated_at]`) the settings
+payload was `%{"filterableAttributes" => ["status"]}`.
+
+**Why it matters.** An index set up by Scrypath alone reports `only_declared: "updated_at"` in the
+sortable dimension of the drift report, and the drift never goes away unless the app also passes
+`settings: %{sortable_attributes: [...]}`. What I did not measure is the user-visible effect: I did
+not run a Meilisearch server with a sorted search for this note, so whether `sort:` then fails
+against the backend is unconfirmed.
+
+**What the fixtures do.** The "aligned" applied settings in `ScrypathFixtures.AppliedSettings`
+include the declared sortable attributes, so Logistify and Shopadelic read as aligned. That models
+an install that set `sortableAttributes` itself. It does not model the default behaviour above.
+
+**What a fix would take.** A root `lib/` change: merge the declared `sortable:` list into
+`Settings.resolve/2` the way `filterable:` is merged. That changes what Scrypath applies to a live
+index, so it is ask-first (FLOW-02) and is not done here.
+
+## Also observed while building the Wikily states
+
+Without a `:backend` option, `Scrypath.sync_status/2` (and `failed_sync_work/2` and
+`index_contract_drift/2`) raise `ArgumentError` ("required :backend option not found") instead of
+returning an error tag. `ScrypathOps.Posture.summary/4` guards against it, so the Search health
+posture reads "Broken". Phase 197 should check that any other screen it renders in the
+`wikily_missing_backend` state does not call those functions directly; this phase only pinned the
+raise in a test.
+
 ## Fresh evidence for items that were already open
 
 - **F2 (unbounded, copyable Meilisearch error text).** A failed task echoes whatever the customer
@@ -53,10 +85,13 @@ null-index rule needs the same change.
   non-Latin text included, inside the error message. `08-task-failed-invalid-document-id-hostile.json`
   shows a rejected id echoed with a right-to-left override and a ZWJ emoji intact. Both are what the
   operator UI would show.
-- **F1 (task history truncated at 1,000).** Plan 04's labelled `history_over_limit` stress variation
-  is meant to reproduce it against the fake client, which now pages like the recorded server (the
-  conformance tests in `fixtures_recordings_test.exs` show that). It is a named stress case, not
-  part of any ordinary scenario.
+- **F1 (task history truncated at 1,000).** Reproduced by the `logistify_history_over_limit_f1`
+  scenario (kind `:stress`, label names finding F1): 1,200 succeeded tasks make the real
+  `Scrypath.sync_status/2` return `{:error, {:task_history_truncated, %{index_uid:
+  "logistify_shipment", limit: 1000, observed: 1000, next: 200}}}`, and the operator posture reads
+  "Search health could not be fully checked". The fake client pages like the recorded server (the
+  conformance tests in `fixtures_recordings_test.exs`), so the reproduction is against the real
+  paging rules. It is a named stress case and no ordinary scenario shows it.
 
 ## Still open, recorded in Phase 195
 
