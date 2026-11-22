@@ -5,14 +5,23 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
   alias ScrypathOps.Catalog.RenderAll
   alias ScrypathOps.Test.CatalogChecks
+  alias ScrypathOps.Test.CopyRules
 
-  # The catalog contract file: Plan 02 and Phase 197 extend it. It adds no gate row and no CI context.
+  # The catalog contract file (Phase 195 and 197), ledger row 11 of 12 in CONTRIBUTING.md. It runs in
+  # the existing ops-ui job and adds no CI context.
   #
-  # Phase 197 handoff: every story under scrypath_ops/storybook is rendered by "render-all" below
-  # through the real iframe route, in light and dark, so a new story needs no edit here. Extend
-  # @primitive_stories only for a path that must never disappear. The planted-tree describe proves the
-  # same render_target/2 plus RenderAll.problems/1 path fails on a crash, an empty story and an
+  # Every story under scrypath_ops/storybook is rendered ONCE (setup_all) through the real iframe
+  # route, in light and dark; render-all, identical variations, DOM hygiene and copy all read that one
+  # pass, so a new story needs no edit here. Coverage and provenance read the story modules.
+  # Extend @primitive_stories only for a path that must never disappear. The planted-tree describe
+  # proves the same render path plus RenderAll.problems/1 fails on a crash, an empty story and an
   # unknown variation id; keep it green when you change either helper.
+  #
+  # Primitive stories (primitives/) are exempt from the provenance line: a primitive is
+  # adopter-independent, so it names no adopter, persona or job.
+  #
+  # Planted copy strings are built by concatenation so this file never spells a phrase a copy row
+  # forbids (the casing row scans every tracked file).
 
   @primitive_stories [
     "/primitives/ops_button",
@@ -22,6 +31,88 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     "/primitives/ops_sync_status"
   ]
   @themes ["light", "dark"]
+  @repo_root Path.expand("../../..", __DIR__)
+  @quality_doc ".planning/reference/OPERATOR-UI-QUALITY.md"
+  @journey_test "scrypath_ops/test/scrypath_ops_web/live/catalog_journey_test.exs"
+
+  # What is knowingly not storied, one reason per key. A key a story now covers, or that names
+  # nothing, fails as stale, so this map can only shrink as stories arrive. The reasons are shared
+  # through attributes for groups; every key is still listed here, one line each.
+  @primitive_not_storied "primitive not storied yet: Phase 198 or later"
+  @shell_helper "app shell piece: rendered inside every surface story, not storied alone"
+  @search_deferred "Search screen deferred (Phase 197 CONTEXT, Deferred Ideas): Phase 198 or v1.51"
+  @no_story %{
+    {ScrypathOpsWeb.OpsUi, :ops_action_group} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_checkbox_list} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_code_block} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_command_hint} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_command_palette} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_condition} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_config_empty} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_data_card} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_disclosure} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_empty_hero} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_field} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_fieldset} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_handoff} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_heading} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_help_link} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_inline_code} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_intent_card} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_link_button} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_loading} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_metric} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_metric_grid} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_modal} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_notice} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_number_input} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_object_item} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_object_list} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_page_header} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_refresh_button} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_refresh_control} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_result_row} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_scaffold} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_schema_select} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_section} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_segmented_control} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_select} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_sheet} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_signal_table} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_status} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_table} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_text_input} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_textarea} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_time} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_tone_chip} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_toolbar} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_trail} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_upload_box} => @primitive_not_storied,
+    {ScrypathOpsWeb.OpsUi, :ops_verdict} => @primitive_not_storied,
+    {ScrypathOpsWeb.ResultUi, :result_hit} => @search_deferred,
+    {ScrypathOpsWeb.ResultUi, :result_value} => @search_deferred,
+    {ScrypathOpsWeb.CoreComponents, :flash} => @shell_helper,
+    {ScrypathOpsWeb.CoreComponents, :icon} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :app} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :brand_mark} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :flash_group} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :ops_mobile_nav} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :ops_primary_nav} => @shell_helper,
+    {ScrypathOpsWeb.Layouts, :ops_sidebar} => @shell_helper,
+    ScrypathOpsWeb.ControlRoomLive =>
+      "Control room deferred (Phase 197 CONTEXT, Deferred Ideas): Phase 198 or v1.51",
+    ScrypathOpsWeb.SearchLive => @search_deferred,
+    ScrypathOpsWeb.HelpLive =>
+      "Help deferred (Phase 197 CONTEXT, Deferred Ideas): Phase 198 or v1.51",
+    ScrypathOpsWeb.SyncDriftLive =>
+      "Sync and index as a whole surface deferred (Phase 197 CONTEXT); its two recovery areas are storied"
+  }
+
+  # One render of every variation in both themes, shared by the checks below. The LiveViews it starts
+  # are linked to this process and end with the module.
+  setup_all do
+    %{rendered: render_every_variation()}
+  end
 
   describe "mount" do
     test "the real iframe route renders the production ops_button with the built stylesheet", %{
@@ -44,7 +135,9 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   end
 
   describe "render-all" do
-    test "every variation of every story renders non-empty with real css, js and theme" do
+    test "every variation of every story renders non-empty with real css, js and theme", %{
+      rendered: rendered
+    } do
       targets = RenderAll.targets(ScrypathOps.Catalog.Storybook)
       paths = targets |> Enum.map(&elem(&1, 0)) |> Enum.uniq()
 
@@ -54,15 +147,12 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
 
       refute Enum.any?(targets, &match?({_, {:unsupported, _}}, &1))
 
+      # The shared pass covered every target in both themes.
+      assert length(rendered) == length(targets) * length(@themes)
+
       failures =
-        for {path, variation_id} <- targets,
-            theme <- @themes,
-            result =
-              render_target(
-                ScrypathOpsWeb.Endpoint,
-                RenderAll.url("/storybook", path, variation_id, theme),
-                theme
-              ),
+        for {path, variation_id, theme, document} <- rendered,
+            result = document_result(document, theme),
             result != {:rendered, []},
             do: {path, variation_id, theme, result}
 
@@ -71,9 +161,9 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   end
 
   describe "no two identical variations" do
-    test "no two variations of one story render the same page in a theme" do
+    test "no two variations of one story render the same page in a theme", %{rendered: rendered} do
       digests =
-        for {path, variation_id, theme, {:ok, html}} <- render_every_variation() do
+        for {path, variation_id, theme, {:ok, html}} <- rendered do
           {path, variation_id, theme, CatalogChecks.main_digest(html)}
         end
 
@@ -87,14 +177,414 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   end
 
   describe "DOM hygiene" do
-    test "every rendered story has unique ids, resolvable ARIA references and named controls" do
+    test "every rendered story has unique ids, resolvable ARIA references and named controls", %{
+      rendered: rendered
+    } do
       problems =
-        for {path, variation_id, theme, rendered} <- render_every_variation(),
-            problem <- hygiene_problems(path, rendered) do
+        for {path, variation_id, theme, document} <- rendered,
+            problem <- hygiene_problems(path, document) do
           {path, variation_id, theme, problem}
         end
 
       assert problems == [], "DOM hygiene problems: #{inspect(problems)}"
+    end
+  end
+
+  describe "coverage" do
+    test "every component and LiveView route is shown by a story or listed in @no_story" do
+      components = app_components()
+      routes = app_routes()
+      index = story_index()
+
+      problems = CatalogChecks.coverage_problems(components, routes, index, @no_story)
+
+      assert problems == [],
+             "components and routes without a story or an @no_story reason, or stale @no_story keys: " <>
+               inspect(problems)
+
+      # The cause is real data: the inventory is computed, and both sides are non-trivial. Some
+      # components are storied, some are listed, and the same goes for routes.
+      assert Enum.any?(components, &(&1 in index.components))
+      assert Enum.any?(components, &Map.has_key?(@no_story, &1))
+      assert Enum.any?(routes, &(&1 in index.routes))
+      assert Enum.any?(routes, &Map.has_key?(@no_story, &1))
+    end
+  end
+
+  describe "provenance and descriptions" do
+    test "every variation outside primitives names its adopter, persona, job and a proof it can back" do
+      known = known_provenance()
+
+      checked =
+        for {path, story} <- loaded_stories(),
+            CatalogChecks.tier(path) != :primitive,
+            story.storybook_type() == :component,
+            variation <- story.variations(),
+            do: {path, story, variation}
+
+      problems =
+        for {path, story, variation} <- checked,
+            problem <- CatalogChecks.provenance_problems(path, story, variation, known) do
+          {path, variation.id, problem}
+        end
+
+      assert problems == [], "provenance problems: #{inspect(problems)}"
+
+      # The cause is real data: variations were linted, and the proof labels in use are all kinds
+      # (render only, a Mounted test, a Mounted test with a Claim).
+      notes = for {_path, _story, variation} <- checked, do: variation.note
+      refute notes == []
+      assert Enum.any?(notes, &(&1 =~ "Proof: render only"))
+      assert Enum.any?(notes, &(&1 =~ ~r/Proof: Mounted \S+\z/m))
+      assert Enum.any?(notes, &(&1 =~ " · Claim: "))
+    end
+
+    test "the Job story's file name carries its job id and it names the journey test as its proof" do
+      assert {"/jobs/job_03_on_call_recovers_failed_sync", story} =
+               Enum.find(loaded_stories(), fn {path, _story} ->
+                 CatalogChecks.tier(path) == :job
+               end)
+
+      assert story.job() == "JOB-03"
+      assert ScrypathOpsWeb.FailedSyncLive in story.covers()
+
+      for variation <- story.variations() do
+        assert variation.note =~ "Proof: Mounted #{@journey_test}"
+      end
+    end
+  end
+
+  describe "copy rules over every rendered variation" do
+    test "no rendered story spells text a global copy row forbids", %{rendered: rendered} do
+      rows = CatalogChecks.copy_rows(CopyRules.load!())
+
+      problems =
+        for {path, variation_id, theme, {:ok, html}} <- rendered,
+            problem <- CatalogChecks.copy_problems(story_markup(html), rows) do
+          {path, variation_id, theme, problem}
+        end
+
+      assert problems == [], "copy problems: #{inspect(problems)}"
+
+      # The cause is real data: rows govern the stories, and rendered text was read.
+      refute rows == []
+      assert Enum.any?(rows, &(&1["id"] == "control-room-casing"))
+      assert Enum.any?(rendered, &match?({_, _, _, {:ok, _}}, &1))
+    end
+
+    test "copy_rows/1 keeps the rows that scan all copy and leaves state-specific rows out" do
+      ids = CopyRules.load!() |> CatalogChecks.copy_rows() |> Enum.map(& &1["id"])
+
+      # Scanned across scrypath_ops/lib or every file: a lexicon rule for all copy.
+      assert "control-room-casing" in ids
+      assert "pending-aggregate" in ids
+      assert "clear-not-healthy" in ids
+
+      # Describes one state (Clear beside a retained observation): a story of a healthy schema
+      # legitimately says Clear, so the row must not govern it.
+      refute "clear-needs-observation" in ids
+      # Requires text and forbids nothing.
+      refute "searchable-settings-row" in ids
+    end
+  end
+
+  describe "planted coverage, provenance and copy" do
+    test "coverage_problems/4 reports each planted cause as its own tagged problem" do
+      a = {ScrypathOpsWeb.PlantedUi, :planted_a}
+      b = {ScrypathOpsWeb.PlantedUi, :planted_b}
+      c = {ScrypathOpsWeb.PlantedUi, :planted_c}
+      shown = ScrypathOpsWeb.PlantedLive
+      hidden = ScrypathOpsWeb.PlantedOtherLive
+
+      index = %{components: [a], routes: [shown]}
+      no_story = %{b => "shown later", c => "shown later", hidden => "deferred"}
+      coverage = &CatalogChecks.coverage_problems([a, b, c], [shown, hidden], index, &1)
+
+      # Control: everything is shown or listed with a reason.
+      assert coverage.(no_story) == []
+
+      # A listed key that names nothing is stale.
+      gone = {ScrypathOpsWeb.PlantedUi, :planted_gone}
+      assert coverage.(Map.put(no_story, gone, "named nothing")) == [{:stale_no_story, gone}]
+
+      # A listed key that a story now covers is stale, for a component and for a route.
+      assert coverage.(Map.put(no_story, a, "now storied")) == [{:stale_no_story, a}]
+      assert coverage.(Map.put(no_story, shown, "now storied")) == [{:stale_no_story, shown}]
+
+      # A component or route nothing shows and nothing lists is uncovered.
+      assert coverage.(Map.delete(no_story, b)) == [{:uncovered, b}]
+      assert coverage.(Map.delete(no_story, hidden)) == [{:uncovered, hidden}]
+
+      # A reason is required, and one line.
+      assert coverage.(Map.put(no_story, b, "  ")) == [{:no_reason, b}]
+      assert coverage.(Map.put(no_story, b, "two\nlines")) == [{:no_reason, b}]
+    end
+
+    test "the real inventory reports a planted fake key, a covered key and a deleted story" do
+      components = app_components()
+      routes = app_routes()
+      index = story_index()
+      coverage = &CatalogChecks.coverage_problems(components, routes, index, &1)
+
+      # Control: the real inventory passes, so each failure below comes from the plant.
+      assert coverage.(@no_story) == []
+
+      fake = {ScrypathOpsWeb.OpsUi, :no_such_component}
+      assert coverage.(Map.put(@no_story, fake, "planted")) == [{:stale_no_story, fake}]
+
+      covered = {ScrypathOpsWeb.OpsUi, :ops_button}
+      assert covered in index.components
+      assert coverage.(Map.put(@no_story, covered, "planted")) == [{:stale_no_story, covered}]
+
+      # Delete the one story that shows a component: it becomes uncovered.
+      failed_row = {ScrypathOpsWeb.Components.FailedSync, :failed_row}
+      assert failed_row in index.components
+
+      without_story = %{index | components: List.delete(index.components, failed_row)}
+
+      assert CatalogChecks.coverage_problems(components, routes, without_story, @no_story) ==
+               [{:uncovered, failed_row}]
+
+      # A route only a surface or jobs story covers: drop that coverage and it is uncovered.
+      assert ScrypathOpsWeb.FailedSyncLive in index.routes
+      no_routes = %{index | routes: List.delete(index.routes, ScrypathOpsWeb.FailedSyncLive)}
+
+      assert CatalogChecks.coverage_problems(components, routes, no_routes, @no_story) ==
+               [{:uncovered, ScrypathOpsWeb.FailedSyncLive}]
+    end
+
+    test "area and pattern stories name their LiveView for traceability but do not count as route coverage" do
+      area_covers =
+        for {path, story} <- loaded_stories(),
+            CatalogChecks.tier(path) in [:area, :pattern],
+            function_exported?(story, :covers, 0),
+            route <- story.covers(),
+            do: route
+
+      # SyncDriftLive is named only by area stories (the recovery areas), so it stays listed.
+      assert ScrypathOpsWeb.SyncDriftLive in area_covers
+      refute ScrypathOpsWeb.SyncDriftLive in story_index().routes
+      assert Map.has_key?(@no_story, ScrypathOpsWeb.SyncDriftLive)
+    end
+
+    test "provenance_problems/4 reports each planted cause as its own tagged problem" do
+      story = ScrypathOpsWeb.CatalogContractTest.PlantedJobStory
+      path = "/jobs/job_03_planted"
+      real = known_provenance()
+      journey = File.read!(Path.join(@repo_root, @journey_test))
+      claim = "an unresolved recovery handle renders a closed unavailable state"
+
+      note = fn tail ->
+        "Adopter: Shopadelic (fictional) · Persona: On-call (ROLE-OPS) · Job: JOB-03 · Proof: " <>
+          tail
+      end
+
+      variation = fn tail, opts ->
+        %{
+          id: Keyword.get(opts, :id, :shopadelic_failed_journey_planted),
+          description: Keyword.get(opts, :description, "Planted, within the limit."),
+          note: Keyword.get(opts, :note, note.(tail))
+        }
+      end
+
+      check = fn variation, known, path, story ->
+        CatalogChecks.provenance_problems(path, story, variation, known)
+      end
+
+      reader = fn text -> %{real | read_file: fn _path -> {:ok, text} end} end
+
+      # Controls: a render-only note, and a Mounted note whose file holds the scenario id, pass.
+      assert check.(variation.("render only", []), real, path, story) == []
+      assert check.(variation.("Mounted #{@journey_test}", []), real, path, story) == []
+
+      # A job nothing defines (the story and the file name say the same job, so only that is reported).
+      bad_job =
+        variation.("render only", note: String.replace(note.("render only"), "JOB-03", "JOB-99"))
+
+      assert check.(
+               bad_job,
+               real,
+               "/jobs/job_99_planted",
+               ScrypathOpsWeb.CatalogContractTest.PlantedJob99Story
+             ) == [{:bad_job, "JOB-99"}]
+
+      # A note whose job is not the story's own (the file name carries the note's job, so only the
+      # mismatch is reported).
+      assert check.(
+               variation.("render only",
+                 note: String.replace(note.("render only"), "JOB-03", "JOB-02")
+               ),
+               real,
+               "/jobs/job_02_planted",
+               story
+             ) == [{:job_mismatch, "JOB-02", "JOB-03"}]
+
+      # A jobs-tier file name that does not carry the job id.
+      assert check.(variation.("render only", []), real, "/jobs/job_02_planted", story) ==
+               [{:job_not_in_path, "JOB-03", "/jobs/job_02_planted"}]
+
+      # A Mounted test file that does not exist.
+      missing = "scrypath_ops/test/scrypath_ops_web/live/no_such_test.exs"
+
+      assert check.(variation.("Mounted #{missing}", []), real, path, story) ==
+               [{:missing_test, missing}]
+
+      # A real test file that does not contain the scenario id: the description would claim more
+      # than the test mentions. The control above holds the id; here it is removed.
+      stripped = String.replace(journey, "shopadelic_failed_journey", "")
+      refute stripped == journey
+
+      assert check.(variation.("Mounted #{@journey_test}", []), reader.(stripped), path, story) ==
+               [{:unbacked_proof, @journey_test, "shopadelic_failed_journey"}]
+
+      assert check.(variation.("Mounted #{@journey_test}", []), reader.(journey), path, story) ==
+               []
+
+      # A declared claim replaces the scenario id as the needle: present passes, absent fails.
+      with_claim = variation.("Mounted #{@journey_test} · Claim: #{claim}", [])
+      assert check.(with_claim, reader.(journey <> "\n# " <> claim), path, story) == []
+
+      assert check.(with_claim, reader.(journey), path, story) ==
+               [{:unbacked_proof, @journey_test, claim}]
+
+      # A Mounted label for a variation with no scenario in its id and no claim proves nothing.
+      assert check.(
+               variation.("Mounted #{@journey_test}", id: :no_scenario_here),
+               real,
+               path,
+               story
+             ) == [{:proof_without_needle, "no_scenario_here"}]
+
+      # Descriptions: 140 characters pass, 141 fail, empty fails.
+      assert check.(
+               variation.("render only", description: String.duplicate("a", 140)),
+               real,
+               path,
+               story
+             ) ==
+               []
+
+      assert check.(
+               variation.("render only", description: String.duplicate("a", 141)),
+               real,
+               path,
+               story
+             ) ==
+               [{:long_description, 141}]
+
+      assert check.(variation.("render only", description: ""), real, path, story) ==
+               [{:missing_description, "shopadelic_failed_journey_planted"}]
+
+      # An adopter or role that is not registered, and a note that is not a provenance line at all.
+      assert check.(
+               variation.("render only",
+                 note: String.replace(note.("render only"), "Shopadelic", "Acmeco")
+               ),
+               real,
+               path,
+               story
+             ) == [{:unknown_adopter, "Acmeco"}]
+
+      assert check.(
+               variation.("render only",
+                 note: String.replace(note.("render only"), "ROLE-OPS", "ROLE-ZZZ")
+               ),
+               real,
+               path,
+               story
+             ) == [{:unknown_role, "ROLE-ZZZ"}]
+
+      for bad <- [
+            nil,
+            "",
+            "Shopadelic, on-call, JOB-03",
+            String.replace(note.("render only"), " (fictional)", "")
+          ] do
+        assert check.(variation.("render only", note: bad), real, path, story) ==
+                 [{:no_provenance, "shopadelic_failed_journey_planted"}]
+      end
+    end
+
+    test "provenance_problems/4 reads only the first line of the note, so a caption can follow it" do
+      story = ScrypathOpsWeb.CatalogContractTest.PlantedJobStory
+
+      variation = %{
+        id: :shopadelic_failed_journey_planted,
+        description: "Planted.",
+        note:
+          "Adopter: Shopadelic (fictional) · Persona: On-call (ROLE-OPS) · Job: JOB-03 · Proof: render only\n\nA caption paragraph."
+      }
+
+      assert CatalogChecks.provenance_problems(
+               "/jobs/job_03_planted",
+               story,
+               variation,
+               known_provenance()
+             ) == []
+    end
+
+    test "copy_problems/2 reports a planted phrase with its row, and ignores clean markup" do
+      rows = CatalogChecks.copy_rows(CopyRules.load!())
+
+      # Control: the same markup without the phrase is clean.
+      assert CatalogChecks.copy_problems("<p>Control room</p>", rows) == []
+
+      casing = "Control " <> "Room"
+
+      assert CatalogChecks.copy_problems("<p>#{casing}</p>", rows) ==
+               [{:copy, "control-room-casing", casing}]
+
+      status_word = "Heal" <> "thy"
+
+      assert CatalogChecks.copy_problems("<p>#{status_word} schema</p>", rows) ==
+               [{:copy, "clear-not-healthy", status_word}]
+    end
+
+    test "copy_problems/2 reports a phrase planted into a real story render", %{
+      rendered: rendered
+    } do
+      rows = CatalogChecks.copy_rows(CopyRules.load!())
+
+      {_path, _id, _theme, {:ok, html}} =
+        Enum.find(rendered, fn {path, id, theme, _doc} ->
+          path == "/surfaces/failed_sync" and id == "shopadelic_failed_journey" and
+            theme == "light"
+        end)
+
+      markup = story_markup(html)
+
+      # Control: the real render is clean, so the failure below comes from the plant.
+      assert CatalogChecks.copy_problems(markup, rows) == []
+      assert markup =~ "Failed sync work"
+
+      casing = "Control " <> "Room"
+      planted = String.replace(markup, "Failed sync work", casing, global: false)
+
+      assert CatalogChecks.copy_problems(planted, rows) ==
+               [{:copy, "control-room-casing", casing}]
+    end
+
+    test "dom_problems/2 counts main landmarks for a jobs-tier story, and a plant into the real job render fails",
+         %{rendered: rendered} do
+      assert CatalogChecks.dom_problems(page("<p>No landmark</p>"), :job) == [{:main_count, 0}]
+
+      assert CatalogChecks.dom_problems(page("<main>A</main><main>B</main>"), :job) == [
+               {:main_count, 2}
+             ]
+
+      assert CatalogChecks.dom_problems(page("<main>A</main>"), :job) == []
+
+      path = "/jobs/job_03_on_call_recovers_failed_sync"
+
+      {^path, _id, _theme, {:ok, html}} =
+        Enum.find(rendered, fn {p, _id, theme, _doc} -> p == path and theme == "light" end)
+
+      # Control: the real Job story renders one main.
+      assert CatalogChecks.dom_problems(html, :job) == []
+
+      without_main = Regex.replace(~r/<(\/?)main\b/, html, "<\\1div")
+      refute without_main == html
+      assert CatalogChecks.dom_problems(without_main, :job) == [{:main_count, 0}]
     end
   end
 
@@ -347,15 +837,14 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # Renders one iframe url through the real LiveView mount and returns the problems found, or
   # {:crashed, kind, cause} when the story or the route took the render down (the request raises or the
   # LiveView exits; both are caught, so a crash is data here, not a test error).
-  defp render_target(endpoint, url, theme) do
-    case render_document(endpoint, url) do
-      {:ok, html} ->
-        {:rendered, RenderAll.problems(html) ++ List.wrap(RenderAll.theme_problem(html, theme))}
+  defp render_target(endpoint, url, theme),
+    do: endpoint |> render_document(url) |> document_result(theme)
 
-      {:crashed, _kind, _cause} = crashed ->
-        crashed
-    end
-  end
+  # The render-all verdict for one rendered document: the problems found, or the crash.
+  defp document_result({:ok, html}, theme),
+    do: {:rendered, RenderAll.problems(html) ++ List.wrap(RenderAll.theme_problem(html, theme))}
+
+  defp document_result({:crashed, _kind, _cause} = crashed, _theme), do: crashed
 
   # The rendered iframe document, or the crash that took the render down.
   defp render_document(endpoint, url) do
@@ -370,6 +859,7 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
   # `{path, variation_id, theme, {:ok, html} | {:crashed, kind, cause}}`.
   defp render_every_variation do
     for {path, variation_id} <- RenderAll.targets(ScrypathOps.Catalog.Storybook),
+        not match?({:unsupported, _}, variation_id),
         theme <- @themes do
       url = RenderAll.url("/storybook", path, variation_id, theme)
       {path, variation_id, theme, render_document(ScrypathOpsWeb.Endpoint, url)}
@@ -380,6 +870,86 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     do: CatalogChecks.dom_problems(html, CatalogChecks.tier(path))
 
   defp hygiene_problems(_path, {:crashed, kind, cause}), do: [{:crashed, kind, cause}]
+
+  # ── Inventory ─────────────────────────────────────────────────────────────
+
+  # Every `{module, function}` function component of the app, computed from the loaded modules.
+  defp app_components do
+    for module <- Application.spec(:scrypath_ops, :modules),
+        Code.ensure_loaded?(module),
+        function_exported?(module, :__components__, 0),
+        {name, _definition} <- module.__components__(),
+        do: {module, name}
+  end
+
+  # Every LiveView module the dev router serves, minus storybook's own and the test-only Phase 173
+  # fixture mount (the same module under another path).
+  defp app_routes do
+    for %{path: path, metadata: %{phoenix_live_view: {module, _action, _opts, _extra}}} <-
+          Phoenix.Router.routes(ScrypathOpsWeb.DevRouter),
+        not String.starts_with?(path, "/storybook"),
+        not String.starts_with?(path, "/ops/phase173"),
+        String.starts_with?(inspect(module), "ScrypathOpsWeb."),
+        uniq: true,
+        do: module
+  end
+
+  # Every story the catalog loads, as `{path, story module}`.
+  defp loaded_stories do
+    backend = ScrypathOps.Catalog.Storybook
+
+    for entry <- backend.leaves(),
+        {:ok, story} = backend.load_story(String.trim_leading(entry.path, "/")),
+        do: {entry.path, story}
+  end
+
+  # What stories show: the function each component story renders, and the LiveViews that surface and
+  # jobs stories cover. Area and pattern stories name a LiveView for traceability only.
+  defp story_index do
+    stories = loaded_stories()
+
+    components =
+      for {_path, story} <- stories,
+          function_exported?(story, :function, 0),
+          fun = story.function(),
+          do: {Function.info(fun, :module) |> elem(1), Function.info(fun, :name) |> elem(1)}
+
+    routes =
+      for {path, story} <- stories,
+          CatalogChecks.tier(path) in [:surface, :job],
+          function_exported?(story, :covers, 0),
+          route <- story.covers(),
+          do: route
+
+    %{components: Enum.uniq(components), routes: Enum.uniq(routes)}
+  end
+
+  # What provenance is checked against: the registered adopters, the roles and jobs the operator
+  # quality doc defines, the fixture scenario ids, and a reader of repo-relative files.
+  defp known_provenance do
+    quality = File.read!(Path.join(@repo_root, @quality_doc))
+
+    ids = fn pattern ->
+      pattern |> Regex.scan(quality, capture: :all_but_first) |> List.flatten() |> Enum.uniq()
+    end
+
+    %{
+      adopters:
+        ScrypathFixtures.preview_epoch()
+        |> ScrypathFixtures.Scenarios.all()
+        |> Enum.map(&(&1.adopter |> Atom.to_string() |> String.capitalize()))
+        |> Enum.uniq(),
+      roles: ids.(~r/`(ROLE-[A-Z]+)`/),
+      jobs: ids.(~r/`(JOB-\d+)`/),
+      scenario_ids: Enum.map(ScrypathFixtures.Scenarios.ids(), &Atom.to_string/1),
+      read_file: &File.read(Path.join(@repo_root, &1))
+    }
+  end
+
+  # The story's own markup in a rendered iframe document (the part copy rules govern).
+  defp story_markup(html) do
+    html |> LazyHTML.from_document() |> LazyHTML.query("[data-phx-main]") |> LazyHTML.to_html()
+  end
 
   # A rendered iframe document around a hand-written fragment.
   defp page(fragment) do
@@ -394,4 +964,16 @@ defmodule ScrypathOpsWeb.CatalogContractTest do
     do: Exception.format_banner(:error, exception)
 
   defp crash_cause(reason), do: inspect(reason)
+end
+
+defmodule ScrypathOpsWeb.CatalogContractTest.PlantedJobStory do
+  @moduledoc false
+  # A story module that only answers `job/0`, for the provenance plants.
+  def job, do: "JOB-03"
+end
+
+defmodule ScrypathOpsWeb.CatalogContractTest.PlantedJob99Story do
+  @moduledoc false
+  # Answers a job nothing defines, so a note naming it fails on the job alone.
+  def job, do: "JOB-99"
 end
