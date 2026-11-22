@@ -57,7 +57,7 @@
       ],
       "allowed_in": [],
       "source_scope": ["**"],
-      "surfaces": ["control_room.default", "sync_drift.default"]
+      "surfaces": ["control_room.default", "posture.shopadelic_degraded", "sync_drift.default"]
     },
     {
       "id": "last-succeeded",
@@ -75,6 +75,7 @@
         "control_room.refresh_retained",
         "control_room.refresh_retained_degraded",
         "posture.default",
+        "posture.shopadelic_degraded",
         "sync_drift.reconcile_error_retained"
       ]
     },
@@ -109,7 +110,10 @@
       "surfaces": [
         "sync_drift.queue_pending",
         "sync_drift.caught_up",
-        "sync_drift.promotion_blocked_queue"
+        "sync_drift.promotion_blocked_queue",
+        "failed_sync.delete_confirmation",
+        "failed_sync.scoped_load_error",
+        "posture.shopadelic_degraded"
       ]
     },
     {
@@ -181,7 +185,13 @@
       "required": [],
       "allowed_in": [],
       "source_scope": [],
-      "surfaces": ["failed_sync.after_retry", "sync_drift.recovery_queued"]
+      "surfaces": [
+        "failed_sync.after_retry",
+        "failed_sync.delete_confirmation",
+        "sync_drift.recovery_queued",
+        "sync_drift.recovery_unavailable",
+        "sync_drift.recovery_verified"
+      ]
     },
     {
       "id": "accepted-is-meilisearch-only",
@@ -249,8 +259,12 @@
       "surfaces": [
         "control_room.healthy",
         "control_room.refresh_retained",
+        "failed_sync.scoped_load_error",
         "posture.default",
-        "sync_drift.caught_up"
+        "posture.shopadelic_degraded",
+        "sync_drift.caught_up",
+        "sync_drift.recovery_unavailable",
+        "sync_drift.recovery_verified"
       ]
     },
     {

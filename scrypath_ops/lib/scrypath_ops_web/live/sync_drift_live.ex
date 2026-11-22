@@ -577,49 +577,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
 
-  defp document_observation_title(nil), do: "Not checked"
-  defp document_observation_title(%{state: :not_checked}), do: "Not checked"
-  defp document_observation_title(%{state: :verified}), do: "Expected documents observed"
-  defp document_observation_title(%{state: :running}), do: "Document task is still running"
-  defp document_observation_title(%{state: :failed}), do: "Document task failed"
-  defp document_observation_title(%{state: :cancelled}), do: "Document task was canceled"
-  defp document_observation_title(_), do: "Could not check document freshness"
-
-  defp document_observation_kind(%{state: :verified}), do: :success
-  defp document_observation_kind(%{state: :failed}), do: :error
-  defp document_observation_kind(%{state: :cancelled}), do: :error
-  defp document_observation_kind(%{state: :running}), do: :warning
-  defp document_observation_kind(_), do: :info
-
-  defp document_observation_copy(nil),
-    do: "Expected-document evidence has not been checked for this recovery."
-
-  defp document_observation_copy(%{state: :not_checked, reason: reason}),
-    do:
-      "Expected-document evidence is unavailable (#{inspect(reason)}); check the selected recovery receipt."
-
-  defp document_observation_copy(%{state: :verified, operation: :upsert}),
-    do: "The expected upsert effect was observed in the active index."
-
-  defp document_observation_copy(%{state: :verified, operation: :delete}),
-    do: "The expected delete effect was observed in the active index."
-
-  defp document_observation_copy(%{state: :running}),
-    do: "The exact backend task is still running; refresh recovery status to check again."
-
-  defp document_observation_copy(%{state: :failed}),
-    do: "The exact backend task failed; inspect its task result before retrying."
-
-  defp document_observation_copy(%{state: :cancelled}),
-    do: "The exact backend task was canceled; inspect its task result before retrying."
-
-  defp document_observation_copy(%{reason: reason}),
-    do:
-      "Document freshness could not be checked (#{inspect(reason)}); refresh recovery status to check again."
-
-  defp document_observation_copy(_),
-    do: "Document freshness has not been confirmed; refresh recovery status to check again."
-
   defp maybe_advance_generation(socket, true) do
     socket
     |> update(:context_generation, &(&1 + 1))
@@ -2041,52 +1998,7 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </p>
       </.ops_section>
 
-      <.ops_section
-        :if={
-          @selected_schema &&
-            (@recovery_handle || @recovery_observation_error || @recovery_document_observation)
-        }
-        id="document-freshness"
-        class="mt-6"
-        title="Document freshness"
-        subtitle="Check the expected effect for the exact recovery task in this schema's active index."
-      >
-        <:metadata>
-          <.ops_time
-            :if={@recovery_document_observation && @recovery_document_observation.checked_at}
-            id="documents-checked-at"
-            label="Checked"
-            dt={@recovery_document_observation.checked_at}
-          />
-        </:metadata>
-        <p :if={@recovery_loading} role="status" aria-label="Checking document freshness">
-          Checking the expected effect for this same recovery operation. Any previous result remains available with its checked time.
-        </p>
-        <.ops_status
-          id="document-freshness-result"
-          kind={document_observation_kind(@recovery_document_observation)}
-          title={document_observation_title(@recovery_document_observation)}
-          role="status"
-          neutral
-        >
-          {document_observation_copy(@recovery_document_observation)}
-        </.ops_status>
-        <div :if={@recovery_document_observation} class="mt-2 space-y-1 text-ops-body">
-          <p :if={@recovery_document_observation.operation}>
-            Expected effect: {@recovery_document_observation.operation}
-          </p>
-          <p :if={@recovery_document_observation.index}>
-            Active index:
-            <.ops_inline_code>{@recovery_document_observation.index}</.ops_inline_code>
-          </p>
-          <p :if={is_list(@recovery_document_observation.expected_ids)}>
-            Expected document identities:
-            <span :for={id <- @recovery_document_observation.expected_ids} class="break-all">
-              <.ops_inline_code>{id}</.ops_inline_code>
-            </span>
-          </p>
-        </div>
-      </.ops_section>
+      <Recovery.document_freshness :if={@recovery_view.visible?} view={@recovery_view} now={@now} />
 
       <Recovery.recovery_status
         :if={@recovery_view.visible?}

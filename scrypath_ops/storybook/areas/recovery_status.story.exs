@@ -32,12 +32,12 @@ defmodule ScrypathOps.Catalog.Stories.Areas.RecoveryStatus do
 
     for {id, status, task_uid, proof, description} <- [
           {:shopadelic_failed_journey_queued, :accepted, nil, @journey,
-           "Shopadelic, Retry was queued as job 991: the status says so and that the backend has not confirmed it."},
+           "Shopadelic, Retry was queued as job 991: the status says the queue has it and that refresh only observes, never resubmits."},
           {:shopadelic_failed_journey_running, :running, 44, "render only",
            "Shopadelic, the retry is running: the status follows job 991 and Meilisearch task 44."},
           {:shopadelic_failed_journey_queue_done_backend_pending, :queue_only_completed, nil,
            "render only",
-           "Shopadelic, the queue job finished but no backend task is confirmed: completed is not verified."},
+           "Shopadelic, the queue job completed but backend and document evidence are not confirmed: completed is not verified."},
           {:shopadelic_failed_journey_verified, :verified, 44, @journey,
            "Shopadelic, the retry's task and its expected documents were observed: recovery is verified."},
           {:shopadelic_failed_journey_failed, :failed, 44, "render only",

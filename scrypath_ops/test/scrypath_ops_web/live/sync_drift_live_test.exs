@@ -21,6 +21,7 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
 
   @recovery_sections "section[aria-labelledby='document-freshness'], section[aria-labelledby='ordinary-recovery']"
   @recovery_status_section "section[aria-labelledby='ordinary-recovery']"
+  @document_freshness_section "section[aria-labelledby='document-freshness']"
 
   setup do
     previous = SyncDriftStubs.put_env()
@@ -828,6 +829,100 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
                HtmlCanon.canon(recovery_status_html(view, ScrypathOps.Clock.utc_now()))
 
       assert HtmlCanon.canon(mounted) =~ "Recovery refresh could not be checked"
+    end
+  end
+
+  describe "seam: document_freshness (story output equals production output)" do
+    test "every document observation the page can show equals the component output", %{
+      conn: conn
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/ops/sync-and-index?schema=ScrypathOps.Test.OpsPostA")
+      _ = render_async(lv)
+
+      mounted_assigns = :sys.get_state(lv.pid).socket.assigns
+      now = ScrypathOps.Clock.utc_now()
+      checked_at = DateTime.add(now, -180, :second)
+
+      observation = fn state, operation, extra ->
+        Map.merge(
+          %{
+            state: state,
+            reason: nil,
+            operation: operation,
+            index: "sdv_ops_post_a",
+            expected_ids: ["post-6001", "post-6002"],
+            checked_at: checked_at
+          },
+          extra
+        )
+      end
+
+      cases = [
+        {"verified upsert", observation.(:verified, :upsert, %{}), "Expected documents observed"},
+        {"verified delete", observation.(:verified, :delete, %{}), "Expected documents observed"},
+        {"running", observation.(:running, :upsert, %{}), "Document task is still running"},
+        {"failed", observation.(:failed, :upsert, %{}), "Document task failed"},
+        {"canceled", observation.(:cancelled, :upsert, %{expected_ids: nil}),
+         "Document task was canceled"},
+        {"could not be checked",
+         observation.(:unknown, nil, %{
+           reason: :observation_timeout,
+           index: nil,
+           expected_ids: nil,
+           checked_at: nil
+         }), "Could not check document freshness"},
+        {"unchecked after an unresolved handle",
+         observation.(:not_checked, nil, %{
+           reason: :receipt_unavailable,
+           index: nil,
+           expected_ids: nil,
+           checked_at: nil
+         }), "Not checked"},
+        {"no observation yet", nil, "Not checked"}
+      ]
+
+      for {name, document, title} <- cases do
+        assigns =
+          Map.merge(mounted_assigns, %{
+            recovery_handle: "opaque-receipt",
+            recovery_document_observation: document,
+            recovery_loading: name == "running"
+          })
+
+        mounted = assigns |> rendered_page() |> LazyHTML.query(@document_freshness_section)
+
+        # The view the test builds itself, spelling out every input.
+        {:ok, view} =
+          RecoveryView.build(%{
+            schema: OpsPostA,
+            handle: "opaque-receipt",
+            status: nil,
+            evidence: nil,
+            document_observation: document,
+            error: nil,
+            checked_at: nil,
+            loading?: name == "running"
+          })
+
+        component = document_freshness_html(view, now)
+
+        assert Enum.count(mounted) == 1, "#{name}: no document freshness section on the page"
+        assert Enum.count(component) == 1
+        assert HtmlCanon.canon(mounted) == HtmlCanon.canon(component), "#{name}: page differs"
+
+        # The cause is real: the section says what this observation means.
+        assert HtmlCanon.canon(mounted) =~ title, "#{name}: the section does not say #{title}"
+      end
+
+      # Control: the comparison can fail. Another operation changes the canonical tree.
+      upsert = observation.(:verified, :upsert, %{})
+      delete = observation.(:verified, :delete, %{})
+      input = %{recovery_input(nil, nil, upsert) | handle: "h"}
+      {:ok, upsert_view} = RecoveryView.build(input)
+      {:ok, delete_view} = RecoveryView.build(%{input | document_observation: delete})
+
+      refute HtmlCanon.canon(document_freshness_html(upsert_view, now)) ==
+               HtmlCanon.canon(document_freshness_html(delete_view, now))
     end
   end
 
@@ -2018,6 +2113,14 @@ defmodule ScrypathOpsWeb.SyncDriftLiveTest do
     |> render_component(view: view, now: now, mount_path: "/ops")
     |> LazyHTML.from_fragment()
     |> LazyHTML.query(@recovery_status_section)
+  end
+
+  # The Document freshness section rendered by the shared component, as a parsed selection.
+  defp document_freshness_html(view, now) do
+    (&Recovery.document_freshness/1)
+    |> render_component(view: view, now: now)
+    |> LazyHTML.from_fragment()
+    |> LazyHTML.query(@document_freshness_section)
   end
 
   # The text of a parsed selection with whitespace runs collapsed to one space.
