@@ -1366,7 +1366,7 @@ test.describe("ops re-skin contract", () => {
           const read = (): Promise<{ bg: string; decoration: string }> =>
             button.evaluate((el) => {
               const cs = getComputedStyle(el);
-              return { bg: `${cs.backgroundColor} ${cs.backgroundImage}`, decoration: cs.textDecorationLine };
+              return { bg: `${cs.backgroundColor} ${cs.filter}`, decoration: cs.textDecorationLine };
             });
           await page.mouse.move(0, 0);
           const rest = await read();

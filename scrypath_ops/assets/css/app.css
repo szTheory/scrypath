@@ -2399,8 +2399,8 @@
    never reaches the button: these rules are authored here, after it, in the same layer.
    Default button (outline): Panel fill, Ink text, opaque Control Edge border
    (LD-15). Hover and press fill is Sunken, never Selected (LD-13). Plum button: hover keeps the
-   Plum fill and lays a 14% black veil over it, above daisyUI's grain layer (a darker fill in both themes, the
-   label untouched, no color mix or new color; 10.2:1 text contrast in light, 5.7:1 in dark) and never underlines the
+   Plum fill and dims the whole button to 88% brightness (a darker fill in both themes, no gradient, no
+   color mix, no new color; 7.6:1 text contrast in light, 5.9:1 in dark) and never underlines the
    label. `[data-ops-state="hover"]` renders the same hover look without a pointer,
    for the storybook's static render. Disabled: muted text, Control Edge border, opaque. There is no
    danger fill: Failed orange is a status color, never a button (LD-2). */
@@ -2418,7 +2418,7 @@
   }
 
   .ops-btn.btn-primary:is(:hover, [data-ops-state="hover"]):not(:disabled) {
-    background-image: linear-gradient(rgb(0 0 0 / 14%), rgb(0 0 0 / 14%)), var(--btn-noise, none);
+    filter: brightness(0.88);
   }
 
   .ops-btn.btn-primary:active:not(:disabled) {

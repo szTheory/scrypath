@@ -203,10 +203,10 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
     primary_hover =
       rule(".ops-btn.btn-primary:is(:hover, [data-ops-state=\"hover\"]):not(:disabled)")
 
-    assert primary_hover =~
-             "background-image: linear-gradient(rgb(0 0 0 / 14%), rgb(0 0 0 / 14%)), var(--btn-noise, none)"
+    assert primary_hover =~ "filter: brightness(0.88)"
 
     refute primary_hover =~ "color-mix"
+    refute primary_hover =~ "gradient"
 
     refute primary_hover =~ "text-decoration"
 

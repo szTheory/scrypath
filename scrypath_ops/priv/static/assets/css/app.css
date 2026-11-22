@@ -5477,7 +5477,7 @@
     background-color: var(--ops-sunken);
   }
   .ops-btn.btn-primary:is(:hover, [data-ops-state="hover"]):not(:disabled) {
-    background-image: linear-gradient(rgb(0 0 0 / 14%), rgb(0 0 0 / 14%)), var(--btn-noise, none);
+    filter: brightness(0.88);
   }
   .ops-btn.btn-primary:active:not(:disabled) {
     background-color: var(--color-primary);
