@@ -242,15 +242,28 @@ defmodule ScrypathFixtures.Failures do
     do: "{:error, {:transport_error, %Req.TransportError{reason: :econnrefused}}}"
 
   # The same value Scrypath's `IndexingAck` returns for a failed task, inspected by Oban with its
-  # default options, so the text has the real struct's shape and line breaks.
+  # default options, so the text has the real struct's shape and line breaks. The one difference is
+  # `inspect_stable/1`: plain map keys print sorted.
   defp oban_reason(:oban_task_failed, opts),
-    do: {:error, {:task_failed, opts |> Keyword.fetch!(:task) |> failed_task()}} |> inspect()
+    do:
+      {:error, {:task_failed, opts |> Keyword.fetch!(:task) |> failed_task()}}
+      |> inspect_stable()
 
   defp oban_reason(:oban_cancel_invalid_job, opts),
     do:
       {:cancel,
        {:invalid_job, {:unknown_schema, opts |> Keyword.fetch!(:schema) |> schema_name()}}}
-      |> inspect()
+      |> inspect_stable()
+
+  @doc """
+  `inspect/1` with the keys of every plain map printed in sorted order. The VM prints a small map's
+  atom keys in atom-table order, which depends on the order modules were loaded, so the same task
+  would print `task_uid` before `index_uid` on one boot and after it on the next. Struct fields keep
+  their declared order. The text of an Oban error is built with this so the catalog reads the same
+  after every restart.
+  """
+  @spec inspect_stable(term()) :: String.t()
+  def inspect_stable(term), do: inspect(term, custom_options: [sort_maps: true])
 
   defp failed_task(%{"status" => "failed"} = raw) do
     {:ok, normalized} = TaskPayload.normalize(raw, :poll)
