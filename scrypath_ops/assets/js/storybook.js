@@ -12,6 +12,16 @@ import {OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation} from "./ops_search"
   if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme)
 })()
 
+// The storybook sandbox class sets `font-family: serif` on <body>, and that beats the product
+// stylesheet, so every story drew in a serif face while the real screens (which get the product
+// sans from <html>) did not. Give the iframe body the product family. The stylesheet stays as is:
+// this is the one place that only the catalog loads.
+;(function () {
+  const useProductFont = () => { document.body.style.fontFamily = "var(--font-sans)" }
+  if (document.body) useProductFont()
+  else document.addEventListener("DOMContentLoaded", useProductFont, {once: true})
+})()
+
 window.storybook = {
   Hooks: {CommandPalette, OpsNavDrawer, OpsModal, OpsRefreshButton, OpsToast, OpsTimestampCopy, OpsSearchDraft, OpsHelpAnchor, OpsFieldValidation}
 }

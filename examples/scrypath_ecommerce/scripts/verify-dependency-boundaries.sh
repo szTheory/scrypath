@@ -702,7 +702,7 @@ for {app, label} <- [{:scrypath_ops, "ops"}, {:scrypath_ecommerce, "host"}] do
   IO.puts("DEPENDENCY_BOUNDARY_APP label=#{label} env=#{environment} required=#{inspect(applications)} optional=#{inspect(optional)} code=#{code_path}")
 end
 
-forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller, ScrypathFixtures, PhoenixStorybook, MDEx]
+forbidden_modules = [Esbuild, Tailwind, Phoenix.LiveDashboard, Phoenix.LiveDashboard.RequestLogger, Telemetry.Metrics, :telemetry_poller, ScrypathOps.Catalog.Endpoint, ScrypathFixtures, PhoenixStorybook, MDEx]
 loaded = Enum.filter(forbidden_modules, &Code.ensure_loaded?/1)
 loaded == [] || raise "runtime loaded builder/diagnostic modules: #{inspect(loaded)}"
 

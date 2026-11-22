@@ -74,6 +74,27 @@ config :scrypath_ops, dev_routes: true
 # Mount the component catalog (phoenix_storybook) at /storybook. The dev endpoint binds 127.0.0.1.
 config :scrypath_ops, catalog_routes: true
 
+# The catalog's own server (`mix scrypath_ops.catalog.serve`): no Repo, no code reloader, no
+# watchers, so it answers without a database. It binds loopback only and never anything wider.
+# CATALOG_PORT picks the port (default 4003); a value that is not a port number falls back to the default.
+catalog_port =
+  case Integer.parse(System.get_env("CATALOG_PORT") || "") do
+    {port, ""} when port in 1..65_535 -> port
+    _ -> 4003
+  end
+
+config :scrypath_ops, ScrypathOps.Catalog.Endpoint,
+  http: [ip: {127, 0, 0, 1}, port: catalog_port],
+  server: true,
+  adapter: Bandit.PhoenixAdapter,
+  pubsub_server: ScrypathOps.PubSub,
+  check_origin: false,
+  code_reloader: false,
+  debug_errors: true,
+  render_errors: [formats: [html: ScrypathOpsWeb.ErrorHTML], layout: false],
+  live_view: [signing_salt: "catalogliveview"],
+  secret_key_base: "Kc3mQz8vNn1rYw0PtLd5HbXe2GsUa7JfRi4oVq9ZyTx6EkMh1BnCwSjDlA0uFgOp"
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
