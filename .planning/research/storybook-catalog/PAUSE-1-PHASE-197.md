@@ -142,4 +142,4 @@ Phase 198 (the remaining small screens, the Clinicly and Chatly sets, a local br
 - **Phase 198: cut.** FLOW-05 (the milestone-end review, Pause 2) is next; the audit, complete and cleanup steps have not run. PILOT-07 is closed.
 - **Fixtures project: keep separate**, revisit at the `phase173` host-spec port or v1.51.
 - **Badge story: one variation** (feedback row 2). Feedback row 1 stays as is.
-- **Port: still open.** The recommendation above (move back to 4003) needs the owner of the `fablebook` process holding 4003 to stop it, which is not something this run can do. PILOT-06 stays Pending until then, or until the recorded decision is changed to 4013.
+- **Port: accepted as 4013 (maintainer, 2026-11-22: "you can just restart and use another port").** PILOT-06 closed with the port wording amended.
