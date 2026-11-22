@@ -57,7 +57,12 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest do
     previous_mode = System.get_env("OPSUI_AUTH_MODE")
     System.delete_env("OPSUI_AUTH_MODE")
 
+    # The observation server is global and keys evidence by queue job identity, and every test
+    # here queues job 991: evidence one test records must not reach the next.
+    reset_observations()
+
     on_exit(fn ->
+      reset_observations()
       restore_env.()
 
       case previous_sigra do
@@ -224,6 +229,71 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest do
     end
   end
 
+  # Optional and cut-able (Phase 197 CONTEXT): if these seams ever cost more than they prove, this
+  # describe goes and the verified end stays the job of `operator.spec.ts`, the real-browser chain.
+  describe "the verified end (basic mode)" do
+    setup do
+      Application.put_env(
+        :scrypath_ops,
+        :meilisearch_client,
+        ScrypathOpsWeb.CatalogJourneyTest.Client
+      )
+
+      # The document check issues real HTTP to the scenario's `.invalid` URL; Req.Test answers it.
+      previous_req = Req.default_options()
+      Req.default_options(plug: {Req.Test, ScrypathOpsWeb.CatalogJourneyTest.Meilisearch})
+      Req.Test.set_req_test_to_shared()
+      on_exit(fn -> Req.default_options(previous_req) end)
+
+      Req.Test.stub(ScrypathOpsWeb.CatalogJourneyTest.Meilisearch, fn conn ->
+        case conn.path_info do
+          ["indexes", @index, "documents", id] ->
+            [record] = ScrypathFixtures.Shopadelic.Product.search_records([id], %{})
+            Req.Test.json(conn, document(record))
+
+          _other ->
+            conn |> Plug.Conn.put_status(404) |> Req.Test.json(%{"code" => "not_found"})
+        end
+      end)
+
+      :ok
+    end
+
+    test "JOB-03: the retry reaches Recovery verified once the worker, the task and the documents agree",
+         %{conn: conn, scenario: scenario} do
+      {:ok, failed, _html} = live(conn, ~p"/ops/failed-sync?schema=#{@schema}")
+      render_async(failed)
+
+      failed
+      |> element("button[data-testid='failed-sync-retry'][phx-value-id='101']")
+      |> render_click()
+
+      assert Agent.get(@counter, & &1.count) == 1
+
+      # The worker runs: the queue shows the job completed and its Meilisearch task 44 succeeded.
+      Agent.update(@counter, &%{&1 | job_state: "completed"})
+      simulate_worker!(Agent.get(@counter, & &1.job), 44, scenario)
+
+      {:ok, sync, _html} =
+        failed
+        |> element("[data-testid='recovery-receipt'] a", "Check sync status")
+        |> render_click()
+        |> follow_redirect(conn)
+
+      sync_doc = sync |> render_async() |> LazyHTML.from_fragment()
+
+      assert sync_doc |> LazyHTML.query("#recovery-observation") |> text() =~ "Recovery verified"
+
+      assert sync_doc
+             |> LazyHTML.query("[data-testid='recovery-evidence']")
+             |> text() =~
+               "Queue job 991 · attempt 1 · Meilisearch task 44 · Active index #{@index}"
+
+      assert sync_doc |> LazyHTML.query("#document-freshness-result") |> text() =~
+               "Expected documents observed"
+    end
+  end
+
   describe "denial (Sigra mode)" do
     setup do
       Application.put_env(:scrypath_ops, :sigra,
@@ -331,6 +401,56 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest do
     |> Enum.flat_map(&LazyHTML.attribute(&1, "href"))
   end
 
+  defp reset_observations do
+    :sys.replace_state(ScrypathOps.RecoveryObservation, fn state ->
+      %{state | recent: %{}, observations: %{}}
+    end)
+
+    :ok
+  end
+
+  # The document Meilisearch would hold for a record: the same projection the page expects.
+  defp document(record) do
+    projected = Scrypath.Projection.document(ScrypathFixtures.Shopadelic.Product, record)
+
+    projected.data
+    |> Map.new(fn {key, value} -> {to_string(key), value} end)
+    |> Map.put("id", projected.id)
+  end
+
+  # What an Oban worker run emits, in one process, in the order a real run emits it. Only the
+  # telemetry is simulated; the page and the recovery observation are the real ones.
+  defp simulate_worker!(%Oban.Job{} = job, task_uid, scenario) do
+    args = Map.put_new(job.args, "meilisearch_url", scenario.scrypath_opts[:meilisearch_url])
+
+    meta = %{
+      job: %{id: job.id, attempt: 1, worker: job.worker, args: args},
+      conf: %{
+        name: ScrypathOpsWeb.CatalogJourneyTest.Queue,
+        repo: ScrypathOpsWeb.CatalogJourneyTest.JobRepo,
+        prefix: nil
+      }
+    }
+
+    Task.async(fn ->
+      :telemetry.execute([:oban, :job, :start], %{}, meta)
+
+      :telemetry.execute([:scrypath, :meilisearch, :task_wait, :start], %{}, %{task_uid: task_uid})
+
+      :telemetry.execute([:scrypath, :meilisearch, :task_wait, :stop], %{}, %{
+        task_uid: task_uid,
+        final_status: "succeeded"
+      })
+
+      :telemetry.execute([:oban, :job, :stop], %{}, meta)
+    end)
+    |> Task.await()
+
+    # Barrier: the observation server has handled the evidence the task sent it.
+    _ = :sys.get_state(ScrypathOps.RecoveryObservation)
+    :ok
+  end
+
   defp squish(string), do: string |> String.replace(~r/\s+/, " ") |> String.trim()
 
   # "3 sync jobs and 1 Meilisearch tasks failed" in the verdict evidence.
@@ -405,4 +525,23 @@ defmodule ScrypathOpsWeb.CatalogJourneyTest.JobRepo do
   end
 
   def get(_schema, _id, _opts), do: nil
+end
+
+defmodule ScrypathOpsWeb.CatalogJourneyTest.Client do
+  @moduledoc false
+  # The fixtures' fake Meilisearch client plus `task/2`, which the recovery check reads for the
+  # task the worker waited on.
+
+  defdelegate tasks(filters, config), to: ScrypathFixtures.FakeMeilisearchClient
+  defdelegate get_settings(index, config), to: ScrypathFixtures.FakeMeilisearchClient
+
+  def task(uid, _opts) do
+    {:ok,
+     %{
+       "uid" => uid,
+       "status" => "succeeded",
+       "type" => "documentAdditionOrUpdate",
+       "indexUid" => "shopadelic_product"
+     }}
+  end
 end
