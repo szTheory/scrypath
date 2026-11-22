@@ -5477,7 +5477,7 @@
     background-color: var(--ops-sunken);
   }
   .ops-btn.btn-primary:is(:hover, [data-ops-state="hover"]):not(:disabled) {
-    background-color: var(--ops-primary-hover);
+    background-color: color-mix(in oklab, var(--color-primary), var(--color-base-content) 25%);
   }
   .ops-btn.btn-primary:active:not(:disabled) {
     background-color: var(--color-primary);
@@ -5932,7 +5932,6 @@ code, pre, kbd {
       --ops-selection: #2b2130;
       --ops-theme-selection: #2b2130;
       --ops-control-edge: #8f7f94;
-      --ops-primary-hover: #e4a3d4;
       --ops-text-muted: #bbaac0;
       --ops-status-failed: #ff9a6b;
       --ops-status-retrying: #e3b25c;
@@ -5981,7 +5980,6 @@ code, pre, kbd {
     --ops-selection: #2b2130;
     --ops-theme-selection: #2b2130;
     --ops-control-edge: #8f7f94;
-    --ops-primary-hover: #e4a3d4;
     --ops-text-muted: #bbaac0;
     --ops-status-failed: #ff9a6b;
     --ops-status-retrying: #e3b25c;
@@ -6029,7 +6027,6 @@ code, pre, kbd {
     --ops-selection: #ebdfe7;
     --ops-theme-selection: #ebdfe7;
     --ops-control-edge: #8a7a8e;
-    --ops-primary-hover: #5e2051;
     --ops-text-muted: #5e5360;
     --ops-status-failed: #b0360b;
     --ops-status-retrying: #8a5a00;

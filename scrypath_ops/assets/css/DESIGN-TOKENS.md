@@ -146,7 +146,6 @@ spreads them to both `[data-theme="dark"]` and `@media (prefers-color-scheme: da
 | `--ops-surface-1` | `#ffffff` | `#201624` | Resting panel — `.ops-panel`, `.ops-surface-flat`, `.ops-preflight__card` |
 | `--ops-sunken` | `#f0e9e6` | `#110a14` | Recessed fill: code, hover fills, disabled fields, skeleton blocks |
 | `--ops-selected` | `#ebdfe7` | `#2b2130` | Selected fill, always paired with the 2px Plum or Orchid inline-start line |
-| `--ops-primary-hover` | `#5e2051` | `#e4a3d4` | Hover fill of the one Plum (Orchid in dark) button: one step darker in light, lighter in dark. 11.7:1 with white and 9.4:1 with Night ink. Replaces the hover underline |
 | `--ops-selection`, `--ops-theme-selection` | `#ebdfe7` | `#2b2130` | The same value under the two older names, kept one milestone because tests and surface lists still name them; the v1.47 cleanup collapses them into `--ops-selected` |
 | `--ops-control-edge` | `#8a7a8e` | `#8f7f94` | The opaque border of every control; 3:1 or better on every backdrop |
 | `--ops-text-muted` | `#5e5360` | `#bbaac0` | Opaque muted text (Muted Ink / Muted Pale) |
@@ -332,7 +331,7 @@ page. `ui-tokens.test.mjs` ("live scroll padding clears the sticky header") enfo
   the outline default (Panel fill, Ink text, opaque Control Edge border; hover and press are
   `--ops-sunken`, never `--ops-selected`). There is no danger variant and no error button class: a
   destructive confirm is the dialog's one Plum button, named by its consequence, with Cancel focused.
-  Plum buttons change fill to `--ops-primary-hover` on hover and never underline their label.
+  Plum buttons change fill on hover (the primary mixed 25% toward `--color-base-content`: darker Plum in light, lighter Orchid in dark, 10.7:1 and 9.3:1 text contrast; derived, so no new hex) and never underline their label.
   Buttons come in three variants: `:default` (outline), `:primary` and `:ghost`.
 - **Row actions** (`.ops-text-action`) are underlined Ink text, 14px 600, with a 40px target and a 2px
   underline on hover. They share one computed style; nothing else may override it. Prose links are
