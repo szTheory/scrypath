@@ -5,9 +5,11 @@ defmodule ScrypathFixtures.Check do
 
   `run/1` returns `{:ok, %{scenarios: n}}` or `{:error, problems}`. A problem is a
   `{scenario_id, tag_tuple}` pair whose tag tuple starts with one of `invariants/0`. A problem in
-  the failure table itself has `:failures` where the scenario id would be. Callers can pass
-  `:scenarios`, `:builders`, `:now` and `:failures` (a list of table entries), so a test can plant
-  a broken scenario, a broken builder or a broken table without a special mode.
+  the failure table itself has `:failures` where the scenario id would be, a problem in a source
+  file has `:source`, and a problem in the bulk data has `:bulk`. Callers can pass `:scenarios`,
+  `:builders`, `:now`, `:failures` (a list of table entries), `:source_files`, `:bulk_sample` and
+  `:labels`, so a test can plant a broken scenario, builder, table, source file, bulk sample or
+  label without a special mode.
 
   The check never reads the operator UI and never touches a database. It does these kinds of work:
 
@@ -28,12 +30,25 @@ defmodule ScrypathFixtures.Check do
       `Scrypath.Meilisearch.TaskPayload.normalize/2`, and `Scrypath.sync_status/2` and
       `Scrypath.failed_sync_work/2` must answer as the scenario's `:expect` says.
 
+  Three more kinds of check read the project's own text and its bulk data:
+
+    * source lints over every file of the project: no raw bidirectional control, zero-width
+      character or byte-order mark (hostile text is written as escapes, never typed), and no
+      wall-clock, random, operating-system or repository call in `lib/` (every time is `now` minus an
+      offset);
+    * labels and data: no compliance-claim word and no sibling-brand canon id in a scenario label,
+      any string inside a scenario, the README or `lib/` source, and a provenance line (fictional,
+      Scrypath-owned, no records copied) in every adopter module and schema;
+    * the bulk data: the digest of the fixed sample must equal the golden digest in
+      `ScrypathFixtures.Bulk`.
+
   Anything that reaches `Scrypath.Config.resolve!/1` or `Scrypath.index_contract_drift/2` is given
   `ScrypathFixtures.Scenario.runtime_opts/1`; `sync_status/2` and `failed_sync_work/2` take the
   full options because they split the operator keys off themselves.
   """
 
   alias Scrypath.Meilisearch.TaskPayload
+  alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Meili
   alias ScrypathFixtures.Recordings
@@ -61,7 +76,12 @@ defmodule ScrypathFixtures.Check do
     :job_schema,
     :time_not_relative,
     :unlabelled,
-    :stress_unmarked
+    :stress_unmarked,
+    :raw_format_char,
+    :impure_source,
+    :denylisted_word,
+    :provenance_missing,
+    :bulk_digest
   ]
 
   @type problem :: {atom(), tuple()}
@@ -89,7 +109,14 @@ defmodule ScrypathFixtures.Check do
       `fun` takes `now` and returns a scenario. The relative-time invariant needs a builder, not
       a built scenario, because it builds the same scenario at two instants;
     * `:scenarios` (default: every builder's scenario built at `now`);
-    * `:failures` (default `ScrypathFixtures.Failures.all/0`).
+    * `:failures` (default `ScrypathFixtures.Failures.all/0`);
+    * `:source_files` (default: every file of this project outside `_build` and `deps`): a list of
+      paths to read, or `{path, content}` pairs to scan without a file. A path decides what a file
+      is: `.../lib/...ex` is source, `.../lib/scrypath_fixtures/<adopter>.ex` and
+      `.../lib/scrypath_fixtures/<adopter>/...` are adopter files;
+    * `:bulk_sample` (default `ScrypathFixtures.Bulk.sample/0`): the term whose digest is compared
+      with the golden one;
+    * `:labels` (default: `{id, label}` of every scenario): the labels scanned for denied words.
 
   The relative-time check runs over `:builders`. A caller that passes only `:scenarios` gave no
   builders, so that check is skipped for that call.
@@ -107,11 +134,18 @@ defmodule ScrypathFixtures.Check do
         {:error, :error} -> {scenarios(now), Scenarios.builders()}
       end
 
+    sources = opts |> Keyword.get_lazy(:source_files, &default_source_files/0) |> read_sources()
+    sample = Keyword.get_lazy(opts, :bulk_sample, &Bulk.sample/0)
+    labels = Keyword.get_lazy(opts, :labels, fn -> Enum.map(scenarios, &{&1.id, &1.label}) end)
+
     problems =
       table_problems(failures) ++
         registry_problems(scenarios) ++
         Enum.flat_map(scenarios, &check_scenario/1) ++
-        Enum.flat_map(builders, &time_problems(&1, now))
+        Enum.flat_map(builders, &time_problems(&1, now)) ++
+        word_problems(labels, scenarios, sources) ++
+        source_problems(sources, scenarios) ++
+        bulk_problems(sample)
 
     case problems do
       [] -> {:ok, %{scenarios: length(scenarios)}}
@@ -143,6 +177,194 @@ defmodule ScrypathFixtures.Check do
         else: []
 
     unlabelled ++ unmarked
+  end
+
+  # -- the project's own text: source lints, denied words, provenance ---------------------------
+
+  # The project root, computed once at compile time (research A6): this check only runs from a
+  # source checkout, never from a release.
+  @fixtures_root Path.expand("../..", __DIR__)
+
+  # The characters Trojan Source hides behind: zero-width and direction marks (U+200B to U+200F),
+  # bidirectional embeddings and overrides (U+202A to U+202E), isolates (U+2066 to U+2069) and the
+  # byte-order mark (U+FEFF). Written as code points, so this file holds none of them itself.
+  @format_codepoints Enum.to_list(0x200B..0x200F) ++
+                       Enum.to_list(0x202A..0x202E) ++
+                       Enum.to_list(0x2066..0x2069) ++ [0xFEFF]
+
+  defp default_source_files do
+    @fixtures_root
+    |> Path.join("**/*")
+    |> Path.wildcard(match_dot: true)
+    |> Enum.filter(&File.regular?/1)
+    |> Enum.reject(&build_artifact?/1)
+    |> Enum.sort()
+  end
+
+  defp build_artifact?(path) do
+    case path |> Path.relative_to(@fixtures_root) |> Path.split() do
+      [top | _rest] -> top in ["_build", "deps"]
+      [] -> false
+    end
+  end
+
+  # A source is `{path, content}`: a bare path is read, a pair is scanned as given.
+  defp read_sources(files) do
+    Enum.map(files, fn
+      {path, content} when is_binary(path) and is_binary(content) -> {path, content}
+      path when is_binary(path) -> {path, File.read!(path)}
+    end)
+  end
+
+  defp relative(path), do: Path.relative_to(path, @fixtures_root)
+
+  defp lib_source?(path), do: String.ends_with?(path, ".ex") and String.contains?(path, "/lib/")
+
+  defp source_problems(sources, scenarios) do
+    adopters = scenarios |> Enum.map(&Atom.to_string(&1.adopter)) |> Enum.uniq()
+    patterns = impure_patterns()
+
+    Enum.flat_map(sources, fn {path, content} ->
+      raw_format_problems(path, content) ++
+        impure_problems(path, content, patterns) ++
+        provenance_problems(path, content, adopters)
+    end)
+  end
+
+  defp raw_format_problems(path, content) do
+    for codepoint <- @format_codepoints,
+        :binary.match(content, <<codepoint::utf8>>) != :nomatch,
+        do: {:source, {:raw_format_char, relative(path), codepoint}}
+  end
+
+  # The calls a pure builder must not make. Each is written in two pieces so this file does not
+  # contain the text it searches for: this file stays under its own lint instead of being exempt.
+  defp impure_tokens do
+    [
+      "DateTime" <> ".utc_now",
+      "NaiveDateTime" <> ".utc_now",
+      "Date" <> ".utc_today",
+      ":rand" <> ".",
+      "System" <> ".",
+      ":os" <> ".",
+      "Repo" <> ".",
+      "~U" <> "["
+    ]
+  end
+
+  # A token counts only where a word starts, so a call on `NaiveDateTime` is one problem and not
+  # also one for the `DateTime` token it contains.
+  defp impure_patterns do
+    for token <- impure_tokens() do
+      {token, Regex.compile!("(?<![A-Za-z0-9_])" <> Regex.escape(token))}
+    end
+  end
+
+  # The one datetime literal in the project lives in `lib/scrypath_fixtures.ex` (the preview epoch).
+  defp impure_problems(path, content, patterns) do
+    if lib_source?(path) do
+      for {token, pattern} <- patterns,
+          Regex.match?(pattern, content),
+          not (token == "~U" <> "[" and String.ends_with?(path, "/lib/scrypath_fixtures.ex")),
+          do: {:source, {:impure_source, relative(path), token}}
+    else
+      []
+    end
+  end
+
+  # An adopter file is a module or schema under `lib/scrypath_fixtures/<adopter>.ex` or
+  # `lib/scrypath_fixtures/<adopter>/`. It needs one line that says the adopter is fictional,
+  # Scrypath-owned data and that no records were copied.
+  defp provenance_problems(path, content, adopters) do
+    if adopter_source?(path, adopters) and not provenance_line?(content) do
+      [{:source, {:provenance_missing, relative(path)}}]
+    else
+      []
+    end
+  end
+
+  defp adopter_source?(path, adopters) do
+    lib_source?(path) and
+      Enum.any?(adopters, fn adopter ->
+        String.ends_with?(path, "/lib/scrypath_fixtures/#{adopter}.ex") or
+          String.contains?(path, "/lib/scrypath_fixtures/#{adopter}/")
+      end)
+  end
+
+  defp provenance_line?(content) do
+    content
+    |> String.split("\n")
+    |> Enum.any?(fn line ->
+      line = String.downcase(line)
+      Enum.all?(["fictional", "scrypath-owned", "no record"], &String.contains?(line, &1))
+    end)
+  end
+
+  # Compliance claims are never made by fictional data, and the sibling brand repositories'
+  # records are never copied. The words live here and nowhere else in the project: the README says
+  # the rule without listing them, and the scan below skips this one file by path, because its
+  # attribute is the one place that has to name them.
+  @denied_words ~w(HIPAA GDPR PCI SOX compliant certified)
+  @canon_sentinel "LGX-0417-DE"
+
+  defp denied_words, do: @denied_words ++ [@canon_sentinel]
+
+  defp denied_regex do
+    words = denied_words() |> Enum.map(&Regex.escape/1) |> Enum.join("|")
+    Regex.compile!("\\b(" <> words <> ")\\b", "i")
+  end
+
+  # The denied words found in `text`, each as spelled in the list (the text is matched without case).
+  defp words_in(text) when is_binary(text) do
+    denied_regex()
+    |> Regex.scan(text, capture: :first)
+    |> Enum.map(fn [found] ->
+      Enum.find(denied_words(), &(String.downcase(&1) == String.downcase(found)))
+    end)
+    |> Enum.uniq()
+  end
+
+  defp word_problems(labels, scenarios, sources) do
+    in_labels =
+      for {id, label} <- labels,
+          word <- words_in(label),
+          do: {id, {:denylisted_word, {:label, id}, word}}
+
+    in_data =
+      for %Scenario{id: id} = scenario <- scenarios,
+          word <-
+            [scenario.scrypath_opts, scenario.expect]
+            |> strings_in()
+            |> Enum.flat_map(&words_in/1)
+            |> Enum.uniq(),
+          do: {id, {:denylisted_word, {:scenario, id}, word}}
+
+    in_files =
+      for {path, content} <- sources,
+          scanned_for_words?(path),
+          word <- words_in(content),
+          do: {:source, {:denylisted_word, {:file, relative(path)}, word}}
+
+    in_labels ++ in_data ++ in_files
+  end
+
+  # The README and the `lib/` source, except the check itself (see `@denied_words`).
+  defp scanned_for_words?(path) do
+    not String.ends_with?(path, "/lib/scrypath_fixtures/check.ex") and
+      (Path.basename(path) == "README.md" or lib_source?(path))
+  end
+
+  # Every binary inside a term: map and keyword values, list and tuple members, struct fields.
+  defp strings_in(term) when is_binary(term), do: [term]
+  defp strings_in(term) when is_struct(term), do: term |> Map.from_struct() |> strings_in()
+  defp strings_in(term) when is_map(term), do: term |> Map.to_list() |> strings_in()
+  defp strings_in(term) when is_tuple(term), do: term |> Tuple.to_list() |> strings_in()
+  defp strings_in(term) when is_list(term), do: Enum.flat_map(term, &strings_in/1)
+  defp strings_in(_term), do: []
+
+  defp bulk_problems(sample) do
+    digest = Bulk.digest(sample)
+    if digest == Bulk.golden_digest(), do: [], else: [{:bulk, {:bulk_digest, digest}}]
   end
 
   # -- relative time ---------------------------------------------------------------------------

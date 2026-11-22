@@ -3,6 +3,8 @@ defmodule ScrypathFixtures.Logistify do
   Logistify scenarios. Logistify is a fictional freight-tracking product; the data is for
   development and tests only.
 
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
+
   Three named states, built from raw wire shapes only, so the real `Scrypath.sync_status/2` and
   `Scrypath.failed_sync_work/2` do the normalizing:
 
@@ -17,6 +19,7 @@ defmodule ScrypathFixtures.Logistify do
   """
 
   alias ScrypathFixtures.AppliedSettings
+  alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.FakeMeilisearchClient
   alias ScrypathFixtures.FakeObanInspector
   alias ScrypathFixtures.Logistify.Shipment
@@ -29,6 +32,9 @@ defmodule ScrypathFixtures.Logistify do
   @queue :logistify_sync
 
   @index_prefix "logistify"
+
+  # The seed of the ordinary shipment records `ScrypathFixtures.Bulk` picks (the Phase 196 number).
+  @bulk_seed 196
 
   # Every ordinary Logistify state reads clean: nothing failed, applied settings equal the schema.
   @clean_expect %{
@@ -215,7 +221,11 @@ defmodule ScrypathFixtures.Logistify do
 
   defp job(now, index, max_attempts, id, state, role, opts) do
     operation = if role == :delete, do: "delete", else: "upsert"
-    document_ids = ["LSH-#{id}", "LSH-#{id + 1000}"]
+    # Two ordinary shipments per job, picked by `Bulk` so the ids are the ones its records carry.
+    document_ids = [
+      Bulk.row(:shipment, @bulk_seed, id).id,
+      Bulk.row(:shipment, @bulk_seed, id + 1_000).id
+    ]
 
     ObanJob.job(
       Map.merge(

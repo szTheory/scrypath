@@ -1,7 +1,9 @@
 defmodule ScrypathFixtures.Wikily.Page do
   @moduledoc """
   Wikily's searchable page schema. Wikily is a fictional team-wiki product; the data is for
-  development and tests only, Scrypath-owned, and no record is copied from a real product.
+  development and tests only.
+
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
   """
 
   use Ecto.Schema

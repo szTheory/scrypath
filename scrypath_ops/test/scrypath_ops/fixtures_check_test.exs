@@ -14,6 +14,7 @@ defmodule ScrypathOps.FixturesCheckTest do
   # Pure: no app env and no database, so it runs async.
   use ExUnit.Case, async: true
 
+  alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.Check
   alias ScrypathFixtures.Failures
   alias ScrypathFixtures.Logistify
@@ -129,6 +130,12 @@ defmodule ScrypathOps.FixturesCheckTest do
     job_id = job_at(deep, 0).id
     now = deep.now
     deep_builder = &Logistify.scenario(:deep_queue, now: &1)
+    planted_lib = "/planted/lib/scrypath_fixtures"
+
+    # The bulk sample with one record's title changed: a sample whose digest is not the golden one.
+    changed_sample =
+      Bulk.sample()
+      |> Keyword.update!(:product, fn [first | rest] -> [%{first | title: "Altered"} | rest] end)
 
     [
       plant(:wire_guard, "a task whose status is outside the wire list", id,
@@ -301,6 +308,40 @@ defmodule ScrypathOps.FixturesCheckTest do
       plant(:stress_unmarked, "a stress scenario that does not say stress", id,
         scenarios: [%{deep | kind: :stress}],
         problem: {:stress_unmarked, id}
+      ),
+      # The source plants are in memory (a `{path, content}` pair) so the table needs no files; the
+      # provenance test plants the same causes as real temporary files. A raw format character is
+      # built from its bytes, never typed.
+      plant(:raw_format_char, "a file holding a right-to-left override", :source,
+        scenarios: [deep],
+        source_files: [{planted_lib <> "/planted.txt", "a" <> <<0xE2, 0x80, 0xAE>> <> "b"}],
+        problem: {:raw_format_char, planted_lib <> "/planted.txt", 0x202E}
+      ),
+      plant(:impure_source, "a lib file that reads the wall clock", :source,
+        scenarios: [deep],
+        source_files: [
+          {planted_lib <> "/planted.ex",
+           "defmodule Planted do\n  def at, do: DateTime.utc_now()\nend\n"}
+        ],
+        problem: {:impure_source, planted_lib <> "/planted.ex", "DateTime.utc_now"}
+      ),
+      plant(:denylisted_word, "a label that makes a compliance claim", id,
+        scenarios: [deep],
+        labels: [{id, "Logistify shipments, HIPAA ready (fictional)"}],
+        problem: {:denylisted_word, {:label, id}, "HIPAA"}
+      ),
+      plant(:provenance_missing, "an adopter schema with no provenance line", :source,
+        scenarios: [deep],
+        source_files: [
+          {planted_lib <> "/logistify/planted.ex",
+           "defmodule Planted do\n  @moduledoc \"A shipment schema.\"\nend\n"}
+        ],
+        problem: {:provenance_missing, planted_lib <> "/logistify/planted.ex"}
+      ),
+      plant(:bulk_digest, "a bulk sample whose record changed", :bulk,
+        scenarios: [deep],
+        bulk_sample: changed_sample,
+        problem: {:bulk_digest, Bulk.digest(changed_sample)}
       )
     ]
   end

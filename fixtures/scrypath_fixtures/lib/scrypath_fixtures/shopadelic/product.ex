@@ -1,7 +1,9 @@
 defmodule ScrypathFixtures.Shopadelic.Product do
   @moduledoc """
   Shopadelic's searchable product schema. Shopadelic is a fictional online-shop product; the data
-  is for development and tests only, Scrypath-owned, and no record is copied from a real product.
+  is for development and tests only.
+
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
 
   `:storeId` is a filterable attribute next to `:status`, which is what the `:settings_drift`
   scenario leaves out of the applied settings.

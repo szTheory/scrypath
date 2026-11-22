@@ -1,7 +1,9 @@
 defmodule ScrypathFixtures.Shopadelic do
   @moduledoc """
   Shopadelic scenarios. Shopadelic is a fictional online-shop product; the data is for development
-  and tests only, Scrypath-owned, and no record is copied from a real product.
+  and tests only.
+
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
 
   Four named states, three ordinary and one stress variation:
 
@@ -26,6 +28,7 @@ defmodule ScrypathFixtures.Shopadelic do
   """
 
   alias ScrypathFixtures.AppliedSettings
+  alias ScrypathFixtures.Bulk
   alias ScrypathFixtures.FakeMeilisearchClient
   alias ScrypathFixtures.FakeObanInspector
   alias ScrypathFixtures.Hostile
@@ -38,6 +41,9 @@ defmodule ScrypathFixtures.Shopadelic do
   # own choice.
   @queue :shopadelic_sync
   @index_prefix "shopadelic"
+
+  # The seed of the ordinary product records `ScrypathFixtures.Bulk` picks (the Phase 196 number).
+  @bulk_seed 196
 
   @states [:settings_aligned, :settings_drift, :failed_journey, :hostile_ids]
 
@@ -285,7 +291,10 @@ defmodule ScrypathFixtures.Shopadelic do
         job(now, index, max_attempts, n, "completed", :upsert,
           ago: 3_600 - n * 200,
           attempt: 1,
-          ids: ["SPD-#{n}", "SPD-#{n + 100}"]
+          ids: [
+            Bulk.row(:product, @bulk_seed, n).id,
+            Bulk.row(:product, @bulk_seed, n + 100).id
+          ]
         )
       end
 

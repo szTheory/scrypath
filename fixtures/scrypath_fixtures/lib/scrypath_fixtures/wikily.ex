@@ -1,7 +1,9 @@
 defmodule ScrypathFixtures.Wikily do
   @moduledoc """
   Wikily scenarios. Wikily is a fictional team-wiki product; the data is for development and tests
-  only, Scrypath-owned, and no record is copied from a real product.
+  only.
+
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
 
   Wikily is an empty install, the four stages a new operator passes through before search health
   has anything to show. All four are ordinary states, and each is one the real code produces:

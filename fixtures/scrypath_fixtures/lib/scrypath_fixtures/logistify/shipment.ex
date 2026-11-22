@@ -2,6 +2,8 @@ defmodule ScrypathFixtures.Logistify.Shipment do
   @moduledoc """
   Logistify's searchable shipment schema. Logistify is a fictional freight-tracking product; the
   data is for development and tests only.
+
+  Fictional adopter: Scrypath-owned data, no records copied from any other project.
   """
 
   use Ecto.Schema
