@@ -73,14 +73,16 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     }
   end
 
-  defp sudo!(view) do
+  # A confirmed operator by default (confirmed a minute ago, window 300 s); pass -600 for one whose
+  # confirmation is stale.
+  defp sudo!(view, sudo_at_offset \\ -60) do
     put_live_assigns(view,
       current_scope: %{user: %{id: "user_123"}, active_organization: %{id: "org_456"}},
       operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
         user_id: "user_123",
         active_org_id: "org_456",
         impersonator_user_id: nil,
-        sudo_at: DateTime.add(DateTime.utc_now(), -60, :second)
+        sudo_at: DateTime.add(DateTime.utc_now(), sudo_at_offset, :second)
       }
     )
   end
@@ -537,32 +539,79 @@ defmodule ScrypathOpsWeb.FailedSyncLiveTest do
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
   end
 
-  test "sigra retry redirects stale sudo and keeps the failed-sync row in place", %{} do
-    socket = %Phoenix.LiveView.Socket{
-      assigns: %{
-        __changed__: %{},
-        flash: %{},
-        operator_context: %ScrypathOps.Integrations.Sigra.OperatorContext{
-          user_id: "user_123",
-          active_org_id: "org_456",
-          impersonator_user_id: nil,
-          sudo_at: DateTime.add(DateTime.utc_now(), -600, :second)
-        },
-        schema_allowlist: [OpsPostA, OpsPostB],
-        loads: nil,
-        recovery_receipts: %{},
-        mount_path: "/ops",
-        context_generation: 0
-      },
-      host_uri: URI.parse("https://scrypath.example/ops/failed-sync")
-    }
+  # Phase 197 PILOT-01: this test used to hand-build a socket with no loaded rows, so no row was
+  # ever found and the sudo gate was never reached for a real row. It now drives a mounted view and
+  # clicks the retry button the page renders.
+  test "stale sudo sends a click on a rendered retry button to the confirm page and keeps the row",
+       %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/ops/failed-sync")
+    retry = "[data-testid='failed-sync-retry'][phx-value-id='501']"
+    assert has_element?(view, retry)
 
-    {:noreply, socket} =
-      ScrypathOpsWeb.FailedSyncLive.handle_event("retry", %{"id" => "501"}, socket)
+    sudo!(view, -600)
+    assert {:error, {:live_redirect, %{to: to}}} = view |> element(retry) |> render_click()
 
-    assert inspect(socket.redirected) =~ "/sudo/confirm"
-    assert inspect(socket.redirected) =~ "return_to=%2Fops%2Ffailed-sync"
+    assert String.starts_with?(to, "/sudo/confirm")
     assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+
+    # The row is still retryable on a fresh mount.
+    {:ok, fresh, _html} = live(conn, ~p"/ops/failed-sync")
+    assert has_element?(fresh, retry)
+
+    # Positive control: the same click with a fresh confirmation is queued exactly once.
+    sudo!(fresh)
+    accepted = fresh |> element(retry) |> render_click()
+    assert accepted =~ "Retry queued"
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 1
+  end
+
+  # Phase 197 defect D1: LiveView prunes the path and query from `host_uri`, so a stale-sudo
+  # operator used to come back from the confirm page to "/" and lose the filters they had set.
+  test "stale sudo returns the operator to the filtered page they left", %{conn: conn} do
+    Application.put_env(:scrypath_ops, :meilisearch_tasks, [])
+
+    Application.put_env(:scrypath_ops, :oban_jobs, [
+      upsert_job(603, OpsPostA, error: "** (Req.TransportError) connection refused")
+    ])
+
+    left = "/ops/failed-sync?schema=ScrypathOps.Test.OpsPostA&cause=transport"
+    {:ok, view, _html} = live(conn, left)
+    retry = "[data-testid='failed-sync-retry'][phx-value-id='603']"
+    assert has_element?(view, retry)
+
+    sudo!(view, -600)
+    assert {:error, {:live_redirect, %{to: to}}} = view |> element(retry) |> render_click()
+
+    assert %URI{path: "/sudo/confirm", query: query} = URI.parse(to)
+    assert %{"return_to" => ^left} = URI.decode_query(query)
+    assert Agent.get(:failed_sync_insert_counter, & &1) == 0
+  end
+
+  describe "OnMount.return_to_path/1" do
+    alias ScrypathOpsWeb.Live.OnMount
+
+    test "keeps the path and the query of a request URL and drops the host" do
+      assert OnMount.return_to_path("https://ops.example.com/ops/failed-sync?schema=A&cause=b") ==
+               "/ops/failed-sync?schema=A&cause=b"
+
+      assert OnMount.return_to_path("http://localhost:4002/ops/health") == "/ops/health"
+      assert OnMount.return_to_path("http://localhost:4002/ops/health?") == "/ops/health"
+    end
+
+    test "never returns a target that could leave the host" do
+      # A protocol-relative path would send the browser to another host after the confirmation.
+      assert OnMount.return_to_path("https://ops.example.com//evil.example/x") == nil
+      assert OnMount.return_to_path("//evil.example/x") == nil
+      assert OnMount.return_to_path("https://ops.example.com/\\evil.example") == nil
+      assert OnMount.return_to_path("https://ops.example.com/ops/\r\nSet-Cookie: a=b") == nil
+    end
+
+    test "returns nil when there is no usable absolute path" do
+      assert OnMount.return_to_path("https://ops.example.com") == nil
+      assert OnMount.return_to_path("ops/failed-sync") == nil
+      assert OnMount.return_to_path("") == nil
+      assert OnMount.return_to_path(nil) == nil
+    end
   end
 
   test "sigra retry refreshes in place and keeps receipts across filter changes", %{conn: conn} do
