@@ -34,7 +34,7 @@ v1.48 Discovery and onboarding is archived ([audit](milestones/v1.48-MILESTONE-A
 - [x] **Phase 195: Mount and prove** - phoenix_storybook mounted dev/test-only with real styling, boundary tests made non-vacuous, and a measured go/no-go recorded (3 plans) (completed 2026-11-21)
 - [x] **Phase 196: Fixtures and three adopters** - a `fixtures/scrypath_fixtures` project of pure builders and three Scrypath-owned fictional adopters with named states (5 plans) (completed 2026-11-22)
 - [ ] **Phase 197: Pilot JOB-03, unhealthy verdict to verified retry** - mounted journey first, safe extraction into shared components, catalog contract test, stable storybook on 4003; ends with Pause 1 (5 plans)
-- [ ] **Phase 198: Scale** - remaining small screens, Clinicly and Chatly sets, a local browser check; cut by default and sized after Pause 1; ends with Pause 2 (at most 4 plans)
+- [ ] **Phase 198: Scale** - remaining small screens, Clinicly and Chatly sets, a local browser check; **cut by the maintainer on 2026-11-22 after Pause 1**; FLOW-05 (Pause 2) runs next
 
 ## Phase Details
 
@@ -141,7 +141,7 @@ FLOW-01, FLOW-02, FLOW-03 and FLOW-04 are not deliverables of one phase. They ar
 | 195. Mount and prove | 3/3 | Complete    | 2026-11-21 |
 | 196. Fixtures and three adopters | 5/5 | Complete    | 2026-11-22 |
 | 197. Pilot JOB-03 | 5/5 | Paused for Pause 1 | - |
-| 198. Scale | 0/4 | Not started (cut by default) | - |
+| 198. Scale | 0/4 | Cut (maintainer, 2026-11-22); FLOW-05 runs next | - |
 
 
 <details>
