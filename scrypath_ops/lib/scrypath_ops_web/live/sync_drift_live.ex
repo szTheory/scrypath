@@ -15,6 +15,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   alias ScrypathOps.OperatorSelection
   alias ScrypathOps.PromotionEligibility
   alias ScrypathOps.RecoveryObservation
+  alias ScrypathOps.RecoveryView
+  alias ScrypathOpsWeb.Components.Recovery
   alias Scrypath.Meilisearch.Tasks
   alias Scrypath.Operations.Task, as: OperationTask
 
@@ -574,54 +576,6 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
   end
 
   defp module_flat_name(mod) when is_atom(mod), do: OperatorSelection.canonical(mod)
-
-  defp recovery_status_label(nil), do: "Not checked"
-  defp recovery_status_label(:accepted), do: "Retry queued"
-  defp recovery_status_label(:running), do: "Retry running"
-
-  defp recovery_status_label(:queue_only_completed),
-    do: "Queue job completed; backend evidence pending"
-
-  defp recovery_status_label(:verified), do: "Recovery verified"
-  defp recovery_status_label(:failed), do: "Recovery failed"
-  defp recovery_status_label(:cancelled), do: "Recovery canceled"
-  defp recovery_status_label(_), do: "Recovery outcome could not be checked"
-
-  defp recovery_status_kind(:verified), do: :success
-  defp recovery_status_kind(:failed), do: :error
-  defp recovery_status_kind(:cancelled), do: :error
-
-  defp recovery_status_kind(status) when status in [:accepted, :running, :queue_only_completed],
-    do: :warning
-
-  defp recovery_status_kind(_), do: :neutral
-
-  defp recovery_status_copy(:accepted),
-    do:
-      "The queue has this retry; refresh to observe this same job. Refresh never resubmits work."
-
-  defp recovery_status_copy(:running),
-    do: "This retry is still running; refresh to observe the same job, attempt, and task."
-
-  defp recovery_status_copy(:queue_only_completed),
-    do: "The queue job completed, but backend and document evidence are not confirmed."
-
-  defp recovery_status_copy(:verified),
-    do: "The exact retry task and its expected active-index effect were observed."
-
-  defp recovery_status_copy(:failed),
-    do: "The exact retry job or backend task failed. Review its result before retrying."
-
-  defp recovery_status_copy(:cancelled),
-    do: "The exact retry job or backend task was canceled. Review its result before retrying."
-
-  defp recovery_status_copy(:unknown),
-    do:
-      "This operation's outcome could not be checked. Refresh this same operation; do not submit another retry."
-
-  defp recovery_status_copy(_),
-    do:
-      "No recovery result has been checked yet. Review failed sync work to start an eligible retry."
 
   defp document_observation_title(nil), do: "Not checked"
   defp document_observation_title(%{state: :not_checked}), do: "Not checked"
@@ -1921,6 +1875,22 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
 
   defp reindex_progress_copy(_report), do: nil
 
+  # What the recovery areas show, from the assigns the observer's results land in. A combination the
+  # observer cannot emit renders as the closed unavailable state (`RecoveryView.for_page/1`), so
+  # this page never shows an outcome its evidence does not back.
+  defp recovery_view(assigns) do
+    RecoveryView.for_page(%{
+      schema: assigns.selected_schema,
+      handle: assigns.recovery_handle,
+      status: assigns.recovery_status,
+      evidence: assigns.recovery_evidence,
+      document_observation: assigns.recovery_document_observation,
+      error: assigns.recovery_observation_error,
+      checked_at: assigns.recovery_checked_at,
+      loading?: assigns.recovery_loading
+    })
+  end
+
   @impl true
   def render(assigns) do
     assigns =
@@ -1931,6 +1901,8 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
       )
       |> assign(:show_promotion?, promotion_visible?(assigns))
       |> assign(:settings_checking?, settings_checking?(assigns))
+      |> assign(:now, ScrypathOps.Clock.utc_now())
+      |> assign(:recovery_view, recovery_view(assigns))
 
     ~H"""
     <Layouts.app
@@ -2116,78 +2088,12 @@ defmodule ScrypathOpsWeb.SyncDriftLive do
         </div>
       </.ops_section>
 
-      <.ops_section
-        :if={
-          @selected_schema &&
-            (@recovery_handle || @recovery_observation_error || @recovery_document_observation)
-        }
-        id="ordinary-recovery"
-        class="mt-6"
-        title="Retry status"
-        subtitle="Follow the exact retry from its queue job to Meilisearch and document visibility."
-      >
-        <:metadata>
-          <.ops_time
-            :if={@recovery_checked_at}
-            id="recovery-checked-at"
-            label="Checked"
-            dt={@recovery_checked_at}
-          />
-        </:metadata>
-        <:actions>
-          <.link
-            navigate={OperatorSelection.path(@mount_path, "failed-sync", @selected_schema)}
-            class="link link-primary"
-          >
-            Review failed sync work
-          </.link>
-          <.ops_button
-            :if={@recovery_handle}
-            phx-click="refresh_recovery_status"
-            phx-disable-with="Checking…"
-            disabled={@recovery_loading || !@selected_schema}
-          >
-            Refresh recovery status
-          </.ops_button>
-        </:actions>
-        <p class="text-ops-body ops-muted">
-          Retry failed work there. Refresh recovery status observes the queued retry and never resubmits it.
-        </p>
-        <div :if={@recovery_handle} id="recovery-observation" class="mt-3 space-y-2">
-          <p :if={@recovery_loading} role="status" aria-label="Checking recovery status">
-            Checking this same recovery operation. The last observed result remains visible until this check finishes.
-          </p>
-          <.ops_status
-            kind={recovery_status_kind(@recovery_status)}
-            title={
-              if @recovery_observation_error,
-                do: "Recovery refresh could not be checked",
-                else: recovery_status_label(@recovery_status)
-            }
-            role={if @recovery_observation_error, do: "alert", else: "status"}
-            neutral
-          >
-            {recovery_status_copy(@recovery_status)}
-            <span :if={@recovery_observation_error}>
-              Check detail: {inspect(@recovery_observation_error)}.
-            </span>
-          </.ops_status>
-          <p
-            :if={@recovery_evidence}
-            class="text-ops-body break-all"
-            data-testid="recovery-evidence"
-          >
-            Schema:
-            <.ops_inline_code>{module_flat_name(@selected_schema)}</.ops_inline_code>
-            · Queue job {@recovery_evidence.replacement_job} · attempt {@recovery_evidence.attempt}
-            <span :if={@recovery_evidence.task_uid}>
-              · Meilisearch task {@recovery_evidence.task_uid}
-            </span>
-            · Active index
-            <.ops_inline_code>{@recovery_evidence.index}</.ops_inline_code>
-          </p>
-        </div>
-      </.ops_section>
+      <Recovery.recovery_status
+        :if={@recovery_view.visible?}
+        view={@recovery_view}
+        now={@now}
+        mount_path={@mount_path}
+      />
 
       <.ops_section
         id="index-settings-heading"
