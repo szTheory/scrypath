@@ -331,7 +331,7 @@ page. `ui-tokens.test.mjs` ("live scroll padding clears the sticky header") enfo
   the outline default (Panel fill, Ink text, opaque Control Edge border; hover and press are
   `--ops-sunken`, never `--ops-selected`). There is no danger variant and no error button class: a
   destructive confirm is the dialog's one Plum button, named by its consequence, with Cancel focused.
-  Plum buttons change fill on hover (the primary mixed 25% toward `--color-base-content`: darker Plum in light, lighter Orchid in dark, 10.7:1 and 9.3:1 text contrast; derived, so no new hex) and never underline their label.
+  Plum buttons keep their Plum fill and lay a 14% black veil over it on hover (a darker fill in both themes, label untouched; 10.2:1 text contrast in light, 5.7:1 in dark; no color mix, no new hex) and never underline their label.
   Buttons come in three variants: `:default` (outline), `:primary` and `:ghost`.
 - **Row actions** (`.ops-text-action`) are underlined Ink text, 14px 600, with a 40px target and a 2px
   underline on hover. They share one computed style; nothing else may override it. Prose links are

@@ -204,7 +204,9 @@ defmodule ScrypathOpsWeb.DesignTokensContractTest do
       rule(".ops-btn.btn-primary:is(:hover, [data-ops-state=\"hover\"]):not(:disabled)")
 
     assert primary_hover =~
-             "background-color: color-mix(in oklab, var(--color-primary), var(--color-base-content) 25%)"
+             "background-image: linear-gradient(rgb(0 0 0 / 14%), rgb(0 0 0 / 14%)), var(--btn-noise, none)"
+
+    refute primary_hover =~ "color-mix"
 
     refute primary_hover =~ "text-decoration"
 
